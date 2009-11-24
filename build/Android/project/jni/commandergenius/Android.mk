@@ -43,5 +43,4 @@ out/apps/commandergenius//libcommandergenius.so: $(CG_SRCDIR)
 out/apps/commandergenius/libcommandergenius.so: $(CG_SRCDIR)
 
 include $(BUILD_SHARED_LIBRARY)
-#include $(BUILD_EXECUTABLE)
 

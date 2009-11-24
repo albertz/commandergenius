@@ -39,7 +39,7 @@
  * Fixing the program to send less polygons to the GPU is left
  * as an exercise to the reader. As always, patches welcomed :-)
  */
-package com.example.SanAngeles;
+package com.pckf.commanderkeen;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -50,6 +50,13 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.KeyEvent;
+
+class LoadLibrary {
+    public LoadLibrary() {}
+    static {
+        System.loadLibrary("commandergenius");
+    }
+}
 
 class DemoRenderer implements GLSurfaceView.Renderer {
 
@@ -130,6 +137,7 @@ public class DemoActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mLoadLibraryStub = new LoadLibrary();
         mGLView = new DemoGLSurfaceView(this);
         setContentView(mGLView);
         // Receive keyboard events
@@ -158,8 +166,5 @@ public class DemoActivity extends Activity {
     }
 
     private DemoGLSurfaceView mGLView;
-
-    static {
-        System.loadLibrary("commandergenius");
-    }
+    private LoadLibrary mLoadLibraryStub;
 }

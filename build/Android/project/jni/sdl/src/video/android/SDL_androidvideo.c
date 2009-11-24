@@ -49,10 +49,12 @@
 #include <jni.h>
 #include <android/log.h>
 #include <GLES/gl.h>
+#include <GLES/glext.h>
 #include <sys/time.h>
 #include <time.h>
 #include <android/log.h>
 #include <stdint.h>
+#include <math.h>
 
 
 #define ANDROIDVID_DRIVER_NAME "android"
@@ -81,7 +83,6 @@ static SDL_sem * WaitForNativeRender = NULL;
 static int memX = 0;
 static int memY = 0;
 static void * memBuffer = NULL;
-static GLuint texture[1] = { 0 };
 static SDL_Thread * mainThread = NULL;
 
 static SDLKey keymap[KEYCODE_LAST+1];
@@ -228,20 +229,6 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	current->pitch = current->w * (bpp / 8);
 	current->pixels = this->hidden->buffer;
 	
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_TEXTURE_2D);
-	//glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();
-	glTranslatef(0.0f,0.0f,-1.0f);
-	//glOrtho (0, width, height, 0, 0, 1);
-	//glMatrixMode (GL_MODELVIEW);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-	glGenTextures(1, &texture[0]);
-	glBindTexture(GL_TEXTURE_2D, texture[0]);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-
 	/* We're done */
 	return(current);
 }
@@ -288,8 +275,6 @@ void ANDROID_VideoQuit(_THIS)
 	memBuffer = NULL;
 	int i;
 	
-	glDeleteTextures( 1, &texture[0] );
-
 	if (this->screen->pixels != NULL)
 	{
 		SDL_free(this->screen->pixels);
@@ -322,14 +307,21 @@ static int SDLCALL MainThreadWrapper(void * dummy)
 	return main( argc, argv );
 };
 
-void
-Java_com_example_SanAngeles_DemoRenderer_nativeInit( JNIEnv*  env, jobject  thiz )
+#ifndef SDL_JAVA_PACKAGE_PATH
+#error You have to define SDL_JAVA_PACKAGE_PATH to your package path with dots replaced with underscores, for example "com_example_SanAngeles"
+#endif
+#define JAVA_EXPORT_NAME2(name,package) Java_##package##_##name
+#define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
+#define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
+
+extern void
+JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject  thiz )
 {
 	mainThread = SDL_CreateThread( MainThreadWrapper, NULL );
 }
 
-void
-Java_com_example_SanAngeles_DemoRenderer_nativeResize( JNIEnv*  env, jobject  thiz, jint w, jint h )
+extern void
+JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint w, jint h )
 {
     sWindowWidth  = w;
     sWindowHeight = h;
@@ -337,8 +329,8 @@ Java_com_example_SanAngeles_DemoRenderer_nativeResize( JNIEnv*  env, jobject  th
 }
 
 /* Call to finalize the graphics state */
-void
-Java_com_example_SanAngeles_DemoRenderer_nativeDone( JNIEnv*  env, jobject  thiz )
+extern void
+JAVA_EXPORT_NAME(DemoRenderer_nativeDone) ( JNIEnv*  env, jobject  thiz )
 {
 	if( mainThread )
 	{
@@ -352,8 +344,8 @@ Java_com_example_SanAngeles_DemoRenderer_nativeDone( JNIEnv*  env, jobject  thiz
 
 enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
 
-void
-Java_com_example_SanAngeles_DemoGLSurfaceView_nativeMouse( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action )
+extern void
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action )
 {
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "mouse event %i at (%03i, %03i)", action, x, y);
 	if( action == MOUSE_DOWN || action == MOUSE_UP )
@@ -383,25 +375,51 @@ static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
 }
 
 void
-Java_com_example_SanAngeles_DemoGLSurfaceView_nativeKey( JNIEnv*  env, jobject  thiz, jint key, jint action )
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject  thiz, jint key, jint action )
 {
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "key event %i %s", key, action ? "down" : "up");
 	SDL_keysym keysym;
 	SDL_PrivateKeyboard( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key, &keysym) );
 }
 
+gluPerspectivef(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar)
+{
+   GLfloat xmin, xmax, ymin, ymax;
+
+   ymax = zNear * tan(fovy * M_PI / 360.0f);
+   ymin = -ymax;
+   xmin = ymin * aspect;
+   xmax = ymax * aspect;
+   glFrustumf(xmin, xmax, ymin, ymax, zNear, zFar);
+};
+
 /* Call to render the next GL frame */
-void
-Java_com_example_SanAngeles_DemoRenderer_nativeRender( JNIEnv*  env, jobject  thiz )
+extern void
+JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz )
 {
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "rendering frame...");
 	
 	static float bounceColor = 0.0f;
 	static float bounceDir = 1.0f;
 
-	static GLshort vertexData [4] [3] = { { -1, -1, 1 }, { 1, -1, 1 }, { -1, 1, 1 }, { 1, 1, 1 } };
-	static GLshort textureData [4] [2] = { { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } };
+	static GLfloat vertexData [] = {
+	-0.5f, -0.5f,  0.5f,
+	 0.5f, -0.5f,  0.5f,
+	-0.5f,  0.5f,  0.5f,
+	 0.5f,  0.5f,  0.5f
+	};
+	static GLfloat textureData [] = {
+	 0.0f, 0.0f,
+	 1.0f, 0.0f,
+	 0.0f, 1.0f,
+	 1.0f, 1.0f,
+	};
+	
+	char tmp[512];
+	
+	GLuint texture[1];
 
+	/*
 	// Show that we're doing something (just flash the screen)
 	bounceColor += 0.005f * bounceDir;
 	if( bounceColor >= 1.0f )
@@ -412,6 +430,7 @@ Java_com_example_SanAngeles_DemoRenderer_nativeRender( JNIEnv*  env, jobject  th
 	glClearColor(bounceColor, bounceColor, bounceColor, 0.5f);
 
 	glClear(GL_COLOR_BUFFER_BIT); // Clear Screen Buffer (TODO: comment this out when whole thing start working)
+	*/
 
 	if( WaitForNativeRender && memBuffer )
 	{
@@ -426,68 +445,86 @@ Java_com_example_SanAngeles_DemoRenderer_nativeRender( JNIEnv*  env, jobject  th
 
 		// ----- Fail code starts here -----
 
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, memX, memY, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
-
-		glLoadIdentity ();
-		glTranslatef(0.0f,0.0f,-1.0f);
-		
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(3, GL_SHORT, 0, vertexData);
-		glTexCoordPointer(2, GL_SHORT, 0, textureData);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 2);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-		glLoadIdentity ();
-		glTranslatef(0.0f,0.0f,1.0f);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(3, GL_SHORT, 0, vertexData);
-		glTexCoordPointer(2, GL_SHORT, 0, textureData);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 2);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-		glEnable(GL_DEPTH_TEST);
-
-		glClearDepthf(-10000.0f);
-		glClear(GL_DEPTH_BUFFER_BIT);
-
-		glLoadIdentity ();
-		glTranslatef(0.0f,0.0f,-1.0f);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(3, GL_SHORT, 0, vertexData);
-		glTexCoordPointer(2, GL_SHORT, 0, textureData);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 2);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-		glLoadIdentity ();
-		glTranslatef(0.0f,0.0f,1.0f);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(3, GL_SHORT, 0, vertexData);
-		glTexCoordPointer(2, GL_SHORT, 0, textureData);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 2);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-		glLoadIdentity ();
-		glTranslatef(0.0f,0.0f,100.0f);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(3, GL_SHORT, 0, vertexData);
-		glTexCoordPointer(2, GL_SHORT, 0, textureData);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 2);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-		glLoadIdentity ();
-		glTranslatef(0.0f,0.0f,-100.0f);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(3, GL_SHORT, 0, vertexData);
-		glTexCoordPointer(2, GL_SHORT, 0, textureData);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 2);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
 		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DITHER);
+		glDisable(GL_MULTISAMPLE);
+
+		glEnable(GL_TEXTURE_2D);
+
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glGenTextures() error");
+
+		glGenTextures(1, texture);
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glGenTextures() error");
+
+		glBindTexture(GL_TEXTURE_2D, texture[0]);
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glBindTexture() error");
+
+		/*
+		glActiveTexture(texture[0]);
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glActiveTexture() error");
+
+		glClientActiveTexture(texture[0]);
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glClientActiveTexture() error");
+		*/
+
+		//glTexImage2D(GL_TEXTURE_2D, 0, 3, memX, memY, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
+
+		int errorNum = glGetError();
+		if( errorNum != GL_NO_ERROR )
+		{
+			sprintf(tmp, "glTexImage2D() error: %i", errorNum);
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", tmp);
+		}
+
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glTexParameteri() error");
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glEnableClientState() error");
+
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspectivef( 90.0f, (float)memX / (float)memY, 0.1f, 100.0f);
+	
+    	glMatrixMode( GL_MODELVIEW );
+    	glLoadIdentity();
+		glTranslatef( 0.0f, 0.0f, -1.0f );
+
+		glVertexPointer(3, GL_FLOAT, 0, vertexData);
+
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glVertexPointer() error");
+
+		glTexCoordPointer(2, GL_FLOAT, 0, textureData);
+
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glTexCoordPointer() error");
+
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glDrawArrays() error");
+
+		//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		//glDisableClientState(GL_VERTEX_ARRAY);
+
+		glDeleteTextures(1, texture);
+		if( glGetError() != GL_NO_ERROR )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glDeleteTextures() error");
 
 		// ----- Fail code ends here - it just doesn't output anything -----
 
@@ -612,4 +649,62 @@ void ANDROID_InitOSKeymap(_THIS)
   */
 
 }
+
+
+void CrossProd(float x1, float y1, float z1, float x2, float y2, float z2, float res[3])
+{
+res[0] = y1*z2 - y2*z1;
+res[1] = x2*z1 - x1*z2;
+res[2] = x1*y2 - x2*y1;
+} 
+
+// Stolen from http://www.khronos.org/message_boards/viewtopic.php?t=541
+void gluLookAtf(float eyeX, float eyeY, float eyeZ, float lookAtX, float lookAtY, float lookAtZ, float upX, float upY, float upZ)
+{
+// i am not using here proper implementation for vectors.
+// if you want, you can replace the arrays with your own
+// vector types
+float f[3];
+
+// calculating the viewing vector
+f[0] = lookAtX - eyeX;
+f[1] = lookAtY - eyeY;
+f[2] = lookAtZ - eyeZ;
+
+float fMag = sqrtf(f[0]*f[0] + f[1]*f[1] + f[2]*f[2]);
+float upMag = sqrtf(upX*upX + upY*upY + upZ*upZ);
+
+// normalizing the viewing vector
+if( fMag != 0)
+{
+f[0] = f[0]/fMag;
+f[1] = f[1]/fMag;
+f[2] = f[2]/fMag;
+}
+
+// normalising the up vector. no need for this here if you have your
+// up vector already normalised, which is mostly the case.
+if( upMag != 0 )
+{
+upX = upX/upMag;
+upY = upY/upMag;
+upZ = upZ/upMag;
+}
+
+float s[3], u[3];
+
+CrossProd(f[0], f[1], f[2], upX, upY, upZ, s);
+CrossProd(s[0], s[1], s[2], f[0], f[1], f[2], u);
+
+float M[]=
+{
+s[0], u[0], -f[0], 0,
+s[1], u[1], -f[1], 0,
+s[2], u[2], -f[2], 0,
+0, 0, 0, 1
+};
+
+glMultMatrixf(M);
+glTranslatef (-eyeX, -eyeY, -eyeZ);
+};
 
