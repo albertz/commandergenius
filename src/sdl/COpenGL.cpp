@@ -61,7 +61,7 @@ bool COpenGL::initGL(unsigned Width, unsigned Height, unsigned char Depth,
 	// Set projection
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
-#if defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR)	// TODO: dont check for iphone but for opengles
+#if defined(GL_VERSION_ES_CM_1_0)
 #define glOrtho glOrthof
 #endif
 	glOrtho( 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f );

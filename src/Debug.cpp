@@ -513,6 +513,10 @@ Logger errors(-1,-1,1, "E: ");
 
 #include <iostream>
 #include <sstream>
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 #include "ThreadPool.h"
 #include "StringUtils.h"
 
@@ -544,6 +548,9 @@ void Logger::unlock() {
 static void CoutPrint(const std::string& str) {
 	// TODO: We have used std::cout here before but it doesn't seem to work after a while for some reason.
 	printf("%s", str.c_str());
+	#ifdef ANDROID
+	__android_log_print(ANDROID_LOG_INFO, "CommanderKeen", str.c_str());
+	#endif
 }
 
 int Logger_Verbosity = 0;

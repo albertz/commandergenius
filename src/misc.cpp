@@ -25,6 +25,11 @@
 #include "FindFile.h"
 
 #include "dialog/CWindow.h"
+#include "sdl/joydrv.h"
+#include "sdl/sound/CSound.h"
+#include "sdl/CInput.h"
+#include "sdl/CTimer.h"
+#include "sdl/CVideoDriver.h"
 
 
 void banner(void)

@@ -470,6 +470,9 @@ void InitBaseSearchPaths() {
 	AddToFileList(&basesearchpaths, "${HOME}/Commander Genius");
 	AddToFileList(&basesearchpaths, ".");
 	AddToFileList(&basesearchpaths, "${BIN}");
+#elif defined(ANDROID)
+	AddToFileList(&basesearchpaths, "/data/data/com.pckf.commanderkeen/files");
+	AddToFileList(&basesearchpaths, "/sdcard/commanderkeen");
 #else // all other systems (Linux, *BSD, OS/2, ...)
 	AddToFileList(&basesearchpaths, "${HOME}/.CommanderGenius");
 	AddToFileList(&basesearchpaths, ".");
@@ -660,10 +663,14 @@ bool OpenGameFileR(std::ifstream& f, const std::string& path, std::ios_base::ope
 
 	std::string fullfn = GetFullFileName(path);
 	if(fullfn.size() != 0) {
+	#ifndef ANDROID
 		try {
+	#endif
 			f.open(Utf8ToSystemNative(fullfn).c_str(), mode);
 			return f.is_open();
+	#ifndef ANDROID
 		} catch(...) {}
+	#endif
 		return false;
 	}
 
@@ -676,10 +683,14 @@ bool OpenGameFileW(std::ofstream& f, const std::string& path, std::ios_base::ope
 	
 	std::string fullfn = GetWriteFullFileName(path, true);
 	if(fullfn.size() != 0) {
+	#ifndef ANDROID
 		try {
+	#endif
 			f.open(Utf8ToSystemNative(fullfn).c_str(), mode);
 			return f.is_open();
+	#ifndef ANDROID
 		} catch(...) {}
+	#endif
 		return false;
 	}
 	

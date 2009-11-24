@@ -53,7 +53,7 @@ void CVideoDriver::resetSettings() {
 	m_updateFG = false;
 	
 	showfps=true;
-#ifdef WIZ
+#if defined(WIZ) || defined(ANDROID)
 	m_Resolution.width=320;
 	m_Resolution.height=240;
 	m_Resolution.depth=16;
@@ -92,7 +92,7 @@ void CVideoDriver::resetSettings() {
 	BGLayerSurface=NULL;
 	BlitSurface=NULL;
 	
-#if defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR)	
+#if defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR) || defined(ANDROID)
 	Zoom = 1;
 	Filtermode = 0;
 	FrameSkip = 15;
@@ -122,8 +122,17 @@ void CVideoDriver::initResolutionList()
 	m_Resolution_pos = m_Resolutionlist.begin();
 	
 	return;
-#endif	
+#endif
+#if defined(ANDROID)
+	m_Resolution.width = 320;
+	m_Resolution.height = 240;
+	m_Resolution.depth = 16;
+	m_Resolutionlist.push_back(m_Resolution);
+	m_Resolution_pos = m_Resolutionlist.begin();
 	
+	return;
+#endif
+
 	  st_resolution resolution;
 	  char buf[256];
 

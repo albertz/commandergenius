@@ -434,7 +434,13 @@ public:
 		virtual bool isValid() { return it != filelist.filelist.end(); }
 		virtual void next() { ++it; }
 		virtual bool operator==(const ::Iterator<FileList::value_type>& other) const {
+			//TODO: dynamic_cast<> shows that your code suxx, and is not available on Android because it has RTTI disabled
+			// I've replaced it with reinterpret_cast<>, if your code expects it to do error-checking it will fail
+			#ifdef ANDROID
+			const Iterator* o = reinterpret_cast<const Iterator*> (&other);
+			#else
 			const Iterator* o = dynamic_cast<const Iterator*> (&other);
+			#endif
 			return o && it == o->it;
 		}
 		virtual FileList::value_type get() { return *it; }
