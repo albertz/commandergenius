@@ -71,6 +71,7 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface);
 static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface);
 static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface);
 static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface);
+static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface);
 
 /* etc. */
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
@@ -78,11 +79,15 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
 static int sWindowWidth  = 320;
 static int sWindowHeight = 480;
-static SDL_sem * WaitForNativeRender = NULL;
-static SDL_sem * WaitForNativeRender1 = NULL;
+static SDL_mutex * WaitForNativeRender = NULL;
+static SDL_cond * WaitForNativeRender1 = NULL;
+static enum { Render_State_Started, Render_State_Processing, Render_State_Finished } 
+	WaitForNativeRenderState = Render_State_Finished;
 // Pointer to in-memory video surface
 static int memX = 0;
 static int memY = 0;
+static void * memBuffer1 = NULL;
+static void * memBuffer2 = NULL;
 static void * memBuffer = NULL;
 static SDL_Thread * mainThread = NULL;
 static enum { GL_State_Init, GL_State_Ready, GL_State_Uninit, GL_State_Uninit2 } openglInitialized = GL_State_Uninit2;
@@ -146,7 +151,7 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->SetHWAlpha = NULL;
 	device->LockHWSurface = ANDROID_LockHWSurface;
 	device->UnlockHWSurface = ANDROID_UnlockHWSurface;
-	device->FlipHWSurface = NULL;
+	device->FlipHWSurface = ANDROID_FlipHWSurface;
 	device->FreeHWSurface = ANDROID_FreeHWSurface;
 	device->SetCaption = NULL;
 	device->SetIcon = NULL;
@@ -185,8 +190,8 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[2]->w = 320; SDL_modelist[2]->h = 200; // Always available on any screen and any orientation
 	SDL_modelist[3] = NULL;
 
-	WaitForNativeRender = SDL_CreateSemaphore(0);
-	WaitForNativeRender1 = SDL_CreateSemaphore(0);
+	WaitForNativeRender = SDL_CreateMutex();
+	WaitForNativeRender1 = SDL_CreateCond();
 	/* We're done! */
 	return(0);
 }
@@ -201,59 +206,93 @@ SDL_Rect **ANDROID_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags)
 SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 				int width, int height, int bpp, Uint32 flags)
 {
-	if ( this->hidden->buffer ) {
-		SDL_free( this->hidden->buffer );
-	}
+	if ( memBuffer1 )
+		SDL_free( memBuffer1 );
+	if ( memBuffer2 )
+		SDL_free( memBuffer2 );
 
 	memX = width;
 	memY = height;
-
-	/*
-	// Texture sizes should be 2^n
-	if( memX <= 256 )
-		memX = 256;
-	else if( memX <= 512 )
-		memX = 512;
-	else
-		memX = 1024;
-
-	if( memY <= 256 )
-		memY = 256;
-	else if( memY <= 512 )
-		memY = 512;
-	else
-		memY = 1024;
-	*/
 	
-	this->hidden->buffer = SDL_malloc(memX * memY * (bpp / 8));
-	if ( ! this->hidden->buffer ) {
+	memBuffer1 = SDL_malloc(memX * memY * (bpp / 8));
+	if ( ! memBuffer1 ) {
 		SDL_SetError("Couldn't allocate buffer for requested mode");
 		return(NULL);
 	}
-	memBuffer = this->hidden->buffer;
+	SDL_memset(memBuffer1, 0, memX * memY * (bpp / 8));
+
+	if( flags & SDL_DOUBLEBUF )
+	{
+		memBuffer2 = SDL_malloc(memX * memY * (bpp / 8));
+		if ( ! memBuffer2 ) {
+			SDL_SetError("Couldn't allocate buffer for requested mode");
+			return(NULL);
+		}
+		SDL_memset(memBuffer2, 0, memX * memY * (bpp / 8));
+	}
+
+	memBuffer = memBuffer1;
 	openglInitialized = GL_State_Init;
-
-/* 	printf("Setting mode %dx%d\n", width, height); */
-
-	SDL_memset(this->hidden->buffer, 0, memX * memY * (bpp / 8));
 
 	/* Allocate the new pixel format for the screen */
 	if ( ! SDL_ReallocFormat(current, bpp, 0, 0, 0, 0) ) {
-		SDL_free(this->hidden->buffer);
-		this->hidden->buffer = NULL;
+		SDL_free(memBuffer);
+		memBuffer = NULL;
 		SDL_SetError("Couldn't allocate new pixel format for requested mode");
 		return(NULL);
 	}
 
 	/* Set up the new mode framebuffer */
-	current->flags = flags & SDL_FULLSCREEN;
-	this->hidden->w = current->w = width;
-	this->hidden->h = current->h = height;
+	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_DOUBLEBUF);
+	current->w = width;
+	current->h = height;
 	current->pitch = memX * (bpp / 8);
-	current->pixels = this->hidden->buffer;
+	current->pixels = memBuffer;
 	
 	/* We're done */
 	return(current);
+}
+
+/* Note:  If we are terminated, this could be called in the middle of
+   another SDL video routine -- notably UpdateRects.
+*/
+void ANDROID_VideoQuit(_THIS)
+{
+	openglInitialized = GL_State_Uninit;
+	while( openglInitialized != GL_State_Uninit2 )
+		SDL_Delay(50);
+
+	memX = 0;
+	memY = 0;
+	memBuffer = NULL;
+	SDL_free( memBuffer1 );
+	memBuffer1 = NULL;
+	if( memBuffer2 )
+		SDL_free( memBuffer2 );
+	memBuffer2 = NULL;
+	SDL_DestroyMutex( WaitForNativeRender );
+	WaitForNativeRender = NULL;
+	SDL_DestroyCond( WaitForNativeRender1 );
+	WaitForNativeRender1 = NULL;
+
+	int i;
+	
+	if (this->screen->pixels != NULL)
+	{
+		SDL_free(this->screen->pixels);
+		this->screen->pixels = NULL;
+	}
+	/* Free video mode lists */
+	for ( i=0; i<SDL_NUMMODES; ++i ) {
+		if ( SDL_modelist[i] != NULL ) {
+			SDL_free(SDL_modelist[i]);
+			SDL_modelist[i] = NULL;
+		}
+	}
+}
+
+void ANDROID_PumpEvents(_THIS)
+{
 }
 
 /* We don't actually allow hardware surfaces other than the main one */
@@ -280,54 +319,74 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
+
+	SDL_mutexP(WaitForNativeRender);
+	while( WaitForNativeRenderState != Render_State_Finished )
+	{
+		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 400 ) != 0 )
+		{
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame failed to render");
+			SDL_mutexV(WaitForNativeRender);
+			return;
+		}
+	}
+
+	WaitForNativeRenderState = Render_State_Started;
+
+	SDL_CondSignal(WaitForNativeRender1);
+
+	while( WaitForNativeRenderState != Render_State_Finished )
+	{
+		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 400 ) != 0 )
+		{
+			SDL_mutexV(WaitForNativeRender);
+			return;
+		};
+	}
+
+	SDL_mutexV(WaitForNativeRender);
+}
+
+static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
+{
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame is ready to render");
-	SDL_SemPost(WaitForNativeRender);
-	if( SDL_SemWaitTimeout( WaitForNativeRender1, 400 ) == 0 )
+	SDL_mutexP(WaitForNativeRender);
+	while( WaitForNativeRenderState != Render_State_Finished )
+	{
+		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 400 ) != 0 )
+		{
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame failed to render");
+			SDL_mutexV(WaitForNativeRender);
+			return(0);
+		}
+	}
+
+	WaitForNativeRenderState = Render_State_Started;
+
+	SDL_CondSignal(WaitForNativeRender1);
+
+	if( WaitForNativeRenderState != Render_State_Started )
+		SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 400 );
+
+	if( WaitForNativeRenderState != Render_State_Started )
 	{
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame rendering done");
+		if( memBuffer == memBuffer1 )
+			memBuffer = memBuffer2;
+		else
+			memBuffer = memBuffer1;
 	}
-}
+
+	surface->pixels = memBuffer;
+
+	SDL_mutexV(WaitForNativeRender);
+	
+	return(0);
+};
 
 int ANDROID_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors)
 {
 	return(1);
-}
-
-/* Note:  If we are terminated, this could be called in the middle of
-   another SDL video routine -- notably UpdateRects.
-*/
-void ANDROID_VideoQuit(_THIS)
-{
-	openglInitialized = GL_State_Uninit;
-	while( openglInitialized != GL_State_Uninit2 )
-		SDL_Delay(50);
-
-	memX = 0;
-	memY = 0;
-	memBuffer = NULL;
-	SDL_DestroySemaphore( WaitForNativeRender );
-	WaitForNativeRender = NULL;
-	SDL_DestroySemaphore( WaitForNativeRender1 );
-	WaitForNativeRender1 = NULL;
-
-	int i;
-	
-	if (this->screen->pixels != NULL)
-	{
-		SDL_free(this->screen->pixels);
-		this->screen->pixels = NULL;
-	}
-	/* Free video mode lists */
-	for ( i=0; i<SDL_NUMMODES; ++i ) {
-		if ( SDL_modelist[i] != NULL ) {
-			SDL_free(SDL_modelist[i]);
-			SDL_modelist[i] = NULL;
-		}
-	}
-}
-
-void ANDROID_PumpEvents(_THIS)
-{
 }
 
 /* JNI-C++ wrapper stuff */
@@ -445,8 +504,9 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz )
 	static float clearColor = 0.0f;
 	static int clearColorDir = 1;
 	int textX, textY;
+	void * memBufferTemp;
 
-	if( WaitForNativeRender && memBuffer && openglInitialized != GL_State_Uninit2 )
+	if( memBuffer && openglInitialized != GL_State_Uninit2 )
 	{
 		if( openglInitialized == GL_State_Init )
 		{
@@ -527,8 +587,8 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz )
 			texcoordsCrop[2] = memX;
 			texcoordsCrop[3] = -memY;
 			glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, texcoordsCrop);
-		
-			glFinish(); //glFlush();
+			
+			glFinish();
 			
 			SDL_free( textBuffer );
 		}
@@ -544,26 +604,40 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz )
 			return;
 		}
 
-		if( SDL_SemWaitTimeout( WaitForNativeRender, 400 ) == 0 )
+		if( WaitForNativeRender )
 		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Rendering frame");
+			SDL_mutexP(WaitForNativeRender);
+		
+			WaitForNativeRenderState = Render_State_Finished;
+			SDL_CondSignal(WaitForNativeRender1);
+		
+			while( WaitForNativeRenderState != Render_State_Started )
+			{
+				if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 400 ) != 0 )
+				{
+					//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame failed to render");
+					SDL_mutexV(WaitForNativeRender);
+					return;
+				}
+			}
+		
+			memBufferTemp = memBuffer;
+
+			WaitForNativeRenderState = Render_State_Processing;
+
+			SDL_CondSignal(WaitForNativeRender1);
+	
+			SDL_mutexV(WaitForNativeRender);
 		}
 		else
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame skipped");
-			SDL_Delay(100);
-		}
+			memBufferTemp = memBuffer;
 
-
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, memX, memY, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBufferTemp);
 
 		//glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		glDrawTexiOES(0, sWindowHeight-memY, 1, memX, memY); // GLES extension (should be faster)
+		//glFinish(); //glFlush();
 		
-		glFinish(); //glFlush();
-
-		SDL_SemPost(WaitForNativeRender1);
 	}
 	else
 	{

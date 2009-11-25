@@ -34,8 +34,6 @@
 /* Private display data */
 
 struct SDL_PrivateVideoData {
-    int w, h;
-    void *buffer;
 	SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 };
 
