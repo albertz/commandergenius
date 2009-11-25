@@ -195,6 +195,10 @@ ELSE(WIN32)
 		TARGET_LINK_LIBRARIES(commandergenius stlportstlg)
 	ENDIF (STLPORT)
 
+	IF (OPENGL)
+		TARGET_LINK_LIBRARIES(commandergenius GL)
+	ENDIF (OPENGL)
+
 	SET_TARGET_PROPERTIES(commandergenius PROPERTIES OUTPUT_NAME bin/commandergenius)
 
 ENDIF(WIN32)

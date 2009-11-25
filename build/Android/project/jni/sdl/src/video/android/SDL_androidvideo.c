@@ -79,11 +79,14 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 static int sWindowWidth  = 320;
 static int sWindowHeight = 480;
 static SDL_sem * WaitForNativeRender = NULL;
+static SDL_sem * WaitForNativeRender1 = NULL;
 // Pointer to in-memory video surface
 static int memX = 0;
 static int memY = 0;
 static void * memBuffer = NULL;
 static SDL_Thread * mainThread = NULL;
+static enum { GL_State_Init, GL_State_Ready, GL_State_Uninit, GL_State_Uninit2 } openglInitialized = GL_State_Uninit2;
+static GLuint texture = 0;
 
 static SDLKey keymap[KEYCODE_LAST+1];
 
@@ -183,6 +186,7 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[3] = NULL;
 
 	WaitForNativeRender = SDL_CreateSemaphore(0);
+	WaitForNativeRender1 = SDL_CreateSemaphore(0);
 	/* We're done! */
 	return(0);
 }
@@ -201,18 +205,37 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		SDL_free( this->hidden->buffer );
 	}
 
-	this->hidden->buffer = SDL_malloc(width * height * (bpp / 8));
+	memX = width;
+	memY = height;
+
+	/*
+	// Texture sizes should be 2^n
+	if( memX <= 256 )
+		memX = 256;
+	else if( memX <= 512 )
+		memX = 512;
+	else
+		memX = 1024;
+
+	if( memY <= 256 )
+		memY = 256;
+	else if( memY <= 512 )
+		memY = 512;
+	else
+		memY = 1024;
+	*/
+	
+	this->hidden->buffer = SDL_malloc(memX * memY * (bpp / 8));
 	if ( ! this->hidden->buffer ) {
 		SDL_SetError("Couldn't allocate buffer for requested mode");
 		return(NULL);
 	}
-	memX = width;
-	memY = height;
 	memBuffer = this->hidden->buffer;
+	openglInitialized = GL_State_Init;
 
 /* 	printf("Setting mode %dx%d\n", width, height); */
 
-	SDL_memset(this->hidden->buffer, 0, width * height * (bpp / 8));
+	SDL_memset(this->hidden->buffer, 0, memX * memY * (bpp / 8));
 
 	/* Allocate the new pixel format for the screen */
 	if ( ! SDL_ReallocFormat(current, bpp, 0, 0, 0, 0) ) {
@@ -226,7 +249,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	current->flags = flags & SDL_FULLSCREEN;
 	this->hidden->w = current->w = width;
 	this->hidden->h = current->h = height;
-	current->pitch = current->w * (bpp / 8);
+	current->pitch = memX * (bpp / 8);
 	current->pixels = this->hidden->buffer;
 	
 	/* We're done */
@@ -234,6 +257,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 }
 
 /* We don't actually allow hardware surfaces other than the main one */
+// TODO: use OpenGL textures here
 static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 {
 	return(-1);
@@ -256,12 +280,16 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
-	/* do nothing. */
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame is ready to render");
+	SDL_SemPost(WaitForNativeRender);
+	if( SDL_SemWaitTimeout( WaitForNativeRender1, 400 ) == 0 )
+	{
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame rendering done");
+	}
 }
 
 int ANDROID_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors)
 {
-	/* do nothing of note. */
 	return(1);
 }
 
@@ -270,9 +298,18 @@ int ANDROID_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors)
 */
 void ANDROID_VideoQuit(_THIS)
 {
+	openglInitialized = GL_State_Uninit;
+	while( openglInitialized != GL_State_Uninit2 )
+		SDL_Delay(50);
+
 	memX = 0;
 	memY = 0;
 	memBuffer = NULL;
+	SDL_DestroySemaphore( WaitForNativeRender );
+	WaitForNativeRender = NULL;
+	SDL_DestroySemaphore( WaitForNativeRender1 );
+	WaitForNativeRender1 = NULL;
+
 	int i;
 	
 	if (this->screen->pixels != NULL)
@@ -287,14 +324,10 @@ void ANDROID_VideoQuit(_THIS)
 			SDL_modelist[i] = NULL;
 		}
 	}
-	SDL_DestroySemaphore( WaitForNativeRender );
-	WaitForNativeRender = NULL;
 }
 
 void ANDROID_PumpEvents(_THIS)
 {
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame is ready to render");
-	SDL_SemPost(WaitForNativeRender);
 }
 
 /* JNI-C++ wrapper stuff */
@@ -303,7 +336,7 @@ extern int main( int argc, char ** argv );
 static int SDLCALL MainThreadWrapper(void * dummy)
 {
 	int argc = 1;
-	char * argv[] = { "demo" };
+	char * argv[] = { "sdl" };
 	return main( argc, argv );
 };
 
@@ -382,154 +415,158 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject  thiz, jin
 	SDL_PrivateKeyboard( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key, &keysym) );
 }
 
-gluPerspectivef(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar)
-{
-   GLfloat xmin, xmax, ymin, ymax;
-
-   ymax = zNear * tan(fovy * M_PI / 360.0f);
-   ymin = -ymax;
-   xmin = ymin * aspect;
-   xmax = ymax * aspect;
-   glFrustumf(xmin, xmax, ymin, ymax, zNear, zFar);
-};
-
 /* Call to render the next GL frame */
 extern void
 JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz )
 {
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "rendering frame...");
-	
-	static float bounceColor = 0.0f;
-	static float bounceDir = 1.0f;
-
-	static GLfloat vertexData [] = {
-	-0.5f, -0.5f,  0.5f,
-	 0.5f, -0.5f,  0.5f,
-	-0.5f,  0.5f,  0.5f,
-	 0.5f,  0.5f,  0.5f
-	};
-	static GLfloat textureData [] = {
-	 0.0f, 0.0f,
-	 1.0f, 0.0f,
-	 0.0f, 1.0f,
-	 1.0f, 1.0f,
-	};
-	
-	char tmp[512];
-	
-	GLuint texture[1];
-
-	/*
-	// Show that we're doing something (just flash the screen)
-	bounceColor += 0.005f * bounceDir;
-	if( bounceColor >= 1.0f )
-		bounceDir = -1.0f;
-	if( bounceColor <= 0.0f )
-		bounceDir = 1.0f;
-	//glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
-	glClearColor(bounceColor, bounceColor, bounceColor, 0.5f);
-
-	glClear(GL_COLOR_BUFFER_BIT); // Clear Screen Buffer (TODO: comment this out when whole thing start working)
-	*/
-
-	if( WaitForNativeRender && memBuffer )
+	// Set up an array of values to use as the sprite vertices.
+	static GLfloat vertices[] =
 	{
-		if( SDL_SemWaitTimeout( WaitForNativeRender, 200 ) == 0 )
+		0, 0,
+		1, 0,
+		0, 1,
+		1, 1,
+	};
+	
+	// Set up an array of values for the texture coordinates.
+	static GLfloat texcoords[] =
+	{
+		0, 0,
+		1, 0,
+		0, 1,
+		1, 1,
+	};
+	
+	static float clearColor = 0.0f;
+	static int clearColorDir = 1;
+	int textX, textY;
+
+	if( WaitForNativeRender && memBuffer && openglInitialized != GL_State_Uninit2 )
+	{
+		if( openglInitialized == GL_State_Init )
+		{
+			openglInitialized = GL_State_Ready;
+
+			// Texture sizes should be 2^n
+			textX = memX;
+			textY = memY;
+
+			if( textX <= 256 )
+				textX = 256;
+			else if( textX <= 512 )
+				textX = 512;
+			else
+				textX = 1024;
+
+			if( textY <= 256 )
+				textY = 256;
+			else if( textY <= 512 )
+				textY = 512;
+			else
+				textY = 1024;
+
+			glViewport(0, 0, textX, textY);
+
+			glClearColor(0,0,0,0);
+			// Set projection
+			glMatrixMode( GL_PROJECTION );
+			glLoadIdentity();
+			#if defined(GL_VERSION_ES_CM_1_0)
+				#define glOrtho glOrthof
+			#endif
+			glOrtho( 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f );
+
+			// Now Initialize modelview matrix
+			glMatrixMode( GL_MODELVIEW );
+			glLoadIdentity();
+			
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DITHER);
+			glDisable(GL_MULTISAMPLE);
+
+			glEnable(GL_TEXTURE_2D);
+			
+			glGenTextures(1, &texture);
+
+			glBindTexture(GL_TEXTURE_2D, texture);
+	
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+		
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+			void * textBuffer = SDL_malloc( textX*textY*2 );
+			SDL_memset( textBuffer, 0, textX*textY*2 );
+			
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textX, textY, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, textBuffer);
+
+			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+			glVertexPointer(2, GL_FLOAT, 0, vertices);
+			glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
+
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		
+			glFinish(); //glFlush();
+			
+			SDL_free( textBuffer );
+		}
+		else if( openglInitialized == GL_State_Uninit )
+		{
+			openglInitialized = GL_State_Uninit2;
+
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			glDisableClientState(GL_VERTEX_ARRAY);
+
+			glDeleteTextures(1, &texture);
+
+			return;
+		}
+
+		if( SDL_SemWaitTimeout( WaitForNativeRender, 400 ) == 0 )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Rendering frame");
 		}
 		else
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame skipped");
+			SDL_Delay(100);
 		}
 
-		// ----- Fail code starts here -----
 
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DITHER);
-		glDisable(GL_MULTISAMPLE);
-
-		glEnable(GL_TEXTURE_2D);
-
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glGenTextures() error");
-
-		glGenTextures(1, texture);
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glGenTextures() error");
-
-		glBindTexture(GL_TEXTURE_2D, texture[0]);
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glBindTexture() error");
-
-		/*
-		glActiveTexture(texture[0]);
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glActiveTexture() error");
-
-		glClientActiveTexture(texture[0]);
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glClientActiveTexture() error");
-		*/
-
-		//glTexImage2D(GL_TEXTURE_2D, 0, 3, memX, memY, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
-
-		int errorNum = glGetError();
-		if( errorNum != GL_NO_ERROR )
-		{
-			sprintf(tmp, "glTexImage2D() error: %i", errorNum);
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", tmp);
-		}
-
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glTexParameteri() error");
-
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glEnableClientState() error");
-
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluPerspectivef( 90.0f, (float)memX / (float)memY, 0.1f, 100.0f);
-	
-    	glMatrixMode( GL_MODELVIEW );
-    	glLoadIdentity();
-		glTranslatef( 0.0f, 0.0f, -1.0f );
-
-		glVertexPointer(3, GL_FLOAT, 0, vertexData);
-
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glVertexPointer() error");
-
-		glTexCoordPointer(2, GL_FLOAT, 0, textureData);
-
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glTexCoordPointer() error");
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, memX, memY, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		
+		glFinish(); //glFlush();
 
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glDrawArrays() error");
-
-		//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		//glDisableClientState(GL_VERTEX_ARRAY);
-
-		glDeleteTextures(1, texture);
-		if( glGetError() != GL_NO_ERROR )
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "glDeleteTextures() error");
-
-		// ----- Fail code ends here - it just doesn't output anything -----
-
+		SDL_SemPost(WaitForNativeRender1);
 	}
-	
+	else
+	{
+		/*
+		// Flash the screen
+		if( clearColor >= 1.0f )
+			clearColorDir = -1;
+		else if( clearColor <= 0.0f )
+			clearColorDir = 1;
+
+		clearColor += (float)clearColorDir * 0.01f;
+		glClearColor(clearColor,clearColor,clearColor,0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		SDL_Delay(50);
+		*/
+	}
 }
 
 void ANDROID_InitOSKeymap(_THIS)
@@ -540,12 +577,16 @@ void ANDROID_InitOSKeymap(_THIS)
   for (i=0; i<SDL_arraysize(keymap); ++i)
     keymap[i] = SDLK_UNKNOWN;
 
-  keymap[KEYCODE_CALL] = SDLK_RCTRL;
-  keymap[KEYCODE_ENDCALL] = SDLK_RSHIFT;
-
   keymap[KEYCODE_UNKNOWN] = SDLK_UNKNOWN;
-  keymap[KEYCODE_HOME] = SDLK_HOME;
-  keymap[KEYCODE_BACK] = SDLK_ESCAPE;
+
+  keymap[KEYCODE_MENU] = SDLK_ESCAPE;
+
+  keymap[KEYCODE_CALL] = SDLK_F1;
+  keymap[KEYCODE_ENDCALL] = SDLK_F2;
+  keymap[KEYCODE_CAMERA] = SDLK_F3;
+  keymap[KEYCODE_POWER] = SDLK_F4;
+
+  keymap[KEYCODE_BACK] = SDLK_ESCAPE; // Note: generates SDL_QUIT
   keymap[KEYCODE_0] = SDLK_0;
   keymap[KEYCODE_1] = SDLK_1;
   keymap[KEYCODE_2] = SDLK_2;
@@ -558,13 +599,22 @@ void ANDROID_InitOSKeymap(_THIS)
   keymap[KEYCODE_9] = SDLK_9;
   keymap[KEYCODE_STAR] = SDLK_ASTERISK;
   keymap[KEYCODE_POUND] = SDLK_DOLLAR;
+
   keymap[KEYCODE_DPAD_UP] = SDLK_UP;
   keymap[KEYCODE_DPAD_DOWN] = SDLK_DOWN;
   keymap[KEYCODE_DPAD_LEFT] = SDLK_LEFT;
   keymap[KEYCODE_DPAD_RIGHT] = SDLK_RIGHT;
   keymap[KEYCODE_DPAD_CENTER] = SDLK_RETURN;
+
+  keymap[KEYCODE_SOFT_LEFT] = SDLK_KP4;
+  keymap[KEYCODE_SOFT_RIGHT] = SDLK_KP6;
+  keymap[KEYCODE_ENTER] = SDLK_KP_ENTER;
+
   keymap[KEYCODE_VOLUME_UP] = SDLK_PAGEUP;
   keymap[KEYCODE_VOLUME_DOWN] = SDLK_PAGEDOWN;
+  keymap[KEYCODE_SEARCH] = SDLK_END;
+  keymap[KEYCODE_HOME] = SDLK_HOME;
+
   keymap[KEYCODE_CLEAR] = SDLK_CLEAR;
   keymap[KEYCODE_A] = SDLK_a;
   keymap[KEYCODE_B] = SDLK_b;
@@ -596,7 +646,6 @@ void ANDROID_InitOSKeymap(_THIS)
   keymap[KEYCODE_PERIOD] = SDLK_PERIOD;
   keymap[KEYCODE_TAB] = SDLK_TAB;
   keymap[KEYCODE_SPACE] = SDLK_SPACE;
-  keymap[KEYCODE_ENTER] = SDLK_RETURN;
   keymap[KEYCODE_DEL] = SDLK_DELETE;
   keymap[KEYCODE_GRAVE] = SDLK_BACKQUOTE;
   keymap[KEYCODE_MINUS] = SDLK_MINUS;
@@ -609,24 +658,15 @@ void ANDROID_InitOSKeymap(_THIS)
   keymap[KEYCODE_SLASH] = SDLK_SLASH;
   keymap[KEYCODE_AT] = SDLK_AT;
 
-  keymap[KEYCODE_POWER] = SDLK_POWER;
-
   keymap[KEYCODE_PLUS] = SDLK_PLUS;
-
-  keymap[KEYCODE_MENU] = SDLK_MENU;
 
   /*
 
   keymap[KEYCODE_SYM] = SDLK_SYM;
   keymap[KEYCODE_NUM] = SDLK_NUM;
 
-  keymap[KEYCODE_CAMERA] = SDLK_CAMERA;
-
   keymap[KEYCODE_SOFT_LEFT] = SDLK_SOFT_LEFT;
   keymap[KEYCODE_SOFT_RIGHT] = SDLK_SOFT_RIGHT;
-
-  keymap[KEYCODE_CALL] = SDLK_CALL;
-  keymap[KEYCODE_ENDCALL] = SDLK_ENDCALL;
 
   keymap[KEYCODE_ALT_LEFT] = SDLK_ALT_LEFT;
   keymap[KEYCODE_ALT_RIGHT] = SDLK_ALT_RIGHT;
@@ -638,7 +678,6 @@ void ANDROID_InitOSKeymap(_THIS)
   keymap[KEYCODE_HEADSETHOOK] = SDLK_HEADSETHOOK;
   keymap[KEYCODE_FOCUS] = SDLK_FOCUS;
   keymap[KEYCODE_NOTIFICATION] = SDLK_NOTIFICATION;
-  keymap[KEYCODE_SEARCH] = SDLK_SEARCH;
   keymap[KEYCODE_MEDIA_PLAY_PAUSE=] = SDLK_MEDIA_PLAY_PAUSE=;
   keymap[KEYCODE_MEDIA_STOP] = SDLK_MEDIA_STOP;
   keymap[KEYCODE_MEDIA_NEXT] = SDLK_MEDIA_NEXT;
@@ -649,62 +688,4 @@ void ANDROID_InitOSKeymap(_THIS)
   */
 
 }
-
-
-void CrossProd(float x1, float y1, float z1, float x2, float y2, float z2, float res[3])
-{
-res[0] = y1*z2 - y2*z1;
-res[1] = x2*z1 - x1*z2;
-res[2] = x1*y2 - x2*y1;
-} 
-
-// Stolen from http://www.khronos.org/message_boards/viewtopic.php?t=541
-void gluLookAtf(float eyeX, float eyeY, float eyeZ, float lookAtX, float lookAtY, float lookAtZ, float upX, float upY, float upZ)
-{
-// i am not using here proper implementation for vectors.
-// if you want, you can replace the arrays with your own
-// vector types
-float f[3];
-
-// calculating the viewing vector
-f[0] = lookAtX - eyeX;
-f[1] = lookAtY - eyeY;
-f[2] = lookAtZ - eyeZ;
-
-float fMag = sqrtf(f[0]*f[0] + f[1]*f[1] + f[2]*f[2]);
-float upMag = sqrtf(upX*upX + upY*upY + upZ*upZ);
-
-// normalizing the viewing vector
-if( fMag != 0)
-{
-f[0] = f[0]/fMag;
-f[1] = f[1]/fMag;
-f[2] = f[2]/fMag;
-}
-
-// normalising the up vector. no need for this here if you have your
-// up vector already normalised, which is mostly the case.
-if( upMag != 0 )
-{
-upX = upX/upMag;
-upY = upY/upMag;
-upZ = upZ/upMag;
-}
-
-float s[3], u[3];
-
-CrossProd(f[0], f[1], f[2], upX, upY, upZ, s);
-CrossProd(s[0], s[1], s[2], f[0], f[1], f[2], u);
-
-float M[]=
-{
-s[0], u[0], -f[0], 0,
-s[1], u[1], -f[1], 0,
-s[2], u[2], -f[2], 0,
-0, 0, 0, 1
-};
-
-glMultMatrixf(M);
-glTranslatef (-eyeX, -eyeY, -eyeZ);
-};
 

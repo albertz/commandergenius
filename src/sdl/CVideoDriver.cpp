@@ -314,7 +314,7 @@ bool CVideoDriver::applyMode(void)
 
 	m_Resolution = *m_Resolution_pos;
 
-#ifndef WIZ
+#if ! defined(WIZ) && ! defined(ANDROID)
 	// Support for doublebuffering
 	Mode |= SDL_DOUBLEBUF;
 #endif

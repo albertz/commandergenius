@@ -14,6 +14,8 @@
 
 #include <SDL.h>
 
+#ifdef USE_OPENGL
+
 #if defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR)
 #include <OpenGLES/ES1/gl.h>
 #include <OpenGLES/ES1/glext.h>
@@ -47,5 +49,7 @@ private:
 	GLuint	m_texBG, m_texFG;
 	
 };
+
+#endif
 
 #endif

@@ -9,6 +9,8 @@
 #include "../CLogFile.h"
 #include "CInput.h" // for CInput::renderOverlay
 
+#ifdef USE_OPENGL
+
 #define GAME_STD_WIDTH            320
 #define GAME_STD_HEIGHT           200
 
@@ -229,3 +231,5 @@ void COpenGL::render(bool withFG)
 	
 	SDL_GL_SwapBuffers();
 }
+
+#endif
