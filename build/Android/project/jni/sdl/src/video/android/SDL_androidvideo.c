@@ -437,6 +437,11 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz )
 		1, 1,
 	};
 	
+	static GLint texcoordsCrop[] =
+	{
+		0, 0, 0, 0,
+	};
+	
 	static float clearColor = 0.0f;
 	static int clearColorDir = 1;
 	int textX, textY;
@@ -515,6 +520,13 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz )
 			glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
 
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+			
+			// GLES extension (should be faster)
+			texcoordsCrop[0] = 0;
+			texcoordsCrop[1] = memY;
+			texcoordsCrop[2] = memX;
+			texcoordsCrop[3] = -memY;
+			glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, texcoordsCrop);
 		
 			glFinish(); //glFlush();
 			
@@ -546,7 +558,8 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz )
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
 		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, memX, memY, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
 
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		//glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glDrawTexiOES(0, sWindowHeight-memY, 1, memX, memY); // GLES extension (should be faster)
 		
 		glFinish(); //glFlush();
 
