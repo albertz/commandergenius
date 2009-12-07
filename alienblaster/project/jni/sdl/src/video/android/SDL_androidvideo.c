@@ -251,6 +251,8 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	current->pitch = memX * (bpp / 8);
 	current->pixels = memBuffer;
 	
+	/* Wait 'till we can draw */
+	ANDROID_FlipHWSurface(this, current);
 	/* We're done */
 	return(current);
 }
@@ -321,32 +323,7 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
-
-	SDL_mutexP(WaitForNativeRender);
-	while( WaitForNativeRenderState != Render_State_Finished )
-	{
-		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 400 ) != 0 )
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame failed to render");
-			SDL_mutexV(WaitForNativeRender);
-			return;
-		}
-	}
-
-	WaitForNativeRenderState = Render_State_Started;
-
-	SDL_CondSignal(WaitForNativeRender1);
-
-	while( WaitForNativeRenderState != Render_State_Finished )
-	{
-		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 400 ) != 0 )
-		{
-			SDL_mutexV(WaitForNativeRender);
-			return;
-		};
-	}
-
-	SDL_mutexV(WaitForNativeRender);
+	ANDROID_FlipHWSurface(this, SDL_VideoSurface);
 }
 
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
@@ -355,7 +332,7 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	SDL_mutexP(WaitForNativeRender);
 	while( WaitForNativeRenderState != Render_State_Finished )
 	{
-		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 400 ) != 0 )
+		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 1000 ) != 0 )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame failed to render");
 			SDL_mutexV(WaitForNativeRender);
@@ -366,20 +343,35 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	WaitForNativeRenderState = Render_State_Started;
 
 	SDL_CondSignal(WaitForNativeRender1);
-
-	if( WaitForNativeRenderState != Render_State_Started )
-		SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 400 );
-
-	if( WaitForNativeRenderState != Render_State_Started )
+	
+	if( surface->flags & SDL_DOUBLEBUF )
 	{
-		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame rendering done");
-		if( memBuffer == memBuffer1 )
-			memBuffer = memBuffer2;
-		else
-			memBuffer = memBuffer1;
-	}
 
-	surface->pixels = memBuffer;
+		if( WaitForNativeRenderState != Render_State_Started )
+			SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 1000 );
+
+		if( WaitForNativeRenderState != Render_State_Started )
+		{
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame rendering done");
+			if( memBuffer == memBuffer1 )
+				memBuffer = memBuffer2;
+			else
+				memBuffer = memBuffer1;
+		}
+
+		surface->pixels = memBuffer;
+	}
+	else
+	{
+		while( WaitForNativeRenderState != Render_State_Finished )
+		{
+			if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 1000 ) != 0 )
+			{
+				SDL_mutexV(WaitForNativeRender);
+				return(0);
+			};
+		}
+	}
 
 	SDL_mutexV(WaitForNativeRender);
 
@@ -481,7 +473,7 @@ static int processAndroidTrackballKeyDelays( int key, int action )
 	#else
 	// Send Directional Pad Up events with a delay, so app wil lthink we're holding the key a bit
 	static const int KeysMapping[4] = {KEYCODE_DPAD_UP, KEYCODE_DPAD_DOWN, KEYCODE_DPAD_LEFT, KEYCODE_DPAD_RIGHT};
-	int idx;
+	int idx, idx2;
 	SDL_keysym keysym;
 	
 	if( key < 0 )
@@ -513,25 +505,26 @@ static int processAndroidTrackballKeyDelays( int key, int action )
 			if( action && AndroidTrackballKeyDelays[idx] == 0 )
 			{
 				// User pressed key for the first time
+				idx2 = (idx + 2) % 4; // Opposite key for current key - if it's still pressing, release it
+				if( AndroidTrackballKeyDelays[idx2] > 0 )
+				{
+					AndroidTrackballKeyDelays[idx2] = 0;
+					SDL_PrivateKeyboard( SDL_RELEASED, TranslateKey(KeysMapping[idx2], &keysym) );
+				}
 				SDL_PrivateKeyboard( SDL_PRESSED, TranslateKey(key, &keysym) );
 			}
 			else if( !action && AndroidTrackballKeyDelays[idx] == 0 )
 			{
-				// User released key - make a delay, do not send event
+				// User released key - make a delay, do not send release event
 				AndroidTrackballKeyDelays[idx] = SDL_TRACKBALL_KEYUP_DELAY;
-			}
-			/*
-			else if( !action && AndroidTrackballKeyDelays[idx] > 0 )
-			{
-				// User released key after we fired delay (should not happen)
-				SDL_PrivateKeyboard( SDL_RELEASED, TranslateKey(key, &keysym) );
-				delays[idx] = SDL_TRACKBALL_KEYUP_DELAY;
 			}
 			else if( action && AndroidTrackballKeyDelays[idx] > 0 )
 			{
-				// User pressed key another time - do nothing
+				// User pressed key another time - add some more time for key to be pressed
+				AndroidTrackballKeyDelays[idx] += SDL_TRACKBALL_KEYUP_DELAY;
+				if( AndroidTrackballKeyDelays[idx] < SDL_TRACKBALL_KEYUP_DELAY * 4 )
+					AndroidTrackballKeyDelays[idx] = SDL_TRACKBALL_KEYUP_DELAY * 4;
 			}
-			*/
 			return 1;
 		}
 	}
@@ -688,7 +681,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz )
 		
 			while( WaitForNativeRenderState != Render_State_Started )
 			{
-				if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 400 ) != 0 )
+				if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 1000 ) != 0 )
 				{
 					//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame failed to render");
 					SDL_mutexV(WaitForNativeRender);
