@@ -95,6 +95,8 @@ static GLuint texture = 0;
 
 static SDLKey keymap[KEYCODE_LAST+1];
 
+static int processAndroidTrackballKeyDelays( int key, int action );
+
 /* ANDROID driver bootstrap functions */
 
 static int ANDROID_Available(void)
@@ -380,6 +382,8 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	surface->pixels = memBuffer;
 
 	SDL_mutexV(WaitForNativeRender);
+
+	processAndroidTrackballKeyDelays( -1, 0 );
 	
 	return(0);
 };
@@ -467,12 +471,82 @@ static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
 	return(keysym);
 }
 
+static int AndroidTrackballKeyDelays[4] = {0,0,0,0};
+
+// Key = -1 if we want to send KeyUp events from main loop
+static int processAndroidTrackballKeyDelays( int key, int action )
+{
+	#if ! defined(SDL_TRACKBALL_KEYUP_DELAY) || (SDL_TRACKBALL_KEYUP_DELAY == 0)
+	return 0;
+	#else
+	// Send Directional Pad Up events with a delay, so app wil lthink we're holding the key a bit
+	static const int KeysMapping[4] = {KEYCODE_DPAD_UP, KEYCODE_DPAD_DOWN, KEYCODE_DPAD_LEFT, KEYCODE_DPAD_RIGHT};
+	int idx;
+	SDL_keysym keysym;
+	
+	if( key < 0 )
+	{
+		for( idx = 0; idx < 4; idx ++ )
+		{
+			if( AndroidTrackballKeyDelays[idx] > 0 )
+			{
+				AndroidTrackballKeyDelays[idx] --;
+				if( AndroidTrackballKeyDelays[idx] == 0 )
+					SDL_PrivateKeyboard( SDL_RELEASED, TranslateKey(KeysMapping[idx], &keysym) );
+			}
+		}
+	}
+	else
+	{
+		idx = -1;
+		// Too lazy to do switch or function
+		if( key == KEYCODE_DPAD_UP )
+			idx = 0;
+		else if( key == KEYCODE_DPAD_DOWN )
+			idx = 1;
+		else if( key == KEYCODE_DPAD_LEFT )
+			idx = 2;
+		else if( key == KEYCODE_DPAD_RIGHT )
+			idx = 3;
+		if( idx >= 0 )
+		{
+			if( action && AndroidTrackballKeyDelays[idx] == 0 )
+			{
+				// User pressed key for the first time
+				SDL_PrivateKeyboard( SDL_PRESSED, TranslateKey(key, &keysym) );
+			}
+			else if( !action && AndroidTrackballKeyDelays[idx] == 0 )
+			{
+				// User released key - make a delay, do not send event
+				AndroidTrackballKeyDelays[idx] = SDL_TRACKBALL_KEYUP_DELAY;
+			}
+			/*
+			else if( !action && AndroidTrackballKeyDelays[idx] > 0 )
+			{
+				// User released key after we fired delay (should not happen)
+				SDL_PrivateKeyboard( SDL_RELEASED, TranslateKey(key, &keysym) );
+				delays[idx] = SDL_TRACKBALL_KEYUP_DELAY;
+			}
+			else if( action && AndroidTrackballKeyDelays[idx] > 0 )
+			{
+				// User pressed key another time - do nothing
+			}
+			*/
+			return 1;
+		}
+	}
+	return 0;
+	
+	#endif
+}
+
 void
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject  thiz, jint key, jint action )
 {
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "key event %i %s", key, action ? "down" : "up");
 	SDL_keysym keysym;
-	SDL_PrivateKeyboard( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key, &keysym) );
+	if( ! processAndroidTrackballKeyDelays(key, action) )
+		SDL_PrivateKeyboard( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key, &keysym) );
 }
 
 /* Call to render the next GL frame */

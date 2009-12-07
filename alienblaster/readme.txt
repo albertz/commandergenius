@@ -1,3 +1,6 @@
+This is Alien Blaster game ported to Google Android.
+I did not change anything in Alien Blaster sources, except for SCREEN_WIDTH,
+SCREEN_HEIGHT and BIT_DEPTH constants in global.h.
 
 This should be compiled with Android 1.6 SDK and NDK - google for them and install them as described in their docs.
 You'll need to install Eclipse or Ant too
@@ -16,9 +19,21 @@ That will create file project/bin/DemoActivity-debug.apk - use "adb install" to 
 
 Alien Blaster data can be downloaded from http://www.schwardtnet.de/alienblaster/ -
 download alienblaster-1.1.0.tgz, unpack it and execute
-	adb push alienblaster /sdcard/alienblaster
+	adb shell
+	<in adb shell>:
+		su
+		mkdir /data/data/de.schwardtnet.alienblaster/files
+		exit
+	adb push alienblaster /data/data/de.schwardtnet.alienblaster/files
 Then you can test it by launching Alien Blaster icon from Android applications menu.
-It's designed for 640x480, but with bit of luck you can redefine your keys and play the game a bit.
+It's designed for 640x480, but with bit of luck you can play the game a bit.
+Note: You should play it with vertical screen orientation (keyboard is closed)
+Fire key is Call key, redefine Choose Weapon to Enter key through (trackball click)
+Other keys like Home, Back and End Call will force application quit, and because
+the app itself does not handle SDL_QUIT event correctly (asks for confirmation),
+it will stay in memory until you reboot device. The same will happen if the phone 
+goes to sleep, so hit keyboard often plz.
+To exit correctly press Menu key - it's redirected to Escape.
 
 When porting you own app, replace "alienblaster" and "de.schwardtnet.alienblaster" with
 the name of your application and your reversed webpage address everywhere:
@@ -29,7 +44,9 @@ the name of your application and your reversed webpage address everywhere:
 	project/res/values/strings.xml:3
 	(that's all, maybe I forgot something)
 
-Make directory project/jni/<yourapp>, copy there file project/jni/alienblaster/Android.mk and edit it
+Make directory project/jni/<yourapp>, copy there file project/jni/alienblaster/Android.mk and edit it -
+rename all "alienblaster" strings to your app name, add subdirs of your app under "CG_SUBDIRS := src"
+and change "LOCAL_CPP_EXTENSION := .cc" to an extension your C++ files are using
 Then repeat steps:
 	make APP=<yourapp> V=1
 	ant debug
@@ -43,4 +60,3 @@ If you'll add new libs add them to project/jni/, copy Android.mk from existing l
 add libname to Application.mk and project/jni/<yourapp>/Android.mk
 
 Note that there's still no sound in SDL, only video and keyboard/mouse
-
