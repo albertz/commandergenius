@@ -53,11 +53,19 @@ import android.view.KeyEvent;
 import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.media.AudioFormat;
+import android.os.PowerManager;
+import android.os.Vibrator;
+
+// TODO: export vibrator to SDL - interface is available in SDL 1.3
+
+class Globals {
+	public static String ApplicationName = "alienblaster";
+}
 
 class LoadLibrary {
     public LoadLibrary() {}
     static {
-        System.loadLibrary("alienblaster");
+        System.loadLibrary(Globals.ApplicationName);
     }
 }
 
@@ -96,7 +104,9 @@ class DemoGLSurfaceView extends GLSurfaceView {
     }
 
     @Override
-    public boolean onTouchEvent(final MotionEvent event) {
+    public boolean onTouchEvent(final MotionEvent event) 
+    {
+        // TODO: add multitouch support (added in Android 2.0 SDK)
         int action = -1;
         if( event.getAction() == MotionEvent.ACTION_DOWN )
         	action = 0;
@@ -200,16 +210,22 @@ public class DemoActivity extends Activity {
         mGLView.setFocusableInTouchMode(true);
         mGLView.setFocusable(true);
         mGLView.requestFocus();
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, Globals.ApplicationName);
+        wakeLock.acquire();
     }
 
     @Override
     protected void onPause() {
+        // TODO: if application pauses it's screen is messed up
+        wakeLock.release();
         super.onPause();
         mGLView.onPause();
     }
 
     @Override
     protected void onResume() {
+        wakeLock.acquire();
         super.onResume();
         mGLView.onResume();
     }
@@ -217,6 +233,7 @@ public class DemoActivity extends Activity {
     @Override
     protected void onStop() 
     {
+        wakeLock.release();
         mAudioThread.interrupt();
         try {
             mAudioThread.join();
@@ -242,4 +259,5 @@ public class DemoActivity extends Activity {
     private DemoGLSurfaceView mGLView;
     private LoadLibrary mLoadLibraryStub;
     private AudioThread mAudioThread;
+    private PowerManager.WakeLock wakeLock;
 }
