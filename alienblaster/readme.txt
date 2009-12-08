@@ -65,4 +65,4 @@ puts it into given folder before executing main code.
 If you'll add new libs add them to project/jni/, copy Android.mk from existing lib, and
 add libname to Application.mk and project/jni/<yourapp>/Android.mk
 
-Note that there's still no sound in SDL, only video and keyboard/mouse
+Audio formats currently supported are AUDIO_S8 and AUDIO_S16 (signed 8-bit and 16-bit PCM)
