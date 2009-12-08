@@ -29,16 +29,6 @@
 /* Hidden "this" pointer for the video functions */
 #define _THIS	SDL_VideoDevice *this
 
-#define SDL_NUMMODES 3
-
-/* Private display data */
-
-struct SDL_PrivateVideoData {
-	SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
-};
-
-#define SDL_modelist		(this->hidden->SDL_modelist)
-
 extern void ANDROID_InitOSKeymap(_THIS);
 extern void ANDROID_PumpEvents(_THIS);
 

@@ -50,6 +50,9 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.KeyEvent;
+import android.media.AudioTrack;
+import android.media.AudioManager;
+import android.media.AudioFormat;
 
 class LoadLibrary {
     public LoadLibrary() {}
@@ -81,6 +84,7 @@ class DemoRenderer implements GLSurfaceView.Renderer {
     private static native void nativeResize(int w, int h);
     private static native void nativeRender();
     private static native void nativeDone();
+
 }
 
 class DemoGLSurfaceView extends GLSurfaceView {
@@ -105,23 +109,7 @@ class DemoGLSurfaceView extends GLSurfaceView {
         }
         return true;
     }
-	
-	@Override
-	public boolean onKeyDown(int keyCode, final KeyEvent event) {
-         if(keyCode == KeyEvent.KEYCODE_BACK) {
-            mParent.finish();
-         } else {
-           nativeKey( keyCode, 1 );
-         }
-         return true;
-     }
-	
-	@Override
-	public boolean onKeyUp(int keyCode, final KeyEvent event) {
-         nativeKey( keyCode, 0 );
-         return true;
-     }
-     
+
      public void exitApp() {
          mRenderer.exitApp();
      };
@@ -129,8 +117,74 @@ class DemoGLSurfaceView extends GLSurfaceView {
     DemoRenderer mRenderer;
     Activity mParent;
 
-    private static native void nativeMouse( int x, int y, int action );
-    private static native void nativeKey( int keyCode, int down );
+    public static native void nativeMouse( int x, int y, int action );
+    public static native void nativeKey( int keyCode, int down );
+}
+
+class AudioThread extends Thread {
+
+	private Activity mParent;
+	private AudioTrack mAudio;
+	private byte[] mAudioBuffer;
+
+	public AudioThread(Activity parent)
+	{
+		mParent = parent;
+		mAudio = null;
+		mAudioBuffer = null;
+	}
+	
+	@Override
+	public void run() 
+	{
+		while( !isInterrupted() )
+		{
+			if( mAudio == null )
+			{
+				int[] initParams = nativeAudioInit();
+				if( initParams == null )
+				{
+					try {
+						sleep(200);
+					} catch( java.lang.InterruptedException e ) { };
+				}
+				else
+				{
+					int rate = initParams[0];
+					int channels = initParams[1];
+					channels = ( channels == 1 ) ? AudioFormat.CHANNEL_CONFIGURATION_MONO : 
+													AudioFormat.CHANNEL_CONFIGURATION_STEREO;
+					int encoding = initParams[2];
+					encoding = ( encoding == 1 ) ? AudioFormat.ENCODING_PCM_16BIT :
+													AudioFormat.ENCODING_PCM_8BIT;
+					int bufSize = AudioTrack.getMinBufferSize( rate, channels, encoding);
+					if( initParams[3] > bufSize )
+						bufSize = initParams[3];
+					mAudioBuffer = new byte[bufSize];
+					mAudio = new AudioTrack(AudioManager.STREAM_MUSIC, 
+												rate,
+												channels,
+												encoding,
+												bufSize,
+												AudioTrack.MODE_STREAM );
+					mAudio.play();
+				}
+			}
+			else
+			{
+				int len = nativeAudioBuffer( mAudioBuffer );
+				if( len > 0 )
+					mAudio.write( mAudioBuffer, 0, len );
+				if( len < 0 )
+					break;
+			}
+		}
+		if( mAudio != null )
+			mAudio.stop();
+	}
+	
+	private static native int[] nativeAudioInit();
+	private static native int nativeAudioBuffer( byte[] data );
 }
 
 public class DemoActivity extends Activity {
@@ -138,6 +192,8 @@ public class DemoActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mLoadLibraryStub = new LoadLibrary();
+        mAudioThread = new AudioThread(this);
+        mAudioThread.start();
         mGLView = new DemoGLSurfaceView(this);
         setContentView(mGLView);
         // Receive keyboard events
@@ -159,12 +215,31 @@ public class DemoActivity extends Activity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onStop() 
+    {
+        mAudioThread.interrupt();
+        try {
+            mAudioThread.join();
+        } catch( java.lang.InterruptedException e ) { };
         mGLView.exitApp();
+        super.onStop();
         finish();
     }
 
+	@Override
+	public boolean onKeyDown(int keyCode, final KeyEvent event) {
+		// Overrides Back key to use in our app
+         mGLView.nativeKey( keyCode, 1 );
+         return true;
+     }
+	
+	@Override
+	public boolean onKeyUp(int keyCode, final KeyEvent event) {
+         mGLView.nativeKey( keyCode, 0 );
+         return true;
+     }
+
     private DemoGLSurfaceView mGLView;
     private LoadLibrary mLoadLibraryStub;
+    private AudioThread mAudioThread;
 }

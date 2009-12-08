@@ -1,6 +1,6 @@
 This is Alien Blaster game ported to Google Android.
 I did not change anything in Alien Blaster sources, except for SCREEN_WIDTH,
-SCREEN_HEIGHT and BIT_DEPTH constants in global.h.
+SCREEN_HEIGHT and BIT_DEPTH constants in global.h, to support 320x430x16bpp video mode.
 
 This should be compiled with Android 1.6 SDK and NDK - google for them and install them as described in their docs.
 You'll need to install Eclipse or Ant too
@@ -26,17 +26,23 @@ download alienblaster-1.1.0.tgz, unpack it and execute
 		exit
 	adb push alienblaster /data/data/de.schwardtnet.alienblaster/files
 Then you can test it by launching Alien Blaster icon from Android applications menu.
-It's designed for 640x480, but with bit of luck you can play the game a bit.
+It's designed for 640x480, and GUI elements are drawn out of place, but you can play the game.
 Note: You should play it with vertical screen orientation (keyboard is closed)
-Fire key is Call key, redefine Choose Weapon to Enter key through (trackball click)
+Fire key is Call key ( = left Ctrl for SDL ), Change weapon is Menu key ( = left Alt for SDL )
+Note that you may use Volume up/down and Camera keys as game inputs -
+you'll have to redefine them in game keyconfig menu.
 Other keys like Home, Back and End Call will force application quit, and because
 the app itself does not handle SDL_QUIT event correctly (asks for confirmation),
 it will stay in memory until you reboot device. The same will happen if the phone 
-goes to sleep, so hit keyboard often plz.
+goes to sleep, so hit keyboard often please.
 To exit correctly press Menu key - it's redirected to Escape.
 
-When porting you own app, replace "alienblaster" and "de.schwardtnet.alienblaster" with
-the name of your application and your reversed webpage address everywhere:
+When porting you own app, first of all ensure that your application supports
+one of 320x200, 320x240 or 320x430 display resolutions and 16 bits per pixel
+(320x430 is resolution for HTC devices, if other vendors will produce Android phones it may differ).
+
+Replace all strings "alienblaster" and "de.schwardtnet.alienblaster" with
+the name of your application and your reversed webpage address (or any unique string):
 	Application.mk:2
 	project/AndroidManifest.xml:3
 	project/src/DemoActivity.java:42 and 57

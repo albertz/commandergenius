@@ -26,7 +26,7 @@ SDL_SRCS := \
 	src/thread/*.c \
 	src/timer/*.c \
 	src/video/*.c \
-	src/audio/dummy/*.c \
+	src/audio/android/*.c \
 	src/video/android/*.c \
 	src/joystick/dummy/*.c \
 	src/cdrom/dummy/*.c \

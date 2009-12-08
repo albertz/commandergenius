@@ -19,35 +19,20 @@
     Sam Lantinga
     slouken@libsdl.org
 */
+#include "SDL_config.h"
 
-#ifndef _SDL_config_minimal_h
-#define _SDL_config_minimal_h
+#ifndef _SDL_androidaudio_h
+#define _SDL_androidaudio_h
 
-#include "SDL_platform.h"
+#include "../SDL_sysaudio.h"
 
-/* This is the minimal configuration that can be used to build SDL */
+/* Hidden "this" pointer for the video functions */
+#define _THIS	SDL_AudioDevice *this
 
-#include <stdarg.h>
-#include <stdint.h>
+struct SDL_PrivateAudioData {
+	/* The file descriptor for the audio device */
+	Uint8 *mixbuf;
+	Uint32 mixlen;
+};
 
-
-#define SDL_AUDIO_DRIVER_ANDROID	1
-
-#define SDL_CDROM_DISABLED	1
-
-#define SDL_JOYSTICK_DISABLED	1
-
-#define SDL_LOADSO_DISABLED	1
-
-#define SDL_THREAD_PTHREAD	1
-#define SDL_THREAD_PTHREAD_RECURSIVE_MUTEX	1
-
-#define SDL_TIMER_UNIX	1
-
-#define SDL_VIDEO_DRIVER_ANDROID	1
-
-#define HAVE_STDIO_H	1
-
-#define NO_SDL_GLEXT	1
-
-#endif /* _SDL_config_minimal_h */
+#endif /* _SDL_androidaudio_h */

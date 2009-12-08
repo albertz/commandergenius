@@ -77,6 +77,17 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface);
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
 
+#define SDL_NUMMODES 3
+
+/* Private display data */
+
+struct SDL_PrivateVideoData {
+	SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
+};
+
+#define SDL_modelist		(this->hidden->SDL_modelist)
+
+
 static int sWindowWidth  = 320;
 static int sWindowHeight = 480;
 static SDL_mutex * WaitForNativeRender = NULL;
@@ -734,12 +745,13 @@ void ANDROID_InitOSKeymap(_THIS)
 
   keymap[KEYCODE_UNKNOWN] = SDLK_UNKNOWN;
 
-  keymap[KEYCODE_MENU] = SDLK_ESCAPE;
+  keymap[KEYCODE_BACK] = SDLK_ESCAPE;
 
+  keymap[KEYCODE_MENU] = SDLK_LALT;
   keymap[KEYCODE_CALL] = SDLK_LCTRL;
   keymap[KEYCODE_ENDCALL] = SDLK_LSHIFT;
   keymap[KEYCODE_CAMERA] = SDLK_RSHIFT;
-  keymap[KEYCODE_POWER] = SDLK_LALT;
+  keymap[KEYCODE_POWER] = SDLK_RALT;
 
   keymap[KEYCODE_BACK] = SDLK_ESCAPE; // Note: generates SDL_QUIT
   keymap[KEYCODE_0] = SDLK_0;
