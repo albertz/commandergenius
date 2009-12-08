@@ -124,6 +124,18 @@ class DemoGLSurfaceView extends GLSurfaceView {
          mRenderer.exitApp();
      };
 
+	@Override
+	public boolean onKeyDown(int keyCode, final KeyEvent event) {
+         nativeKey( keyCode, 1 );
+         return true;
+     }
+	
+	@Override
+	public boolean onKeyUp(int keyCode, final KeyEvent event) {
+         nativeKey( keyCode, 0 );
+         return true;
+     }
+
     DemoRenderer mRenderer;
     Activity mParent;
 

@@ -48,7 +48,7 @@ static void ANDROIDAUD_CloseAudio(_THIS);
 /* Audio driver bootstrap functions */
 static int ANDROIDAUD_Available(void)
 {
-	return(1);
+	return(0);
 }
 
 static void ANDROIDAUD_DeleteDevice(SDL_AudioDevice *device)
@@ -193,7 +193,7 @@ static void ANDROIDAUD_PlayAudio(_THIS)
 #define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
-extern jintArray JAVA_EXPORT_NAME(nativeAudioInit) (JNIEnv * env, jobject jobj)
+extern jintArray JAVA_EXPORT_NAME(AudioThread_nativeAudioInit) (JNIEnv * env, jobject jobj)
 {
 	jintArray ret = NULL;
 	int initData[4] = { 0, 0, 0, 0 }; // { rate, channels, encoding, bufsize };
@@ -220,7 +220,7 @@ extern jintArray JAVA_EXPORT_NAME(nativeAudioInit) (JNIEnv * env, jobject jobj)
 	return (ret);
 };
 
-extern jint JAVA_EXPORT_NAME(nativeAudioBuffer) ( JNIEnv * env, jobject jobj, jbyteArray data )
+extern jint JAVA_EXPORT_NAME(AudioThread_nativeAudioBuffer) ( JNIEnv * env, jobject jobj, jbyteArray data )
 {
 	int ret = 0;
 	
