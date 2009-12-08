@@ -25,7 +25,14 @@ using namespace std;
 #include <fstream>
 #include <iostream>
 
-Mixer mixer;
+Mixer * mixerInstance = NULL;
+
+Mixer & Mixer::mixer()
+{
+	if( mixerInstance == NULL )
+		mixerInstance = new Mixer();
+	return *mixerInstance;
+}
 
 Mixer::Mixer() {
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {

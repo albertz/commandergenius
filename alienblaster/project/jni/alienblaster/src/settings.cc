@@ -346,10 +346,10 @@ void Settings::settingsDialog( SDL_Surface *screen ) {
             case SDLK_F7: {
               if ( playMusicOn ) {
                 playMusicOn = false;
-                mixer.stopMusic();
+                Mixer::mixer().stopMusic();
               } else {
                 playMusicOn = true;
-                mixer.playMusic( MUSIC_INTRO, -1, 1000 );
+                Mixer::mixer().playMusic( MUSIC_INTRO, -1, 1000 );
               }
               break;
             }

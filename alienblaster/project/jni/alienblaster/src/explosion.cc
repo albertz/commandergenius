@@ -31,8 +31,8 @@ Explosion::Explosion(string fn, const Vector2D &position,
   nrAnimStages = sprite->w / sprite->h;
   expired = false;
 
-  sndExplosion = mixer.loadSample( FN_SOUND_EXPLOSION_NORMAL );  
-  mixer.playSample( sndExplosion, 0 );
+  sndExplosion = Mixer::mixer().loadSample( FN_SOUND_EXPLOSION_NORMAL );  
+  Mixer::mixer().playSample( sndExplosion, 0 );
 
   this->explosionType = explosionType;
   pos = position;

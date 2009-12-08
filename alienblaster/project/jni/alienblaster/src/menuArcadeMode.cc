@@ -41,8 +41,8 @@ MenuArcadeMode::MenuArcadeMode( SDL_Surface *scr ) {
   fontHighlighted = new Font( FN_FONT_INTRO_HIGHLIGHTED );
   lightFighterIcon1 = surfaceDB.loadSurface( FN_LIGHT_FIGHTER_1_ICON );
   heavyFighterIcon1 = surfaceDB.loadSurface( FN_HEAVY_FIGHTER_1_ICON );
-  choose = mixer.loadSample( FN_SOUND_ARCADE_CHOOSE, 100 );
-  confirm = mixer.loadSample( FN_SOUND_ARCADE_CONFIRM, 60 );
+  choose = Mixer::mixer().loadSample( FN_SOUND_ARCADE_CHOOSE, 100 );
+  confirm = Mixer::mixer().loadSample( FN_SOUND_ARCADE_CONFIRM, 60 );
   activeChoice = 0;
   playerOneLightFighter = true;
 
@@ -175,21 +175,21 @@ void MenuArcadeMode::handleEvents( GameStates &gameState ) {
       case SDLK_F7: {
 	if ( playMusicOn ) {
 	  playMusicOn = false;
-	  mixer.stopMusic();
+	  Mixer::mixer().stopMusic();
 	} else {
 	  playMusicOn = true;
-	  mixer.playMusic( MUSIC_INTRO, -1, 1000 );
+	  Mixer::mixer().playMusic( MUSIC_INTRO, -1, 1000 );
 	}
 	break;
       }
       case SDLK_UP: {
-	mixer.playSample( choose, 0 );
+	Mixer::mixer().playSample( choose, 0 );
 	activeChoice--;
 	if ( activeChoice < 0 ) activeChoice = NR_MENU_ARCADE_CHOICES - 1;
 	break;
       }
       case SDLK_DOWN: {
-	mixer.playSample( choose, 0 );
+	Mixer::mixer().playSample( choose, 0 );
 	activeChoice = (activeChoice + 1) % NR_MENU_ARCADE_CHOICES;
 	break;
       }
@@ -200,7 +200,7 @@ void MenuArcadeMode::handleEvents( GameStates &gameState ) {
       case SDLK_RETURN: {
 	switch (activeChoice) {
 	case ARCADE_FIGHT: {
-	  mixer.playSample( confirm, 0 );
+	  Mixer::mixer().playSample( confirm, 0 );
 	  difficultyLevel = ARCADE_DIFFICULTY_LEVEL;
 	  gameState = GS_PLAYON;
 	  break;
@@ -312,10 +312,10 @@ bool MenuArcadeMode::handleEventsReadName( string &newName ) {
 	{
 	  if ( playMusicOn ) {
 	    playMusicOn = false;
-	    mixer.stopMusic();
+	    Mixer::mixer().stopMusic();
 	  } else {
 	    playMusicOn = true;
-	    mixer.playMusic( MUSIC_INTRO, -1, 1000 );
+	    Mixer::mixer().playMusic( MUSIC_INTRO, -1, 1000 );
 	  }
 	  break;
 	}

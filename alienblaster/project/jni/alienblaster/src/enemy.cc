@@ -131,8 +131,8 @@ Enemy::Enemy( Vector2D pos, Vector2D vel, EnemyTypes whichEnemyType,
   nextShotPrimary = rand() % (ENEMY_RAND_WAIT_PRIMARY[ enemyType ]+1);
   nextShotSecondary = rand() % (ENEMY_RAND_WAIT_SECONDARY[ enemyType ]+1);
 
-  sndShotPrimary = mixer.loadSample( FN_SOUND_SHOT_PRIMARY );
-  sndShotSecondary = mixer.loadSample( FN_SOUND_SHOT_SECONDARY );
+  sndShotPrimary = Mixer::mixer().loadSample( FN_SOUND_SHOT_PRIMARY );
+  sndShotSecondary = Mixer::mixer().loadSample( FN_SOUND_SHOT_SECONDARY );
 }
 
 Enemy::~Enemy() {
@@ -258,7 +258,7 @@ void Enemy::firePrimary() {
 		  pos + Vector2D( 0, spriteEnemy->h / 2 ),
 		  90 );
       shots->addShot( shot );
-      mixer.playSample( sndShotPrimary, 0 );
+      Mixer::mixer().playSample( sndShotPrimary, 0 );
       break;
     }
   case BOMBER:
@@ -273,7 +273,7 @@ void Enemy::firePrimary() {
 		  pos + Vector2D( +7, spriteEnemy->h / 2 ),
 		  80 );
       shots->addShot( shot );
-      mixer.playSample( sndShotPrimary, 0 );
+      Mixer::mixer().playSample( sndShotPrimary, 0 );
       break;
     }
   case TANK:
@@ -283,7 +283,7 @@ void Enemy::firePrimary() {
 		  pos,
 		  (rand() % 360) - 180 );
       shots->addShot( shot );
-      mixer.playSample( sndShotPrimary, 0 );
+      Mixer::mixer().playSample( sndShotPrimary, 0 );
       break;
     }
   case BOSS_1_MAIN_GUN:
@@ -293,7 +293,7 @@ void Enemy::firePrimary() {
 		  pos,
 		  (rand() % 20) + 80 );
       shots->addShot( shot );
-      mixer.playSample( sndShotPrimary, 0 );
+      Mixer::mixer().playSample( sndShotPrimary, 0 );
       break;
     }
   case BOSS_1_SHOT_BATTERY_LEFT:
@@ -303,7 +303,7 @@ void Enemy::firePrimary() {
 		  pos,
 		  (rand() % 120) + 30 );
       shots->addShot( shot );
-      mixer.playSample( sndShotPrimary, 0 );
+      Mixer::mixer().playSample( sndShotPrimary, 0 );
       break;
     }
   case BOSS_1_SHOT_BATTERY_RIGHT:
@@ -313,7 +313,7 @@ void Enemy::firePrimary() {
 		  pos,
 		  (rand() % 120) + 30 );
       shots->addShot( shot );
-      mixer.playSample( sndShotPrimary, 0 );
+      Mixer::mixer().playSample( sndShotPrimary, 0 );
       break;
     }
   case BOSS_1_ROCKET_LAUNCHER:
@@ -323,7 +323,7 @@ void Enemy::firePrimary() {
       Shot *shot = 
 	new Shot( ENEMY_SHOT_TANK_ROCKET, 666, pos, angle );
       shots->addShot( shot );
-      mixer.playSample( sndShotSecondary, 0 );
+      Mixer::mixer().playSample( sndShotSecondary, 0 );
       break;
     }
   case BOSS_2:
@@ -332,7 +332,7 @@ void Enemy::firePrimary() {
       float angle = (racers->getRacer( racerIdx )->getPos() - pos).getDirection();
       Shot *shot = new Shot( ENEMY_SHOT_NORMAL, 666, pos, angle );
       shots->addShot( shot );
-      mixer.playSample( sndShotPrimary, 0 );
+      Mixer::mixer().playSample( sndShotPrimary, 0 );
       break;
     }
   default:
@@ -363,7 +363,7 @@ void Enemy::fireSecondary() {
       Shot *shot = 
 	new Shot( ENEMY_SHOT_TANK_ROCKET, 666, pos, angle );
       shots->addShot( shot );
-      mixer.playSample( sndShotSecondary, 0 );
+      Mixer::mixer().playSample( sndShotSecondary, 0 );
       break;
     }
   case BOSS_2:
@@ -374,7 +374,7 @@ void Enemy::fireSecondary() {
       shots->addShot( shot );
       shot = new Shot( ENEMY_SHOT_TANK_ROCKET, 666, pos - Vector2D(+80,0), angle );
       shots->addShot( shot );
-      mixer.playSample( sndShotSecondary, 0 );
+      Mixer::mixer().playSample( sndShotSecondary, 0 );
       break;
     }
   default:

@@ -35,8 +35,8 @@ Intro::Intro( SDL_Surface *scr ) {
   font = new Font( FN_FONT_INTRO );
   fontHighlighted = new Font( FN_FONT_INTRO_HIGHLIGHTED );
   activeChoice = 0;
-  choose = mixer.loadSample( FN_SOUND_INTRO_CHOOSE, 100 );
-  confirm = mixer.loadSample( FN_SOUND_INTRO_CONFIRM, 100 );
+  choose = Mixer::mixer().loadSample( FN_SOUND_INTRO_CHOOSE, 100 );
+  confirm = Mixer::mixer().loadSample( FN_SOUND_INTRO_CONFIRM, 100 );
   infoscreen = new Infoscreen( screen );
 }
 
@@ -44,8 +44,8 @@ Intro::~Intro() {}
 
 void Intro::run( GameStates &gameState ) {
 
-  if ( playMusicOn && mixer.whichMusicPlaying() != MUSIC_INTRO ) {
-    mixer.playMusic( MUSIC_INTRO, -1, 1000 );
+  if ( playMusicOn && Mixer::mixer().whichMusicPlaying() != MUSIC_INTRO ) {
+    Mixer::mixer().playMusic( MUSIC_INTRO, -1, 1000 );
   }
 
   draw();
@@ -94,21 +94,21 @@ void Intro::handleEvents( GameStates &gameState ) {
 	case SDLK_F7: {
 	  if ( playMusicOn ) {
 	    playMusicOn = false;
-	    mixer.stopMusic();
+	    Mixer::mixer().stopMusic();
 	  } else {
 	    playMusicOn = true;
-	    mixer.playMusic( MUSIC_INTRO, -1, 1000 );
+	    Mixer::mixer().playMusic( MUSIC_INTRO, -1, 1000 );
 	  }
 	  break;
 	}	    
 	case SDLK_UP: {
-	  mixer.playSample( choose, 0 );
+	  Mixer::mixer().playSample( choose, 0 );
 	  activeChoice--;
 	  if ( activeChoice < 0 ) activeChoice = NR_INTRO_CHOICES - 1;
 	  break;
 	}
 	case SDLK_DOWN: {
-	  mixer.playSample( choose, 0 );
+	  Mixer::mixer().playSample( choose, 0 );
 	  activeChoice = (activeChoice + 1) % NR_INTRO_CHOICES;
 	  break;
 	}
@@ -117,7 +117,7 @@ void Intro::handleEvents( GameStates &gameState ) {
 	  break;
 	}
 	case SDLK_RETURN: {
-	  mixer.playSample( confirm, 0 );
+	  Mixer::mixer().playSample( confirm, 0 );
 	  switch (activeChoice) {
 	  case ONE_PLAYER_GAME: {
 	    onePlayerGame = true;
@@ -168,8 +168,8 @@ void Intro::handleEvents( GameStates &gameState ) {
 
 
 void Intro::showScreenshots() {
-  if ( playMusicOn && mixer.whichMusicPlaying() != MUSIC_INTRO ) {
-    mixer.playMusic( MUSIC_INTRO, -1, 1000 );
+  if ( playMusicOn && Mixer::mixer().whichMusicPlaying() != MUSIC_INTRO ) {
+    Mixer::mixer().playMusic( MUSIC_INTRO, -1, 1000 );
   }
 
   SDL_Surface *surfS = SDL_LoadBMP( FN_ALIENBLASTER_INTRO.c_str() );

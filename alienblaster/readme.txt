@@ -1,6 +1,7 @@
 This is Alien Blaster game ported to Google Android.
 I did not change anything in Alien Blaster sources, except for SCREEN_WIDTH,
-SCREEN_HEIGHT and BIT_DEPTH constants in global.h, to support 320x430x16bpp video mode.
+SCREEN_HEIGHT and BIT_DEPTH constants in global.h, to support 320x430x16bpp video mode,
+and also made audio initialize after main() has been called, not inside static initializers (ugh)
 
 This should be compiled with Android 1.6 SDK and NDK - google for them and install them as described in their docs.
 You'll need to install Eclipse or Ant too

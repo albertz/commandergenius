@@ -141,8 +141,8 @@ Racer::Racer( string fnSprite, int whichPlayer, Vector2D startpos , int newShipT
   } 
   fontSize = font->getCharWidth();
 
-  sndShotPrimary = mixer.loadSample( FN_SOUND_SHOT_PRIMARY );
-  sndShotSecondary = mixer.loadSample( FN_SOUND_SHOT_SECONDARY );
+  sndShotPrimary = Mixer::mixer().loadSample( FN_SOUND_SHOT_PRIMARY );
+  sndShotSecondary = Mixer::mixer().loadSample( FN_SOUND_SHOT_SECONDARY );
 
   spriteSpecials = surfaceDB.loadSurface( FN_ICONS_SPECIALS );
   spriteSecondaryWeapons = surfaceDB.loadSurface( FN_ICONS_SECONDARY_WEAPONS );
@@ -426,7 +426,7 @@ void Racer::shootPrimary() {
 		      -90 + (rand() % SPREAD_ANGLE_SHOT_NORMAL) -
 		      SPREAD_ANGLE_SHOT_NORMAL / 2 );
 	  shots->addShot( shot );
-	  mixer.playSample( sndShotPrimary, 0 );
+	  Mixer::mixer().playSample( sndShotPrimary, 0 );
 	  timeLastShotPrimary = SDL_GetTicks();
 	}
 	break;
@@ -438,7 +438,7 @@ void Racer::shootPrimary() {
 	    new Shot( SHOT_NORMAL_HEAVY, playerNr,
 		      pos + Vector2D(0, -spriteRacerBase->h / 2), -90 );
 	  shots->addShot( shot );
-	  mixer.playSample( sndShotPrimary, 0 );
+	  Mixer::mixer().playSample( sndShotPrimary, 0 );
 	  timeLastShotPrimary = SDL_GetTicks();
 	}
 	break;
@@ -452,7 +452,7 @@ void Racer::shootPrimary() {
 	    new Shot( SHOT_DOUBLE, playerNr, pos + Vector2D(8,-2), -85 );
 	  shots->addShot(shot1);
 	  shots->addShot(shot2);
-	  mixer.playSample( sndShotPrimary, 0 );
+	  Mixer::mixer().playSample( sndShotPrimary, 0 );
 	  timeLastShotPrimary = SDL_GetTicks();
 	}
 	break;
@@ -466,7 +466,7 @@ void Racer::shootPrimary() {
 	    new Shot( SHOT_DOUBLE_HEAVY, playerNr, pos + Vector2D(8,-2), -85 );
 	  shots->addShot(shot1);
 	  shots->addShot(shot2);
-	  mixer.playSample( sndShotPrimary, 0 );
+	  Mixer::mixer().playSample( sndShotPrimary, 0 );
 	  timeLastShotPrimary = SDL_GetTicks();
 	}
 	break;
@@ -483,7 +483,7 @@ void Racer::shootPrimary() {
 	  shots->addShot(shot1);
 	  shots->addShot(shot2);
 	  shots->addShot(shot3);
-	  mixer.playSample( sndShotPrimary, 0 );
+	  Mixer::mixer().playSample( sndShotPrimary, 0 );
 	  timeLastShotPrimary = SDL_GetTicks();
 	}
 	break;
@@ -497,7 +497,7 @@ void Racer::shootPrimary() {
 	    new Shot( SHOT_HF_NORMAL, playerNr,
 		      pos + Vector2D(0, -spriteRacerBase->h / 2), -90 );
 	  shots->addShot( shot );
-	  mixer.playSample( sndShotPrimary, 0 );
+	  Mixer::mixer().playSample( sndShotPrimary, 0 );
 	  timeLastShotPrimary = SDL_GetTicks();
 	}
 	break;
@@ -509,7 +509,7 @@ void Racer::shootPrimary() {
 	  shots->addShot( shot );
 	  shot = new Shot( SHOT_HF_DOUBLE, playerNr, pos + Vector2D(12, -12), -90 );
 	  shots->addShot( shot );
-	  mixer.playSample( sndShotPrimary, 0 );
+	  Mixer::mixer().playSample( sndShotPrimary, 0 );
 	  timeLastShotPrimary = SDL_GetTicks();
 	}
 	break;
@@ -524,7 +524,7 @@ void Racer::shootPrimary() {
 	  shots->addShot( shot );
 	  shot = new Shot( SHOT_HF_TRIPLE, playerNr, pos + Vector2D(12, -12), -77 );
 	  shots->addShot( shot );
-	  mixer.playSample( sndShotPrimary, 0 );
+	  Mixer::mixer().playSample( sndShotPrimary, 0 );
 	  timeLastShotPrimary = SDL_GetTicks();
 	}
 	break;
@@ -540,7 +540,7 @@ void Racer::shootPrimary() {
 	  shots->addShot( shot );
 	  shot = new Shot( SHOT_HF_QUATTRO, playerNr, pos + Vector2D(30, -15), -80 );
 	  shots->addShot( shot );
-	  mixer.playSample( sndShotPrimary, 0 );
+	  Mixer::mixer().playSample( sndShotPrimary, 0 );
 	  timeLastShotPrimary = SDL_GetTicks();
 	}
 	break;
@@ -559,7 +559,7 @@ void Racer::shootPrimary() {
 	  shots->addShot( shot );
 	  shot = new Shot( SHOT_HF_QUINTO, playerNr, pos + Vector2D(30, -15), -70 );
 	  shots->addShot( shot );
-	  mixer.playSample( sndShotPrimary, 0 );
+	  Mixer::mixer().playSample( sndShotPrimary, 0 );
 	  timeLastShotPrimary = SDL_GetTicks();
 	}
 	break;
@@ -587,7 +587,7 @@ void Racer::shootSecondary() {
 	  Shot *shot = 
 	    new Shot( SHOT_DUMBFIRE, playerNr, pos + Vector2D(0, -5), -90 );
 	  shots->addShot(shot);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastShotSecondary = SDL_GetTicks();
 	}
 	break;
@@ -603,7 +603,7 @@ void Racer::shootSecondary() {
 	  }
 	  lastDumbfireWasLeft = !lastDumbfireWasLeft;
 	  shots->addShot(shot);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastShotSecondary = SDL_GetTicks();
 	}
 	break;
@@ -614,7 +614,7 @@ void Racer::shootSecondary() {
 	  Shot *shot = 
 	    new Shot( SHOT_KICK_ASS_ROCKET, playerNr, pos, -90 );
 	  shots->addShot(shot);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastShotSecondary = SDL_GetTicks();
 	}
 	break;
@@ -628,7 +628,7 @@ void Racer::shootSecondary() {
 	    new Shot( SHOT_HELLFIRE, playerNr, pos + Vector2D(15, -3), 0 );
 	  shots->addShot(shot1);
 	  shots->addShot(shot2);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastShotSecondary = SDL_GetTicks();
 	}
 	break;
@@ -674,7 +674,7 @@ void Racer::shootSecondary() {
 		      pos + Vector2D(+3, -spriteRacerBase->h/2), angle2 );
 	  shots->addShot(shot1);
 	  shots->addShot(shot2);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastShotSecondary = SDL_GetTicks();
 	}
 	break;
@@ -685,7 +685,7 @@ void Racer::shootSecondary() {
 	  Shot *shot = 
 	    new Shot( SHOT_ENERGY_BEAM, playerNr, pos + Vector2D(-1, -10), -90 );
 	  shots->addShot(shot);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastShotSecondary = SDL_GetTicks();
 	}
 	break;
@@ -701,7 +701,7 @@ void Racer::shootSecondary() {
 	  shot = 
 	    new Shot( SHOT_HF_DUMBFIRE, playerNr, pos + Vector2D(30, -5), -90 );
 	  shots->addShot(shot);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastShotSecondary = SDL_GetTicks();
 	}
 	break;
@@ -715,7 +715,7 @@ void Racer::shootSecondary() {
 	  shot = 
 	    new Shot( SHOT_HF_DUMBFIRE_DOUBLE, playerNr, pos + Vector2D(30, -5), -90 );
 	  shots->addShot(shot);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastShotSecondary = SDL_GetTicks();
 	}
 	break;
@@ -729,7 +729,7 @@ void Racer::shootSecondary() {
 	  Shot *shot2 = 
 	    new Shot( SHOT_HF_KICK_ASS_ROCKET, playerNr, pos + Vector2D(30,0), -90 );
 	  shots->addShot(shot2);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastShotSecondary = SDL_GetTicks();
 	}
 	break;
@@ -743,7 +743,7 @@ void Racer::shootSecondary() {
 	  Shot *shot2 = 
 	    new Shot( SHOT_HF_LASER, playerNr, pos + Vector2D(30,-10), -90 );
 	  shots->addShot(shot2);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastShotSecondary = SDL_GetTicks();
 	}
 	break;
@@ -778,7 +778,7 @@ void Racer::shootSpecial() {
 	  }
 	  lastHeatseekerWasLeft = !lastHeatseekerWasLeft;
 	  shots->addShot(shot);
-	  mixer.playSample( sndShotSecondary, 0 );
+	  Mixer::mixer().playSample( sndShotSecondary, 0 );
 	  timeLastHeatseekerUsed = SDL_GetTicks();
 	  specialsAvailability[ SPECIAL_HEATSEEKER ]--;
 	}

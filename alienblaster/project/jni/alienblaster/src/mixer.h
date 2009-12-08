@@ -32,8 +32,6 @@ typedef vector<Mix_Music*> Musics;
 
 class Mixer;
 
-extern Mixer mixer;
-
 const int MIXER_NUMBER_CHANNELS = 32;
 // reserved for samples, which should play with priority
 const int MIXER_RESERVED_CHANNELS = 8;
@@ -100,7 +98,7 @@ public:
 
 	MusicTracks whichMusicPlaying();
 
-	static const Mixer mixer();
+	static Mixer & mixer();
 };
 
 #endif //#define MIXER_HH

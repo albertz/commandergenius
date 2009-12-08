@@ -40,8 +40,8 @@ SetDifficulty::SetDifficulty( SDL_Surface *scr ) {
   lightFighterIcon2 = surfaceDB.loadSurface( FN_LIGHT_FIGHTER_2_ICON );
   heavyFighterIcon1 = surfaceDB.loadSurface( FN_HEAVY_FIGHTER_1_ICON );
   heavyFighterIcon2 = surfaceDB.loadSurface( FN_HEAVY_FIGHTER_2_ICON );
-  choose = mixer.loadSample( FN_SOUND_INTRO_CHOOSE, 100 );
-  confirm = mixer.loadSample( FN_SOUND_INTRO_CONFIRM, 100 );
+  choose = Mixer::mixer().loadSample( FN_SOUND_INTRO_CHOOSE, 100 );
+  confirm = Mixer::mixer().loadSample( FN_SOUND_INTRO_CONFIRM, 100 );
 
   activeChoice = 0;
   playerOneLightFighter = true;
@@ -169,21 +169,21 @@ void SetDifficulty::handleEvents( GameStates &gameState ) {
           case SDLK_F7: {
             if ( playMusicOn ) {
               playMusicOn = false;
-              mixer.stopMusic();
+              Mixer::mixer().stopMusic();
             } else {
               playMusicOn = true;
-              mixer.playMusic( MUSIC_INTRO, -1, 1000 );
+              Mixer::mixer().playMusic( MUSIC_INTRO, -1, 1000 );
             }
             break;
           }
           case SDLK_UP: {
-            mixer.playSample( choose, 0 );
+            Mixer::mixer().playSample( choose, 0 );
             activeChoice--;
             if ( activeChoice < 0 ) activeChoice = NR_DIFFICULTY_CHOICES - 1;
             break;
           }
           case SDLK_DOWN: {
-            mixer.playSample( choose, 0 );
+            Mixer::mixer().playSample( choose, 0 );
             activeChoice = (activeChoice + 1) % NR_DIFFICULTY_CHOICES;
             break;
           }
@@ -192,7 +192,7 @@ void SetDifficulty::handleEvents( GameStates &gameState ) {
             break;
           }
           case SDLK_RETURN: {
-            mixer.playSample( confirm, 0 );
+            Mixer::mixer().playSample( confirm, 0 );
             switch (activeChoice) {
               case DIFFICULTY_0: {
                 difficultyLevel = 0;

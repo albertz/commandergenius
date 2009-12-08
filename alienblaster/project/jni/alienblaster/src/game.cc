@@ -23,7 +23,7 @@ using namespace std;
 #include <stdlib.h>
 #include <unistd.h>
 #include "SDL.h"
-#include "SDL_mixer.h"
+#include "mixer.h"
 #include "game.h"
 #include "surfaceDB.h"
 #include "racers.h"
@@ -88,7 +88,7 @@ Game::Game() {
 
   nukeEffectSurface = surfaceDB.loadSurface( FN_NUKE_EFFECT );
 
-  bossAlarm = mixer.loadSample( FN_SOUND_BOSS_ALARM, 60 );
+  bossAlarm = Mixer::mixer().loadSample( FN_SOUND_BOSS_ALARM, 60 );
 
   fontTime = new Font( FN_FONT_NUMBERS_TIME );
   fontSizeTime = fontTime->getCharWidth();
@@ -234,7 +234,7 @@ void Game::initNewGame() {
   paused = true;
   bossTime = false;
   bossNukeEffect = false;
-  bossExplosion = mixer.loadSample( FN_SOUND_EXPLOSION_BOSS );
+  bossExplosion = Mixer::mixer().loadSample( FN_SOUND_EXPLOSION_BOSS );
 
   minibossAlreadyKilled = false;
   minibossTime = false;
@@ -300,7 +300,7 @@ void Game::run(){
     case GS_PLAYON: 
       {
         initNewGame();
-        if ( playMusicOn ) mixer.playMusic( MUSIC_PLAYON, -1, 1000 );
+        if ( playMusicOn ) Mixer::mixer().playMusic( MUSIC_PLAYON, -1, 1000 );
         playOn();
         break;
       }
@@ -339,8 +339,8 @@ void Game::playOn() {
 	(unsigned int)GAME_LENGTH < gameActRuntime) {
       enemys->bossTime(1); // generates the boss
       bossTime = true;
-      mixer.playSample( bossAlarm , 0, true );
-      if ( playMusicOn ) mixer.playMusic( MUSIC_BOSS1, -1, 0 );
+      Mixer::mixer().playSample( bossAlarm , 0, true );
+      if ( playMusicOn ) Mixer::mixer().playMusic( MUSIC_BOSS1, -1, 0 );
     }
     if ( bossTime && enemys->bossDead() ) gameState = GS_BOSS_KILLED;
     if ( racers->bothPlayersLost() ) gameState = GS_ROUNDFINISHED;
@@ -405,11 +405,11 @@ void Game::handleEventsPlayOn() {
           case SDLK_F7: {
             if ( playMusicOn ) {
               playMusicOn = false;
-              mixer.stopMusic();
+              Mixer::mixer().stopMusic();
             } else {
               playMusicOn = true;
-              if ( bossTime ) mixer.playMusic( MUSIC_BOSS1, -1, 1000 );
-              else mixer.playMusic( MUSIC_PLAYON, -1, 1000 );
+              if ( bossTime ) Mixer::mixer().playMusic( MUSIC_BOSS1, -1, 1000 );
+              else Mixer::mixer().playMusic( MUSIC_PLAYON, -1, 1000 );
             }
             break;
           }
@@ -781,14 +781,14 @@ void Game::generateMiniboss() {
   scrollingOn = false;
   minibossTime = true;
   enemys->bossTime(2); // generates the miniboss
-  mixer.playSample( bossAlarm , 0, true );
-  if ( playMusicOn ) mixer.playMusic( MUSIC_BOSS1, -1, 0 );
+  Mixer::mixer().playSample( bossAlarm , 0, true );
+  if ( playMusicOn ) Mixer::mixer().playMusic( MUSIC_BOSS1, -1, 0 );
 }
 
 void Game::minibossKilled() {
   scrollingOn = true;
   minibossTime = false;
-  if ( playMusicOn ) mixer.playMusic( MUSIC_PLAYON, -1, 0 );
+  if ( playMusicOn ) Mixer::mixer().playMusic( MUSIC_PLAYON, -1, 0 );
 }
 
 
@@ -818,7 +818,7 @@ void Game::bossKilled() {
     else if ( (actualTime - startOfBossExplosion) < (BOSS_EXPLOSION_DURATION + NUKE_EFFECT_DURATION) ) {
       // nuke effect
       if ( !bossExplosionSound ) {
-        mixer.playSample( bossExplosion, 0, true );
+        Mixer::mixer().playSample( bossExplosion, 0, true );
         bossExplosionSound = false;
         enemys->doNukeDamage();
         enemys->deleteExpiredEnemys();
