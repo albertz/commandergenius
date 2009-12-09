@@ -148,7 +148,6 @@ class AudioThread extends Thread {
 	private Activity mParent;
 	private AudioTrack mAudio;
 	private byte[] mAudioBuffer;
-	public int mLibraryLoaded;
 
 	public AudioThread(Activity parent)
 	{
@@ -156,24 +155,16 @@ class AudioThread extends Thread {
 		mParent = parent;
 		mAudio = null;
 		mAudioBuffer = null;
-		mLibraryLoaded = 0;
 	}
 	
 	@Override
 	public void run() 
 	{
-		android.util.Log.i("SDL Java", "AudioThread::Run(): enter");
 		while( !isInterrupted() )
 		{
-			android.util.Log.i("SDL Java", "AudioThread::Run(): loop");
 			if( mAudio == null )
 			{
-				int[] initParams = null;
-				if( mLibraryLoaded != 0 ) 
-				{
-					android.util.Log.i("SDL Java", "AudioThread::Run(): call nativeAudioInit()");
-					initParams = nativeAudioInit();
-				}
+				int[] initParams = nativeAudioInit();
 				if( initParams == null )
 				{
 					try {
@@ -182,7 +173,6 @@ class AudioThread extends Thread {
 				}
 				else
 				{
-					android.util.Log.i("SDL Java", "AudioThread::Run(): !!!INIT!!!");
 					int rate = initParams[0];
 					int channels = initParams[1];
 					channels = ( channels == 1 ) ? AudioFormat.CHANNEL_CONFIGURATION_MONO : 
@@ -205,7 +195,6 @@ class AudioThread extends Thread {
 			}
 			else
 			{
-				android.util.Log.i("SDL Java", "AudioThread::Run(): playing");
 				int len = nativeAudioBuffer( mAudioBuffer );
 				if( len > 0 )
 					mAudio.write( mAudioBuffer, 0, len );
@@ -227,11 +216,9 @@ public class DemoActivity extends Activity {
         super.onCreate(savedInstanceState);
         // Wicked - we have to create audio thread before loading library
         // because audio is initialized even before main() (how's that even possible?)
-        mLoadLibraryStub = null;
+        mLoadLibraryStub = new LoadLibrary();
         mAudioThread = new AudioThread(this);
         mAudioThread.start();
-        mLoadLibraryStub = new LoadLibrary();
-        mAudioThread.mLibraryLoaded = 1;
         mGLView = new DemoGLSurfaceView(this);
         setContentView(mGLView);
         // Receive keyboard events
