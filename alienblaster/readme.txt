@@ -1,4 +1,4 @@
-This is Alien Blaster game ported to Google Android.
+This is Alien Blaster game ported to Google Android (original sources: http://www.schwardtnet.de/alienblaster/ ).
 I did not change anything in Alien Blaster sources, except for SCREEN_WIDTH,
 SCREEN_HEIGHT and BIT_DEPTH constants in global.h, to support 320x430x16bpp video mode,
 and also made audio initialize after main() has been called, not inside static initializers (ugh)
@@ -17,15 +17,6 @@ Go to "project" directory and type
 	android update project -p .
 	ant debug
 That will create file project/bin/DemoActivity-debug.apk - use "adb install" to test it
-
-Alien Blaster data can be downloaded from http://www.schwardtnet.de/alienblaster/ -
-download alienblaster-1.1.0.tgz, unpack it and execute
-	adb shell
-	<in adb shell>:
-		su
-		mkdir /data/data/de.schwardtnet.alienblaster/files
-		exit
-	adb push alienblaster /data/data/de.schwardtnet.alienblaster/files
 Then you can test it by launching Alien Blaster icon from Android applications menu.
 It's designed for 640x480, and GUI elements are drawn out of place, but you can play the game.
 Note: You should play it with vertical screen orientation (keyboard is closed)
@@ -46,7 +37,7 @@ Replace all strings "alienblaster" and "de.schwardtnet.alienblaster" with
 the name of your application and your reversed webpage address (or any unique string):
 	Application.mk:2
 	project/AndroidManifest.xml:3
-	project/src/DemoActivity.java:42 and 57
+	project/src/DemoActivity.java:42 and 71
 	project/jni/Android.mk:3 and 10
 	project/res/values/strings.xml:3
 	(that's all, maybe I forgot something)
@@ -58,10 +49,13 @@ Then repeat steps:
 	make APP=<yourapp> V=1
 	ant debug
 
-Currently you have to copy your application data by hand using "adb push" (it can copy directories too),
-into the path specified in project/jni/Android.mk:10,
-in the future I'll add some handler to Java sources that downloads data from Internet and
-puts it into given folder before executing main code.
+Application data is not bundled with app itself - it should be downloaded from net on first run.
+Create .ZIP file with your application data, and put it somewhere on HTTP server,
+then replace project/src/DemoActivity.java:73 with download URL.
+If your app data is bigger than 5 megabytes it's better to store it on SD card -
+set DownloadToSdcard variable to true in project/src/DemoActivity.java:78,
+and set appropriate path in project/jni/Android.mk:10
+(I did not test the code with SD card, so it may fail)
 
 If you'll add new libs add them to project/jni/, copy Android.mk from existing lib, and
 add libname to Application.mk and project/jni/<yourapp>/Android.mk

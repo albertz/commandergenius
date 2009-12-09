@@ -56,10 +56,26 @@ import android.media.AudioFormat;
 import android.os.PowerManager;
 import android.os.Vibrator;
 
+import android.widget.TextView;
+import org.apache.http.client.methods.*;
+import org.apache.http.*;
+import org.apache.http.impl.*;
+import org.apache.http.impl.client.*;
+import java.util.zip.*;
+import java.io.*;
+
+
 // TODO: export vibrator to SDL - interface is available in SDL 1.3
 
 class Globals {
 	public static String ApplicationName = "alienblaster";
+	// Should be zip file
+	public static String DataDownloadUrl = "http://sites.google.com/site/xpelyax/Home/alienblaster110_data.zip?attredirects=0&d=1";
+	// Set DownloadToSdcard to true if your app data is bigger than 5 megabytes.
+	// It will download app data to /sdcard/alienblaster then,
+	// otherwise it will download it to /data/data/de.schwardtnet.alienblaster/files -
+	// set this dir in jni/Android.mk in SDL_CURDIR_PATH
+	public static boolean DownloadToSdcard = false;
 }
 
 class LoadLibrary {
@@ -155,6 +171,7 @@ class AudioThread extends Thread {
 		mParent = parent;
 		mAudio = null;
 		mAudioBuffer = null;
+		this.start();
 	}
 	
 	@Override
@@ -210,15 +227,21 @@ class AudioThread extends Thread {
 	private static native int nativeAudioBuffer( byte[] data );
 }
 
+
 public class DemoActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Wicked - we have to create audio thread before loading library
-        // because audio is initialized even before main() (how's that even possible?)
+        TextView tv = new TextView(this);
+        tv.setText("Initializing");
+        setContentView(tv);
+        downloader = new DataDownloader(this, tv);
+    }
+
+    public void initSDL()
+    {
         mLoadLibraryStub = new LoadLibrary();
         mAudioThread = new AudioThread(this);
-        mAudioThread.start();
         mGLView = new DemoGLSurfaceView(this);
         setContentView(mGLView);
         // Receive keyboard events
@@ -233,27 +256,36 @@ public class DemoActivity extends Activity {
     @Override
     protected void onPause() {
         // TODO: if application pauses it's screen is messed up
-        wakeLock.release();
+        if( wakeLock != null )
+            wakeLock.release();
         super.onPause();
-        mGLView.onPause();
+        if( mGLView != null )
+            mGLView.onPause();
     }
 
     @Override
     protected void onResume() {
-        wakeLock.acquire();
+        if( wakeLock != null )
+            wakeLock.acquire();
         super.onResume();
-        mGLView.onResume();
+        if( mGLView != null )
+            mGLView.onResume();
     }
 
     @Override
     protected void onStop() 
     {
-        wakeLock.release();
-        mAudioThread.interrupt();
-        try {
-            mAudioThread.join();
-        } catch( java.lang.InterruptedException e ) { };
-        mGLView.exitApp();
+        if( wakeLock != null )
+            wakeLock.release();
+        if( mAudioThread != null )
+        {
+            mAudioThread.interrupt();
+            try {
+                mAudioThread.join();
+            } catch( java.lang.InterruptedException e ) { };
+        }
+        if( mGLView != null )
+            mGLView.exitApp();
         super.onStop();
         finish();
     }
@@ -261,18 +293,223 @@ public class DemoActivity extends Activity {
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event) {
 		// Overrides Back key to use in our app
-         mGLView.nativeKey( keyCode, 1 );
+         if( mGLView != null )
+             mGLView.nativeKey( keyCode, 1 );
          return true;
      }
 	
 	@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event) {
-         mGLView.nativeKey( keyCode, 0 );
+         if( mGLView != null )
+             mGLView.nativeKey( keyCode, 0 );
          return true;
      }
 
-    private DemoGLSurfaceView mGLView;
-    private LoadLibrary mLoadLibraryStub;
-    private AudioThread mAudioThread;
-    private PowerManager.WakeLock wakeLock;
+    private DemoGLSurfaceView mGLView = null;
+    private LoadLibrary mLoadLibraryStub = null;
+    private AudioThread mAudioThread = null;
+    private PowerManager.WakeLock wakeLock = null;
+    private DataDownloader downloader = null;
+    
+    
+    
+    class DataDownloader extends Thread
+{
+	class StatusWriter
+	{
+		private TextView Status;
+		private DemoActivity Parent;
+
+		public StatusWriter( TextView _Status, DemoActivity _Parent )
+		{
+			Status = _Status;
+			Parent = _Parent;
+		}
+		
+		public void setText(final String str)
+		{
+			class Callback implements Runnable
+			{
+        		public TextView Status;
+	        	public String text;
+	        	public void run()
+    	    	{
+        			Status.setText(text);
+        		}
+	        }
+    	    Callback cb = new Callback();
+    	    cb.text = new String(str);
+    	    cb.Status = Status;
+			Parent.runOnUiThread(cb);
+		}
+		
+	}
+	public DataDownloader( DemoActivity _Parent, TextView _Status )
+	{
+		Parent = _Parent;
+		DownloadComplete = false;
+		Status = new StatusWriter( _Status, _Parent );
+		Status.setText( "Connecting to " + Globals.DataDownloadUrl );
+		this.start();
+	}
+
+	@Override
+	public void run() 
+	{
+	
+		String path = getOutFilePath("DownloadFinished.flag");
+		InputStream checkFile = null;
+		try {
+			checkFile = new FileInputStream( path );
+		} catch( FileNotFoundException e ) {
+		} catch( SecurityException e ) { };
+		if( checkFile != null )
+		{
+			Status.setText( "Already downloaded" );
+			DownloadComplete = true;
+			Parent.initSDL();
+			return;
+		}
+		checkFile = null;
+		
+		// Create output directory
+		if( Globals.DownloadToSdcard )
+		{
+			try {
+				(new File( "/sdcard/" + Globals.ApplicationName )).mkdirs();
+			} catch( SecurityException e ) { };
+		}
+		else
+		{
+			try {
+				FileOutputStream dummy = Parent.openFileOutput( "dummy", Parent.MODE_WORLD_READABLE );
+				dummy.write(0);
+				dummy.flush();
+			} catch( FileNotFoundException e ) {
+			} catch( java.io.IOException e ) {};
+		}
+		
+		HttpGet request = new HttpGet(Globals.DataDownloadUrl);
+		request.addHeader("Accept", "*/*");
+		HttpResponse response = null;
+		try {
+			DefaultHttpClient client = new DefaultHttpClient();
+			client.getParams().setBooleanParameter("http.protocol.handle-redirects", true);
+			response = client.execute(request);
+		} catch (IOException e) { } ;
+		if( response == null )
+		{
+			Status.setText( "Error connecting to " + Globals.DataDownloadUrl );
+			return;
+		}
+
+		Status.setText( "Downloading data from " + Globals.DataDownloadUrl );
+		
+		ZipInputStream zip = null;
+		try {
+			zip = new ZipInputStream(response.getEntity().getContent());
+		} catch( java.io.IOException e ) {
+			Status.setText( "Error downloading data from " + Globals.DataDownloadUrl );
+			return;
+		}
+		
+		byte[] buf = new byte[1024];
+		
+		ZipEntry entry = null;
+
+		while(true)
+		{
+			entry = null;
+			try {
+				entry = zip.getNextEntry();
+			} catch( java.io.IOException e ) {
+				Status.setText( "Error downloading data from " + Globals.DataDownloadUrl );
+				return;
+			}
+			if( entry == null )
+				break;
+			if( entry.isDirectory() )
+			{
+				try {
+					(new File( getOutFilePath(entry.getName()) )).mkdirs();
+				} catch( SecurityException e ) { };
+				continue;
+			}
+			
+			OutputStream out = null;
+			path = getOutFilePath(entry.getName());
+			
+			try {
+				out = new FileOutputStream( path );
+			} catch( FileNotFoundException e ) {
+			} catch( SecurityException e ) { };
+			if( out == null )
+			{
+				Status.setText( "Error writing to " + path );
+				return;
+			}
+
+			Status.setText( "Writing file " + path );
+
+			try {
+				int len;
+				while ((len = zip.read(buf)) > 0)
+				{
+					out.write(buf, 0, len);
+				}
+				out.flush();
+			} catch( java.io.IOException e ) {
+				Status.setText( "Error writing file " + path );
+				return;
+			}
+
+		}
+
+		OutputStream out = null;
+		path = getOutFilePath("DownloadFinished.flag");
+		try {
+			out = new FileOutputStream( path );
+			out.write(0);
+			out.flush();
+		} catch( FileNotFoundException e ) {
+		} catch( SecurityException e ) {
+		} catch( java.io.IOException e ) {
+			Status.setText( "Error writing file " + path );
+			return;
+		};
+		
+		if( out == null )
+		{
+			Status.setText( "Error writing to " + path );
+			return;
+		}
+	
+		Status.setText( "Finished" );
+		DownloadComplete = true;
+		
+		class Callback implements Runnable
+		{
+       		public DemoActivity Parent;
+        	public void run()
+   	    	{
+    	    		Parent.initSDL();
+       		}
+        }
+   	    Callback cb = new Callback();
+        cb.Parent = Parent;
+		Parent.runOnUiThread(cb);
+	};
+	
+	private String getOutFilePath(final String filename)
+	{
+		if( Globals.DownloadToSdcard )
+			return  "/sdcard/" + Globals.ApplicationName + "/" + filename;
+		return Parent.getFilesDir().getAbsolutePath() + "/" + filename;
+	};
+	
+	public boolean DownloadComplete;
+	public StatusWriter Status;
+	private DemoActivity Parent;
+}
+
 }
