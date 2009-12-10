@@ -63,6 +63,7 @@ import org.apache.http.impl.*;
 import org.apache.http.impl.client.*;
 import java.util.zip.*;
 import java.io.*;
+import java.nio.ByteBuffer;
 
 
 // TODO: export vibrator to SDL - interface is available in SDL 1.3
@@ -164,13 +165,14 @@ class AudioThread extends Thread {
 	private Activity mParent;
 	private AudioTrack mAudio;
 	private byte[] mAudioBuffer;
+	private ByteBuffer mAudioBufferNative;
 
 	public AudioThread(Activity parent)
 	{
-		android.util.Log.i("SDL Java", "AudioThread created");
 		mParent = parent;
 		mAudio = null;
 		mAudioBuffer = null;
+		this.setPriority(Thread.MAX_PRIORITY);
 		this.start();
 	}
 	
@@ -197,10 +199,11 @@ class AudioThread extends Thread {
 					int encoding = initParams[2];
 					encoding = ( encoding == 1 ) ? AudioFormat.ENCODING_PCM_16BIT :
 													AudioFormat.ENCODING_PCM_8BIT;
-					int bufSize = AudioTrack.getMinBufferSize( rate, channels, encoding);
+					int bufSize = AudioTrack.getMinBufferSize( rate, channels, encoding );
 					if( initParams[3] > bufSize )
 						bufSize = initParams[3];
 					mAudioBuffer = new byte[bufSize];
+					nativeAudioInit2(mAudioBuffer);
 					mAudio = new AudioTrack(AudioManager.STREAM_MUSIC, 
 												rate,
 												channels,
@@ -212,19 +215,26 @@ class AudioThread extends Thread {
 			}
 			else
 			{
-				int len = nativeAudioBuffer( mAudioBuffer );
+				int len = nativeAudioBufferLock();
 				if( len > 0 )
 					mAudio.write( mAudioBuffer, 0, len );
 				if( len < 0 )
 					break;
+				nativeAudioBufferUnlock();
 			}
 		}
 		if( mAudio != null )
+		{
 			mAudio.stop();
+			mAudio.release();
+			mAudio = null;
+		}
 	}
 	
 	private static native int[] nativeAudioInit();
-	private static native int nativeAudioBuffer( byte[] data );
+	private static native int nativeAudioInit2(byte[] buf);
+	private static native int nativeAudioBufferLock();
+	private static native int nativeAudioBufferUnlock();
 }
 
 
@@ -313,7 +323,7 @@ public class DemoActivity extends Activity {
     
     
     
-    class DataDownloader extends Thread
+class DataDownloader extends Thread
 {
 	class StatusWriter
 	{
@@ -365,9 +375,9 @@ public class DemoActivity extends Activity {
 		} catch( SecurityException e ) { };
 		if( checkFile != null )
 		{
-			Status.setText( "Already downloaded" );
+			Status.setText( "No need to download" );
 			DownloadComplete = true;
-			Parent.initSDL();
+			initParent();
 			return;
 		}
 		checkFile = null;
@@ -487,6 +497,11 @@ public class DemoActivity extends Activity {
 		Status.setText( "Finished" );
 		DownloadComplete = true;
 		
+		initParent();
+	};
+	
+	private void initParent()
+	{
 		class Callback implements Runnable
 		{
        		public DemoActivity Parent;
@@ -498,7 +513,7 @@ public class DemoActivity extends Activity {
    	    Callback cb = new Callback();
         cb.Parent = Parent;
 		Parent.runOnUiThread(cb);
-	};
+	}
 	
 	private String getOutFilePath(final String filename)
 	{

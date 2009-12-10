@@ -98,16 +98,14 @@ AudioBootStrap ANDROIDAUD_bootstrap = {
 
 static SDL_mutex * audioMutex = NULL;
 static SDL_cond * audioCond = NULL;
+static SDL_cond * audioCond2 = NULL;
 static unsigned char * audioBuffer = NULL;
 static size_t audioBufferSize = 0;
 static SDL_AudioSpec *audioFormat = NULL;
 static int audioInitialized = 0;
-
-/* This function waits until it is possible to write a full sound buffer */
-static void ANDROIDAUD_WaitAudio(_THIS)
-{
-	/* We will block in PlayAudio(), do nothing here */
-}
+static int audioPlayed = 0;
+static jbyteArray audioBufferJNI = NULL;
+static JNIEnv * jniEnv = NULL;
 
 static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS)
 {
@@ -117,25 +115,38 @@ static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS)
 static void ANDROIDAUD_CloseAudio(_THIS)
 {
 	SDL_mutex * audioMutex1;
-	
+
+	/*	
 	if ( this->hidden->mixbuf != NULL ) {
 		SDL_FreeAudioMem(this->hidden->mixbuf);
 		this->hidden->mixbuf = NULL;
 	}
+	*/
 	if( audioMutex != NULL )
 	{
 		audioMutex1 = audioMutex;
 		SDL_mutexP(audioMutex1);
 		audioInitialized = 0;
 		SDL_CondSignal(audioCond);
+		SDL_CondSignal(audioCond2);
 		audioMutex = NULL;
 		SDL_DestroyCond(audioCond);
+		SDL_DestroyCond(audioCond2);
 		audioCond = NULL;
+		audioCond2 = NULL;
 		audioFormat = NULL;
+		// TODO: this crashes JNI, so we're just memleaking it
+		/*
+		(*jniEnv)->ReleaseByteArrayElements(jniEnv, audioBufferJNI, (jbyte *)audioBuffer, 0);
+		(*jniEnv)->DeleteGlobalRef(jniEnv, audioBufferJNI);
+		*/
+		jniEnv = NULL;
+		audioBufferJNI = NULL;
 		audioBuffer = NULL;
 		audioBufferSize = 0;
 		SDL_mutexV(audioMutex1);
 		SDL_DestroyMutex(audioMutex1);
+		
 	}
 }
 
@@ -143,23 +154,15 @@ static int ANDROIDAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 {
 	if( ! (spec->format == AUDIO_S8 || spec->format == AUDIO_S16) )
 		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL
-
-	/* Allocate mixing buffer */
-	this->hidden->mixlen = spec->size;
-	this->hidden->mixbuf = (Uint8 *) SDL_AllocAudioMem(this->hidden->mixlen);
-	if ( this->hidden->mixbuf == NULL ) {
-		return(-1);
-	}
-	SDL_memset(this->hidden->mixbuf, spec->silence, spec->size);
-
+	
 	if( audioMutex == NULL )
 	{
 		audioInitialized = 0;
 		audioFormat = spec;
-		audioBuffer = this->hidden->mixbuf;
-		audioBufferSize = this->hidden->mixlen;
 		audioMutex = SDL_CreateMutex();
 		audioCond = SDL_CreateCond();
+		audioCond2 = SDL_CreateCond();
+		audioPlayed == 0;
 	}
 
 	SDL_mutexP(audioMutex);
@@ -175,6 +178,9 @@ static int ANDROIDAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 		}
 	}
 
+	this->hidden->mixbuf = audioBuffer;
+	this->hidden->mixlen = audioBufferSize;
+
 	audioFormat = NULL;
 	
 	SDL_mutexV(audioMutex);
@@ -182,16 +188,26 @@ static int ANDROIDAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 	return(0);
 }
 
+/* This function waits until it is possible to write a full sound buffer */
+static void ANDROIDAUD_WaitAudio(_THIS)
+{
+	/* We will block in PlayAudio(), do nothing here */
+}
+
 static void ANDROIDAUD_PlayAudio(_THIS)
 {
 	SDL_mutexP(audioMutex);
 
-	audioBuffer = this->hidden->mixbuf;
-	audioBufferSize = this->hidden->mixlen;
-	
-	while( audioBuffer != NULL )
-		SDL_CondWait( audioCond, audioMutex );
+	//audioBuffer = this->hidden->mixbuf;
+	//audioBufferSize = this->hidden->mixlen;
 
+	audioPlayed = 1;
+	
+	SDL_CondSignal(audioCond2);
+	SDL_CondWaitTimeout( audioCond, audioMutex, 1000 );
+
+	this->hidden->mixbuf = audioBuffer;
+	
 	SDL_mutexV(audioMutex);
 }
 
@@ -216,12 +232,12 @@ extern jintArray JAVA_EXPORT_NAME(AudioThread_nativeAudioInit) (JNIEnv * env, jo
 	{
 		initData[0] = audioFormat->freq;
 		initData[1] = audioFormat->channels;
-		initData[2] = ( audioFormat->format == AUDIO_S16 ) ? 1 : 0;
+		int bytesPerSample = (audioFormat->format & 0xFF) / 8;
+		initData[2] = ( bytesPerSample == 2 ) ? 1 : 0;
+		audioFormat->format = ( bytesPerSample == 2 ) ? AUDIO_S16 : AUDIO_S8;
 		initData[3] = audioFormat->size;
 		ret=(*env)->NewIntArray(env, 4);
 		(*env)->SetIntArrayRegion(env, ret, 0, 4, (jint *)initData);
-		audioInitialized = 1;
-		SDL_CondSignal(audioCond);
 	}
 	
 	SDL_mutexV(audioMutex);
@@ -229,33 +245,100 @@ extern jintArray JAVA_EXPORT_NAME(AudioThread_nativeAudioInit) (JNIEnv * env, jo
 	return (ret);
 };
 
-extern jint JAVA_EXPORT_NAME(AudioThread_nativeAudioBuffer) ( JNIEnv * env, jobject jobj, jbyteArray data )
+extern jobject JAVA_EXPORT_NAME(AudioThread_nativeAudioInit2) (JNIEnv * env, jobject jobj, jbyteArray buf)
+{
+	jobject ret = NULL;
+
+	if( audioMutex == NULL )
+		return;
+
+	SDL_mutexP(audioMutex);
+	
+	if( audioInitialized == 0 )
+	{
+		/* Allocate mixing buffer */
+		audioBufferJNI = (jbyteArray*)(*env)->NewGlobalRef(env, buf);
+		audioBufferSize = (*env)->GetArrayLength(env, audioBufferJNI);
+		jboolean isCopy = JNI_TRUE;
+		audioBuffer = (unsigned char *) (*env)->GetByteArrayElements(env, audioBufferJNI, &isCopy);
+		if( isCopy == JNI_TRUE )
+			__android_log_print(ANDROID_LOG_ERROR, "libSDL", "AudioThread_nativeAudioInit2() JNI returns a copy of byte array - no audio will be played");
+
+		jniEnv = env;
+
+		int bytesPerSample = (audioFormat->format & 0xFF) / 8;
+		audioFormat->samples = audioBufferSize / bytesPerSample / audioFormat->channels;
+		audioFormat->size = audioBufferSize;
+		SDL_memset(audioBuffer, audioFormat->silence, audioFormat->size);
+		char t[512];
+		//sprintf(t, "AudioThread_nativeAudioInit2() got byte array from JNI: size %i samples %i direct memory %i", audioBufferSize, audioFormat->samples, (isCopy == JNI_FALSE) );
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", t);
+		
+		/*
+		audioBuffer = (Uint8 *) SDL_AllocAudioMem(audioBufferSize);
+		if ( audioBuffer == NULL ) {
+			SDL_mutexV(audioMutex);
+			return NULL;
+		}
+		
+		ret = (*env)->NewDirectByteBuffer(env, audioBuffer, audioBufferSize);
+		*/
+
+		audioInitialized = 1;
+		SDL_CondSignal(audioCond);
+	}
+	
+	SDL_mutexV(audioMutex);
+
+	return 0;
+}
+
+extern jint JAVA_EXPORT_NAME(AudioThread_nativeAudioBufferLock) ( JNIEnv * env, jobject jobj )
 {
 	int ret = 0;
 	
 	if( audioMutex == NULL )
-		return;
+		return(-1);
 	
 	SDL_mutexP(audioMutex);
 	
 	if( !audioInitialized )
-		ret = -1;
-
-	if( audioBuffer == NULL )
 	{
-		ret = 0;
+		SDL_mutexV(audioMutex);
+		SDL_CondSignal(audioCond);
+		return (-1);
 	}
+	
+	if( audioPlayed == 0 )
+		SDL_CondWaitTimeout(audioCond2, audioMutex, 1000);
+
+	if( audioBuffer == NULL ) // Should not happen
+		ret = 0;
 	else
 	{
-		(*env)->SetByteArrayRegion(env, data, 0, audioBufferSize, (jbyte *)audioBuffer);
+		(*jniEnv)->ReleaseByteArrayElements(jniEnv, audioBufferJNI, (jbyte *)audioBuffer, 0);
+		audioBuffer == NULL;
 		ret = audioBufferSize;
-		audioBuffer = NULL;
-		audioBufferSize = 0;
-		SDL_CondSignal(audioCond);
 	}
-
-	SDL_mutexV(audioMutex);
 
 	return ret;
 };
+
+extern jint JAVA_EXPORT_NAME(AudioThread_nativeAudioBufferUnlock) ( JNIEnv * env, jobject jobj )
+{
+	if( audioMutex == NULL )
+		return(-1);
+
+	jboolean isCopy = JNI_TRUE;
+	audioBuffer = (unsigned char *) (*env)->GetByteArrayElements(env, audioBufferJNI, &isCopy);
+	if( isCopy == JNI_TRUE )
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "AudioThread_nativeAudioBufferUnlock() JNI returns a copy of byte array - that's slow");
+
+	audioPlayed = 0;
+	
+	SDL_mutexV(audioMutex);
+	SDL_CondSignal(audioCond);
+
+	return 0;
+}
 

@@ -22,6 +22,9 @@ using namespace std;
 #include "surfaceDB.h"
 #include <fstream>
 #include <iostream>
+#ifdef ANDROID
+#include <android/log.h>
+#endif
 
 SurfaceDB surfaceDB;
 
@@ -56,6 +59,14 @@ SDL_Surface *SurfaceDB::loadSurface( string fn, bool alpha ) {
   }
   
   SDL_Surface *newSurface = SDL_LoadBMP( fn.c_str() );
+  if( newSurface == NULL )
+  {
+    cout << "ERROR: Cannot load image " << fn << endl;
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn).c_str() );
+#endif
+    exit(1);
+  }
   SDL_SetColorKey( newSurface, SDL_SRCCOLORKEY, 
 		   SDL_MapRGB(newSurface->format, transR, transG, transB) );
   if ( alpha ) {
