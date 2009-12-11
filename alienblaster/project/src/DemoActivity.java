@@ -305,6 +305,8 @@ public class DemoActivity extends Activity {
 		// Overrides Back key to use in our app
          if( mGLView != null )
              mGLView.nativeKey( keyCode, 1 );
+         if( keyCode == KeyEvent.KEYCODE_BACK && !downloader.DownloadComplete )
+             onStop();
          return true;
      }
 	
