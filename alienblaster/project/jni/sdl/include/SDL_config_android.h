@@ -50,4 +50,9 @@
 
 #define NO_SDL_GLEXT	1
 
+/* FireSlash found that SDL native memcpy crashes sometimes, these defines fix it */
+#define HAVE_MEMSET 1
+#define HAVE_MEMCPY 1
+#define HAVE_MEMMOVE 1
+
 #endif /* _SDL_config_minimal_h */
