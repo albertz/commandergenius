@@ -36,6 +36,7 @@
 #include "SDL_thread.h"
 #include <jni.h>
 #include <android/log.h>
+#include <string.h> // for memset()
 
 #define ANDROIDAUD_DRIVER_NAME         "android"
 

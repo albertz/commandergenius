@@ -55,6 +55,8 @@ import android.media.AudioManager;
 import android.media.AudioFormat;
 import android.os.PowerManager;
 import android.os.Vibrator;
+import android.hardware.SensorManager;
+import android.hardware.SensorListener;
 
 import android.widget.TextView;
 import org.apache.http.client.methods.*;
@@ -86,8 +88,66 @@ class LoadLibrary {
     }
 }
 
+
+// Accelerometer code partially ripped from http://karanar.net/
+class AccelerometerReader implements SensorListener {
+
+    private long timekeeper;
+
+    private float [] v;
+
+    public AccelerometerReader(Activity context) {
+        v = new float[3];
+        SensorManager sma = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        if( sma != null )
+        {
+            timekeeper = android.os.SystemClock.uptimeMillis();
+            int mask = 0;
+            mask |= SensorManager.SENSOR_ORIENTATION;
+            mask |= SensorManager.SENSOR_ACCELEROMETER;
+            sma.registerListener(this, mask, SensorManager.SENSOR_DELAY_GAME);
+        }
+    }
+
+    public synchronized void onSensorChanged(int sensor, float[] values) {
+        if (android.os.SystemClock.uptimeMillis() < timekeeper + 20) return;
+        timekeeper = android.os.SystemClock.uptimeMillis();
+
+        if (sensor == SensorManager.SENSOR_ACCELEROMETER) {
+            if( values.length >= 1 )
+                v[0] = values[0];
+            if( values.length >= 2 )
+                v[1] = values[1];
+            if( values.length >= 3 )
+                v[2] = values[2];
+        }
+
+    }
+
+    public synchronized void onAccuracyChanged(int i, int i1) {
+        /* @todo implement method */
+    }
+    
+    public synchronized float[] readAccelerometer()
+    {
+        float [] ret = new float[3];
+        ret[0] = v[0];
+        ret[1] = v[1];
+        ret[2] = v[2];
+        return ret;
+    };
+}
+
+
+
 class DemoRenderer implements GLSurfaceView.Renderer {
 
+	public DemoRenderer(Activity context)
+	{
+		super();
+        accelerometer = new AccelerometerReader(context);
+	}
+	
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         nativeInit();
     }
@@ -98,7 +158,8 @@ class DemoRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onDrawFrame(GL10 gl) {
-        nativeRender();
+        float [] f = accelerometer.readAccelerometer();
+        nativeRender(f[0], f[1], f[2]);
     }
 
     public void exitApp() {
@@ -107,16 +168,16 @@ class DemoRenderer implements GLSurfaceView.Renderer {
 
     private static native void nativeInit();
     private static native void nativeResize(int w, int h);
-    private static native void nativeRender();
+    private static native void nativeRender(float accX, float accY, float accZ);
     private static native void nativeDone();
-
+    private AccelerometerReader accelerometer = null;
 }
 
 class DemoGLSurfaceView extends GLSurfaceView {
     public DemoGLSurfaceView(Activity context) {
         super(context);
         mParent = context;
-        mRenderer = new DemoRenderer();
+        mRenderer = new DemoRenderer(context);
         setRenderer(mRenderer);
     }
 
