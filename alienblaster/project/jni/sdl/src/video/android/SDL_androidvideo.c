@@ -737,18 +737,18 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 			#define MIN(x,y) ( (x) < (y) ? (x) : (y) )
 			#define SIGN(x) ( (x) > 0 ? 1 : -1 )
 			// Make fast movement to move display more than slow one
-			float threshold = 0.1f;
+			float threshold = 0.2f;
 			if( fabs( accX - oldAccX ) > threshold )
-				smoothMoveX -= (fabs(accX - oldAccX) - threshold) * SIGN(accX - oldAccX);
+				smoothMoveX += (fabs(accX - oldAccX) - threshold) * SIGN(accX - oldAccX);
 			if( fabs( accY - oldAccY ) > threshold )
-				smoothMoveY -= (fabs(accY - oldAccY) - threshold) * SIGN(accY - oldAccY);
+				smoothMoveY += (fabs(accY - oldAccY) - threshold) * SIGN(accY - oldAccY);
 			if( fabs( accZ - oldAccZ ) > threshold )
-				smoothMoveZ -= (fabs(accZ - oldAccZ) - threshold) * SIGN(accZ - oldAccZ);
+				smoothMoveZ += (fabs(accZ - oldAccZ) - threshold) * SIGN(accZ - oldAccZ);
 			oldAccX = accX;
 			oldAccY = accY;
 			oldAccZ = accZ;
 			
-			float sensitivity = 50.0f;
+			float sensitivity = 80.0f;
 			float maxspeed = 1.3f;
 			float dX = MIN( maxspeed, fabs(smoothMoveX) ) * SIGN(smoothMoveX);
 			float dY = MIN( maxspeed, fabs(smoothMoveY) ) * SIGN(smoothMoveY);
@@ -763,13 +763,25 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 			smoothMoveZ -= dZ;
 			
 			if(memOffsetX < 0)
+			{
 				memOffsetX = 0;
+				smoothMoveX = 0;
+			}
 			if(memOffsetX > memX - sWindowWidth)
+			{
 				memOffsetX = memX - sWindowWidth;
+				smoothMoveX = 0;
+			}
 			if(memOffsetY < 0)
+			{
 				memOffsetY = 0;
+				smoothMoveY = 0;
+			}
 			if(memOffsetY > memY - sWindowHeight)
+			{
 				memOffsetY = memY - sWindowHeight;
+				smoothMoveY = 0;
+			}
 			// TODO: memOffsetZ unused - add zooming? It will look ugly probably
 			
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBufferTemp);
