@@ -45,6 +45,14 @@
 #  define BYTE_ORDER LITTLE_ENDIAN
 #endif
 
+#ifdef __ARMEB__
+#define BIG_ENDIAN 1
+#define BYTE_ORDER BIG_ENDIAN
+#else
+#define LITTLE_ENDIAN 1
+#define BYTE_ORDER LITTLE_ENDIAN
+#endif
+
 #ifdef HAVE_ALLOCA_H
 #  include <alloca.h>
 #endif
