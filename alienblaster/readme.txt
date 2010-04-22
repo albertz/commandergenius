@@ -26,8 +26,7 @@ Note that you may use Volume up/down and Camera keys as game inputs -
 you'll have to redefine them in game keyconfig menu.
 Other keys like Home, Back and End Call will force application quit, and because
 the app itself does not handle SDL_QUIT event correctly (asks for confirmation),
-it will stay in memory until you reboot device. The same will happen if the phone 
-goes to sleep, so hit keyboard often please. (actually it won't stay in memory - it will crash :P )
+it will stay in memory until you reboot device (actually it won't stay in memory - it will crash :P ).
 To exit correctly press Menu key - it's redirected to Escape.
 
 When porting you own app, first of all ensure that your application supports
