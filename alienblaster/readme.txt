@@ -7,7 +7,7 @@ This should be compiled with Android 1.6 SDK and NDK - google for them and insta
 You'll need to install Eclipse or Ant too
 Then symlink this dir to <android-ndk>/apps under the name "alienblaster":
 	ln -s `pwd` <android-ndk>/apps/alienblaster
-Then make symling of alienbuster/src dir into project/jni/alienblaster/src - this should be absolute path:
+Then make symling of alienblaster/src dir into project/jni/alienblaster/src - this should be absolute path:
 	ln -s /home/user/sources/AlienBlaster/src project/jni/alienblaster/src
 Then go to <android-ndk> dir and execute:
 	make APP=alienblaster V=1
@@ -19,19 +19,23 @@ Go to "project" directory and type
 That will create file project/bin/DemoActivity-debug.apk - use "adb install" to test it
 Then you can test it by launching Alien Blaster icon from Android applications menu.
 It's designed for 640x480, and GUI elements are drawn out of place, but you can play the game.
-Note: You should play it with vertical screen orientation (keyboard is closed)
+Note: The game enforces vertical screen orientation, but you may open your keyboard and use it for 
+additional keys - the phone will just keep current screen orientation.
 Fire key is Call key ( = left Ctrl for SDL ), Change weapon is Menu key ( = left Alt for SDL )
 Note that you may use Volume up/down and Camera keys as game inputs -
 you'll have to redefine them in game keyconfig menu.
 Other keys like Home, Back and End Call will force application quit, and because
 the app itself does not handle SDL_QUIT event correctly (asks for confirmation),
 it will stay in memory until you reboot device. The same will happen if the phone 
-goes to sleep, so hit keyboard often please.
+goes to sleep, so hit keyboard often please. (actually it won't stay in memory - it will crash :P )
 To exit correctly press Menu key - it's redirected to Escape.
 
 When porting you own app, first of all ensure that your application supports
 one of 320x200, 320x240 or 320x430 display resolutions and 16 bits per pixel
 (320x430 is resolution for HTC devices, if other vendors will produce Android phones it may differ).
+You may try to use 640x480x16, and scroll through the larger underlying screen with accelerometer, 
+but it will give you 2 FPS at most because I've screwed up with optimizations.
+In the future I'm planning to use accelerometer as a SDL joystick.
 
 Replace all strings "alienblaster" and "de.schwardtnet.alienblaster" with
 the name of your application and your reversed webpage address (or any unique string):
