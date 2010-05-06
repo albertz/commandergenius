@@ -50,6 +50,8 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.KeyEvent;
+import android.view.Window;
+import android.view.WindowManager;
 import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.media.AudioFormat;
@@ -303,6 +305,12 @@ public class DemoActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // fullscreen mode
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                   WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+
         TextView tv = new TextView(this);
         tv.setText("Initializing");
         setContentView(tv);
