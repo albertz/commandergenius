@@ -29,7 +29,8 @@
 
 #include <stdarg.h>
 #include <stdint.h>
-
+#include <string.h> // for memmove etc
+#include <strings.h> // for bcopy etc
 
 #define SDL_AUDIO_DRIVER_ANDROID	1
 
@@ -50,9 +51,20 @@
 
 #define NO_SDL_GLEXT	1
 
-/* FireSlash found that SDL native memcpy crashes sometimes, these defines fix it */
+/* FireSlash found that SDL native memcpy crashes sometimes, these defines fix it (and they are faster) */
 #define HAVE_MEMSET 1
 #define HAVE_MEMCPY 1
 #define HAVE_MEMMOVE 1
+#define HAVE_BCOPY 1
+#define HAVE_MEMCMP 1
+#define HAVE_STRLEN 1
+#define HAVE_STRLCPY 1
+#define HAVE_STRLCAT 1
+#define HAVE_STRDUP 1
+#define HAVE_INDEX 1
+#define HAVE_RINDEX 1
+#define HAVE_STRCHR 1
+#define HAVE_STRRCHR 1
+#define HAVE_STRSTR 1
 
 #endif /* _SDL_config_minimal_h */
