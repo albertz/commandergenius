@@ -38,9 +38,8 @@ In the future I'm planning to use accelerometer as a SDL joystick.
 
 Replace all strings "alienblaster" and "de.schwardtnet.alienblaster" with
 the name of your application and your reversed webpage address (or any unique string):
-	Application.mk:2
 	project/AndroidManifest.xml:3
-	project/src/DemoActivity.java:42 and 71
+	project/src/DemoActivity.java:35
 	project/jni/Android.mk:3 and 10
 	project/res/values/strings.xml:3
 	(that's all, maybe I forgot something)

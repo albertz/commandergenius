@@ -103,7 +103,8 @@ static void * memBuffer1 = NULL;
 static void * memBuffer2 = NULL;
 static void * memBuffer = NULL;
 // We have one Java thread drawing on GL surface, and another native C thread (typically main()) feeding it with video data
-static SDL_Thread * mainThread = NULL;
+extern SDL_Thread * SDL_mainThread;
+SDL_Thread * SDL_mainThread = NULL;
 // Some wicked multithreading
 static SDL_mutex * WaitForNativeRender = NULL;
 static SDL_cond * WaitForNativeRender1 = NULL;
@@ -411,27 +412,12 @@ int ANDROID_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors)
 
 /* JNI-C++ wrapper stuff */
 
-extern int main( int argc, char ** argv );
-static int SDLCALL MainThreadWrapper(void * dummy)
-{
-	int argc = 1;
-	char * argv[] = { "sdl" };
-	chdir(SDL_CURDIR_PATH);
-	return main( argc, argv );
-};
-
 #ifndef SDL_JAVA_PACKAGE_PATH
 #error You have to define SDL_JAVA_PACKAGE_PATH to your package path with dots replaced with underscores, for example "com_example_SanAngeles"
 #endif
 #define JAVA_EXPORT_NAME2(name,package) Java_##package##_##name
 #define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
-
-extern void
-JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject  thiz )
-{
-	mainThread = SDL_CreateThread( MainThreadWrapper, NULL );
-}
 
 extern void
 JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint w, jint h )
@@ -445,12 +431,12 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint 
 extern void
 JAVA_EXPORT_NAME(DemoRenderer_nativeDone) ( JNIEnv*  env, jobject  thiz )
 {
-	if( mainThread )
+	if( SDL_mainThread )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "quitting...");
 		SDL_PrivateQuit();
-		SDL_WaitThread(mainThread, NULL);
-		mainThread = NULL;
+		SDL_WaitThread(SDL_mainThread, NULL);
+		SDL_mainThread = NULL;
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "quit OK");
 	}
 }

@@ -29,8 +29,7 @@
 
 #include <stdarg.h>
 #include <stdint.h>
-#include <string.h> // for memmove etc
-#include <strings.h> // for bcopy etc
+#include <sys/mman.h>
 
 #define SDL_AUDIO_DRIVER_ANDROID	1
 
@@ -52,19 +51,81 @@
 #define NO_SDL_GLEXT	1
 
 /* FireSlash found that SDL native memcpy crashes sometimes, these defines fix it (and they are faster) */
+#define HAVE_LIBC 1
+
+#define HAVE_ALLOCA_H 1
+#define HAVE_SYS_TYPES_H 1
+#define HAVE_STDIO_H 1
+#define STDC_HEADERS 1
+#define HAVE_STDLIB_H 1
+#define HAVE_STDARG_H 1
+#define HAVE_MALLOC_H 1
+#define HAVE_MEMORY_H 1
+#define HAVE_STRING_H 1
+#define HAVE_STRINGS_H 1
+#define HAVE_INTTYPES_H 1
+#define HAVE_STDINT_H 1
+#define HAVE_CTYPE_H 1
+#define HAVE_MATH_H 1
+#undef HAVE_ICONV_H
+#define HAVE_SIGNAL_H 1
+#undef HAVE_ALTIVEC_H
+
+#define HAVE_MALLOC 1
+#define HAVE_CALLOC 1
+#define HAVE_REALLOC 1
+#define HAVE_FREE 1
+#define HAVE_ALLOCA 1
+#define HAVE_GETENV 1
+#define HAVE_PUTENV 1
+#define HAVE_UNSETENV 1
+#define HAVE_QSORT 1
+#define HAVE_ABS 1
+#define HAVE_BCOPY 1
 #define HAVE_MEMSET 1
 #define HAVE_MEMCPY 1
 #define HAVE_MEMMOVE 1
-#define HAVE_BCOPY 1
 #define HAVE_MEMCMP 1
 #define HAVE_STRLEN 1
 #define HAVE_STRLCPY 1
 #define HAVE_STRLCAT 1
 #define HAVE_STRDUP 1
+#undef HAVE__STRREV
+#undef HAVE__STRUPR
+#undef HAVE__STRLWR
 #define HAVE_INDEX 1
 #define HAVE_RINDEX 1
 #define HAVE_STRCHR 1
 #define HAVE_STRRCHR 1
 #define HAVE_STRSTR 1
+#undef HAVE_ITOA
+#undef HAVE__LTOA
+#undef HAVE__UITOA
+#undef HAVE__ULTOA
+#define HAVE_STRTOL
+#define HAVE_STRTOUL
+#undef HAVE__I64TOA
+#undef HAVE__UI64TOA
+#define HAVE_STRTOLL 1
+#define HAVE_STRTOULL 1
+#define HAVE_STRTOD 1
+#define HAVE_ATOI 1
+#define HAVE_ATOF 1
+#define HAVE_STRCMP 1
+#define HAVE_STRNCMP 1
+#undef HAVE__STRICMP
+#define HAVE_STRCASECMP 1
+#undef HAVE__STRNICMP
+#define HAVE_STRNCASECMP 1
+#define HAVE_SSCANF 1
+#define HAVE_SNPRINTF 1
+#define HAVE_VSNPRINTF 1
+#undef HAVE_ICONV
+#define HAVE_SIGACTION 1
+#define HAVE_SETJMP 1
+#define HAVE_NANOSLEEP 1
+#define HAVE_CLOCK_GETTIME 1
+#define HAVE_GETPAGESIZE 1
+#define HAVE_MPROTECT 1
 
 #endif /* _SDL_config_minimal_h */
