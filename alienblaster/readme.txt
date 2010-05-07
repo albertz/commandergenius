@@ -1,7 +1,7 @@
 This is Alien Blaster game ported to Google Android (original sources: http://www.schwardtnet.de/alienblaster/ ).
 I did not change anything in Alien Blaster sources, except for SCREEN_WIDTH,
-SCREEN_HEIGHT and BIT_DEPTH constants in global.h, to support 320x430x16bpp video mode,
-and also made audio initialize after main() has been called, not inside static initializers (ugh)
+SCREEN_HEIGHT and BIT_DEPTH constants in global.h, to support 320x480x16bpp video mode,
+and also made audio initialize after main() has been called, not inside static initializers.
 
 This should be compiled with Android 1.6 SDK and NDK - google for them and install them as described in their docs.
 You'll need to install Eclipse or Ant too
@@ -30,36 +30,47 @@ it will stay in memory until you reboot device (actually it won't stay in memory
 To exit correctly press Menu key - it's redirected to Escape.
 
 When porting you own app, first of all ensure that your application supports
-one of 320x200, 320x240 or 320x430 display resolutions and 16 bits per pixel
-(320x430 is resolution for HTC devices, if other vendors will produce Android phones it may differ).
-You may try to use 640x480x16, and scroll through the larger underlying screen with accelerometer, 
-but it will give you 2 FPS at most because I've screwed up with optimizations.
-In the future I'm planning to use accelerometer as a SDL joystick.
+one of 320x200, 320x240 or 320x480 display resolutions and 16 bits per pixel
+(320x480 is native resolution for HTC devices, if other vendors will produce Android phones it may differ).
+You may try to use 640x480, but it will be 2x-shrinked, and also it's very slow.
 
-Replace all strings "alienblaster" and "de.schwardtnet.alienblaster" with
-the name of your application and your reversed webpage address (or any unique string):
-	project/AndroidManifest.xml:3
-	project/src/DemoActivity.java:35
-	project/jni/Android.mk:3 and 10
-	project/res/values/strings.xml:3
-	(that's all, maybe I forgot something)
+To compile your own app, put your app sources into project/jni/application dir (remove Alien Blaster first),
+and launch script ChangeAppSettings.sh - it will put the name of your app in several places in sources.
+The C++ files shall have .cpp extension to be compiled.
+The file which contains "main()" function definition shall include "SDL_main.h" header, or app won't run
+(do not include "SDL_main.h" into any other files plz).
 
-Make directory project/jni/<yourapp>, copy there file project/jni/alienblaster/Android.mk and edit it -
-rename all "alienblaster" strings to your app name, add subdirs of your app under "CG_SUBDIRS := src"
-and change "LOCAL_CPP_EXTENSION := .cc" to an extension your C++ files are using
 Then repeat steps:
 	make APP=<yourapp> V=1
 	ant debug
 
 Application data is not bundled with app itself - it should be downloaded from net on first run.
-Create .ZIP file with your application data, and put it somewhere on HTTP server,
-then replace project/src/DemoActivity.java:73 with download URL.
-If your app data is bigger than 5 megabytes it's better to store it on SD card -
-set DownloadToSdcard variable to true in project/src/DemoActivity.java:78,
-and set appropriate path in project/jni/Android.mk:10
-(I did not test the code with SD card, so it may fail)
+Create .ZIP file with your application data, and put it somewhere on HTTP server - ChangeAppSettings.sh
+will ask you for the URL.
+If your app data is bigger than 5 megabytes it's better to store it on SD card, 
+internal flash on Android is very limited.
 
 If you'll add new libs add them to project/jni/, copy Android.mk from existing lib, and
 add libname to Application.mk and project/jni/<yourapp>/Android.mk
 
-Audio formats currently supported are AUDIO_S8 and AUDIO_S16 (signed 8-bit and 16-bit PCM)
+Audio formats currently supported are AUDIO_S8 and AUDIO_S16 (signed 8-bit and 16-bit PCM).
+
+Known bugs:
+
+1. Application will crash on exit or when you're pressing "Home" button - the correct behavior for Android apps
+is to stay in memory and go to foreground when you're launching app again, that's not working yet because
+app will lose OpenGL context (there are rumors that it won't lose GL context in 2.1 SDK).
+
+2. Move to SDL 1.3, and add hardware surfaces and OpenGL support.
+
+3. Multitouch support - it is available since 2.0 SDK, but not on 1.6 - I'll have to follow
+http://devtcg.blogspot.com/2009/12/gracefully-supporting-multiple-android.html to make it compile.
+
+4. In the future I'm planning to use accelerometer as a SDL joystick.
+
+5. Many SDL games require keyboard, and newer phones have only touchscreen - there should be configuration screen
+where you can toggle on-screen keyboard, bind existing keys like volume up/down to PgUp/PgDown for example,
+and configure other actions like accelerometer tilt as keypresses.
+
+6. Progress bar for data downloader.
+
