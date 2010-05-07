@@ -30,9 +30,8 @@ it will stay in memory until you reboot device (actually it won't stay in memory
 To exit correctly press Menu key - it's redirected to Escape.
 
 When porting you own app, first of all ensure that your application supports
-one of 320x200, 320x240 or 320x480 display resolutions and 16 bits per pixel
-(320x480 is native resolution for HTC devices, if other vendors will produce Android phones it may differ).
-You may try to use 640x480, but it will be 2x-shrinked, and also it's very slow.
+one of 320x200, 320x240 or 480x320 display resolutions and 16 bits per pixel
+(480x320 is native resolution for G1, Supersonic has 800x480).
 
 To compile your own app, put your app sources into project/jni/application dir (remove Alien Blaster first),
 and launch script ChangeAppSettings.sh - it will put the name of your app in several places in sources.
@@ -74,3 +73,4 @@ and configure other actions like accelerometer tilt as keypresses.
 
 6. Progress bar for data downloader.
 
+7. Export phone vibrator to SDL - interface is available in SDL 1.3
