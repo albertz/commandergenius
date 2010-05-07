@@ -209,9 +209,9 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	}
 	/* Modes sorted largest to smallest */
 	SDL_modelist[0]->w = sWindowWidth; SDL_modelist[0]->h = sWindowHeight;
-	SDL_modelist[1]->w = 320; SDL_modelist[1]->h = 240; // Always available on any screen and any orientation
-	SDL_modelist[2]->w = 320; SDL_modelist[2]->h = 200; // Always available on any screen and any orientation
-	SDL_modelist[3]->w = 640; SDL_modelist[3]->h = 480; // Requires accelerometer to scroll large virtual display surface
+	SDL_modelist[1]->w = 640; SDL_modelist[1]->h = 480; // Will likely be shrinked
+	SDL_modelist[2]->w = 320; SDL_modelist[2]->h = 240; // Always available on any screen and any orientation
+	SDL_modelist[3]->w = 320; SDL_modelist[3]->h = 200; // Always available on any screen and any orientation
 	SDL_modelist[4] = NULL;
 
 	WaitForNativeRender = SDL_CreateMutex();

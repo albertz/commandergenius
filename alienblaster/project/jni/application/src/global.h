@@ -56,7 +56,7 @@ int getRandValue( const int *choicesWeights, int nrChoices, int sumWeights=0 );
 void initAllSurfaces();
 
 // screen options
-const int SCREEN_WIDTH = 320;
+const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 const int BIT_DEPTH = 16;
 
