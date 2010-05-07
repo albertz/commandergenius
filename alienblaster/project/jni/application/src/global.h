@@ -57,7 +57,7 @@ void initAllSurfaces();
 
 // screen options
 const int SCREEN_WIDTH = 320;
-const int SCREEN_HEIGHT = 430;
+const int SCREEN_HEIGHT = 480;
 const int BIT_DEPTH = 16;
 
 const int MAX_PLAYER_CNT = 2;
