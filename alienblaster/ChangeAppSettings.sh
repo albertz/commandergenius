@@ -84,9 +84,9 @@ cat project/res/values/strings.xml | \
 mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
 
 # Force rebuild of C-Java bindings
-touch project/jni/sdl/include/SDL_main.h
+touch project/jni/sdl_main/*.c
 touch project/jni/sdl/src/video/android/*.c
 touch project/jni/sdl/src/audio/android/*.c
-rm project/libs/armeabi/libapplication.so project/libs/armeabi/libsdl.so
+rm project/libs/armeabi/libapplication.so project/libs/armeabi/libsdl.so project/libs/armeabi/libsdl_main.so
 
 echo Done

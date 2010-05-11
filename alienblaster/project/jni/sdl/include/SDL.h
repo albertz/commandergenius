@@ -27,9 +27,7 @@
 #ifndef _SDL_H
 #define _SDL_H
 
-#ifndef ANDROID
 #include "SDL_main.h"
-#endif
 #include "SDL_stdinc.h"
 #include "SDL_audio.h"
 #include "SDL_cdrom.h"
