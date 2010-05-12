@@ -4,12 +4,12 @@ SCREEN_HEIGHT and BIT_DEPTH constants in global.h, to support 320x480x16bpp vide
 and also made audio initialize after main() has been called, not inside static initializers.
 
 This should be compiled with Android 1.6 SDK and NDK - google for them and install them as described in their docs.
-You'll need to install Eclipse or Ant too
+You'll need to install Ant too
 Then symlink this dir to <android-ndk>/apps under the name "alienblaster":
 	ln -s `pwd` <android-ndk>/apps/alienblaster
 Then go to <android-ndk> dir and execute:
 	make APP=alienblaster V=1
-Hopefully it will compile the file project/libs/armeabi/libalienblaster.so
+Hopefully it will compile a bunch of libs under project/libs/armeabi
 Then you'll have to compile Android .apk package with Java wrapper code for this lib:
 Go to "project" directory and type
 	android update project -p .
@@ -34,11 +34,9 @@ one of 320x200, 320x240 or 480x320 display resolutions and 16 bits per pixel
 To compile your own app, put your app sources into project/jni/application dir (remove Alien Blaster first),
 and launch script ChangeAppSettings.sh - it will put the name of your app in several places in sources.
 The C++ files shall have .cpp extension to be compiled.
-The file which contains "main()" function definition shall include "SDL_main.h" header, or app won't run
-(do not include "SDL_main.h" into any other files plz).
 
 Then repeat steps:
-	make APP=<yourapp> V=1
+	make APP=alienblaster V=1
 	ant debug
 
 Application data is not bundled with app itself - it should be downloaded from net on first run.
