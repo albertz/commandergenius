@@ -7,8 +7,6 @@ This should be compiled with Android 1.6 SDK and NDK - google for them and insta
 You'll need to install Eclipse or Ant too
 Then symlink this dir to <android-ndk>/apps under the name "alienblaster":
 	ln -s `pwd` <android-ndk>/apps/alienblaster
-Then make symling of alienblaster/src dir into project/jni/alienblaster/src - this should be absolute path:
-	ln -s /home/user/sources/AlienBlaster/src project/jni/alienblaster/src
 Then go to <android-ndk> dir and execute:
 	make APP=alienblaster V=1
 Hopefully it will compile the file project/libs/armeabi/libalienblaster.so
