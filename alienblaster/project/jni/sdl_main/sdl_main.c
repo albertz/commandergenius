@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include <jni.h>
+#include <android/log.h>
 #include "SDL_thread.h"
 #include "SDL_main.h"
 

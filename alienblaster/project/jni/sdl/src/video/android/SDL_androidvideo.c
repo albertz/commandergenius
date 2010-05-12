@@ -52,7 +52,6 @@
 #include <GLES/glext.h>
 #include <sys/time.h>
 #include <time.h>
-#include <android/log.h>
 #include <stdint.h>
 #include <math.h>
 #include <string.h> // for memset()
@@ -214,8 +213,6 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[3]->w = 320; SDL_modelist[3]->h = 200; // Always available on any screen and any orientation
 	SDL_modelist[4] = NULL;
 
-	WaitForNativeRender = SDL_CreateMutex();
-	WaitForNativeRender1 = SDL_CreateCond();
 	/* We're done! */
 	return(0);
 }
@@ -230,6 +227,8 @@ SDL_Rect **ANDROID_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags)
 SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 				int width, int height, int bpp, Uint32 flags)
 {
+    __android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): application requested mode %dx%d", width, height);
+
 	if ( memBuffer1 )
 		SDL_free( memBuffer1 );
 	if ( memBuffer2 )
@@ -243,6 +242,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	
 	memBuffer1 = SDL_malloc(memX * memY * (bpp / 8));
 	if ( ! memBuffer1 ) {
+	    __android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
 		SDL_SetError("Couldn't allocate buffer for requested mode");
 		return(NULL);
 	}
@@ -252,6 +252,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	{
 		memBuffer2 = SDL_malloc(memX * memY * (bpp / 8));
 		if ( ! memBuffer2 ) {
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
 			SDL_SetError("Couldn't allocate buffer for requested mode");
 			return(NULL);
 		}
@@ -265,6 +266,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	if ( ! SDL_ReallocFormat(current, bpp, 0, 0, 0, 0) ) {
 		SDL_free(memBuffer);
 		memBuffer = NULL;
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate new pixel format for requested mode");
 		SDL_SetError("Couldn't allocate new pixel format for requested mode");
 		return(NULL);
 	}
@@ -275,10 +277,17 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	current->h = height;
 	current->pitch = memX * (bpp / 8);
 	current->pixels = memBuffer;
+
+	if( ! WaitForNativeRender )
+	{
+		WaitForNativeRender = SDL_CreateMutex();
+		WaitForNativeRender1 = SDL_CreateCond();
+	}
 	
 	/* Wait 'till we can draw */
 	ANDROID_FlipHWSurface(this, current);
 	/* We're done */
+    __android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): done");
 	return(current);
 }
 
@@ -353,13 +362,18 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 {
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame is ready to render");
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame is ready to render");
+	if( ! WaitForNativeRender )
+	{
+		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "FlipHWSurface: called before SetVideoMode");
+		return 0;
+	}
 	SDL_mutexP(WaitForNativeRender);
 	while( WaitForNativeRenderState != Render_State_Finished )
 	{
-		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 1000 ) != 0 )
+		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
 		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame failed to render");
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame failed to render");
 			SDL_mutexV(WaitForNativeRender);
 			return(0);
 		}
@@ -367,17 +381,21 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 
 	WaitForNativeRenderState = Render_State_Started;
 
+	SDL_mutexV(WaitForNativeRender);
 	SDL_CondSignal(WaitForNativeRender1);
-	
+	SDL_mutexP(WaitForNativeRender);
+
 	if( surface->flags & SDL_DOUBLEBUF )
 	{
-
-		if( WaitForNativeRenderState != Render_State_Started )
-			SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 1000 );
+		if( WaitForNativeRenderState == Render_State_Started )
+			if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
+			{
+				__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame rendering timed out");
+			}
 
 		if( WaitForNativeRenderState != Render_State_Started )
 		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame rendering done");
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame rendering done");
 			if( memBuffer == memBuffer1 )
 				memBuffer = memBuffer2;
 			else
@@ -390,8 +408,9 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	{
 		while( WaitForNativeRenderState != Render_State_Finished )
 		{
-			if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 1000 ) != 0 )
+			if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
 			{
+				__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame is too slow to render");
 				SDL_mutexV(WaitForNativeRender);
 				return(0);
 			};
@@ -401,6 +420,8 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	SDL_mutexV(WaitForNativeRender);
 
 	processAndroidTrackballKeyDelays( -1, 0 );
+	
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: exit");
 	
 	return(0);
 };
@@ -424,7 +445,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint 
 {
     sWindowWidth  = w;
     sWindowHeight = h;
-    __android_log_print(ANDROID_LOG_INFO, "libSDL", "resize w=%d h=%d", w, h);
+    __android_log_print(ANDROID_LOG_INFO, "libSDL", "Physical screen resolution is %dx%d", w, h);
 }
 
 /* Call to finalize the graphics state */
@@ -693,13 +714,16 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 			SDL_mutexP(WaitForNativeRender);
 		
 			WaitForNativeRenderState = Render_State_Finished;
+
+			SDL_mutexV(WaitForNativeRender);
 			SDL_CondSignal(WaitForNativeRender1);
+			SDL_mutexP(WaitForNativeRender);
 		
 			while( WaitForNativeRenderState != Render_State_Started )
 			{
-				if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 1000 ) != 0 )
+				if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
 				{
-					//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Frame failed to render");
+					__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeRender: Frame failed to render");
 					SDL_mutexV(WaitForNativeRender);
 					return;
 				}
@@ -709,13 +733,14 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 
 			WaitForNativeRenderState = Render_State_Processing;
 
-			SDL_CondSignal(WaitForNativeRender1);
-	
 			SDL_mutexV(WaitForNativeRender);
+
+			SDL_CondSignal(WaitForNativeRender1);
 		}
 		else
 			memBufferTemp = memBuffer;
-
+		
+		/*
 		if( sWindowWidth < memX || sWindowHeight < memY )
 		{
 			// Move the large virtual surface with accelerometer
@@ -784,10 +809,12 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 			glDrawTexiOES(0, 0, 1, sWindowWidth, sWindowHeight);
 		}
 		else
+		*/
 		{
 			// TODO: use accelerometer as joystick
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBufferTemp);
 			glDrawTexiOES(0, sWindowHeight-memY, 1, memX, memY);
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeRender: Frame rendered");
 		}
 
 		//glFinish(); //glFlush();

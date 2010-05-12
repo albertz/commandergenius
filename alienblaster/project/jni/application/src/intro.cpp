@@ -19,6 +19,8 @@
 ***************************************************************************/
 using namespace std;
 
+#include <android/log.h>
+
 #include "intro.h"
 #include "global.h"
 #include "surfaceDB.h"
@@ -43,6 +45,8 @@ Intro::Intro( SDL_Surface *scr ) {
 Intro::~Intro() {}
 
 void Intro::run( GameStates &gameState ) {
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Intro::run()");
 
   if ( playMusicOn && Mixer::mixer().whichMusicPlaying() != MUSIC_INTRO ) {
     Mixer::mixer().playMusic( MUSIC_INTRO, -1, 1000 );

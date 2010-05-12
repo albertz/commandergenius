@@ -20,13 +20,31 @@
 #ifndef _AS_STRING_H_
 #define _AS_STRING_H_
 
-#include <sstream>
+//#include <sstream>
+#include <stdio.h>
 
+
+// TODO: why the hell this function deadlocks? Is ostringstream illegal in Android? And why did it work earlier?
+/*
 template<typename T> std::string asString(const T& obj) {
+
   std::ostringstream t;
   t << obj;
   std::string res(t.str());
   return res;  
+}
+*/
+
+static inline std::string asString(int obj) {
+	char t[64];
+	sprintf(t, "%i", obj);
+	return std::string (t);
+}
+
+static inline std::string asString(unsigned int obj) {
+	char t[64];
+	sprintf(t, "%u", obj);
+	return std::string (t);
 }
 
 #endif

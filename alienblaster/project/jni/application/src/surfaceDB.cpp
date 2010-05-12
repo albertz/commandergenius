@@ -55,6 +55,9 @@ SDL_Surface *SurfaceDB::loadSurface( string fn, bool alpha ) {
   ifstream inputFile ( fn.c_str(), ios::in);
   if (!inputFile.good()) {
     cout << "ERROR: file " << fn << " does not exist!" << endl;
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn).c_str() );
+#endif
     exit(1);
   }
   

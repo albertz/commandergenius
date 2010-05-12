@@ -113,14 +113,14 @@ class AccelerometerReader implements SensorListener {
 
 class DemoRenderer implements GLSurfaceView.Renderer {
 
-	public DemoRenderer(Activity context)
+	public DemoRenderer(Activity _context)
 	{
 		super();
-        accelerometer = new AccelerometerReader(context);
+		context = _context;
 	}
 	
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        nativeInit();
+        // nativeInit();
     }
 
     public void onSurfaceChanged(GL10 gl, int w, int h) {
@@ -129,6 +129,10 @@ class DemoRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onDrawFrame(GL10 gl) {
+        if( accelerometer == null) {
+            accelerometer = new AccelerometerReader(context);
+            nativeInit();
+        }
         float [] f = accelerometer.readAccelerometer();
         nativeRender(f[0], f[1], f[2]);
     }
@@ -142,6 +146,7 @@ class DemoRenderer implements GLSurfaceView.Renderer {
     private static native void nativeRender(float accX, float accY, float accZ);
     private static native void nativeDone();
     private AccelerometerReader accelerometer = null;
+    private Activity context = null;
 }
 
 class DemoGLSurfaceView extends GLSurfaceView {

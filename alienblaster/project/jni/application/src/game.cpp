@@ -22,6 +22,8 @@ using namespace std;
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <android/log.h>
+
 #include "SDL.h"
 #include "mixer.h"
 #include "game.h"
@@ -72,26 +74,36 @@ int difficultyLevel;
 float actBackgroundPos;
 
 Game::Game() {
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() 0");
   videoserver = new Video();
   screen = 0;
   screen = videoserver->init();
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() 1");
   settings = new Settings();
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() 11");
   intro = new Intro( screen );
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() 12");
   setDifficulty = new SetDifficulty( screen );
   menuArcadeMode = new MenuArcadeMode( screen );
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() 13");
   
   pauseSprite = surfaceDB.loadSurface( FN_PAUSED );
   youLoseSprite = surfaceDB.loadSurface( FN_YOU_LOSE );
   youWinSprite = surfaceDB.loadSurface( FN_YOU_WIN );
   // for arcadeMode
   gameOverSprite = surfaceDB.loadSurface( FN_GAME_OVER );
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() 14");
 
   nukeEffectSurface = surfaceDB.loadSurface( FN_NUKE_EFFECT );
 
   bossAlarm = Mixer::mixer().loadSample( FN_SOUND_BOSS_ALARM, 60 );
 
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() 15");
+
   fontTime = new Font( FN_FONT_NUMBERS_TIME );
   fontSizeTime = fontTime->getCharWidth();
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() 16");
 
   racers = 0;
   explosions = 0;
@@ -126,6 +138,8 @@ Game::Game() {
   background = new Background();
   loadLevel( FN_LEVEL_ONE_PLAYER );
 
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() 2");
+
   SDL_Surface *loadingSprite = surfaceDB.loadSurface( FN_LOADING );
   SDL_Rect dest;
   dest.x = (SCREEN_WIDTH - loadingSprite->w ) / 2;
@@ -134,7 +148,9 @@ Game::Game() {
   dest.h = loadingSprite->h;
   SDL_BlitSurface( loadingSprite, 0, screen, &dest );
   SDL_Flip( screen );
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() 3");
   initAllSurfaces();
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Game::Game() done");
 }
 
 Game::~Game(){

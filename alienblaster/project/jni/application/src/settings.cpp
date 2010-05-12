@@ -22,6 +22,7 @@ using namespace std;
 #include <cassert>
 #include <string>
 #include <map>
+#include <android/log.h>
 #include "SDL.h"
 #include "options.h"
 #include "settings.h"
@@ -38,16 +39,25 @@ Settings *settings;
 Settings::Settings() {
   opfile = NULL;
 
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::Settings() 0");
+  
   introSprite = surfaceDB.loadSurface( FN_ALIENBLASTER_INTRO );
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::Settings() 1");
+  
   activeChoiceSprite = surfaceDB.loadSurface( FN_INTRO_SHOW_CHOICE );
   bluePlain = surfaceDB.loadSurface( FN_SETTINGS_BLUE, true );
   whitePlain = surfaceDB.loadSurface( FN_SETTINGS_WHITE, false );
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::Settings() 2");
 
   fontMenu = new Font ( FN_FONT_SETTINGS );
   fontMenuHighlighted = new Font ( FN_FONT_SETTINGS_HIGHLIGHTED );
   fontNormal = new Font( FN_FONT_SETTINGS_SMALL );
   fontKey = new Font ( FN_FONT_SETTINGS_SMALL_BLUE );
   fontHighlighted = new Font( FN_FONT_SETTINGS_SMALL_HIGHLIGHTED );
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::Settings() 3");
 
   playerEventNames[ PE_UNKNOWN ] = "UNKNOWN"; 
   playerEventNames[ PE_UP ]    = "UP"; 
@@ -77,9 +87,16 @@ Settings::Settings() {
   defaultSettings[ string("PLAYER1-") + playerEventNames[ PE_FIRE_WEAPONS ] ] = SDLK_LCTRL;
   defaultSettings[ string("PLAYER1-") + playerEventNames[ PE_FIRE_SPECIALS ] ] = SDLK_LALT;
 
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::Settings() 4");
+
   setKeyNames();
 
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::Settings() 5");
+
   loadSettings();
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::Settings() done");
+
 }
 
 
@@ -97,24 +114,33 @@ void Settings::loadSettings() {
   if (opfile) {
     delete opfile;
   }
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::loadSettings() 1");
   opfile = new Options( FN_SETTINGS );
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::loadSettings() 2");
   playerKeys.clear();
   for(int i=0; i < MAX_PLAYER_CNT; ++i) {
+    __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::loadSettings() 21: %d", i);
     PlayerEventKeys pk;
     for(int t=1; t < PlayerEventCnt; ++t) {
+      __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::loadSettings() 22: %d %d", i, t);
+      __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::loadSettings() 221: %d %d str %s", i, t, asString(i).c_str());
       int key;
       string keyname = string("PLAYER") + asString(i) + "-" + playerEventNames[(PlayerEvent)t];
+      __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::loadSettings() 23: %d %d", i, t);
       if (!opfile->getInt( keyname , key)) {
 	key = defaultSettings[ keyname ];
 	restoredSettings = true;
       }
       pk[ (PlayerEvent)t ] = (SDLKey)key;
+      __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::loadSettings() 24: %d %d", i, t);
     }
     playerKeys.push_back(pk);
   }
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::loadSettings() 3");
   if (restoredSettings) {
     saveSettings();
   }
+  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Settings::loadSettings() done");
 }
 
 void Settings::saveSettings() {

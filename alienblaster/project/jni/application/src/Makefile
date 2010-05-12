@@ -40,7 +40,7 @@ realclean:
 
 rebuild: realclean game
 
-.SUFFIXES: .cc
+.SUFFIXES: .cpp
 
 # How to compile a c++ programm
 $(GAME_NAME): $(OBJECT_FILES)
@@ -50,7 +50,7 @@ $(GAME_NAME): $(OBJECT_FILES)
 	@$(COMPILER) $(GAME_LIBS) -o $(GAME_NAME) $(OBJECT_FILES)
 	mv $(GAME_NAME) ../
 
-%.o: %.cc
+%.o: %.cpp
 	@echo ""
 	@echo ""
 	@echo "Compiling $<"
@@ -60,7 +60,7 @@ depend:  dep
 
 dep:
 	-touch Makefile.dep
-	-makedepend $(INCLUDE_PATH) -Y -f Makefile.dep *.cc 2> /dev/null
+	-makedepend $(INCLUDE_PATH) -Y -f Makefile.dep *.cpp 2> /dev/null
 	-rm -f Makefile.dep.bak
 
 -include Makefile.dep

@@ -164,13 +164,13 @@ bool Options::setStr(const string newValue, const string keyword) {
 
 
 bool Options::setInt(const int newValue, const string keyword) {
-  keymap[keyword] = asString<int>( newValue );
+  keymap[keyword] = asString( newValue );
   return true;
 }
 
 
 bool Options::setUInt(const unsigned int newValue, const string keyword) {
-  keymap[keyword] = asString<unsigned int>( newValue );
+  keymap[keyword] = asString( newValue );
   return true;
 }
 
