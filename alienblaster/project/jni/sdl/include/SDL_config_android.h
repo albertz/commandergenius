@@ -48,8 +48,6 @@
 
 #define HAVE_STDIO_H	1
 
-#define NO_SDL_GLEXT	1
-
 /* FireSlash found that SDL native memcpy crashes sometimes, these defines fix it (and they are faster) */
 #define HAVE_LIBC 1
 

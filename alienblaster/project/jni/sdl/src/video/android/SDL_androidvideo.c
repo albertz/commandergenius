@@ -72,6 +72,7 @@ static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface);
 static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface);
 static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface);
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface);
+static void ANDROID_GL_SwapBuffers(_THIS);
 
 /* etc. */
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
@@ -97,6 +98,7 @@ static int memY = 0;
 static void * memBuffer1 = NULL;
 static void * memBuffer2 = NULL;
 static void * memBuffer = NULL;
+static int sdl_opengl = 0;
 // We have one Java thread drawing on GL surface, and another native C thread (typically main()) feeding it with video data
 extern SDL_Thread * SDL_mainThread;
 SDL_Thread * SDL_mainThread = NULL;
@@ -178,6 +180,7 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->GetWMInfo = NULL;
 	device->InitOSKeymap = ANDROID_InitOSKeymap;
 	device->PumpEvents = ANDROID_PumpEvents;
+	device->GL_SwapBuffers = ANDROID_GL_SwapBuffers;
 
 	device->free = ANDROID_DeleteDevice;
 
@@ -230,34 +233,42 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	if ( memBuffer2 )
 		SDL_free( memBuffer2 );
 
+	memBuffer = memBuffer1 = memBuffer2 = NULL;
+
+	sdl_opengl = (flags & SDL_OPENGL) ? 1 : 0;
+
 	memX = width;
 	memY = height;
 	
-	memBuffer1 = SDL_malloc(memX * memY * (bpp / 8));
-	if ( ! memBuffer1 ) {
-	    __android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
-		SDL_SetError("Couldn't allocate buffer for requested mode");
-		return(NULL);
-	}
-	SDL_memset(memBuffer1, 0, memX * memY * (bpp / 8));
-
-	if( flags & SDL_DOUBLEBUF )
+	if( ! sdl_opengl )
 	{
-		memBuffer2 = SDL_malloc(memX * memY * (bpp / 8));
-		if ( ! memBuffer2 ) {
+		memBuffer1 = SDL_malloc(memX * memY * (bpp / 8));
+		if ( ! memBuffer1 ) {
 			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
 			SDL_SetError("Couldn't allocate buffer for requested mode");
 			return(NULL);
 		}
-		SDL_memset(memBuffer2, 0, memX * memY * (bpp / 8));
+		SDL_memset(memBuffer1, 0, memX * memY * (bpp / 8));
+
+		if( flags & SDL_DOUBLEBUF )
+		{
+			memBuffer2 = SDL_malloc(memX * memY * (bpp / 8));
+			if ( ! memBuffer2 ) {
+				__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
+				SDL_SetError("Couldn't allocate buffer for requested mode");
+				return(NULL);
+			}
+			SDL_memset(memBuffer2, 0, memX * memY * (bpp / 8));
+		}
+		memBuffer = memBuffer1;
 	}
 
-	memBuffer = memBuffer1;
 	openglInitialized = GL_State_Init;
 
 	/* Allocate the new pixel format for the screen */
 	if ( ! SDL_ReallocFormat(current, bpp, 0, 0, 0, 0) ) {
-		SDL_free(memBuffer);
+		if(memBuffer)
+			SDL_free(memBuffer);
 		memBuffer = NULL;
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate new pixel format for requested mode");
 		SDL_SetError("Couldn't allocate new pixel format for requested mode");
@@ -265,7 +276,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	}
 
 	/* Set up the new mode framebuffer */
-	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_DOUBLEBUF);
+	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_DOUBLEBUF) | (flags & SDL_OPENGL);
 	current->w = width;
 	current->h = height;
 	current->pitch = memX * (bpp / 8);
@@ -376,7 +387,7 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	SDL_CondSignal(WaitForNativeRender1);
 	SDL_mutexP(WaitForNativeRender);
 
-	if( surface->flags & SDL_DOUBLEBUF )
+	if( ! sdl_opengl && surface && surface->flags & SDL_DOUBLEBUF )
 	{
 		if( WaitForNativeRenderState == Render_State_Started )
 			if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
@@ -412,6 +423,11 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	processAndroidTrackballKeyDelays( -1, 0 );
 	
 	return(0);
+};
+
+void ANDROID_GL_SwapBuffers(_THIS)
+{
+	ANDROID_FlipHWSurface(this, NULL);
 };
 
 int ANDROID_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors)
@@ -593,7 +609,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 	int textX, textY;
 	void * memBufferTemp;
 	
-	if( memBuffer && openglInitialized != GL_State_Uninit2 )
+	if( !sdl_opengl && memBuffer && openglInitialized != GL_State_Uninit2 )
 	{
 		if( openglInitialized == GL_State_Init )
 		{
@@ -733,6 +749,45 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 
 		//glFinish(); //glFlush();
 		
+	}
+	else if( sdl_opengl && openglInitialized != GL_State_Uninit2 )
+	{
+		if( openglInitialized == GL_State_Init )
+		{
+			openglInitialized = GL_State_Ready;
+		}
+		else if( openglInitialized == GL_State_Uninit )
+		{
+			openglInitialized = GL_State_Uninit2;
+			return;
+		}
+		
+		if( WaitForNativeRender )
+		{
+			SDL_mutexP(WaitForNativeRender);
+		
+			WaitForNativeRenderState = Render_State_Finished;
+
+			SDL_mutexV(WaitForNativeRender);
+			SDL_CondSignal(WaitForNativeRender1);
+			SDL_mutexP(WaitForNativeRender);
+		
+			while( WaitForNativeRenderState != Render_State_Started )
+			{
+				if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
+				{
+					__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeRender: Frame failed to render");
+					SDL_mutexV(WaitForNativeRender);
+					return;
+				}
+			}
+		
+			WaitForNativeRenderState = Render_State_Processing;
+
+			SDL_mutexV(WaitForNativeRender);
+
+			SDL_CondSignal(WaitForNativeRender1);
+		}
 	}
 	else
 	{
