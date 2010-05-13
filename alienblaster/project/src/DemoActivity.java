@@ -49,7 +49,6 @@ class Globals {
 class LoadLibrary {
     public LoadLibrary() {}
     static {
-        System.loadLibrary("stlport");
         System.loadLibrary("tremor");
         System.loadLibrary("sdl");
         System.loadLibrary("sdl_mixer");
