@@ -287,7 +287,6 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	/* Wait 'till we can draw */
 	ANDROID_FlipHWSurface(this, current);
 	/* We're done */
-    __android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): done");
 	return(current);
 }
 
@@ -362,7 +361,6 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 {
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame is ready to render");
 	if( ! WaitForNativeRender )
 	{
 		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "FlipHWSurface: called before SetVideoMode");
@@ -395,7 +393,6 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 
 		if( WaitForNativeRenderState != Render_State_Started )
 		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame rendering done");
 			if( memBuffer == memBuffer1 )
 				memBuffer = memBuffer2;
 			else
@@ -420,8 +417,6 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	SDL_mutexV(WaitForNativeRender);
 
 	processAndroidTrackballKeyDelays( -1, 0 );
-	
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: exit");
 	
 	return(0);
 };
@@ -814,7 +809,6 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 			// TODO: use accelerometer as joystick
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBufferTemp);
 			glDrawTexiOES(0, sWindowHeight-memY, 1, memX, memY);
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeRender: Frame rendered");
 		}
 
 		//glFinish(); //glFlush();

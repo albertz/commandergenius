@@ -46,8 +46,6 @@ Intro::~Intro() {}
 
 void Intro::run( GameStates &gameState ) {
 
-  __android_log_print(ANDROID_LOG_VERBOSE, "alienblaster", "Intro::run()");
-
   if ( playMusicOn && Mixer::mixer().whichMusicPlaying() != MUSIC_INTRO ) {
     Mixer::mixer().playMusic( MUSIC_INTRO, -1, 1000 );
   }

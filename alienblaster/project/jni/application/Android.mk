@@ -22,9 +22,33 @@ LOCAL_SRC_FILES := $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wil
 # Uncomment to also add C sources
 LOCAL_SRC_FILES += $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wildcard $(LOCAL_PATH)/$(F)/*.c))))
 
-LOCAL_SHARED_LIBRARIES := sdl sdl_mixer tremor stlport
+LOCAL_SHARED_LIBRARIES := sdl sdl_mixer tremor
+
+LOCAL_STATIC_LIBRARIES := stlport
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
 
-include $(BUILD_SHARED_LIBRARY)
+LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
+	for f in $(LOCAL_PATH)/../../libs/armeabi/*.so ; do \
+		if echo $$f | grep "libapplication[.]so" > /dev/null ; then \
+			continue ; \
+		fi ; \
+		if [ -e "$$f" ] ; then \
+			if nm -g $$f | cut -c 12- | egrep '.{128}' > /dev/null ; then \
+				echo $$f | grep -o 'lib[^/]*[.]so' ; \
+			fi ; \
+		fi ; \
+	done \
+) )
 
+ifneq "$(LIBS_WITH_LONG_SYMBOLS)" ""
+$(foreach F, $(LIBS_WITH_LONG_SYMBOLS), \
+$(info Library $(F): abusing symbol names are: \
+$(shell nm -g $(LOCAL_PATH)/../../libs/armeabi/$(F) | cut -c 12- | egrep '.{128}' ) ) \
+$(info Library $(F) contains symbol names longer than 128 bytes, \
+YOUR CODE WILL DEADLOCK WITHOUT ANY WARNING when you'll access such function - \
+please make this library static to avoid problems. ) )
+$(error Detected libraries with too long symbol names. Remove all files under project/libs/armeabi, make these libs static, and recompile)
+endif
+
+include $(BUILD_SHARED_LIBRARY)

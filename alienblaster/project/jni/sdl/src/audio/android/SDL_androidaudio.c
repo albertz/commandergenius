@@ -59,7 +59,6 @@ static void ANDROIDAUD_DeleteDevice(SDL_AudioDevice *device)
 
 static SDL_AudioDevice *ANDROIDAUD_CreateDevice(int devindex)
 {
-	__android_log_print(ANDROID_LOG_VERBOSE, "libSDL", "ANDROIDAUD_CreateDevice");
 	SDL_AudioDevice *this;
 
 	/* Initialize all variables that we clean on shutdown */
@@ -152,7 +151,6 @@ static void ANDROIDAUD_CloseAudio(_THIS)
 
 static int ANDROIDAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 {
-	__android_log_print(ANDROID_LOG_VERBOSE, "libSDL", "ANDROIDAUD_OpenAudio");
 	if( ! (spec->format == AUDIO_S8 || spec->format == AUDIO_S16) )
 		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL
 	
@@ -186,8 +184,6 @@ static int ANDROIDAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 	
 	SDL_mutexV(audioMutex);
 
-	__android_log_print(ANDROID_LOG_VERBOSE, "libSDL", "ANDROIDAUD_OpenAudio exit");
-
 	return(0);
 }
 
@@ -199,7 +195,6 @@ static void ANDROIDAUD_WaitAudio(_THIS)
 
 static void ANDROIDAUD_PlayAudio(_THIS)
 {
-	__android_log_print(ANDROID_LOG_VERBOSE, "libSDL", "ANDROIDAUD_PlayAudio: enter");
 	SDL_mutexP(audioMutex);
 
 	//audioBuffer = this->hidden->mixbuf;
@@ -213,7 +208,6 @@ static void ANDROIDAUD_PlayAudio(_THIS)
 	this->hidden->mixbuf = audioBuffer;
 	
 	SDL_mutexV(audioMutex);
-	__android_log_print(ANDROID_LOG_VERBOSE, "libSDL", "ANDROIDAUD_PlayAudio: exit");
 }
 
 #ifndef SDL_JAVA_PACKAGE_PATH
@@ -302,8 +296,6 @@ extern jint JAVA_EXPORT_NAME(AudioThread_nativeAudioBufferLock) ( JNIEnv * env, 
 	if( audioMutex == NULL )
 		return(-1);
 
-	__android_log_print(ANDROID_LOG_VERBOSE, "libSDL", "nativeAudioBufferLock");
-	
 	SDL_mutexP(audioMutex);
 	
 	if( !audioInitialized )
@@ -341,8 +333,6 @@ extern jint JAVA_EXPORT_NAME(AudioThread_nativeAudioBufferUnlock) ( JNIEnv * env
 	audioPlayed = 0;
 	
 	SDL_mutexV(audioMutex);
-
-	__android_log_print(ANDROID_LOG_VERBOSE, "libSDL", "nativeAudioBufferUnlock");
 
 	SDL_CondSignal(audioCond);
 
