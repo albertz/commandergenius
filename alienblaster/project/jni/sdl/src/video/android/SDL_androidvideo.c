@@ -93,10 +93,6 @@ static int sWindowHeight = 480;
 // Pointer to in-memory video surface
 static int memX = 0;
 static int memY = 0;
-// Offset if the mem surface is larger than device screen
-static float memOffsetX = 0;
-static float memOffsetY = 0;
-static float memOffsetZ = 0; // Zoom ( not implemented yet, and probably will look ugly )
 // In-memory surfaces
 static void * memBuffer1 = NULL;
 static void * memBuffer2 = NULL;
@@ -236,9 +232,6 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 
 	memX = width;
 	memY = height;
-	memOffsetX = 0;
-	memOffsetY = 0;
-	memOffsetZ = 0;
 	
 	memBuffer1 = SDL_malloc(memX * memY * (bpp / 8));
 	if ( ! memBuffer1 ) {
@@ -466,7 +459,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	if( action == MOUSE_DOWN || action == MOUSE_UP )
 		SDL_PrivateMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, 1, x, y );
 	if( action == MOUSE_MOVE )
-		SDL_PrivateMouseMotion(0, 0, x + (int)memOffsetX, y + (int)memOffsetY);
+		SDL_PrivateMouseMotion(0, 0, x, y);
 }
 
 static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
@@ -600,8 +593,6 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 	int textX, textY;
 	void * memBufferTemp;
 	
-	static float oldAccX = 0, oldAccY = 0, oldAccZ = 0, smoothMoveX = 0, smoothMoveY = 0, smoothMoveZ = 0;
-
 	if( memBuffer && openglInitialized != GL_State_Uninit2 )
 	{
 		if( openglInitialized == GL_State_Init )
@@ -676,21 +667,18 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 			glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
 
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-			
+
 			texcoordsCrop[0] = 0;
 			texcoordsCrop[1] = memY;
 			texcoordsCrop[2] = memX;
 			texcoordsCrop[3] = -memY;
+
 			glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, texcoordsCrop);
 			
 			glFinish();
 			
 			SDL_free( textBuffer );
 
-			oldAccX = accX;
-			oldAccY = accY;
-			oldAccZ = accZ;
-			smoothMoveX = smoothMoveY = smoothMoveZ = 0;
 		}
 		else if( openglInitialized == GL_State_Uninit )
 		{
@@ -735,81 +723,13 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 		else
 			memBufferTemp = memBuffer;
 		
-		/*
-		if( sWindowWidth < memX || sWindowHeight < memY )
-		{
-			// Move the large virtual surface with accelerometer
-			// TODO: configurable coeffs?
-			#define MIN(x,y) ( (x) < (y) ? (x) : (y) )
-			#define SIGN(x) ( (x) > 0 ? 1 : -1 )
-			// Make fast movement to move display more than slow one
-			float threshold = 0.2f;
-			if( fabs( accX - oldAccX ) > threshold )
-				smoothMoveX += (fabs(accX - oldAccX) - threshold) * SIGN(accX - oldAccX);
-			if( fabs( accY - oldAccY ) > threshold )
-				smoothMoveY += (fabs(accY - oldAccY) - threshold) * SIGN(accY - oldAccY);
-			if( fabs( accZ - oldAccZ ) > threshold )
-				smoothMoveZ += (fabs(accZ - oldAccZ) - threshold) * SIGN(accZ - oldAccZ);
-			oldAccX = accX;
-			oldAccY = accY;
-			oldAccZ = accZ;
-			
-			float sensitivity = 80.0f;
-			float maxspeed = 1.3f;
-			float dX = MIN( maxspeed, fabs(smoothMoveX) ) * SIGN(smoothMoveX);
-			float dY = MIN( maxspeed, fabs(smoothMoveY) ) * SIGN(smoothMoveY);
-			float dZ = MIN( maxspeed, fabs(smoothMoveZ) ) * SIGN(smoothMoveZ);
-			memOffsetX += dX * sensitivity;
-			memOffsetY += dY * sensitivity;
-			memOffsetZ += dZ * sensitivity;
-
-			float dampening = 0.4f;
-			smoothMoveX -= dX;
-			smoothMoveY -= dY;
-			smoothMoveZ -= dZ;
-			
-			if(memOffsetX < 0)
-			{
-				memOffsetX = 0;
-				smoothMoveX = 0;
-			}
-			if(memOffsetX > memX - sWindowWidth)
-			{
-				memOffsetX = memX - sWindowWidth;
-				smoothMoveX = 0;
-			}
-			if(memOffsetY < 0)
-			{
-				memOffsetY = 0;
-				smoothMoveY = 0;
-			}
-			if(memOffsetY > memY - sWindowHeight)
-			{
-				memOffsetY = memY - sWindowHeight;
-				smoothMoveY = 0;
-			}
-			// TODO: memOffsetZ unused - add zooming? It will look ugly probably
-			
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBufferTemp);
-			// The data should be contiguous, so we can only omit upper and lower invisible parts of image being copied - 
-			// invisible parts to the left and to the right are copied, so it's not much of an optimization anyway
-			// I failed to do that optimisation properly anyway
-			//glTexSubImage2D(GL_TEXTURE_2D, 0, 0, (int)memOffsetY, memX, sWindowHeight, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBufferTemp + ( 2 * memX * (int)memOffsetY ) );
-
-			texcoordsCrop[0] = (int)memOffsetX;
-			texcoordsCrop[1] = memY-(int)memOffsetY;
-			texcoordsCrop[2] = sWindowWidth;
-			texcoordsCrop[3] = -sWindowHeight;
-			glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, texcoordsCrop);
-			glDrawTexiOES(0, 0, 1, sWindowWidth, sWindowHeight);
-		}
+		// TODO: use accelerometer as joystick
+		
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBufferTemp);
+		if( sWindowHeight < memY || sWindowWidth < memX )
+			glDrawTexiOES(0, 0, 1, sWindowWidth, sWindowHeight);  // Larger than screen - shrink to fit
 		else
-		*/
-		{
-			// TODO: use accelerometer as joystick
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBufferTemp);
-			glDrawTexiOES(0, sWindowHeight-memY, 1, memX, memY);
-		}
+			glDrawTexiOES(0, sWindowHeight-memY, 1, memX, memY);  // Smaller than screen - do not scale, it's faster that way
 
 		//glFinish(); //glFlush();
 		
