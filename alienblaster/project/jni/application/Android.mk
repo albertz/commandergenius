@@ -26,7 +26,7 @@ LOCAL_SHARED_LIBRARIES := sdl sdl_mixer tremor
 
 LOCAL_STATIC_LIBRARIES := stlport
 
-LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
+LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz -lGLESv1_CM
 
 LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
 	for f in $(LOCAL_PATH)/../../libs/armeabi/*.so ; do \

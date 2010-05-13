@@ -74,6 +74,32 @@ static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface);
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface);
 static void ANDROID_GL_SwapBuffers(_THIS);
 
+// Stubs to get rid of crashing in OpenGL mode
+// The implementation dependent data for the window manager cursor
+struct WMcursor {
+    int unused ;
+};
+
+void ANDROID_FreeWMCursor(_THIS, WMcursor *cursor) {
+    SDL_free (cursor);
+    return;
+}
+WMcursor * ANDROID_CreateWMCursor(_THIS, Uint8 *data, Uint8 *mask, int w, int h, int hot_x, int hot_y) {
+    WMcursor * cursor;
+    cursor = (WMcursor *) SDL_malloc (sizeof (WMcursor)) ;
+    if (cursor == NULL) {
+        SDL_OutOfMemory () ;
+        return NULL ;
+    }
+    return cursor;
+}
+int ANDROID_ShowWMCursor(_THIS, WMcursor *cursor) {
+    return 1;
+}
+void ANDROID_WarpWMCursor(_THIS, Uint16 x, Uint16 y) { }
+void ANDROID_MoveWMCursor(_THIS, int x, int y) { }
+
+
 /* etc. */
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
@@ -181,8 +207,14 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->InitOSKeymap = ANDROID_InitOSKeymap;
 	device->PumpEvents = ANDROID_PumpEvents;
 	device->GL_SwapBuffers = ANDROID_GL_SwapBuffers;
-
 	device->free = ANDROID_DeleteDevice;
+
+	// Stubs
+	device->FreeWMCursor = ANDROID_FreeWMCursor;
+	device->CreateWMCursor = ANDROID_CreateWMCursor;
+	device->ShowWMCursor = ANDROID_ShowWMCursor;
+	device->WarpWMCursor = ANDROID_WarpWMCursor;
+	device->MoveWMCursor = ANDROID_MoveWMCursor;
 
 	return device;
 }
@@ -240,7 +272,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	memX = width;
 	memY = height;
 	
-	if( ! sdl_opengl )
+	//if( ! sdl_opengl )
 	{
 		memBuffer1 = SDL_malloc(memX * memY * (bpp / 8));
 		if ( ! memBuffer1 ) {
@@ -387,34 +419,21 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	SDL_CondSignal(WaitForNativeRender1);
 	SDL_mutexP(WaitForNativeRender);
 
-	if( ! sdl_opengl && surface && surface->flags & SDL_DOUBLEBUF )
-	{
-		if( WaitForNativeRenderState == Render_State_Started )
-			if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
-			{
-				__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame rendering timed out");
-			}
+	if( WaitForNativeRenderState == Render_State_Started )
+		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
+		{
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame rendering timed out");
+		}
 
-		if( WaitForNativeRenderState != Render_State_Started )
+	if( WaitForNativeRenderState != Render_State_Started )
+	{
+		if( ! sdl_opengl && surface && surface->flags & SDL_DOUBLEBUF )
 		{
 			if( memBuffer == memBuffer1 )
 				memBuffer = memBuffer2;
 			else
 				memBuffer = memBuffer1;
-		}
-
-		surface->pixels = memBuffer;
-	}
-	else
-	{
-		while( WaitForNativeRenderState != Render_State_Finished )
-		{
-			if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
-			{
-				__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame is too slow to render");
-				SDL_mutexV(WaitForNativeRender);
-				return(0);
-			};
+			surface->pixels = memBuffer;
 		}
 	}
 
@@ -428,6 +447,7 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 void ANDROID_GL_SwapBuffers(_THIS)
 {
 	ANDROID_FlipHWSurface(this, NULL);
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "GL_SwapBuffers: Frame rendered");
 };
 
 int ANDROID_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors)
@@ -755,6 +775,10 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 		if( openglInitialized == GL_State_Init )
 		{
 			openglInitialized = GL_State_Ready;
+
+			glViewport(0, 0, memX, memY);
+
+			glClearColor(0,0,0,0);
 		}
 		else if( openglInitialized == GL_State_Uninit )
 		{
@@ -781,7 +805,9 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 					return;
 				}
 			}
-		
+			
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeRender: Frame rendered");
+
 			WaitForNativeRenderState = Render_State_Processing;
 
 			SDL_mutexV(WaitForNativeRender);
