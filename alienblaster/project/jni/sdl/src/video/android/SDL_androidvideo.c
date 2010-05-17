@@ -648,7 +648,6 @@ void ANDROID_InitOSKeymap(_THIS)
   keymap[KEYCODE_CAMERA] = SDLK_RSHIFT;
   keymap[KEYCODE_POWER] = SDLK_RALT;
 
-  keymap[KEYCODE_BACK] = SDLK_ESCAPE; // Note: generates SDL_QUIT
   keymap[KEYCODE_0] = SDLK_0;
   keymap[KEYCODE_1] = SDLK_1;
   keymap[KEYCODE_2] = SDLK_2;

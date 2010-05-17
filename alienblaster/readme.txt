@@ -22,10 +22,15 @@ additional keys - the phone will just keep current screen orientation.
 Fire key is Call key ( = left Ctrl for SDL ), Change weapon is Menu key ( = left Alt for SDL )
 Note that you may use Volume up/down and Camera keys as game inputs -
 you'll have to redefine them in game keyconfig menu.
-Other keys like Home, Back and End Call will force application quit, and because
+Other keys like Home, Search and End Call will force application quit, and because
 the app itself does not handle SDL_QUIT event correctly (asks for confirmation),
 it will stay in memory until you reboot device (actually it won't stay in memory - it will crash :P ).
 To exit correctly press Menu key - it's redirected to Escape.
+
+This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
+remove all files from project/jni/application/src and put glxgears.c there to check if it works.
+Note that GL ES is NOT pure OpenGL - there are no glBegin() and glEnd() call and other widely used functions, 
+and generally it will take a lot of effort to port pure OpenGL application to GL ES.
 
 When porting you own app, first of all ensure that your application supports
 one of 320x200, 320x240 or 480x320 display resolutions and 16 bits per pixel
@@ -56,7 +61,7 @@ Known bugs:
 is to stay in memory and go to foreground when you're launching app again, that's not working yet because
 app will lose OpenGL context (there are rumors that it won't lose GL context in 2.1 SDK).
 
-2. Move to SDL 1.3, and add hardware surfaces and OpenGL support.
+2. Move to SDL 1.3, and add hardware surfaces.
 
 3. Multitouch support - it is available since 2.0 SDK, but not on 1.6 - I'll have to follow
 http://devtcg.blogspot.com/2009/12/gracefully-supporting-multiple-android.html to make it compile.
