@@ -125,20 +125,20 @@ static void * memBuffer1 = NULL;
 static void * memBuffer2 = NULL;
 static void * memBuffer = NULL;
 static int sdl_opengl = 0;
-// We have one Java thread drawing on GL surface, and another native C thread (typically main()) feeding it with video data
-extern SDL_Thread * SDL_mainThread;
-SDL_Thread * SDL_mainThread = NULL;
-// Some wicked multithreading
-static SDL_mutex * WaitForNativeRender = NULL;
-static SDL_cond * WaitForNativeRender1 = NULL;
-static enum { Render_State_Started, Render_State_Processing, Render_State_Finished } 
-	WaitForNativeRenderState = Render_State_Finished;
 // Some wicked GLES stuff
-static enum { GL_State_Init, GL_State_Ready, GL_State_Uninit, GL_State_Uninit2 } openglInitialized = GL_State_Uninit2;
 static GLuint texture = 0;
+
+// Extremely wicked JNI environment to call Java functions from C code
+static JNIEnv* JavaEnv = NULL;
+static jclass JavaRendererClass = NULL;
+static jobject JavaRenderer = NULL;
+static jmethodID JavaSwapBuffers = NULL;
+
 
 static SDLKey keymap[KEYCODE_LAST+1];
 
+static int CallJavaSwapBuffers();
+static void SdlGlRenderInit();
 static int processAndroidTrackballKeyDelays( int key, int action );
 
 /* ANDROID driver bootstrap functions */
@@ -272,7 +272,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	memX = width;
 	memY = height;
 	
-	//if( ! sdl_opengl )
+	if( ! sdl_opengl )
 	{
 		memBuffer1 = SDL_malloc(memX * memY * (bpp / 8));
 		if ( ! memBuffer1 ) {
@@ -295,8 +295,6 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		memBuffer = memBuffer1;
 	}
 
-	openglInitialized = GL_State_Init;
-
 	/* Allocate the new pixel format for the screen */
 	if ( ! SDL_ReallocFormat(current, bpp, 0, 0, 0, 0) ) {
 		if(memBuffer)
@@ -313,15 +311,9 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	current->h = height;
 	current->pitch = memX * (bpp / 8);
 	current->pixels = memBuffer;
-
-	if( ! WaitForNativeRender )
-	{
-		WaitForNativeRender = SDL_CreateMutex();
-		WaitForNativeRender1 = SDL_CreateCond();
-	}
 	
-	/* Wait 'till we can draw */
-	ANDROID_FlipHWSurface(this, current);
+	SdlGlRenderInit();
+
 	/* We're done */
 	return(current);
 }
@@ -331,9 +323,12 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 */
 void ANDROID_VideoQuit(_THIS)
 {
-	openglInitialized = GL_State_Uninit;
-	while( openglInitialized != GL_State_Uninit2 )
-		SDL_Delay(50);
+	if( ! sdl_opengl )
+	{
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDeleteTextures(1, &texture);
+	}
 
 	memX = 0;
 	memY = 0;
@@ -343,10 +338,6 @@ void ANDROID_VideoQuit(_THIS)
 	if( memBuffer2 )
 		SDL_free( memBuffer2 );
 	memBuffer2 = NULL;
-	SDL_DestroyMutex( WaitForNativeRender );
-	WaitForNativeRender = NULL;
-	SDL_DestroyCond( WaitForNativeRender1 );
-	WaitForNativeRender1 = NULL;
 
 	int i;
 	
@@ -397,37 +388,15 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 {
-	if( ! WaitForNativeRender )
+	if( ! sdl_opengl )
 	{
-		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "FlipHWSurface: called before SetVideoMode");
-		return 0;
-	}
-	SDL_mutexP(WaitForNativeRender);
-	while( WaitForNativeRenderState != Render_State_Finished )
-	{
-		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
-		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame failed to render");
-			SDL_mutexV(WaitForNativeRender);
-			return(0);
-		}
-	}
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
+		if( sWindowHeight < memY || sWindowWidth < memX )
+			glDrawTexiOES(0, 0, 1, sWindowWidth, sWindowHeight);  // Larger than screen - shrink to fit
+		else
+			glDrawTexiOES(0, sWindowHeight-memY, 1, memX, memY);  // Smaller than screen - do not scale, it's faster that way
 
-	WaitForNativeRenderState = Render_State_Started;
-
-	SDL_mutexV(WaitForNativeRender);
-	SDL_CondSignal(WaitForNativeRender1);
-	SDL_mutexP(WaitForNativeRender);
-
-	if( WaitForNativeRenderState == Render_State_Started )
-		if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
-		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "FlipHWSurface: Frame rendering timed out");
-		}
-
-	if( WaitForNativeRenderState != Render_State_Started )
-	{
-		if( ! sdl_opengl && surface && surface->flags & SDL_DOUBLEBUF )
+		if( surface->flags & SDL_DOUBLEBUF )
 		{
 			if( memBuffer == memBuffer1 )
 				memBuffer = memBuffer2;
@@ -437,9 +406,11 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 		}
 	}
 
-	SDL_mutexV(WaitForNativeRender);
+	CallJavaSwapBuffers();
 
 	processAndroidTrackballKeyDelays( -1, 0 );
+
+	SDL_Delay(10);
 	
 	return(0);
 };
@@ -447,7 +418,6 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 void ANDROID_GL_SwapBuffers(_THIS)
 {
 	ANDROID_FlipHWSurface(this, NULL);
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "GL_SwapBuffers: Frame rendered");
 };
 
 int ANDROID_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors)
@@ -476,14 +446,15 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint 
 extern void
 JAVA_EXPORT_NAME(DemoRenderer_nativeDone) ( JNIEnv*  env, jobject  thiz )
 {
-	if( SDL_mainThread )
-	{
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "quitting...");
-		SDL_PrivateQuit();
-		SDL_WaitThread(SDL_mainThread, NULL);
-		SDL_mainThread = NULL;
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "quit OK");
-	}
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "quitting...");
+	SDL_PrivateQuit();
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "quit OK");
+}
+
+extern void
+JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
+{
+	// TODO: use accelerometer as joystick
 }
 
 enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
@@ -518,78 +489,9 @@ static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
 	return(keysym);
 }
 
-static int AndroidTrackballKeyDelays[4] = {0,0,0,0};
-
-// Key = -1 if we want to send KeyUp events from main loop
-static int processAndroidTrackballKeyDelays( int key, int action )
-{
-	#if ! defined(SDL_TRACKBALL_KEYUP_DELAY) || (SDL_TRACKBALL_KEYUP_DELAY == 0)
-	return 0;
-	#else
-	// Send Directional Pad Up events with a delay, so app wil lthink we're holding the key a bit
-	static const int KeysMapping[4] = {KEYCODE_DPAD_UP, KEYCODE_DPAD_DOWN, KEYCODE_DPAD_LEFT, KEYCODE_DPAD_RIGHT};
-	int idx, idx2;
-	SDL_keysym keysym;
-	
-	if( key < 0 )
-	{
-		for( idx = 0; idx < 4; idx ++ )
-		{
-			if( AndroidTrackballKeyDelays[idx] > 0 )
-			{
-				AndroidTrackballKeyDelays[idx] --;
-				if( AndroidTrackballKeyDelays[idx] == 0 )
-					SDL_PrivateKeyboard( SDL_RELEASED, TranslateKey(KeysMapping[idx], &keysym) );
-			}
-		}
-	}
-	else
-	{
-		idx = -1;
-		// Too lazy to do switch or function
-		if( key == KEYCODE_DPAD_UP )
-			idx = 0;
-		else if( key == KEYCODE_DPAD_DOWN )
-			idx = 1;
-		else if( key == KEYCODE_DPAD_LEFT )
-			idx = 2;
-		else if( key == KEYCODE_DPAD_RIGHT )
-			idx = 3;
-		if( idx >= 0 )
-		{
-			if( action && AndroidTrackballKeyDelays[idx] == 0 )
-			{
-				// User pressed key for the first time
-				idx2 = (idx + 2) % 4; // Opposite key for current key - if it's still pressing, release it
-				if( AndroidTrackballKeyDelays[idx2] > 0 )
-				{
-					AndroidTrackballKeyDelays[idx2] = 0;
-					SDL_PrivateKeyboard( SDL_RELEASED, TranslateKey(KeysMapping[idx2], &keysym) );
-				}
-				SDL_PrivateKeyboard( SDL_PRESSED, TranslateKey(key, &keysym) );
-			}
-			else if( !action && AndroidTrackballKeyDelays[idx] == 0 )
-			{
-				// User released key - make a delay, do not send release event
-				AndroidTrackballKeyDelays[idx] = SDL_TRACKBALL_KEYUP_DELAY;
-			}
-			else if( action && AndroidTrackballKeyDelays[idx] > 0 )
-			{
-				// User pressed key another time - add some more time for key to be pressed
-				AndroidTrackballKeyDelays[idx] += SDL_TRACKBALL_KEYUP_DELAY;
-				if( AndroidTrackballKeyDelays[idx] < SDL_TRACKBALL_KEYUP_DELAY * 4 )
-					AndroidTrackballKeyDelays[idx] = SDL_TRACKBALL_KEYUP_DELAY * 4;
-			}
-			return 1;
-		}
-	}
-	return 0;
-	
-	#endif
-}
 
 void
-JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject  thiz, jint key, jint action )
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint key, jint action )
 {
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "key event %i %s", key, action ? "down" : "up");
 	SDL_keysym keysym;
@@ -597,9 +499,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject  thiz, jin
 		SDL_PrivateKeyboard( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key, &keysym) );
 }
 
-// The most wicked routine out there, all wicked multithreading and GL-ES stuff here
-extern void
-JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
+void SdlGlRenderInit()
 {
 	// Set up an array of values to use as the sprite vertices.
 	static GLfloat vertices[] =
@@ -629,12 +529,8 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 	int textX, textY;
 	void * memBufferTemp;
 	
-	if( !sdl_opengl && memBuffer && openglInitialized != GL_State_Uninit2 )
+	if( !sdl_opengl && memBuffer )
 	{
-		if( openglInitialized == GL_State_Init )
-		{
-			openglInitialized = GL_State_Ready;
-
 			// Texture sizes should be 2^n
 			textX = memX;
 			textY = memY;
@@ -714,122 +610,24 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeRender) ( JNIEnv*  env, jobject  thiz, jfloa
 			glFinish();
 			
 			SDL_free( textBuffer );
-
-		}
-		else if( openglInitialized == GL_State_Uninit )
-		{
-			openglInitialized = GL_State_Uninit2;
-
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			glDisableClientState(GL_VERTEX_ARRAY);
-
-			glDeleteTextures(1, &texture);
-
-			return;
-		}
-
-		if( WaitForNativeRender )
-		{
-			SDL_mutexP(WaitForNativeRender);
-		
-			WaitForNativeRenderState = Render_State_Finished;
-
-			SDL_mutexV(WaitForNativeRender);
-			SDL_CondSignal(WaitForNativeRender1);
-			SDL_mutexP(WaitForNativeRender);
-		
-			while( WaitForNativeRenderState != Render_State_Started )
-			{
-				if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
-				{
-					__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeRender: Frame failed to render");
-					SDL_mutexV(WaitForNativeRender);
-					return;
-				}
-			}
-		
-			memBufferTemp = memBuffer;
-
-			WaitForNativeRenderState = Render_State_Processing;
-
-			SDL_mutexV(WaitForNativeRender);
-
-			SDL_CondSignal(WaitForNativeRender1);
-		}
-		else
-			memBufferTemp = memBuffer;
-		
-		// TODO: use accelerometer as joystick
-		
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBufferTemp);
-		if( sWindowHeight < memY || sWindowWidth < memX )
-			glDrawTexiOES(0, 0, 1, sWindowWidth, sWindowHeight);  // Larger than screen - shrink to fit
-		else
-			glDrawTexiOES(0, sWindowHeight-memY, 1, memX, memY);  // Smaller than screen - do not scale, it's faster that way
-
-		//glFinish(); //glFlush();
-		
 	}
-	else if( sdl_opengl && openglInitialized != GL_State_Uninit2 )
-	{
-		if( openglInitialized == GL_State_Init )
-		{
-			openglInitialized = GL_State_Ready;
+}
 
-			glViewport(0, 0, memX, memY);
 
-			glClearColor(0,0,0,0);
-		}
-		else if( openglInitialized == GL_State_Uninit )
-		{
-			openglInitialized = GL_State_Uninit2;
-			return;
-		}
-		
-		if( WaitForNativeRender )
-		{
-			SDL_mutexP(WaitForNativeRender);
-		
-			WaitForNativeRenderState = Render_State_Finished;
+void
+JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject thiz )
+{
+	char classPath[1024];
+	JavaEnv = env;
+	JavaRenderer = thiz;
+	
+	JavaRendererClass = (*JavaEnv)->GetObjectClass(JavaEnv, thiz);
+	JavaSwapBuffers = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "swapBuffers", "()I");
+}
 
-			SDL_mutexV(WaitForNativeRender);
-			SDL_CondSignal(WaitForNativeRender1);
-			SDL_mutexP(WaitForNativeRender);
-		
-			while( WaitForNativeRenderState != Render_State_Started )
-			{
-				if( SDL_CondWaitTimeout( WaitForNativeRender1, WaitForNativeRender, 5000 ) != 0 )
-				{
-					__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeRender: Frame failed to render");
-					SDL_mutexV(WaitForNativeRender);
-					return;
-				}
-			}
-			
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeRender: Frame rendered");
-
-			WaitForNativeRenderState = Render_State_Processing;
-
-			SDL_mutexV(WaitForNativeRender);
-
-			SDL_CondSignal(WaitForNativeRender1);
-		}
-	}
-	else
-	{
-		/*
-		// Flash the screen
-		if( clearColor >= 1.0f )
-			clearColorDir = -1;
-		else if( clearColor <= 0.0f )
-			clearColorDir = 1;
-
-		clearColor += (float)clearColorDir * 0.01f;
-		glClearColor(clearColor,clearColor,clearColor,0);
-		glClear(GL_COLOR_BUFFER_BIT);
-		SDL_Delay(50);
-		*/
-	}
+int CallJavaSwapBuffers()
+{
+	return (*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaSwapBuffers );
 }
 
 void ANDROID_InitOSKeymap(_THIS)
@@ -953,3 +751,72 @@ void ANDROID_InitOSKeymap(_THIS)
 
 }
 
+static int AndroidTrackballKeyDelays[4] = {0,0,0,0};
+
+// Key = -1 if we want to send KeyUp events from main loop
+int processAndroidTrackballKeyDelays( int key, int action )
+{
+	#if ! defined(SDL_TRACKBALL_KEYUP_DELAY) || (SDL_TRACKBALL_KEYUP_DELAY == 0)
+	return 0;
+	#else
+	// Send Directional Pad Up events with a delay, so app wil lthink we're holding the key a bit
+	static const int KeysMapping[4] = {KEYCODE_DPAD_UP, KEYCODE_DPAD_DOWN, KEYCODE_DPAD_LEFT, KEYCODE_DPAD_RIGHT};
+	int idx, idx2;
+	SDL_keysym keysym;
+	
+	if( key < 0 )
+	{
+		for( idx = 0; idx < 4; idx ++ )
+		{
+			if( AndroidTrackballKeyDelays[idx] > 0 )
+			{
+				AndroidTrackballKeyDelays[idx] --;
+				if( AndroidTrackballKeyDelays[idx] == 0 )
+					SDL_PrivateKeyboard( SDL_RELEASED, TranslateKey(KeysMapping[idx], &keysym) );
+			}
+		}
+	}
+	else
+	{
+		idx = -1;
+		// Too lazy to do switch or function
+		if( key == KEYCODE_DPAD_UP )
+			idx = 0;
+		else if( key == KEYCODE_DPAD_DOWN )
+			idx = 1;
+		else if( key == KEYCODE_DPAD_LEFT )
+			idx = 2;
+		else if( key == KEYCODE_DPAD_RIGHT )
+			idx = 3;
+		if( idx >= 0 )
+		{
+			if( action && AndroidTrackballKeyDelays[idx] == 0 )
+			{
+				// User pressed key for the first time
+				idx2 = (idx + 2) % 4; // Opposite key for current key - if it's still pressing, release it
+				if( AndroidTrackballKeyDelays[idx2] > 0 )
+				{
+					AndroidTrackballKeyDelays[idx2] = 0;
+					SDL_PrivateKeyboard( SDL_RELEASED, TranslateKey(KeysMapping[idx2], &keysym) );
+				}
+				SDL_PrivateKeyboard( SDL_PRESSED, TranslateKey(key, &keysym) );
+			}
+			else if( !action && AndroidTrackballKeyDelays[idx] == 0 )
+			{
+				// User released key - make a delay, do not send release event
+				AndroidTrackballKeyDelays[idx] = SDL_TRACKBALL_KEYUP_DELAY;
+			}
+			else if( action && AndroidTrackballKeyDelays[idx] > 0 )
+			{
+				// User pressed key another time - add some more time for key to be pressed
+				AndroidTrackballKeyDelays[idx] += SDL_TRACKBALL_KEYUP_DELAY;
+				if( AndroidTrackballKeyDelays[idx] < SDL_TRACKBALL_KEYUP_DELAY * 4 )
+					AndroidTrackballKeyDelays[idx] = SDL_TRACKBALL_KEYUP_DELAY * 4;
+			}
+			return 1;
+		}
+	}
+	return 0;
+	
+	#endif
+}

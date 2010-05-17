@@ -15,15 +15,6 @@
 #endif
 
 
-extern C_LINKAGE int main( int argc, char ** argv );
-static int SDLCALL MainThreadWrapper(void * dummy)
-{
-	int argc = 1;
-	char * argv[] = { "sdl" };
-	chdir(SDL_CURDIR_PATH);
-	return main( argc, argv );
-};
-
 #ifndef SDL_JAVA_PACKAGE_PATH
 #error You have to define SDL_JAVA_PACKAGE_PATH to your package path with dots replaced with underscores, for example "com_example_SanAngeles"
 #endif
@@ -31,13 +22,14 @@ static int SDLCALL MainThreadWrapper(void * dummy)
 #define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
-extern C_LINKAGE SDL_Thread * SDL_mainThread;
-
 extern C_LINKAGE void
-JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject  thiz )
+JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz )
 {
-	SDL_mainThread = SDL_CreateThread( MainThreadWrapper, NULL );
-}
+	int argc = 1;
+	char * argv[] = { "sdl" };
+	chdir(SDL_CURDIR_PATH);
+	main( argc, argv );
+};
 
 #undef JAVA_EXPORT_NAME
 #undef JAVA_EXPORT_NAME1

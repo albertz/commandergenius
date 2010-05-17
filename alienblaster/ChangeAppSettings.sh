@@ -61,9 +61,16 @@ cat project/AndroidManifest.xml | \
 	project/AndroidManifest.xml.1
 mv -f project/AndroidManifest.xml.1 project/AndroidManifest.xml
 
+for F in project/src/*.java; do
+	echo Patching $F
+	cat $F | \
+		sed "s/package .*;/package $AppFullName;/" > \
+		$F.1
+	mv -f $F.1 $F
+done
+
 echo Patching project/src/DemoActivity.java
 cat project/src/DemoActivity.java | \
-	sed "s/package .*;/package $AppFullName;/" | \
 	sed "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" | \
 	sed "s^public static String DataDownloadUrl = \".*\";^public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";^" | \
 	sed "s/public static boolean DownloadToSdcard = .*;/public static boolean DownloadToSdcard = $DownloadToSdcard1;/" > \
