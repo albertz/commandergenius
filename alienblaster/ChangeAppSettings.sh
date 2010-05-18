@@ -94,6 +94,6 @@ mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
 touch project/jni/sdl_main/*.c
 touch project/jni/sdl/src/video/android/*.c
 touch project/jni/sdl/src/audio/android/*.c
-rm project/libs/armeabi/libapplication.so project/libs/armeabi/libsdl.so project/libs/armeabi/libsdl_main.so
+rm -f project/libs/armeabi/libapplication.so project/libs/armeabi/libsdl.so project/libs/armeabi/libsdl_main.so
 
 echo Done
