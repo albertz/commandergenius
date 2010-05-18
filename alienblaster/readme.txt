@@ -29,7 +29,7 @@ To exit correctly press Menu key - it's redirected to Escape.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
 remove all files from project/jni/application/src and put glxgears.c there to check if it works.
-Note that GL ES is NOT pure OpenGL - there are no glBegin() and glEnd() call and other widely used functions, 
+Note that GL ES is NOT pure OpenGL - there are no glBegin() and glEnd() call and other widely used functions,
 and generally it will take a lot of effort to port pure OpenGL application to GL ES.
 
 When porting you own app, first of all ensure that your application supports

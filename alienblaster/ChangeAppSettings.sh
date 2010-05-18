@@ -69,13 +69,13 @@ for F in project/src/*.java; do
 	mv -f $F.1 $F
 done
 
-echo Patching project/src/DemoActivity.java
-cat project/src/DemoActivity.java | \
+echo Patching project/src/Globals.java
+cat project/src/Globals.java | \
 	sed "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" | \
 	sed "s^public static String DataDownloadUrl = \".*\";^public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";^" | \
 	sed "s/public static boolean DownloadToSdcard = .*;/public static boolean DownloadToSdcard = $DownloadToSdcard1;/" > \
-	project/src/DemoActivity.java.1
-mv -f project/src/DemoActivity.java.1 project/src/DemoActivity.java
+	project/src/Globals.java.1
+mv -f project/src/Globals.java.1 project/src/Globals.java
 
 echo Patching project/jni/Android.mk
 cat project/jni/Android.mk | \
