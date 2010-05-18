@@ -35,6 +35,8 @@ and generally it will take a lot of effort to port pure OpenGL application to GL
 When porting you own app, first of all ensure that your application supports
 one of 320x200, 320x240 or 480x320 display resolutions and 16 bits per pixel
 (480x320 is native resolution for G1, Supersonic has 800x480).
+Also there is 640x480 mode, but it's very slow on G1 to copy from memory surface (2 FPS max).
+SDL_ListModes()[0] will always return native screen resolution, other modes are there for compatibility.
 
 To compile your own app, put your app sources into project/jni/application dir (remove Alien Blaster first),
 and launch script ChangeAppSettings.sh - it will put the name of your app in several places in sources.
