@@ -17,6 +17,75 @@ import org.apache.http.impl.client.*;
 import java.util.zip.*;
 import java.io.*;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * CountingInputStream
+ * @author $Author: jeffdrost $
+ * @version $Revision: 1.7 $
+ * @deprecated
+ */
+class CountingInputStream extends BufferedInputStream {
+
+	private long bytesReadMark = 0;
+	private long bytesRead = 0;
+
+	public CountingInputStream(InputStream in, int size) {
+
+		super(in, size);
+	}
+
+	public CountingInputStream(InputStream in) {
+
+		super(in);
+	}
+
+	public long getBytesRead() {
+
+		return bytesRead;
+	}
+
+	public synchronized int read() throws IOException {
+
+		int read = super.read();
+		if (read >= 0) {
+			bytesRead++;
+		}
+		return read;
+	}
+
+	public synchronized int read(byte[] b, int off, int len) throws IOException {
+
+		int read = super.read(b, off, len);
+		if (read >= 0) {
+			bytesRead += read;
+		}
+		return read;
+	}
+
+	public synchronized long skip(long n) throws IOException {
+
+		long skipped = super.skip(n);
+		if (skipped >= 0) {
+			bytesRead += skipped;
+		}
+		return skipped;
+	}
+
+	public synchronized void mark(int readlimit) {
+
+		super.mark(readlimit);
+		bytesReadMark = bytesRead;
+	}
+
+	public synchronized void reset() throws IOException {
+
+		super.reset();
+		bytesRead = bytesReadMark;
+	}
+}
 
 
 class DataDownloader extends Thread
@@ -110,16 +179,19 @@ class DataDownloader extends Thread
 		}
 
 		Status.setText( "Downloading data from " + Globals.DataDownloadUrl );
-		
-		ZipInputStream zip = null;
+		long totalLen = response.getEntity().getContentLength();
+		CountingInputStream stream;
 		try {
-			zip = new ZipInputStream(response.getEntity().getContent());
+			stream = new CountingInputStream(response.getEntity().getContent());
 		} catch( java.io.IOException e ) {
 			Status.setText( "Error downloading data from " + Globals.DataDownloadUrl );
 			return;
 		}
 		
-		byte[] buf = new byte[1024];
+		ZipInputStream zip = null;
+			zip = new ZipInputStream(stream);
+		
+		byte[] buf = new byte[16384];
 		
 		ZipEntry entry = null;
 
@@ -155,13 +227,20 @@ class DataDownloader extends Thread
 				return;
 			}
 
-			Status.setText( "Writing file " + path );
-
+			String percent = "";
+			if( totalLen > 0 )
+				percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
+			Status.setText( percent + "writing file " + path );
+			
 			try {
 				int len;
 				while ((len = zip.read(buf)) > 0)
 				{
 					out.write(buf, 0, len);
+					percent = "";
+					if( totalLen > 0 )
+						percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
+					Status.setText( percent + "writing file " + path );
 				}
 				out.flush();
 			} catch( java.io.IOException e ) {
