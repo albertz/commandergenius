@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -24,14 +24,47 @@
 #include "SDL_video.h"
 #include "SDL_sysvideo.h"
 
-/* This is the software implementation of the YUV video overlay support */
+/* This is the software implementation of the YUV texture support */
 
-extern SDL_Overlay *SDL_CreateYUV_SW(_THIS, int width, int height, Uint32 format, SDL_Surface *display);
+struct SDL_SW_YUVTexture
+{
+    Uint32 format;
+    Uint32 target_format;
+    int w, h;
+    Uint8 *pixels;
+    int *colortab;
+    Uint32 *rgb_2_pix;
+    void (*Display1X) (int *colortab, Uint32 * rgb_2_pix,
+                       unsigned char *lum, unsigned char *cr,
+                       unsigned char *cb, unsigned char *out,
+                       int rows, int cols, int mod);
+    void (*Display2X) (int *colortab, Uint32 * rgb_2_pix,
+                       unsigned char *lum, unsigned char *cr,
+                       unsigned char *cb, unsigned char *out,
+                       int rows, int cols, int mod);
 
-extern int SDL_LockYUV_SW(_THIS, SDL_Overlay *overlay);
+    /* These are just so we don't have to allocate them separately */
+    Uint16 pitches[3];
+    Uint8 *planes[3];
 
-extern void SDL_UnlockYUV_SW(_THIS, SDL_Overlay *overlay);
+    /* This is a temporary surface in case we have to stretch copy */
+    SDL_Surface *stretch;
+    SDL_Surface *display;
+};
 
-extern int SDL_DisplayYUV_SW(_THIS, SDL_Overlay *overlay, SDL_Rect *src, SDL_Rect *dst);
+typedef struct SDL_SW_YUVTexture SDL_SW_YUVTexture;
 
-extern void SDL_FreeYUV_SW(_THIS, SDL_Overlay *overlay);
+SDL_SW_YUVTexture *SDL_SW_CreateYUVTexture(Uint32 format, int w, int h);
+int SDL_SW_QueryYUVTexturePixels(SDL_SW_YUVTexture * swdata, void **pixels,
+                                 int *pitch);
+int SDL_SW_UpdateYUVTexture(SDL_SW_YUVTexture * swdata, const SDL_Rect * rect,
+                            const void *pixels, int pitch);
+int SDL_SW_LockYUVTexture(SDL_SW_YUVTexture * swdata, const SDL_Rect * rect,
+                          int markDirty, void **pixels, int *pitch);
+void SDL_SW_UnlockYUVTexture(SDL_SW_YUVTexture * swdata);
+int SDL_SW_CopyYUVToRGB(SDL_SW_YUVTexture * swdata, const SDL_Rect * srcrect,
+                        Uint32 target_format, int w, int h, void *pixels,
+                        int pitch);
+void SDL_SW_DestroyYUVTexture(SDL_SW_YUVTexture * swdata);
+
+/* vi: set ts=4 sw=4 expandtab: */

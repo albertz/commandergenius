@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -26,20 +26,18 @@
 
 #include "../SDL_sysaudio.h"
 
-/* Hidden "this" pointer for the video functions */
+/* Hidden "this" pointer for the audio functions */
 #define _THIS	SDL_AudioDevice *this
 
-struct SDL_PrivateAudioData {
-	AudioUnit outputAudioUnit;
-	void *buffer;
-	UInt32 bufferOffset;
-	UInt32 bufferSize;
+struct SDL_PrivateAudioData
+{
+    AudioUnit audioUnit;
+    int audioUnitOpened;
+    void *buffer;
+    UInt32 bufferOffset;
+    UInt32 bufferSize;
+    AudioDeviceID deviceID;
 };
 
-/* Old variable names */
-#define outputAudioUnit		(this->hidden->outputAudioUnit)
-#define buffer		(this->hidden->buffer)
-#define bufferOffset		(this->hidden->bufferOffset)
-#define bufferSize		(this->hidden->bufferSize)
-
 #endif /* _SDL_coreaudio_h */
+/* vi: set ts=4 sw=4 expandtab: */

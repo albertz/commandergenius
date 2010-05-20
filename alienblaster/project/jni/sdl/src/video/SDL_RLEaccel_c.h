@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -23,9 +23,10 @@
 
 /* Useful functions and variables from SDL_RLEaccel.c */
 
-extern int SDL_RLESurface(SDL_Surface *surface);
-extern int SDL_RLEBlit(SDL_Surface *src, SDL_Rect *srcrect,
-                       SDL_Surface *dst, SDL_Rect *dstrect);
-extern int SDL_RLEAlphaBlit(SDL_Surface *src, SDL_Rect *srcrect,
-			    SDL_Surface *dst, SDL_Rect *dstrect);
-extern void SDL_UnRLESurface(SDL_Surface *surface, int recode);
+extern int SDL_RLESurface(SDL_Surface * surface);
+extern int SDL_RLEBlit(SDL_Surface * src, SDL_Rect * srcrect,
+                       SDL_Surface * dst, SDL_Rect * dstrect);
+extern int SDL_RLEAlphaBlit(SDL_Surface * src, SDL_Rect * srcrect,
+                            SDL_Surface * dst, SDL_Rect * dstrect);
+extern void SDL_UnRLESurface(SDL_Surface * surface, int recode);
+/* vi: set ts=4 sw=4 expandtab: */

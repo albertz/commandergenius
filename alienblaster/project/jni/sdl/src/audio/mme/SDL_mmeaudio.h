@@ -1,20 +1,20 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
+    modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
+    version 2.1 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
+    Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
     Sam Lantinga
     slouken@libsdl.org
@@ -23,29 +23,29 @@
 
 /* Allow access to a raw mixing buffer */
 
-#ifndef _SDL_lowaudio_h
-#define _SDL_lowaudio_h
+#ifndef _SDL_mmeaudio_h
+#define _SDL_mmeaudio_h
 
 #include "../SDL_sysaudio.h"
 
-/* Hidden "this" pointer for the video functions */
+/* Hidden "this" pointer for the audio functions */
 #define _THIS	SDL_AudioDevice *this
 #define NUM_BUFFERS 2
 
-struct SharedMem {
+struct SharedMem
+{
     HWAVEOUT sound;
     WAVEHDR wHdr[NUM_BUFFERS];
     PCMWAVEFORMAT wFmt;
 };
 
-struct SDL_PrivateAudioData {
-    Uint8 *mixbuf;          /* The raw allocated mixing buffer */
+struct SDL_PrivateAudioData
+{
+    Uint8 *mixbuf;              /* The raw allocated mixing buffer */
     struct SharedMem *shm;
     int next_buffer;
 };
 
-#define shm			(this->hidden->shm)
-#define mixbuf			(this->hidden->mixbuf)
-#define next_buffer		(this->hidden->next_buffer)
-/* Old variable names */
-#endif /* _SDL_lowaudio_h */
+#endif /* _SDL_mmeaudio_h */
+
+/* vi: set ts=4 sw=4 expandtab: */

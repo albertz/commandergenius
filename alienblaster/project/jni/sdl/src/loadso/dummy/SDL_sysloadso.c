@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -28,23 +28,28 @@
 
 #include "SDL_loadso.h"
 
-void *SDL_LoadObject(const char *sofile)
+void *
+SDL_LoadObject(const char *sofile)
 {
-	const char *loaderror = "SDL_LoadObject() not implemented";
-	SDL_SetError("Failed loading %s: %s", sofile, loaderror);
-	return(NULL);
+    const char *loaderror = "SDL_LoadObject() not implemented";
+    SDL_SetError("Failed loading %s: %s", sofile, loaderror);
+    return (NULL);
 }
 
-void *SDL_LoadFunction(void *handle, const char *name)
+void *
+SDL_LoadFunction(void *handle, const char *name)
 {
-	const char *loaderror = "SDL_LoadFunction() not implemented";
-	SDL_SetError("Failed loading %s: %s", name, loaderror);
-	return(NULL);
+    const char *loaderror = "SDL_LoadFunction() not implemented";
+    SDL_SetError("Failed loading %s: %s", name, loaderror);
+    return (NULL);
 }
 
-void SDL_UnloadObject(void *handle)
+void
+SDL_UnloadObject(void *handle)
 {
     /* no-op. */
 }
 
 #endif /* SDL_LOADSO_DUMMY || SDL_LOADSO_DISABLED */
+
+/* vi: set ts=4 sw=4 expandtab: */

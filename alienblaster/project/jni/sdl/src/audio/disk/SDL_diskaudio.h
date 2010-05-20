@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -27,15 +27,17 @@
 #include "SDL_rwops.h"
 #include "../SDL_sysaudio.h"
 
-/* Hidden "this" pointer for the video functions */
+/* Hidden "this" pointer for the audio functions */
 #define _THIS	SDL_AudioDevice *this
 
-struct SDL_PrivateAudioData {
-	/* The file descriptor for the audio device */
-	SDL_RWops *output;
-	Uint8 *mixbuf;
-	Uint32 mixlen;
-	Uint32 write_delay;
+struct SDL_PrivateAudioData
+{
+    /* The file descriptor for the audio device */
+    SDL_RWops *output;
+    Uint8 *mixbuf;
+    Uint32 mixlen;
+    Uint32 write_delay;
 };
 
 #endif /* _SDL_diskaudio_h */
+/* vi: set ts=4 sw=4 expandtab: */

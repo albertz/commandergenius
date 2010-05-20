@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -23,11 +23,6 @@
 
 #include "SDL_nullvideo.h"
 
-/* Variables and functions exported by SDL_sysevents.c to other parts 
-   of the native video subsystem (SDL_sysvideo.c)
-*/
-extern void DUMMY_InitOSKeymap(_THIS);
 extern void DUMMY_PumpEvents(_THIS);
 
-/* end of SDL_nullevents_c.h ... */
-
+/* vi: set ts=4 sw=4 expandtab: */

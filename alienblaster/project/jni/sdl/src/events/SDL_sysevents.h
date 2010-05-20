@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is SDL_free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -25,22 +25,12 @@
 
 /* Useful functions and variables from SDL_sysevents.c */
 
-#ifdef __BEOS__		/* The Be event loop runs in a separate thread */
+#ifdef __BEOS__                 /* The Be event loop runs in a separate thread */
 #define MUST_THREAD_EVENTS
 #endif
 
-#ifdef __WIN32__	/* Win32 doesn't allow a separate event thread */
+#ifdef __WIN32__                /* Win32 doesn't allow a separate event thread */
 #define CANT_THREAD_EVENTS
 #endif
 
-#ifdef IPOD			/* iPod doesn't support threading at all */
-#define CANT_THREAD_EVENTS
-#endif
-
-#ifdef __MACOS__	/* MacOS 7/8 don't support preemptive multi-tasking */
-#define CANT_THREAD_EVENTS
-#endif
-
-#ifdef __OS2__		/* The OS/2 event loop runs in a separate thread */
-#define MUST_THREAD_EVENTS
-#endif
+/* vi: set ts=4 sw=4 expandtab: */

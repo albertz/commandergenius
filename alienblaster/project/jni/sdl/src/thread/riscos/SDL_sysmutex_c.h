@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -25,10 +25,12 @@
 #define _SDL_mutex_c_h
 
 #if !SDL_THREADS_DISABLED
-struct SDL_mutex {
-	pthread_mutex_t id;
+struct SDL_mutex
+{
+    pthread_mutex_t id;
 };
 #endif
 
 
 #endif /* _SDL_mutex_c_h */
+/* vi: set ts=4 sw=4 expandtab: */

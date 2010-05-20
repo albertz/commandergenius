@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,9 @@
     slouken@libsdl.org
 */
 
-/** @file SDL_keyboard.h
+/**
+ *  \file SDL_keyboard.h
+ *  
  *  Include file for SDL keyboard event handling
  */
 
@@ -30,106 +32,139 @@
 #include "SDL_stdinc.h"
 #include "SDL_error.h"
 #include "SDL_keysym.h"
+#include "SDL_video.h"
 
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
+/* *INDENT-OFF* */
 extern "C" {
+/* *INDENT-ON* */
 #endif
 
-/** Keysym structure
- *
- *  - The scancode is hardware dependent, and should not be used by general
- *    applications.  If no hardware scancode is available, it will be 0.
- *
- *  - The 'unicode' translated character is only available when character
- *    translation is enabled by the SDL_EnableUNICODE() API.  If non-zero,
- *    this is a UNICODE character corresponding to the keypress.  If the
- *    high 9 bits of the character are 0, then this maps to the equivalent
- *    ASCII character:
- *      @code
- *	char ch;
- *	if ( (keysym.unicode & 0xFF80) == 0 ) {
- *		ch = keysym.unicode & 0x7F;
- *	} else {
- *		An international character..
- *	}
- *      @endcode
+/**
+ *  \brief The SDL keysym structure, used in key events.
  */
-typedef struct SDL_keysym {
-	Uint8 scancode;			/**< hardware specific scancode */
-	SDLKey sym;			/**< SDL virtual keysym */
-	SDLMod mod;			/**< current key modifiers */
-	Uint16 unicode;			/**< translated character */
+typedef struct SDL_keysym
+{
+    SDL_scancode scancode;      /**< SDL physical key code - see ::SDL_scancode for details */
+    SDLKey sym;                 /**< SDL virtual key code - see ::SDLKey for details */
+    Uint16 mod;                 /**< current key modifiers */
+    Uint32 unicode;             /**< \deprecated use SDL_TextInputEvent instead */
 } SDL_keysym;
 
-/** This is the mask which refers to all hotkey bindings */
-#define SDL_ALL_HOTKEYS		0xFFFFFFFF
-
 /* Function prototypes */
-/**
- * Enable/Disable UNICODE translation of keyboard input.
- *
- * This translation has some overhead, so translation defaults off.
- *
- * @param[in] enable
- * If 'enable' is 1, translation is enabled.
- * If 'enable' is 0, translation is disabled.
- * If 'enable' is -1, the translation state is not changed.
- *
- * @return It returns the previous state of keyboard translation.
- */
-extern DECLSPEC int SDLCALL SDL_EnableUNICODE(int enable);
-
-#define SDL_DEFAULT_REPEAT_DELAY	500
-#define SDL_DEFAULT_REPEAT_INTERVAL	30
-/**
- * Enable/Disable keyboard repeat.  Keyboard repeat defaults to off.
- *
- *  @param[in] delay
- *  'delay' is the initial delay in ms between the time when a key is
- *  pressed, and keyboard repeat begins.
- *
- *  @param[in] interval
- *  'interval' is the time in ms between keyboard repeat events.
- *
- *  If 'delay' is set to 0, keyboard repeat is disabled.
- */
-extern DECLSPEC int SDLCALL SDL_EnableKeyRepeat(int delay, int interval);
-extern DECLSPEC void SDLCALL SDL_GetKeyRepeat(int *delay, int *interval);
 
 /**
- * Get a snapshot of the current state of the keyboard.
- * Returns an array of keystates, indexed by the SDLK_* syms.
- * Usage:
- *	@code
- * 	Uint8 *keystate = SDL_GetKeyState(NULL);
- *	if ( keystate[SDLK_RETURN] ) //... \<RETURN> is pressed.
- *	@endcode
+ *  \brief Get the window which currently has keyboard focus.
  */
-extern DECLSPEC Uint8 * SDLCALL SDL_GetKeyState(int *numkeys);
+extern DECLSPEC SDL_Window * SDLCALL SDL_GetKeyboardFocus(void);
 
 /**
- * Get the current key modifier state
+ *  \brief Get a snapshot of the current state of the keyboard.
+ *  
+ *  \param numkeys if non-NULL, receives the length of the returned array.
+ *  
+ *  \return An array of key states. Indexes into this array are obtained by using ::SDL_scancode values.
+ *  
+ *  \b Example:
+ *  \code
+ *  Uint8 *state = SDL_GetKeyboardState(NULL);
+ *  if ( state[SDL_SCANCODE_RETURN] )   {
+ *      printf("<RETURN> is pressed.\n");
+ *  }
+ *  \endcode
+ */
+extern DECLSPEC Uint8 *SDLCALL SDL_GetKeyboardState(int *numkeys);
+
+/**
+ *  \brief Get the current key modifier state for the keyboard.
  */
 extern DECLSPEC SDLMod SDLCALL SDL_GetModState(void);
 
 /**
- * Set the current key modifier state.
- * This does not change the keyboard state, only the key modifier flags.
+ *  \brief Set the current key modifier state for the keyboard.
+ *  
+ *  \note This does not change the keyboard state, only the key modifier flags.
  */
 extern DECLSPEC void SDLCALL SDL_SetModState(SDLMod modstate);
 
 /**
- * Get the name of an SDL virtual keysym
+ *  \brief Get the key code corresponding to the given scancode according
+ *         to the current keyboard layout.
+ *  
+ *  See ::SDLKey for details.
+ *  
+ *  \sa SDL_GetKeyName()
  */
-extern DECLSPEC char * SDLCALL SDL_GetKeyName(SDLKey key);
+extern DECLSPEC SDLKey SDLCALL SDL_GetKeyFromScancode(SDL_scancode scancode);
+
+/**
+ *  \brief Get the scancode corresponding to the given key code according to the
+ *         current keyboard layout.
+ *  
+ *  See ::SDL_scancode for details.
+ *  
+ *  \sa SDL_GetScancodeName()
+ */
+extern DECLSPEC SDL_scancode SDLCALL SDL_GetScancodeFromKey(SDLKey key);
+
+/**
+ *  \brief Get a human-readable name for a scancode.
+ *  
+ *  \return A pointer to a UTF-8 string that stays valid at least until the next
+ *          call to this function. If you need it around any longer, you must 
+ *          copy it.  If the scancode doesn't have a name, this function returns
+ *          an empty string ("").
+ *
+ *  \sa SDL_scancode
+ */
+extern DECLSPEC const char *SDLCALL SDL_GetScancodeName(SDL_scancode
+                                                        scancode);
+
+/**
+ *  \brief Get a human-readable name for a key.
+ *  
+ *  \return A pointer to a UTF-8 string that stays valid at least until the next
+ *          call to this function. If you need it around any longer, you must 
+ *          copy it.  If the key doesn't have a name, this function returns an 
+ *          empty string ("").
+ *  
+ *  \sa SDLKey
+ */
+extern DECLSPEC const char *SDLCALL SDL_GetKeyName(SDLKey key);
+
+/**
+ *  \brief Start accepting Unicode text input events.
+ *  
+ *  \sa SDL_StopTextInput()
+ *  \sa SDL_SetTextInputRect()
+ */
+extern DECLSPEC void SDLCALL SDL_StartTextInput(void);
+
+/**
+ *  \brief Stop receiving any text input events.
+ *  
+ *  \sa SDL_StartTextInput()
+ */
+extern DECLSPEC void SDLCALL SDL_StopTextInput(void);
+
+/**
+ *  \brief Set the rectangle used to type Unicode text inputs.
+ *  
+ *  \sa SDL_StartTextInput()
+ */
+extern DECLSPEC void SDLCALL SDL_SetTextInputRect(SDL_Rect *rect);
 
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
+/* *INDENT-OFF* */
 }
+/* *INDENT-ON* */
 #endif
 #include "close_code.h"
 
 #endif /* _SDL_keyboard_h */
+
+/* vi: set ts=4 sw=4 expandtab: */

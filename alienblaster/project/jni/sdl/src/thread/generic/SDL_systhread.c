@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -26,29 +26,29 @@
 #include "SDL_thread.h"
 #include "../SDL_systhread.h"
 
-int SDL_SYS_CreateThread(SDL_Thread *thread, void *args)
+int
+SDL_SYS_CreateThread(SDL_Thread * thread, void *args)
 {
-	SDL_SetError("Threads are not supported on this platform");
-	return(-1);
+    SDL_SetError("Threads are not supported on this platform");
+    return (-1);
 }
 
-void SDL_SYS_SetupThread(void)
+void
+SDL_SYS_SetupThread(void)
 {
-	return;
+    return;
 }
 
-Uint32 SDL_ThreadID(void)
+SDL_threadID
+SDL_ThreadID(void)
 {
-	return(0);
+    return (0);
 }
 
-void SDL_SYS_WaitThread(SDL_Thread *thread)
+void
+SDL_SYS_WaitThread(SDL_Thread * thread)
 {
-	return;
+    return;
 }
 
-void SDL_SYS_KillThread(SDL_Thread *thread)
-{
-	return;
-}
-
+/* vi: set ts=4 sw=4 expandtab: */

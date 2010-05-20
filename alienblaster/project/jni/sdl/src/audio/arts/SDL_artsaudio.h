@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -28,33 +28,26 @@
 
 #include "../SDL_sysaudio.h"
 
-/* Hidden "this" pointer for the video functions */
+/* Hidden "this" pointer for the audio functions */
 #define _THIS	SDL_AudioDevice *this
 
-struct SDL_PrivateAudioData {
-	/* The stream descriptor for the audio device */
-	arts_stream_t stream;
+struct SDL_PrivateAudioData
+{
+    /* The stream descriptor for the audio device */
+    arts_stream_t stream;
 
-	/* The parent process id, to detect when application quits */
-	pid_t parent;
+    /* The parent process id, to detect when application quits */
+    pid_t parent;
 
-	/* Raw mixing buffer */
-	Uint8 *mixbuf;
-	int    mixlen;
+    /* Raw mixing buffer */
+    Uint8 *mixbuf;
+    int mixlen;
 
-	/* Support for audio timing using a timer, in addition to select() */
-	float frame_ticks;
-	float next_frame;
+    /* Support for audio timing using a timer, in addition to select() */
+    float frame_ticks;
+    float next_frame;
 };
-#define FUDGE_TICKS	10	/* The scheduler overhead ticks per frame */
-
-/* Old variable names */
-#define stream			(this->hidden->stream)
-#define parent			(this->hidden->parent)
-#define mixbuf			(this->hidden->mixbuf)
-#define mixlen			(this->hidden->mixlen)
-#define frame_ticks		(this->hidden->frame_ticks)
-#define next_frame		(this->hidden->next_frame)
+#define FUDGE_TICKS	10      /* The scheduler overhead ticks per frame */
 
 #endif /* _SDL_artscaudio_h */
-
+/* vi: set ts=4 sw=4 expandtab: */

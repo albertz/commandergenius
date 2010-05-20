@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -19,17 +19,20 @@
     Sam Lantinga
     slouken@libsdl.org
 */
+
 #include "SDL_config.h"
+
+#ifdef SDL_JOYSTICK_NDS
 
 /* This is the system specific header for the SDL joystick API */
 #include <nds.h>
-//#include <nds/registers_alt.h>
+#include <stdio.h>              /* For the definition of NULL */
 
 #include "SDL_error.h"
 #include "SDL_events.h"
 #include "SDL_joystick.h"
-#include "../SDL_sysjoystick.h"
-#include "../SDL_joystick_c.h"
+#include "SDL_sysjoystick.h"
+#include "SDL_joystick_c.h"
 
 #include "../../video/nds/SDL_ndsevents_c.h"
 
@@ -38,21 +41,21 @@
  * joysticks.  Joystick 0 should be the system default joystick.
  * It should return 0, or -1 on an unrecoverable fatal error.
  */
-int SDL_SYS_JoystickInit(void)
+int
+SDL_SYS_JoystickInit(void)
 {
-	SDL_numjoysticks = 1;
-    //keysInit();
-
-	return(1);
+    SDL_numjoysticks = 1;
+    return (1);
 }
 
 /* Function to get the device-dependent name of a joystick */
-const char *SDL_SYS_JoystickName(int index)
+const char *
+SDL_SYS_JoystickName(int index)
 {
-	if(!index)
-		return "NDS builtin joypad";
-	SDL_SetError("No joystick available with that index");
-	return (NULL);
+    if (!index)
+        return "NDS builtin joypad";
+    SDL_SetError("No joystick available with that index");
+    return (NULL);
 }
 
 /* Function to open a joystick for use.
@@ -60,13 +63,14 @@ const char *SDL_SYS_JoystickName(int index)
    This should fill the nbuttons and naxes fields of the joystick structure.
    It returns 0, or -1 if there is an error.
  */
-int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
+int
+SDL_SYS_JoystickOpen(SDL_Joystick * joystick)
 {
-	joystick->nbuttons=8;
-	joystick->nhats=0;
-	joystick->nballs=0;
-	joystick->naxes=2;
-	return 0;
+    joystick->nbuttons = 8;
+    joystick->nhats = 0;
+    joystick->nballs = 0;
+    joystick->naxes = 2;
+    return 0;
 }
 
 
@@ -75,76 +79,94 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
  * but instead should call SDL_PrivateJoystick*() to deliver events
  * and update joystick device state.
  */
-
-int prevbutton=0;
-int prevkey=0;
-
-int dc=0;int ldc=0;
-u32 keysd,keysu=0;
-void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
+    void
+SDL_SYS_JoystickUpdate(SDL_Joystick * joystick)
 {
-    //dc=keysd;
-	//if (dc)
-	//{
-		//fprintf(stderr,"heartbeat= %d\n",REG_VCOUNT); 
-		//swiWaitForVBlank();
-		//scanKeys();
-		//keysd = keysDown(); 
-		//keysu = keysUp();
-		//ldc=keysd;
-		 
-	//}
-	/*if (prevkey && prevbutton)
-	{
-		scanKeys();
-	}
-	*/
-	
-	//scanKeys();
-		keysd = keysDown(); 
-		keysu = keysUp();
-		
-	
-	short ax=0,v=0,h=0;
-	if((keysd&KEY_UP)) {ax=1;v=-10;SDL_PrivateJoystickAxis(joystick,ax,v);prevkey=KEY_UP;}//fprintf(stderr,"KEY_UP\n");}
-	if((keysd&KEY_DOWN)) {ax=1;v=10;SDL_PrivateJoystickAxis(joystick,ax,v);prevkey=KEY_DOWN;}//fprintf(stderr,"KEY_DOWN\n");}
-	if((keysd&KEY_LEFT)) {ax=0;h=-10;SDL_PrivateJoystickAxis(joystick,ax,h);prevkey=KEY_LEFT;}//fprintf(stderr,"KEY_LEFT\n");}
-	if((keysd&KEY_RIGHT)) {ax=0;h=10;SDL_PrivateJoystickAxis(joystick,ax,h);prevkey=KEY_RIGHT;}//fprintf(stderr,"KEY_RIGHT\n");}
+    u32 keysd, keysu;
+    int magnitude = 16384;
+    
+        /*scanKeys(); - this is done in PumpEvents, because touch uses it too */ 
+        keysd = keysDown();
+    keysu = keysUp();
 
-	if((keysu&KEY_UP)) {ax=1;v=0;SDL_PrivateJoystickAxis(joystick,ax,v);prevkey=0;}//fprintf(stderr,"KEY_UP\n");}
-	if((keysu&KEY_DOWN)) {ax=1;v=0;SDL_PrivateJoystickAxis(joystick,ax,v);prevkey=0;}//fprintf(stderr,"KEY_DOWN\n");}
-	if((keysu&KEY_LEFT)) {ax=0;h=0;SDL_PrivateJoystickAxis(joystick,ax,h);prevkey=0;}//fprintf(stderr,"KEY_LEFT\n");}
-	if((keysu&KEY_RIGHT)) {ax=0;h=0;SDL_PrivateJoystickAxis(joystick,ax,h);prevkey=0;}//fprintf(stderr,"KEY_RIGHT\n");}
-
-	if((keysd&KEY_A))		{SDL_PrivateJoystickButton(joystick,0,SDL_PRESSED);prevbutton=KEY_A;}
-	if((keysd&KEY_B))		{SDL_PrivateJoystickButton(joystick,1,SDL_PRESSED);prevbutton=KEY_B;}
-	if((keysd&KEY_X))		{SDL_PrivateJoystickButton(joystick,2,SDL_PRESSED);prevbutton=KEY_X;}
-	if((keysd&KEY_Y))		{SDL_PrivateJoystickButton(joystick,3,SDL_PRESSED);prevbutton=KEY_Y;}
-	if((keysd&KEY_SELECT))	{SDL_PrivateJoystickButton(joystick,6,SDL_PRESSED);prevbutton=KEY_SELECT;}
-	if((keysd&KEY_START))	{SDL_PrivateJoystickButton(joystick,7,SDL_PRESSED);prevbutton=KEY_START;}
-	if((keysd&KEY_L))		{SDL_PrivateJoystickButton(joystick,4,SDL_PRESSED);prevbutton=KEY_L;}
-	if((keysd&KEY_R))		{SDL_PrivateJoystickButton(joystick,5,SDL_PRESSED);prevbutton=KEY_R;}
-
-	if((keysu&KEY_A))		{SDL_PrivateJoystickButton(joystick,0,SDL_RELEASED);prevbutton=0;}
-	if((keysu&KEY_B))		{SDL_PrivateJoystickButton(joystick,1,SDL_RELEASED);prevbutton=0;}
-	if((keysu&KEY_X))		{SDL_PrivateJoystickButton(joystick,2,SDL_RELEASED);prevbutton=0;}
-	if((keysu&KEY_Y))		{SDL_PrivateJoystickButton(joystick,3,SDL_RELEASED);prevbutton=0;}
-	if((keysu&KEY_SELECT))  {SDL_PrivateJoystickButton(joystick,6,SDL_RELEASED);prevbutton=0;}
-	if((keysu&KEY_START))	{SDL_PrivateJoystickButton(joystick,7,SDL_RELEASED);prevbutton=0;}
-	if((keysu&KEY_L))		{SDL_PrivateJoystickButton(joystick,4,SDL_RELEASED);prevbutton=0;}
-	if((keysu&KEY_R))		{SDL_PrivateJoystickButton(joystick,5,SDL_RELEASED);prevbutton=0;}
-
-
-
-}
+    if ((keysd & KEY_UP)) {
+        SDL_PrivateJoystickAxis(joystick, 1, -magnitude);
+    }
+    if ((keysd & KEY_DOWN)) {
+        SDL_PrivateJoystickAxis(joystick, 1, magnitude);
+    }
+    if ((keysd & KEY_LEFT)) {
+        SDL_PrivateJoystickAxis(joystick, 0, -magnitude);
+    }
+    if ((keysd & KEY_RIGHT)) {
+        SDL_PrivateJoystickAxis(joystick, 0, magnitude);
+    }
+    if ((keysu & (KEY_UP | KEY_DOWN))) {
+        SDL_PrivateJoystickAxis(joystick, 1, 0);
+    }
+    if ((keysu & (KEY_LEFT | KEY_RIGHT))) {
+        SDL_PrivateJoystickAxis(joystick, 0, 0);
+    }
+    if ((keysd & KEY_A)) {
+        SDL_PrivateJoystickButton(joystick, 0, SDL_PRESSED);
+    }
+    if ((keysd & KEY_B)) {
+        SDL_PrivateJoystickButton(joystick, 1, SDL_PRESSED);
+    }
+    if ((keysd & KEY_X)) {
+        SDL_PrivateJoystickButton(joystick, 2, SDL_PRESSED);
+    }
+    if ((keysd & KEY_Y)) {
+        SDL_PrivateJoystickButton(joystick, 3, SDL_PRESSED);
+    }
+    if ((keysd & KEY_L)) {
+        SDL_PrivateJoystickButton(joystick, 4, SDL_PRESSED);
+    }
+    if ((keysd & KEY_R)) {
+        SDL_PrivateJoystickButton(joystick, 5, SDL_PRESSED);
+    }
+    if ((keysd & KEY_SELECT)) {
+        SDL_PrivateJoystickButton(joystick, 6, SDL_PRESSED);
+    }
+    if ((keysd & KEY_START)) {
+        SDL_PrivateJoystickButton(joystick, 7, SDL_PRESSED);
+    }
+    if ((keysu & KEY_A)) {
+        SDL_PrivateJoystickButton(joystick, 0, SDL_RELEASED);
+    }
+    if ((keysu & KEY_B)) {
+        SDL_PrivateJoystickButton(joystick, 1, SDL_RELEASED);
+    }
+    if ((keysu & KEY_X)) {
+        SDL_PrivateJoystickButton(joystick, 2, SDL_RELEASED);
+    }
+    if ((keysu & KEY_Y)) {
+        SDL_PrivateJoystickButton(joystick, 3, SDL_RELEASED);
+    }
+    if ((keysu & KEY_L)) {
+        SDL_PrivateJoystickButton(joystick, 4, SDL_RELEASED);
+    }
+    if ((keysu & KEY_R)) {
+        SDL_PrivateJoystickButton(joystick, 5, SDL_RELEASED);
+    }
+    if ((keysu & KEY_SELECT)) {
+        SDL_PrivateJoystickButton(joystick, 6, SDL_RELEASED);
+    }
+    if ((keysu & KEY_START)) {
+        SDL_PrivateJoystickButton(joystick, 7, SDL_RELEASED);
+    }
+}
 
 /* Function to close a joystick after use */
-void SDL_SYS_JoystickClose(SDL_Joystick *joystick)
+void
+SDL_SYS_JoystickClose(SDL_Joystick * joystick)
 {
 }
 
 /* Function to perform any system-specific joystick related cleanup */
-void SDL_SYS_JoystickQuit(void)
+void
+SDL_SYS_JoystickQuit(void)
 {
 }
 
+#endif /* SDL_JOYSTICK_NDS */

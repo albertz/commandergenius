@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -21,8 +21,9 @@
 */
 
 /**
- *  @file SDL_cpuinfo.h
- *  CPU feature detection for SDL
+ *  \file SDL_cpuinfo.h
+ *  
+ *  CPU feature detection for SDL.
  */
 
 #ifndef _SDL_cpuinfo_h
@@ -33,37 +34,64 @@
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
+/* *INDENT-OFF* */
 extern "C" {
+/* *INDENT-ON* */
 #endif
 
-/** This function returns true if the CPU has the RDTSC instruction */
+/**
+ *  This function returns the number of CPU cores available.
+ */
+extern DECLSPEC int SDLCALL SDL_GetCPUCount(void);
+
+/**
+ *  This function returns true if the CPU has the RDTSC instruction.
+ */
 extern DECLSPEC SDL_bool SDLCALL SDL_HasRDTSC(void);
 
-/** This function returns true if the CPU has MMX features */
+/**
+ *  This function returns true if the CPU has MMX features.
+ */
 extern DECLSPEC SDL_bool SDLCALL SDL_HasMMX(void);
 
-/** This function returns true if the CPU has MMX Ext. features */
+/**
+ *  This function returns true if the CPU has MMX Ext.\ features.
+ */
 extern DECLSPEC SDL_bool SDLCALL SDL_HasMMXExt(void);
 
-/** This function returns true if the CPU has 3DNow features */
+/**
+ *  This function returns true if the CPU has 3DNow!\ features.
+ */
 extern DECLSPEC SDL_bool SDLCALL SDL_Has3DNow(void);
 
-/** This function returns true if the CPU has 3DNow! Ext. features */
+/**
+ *  This function returns true if the CPU has 3DNow!\ Ext.\ features.
+ */
 extern DECLSPEC SDL_bool SDLCALL SDL_Has3DNowExt(void);
 
-/** This function returns true if the CPU has SSE features */
+/**
+ *  This function returns true if the CPU has SSE features.
+ */
 extern DECLSPEC SDL_bool SDLCALL SDL_HasSSE(void);
 
-/** This function returns true if the CPU has SSE2 features */
+/**
+ *  This function returns true if the CPU has SSE2 features.
+ */
 extern DECLSPEC SDL_bool SDLCALL SDL_HasSSE2(void);
 
-/** This function returns true if the CPU has AltiVec features */
+/**
+ *  This function returns true if the CPU has AltiVec features.
+ */
 extern DECLSPEC SDL_bool SDLCALL SDL_HasAltiVec(void);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
+/* *INDENT-OFF* */
 }
+/* *INDENT-ON* */
 #endif
 #include "close_code.h"
 
 #endif /* _SDL_cpuinfo_h */
+
+/* vi: set ts=4 sw=4 expandtab: */

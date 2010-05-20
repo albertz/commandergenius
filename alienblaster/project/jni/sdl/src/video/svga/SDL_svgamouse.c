@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,8 @@
 
 
 /* The implementation dependent data for the window manager cursor */
-struct WMcursor {
-	int unused;
+struct WMcursor
+{
+    int unused;
 };
+/* vi: set ts=4 sw=4 expandtab: */

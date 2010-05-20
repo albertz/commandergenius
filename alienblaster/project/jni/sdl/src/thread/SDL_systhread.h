@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -33,9 +33,11 @@
    on success.
 */
 #ifdef SDL_PASSED_BEGINTHREAD_ENDTHREAD
-extern int SDL_SYS_CreateThread(SDL_Thread *thread, void *args, pfnSDL_CurrentBeginThread pfnBeginThread, pfnSDL_CurrentEndThread pfnEndThread);
+extern int SDL_SYS_CreateThread(SDL_Thread * thread, void *args,
+                                pfnSDL_CurrentBeginThread pfnBeginThread,
+                                pfnSDL_CurrentEndThread pfnEndThread);
 #else
-extern int SDL_SYS_CreateThread(SDL_Thread *thread, void *args);
+extern int SDL_SYS_CreateThread(SDL_Thread * thread, void *args);
 #endif
 
 /* This function does any necessary setup in the child thread */
@@ -44,9 +46,8 @@ extern void SDL_SYS_SetupThread(void);
 /* This function waits for the thread to finish and frees any data
    allocated by SDL_SYS_CreateThread()
  */
-extern void SDL_SYS_WaitThread(SDL_Thread *thread);
-
-/* This function kills the thread and returns */
-extern void SDL_SYS_KillThread(SDL_Thread *thread);
+extern void SDL_SYS_WaitThread(SDL_Thread * thread);
 
 #endif /* _SDL_systhread_h */
+
+/* vi: set ts=4 sw=4 expandtab: */

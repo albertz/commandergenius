@@ -17,22 +17,34 @@ LOCAL_CFLAGS := -I$(LOCAL_PATH)/include \
 SDL_SRCS := \
 	src/*.c \
 	src/audio/*.c \
-	src/cdrom/*.c \
 	src/cpuinfo/*.c \
 	src/events/*.c \
 	src/file/*.c \
+	src/haptic/*.c \
 	src/joystick/*.c \
 	src/stdlib/*.c \
 	src/thread/*.c \
 	src/timer/*.c \
 	src/video/*.c \
-	src/audio/android/*.c \
-	src/video/android/*.c \
-	src/joystick/dummy/*.c \
-	src/cdrom/dummy/*.c \
+	src/main/*.c \
+	src/power/*.c \
 	src/thread/pthread/*.c \
 	src/timer/unix/*.c \
-	src/loadso/dummy/*.c \
+	src/audio/android/*.c \
+	src/audio/dummy/*.c \
+	src/video/android/*.c \
+	src/joystick/dummy/*.c \
+	src/haptic/dummy/*.c \
+	src/loadso/dlopen/*.c \
+	src/atomic/dummy/*.c \
+
+# TODO: use libcutils for atomic operations, but it's not included in NDK
+
+#	src/atomic/linux/*.c \
+#	src/power/linux/*.c \
+#	src/joystick/android/*.c \
+#	src/haptic/android/*.c \
+#	src/libm/*.c \
 
 LOCAL_CPP_EXTENSION := .cpp
 

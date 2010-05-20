@@ -26,11 +26,8 @@
 
 #include "../SDL_sysvideo.h"
 
-/* Hidden "this" pointer for the video functions */
-#define _THIS	SDL_VideoDevice *this
-
-extern void ANDROID_InitOSKeymap(_THIS);
 extern void ANDROID_PumpEvents(_THIS);
+extern void ANDROID_InitOSKeymap();
 
 
 // Keycodes ripped from Java SDK

@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -21,8 +21,8 @@
 */
 #include "SDL_config.h"
 
-#ifndef _SDL_lowaudio_h
-#define _SDL_lowaudio_h
+#ifndef _SDL_irixaudio_h
+#define _SDL_irixaudio_h
 
 #include <dmedia/audio.h>
 
@@ -31,15 +31,12 @@
 /* Hidden "this" pointer for the audio functions */
 #define _THIS	SDL_AudioDevice *this
 
-struct SDL_PrivateAudioData {
-	/* The handle for the audio device */
-	ALport audio_port;
-
-	Uint8 *mixbuf;           /* The app mixing buffer */
+struct SDL_PrivateAudioData
+{
+    ALport audio_port;          /* The handle for the audio device */
+    Uint8 *mixbuf;              /* The app mixing buffer */
 };
 
-/* Old variable names */
-#define audio_port		(this->hidden->audio_port)
-#define mixbuf			(this->hidden->mixbuf)
+#endif /* _SDL_irixaudio_h */
 
-#endif /* _SDL_lowaudio_h */
+/* vi: set ts=4 sw=4 expandtab: */

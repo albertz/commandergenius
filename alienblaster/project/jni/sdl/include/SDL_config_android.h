@@ -20,8 +20,8 @@
     slouken@libsdl.org
 */
 
-#ifndef _SDL_config_minimal_h
-#define _SDL_config_minimal_h
+#ifndef _SDL_config_android_h
+#define _SDL_config_android_h
 
 #include "SDL_platform.h"
 
@@ -31,22 +31,37 @@
 #include <stdint.h>
 #include <sys/mman.h>
 
-#define SDL_AUDIO_DRIVER_ANDROID	1
+#define SDL_VIDEO_DRIVER_ANDROID 1
+#define SDL_VIDEO_OPENGL_ES 1
+#define SDL_VIDEO_RENDER_OGL_ES 1
 
-#define SDL_CDROM_DISABLED	1
+// #define SDL_AUDIO_DRIVER_ANDROID 1
+#define SDL_AUDIO_DRIVER_DUMMY 1 // TODO: fix audio and remove that
 
-#define SDL_JOYSTICK_DISABLED	1
+#define SDL_CDROM_DISABLED 1
 
-#define SDL_LOADSO_DISABLED	1
+#define SDL_JOYSTICK_DUMMY 1 // TODO: add joystick and remove that
+#define SDL_JOYSTICK_ANDROID 1
 
-#define SDL_THREAD_PTHREAD	1
-#define SDL_THREAD_PTHREAD_RECURSIVE_MUTEX	1
+#define SDL_HAPTIC_DUMMY 1 // TODO: add vibrator and remove that
+#define SDL_HAPTIC_ANDROID 1
 
-#define SDL_TIMER_UNIX	1
+#define SDL_POWER_DISABLED 1 // TODO: add battery meter and remove that
+#define SDL_POWER_ANDROID 1
+#undef SDL_POWER_LINUX
 
-#define SDL_VIDEO_DRIVER_ANDROID	1
+#define SDL_LOADSO_DLOPEN 1
 
-#define HAVE_STDIO_H	1
+#define SDL_THREAD_PTHREAD 1
+#define SDL_THREAD_PTHREAD_RECURSIVE_MUTEX 1
+
+#define SDL_TIMER_UNIX 1
+
+#define HAVE_STDIO_H 1
+
+
+#define SIZEOF_VOIDP 4
+#define SDL_HAS_64BIT_TYPE 1
 
 /* FireSlash found that SDL native memcpy crashes sometimes, these defines fix it (and they are faster) */
 #define HAVE_LIBC 1
@@ -125,5 +140,24 @@
 #define HAVE_CLOCK_GETTIME 1
 #define HAVE_GETPAGESIZE 1
 #define HAVE_MPROTECT 1
+
+#define HAVE_CEIL 1
+#define HAVE_COPYSIGN 1
+#define HAVE_COS 1
+#define HAVE_COSF 1
+#define HAVE_FABS 1
+#define HAVE_FLOOR 1
+#define HAVE_LOG 1
+#define HAVE_M_PI 1
+#define HAVE_POW 1
+#define HAVE_SCALBN 1
+#define HAVE_SETENV 1
+#define HAVE_SIN 1
+#define HAVE_SINF 1
+#define HAVE_SQRT 1
+#define HAVE_SYSCONF 1
+#undef HAVE_SYSCTLBYNAME
+#undef SDL_ALTIVEC_BLITTERS
+#define SDL_ASSEMBLY_ROUTINES 1 // There is no assembly code for Arm CPU yet
 
 #endif /* _SDL_config_minimal_h */

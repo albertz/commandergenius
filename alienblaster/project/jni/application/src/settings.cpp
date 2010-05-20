@@ -409,8 +409,8 @@ void Settings::getNewKeyFromUser() {
 const PlayerKeys Settings::getPlayerKeys(unsigned int player) const {
   assert( player < playerKeys.size() );
   PlayerKeys pk;
-  for(int i=SDLK_FIRST; i <= SDLK_LAST; ++i) {
-    pk[ (SDLKey)i ] = PE_UNKNOWN;
+  for( std::map< SDLKey, std::string > :: const_iterator i = keyName.begin(); i != keyName.end(); ++i ) {
+    pk[ i->first ] = PE_UNKNOWN;
   }
   std::map< PlayerEvent, SDLKey >::const_iterator pkiter;
   for(pkiter = playerKeys[player].begin(); pkiter != playerKeys[player].end(); ++pkiter) {

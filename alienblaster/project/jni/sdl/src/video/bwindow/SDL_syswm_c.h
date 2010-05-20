@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -28,5 +28,5 @@
 /* Functions to be exported */
 extern void BE_SetWMCaption(_THIS, const char *title, const char *icon);
 extern int BE_IconifyWindow(_THIS);
-extern int BE_GetWMInfo(_THIS, SDL_SysWMinfo *info);
-extern SDL_GrabMode BE_GrabInput(_THIS, SDL_GrabMode mode);
+extern int BE_GetWMInfo(_THIS, SDL_SysWMinfo * info);
+/* vi: set ts=4 sw=4 expandtab: */

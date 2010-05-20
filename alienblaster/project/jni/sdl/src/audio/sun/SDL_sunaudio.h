@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -21,25 +21,26 @@
 */
 #include "SDL_config.h"
 
-#ifndef _SDL_lowaudio_h
-#define _SDL_lowaudio_h
+#ifndef _SDL_sunaudio_h
+#define _SDL_sunaudio_h
 
 #include "../SDL_sysaudio.h"
 
-/* Hidden "this" pointer for the video functions */
+/* Hidden "this" pointer for the audio functions */
 #define _THIS	SDL_AudioDevice *this
 
-struct SDL_PrivateAudioData {
-	/* The file descriptor for the audio device */
-	int audio_fd;
+struct SDL_PrivateAudioData
+{
+    /* The file descriptor for the audio device */
+    int audio_fd;
 
-	Uint16 audio_fmt;        /* The app audio format */
-	Uint8 *mixbuf;           /* The app mixing buffer */
-	int ulaw_only;           /* Flag -- does hardware only output U-law? */
-	Uint8 *ulaw_buf;         /* The U-law mixing buffer */
-	Sint32 written;          /* The number of samples written */
-	int fragsize;            /* The audio fragment size in samples */
-	int frequency;           /* The audio frequency in KHz */
+    SDL_AudioFormat audio_fmt;  /* The app audio format */
+    Uint8 *mixbuf;              /* The app mixing buffer */
+    int ulaw_only;              /* Flag -- does hardware only output U-law? */
+    Uint8 *ulaw_buf;            /* The U-law mixing buffer */
+    Sint32 written;             /* The number of samples written */
+    int fragsize;               /* The audio fragment size in samples */
+    int frequency;              /* The audio frequency in KHz */
 };
 
 /* Old variable names */
@@ -52,4 +53,6 @@ struct SDL_PrivateAudioData {
 #define fragsize		(this->hidden->fragsize)
 #define frequency		(this->hidden->frequency)
 
-#endif /* _SDL_lowaudio_h */
+#endif /* _SDL_sunaudio_h */
+
+/* vi: set ts=4 sw=4 expandtab: */

@@ -1,20 +1,20 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
+    modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
+    version 2.1 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
+    Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
     Sam Lantinga
     slouken@libsdl.org
@@ -35,7 +35,6 @@
 #endif
 
 #include <X11/Xproto.h>
-
 #include "../Xext/extensions/Xext.h"
 #include "../Xext/extensions/extutil.h"
 
@@ -49,6 +48,10 @@
 #include <X11/extensions/Xrandr.h>
 #endif
 
+#if SDL_VIDEO_DRIVER_X11_XINPUT
+#include <X11/extensions/XInput.h>
+#endif
+
 /*
  * When using the "dynamic X11" functionality, we duplicate all the Xlib
  *  symbols that would be referenced by SDL inside of SDL itself.
@@ -60,21 +63,24 @@
  *  headers that may or may not exist or vary on a given platform.
  */
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* evil function signatures... */
-typedef Bool (*SDL_X11_XESetWireToEventRetType)(Display*,XEvent*,xEvent*);
-typedef int (*SDL_X11_XSynchronizeRetType)(Display*);
-typedef Status (*SDL_X11_XESetEventToWireRetType)(Display*,XEvent*,xEvent*);
+    typedef Bool(*SDL_X11_XESetWireToEventRetType) (Display *, XEvent *,
+                                                    xEvent *);
+    typedef int (*SDL_X11_XSynchronizeRetType) (Display *);
+    typedef Status(*SDL_X11_XESetEventToWireRetType) (Display *, XEvent *,
+                                                      xEvent *);
 
-int SDL_X11_LoadSymbols(void);
-void SDL_X11_UnloadSymbols(void);
+    int SDL_X11_LoadSymbols(void);
+    void SDL_X11_UnloadSymbols(void);
 
-/* That's really annoying...make this a function pointer no matter what. */
+/* That's really annoying...make these function pointers no matter what. */
 #ifdef X_HAVE_UTF8_STRING
-extern XIC (*pXCreateIC)(XIM,...);
-extern char *(*pXGetICValues)(XIC, ...);
+    extern XIC(*pXCreateIC) (XIM, ...);
+    extern char *(*pXGetICValues) (XIC, ...);
 #endif
 
 /* These SDL_X11_HAVE_* flags are here whether you have dynamic X11 or not. */
@@ -89,5 +95,5 @@ extern char *(*pXGetICValues)(XIC, ...);
 }
 #endif
 
-#endif  /* !defined _SDL_x11dyn_h */
-
+#endif                          /* !defined _SDL_x11dyn_h */
+/* vi: set ts=4 sw=4 expandtab: */

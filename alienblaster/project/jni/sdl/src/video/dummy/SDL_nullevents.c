@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -24,22 +24,16 @@
 /* Being a null driver, there's no event stream. We just define stubs for
    most of the API. */
 
-#include "SDL.h"
 #include "../../events/SDL_sysevents.h"
 #include "../../events/SDL_events_c.h"
 
 #include "SDL_nullvideo.h"
 #include "SDL_nullevents_c.h"
 
-void DUMMY_PumpEvents(_THIS)
+void
+DUMMY_PumpEvents(_THIS)
 {
-	/* do nothing. */
+    /* do nothing. */
 }
 
-void DUMMY_InitOSKeymap(_THIS)
-{
-	/* do nothing. */
-}
-
-/* end of SDL_nullevents.c ... */
-
+/* vi: set ts=4 sw=4 expandtab: */

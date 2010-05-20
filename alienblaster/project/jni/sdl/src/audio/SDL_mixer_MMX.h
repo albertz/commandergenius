@@ -10,8 +10,8 @@
 
 #if defined(SDL_BUGGY_MMX_MIXERS) /* buggy, so we're disabling them. --ryan. */
 #if defined(__GNUC__) && defined(__i386__) && defined(SDL_ASSEMBLY_ROUTINES)
-void SDL_MixAudio_MMX_S16(char* ,char* ,unsigned int ,int );
-void SDL_MixAudio_MMX_S8(char* ,char* ,unsigned int ,int );
+void SDL_MixAudio_MMX_S16(char *, char *, unsigned int, int);
+void SDL_MixAudio_MMX_S8(char *, char *, unsigned int, int);
 #endif
-#endif
-
+#endif /* SDL_BUGGY_MMX_MIXERS */
+/* vi: set ts=4 sw=4 expandtab: */

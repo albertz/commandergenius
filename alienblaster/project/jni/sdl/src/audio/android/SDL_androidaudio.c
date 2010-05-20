@@ -36,6 +36,8 @@
 #include <android/log.h>
 #include <string.h> // for memset()
 
+#if 0 // Disabled for now
+
 #define ANDROIDAUD_DRIVER_NAME         "android"
 
 /* Audio driver functions */
@@ -339,3 +341,4 @@ extern jint JAVA_EXPORT_NAME(AudioThread_nativeAudioBufferUnlock) ( JNIEnv * env
 	return 0;
 }
 
+#endif

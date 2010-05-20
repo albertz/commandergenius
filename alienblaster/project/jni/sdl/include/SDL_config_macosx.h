@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -30,6 +30,12 @@
 
 /* This is a set of defines to configure the SDL features */
 
+#ifdef __LP64__
+	#define SIZEOF_VOIDP 8
+#else
+	#define SIZEOF_VOIDP 4
+#endif
+
 #define SDL_HAS_64BIT_TYPE	1
 
 /* Useful headers */
@@ -54,6 +60,7 @@
 #define HAVE_FREE	1
 #define HAVE_ALLOCA	1
 #define HAVE_GETENV	1
+#define HAVE_SETENV	1
 #define HAVE_PUTENV	1
 #define HAVE_UNSETENV	1
 #define HAVE_QSORT	1
@@ -84,28 +91,35 @@
 #define HAVE_SSCANF	1
 #define HAVE_SNPRINTF	1
 #define HAVE_VSNPRINTF	1
+#define HAVE_CEIL	1
+#define HAVE_COPYSIGN	1
+#define HAVE_COS	1
+#define HAVE_COSF	1
+#define HAVE_FABS	1
+#define HAVE_FLOOR	1
+#define HAVE_LOG	1
+#define HAVE_POW	1
+#define HAVE_SCALBN	1
+#define HAVE_SIN	1
+#define HAVE_SINF	1
+#define HAVE_SQRT	1
 #define HAVE_SIGACTION	1
 #define HAVE_SETJMP	1
 #define HAVE_NANOSLEEP	1
+#define HAVE_SYSCONF	1
+#define HAVE_SYSCTLBYNAME 1
 
 /* Enable various audio drivers */
 #define SDL_AUDIO_DRIVER_COREAUDIO	1
 #define SDL_AUDIO_DRIVER_DISK	1
 #define SDL_AUDIO_DRIVER_DUMMY	1
 
-/* Enable various cdrom drivers */
-#define SDL_CDROM_MACOSX	1
-
 /* Enable various input drivers */
 #define SDL_JOYSTICK_IOKIT	1
+#define SDL_HAPTIC_IOKIT	1
 
 /* Enable various shared object loading systems */
-#ifdef __ppc__
-/* For Mac OS X 10.2 compatibility */
-#define SDL_LOADSO_DLCOMPAT	1
-#else
 #define SDL_LOADSO_DLOPEN	1
-#endif
 
 /* Enable various threading systems */
 #define SDL_THREAD_PTHREAD	1
@@ -115,31 +129,32 @@
 #define SDL_TIMER_UNIX	1
 
 /* Enable various video drivers */
+#define SDL_VIDEO_DRIVER_COCOA	1
 #define SDL_VIDEO_DRIVER_DUMMY	1
-#if ((defined TARGET_API_MAC_CARBON) && (TARGET_API_MAC_CARBON))
-#define SDL_VIDEO_DRIVER_TOOLBOX	1
-#else
-#define SDL_VIDEO_DRIVER_QUARTZ	1
-#endif
-#define SDL_VIDEO_DRIVER_DGA 1
 #define SDL_VIDEO_DRIVER_X11 1
-#define SDL_VIDEO_DRIVER_X11_DGAMOUSE 1
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC "/usr/X11R6/lib/libX11.6.dylib"
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XEXT "/usr/X11R6/lib/libXext.6.dylib"
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR "/usr/X11R6/lib/libXrandr.2.dylib"
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XRENDER "/usr/X11R6/lib/libXrender.1.dylib"
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XINPUT "/usr/X11R6/lib/libXi.6.dylib"
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS "/usr/X11R6/lib/libXss.6.dylib"
 #define SDL_VIDEO_DRIVER_X11_VIDMODE 1
 #define SDL_VIDEO_DRIVER_X11_XINERAMA 1
-#define SDL_VIDEO_DRIVER_X11_XME 1
 #define SDL_VIDEO_DRIVER_X11_XRANDR 1
+#define SDL_VIDEO_DRIVER_X11_XINPUT 1
+#define SDL_VIDEO_DRIVER_X11_SCRNSAVER 1
 #define SDL_VIDEO_DRIVER_X11_XV 1
+
+#define SDL_VIDEO_RENDER_OGL	1
+#define SDL_VIDEO_RENDER_X11	1
 
 /* Enable OpenGL support */
 #define SDL_VIDEO_OPENGL	1
-#define SDL_VIDEO_OPENGL_GLX 1
+#define SDL_VIDEO_OPENGL_CGL	1
+#define SDL_VIDEO_OPENGL_GLX	1
 
-/* Disable screensaver */
-#define SDL_VIDEO_DISABLE_SCREENSAVER	1
+/* Enable system power support */
+#define SDL_POWER_MACOSX 1
 
 /* Enable assembly routines */
 #define SDL_ASSEMBLY_ROUTINES	1

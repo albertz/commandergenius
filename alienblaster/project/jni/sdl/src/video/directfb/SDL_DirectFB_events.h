@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,7 @@
 #include "SDL_DirectFB_video.h"
 
 /* Functions to be exported */
-extern void DirectFB_InitOSKeymap(_THIS);
-extern void DirectFB_PumpEvents(_THIS);
-
+extern void DirectFB_InitKeyboard(_THIS);
+extern void DirectFB_QuitKeyboard(_THIS);
+extern void DirectFB_PumpEventsWindow(_THIS);
+extern SDLKey DirectFB_GetLayoutKey(_THIS, SDLKey physicalKey);

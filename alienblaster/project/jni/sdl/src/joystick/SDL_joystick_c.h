@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -28,11 +28,16 @@
 extern Uint8 SDL_numjoysticks;
 
 /* Internal event queueing functions */
-extern int SDL_PrivateJoystickAxis(SDL_Joystick *joystick,
+extern int SDL_PrivateJoystickAxis(SDL_Joystick * joystick,
                                    Uint8 axis, Sint16 value);
-extern int SDL_PrivateJoystickBall(SDL_Joystick *joystick,
+extern int SDL_PrivateJoystickBall(SDL_Joystick * joystick,
                                    Uint8 ball, Sint16 xrel, Sint16 yrel);
-extern int SDL_PrivateJoystickHat(SDL_Joystick *joystick,
-                                 Uint8 hat, Uint8 value);
-extern int SDL_PrivateJoystickButton(SDL_Joystick *joystick,
+extern int SDL_PrivateJoystickHat(SDL_Joystick * joystick,
+                                  Uint8 hat, Uint8 value);
+extern int SDL_PrivateJoystickButton(SDL_Joystick * joystick,
                                      Uint8 button, Uint8 state);
+
+/* Internal sanity checking functions */
+extern int SDL_PrivateJoystickValid(SDL_Joystick ** joystick);
+
+/* vi: set ts=4 sw=4 expandtab: */

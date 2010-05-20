@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -28,8 +28,9 @@
 */
 extern int SVGA_initkeymaps(int fd);
 extern void SVGA_mousecallback(int button, int dx, int dy,
-                                 int u1,int u2,int u3, int u4);
+                               int u1, int u2, int u3, int u4);
 extern void SVGA_keyboardcallback(int scancode, int pressed);
 
 extern void SVGA_InitOSKeymap(_THIS);
 extern void SVGA_PumpEvents(_THIS);
+/* vi: set ts=4 sw=4 expandtab: */

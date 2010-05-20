@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -30,13 +30,13 @@
 
 #include "../SDL_sysaudio.h"
 
-/* Hidden "this" pointer for the video functions */
+/* Hidden "this" pointer for the audio functions */
 #define _THIS	SDL_AudioDevice *this
 
 struct SDL_PrivateAudioData
 {
     /* Pointer to the (open) UMS audio device */
-    Environment*   ev;
+    Environment *ev;
     UMSAudioDevice umsdev;
 
     /* Raw mixing buffer */
@@ -47,4 +47,4 @@ struct SDL_PrivateAudioData
 };
 
 #endif /* _SDL_UMSaudio_h */
-
+/* vi: set ts=4 sw=4 expandtab: */

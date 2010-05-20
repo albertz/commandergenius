@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@
 */
 #include "SDL_config.h"
 
-
 #if defined(SDL_BUGGY_MMX_MIXERS) /* buggy, so we're disabling them. --ryan. */
 #if ((defined(_MSC_VER) && defined(_M_IX86)) || defined(__WATCOMC__)) && defined(SDL_ASSEMBLY_ROUTINES)
 /* headers for MMX assembler version of SDL_MixAudio
@@ -32,7 +31,9 @@
    Assumes buffer size in bytes is a multiple of 16
    Assumes SDL_MIX_MAXVOLUME = 128
 */
-void SDL_MixAudio_MMX_S16_VC(char* ,char* ,unsigned int ,int );
-void SDL_MixAudio_MMX_S8_VC(char* ,char* ,unsigned int ,int );
+void SDL_MixAudio_MMX_S16_VC(char *, char *, unsigned int, int);
+void SDL_MixAudio_MMX_S8_VC(char *, char *, unsigned int, int);
 #endif
-#endif
+#endif /* SDL_BUGGY_MMX_MIXERS */
+
+/* vi: set ts=4 sw=4 expandtab: */

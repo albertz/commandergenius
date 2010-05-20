@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -24,61 +24,117 @@
 #ifndef _SDL_blit_h
 #define _SDL_blit_h
 
-#include "SDL_endian.h"
+#ifdef __MINGW32__
+#include <_mingw.h>
+#endif
 
-/* The structure passed to the low level blit functions */
-typedef struct {
-	Uint8 *s_pixels;
-	int s_width;
-	int s_height;
-	int s_skip;
-	Uint8 *d_pixels;
-	int d_width;
-	int d_height;
-	int d_skip;
-	void *aux_data;
-	SDL_PixelFormat *src;
-	Uint8 *table;
-	SDL_PixelFormat *dst;
+#if defined(__MINGW32__) && defined(__MINGW64_VERSION_MAJOR)
+#include <intrin.h>
+#else
+#ifdef __MMX__
+#include <mmintrin.h>
+#endif
+#ifdef __3dNOW__
+#include <mm3dnow.h>
+#endif
+#ifdef __SSE__
+#include <xmmintrin.h>
+#endif
+#ifdef __SSE2__
+#include <emmintrin.h>
+#endif
+#endif
+
+#include "SDL_cpuinfo.h"
+#include "SDL_endian.h"
+#include "SDL_video.h"
+
+/* SDL blit copy flags */
+#define SDL_COPY_MODULATE_COLOR     0x00000001
+#define SDL_COPY_MODULATE_ALPHA     0x00000002
+#define SDL_COPY_MASK               0x00000010
+#define SDL_COPY_BLEND              0x00000020
+#define SDL_COPY_ADD                0x00000040
+#define SDL_COPY_MOD                0x00000080
+#define SDL_COPY_COLORKEY           0x00000100
+#define SDL_COPY_NEAREST            0x00000200
+#define SDL_COPY_RLE_DESIRED        0x00001000
+#define SDL_COPY_RLE_COLORKEY       0x00002000
+#define SDL_COPY_RLE_ALPHAKEY       0x00004000
+#define SDL_COPY_RLE_MASK           (SDL_COPY_RLE_DESIRED|SDL_COPY_RLE_COLORKEY|SDL_COPY_RLE_ALPHAKEY)
+
+/* SDL blit CPU flags */
+#define SDL_CPU_ANY                 0x00000000
+#define SDL_CPU_MMX                 0x00000001
+#define SDL_CPU_3DNOW               0x00000002
+#define SDL_CPU_SSE                 0x00000004
+#define SDL_CPU_SSE2                0x00000008
+#define SDL_CPU_ALTIVEC_PREFETCH    0x00000010
+#define SDL_CPU_ALTIVEC_NOPREFETCH  0x00000020
+
+typedef struct
+{
+    Uint8 *src;
+    int src_w, src_h;
+    int src_pitch;
+    int src_skip;
+    Uint8 *dst;
+    int dst_w, dst_h;
+    int dst_pitch;
+    int dst_skip;
+    SDL_PixelFormat *src_fmt;
+    SDL_PixelFormat *dst_fmt;
+    Uint8 *table;
+    int flags;
+    Uint32 colorkey;
+    Uint8 r, g, b, a;
 } SDL_BlitInfo;
 
-/* The type definition for the low level blit functions */
-typedef void (*SDL_loblit)(SDL_BlitInfo *info);
+typedef void (SDLCALL * SDL_BlitFunc) (SDL_BlitInfo * info);
 
-/* This is the private info structure for software accelerated blits */
-struct private_swaccel {
-	SDL_loblit blit;
-	void *aux_data;
-};
+typedef struct
+{
+    Uint32 src_format;
+    Uint32 dst_format;
+    int flags;
+    int cpu;
+    SDL_BlitFunc func;
+} SDL_BlitFuncEntry;
 
 /* Blit mapping definition */
-typedef struct SDL_BlitMap {
-	SDL_Surface *dst;
-	int identity;
-	Uint8 *table;
-	SDL_blit hw_blit;
-	SDL_blit sw_blit;
-	struct private_hwaccel *hw_data;
-	struct private_swaccel *sw_data;
+typedef struct SDL_BlitMap
+{
+    SDL_Surface *dst;
+    int identity;
+    SDL_blit blit;
+    void *data;
+    SDL_BlitInfo info;
 
-	/* the version count matches the destination; mismatch indicates
-	   an invalid mapping */
-        unsigned int format_version;
+    /* the version count matches the destination; mismatch indicates
+       an invalid mapping */
+    unsigned int format_version;
 } SDL_BlitMap;
 
-
 /* Functions found in SDL_blit.c */
-extern int SDL_CalculateBlit(SDL_Surface *surface);
+extern int SDL_CalculateBlit(SDL_Surface * surface);
 
-/* Functions found in SDL_blit_{0,1,N,A}.c */
-extern SDL_loblit SDL_CalculateBlit0(SDL_Surface *surface, int complex);
-extern SDL_loblit SDL_CalculateBlit1(SDL_Surface *surface, int complex);
-extern SDL_loblit SDL_CalculateBlitN(SDL_Surface *surface, int complex);
-extern SDL_loblit SDL_CalculateAlphaBlit(SDL_Surface *surface, int complex);
+/* Functions found in SDL_blit_*.c */
+extern SDL_BlitFunc SDL_CalculateBlit0(SDL_Surface * surface);
+extern SDL_BlitFunc SDL_CalculateBlit1(SDL_Surface * surface);
+extern SDL_BlitFunc SDL_CalculateBlitN(SDL_Surface * surface);
+extern SDL_BlitFunc SDL_CalculateBlitA(SDL_Surface * surface);
 
 /*
  * Useful macros for blitting routines
  */
+
+#if defined(__GNUC__)
+#define DECLARE_ALIGNED(t,v,a)  t __attribute__((aligned(a))) v
+#elif defined(_MSC_VER)
+#define DECLARE_ALIGNED(t,v,a)  __declspec(align(a)) t v
+#else
+#define DECLARE_ALIGNED(t,v,a)  t v
+#endif
 
 #define FORMAT_EQUAL(A, B)						\
     ((A)->BitsPerPixel == (B)->BitsPerPixel				\
@@ -119,7 +175,7 @@ do {									   \
 									   \
 		case 3: {						   \
 		        Uint8 *B = (Uint8 *)(buf);			   \
-			if(SDL_BYTEORDER == SDL_LIL_ENDIAN) {		   \
+			if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {		   \
 			        Pixel = B[0] + (B[1] << 8) + (B[2] << 16); \
 			} else {					   \
 			        Pixel = (B[0] << 16) + (B[1] << 8) + B[2]; \
@@ -132,55 +188,50 @@ do {									   \
 		break;							   \
 									   \
 		default:						   \
-			Pixel = 0; /* appease gcc */			   \
+		        Pixel; /* stop gcc complaints */		   \
 		break;							   \
 	}								   \
-} while(0)
+} while (0)
 
 #define DISEMBLE_RGB(buf, bpp, fmt, Pixel, r, g, b)			   \
 do {									   \
 	switch (bpp) {							   \
 		case 2:							   \
 			Pixel = *((Uint16 *)(buf));			   \
+			RGB_FROM_PIXEL(Pixel, fmt, r, g, b);		   \
 		break;							   \
 									   \
-		case 3: {						   \
-		        Uint8 *B = (Uint8 *)buf;			   \
-			if(SDL_BYTEORDER == SDL_LIL_ENDIAN) {		   \
-			        Pixel = B[0] + (B[1] << 8) + (B[2] << 16); \
+		case 3:	{						   \
+                        if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {		   \
+			        r = *((buf)+fmt->Rshift/8);		   \
+				g = *((buf)+fmt->Gshift/8);		   \
+				b = *((buf)+fmt->Bshift/8);		   \
 			} else {					   \
-			        Pixel = (B[0] << 16) + (B[1] << 8) + B[2]; \
+			        r = *((buf)+2-fmt->Rshift/8);		   \
+				g = *((buf)+2-fmt->Gshift/8);		   \
+				b = *((buf)+2-fmt->Bshift/8);		   \
 			}						   \
 		}							   \
 		break;							   \
 									   \
 		case 4:							   \
 			Pixel = *((Uint32 *)(buf));			   \
+			RGB_FROM_PIXEL(Pixel, fmt, r, g, b);		   \
 		break;							   \
 									   \
-	        default:						   \
-		        Pixel = 0;	/* prevent gcc from complaining */ \
+		default:						   \
+		        Pixel; /* stop gcc complaints */		   \
 		break;							   \
 	}								   \
-	RGB_FROM_PIXEL(Pixel, fmt, r, g, b);				   \
-} while(0)
+} while (0)
 
 /* Assemble R-G-B values into a specified pixel format and store them */
-#ifdef __NDS__ /* FIXME */
-#define PIXEL_FROM_RGB(Pixel, fmt, r, g, b)				\
-{									\
-	Pixel = ((r>>fmt->Rloss)<<fmt->Rshift)|				\
-		((g>>fmt->Gloss)<<fmt->Gshift)|				\
-		((b>>fmt->Bloss)<<fmt->Bshift) | (1<<15);				\
-}
-#else
 #define PIXEL_FROM_RGB(Pixel, fmt, r, g, b)				\
 {									\
 	Pixel = ((r>>fmt->Rloss)<<fmt->Rshift)|				\
 		((g>>fmt->Gloss)<<fmt->Gshift)|				\
 		((b>>fmt->Bloss)<<fmt->Bshift);				\
 }
-#endif /* __NDS__ FIXME */
 #define RGB565_FROM_RGB(Pixel, r, g, b)					\
 {									\
 	Pixel = ((r>>3)<<11)|((g>>2)<<5)|(b>>3);			\
@@ -192,6 +243,22 @@ do {									   \
 #define RGB888_FROM_RGB(Pixel, r, g, b)					\
 {									\
 	Pixel = (r<<16)|(g<<8)|b;					\
+}
+#define ARGB8888_FROM_RGBA(Pixel, r, g, b, a)				\
+{									\
+	Pixel = (a<<24)|(r<<16)|(g<<8)|b;				\
+}
+#define RGBA8888_FROM_RGBA(Pixel, r, g, b, a)				\
+{									\
+	Pixel = (r<<24)|(g<<16)|(b<<8)|a;				\
+}
+#define ABGR8888_FROM_RGBA(Pixel, r, g, b, a)				\
+{									\
+	Pixel = (a<<24)|(b<<16)|(g<<8)|r;				\
+}
+#define BGRA8888_FROM_RGBA(Pixel, r, g, b, a)				\
+{									\
+	Pixel = (b<<24)|(g<<16)|(r<<8)|a;				\
 }
 #define ASSEMBLE_RGB(buf, bpp, fmt, r, g, b) 				\
 {									\
@@ -205,7 +272,7 @@ do {									   \
 		break;							\
 									\
 		case 3: {						\
-                        if(SDL_BYTEORDER == SDL_LIL_ENDIAN) {		\
+                        if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {		\
 			        *((buf)+fmt->Rshift/8) = r;		\
 				*((buf)+fmt->Gshift/8) = g;		\
 				*((buf)+fmt->Bshift/8) = b;		\
@@ -240,7 +307,7 @@ do {									   \
 		break;							\
 									\
 		case 3: {						\
-                        if(SDL_BYTEORDER == SDL_LIL_ENDIAN) {		\
+                        if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {		\
 			        *((buf)+fmt->Rshift/8) = r;		\
 				*((buf)+fmt->Gshift/8) = g;		\
 				*((buf)+fmt->Bshift/8) = b;		\
@@ -300,45 +367,47 @@ do {									   \
 	b = ((Pixel>>16)&0xFF);						\
 	a = (Pixel>>24);						\
 }
+#define RGBA_FROM_BGRA8888(Pixel, r, g, b, a)				\
+{									\
+	r = ((Pixel>>8)&0xFF);						\
+	g = ((Pixel>>16)&0xFF);						\
+	b = (Pixel>>24);						\
+	a = (Pixel&0xFF);						\
+}
 #define DISEMBLE_RGBA(buf, bpp, fmt, Pixel, r, g, b, a)			   \
 do {									   \
 	switch (bpp) {							   \
 		case 2:							   \
 			Pixel = *((Uint16 *)(buf));			   \
+			RGBA_FROM_PIXEL(Pixel, fmt, r, g, b, a);	   \
 		break;							   \
 									   \
-		case 3:	{/* FIXME: broken code (no alpha) */		   \
-		        Uint8 *b = (Uint8 *)buf;			   \
-			if(SDL_BYTEORDER == SDL_LIL_ENDIAN) {		   \
-			        Pixel = b[0] + (b[1] << 8) + (b[2] << 16); \
+		case 3:	{						   \
+                        if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {		   \
+			        r = *((buf)+fmt->Rshift/8);		   \
+				g = *((buf)+fmt->Gshift/8);		   \
+				b = *((buf)+fmt->Bshift/8);		   \
 			} else {					   \
-			        Pixel = (b[0] << 16) + (b[1] << 8) + b[2]; \
+			        r = *((buf)+2-fmt->Rshift/8);		   \
+				g = *((buf)+2-fmt->Gshift/8);		   \
+				b = *((buf)+2-fmt->Bshift/8);		   \
 			}						   \
+			a = 0xFF;					   \
 		}							   \
 		break;							   \
 									   \
 		case 4:							   \
 			Pixel = *((Uint32 *)(buf));			   \
+			RGBA_FROM_PIXEL(Pixel, fmt, r, g, b, a);	   \
 		break;							   \
 									   \
 		default:						   \
-		        Pixel = 0; /* stop gcc complaints */		   \
+		        Pixel; /* stop gcc complaints */		   \
 		break;							   \
 	}								   \
-	RGBA_FROM_PIXEL(Pixel, fmt, r, g, b, a);			   \
-	Pixel &= ~fmt->Amask;						   \
-} while(0)
+} while (0)
 
 /* FIXME: this isn't correct, especially for Alpha (maximum != 255) */
-#ifdef __NDS__ /* FIXME */
-#define PIXEL_FROM_RGBA(Pixel, fmt, r, g, b, a)				\
-{									\
-	Pixel = ((r>>fmt->Rloss)<<fmt->Rshift)|				\
-		((g>>fmt->Gloss)<<fmt->Gshift)|				\
-		((b>>fmt->Bloss)<<fmt->Bshift)|				\
-		((a>>fmt->Aloss)<<fmt->Ashift) | (1<<15);				\
-}
-#else
 #define PIXEL_FROM_RGBA(Pixel, fmt, r, g, b, a)				\
 {									\
 	Pixel = ((r>>fmt->Rloss)<<fmt->Rshift)|				\
@@ -346,7 +415,6 @@ do {									   \
 		((b>>fmt->Bloss)<<fmt->Bshift)|				\
 		((a>>fmt->Aloss)<<fmt->Ashift);				\
 }
-#endif /* __NDS__ FIXME */
 #define ASSEMBLE_RGBA(buf, bpp, fmt, r, g, b, a)			\
 {									\
 	switch (bpp) {							\
@@ -358,8 +426,8 @@ do {									   \
 		}							\
 		break;							\
 									\
-		case 3: { /* FIXME: broken code (no alpha) */		\
-                        if(SDL_BYTEORDER == SDL_LIL_ENDIAN) {		\
+		case 3: {						\
+                        if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {		\
 			        *((buf)+fmt->Rshift/8) = r;		\
 				*((buf)+fmt->Gshift/8) = g;		\
 				*((buf)+fmt->Bshift/8) = b;		\
@@ -384,9 +452,9 @@ do {									   \
 /* Blend the RGB values of two Pixels based on a source alpha value */
 #define ALPHA_BLEND(sR, sG, sB, A, dR, dG, dB)	\
 do {						\
-	dR = (((sR-dR)*(A)+255)>>8)+dR;		\
-	dG = (((sG-dG)*(A)+255)>>8)+dG;		\
-	dB = (((sB-dB)*(A)+255)>>8)+dB;		\
+	dR = ((((int)(sR-dR)*(int)A)/255)+dR);	\
+	dG = ((((int)(sG-dG)*(int)A)/255)+dG);	\
+	dB = ((((int)(sB-dB)*(int)A)/255)+dB);	\
 } while(0)
 
 
@@ -422,48 +490,7 @@ do {						\
 	case 3:		pixel_copy_increment;				\
 	case 2:		pixel_copy_increment;				\
 	case 1:		pixel_copy_increment;				\
-		} while ( --n > 0 );					\
-	}								\
-}
-
-/* 2 - times unrolled loop */
-#define DUFFS_LOOP_DOUBLE2(pixel_copy_increment,			\
-				double_pixel_copy_increment, width)	\
-{ int n, w = width;							\
-	if( w & 1 ) {							\
-	    pixel_copy_increment;					\
-	    w--;							\
-	}								\
-	if ( w > 0 )	{						\
-	    n = ( w + 2) / 4;						\
-	    switch( w & 2 ) {						\
-	    case 0: do {	double_pixel_copy_increment;		\
-	    case 2:		double_pixel_copy_increment;		\
-		    } while ( --n > 0 );					\
-	    }								\
-	}								\
-}
-
-/* 2 - times unrolled loop 4 pixels */
-#define DUFFS_LOOP_QUATRO2(pixel_copy_increment,			\
-				double_pixel_copy_increment,		\
-				quatro_pixel_copy_increment, width)	\
-{ int n, w = width;								\
-        if(w & 1) {							\
-	  pixel_copy_increment;						\
-	  w--;								\
-	}								\
-	if(w & 2) {							\
-	  double_pixel_copy_increment;					\
-	  w -= 2;							\
-	}								\
-	if ( w > 0 ) {							\
-	    n = ( w + 7 ) / 8;						\
-	    switch( w & 4 ) {						\
-	    case 0: do {	quatro_pixel_copy_increment;		\
-	    case 4:		quatro_pixel_copy_increment;		\
-		    } while ( --n > 0 );					\
-	    }								\
+		} while (--n > 0);					\
 	}								\
 }
 
@@ -471,40 +498,28 @@ do {						\
 #define DUFFS_LOOP(pixel_copy_increment, width)				\
 	DUFFS_LOOP8(pixel_copy_increment, width)
 
+/* Special version of Duff's device for even more optimization */
+#define DUFFS_LOOP_124(pixel_copy_increment1,				\
+                       pixel_copy_increment2,				\
+                       pixel_copy_increment4, width)			\
+{ int n = width;							\
+	if (n & 1) {							\
+		pixel_copy_increment1; n -= 1;				\
+	}								\
+	if (n & 2) {							\
+		pixel_copy_increment2; n -= 2;				\
+	}								\
+	if (n) {							\
+		n = (n+7)/ 8;						\
+		switch (n & 4) {					\
+		case 0: do {	pixel_copy_increment4;			\
+		case 4:		pixel_copy_increment4;			\
+			} while (--n > 0);				\
+		}							\
+	}								\
+}
+
 #else
-
-/* Don't use Duff's device to unroll loops */
-#define DUFFS_LOOP_DOUBLE2(pixel_copy_increment,			\
-			 double_pixel_copy_increment, width)		\
-{ int n = width;								\
-    if( n & 1 ) {							\
-	pixel_copy_increment;						\
-	n--;								\
-    }									\
-    n=n>>1;								\
-    for(; n > 0; --n) {   						\
-	double_pixel_copy_increment;					\
-    }									\
-}
-
-/* Don't use Duff's device to unroll loops */
-#define DUFFS_LOOP_QUATRO2(pixel_copy_increment,			\
-				double_pixel_copy_increment,		\
-				quatro_pixel_copy_increment, width)	\
-{ int n = width;								\
-        if(n & 1) {							\
-	  pixel_copy_increment;						\
-	  n--;								\
-	}								\
-	if(n & 2) {							\
-	  double_pixel_copy_increment;					\
-	  n -= 2;							\
-	}								\
-	n=n>>2;								\
-	for(; n > 0; --n) {   						\
-	  quatro_pixel_copy_increment;					\
-        }								\
-}
 
 /* Don't use Duff's device to unroll loops */
 #define DUFFS_LOOP(pixel_copy_increment, width)				\
@@ -517,6 +532,10 @@ do {						\
 	DUFFS_LOOP(pixel_copy_increment, width)
 #define DUFFS_LOOP4(pixel_copy_increment, width)			\
 	DUFFS_LOOP(pixel_copy_increment, width)
+#define DUFFS_LOOP_124(pixel_copy_increment1,				\
+                       pixel_copy_increment2,				\
+                       pixel_copy_increment4, width)			\
+	DUFFS_LOOP(pixel_copy_increment1, width)
 
 #endif /* USE_DUFFS_LOOP */
 
@@ -526,3 +545,5 @@ do {						\
 #endif
 
 #endif /* _SDL_blit_h */
+
+/* vi: set ts=4 sw=4 expandtab: */

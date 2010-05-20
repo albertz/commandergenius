@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -27,5 +27,7 @@
 typedef thread_id SYS_ThreadHandle;
 
 /* Functions needed to work with system threads in other portions of SDL */
-extern void SDL_MaskSignals(sigset_t *omask);
-extern void SDL_UnmaskSignals(sigset_t *omask);
+extern void SDL_MaskSignals(sigset_t * omask);
+extern void SDL_UnmaskSignals(sigset_t * omask);
+
+/* vi: set ts=4 sw=4 expandtab: */

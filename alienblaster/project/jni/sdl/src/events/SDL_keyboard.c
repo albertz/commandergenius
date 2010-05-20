@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -29,586 +29,873 @@
 #include "SDL_sysevents.h"
 
 
-/* Global keystate information */
-static Uint8  SDL_KeyState[SDLK_LAST];
-static SDLMod SDL_ModState;
-int SDL_TranslateUNICODE = 0;
+/* Global keyboard information */
 
-static const char *keynames[SDLK_LAST];	/* Array of keycode names */
+typedef struct SDL_Keyboard SDL_Keyboard;
 
-/*
- * jk 991215 - added
- */
-struct {
-	int firsttime;    /* if we check against the delay or repeat value */
-	int delay;        /* the delay before we start repeating */
-	int interval;     /* the delay between key repeat events */
-	Uint32 timestamp; /* the time the first keydown event occurred */
+struct SDL_Keyboard
+{
+    /* Data common to all keyboards */
+    SDL_Window *focus;
+    Uint16 modstate;
+    Uint8 keystate[SDL_NUM_SCANCODES];
+    SDLKey keymap[SDL_NUM_SCANCODES];
+};
 
-	SDL_Event evt;    /* the event we are supposed to repeat */
-} SDL_KeyRepeat;
+static SDL_Keyboard SDL_keyboard;
 
-/* Global no-lock-keys support */
-static Uint8 SDL_NoLockKeys;
+static const SDLKey SDL_default_keymap[SDL_NUM_SCANCODES] = {
+    0, 0, 0, 0,
+    'a',
+    'b',
+    'c',
+    'd',
+    'e',
+    'f',
+    'g',
+    'h',
+    'i',
+    'j',
+    'k',
+    'l',
+    'm',
+    'n',
+    'o',
+    'p',
+    'q',
+    'r',
+    's',
+    't',
+    'u',
+    'v',
+    'w',
+    'x',
+    'y',
+    'z',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '0',
+    SDLK_RETURN,
+    SDLK_ESCAPE,
+    SDLK_BACKSPACE,
+    SDLK_TAB,
+    SDLK_SPACE,
+    '-',
+    '=',
+    '[',
+    ']',
+    '\\',
+    '#',
+    ';',
+    '\'',
+    '`',
+    ',',
+    '.',
+    '/',
+    SDLK_CAPSLOCK,
+    SDLK_F1,
+    SDLK_F2,
+    SDLK_F3,
+    SDLK_F4,
+    SDLK_F5,
+    SDLK_F6,
+    SDLK_F7,
+    SDLK_F8,
+    SDLK_F9,
+    SDLK_F10,
+    SDLK_F11,
+    SDLK_F12,
+    SDLK_PRINTSCREEN,
+    SDLK_SCROLLLOCK,
+    SDLK_PAUSE,
+    SDLK_INSERT,
+    SDLK_HOME,
+    SDLK_PAGEUP,
+    SDLK_DELETE,
+    SDLK_END,
+    SDLK_PAGEDOWN,
+    SDLK_RIGHT,
+    SDLK_LEFT,
+    SDLK_DOWN,
+    SDLK_UP,
+    SDLK_NUMLOCKCLEAR,
+    SDLK_KP_DIVIDE,
+    SDLK_KP_MULTIPLY,
+    SDLK_KP_MINUS,
+    SDLK_KP_PLUS,
+    SDLK_KP_ENTER,
+    SDLK_KP_1,
+    SDLK_KP_2,
+    SDLK_KP_3,
+    SDLK_KP_4,
+    SDLK_KP_5,
+    SDLK_KP_6,
+    SDLK_KP_7,
+    SDLK_KP_8,
+    SDLK_KP_9,
+    SDLK_KP_0,
+    SDLK_KP_PERIOD,
+    0,
+    SDLK_APPLICATION,
+    SDLK_POWER,
+    SDLK_KP_EQUALS,
+    SDLK_F13,
+    SDLK_F14,
+    SDLK_F15,
+    SDLK_F16,
+    SDLK_F17,
+    SDLK_F18,
+    SDLK_F19,
+    SDLK_F20,
+    SDLK_F21,
+    SDLK_F22,
+    SDLK_F23,
+    SDLK_F24,
+    SDLK_EXECUTE,
+    SDLK_HELP,
+    SDLK_MENU,
+    SDLK_SELECT,
+    SDLK_STOP,
+    SDLK_AGAIN,
+    SDLK_UNDO,
+    SDLK_CUT,
+    SDLK_COPY,
+    SDLK_PASTE,
+    SDLK_FIND,
+    SDLK_MUTE,
+    SDLK_VOLUMEUP,
+    SDLK_VOLUMEDOWN,
+    0, 0, 0,
+    SDLK_KP_COMMA,
+    SDLK_KP_EQUALSAS400,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    SDLK_ALTERASE,
+    SDLK_SYSREQ,
+    SDLK_CANCEL,
+    SDLK_CLEAR,
+    SDLK_PRIOR,
+    SDLK_RETURN2,
+    SDLK_SEPARATOR,
+    SDLK_OUT,
+    SDLK_OPER,
+    SDLK_CLEARAGAIN,
+    SDLK_CRSEL,
+    SDLK_EXSEL,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    SDLK_KP_00,
+    SDLK_KP_000,
+    SDLK_THOUSANDSSEPARATOR,
+    SDLK_DECIMALSEPARATOR,
+    SDLK_CURRENCYUNIT,
+    SDLK_CURRENCYSUBUNIT,
+    SDLK_KP_LEFTPAREN,
+    SDLK_KP_RIGHTPAREN,
+    SDLK_KP_LEFTBRACE,
+    SDLK_KP_RIGHTBRACE,
+    SDLK_KP_TAB,
+    SDLK_KP_BACKSPACE,
+    SDLK_KP_A,
+    SDLK_KP_B,
+    SDLK_KP_C,
+    SDLK_KP_D,
+    SDLK_KP_E,
+    SDLK_KP_F,
+    SDLK_KP_XOR,
+    SDLK_KP_POWER,
+    SDLK_KP_PERCENT,
+    SDLK_KP_LESS,
+    SDLK_KP_GREATER,
+    SDLK_KP_AMPERSAND,
+    SDLK_KP_DBLAMPERSAND,
+    SDLK_KP_VERTICALBAR,
+    SDLK_KP_DBLVERTICALBAR,
+    SDLK_KP_COLON,
+    SDLK_KP_HASH,
+    SDLK_KP_SPACE,
+    SDLK_KP_AT,
+    SDLK_KP_EXCLAM,
+    SDLK_KP_MEMSTORE,
+    SDLK_KP_MEMRECALL,
+    SDLK_KP_MEMCLEAR,
+    SDLK_KP_MEMADD,
+    SDLK_KP_MEMSUBTRACT,
+    SDLK_KP_MEMMULTIPLY,
+    SDLK_KP_MEMDIVIDE,
+    SDLK_KP_PLUSMINUS,
+    SDLK_KP_CLEAR,
+    SDLK_KP_CLEARENTRY,
+    SDLK_KP_BINARY,
+    SDLK_KP_OCTAL,
+    SDLK_KP_DECIMAL,
+    SDLK_KP_HEXADECIMAL,
+    0, 0,
+    SDLK_LCTRL,
+    SDLK_LSHIFT,
+    SDLK_LALT,
+    SDLK_LGUI,
+    SDLK_RCTRL,
+    SDLK_RSHIFT,
+    SDLK_RALT,
+    SDLK_RGUI,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    SDLK_MODE,
+    SDLK_AUDIONEXT,
+    SDLK_AUDIOPREV,
+    SDLK_AUDIOSTOP,
+    SDLK_AUDIOPLAY,
+    SDLK_AUDIOMUTE,
+    SDLK_MEDIASELECT,
+    SDLK_WWW,
+    SDLK_MAIL,
+    SDLK_CALCULATOR,
+    SDLK_COMPUTER,
+    SDLK_AC_SEARCH,
+    SDLK_AC_HOME,
+    SDLK_AC_BACK,
+    SDLK_AC_FORWARD,
+    SDLK_AC_STOP,
+    SDLK_AC_REFRESH,
+    SDLK_AC_BOOKMARKS,
+    SDLK_BRIGHTNESSDOWN,
+    SDLK_BRIGHTNESSUP,
+    SDLK_DISPLAYSWITCH,
+    SDLK_KBDILLUMTOGGLE,
+    SDLK_KBDILLUMDOWN,
+    SDLK_KBDILLUMUP,
+    SDLK_EJECT,
+    SDLK_SLEEP,
+};
 
-#define SDL_NLK_CAPS 0x01
-#define SDL_NLK_NUM  0x02
+static const char *SDL_scancode_names[SDL_NUM_SCANCODES] = {
+    NULL, NULL, NULL, NULL,
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "0",
+    "Return",
+    "Escape",
+    "Backspace",
+    "Tab",
+    "Space",
+    "-",
+    "=",
+    "[",
+    "]",
+    "\\",
+    "#",
+    ";",
+    "'",
+    "`",
+    ",",
+    ".",
+    "/",
+    "CapsLock",
+    "F1",
+    "F2",
+    "F3",
+    "F4",
+    "F5",
+    "F6",
+    "F7",
+    "F8",
+    "F9",
+    "F10",
+    "F11",
+    "F12",
+    "PrintScreen",
+    "ScrollLock",
+    "Pause",
+    "Insert",
+    "Home",
+    "PageUp",
+    "Delete",
+    "End",
+    "PageDown",
+    "Right",
+    "Left",
+    "Down",
+    "Up",
+    "Numlock",
+    "Keypad /",
+    "Keypad *",
+    "Keypad -",
+    "Keypad +",
+    "Keypad Enter",
+    "Keypad 1",
+    "Keypad 2",
+    "Keypad 3",
+    "Keypad 4",
+    "Keypad 5",
+    "Keypad 6",
+    "Keypad 7",
+    "Keypad 8",
+    "Keypad 9",
+    "Keypad 0",
+    "Keypad .",
+    NULL,
+    "Application",
+    "Power",
+    "Keypad =",
+    "F13",
+    "F14",
+    "F15",
+    "F16",
+    "F17",
+    "F18",
+    "F19",
+    "F20",
+    "F21",
+    "F22",
+    "F23",
+    "F24",
+    "Execute",
+    "Help",
+    "Menu",
+    "Select",
+    "Stop",
+    "Again",
+    "Undo",
+    "Cut",
+    "Copy",
+    "Paste",
+    "Find",
+    "Mute",
+    "VolumeUp",
+    "VolumeDown",
+    NULL, NULL, NULL,
+    "Keypad ,",
+    "Keypad = (AS400)",
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL,
+    "AltErase",
+    "SysReq",
+    "Cancel",
+    "Clear",
+    "Prior",
+    "Return",
+    "Separator",
+    "Out",
+    "Oper",
+    "Clear / Again",
+    "CrSel",
+    "ExSel",
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "Keypad 00",
+    "Keypad 000",
+    "ThousandsSeparator",
+    "DecimalSeparator",
+    "CurrencyUnit",
+    "CurrencySubUnit",
+    "Keypad (",
+    "Keypad )",
+    "Keypad {",
+    "Keypad }",
+    "Keypad Tab",
+    "Keypad Backspace",
+    "Keypad A",
+    "Keypad B",
+    "Keypad C",
+    "Keypad D",
+    "Keypad E",
+    "Keypad F",
+    "Keypad XOR",
+    "Keypad ^",
+    "Keypad %",
+    "Keypad <",
+    "Keypad >",
+    "Keypad &",
+    "Keypad &&",
+    "Keypad |",
+    "Keypad ||",
+    "Keypad :",
+    "Keypad #",
+    "Keypad Space",
+    "Keypad @",
+    "Keypad !",
+    "Keypad MemStore",
+    "Keypad MemRecall",
+    "Keypad MemClear",
+    "Keypad MemAdd",
+    "Keypad MemSubtract",
+    "Keypad MemMultiply",
+    "Keypad MemDivide",
+    "Keypad +/-",
+    "Keypad Clear",
+    "Keypad ClearEntry",
+    "Keypad Binary",
+    "Keypad Octal",
+    "Keypad Decimal",
+    "Keypad Hexadecimal",
+    NULL, NULL,
+    "Left Ctrl",
+    "Left Shift",
+    "Left Alt",
+    "Left GUI",
+    "Right Ctrl",
+    "Right Shift",
+    "Right Alt",
+    "Right GUI",
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL,
+    "ModeSwitch",
+    "AudioNext",
+    "AudioPrev",
+    "AudioStop",
+    "AudioPlay",
+    "AudioMute",
+    "MediaSelect",
+    "WWW",
+    "Mail",
+    "Calculator",
+    "Computer",
+    "AC Search",
+    "AC Home",
+    "AC Back",
+    "AC Forward",
+    "AC Stop",
+    "AC Refresh",
+    "AC Bookmarks",
+    "BrightnessDown",
+    "BrightnessUp",
+    "DisplaySwitch",
+    "KBDIllumToggle",
+    "KBDIllumDown",
+    "KBDIllumUp",
+    "Eject",
+    "Sleep",
+};
+
+/* Taken from SDL_iconv() */
+static char *
+SDL_UCS4ToUTF8(Uint32 ch, char *dst)
+{
+    Uint8 *p = (Uint8 *) dst;
+    if (ch <= 0x7F) {
+        *p = (Uint8) ch;
+        ++dst;
+    } else if (ch <= 0x7FF) {
+        p[0] = 0xC0 | (Uint8) ((ch >> 6) & 0x1F);
+        p[1] = 0x80 | (Uint8) (ch & 0x3F);
+        dst += 2;
+    } else if (ch <= 0xFFFF) {
+        p[0] = 0xE0 | (Uint8) ((ch >> 12) & 0x0F);
+        p[1] = 0x80 | (Uint8) ((ch >> 6) & 0x3F);
+        p[2] = 0x80 | (Uint8) (ch & 0x3F);
+        dst += 3;
+    } else if (ch <= 0x1FFFFF) {
+        p[0] = 0xF0 | (Uint8) ((ch >> 18) & 0x07);
+        p[1] = 0x80 | (Uint8) ((ch >> 12) & 0x3F);
+        p[2] = 0x80 | (Uint8) ((ch >> 6) & 0x3F);
+        p[3] = 0x80 | (Uint8) (ch & 0x3F);
+        dst += 4;
+    } else if (ch <= 0x3FFFFFF) {
+        p[0] = 0xF8 | (Uint8) ((ch >> 24) & 0x03);
+        p[1] = 0x80 | (Uint8) ((ch >> 18) & 0x3F);
+        p[2] = 0x80 | (Uint8) ((ch >> 12) & 0x3F);
+        p[3] = 0x80 | (Uint8) ((ch >> 6) & 0x3F);
+        p[4] = 0x80 | (Uint8) (ch & 0x3F);
+        dst += 5;
+    } else {
+        p[0] = 0xFC | (Uint8) ((ch >> 30) & 0x01);
+        p[1] = 0x80 | (Uint8) ((ch >> 24) & 0x3F);
+        p[2] = 0x80 | (Uint8) ((ch >> 18) & 0x3F);
+        p[3] = 0x80 | (Uint8) ((ch >> 12) & 0x3F);
+        p[4] = 0x80 | (Uint8) ((ch >> 6) & 0x3F);
+        p[5] = 0x80 | (Uint8) (ch & 0x3F);
+        dst += 6;
+    }
+    return dst;
+}
 
 /* Public functions */
-int SDL_KeyboardInit(void)
+int
+SDL_KeyboardInit(void)
 {
-	const char* env;
-	SDL_VideoDevice *video = current_video;
-	SDL_VideoDevice *this  = current_video;
-
-	/* Set default mode of UNICODE translation */
-	SDL_EnableUNICODE(DEFAULT_UNICODE_TRANSLATION);
-
-	/* Initialize the tables */
-	SDL_ModState = KMOD_NONE;
-	SDL_memset((void*)keynames, 0, sizeof(keynames));
-	SDL_memset(SDL_KeyState, 0, sizeof(SDL_KeyState));
-	video->InitOSKeymap(this);
-
-	SDL_EnableKeyRepeat(0, 0);
-
-	/* Allow environment override to disable special lock-key behavior */
-	SDL_NoLockKeys = 0;
-	env = SDL_getenv("SDL_DISABLE_LOCK_KEYS");
-	if (env) {
-		switch (SDL_atoi(env)) {
-			case 1:
-				SDL_NoLockKeys = SDL_NLK_CAPS | SDL_NLK_NUM;
-				break;
-			case 2:
-				SDL_NoLockKeys = SDL_NLK_CAPS;
-				break;
-			case 3:
-				SDL_NoLockKeys = SDL_NLK_NUM;
-				break;
-			default:
-				break;
-		}
-	}
-
-	/* Fill in the blanks in keynames */
-	keynames[SDLK_BACKSPACE] = "backspace";
-	keynames[SDLK_TAB] = "tab";
-	keynames[SDLK_CLEAR] = "clear";
-	keynames[SDLK_RETURN] = "return";
-	keynames[SDLK_PAUSE] = "pause";
-	keynames[SDLK_ESCAPE] = "escape";
-	keynames[SDLK_SPACE] = "space";
-	keynames[SDLK_EXCLAIM]  = "!";
-	keynames[SDLK_QUOTEDBL]  = "\"";
-	keynames[SDLK_HASH]  = "#";
-	keynames[SDLK_DOLLAR]  = "$";
-	keynames[SDLK_AMPERSAND]  = "&";
-	keynames[SDLK_QUOTE] = "'";
-	keynames[SDLK_LEFTPAREN] = "(";
-	keynames[SDLK_RIGHTPAREN] = ")";
-	keynames[SDLK_ASTERISK] = "*";
-	keynames[SDLK_PLUS] = "+";
-	keynames[SDLK_COMMA] = ",";
-	keynames[SDLK_MINUS] = "-";
-	keynames[SDLK_PERIOD] = ".";
-	keynames[SDLK_SLASH] = "/";
-	keynames[SDLK_0] = "0";
-	keynames[SDLK_1] = "1";
-	keynames[SDLK_2] = "2";
-	keynames[SDLK_3] = "3";
-	keynames[SDLK_4] = "4";
-	keynames[SDLK_5] = "5";
-	keynames[SDLK_6] = "6";
-	keynames[SDLK_7] = "7";
-	keynames[SDLK_8] = "8";
-	keynames[SDLK_9] = "9";
-	keynames[SDLK_COLON] = ":";
-	keynames[SDLK_SEMICOLON] = ";";
-	keynames[SDLK_LESS] = "<";
-	keynames[SDLK_EQUALS] = "=";
-	keynames[SDLK_GREATER] = ">";
-	keynames[SDLK_QUESTION] = "?";
-	keynames[SDLK_AT] = "@";
-	keynames[SDLK_LEFTBRACKET] = "[";
-	keynames[SDLK_BACKSLASH] = "\\";
-	keynames[SDLK_RIGHTBRACKET] = "]";
-	keynames[SDLK_CARET] = "^";
-	keynames[SDLK_UNDERSCORE] = "_";
-	keynames[SDLK_BACKQUOTE] = "`";
-	keynames[SDLK_a] = "a";
-	keynames[SDLK_b] = "b";
-	keynames[SDLK_c] = "c";
-	keynames[SDLK_d] = "d";
-	keynames[SDLK_e] = "e";
-	keynames[SDLK_f] = "f";
-	keynames[SDLK_g] = "g";
-	keynames[SDLK_h] = "h";
-	keynames[SDLK_i] = "i";
-	keynames[SDLK_j] = "j";
-	keynames[SDLK_k] = "k";
-	keynames[SDLK_l] = "l";
-	keynames[SDLK_m] = "m";
-	keynames[SDLK_n] = "n";
-	keynames[SDLK_o] = "o";
-	keynames[SDLK_p] = "p";
-	keynames[SDLK_q] = "q";
-	keynames[SDLK_r] = "r";
-	keynames[SDLK_s] = "s";
-	keynames[SDLK_t] = "t";
-	keynames[SDLK_u] = "u";
-	keynames[SDLK_v] = "v";
-	keynames[SDLK_w] = "w";
-	keynames[SDLK_x] = "x";
-	keynames[SDLK_y] = "y";
-	keynames[SDLK_z] = "z";
-	keynames[SDLK_DELETE] = "delete";
-
-	keynames[SDLK_WORLD_0] = "world 0";
-	keynames[SDLK_WORLD_1] = "world 1";
-	keynames[SDLK_WORLD_2] = "world 2";
-	keynames[SDLK_WORLD_3] = "world 3";
-	keynames[SDLK_WORLD_4] = "world 4";
-	keynames[SDLK_WORLD_5] = "world 5";
-	keynames[SDLK_WORLD_6] = "world 6";
-	keynames[SDLK_WORLD_7] = "world 7";
-	keynames[SDLK_WORLD_8] = "world 8";
-	keynames[SDLK_WORLD_9] = "world 9";
-	keynames[SDLK_WORLD_10] = "world 10";
-	keynames[SDLK_WORLD_11] = "world 11";
-	keynames[SDLK_WORLD_12] = "world 12";
-	keynames[SDLK_WORLD_13] = "world 13";
-	keynames[SDLK_WORLD_14] = "world 14";
-	keynames[SDLK_WORLD_15] = "world 15";
-	keynames[SDLK_WORLD_16] = "world 16";
-	keynames[SDLK_WORLD_17] = "world 17";
-	keynames[SDLK_WORLD_18] = "world 18";
-	keynames[SDLK_WORLD_19] = "world 19";
-	keynames[SDLK_WORLD_20] = "world 20";
-	keynames[SDLK_WORLD_21] = "world 21";
-	keynames[SDLK_WORLD_22] = "world 22";
-	keynames[SDLK_WORLD_23] = "world 23";
-	keynames[SDLK_WORLD_24] = "world 24";
-	keynames[SDLK_WORLD_25] = "world 25";
-	keynames[SDLK_WORLD_26] = "world 26";
-	keynames[SDLK_WORLD_27] = "world 27";
-	keynames[SDLK_WORLD_28] = "world 28";
-	keynames[SDLK_WORLD_29] = "world 29";
-	keynames[SDLK_WORLD_30] = "world 30";
-	keynames[SDLK_WORLD_31] = "world 31";
-	keynames[SDLK_WORLD_32] = "world 32";
-	keynames[SDLK_WORLD_33] = "world 33";
-	keynames[SDLK_WORLD_34] = "world 34";
-	keynames[SDLK_WORLD_35] = "world 35";
-	keynames[SDLK_WORLD_36] = "world 36";
-	keynames[SDLK_WORLD_37] = "world 37";
-	keynames[SDLK_WORLD_38] = "world 38";
-	keynames[SDLK_WORLD_39] = "world 39";
-	keynames[SDLK_WORLD_40] = "world 40";
-	keynames[SDLK_WORLD_41] = "world 41";
-	keynames[SDLK_WORLD_42] = "world 42";
-	keynames[SDLK_WORLD_43] = "world 43";
-	keynames[SDLK_WORLD_44] = "world 44";
-	keynames[SDLK_WORLD_45] = "world 45";
-	keynames[SDLK_WORLD_46] = "world 46";
-	keynames[SDLK_WORLD_47] = "world 47";
-	keynames[SDLK_WORLD_48] = "world 48";
-	keynames[SDLK_WORLD_49] = "world 49";
-	keynames[SDLK_WORLD_50] = "world 50";
-	keynames[SDLK_WORLD_51] = "world 51";
-	keynames[SDLK_WORLD_52] = "world 52";
-	keynames[SDLK_WORLD_53] = "world 53";
-	keynames[SDLK_WORLD_54] = "world 54";
-	keynames[SDLK_WORLD_55] = "world 55";
-	keynames[SDLK_WORLD_56] = "world 56";
-	keynames[SDLK_WORLD_57] = "world 57";
-	keynames[SDLK_WORLD_58] = "world 58";
-	keynames[SDLK_WORLD_59] = "world 59";
-	keynames[SDLK_WORLD_60] = "world 60";
-	keynames[SDLK_WORLD_61] = "world 61";
-	keynames[SDLK_WORLD_62] = "world 62";
-	keynames[SDLK_WORLD_63] = "world 63";
-	keynames[SDLK_WORLD_64] = "world 64";
-	keynames[SDLK_WORLD_65] = "world 65";
-	keynames[SDLK_WORLD_66] = "world 66";
-	keynames[SDLK_WORLD_67] = "world 67";
-	keynames[SDLK_WORLD_68] = "world 68";
-	keynames[SDLK_WORLD_69] = "world 69";
-	keynames[SDLK_WORLD_70] = "world 70";
-	keynames[SDLK_WORLD_71] = "world 71";
-	keynames[SDLK_WORLD_72] = "world 72";
-	keynames[SDLK_WORLD_73] = "world 73";
-	keynames[SDLK_WORLD_74] = "world 74";
-	keynames[SDLK_WORLD_75] = "world 75";
-	keynames[SDLK_WORLD_76] = "world 76";
-	keynames[SDLK_WORLD_77] = "world 77";
-	keynames[SDLK_WORLD_78] = "world 78";
-	keynames[SDLK_WORLD_79] = "world 79";
-	keynames[SDLK_WORLD_80] = "world 80";
-	keynames[SDLK_WORLD_81] = "world 81";
-	keynames[SDLK_WORLD_82] = "world 82";
-	keynames[SDLK_WORLD_83] = "world 83";
-	keynames[SDLK_WORLD_84] = "world 84";
-	keynames[SDLK_WORLD_85] = "world 85";
-	keynames[SDLK_WORLD_86] = "world 86";
-	keynames[SDLK_WORLD_87] = "world 87";
-	keynames[SDLK_WORLD_88] = "world 88";
-	keynames[SDLK_WORLD_89] = "world 89";
-	keynames[SDLK_WORLD_90] = "world 90";
-	keynames[SDLK_WORLD_91] = "world 91";
-	keynames[SDLK_WORLD_92] = "world 92";
-	keynames[SDLK_WORLD_93] = "world 93";
-	keynames[SDLK_WORLD_94] = "world 94";
-	keynames[SDLK_WORLD_95] = "world 95";
-
-	keynames[SDLK_KP0] = "[0]";
-	keynames[SDLK_KP1] = "[1]";
-	keynames[SDLK_KP2] = "[2]";
-	keynames[SDLK_KP3] = "[3]";
-	keynames[SDLK_KP4] = "[4]";
-	keynames[SDLK_KP5] = "[5]";
-	keynames[SDLK_KP6] = "[6]";
-	keynames[SDLK_KP7] = "[7]";
-	keynames[SDLK_KP8] = "[8]";
-	keynames[SDLK_KP9] = "[9]";
-	keynames[SDLK_KP_PERIOD] = "[.]";
-	keynames[SDLK_KP_DIVIDE] = "[/]";
-	keynames[SDLK_KP_MULTIPLY] = "[*]";
-	keynames[SDLK_KP_MINUS] = "[-]";
-	keynames[SDLK_KP_PLUS] = "[+]";
-	keynames[SDLK_KP_ENTER] = "enter";
-	keynames[SDLK_KP_EQUALS] = "equals";
-
-	keynames[SDLK_UP] = "up";
-	keynames[SDLK_DOWN] = "down";
-	keynames[SDLK_RIGHT] = "right";
-	keynames[SDLK_LEFT] = "left";
-	keynames[SDLK_DOWN] = "down";
-	keynames[SDLK_INSERT] = "insert";
-	keynames[SDLK_HOME] = "home";
-	keynames[SDLK_END] = "end";
-	keynames[SDLK_PAGEUP] = "page up";
-	keynames[SDLK_PAGEDOWN] = "page down";
-
-	keynames[SDLK_F1] = "f1";
-	keynames[SDLK_F2] = "f2";
-	keynames[SDLK_F3] = "f3";
-	keynames[SDLK_F4] = "f4";
-	keynames[SDLK_F5] = "f5";
-	keynames[SDLK_F6] = "f6";
-	keynames[SDLK_F7] = "f7";
-	keynames[SDLK_F8] = "f8";
-	keynames[SDLK_F9] = "f9";
-	keynames[SDLK_F10] = "f10";
-	keynames[SDLK_F11] = "f11";
-	keynames[SDLK_F12] = "f12";
-	keynames[SDLK_F13] = "f13";
-	keynames[SDLK_F14] = "f14";
-	keynames[SDLK_F15] = "f15";
-
-	keynames[SDLK_NUMLOCK] = "numlock";
-	keynames[SDLK_CAPSLOCK] = "caps lock";
-	keynames[SDLK_SCROLLOCK] = "scroll lock";
-	keynames[SDLK_RSHIFT] = "right shift";
-	keynames[SDLK_LSHIFT] = "left shift";
-	keynames[SDLK_RCTRL] = "right ctrl";
-	keynames[SDLK_LCTRL] = "left ctrl";
-	keynames[SDLK_RALT] = "right alt";
-	keynames[SDLK_LALT] = "left alt";
-	keynames[SDLK_RMETA] = "right meta";
-	keynames[SDLK_LMETA] = "left meta";
-	keynames[SDLK_LSUPER] = "left super";	/* "Windows" keys */
-	keynames[SDLK_RSUPER] = "right super";	
-	keynames[SDLK_MODE] = "alt gr";
-	keynames[SDLK_COMPOSE] = "compose";
-
-	keynames[SDLK_HELP] = "help";
-	keynames[SDLK_PRINT] = "print screen";
-	keynames[SDLK_SYSREQ] = "sys req";
-	keynames[SDLK_BREAK] = "break";
-	keynames[SDLK_MENU] = "menu";
-	keynames[SDLK_POWER] = "power";
-	keynames[SDLK_EURO] = "euro";
-	keynames[SDLK_UNDO] = "undo";
-
-	/* Done.  Whew. */
-	return(0);
-}
-void SDL_KeyboardQuit(void)
-{
+    return (0);
 }
 
-/* We lost the keyboard, so post key up messages for all pressed keys */
-void SDL_ResetKeyboard(void)
+void
+SDL_ResetKeyboard(void)
 {
-	SDL_keysym keysym;
-	SDLKey key;
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+    SDL_scancode scancode;
 
-	SDL_memset(&keysym, 0, (sizeof keysym));
-	for ( key=SDLK_FIRST; key<SDLK_LAST; ++key ) {
-		if ( SDL_KeyState[key] == SDL_PRESSED ) {
-			keysym.sym = key;
-			SDL_PrivateKeyboard(SDL_RELEASED, &keysym);
-		}
-	}
-	SDL_KeyRepeat.timestamp = 0;
+    for (scancode = 0; scancode < SDL_NUM_SCANCODES; ++scancode) {
+        if (keyboard->keystate[scancode] == SDL_PRESSED) {
+            SDL_SendKeyboardKey(SDL_RELEASED, scancode);
+        }
+    }
 }
 
-int SDL_EnableUNICODE(int enable)
+void
+SDL_GetDefaultKeymap(SDLKey * keymap)
 {
-	int old_mode;
-
-	old_mode = SDL_TranslateUNICODE;
-	if ( enable >= 0 ) {
-		SDL_TranslateUNICODE = enable;
-	}
-	return(old_mode);
+    SDL_memcpy(keymap, SDL_default_keymap, sizeof(SDL_default_keymap));
 }
 
-Uint8 * SDL_GetKeyState (int *numkeys)
+void
+SDL_SetKeymap(int start, SDLKey * keys, int length)
 {
-	if ( numkeys != (int *)0 )
-		*numkeys = SDLK_LAST;
-	return(SDL_KeyState);
-}
-SDLMod SDL_GetModState (void)
-{
-	return(SDL_ModState);
-}
-void SDL_SetModState (SDLMod modstate)
-{
-	SDL_ModState = modstate;
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+
+    if (start < 0 || start + length > SDL_NUM_SCANCODES) {
+        return;
+    }
+
+    SDL_memcpy(&keyboard->keymap[start], keys, sizeof(*keys) * length);
 }
 
-char *SDL_GetKeyName(SDLKey key)
+void
+SDL_SetScancodeName(SDL_scancode scancode, const char *name)
 {
-	const char *keyname;
-
-	keyname = NULL;
-	if ( key < SDLK_LAST ) {
-		keyname = keynames[key];
-	}
-	if ( keyname == NULL ) {
-		keyname = "unknown key";
-	}
-	/* FIXME: make this function const in 1.3 */
-	return (char *)(keyname);
+    SDL_scancode_names[scancode] = name;
 }
 
-/* These are global for SDL_eventloop.c */
-int SDL_PrivateKeyboard(Uint8 state, SDL_keysym *keysym)
+SDL_Window *
+SDL_GetKeyboardFocus(void)
 {
-	SDL_Event event;
-	int posted, repeatable;
-	Uint16 modstate;
+    SDL_Keyboard *keyboard = &SDL_keyboard;
 
-	SDL_memset(&event, 0, sizeof(event));
+    return keyboard->focus;
+}
 
+void
+SDL_SetKeyboardFocus(SDL_Window * window)
+{
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+
+    /* See if the current window has lost focus */
+    if (keyboard->focus && keyboard->focus != window) {
+        SDL_SendWindowEvent(keyboard->focus, SDL_WINDOWEVENT_FOCUS_LOST,
+                            0, 0);
+    }
+
+    keyboard->focus = window;
+
+    if (keyboard->focus) {
+        SDL_SendWindowEvent(keyboard->focus, SDL_WINDOWEVENT_FOCUS_GAINED,
+                            0, 0);
+
+        if (SDL_EventState(SDL_TEXTINPUT, SDL_QUERY)) {
+            SDL_StartTextInput();
+        }
+    }
+}
+
+int
+SDL_SendKeyboardKey(Uint8 state, SDL_scancode scancode)
+{
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+    int posted;
+    Uint16 modstate;
+    Uint32 type;
+
+    if (!scancode) {
+        return 0;
+    }
 #if 0
-printf("The '%s' key has been %s\n", SDL_GetKeyName(keysym->sym), 
-				state == SDL_PRESSED ? "pressed" : "released");
+    printf("The '%s' key has been %s\n", SDL_GetScancodeName(scancode),
+           state == SDL_PRESSED ? "pressed" : "released");
 #endif
-	/* Set up the keysym */
-	modstate = (Uint16)SDL_ModState;
+    if (state == SDL_PRESSED) {
+        modstate = keyboard->modstate;
+        switch (scancode) {
+        case SDL_SCANCODE_NUMLOCKCLEAR:
+            keyboard->modstate ^= KMOD_NUM;
+            break;
+        case SDL_SCANCODE_CAPSLOCK:
+            keyboard->modstate ^= KMOD_CAPS;
+            break;
+        case SDL_SCANCODE_LCTRL:
+            keyboard->modstate |= KMOD_LCTRL;
+            break;
+        case SDL_SCANCODE_RCTRL:
+            keyboard->modstate |= KMOD_RCTRL;
+            break;
+        case SDL_SCANCODE_LSHIFT:
+            keyboard->modstate |= KMOD_LSHIFT;
+            break;
+        case SDL_SCANCODE_RSHIFT:
+            keyboard->modstate |= KMOD_RSHIFT;
+            break;
+        case SDL_SCANCODE_LALT:
+            keyboard->modstate |= KMOD_LALT;
+            break;
+        case SDL_SCANCODE_RALT:
+            keyboard->modstate |= KMOD_RALT;
+            break;
+        case SDL_SCANCODE_LGUI:
+            keyboard->modstate |= KMOD_LGUI;
+            break;
+        case SDL_SCANCODE_RGUI:
+            keyboard->modstate |= KMOD_RGUI;
+            break;
+        case SDL_SCANCODE_MODE:
+            keyboard->modstate |= KMOD_MODE;
+            break;
+        default:
+            break;
+        }
+    } else {
+        switch (scancode) {
+        case SDL_SCANCODE_NUMLOCKCLEAR:
+        case SDL_SCANCODE_CAPSLOCK:
+            break;
+        case SDL_SCANCODE_LCTRL:
+            keyboard->modstate &= ~KMOD_LCTRL;
+            break;
+        case SDL_SCANCODE_RCTRL:
+            keyboard->modstate &= ~KMOD_RCTRL;
+            break;
+        case SDL_SCANCODE_LSHIFT:
+            keyboard->modstate &= ~KMOD_LSHIFT;
+            break;
+        case SDL_SCANCODE_RSHIFT:
+            keyboard->modstate &= ~KMOD_RSHIFT;
+            break;
+        case SDL_SCANCODE_LALT:
+            keyboard->modstate &= ~KMOD_LALT;
+            break;
+        case SDL_SCANCODE_RALT:
+            keyboard->modstate &= ~KMOD_RALT;
+            break;
+        case SDL_SCANCODE_LGUI:
+            keyboard->modstate &= ~KMOD_LGUI;
+            break;
+        case SDL_SCANCODE_RGUI:
+            keyboard->modstate &= ~KMOD_RGUI;
+            break;
+        case SDL_SCANCODE_MODE:
+            keyboard->modstate &= ~KMOD_MODE;
+            break;
+        default:
+            break;
+        }
+        modstate = keyboard->modstate;
+    }
 
-	repeatable = 0;
+    /* Figure out what type of event this is */
+    switch (state) {
+    case SDL_PRESSED:
+        type = SDL_KEYDOWN;
+        break;
+    case SDL_RELEASED:
+        type = SDL_KEYUP;
+        break;
+    default:
+        /* Invalid state -- bail */
+        return 0;
+    }
 
-	if ( state == SDL_PRESSED ) {
-		keysym->mod = (SDLMod)modstate;
-		switch (keysym->sym) {
-			case SDLK_UNKNOWN:
-				break;
-			case SDLK_NUMLOCK:
-				modstate ^= KMOD_NUM;
-				if ( SDL_NoLockKeys & SDL_NLK_NUM )
-					break;
-				if ( ! (modstate&KMOD_NUM) )
-					state = SDL_RELEASED;
-				keysym->mod = (SDLMod)modstate;
-				break;
-			case SDLK_CAPSLOCK:
-				modstate ^= KMOD_CAPS;
-				if ( SDL_NoLockKeys & SDL_NLK_CAPS )
-					break;
-				if ( ! (modstate&KMOD_CAPS) )
-					state = SDL_RELEASED;
-				keysym->mod = (SDLMod)modstate;
-				break;
-			case SDLK_LCTRL:
-				modstate |= KMOD_LCTRL;
-				break;
-			case SDLK_RCTRL:
-				modstate |= KMOD_RCTRL;
-				break;
-			case SDLK_LSHIFT:
-				modstate |= KMOD_LSHIFT;
-				break;
-			case SDLK_RSHIFT:
-				modstate |= KMOD_RSHIFT;
-				break;
-			case SDLK_LALT:
-				modstate |= KMOD_LALT;
-				break;
-			case SDLK_RALT:
-				modstate |= KMOD_RALT;
-				break;
-			case SDLK_LMETA:
-				modstate |= KMOD_LMETA;
-				break;
-			case SDLK_RMETA:
-				modstate |= KMOD_RMETA;
-				break;
-			case SDLK_MODE:
-				modstate |= KMOD_MODE;
-				break;
-			default:
-				repeatable = 1;
-				break;
-		}
-	} else {
-		switch (keysym->sym) {
-			case SDLK_UNKNOWN:
-				break;
-			case SDLK_NUMLOCK:
-				if ( SDL_NoLockKeys & SDL_NLK_NUM )
-					break;
-				/* Only send keydown events */
-				return(0);
-			case SDLK_CAPSLOCK:
-				if ( SDL_NoLockKeys & SDL_NLK_CAPS )
-					break;
-				/* Only send keydown events */
-				return(0);
-			case SDLK_LCTRL:
-				modstate &= ~KMOD_LCTRL;
-				break;
-			case SDLK_RCTRL:
-				modstate &= ~KMOD_RCTRL;
-				break;
-			case SDLK_LSHIFT:
-				modstate &= ~KMOD_LSHIFT;
-				break;
-			case SDLK_RSHIFT:
-				modstate &= ~KMOD_RSHIFT;
-				break;
-			case SDLK_LALT:
-				modstate &= ~KMOD_LALT;
-				break;
-			case SDLK_RALT:
-				modstate &= ~KMOD_RALT;
-				break;
-			case SDLK_LMETA:
-				modstate &= ~KMOD_LMETA;
-				break;
-			case SDLK_RMETA:
-				modstate &= ~KMOD_RMETA;
-				break;
-			case SDLK_MODE:
-				modstate &= ~KMOD_MODE;
-				break;
-			default:
-				break;
-		}
-		keysym->mod = (SDLMod)modstate;
-	}
-
-	/* Figure out what type of event this is */
-	switch (state) {
-		case SDL_PRESSED:
-			event.type = SDL_KEYDOWN;
-			break;
-		case SDL_RELEASED:
-			event.type = SDL_KEYUP;
-			/*
-			 * jk 991215 - Added
-			 */
-			if ( SDL_KeyRepeat.timestamp &&
-			     SDL_KeyRepeat.evt.key.keysym.sym == keysym->sym ) {
-				SDL_KeyRepeat.timestamp = 0;
-			}
-			break;
-		default:
-			/* Invalid state -- bail */
-			return(0);
-	}
-
-	if ( keysym->sym != SDLK_UNKNOWN ) {
-		/* Drop events that don't change state */
-		if ( SDL_KeyState[keysym->sym] == state ) {
+    /* Drop events that don't change state */
+    if (keyboard->keystate[scancode] == state) {
 #if 0
-printf("Keyboard event didn't change state - dropped!\n");
+        printf("Keyboard event didn't change state - dropped!\n");
 #endif
-			return(0);
-		}
+        return 0;
+    }
 
-		/* Update internal keyboard state */
-		SDL_ModState = (SDLMod)modstate;
-		SDL_KeyState[keysym->sym] = state;
-	}
+    /* Update internal keyboard state */
+    keyboard->keystate[scancode] = state;
 
-	/* Post the event, if desired */
-	posted = 0;
-	if ( SDL_ProcessEvents[event.type] == SDL_ENABLE ) {
-		event.key.state = state;
-		event.key.keysym = *keysym;
-		/*
-		 * jk 991215 - Added
-		 */
-		if (repeatable && (SDL_KeyRepeat.delay != 0)) {
-			SDL_KeyRepeat.evt = event;
-			SDL_KeyRepeat.firsttime = 1;
-			SDL_KeyRepeat.timestamp=SDL_GetTicks();
-		}
-		if ( (SDL_EventOK == NULL) || SDL_EventOK(&event) ) {
-			posted = 1;
-			SDL_PushEvent(&event);
-		}
-	}
-	return(posted);
+    /* Post the event, if desired */
+    posted = 0;
+    if (SDL_GetEventState(type) == SDL_ENABLE) {
+        SDL_Event event;
+        event.key.type = type;
+        event.key.state = state;
+        event.key.keysym.scancode = scancode;
+        event.key.keysym.sym = keyboard->keymap[scancode];
+        event.key.keysym.mod = modstate;
+        event.key.keysym.unicode = 0;
+        event.key.windowID = keyboard->focus ? keyboard->focus->id : 0;
+        posted = (SDL_PushEvent(&event) > 0);
+    }
+    return (posted);
 }
 
-/*
- * jk 991215 - Added
- */
-void SDL_CheckKeyRepeat(void)
+int
+SDL_SendKeyboardText(const char *text)
 {
-	if ( SDL_KeyRepeat.timestamp ) {
-		Uint32 now, interval;
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+    int posted;
 
-		now = SDL_GetTicks();
-		interval = (now - SDL_KeyRepeat.timestamp);
-		if ( SDL_KeyRepeat.firsttime ) {
-			if ( interval > (Uint32)SDL_KeyRepeat.delay ) {
-				SDL_KeyRepeat.timestamp = now;
-				SDL_KeyRepeat.firsttime = 0;
-			}
-		} else {
-			if ( interval > (Uint32)SDL_KeyRepeat.interval ) {
-				SDL_KeyRepeat.timestamp = now;
-				if ( (SDL_EventOK == NULL) || SDL_EventOK(&SDL_KeyRepeat.evt) ) {
-					SDL_PushEvent(&SDL_KeyRepeat.evt);
-				}
-			}
-		}
-	}
+    /* Post the event, if desired */
+    posted = 0;
+    if (SDL_GetEventState(SDL_TEXTINPUT) == SDL_ENABLE) {
+        SDL_Event event;
+        event.text.type = SDL_TEXTINPUT;
+        event.text.windowID = keyboard->focus ? keyboard->focus->id : 0;
+        SDL_strlcpy(event.text.text, text, SDL_arraysize(event.text.text));
+        event.text.windowID = keyboard->focus ? keyboard->focus->id : 0;
+        posted = (SDL_PushEvent(&event) > 0);
+    }
+    return (posted);
 }
 
-int SDL_EnableKeyRepeat(int delay, int interval)
+int
+SDL_SendEditingText(const char *text, int start, int length)
 {
-	if ( (delay < 0) || (interval < 0) ) {
-		SDL_SetError("keyboard repeat value less than zero");
-		return(-1);
-	}
-	SDL_KeyRepeat.firsttime = 0;
-	SDL_KeyRepeat.delay = delay;
-	SDL_KeyRepeat.interval = interval;
-	SDL_KeyRepeat.timestamp = 0;
-	return(0);
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+    int posted;
+
+    /* Post the event, if desired */
+    posted = 0;
+    if (SDL_GetEventState(SDL_TEXTEDITING) == SDL_ENABLE) {
+        SDL_Event event;
+        event.edit.type = SDL_TEXTEDITING;
+        event.edit.windowID = keyboard->focus ? keyboard->focus->id : 0;
+        event.edit.start = start;
+        event.edit.length = length;
+        SDL_strlcpy(event.edit.text, text, SDL_arraysize(event.edit.text));
+        posted = (SDL_PushEvent(&event) > 0);
+    }
+    return (posted);
 }
 
-void SDL_GetKeyRepeat(int *delay, int *interval)
+void
+SDL_KeyboardQuit(void)
 {
-	*delay = SDL_KeyRepeat.delay;
-	*interval = SDL_KeyRepeat.interval;
 }
 
+Uint8 *
+SDL_GetKeyboardState(int *numkeys)
+{
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+
+    if (numkeys != (int *) 0) {
+        *numkeys = SDL_NUM_SCANCODES;
+    }
+    return keyboard->keystate;
+}
+
+SDLMod
+SDL_GetModState(void)
+{
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+
+    return keyboard->modstate;
+}
+
+void
+SDL_SetModState(SDLMod modstate)
+{
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+
+    keyboard->modstate = modstate;
+}
+
+SDLKey
+SDL_GetKeyFromScancode(SDL_scancode scancode)
+{
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+
+    return keyboard->keymap[scancode];
+}
+
+SDL_scancode
+SDL_GetScancodeFromKey(SDLKey key)
+{
+    SDL_Keyboard *keyboard = &SDL_keyboard;
+    SDL_scancode scancode;
+
+    for (scancode = SDL_SCANCODE_UNKNOWN; scancode < SDL_NUM_SCANCODES;
+         ++scancode) {
+        if (keyboard->keymap[scancode] == key) {
+            return scancode;
+        }
+    }
+    return SDL_SCANCODE_UNKNOWN;
+}
+
+const char *
+SDL_GetScancodeName(SDL_scancode scancode)
+{
+    const char *name = SDL_scancode_names[scancode];
+
+    if (name)
+        return name;
+    else
+        return "";
+}
+
+const char *
+SDL_GetKeyName(SDLKey key)
+{
+    static char name[8];
+    char *end;
+
+    if (key & SDLK_SCANCODE_MASK) {
+        return
+            SDL_GetScancodeName((SDL_scancode) (key & ~SDLK_SCANCODE_MASK));
+    }
+
+    switch (key) {
+    case SDLK_RETURN:
+        return SDL_GetScancodeName(SDL_SCANCODE_RETURN);
+    case SDLK_ESCAPE:
+        return SDL_GetScancodeName(SDL_SCANCODE_ESCAPE);
+    case SDLK_BACKSPACE:
+        return SDL_GetScancodeName(SDL_SCANCODE_BACKSPACE);
+    case SDLK_TAB:
+        return SDL_GetScancodeName(SDL_SCANCODE_TAB);
+    case SDLK_SPACE:
+        return SDL_GetScancodeName(SDL_SCANCODE_SPACE);
+    case SDLK_DELETE:
+        return SDL_GetScancodeName(SDL_SCANCODE_DELETE);
+    default:
+        /* Unaccented letter keys on latin keyboards are normally
+           labeled in upper case (and probably on others like Greek or
+           Cyrillic too, so if you happen to know for sure, please
+           adapt this). */
+        if (key >= 'a' && key <= 'z') {
+            key -= 32;
+        }
+
+        end = SDL_UCS4ToUTF8((Uint32) key, name);
+        *end = '\0';
+        return name;
+    }
+}
+
+/* vi: set ts=4 sw=4 expandtab: */

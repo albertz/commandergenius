@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -49,7 +49,8 @@ SDL_LoadFunction(void *handle, const char *name)
 {
     void *sym = NULL;
     image_id library_id = (image_id) handle;
-    status_t rc = get_image_symbol(library_id, name, B_SYMBOL_TYPE_TEXT, &sym);
+    status_t rc =
+        get_image_symbol(library_id, name, B_SYMBOL_TYPE_TEXT, &sym);
     if (rc != B_NO_ERROR) {
         SDL_SetError(strerror(rc));
     }
@@ -69,4 +70,3 @@ SDL_UnloadObject(void *handle)
 #endif /* SDL_LOADSO_BEOS */
 
 /* vi: set ts=4 sw=4 expandtab: */
-

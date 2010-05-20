@@ -2,82 +2,46 @@
 # libfb_writer_spu.so, libyuv2rgb_spu.so, libbilin_scaler_spu.so
 
 # Toolchain
-SPU_GCC=/usr/bin/spu-gcc
-PPU_GCC=/usr/bin/gcc
-PPU_EMBEDSPU=/usr/bin/embedspu
-PPU_AR=/usr/bin/ar
 PPU_LD=/usr/bin/ld
-INSTALL=/usr/bin/install
+SPU_SRCDIR=$(srcdir)/src/video/ps3/spulibs
+SPU_LIBDIR=$(srcdir)/src/video/ps3/spulibs/libs
+SPU_CFLAGS=-g -W -Wall -Winline -Wno-main -I. -I /usr/spu/include -I /opt/cell/sdk/usr/spu/include -finline-limit=10000 -Winline -ftree-vectorize -funroll-loops -fmodulo-sched -ffast-math -fPIC -O2
 
-SPU_CFLAGS=-W -Wall -Winline -Wno-main -I. -I /usr/spu/include -I /opt/cell/sdk/usr/spu/include -finline-limit=10000 -Winline -ftree-vectorize -funroll-loops -fmodulo-sched -ffast-math -fPIC -O2
+DEPS = $(SPU_SRCDIR)/spu_common.h
+LIBS= fb_writer yuv2rgb bilin_scaler
 
-# Usually /usr/lib, depending on your distribution
-PREFIX=/usr/lib
-
-
-all: libfb_writer_spu.a libfb_writer_spu.so \
-				libyuv2rgb_spu.so libyuv2rgb_spu.a \
-				libbilin_scaler_spu.so libbilin_scaler_spu.a
+OBJLIBS = $(foreach lib,$(LIBS),lib$(lib)_spu.a)
+SHALIBS = $(foreach lib,$(LIBS),lib$(lib)_spu.so)
 
 
-# fb_writer
-fb_writer_spu-embed.o: fb_writer.c spu_common.h
-	$(SPU_GCC) $(SPU_CFLAGS) -o fb_writer_spu fb_writer.c -lm
-	$(PPU_EMBEDSPU) -m32 fb_writer_spu fb_writer_spu fb_writer_spu-embed.o
-
-libfb_writer_spu.so: fb_writer_spu-embed.o
-	$(PPU_LD) -o libfb_writer_spu.so -shared -soname=libfb_writer_spu.so fb_writer_spu-embed.o
-
-libfb_writer_spu.a: fb_writer_spu-embed.o
-	$(PPU_AR) -qcs libfb_writer_spu.a fb_writer_spu-embed.o
+ps3libs: $(foreach lib,$(OBJLIBS),$(SPU_LIBDIR)/$(lib)) $(foreach lib,$(SHALIBS),$(SPU_LIBDIR)/$(lib))
 
 
-# yuv2rgb_converter
-yuv2rgb_spu-embed.o: yuv2rgb_converter.c spu_common.h
-	$(SPU_GCC) $(SPU_CFLAGS) -o yuv2rgb_spu yuv2rgb_converter.c -lm
-	$(PPU_EMBEDSPU) -m32 yuv2rgb_spu yuv2rgb_spu yuv2rgb_spu-embed.o
+$(SPU_LIBDIR)/lib%_spu.a: $(SPU_LIBDIR)/%-embed.o
+	$(AR) -qcs $@ $<
 
-libyuv2rgb_spu.a: yuv2rgb_spu-embed.o
-	$(PPU_AR) -qcs libyuv2rgb_spu.a yuv2rgb_spu-embed.o
+$(SPU_LIBDIR)/lib%_spu.so: $(SPU_LIBDIR)/%-embed.o
+	$(PPU_LD) -o $@ -shared -soname=$(notdir $@) $<
 
-libyuv2rgb_spu.so: yuv2rgb_spu-embed.o
-	$(PPU_LD) -o libyuv2rgb_spu.so -shared -soname=libyuv2rgb_spu.so yuv2rgb_spu-embed.o
+$(SPU_LIBDIR)/%-embed.o: $(SPU_LIBDIR)/%.o
+	$(EMBEDSPU) -m32 $(subst -embed.o,,$(notdir $@))_spu $< $@
 
-
-# bilin_scaler
-bilin_scaler_spu-embed.o: bilin_scaler.c spu_common.h
-	$(SPU_GCC) $(SPU_CFLAGS) -o bilin_scaler_spu bilin_scaler.c -lm
-	$(PPU_EMBEDSPU) -m32 bilin_scaler_spu bilin_scaler_spu bilin_scaler_spu-embed.o
-
-libbilin_scaler_spu.a: bilin_scaler_spu-embed.o
-	$(PPU_AR) -qcs libbilin_scaler_spu.a bilin_scaler_spu-embed.o
-
-libbilin_scaler_spu.so: bilin_scaler_spu-embed.o
-	$(PPU_LD) -o libbilin_scaler_spu.so -shared -soname=libbilin_scaler_spu.so bilin_scaler_spu-embed.o
-
-install: libfb_writer_spu.a libfb_writer_spu.so \
-				libyuv2rgb_spu.so libyuv2rgb_spu.a \
-				libbilin_scaler_spu.so libbilin_scaler_spu.a
-	$(INSTALL) -c -m 0755 libfb_writer_spu.so $(PREFIX)/.
-	$(INSTALL) -c -m 0655 libfb_writer_spu.a $(PREFIX)/.
-	$(INSTALL) -c -m 0755 libyuv2rgb_spu.so $(PREFIX)/.
-	$(INSTALL) -c -m 0655 libyuv2rgb_spu.a $(PREFIX)/.
-	$(INSTALL) -c -m 0755 libbilin_scaler_spu.so $(PREFIX)/.
-	$(INSTALL) -c -m 0655 libbilin_scaler_spu.a $(PREFIX)/.
+$(SPU_LIBDIR)/%.o: $(SPU_SRCDIR)/%.c $(DEPS)
+	$(SPU_GCC) $(SPU_CFLAGS) -o $@ $< -lm
 
 
-uninstall: $(PREFIX)/libfb_writer_spu.so $(PREFIX)/libfb_writer_spu.a \
-		$(PREFIX)/libyuv2rgb_spu.so $(PREFIX)/libyuv2rgb_spu.a \
-		$(PREFIX)/libbilin_scaler_spu.so $(PREFIX)/libbilin_scaler_spu.a
-	rm -f $(PREFIX)/libfb_writer_spu.a
-	rm -f $(PREFIX)/libfb_writer_spu.so
-	rm -f $(PREFIX)/libyuv2rgb_spu.so
-	rm -f $(PREFIX)/libyuv2rgb_spu.a
-	rm -f $(PREFIX)/libbilin_scaler_spu.so
-	rm -f $(PREFIX)/libbilin_scaler_spu.a
+ps3libs-install: $(foreach obj,$(OBJLIBS),$(SPU_LIBDIR)/$(obj)) $(foreach obj,$(SHALIBS),$(SPU_LIBDIR)/$(obj))
+	for file in $(OBJLIBS); do \
+		$(INSTALL) -c -m 0655 $(SPU_LIBDIR)/$$file $(DESTDIR)$(libdir)/$$file; \
+	done
+	for file in $(SHALIBS); do \
+		$(INSTALL) -c -m 0755 $(SPU_LIBDIR)/$$file $(DESTDIR)$(libdir)/$$file; \
+	done
 
+ps3libs-uninstall:
+	for file in $(OBJLIBS) $(SHALIBS); do \
+		rm -f $(DESTDIR)$(libdir)/$$file; \
+	done
 
-clean:
-	rm -f bilin_scaler_spu-embed.o libbilin_scaler_spu.so libbilin_scaler_spu.a bilin_scaler_spu
-	rm -f yuv2rgb_spu-embed.o libyuv2rgb_spu.so libyuv2rgb_spu.a yuv2rgb_spu
-	rm -f fb_writer_spu-embed.o libfb_writer_spu.so libfb_writer_spu.a fb_writer_spu
+ps3libs-clean:
+	rm -f $(SPU_LIBDIR)/*

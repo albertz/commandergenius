@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -31,3 +31,4 @@ extern void SDL_QuitBeApp(void);
 
 /* Flag to tell whether the app is active or not */
 extern int SDL_BeAppActive;
+/* vi: set ts=4 sw=4 expandtab: */

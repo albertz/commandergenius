@@ -19,6 +19,14 @@
     Sam Lantinga
     slouken@libsdl.org
 */
+#include <jni.h>
+#include <android/log.h>
+#include <sys/time.h>
+#include <time.h>
+#include <stdint.h>
+#include <math.h>
+#include <string.h> // for memset()
+
 #include "SDL_config.h"
 
 #include "SDL_video.h"
@@ -28,16 +36,12 @@
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
+#include "../../events/SDL_keyboard_c.h"
+#include "../../events/SDL_mouse_c.h"
 
 #include "SDL_androidvideo.h"
-
-#include <jni.h>
-#include <android/log.h>
-#include <sys/time.h>
-#include <time.h>
-#include <stdint.h>
-#include <math.h>
-#include <string.h> // for memset()
+#include "SDL_scancode.h"
+#include "SDL_compat.h"
 
 
 static SDLKey keymap[KEYCODE_LAST+1];
@@ -63,161 +67,144 @@ enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
 extern void
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action )
 {
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "mouse event %i at (%03i, %03i)", action, x, y);
 	if( action == MOUSE_DOWN || action == MOUSE_UP )
-		SDL_PrivateMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, 1, x, y );
+	{
+		SDL_SendMouseMotion(0, x, y);
+		SDL_SendMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, 1 );
+	}
 	if( action == MOUSE_MOVE )
-		SDL_PrivateMouseMotion(0, 0, x, y);
+		SDL_SendMouseMotion(0, x, y);
 }
 
-static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
+static SDL_scancode TranslateKey(int scancode)
 {
-	/* Sanity check */
 	if ( scancode >= SDL_arraysize(keymap) )
 		scancode = KEYCODE_UNKNOWN;
-
-	/* Set the keysym information */
-	keysym->scancode = scancode;
-	keysym->sym = keymap[scancode];
-	keysym->mod = KMOD_NONE;
-
-	/* If UNICODE is on, get the UNICODE value for the key */
-	keysym->unicode = 0;
-	if ( SDL_TranslateUNICODE ) {
-		/* Populate the unicode field with the ASCII value */
-		keysym->unicode = scancode;
-	}
-	return(keysym);
+	return keymap[scancode];
 }
 
 
 void
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint key, jint action )
 {
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "key event %i %s", key, action ? "down" : "up");
-	SDL_keysym keysym;
 	if( ! processAndroidTrackballKeyDelays(key, action) )
-		SDL_PrivateKeyboard( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key, &keysym) );
+		SDL_SendKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key) );
 }
 
 
-void ANDROID_InitOSKeymap(_THIS)
+void ANDROID_InitOSKeymap()
 {
   int i;
-	
-  /* Initialize the DirectFB key translation table */
+
+  // TODO: keys are mapped rather randomly
+
   for (i=0; i<SDL_arraysize(keymap); ++i)
-    keymap[i] = SDLK_UNKNOWN;
+    keymap[i] = SDL_SCANCODE_UNKNOWN;
 
-  keymap[KEYCODE_UNKNOWN] = SDLK_UNKNOWN;
+  keymap[KEYCODE_UNKNOWN] = SDL_SCANCODE_UNKNOWN;
 
-  keymap[KEYCODE_BACK] = SDLK_ESCAPE;
+  keymap[KEYCODE_BACK] = SDL_SCANCODE_ESCAPE;
 
-  keymap[KEYCODE_MENU] = SDLK_LALT;
-  keymap[KEYCODE_CALL] = SDLK_LCTRL;
-  keymap[KEYCODE_ENDCALL] = SDLK_LSHIFT;
-  keymap[KEYCODE_CAMERA] = SDLK_RSHIFT;
-  keymap[KEYCODE_POWER] = SDLK_RALT;
+  keymap[KEYCODE_MENU] = SDL_SCANCODE_LALT;
+  keymap[KEYCODE_CALL] = SDL_SCANCODE_LCTRL;
+  keymap[KEYCODE_ENDCALL] = SDL_SCANCODE_LSHIFT;
+  keymap[KEYCODE_CAMERA] = SDL_SCANCODE_RSHIFT;
+  keymap[KEYCODE_POWER] = SDL_SCANCODE_RALT;
 
-  keymap[KEYCODE_0] = SDLK_0;
-  keymap[KEYCODE_1] = SDLK_1;
-  keymap[KEYCODE_2] = SDLK_2;
-  keymap[KEYCODE_3] = SDLK_3;
-  keymap[KEYCODE_4] = SDLK_4;
-  keymap[KEYCODE_5] = SDLK_5;
-  keymap[KEYCODE_6] = SDLK_6;
-  keymap[KEYCODE_7] = SDLK_7;
-  keymap[KEYCODE_8] = SDLK_8;
-  keymap[KEYCODE_9] = SDLK_9;
-  keymap[KEYCODE_STAR] = SDLK_ASTERISK;
-  keymap[KEYCODE_POUND] = SDLK_DOLLAR;
+  keymap[KEYCODE_0] = SDL_SCANCODE_0;
+  keymap[KEYCODE_1] = SDL_SCANCODE_1;
+  keymap[KEYCODE_2] = SDL_SCANCODE_2;
+  keymap[KEYCODE_3] = SDL_SCANCODE_3;
+  keymap[KEYCODE_4] = SDL_SCANCODE_4;
+  keymap[KEYCODE_5] = SDL_SCANCODE_5;
+  keymap[KEYCODE_6] = SDL_SCANCODE_6;
+  keymap[KEYCODE_7] = SDL_SCANCODE_7;
+  keymap[KEYCODE_8] = SDL_SCANCODE_8;
+  keymap[KEYCODE_9] = SDL_SCANCODE_9;
+  keymap[KEYCODE_STAR] = SDL_SCANCODE_KP_DIVIDE;
+  keymap[KEYCODE_POUND] = SDL_SCANCODE_KP_MULTIPLY;
 
-  keymap[KEYCODE_DPAD_UP] = SDLK_UP;
-  keymap[KEYCODE_DPAD_DOWN] = SDLK_DOWN;
-  keymap[KEYCODE_DPAD_LEFT] = SDLK_LEFT;
-  keymap[KEYCODE_DPAD_RIGHT] = SDLK_RIGHT;
-  keymap[KEYCODE_DPAD_CENTER] = SDLK_RETURN;
+  keymap[KEYCODE_DPAD_UP] = SDL_SCANCODE_UP;
+  keymap[KEYCODE_DPAD_DOWN] = SDL_SCANCODE_DOWN;
+  keymap[KEYCODE_DPAD_LEFT] = SDL_SCANCODE_LEFT;
+  keymap[KEYCODE_DPAD_RIGHT] = SDL_SCANCODE_RIGHT;
+  keymap[KEYCODE_DPAD_CENTER] = SDL_SCANCODE_RETURN;
 
-  keymap[KEYCODE_SOFT_LEFT] = SDLK_KP4;
-  keymap[KEYCODE_SOFT_RIGHT] = SDLK_KP6;
-  keymap[KEYCODE_ENTER] = SDLK_KP_ENTER;
+  keymap[KEYCODE_SOFT_LEFT] = SDL_SCANCODE_KP_4;
+  keymap[KEYCODE_SOFT_RIGHT] = SDL_SCANCODE_KP_6;
+  keymap[KEYCODE_ENTER] = SDL_SCANCODE_KP_ENTER;
 
-  keymap[KEYCODE_VOLUME_UP] = SDLK_PAGEUP;
-  keymap[KEYCODE_VOLUME_DOWN] = SDLK_PAGEDOWN;
-  keymap[KEYCODE_SEARCH] = SDLK_END;
-  keymap[KEYCODE_HOME] = SDLK_HOME;
+  keymap[KEYCODE_VOLUME_UP] = SDL_SCANCODE_PAGEUP;
+  keymap[KEYCODE_VOLUME_DOWN] = SDL_SCANCODE_PAGEDOWN;
+  keymap[KEYCODE_SEARCH] = SDL_SCANCODE_END;
+  keymap[KEYCODE_HOME] = SDL_SCANCODE_HOME;
 
-  keymap[KEYCODE_CLEAR] = SDLK_CLEAR;
-  keymap[KEYCODE_A] = SDLK_a;
-  keymap[KEYCODE_B] = SDLK_b;
-  keymap[KEYCODE_C] = SDLK_c;
-  keymap[KEYCODE_D] = SDLK_d;
-  keymap[KEYCODE_E] = SDLK_e;
-  keymap[KEYCODE_F] = SDLK_f;
-  keymap[KEYCODE_G] = SDLK_g;
-  keymap[KEYCODE_H] = SDLK_h;
-  keymap[KEYCODE_I] = SDLK_i;
-  keymap[KEYCODE_J] = SDLK_j;
-  keymap[KEYCODE_K] = SDLK_k;
-  keymap[KEYCODE_L] = SDLK_l;
-  keymap[KEYCODE_M] = SDLK_m;
-  keymap[KEYCODE_N] = SDLK_n;
-  keymap[KEYCODE_O] = SDLK_o;
-  keymap[KEYCODE_P] = SDLK_p;
-  keymap[KEYCODE_Q] = SDLK_q;
-  keymap[KEYCODE_R] = SDLK_r;
-  keymap[KEYCODE_S] = SDLK_s;
-  keymap[KEYCODE_T] = SDLK_t;
-  keymap[KEYCODE_U] = SDLK_u;
-  keymap[KEYCODE_V] = SDLK_v;
-  keymap[KEYCODE_W] = SDLK_w;
-  keymap[KEYCODE_X] = SDLK_x;
-  keymap[KEYCODE_Y] = SDLK_y;
-  keymap[KEYCODE_Z] = SDLK_z;
-  keymap[KEYCODE_COMMA] = SDLK_COMMA;
-  keymap[KEYCODE_PERIOD] = SDLK_PERIOD;
-  keymap[KEYCODE_TAB] = SDLK_TAB;
-  keymap[KEYCODE_SPACE] = SDLK_SPACE;
-  keymap[KEYCODE_DEL] = SDLK_DELETE;
-  keymap[KEYCODE_GRAVE] = SDLK_BACKQUOTE;
-  keymap[KEYCODE_MINUS] = SDLK_MINUS;
-  keymap[KEYCODE_EQUALS] = SDLK_EQUALS;
-  keymap[KEYCODE_LEFT_BRACKET] = SDLK_LEFTBRACKET;
-  keymap[KEYCODE_RIGHT_BRACKET] = SDLK_RIGHTBRACKET;
-  keymap[KEYCODE_BACKSLASH] = SDLK_BACKSLASH;
-  keymap[KEYCODE_SEMICOLON] = SDLK_SEMICOLON;
-  keymap[KEYCODE_APOSTROPHE] = SDLK_QUOTE;
-  keymap[KEYCODE_SLASH] = SDLK_SLASH;
-  keymap[KEYCODE_AT] = SDLK_AT;
+  keymap[KEYCODE_CLEAR] = SDL_SCANCODE_BACKSPACE;
+  keymap[KEYCODE_A] = SDL_SCANCODE_A;
+  keymap[KEYCODE_B] = SDL_SCANCODE_B;
+  keymap[KEYCODE_C] = SDL_SCANCODE_C;
+  keymap[KEYCODE_D] = SDL_SCANCODE_D;
+  keymap[KEYCODE_E] = SDL_SCANCODE_E;
+  keymap[KEYCODE_F] = SDL_SCANCODE_F;
+  keymap[KEYCODE_G] = SDL_SCANCODE_G;
+  keymap[KEYCODE_H] = SDL_SCANCODE_H;
+  keymap[KEYCODE_I] = SDL_SCANCODE_I;
+  keymap[KEYCODE_J] = SDL_SCANCODE_J;
+  keymap[KEYCODE_K] = SDL_SCANCODE_K;
+  keymap[KEYCODE_L] = SDL_SCANCODE_L;
+  keymap[KEYCODE_M] = SDL_SCANCODE_M;
+  keymap[KEYCODE_N] = SDL_SCANCODE_N;
+  keymap[KEYCODE_O] = SDL_SCANCODE_O;
+  keymap[KEYCODE_P] = SDL_SCANCODE_P;
+  keymap[KEYCODE_Q] = SDL_SCANCODE_Q;
+  keymap[KEYCODE_R] = SDL_SCANCODE_R;
+  keymap[KEYCODE_S] = SDL_SCANCODE_S;
+  keymap[KEYCODE_T] = SDL_SCANCODE_T;
+  keymap[KEYCODE_U] = SDL_SCANCODE_U;
+  keymap[KEYCODE_V] = SDL_SCANCODE_V;
+  keymap[KEYCODE_W] = SDL_SCANCODE_W;
+  keymap[KEYCODE_X] = SDL_SCANCODE_X;
+  keymap[KEYCODE_Y] = SDL_SCANCODE_Y;
+  keymap[KEYCODE_Z] = SDL_SCANCODE_Z;
+  keymap[KEYCODE_COMMA] = SDL_SCANCODE_COMMA;
+  keymap[KEYCODE_PERIOD] = SDL_SCANCODE_PERIOD;
+  keymap[KEYCODE_TAB] = SDL_SCANCODE_TAB;
+  keymap[KEYCODE_SPACE] = SDL_SCANCODE_SPACE;
+  keymap[KEYCODE_DEL] = SDL_SCANCODE_DELETE;
+  keymap[KEYCODE_GRAVE] = SDL_SCANCODE_GRAVE;
+  keymap[KEYCODE_MINUS] = SDL_SCANCODE_KP_MINUS;
+  keymap[KEYCODE_PLUS] = SDL_SCANCODE_KP_PLUS;
+  keymap[KEYCODE_EQUALS] = SDL_SCANCODE_EQUALS;
+  keymap[KEYCODE_LEFT_BRACKET] = SDL_SCANCODE_LEFTBRACKET;
+  keymap[KEYCODE_RIGHT_BRACKET] = SDL_SCANCODE_RIGHTBRACKET;
+  keymap[KEYCODE_BACKSLASH] = SDL_SCANCODE_BACKSLASH;
+  keymap[KEYCODE_SEMICOLON] = SDL_SCANCODE_SEMICOLON;
+  keymap[KEYCODE_APOSTROPHE] = SDL_SCANCODE_APOSTROPHE;
+  keymap[KEYCODE_SLASH] = SDL_SCANCODE_SLASH;
+  keymap[KEYCODE_AT] = SDL_SCANCODE_KP_AT;
 
-  keymap[KEYCODE_PLUS] = SDLK_PLUS;
+  keymap[KEYCODE_MEDIA_PLAY_PAUSE] = SDL_SCANCODE_AUDIOPLAY;
+  keymap[KEYCODE_MEDIA_STOP] = SDL_SCANCODE_AUDIOSTOP;
+  keymap[KEYCODE_MEDIA_NEXT] = SDL_SCANCODE_AUDIONEXT;
+  keymap[KEYCODE_MEDIA_PREVIOUS] = SDL_SCANCODE_AUDIOPREV;
+  keymap[KEYCODE_MEDIA_REWIND] = SDL_SCANCODE_KP_1;
+  keymap[KEYCODE_MEDIA_FAST_FORWARD] = SDL_SCANCODE_KP_3;
+  keymap[KEYCODE_MUTE] = SDL_SCANCODE_MUTE;
 
-  /*
+  keymap[KEYCODE_SYM] = SDL_SCANCODE_LGUI;
+  keymap[KEYCODE_NUM] = SDL_SCANCODE_NUMLOCKCLEAR;
 
-  keymap[KEYCODE_SYM] = SDLK_SYM;
-  keymap[KEYCODE_NUM] = SDLK_NUM;
+  keymap[KEYCODE_ALT_LEFT] = SDL_SCANCODE_AC_BACK;
+  keymap[KEYCODE_ALT_RIGHT] = SDL_SCANCODE_AC_FORWARD;
+  keymap[KEYCODE_SHIFT_LEFT] = SDL_SCANCODE_VOLUMEUP;
+  keymap[KEYCODE_SHIFT_RIGHT] = SDL_SCANCODE_VOLUMEDOWN;
 
-  keymap[KEYCODE_SOFT_LEFT] = SDLK_SOFT_LEFT;
-  keymap[KEYCODE_SOFT_RIGHT] = SDLK_SOFT_RIGHT;
+  keymap[KEYCODE_EXPLORER] = SDL_SCANCODE_WWW;
+  keymap[KEYCODE_ENVELOPE] = SDL_SCANCODE_MAIL;
 
-  keymap[KEYCODE_ALT_LEFT] = SDLK_ALT_LEFT;
-  keymap[KEYCODE_ALT_RIGHT] = SDLK_ALT_RIGHT;
-  keymap[KEYCODE_SHIFT_LEFT] = SDLK_SHIFT_LEFT;
-  keymap[KEYCODE_SHIFT_RIGHT] = SDLK_SHIFT_RIGHT;
-
-  keymap[KEYCODE_EXPLORER] = SDLK_EXPLORER;
-  keymap[KEYCODE_ENVELOPE] = SDLK_ENVELOPE;
-  keymap[KEYCODE_HEADSETHOOK] = SDLK_HEADSETHOOK;
-  keymap[KEYCODE_FOCUS] = SDLK_FOCUS;
-  keymap[KEYCODE_NOTIFICATION] = SDLK_NOTIFICATION;
-  keymap[KEYCODE_MEDIA_PLAY_PAUSE=] = SDLK_MEDIA_PLAY_PAUSE=;
-  keymap[KEYCODE_MEDIA_STOP] = SDLK_MEDIA_STOP;
-  keymap[KEYCODE_MEDIA_NEXT] = SDLK_MEDIA_NEXT;
-  keymap[KEYCODE_MEDIA_PREVIOUS] = SDLK_MEDIA_PREVIOUS;
-  keymap[KEYCODE_MEDIA_REWIND] = SDLK_MEDIA_REWIND;
-  keymap[KEYCODE_MEDIA_FAST_FORWARD] = SDLK_MEDIA_FAST_FORWARD;
-  keymap[KEYCODE_MUTE] = SDLK_MUTE;
-  */
+  keymap[KEYCODE_HEADSETHOOK] = SDL_SCANCODE_AC_SEARCH;
+  keymap[KEYCODE_FOCUS] = SDL_SCANCODE_AC_REFRESH;
+  keymap[KEYCODE_NOTIFICATION] = SDL_SCANCODE_AC_BOOKMARKS;
 
 }
 
@@ -226,13 +213,13 @@ static int AndroidTrackballKeyDelays[4] = {0,0,0,0};
 // Key = -1 if we want to send KeyUp events from main loop
 int processAndroidTrackballKeyDelays( int key, int action )
 {
-	#if ! defined(SDL_TRACKBALL_KEYUP_DELAY) || (SDL_TRACKBALL_KEYUP_DELAY == 0)
 	return 0;
-	#else
+	
+	//TODO: fix that code
+	
 	// Send Directional Pad Up events with a delay, so app wil lthink we're holding the key a bit
 	static const int KeysMapping[4] = {KEYCODE_DPAD_UP, KEYCODE_DPAD_DOWN, KEYCODE_DPAD_LEFT, KEYCODE_DPAD_RIGHT};
 	int idx, idx2;
-	SDL_keysym keysym;
 	
 	if( key < 0 )
 	{
@@ -242,7 +229,7 @@ int processAndroidTrackballKeyDelays( int key, int action )
 			{
 				AndroidTrackballKeyDelays[idx] --;
 				if( AndroidTrackballKeyDelays[idx] == 0 )
-					SDL_PrivateKeyboard( SDL_RELEASED, TranslateKey(KeysMapping[idx], &keysym) );
+					SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(idx) );
 			}
 		}
 	}
@@ -267,9 +254,9 @@ int processAndroidTrackballKeyDelays( int key, int action )
 				if( AndroidTrackballKeyDelays[idx2] > 0 )
 				{
 					AndroidTrackballKeyDelays[idx2] = 0;
-					SDL_PrivateKeyboard( SDL_RELEASED, TranslateKey(KeysMapping[idx2], &keysym) );
+					SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(idx2) );
 				}
-				SDL_PrivateKeyboard( SDL_PRESSED, TranslateKey(key, &keysym) );
+				SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key) );
 			}
 			else if( !action && AndroidTrackballKeyDelays[idx] == 0 )
 			{
@@ -287,6 +274,4 @@ int processAndroidTrackballKeyDelays( int key, int action )
 		}
 	}
 	return 0;
-	
-	#endif
 }

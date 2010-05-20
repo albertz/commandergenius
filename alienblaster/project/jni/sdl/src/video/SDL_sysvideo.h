@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -25,318 +25,349 @@
 #define _SDL_sysvideo_h
 
 #include "SDL_mouse.h"
-#define SDL_PROTOTYPES_ONLY
-#include "SDL_syswm.h"
-#undef SDL_PROTOTYPES_ONLY
-
-/* This file prototypes the video driver implementation.
-   This is designed to be easily converted to C++ in the future.
- */
-
-#if SDL_VIDEO_OPENGL
-#include "SDL_opengl.h"
-#endif /* SDL_VIDEO_OPENGL */
+#include "SDL_keysym.h"
 
 /* The SDL video driver */
+
+typedef struct SDL_Renderer SDL_Renderer;
+typedef struct SDL_RenderDriver SDL_RenderDriver;
+typedef struct SDL_VideoDisplay SDL_VideoDisplay;
 typedef struct SDL_VideoDevice SDL_VideoDevice;
+
+/* Define the SDL texture structure */
+struct SDL_Texture
+{
+    const void *magic;
+    Uint32 format;              /**< The pixel format of the texture */
+    int access;                 /**< SDL_TextureAccess */
+    int w;                      /**< The width of the texture */
+    int h;                      /**< The height of the texture */
+    int modMode;                /**< The texture modulation mode */
+    int blendMode;              /**< The texture blend mode */
+    int scaleMode;              /**< The texture scale mode */
+    Uint8 r, g, b, a;           /**< Texture modulation values */
+
+    SDL_Renderer *renderer;
+
+    void *driverdata;           /**< Driver specific texture representation */
+
+    SDL_Texture *prev;
+    SDL_Texture *next;
+};
+
+/* Define the SDL renderer structure */
+struct SDL_Renderer
+{
+    int (*ActivateRenderer) (SDL_Renderer * renderer);
+    int (*DisplayModeChanged) (SDL_Renderer * renderer);
+    int (*CreateTexture) (SDL_Renderer * renderer, SDL_Texture * texture);
+    int (*QueryTexturePixels) (SDL_Renderer * renderer, SDL_Texture * texture,
+                               void **pixels, int *pitch);
+    int (*SetTexturePalette) (SDL_Renderer * renderer, SDL_Texture * texture,
+                              const SDL_Color * colors, int firstcolor,
+                              int ncolors);
+    int (*GetTexturePalette) (SDL_Renderer * renderer, SDL_Texture * texture,
+                              SDL_Color * colors, int firstcolor,
+                              int ncolors);
+    int (*SetTextureColorMod) (SDL_Renderer * renderer,
+                               SDL_Texture * texture);
+    int (*SetTextureAlphaMod) (SDL_Renderer * renderer,
+                               SDL_Texture * texture);
+    int (*SetTextureBlendMode) (SDL_Renderer * renderer,
+                                SDL_Texture * texture);
+    int (*SetTextureScaleMode) (SDL_Renderer * renderer,
+                                SDL_Texture * texture);
+    int (*UpdateTexture) (SDL_Renderer * renderer, SDL_Texture * texture,
+                          const SDL_Rect * rect, const void *pixels,
+                          int pitch);
+    int (*LockTexture) (SDL_Renderer * renderer, SDL_Texture * texture,
+                        const SDL_Rect * rect, int markDirty, void **pixels,
+                        int *pitch);
+    void (*UnlockTexture) (SDL_Renderer * renderer, SDL_Texture * texture);
+    void (*DirtyTexture) (SDL_Renderer * renderer, SDL_Texture * texture,
+                          int numrects, const SDL_Rect * rects);
+    int (*SetDrawColor) (SDL_Renderer * renderer);
+    int (*SetDrawBlendMode) (SDL_Renderer * renderer);
+    int (*RenderClear) (SDL_Renderer * renderer);
+    int (*RenderDrawPoints) (SDL_Renderer * renderer, const SDL_Point * points,
+                             int count);
+    int (*RenderDrawLines) (SDL_Renderer * renderer, const SDL_Point * points,
+                            int count);
+    int (*RenderDrawRects) (SDL_Renderer * renderer, const SDL_Rect ** rects,
+                            int count);
+    int (*RenderFillRects) (SDL_Renderer * renderer, const SDL_Rect ** rects,
+                            int count);
+    int (*RenderDrawEllipse) (SDL_Renderer * renderer, int x, int y,
+                              int w, int h);
+    int (*RenderFillEllipse) (SDL_Renderer * renderer, int x, int y,
+                              int w, int h);
+    int (*RenderCopy) (SDL_Renderer * renderer, SDL_Texture * texture,
+                       const SDL_Rect * srcrect, const SDL_Rect * dstrect);
+    int (*RenderReadPixels) (SDL_Renderer * renderer, const SDL_Rect * rect,
+                             Uint32 format, void * pixels, int pitch);
+    int (*RenderWritePixels) (SDL_Renderer * renderer, const SDL_Rect * rect,
+                              Uint32 format, const void * pixels, int pitch);
+    void (*RenderPresent) (SDL_Renderer * renderer);
+    void (*DestroyTexture) (SDL_Renderer * renderer, SDL_Texture * texture);
+
+    void (*DestroyRenderer) (SDL_Renderer * renderer);
+
+    /* The current renderer info */
+    SDL_RendererInfo info;
+
+    /* The window associated with the renderer */
+    SDL_Window *window;
+
+    /* The list of textures */
+    SDL_Texture *textures;
+
+    Uint8 r, g, b, a;                   /**< Color for drawing operations values */
+    int blendMode;                      /**< The drawing blend mode */
+
+    void *driverdata;
+};
+
+/* Define the SDL render driver structure */
+struct SDL_RenderDriver
+{
+    SDL_Renderer *(*CreateRenderer) (SDL_Window * window, Uint32 flags);
+
+    /* Info about the renderer capabilities */
+    SDL_RendererInfo info;
+};
+
+/* Define the SDL window structure, corresponding to toplevel windows */
+struct SDL_Window
+{
+    const void *magic;
+    Uint32 id;
+    char *title;
+    int x, y;
+    int w, h;
+    Uint32 flags;
+
+    SDL_VideoDisplay *display;
+    SDL_Renderer *renderer;
+
+    SDL_DisplayMode fullscreen_mode;
+
+    void *userdata;
+    void *driverdata;
+
+    SDL_Window *prev;
+    SDL_Window *next;
+};
+#define FULLSCREEN_VISIBLE(W) \
+    (((W)->flags & SDL_WINDOW_FULLSCREEN) && \
+     ((W)->flags & SDL_WINDOW_SHOWN) && \
+     !((W)->flags & SDL_WINDOW_MINIMIZED))
+
+/*
+ * Define the SDL display structure This corresponds to physical monitors
+ * attached to the system.
+ */
+struct SDL_VideoDisplay
+{
+    int max_display_modes;
+    int num_display_modes;
+    SDL_DisplayMode *display_modes;
+    SDL_DisplayMode desktop_mode;
+    SDL_DisplayMode current_mode;
+    SDL_bool updating_fullscreen;
+    SDL_Palette *palette;
+
+    Uint16 *gamma;
+    Uint16 *saved_gamma;        /* (just offset into gamma) */
+
+    int num_render_drivers;
+    SDL_RenderDriver *render_drivers;
+
+    SDL_Window *windows;
+    SDL_Window *fullscreen_window;
+
+    SDL_Renderer *current_renderer;
+
+    SDL_VideoDevice *device;
+
+    void *driverdata;
+};
 
 /* Define the SDL video driver structure */
 #define _THIS	SDL_VideoDevice *_this
-#ifndef _STATUS
-#define _STATUS	SDL_status *status
+
+struct SDL_VideoDevice
+{
+    /* * * */
+    /* The name of this video driver */
+    const char *name;
+
+    /* * * */
+    /* Initialization/Query functions */
+
+    /*
+     * Initialize the native video subsystem, filling in the list of
+     * displays for this driver, returning 0 or -1 if there's an error.
+     */
+    int (*VideoInit) (_THIS);
+
+    /*
+     * Reverse the effects VideoInit() -- called if VideoInit() fails or
+     * if the application is shutting down the video subsystem.
+     */
+    void (*VideoQuit) (_THIS);
+
+    /* * * */
+    /*
+     * Display functions
+     */
+
+    /*
+     * Get the bounds of a display
+     */
+    int (*GetDisplayBounds) (_THIS, SDL_VideoDisplay * display, SDL_Rect * rect);
+
+    /*
+     * Get a list of the available display modes. e.g.
+     * SDL_AddDisplayMode(_this->current_display, mode)
+     */
+    void (*GetDisplayModes) (_THIS, SDL_VideoDisplay * display);
+
+    /*
+     * Setting the display mode is independent of creating windows, so
+     * when the display mode is changed, all existing windows should have
+     * their data updated accordingly, including the display surfaces
+     * associated with them.
+     */
+    int (*SetDisplayMode) (_THIS, SDL_VideoDisplay * display, SDL_DisplayMode * mode);
+
+    /* Set the color entries of the display palette */
+    int (*SetDisplayPalette) (_THIS, SDL_VideoDisplay * display, SDL_Palette * palette);
+
+    /* Get the color entries of the display palette */
+    int (*GetDisplayPalette) (_THIS, SDL_VideoDisplay * display, SDL_Palette * palette);
+
+    /* Set the gamma ramp */
+    int (*SetDisplayGammaRamp) (_THIS, SDL_VideoDisplay * display, Uint16 * ramp);
+
+    /* Get the gamma ramp */
+    int (*GetDisplayGammaRamp) (_THIS, SDL_VideoDisplay * display, Uint16 * ramp);
+
+    /* * * */
+    /*
+     * Window functions
+     */
+    int (*CreateWindow) (_THIS, SDL_Window * window);
+    int (*CreateWindowFrom) (_THIS, SDL_Window * window, const void *data);
+    void (*SetWindowTitle) (_THIS, SDL_Window * window);
+    void (*SetWindowIcon) (_THIS, SDL_Window * window, SDL_Surface * icon);
+    void (*SetWindowPosition) (_THIS, SDL_Window * window);
+    void (*SetWindowSize) (_THIS, SDL_Window * window);
+    void (*ShowWindow) (_THIS, SDL_Window * window);
+    void (*HideWindow) (_THIS, SDL_Window * window);
+    void (*RaiseWindow) (_THIS, SDL_Window * window);
+    void (*MaximizeWindow) (_THIS, SDL_Window * window);
+    void (*MinimizeWindow) (_THIS, SDL_Window * window);
+    void (*RestoreWindow) (_THIS, SDL_Window * window);
+    void (*SetWindowGrab) (_THIS, SDL_Window * window);
+    void (*DestroyWindow) (_THIS, SDL_Window * window);
+
+    /* Get some platform dependent window information */
+      SDL_bool(*GetWindowWMInfo) (_THIS, SDL_Window * window,
+                                  struct SDL_SysWMinfo * info);
+
+    /* * * */
+    /*
+     * OpenGL support
+     */
+    int (*GL_LoadLibrary) (_THIS, const char *path);
+    void *(*GL_GetProcAddress) (_THIS, const char *proc);
+    void (*GL_UnloadLibrary) (_THIS);
+      SDL_GLContext(*GL_CreateContext) (_THIS, SDL_Window * window);
+    int (*GL_MakeCurrent) (_THIS, SDL_Window * window, SDL_GLContext context);
+    int (*GL_SetSwapInterval) (_THIS, int interval);
+    int (*GL_GetSwapInterval) (_THIS);
+    void (*GL_SwapWindow) (_THIS, SDL_Window * window);
+    void (*GL_DeleteContext) (_THIS, SDL_GLContext context);
+
+    /* * * */
+    /*
+     * Event manager functions
+     */
+    void (*PumpEvents) (_THIS);
+
+    /* Suspend the screensaver */
+    void (*SuspendScreenSaver) (_THIS);
+
+    /* Text input */
+    void (*StartTextInput) (_THIS);
+    void (*StopTextInput) (_THIS);
+    void (*SetTextInputRect) (_THIS, SDL_Rect *rect);
+
+    /* * * */
+    /* Data common to all drivers */
+    SDL_bool suspend_screensaver;
+    int num_displays;
+    SDL_VideoDisplay *displays;
+    int current_display;
+    Uint8 window_magic;
+    Uint8 texture_magic;
+    Uint32 next_object_id;
+
+    /* * * */
+    /* Data used by the GL drivers */
+    struct
+    {
+        int red_size;
+        int green_size;
+        int blue_size;
+        int alpha_size;
+        int depth_size;
+        int buffer_size;
+        int stencil_size;
+        int double_buffer;
+        int accum_red_size;
+        int accum_green_size;
+        int accum_blue_size;
+        int accum_alpha_size;
+        int stereo;
+        int multisamplebuffers;
+        int multisamplesamples;
+        int accelerated;
+        int major_version;
+        int minor_version;
+        int retained_backing;
+        int driver_loaded;
+        char driver_path[256];
+        void *dll_handle;
+    } gl_config;
+
+    /* * * */
+    /* Data private to this driver */
+    void *driverdata;
+    struct SDL_GLDriverData *gl_data;
+
+#if SDL_VIDEO_DRIVER_PANDORA
+    struct SDL_PrivateGLESData *gles_data;
 #endif
-struct SDL_VideoDevice {
-	/* * * */
-	/* The name of this video driver */
-	const char *name;
 
-	/* * * */
-	/* Initialization/Query functions */
-
-	/* Initialize the native video subsystem, filling 'vformat' with the 
-	   "best" display pixel format, returning 0 or -1 if there's an error.
-	 */
-	int (*VideoInit)(_THIS, SDL_PixelFormat *vformat);
-
-	/* List the available video modes for the given pixel format, sorted
-	   from largest to smallest.
-	 */
-	SDL_Rect **(*ListModes)(_THIS, SDL_PixelFormat *format, Uint32 flags);
-
-	/* Set the requested video mode, returning a surface which will be
-	   set to the SDL_VideoSurface.  The width and height will already
-	   be verified by ListModes(), and the video subsystem is free to
-	   set the mode to a supported bit depth different from the one
-	   specified -- the desired bpp will be emulated with a shadow
-	   surface if necessary.  If a new mode is returned, this function
-	   should take care of cleaning up the current mode.
-	 */
-	SDL_Surface *(*SetVideoMode)(_THIS, SDL_Surface *current,
-				int width, int height, int bpp, Uint32 flags);
-
-	/* Toggle the fullscreen mode */
-	int (*ToggleFullScreen)(_THIS, int on);
-
-	/* This is called after the video mode has been set, to get the
-	   initial mouse state.  It should queue events as necessary to
-	   properly represent the current mouse focus and position.
-	 */
-	void (*UpdateMouse)(_THIS);
-
-	/* Create a YUV video surface (possibly overlay) of the given
-	   format.  The hardware should be able to perform at least 2x
-	   scaling on display.
-	 */
-	SDL_Overlay *(*CreateYUVOverlay)(_THIS, int width, int height,
-	                                 Uint32 format, SDL_Surface *display);
-
-        /* Sets the color entries { firstcolor .. (firstcolor+ncolors-1) }
-	   of the physical palette to those in 'colors'. If the device is
-	   using a software palette (SDL_HWPALETTE not set), then the
-	   changes are reflected in the logical palette of the screen
-	   as well.
-	   The return value is 1 if all entries could be set properly
-	   or 0 otherwise.
-	*/
-	int (*SetColors)(_THIS, int firstcolor, int ncolors,
-			 SDL_Color *colors);
-
-	/* This pointer should exist in the native video subsystem and should
-	   point to an appropriate update function for the current video mode
-	 */
-	void (*UpdateRects)(_THIS, int numrects, SDL_Rect *rects);
-
-	/* Reverse the effects VideoInit() -- called if VideoInit() fails
-	   or if the application is shutting down the video subsystem.
-	*/
-	void (*VideoQuit)(_THIS);
-
-	/* * * */
-	/* Hardware acceleration functions */
-
-	/* Information about the video hardware */
-	SDL_VideoInfo info;
-
-	/* The pixel format used when SDL_CreateRGBSurface creates SDL_HWSURFACEs with alpha */
-	SDL_PixelFormat* displayformatalphapixel;
-	
-	/* Allocates a surface in video memory */
-	int (*AllocHWSurface)(_THIS, SDL_Surface *surface);
-
-	/* Sets the hardware accelerated blit function, if any, based
-	   on the current flags of the surface (colorkey, alpha, etc.)
-	 */
-	int (*CheckHWBlit)(_THIS, SDL_Surface *src, SDL_Surface *dst);
-
-	/* Fills a surface rectangle with the given color */
-	int (*FillHWRect)(_THIS, SDL_Surface *dst, SDL_Rect *rect, Uint32 color);
-
-	/* Sets video mem colorkey and accelerated blit function */
-	int (*SetHWColorKey)(_THIS, SDL_Surface *surface, Uint32 key);
-
-	/* Sets per surface hardware alpha value */
-	int (*SetHWAlpha)(_THIS, SDL_Surface *surface, Uint8 value);
-
-	/* Returns a readable/writable surface */
-	int (*LockHWSurface)(_THIS, SDL_Surface *surface);
-	void (*UnlockHWSurface)(_THIS, SDL_Surface *surface);
-
-	/* Performs hardware flipping */
-	int (*FlipHWSurface)(_THIS, SDL_Surface *surface);
-
-	/* Frees a previously allocated video surface */
-	void (*FreeHWSurface)(_THIS, SDL_Surface *surface);
-
-	/* * * */
-	/* Gamma support */
-
-	Uint16 *gamma;
-
-	/* Set the gamma correction directly (emulated with gamma ramps) */
-	int (*SetGamma)(_THIS, float red, float green, float blue);
-
-	/* Get the gamma correction directly (emulated with gamma ramps) */
-	int (*GetGamma)(_THIS, float *red, float *green, float *blue);
-
-	/* Set the gamma ramp */
-	int (*SetGammaRamp)(_THIS, Uint16 *ramp);
-
-	/* Get the gamma ramp */
-	int (*GetGammaRamp)(_THIS, Uint16 *ramp);
-
-	/* * * */
-	/* OpenGL support */
-
-	/* Sets the dll to use for OpenGL and loads it */
-	int (*GL_LoadLibrary)(_THIS, const char *path);
-
-	/* Retrieves the address of a function in the gl library */
-	void* (*GL_GetProcAddress)(_THIS, const char *proc);
-
-	/* Get attribute information from the windowing system. */
-	int (*GL_GetAttribute)(_THIS, SDL_GLattr attrib, int* value);
-
-	/* Make the context associated with this driver current */
-	int (*GL_MakeCurrent)(_THIS);
-
-	/* Swap the current buffers in double buffer mode. */
-	void (*GL_SwapBuffers)(_THIS);
-
-  	/* OpenGL functions for SDL_OPENGLBLIT */
-#if SDL_VIDEO_OPENGL
-#if !defined(__WIN32__)
-#define WINAPI
-#endif
-#define SDL_PROC(ret,func,params) ret (WINAPI *func) params;
-#include "SDL_glfuncs.h"
-#undef SDL_PROC
-
-	/* Texture id */
-	GLuint texture;
-#endif
-	int is_32bit;
- 
-	/* * * */
-	/* Window manager functions */
-
-	/* Set the title and icon text */
-	void (*SetCaption)(_THIS, const char *title, const char *icon);
-
-	/* Set the window icon image */
-	void (*SetIcon)(_THIS, SDL_Surface *icon, Uint8 *mask);
-
-	/* Iconify the window.
-	   This function returns 1 if there is a window manager and the
-	   window was actually iconified, it returns 0 otherwise.
-	*/
-	int (*IconifyWindow)(_THIS);
-
-	/* Grab or ungrab keyboard and mouse input */
-	SDL_GrabMode (*GrabInput)(_THIS, SDL_GrabMode mode);
-
-	/* Get some platform dependent window information */
-	int (*GetWMInfo)(_THIS, SDL_SysWMinfo *info);
-
-	/* * * */
-	/* Cursor manager functions */
-
-	/* Free a window manager cursor
-	   This function can be NULL if CreateWMCursor is also NULL.
-	 */
-	void (*FreeWMCursor)(_THIS, WMcursor *cursor);
-
-	/* If not NULL, create a black/white window manager cursor */
-	WMcursor *(*CreateWMCursor)(_THIS,
-		Uint8 *data, Uint8 *mask, int w, int h, int hot_x, int hot_y);
-
-	/* Show the specified cursor, or hide if cursor is NULL */
-	int (*ShowWMCursor)(_THIS, WMcursor *cursor);
-
-	/* Warp the window manager cursor to (x,y)
-	   If NULL, a mouse motion event is posted internally.
-	 */
-	void (*WarpWMCursor)(_THIS, Uint16 x, Uint16 y);
-
-	/* If not NULL, this is called when a mouse motion event occurs */
-	void (*MoveWMCursor)(_THIS, int x, int y);
-
-	/* Determine whether the mouse should be in relative mode or not.
-	   This function is called when the input grab state or cursor
-	   visibility state changes.
-	   If the cursor is not visible, and the input is grabbed, the
-	   driver can place the mouse in relative mode, which may result
-	   in higher accuracy sampling of the pointer motion.
-	*/
-	void (*CheckMouseMode)(_THIS);
-
-	/* * * */
-	/* Event manager functions */
-
-	/* Initialize keyboard mapping for this driver */
-	void (*InitOSKeymap)(_THIS);
-
-	/* Handle any queued OS events */
-	void (*PumpEvents)(_THIS);
-
-	/* * * */
-	/* Data common to all drivers */
-	SDL_Surface *screen;
-	SDL_Surface *shadow;
-	SDL_Surface *visible;
-        SDL_Palette *physpal;	/* physical palette, if != logical palette */
-        SDL_Color *gammacols;	/* gamma-corrected colours, or NULL */
-	char *wm_title;
-	char *wm_icon;
-	int offset_x;
-	int offset_y;
-	SDL_GrabMode input_grab;
-
-	/* Driver information flags */
-	int handles_any_size;	/* Driver handles any size video mode */
-
-	/* * * */
-	/* Data used by the GL drivers */
-	struct {
-		int red_size;
-		int green_size;
-		int blue_size;
-		int alpha_size;
-		int depth_size;
-		int buffer_size;
-		int stencil_size;
-		int double_buffer;
-		int accum_red_size;
-		int accum_green_size;
-		int accum_blue_size;
-		int accum_alpha_size;
-		int stereo;
-		int multisamplebuffers;
-		int multisamplesamples;
-		int accelerated;
-		int swap_control;
-		int driver_loaded;
-		char driver_path[256];
-		void* dll_handle;
-	} gl_config;
-
-	/* * * */
-	/* Data private to this driver */
-	struct SDL_PrivateVideoData *hidden;
-	struct SDL_PrivateGLData *gl_data;
-
-	/* * * */
-	/* The function used to dispose of this structure */
-	void (*free)(_THIS);
+    /* * * */
+    /* The function used to dispose of this structure */
+    void (*free) (_THIS);
 };
-#undef _THIS
 
-typedef struct VideoBootStrap {
-	const char *name;
-	const char *desc;
-	int (*available)(void);
-	SDL_VideoDevice *(*create)(int devindex);
+typedef struct VideoBootStrap
+{
+    const char *name;
+    const char *desc;
+    int (*available) (void);
+    SDL_VideoDevice *(*create) (int devindex);
 } VideoBootStrap;
 
-#if SDL_VIDEO_DRIVER_QUARTZ
-extern VideoBootStrap QZ_bootstrap;
+#if SDL_VIDEO_DRIVER_COCOA
+extern VideoBootStrap COCOA_bootstrap;
 #endif
 #if SDL_VIDEO_DRIVER_X11
 extern VideoBootStrap X11_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_DGA
-extern VideoBootStrap DGA_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_NANOX
-extern VideoBootStrap NX_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_IPOD
-extern VideoBootStrap iPod_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_QTOPIA
-extern VideoBootStrap Qtopia_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_WSCONS
-extern VideoBootStrap WSCONS_bootstrap;
 #endif
 #if SDL_VIDEO_DRIVER_FBCON
 extern VideoBootStrap FBCON_bootstrap;
@@ -344,17 +375,8 @@ extern VideoBootStrap FBCON_bootstrap;
 #if SDL_VIDEO_DRIVER_DIRECTFB
 extern VideoBootStrap DirectFB_bootstrap;
 #endif
-#if SDL_VIDEO_DRIVER_PS2GS
-extern VideoBootStrap PS2GS_bootstrap;
-#endif
 #if SDL_VIDEO_DRIVER_PS3
 extern VideoBootStrap PS3_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_GGI
-extern VideoBootStrap GGI_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_VGL
-extern VideoBootStrap VGL_bootstrap;
 #endif
 #if SDL_VIDEO_DRIVER_SVGALIB
 extern VideoBootStrap SVGALIB_bootstrap;
@@ -362,53 +384,26 @@ extern VideoBootStrap SVGALIB_bootstrap;
 #if SDL_VIDEO_DRIVER_GAPI
 extern VideoBootStrap GAPI_bootstrap;
 #endif
-#if SDL_VIDEO_DRIVER_WINDIB
-extern VideoBootStrap WINDIB_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_DDRAW
-extern VideoBootStrap DIRECTX_bootstrap;
+#if SDL_VIDEO_DRIVER_WIN32
+extern VideoBootStrap WIN32_bootstrap;
 #endif
 #if SDL_VIDEO_DRIVER_BWINDOW
 extern VideoBootStrap BWINDOW_bootstrap;
 #endif
-#if SDL_VIDEO_DRIVER_TOOLBOX
-extern VideoBootStrap TOOLBOX_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_DRAWSPROCKET
-extern VideoBootStrap DSp_bootstrap;
-#endif
 #if SDL_VIDEO_DRIVER_PHOTON
-extern VideoBootStrap ph_bootstrap;
+extern VideoBootStrap photon_bootstrap;
+#endif
+#if SDL_VIDEO_DRIVER_QNXGF
+extern VideoBootStrap qnxgf_bootstrap;
 #endif
 #if SDL_VIDEO_DRIVER_EPOC
 extern VideoBootStrap EPOC_bootstrap;
 #endif
-#if SDL_VIDEO_DRIVER_XBIOS
-extern VideoBootStrap XBIOS_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_GEM
-extern VideoBootStrap GEM_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_PICOGUI
-extern VideoBootStrap PG_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_DC
-extern VideoBootStrap DC_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_NDS
-extern VideoBootStrap NDS_bootstrap;
-#endif
 #if SDL_VIDEO_DRIVER_RISCOS
 extern VideoBootStrap RISCOS_bootstrap;
 #endif
-#if SDL_VIDEO_DRIVER_OS2FS
-extern VideoBootStrap OS2FSLib_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_AALIB
-extern VideoBootStrap AALIB_bootstrap;
-#endif
-#if SDL_VIDEO_DRIVER_CACA
-extern VideoBootStrap CACA_bootstrap;
+#if SDL_VIDEO_DRIVER_UIKIT
+extern VideoBootStrap UIKIT_bootstrap;
 #endif
 #if SDL_VIDEO_DRIVER_ANDROID
 extern VideoBootStrap ANDROID_bootstrap;
@@ -416,12 +411,43 @@ extern VideoBootStrap ANDROID_bootstrap;
 #if SDL_VIDEO_DRIVER_DUMMY
 extern VideoBootStrap DUMMY_bootstrap;
 #endif
+#if SDL_VIDEO_DRIVER_NDS
+extern VideoBootStrap NDS_bootstrap;
+#endif
+#if SDL_VIDEO_DRIVER_PANDORA
+extern VideoBootStrap PND_bootstrap;
+#endif
 
-/* This is the current video device */
-extern SDL_VideoDevice *current_video;
+#define SDL_CurrentDisplay	(&_this->displays[_this->current_display])
+#define SDL_CurrentRenderer	(SDL_CurrentDisplay->current_renderer)
 
-#define SDL_VideoSurface	(current_video->screen)
-#define SDL_ShadowSurface	(current_video->shadow)
-#define SDL_PublicSurface	(current_video->visible)
+extern SDL_VideoDevice *SDL_GetVideoDevice();
+extern int SDL_AddBasicVideoDisplay(const SDL_DisplayMode * desktop_mode);
+extern int SDL_AddVideoDisplay(const SDL_VideoDisplay * display);
+extern SDL_bool SDL_AddDisplayMode(SDL_VideoDisplay *display, const SDL_DisplayMode * mode);
+extern int SDL_GetNumDisplayModesForDisplay(SDL_VideoDisplay * display);
+extern int SDL_GetDisplayModeForDisplay(SDL_VideoDisplay * display, int index, SDL_DisplayMode * mode);
+extern int SDL_GetDesktopDisplayModeForDisplay(SDL_VideoDisplay * display, SDL_DisplayMode * mode);
+extern int SDL_GetCurrentDisplayModeForDisplay(SDL_VideoDisplay * display, SDL_DisplayMode * mode);
+extern SDL_DisplayMode * SDL_GetClosestDisplayModeForDisplay(SDL_VideoDisplay * display, const SDL_DisplayMode * mode, SDL_DisplayMode * closest);
+extern int SDL_SetDisplayModeForDisplay(SDL_VideoDisplay * display, const SDL_DisplayMode * mode);
+extern int SDL_SetPaletteForDisplay(SDL_VideoDisplay * display, const SDL_Color * colors, int firstcolor, int ncolors);
+extern int SDL_GetPaletteForDisplay(SDL_VideoDisplay * display, SDL_Color * colors, int firstcolor, int ncolors);
+extern int SDL_SetGammaRampForDisplay(SDL_VideoDisplay * display, const Uint16 * red, const Uint16 * green, const Uint16 * blue);
+extern int SDL_GetGammaRampForDisplay(SDL_VideoDisplay * display, Uint16 * red, Uint16 * green, Uint16 * blue);
+extern void SDL_AddRenderDriver(SDL_VideoDisplay *display, const SDL_RenderDriver * driver);
+
+extern int SDL_RecreateWindow(SDL_Window * window, Uint32 flags);
+
+extern void SDL_OnWindowShown(SDL_Window * window);
+extern void SDL_OnWindowHidden(SDL_Window * window);
+extern void SDL_OnWindowResized(SDL_Window * window);
+extern void SDL_OnWindowMinimized(SDL_Window * window);
+extern void SDL_OnWindowRestored(SDL_Window * window);
+extern void SDL_OnWindowFocusGained(SDL_Window * window);
+extern void SDL_OnWindowFocusLost(SDL_Window * window);
+extern SDL_Window * SDL_GetFocusWindow(void);
 
 #endif /* _SDL_sysvideo_h */
+
+/* vi: set ts=4 sw=4 expandtab: */

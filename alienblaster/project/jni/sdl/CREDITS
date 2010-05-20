@@ -5,71 +5,50 @@ Thanks to everyone who made this possible, including:
 * Cliff Matthews, for giving me a reason to start this project. :)
  -- Executor rocks!  *grin*
 
-* Scott Call, for making a home for SDL on the 'Net... Thanks! :)
-
 * The Linux Fund, C Magazine, Educational Technology Resources Inc.,
   Gareth Noyce, Jesse Pavel, Keith Kitchin, Jeremy Horvath, Thomas Nicholson,
   Hans-Peter Gygax, the Eternal Lands Development Team, Lars Brubaker,
   and Phoenix Kokido for financial contributions
 
+* Edgar "bobbens" Simo for his force feedback API development during the
+  Google Summer of Code 2008
+
+* Aaron Wishnick for his work on audio resampling and pitch shifting during
+  the Google Summer of Code 2008
+
+* Holmes Futrell for port of SDL to the iPhone and iPod Touch during the
+  Google Summer of Code 2008
+
+* Darren Alton for port of SDL to the Nintendo DS during the Google Summer
+  of Code 2008
+
+* Szymon "Wilku" Wilczek for adding support for multiple mice and tablets
+  during the Google Summer of Code 2008
+
+* Marty Leisner, Andrew, Will, Edgar Simo, Donny Viszneki, Andrea Mazzoleni,
+  Dmytro Bogovych, and Couriersud for helping find SDL 1.3 bugs in the great
+  SDL Bug Hunt of January 2009!
+
+* Donny Viszneki for helping fix SDL 1.3 bugs in the great SDL Bug Hunt of
+  January 2009!
+
+* Luke Benstead for OpenGL 3.0 support
+
 * Gaëtan de Menten for writing the PHP and SQL behind the SDL website
 
 * Tim Jones for the new look of the SDL website
 
-* Marco Kraus for setting up SDL merchandise
-
-* Martin Donlon for his work on the SDL Documentation Project
-
 * Ryan Gordon for helping everybody out and keeping the dream alive. :)
-
-* IBM R&D Lab for their PS3 SPE video acceleration code
 
 * Mattias Engdegård, for help with the Solaris port and lots of other help
 
-* Max Watson, Matt Slot, and Kyle for help with the MacOS Classic port
-
-* Stan Shebs, for the initial Mac OS X port
-
 * Eric Wing, Max Horn, and Darrell Walisser for unflagging work on the Mac OS X port
 
-* Patrick Trainor, Jim Boucher, and Mike Gorchak for the QNX Neutrino port
+* David Carré, for the Pandora port
 
-* Carsten Griwodz for the AIX port
-
-* Gabriele Greco, for the Amiga port
-
-* Patrice Mandin, for the Atari port
-
-* Hannu Viitala for the EPOC port
-
-* Marcus Mertama for the S60 port.
-
-* Peter Valchev for nagging me about the OpenBSD port until I got it right. :)
-
-* Kent B Mein, for a place to do the IRIX port
-
-* Ash, for a place to do the OSF/1 Alpha port
-
-* David Sowsy, for help with the BeOS port
-
-* Eugenia Loli, for endless work on porting SDL games to BeOS
-
-* Jon Taylor for the GGI front-end
-
-* Paulus Esterhazy, for the Visual C++ testing and libraries
-
-* Brenda Tantzen, for Metrowerks CodeWarrior on MacOS
-
-* Chris Nentwich, for the Hermes assembly blitters
-
-* Michael Vance and Jim Kutter for the X11 OpenGL support
-
-* Stephane Peter, for the AAlib front-end and multi-threaded timer idea.
+* Couriersud for the DirectFB driver
 
 * Jon Atkins for SDL_image, SDL_mixer and SDL_net documentation
-
-* Peter Wiklund, for the 1998 winning SDL logo,
-  and Arto Hamara, Steven Wong, and Kent Mein for other logo entries.
 
 * Arne Claus, for the 2004 winning SDL logo,
   and Shandy Brown, Jac, Alex Lyman, Mikkel Gjoel, #Guy, Jonas Hartmann,

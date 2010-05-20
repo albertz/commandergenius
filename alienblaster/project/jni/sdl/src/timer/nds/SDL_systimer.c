@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -21,53 +21,100 @@
 */
 #include "SDL_config.h"
 
-#include "SDL_thread.h"
-#include "SDL_timer.h"
-#include "SDL_error.h"
-#include "../SDL_timer_c.h"
+#ifdef SDL_TIMER_NDS
 
 #include <nds.h>
+#include <nds/timers.h>
 
-#define timers2ms(tlow,thigh)(tlow | (thigh<<16)) >> 5
+#include "SDL_timer.h"
+#include "../SDL_timer_c.h"
+#include "../SDL_systimer.h"
 
+/* Data to handle a single periodic alarm */
+static int timer_alive = 0;
+static Uint32 timer_ticks;
 
-void SDL_StartTicks(void)
+void
+SDL_StartTicks(void)
 {
-   TIMER0_DATA=0; 
-   TIMER1_DATA=0; 
-   TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024; 
-   TIMER1_CR=TIMER_ENABLE|TIMER_CASCADE;
+    if (!timer_alive) {
+        SDL_SYS_TimerInit();
+        SDL_SYS_StartTimer();
+    }
+
+    timer_ticks = 0;
 }
 
-Uint32 SDL_GetTicks(void)
+Uint32
+SDL_GetTicks(void)
 {
-	return timers2ms(TIMER0_DATA, TIMER1_DATA);
+    return timer_ticks;
 }
 
-void SDL_Delay(Uint32 ms)
+void
+SDL_Delay(Uint32 ms)
 {
-   Uint32 now; 
-   now=timers2ms(TIMER0_DATA, TIMER1_DATA); 
-   while((Uint32)timers2ms(TIMER0_DATA, TIMER1_DATA)<now+ms); 
+    Uint32 start = SDL_GetTicks();
+    while (timer_alive) {
+        if ((SDL_GetTicks() - start) >= ms)
+            break;
+    }
+}
 
+static int
+RunTimer(void *unused)
+{
+    while (timer_alive) {
+        if (SDL_timer_running) {
+        }
+        SDL_Delay(1);
+    }
+    return (0);
+}
+
+void
+NDS_TimerInterrupt(void)
+{
+    timer_ticks++;
 }
 
 /* This is only called if the event thread is not running */
-int SDL_SYS_TimerInit(void)
+int
+SDL_SYS_TimerInit(void)
 {
-	return 0;
+    timer_alive = 1;
+    timer_ticks = 0;
+    TIMER_CR(3) = TIMER_DIV_1024 | TIMER_IRQ_REQ;
+    TIMER_DATA(3) = TIMER_FREQ_1024(1000);
+    irqSet(IRQ_TIMER3, NDS_TimerInterrupt);
+    irqEnable(IRQ_TIMER3);
+    return 0;
 }
 
-void SDL_SYS_TimerQuit(void)
+void
+SDL_SYS_TimerQuit(void)
 {
+    if (timer_alive) {
+        TIMER_CR(3) = 0;
+    }
+    timer_alive = 0;
+    irqDisable(IRQ_TIMER3);
 }
 
-int SDL_SYS_StartTimer(void)
+int
+SDL_SYS_StartTimer(void)
 {
-	SDL_SetError("Timers not implemented on NDS");
-	return -1;
+    TIMER_CR(3) |= TIMER_ENABLE;
+    return 0;
 }
 
-void SDL_SYS_StopTimer(void)
+void
+SDL_SYS_StopTimer(void)
 {
+    TIMER_CR(3) &= ~TIMER_ENABLE;
+    return;
 }
+
+
+#endif /* SDL_TIMER_NDS */
+/* vi: set ts=4 sw=4 expandtab: */

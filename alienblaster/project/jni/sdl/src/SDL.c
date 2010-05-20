@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -25,326 +25,336 @@
 
 #include "SDL.h"
 #include "SDL_fatal.h"
+#include "SDL_assert.h"
+
 #if !SDL_VIDEO_DISABLED
 #include "video/SDL_leaks.h"
 #endif
 
-#if SDL_THREAD_PTH
-#include <pth.h>
-#endif
-
 /* Initialization/Cleanup routines */
 #if !SDL_JOYSTICK_DISABLED
-extern int  SDL_JoystickInit(void);
+extern int SDL_JoystickInit(void);
 extern void SDL_JoystickQuit(void);
 #endif
-#if !SDL_CDROM_DISABLED
-extern int  SDL_CDROMInit(void);
-extern void SDL_CDROMQuit(void);
+#if !SDL_HAPTIC_DISABLED
+extern int SDL_HapticInit(void);
+extern int SDL_HapticQuit(void);
 #endif
 #if !SDL_TIMERS_DISABLED
 extern void SDL_StartTicks(void);
-extern int  SDL_TimerInit(void);
+extern int SDL_TimerInit(void);
 extern void SDL_TimerQuit(void);
 #endif
+#if defined(__WIN32__)
+extern int SDL_HelperWindowCreate(void);
+extern int SDL_HelperWindowDestroy(void);
+#endif
 
-/* The current SDL version */
-static SDL_version version = 
-	{ SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL };
+extern int SDL_AssertionsInit(void);
+extern void SDL_AssertionsQuit(void);
 
 /* The initialized subsystems */
 static Uint32 SDL_initialized = 0;
-#if !SDL_TIMERS_DISABLED
 static Uint32 ticks_started = 0;
-#endif
 
 #ifdef CHECK_LEAKS
 int surfaces_allocated = 0;
 #endif
 
-int SDL_InitSubSystem(Uint32 flags)
+int
+SDL_InitSubSystem(Uint32 flags)
 {
 #if !SDL_VIDEO_DISABLED
-	/* Initialize the video/event subsystem */
-	if ( (flags & SDL_INIT_VIDEO) && !(SDL_initialized & SDL_INIT_VIDEO) ) {
-		if ( SDL_VideoInit(SDL_getenv("SDL_VIDEODRIVER"),
-		                   (flags&SDL_INIT_EVENTTHREAD)) < 0 ) {
-			return(-1);
-		}
-		SDL_initialized |= SDL_INIT_VIDEO;
-	}
+    /* Initialize the video/event subsystem */
+    if ((flags & SDL_INIT_VIDEO) && !(SDL_initialized & SDL_INIT_VIDEO)) {
+        if (SDL_VideoInit(NULL, (flags & SDL_INIT_EVENTTHREAD)) < 0) {
+            return (-1);
+        }
+        SDL_initialized |= SDL_INIT_VIDEO;
+    }
 #else
-	if ( flags & SDL_INIT_VIDEO ) {
-		SDL_SetError("SDL not built with video support");
-		return(-1);
-	}
+    if (flags & SDL_INIT_VIDEO) {
+        SDL_SetError("SDL not built with video support");
+        return (-1);
+    }
 #endif
 
 #if !SDL_AUDIO_DISABLED
-	/* Initialize the audio subsystem */
-	if ( (flags & SDL_INIT_AUDIO) && !(SDL_initialized & SDL_INIT_AUDIO) ) {
-		if ( SDL_AudioInit(SDL_getenv("SDL_AUDIODRIVER")) < 0 ) {
-			return(-1);
-		}
-		SDL_initialized |= SDL_INIT_AUDIO;
-	}
+    /* Initialize the audio subsystem */
+    if ((flags & SDL_INIT_AUDIO) && !(SDL_initialized & SDL_INIT_AUDIO)) {
+        if (SDL_AudioInit(NULL) < 0) {
+            return (-1);
+        }
+        SDL_initialized |= SDL_INIT_AUDIO;
+    }
 #else
-	if ( flags & SDL_INIT_AUDIO ) {
-		SDL_SetError("SDL not built with audio support");
-		return(-1);
-	}
+    if (flags & SDL_INIT_AUDIO) {
+        SDL_SetError("SDL not built with audio support");
+        return (-1);
+    }
 #endif
 
 #if !SDL_TIMERS_DISABLED
-	/* Initialize the timer subsystem */
-	if ( ! ticks_started ) {
-		SDL_StartTicks();
-		ticks_started = 1;
-	}
-	if ( (flags & SDL_INIT_TIMER) && !(SDL_initialized & SDL_INIT_TIMER) ) {
-		if ( SDL_TimerInit() < 0 ) {
-			return(-1);
-		}
-		SDL_initialized |= SDL_INIT_TIMER;
-	}
+    /* Initialize the timer subsystem */
+    if (!ticks_started) {
+        SDL_StartTicks();
+        ticks_started = 1;
+    }
+    if ((flags & SDL_INIT_TIMER) && !(SDL_initialized & SDL_INIT_TIMER)) {
+        if (SDL_TimerInit() < 0) {
+            return (-1);
+        }
+        SDL_initialized |= SDL_INIT_TIMER;
+    }
 #else
-	if ( flags & SDL_INIT_TIMER ) {
-		SDL_SetError("SDL not built with timer support");
-		return(-1);
-	}
+    if (flags & SDL_INIT_TIMER) {
+        SDL_SetError("SDL not built with timer support");
+        return (-1);
+    }
 #endif
 
 #if !SDL_JOYSTICK_DISABLED
-	/* Initialize the joystick subsystem */
-	if ( (flags & SDL_INIT_JOYSTICK) &&
-	     !(SDL_initialized & SDL_INIT_JOYSTICK) ) {
-		if ( SDL_JoystickInit() < 0 ) {
-			return(-1);
-		}
-		SDL_initialized |= SDL_INIT_JOYSTICK;
-	}
+    /* Initialize the joystick subsystem */
+    if ((flags & SDL_INIT_JOYSTICK) && !(SDL_initialized & SDL_INIT_JOYSTICK)) {
+        if (SDL_JoystickInit() < 0) {
+            return (-1);
+        }
+        SDL_initialized |= SDL_INIT_JOYSTICK;
+    }
 #else
-	if ( flags & SDL_INIT_JOYSTICK ) {
-		SDL_SetError("SDL not built with joystick support");
-		return(-1);
-	}
+    if (flags & SDL_INIT_JOYSTICK) {
+        SDL_SetError("SDL not built with joystick support");
+        return (-1);
+    }
 #endif
 
-#if !SDL_CDROM_DISABLED
-	/* Initialize the CD-ROM subsystem */
-	if ( (flags & SDL_INIT_CDROM) && !(SDL_initialized & SDL_INIT_CDROM) ) {
-		if ( SDL_CDROMInit() < 0 ) {
-			return(-1);
-		}
-		SDL_initialized |= SDL_INIT_CDROM;
-	}
+#if !SDL_HAPTIC_DISABLED
+    /* Initialize the haptic subsystem */
+    if ((flags & SDL_INIT_HAPTIC) && !(SDL_initialized & SDL_INIT_HAPTIC)) {
+        if (SDL_HapticInit() < 0) {
+            return (-1);
+        }
+        SDL_initialized |= SDL_INIT_HAPTIC;
+    }
 #else
-	if ( flags & SDL_INIT_CDROM ) {
-		SDL_SetError("SDL not built with cdrom support");
-		return(-1);
-	}
+    if (flags & SDL_INIT_HAPTIC) {
+        SDL_SetError("SDL not built with haptic (force feedback) support");
+        return (-1);
+    }
 #endif
-	return(0);
+    return (0);
 }
 
-int SDL_Init(Uint32 flags)
+int
+SDL_Init(Uint32 flags)
 {
-#if !SDL_THREADS_DISABLED && SDL_THREAD_PTH
-	if (!pth_init()) {
-		return -1;
-	}
+    if (SDL_AssertionsInit() < 0) {
+        return -1;
+    }
+
+    /* Clear the error message */
+    SDL_ClearError();
+
+#if defined(__WIN32__)
+    if (SDL_HelperWindowCreate() < 0) {
+        return -1;
+    }
 #endif
 
-	/* Clear the error message */
-	SDL_ClearError();
+    /* Initialize the desired subsystems */
+    if (SDL_InitSubSystem(flags) < 0) {
+        return (-1);
+    }
 
-	/* Initialize the desired subsystems */
-	if ( SDL_InitSubSystem(flags) < 0 ) {
-		return(-1);
-	}
+    /* Everything is initialized */
+    if (!(flags & SDL_INIT_NOPARACHUTE)) {
+        SDL_InstallParachute();
+    }
 
-	/* Everything is initialized */
-	if ( !(flags & SDL_INIT_NOPARACHUTE) ) {
-		SDL_InstallParachute();
-	}
-	return(0);
+    return (0);
 }
 
-void SDL_QuitSubSystem(Uint32 flags)
+void
+SDL_QuitSubSystem(Uint32 flags)
 {
-	/* Shut down requested initialized subsystems */
-#if !SDL_CDROM_DISABLED
-	if ( (flags & SDL_initialized & SDL_INIT_CDROM) ) {
-		SDL_CDROMQuit();
-		SDL_initialized &= ~SDL_INIT_CDROM;
-	}
-#endif
+    /* Shut down requested initialized subsystems */
 #if !SDL_JOYSTICK_DISABLED
-	if ( (flags & SDL_initialized & SDL_INIT_JOYSTICK) ) {
-		SDL_JoystickQuit();
-		SDL_initialized &= ~SDL_INIT_JOYSTICK;
-	}
+    if ((flags & SDL_initialized & SDL_INIT_JOYSTICK)) {
+        SDL_JoystickQuit();
+        SDL_initialized &= ~SDL_INIT_JOYSTICK;
+    }
+#endif
+#if !SDL_HAPTIC_DISABLED
+    if ((flags & SDL_initialized & SDL_INIT_HAPTIC)) {
+        SDL_HapticQuit();
+        SDL_initialized &= ~SDL_INIT_HAPTIC;
+    }
 #endif
 #if !SDL_TIMERS_DISABLED
-	if ( (flags & SDL_initialized & SDL_INIT_TIMER) ) {
-		SDL_TimerQuit();
-		SDL_initialized &= ~SDL_INIT_TIMER;
-	}
+    if ((flags & SDL_initialized & SDL_INIT_TIMER)) {
+        SDL_TimerQuit();
+        SDL_initialized &= ~SDL_INIT_TIMER;
+    }
 #endif
 #if !SDL_AUDIO_DISABLED
-	if ( (flags & SDL_initialized & SDL_INIT_AUDIO) ) {
-		SDL_AudioQuit();
-		SDL_initialized &= ~SDL_INIT_AUDIO;
-	}
+    if ((flags & SDL_initialized & SDL_INIT_AUDIO)) {
+        SDL_AudioQuit();
+        SDL_initialized &= ~SDL_INIT_AUDIO;
+    }
 #endif
 #if !SDL_VIDEO_DISABLED
-	if ( (flags & SDL_initialized & SDL_INIT_VIDEO) ) {
-		SDL_VideoQuit();
-		SDL_initialized &= ~SDL_INIT_VIDEO;
-	}
+    if ((flags & SDL_initialized & SDL_INIT_VIDEO)) {
+        SDL_VideoQuit();
+        SDL_initialized &= ~SDL_INIT_VIDEO;
+    }
 #endif
 }
 
-Uint32 SDL_WasInit(Uint32 flags)
+Uint32
+SDL_WasInit(Uint32 flags)
 {
-	if ( ! flags ) {
-		flags = SDL_INIT_EVERYTHING;
-	}
-	return (SDL_initialized&flags);
+    if (!flags) {
+        flags = SDL_INIT_EVERYTHING;
+    }
+    return (SDL_initialized & flags);
 }
 
-void SDL_Quit(void)
+void
+SDL_Quit(void)
 {
-	/* Quit all subsystems */
+    /* Quit all subsystems */
 #ifdef DEBUG_BUILD
-  printf("[SDL_Quit] : Enter! Calling QuitSubSystem()\n"); fflush(stdout);
+    printf("[SDL_Quit] : Enter! Calling QuitSubSystem()\n");
+    fflush(stdout);
 #endif
-	SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
+
+#if defined(__WIN32__)
+    SDL_HelperWindowDestroy();
+#endif
+    SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
 
 #ifdef CHECK_LEAKS
 #ifdef DEBUG_BUILD
-  printf("[SDL_Quit] : CHECK_LEAKS\n"); fflush(stdout);
+    printf("[SDL_Quit] : CHECK_LEAKS\n");
+    fflush(stdout);
 #endif
 
-	/* Print the number of surfaces not freed */
-	if ( surfaces_allocated != 0 ) {
-		fprintf(stderr, "SDL Warning: %d SDL surfaces extant\n", 
-							surfaces_allocated);
-	}
-#endif
-#ifdef DEBUG_BUILD
-  printf("[SDL_Quit] : SDL_UninstallParachute()\n"); fflush(stdout);
-#endif
-
-	/* Uninstall any parachute signal handlers */
-	SDL_UninstallParachute();
-
-#if !SDL_THREADS_DISABLED && SDL_THREAD_PTH
-	pth_kill();
-#endif
-#ifdef DEBUG_BUILD
-  printf("[SDL_Quit] : Returning!\n"); fflush(stdout);
-#endif
-
-}
-
-/* Return the library version number */
-const SDL_version * SDL_Linked_Version(void)
-{
-	return(&version);
-}
-
-#if defined(__OS2__)
-/* Building for OS/2 */
-#ifdef __WATCOMC__
-
-#define INCL_DOSERRORS
-#define INCL_DOSEXCEPTIONS
-#include <os2.h>
-
-/* Exception handler to prevent the Audio thread hanging, making a zombie process! */
-ULONG _System SDL_Main_ExceptionHandler(PEXCEPTIONREPORTRECORD pERepRec,
-                                        PEXCEPTIONREGISTRATIONRECORD pERegRec,
-                                        PCONTEXTRECORD pCtxRec,
-                                        PVOID p)
-{
-  if (pERepRec->fHandlerFlags & EH_EXIT_UNWIND)
-    return XCPT_CONTINUE_SEARCH;
-  if (pERepRec->fHandlerFlags & EH_UNWINDING)
-    return XCPT_CONTINUE_SEARCH;
-  if (pERepRec->fHandlerFlags & EH_NESTED_CALL)
-    return XCPT_CONTINUE_SEARCH;
-
-  /* Do cleanup at every fatal exception! */
-  if (((pERepRec->ExceptionNum & XCPT_SEVERITY_CODE) == XCPT_FATAL_EXCEPTION) &&
-      (pERepRec->ExceptionNum != XCPT_BREAKPOINT) &&
-      (pERepRec->ExceptionNum != XCPT_SINGLE_STEP)
-     )
-  {
-    if (SDL_initialized & SDL_INIT_AUDIO)
-    {
-      /* This removes the zombie audio thread in case of emergency. */
-#ifdef DEBUG_BUILD
-      printf("[SDL_Main_ExceptionHandler] : Calling SDL_CloseAudio()!\n");
-#endif
-      SDL_CloseAudio();
+    /* !!! FIXME: make this an assertion. */
+    /* Print the number of surfaces not freed */
+    if (surfaces_allocated != 0) {
+        fprintf(stderr, "SDL Warning: %d SDL surfaces extant\n",
+                surfaces_allocated);
     }
-  }
-  return (XCPT_CONTINUE_SEARCH);
+#endif
+#ifdef DEBUG_BUILD
+    printf("[SDL_Quit] : SDL_UninstallParachute()\n");
+    fflush(stdout);
+#endif
+
+    /* Uninstall any parachute signal handlers */
+    SDL_UninstallParachute();
+
+    SDL_AssertionsQuit();
+
+#ifdef DEBUG_BUILD
+    printf("[SDL_Quit] : Returning!\n");
+    fflush(stdout);
+#endif
+
 }
 
-
-EXCEPTIONREGISTRATIONRECORD SDL_Main_xcpthand = {0, SDL_Main_ExceptionHandler};
-
-/* The main DLL entry for DLL Initialization and Uninitialization: */
-unsigned _System LibMain(unsigned hmod, unsigned termination)
+/* Get the library version number */
+void
+SDL_GetVersion(SDL_version * ver)
 {
-  if (termination)
-  {
-#ifdef DEBUG_BUILD
-/*    printf("[SDL DLL Unintialization] : Removing exception handler\n"); */
-#endif
-    DosUnsetExceptionHandler(&SDL_Main_xcpthand);
-    return 1;
-  } else
-  {
-#ifdef DEBUG_BUILD
-    /* Make stdout and stderr unbuffered! */
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
-#endif
-    /* Fire up exception handler */
-#ifdef DEBUG_BUILD
-/*    printf("[SDL DLL Initialization] : Setting exception handler\n"); */
-#endif
-    /* Set exception handler */
-    DosSetExceptionHandler(&SDL_Main_xcpthand);
-
-    return 1;
-  }
+    SDL_VERSION(ver);
 }
-#endif /* __WATCOMC__ */
 
-#elif defined(__WIN32__)  && !defined(__SYMBIAN32__)
+/* Get the library source revision */
+const char *
+SDL_GetRevision(void)
+{
+    return SDL_REVISION;
+}
+
+/* Get the name of the platform */
+const char *
+SDL_GetPlatform()
+{
+#if __AIX__
+    return "AIX";
+#elif __HAIKU__
+/* Haiku must appear here before BeOS, since it also defines __BEOS__ */
+    return "Haiku";
+#elif __BEOS__
+    return "BeOS";
+#elif __BSDI__
+    return "BSDI";
+#elif __DREAMCAST__
+    return "Dreamcast";
+#elif __FREEBSD__
+    return "FreeBSD";
+#elif __HPUX__
+    return "HP-UX";
+#elif __IRIX__
+    return "Irix";
+#elif __LINUX__
+    return "Linux";
+#elif __MINT__
+    return "Atari MiNT";
+#elif __MACOS__
+    return "MacOS Classic";
+#elif __MACOSX__
+    return "Mac OS X";
+#elif __NETBSD__
+    return "NetBSD";
+#elif __OPENBSD__
+    return "OpenBSD";
+#elif __OS2__
+    return "OS/2";
+#elif __OSF__
+    return "OSF/1";
+#elif __QNXNTO__
+    return "QNX Neutrino";
+#elif __RISCOS__
+    return "RISC OS";
+#elif __SOLARIS__
+    return "Solaris";
+#elif __WIN32__
+#ifdef _WIN32_WCE
+    return "Windows CE";
+#else
+    return "Windows";
+#endif
+#elif __IPHONEOS__
+    return "iPhone OS";
+#else
+    return "Unknown (see SDL_platform.h)";
+#endif
+}
+
+#if defined(__WIN32__)
 
 #if !defined(HAVE_LIBC) || (defined(__WATCOMC__) && defined(BUILD_DLL))
 /* Need to include DllMain() on Watcom C for some reason.. */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-BOOL APIENTRY _DllMainCRTStartup( HANDLE hModule, 
-                       DWORD  ul_reason_for_call, 
-                       LPVOID lpReserved )
+BOOL APIENTRY
+_DllMainCRTStartup(HANDLE hModule,
+                   DWORD ul_reason_for_call, LPVOID lpReserved)
 {
-	switch (ul_reason_for_call) {
-		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH:
-		case DLL_THREAD_DETACH:
-		case DLL_PROCESS_DETACH:
-			break;
-	}
-	return TRUE;
+    switch (ul_reason_for_call) {
+    case DLL_PROCESS_ATTACH:
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
+        break;
+    }
+    return TRUE;
 }
 #endif /* building DLL with Watcom C */
 
-#endif /* OS/2 elif __WIN32__ */
+#endif /* __WIN32__ */
+
+/* vi: set ts=4 sw=4 expandtab: */

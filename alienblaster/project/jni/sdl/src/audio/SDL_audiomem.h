@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -23,3 +23,4 @@
 
 #define SDL_AllocAudioMem	SDL_malloc
 #define SDL_FreeAudioMem	SDL_free
+/* vi: set ts=4 sw=4 expandtab: */

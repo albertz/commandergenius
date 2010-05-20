@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -37,26 +37,25 @@
 
 #include "../SDL_sysaudio.h"
 
-/* Hidden "this" pointer for the video functions */
+/* Hidden "this" pointer for the audio functions */
 #define _THIS	SDL_AudioDevice *this
 
-struct SDL_PrivateAudioData {
-	AuServer*  aud;
-	AuFlowID   flow;
-	AuDeviceID dev;
-	
-	/* The parent process id, to detect when application quits */
-	pid_t parent;
+struct SDL_PrivateAudioData
+{
+    AuServer *aud;
+    AuFlowID flow;
+    AuDeviceID dev;
 
-	/* Raw mixing buffer */
-	Uint8 *mixbuf;
-	int    mixlen;
+    /* Raw mixing buffer */
+    Uint8 *mixbuf;
+    int mixlen;
 
-	int written;
-	int really;
-	int bps;
-	struct timeval last_tv;
-	int buf_free;
+    int written;
+    int really;
+    int bps;
+    struct timeval last_tv;
+    int buf_free;
 };
 #endif /* _SDL_nasaudio_h */
 
+/* vi: set ts=4 sw=4 expandtab: */
