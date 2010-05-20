@@ -27,6 +27,7 @@ class LoadLibrary {
 		System.loadLibrary("sdl");
 		System.loadLibrary("sdl_mixer");
 		System.loadLibrary("sdl_image");
+		System.loadLibrary("sdl_ttf");
 		System.loadLibrary("application");
 		System.loadLibrary("sdl_main");
 	}
