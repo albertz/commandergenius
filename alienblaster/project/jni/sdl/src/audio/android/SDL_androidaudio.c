@@ -167,6 +167,8 @@ static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
 		}
 	}
 
+	SDL_CalculateAudioSpec(&this->spec);
+	
 	this->hidden->mixbuf = audioBuffer;
 	this->hidden->mixlen = audioBufferSize;
 
@@ -174,7 +176,7 @@ static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
 	
 	SDL_mutexV(audioMutex);
 
-	return(0);
+	return(1);
 }
 
 /* This function waits until it is possible to write a full sound buffer */
