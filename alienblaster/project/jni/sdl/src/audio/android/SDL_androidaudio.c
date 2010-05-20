@@ -36,12 +36,12 @@
 #include <android/log.h>
 #include <string.h> // for memset()
 
-#if 0 // Disabled for now
+#define _THIS	SDL_AudioDevice *this
 
-#define ANDROIDAUD_DRIVER_NAME         "android"
+// TODO: make audio single-threaded, the same way as video
 
 /* Audio driver functions */
-static int ANDROIDAUD_OpenAudio(_THIS, SDL_AudioSpec *spec);
+static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture);
 static void ANDROIDAUD_WaitAudio(_THIS);
 static void ANDROIDAUD_PlayAudio(_THIS);
 static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS);
@@ -53,47 +53,27 @@ static int ANDROIDAUD_Available(void)
 	return(1);
 }
 
-static void ANDROIDAUD_DeleteDevice(SDL_AudioDevice *device)
+static void ANDROIDAUD_DeleteDevice()
 {
-	SDL_free(device->hidden);
-	SDL_free(device);
 }
 
-static SDL_AudioDevice *ANDROIDAUD_CreateDevice(int devindex)
+static int ANDROIDAUD_CreateDevice(SDL_AudioDriverImpl * impl)
 {
-	SDL_AudioDevice *this;
-
-	/* Initialize all variables that we clean on shutdown */
-	this = (SDL_AudioDevice *)SDL_malloc(sizeof(SDL_AudioDevice));
-	if ( this ) {
-		SDL_memset(this, 0, (sizeof *this));
-		this->hidden = (struct SDL_PrivateAudioData *)
-				SDL_malloc((sizeof *this->hidden));
-	}
-	if ( (this == NULL) || (this->hidden == NULL) ) {
-		SDL_OutOfMemory();
-		if ( this ) {
-			SDL_free(this);
-		}
-		return(0);
-	}
-	SDL_memset(this->hidden, 0, (sizeof *this->hidden));
-
 	/* Set the function pointers */
-	this->OpenAudio = ANDROIDAUD_OpenAudio;
-	this->WaitAudio = ANDROIDAUD_WaitAudio;
-	this->PlayAudio = ANDROIDAUD_PlayAudio;
-	this->GetAudioBuf = ANDROIDAUD_GetAudioBuf;
-	this->CloseAudio = ANDROIDAUD_CloseAudio;
+	impl->OpenDevice = ANDROIDAUD_OpenAudio;
+	impl->WaitDevice = ANDROIDAUD_WaitAudio;
+	impl->PlayDevice = ANDROIDAUD_PlayAudio;
+	impl->GetDeviceBuf = ANDROIDAUD_GetAudioBuf;
+	impl->CloseDevice = ANDROIDAUD_CloseAudio;
+	impl->Deinitialize = ANDROIDAUD_DeleteDevice;
+	impl->OnlyHasDefaultOutputDevice = 1;
 
-	this->free = ANDROIDAUD_DeleteDevice;
-
-	return this;
+	return 1;
 }
 
 AudioBootStrap ANDROIDAUD_bootstrap = {
-	ANDROIDAUD_DRIVER_NAME, "SDL Android audio driver",
-	ANDROIDAUD_Available, ANDROIDAUD_CreateDevice
+	"android", "SDL Android audio driver",
+	ANDROIDAUD_CreateDevice, 0
 };
 
 
@@ -117,12 +97,6 @@ static void ANDROIDAUD_CloseAudio(_THIS)
 {
 	SDL_mutex * audioMutex1;
 
-	/*	
-	if ( this->hidden->mixbuf != NULL ) {
-		SDL_FreeAudioMem(this->hidden->mixbuf);
-		this->hidden->mixbuf = NULL;
-	}
-	*/
 	if( audioMutex != NULL )
 	{
 		audioMutex1 = audioMutex;
@@ -149,17 +123,31 @@ static void ANDROIDAUD_CloseAudio(_THIS)
 		SDL_DestroyMutex(audioMutex1);
 		
 	}
+	if ( this->hidden != NULL ) {
+		SDL_free(this->hidden);
+		this->hidden = NULL;
+	}
 }
 
-static int ANDROIDAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
+static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
 {
-	if( ! (spec->format == AUDIO_S8 || spec->format == AUDIO_S16) )
+	this->hidden = (struct SDL_PrivateAudioData *) SDL_malloc((sizeof *this->hidden));
+	if ( this->hidden == NULL ) {
+		SDL_OutOfMemory();
+		return(-1);
+	}
+	SDL_memset(this->hidden, 0, (sizeof *this->hidden));
+
+	if( ! (this->spec.format == AUDIO_S8 || this->spec.format == AUDIO_S16) )
+	{
+		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "Application requested unsupported audio format - only S8 and S16 are supported");
 		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL
+	}
 	
 	if( audioMutex == NULL )
 	{
 		audioInitialized = 0;
-		audioFormat = spec;
+		audioFormat = &this->spec;
 		audioMutex = SDL_CreateMutex();
 		audioCond = SDL_CreateCond();
 		audioCond2 = SDL_CreateCond();
@@ -170,7 +158,7 @@ static int ANDROIDAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 	
 	while( !audioInitialized )
 	{
-		if( SDL_CondWaitTimeout( audioCond, audioMutex, 1000 ) != 0 )
+		if( SDL_CondWaitTimeout( audioCond, audioMutex, 5000 ) != 0 )
 		{
 			__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio() failed! timeout when waiting callback");
 			SDL_mutexV(audioMutex);
@@ -341,4 +329,3 @@ extern jint JAVA_EXPORT_NAME(AudioThread_nativeAudioBufferUnlock) ( JNIEnv * env
 	return 0;
 }
 
-#endif
