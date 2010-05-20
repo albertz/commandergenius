@@ -35,8 +35,7 @@
 #define SDL_VIDEO_OPENGL_ES 1
 #define SDL_VIDEO_RENDER_OGL_ES 1
 
-// #define SDL_AUDIO_DRIVER_ANDROID 1
-#define SDL_AUDIO_DRIVER_DUMMY 1 // TODO: fix audio and remove that
+#define SDL_AUDIO_DRIVER_ANDROID 1
 
 #define SDL_CDROM_DISABLED 1
 

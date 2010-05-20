@@ -115,6 +115,8 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->GL_MakeCurrent = ANDROID_GL_MakeCurrent;
 	device->GL_DeleteContext = ANDROID_GL_DeleteContext;
 
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_CreateDevice() called");
+
 	return device;
 }
 
@@ -126,7 +128,22 @@ VideoBootStrap ANDROID_bootstrap = {
 
 int ANDROID_VideoInit(_THIS)
 {
-	return 0;
+	SDL_VideoDisplay display;
+	SDL_DisplayMode mode;
+
+	mode.w = sWindowWidth;
+	mode.h = sWindowHeight;
+	mode.refresh_rate = 0;
+	mode.format = SDL_PIXELFORMAT_BGR565; // SDL_PIXELFORMAT_RGB565;
+	mode.driverdata = NULL;
+
+	SDL_zero(display);
+	display.desktop_mode = mode;
+	display.current_mode = mode;
+	display.driverdata = NULL;
+	SDL_AddVideoDisplay(&display);
+
+	return 1;
 }
 
 
@@ -135,11 +152,11 @@ void ANDROID_GetDisplayModes(_THIS, SDL_VideoDisplay * display)
 	SDL_DisplayMode mode;
 	mode.w = sWindowWidth;
 	mode.h = sWindowHeight;
-	mode.refresh_rate = 30;
-	mode.format = SDL_PIXELFORMAT_RGB565;
+	mode.refresh_rate = 0;
+	mode.format = SDL_PIXELFORMAT_BGR565; // SDL_PIXELFORMAT_RGB565;
 	mode.driverdata = NULL;
 	SDL_AddDisplayMode(display, &mode);
-	
+
 	/*
 	struct compatModes_t { int x, int y } compatModes[] =
 	{ {800, 600}, {640, 480}, {320, 240}, {320, 200} };
@@ -158,12 +175,12 @@ int ANDROID_GetDisplayBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect)
 {
 	rect->w = sWindowWidth;
 	rect->h = sWindowHeight;
-	return 0;
+	return 1;
 };
 
 int ANDROID_SetDisplayMode(_THIS, SDL_VideoDisplay * display, SDL_DisplayMode * mode)
 {
-	return 0;
+	return 1;
 };
 
 
@@ -185,11 +202,11 @@ void ANDROID_GL_SwapBuffers(_THIS, SDL_Window * window)
 
 SDL_GLContext ANDROID_GL_CreateContext(_THIS, SDL_Window * window)
 {
-	return (1);
+	return (SDL_GLContext)1;
 };
 int ANDROID_GL_MakeCurrent (_THIS, SDL_Window * window, SDL_GLContext context)
 {
-	return 0;
+	return 1;
 };
 void ANDROID_GL_DeleteContext (_THIS, SDL_GLContext context)
 {
@@ -231,6 +248,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaSwapBuffers = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "swapBuffers", "()I");
 	
 	ANDROID_InitOSKeymap();
+	
 }
 
 int CallJavaSwapBuffers()

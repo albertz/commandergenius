@@ -31,7 +31,6 @@ SDL_SRCS := \
 	src/thread/pthread/*.c \
 	src/timer/unix/*.c \
 	src/audio/android/*.c \
-	src/audio/dummy/*.c \
 	src/video/android/*.c \
 	src/joystick/dummy/*.c \
 	src/haptic/dummy/*.c \
