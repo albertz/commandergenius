@@ -16,6 +16,8 @@ import java.io.*;
 import java.nio.ByteBuffer;
 
 
+// TODO: make audio single-threaded, the same way as video
+
 class AudioThread extends Thread {
 
 	private Activity mParent;

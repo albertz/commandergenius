@@ -233,16 +233,19 @@ class DataDownloader extends Thread
 			Status.setText( percent + "writing file " + path );
 			
 			try {
-				int len;
-				while ((len = zip.read(buf)) > 0)
+				int len = zip.read(buf);
+				while (len > 0)
 				{
 					out.write(buf, 0, len);
+					len = zip.read(buf);
+
 					percent = "";
 					if( totalLen > 0 )
 						percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
 					Status.setText( percent + "writing file " + path );
 				}
 				out.flush();
+				out.close();
 			} catch( java.io.IOException e ) {
 				Status.setText( "Error writing file " + path );
 				return;
@@ -256,6 +259,7 @@ class DataDownloader extends Thread
 			out = new FileOutputStream( path );
 			out.write(0);
 			out.flush();
+			out.close();
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
 		} catch( java.io.IOException e ) {
@@ -271,6 +275,11 @@ class DataDownloader extends Thread
 	
 		Status.setText( "Finished" );
 		DownloadComplete = true;
+		
+		try {
+			stream.close();
+		} catch( java.io.IOException e ) {
+		};
 		
 		initParent();
 	};
