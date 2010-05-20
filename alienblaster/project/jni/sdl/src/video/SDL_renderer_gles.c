@@ -119,6 +119,9 @@ SDL_RenderDriver GL_ES_RenderDriver = {
       SDL_PIXELFORMAT_ABGR4444,
       SDL_PIXELFORMAT_ABGR1555,
       SDL_PIXELFORMAT_BGR565,
+#ifdef ANDROID
+      SDL_PIXELFORMAT_RGB565,
+#endif
       SDL_PIXELFORMAT_BGR24,
       SDL_PIXELFORMAT_ABGR8888},
      0,
@@ -406,6 +409,13 @@ GLES_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         format = GL_RGBA;
         type = GL_UNSIGNED_SHORT_4_4_4_4;
         break;
+#ifdef ANDROID
+    case SDL_PIXELFORMAT_RGB565:
+        internalFormat = GL_RGB;
+        format = GL_RGB;
+        type = GL_UNSIGNED_SHORT_5_6_5;
+        break;
+#endif
     default:
         SDL_SetError("Unsupported by OpenGL ES texture format");
         return -1;
