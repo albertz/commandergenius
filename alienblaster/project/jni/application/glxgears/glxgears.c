@@ -451,7 +451,7 @@ main(int argc, char *argv[])
           break;
       }
     }
-    keys = SDL_GetKeyState(NULL);
+    keys = SDL_GetKeyboardState(NULL);
 
     if ( keys[SDLK_ESCAPE] ) {
       done = 1;
