@@ -56,11 +56,6 @@ static SDLKey keymap[KEYCODE_LAST+1];
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
 
-extern void
-JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
-{
-	// TODO: use accelerometer as joystick
-}
 
 enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
 
@@ -87,8 +82,106 @@ static SDL_scancode TranslateKey(int scancode)
 void
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint key, jint action )
 {
-	if( ! processAndroidTrackballKeyDelays(key, action) )
-		SDL_SendKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key) );
+	//if( ! processAndroidTrackballKeyDelays(key, action) )
+	int posted = SDL_SendKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key) );
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SendKeyboardKey state %d code %d posted %d", (int)action, TranslateKey(key), posted);
+}
+
+
+extern void
+JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
+{
+	// TODO: use accelerometer as joystick, make this configurable
+	// Currenly it's used as cursor + Home/End keys
+	static const float dx = 0.1, dy = 0.1, dz = 0.1;
+
+	static float midX = 0, midY = 0, midZ = 0;
+	static int pressLeft = 0, pressRight = 0, pressUp = 0, pressDown = 0, pressR = 0, pressL = 0;
+	
+	if( accX < midX - dx )
+	{
+		if( !pressLeft )
+		{
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press left, acc %f mid %f d %f", accX, midX, dx);
+			pressLeft = 1;
+			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_LEFT );
+		}
+	}
+	else
+	{
+		if( pressLeft )
+		{
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release left, acc %f mid %f d %f", accX, midX, dx);
+			pressLeft = 0;
+			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_LEFT );
+		}
+	}
+	if( accX < midX - dx*2 )
+		midX = accX + dx*2;
+
+	if( accX > midX + dx )
+	{
+		if( !pressRight )
+		{
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press right, acc %f mid %f d %f", accX, midX, dx);
+			pressRight = 1;
+			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_RIGHT );
+		}
+	}
+	else
+	{
+		if( pressRight )
+		{
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release right, acc %f mid %f d %f", accX, midX, dx);
+			pressRight = 0;
+			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_RIGHT );
+		}
+	}
+	if( accX > midX + dx*2 )
+		midX = accX - dx*2;
+
+	if( accY < midY - dy )
+	{
+		if( !pressUp )
+		{
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press up, acc %f mid %f d %f", accY, midY, dy);
+			pressUp = 1;
+			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_UP );
+		}
+	}
+	else
+	{
+		if( pressUp )
+		{
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release up, acc %f mid %f d %f", accY, midY, dy);
+			pressUp = 0;
+			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_UP );
+		}
+	}
+	if( accY < midY - dy*2 )
+		midY = accY + dy*2;
+
+	if( accY > midY + dy )
+	{
+		if( !pressDown )
+		{
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press down, acc %f mid %f d %f", accY, midY, dy);
+			pressDown = 1;
+			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_DOWN );
+		}
+	}
+	else
+	{
+		if( pressDown )
+		{
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release down, acc %f mid %f d %f", accY, midY, dy);
+			pressDown = 0;
+			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_DOWN );
+		}
+	}
+	if( accY > midY + dy*2 )
+		midY = accY - dy*2;
+
 }
 
 
@@ -105,7 +198,10 @@ void ANDROID_InitOSKeymap()
 
   keymap[KEYCODE_BACK] = SDL_SCANCODE_ESCAPE;
 
-  keymap[KEYCODE_MENU] = SDL_SCANCODE_LALT;
+  // HTC Evo has only two keys - Menu and Back, and all games require Enter. (Also Volume Up/Down, but they are hard to reach) 
+  // TODO: make this configurable
+  keymap[KEYCODE_MENU] = SDL_SCANCODE_RETURN; // SDL_SCANCODE_LALT;
+
   keymap[KEYCODE_CALL] = SDL_SCANCODE_LCTRL;
   keymap[KEYCODE_ENDCALL] = SDL_SCANCODE_LSHIFT;
   keymap[KEYCODE_CAMERA] = SDL_SCANCODE_RSHIFT;
