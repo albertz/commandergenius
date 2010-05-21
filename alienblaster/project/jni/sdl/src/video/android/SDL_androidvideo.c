@@ -115,8 +115,6 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->GL_MakeCurrent = ANDROID_GL_MakeCurrent;
 	device->GL_DeleteContext = ANDROID_GL_DeleteContext;
 
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_CreateDevice() called");
-
 	return device;
 }
 

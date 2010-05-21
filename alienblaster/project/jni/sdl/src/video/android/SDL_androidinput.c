@@ -84,7 +84,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 {
 	//if( ! processAndroidTrackballKeyDelays(key, action) )
 	int posted = SDL_SendKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key) );
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SendKeyboardKey state %d code %d posted %d", (int)action, TranslateKey(key), posted);
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SendKeyboardKey state %d code %d posted %d, SDL_PollEvent %d", (int)action, TranslateKey(key), posted, ret);
 }
 
 
@@ -93,7 +93,7 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 {
 	// TODO: use accelerometer as joystick, make this configurable
 	// Currenly it's used as cursor + Home/End keys
-	static const float dx = 0.1, dy = 0.1, dz = 0.1;
+	static const float dx = 1.0, dy = 1.0, dz = 1.0;
 
 	static float midX = 0, midY = 0, midZ = 0;
 	static int pressLeft = 0, pressRight = 0, pressUp = 0, pressDown = 0, pressR = 0, pressL = 0;
@@ -102,7 +102,7 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	{
 		if( !pressLeft )
 		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press left, acc %f mid %f d %f", accX, midX, dx);
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press left, acc %f mid %f d %f", accX, midX, dx);
 			pressLeft = 1;
 			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_LEFT );
 		}
@@ -111,7 +111,7 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	{
 		if( pressLeft )
 		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release left, acc %f mid %f d %f", accX, midX, dx);
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release left, acc %f mid %f d %f", accX, midX, dx);
 			pressLeft = 0;
 			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_LEFT );
 		}
@@ -123,7 +123,7 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	{
 		if( !pressRight )
 		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press right, acc %f mid %f d %f", accX, midX, dx);
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press right, acc %f mid %f d %f", accX, midX, dx);
 			pressRight = 1;
 			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_RIGHT );
 		}
@@ -132,7 +132,7 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	{
 		if( pressRight )
 		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release right, acc %f mid %f d %f", accX, midX, dx);
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release right, acc %f mid %f d %f", accX, midX, dx);
 			pressRight = 0;
 			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_RIGHT );
 		}
@@ -140,11 +140,11 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	if( accX > midX + dx*2 )
 		midX = accX - dx*2;
 
-	if( accY < midY - dy )
+	if( accY < midY + dy )
 	{
 		if( !pressUp )
 		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press up, acc %f mid %f d %f", accY, midY, dy);
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press up, acc %f mid %f d %f", accY, midY, dy);
 			pressUp = 1;
 			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_UP );
 		}
@@ -153,19 +153,19 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	{
 		if( pressUp )
 		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release up, acc %f mid %f d %f", accY, midY, dy);
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release up, acc %f mid %f d %f", accY, midY, dy);
 			pressUp = 0;
 			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_UP );
 		}
 	}
-	if( accY < midY - dy*2 )
-		midY = accY + dy*2;
+	if( accY < midY + dy*2 )
+		midY = accY - dy*2;
 
-	if( accY > midY + dy )
+	if( accY > midY - dy )
 	{
 		if( !pressDown )
 		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press down, acc %f mid %f d %f", accY, midY, dy);
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press down, acc %f mid %f d %f", accY, midY, dy);
 			pressDown = 1;
 			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_DOWN );
 		}
@@ -174,13 +174,13 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	{
 		if( pressDown )
 		{
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release down, acc %f mid %f d %f", accY, midY, dy);
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release down, acc %f mid %f d %f", accY, midY, dy);
 			pressDown = 0;
 			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_DOWN );
 		}
 	}
-	if( accY > midY + dy*2 )
-		midY = accY - dy*2;
+	if( accY > midY - dy*2 )
+		midY = accY + dy*2;
 
 }
 
@@ -188,6 +188,10 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 void ANDROID_InitOSKeymap()
 {
   int i;
+
+  SDLKey defaultKeymap[SDL_NUM_SCANCODES];
+  SDL_GetDefaultKeymap(&defaultKeymap);
+  SDL_SetKeymap(0, defaultKeymap, SDL_NUM_SCANCODES);
 
   // TODO: keys are mapped rather randomly
 

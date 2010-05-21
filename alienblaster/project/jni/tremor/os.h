@@ -48,7 +48,7 @@
 #ifdef __ARMEB__
 #define BIG_ENDIAN 1
 #define BYTE_ORDER BIG_ENDIAN
-#else
+#elif defined(__ARMEL__)
 #define LITTLE_ENDIAN 1
 #define BYTE_ORDER LITTLE_ENDIAN
 #endif
