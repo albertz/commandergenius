@@ -72,8 +72,23 @@ SDL_Surface *SurfaceDB::loadSurface( string fn, bool alpha ) {
   }
   SDL_SetColorKey( newSurface, SDL_SRCCOLORKEY, 
 		   SDL_MapRGB(newSurface->format, transR, transG, transB) );
+
+  SDL_Surface * hwSurface = SDL_DisplayFormat(newSurface);
+
+  if( hwSurface ) {
+    SDL_FreeSurface(newSurface);
+    newSurface = hwSurface;
+  }
+
   if ( alpha ) {
+    hwSurface = SDL_DisplayFormatAlpha(newSurface);
+    if( hwSurface ) {
+      SDL_FreeSurface(newSurface);
+      newSurface = hwSurface;
+    }
     SDL_SetAlpha( newSurface, SDL_SRCALPHA, 128 );
+    SDL_SetColorKey( newSurface, SDL_SRCCOLORKEY, 
+		   SDL_MapRGB(newSurface->format, transR, transG, transB) );
   }
 
   surfaceDB[ fn ] = newSurface;
