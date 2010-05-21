@@ -63,17 +63,13 @@ Known bugs:
 is to stay in memory and go to foreground when you're launching app again, that's not working yet because
 app will lose OpenGL context (there are rumors that it won't lose GL context in 2.1 SDK).
 
-2. Move to SDL 1.3, and add hardware surfaces.
-
-3. Multitouch support - it is available since 2.0 SDK, but not on 1.6 - I'll have to follow
+2. Multitouch support - it is available since 2.0 SDK, but not on 1.6 - I'll have to follow
 http://devtcg.blogspot.com/2009/12/gracefully-supporting-multiple-android.html to make it compile.
 
-4. In the future I'm planning to use accelerometer as a SDL joystick.
+3. In the future I'm planning to use accelerometer as a SDL joystick.
 
-5. Many SDL games require keyboard, and newer phones have only touchscreen - there should be configuration screen
+4. Many SDL games require keyboard, and newer phones have only touchscreen - there should be configuration screen
 where you can toggle on-screen keyboard, bind existing keys like volume up/down to PgUp/PgDown for example,
 and configure other actions like accelerometer tilt as keypresses.
 
-6. Progress bar for data downloader.
-
-7. Export phone vibrator to SDL - interface is available in SDL 1.3
+5. Export phone vibrator to SDL - interface is available in SDL 1.3
