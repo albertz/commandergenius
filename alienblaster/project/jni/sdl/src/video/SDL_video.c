@@ -31,6 +31,7 @@
 #include "SDL_renderer_gl.h"
 #include "SDL_renderer_gles.h"
 #include "SDL_renderer_sw.h"
+#include "SDL_renderer_resize.h"
 #include "../events/SDL_sysevents.h"
 #include "../events/SDL_events_c.h"
 
@@ -1602,6 +1603,14 @@ SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
     }
 
     SDL_SelectRenderer(window);
+
+#ifdef SDL_VIDEO_RENDER_RESIZE
+
+    if( window->w > window->display->current_mode.w || window->h > window->display->current_mode.h ) {
+        RESIZE_CreateRenderer(window);
+    }
+
+#endif
 
     return 0;
 }
