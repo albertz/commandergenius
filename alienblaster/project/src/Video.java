@@ -40,6 +40,9 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	public void onDrawFrame(GL10 gl) {
 
 		nativeInitJavaCallbacks();
+		
+		System.loadLibrary("application");
+		System.loadLibrary("sdl_main");
 
 		nativeInit(); // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
 
