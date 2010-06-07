@@ -32,6 +32,10 @@
 #include "SDL_renderer_gles.h"
 #include "SDL_renderer_sw.h"
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 static int RESIZE_RenderDrawPoints(SDL_Renderer * renderer,
                                  const SDL_Point * points, int count);
 static int RESIZE_RenderDrawLines(SDL_Renderer * renderer,
@@ -88,11 +92,28 @@ RESIZE_CreateRenderer(SDL_Window * window)
 		realH /= 2;
 		fakeH /= 2;
 	}
+
+	while( (realW / 5) * 5 == realW && (fakeW / 5) * 5 == fakeW ) {
+		realW /= 5;
+		fakeW /= 5;
+	}
+
+	while( (realH / 5) * 5 == realH && (fakeH / 5) * 5 == fakeH ) {
+		realH /= 5;
+		fakeH /= 5;
+	}
 	
 	if( realW > 255 || realH > 255 || fakeW > 255 || fakeH > 255 ||
 		realW == 0 || realH == 0 || fakeW == 0 || fakeH == 0 )
 		return -1;
 
+	#ifdef ANDROID
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Using resize renderer: from %dx%d to %dx%d", 
+					window->w, window->h, window->display->current_mode.w, window->display->current_mode.h);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Resize renderer ratio: from %dx%d to %dx%d", 
+					fakeW, fakeH, realW, realH );
+	#endif
+	
 #if SDL_VIDEO_RENDER_OGL_ES
     if( !strcmp(window->renderer->info.name, "opengl_es") )
         driverDataSize = GLES_RenderDataSize;
@@ -103,6 +124,8 @@ RESIZE_CreateRenderer(SDL_Window * window)
 #endif
     if( !strcmp(window->renderer->info.name, "software") )
         driverDataSize = SW_RenderDataSize;
+
+/* TODO: add other renderers */
 
     if( !driverDataSize )
         return -1;
@@ -163,15 +186,18 @@ RESIZE_RenderDrawPoints(SDL_Renderer * renderer, const SDL_Point * points,
 	RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
 	int ret;
 	
-	if( !data->renderer.RenderDrawPoints )
-		return -1;
-	
 	SDL_Point * resized = SDL_stack_alloc( SDL_Point, count );
 	if( ! resized ) {
 		SDL_OutOfMemory();
 		return -1;
 	}
 	
+	data->renderer.r = renderer->r;
+	data->renderer.g = renderer->g;
+	data->renderer.b = renderer->b;
+	data->renderer.a = renderer->a;
+	data->renderer.blendMode = renderer->blendMode;
+
 	RESIZE_resizePoints( data->realW, data->fakeW, data->realH, data->fakeH, points, resized, count );
 	
 	ret = data->renderer.RenderDrawPoints(&data->renderer, resized, count);
@@ -188,14 +214,17 @@ RESIZE_RenderDrawLines(SDL_Renderer * renderer, const SDL_Point * points,
 	RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
 	int ret;
 	
-	if( !data->renderer.RenderDrawLines )
-		return -1;
-	
 	SDL_Point * resized = SDL_stack_alloc( SDL_Point, count * 2 );
 	if( ! resized ) {
 		SDL_OutOfMemory();
 		return -1;
 	}
+
+	data->renderer.r = renderer->r;
+	data->renderer.g = renderer->g;
+	data->renderer.b = renderer->b;
+	data->renderer.a = renderer->a;
+	data->renderer.blendMode = renderer->blendMode;
 	
 	RESIZE_resizePoints( data->realW, data->fakeW, data->realH, data->fakeH, points, resized, count * 2 );
 	
@@ -226,9 +255,6 @@ RESIZE_RenderDrawRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
 	RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
 	int i, ret;
 	
-	if( !data->renderer.RenderDrawRects )
-		return -1;
-	
 	SDL_Rect * resized = SDL_stack_alloc( SDL_Rect, count );
 	if( ! resized ) {
 		SDL_OutOfMemory();
@@ -244,9 +270,15 @@ RESIZE_RenderDrawRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
 	for( i = 0; i < count; i++ ) {
 		resizedPtrs[i] = &(resized[i]);
 	}
-	
+
 	RESIZE_resizeRects( data->realW, data->fakeW, data->realH, data->fakeH, rects, resized, count );
 	
+	data->renderer.r = renderer->r;
+	data->renderer.g = renderer->g;
+	data->renderer.b = renderer->b;
+	data->renderer.a = renderer->a;
+	data->renderer.blendMode = renderer->blendMode;
+
 	ret = data->renderer.RenderDrawRects(&data->renderer, resizedPtrs, count);
 	
 	SDL_stack_free(resizedPtrs);
@@ -261,9 +293,6 @@ RESIZE_RenderFillRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
 {
 	RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
 	int i, ret;
-	
-	if( !data->renderer.RenderFillRects )
-		return -1;
 	
 	SDL_Rect * resized = SDL_stack_alloc( SDL_Rect, count );
 	if( ! resized ) {
@@ -283,6 +312,12 @@ RESIZE_RenderFillRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
 	
 	RESIZE_resizeRects( data->realW, data->fakeW, data->realH, data->fakeH, rects, resized, count * 4 );
 	
+	data->renderer.r = renderer->r;
+	data->renderer.g = renderer->g;
+	data->renderer.b = renderer->b;
+	data->renderer.a = renderer->a;
+	data->renderer.blendMode = renderer->blendMode;
+
 	ret = data->renderer.RenderFillRects(&data->renderer, resizedPtrs, count);
 	
 	SDL_stack_free(resizedPtrs);
@@ -296,13 +331,22 @@ RESIZE_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
                 const SDL_Rect * srcrect, const SDL_Rect * dstrect)
 {
 	RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
-	SDL_Rect dest;
 	uint8_t realW = data->realW, fakeW = data->fakeW, realH = data->realH, fakeH = data->fakeH;
+	SDL_Rect dest;
 
-	dest.x = dstrect->x * realW / fakeW;
-	dest.w = dstrect->w * realW / fakeW;
-	dest.y = dstrect->y * realH / fakeH;
-	dest.h = dstrect->h * realH / fakeH;
+	dest.x = (dstrect->x * realW) / fakeW;
+	dest.w = (dstrect->w * realW) / fakeW;
+	dest.y = (dstrect->y * realH) / fakeH;
+	dest.h = (dstrect->h * realH) / fakeH;
+
+	/*
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "RESIZE_RenderCopy: from x%dy%dw%dh%d to x%dy%dw%dh%d rW%d/fW%d rH%d/fH%d", 
+					dstrect->x, dstrect->y, dstrect->w, dstrect->h, 
+					dest.x, dest.y, dest.w, dest.h,
+					realW, fakeW, realH, fakeH);
+    */
+	/* HACK */
+	/* dest.y += 160; */
 
 	return data->renderer.RenderCopy(&data->renderer, texture, srcrect, &dest);
 }

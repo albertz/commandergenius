@@ -190,7 +190,7 @@ void ANDROID_InitOSKeymap()
   int i;
 
   SDLKey defaultKeymap[SDL_NUM_SCANCODES];
-  SDL_GetDefaultKeymap(&defaultKeymap);
+  SDL_GetDefaultKeymap(defaultKeymap);
   SDL_SetKeymap(0, defaultKeymap, SDL_NUM_SCANCODES);
 
   // TODO: keys are mapped rather randomly
