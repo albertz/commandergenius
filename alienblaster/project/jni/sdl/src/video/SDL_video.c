@@ -1602,8 +1602,6 @@ SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
         return -1;
     }
 
-    SDL_SelectRenderer(window);
-
 #ifdef SDL_VIDEO_RENDER_RESIZE
 
     if( window->w > window->display->current_mode.w || window->h > window->display->current_mode.h ) {
@@ -1611,6 +1609,8 @@ SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
     }
 
 #endif
+
+    SDL_SelectRenderer(window);
 
     return 0;
 }

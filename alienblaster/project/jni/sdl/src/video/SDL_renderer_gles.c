@@ -148,6 +148,8 @@ typedef struct
 
 } GLES_RenderData;
 
+const size_t GLES_RenderDataSize = sizeof(GLES_RenderData);
+
 typedef struct
 {
     GLuint texture;

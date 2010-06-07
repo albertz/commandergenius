@@ -134,6 +134,8 @@ struct SDL_RenderDriver
 
     /* Info about the renderer capabilities */
     SDL_RendererInfo info;
+    /* Used for resizing renderer */
+    size_t infoSize;
 };
 
 /* Define the SDL window structure, corresponding to toplevel windows */

@@ -28,6 +28,10 @@
 #include "SDL_pixels_c.h"
 #include "SDL_rect_c.h"
 
+#include "SDL_renderer_gl.h"
+#include "SDL_renderer_gles.h"
+#include "SDL_renderer_sw.h"
+
 static int RESIZE_RenderDrawPoints(SDL_Renderer * renderer,
                                  const SDL_Point * points, int count);
 static int RESIZE_RenderDrawLines(SDL_Renderer * renderer,
@@ -47,7 +51,7 @@ typedef struct
     /* It should work fast on FPU-less processors, so I did not use floats but ints.
     Hopefully compiler will somehow optimize (realW / fakeW) because it's adjacent bytes */
     uint8_t realW, fakeW, realH, fakeH; 
-    SDL_Renderer * renderer;
+    SDL_Renderer renderer;
 
 } RESIZE_RenderData;
 
@@ -66,14 +70,15 @@ RESIZE_CreateRenderer(SDL_Window * window)
 	RESIZE_RenderData * data;
 	int realW, realH;
 	int fakeW, fakeH;
+	size_t driverDataSize = 0;
 
 	realW = window->display->current_mode.w;
 	realH = window->display->current_mode.h;
 	fakeW = window->w;
 	fakeH = window->h;
-	
+
 	/* Here we're assuming that both real and fake dimensins can be shrinked to byte-size ints
-		by dividong both in half, for example real 480x320 : fake 640x480 becomes 3x2 : 4x3 */
+		by dividing both in half, for example real 480x320 : fake 640x480 becomes 3x2 : 4x3 */
 	while( (realW / 2) * 2 == realW && (fakeW / 2) * 2 == fakeW ) {
 		realW /= 2;
 		fakeW /= 2;
@@ -88,13 +93,28 @@ RESIZE_CreateRenderer(SDL_Window * window)
 		realW == 0 || realH == 0 || fakeW == 0 || fakeH == 0 )
 		return -1;
 
+#if SDL_VIDEO_RENDER_OGL_ES
+    if( !strcmp(window->renderer->info.name, "opengl_es") )
+        driverDataSize = GLES_RenderDataSize;
+#endif
+#if SDL_VIDEO_RENDER_OGL
+    if( !strcmp(window->renderer->info.name, "opengl") )
+        driverDataSize = GL_RenderDataSize;
+#endif
+    if( !strcmp(window->renderer->info.name, "software") )
+        driverDataSize = SW_RenderDataSize;
+
+    if( !driverDataSize )
+        return -1;
+
+
     renderer = (SDL_Renderer *) SDL_calloc(1, sizeof(*renderer));
     if (!renderer) {
         SDL_OutOfMemory();
         return -1;
     }
 
-    data = (RESIZE_RenderData *) SDL_calloc(1, sizeof(*data));
+    data = (RESIZE_RenderData *) SDL_calloc(1, sizeof(RESIZE_RenderData) + driverDataSize);
     if (!data) {
         SDL_free(renderer);
         SDL_OutOfMemory();
@@ -105,9 +125,11 @@ RESIZE_CreateRenderer(SDL_Window * window)
     data->fakeW = fakeW;
     data->realH = realH;
     data->fakeH = fakeH;
-    data->renderer = window->renderer;
 
+    memcpy(&data->renderer, window->renderer, sizeof(SDL_Renderer));
     memcpy(renderer, window->renderer, sizeof(SDL_Renderer));
+    /* Copy data from old renderer to renderer->driverdata */
+    memcpy(((void *)data) + sizeof(RESIZE_RenderData), window->renderer->driverdata, driverDataSize);
 
     renderer->RenderDrawPoints = RESIZE_RenderDrawPoints;
     renderer->RenderDrawLines = RESIZE_RenderDrawLines;
@@ -115,7 +137,8 @@ RESIZE_CreateRenderer(SDL_Window * window)
     renderer->RenderFillRects = RESIZE_RenderFillRects;
     renderer->RenderCopy = RESIZE_RenderCopy;
     renderer->DestroyRenderer = RESIZE_DestroyRenderer;
-    renderer->driverdata = data;
+    /* Our own data will be located above the renderer->driverdata pointer */
+    renderer->driverdata = ((void *)data) + sizeof(RESIZE_RenderData);
 
     window->renderer = renderer;
 
@@ -137,10 +160,10 @@ static int
 RESIZE_RenderDrawPoints(SDL_Renderer * renderer, const SDL_Point * points,
                       int count)
 {
-	RESIZE_RenderData *data = (RESIZE_RenderData *) renderer->driverdata;
+	RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
 	int ret;
 	
-	if( !data->renderer->RenderDrawPoints )
+	if( !data->renderer.RenderDrawPoints )
 		return -1;
 	
 	SDL_Point * resized = SDL_stack_alloc( SDL_Point, count );
@@ -151,7 +174,7 @@ RESIZE_RenderDrawPoints(SDL_Renderer * renderer, const SDL_Point * points,
 	
 	RESIZE_resizePoints( data->realW, data->fakeW, data->realH, data->fakeH, points, resized, count );
 	
-	ret = data->renderer->RenderDrawPoints(data->renderer, resized, count);
+	ret = data->renderer.RenderDrawPoints(&data->renderer, resized, count);
 	
 	SDL_stack_free(resized);
 
@@ -162,10 +185,10 @@ static int
 RESIZE_RenderDrawLines(SDL_Renderer * renderer, const SDL_Point * points,
                      int count)
 {
-	RESIZE_RenderData *data = (RESIZE_RenderData *) renderer->driverdata;
+	RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
 	int ret;
 	
-	if( !data->renderer->RenderDrawLines )
+	if( !data->renderer.RenderDrawLines )
 		return -1;
 	
 	SDL_Point * resized = SDL_stack_alloc( SDL_Point, count * 2 );
@@ -176,7 +199,7 @@ RESIZE_RenderDrawLines(SDL_Renderer * renderer, const SDL_Point * points,
 	
 	RESIZE_resizePoints( data->realW, data->fakeW, data->realH, data->fakeH, points, resized, count * 2 );
 	
-	ret = data->renderer->RenderDrawLines(data->renderer, resized, count);
+	ret = data->renderer.RenderDrawLines(&data->renderer, resized, count);
 	
 	SDL_stack_free(resized);
 
@@ -200,10 +223,10 @@ static int
 RESIZE_RenderDrawRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
                      int count)
 {
-	RESIZE_RenderData *data = (RESIZE_RenderData *) renderer->driverdata;
+	RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
 	int i, ret;
 	
-	if( !data->renderer->RenderDrawRects )
+	if( !data->renderer.RenderDrawRects )
 		return -1;
 	
 	SDL_Rect * resized = SDL_stack_alloc( SDL_Rect, count );
@@ -224,7 +247,7 @@ RESIZE_RenderDrawRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
 	
 	RESIZE_resizeRects( data->realW, data->fakeW, data->realH, data->fakeH, rects, resized, count );
 	
-	ret = data->renderer->RenderDrawRects(data->renderer, resizedPtrs, count);
+	ret = data->renderer.RenderDrawRects(&data->renderer, resizedPtrs, count);
 	
 	SDL_stack_free(resizedPtrs);
 	SDL_stack_free(resized);
@@ -236,10 +259,10 @@ static int
 RESIZE_RenderFillRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
                      int count)
 {
-	RESIZE_RenderData *data = (RESIZE_RenderData *) renderer->driverdata;
+	RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
 	int i, ret;
 	
-	if( !data->renderer->RenderFillRects )
+	if( !data->renderer.RenderFillRects )
 		return -1;
 	
 	SDL_Rect * resized = SDL_stack_alloc( SDL_Rect, count );
@@ -260,7 +283,7 @@ RESIZE_RenderFillRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
 	
 	RESIZE_resizeRects( data->realW, data->fakeW, data->realH, data->fakeH, rects, resized, count * 4 );
 	
-	ret = data->renderer->RenderFillRects(data->renderer, resizedPtrs, count);
+	ret = data->renderer.RenderFillRects(&data->renderer, resizedPtrs, count);
 	
 	SDL_stack_free(resizedPtrs);
 	SDL_stack_free(resized);
@@ -272,7 +295,7 @@ static int
 RESIZE_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
                 const SDL_Rect * srcrect, const SDL_Rect * dstrect)
 {
-	RESIZE_RenderData *data = (RESIZE_RenderData *) renderer->driverdata;
+	RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
 	SDL_Rect dest;
 	uint8_t realW = data->realW, fakeW = data->fakeW, realH = data->realH, fakeH = data->fakeH;
 
@@ -280,8 +303,8 @@ RESIZE_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
 	dest.w = dstrect->w * realW / fakeW;
 	dest.y = dstrect->y * realH / fakeH;
 	dest.h = dstrect->h * realH / fakeH;
-	
-	return data->renderer->RenderCopy(data->renderer, texture, srcrect, &dest);
+
+	return data->renderer.RenderCopy(&data->renderer, texture, srcrect, &dest);
 }
 
 
@@ -289,15 +312,13 @@ static void
 RESIZE_DestroyRenderer(SDL_Renderer * renderer)
 {
 
-    RESIZE_RenderData *data = (RESIZE_RenderData *) renderer->driverdata;
+    RESIZE_RenderData *data = (RESIZE_RenderData *) (renderer->driverdata - sizeof(RESIZE_RenderData));
 
-    if (data && data->renderer && data->renderer->DestroyRenderer) {
-        data->renderer->DestroyRenderer(data->renderer);
+    if (data->renderer.DestroyRenderer) {
+        data->renderer.DestroyRenderer(&data->renderer);
     }
 
-    if (data) {
-        SDL_free(data);
-    }
+    SDL_free((void *)data);
 
     SDL_free(renderer);
 }
