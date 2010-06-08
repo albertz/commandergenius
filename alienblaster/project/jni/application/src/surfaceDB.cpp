@@ -22,6 +22,7 @@ using namespace std;
 #include "surfaceDB.h"
 #include <fstream>
 #include <iostream>
+#include <SDL_image.h>
 #ifdef ANDROID
 #include <android/log.h>
 #endif
@@ -51,17 +52,26 @@ SDL_Surface *SurfaceDB::loadSurface( string fn, bool alpha ) {
     return searchResult;
   }
 
-  // open the file for reading
-  ifstream inputFile ( fn.c_str(), ios::in);
-  if (!inputFile.good()) {
-    cout << "ERROR: file " << fn << " does not exist!" << endl;
+  bool isPNG = false;
+  // Check if file exist
+  FILE * inputFile = fopen( fn.c_str(), "rb");
+  if (!inputFile) {
+    if( fn.size() > 4 && fn.find(".bmp") != string::npos ) {
+      isPNG = true;
+      fn = fn.substr( 0, fn.size() - 4 ) + ".png";
+      inputFile = fopen( fn.c_str(), "rb");
+    }
+    if (!inputFile) {
+      cout << "ERROR: file " << fn << " does not exist!" << endl;
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn).c_str() );
+      __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn).c_str() );
 #endif
-    exit(1);
+      exit(1);
+    }
   }
-  
-  SDL_Surface *newSurface = SDL_LoadBMP( fn.c_str() );
+  fclose(inputFile);
+
+  SDL_Surface *newSurface = isPNG ? IMG_Load( fn.c_str() ) : SDL_LoadBMP( fn.c_str() );
   if( newSurface == NULL )
   {
     cout << "ERROR: Cannot load image " << fn << endl;

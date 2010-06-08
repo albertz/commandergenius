@@ -21,6 +21,10 @@ using namespace std;
 
 #include "soundDB.h"
 #include "SDL_mixer.h"
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+#include <iostream>
 
 SoundDB::SoundDB() {}
 
@@ -37,9 +41,33 @@ Mix_Chunk *SoundDB::loadWav( string fn ) {
   if ( searchResult ) {
     return searchResult;
   }
-  
+
+  // Check if file exist
+  FILE * inputFile = fopen( fn.c_str(), "rb");
+  if (!inputFile) {
+    if( fn.size() > 4 && fn.find(".wav") != string::npos ) {
+      fn = fn.substr( 0, fn.size() - 4 ) + ".ogg";
+      inputFile = fopen( fn.c_str(), "rb");
+    }
+    if (!inputFile) {
+      cout << "ERROR: file " << fn << " does not exist!" << endl;
+#ifdef ANDROID
+      __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load sound " ) + fn).c_str() );
+#endif
+      exit(1);
+    }
+  }
+  fclose(inputFile);
+
   // TODO: error-handling
   Mix_Chunk *newSound = Mix_LoadWAV( fn.c_str() );
+  if( !newSound ) {
+    cout << "ERROR: file " << fn << " cannot be loaded!" << endl;
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load sound " ) + fn).c_str() );
+#endif
+    exit(1);
+  }
   soundDB[ fn ] = newSound;
   return newSound;
 }

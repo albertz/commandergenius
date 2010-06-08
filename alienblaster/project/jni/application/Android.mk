@@ -22,7 +22,7 @@ LOCAL_SRC_FILES := $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wil
 # Uncomment to also add C sources
 LOCAL_SRC_FILES += $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wildcard $(LOCAL_PATH)/$(F)/*.c))))
 
-LOCAL_SHARED_LIBRARIES := sdl sdl_mixer tremor sdl_ttf
+LOCAL_SHARED_LIBRARIES := sdl sdl_mixer sdl_image tremor sdl_ttf
 
 LOCAL_STATIC_LIBRARIES := stlport
 
