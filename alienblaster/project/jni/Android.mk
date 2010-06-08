@@ -2,6 +2,9 @@
 # The namespace in Java file, with dots replaced with underscores
 SDL_JAVA_PACKAGE_PATH := de_schwardtnet_alienblaster
 
+# Path to shared libraries - Android 1.6 cannot load them properly, thus we have to specify absolute path here
+# SDL_SHARED_LIBRARIES_PATH := /data/data/de.schwardtnet.alienblaster/lib
+
 # Path to files with application data - they should be downloaded from Internet on first app run inside
 # Java sources, or unpacked from resources (TODO)
 # Typically /sdcard/alienblaster 

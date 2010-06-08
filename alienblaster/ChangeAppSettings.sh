@@ -48,6 +48,7 @@ if [ "$DownloadToSdcard" = "y" ] ; then
 	DataPath="/sdcard/$AppShortName"
 fi
 AppFullNameUnderscored=`echo $AppFullName | sed 's/[.]/_/g'`
+AppSharedLibrariesPath=/data/data/$AppFullName/lib
 ScreenOrientation1=portrait
 if [ "$ScreenOrientation" = "h" ] ; then
 	ScreenOrientation1=landscape
@@ -78,6 +79,9 @@ cat project/src/Globals.java | \
 mv -f project/src/Globals.java.1 project/src/Globals.java
 
 echo Patching project/jni/Android.mk
+
+# sed "s^SDL_SHARED_LIBRARIES_PATH := .*^SDL_SHARED_LIBRARIES_PATH := $AppSharedLibrariesPath^" | \
+
 cat project/jni/Android.mk | \
 	sed "s/SDL_JAVA_PACKAGE_PATH := .*/SDL_JAVA_PACKAGE_PATH := $AppFullNameUnderscored/" | \
 	sed "s^SDL_CURDIR_PATH := .*^SDL_CURDIR_PATH := $DataPath^" > \
