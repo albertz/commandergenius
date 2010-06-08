@@ -67,13 +67,7 @@ public class MainActivity extends Activity {
 	{
 		if( wakeLock != null )
 			wakeLock.release();
-		if( mAudioThread != null )
-		{
-			mAudioThread.interrupt();
-			try {
-				mAudioThread.join();
-			} catch( java.lang.InterruptedException e ) { };
-		}
+		
 		if( mGLView != null )
 			mGLView.exitApp();
 		super.onStop();

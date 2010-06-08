@@ -20,6 +20,7 @@
 #include "game.h"
 #include "SDL.h"
 #include <stdlib.h>
+#include <android/log.h>
 
 using namespace std;
 

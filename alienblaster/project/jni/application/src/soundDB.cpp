@@ -41,18 +41,20 @@ Mix_Chunk *SoundDB::loadWav( string fn ) {
   if ( searchResult ) {
     return searchResult;
   }
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", (string( "Loading sound " ) + fn).c_str() );
 
+  string fn1 = fn;
   // Check if file exist
-  FILE * inputFile = fopen( fn.c_str(), "rb");
+  FILE * inputFile = fopen( fn1.c_str(), "rb");
   if (!inputFile) {
-    if( fn.size() > 4 && fn.find(".wav") != string::npos ) {
-      fn = fn.substr( 0, fn.size() - 4 ) + ".ogg";
-      inputFile = fopen( fn.c_str(), "rb");
+    if( fn1.size() > 4 && fn1.find(".wav") != string::npos ) {
+      fn1 = fn1.substr( 0, fn1.size() - 4 ) + ".ogg";
+      inputFile = fopen( fn1.c_str(), "rb");
     }
     if (!inputFile) {
-      cout << "ERROR: file " << fn << " does not exist!" << endl;
+      cout << "ERROR: file " << fn1 << " does not exist!" << endl;
 #ifdef ANDROID
-      __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load sound " ) + fn).c_str() );
+      __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load sound " ) + fn1).c_str() );
 #endif
       exit(1);
     }
@@ -60,11 +62,11 @@ Mix_Chunk *SoundDB::loadWav( string fn ) {
   fclose(inputFile);
 
   // TODO: error-handling
-  Mix_Chunk *newSound = Mix_LoadWAV( fn.c_str() );
+  Mix_Chunk *newSound = Mix_LoadWAV( fn1.c_str() );
   if( !newSound ) {
-    cout << "ERROR: file " << fn << " cannot be loaded!" << endl;
+    cout << "ERROR: file " << fn1 << " cannot be loaded!" << endl;
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load sound " ) + fn).c_str() );
+    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load sound " ) + fn1).c_str() );
 #endif
     exit(1);
   }

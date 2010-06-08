@@ -16,9 +16,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 
 
-// TODO: make audio single-threaded, the same way as video
-
-class AudioThread extends Thread {
+class AudioThread {
 
 	private Activity mParent;
 	private AudioTrack mAudio;
@@ -30,26 +28,19 @@ class AudioThread extends Thread {
 		mParent = parent;
 		mAudio = null;
 		mAudioBuffer = null;
-		this.setPriority(Thread.MAX_PRIORITY);
-		this.start();
+		nativeAudioInitJavaCallbacks();
 	}
 	
-	@Override
-	public void run() 
+	public int fillBuffer()
 	{
-		while( !isInterrupted() )
-		{
+		mAudio.write( mAudioBuffer, 0, mAudioBuffer.length );
+		return 1;
+	}
+	
+	public byte[] initAudio(int[] initParams)
+	{
 			if( mAudio == null )
 			{
-				int[] initParams = nativeAudioInit();
-				if( initParams == null )
-				{
-					try {
-						sleep(200);
-					} catch( java.lang.InterruptedException e ) { };
-				}
-				else
-				{
 					int rate = initParams[0];
 					int channels = initParams[1];
 					channels = ( channels == 1 ) ? AudioFormat.CHANNEL_CONFIGURATION_MONO : 
@@ -61,7 +52,6 @@ class AudioThread extends Thread {
 					if( initParams[3] > bufSize )
 						bufSize = initParams[3];
 					mAudioBuffer = new byte[bufSize];
-					nativeAudioInit2(mAudioBuffer);
 					mAudio = new AudioTrack(AudioManager.STREAM_MUSIC, 
 												rate,
 												channels,
@@ -69,29 +59,22 @@ class AudioThread extends Thread {
 												bufSize,
 												AudioTrack.MODE_STREAM );
 					mAudio.play();
-				}
 			}
-			else
-			{
-				int len = nativeAudioBufferLock();
-				if( len > 0 )
-					mAudio.write( mAudioBuffer, 0, len );
-				if( len < 0 )
-					break;
-				nativeAudioBufferUnlock();
-			}
-		}
+			return mAudioBuffer;
+	}
+	
+	public int deinitAudio()
+	{
 		if( mAudio != null )
 		{
 			mAudio.stop();
 			mAudio.release();
 			mAudio = null;
 		}
+		mAudioBuffer = null;
+		return 1;
 	}
 	
-	private native int[] nativeAudioInit();
-	private native int nativeAudioInit2(byte[] buf);
-	private native int nativeAudioBufferLock();
-	private native int nativeAudioBufferUnlock();
+	private native int nativeAudioInitJavaCallbacks();
 }
 

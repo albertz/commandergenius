@@ -35,6 +35,9 @@ Mixer & Mixer::mixer()
 }
 
 Mixer::Mixer() {
+	enabled = false;
+	return;
+
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
       printf("Couldn't initialize SDL audio subsystem: %s\n", SDL_GetError());
       exit(1);

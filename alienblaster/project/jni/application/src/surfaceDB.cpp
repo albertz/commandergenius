@@ -51,32 +51,34 @@ SDL_Surface *SurfaceDB::loadSurface( string fn, bool alpha ) {
   if ( searchResult ) {
     return searchResult;
   }
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", (string( "Loading image " ) + fn).c_str() );
+  string fn1 = fn;
 
   bool isPNG = false;
   // Check if file exist
-  FILE * inputFile = fopen( fn.c_str(), "rb");
+  FILE * inputFile = fopen( fn1.c_str(), "rb");
   if (!inputFile) {
-    if( fn.size() > 4 && fn.find(".bmp") != string::npos ) {
+    if( fn1.size() > 4 && fn1.find(".bmp") != string::npos ) {
       isPNG = true;
-      fn = fn.substr( 0, fn.size() - 4 ) + ".png";
-      inputFile = fopen( fn.c_str(), "rb");
+      fn1 = fn1.substr( 0, fn1.size() - 4 ) + ".png";
+      inputFile = fopen( fn1.c_str(), "rb");
     }
     if (!inputFile) {
-      cout << "ERROR: file " << fn << " does not exist!" << endl;
+      cout << "ERROR: file " << fn1 << " does not exist!" << endl;
 #ifdef ANDROID
-      __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn).c_str() );
+      __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn1).c_str() );
 #endif
       exit(1);
     }
   }
   fclose(inputFile);
 
-  SDL_Surface *newSurface = isPNG ? IMG_Load( fn.c_str() ) : SDL_LoadBMP( fn.c_str() );
+  SDL_Surface *newSurface = isPNG ? IMG_Load( fn1.c_str() ) : SDL_LoadBMP( fn1.c_str() );
   if( newSurface == NULL )
   {
-    cout << "ERROR: Cannot load image " << fn << endl;
+    cout << "ERROR: Cannot load image " << fn1 << endl;
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn).c_str() );
+    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn1).c_str() );
 #endif
     exit(1);
   }
