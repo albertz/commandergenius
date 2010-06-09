@@ -67,10 +67,7 @@ static jclass JavaRendererClass = NULL;
 static jobject JavaRenderer = NULL;
 static jmethodID JavaSwapBuffers = NULL;
 
-
-static int CallJavaSwapBuffers();
 static void SdlGlRenderInit();
-
 
 /* ANDROID driver bootstrap functions */
 
@@ -193,6 +190,11 @@ void ANDROID_PumpEvents(_THIS)
 {
 }
 
+static inline int CallJavaSwapBuffers()
+{
+	return (*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaSwapBuffers );
+}
+
 void ANDROID_GL_SwapBuffers(_THIS, SDL_Window * window)
 {
 	CallJavaSwapBuffers();
@@ -219,7 +221,7 @@ void ANDROID_GL_DeleteContext (_THIS, SDL_GLContext context)
 #define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
-extern void
+JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint w, jint h )
 {
     sWindowWidth  = w;
@@ -227,15 +229,15 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint 
     __android_log_print(ANDROID_LOG_INFO, "libSDL", "Physical screen resolution is %dx%d", w, h);
 }
 
-/* Call to finalize the graphics state */
-extern void
+JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoRenderer_nativeDone) ( JNIEnv*  env, jobject  thiz )
 {
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "quitting...");
 	SDL_SendQuit();
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "quit OK");
 }
-void
+
+JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject thiz )
 {
 	JavaEnv = env;
@@ -247,10 +249,3 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	ANDROID_InitOSKeymap();
 	
 }
-
-int CallJavaSwapBuffers()
-{
-	return (*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaSwapBuffers );
-}
-
-

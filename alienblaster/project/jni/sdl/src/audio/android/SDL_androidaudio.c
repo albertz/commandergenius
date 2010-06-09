@@ -46,6 +46,8 @@ static void ANDROIDAUD_WaitAudio(_THIS);
 static void ANDROIDAUD_PlayAudio(_THIS);
 static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS);
 static void ANDROIDAUD_CloseAudio(_THIS);
+static void ANDROIDAUD_ThreadInit(_THIS);
+static void ANDROIDAUD_ThreadDeinit(_THIS);
 
 /* Audio driver bootstrap functions */
 static int ANDROIDAUD_Available(void)
@@ -65,6 +67,8 @@ static int ANDROIDAUD_CreateDevice(SDL_AudioDriverImpl * impl)
 	impl->PlayDevice = ANDROIDAUD_PlayAudio;
 	impl->GetDeviceBuf = ANDROIDAUD_GetAudioBuf;
 	impl->CloseDevice = ANDROIDAUD_CloseAudio;
+	impl->ThreadInit = ANDROIDAUD_ThreadInit;
+	impl->WaitDone = ANDROIDAUD_ThreadDeinit;
 	impl->Deinitialize = ANDROIDAUD_DeleteDevice;
 	impl->OnlyHasDefaultOutputDevice = 1;
 
@@ -82,7 +86,7 @@ static size_t audioBufferSize = 0;
 
 // Extremely wicked JNI environment to call Java functions from C code
 static jbyteArray audioBufferJNI = NULL;
-static JNIEnv * jniEnv = NULL;
+static JavaVM *jniVM = NULL;
 static jclass JavaAudioThreadClass = NULL;
 static jobject JavaAudioThread = NULL;
 static jmethodID JavaFillBuffer = NULL;
@@ -97,12 +101,18 @@ static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS)
 
 static void ANDROIDAUD_CloseAudio(_THIS)
 {
+	JNIEnv * jniEnv = NULL;
+	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
+
 	(*jniEnv)->DeleteGlobalRef(jniEnv, audioBufferJNI);
 	audioBufferJNI = NULL;
 	audioBuffer = NULL;
 	audioBufferSize = 0;
 	
 	(*jniEnv)->CallIntMethod( jniEnv, JavaAudioThread, JavaDeinitAudio );
+
+	/* We cannot call DetachCurrentThread() from main thread or we'll crash */
+	/* (*jniVM)->DetachCurrentThread(jniVM); */
 	
 	if ( this->hidden != NULL ) {
 		SDL_free(this->hidden);
@@ -113,13 +123,9 @@ static void ANDROIDAUD_CloseAudio(_THIS)
 static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
 {
 	SDL_AudioSpec *audioFormat = &this->spec;
-	jintArray initArray = NULL;
-	int initData[4] = { 0, 0, 0, 0 }; // { rate, channels, encoding, bufsize };
-	jobject * bufferObj;
 	jboolean isCopy = JNI_TRUE;
-	unsigned char *audioBuffer;
-	int audioBufferSize;
 	int bytesPerSample;
+	JNIEnv * jniEnv = NULL;
 
 	this->hidden = (struct SDL_PrivateAudioData *) SDL_malloc((sizeof *this->hidden));
 	if ( this->hidden == NULL ) {
@@ -134,32 +140,40 @@ static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
 		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL
 	}
 
-	
-	initData[0] = audioFormat->freq;
-	initData[1] = audioFormat->channels;
 	bytesPerSample = (audioFormat->format & 0xFF) / 8;
-	initData[2] = ( bytesPerSample == 2 ) ? 1 : 0;
 	audioFormat->format = ( bytesPerSample == 2 ) ? AUDIO_S16 : AUDIO_S8;
-	initData[3] = audioFormat->size;
-	initArray = (*jniEnv)->NewIntArray(jniEnv, 4);
-	(*jniEnv)->SetIntArrayRegion(jniEnv, initArray, 0, 4, (jint *)initData);
 	
-	bufferObj = (*jniEnv)->CallObjectMethod( jniEnv, JavaAudioThread, JavaInitAudio, initArray );
+	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
 
-	if( ! bufferObj )
+	if( !jniEnv )
+	{
+		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_OpenAudio: Java VM AttachCurrentThread() failed");
+		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL
+	}
+
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): jniEnv %p JavaInitAudio %p JavaAudioThread %p",
+							jniEnv, JavaInitAudio, JavaAudioThread);
+	
+	audioBufferJNI = (*jniEnv)->CallObjectMethod( jniEnv, JavaAudioThread, JavaInitAudio, 
+					(jint)audioFormat->freq, (jint)audioFormat->channels, 
+					(jint)(( bytesPerSample == 2 ) ? 1 : 0), (jint)audioFormat->size);
+
+	if( ! audioBufferJNI )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): failed to get audio buffer from JNI");
 		ANDROIDAUD_CloseAudio(this);
 		return(-1);
 	}
 
-	audioBufferJNI = (jbyteArray*)(*jniEnv)->NewGlobalRef(jniEnv, bufferObj);
+	audioBufferJNI = (*jniEnv)->NewGlobalRef(jniEnv, audioBufferJNI);
 	audioBufferSize = (*jniEnv)->GetArrayLength(jniEnv, audioBufferJNI);
 	audioBuffer = (unsigned char *) (*jniEnv)->GetByteArrayElements(jniEnv, audioBufferJNI, &isCopy);
 	if( isCopy == JNI_TRUE )
 		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_OpenAudio(): JNI returns a copy of byte array - no audio will be played");
 
-	bytesPerSample = (audioFormat->format & 0xFF) / 8;
+	/* We cannot call DetachCurrentThread() from main thread or we'll crash */
+	/* (*jniVM)->DetachCurrentThread(jniVM); */
+
 	audioFormat->samples = audioBufferSize / bytesPerSample / audioFormat->channels;
 	audioFormat->size = audioBufferSize;
 	SDL_memset(audioBuffer, audioFormat->silence, audioFormat->size);
@@ -175,15 +189,29 @@ static void ANDROIDAUD_WaitAudio(_THIS)
 	/* We will block in PlayAudio(), do nothing here */
 }
 
+static JNIEnv * jniEnvPlaying = NULL;
+
+static void ANDROIDAUD_ThreadInit(_THIS)
+{
+	(*jniVM)->AttachCurrentThread(jniVM, &jniEnvPlaying, NULL);
+};
+
+static void ANDROIDAUD_ThreadDeinit(_THIS)
+{
+	(*jniVM)->DetachCurrentThread(jniVM);
+};
+
 static void ANDROIDAUD_PlayAudio(_THIS)
 {
-	(*jniEnv)->ReleaseByteArrayElements(jniEnv, audioBufferJNI, (jbyte *)audioBuffer, 0);
-	audioBuffer == NULL;
-
-	(*jniEnv)->CallIntMethod( jniEnv, JavaAudioThread, JavaDeinitAudio );
-
 	jboolean isCopy = JNI_TRUE;
-	audioBuffer = (unsigned char *) (*jniEnv)->GetByteArrayElements(jniEnv, audioBufferJNI, &isCopy);
+
+	(*jniEnvPlaying)->ReleaseByteArrayElements(jniEnvPlaying, audioBufferJNI, (jbyte *)audioBuffer, 0);
+	audioBuffer = NULL;
+
+	(*jniEnvPlaying)->CallIntMethod( jniEnvPlaying, JavaAudioThread, JavaDeinitAudio );
+
+	audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetByteArrayElements(jniEnvPlaying, audioBufferJNI, &isCopy);
+
 	if( isCopy == JNI_TRUE )
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio() JNI returns a copy of byte array - that's slow");
 
@@ -196,22 +224,27 @@ static void ANDROIDAUD_PlayAudio(_THIS)
 #define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
-extern int JAVA_EXPORT_NAME(AudioThread_nativeAudioInitJavaCallbacks) (JNIEnv * env, jobject thiz)
+JNIEXPORT jint JNICALL JAVA_EXPORT_NAME(AudioThread_nativeAudioInitJavaCallbacks) (JNIEnv * jniEnv, jobject thiz)
 {
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeAudioInitJavaCallbacks(): enter");
-	jniEnv = env;
-	JavaAudioThread = thiz;
-	
+	JavaAudioThread = (*jniEnv)->NewGlobalRef(jniEnv, thiz);
+
 	JavaAudioThreadClass = (*jniEnv)->GetObjectClass(jniEnv, thiz);
 	JavaFillBuffer = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "fillBuffer", "()I");
-	JavaInitAudio = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "initAudio", "([I)[B");
+	JavaInitAudio = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "initAudio", "(IIII)[B");
 	JavaDeinitAudio = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "deinitAudio", "()I");
-	if( ! JavaFillBuffer )
-		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "nativeAudioInitJavaCallbacks(): JavaFillBuffer is NULL");
-	if( ! JavaInitAudio )
-		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "nativeAudioInitJavaCallbacks(): JavaInitAudio is NULL");
-	if( ! JavaInitAudio )
-		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "nativeAudioInitJavaCallbacks(): JavaDeinitAudio is NULL");
-
-	
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeAudioInitJavaCallbacks(): JavaAudioThread %p JavaFillBuffer %p JavaInitAudio %p JavaDeinitAudio %p",
+							JavaAudioThread, JavaFillBuffer, JavaInitAudio, JavaDeinitAudio);
 }
+
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
+{
+	jniVM = vm;
+	return JNI_VERSION_1_2;
+};
+
+JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
+{
+	/* TODO: free JavaAudioThread */
+	jniVM = vm;
+};
+

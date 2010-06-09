@@ -37,20 +37,18 @@ class AudioThread {
 		return 1;
 	}
 	
-	public byte[] initAudio(int[] initParams)
+	public byte[] initAudio(int rate, int channels, int encoding, int bufSize)
 	{
 			if( mAudio == null )
 			{
-					int rate = initParams[0];
-					int channels = initParams[1];
 					channels = ( channels == 1 ) ? AudioFormat.CHANNEL_CONFIGURATION_MONO : 
 													AudioFormat.CHANNEL_CONFIGURATION_STEREO;
-					int encoding = initParams[2];
 					encoding = ( encoding == 1 ) ? AudioFormat.ENCODING_PCM_16BIT :
 													AudioFormat.ENCODING_PCM_8BIT;
-					int bufSize = AudioTrack.getMinBufferSize( rate, channels, encoding );
-					if( initParams[3] > bufSize )
-						bufSize = initParams[3];
+
+					if( AudioTrack.getMinBufferSize( rate, channels, encoding ) > bufSize )
+						bufSize = AudioTrack.getMinBufferSize( rate, channels, encoding );
+
 					mAudioBuffer = new byte[bufSize];
 					mAudio = new AudioTrack(AudioManager.STREAM_MUSIC, 
 												rate,

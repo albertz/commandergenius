@@ -59,7 +59,7 @@ static SDLKey keymap[KEYCODE_LAST+1];
 
 enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
 
-extern void
+JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action )
 {
 	if( action == MOUSE_DOWN || action == MOUSE_UP )
@@ -79,7 +79,7 @@ static SDL_scancode TranslateKey(int scancode)
 }
 
 
-void
+JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint key, jint action )
 {
 	//if( ! processAndroidTrackballKeyDelays(key, action) )
@@ -88,7 +88,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 }
 
 
-extern void
+JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
 {
 	// TODO: use accelerometer as joystick, make this configurable
