@@ -87,9 +87,7 @@ static size_t audioBufferSize = 0;
 // Extremely wicked JNI environment to call Java functions from C code
 static jbyteArray audioBufferJNI = NULL;
 static JavaVM *jniVM = NULL;
-static jclass JavaAudioThreadClass = NULL;
 static jobject JavaAudioThread = NULL;
-static jmethodID JavaFillBuffer = NULL;
 static jmethodID JavaInitAudio = NULL;
 static jmethodID JavaDeinitAudio = NULL;
 
@@ -97,27 +95,6 @@ static jmethodID JavaDeinitAudio = NULL;
 static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS)
 {
 	return(audioBuffer);
-}
-
-static void ANDROIDAUD_CloseAudio(_THIS)
-{
-	JNIEnv * jniEnv = NULL;
-	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
-
-	(*jniEnv)->DeleteGlobalRef(jniEnv, audioBufferJNI);
-	audioBufferJNI = NULL;
-	audioBuffer = NULL;
-	audioBufferSize = 0;
-	
-	(*jniEnv)->CallIntMethod( jniEnv, JavaAudioThread, JavaDeinitAudio );
-
-	/* We cannot call DetachCurrentThread() from main thread or we'll crash */
-	/* (*jniVM)->DetachCurrentThread(jniVM); */
-	
-	if ( this->hidden != NULL ) {
-		SDL_free(this->hidden);
-		this->hidden = NULL;
-	}
 }
 
 static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
@@ -151,9 +128,6 @@ static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
 		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL
 	}
 
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): jniEnv %p JavaInitAudio %p JavaAudioThread %p",
-							jniEnv, JavaInitAudio, JavaAudioThread);
-	
 	audioBufferJNI = (*jniEnv)->CallObjectMethod( jniEnv, JavaAudioThread, JavaInitAudio, 
 					(jint)audioFormat->freq, (jint)audioFormat->channels, 
 					(jint)(( bytesPerSample == 2 ) ? 1 : 0), (jint)audioFormat->size);
@@ -183,6 +157,27 @@ static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
 	return(1);
 }
 
+static void ANDROIDAUD_CloseAudio(_THIS)
+{
+	JNIEnv * jniEnv = NULL;
+	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
+
+	(*jniEnv)->DeleteGlobalRef(jniEnv, audioBufferJNI);
+	audioBufferJNI = NULL;
+	audioBuffer = NULL;
+	audioBufferSize = 0;
+	
+	(*jniEnv)->CallIntMethod( jniEnv, JavaAudioThread, JavaDeinitAudio );
+
+	/* We cannot call DetachCurrentThread() from main thread or we'll crash */
+	/* (*jniVM)->DetachCurrentThread(jniVM); */
+	
+	if ( this->hidden != NULL ) {
+		SDL_free(this->hidden);
+		this->hidden = NULL;
+	}
+}
+
 /* This function waits until it is possible to write a full sound buffer */
 static void ANDROIDAUD_WaitAudio(_THIS)
 {
@@ -190,10 +185,17 @@ static void ANDROIDAUD_WaitAudio(_THIS)
 }
 
 static JNIEnv * jniEnvPlaying = NULL;
+static jmethodID JavaFillBuffer = NULL;
 
 static void ANDROIDAUD_ThreadInit(_THIS)
 {
+	jclass JavaAudioThreadClass = NULL;
+
 	(*jniVM)->AttachCurrentThread(jniVM, &jniEnvPlaying, NULL);
+
+	JavaAudioThreadClass = (*jniEnvPlaying)->GetObjectClass(jniEnvPlaying, JavaAudioThread);
+	JavaFillBuffer = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "fillBuffer", "()I");
+
 };
 
 static void ANDROIDAUD_ThreadDeinit(_THIS)
@@ -208,7 +210,7 @@ static void ANDROIDAUD_PlayAudio(_THIS)
 	(*jniEnvPlaying)->ReleaseByteArrayElements(jniEnvPlaying, audioBufferJNI, (jbyte *)audioBuffer, 0);
 	audioBuffer = NULL;
 
-	(*jniEnvPlaying)->CallIntMethod( jniEnvPlaying, JavaAudioThread, JavaDeinitAudio );
+	(*jniEnvPlaying)->CallIntMethod( jniEnvPlaying, JavaAudioThread, JavaFillBuffer );
 
 	audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetByteArrayElements(jniEnvPlaying, audioBufferJNI, &isCopy);
 
@@ -226,14 +228,15 @@ static void ANDROIDAUD_PlayAudio(_THIS)
 
 JNIEXPORT jint JNICALL JAVA_EXPORT_NAME(AudioThread_nativeAudioInitJavaCallbacks) (JNIEnv * jniEnv, jobject thiz)
 {
+	jclass JavaAudioThreadClass = NULL;
 	JavaAudioThread = (*jniEnv)->NewGlobalRef(jniEnv, thiz);
-
-	JavaAudioThreadClass = (*jniEnv)->GetObjectClass(jniEnv, thiz);
-	JavaFillBuffer = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "fillBuffer", "()I");
+	JavaAudioThreadClass = (*jniEnv)->GetObjectClass(jniEnv, JavaAudioThread);
 	JavaInitAudio = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "initAudio", "(IIII)[B");
 	JavaDeinitAudio = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "deinitAudio", "()I");
+	/*
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeAudioInitJavaCallbacks(): JavaAudioThread %p JavaFillBuffer %p JavaInitAudio %p JavaDeinitAudio %p",
 							JavaAudioThread, JavaFillBuffer, JavaInitAudio, JavaDeinitAudio);
+	*/
 }
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)

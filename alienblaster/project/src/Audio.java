@@ -14,6 +14,7 @@ import android.media.AudioManager;
 import android.media.AudioFormat;
 import java.io.*;
 import java.nio.ByteBuffer;
+import android.util.Log;
 
 
 class AudioThread {
@@ -21,7 +22,6 @@ class AudioThread {
 	private Activity mParent;
 	private AudioTrack mAudio;
 	private byte[] mAudioBuffer;
-	private ByteBuffer mAudioBufferNative;
 
 	public AudioThread(Activity parent)
 	{
@@ -50,6 +50,7 @@ class AudioThread {
 						bufSize = AudioTrack.getMinBufferSize( rate, channels, encoding );
 
 					mAudioBuffer = new byte[bufSize];
+
 					mAudio = new AudioTrack(AudioManager.STREAM_MUSIC, 
 												rate,
 												channels,
