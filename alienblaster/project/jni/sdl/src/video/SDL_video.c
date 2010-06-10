@@ -31,7 +31,6 @@
 #include "SDL_renderer_gl.h"
 #include "SDL_renderer_gles.h"
 #include "SDL_renderer_sw.h"
-#include "SDL_renderer_resize.h"
 #include "../events/SDL_sysevents.h"
 #include "../events/SDL_events_c.h"
 
