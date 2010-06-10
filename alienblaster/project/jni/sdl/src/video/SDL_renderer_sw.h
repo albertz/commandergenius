@@ -24,7 +24,6 @@
 /* SDL surface based renderer implementation */
 
 extern SDL_RenderDriver SW_RenderDriver;
-extern const size_t SW_RenderDataSize;
 
 /* Set up SDL_Surface texture functions for a renderer */
 void Setup_SoftwareRenderer(SDL_Renderer * renderer);

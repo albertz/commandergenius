@@ -1602,14 +1602,6 @@ SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
         return -1;
     }
 
-#ifdef SDL_VIDEO_RENDER_RESIZE
-
-    if( window->w > window->display->current_mode.w || window->h > window->display->current_mode.h ) {
-        RESIZE_CreateRenderer(window);
-    }
-
-#endif
-
     SDL_SelectRenderer(window);
 
     return 0;
@@ -2384,6 +2376,32 @@ SDL_RenderClear()
     return renderer->RenderClear(renderer);
 }
 
+#if SDL_VIDEO_RENDER_RESIZE
+static inline void
+SDL_RESIZE_resizePoints(int realW, int fakeW, int realH, int fakeH,
+                        const SDL_Point * src, SDL_Point * dest, int count )
+{
+    int i;
+    for( i = 0; i < count; i++ ) {
+        dest[i].x = src[i].x * realW / fakeW;
+        dest[i].y = src[i].y * realH / fakeH;
+    }
+}
+
+static inline void
+SDL_RESIZE_resizeRects(int realW, int fakeW, int realH, int fakeH,
+                       const SDL_Rect ** src, SDL_Rect * dest, int count )
+{
+    int i;
+    for( i = 0; i < count; i++ ) {
+        dest[i].x = src[i]->x * realW / fakeW;
+        dest[i].w = src[i]->w * realW / fakeW;
+        dest[i].y = src[i]->y * realH / fakeH;
+        dest[i].h = src[i]->h * realH / fakeH;
+    }
+}
+#endif
+
 int
 SDL_RenderDrawPoint(int x, int y)
 {
@@ -2391,6 +2409,7 @@ SDL_RenderDrawPoint(int x, int y)
 
     point.x = x;
     point.y = y;
+
     return SDL_RenderDrawPoints(&point, 1);
 }
 
@@ -2398,6 +2417,9 @@ int
 SDL_RenderDrawPoints(const SDL_Point * points, int count)
 {
     SDL_Renderer *renderer;
+#if SDL_VIDEO_RENDER_RESIZE
+    int realW, realH, fakeW, fakeH, ret;
+#endif
 
     if (!points) {
         SDL_SetError("SDL_RenderDrawPoints(): Passed NULL points");
@@ -2415,6 +2437,25 @@ SDL_RenderDrawPoints(const SDL_Point * points, int count)
     if (count < 1) {
         return 0;
     }
+
+#if SDL_VIDEO_RENDER_RESIZE
+    realW = renderer->window->display->current_mode.w;
+    realH = renderer->window->display->current_mode.h;
+    fakeW = renderer->window->w;
+    fakeH = renderer->window->h;
+    if( fakeW > realW || fakeH > realH ) {
+        SDL_Point * resized = SDL_stack_alloc( SDL_Point, count );
+        if( ! resized ) {
+            SDL_OutOfMemory();
+            return -1;
+        }
+        SDL_RESIZE_resizePoints( realW, fakeW, realH, fakeH, points, resized, count );
+        ret = renderer->RenderDrawPoints(renderer, resized, count);
+        SDL_stack_free(resized);
+        return ret;
+    }
+#endif
+
     return renderer->RenderDrawPoints(renderer, points, count);
 }
 
@@ -2434,6 +2475,9 @@ int
 SDL_RenderDrawLines(const SDL_Point * points, int count)
 {
     SDL_Renderer *renderer;
+#if SDL_VIDEO_RENDER_RESIZE
+    int realW, realH, fakeW, fakeH, ret;
+#endif
 
     if (!points) {
         SDL_SetError("SDL_RenderDrawLines(): Passed NULL points");
@@ -2451,6 +2495,25 @@ SDL_RenderDrawLines(const SDL_Point * points, int count)
     if (count < 2) {
         return 0;
     }
+
+#if SDL_VIDEO_RENDER_RESIZE
+    realW = renderer->window->display->current_mode.w;
+    realH = renderer->window->display->current_mode.h;
+    fakeW = renderer->window->w;
+    fakeH = renderer->window->h;
+    if( fakeW > realW || fakeH > realH ) {
+        SDL_Point * resized = SDL_stack_alloc( SDL_Point, count );
+        if( ! resized ) {
+            SDL_OutOfMemory();
+            return -1;
+        }
+        SDL_RESIZE_resizePoints( realW, fakeW, realH, fakeH, points, resized, count );
+        ret = renderer->RenderDrawLines(renderer, resized, count);
+        SDL_stack_free(resized);
+        return ret;
+    }
+#endif
+
     return renderer->RenderDrawLines(renderer, points, count);
 }
 
@@ -2465,6 +2528,9 @@ SDL_RenderDrawRects(const SDL_Rect ** rects, int count)
 {
     SDL_Renderer *renderer;
     int i;
+#if SDL_VIDEO_RENDER_RESIZE
+    int realW, realH, fakeW, fakeH, ret;
+#endif
 
     if (!rects) {
         SDL_SetError("SDL_RenderDrawRects(): Passed NULL rects");
@@ -2497,6 +2563,36 @@ SDL_RenderDrawRects(const SDL_Rect ** rects, int count)
             return renderer->RenderDrawRects(renderer, &rect, 1);
         }
     }
+
+#if SDL_VIDEO_RENDER_RESIZE
+    realW = renderer->window->display->current_mode.w;
+    realH = renderer->window->display->current_mode.h;
+    fakeW = renderer->window->w;
+    fakeH = renderer->window->h;
+    if( fakeW > realW || fakeH > realH ) {
+        SDL_Rect * resized = SDL_stack_alloc( SDL_Rect, count );
+        if( ! resized ) {
+            SDL_OutOfMemory();
+            return -1;
+        }
+
+        const SDL_Rect ** resizedPtrs = SDL_stack_alloc( const SDL_Rect *, count );
+        if( ! resizedPtrs ) {
+            SDL_OutOfMemory();
+            return -1;
+        }
+
+        for( i = 0; i < count; i++ ) {
+            resizedPtrs[i] = &(resized[i]);
+        }
+        SDL_RESIZE_resizeRects( realW, fakeW, realH, fakeH, rects, resized, count );
+        ret = renderer->RenderDrawRects(renderer, resizedPtrs, count);
+        SDL_stack_free(resizedPtrs);
+        SDL_stack_free(resized);
+        return ret;
+    }
+#endif
+
     return renderer->RenderDrawRects(renderer, rects, count);
 }
 
@@ -2511,6 +2607,9 @@ SDL_RenderFillRects(const SDL_Rect ** rects, int count)
 {
     SDL_Renderer *renderer;
     int i;
+#if SDL_VIDEO_RENDER_RESIZE
+    int realW, realH, fakeW, fakeH, ret;
+#endif
 
     if (!rects) {
         SDL_SetError("SDL_RenderFillRects(): Passed NULL rects");
@@ -2543,6 +2642,36 @@ SDL_RenderFillRects(const SDL_Rect ** rects, int count)
             return renderer->RenderFillRects(renderer, &rect, 1);
         }
     }
+
+#if SDL_VIDEO_RENDER_RESIZE
+    realW = renderer->window->display->current_mode.w;
+    realH = renderer->window->display->current_mode.h;
+    fakeW = renderer->window->w;
+    fakeH = renderer->window->h;
+    if( fakeW > realW || fakeH > realH ) {
+        SDL_Rect * resized = SDL_stack_alloc( SDL_Rect, count );
+        if( ! resized ) {
+            SDL_OutOfMemory();
+            return -1;
+        }
+
+        const SDL_Rect ** resizedPtrs = SDL_stack_alloc( const SDL_Rect *, count );
+        if( ! resizedPtrs ) {
+            SDL_OutOfMemory();
+            return -1;
+        }
+
+        for( i = 0; i < count; i++ ) {
+            resizedPtrs[i] = &(resized[i]);
+        }
+        SDL_RESIZE_resizeRects( realW, fakeW, realH, fakeH, rects, resized, count );
+        ret = renderer->RenderFillRects(renderer, resizedPtrs, count);
+        SDL_stack_free(resizedPtrs);
+        SDL_stack_free(resized);
+        return ret;
+    }
+#endif
+
     return renderer->RenderFillRects(renderer, rects, count);
 }
 
@@ -2554,6 +2683,12 @@ SDL_RenderCopy(SDL_Texture * texture, const SDL_Rect * srcrect,
     SDL_Window *window;
     SDL_Rect real_srcrect;
     SDL_Rect real_dstrect;
+#if SDL_VIDEO_RENDER_RESIZE
+    int realW = window->display->current_mode.w;
+    int realH = window->display->current_mode.h;
+    int fakeW = window->w;
+    int fakeH = window->h;
+#endif
 
     CHECK_TEXTURE_MAGIC(texture, -1);
 
@@ -2603,6 +2738,15 @@ SDL_RenderCopy(SDL_Texture * texture, const SDL_Rect * srcrect,
             real_srcrect.h += (deltah * real_srcrect.h) / dstrect->h;
         }
     }
+
+#if SDL_VIDEO_RENDER_RESIZE
+    if( fakeW > realW || fakeH > realH ) {
+        real_dstrect.x = real_dstrect.x * realW / fakeW;
+        real_dstrect.y = real_dstrect.y * realH / fakeH;
+        real_dstrect.w = real_dstrect.w * realW / fakeW;
+        real_dstrect.h = real_dstrect.h * realH / fakeH;
+    }
+#endif
 
     return renderer->RenderCopy(renderer, texture, &real_srcrect,
                                 &real_dstrect);

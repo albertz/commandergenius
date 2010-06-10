@@ -24,6 +24,5 @@
 /* OpenGL renderer implementation */
 
 extern SDL_RenderDriver GL_ES_RenderDriver;
-extern const size_t GLES_RenderDataSize;
 
 /* vi: set ts=4 sw=4 expandtab: */

@@ -121,8 +121,6 @@ typedef struct
     SDL_DirtyRectList dirty;
 } SW_RenderData;
 
-const size_t SW_RenderDataSize = sizeof(SW_RenderData);
-
 static SDL_Texture *
 CreateTexture(SDL_Renderer * renderer, Uint32 format, int w, int h)
 {

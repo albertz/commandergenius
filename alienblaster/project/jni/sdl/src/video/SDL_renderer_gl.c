@@ -184,8 +184,6 @@ typedef struct
     GLuint fragment_program_UYVY;
 } GL_RenderData;
 
-const size_t GL_RenderDataSize = sizeof(GL_RenderData);
-
 typedef struct
 {
     GLuint texture;
