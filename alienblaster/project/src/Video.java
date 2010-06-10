@@ -19,6 +19,7 @@ import android.view.Window;
 import android.view.WindowManager;
 
 import android.widget.TextView;
+import java.lang.Thread;
 
 
 class DemoRenderer extends GLSurfaceView_SDL.Renderer {
@@ -40,6 +41,9 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	public void onDrawFrame(GL10 gl) {
 
 		nativeInitJavaCallbacks();
+		
+		// Make main thread priority lower so audio thread won't get underrun
+		// Thread.currentThread().setPriority((Thread.currentThread().getPriority() + Thread.MIN_PRIORITY)/2);
 		
 		System.loadLibrary("application");
 		System.loadLibrary("sdl_main");
@@ -76,6 +80,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public DemoGLSurfaceView(Activity context) {
 		super(context);
 		mParent = context;
+		setEGLConfigChooser(Globals.NeedDepthBuffer);
 		accelerometer = new AccelerometerReader(context);
 		mRenderer = new DemoRenderer(context);
 		setRenderer(mRenderer);
