@@ -45,6 +45,8 @@ if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
 fi
 
+echo
+
 cat /dev/null > AppSettings.cfg
 echo AppName=\"$AppName\" >> AppSettings.cfg
 echo AppFullName=$AppFullName >> AppSettings.cfg
