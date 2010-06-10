@@ -2683,10 +2683,10 @@ SDL_RenderCopy(SDL_Texture * texture, const SDL_Rect * srcrect,
     SDL_Rect real_srcrect;
     SDL_Rect real_dstrect;
 #if SDL_VIDEO_RENDER_RESIZE
-    int realW = window->display->current_mode.w;
-    int realH = window->display->current_mode.h;
-    int fakeW = window->w;
-    int fakeH = window->h;
+    int realW;
+    int realH;
+    int fakeW;
+    int fakeH;
 #endif
 
     CHECK_TEXTURE_MAGIC(texture, -1);
@@ -2739,6 +2739,10 @@ SDL_RenderCopy(SDL_Texture * texture, const SDL_Rect * srcrect,
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
+    realW = window->display->current_mode.w;
+    realH = window->display->current_mode.h;
+    fakeW = window->w;
+    fakeH = window->h;
     if( fakeW > realW || fakeH > realH ) {
         real_dstrect.x = real_dstrect.x * realW / fakeW;
         real_dstrect.y = real_dstrect.y * realH / fakeH;
