@@ -15,6 +15,7 @@ import android.media.AudioFormat;
 import java.io.*;
 import java.nio.ByteBuffer;
 import android.util.Log;
+import java.lang.Thread;
 
 
 class AudioThread {
@@ -71,6 +72,13 @@ class AudioThread {
 			mAudio = null;
 		}
 		mAudioBuffer = null;
+		return 1;
+	}
+	
+	public int initAudioThread()
+	{
+		// Make audio thread priority higher so audio thread won't get underrun
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		return 1;
 	}
 	

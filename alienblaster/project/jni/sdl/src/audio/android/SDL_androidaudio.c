@@ -35,6 +35,7 @@
 #include <jni.h>
 #include <android/log.h>
 #include <string.h> // for memset()
+#include <pthread.h>
 
 #define _THIS	SDL_AudioDevice *this
 
@@ -190,12 +191,18 @@ static jmethodID JavaFillBuffer = NULL;
 static void ANDROIDAUD_ThreadInit(_THIS)
 {
 	jclass JavaAudioThreadClass = NULL;
+	jmethodID JavaInitThread = NULL;
+	struct sched_param param;
 
 	(*jniVM)->AttachCurrentThread(jniVM, &jniEnvPlaying, NULL);
+	
 
 	JavaAudioThreadClass = (*jniEnvPlaying)->GetObjectClass(jniEnvPlaying, JavaAudioThread);
 	JavaFillBuffer = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "fillBuffer", "()I");
 
+	/* HACK: raise our own thread priority to max to get rid of "W/AudioFlinger: write blocked for 54 msecs" errors */
+	JavaInitThread = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "initAudioThread", "()I");
+	(*jniEnvPlaying)->CallIntMethod( jniEnvPlaying, JavaAudioThread, JavaInitThread );
 };
 
 static void ANDROIDAUD_ThreadDeinit(_THIS)
