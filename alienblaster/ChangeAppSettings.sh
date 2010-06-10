@@ -125,7 +125,7 @@ mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
 # Force rebuild of C-Java bindings and updated settings
 touch project/jni/sdl_main/*.c
 touch project/jni/sdl/src/video/android/*.c
-touch project/jni/sdl/src/video/*.c
+touch project/jni/sdl/src/video/SDL_video.c
 touch project/jni/sdl/src/audio/android/*.c
 rm -f project/libs/armeabi/libapplication.so project/libs/armeabi/libsdl.so project/libs/armeabi/libsdl_main.so
 
