@@ -314,6 +314,10 @@ GLES_CreateRenderer(SDL_Window * window, Uint32 flags)
         data->GL_OES_draw_texture_supported = SDL_FALSE;
         data->useDrawTexture = SDL_FALSE;
     }
+#ifdef ANDROID
+    data->GL_OES_draw_texture_supported = SDL_TRUE;
+    data->useDrawTexture = SDL_TRUE;
+#endif
 #endif
 
     data->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
@@ -890,7 +894,12 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
         cropRect[3] = -srcrect->h;
         data->glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES,
                                cropRect);
-        data->glDrawTexiOES(dstrect->x, window->h - dstrect->y - dstrect->h,
+        data->glDrawTexiOES(dstrect->x, 
+#if SDL_VIDEO_RENDER_RESIZE
+                            window->display->current_mode.h - dstrect->y - dstrect->h,
+#else
+                            window->h - dstrect->y - dstrect->h,
+#endif
                             0, dstrect->w, dstrect->h);
     } else {
 
