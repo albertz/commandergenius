@@ -897,6 +897,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 mEglHelper = new EglHelper();
                 // mEglHelper.start();
                 mNeedStart = true;
+                mSizeChanged = true;
                 SwapBuffers();
                 SwapBuffers();
 
@@ -955,6 +956,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                     mEglHelper.start();
                     tellRendererSurfaceCreated = true;
                     changed = true;
+                    mNeedStart = false;
                 }
                 if (changed) {
                     mGL = (GL10) mEglHelper.createSurface(getHolder());
