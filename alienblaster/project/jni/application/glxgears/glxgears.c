@@ -412,8 +412,8 @@ static void run_gears()
 int
 main(int argc, char *argv[])
 {
-  int width  = 320;
-  int height = 480;
+  int width  = 480;
+  int height = 320;
 
   SDL_Surface *screen;
   int done;
@@ -453,7 +453,7 @@ main(int argc, char *argv[])
     }
     keys = SDL_GetKeyboardState(NULL);
 
-    if ( keys[SDLK_ESCAPE] ) {
+    if ( keys[SDL_SCANCODE_ESCAPE] ) {
       done = 1;
     }
 
