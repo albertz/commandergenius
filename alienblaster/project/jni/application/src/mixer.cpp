@@ -24,6 +24,7 @@ using namespace std;
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <android/log.h>
 
 Mixer * mixerInstance = NULL;
 
@@ -35,17 +36,22 @@ Mixer & Mixer::mixer()
 }
 
 Mixer::Mixer() {
+    __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Initializing audio");
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
       printf("Couldn't initialize SDL audio subsystem: %s\n", SDL_GetError());
+      __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", "Couldn't initialize SDL audio subsystem: %s", SDL_GetError());
       exit(1);
     }    
+    __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Initializing audio 2");
 	mixChunks = MixChunks(0);
 	musics = Musics(0);
 	enabled = false;
+    __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Initializing audio 3");
 	initMixer();
 	lastUsedReservedChannel = 0;
 	reservedChannels = 0;
 	musicPlaying = MUSIC_NONE;
+    __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Initializing audio done");
 }
 
 Mixer::~Mixer() {
@@ -55,6 +61,7 @@ Mixer::~Mixer() {
 }
 
 void Mixer::initMixer() {
+    __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Initializing audio 4");
 	enabled = (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 1, 1024) >= 0);
 	if (enabled) {
 		Mix_AllocateChannels(MIXER_NUMBER_CHANNELS);
@@ -66,6 +73,7 @@ void Mixer::initMixer() {
 		fn2mus.clear();
 		playsOn.clear();
 	}
+    __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Initializing audio 5");
 }
 
 void Mixer::freeMixer() {

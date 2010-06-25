@@ -40,14 +40,17 @@ SDL_Surface *Video::init(){
   // SDL initialisation
   // -----------------------------------------------------
 
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Initializing video");
   fullscreen = false;
   if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0) {
     printf("Couldn't initialize SDL video subsystem: %s\n", SDL_GetError());
+    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", "Couldn't initialize SDL video subsystem: %s\n", SDL_GetError());
     exit(1);
   }
   screen = SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, BIT_DEPTH, SDL_DOUBLEBUF /* | SDL_FULLSCREEN */ );
   if (!screen) {
     printf("Couldn't set %dx%d, %dbit video mode: %s\n", SCREEN_WIDTH, SCREEN_HEIGHT, BIT_DEPTH, SDL_GetError());
+    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", "Couldn't set %dx%d, %dbit video mode: %s\n", SCREEN_WIDTH, SCREEN_HEIGHT, BIT_DEPTH, SDL_GetError());
     exit(2);
   }
   
@@ -55,6 +58,7 @@ SDL_Surface *Video::init(){
   SDL_WM_SetIcon(SDL_LoadBMP( FN_ALIENBLASTER_ICON.c_str() ), NULL);
   SDL_ShowCursor(SDL_DISABLE);
 
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Initializing video done");
   return screen;
 }
 

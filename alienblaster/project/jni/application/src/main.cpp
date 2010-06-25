@@ -25,10 +25,15 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "main() 0");
   SDL_Init(0);
   srand(0);
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "main() 1");
   Game game;
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "main() 2");
   game.run();
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "main() 3");
   SDL_Quit();
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "main() 4");
   return 0;
 }

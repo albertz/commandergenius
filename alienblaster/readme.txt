@@ -3,29 +3,25 @@ I did not change anything in Alien Blaster sources, except for SCREEN_WIDTH,
 SCREEN_HEIGHT and BIT_DEPTH constants in global.h, to support 320x480x16bpp video mode,
 and also made audio initialize after main() has been called, not inside static initializers.
 
-This should be compiled with Android 1.6 SDK and NDK - google for them and install them as described in their docs.
-You'll need to install Ant too
-Then symlink this dir to <android-ndk>/apps under the name "alienblaster":
-	ln -s `pwd` <android-ndk>/apps/alienblaster
-Then go to <android-ndk> dir and execute:
-	make APP=alienblaster V=1
-Hopefully it will compile a bunch of libs under project/libs/armeabi
-Then you'll have to compile Android .apk package with Java wrapper code for this lib:
-Go to "project" directory and type
+This should be compiled with Android 2.2 SDK and NDK r4 - google for them and install them as described in their docs
+(the application will run on Android 1.6 and above, 2.2 is the first version where you can debug it).
+You'll need to install Ant too.
+Go to "project" directory and launch command
 	android update project -p .
-	ant debug
-That will create file project/bin/DemoActivity-debug.apk - use "adb install" to test it
+Then go back, edit file build.sh if needed to add NDK dir to your PATH, then launch it.
+Hopefully it will compile a bunch of libs under project/libs/armeabi,
+create file project/bin/DemoActivity-debug.apk and install it on your device or emulator.
 Then you can test it by launching Alien Blaster icon from Android applications menu.
-It's designed for 640x480, and GUI elements are drawn out of place, but you can play the game.
-Note: The game enforces vertical screen orientation, but you may open your keyboard and use it for 
+It's designed for 640x480, so if you have smaller screen it will be resized.
+Note: The game enforces horizontal screen orientation, you may open your keyboard and use it for 
 additional keys - the phone will just keep current screen orientation.
-Fire key is Call key ( = left Ctrl for SDL ), Change weapon is Menu key ( = left Alt for SDL )
 Note that you may use Volume up/down and Camera keys as game inputs -
 you'll have to redefine them in game keyconfig menu.
-Other keys like Home, Search and End Call will force application quit, and because
-the app itself does not handle SDL_QUIT event correctly (asks for confirmation),
-it will stay in memory until you reboot device (actually it won't stay in memory - it will crash :P ).
-To exit correctly press Menu key - it's redirected to Escape.
+Keys Home, Search and End Call will force application quit, and because
+of a bug in my SDL implementation application will crash.
+Back key is mapped to Escape, and both Menu and cursor keys center / trackball click are mapped to Enter.
+Newer Android phones like HTC Evo have no keyboard at all, so there are just 3 usable keys - 
+Menu, Volume Up and Volume Down. Because of that the accelerometer is configured to trigger cursor key events.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
 remove all files from project/jni/application/src and put glxgears.c there to check if it works.
@@ -33,31 +29,44 @@ Note that GL ES is NOT pure OpenGL - there are no glBegin() and glEnd() call and
 and generally it will take a lot of effort to port pure OpenGL application to GL ES.
 
 When porting you own app, first of all ensure that your application supports
-one of 320x200, 320x240 or 480x320 display resolutions and 16 bits per pixel
-(480x320 is native resolution for G1, Supersonic has 800x480).
-Also there is 640x480 mode, but it's very slow on G1 to copy from memory surface (2 FPS max).
-SDL_ListModes()[0] will always return native screen resolution, other modes are there for compatibility.
+native RGB_565 pixel format and AUDIO_S8 or AUDIO_S16 audio format
+(yes, there is RGB_565 pixelformat even for OpenGL, not BGR_565 as all other OpenGL implementation have).
+HTC G1/Nexus One has native screen resolution 480x320, HTC Evo has 800x480, so design your app to support
+any screen resolution.
+SDL_ListModes()[0] will always return native screen resolution, you may use 640x480 or 800x600
+but it will be resized to fit the screen.
 
 To compile your own app, put your app sources into project/jni/application dir (remove Alien Blaster first),
 and launch script ChangeAppSettings.sh - it will put the name of your app in several places in sources.
-The C++ files shall have .cpp extension to be compiled.
-
-Then repeat steps:
-	make APP=alienblaster V=1
-	ant debug
+The C++ files shall have .cpp extension to be compiled, rename them if necessary.
+Then you should launch script ChangeAppSettings.sh - it will ask you few questions,
+and change several values across project files.
+Then you can launch build.sh.
 
 Application data is not bundled with app itself - it should be downloaded from net on first run.
 Create .ZIP file with your application data, and put it somewhere on HTTP server - ChangeAppSettings.sh
 will ask you for the URL.
-If your app data is bigger than 5 megabytes it's better to store it on SD card, 
+If your app data is bigger than 5 megabytes it's better to store it on SD card,
 internal flash on Android is very limited.
 
-If you'll add new libs add them to project/jni/, copy Android.mk from existing lib, and
-add libname to Application.mk and project/jni/<yourapp>/Android.mk
+If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
+add libname to project/jni/<yourapp>/Android.mk
 
-Audio formats currently supported are AUDIO_S8 and AUDIO_S16 (signed 8-bit and 16-bit PCM).
+To debug your application launch Android 2.2 emulator or connect Android 2.2 device,
+go to "project" directory and launch command
+	ndk-gdb --verbose --start --force
+then when it fails enter command
+	target remote:5039
+	(then answer "y")
+Note that it's extremely buggy (I've succeeded to launch debug session twice from 20 tries), 
+you may wish to add "sleep(30);" at the beginning of main() so your app won't crash before debugger attached.
+So it's best to debug with code like:
+	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
 
 Known bugs:
+
+0. Revert to widely-used SDL 1.2, backport changes that enable hardware acceleration from SDL 1.3
+Ideally ChangeAppSettings.sh should ask you what SDL version you want to use.
 
 1. Application will crash on exit or when you're pressing "Home" button - the correct behavior for Android apps
 is to stay in memory and go to foreground when you're launching app again, that's not working yet because

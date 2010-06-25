@@ -31,15 +31,25 @@ using namespace std;
 #include "infoscreen.h"
 
 Intro::Intro( SDL_Surface *scr ) {
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 1");
   screen = scr;
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 2");
   introSprite = surfaceDB.loadSurface( FN_ALIENBLASTER_INTRO );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 3");
   activeChoiceSprite = surfaceDB.loadSurface( FN_INTRO_SHOW_CHOICE );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 4");
   font = new Font( FN_FONT_INTRO );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 5");
   fontHighlighted = new Font( FN_FONT_INTRO_HIGHLIGHTED );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 6");
   activeChoice = 0;
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 7");
   choose = Mixer::mixer().loadSample( FN_SOUND_INTRO_CHOOSE, 100 );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 8");
   confirm = Mixer::mixer().loadSample( FN_SOUND_INTRO_CONFIRM, 100 );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 9");
   infoscreen = new Infoscreen( screen );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 10");
 }
 
 Intro::~Intro() {}

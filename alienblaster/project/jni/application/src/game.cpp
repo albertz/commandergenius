@@ -74,13 +74,19 @@ int difficultyLevel;
 float actBackgroundPos;
 
 Game::Game() {
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 1");
   videoserver = new Video();
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 2");
   screen = 0;
   screen = videoserver->init();
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 3");
   settings = new Settings();
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 4");
   intro = new Intro( screen );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 5");
   setDifficulty = new SetDifficulty( screen );
   menuArcadeMode = new MenuArcadeMode( screen );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 6");
   
   pauseSprite = surfaceDB.loadSurface( FN_PAUSED );
   youLoseSprite = surfaceDB.loadSurface( FN_YOU_LOSE );
@@ -91,6 +97,8 @@ Game::Game() {
   nukeEffectSurface = surfaceDB.loadSurface( FN_NUKE_EFFECT );
 
   bossAlarm = Mixer::mixer().loadSample( FN_SOUND_BOSS_ALARM, 60 );
+
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 7");
 
   fontTime = new Font( FN_FONT_NUMBERS_TIME );
   fontSizeTime = fontTime->getCharWidth();
@@ -125,18 +133,27 @@ Game::Game() {
   sonic1 = new Sonic();
   sonic2 = new Sonic();
 
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 8");
+
   background = new Background();
   loadLevel( FN_LEVEL_ONE_PLAYER );
 
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 9");
+
   SDL_Surface *loadingSprite = surfaceDB.loadSurface( FN_LOADING );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 10");
   SDL_Rect dest;
   dest.x = (SCREEN_WIDTH - loadingSprite->w ) / 2;
   dest.y = (SCREEN_HEIGHT - loadingSprite->h ) / 2;
   dest.w = loadingSprite->w;
   dest.h = loadingSprite->h;
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 11");
   SDL_BlitSurface( loadingSprite, 0, screen, &dest );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 12");
   SDL_Flip( screen );
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 13");
   initAllSurfaces();
+  __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 14");
 }
 
 Game::~Game(){

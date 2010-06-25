@@ -26,6 +26,10 @@
 #include "SDL_error.h"
 #include "SDL_error_c.h"
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 /* Routine to get the thread-specific error variable */
 #if SDL_THREADS_DISABLED
 /* !!! FIXME: what does this comment mean? Victim of Search and Replace? */
@@ -110,6 +114,9 @@ SDL_SetError(const char *fmt, ...)
     /* If we are in debug mode, print out an error message */
 #ifdef DEBUG_ERROR
     fprintf(stderr, "SDL_SetError: %s\n", SDL_GetError());
+#endif
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_ERROR, "libSDL", "SDL_SetError: %s", SDL_GetError());
 #endif
 }
 

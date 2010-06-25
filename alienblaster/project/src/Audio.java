@@ -34,11 +34,18 @@ class AudioThread {
 	
 	public int fillBuffer()
 	{
-		mAudio.write( mAudioBuffer, 0, mAudioBuffer.length );
+		Log.i("libSDL", "JNI: fillBuffer() enter, mAudioBuffer len " + String.valueOf(mAudioBuffer.length));
+		int ret = 0;
+		try{
+		ret = mAudio.write( mAudioBuffer, 0, mAudioBuffer.length );
+		} catch( Throwable t ) {
+			Log.i("libSDL", "JNI: fillBuffer() caught exception!");
+		}
+		Log.i("libSDL", "JNI: fillBuffer() exit, written " + String.valueOf(ret));
 		return 1;
 	}
 	
-	public byte[] initAudio(int rate, int channels, int encoding, int bufSize)
+	public int initAudio(int rate, int channels, int encoding, int bufSize)
 	{
 			if( mAudio == null )
 			{
@@ -60,7 +67,12 @@ class AudioThread {
 												AudioTrack.MODE_STREAM );
 					mAudio.play();
 			}
-			return mAudioBuffer;
+			return mAudioBuffer.length;
+	}
+	
+	public byte[] getBuffer()
+	{
+		return mAudioBuffer;
 	}
 	
 	public int deinitAudio()
