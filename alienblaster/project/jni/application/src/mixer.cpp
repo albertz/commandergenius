@@ -24,7 +24,9 @@ using namespace std;
 #include <string>
 #include <fstream>
 #include <iostream>
+#ifdef ANDROID
 #include <android/log.h>
+#endif
 
 Mixer * mixerInstance = NULL;
 
@@ -91,13 +93,39 @@ void Mixer::freeMixer() {
 int Mixer::loadSample(string fileName, int volume) {
 	if (enabled) {
 		if (fn2snd.find(fileName) == fn2snd.end()) {
-			// open the file for reading
-			ifstream inputFile ( fileName.c_str(), ios::in);
-			if (!inputFile.good()) {
-				cout << "ERROR: file " << fileName << " does not exist!" << endl;
-				exit(1);
-			}
-			mixChunks.push_back(Mix_LoadWAV(fileName.c_str()));
+
+            string fn = fileName;
+            string fn1 = fn;
+            __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", (string( "Loading sound " ) + fn).c_str() );
+
+            // Check if file exist
+            FILE * inputFile = fopen( fn1.c_str(), "rb");
+            if (!inputFile) {
+              if( fn1.size() > 4 && fn1.find(".wav") != string::npos ) {
+                fn1 = fn1.substr( 0, fn1.size() - 4 ) + ".ogg";
+                inputFile = fopen( fn1.c_str(), "rb");
+              }
+              if (!inputFile) {
+                cout << "ERROR: file " << fn1 << " does not exist!" << endl;
+                #ifdef ANDROID
+                __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load sound " ) + fn1).c_str() );
+                #endif
+                exit(1);
+              }
+            }
+            fclose(inputFile);
+
+            // TODO: error-handling
+            Mix_Chunk *newSound = Mix_LoadWAV(fn1.c_str());
+            if( !newSound ) {
+              cout << "ERROR: file " << fn1 << " cannot be loaded!" << endl;
+              #ifdef ANDROID
+              __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load sound " ) + fn1).c_str() );
+              #endif
+              exit(1);
+            }
+
+			mixChunks.push_back(newSound);
 			fn2snd[ fileName ] = mixChunks.size() - 1;
 			if ( 0 <= volume && volume < 128 ) {
 				Mix_VolumeChunk( mixChunks[ mixChunks.size() - 1 ], volume );
@@ -151,14 +179,39 @@ void Mixer::fadeOut(int mSecs) {
 int Mixer::loadMusic( string fn ) {
 	if (enabled) {
 		if (fn2mus.find(fn) == fn2mus.end()) {
-			// open the file for reading
-			ifstream inputFile ( fn.c_str(), ios::in);
-			if (!inputFile.good()) {
-				cout << "ERROR: file " << fn << " does not exist!" << endl;
-				exit(1);
-			}
+
+            __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", (string( "Loading sound " ) + fn).c_str() );
+
+            string fn1 = fn;
+            // Check if file exist
+            FILE * inputFile = fopen( fn1.c_str(), "rb");
+            if (!inputFile) {
+              if( fn1.size() > 4 && fn1.find(".wav") != string::npos ) {
+                fn1 = fn1.substr( 0, fn1.size() - 4 ) + ".ogg";
+                inputFile = fopen( fn1.c_str(), "rb");
+              }
+              if (!inputFile) {
+                cout << "ERROR: file " << fn1 << " does not exist!" << endl;
+                #ifdef ANDROID
+                __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load sound " ) + fn1).c_str() );
+                #endif
+                exit(1);
+              }
+            }
+            fclose(inputFile);
+
+            // TODO: error-handling
+            Mix_Music *newSound = Mix_LoadMUS(fn1.c_str());
+            if( !newSound ) {
+              cout << "ERROR: file " << fn1 << " cannot be loaded!" << endl;
+              #ifdef ANDROID
+              __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load sound " ) + fn1).c_str() );
+              #endif
+              exit(1);
+            }
+
 			
-			musics.push_back(Mix_LoadMUS(fn.c_str()));
+			musics.push_back(newSound);
 			fn2mus[ fn ] = musics.size() - 1;
 			return musics.size() - 1;
 		}

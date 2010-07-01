@@ -100,7 +100,6 @@ static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS)
 
 static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
 {
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio: enter");
 	SDL_AudioSpec *audioFormat = &this->spec;
 	int bytesPerSample;
 	JNIEnv * jniEnv = NULL;
@@ -148,7 +147,6 @@ static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
 
 	SDL_CalculateAudioSpec(&this->spec);
 	
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio: exit, audioBufferSize %d", audioBufferSize);
 	return(1);
 }
 
@@ -184,7 +182,6 @@ static jmethodID JavaFillBuffer = NULL;
 
 static void ANDROIDAUD_ThreadInit(_THIS)
 {
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_ThreadInit: enter");
 	jclass JavaAudioThreadClass = NULL;
 	jmethodID JavaInitThread = NULL;
 	jmethodID JavaGetBuffer = NULL;
@@ -212,8 +209,6 @@ static void ANDROIDAUD_ThreadInit(_THIS)
 		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_OpenAudio(): JNI returns a copy of byte array - no audio will be played");
 
 	SDL_memset(audioBuffer, this->spec.silence, this->spec.size);
-
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_ThreadInit: exit, audioBuffer %p", audioBuffer);
 };
 
 static void ANDROIDAUD_ThreadDeinit(_THIS)
@@ -223,15 +218,12 @@ static void ANDROIDAUD_ThreadDeinit(_THIS)
 
 static void ANDROIDAUD_PlayAudio(_THIS)
 {
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio: enter, audiobuffer %p", audioBuffer);
 	jboolean isCopy = JNI_TRUE;
 
 	(*jniEnvPlaying)->ReleaseByteArrayElements(jniEnvPlaying, audioBufferJNI, (jbyte *)audioBuffer, 0);
 	audioBuffer = NULL;
 
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio: before JavaFillBuffer");
 	(*jniEnvPlaying)->CallIntMethod( jniEnvPlaying, JavaAudioThread, JavaFillBuffer );
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio: after JavaFillBuffer");
 
 	audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetByteArrayElements(jniEnvPlaying, audioBufferJNI, &isCopy);
 	if( !audioBuffer )
@@ -239,7 +231,6 @@ static void ANDROIDAUD_PlayAudio(_THIS)
 
 	if( isCopy == JNI_TRUE )
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio() JNI returns a copy of byte array - that's slow");
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio: exit audioBuffer %p", audioBuffer);
 }
 
 #ifndef SDL_JAVA_PACKAGE_PATH

@@ -34,14 +34,7 @@ class AudioThread {
 	
 	public int fillBuffer()
 	{
-		Log.i("libSDL", "JNI: fillBuffer() enter, mAudioBuffer len " + String.valueOf(mAudioBuffer.length));
-		int ret = 0;
-		try{
-		ret = mAudio.write( mAudioBuffer, 0, mAudioBuffer.length );
-		} catch( Throwable t ) {
-			Log.i("libSDL", "JNI: fillBuffer() caught exception!");
-		}
-		Log.i("libSDL", "JNI: fillBuffer() exit, written " + String.valueOf(ret));
+		mAudio.write( mAudioBuffer, 0, mAudioBuffer.length );
 		return 1;
 	}
 	
