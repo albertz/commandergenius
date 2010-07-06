@@ -16,17 +16,12 @@ import org.apache.http.impl.*;
 import org.apache.http.impl.client.*;
 import java.util.zip.*;
 import java.io.*;
+import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * CountingInputStream
- * @author $Author: jeffdrost $
- * @version $Revision: 1.7 $
- * @deprecated
- */
 class CountingInputStream extends BufferedInputStream {
 
 	private long bytesReadMark = 0;
@@ -131,8 +126,8 @@ class DataDownloader extends Thread
 	@Override
 	public void run() 
 	{
-	
-		String path = getOutFilePath("DownloadFinished.flag");
+		final String DownloadFlagFileName = "libsdl-DownloadFinished.flag";
+		String path = getOutFilePath(DownloadFlagFileName);
 		InputStream checkFile = null;
 		try {
 			checkFile = new FileInputStream( path );
@@ -140,10 +135,20 @@ class DataDownloader extends Thread
 		} catch( SecurityException e ) { };
 		if( checkFile != null )
 		{
-			Status.setText( "No need to download" );
-			DownloadComplete = true;
-			initParent();
-			return;
+			try {
+				byte b[] = new byte[ Globals.DataDownloadUrl.getBytes("UTF-8").length + 1 ];
+				int readed = checkFile.read(b);
+				String compare = new String( b, 0, b.length - 1, "UTF-8" );
+				//Log.i("libSDL", "Saved URL '" + compare + "' requested URL '" + Globals.DataDownloadUrl + "'");
+				if( readed != b.length - 1 )
+					throw new IOException();
+				if( compare.compareTo(Globals.DataDownloadUrl) != 0 )
+					throw new IOException();
+				Status.setText( "No need to download" );
+				DownloadComplete = true;
+				initParent();
+				return;
+			} catch ( IOException e ) {};
 		}
 		checkFile = null;
 		
@@ -254,10 +259,10 @@ class DataDownloader extends Thread
 		}
 
 		OutputStream out = null;
-		path = getOutFilePath("DownloadFinished.flag");
+		path = getOutFilePath(DownloadFlagFileName);
 		try {
 			out = new FileOutputStream( path );
-			out.write(0);
+			out.write(Globals.DataDownloadUrl.getBytes("UTF-8"));
 			out.flush();
 			out.close();
 		} catch( FileNotFoundException e ) {
