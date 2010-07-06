@@ -121,8 +121,8 @@ SDL_RenderDriver GL_ES_RenderDriver = {
       SDL_PIXELFORMAT_BGR565,
 #ifdef ANDROID
       SDL_PIXELFORMAT_RGB565, // Android is special, GL pixelformat has R and B channels not swapped
-      SDL_PIXELFORMAT_ARGB1555,
-      SDL_PIXELFORMAT_ARGB4444,
+      SDL_PIXELFORMAT_RGBA5551,
+      SDL_PIXELFORMAT_RGBA4444,
 #endif
       SDL_PIXELFORMAT_BGR24,
       SDL_PIXELFORMAT_ABGR8888},
@@ -421,12 +421,12 @@ GLES_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         format = GL_RGB;
         type = GL_UNSIGNED_SHORT_5_6_5;
         break;
-    case SDL_PIXELFORMAT_ARGB1555:
+    case SDL_PIXELFORMAT_RGBA5551:
         internalFormat = GL_RGBA;
         format = GL_RGBA;
         type = GL_UNSIGNED_SHORT_5_5_5_1;
         break;
-    case SDL_PIXELFORMAT_ARGB4444:
+    case SDL_PIXELFORMAT_RGBA4444:
         internalFormat = GL_RGBA;
         format = GL_RGBA;
         type = GL_UNSIGNED_SHORT_4_4_4_4;
