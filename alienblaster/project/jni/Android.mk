@@ -21,6 +21,6 @@ SDL_TRACKBALL_KEYUP_DELAY := 1
 
 # If the application designed for higher screen resolution enable this to get the screen
 # resized in HW-accelerated way, however it eats a tiny bit of CPU
-SDL_VIDEO_RENDER_RESIZE := 1
+SDL_VIDEO_RENDER_RESIZE := 2
 
 include $(call all-subdir-makefiles)
