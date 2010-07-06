@@ -22,6 +22,7 @@
 
 #include "SDL.h"
 #include <vector>
+#include "SdlForwardCompat.h"
 
 class Wreck;
 
@@ -35,7 +36,7 @@ class Wrecks {
   void addWreck(Wreck *wreck);
   void expireWrecks();
   void updateWrecks( int dT );
-  void draw(SDL_Surface *screen);
+  void draw(SdlCompat_AcceleratedSurface *screen);
   void deleteAllWrecks();
   
   unsigned int getNrWrecks() { return wrecks.size(); }

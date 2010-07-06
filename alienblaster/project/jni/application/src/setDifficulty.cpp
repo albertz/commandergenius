@@ -29,7 +29,7 @@ using namespace std;
 #include "racer.h"
 #include "racers.h"
 
-SetDifficulty::SetDifficulty( SDL_Surface *scr ) {
+SetDifficulty::SetDifficulty( SdlCompat_AcceleratedSurface *scr ) {
   screen = scr;
   introSprite = surfaceDB.loadSurface( FN_ALIENBLASTER_INTRO );
   activeChoiceSprite = surfaceDB.loadSurface( FN_INTRO_SHOW_CHOICE );
@@ -163,7 +163,7 @@ void SetDifficulty::handleEvents( GameStates &gameState ) {
             break;
           }
           case SDLK_F5: {
-            SDL_WM_ToggleFullScreen( screen );
+            //SDL_WM_ToggleFullScreen( screen );
             break;
           }
           case SDLK_F7: {

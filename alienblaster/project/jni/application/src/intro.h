@@ -22,6 +22,7 @@
 
 #include <string>
 #include "SDL.h"
+#include "SdlForwardCompat.h"
 #include "game.h"
 
 class Font;
@@ -36,9 +37,9 @@ const int NR_INTRO_CHOICES = 6;
 
 class Intro {
   private:
-  SDL_Surface *screen;
-  SDL_Surface *introSprite;
-  SDL_Surface *activeChoiceSprite;
+  SdlCompat_AcceleratedSurface *screen;
+  SdlCompat_AcceleratedSurface *introSprite;
+  SdlCompat_AcceleratedSurface *activeChoiceSprite;
   Font *font;
   Font *fontHighlighted;
   Infoscreen *infoscreen;
@@ -50,11 +51,11 @@ class Intro {
   int confirm;
 
   public:
-  Intro( SDL_Surface *scr );
+  Intro( SdlCompat_AcceleratedSurface *scr );
   ~Intro();
   void run( GameStates &gameState );
   void showScreenshots();
-  bool blendImages( SDL_Surface *screen, SDL_Surface *surf0, SDL_Rect *r1, SDL_Surface *surf1, SDL_Rect *r2, int sps );
+  // bool blendImages( SdlCompat_AcceleratedSurface *screen, SdlCompat_AcceleratedSurface *surf0, SDL_Rect *r1, SdlCompat_AcceleratedSurface *surf1, SDL_Rect *r2, int sps );
 
   private:
   void handleEvents( GameStates &gameState );

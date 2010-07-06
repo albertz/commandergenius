@@ -35,7 +35,7 @@ Video::~Video(){
   // kill something
 }
 
-SDL_Surface *Video::init(){
+SdlCompat_AcceleratedSurface *Video::init(){
   // --------------------------------------------------
   // SDL initialisation
   // -----------------------------------------------------
@@ -47,12 +47,18 @@ SDL_Surface *Video::init(){
     __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", "Couldn't initialize SDL video subsystem: %s\n", SDL_GetError());
     exit(1);
   }
-  screen = SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, BIT_DEPTH, SDL_DOUBLEBUF /* | SDL_FULLSCREEN */ );
-  if (!screen) {
+  SDL_Surface * screen2 = SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, BIT_DEPTH, SDL_DOUBLEBUF /* | SDL_FULLSCREEN */ );
+  if (!screen2) {
     printf("Couldn't set %dx%d, %dbit video mode: %s\n", SCREEN_WIDTH, SCREEN_HEIGHT, BIT_DEPTH, SDL_GetError());
     __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", "Couldn't set %dx%d, %dbit video mode: %s\n", SCREEN_WIDTH, SCREEN_HEIGHT, BIT_DEPTH, SDL_GetError());
     exit(2);
   }
+  // Dummy texture
+  screen2 = SDL_CreateRGBSurface( 0, 16, 16, 16, 0xff, 0x00ff, 0x0000ff, 0 );
+  SDL_Surface * screen3 = SDL_DisplayFormat( screen2 );
+  SDL_FreeSurface(screen2);
+  screen = SdlCompat_CreateAcceleratedSurface(screen3);
+  SDL_FreeSurface(screen3);
   
   SDL_WM_SetCaption("AlienBlaster", "AlienBlaster");
   SDL_WM_SetIcon(SDL_LoadBMP( FN_ALIENBLASTER_ICON.c_str() ), NULL);
@@ -74,10 +80,13 @@ void Video::clearScreen() {
 }
 
 void Video::toggleFullscreen() {
+  // TODO: fix that?
+  /*
   if ( fullscreen ) {
     screen = SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, BIT_DEPTH, SDL_DOUBLEBUF );
   } else {
     screen = SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, BIT_DEPTH, SDL_DOUBLEBUF | SDL_FULLSCREEN );
   }
+  */
   fullscreen = !fullscreen;
 }

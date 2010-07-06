@@ -45,9 +45,9 @@ SurfaceDB::~SurfaceDB() {
   }
 }
 
-SDL_Surface *SurfaceDB::loadSurface( string fn, bool alpha ) {
+SdlCompat_AcceleratedSurface *SurfaceDB::loadSurface( string fn, bool alpha ) {
 
-  SDL_Surface *searchResult = getSurface( fn );
+  SdlCompat_AcceleratedSurface *searchResult = getSurface( fn );
   if ( searchResult ) {
     return searchResult;
   }
@@ -103,11 +103,12 @@ SDL_Surface *SurfaceDB::loadSurface( string fn, bool alpha ) {
 		   SDL_MapRGB(newSurface->format, transR, transG, transB) );
   }
 
-  surfaceDB[ fn ] = newSurface;
-  return newSurface;
+  surfaceDB[ fn ] = SdlCompat_CreateAcceleratedSurface( newSurface );
+  SDL_FreeSurface(newSurface);
+  return surfaceDB[ fn ];
 }
 
-SDL_Surface *SurfaceDB::getSurface( string fn ) {
+SdlCompat_AcceleratedSurface *SurfaceDB::getSurface( string fn ) {
   if ( surfaceDB.empty() ) {
     return 0;
   } else {

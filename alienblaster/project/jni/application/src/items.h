@@ -40,7 +40,7 @@ class Items {
   void generate( int dT );
   void expireItems();
   void update( int dT );
-  void draw(SDL_Surface *screen);
+  void draw(SdlCompat_AcceleratedSurface *screen);
   void deleteAllItems();
   
   inline unsigned int getNrItems() { return items.size(); }

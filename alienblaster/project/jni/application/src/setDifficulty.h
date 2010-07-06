@@ -36,13 +36,13 @@ const int NR_DIFFICULTY_CHOICES = 5;
 
 class SetDifficulty {
   private:
-  SDL_Surface *screen;
-  SDL_Surface *introSprite;
-  SDL_Surface *activeChoiceSprite;
-  SDL_Surface *lightFighterIcon1;
-  SDL_Surface *lightFighterIcon2;
-  SDL_Surface *heavyFighterIcon1;
-  SDL_Surface *heavyFighterIcon2;
+  SdlCompat_AcceleratedSurface *screen;
+  SdlCompat_AcceleratedSurface *introSprite;
+  SdlCompat_AcceleratedSurface *activeChoiceSprite;
+  SdlCompat_AcceleratedSurface *lightFighterIcon1;
+  SdlCompat_AcceleratedSurface *lightFighterIcon2;
+  SdlCompat_AcceleratedSurface *heavyFighterIcon1;
+  SdlCompat_AcceleratedSurface *heavyFighterIcon2;
   Font *font;
   Font *fontHighlighted;
   
@@ -56,7 +56,7 @@ class SetDifficulty {
   int choose;
 
   public:
-  SetDifficulty( SDL_Surface *scr );
+  SetDifficulty( SdlCompat_AcceleratedSurface *scr );
   ~SetDifficulty();
   void run( GameStates &gameState, bool onePlayerGame );
   bool getPlayerOneLightFighter();

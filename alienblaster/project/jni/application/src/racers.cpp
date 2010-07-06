@@ -114,21 +114,21 @@ void Racers::rechargeShield( int dT ) {
   }
 }
 
-void Racers::drawRacers( SDL_Surface *screen ) {
+void Racers::drawRacers( SdlCompat_AcceleratedSurface *screen ) {
   vector<Racer *>::iterator i;
   for (i = racers.begin(); i != racers.end(); ++i) {
     (*i)->drawRacer(screen);
   }
 }
 
-void Racers::drawShadows( SDL_Surface *screen ) {
+void Racers::drawShadows( SdlCompat_AcceleratedSurface *screen ) {
   vector<Racer *>::iterator i;
   for (i = racers.begin(); i != racers.end(); ++i) {
     (*i)->drawShadow(screen);
   }
 }
 
-void Racers::drawStats( SDL_Surface *screen ) {
+void Racers::drawStats( SdlCompat_AcceleratedSurface *screen ) {
   vector<Racer *>::iterator i;
   for (i = racers.begin(); i != racers.end(); ++i) {
     (*i)->drawStats(screen);

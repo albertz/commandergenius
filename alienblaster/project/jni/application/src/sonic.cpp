@@ -40,12 +40,12 @@ void Sonic::setPos( Vector2D pos1, Vector2D pos2 ) {
   active = true;
 }
 
-void Sonic::drawAtPos( SDL_Surface *screen, Vector2D pos1, Vector2D pos2 ) {
+void Sonic::drawAtPos( SdlCompat_AcceleratedSurface *screen, Vector2D pos1, Vector2D pos2 ) {
   setPos( pos1, pos2 );
   draw( screen );
 }
 
-void Sonic::draw( SDL_Surface *screen ) {
+void Sonic::draw( SdlCompat_AcceleratedSurface *screen ) {
   if ( !active ) return;
   timeStage += 2;
   timeStage = (timeStage % (int)(waveLength + 0.5f)) + 1;

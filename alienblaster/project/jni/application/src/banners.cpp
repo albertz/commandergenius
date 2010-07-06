@@ -73,7 +73,7 @@ void Banners::update( int dT ) {
   }
 }
 
-void Banners::draw(SDL_Surface *screen) {
+void Banners::draw(SdlCompat_AcceleratedSurface *screen) {
   switch ( banners.size() ) {
   case 0: break;
   case 1: banners[0]->draw( screen ); break;

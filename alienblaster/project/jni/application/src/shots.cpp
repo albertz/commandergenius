@@ -67,28 +67,28 @@ void Shots::expireShots() {
   }
 }
 
-void Shots::drawShadows(SDL_Surface *screen) {
+void Shots::drawShadows(SdlCompat_AcceleratedSurface *screen) {
   vector<Shot *>::iterator i;
   for (i = shots.begin(); i != shots.end(); ++i) {
     (*i)->drawShadow(screen);
   }
 }
 
-void Shots::drawGroundShots(SDL_Surface *screen) {
+void Shots::drawGroundShots(SdlCompat_AcceleratedSurface *screen) {
   vector<Shot *>::iterator i;
   for (i = shots.begin(); i != shots.end(); ++i) {
     (*i)->drawGroundShot(screen);
   }
 }
 
-void Shots::drawAirShots(SDL_Surface *screen) {
+void Shots::drawAirShots(SdlCompat_AcceleratedSurface *screen) {
   vector<Shot *>::iterator i;
   for (i = shots.begin(); i != shots.end(); ++i) {
     (*i)->drawAirShot(screen);
   }
 }
 
-void Shots::drawGroundAirShots(SDL_Surface *screen) {
+void Shots::drawGroundAirShots(SdlCompat_AcceleratedSurface *screen) {
   vector<Shot *>::iterator i;
   for (i = shots.begin(); i != shots.end(); ++i) {
     (*i)->drawGroundAirShot(screen);

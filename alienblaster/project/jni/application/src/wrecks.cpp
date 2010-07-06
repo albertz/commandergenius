@@ -55,7 +55,7 @@ void Wrecks::updateWrecks( int dT ) {
   }
 }
 
-void Wrecks::draw(SDL_Surface *screen) {
+void Wrecks::draw(SdlCompat_AcceleratedSurface *screen) {
   vector<Wreck *>::iterator i;
   for (i = wrecks.begin(); i != wrecks.end(); ++i) {
     (*i)->draw(screen);

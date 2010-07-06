@@ -642,7 +642,7 @@ void Shot::addExplosion() {
 
 ////////////////////
 
-void Shot::drawShadow(SDL_Surface *screen) {
+void Shot::drawShadow(SdlCompat_AcceleratedSurface *screen) {
   switch (shotType) {
   case SHOT_KICK_ASS_ROCKET:
   case SHOT_HF_KICK_ASS_ROCKET:
@@ -680,7 +680,7 @@ void Shot::drawShadow(SDL_Surface *screen) {
   }
 }
 
-void Shot::drawGroundShot(SDL_Surface *screen) {
+void Shot::drawGroundShot(SdlCompat_AcceleratedSurface *screen) {
   switch (shotType) {
   case SHOT_KICK_ASS_ROCKET:
   case SHOT_HF_KICK_ASS_ROCKET:
@@ -704,7 +704,7 @@ void Shot::drawGroundShot(SDL_Surface *screen) {
   }
 }
  
-void Shot::drawGroundAirShot(SDL_Surface *screen) {
+void Shot::drawGroundAirShot(SdlCompat_AcceleratedSurface *screen) {
   switch (shotType) {
   case SHOT_DUMBFIRE:
   case SHOT_DUMBFIRE_DOUBLE:
@@ -798,7 +798,7 @@ void Shot::drawGroundAirShot(SDL_Surface *screen) {
   }
 }
 
-void Shot::drawAirShot(SDL_Surface *screen) {
+void Shot::drawAirShot(SdlCompat_AcceleratedSurface *screen) {
   switch (shotType) {
   case SHOT_NORMAL:
   case SHOT_NORMAL_HEAVY:

@@ -37,7 +37,7 @@ class SmokePuffs {
   void addSmokePuff( Vector2D pos, Vector2D vel, SmokePuffTypes whichType );
   void expireSmokePuffs();
   void update( int dT );
-  void draw(SDL_Surface *screen);
+  void draw(SdlCompat_AcceleratedSurface *screen);
   unsigned int getNrSmokePuffs() { return smokePuffs.size(); }
 };
 

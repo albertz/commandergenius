@@ -208,13 +208,13 @@ void Enemys::generateEnemys( int dT ) {
       }
     case TANK:
       {
-// 	SDL_Surface *spriteTank = surfaceDB.loadSurface( FN_ENEMY_TANK );
-// 	SDL_Surface *spriteTankWreck = surfaceDB.loadSurface( FN_WRECK_TANK );
+// 	SdlCompat_AcceleratedSurface *spriteTank = surfaceDB.loadSurface( FN_ENEMY_TANK );
+// 	SdlCompat_AcceleratedSurface *spriteTankWreck = surfaceDB.loadSurface( FN_WRECK_TANK );
 	string fn1, fn2;
 	levelConf->getStr( LVL_ENEMY_TANK, fn1 );
 	levelConf->getStr( LVL_WRECK_TANK, fn2 );
-	SDL_Surface *spriteTank = surfaceDB.loadSurface( fn1 );
-	SDL_Surface *spriteTankWreck = surfaceDB.loadSurface( fn2 );
+	SdlCompat_AcceleratedSurface *spriteTank = surfaceDB.loadSurface( fn1 );
+	SdlCompat_AcceleratedSurface *spriteTankWreck = surfaceDB.loadSurface( fn2 );
 	int halfWidthTank = spriteTank->w / 2;
 	int halfHeightTank = spriteTank->h / 2;
 	int halfWidthTankWreck = spriteTankWreck->w / 2;
@@ -338,28 +338,28 @@ void Enemys::deleteExpiredEnemys() {
   }
 }
 
-void Enemys::drawGroundEnemys(SDL_Surface *screen) {
+void Enemys::drawGroundEnemys(SdlCompat_AcceleratedSurface *screen) {
   vector<Enemy *>::iterator i;
   for (i = enemys.begin(); i != enemys.end(); ++i) {
     (*i)->drawGroundEnemy(screen);
   }
 }
 
-void Enemys::drawAirEnemys(SDL_Surface *screen) {
+void Enemys::drawAirEnemys(SdlCompat_AcceleratedSurface *screen) {
   vector<Enemy *>::iterator i;
   for (i = enemys.begin(); i != enemys.end(); ++i) {
     (*i)->drawAirEnemy(screen);
   }
 }
   
-void Enemys::drawShadows(SDL_Surface *screen) {
+void Enemys::drawShadows(SdlCompat_AcceleratedSurface *screen) {
   vector<Enemy *>::iterator i;
   for (i = enemys.begin(); i != enemys.end(); ++i) {
     (*i)->drawShadow(screen);
   }
 }
 
-void Enemys::drawBossStats( SDL_Surface *screen ) {
+void Enemys::drawBossStats( SdlCompat_AcceleratedSurface *screen ) {
   for ( unsigned int i = 0; i < enemys.size(); i++ ) {
     if ( enemys[ i ]->getType() >= NR_ENEMY_TYPES_NORMAL ) {
       enemys[ i ]->drawStats( screen );
@@ -367,7 +367,7 @@ void Enemys::drawBossStats( SDL_Surface *screen ) {
   }
 }
 
-void Enemys::drawAllStats( SDL_Surface *screen ) {
+void Enemys::drawAllStats( SdlCompat_AcceleratedSurface *screen ) {
   for ( unsigned int i = 0; i < enemys.size(); i++ ) {
     enemys[ i ]->drawStats( screen );
   }

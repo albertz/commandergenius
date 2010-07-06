@@ -52,7 +52,7 @@ void SmokePuff::update( int dT ) {
   }
 }
 
-void SmokePuff::drawSmokePuff( SDL_Surface *screen ) {
+void SmokePuff::drawSmokePuff( SdlCompat_AcceleratedSurface *screen ) {
   if (expired) return;
 
   SDL_Rect dest;

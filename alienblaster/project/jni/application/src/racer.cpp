@@ -231,7 +231,7 @@ void Racer::clipWorld() {
 }
     
 
-void Racer::drawStats( SDL_Surface *screen ) {
+void Racer::drawStats( SdlCompat_AcceleratedSurface *screen ) {
   SDL_Rect srcR, destR;
 
   int indent = 5;
@@ -320,7 +320,7 @@ void Racer::drawStats( SDL_Surface *screen ) {
 }
 
 
-void Racer::drawShadow( SDL_Surface *screen ) {
+void Racer::drawShadow( SdlCompat_AcceleratedSurface *screen ) {
   SDL_Rect destR;
   destR.x = lroundf(pos.getX()) - (spriteShadow->w / 2) - 10;
   destR.y = lroundf(pos.getY()) - (spriteShadow->h / 2) + 10;
@@ -330,7 +330,7 @@ void Racer::drawShadow( SDL_Surface *screen ) {
 }
 
 
-void Racer::drawRacer( SDL_Surface *screen ) {
+void Racer::drawRacer( SdlCompat_AcceleratedSurface *screen ) {
 
   SDL_Rect srcR;
   SDL_Rect destR;

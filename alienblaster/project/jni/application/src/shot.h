@@ -36,8 +36,8 @@ class Shot {
   int fromWhichPlayer;
   ShotTypes shotType;
 
-  SDL_Surface *sprite;
-  SDL_Surface *spriteShadow;
+  SdlCompat_AcceleratedSurface *sprite;
+  SdlCompat_AcceleratedSurface *spriteShadow;
 
   bool collidedWithGround; // defaultValue = false
   
@@ -55,10 +55,10 @@ class Shot {
   // and makes a neat explosion
   void moveAndCollide( int dT );
   // draws the shot
-  void drawShadow(SDL_Surface *screen);
-  void drawGroundShot(SDL_Surface *screen);
-  void drawAirShot(SDL_Surface *screen);
-  void drawGroundAirShot(SDL_Surface *screen);
+  void drawShadow(SdlCompat_AcceleratedSurface *screen);
+  void drawGroundShot(SdlCompat_AcceleratedSurface *screen);
+  void drawAirShot(SdlCompat_AcceleratedSurface *screen);
+  void drawGroundAirShot(SdlCompat_AcceleratedSurface *screen);
 
   bool isExpired() { return (timeToLive <= 0); }
   Vector2D getPos() { return pos; }

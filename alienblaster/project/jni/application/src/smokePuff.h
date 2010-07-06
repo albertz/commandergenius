@@ -29,7 +29,7 @@ class SmokePuff {
 
   // a sprite, that contains horizontally all animationframes of the smokePuff.
   // it is assumed, that every frame is quadratic.
-  SDL_Surface *sprite;
+  SdlCompat_AcceleratedSurface *sprite;
 
   // how many frames does this explosion have?
   int nrAnimStages;
@@ -54,7 +54,7 @@ class SmokePuff {
   ~SmokePuff();
   // updates the position and the counters
   void update( int dT );
-  void drawSmokePuff(SDL_Surface *screen);
+  void drawSmokePuff(SdlCompat_AcceleratedSurface *screen);
   bool isExpired() { return expired; }
 };
 

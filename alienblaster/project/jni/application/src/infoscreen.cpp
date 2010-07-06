@@ -30,7 +30,7 @@ using namespace std;
 
 Items *infoscreenItems;
 
-Infoscreen::Infoscreen( SDL_Surface *scr ) {
+Infoscreen::Infoscreen( SdlCompat_AcceleratedSurface *scr ) {
   screen = scr;
   font = new Font( FN_FONT_INTRO );
   fontHighlighted = new Font( FN_FONT_INTRO_HIGHLIGHTED );
@@ -61,7 +61,7 @@ void Infoscreen::run() {
   }
 }
 
-void Infoscreen::putBitmapAtPosition( int x, int y, SDL_Surface* bitmap ) {
+void Infoscreen::putBitmapAtPosition( int x, int y, SdlCompat_AcceleratedSurface* bitmap ) {
   SDL_Rect d;
   d.x = x - bitmap->w / 2;
   d.y = y - bitmap->h / 2;

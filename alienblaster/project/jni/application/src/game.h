@@ -21,7 +21,9 @@
 #define GAME_HH
 
 #include "SDL.h"
+#include "SdlForwardCompat.h"
 #include <string>
+
 
 class Video;
 class SurfaceDB;
@@ -46,14 +48,14 @@ enum GameStates { GS_QUIT, GS_SCREENSHOTS, GS_INTRO, GS_SET_DIFFICULTY,
    game objects and their dependencies. */
 class Game {
   // Video system
-  SDL_Surface *screen;
+  SdlCompat_AcceleratedSurface *screen;
 
-  SDL_Surface *pauseSprite;
-  SDL_Surface *youLoseSprite;
-  SDL_Surface *youWinSprite;
-  SDL_Surface *gameOverSprite;
-  SDL_Surface *nukeEffectSurface;
-  SDL_Surface *hud;
+  SdlCompat_AcceleratedSurface *pauseSprite;
+  SdlCompat_AcceleratedSurface *youLoseSprite;
+  SdlCompat_AcceleratedSurface *youWinSprite;
+  SdlCompat_AcceleratedSurface *gameOverSprite;
+  SdlCompat_AcceleratedSurface *nukeEffectSurface;
+  SdlCompat_AcceleratedSurface *hud;
 
   // Time system
   Font *fontTime;

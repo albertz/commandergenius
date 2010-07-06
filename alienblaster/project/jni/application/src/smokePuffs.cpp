@@ -61,7 +61,7 @@ void SmokePuffs::update( int dT ) {
   }
 }
 
-void SmokePuffs::draw(SDL_Surface *screen) {
+void SmokePuffs::draw(SdlCompat_AcceleratedSurface *screen) {
   vector<SmokePuff *>::iterator i;
   for (i = smokePuffs.begin(); i != smokePuffs.end(); ++i) {
     (*i)->drawSmokePuff( screen );

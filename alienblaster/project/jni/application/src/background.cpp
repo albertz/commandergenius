@@ -52,10 +52,10 @@ void Background::generateBackground( int length ) {
   minTileHeight  = 9999999;
   
   // load all tiles
-  vector< SDL_Surface* > tmpTiles;
+  vector< SdlCompat_AcceleratedSurface* > tmpTiles;
   for(int i=tileNames.size()-1; i>=0; i--) {
 
-    SDL_Surface *tile = surfaceDB.loadSurface( tileNames[i] );
+    SdlCompat_AcceleratedSurface *tile = surfaceDB.loadSurface( tileNames[i] );
 
     if (tile != NULL) {
       tmpTiles.push_back( tile );
@@ -92,13 +92,13 @@ void Background::generateBackground( int length ) {
 }
 
 
-void Background::draw( SDL_Surface* screen ) {  
+void Background::draw( SdlCompat_AcceleratedSurface* screen ) {  
   step = (step+1) % (tilesPerColumn*minTileHeight);
   draw( screen, step );
 }
 
 
-void Background::draw( SDL_Surface* screen, int step ) {
+void Background::draw( SdlCompat_AcceleratedSurface* screen, int step ) {
   if (step < 0) {
     step *= -1;
   }

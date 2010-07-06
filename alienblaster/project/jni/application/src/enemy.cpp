@@ -474,7 +474,7 @@ void Enemy::doDamage( ShotTypes shotType, int fromWhichPlayer ) {
 }
 
 
-void Enemy::drawGroundEnemy( SDL_Surface *screen ) {
+void Enemy::drawGroundEnemy( SdlCompat_AcceleratedSurface *screen ) {
   if ( ENEMY_FLYING[ enemyType ] ) return;
 
   SDL_Rect destR;
@@ -487,7 +487,7 @@ void Enemy::drawGroundEnemy( SDL_Surface *screen ) {
   SDL_BlitSurface( spriteEnemy, 0, screen, &destR );
 }
 
-void Enemy::drawAirEnemy( SDL_Surface *screen ) {
+void Enemy::drawAirEnemy( SdlCompat_AcceleratedSurface *screen ) {
   if ( !ENEMY_FLYING[ enemyType ] ) return;
 
   SDL_Rect destR;
@@ -500,7 +500,7 @@ void Enemy::drawAirEnemy( SDL_Surface *screen ) {
   SDL_BlitSurface( spriteEnemy, 0, screen, &destR );
 }
 
-void Enemy::drawShadow( SDL_Surface *screen ) {
+void Enemy::drawShadow( SdlCompat_AcceleratedSurface *screen ) {
   if ( !ENEMY_FLYING[ enemyType ] ) return;
 
   SDL_Rect destR;
@@ -514,7 +514,7 @@ void Enemy::drawShadow( SDL_Surface *screen ) {
 }
 
 
-void Enemy::drawStats( SDL_Surface *screen ) {
+void Enemy::drawStats( SdlCompat_AcceleratedSurface *screen ) {
   // draw status of the bosses
   float pixPerHP = spriteEnemy->w / (float)(ENEMY_HITPOINTS[ enemyType ]);
   SDL_Rect destR;

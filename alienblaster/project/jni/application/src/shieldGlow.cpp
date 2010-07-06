@@ -42,7 +42,7 @@ ShieldGlow::ShieldGlow( ShipTypes shipType ) {
 
 ShieldGlow::~ShieldGlow() {}
 
-void ShieldGlow::draw( SDL_Surface *screen, Vector2D pos, int time ) {
+void ShieldGlow::draw( SdlCompat_AcceleratedSurface *screen, Vector2D pos, int time ) {
   if ( time < 0 || RACER_SHIELD_DAMAGE_LIFETIME < time ) return;
   
   int actFrame = time / timePerFrame;

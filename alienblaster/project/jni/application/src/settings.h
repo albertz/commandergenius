@@ -24,6 +24,8 @@
 #include <map>
 #include <vector>
 #include "SDL.h"
+#include "SdlForwardCompat.h"
+
 
 class Font;
 class Options;
@@ -60,15 +62,15 @@ class Settings {
   Settings();
   ~Settings();
   
-  void settingsDialog(SDL_Surface *screen);
+  void settingsDialog(SdlCompat_AcceleratedSurface *screen);
   const PlayerKeys getPlayerKeys(unsigned int player) const;
 
   private:
 
-  SDL_Surface *introSprite;
-  SDL_Surface *activeChoiceSprite;
-  SDL_Surface *bluePlain;
-  SDL_Surface *whitePlain;
+  SdlCompat_AcceleratedSurface *introSprite;
+  SdlCompat_AcceleratedSurface *activeChoiceSprite;
+  SdlCompat_AcceleratedSurface *bluePlain;
+  SdlCompat_AcceleratedSurface *whitePlain;
   SettingsChoices actChoice;
   bool wasLeftColumn;
   Options *opfile;
@@ -85,11 +87,11 @@ class Settings {
   void loadDefaultSettings();
   void loadSettings();
   void saveSettings();
-  void draw( SDL_Surface *screen, bool getNewKey=false );
-  void showSpecialKeys( SDL_Surface *screen );
-  void showSettings( SDL_Surface *screen, bool getNewKey );
-  void showMenu( SDL_Surface *screen );
-  void changeCurrentSettings(SDL_Surface *screen, int player);
+  void draw( SdlCompat_AcceleratedSurface *screen, bool getNewKey=false );
+  void showSpecialKeys( SdlCompat_AcceleratedSurface *screen );
+  void showSettings( SdlCompat_AcceleratedSurface *screen, bool getNewKey );
+  void showMenu( SdlCompat_AcceleratedSurface *screen );
+  void changeCurrentSettings(SdlCompat_AcceleratedSurface *screen, int player);
   void setKeyNames();
 };
 

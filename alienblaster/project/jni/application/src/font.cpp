@@ -25,11 +25,13 @@ using namespace std;
 #include <iostream>
 
 Font::Font(string fn) {
-  sprite = surfaceDB.loadSurface( fn );
+  sprites[0] = surfaceDB.loadSurface( fn + "-1.bmp" );
+  sprites[1] = surfaceDB.loadSurface( fn + "-2.bmp" );
+  sprites[2] = surfaceDB.loadSurface( fn + "-3.bmp" );
   charset = " ABCDEFGHIJKLMNOPQRSTUVWXYZÜÄÖabcdefghijklmnopqrstuvwxyzüäöß0123456789!\"§$%&/()=?*+'#,.-;:_@°\\";
   // 94 Zeichen
-  charWidth = sprite->w / 94;
-  charHeight = sprite->h;
+  charWidth = sprites[0]->w / MAX_CHARS_PER_TEXTURE;
+  charHeight = sprites[0]->h;
 }
 
 Font::~Font() {
@@ -45,10 +47,10 @@ int Font::getCharWidth() {
 }
 
 int Font::getCharHeight() {
-  return sprite->h;
+  return sprites[0]->h;
 }
 
-void Font::drawInt(SDL_Surface *screen, int posx, int posy, int val, int alignDigitCnt, int flags) {
+void Font::drawInt(SdlCompat_AcceleratedSurface *screen, int posx, int posy, int val, int alignDigitCnt, int flags) {
   int indent = 0;
   int digitCnt = 1;
   int i=1;
@@ -85,17 +87,16 @@ void Font::drawInt(SDL_Surface *screen, int posx, int posy, int val, int alignDi
       destR.h = charHeight;
       
       unsigned int charsetpos = charset.find( (char)((val % 10) + '0') );
-      if (charsetpos != string::npos ) {
-	srcR.x = charsetpos * charWidth;
-      } else {
-	srcR.x = charWidth;
-      }
+      if (charsetpos == string::npos )
+        charsetpos = 0; // Space
+      srcR.x = (charsetpos % MAX_CHARS_PER_TEXTURE) * charWidth;
+
       //      srcR.x = (1 + 2*26 + (val % 10)) * charWidth;
       srcR.y = 0;
       srcR.w = charWidth;
       srcR.h = charHeight;
       
-      SDL_BlitSurface( sprite, &srcR, screen, &destR );
+      SDL_BlitSurface( sprites[charsetpos / MAX_CHARS_PER_TEXTURE], &srcR, screen, &destR );
     }
     val /= 10;
     digitCnt--;
@@ -105,7 +106,7 @@ void Font::drawInt(SDL_Surface *screen, int posx, int posy, int val, int alignDi
 
 
   
-void Font::drawStr(SDL_Surface *screen, int posx, int posy, const string &text, int flags) {
+void Font::drawStr(SdlCompat_AcceleratedSurface *screen, int posx, int posy, const string &text, int flags) {
 
   int indent = 0;
   if ( flags & (FONT_ALIGN_CENTERED | FONT_ALIGN_RIGHT) ) {
@@ -131,21 +132,21 @@ void Font::drawStr(SDL_Surface *screen, int posx, int posy, const string &text, 
   for(unsigned int i=0; i < text.size(); ++i) {
     x = 0;
     charsetpos = charset.find(text[i]);
-    if (charsetpos != string::npos ) {
-      x = charsetpos * charWidth;
-    }
+    if (charsetpos == string::npos )
+      charsetpos = 0; // Space
+    x = (charsetpos % MAX_CHARS_PER_TEXTURE) * charWidth;
     
     destR.x = posx + indent;
     destR.y = posy;
     destR.w = charWidth;
-    destR.h = sprite->h;
+    destR.h = sprites[0]->h;
       
     srcR.x = x;
     srcR.y = 0;
     srcR.w = charWidth;
-    srcR.h = sprite->h;
+    srcR.h = sprites[0]->h;
       
-    SDL_BlitSurface( sprite, &srcR, screen, &destR );
+    SDL_BlitSurface( sprites[charsetpos / MAX_CHARS_PER_TEXTURE], &srcR, screen, &destR );
 
     if (!(flags & FONT_MONOSPACE) && text[i] == ' ') {
       posx += ((charWidth * 2) / 3);

@@ -94,7 +94,7 @@ void Wreck::update( int dT ) {
 }
 
 
-void Wreck::draw(SDL_Surface *screen) {
+void Wreck::draw(SdlCompat_AcceleratedSurface *screen) {
   SDL_Rect r;
   r.x = lroundf(pos.getX()) - sprite->w / 2;
   r.y = lroundf(pos.getY()) - sprite->h / 2;

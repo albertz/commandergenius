@@ -1732,10 +1732,12 @@ SDL_CreateTextureFromSurface(Uint32 format, SDL_Surface * surface)
                 SDL_PIXELFORMAT_BGR565,
                 SDL_PIXELFORMAT_ARGB1555,
                 SDL_PIXELFORMAT_ABGR1555,
+                SDL_PIXELFORMAT_RGBA5551,
                 SDL_PIXELFORMAT_RGB555,
                 SDL_PIXELFORMAT_BGR555,
                 SDL_PIXELFORMAT_ARGB4444,
                 SDL_PIXELFORMAT_ABGR4444,
+                SDL_PIXELFORMAT_RGBA4444,
                 SDL_PIXELFORMAT_RGB444,
                 SDL_PIXELFORMAT_ARGB2101010,
                 SDL_PIXELFORMAT_INDEX8,
@@ -1820,8 +1822,10 @@ SDL_CreateTextureFromSurface(Uint32 format, SDL_Surface * surface)
                 SDL_PIXELFORMAT_BGRA8888,
                 SDL_PIXELFORMAT_ARGB1555,
                 SDL_PIXELFORMAT_ABGR1555,
+                SDL_PIXELFORMAT_RGBA5551,
                 SDL_PIXELFORMAT_ARGB4444,
                 SDL_PIXELFORMAT_ABGR4444,
+                SDL_PIXELFORMAT_RGBA4444,
                 SDL_PIXELFORMAT_ARGB2101010,
                 SDL_PIXELFORMAT_UNKNOWN
             };

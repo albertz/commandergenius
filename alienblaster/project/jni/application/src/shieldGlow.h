@@ -25,7 +25,7 @@
 #include "global.h"
 
 class ShieldGlow {
-  SDL_Surface *spriteShieldGlow;
+  SdlCompat_AcceleratedSurface *spriteShieldGlow;
   int nrFrames;
   int frameWidth;
   int halfFrameWidth;
@@ -36,7 +36,7 @@ class ShieldGlow {
   ShieldGlow( ShipTypes shipType );
   ~ShieldGlow();
 
-  void draw( SDL_Surface *screen, Vector2D drawPos, int time );
+  void draw( SdlCompat_AcceleratedSurface *screen, Vector2D drawPos, int time );
   
 };
 

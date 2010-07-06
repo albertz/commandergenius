@@ -69,9 +69,9 @@ class Racers {
   // recharge the shields
   void rechargeShield( int dT );
   // draws the racers.
-  void drawRacers( SDL_Surface *screen );
-  void drawShadows( SDL_Surface *screen );
-  void drawStats( SDL_Surface *screen );
+  void drawRacers( SdlCompat_AcceleratedSurface *screen );
+  void drawShadows( SdlCompat_AcceleratedSurface *screen );
+  void drawStats( SdlCompat_AcceleratedSurface *screen );
 
   // returns, which racer has shot more enemys
   //int getWinner();

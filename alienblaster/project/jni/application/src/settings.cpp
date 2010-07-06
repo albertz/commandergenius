@@ -134,7 +134,7 @@ void Settings::saveSettings() {
 }
 
 
-void Settings::draw( SDL_Surface *screen, bool getNewKey ) {
+void Settings::draw( SdlCompat_AcceleratedSurface *screen, bool getNewKey ) {
   videoserver->clearScreen();
   SDL_Rect r;
   r.x = screen->w / 2 - introSprite->w / 2;
@@ -149,7 +149,7 @@ void Settings::draw( SDL_Surface *screen, bool getNewKey ) {
 }
 
 
-void Settings::showSpecialKeys( SDL_Surface *screen ) {
+void Settings::showSpecialKeys( SdlCompat_AcceleratedSurface *screen ) {
   fontNormal->drawStr(screen, screen->w/2, screen->h - 2*fontNormal->getCharHeight() - 10,
 		      "F1: Configure Keys   F5: Fullscreen", FONT_ALIGN_CENTERED );
   fontNormal->drawStr(screen, screen->w/2, screen->h - fontNormal->getCharHeight() - 5,
@@ -158,7 +158,7 @@ void Settings::showSpecialKeys( SDL_Surface *screen ) {
 }
 
 
-void Settings::showSettings( SDL_Surface *screen, bool getNewKey ) {
+void Settings::showSettings( SdlCompat_AcceleratedSurface *screen, bool getNewKey ) {
   int playerOfActiveItem = -1;
   if ( actChoice <= SC_FIRE_SPEC_1 ) playerOfActiveItem = 0;
   else if ( actChoice <= SC_FIRE_SPEC_2 ) playerOfActiveItem = 1;
@@ -242,7 +242,7 @@ void Settings::showSettings( SDL_Surface *screen, bool getNewKey ) {
   }
 }
 
-void Settings::showMenu( SDL_Surface *screen ) {
+void Settings::showMenu( SdlCompat_AcceleratedSurface *screen ) {
   SDL_Rect r;
   r.x = 230 - activeChoiceSprite->w - 8;
   r.w = activeChoiceSprite->w;
@@ -267,7 +267,7 @@ void Settings::showMenu( SDL_Surface *screen ) {
   } else fontMenu->drawStr( screen, 230, 400, "Finish" );
 }
 
-void Settings::settingsDialog( SDL_Surface *screen ) {
+void Settings::settingsDialog( SdlCompat_AcceleratedSurface *screen ) {
   bool run = true;
   actChoice = SC_FINISH;
   wasLeftColumn = true;

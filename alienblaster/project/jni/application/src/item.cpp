@@ -121,7 +121,7 @@ void Item::updateBoundingBox() {
   boundingBox->moveLeftBound( lroundf(pos.getX() - sprite->w * 0.5) );
 }
 
-void Item::draw(SDL_Surface *screen) {
+void Item::draw(SdlCompat_AcceleratedSurface *screen) {
   SDL_Rect r;
   r.x = lroundf(pos.getX()) - sprite->w / 2;
   r.y = lroundf(pos.getY()) - sprite->h / 2;

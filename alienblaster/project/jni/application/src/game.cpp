@@ -22,6 +22,7 @@ using namespace std;
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sstream>
 #include <android/log.h>
 
 #include "SDL.h"
@@ -140,7 +141,7 @@ Game::Game() {
 
   __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 9");
 
-  SDL_Surface *loadingSprite = surfaceDB.loadSurface( FN_LOADING );
+  SdlCompat_AcceleratedSurface *loadingSprite = surfaceDB.loadSurface( FN_LOADING );
   __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Game() 10");
   SDL_Rect dest;
   dest.x = (SCREEN_WIDTH - loadingSprite->w ) / 2;
@@ -337,8 +338,13 @@ void Game::playOn() {
   int A = SDL_GetTicks();
   frameCnt = 0;
   tickCnt = 0;
-  cout << "frameCnt: " << frameCnt << "  tickCnt: " << tickCnt 
-       << "  SDL_GetTicks()=" <<  A << endl;
+  {
+    std::ostringstream logout;
+    logout << "frameCnt: " << frameCnt << "  tickCnt: " << tickCnt 
+           << "  SDL_GetTicks()=" <<  A;
+    __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", logout.str().c_str());
+  }
+
 
   while ( gameState == GS_PLAYON ) {
     handleEventsPlayOn();
@@ -365,12 +371,17 @@ void Game::playOn() {
     if ( racers->bothPlayersLost() ) gameState = GS_ROUNDFINISHED;
   }
 
-  int B = SDL_GetTicks();
-  cout << "frameCnt: " << frameCnt << "  tickCnt: " << tickCnt
-       << "  SDL_GetTicks()=" <<  B << endl;
-  cout << "Miliseconds: " << B-A << endl;
-  cout << "Frames/sec : " << (float)frameCnt / ((float)(B-A) / 1000.0) << endl;
-  cout << "ms/Frame   : " << (float)tickCnt / (float)frameCnt << endl;
+  {
+    std::ostringstream logout;
+     
+    int B = SDL_GetTicks();
+    logout << "frameCnt: " << frameCnt << "  tickCnt: " << tickCnt
+           << "  SDL_GetTicks()=" <<  B << endl;
+    logout << "Milliseconds: " << B-A << endl;
+    logout << "Frames/sec : " << (float)frameCnt / ((float)(B-A) / 1000.0) << endl;
+    logout << "ms/Frame   : " << (float)tickCnt / (float)frameCnt << endl;
+    __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", logout.str().c_str());
+  }
 }
 
 
@@ -636,9 +647,11 @@ void Game::drawNukeEffect() {
   // effect-process: transparent -> nearly opaque -> transparent
   int timeFromMaximum = (NUKE_EFFECT_DURATION / 2) - (timeNukeEnd - SDL_GetTicks());
   timeFromMaximum = abs(timeFromMaximum);
+
   SDL_SetAlpha( nukeEffectSurface, SDL_SRCALPHA | SDL_RLEACCEL,
 		lroundf(((NUKE_EFFECT_DURATION / 2) - timeFromMaximum) * 128.0 / 
 			(NUKE_EFFECT_DURATION / 2)) );
+
   SDL_BlitSurface( nukeEffectSurface, 0, screen, 0 );
 
   int randRange = (int)

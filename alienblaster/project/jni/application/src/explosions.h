@@ -22,6 +22,7 @@
 
 #include <vector>
 #include "SDL.h"
+#include "SdlForwardCompat.h"
 
 class Explosion;
 
@@ -41,8 +42,8 @@ class Explosions {
   // deletes the explosions, that have timed out
   void expireExplosions();
   // draws all explosions
-  void drawAirExplosions( SDL_Surface *screen );
-  void drawGroundExplosions( SDL_Surface *screen );
+  void drawAirExplosions( SdlCompat_AcceleratedSurface *screen );
+  void drawGroundExplosions( SdlCompat_AcceleratedSurface *screen );
 };
 
 #endif

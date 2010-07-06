@@ -22,8 +22,7 @@
 
 #include <vector>
 #include <string>
-
-class SDL_Surface;
+#include "SdlForwardCompat.h"
 
 class Background {
   public:
@@ -32,8 +31,8 @@ class Background {
   void clearTileList();
   void addTile( std::string tilename );
   void generateBackground( int length );
-  void draw( SDL_Surface* screen );
-  void draw( SDL_Surface* screen, int step );
+  void draw( SdlCompat_AcceleratedSurface* screen );
+  void draw( SdlCompat_AcceleratedSurface* screen, int step );
 
   private:
   
@@ -44,7 +43,7 @@ class Background {
   int step;
 
   std::vector< std::string > tileNames;
-  std::vector< SDL_Surface* > tileSurfaces;
+  std::vector< SdlCompat_AcceleratedSurface* > tileSurfaces;
 };
 
 

@@ -22,6 +22,7 @@
 
 #include "SDL.h"
 #include <string>
+#include "SdlForwardCompat.h"
 
 // *** Code ***
 //
@@ -58,7 +59,8 @@ const int FONT_MONOSPACE       = (1<<3);
 
 class Font {
   private:
-  SDL_Surface *sprite;
+  enum { MAX_CHARS_PER_TEXTURE = 32 }; // OpenGL ES does not allow textures wider than 1024 bytes, so we have to split it
+  SdlCompat_AcceleratedSurface *sprites[3]; // Our font has only 94 letters
   int charWidth;
   int charHeight;
   std::string charset;
@@ -70,8 +72,8 @@ class Font {
   void setCharWidth(int width);
   int getCharWidth();
   int getCharHeight();
-  void drawInt(SDL_Surface *screen, int posx, int posy, int val, int alignDigitCnt, int flags = 0);
-  void drawStr(SDL_Surface *screen, int posx, int posy, const std::string &text, int flags = 0);
+  void drawInt(SdlCompat_AcceleratedSurface *screen, int posx, int posy, int val, int alignDigitCnt, int flags = 0);
+  void drawStr(SdlCompat_AcceleratedSurface *screen, int posx, int posy, const std::string &text, int flags = 0);
 };
 
 #endif

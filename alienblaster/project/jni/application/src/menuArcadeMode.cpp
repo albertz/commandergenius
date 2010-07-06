@@ -32,7 +32,7 @@ using namespace std;
 #include <iostream>
 #include <fstream>
 
-MenuArcadeMode::MenuArcadeMode( SDL_Surface *scr ) {
+MenuArcadeMode::MenuArcadeMode( SdlCompat_AcceleratedSurface *scr ) {
   screen = scr;
   arcadeSprite = surfaceDB.loadSurface( FN_ARCADE_LOGO );
   activeChoiceSprite = surfaceDB.loadSurface( FN_INTRO_SHOW_CHOICE );

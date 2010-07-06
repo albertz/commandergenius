@@ -30,7 +30,7 @@ using namespace std;
 #include "settings.h"
 #include "infoscreen.h"
 
-Intro::Intro( SDL_Surface *scr ) {
+Intro::Intro( SdlCompat_AcceleratedSurface *scr ) {
   __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 1");
   screen = scr;
   __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Intro() 2");
@@ -184,17 +184,19 @@ void Intro::showScreenshots() {
     Mixer::mixer().playMusic( MUSIC_INTRO, -1, 1000 );
   }
 
-  SDL_Surface *surfS = SDL_LoadBMP( FN_ALIENBLASTER_INTRO.c_str() );
-  SDL_Surface *surf0 = SDL_LoadBMP( FN_SCREENSHOT0.c_str() );
-  SDL_Surface *surf1 = SDL_LoadBMP( FN_SCREENSHOT1.c_str() );
-  SDL_Surface *surf2 = SDL_LoadBMP( FN_SCREENSHOT2.c_str() );
-  SDL_Surface *surf3 = SDL_LoadBMP( FN_SCREENSHOT3.c_str() );
-  SDL_Surface *surf4 = SDL_LoadBMP( FN_SCREENSHOT4.c_str() );
-  SDL_Surface *surf5 = SDL_LoadBMP( FN_SCREENSHOT5.c_str() );
-  SDL_Surface *surf6 = SDL_LoadBMP( FN_SCREENSHOT6.c_str() );
-  SDL_Surface *surf7 = SDL_LoadBMP( FN_SCREENSHOT7.c_str() );
-  SDL_Surface *surf8 = SDL_LoadBMP( FN_SCREENSHOT8.c_str() );
-  SDL_Surface *surf9 = SDL_LoadBMP( FN_SCREENSHOT9.c_str() );
+  // TODO: Too lazy to fix that
+  /*
+  SdlCompat_AcceleratedSurface *surfS = SDL_LoadBMP( FN_ALIENBLASTER_INTRO.c_str() );
+  SdlCompat_AcceleratedSurface *surf0 = SDL_LoadBMP( FN_SCREENSHOT0.c_str() );
+  SdlCompat_AcceleratedSurface *surf1 = SDL_LoadBMP( FN_SCREENSHOT1.c_str() );
+  SdlCompat_AcceleratedSurface *surf2 = SDL_LoadBMP( FN_SCREENSHOT2.c_str() );
+  SdlCompat_AcceleratedSurface *surf3 = SDL_LoadBMP( FN_SCREENSHOT3.c_str() );
+  SdlCompat_AcceleratedSurface *surf4 = SDL_LoadBMP( FN_SCREENSHOT4.c_str() );
+  SdlCompat_AcceleratedSurface *surf5 = SDL_LoadBMP( FN_SCREENSHOT5.c_str() );
+  SdlCompat_AcceleratedSurface *surf6 = SDL_LoadBMP( FN_SCREENSHOT6.c_str() );
+  SdlCompat_AcceleratedSurface *surf7 = SDL_LoadBMP( FN_SCREENSHOT7.c_str() );
+  SdlCompat_AcceleratedSurface *surf8 = SDL_LoadBMP( FN_SCREENSHOT8.c_str() );
+  SdlCompat_AcceleratedSurface *surf9 = SDL_LoadBMP( FN_SCREENSHOT9.c_str() );
 
   SDL_BlitSurface( surfS, 0, screen, 0 );
   SDL_Flip(screen);
@@ -210,9 +212,12 @@ void Intro::showScreenshots() {
 	      if (blendImages( screen, surf6, 0, surf7, 0, sps ))
 		if (blendImages( screen, surf7, 0, surf8, 0, sps ))
 		  blendImages( screen, surf8, 0, surf9, 0, sps );
+  */
 }
 
-bool Intro::blendImages( SDL_Surface *screen, SDL_Surface *surf0, SDL_Rect *r1, SDL_Surface *surf1, SDL_Rect *r2, int sps ) {
+// TODO: Too lazy to fix that
+/*
+bool Intro::blendImages( SdlCompat_AcceleratedSurface *screen, SdlCompat_AcceleratedSurface *surf0, SDL_Rect *r1, SdlCompat_AcceleratedSurface *surf1, SDL_Rect *r2, int sps ) {
   SDL_Event event;
   
   int i = 0;
@@ -242,3 +247,4 @@ bool Intro::blendImages( SDL_Surface *screen, SDL_Surface *surf0, SDL_Rect *r1, 
   }
   return true;
 }
+*/

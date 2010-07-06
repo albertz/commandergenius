@@ -21,6 +21,8 @@
 #define VIDEO_H
 
 #include "SDL.h"
+#include "SdlForwardCompat.h"
+
 
 class Video;
 
@@ -29,12 +31,12 @@ extern Video *videoserver;
 class Video {
 
 private:
-  SDL_Surface *screen;
+  SdlCompat_AcceleratedSurface *screen;
 
 public:
   Video();
   ~Video();
-  SDL_Surface *init();
+  SdlCompat_AcceleratedSurface *init();
 
   bool fullscreen;
   

@@ -21,6 +21,7 @@
 #define GLOBAL_H
 
 #include <string>
+#include "SdlForwardCompat.h"
 
 class Racers;
 class Enemys;
@@ -617,16 +618,16 @@ const std::string FN_INTRO_SHOW_CHOICE      = "./images/menuIcon.bmp";
 
 const std::string FN_FONT_PATH = "./images/";
 const std::string FN_FONT_SUFFIX_SURFACE = ".bmp";
-const std::string FN_FONT_INTRO = "./images/font-20white.bmp";
-const std::string FN_FONT_INTRO_HIGHLIGHTED = "./images/font-20lightblue.bmp";
-const std::string FN_FONT_NUMBERS_TIME = "./images/font-20red.bmp";
-const std::string FN_FONT_NUMBERS_LEFT = "./images/font-20red.bmp";
-const std::string FN_FONT_NUMBERS_RIGHT = "./images/font-20blue.bmp";
-const std::string FN_FONT_SETTINGS = "./images/font-20white.bmp";
-const std::string FN_FONT_SETTINGS_HIGHLIGHTED = "./images/font-20lightblue.bmp";
-const std::string FN_FONT_SETTINGS_SMALL = "./images/font-14white.bmp";
-const std::string FN_FONT_SETTINGS_SMALL_BLUE = "./images/font-14lightblue.bmp";
-const std::string FN_FONT_SETTINGS_SMALL_HIGHLIGHTED = "./images/font-14red.bmp";
+const std::string FN_FONT_INTRO = "./images/font-20white";
+const std::string FN_FONT_INTRO_HIGHLIGHTED = "./images/font-20lightblue";
+const std::string FN_FONT_NUMBERS_TIME = "./images/font-20red";
+const std::string FN_FONT_NUMBERS_LEFT = "./images/font-20red";
+const std::string FN_FONT_NUMBERS_RIGHT = "./images/font-20blue";
+const std::string FN_FONT_SETTINGS = "./images/font-20white";
+const std::string FN_FONT_SETTINGS_HIGHLIGHTED = "./images/font-20lightblue";
+const std::string FN_FONT_SETTINGS_SMALL = "./images/font-14white";
+const std::string FN_FONT_SETTINGS_SMALL_BLUE = "./images/font-14lightblue";
+const std::string FN_FONT_SETTINGS_SMALL_HIGHLIGHTED = "./images/font-14red";
 
 const std::string FN_SETTINGS_BLUE = "./images/bluePlain.bmp";
 const std::string FN_SETTINGS_WHITE = "./images/whitePlain.bmp";

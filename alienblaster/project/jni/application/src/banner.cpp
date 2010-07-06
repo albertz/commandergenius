@@ -104,7 +104,7 @@ bool Banner::movingAway() {
   return ( 3000 <= timeLived );
 }
 
-void Banner::draw(SDL_Surface *screen) {
+void Banner::draw(SdlCompat_AcceleratedSurface *screen) {
   SDL_Rect r;
   r.x = lroundf(pos.getX());
   r.y = lroundf(pos.getY());

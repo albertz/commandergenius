@@ -28,7 +28,7 @@
 class BoundingBox;
 
 class Item {
-  SDL_Surface *sprite;
+  SdlCompat_AcceleratedSurface *sprite;
   BoundingBox *boundingBox;
 
   Vector2D pos;
@@ -47,7 +47,7 @@ class Item {
   
   void deleteItem();
 
-  void draw(SDL_Surface *screen);
+  void draw(SdlCompat_AcceleratedSurface *screen);
 
   inline bool isExpired() { return (timeLived >= ITEM_LIFETIME); }
   inline Vector2D getPos() { return pos; }

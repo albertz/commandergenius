@@ -22,12 +22,13 @@
 
 
 #include "SDL.h"
+#include "SdlForwardCompat.h"
 
 #include <string>
 #include <map>
 #include <functional>
 
-typedef std::map<std::string, SDL_Surface *, std::greater<std::string> > StringSurfaceMap;
+typedef std::map<std::string, SdlCompat_AcceleratedSurface *, std::greater<std::string> > StringSurfaceMap;
 
 
 class SurfaceDB;
@@ -48,13 +49,13 @@ class SurfaceDB {
 	     Uint8 transparentB=255 );
   ~SurfaceDB();
 
-  SDL_Surface *loadSurface( std::string fn, bool alpha=false );
+  SdlCompat_AcceleratedSurface *loadSurface( std::string fn, bool alpha=false );
 
   private:
   StringSurfaceMap surfaceDB;
   Uint8 transR, transG, transB;
 
-  SDL_Surface *getSurface( std::string fn );
+  SdlCompat_AcceleratedSurface *getSurface( std::string fn );
 };
 
 

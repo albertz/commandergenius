@@ -70,7 +70,7 @@ void Explosion::update( int dT ) {
   }
 }
 
-void Explosion::drawAirExplosion(SDL_Surface *screen) {
+void Explosion::drawAirExplosion(SdlCompat_AcceleratedSurface *screen) {
   if (expired) return;
   if ( ! ( explosionType == EXPLOSION_NORMAL_AIR ) ) return;
 
@@ -89,7 +89,7 @@ void Explosion::drawAirExplosion(SDL_Surface *screen) {
   SDL_BlitSurface( sprite, &src, screen, &dest );
 }
 
-void Explosion::drawGroundExplosion(SDL_Surface *screen) {
+void Explosion::drawGroundExplosion(SdlCompat_AcceleratedSurface *screen) {
   if (expired) return;
   if ( ! ( explosionType == EXPLOSION_NORMAL_GROUND ) ) return;
 
