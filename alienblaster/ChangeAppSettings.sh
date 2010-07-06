@@ -33,13 +33,13 @@ if [ -n "$var" ] ; then
 	DownloadToSdcard="$var"
 fi
 
-echo -n "\nApplication window should be resized to fit into 480x320 screen ($SdlVideoResize): "
+echo -n "\nApplication window should be resized to fit into 480x320 screen,\n(y) or (n) or (a)lways resize, even if screen is bigger ($SdlVideoResize): "
 read var
 if [ -n "$var" ] ; then
 	SdlVideoResize="$var"
 fi
 
-echo -n "\nEnable OpenGL depth buffer (needed only for 3-d applications) ($NeedDepthBuffer): "
+echo -n "\nEnable OpenGL depth buffer (needed only for 3-d applications, small speed decrease) (y) or (n) ($NeedDepthBuffer): "
 read var
 if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
@@ -72,6 +72,8 @@ fi
 AppDataDownloadUrl1="`echo $AppDataDownloadUrl | sed 's/[&]/%26/g'`"
 if [ "$SdlVideoResize" = "y" ] ; then
 	SdlVideoResize=1
+elif [ "$SdlVideoResize" = "a" ] ; then
+	SdlVideoResize=2
 else
 	SdlVideoResize=0
 fi

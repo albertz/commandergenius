@@ -2376,6 +2376,13 @@ SDL_RenderClear()
 }
 
 #if SDL_VIDEO_RENDER_RESIZE
+
+#if ( SDL_VIDEO_RENDER_RESIZE == 2 )
+#define SDL_VIDEO_RENDER_RESIZE_ALWAYS 1
+#else
+#define SDL_VIDEO_RENDER_RESIZE_ALWAYS
+#endif
+
 static inline void
 SDL_RESIZE_resizePoints(int realW, int fakeW, int realH, int fakeH,
                         const SDL_Point * src, SDL_Point * dest, int count )
@@ -2393,10 +2400,12 @@ SDL_RESIZE_resizeRects(int realW, int fakeW, int realH, int fakeH,
 {
     int i;
     for( i = 0; i < count; i++ ) {
+        // Calculate bottom-right corner instead of width/height, and substract upper-left corner,
+        // otherwise we'll have rounding errors and holes between textures
         dest[i].x = src[i]->x * realW / fakeW;
-        dest[i].w = src[i]->w * realW / fakeW;
         dest[i].y = src[i]->y * realH / fakeH;
-        dest[i].h = src[i]->h * realH / fakeH;
+        dest[i].w = (src[i]->w + src[i]->x) * realW / fakeW - dest[i].x;
+        dest[i].h = (src[i]->h + src[i]->y) * realH / fakeH - dest[i].y;
     }
 }
 #endif
@@ -2442,7 +2451,10 @@ SDL_RenderDrawPoints(const SDL_Point * points, int count)
     realH = renderer->window->display->current_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
-    if( fakeW > realW || fakeH > realH ) {
+#if !(SDL_VIDEO_RENDER_RESIZE_ALWAYS)
+    if( fakeW > realW || fakeH > realH )
+#endif
+    {
         SDL_Point * resized = SDL_stack_alloc( SDL_Point, count );
         if( ! resized ) {
             SDL_OutOfMemory();
@@ -2500,7 +2512,10 @@ SDL_RenderDrawLines(const SDL_Point * points, int count)
     realH = renderer->window->display->current_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
-    if( fakeW > realW || fakeH > realH ) {
+#if !(SDL_VIDEO_RENDER_RESIZE_ALWAYS)
+    if( fakeW > realW || fakeH > realH )
+#endif
+    {
         SDL_Point * resized = SDL_stack_alloc( SDL_Point, count );
         if( ! resized ) {
             SDL_OutOfMemory();
@@ -2568,7 +2583,10 @@ SDL_RenderDrawRects(const SDL_Rect ** rects, int count)
     realH = renderer->window->display->current_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
-    if( fakeW > realW || fakeH > realH ) {
+#if !(SDL_VIDEO_RENDER_RESIZE_ALWAYS)
+    if( fakeW > realW || fakeH > realH )
+#endif
+    {
         SDL_Rect * resized = SDL_stack_alloc( SDL_Rect, count );
         if( ! resized ) {
             SDL_OutOfMemory();
@@ -2647,7 +2665,10 @@ SDL_RenderFillRects(const SDL_Rect ** rects, int count)
     realH = renderer->window->display->current_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
-    if( fakeW > realW || fakeH > realH ) {
+#if !(SDL_VIDEO_RENDER_RESIZE_ALWAYS)
+    if( fakeW > realW || fakeH > realH )
+#endif
+    {
         SDL_Rect * resized = SDL_stack_alloc( SDL_Rect, count );
         if( ! resized ) {
             SDL_OutOfMemory();
@@ -2743,11 +2764,18 @@ SDL_RenderCopy(SDL_Texture * texture, const SDL_Rect * srcrect,
     realH = window->display->current_mode.h;
     fakeW = window->w;
     fakeH = window->h;
-    if( fakeW > realW || fakeH > realH ) {
+#if !(SDL_VIDEO_RENDER_RESIZE_ALWAYS)
+    if( fakeW > realW || fakeH > realH )
+#endif
+    {
+        // Calculate bottom-right corner instead of width/height, and substract upper-left corner,
+        // otherwise we'll have rounding errors and holes between textures
+        real_dstrect.w = (real_dstrect.w + real_dstrect.x) * realW / fakeW;
+        real_dstrect.h = (real_dstrect.h + real_dstrect.y) * realH / fakeH;
         real_dstrect.x = real_dstrect.x * realW / fakeW;
         real_dstrect.y = real_dstrect.y * realH / fakeH;
-        real_dstrect.w = real_dstrect.w * realW / fakeW;
-        real_dstrect.h = real_dstrect.h * realH / fakeH;
+        real_dstrect.w -= real_dstrect.x;
+        real_dstrect.h -= real_dstrect.y;
     }
 #endif
 
