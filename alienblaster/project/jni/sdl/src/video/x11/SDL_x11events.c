@@ -272,17 +272,17 @@ X11_DispatchEvent(_THIS)
 #ifdef DEBUG_MOTION
             printf("X11 motion: %d,%d\n", xevent.xmotion.x, xevent.xmotion.y);
 #endif
-            SDL_SendMouseMotion(0, xevent.xmotion.x, xevent.xmotion.y);
+            SDL_SendMouseMotion(data->window, 0, xevent.xmotion.x, xevent.xmotion.y);
         }
         break;
 
     case ButtonPress:{
-            SDL_SendMouseButton(SDL_PRESSED, xevent.xbutton.button);
+            SDL_SendMouseButton(data->window, SDL_PRESSED, xevent.xbutton.button);
         }
         break;
 
     case ButtonRelease:{
-            SDL_SendMouseButton(SDL_RELEASED, xevent.xbutton.button);
+            SDL_SendMouseButton(data->window, SDL_RELEASED, xevent.xbutton.button);
         }
         break;
 
@@ -296,7 +296,7 @@ X11_DispatchEvent(_THIS)
 }
 
 /* Ack!  XPending() actually performs a blocking read if no events available */
-int
+static int
 X11_Pending(Display * display)
 {
     /* Flush the display connection and look to see if events are queued */

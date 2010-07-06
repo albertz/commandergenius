@@ -417,7 +417,7 @@ SetupScreenSaver(int flags)
     }
 }
 
-int
+static int
 SDL_ResizeVideoMode(int width, int height, int bpp, Uint32 flags)
 {
     int w, h;
@@ -1749,7 +1749,6 @@ SDL_EnableUNICODE(int enable)
     }
     return previous;
 }
-
 
 int
 SDL_putenv(const char *_var)
