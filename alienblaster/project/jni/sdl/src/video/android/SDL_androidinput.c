@@ -64,11 +64,11 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 {
 	if( action == MOUSE_DOWN || action == MOUSE_UP )
 	{
-		SDL_SendMouseMotion(0, x, y);
-		SDL_SendMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, 1 );
+		SDL_SendMouseMotion(NULL, 0, x, y);
+		SDL_SendMouseButton(NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, 1 );
 	}
 	if( action == MOUSE_MOVE )
-		SDL_SendMouseMotion(0, x, y);
+		SDL_SendMouseMotion(NULL, 0, x, y);
 }
 
 static SDL_scancode TranslateKey(int scancode)

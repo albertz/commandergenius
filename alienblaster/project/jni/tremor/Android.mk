@@ -8,7 +8,6 @@ LOCAL_CFLAGS := -I$(LOCAL_PATH) -DHAVE_ALLOCA_H
 
 LOCAL_CPP_EXTENSION := .cpp
 
-# Note this simple makefile var substitution, you can find even simpler examples in different Android projects
 LOCAL_SRC_FILES := $(notdir $(wildcard $(LOCAL_PATH)/*.c))
 
 include $(BUILD_SHARED_LIBRARY)
