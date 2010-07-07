@@ -104,7 +104,7 @@ class DataDownloader extends Thread
 				public String text;
 				public void run()
 				{
-					Status.setText(text);
+					Status.setText(text + "\n" + Globals.ReadmeText);
 				}
 			}
 			Callback cb = new Callback();

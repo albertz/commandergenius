@@ -45,6 +45,23 @@ if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
 fi
 
+echo -n "\nHere you may type some short readme text that will be shown when app data is downloaded."
+echo -n "\nCurrent text:\n"
+echo -n "`echo $ReadmeText | tr '^' '\\n'`"
+echo -n "\n\nNew text (empty line to finish):\n\n"
+ReadmeText1=""
+while true; do
+	read var
+	if [ -n "$var" ] ; then
+		ReadmeText1="$ReadmeText1^$var"
+	else
+		break
+	fi
+done
+if [ -n "$ReadmeText1" ] ; then
+	ReadmeText="$ReadmeText1"
+fi
+
 echo
 
 cat /dev/null > AppSettings.cfg
@@ -55,6 +72,7 @@ echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AppSettings.cfg
 echo DownloadToSdcard=$DownloadToSdcard >> AppSettings.cfg
 echo SdlVideoResize=$SdlVideoResize >> AppSettings.cfg
 echo NeedDepthBuffer=$NeedDepthBuffer >> AppSettings.cfg
+echo ReadmeText=\'$ReadmeText\' >> AppSettings.cfg
 
 AppShortName=`echo $AppName | sed 's/ //g'`
 DataPath="/data/data/$AppFullName/files"
@@ -82,6 +100,9 @@ if [ "$NeedDepthBuffer" = "y" ] ; then
 else
 	NeedDepthBuffer=false
 fi
+echo ReadmeText1 "$ReadmeText"
+ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
+echo ReadmeText2 "$ReadmeText"
 
 echo Patching project/AndroidManifest.xml
 cat project/AndroidManifest.xml | \
@@ -103,7 +124,8 @@ cat project/src/Globals.java | \
 	sed "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" | \
 	sed "s^public static String DataDownloadUrl = \".*\";^public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";^" | \
 	sed "s/public static boolean DownloadToSdcard = .*;/public static boolean DownloadToSdcard = $DownloadToSdcard1;/" | \
-	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" > \
+	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
+	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" > \
 	project/src/Globals.java.1
 mv -f project/src/Globals.java.1 project/src/Globals.java
 

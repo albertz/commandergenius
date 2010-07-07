@@ -21,6 +21,9 @@ class Globals {
 	
 	// Set this value to true if you're planning to render 3D using OpenGL - it eats some GFX resources, so disabled for 2D
 	public static boolean NeedDepthBuffer = false;
+	
+	// Readme text to be shown on download page
+	public static String ReadmeText = "^Use accelerometer to navigate menus and control ship^Press \"Menu\" to select menu and for secondary fire^Press \"Call\" or touch screen for primary fire^Press \"Volume Up/Down\" to cycle through weapons".replace("^","\n");
 }
 
 class LoadLibrary {

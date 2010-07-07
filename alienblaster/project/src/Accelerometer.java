@@ -18,8 +18,6 @@ import android.widget.TextView;
 // Accelerometer code partially ripped from http://karanar.net/
 class AccelerometerReader implements SensorListener {
 
-	private long timekeeper;
-
 	private float [] v;
 	
 	private SensorManager _manager = null;
@@ -29,7 +27,6 @@ class AccelerometerReader implements SensorListener {
 		_manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 		if( _manager != null )
 		{
-			timekeeper = android.os.SystemClock.uptimeMillis();
 			int mask = 0;
 			//mask |= SensorManager.SENSOR_ORIENTATION;
 			mask |= SensorManager.SENSOR_ACCELEROMETER;
@@ -45,8 +42,6 @@ class AccelerometerReader implements SensorListener {
 	}
 
 	public synchronized void onSensorChanged(int sensor, float[] values) {
-		//if (android.os.SystemClock.uptimeMillis() < timekeeper + 20) return;
-		timekeeper = android.os.SystemClock.uptimeMillis();
 
 		if (sensor == SensorManager.SENSOR_ACCELEROMETER) {
 			if( values.length >= 1 )
@@ -61,7 +56,6 @@ class AccelerometerReader implements SensorListener {
 	}
 
 	public synchronized void onAccuracyChanged(int i, int i1) {
-		/* @todo implement method */
 	}
 	
 	public synchronized float[] readAccelerometer()

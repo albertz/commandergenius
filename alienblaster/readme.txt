@@ -52,16 +52,15 @@ internal flash on Android is very limited.
 If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
 add libname to project/jni/<yourapp>/Android.mk
 
-To debug your application launch Android 2.2 emulator or connect Android 2.2 device,
-go to "project" directory and launch command
+To debug your application add tag 'android:debuggable="true"' to 'application' element in AndroidManifest.xml,
+recmpile and reinstall your app to Android 2.2 emulator or Android 2.2 device, go to "project" dir and launch command
 	ndk-gdb --verbose --start --force
 then when it fails enter command
-	target remote:5039
-	(then answer "y")
-Note that it's extremely buggy (I've succeeded to launch debug session twice from 20 tries), 
-you may wish to add "sleep(30);" at the beginning of main() so your app won't crash before debugger attached.
+	target remote:5039 (then it will fail again)
+Note that it's extremely buggy, and I had no any success in debugging my app with ndk-gdb.
 So it's best to debug with code like:
 	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
+and then watching "adb logcat" output.
 
 Known bugs:
 
