@@ -45,6 +45,15 @@ if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
 fi
 
+echo -n "\nLibraries to compile (removing some of them will save space, MP3 support by libMAD is encumbered by patents and libMAD is GPL-ed)"
+grep 'Available libraries:' project/Application.mk 
+grep 'depends on' project/Application.mk 
+echo "Current: $CompiledLibraries\n\n: "
+read var
+if [ -n "$var" ] ; then
+	CompiledLibraries="$var"
+fi
+
 echo -n "\nHere you may type some short readme text that will be shown when app data is downloaded."
 echo -n "\nCurrent text:\n"
 echo -n "`echo $ReadmeText | tr '^' '\\n'`"
@@ -72,6 +81,7 @@ echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AppSettings.cfg
 echo DownloadToSdcard=$DownloadToSdcard >> AppSettings.cfg
 echo SdlVideoResize=$SdlVideoResize >> AppSettings.cfg
 echo NeedDepthBuffer=$NeedDepthBuffer >> AppSettings.cfg
+echo CompiledLibraries=\"$CompiledLibraries\" >> AppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AppSettings.cfg
 
 AppShortName=`echo $AppName | sed 's/ //g'`
@@ -99,6 +109,10 @@ if [ "$NeedDepthBuffer" = "y" ] ; then
 	NeedDepthBuffer=true
 else
 	NeedDepthBuffer=false
+fi
+SdlMixerUseLibMad=0
+if echo $CompiledLibraries | grep '\bmad\b' > /dev/null ; then
+	SdlMixerUseLibMad=1
 fi
 echo ReadmeText1 "$ReadmeText"
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
@@ -136,9 +150,15 @@ echo Patching project/jni/Android.mk
 cat project/jni/Android.mk | \
 	sed "s/SDL_JAVA_PACKAGE_PATH := .*/SDL_JAVA_PACKAGE_PATH := $AppFullNameUnderscored/" | \
 	sed "s^SDL_CURDIR_PATH := .*^SDL_CURDIR_PATH := $DataPath^" | \
-	sed "s^SDL_VIDEO_RENDER_RESIZE := .*^SDL_VIDEO_RENDER_RESIZE := $SdlVideoResize^" > \
+	sed "s^SDL_VIDEO_RENDER_RESIZE := .*^SDL_VIDEO_RENDER_RESIZE := $SdlVideoResize^" | \
+	sed "s^SDL_MIXER_USE_LIBMAD := .*^SDL_MIXER_USE_LIBMAD := $SdlMixerUseLibMad^" > \
 	project/jni/Android.mk.1
 mv -f project/jni/Android.mk.1 project/jni/Android.mk
+
+cat project/Application.mk | \
+	sed "s/APP_MODULES := .*/APP_MODULES := application sdl_main $CompiledLibraries/" > \
+	project/Application.mk.1
+mv -f project/Application.mk.1 project/Application.mk
 
 echo Patching project/res/values/strings.xml
 cat project/res/values/strings.xml | \

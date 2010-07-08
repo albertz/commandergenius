@@ -13,5 +13,10 @@ LOCAL_SRC_FILES := $(notdir $(wildcard $(LOCAL_PATH)/*.c))
 
 LOCAL_SHARED_LIBRARIES := sdl tremor
 
+ifneq ($(SDL_MIXER_USE_LIBMAD),)
+	LOCAL_CFLAGS :=  -DMP3_MAD_MUSIC
+	LOCAL_SHARED_LIBRARIES += mad
+endif
+
 include $(BUILD_SHARED_LIBRARY)
 

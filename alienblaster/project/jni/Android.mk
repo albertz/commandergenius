@@ -23,4 +23,7 @@ SDL_TRACKBALL_KEYUP_DELAY := 1
 # resized in HW-accelerated way, however it eats a tiny bit of CPU
 SDL_VIDEO_RENDER_RESIZE := 2
 
+# If SDL_Mixer should link to libMAD
+SDL_MIXER_USE_LIBMAD := 1
+
 include $(call all-subdir-makefiles)
