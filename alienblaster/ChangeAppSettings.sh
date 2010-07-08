@@ -45,10 +45,16 @@ if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
 fi
 
-echo -n "\nLibraries to compile (removing some of them will save space, MP3 support by libMAD is encumbered by patents and libMAD is GPL-ed)"
+echo -n "\nEnable multi-ABI binary, with hardware FPU support (it will also work on old devices, but .apk size is 2x bigger) (y) or (n) ($MultiABI): "
+read var
+if [ -n "$var" ] ; then
+	MultiABI="$var"
+fi
+
+echo -n "\nOptional shared libraries to compile - removing some of them will save space\nMP3 support by libMAD is encumbered by patents and libMAD is GPL-ed\n"
 grep 'Available libraries:' project/Application.mk 
-grep 'depends on' project/Application.mk 
-echo "Current: $CompiledLibraries\n\n: "
+grep 'depends on' project/Application.mk
+echo -n "Current: $CompiledLibraries\n\n: "
 read var
 if [ -n "$var" ] ; then
 	CompiledLibraries="$var"
@@ -58,6 +64,7 @@ echo -n "\nHere you may type some short readme text that will be shown when app 
 echo -n "\nCurrent text:\n"
 echo -n "`echo $ReadmeText | tr '^' '\\n'`"
 echo -n "\n\nNew text (empty line to finish):\n\n"
+
 ReadmeText1=""
 while true; do
 	read var
@@ -81,6 +88,7 @@ echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AppSettings.cfg
 echo DownloadToSdcard=$DownloadToSdcard >> AppSettings.cfg
 echo SdlVideoResize=$SdlVideoResize >> AppSettings.cfg
 echo NeedDepthBuffer=$NeedDepthBuffer >> AppSettings.cfg
+echo MultiABI=$MultiABI >> AppSettings.cfg
 echo CompiledLibraries=\"$CompiledLibraries\" >> AppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AppSettings.cfg
 
@@ -110,13 +118,23 @@ if [ "$NeedDepthBuffer" = "y" ] ; then
 else
 	NeedDepthBuffer=false
 fi
+if [ "$MultiABI" = "y" ] ; then
+	MultiABI="armeabi armeabi-v7a"
+else
+	MultiABI="armeabi"
+fi
 SdlMixerUseLibMad=0
 if echo $CompiledLibraries | grep '\bmad\b' > /dev/null ; then
 	SdlMixerUseLibMad=1
 fi
-echo ReadmeText1 "$ReadmeText"
+LibrariesToLoad="System.loadLibrary(\\\"sdl\\\");"
+for lib in $CompiledLibraries; do
+	LibrariesToLoad="$LibrariesToLoad System.loadLibrary(\\\"$lib\\\");"
+done
+echo CompiledLibraries $CompiledLibraries
+echo LibrariesToLoad $LibrariesToLoad
+
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
-echo ReadmeText2 "$ReadmeText"
 
 echo Patching project/AndroidManifest.xml
 cat project/AndroidManifest.xml | \
@@ -139,7 +157,8 @@ cat project/src/Globals.java | \
 	sed "s^public static String DataDownloadUrl = \".*\";^public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";^" | \
 	sed "s/public static boolean DownloadToSdcard = .*;/public static boolean DownloadToSdcard = $DownloadToSdcard1;/" | \
 	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
-	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" > \
+	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
+	sed "s/public LoadLibrary() .*/public LoadLibrary() { $LibrariesToLoad };/" > \
 	project/src/Globals.java.1
 mv -f project/src/Globals.java.1 project/src/Globals.java
 
@@ -156,7 +175,8 @@ cat project/jni/Android.mk | \
 mv -f project/jni/Android.mk.1 project/jni/Android.mk
 
 cat project/Application.mk | \
-	sed "s/APP_MODULES := .*/APP_MODULES := application sdl_main $CompiledLibraries/" > \
+	sed "s/APP_MODULES := .*/APP_MODULES := application sdl_main stlport tremor png jpeg freetype $CompiledLibraries/" | \
+	sed "s/APP_ABI := .*/APP_ABI := $MultiABI/" > \
 	project/Application.mk.1
 mv -f project/Application.mk.1 project/Application.mk
 

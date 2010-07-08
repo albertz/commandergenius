@@ -10,5 +10,5 @@ LOCAL_CPP_EXTENSION := .cpp
 
 LOCAL_SRC_FILES := $(notdir $(wildcard $(LOCAL_PATH)/*.c))
 
-include $(BUILD_SHARED_LIBRARY)
+include $(BUILD_STATIC_LIBRARY)
 
