@@ -23,7 +23,7 @@ SDL_TRACKBALL_KEYUP_DELAY := 1
 # resized in HW-accelerated way, however it eats a tiny bit of CPU
 SDL_VIDEO_RENDER_RESIZE := 2
 
-COMPILED_LIBRARIES := mad sdl_mixer sdl_image sdl_ttf
+COMPILED_LIBRARIES := sdl_mixer sdl_image
 
 # If SDL_Mixer should link to libMAD
 SDL_MIXER_USE_LIBMAD :=

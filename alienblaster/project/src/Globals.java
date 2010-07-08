@@ -24,5 +24,5 @@ class Globals {
 }
 
 class LoadLibrary {
-	public LoadLibrary() { System.loadLibrary("sdl"); System.loadLibrary("mad"); System.loadLibrary("sdl_mixer"); System.loadLibrary("sdl_image"); System.loadLibrary("sdl_ttf"); };
+	public LoadLibrary() { System.loadLibrary("sdl"); System.loadLibrary("sdl_mixer"); System.loadLibrary("sdl_image"); };
 }
