@@ -45,15 +45,15 @@ if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
 fi
 
-echo -n "\nEnable multi-ABI binary, with hardware FPU support (it will also work on old devices, but .apk size is 2x bigger) (y) or (n) ($MultiABI): "
+echo -n "\nEnable multi-ABI binary, with hardware FPU support - \nit will also work on old devices, but .apk size is 2x bigger (y) or (n) ($MultiABI): "
 read var
 if [ -n "$var" ] ; then
 	MultiABI="$var"
 fi
 
 echo -n "\nOptional shared libraries to compile - removing some of them will save space\nMP3 support by libMAD is encumbered by patents and libMAD is GPL-ed\n"
-grep 'Available libraries:' project/Application.mk 
-grep 'depends on' project/Application.mk
+grep 'Available libraries:' project/jni/Application.mk 
+grep 'depends on' project/jni/Application.mk
 echo -n "Current: $CompiledLibraries\n\n: "
 read var
 if [ -n "$var" ] ; then
@@ -123,10 +123,6 @@ if [ "$MultiABI" = "y" ] ; then
 else
 	MultiABI="armeabi"
 fi
-SdlMixerUseLibMad=0
-if echo $CompiledLibraries | grep '\bmad\b' > /dev/null ; then
-	SdlMixerUseLibMad=1
-fi
 LibrariesToLoad="System.loadLibrary(\\\"sdl\\\");"
 for lib in $CompiledLibraries; do
 	LibrariesToLoad="$LibrariesToLoad System.loadLibrary(\\\"$lib\\\");"
@@ -163,22 +159,20 @@ cat project/src/Globals.java | \
 mv -f project/src/Globals.java.1 project/src/Globals.java
 
 echo Patching project/jni/Android.mk
-
-# sed "s^SDL_SHARED_LIBRARIES_PATH := .*^SDL_SHARED_LIBRARIES_PATH := $AppSharedLibrariesPath^" | \
-
 cat project/jni/Android.mk | \
 	sed "s/SDL_JAVA_PACKAGE_PATH := .*/SDL_JAVA_PACKAGE_PATH := $AppFullNameUnderscored/" | \
 	sed "s^SDL_CURDIR_PATH := .*^SDL_CURDIR_PATH := $DataPath^" | \
 	sed "s^SDL_VIDEO_RENDER_RESIZE := .*^SDL_VIDEO_RENDER_RESIZE := $SdlVideoResize^" | \
-	sed "s^SDL_MIXER_USE_LIBMAD := .*^SDL_MIXER_USE_LIBMAD := $SdlMixerUseLibMad^" > \
+	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" > \
 	project/jni/Android.mk.1
 mv -f project/jni/Android.mk.1 project/jni/Android.mk
 
-cat project/Application.mk | \
+echo Patching project/jni/Application.mk
+cat project/jni/Application.mk | \
 	sed "s/APP_MODULES := .*/APP_MODULES := application sdl_main stlport tremor png jpeg freetype $CompiledLibraries/" | \
 	sed "s/APP_ABI := .*/APP_ABI := $MultiABI/" > \
-	project/Application.mk.1
-mv -f project/Application.mk.1 project/Application.mk
+	project/jni/Application.mk.1
+mv -f project/jni/Application.mk.1 project/jni/Application.mk
 
 echo Patching project/res/values/strings.xml
 cat project/res/values/strings.xml | \
@@ -192,6 +186,6 @@ touch project/jni/sdl/src/video/android/*.c
 touch project/jni/sdl/src/video/SDL_video.c
 touch project/jni/sdl/src/video/SDL_renderer_gles.c
 touch project/jni/sdl/src/audio/android/*.c
-rm -f project/libs/armeabi/libapplication.so project/libs/armeabi/libsdl.so project/libs/armeabi/libsdl_main.so
+rm -rf project/libs/*
 
 echo Done

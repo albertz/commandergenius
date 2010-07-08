@@ -12,6 +12,7 @@ LOCAL_CFLAGS := $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../sdl/include \
 				-I$(LOCAL_PATH)/../sdl_mixer \
 				-I$(LOCAL_PATH)/../sdl_image \
+				-I$(LOCAL_PATH)/../sdl_ttf \
 				-I$(LOCAL_PATH)/../stlport/stlport \
 
 
@@ -22,11 +23,11 @@ LOCAL_SRC_FILES := $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wil
 # Uncomment to also add C sources
 LOCAL_SRC_FILES += $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wildcard $(LOCAL_PATH)/$(F)/*.c))))
 
-LOCAL_SHARED_LIBRARIES := sdl sdl_mixer sdl_image tremor sdl_ttf
+LOCAL_SHARED_LIBRARIES := sdl $(COMPILED_LIBRARIES)
 
 LOCAL_STATIC_LIBRARIES := stlport
 
-LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz -lGLESv1_CM
+LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
 
 LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
 	for f in $(LOCAL_PATH)/../../libs/armeabi/*.so ; do \

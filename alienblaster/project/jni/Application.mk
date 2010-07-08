@@ -1,4 +1,4 @@
-APP_PROJECT_PATH := $(call my-dir)
+APP_PROJECT_PATH := $(call my-dir)/..
 
 # Available libraries: mad sdl_mixer sdl_image sdl_ttf
 # sdl_mixer depends on tremor and optionally mad
