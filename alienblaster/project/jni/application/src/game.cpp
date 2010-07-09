@@ -650,7 +650,7 @@ void Game::drawNukeEffect() {
   int timeFromMaximum = (NUKE_EFFECT_DURATION / 2) - (timeNukeEnd - SDL_GetTicks());
   timeFromMaximum = abs(timeFromMaximum);
 
-  SDL_SetAlpha( nukeEffectSurface, SDL_SRCALPHA | SDL_RLEACCEL,
+  SDL_SetAlpha( nukeEffectSurface, SDL_SRCALPHA,
 		lroundf(((NUKE_EFFECT_DURATION / 2) - timeFromMaximum) * 128.0 / 
 			(NUKE_EFFECT_DURATION / 2)) );
 
