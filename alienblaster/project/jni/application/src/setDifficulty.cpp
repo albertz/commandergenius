@@ -105,7 +105,7 @@ void SetDifficulty::draw() {
         r.h = heavyFighterIcon1->h;
         SDL_BlitSurface( heavyFighterIcon1, 0, screen, &r );
       }
-      fontHighlighted->drawStr( screen, 100, 400, "Press \"1\"", FONT_ALIGN_CENTERED );
+      fontHighlighted->drawStr( screen, 100, 400, "Press \"Volume Up\"", FONT_ALIGN_CENTERED );
       fontHighlighted->drawStr( screen, 100, 430, "To Change", FONT_ALIGN_CENTERED );
     }
     else {
@@ -124,7 +124,7 @@ void SetDifficulty::draw() {
         r.h = heavyFighterIcon1->h;
         SDL_BlitSurface( heavyFighterIcon1, 0, screen, &r );
       }
-      fontHighlighted->drawStr( screen, 100, 400, "Press \"1\"", FONT_ALIGN_CENTERED );
+      fontHighlighted->drawStr( screen, 100, 400, "Press \"Volume Up\"", FONT_ALIGN_CENTERED );
       fontHighlighted->drawStr( screen, 100, 430, "To Change", FONT_ALIGN_CENTERED );
       font->drawStr( screen, 560, 270, "Player 2", FONT_ALIGN_CENTERED );
       if ( playerTwoLightFighter ) {
@@ -140,7 +140,7 @@ void SetDifficulty::draw() {
         r.h = heavyFighterIcon2->h;
         SDL_BlitSurface( heavyFighterIcon2, 0, screen, &r );
       }
-      fontHighlighted->drawStr( screen, 560, 400, "Press \"2\"", FONT_ALIGN_CENTERED );
+      fontHighlighted->drawStr( screen, 560, 400, "Press \"Volume Down\"", FONT_ALIGN_CENTERED );
       fontHighlighted->drawStr( screen, 560, 430, "To Change", FONT_ALIGN_CENTERED );
     }
   }
@@ -154,11 +154,11 @@ void SetDifficulty::handleEvents( GameStates &gameState ) {
     switch(event.type) {
       case SDL_KEYDOWN: {
         switch ( event.key.keysym.sym ) {
-          case SDLK_1: {
+          case SDLK_PAGEUP: {
             playerOneLightFighter = !playerOneLightFighter;
             break;
           }
-          case SDLK_2: {
+          case SDLK_PAGEDOWN: {
             playerTwoLightFighter = !playerTwoLightFighter;
             break;
           }

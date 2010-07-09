@@ -64,6 +64,7 @@ class Settings {
   
   void settingsDialog(SdlCompat_AcceleratedSurface *screen);
   const PlayerKeys getPlayerKeys(unsigned int player) const;
+  const PlayerEventKeys & getPlayerEventKeys(unsigned int player) const;
 
   private:
 

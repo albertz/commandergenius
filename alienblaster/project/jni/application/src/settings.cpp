@@ -421,6 +421,10 @@ const PlayerKeys Settings::getPlayerKeys(unsigned int player) const {
   return pk;
 }
 
+const PlayerEventKeys & Settings::getPlayerEventKeys(unsigned int player) const {
+	return playerKeys[player];
+}
+
 void Settings::setKeyNames() {
   /*
   keyName[ (SDLKey)0 ] = "UNKNOWN";

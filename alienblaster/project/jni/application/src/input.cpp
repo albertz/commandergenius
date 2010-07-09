@@ -22,6 +22,7 @@ using namespace std;
 #include <vector>
 #include "input.h"
 #include "SDL.h"
+#include "settings.h"
 
 Input input;
 
@@ -101,12 +102,14 @@ const SDLKey Input::translate(const SDL_Event& event) {
   if (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_JOYBUTTONUP) {
     return (SDLKey) (1040 + event.jbutton.button);
   }    
+  if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
+    return SDLK_LCTRL; // settings->getPlayerEventKeys(0).find(PE_FIRE_WEAPONS)->second;
+  }    
   return (SDLKey) 0;
 }    
 
 const bool Input::isPressed(const SDL_Event& event) {
-  /* || event.type == SDL_MOUSEBUTTONDOWN*/
-  if (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_KEYDOWN) return true;
+  if (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN) return true;
   if (event.type == SDL_JOYAXISMOTION) return event.jaxis.value / initialSensitivity;
   return false;
 }
