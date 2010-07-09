@@ -92,10 +92,17 @@ static void updateOrientation ( float accX, float accY, float accZ )
 {
 	// TODO: use accelerometer as joystick, make this configurable
 	// Currenly it's used as cursor + KP7/KP9 keys
-	static const float dx = 0.2, dy = 0.2, dz = 0.2;
+	static const float dx = 0.1, dy = 0.1, dz = 0.1;
 
 	static float midX = 0, midY = 0, midZ = 0;
 	static int pressLeft = 0, pressRight = 0, pressUp = 0, pressDown = 0, pressR = 0, pressL = 0;
+	
+	static int count = 0;
+	count++;
+	if(count > 30)
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accel: %-1.3f %-1.3f %-1.3f : %-1.3f %-1.3f %-1.3f", accX, accY, accZ, midX, midY, midZ);
+	}
 	
 	if( accX < midX - dx )
 	{
@@ -139,7 +146,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 	if( accX > midX + dx*2 )
 		midX = accX - dx*2;
 
-	if( accY < midY + dy )
+	if( accY < midY - dy )
 	{
 		if( !pressUp )
 		{
@@ -157,10 +164,10 @@ static void updateOrientation ( float accX, float accY, float accZ )
 			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_UP );
 		}
 	}
-	if( accY < midY + dy*2 )
-		midY = accY - dy*2;
+	if( accY < midY - dy*2 )
+		midY = accY + dy*2;
 
-	if( accY > midY - dy )
+	if( accY > midY + dy )
 	{
 		if( !pressDown )
 		{
@@ -178,10 +185,10 @@ static void updateOrientation ( float accX, float accY, float accZ )
 			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_DOWN );
 		}
 	}
-	if( accY > midY - dy*2 )
-		midY = accY + dy*2;
+	if( accY > midY + dy*2 )
+		midY = accY - dy*2;
 
-	if( accZ < midZ + dz )
+	if( accZ < midZ - dz )
 	{
 		if( !pressL )
 		{
@@ -197,10 +204,10 @@ static void updateOrientation ( float accX, float accY, float accZ )
 			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_KP_7 );
 		}
 	}
-	if( accZ < midZ + dz*2 )
-		midZ = accZ - dz*2;
+	if( accZ < midZ - dz*2 )
+		midZ = accZ + dz*2;
 
-	if( accZ > midZ - dz )
+	if( accZ > midZ + dz )
 	{
 		if( !pressR )
 		{
@@ -216,8 +223,8 @@ static void updateOrientation ( float accX, float accY, float accZ )
 			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_KP_9 );
 		}
 	}
-	if( accZ > midZ - dz*2 )
-		midZ = accZ + dz*2;
+	if( accZ > midZ + dz*2 )
+		midZ = accZ - dz*2;
 
 }
 
@@ -226,13 +233,11 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 {
 	// Calculate two angles from three coordinates - TODO: this is faulty!
 	//float accX = atan2f(-accPosX, sqrtf(accPosY*accPosY+accPosZ*accPosZ) * ( accPosY > 0 ? 1.0f : -1.0f ) ) * M_1_PI * 180.0f;
+	//float accY = atan2f(accPosZ, accPosY) * M_1_PI;
 	float normal = sqrt(accPosX*accPosX+accPosY*accPosY+accPosZ*accPosZ);
 	if(normal <= 0.0000001f)
 		normal = 1.0f;
-	float accX = accPosX/normal;
-	//float accY = atan2f(accPosZ, accPosY) * M_1_PI;
-	float accY = accPosY/normal;
-	updateOrientation (accX, accY, 0.0f);
+	updateOrientation (accPosX/normal, accPosY/normal, 0.0f);
 }
 
 

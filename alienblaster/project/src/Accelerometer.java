@@ -50,8 +50,8 @@ class AccelerometerReader implements SensorListener {
 		if (sensor == SensorManager.SENSOR_ACCELEROMETER) {
 			if( Globals.HorizontalOrientation )
 			{
-				v[0] = values[1];
-				v[1] = values[2];
+				v[0] = values[2];
+				v[1] = values[1];
 				v[2] = values[0];
 			}
 			nativeAccelerometer(v[0], v[1], v[2]);
