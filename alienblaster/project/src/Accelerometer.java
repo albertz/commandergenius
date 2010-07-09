@@ -43,14 +43,21 @@ class AccelerometerReader implements SensorListener {
 
 	public synchronized void onSensorChanged(int sensor, float[] values) {
 
+		v[0] = values[0];
+		v[1] = values[1];
+		v[2] = values[2];
+		
 		if (sensor == SensorManager.SENSOR_ACCELEROMETER) {
-			if( values.length >= 1 )
-				v[0] = values[0];
-			if( values.length >= 2 )
-				v[1] = values[1];
-			if( values.length >= 3 )
-				v[2] = values[2];
+			if( Globals.HorizontalOrientation )
+			{
+				v[0] = values[1];
+				v[1] = values[2];
+				v[2] = values[0];
+			}
 			nativeAccelerometer(v[0], v[1], v[2]);
+		}
+		if (sensor == SensorManager.SENSOR_ORIENTATION) {
+			nativeOrientation(v[0], v[1], v[2]);
 		}
 		
 	}
@@ -68,6 +75,7 @@ class AccelerometerReader implements SensorListener {
 	};
 
 	private native void nativeAccelerometer(float accX, float accY, float accZ);
+	private native void nativeOrientation(float accX, float accY, float accZ);
 }
 
 

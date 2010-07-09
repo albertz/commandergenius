@@ -102,8 +102,10 @@ fi
 AppFullNameUnderscored=`echo $AppFullName | sed 's/[.]/_/g'`
 AppSharedLibrariesPath=/data/data/$AppFullName/lib
 ScreenOrientation1=portrait
+HorizontalOrientation=false
 if [ "$ScreenOrientation" = "h" ] ; then
 	ScreenOrientation1=landscape
+	HorizontalOrientation=true
 fi
 AppDataDownloadUrl1="`echo $AppDataDownloadUrl | sed 's/[&]/%26/g'`"
 if [ "$SdlVideoResize" = "y" ] ; then
@@ -153,6 +155,7 @@ cat project/src/Globals.java | \
 	sed "s^public static String DataDownloadUrl = \".*\";^public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";^" | \
 	sed "s/public static boolean DownloadToSdcard = .*;/public static boolean DownloadToSdcard = $DownloadToSdcard1;/" | \
 	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
+	sed "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
 	sed "s/public LoadLibrary() .*/public LoadLibrary() { $LibrariesToLoad };/" > \
 	project/src/Globals.java.1

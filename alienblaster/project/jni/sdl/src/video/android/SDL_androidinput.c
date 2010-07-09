@@ -88,12 +88,11 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 }
 
 
-JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
+static void updateOrientation ( float accX, float accY, float accZ )
 {
 	// TODO: use accelerometer as joystick, make this configurable
-	// Currenly it's used as cursor + Home/End keys
-	static const float dx = 1.0, dy = 1.0, dz = 1.0;
+	// Currenly it's used as cursor + KP7/KP9 keys
+	static const float dx = 0.2, dy = 0.2, dz = 0.2;
 
 	static float midX = 0, midY = 0, midZ = 0;
 	static int pressLeft = 0, pressRight = 0, pressUp = 0, pressDown = 0, pressR = 0, pressL = 0;
@@ -182,8 +181,66 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	if( accY > midY - dy*2 )
 		midY = accY + dy*2;
 
+	if( accZ < midZ + dz )
+	{
+		if( !pressL )
+		{
+			pressL = 1;
+			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_KP_7 );
+		}
+	}
+	else
+	{
+		if( pressL )
+		{
+			pressL = 0;
+			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_KP_7 );
+		}
+	}
+	if( accZ < midZ + dz*2 )
+		midZ = accZ - dz*2;
+
+	if( accZ > midZ - dz )
+	{
+		if( !pressR )
+		{
+			pressR = 1;
+			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_KP_9 );
+		}
+	}
+	else
+	{
+		if( pressR )
+		{
+			pressR = 0;
+			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_KP_9 );
+		}
+	}
+	if( accZ > midZ - dz*2 )
+		midZ = accZ + dz*2;
+
 }
 
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobject  thiz, jfloat accPosX, jfloat accPosY, jfloat accPosZ )
+{
+	// Calculate two angles from three coordinates - TODO: this is faulty!
+	//float accX = atan2f(-accPosX, sqrtf(accPosY*accPosY+accPosZ*accPosZ) * ( accPosY > 0 ? 1.0f : -1.0f ) ) * M_1_PI * 180.0f;
+	float normal = sqrt(accPosX*accPosX+accPosY*accPosY+accPosZ*accPosZ);
+	if(normal <= 0.0000001f)
+		normal = 1.0f;
+	float accX = accPosX/normal;
+	//float accY = atan2f(accPosZ, accPosY) * M_1_PI;
+	float accY = accPosY/normal;
+	updateOrientation (accX, accY, 0.0f);
+}
+
+
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(AccelerometerReader_nativeOrientation) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
+{
+	updateOrientation (accX, accY, accZ);
+}
 
 void ANDROID_InitOSKeymap()
 {

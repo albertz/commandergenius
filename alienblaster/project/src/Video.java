@@ -49,7 +49,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 		System.loadLibrary("sdl_main");
 
 		nativeInit(); // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
-
+		System.exit(0);
 	}
 
 	public int swapBuffers() // Called from native code, returns 1 on success, 0 when GL context lost (user put app to background)
