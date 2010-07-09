@@ -150,7 +150,7 @@ void MenuArcadeMode::draw() {
     r.h = heavyFighterIcon1->h;
     SDL_BlitSurface( heavyFighterIcon1, 0, screen, &r );
   }
-  fontHighlighted->drawStr( screen, 100, 400, "Press \"1\"", FONT_ALIGN_CENTERED );
+  fontHighlighted->drawStr( screen, 100, 400, "Press \"Volume Up\"", FONT_ALIGN_CENTERED );
   fontHighlighted->drawStr( screen, 100, 430, "To Change", FONT_ALIGN_CENTERED );
 
   SDL_Flip( screen );
@@ -164,7 +164,7 @@ void MenuArcadeMode::handleEvents( GameStates &gameState ) {
     switch(event.type) {
     case SDL_KEYDOWN: {
       switch ( event.key.keysym.sym ) {
-      case SDLK_1: {
+      case SDLK_PAGEUP: {
 	playerOneLightFighter = !playerOneLightFighter;
 	break;
       }

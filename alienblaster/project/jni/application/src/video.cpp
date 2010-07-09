@@ -73,12 +73,14 @@ SdlCompat_AcceleratedSurface *Video::init(){
 
 void Video::clearScreen() {
   // clear the screen
+  /*
   SDL_Rect r;
   r.x = 0;
   r.y = 0;
   r.w = screen->w;
   r.h = screen->h;
-  SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0, 0, 0) );
+  */
+  SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0) );
 }
 
 void Video::toggleFullscreen() {
