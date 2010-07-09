@@ -92,17 +92,10 @@ static void updateOrientation ( float accX, float accY, float accZ )
 {
 	// TODO: use accelerometer as joystick, make this configurable
 	// Currenly it's used as cursor + KP7/KP9 keys
-	static const float dx = 0.1, dy = 0.1, dz = 0.1;
+	static const float dx = 0.04, dy = 0.1, dz = 0.1;
 
 	static float midX = 0, midY = 0, midZ = 0;
 	static int pressLeft = 0, pressRight = 0, pressUp = 0, pressDown = 0, pressR = 0, pressL = 0;
-	
-	static int count = 0;
-	count++;
-	if(count > 30)
-	{
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accel: %-1.3f %-1.3f %-1.3f : %-1.3f %-1.3f %-1.3f", accX, accY, accZ, midX, midY, midZ);
-	}
 	
 	if( accX < midX - dx )
 	{
@@ -152,7 +145,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press up, acc %f mid %f d %f", accY, midY, dy);
 			pressUp = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_UP );
+			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_DOWN );
 		}
 	}
 	else
@@ -161,7 +154,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release up, acc %f mid %f d %f", accY, midY, dy);
 			pressUp = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_UP );
+			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_DOWN );
 		}
 	}
 	if( accY < midY - dy*2 )
@@ -173,7 +166,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press down, acc %f mid %f d %f", accY, midY, dy);
 			pressDown = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_DOWN );
+			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_UP );
 		}
 	}
 	else
@@ -182,7 +175,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release down, acc %f mid %f d %f", accY, midY, dy);
 			pressDown = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_DOWN );
+			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_UP );
 		}
 	}
 	if( accY > midY + dy*2 )
@@ -237,6 +230,12 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	float normal = sqrt(accPosX*accPosX+accPosY*accPosY+accPosZ*accPosZ);
 	if(normal <= 0.0000001f)
 		normal = 1.0f;
+	static int count = 0;
+	count++;
+	if(count > 50)
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accel: %-1.3f %-1.3f %-1.3f", accPosX/normal, accPosY/normal, accPosZ/normal);
+	}
 	updateOrientation (accPosX/normal, accPosY/normal, 0.0f);
 }
 
