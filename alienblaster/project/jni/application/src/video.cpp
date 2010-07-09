@@ -58,6 +58,8 @@ SdlCompat_AcceleratedSurface *Video::init(){
   SDL_Surface * screen3 = SDL_DisplayFormat( screen2 );
   SDL_FreeSurface(screen2);
   screen = SdlCompat_CreateAcceleratedSurface(screen3);
+  screen->w = SCREEN_WIDTH;
+  screen->h = SCREEN_HEIGHT;
   SDL_FreeSurface(screen3);
   
   SDL_WM_SetCaption("AlienBlaster", "AlienBlaster");

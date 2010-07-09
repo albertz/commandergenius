@@ -80,7 +80,7 @@ class Settings {
   Font *fontKey;
   Font *fontHighlighted;
   std::vector< PlayerEventKeys > playerKeys;
-  std::map< SDLKey, std::string > keyName;
+  //std::map< SDLKey, std::string > keyName;
   PlayerEventName playerEventNames;
   DefaultSettings defaultSettings;
   void getNewKeyFromUser();

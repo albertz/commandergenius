@@ -192,7 +192,7 @@ void Settings::showSettings( SdlCompat_AcceleratedSurface *screen, bool getNewKe
       r.x = 175;
       r.y = i-1;
       SDL_BlitSurface(bluePlain, &srcKey, screen, &r );
-      fontNormal->drawStr( screen, 270, i, keyName[ pkiter->second ], FONT_ALIGN_RIGHT );
+      fontNormal->drawStr( screen, 270, i, SDL_GetKeyName( pkiter->second ), FONT_ALIGN_RIGHT );
     }
     if ( !(playerOfActiveItem == 1 && pkiter->first == activePlayerEvent) ) {
       r.x = screen->w/2 + 5;
@@ -206,7 +206,7 @@ void Settings::showSettings( SdlCompat_AcceleratedSurface *screen, bool getNewKe
       r.y = i-1;
       SDL_BlitSurface(bluePlain, &srcKey, screen, &r );
       fontNormal->drawStr( screen, screen->w/2 + 260, i, 
-			   keyName[ playerKeys[1][pkiter->first] ], FONT_ALIGN_RIGHT );
+			   SDL_GetKeyName( playerKeys[1][pkiter->first] ), FONT_ALIGN_RIGHT );
     }
     
     if ( playerOfActiveItem == 0 && pkiter->first == activePlayerEvent ) {
@@ -219,7 +219,7 @@ void Settings::showSettings( SdlCompat_AcceleratedSurface *screen, bool getNewKe
       r.y = i-1;
       SDL_BlitSurface(whitePlain, &srcKey, screen, &r );
       if (!getNewKey) {
-	fontHighlighted->drawStr( screen, 270, i, keyName[ pkiter->second ], FONT_ALIGN_RIGHT );
+	fontHighlighted->drawStr( screen, 270, i, SDL_GetKeyName( pkiter->second ), FONT_ALIGN_RIGHT );
       }
     }
     if ( playerOfActiveItem == 1 && pkiter->first == activePlayerEvent ) {
@@ -234,7 +234,7 @@ void Settings::showSettings( SdlCompat_AcceleratedSurface *screen, bool getNewKe
       SDL_BlitSurface(whitePlain, &srcKey, screen, &r );
       if (!getNewKey) {
 	fontHighlighted->drawStr( screen, screen->w/2 + 260, i, 
-				  keyName[ playerKeys[1][pkiter->first] ], FONT_ALIGN_RIGHT );
+				  SDL_GetKeyName( playerKeys[1][pkiter->first] ), FONT_ALIGN_RIGHT );
       }
     }
     
@@ -409,9 +409,11 @@ void Settings::getNewKeyFromUser() {
 const PlayerKeys Settings::getPlayerKeys(unsigned int player) const {
   assert( player < playerKeys.size() );
   PlayerKeys pk;
+  /*
   for( std::map< SDLKey, std::string > :: const_iterator i = keyName.begin(); i != keyName.end(); ++i ) {
     pk[ i->first ] = PE_UNKNOWN;
   }
+  */
   std::map< PlayerEvent, SDLKey >::const_iterator pkiter;
   for(pkiter = playerKeys[player].begin(); pkiter != playerKeys[player].end(); ++pkiter) {
     pk[ pkiter->second ] = pkiter->first;
@@ -420,6 +422,7 @@ const PlayerKeys Settings::getPlayerKeys(unsigned int player) const {
 }
 
 void Settings::setKeyNames() {
+  /*
   keyName[ (SDLKey)0 ] = "UNKNOWN";
   keyName[ (SDLKey)8 ] = "BACKSPACE";
   keyName[ (SDLKey)9 ] = "TAB";
@@ -685,4 +688,5 @@ void Settings::setKeyNames() {
   keyName[ (SDLKey)1053 ] = "GPB_13";
   keyName[ (SDLKey)1054 ] = "GPB_14";
   keyName[ (SDLKey)1055 ] = "GPB_15";
+  */
 }
