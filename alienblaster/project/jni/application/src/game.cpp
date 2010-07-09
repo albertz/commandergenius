@@ -95,7 +95,7 @@ Game::Game() {
   // for arcadeMode
   gameOverSprite = surfaceDB.loadSurface( FN_GAME_OVER );
 
-  nukeEffectSurface = surfaceDB.loadSurface( FN_NUKE_EFFECT );
+  nukeEffectSurface = surfaceDB.loadSurface( FN_NUKE_EFFECT, true );
 
   bossAlarm = Mixer::mixer().loadSample( FN_SOUND_BOSS_ALARM, 60 );
 
