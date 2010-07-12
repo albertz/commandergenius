@@ -5,6 +5,7 @@
       android:versionName="1.1.0.p1"
 >
     <application android:label="@string/app_name" 
+                 android:icon="@drawable/icon"
     >
         <activity android:name=".MainActivity"
                   android:label="@string/app_name"
