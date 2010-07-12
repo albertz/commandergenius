@@ -45,13 +45,16 @@ and launch script ChangeAppSettings.sh - it will put the name of your app in sev
 The C++ files shall have .cpp extension to be compiled, rename them if necessary.
 Then you should launch script ChangeAppSettings.sh - it will ask you few questions,
 and change several values across project files.
-Then you can launch build.sh.
+Also you can replace icon image at project/res/drawable/icon.png.
+Then you can launch build.sh and hope for the best.
 
 Application data is not bundled with app itself - it should be downloaded from net on first run.
 Create .ZIP file with your application data, and put it somewhere on HTTP server - ChangeAppSettings.sh
 will ask you for the URL.
 If your app data is bigger than 5 megabytes it's better to store it on SD card,
 internal flash on Android is very limited.
+If you'll release new version of data files you should change download URL and update your app as well -
+the app will re-download the data if URL does not match the saved URL from previous download.
 
 If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
 add libname to project/jni/<yourapp>/Android.mk
