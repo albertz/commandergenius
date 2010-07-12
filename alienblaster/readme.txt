@@ -19,7 +19,7 @@ Note that you may use Volume up/down and Camera keys as game inputs -
 you'll have to redefine them in game keyconfig menu.
 Keys Home, Search and End Call will force application quit, and because
 of a bug in my SDL implementation application will crash.
-Back key is mapped to Escape, and both Menu and cursor keys center / trackball click are mapped to Enter.
+Back key is mapped to Escape, and Menu is mapped to Enter.
 Newer Android phones like HTC Evo have no keyboard at all, so there are just 3 usable keys - 
 Menu, Volume Up and Volume Down (and Escape of course).
 Because of that the accelerometer is configured to trigger cursor key events.
@@ -68,6 +68,8 @@ Note that it's extremely buggy, and I had no any success in debugging my app wit
 So it's best to debug with code like:
 	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
 and then watching "adb logcat" output.
+
+
 
 Known bugs:
 
