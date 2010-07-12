@@ -51,6 +51,18 @@ if [ -n "$var" ] ; then
 	MultiABI="$var"
 fi
 
+echo -n "\nApplication version code (integer) ($AppVersionCode): "
+read var
+if [ -n "$var" ] ; then
+	AppVersionCode="$var"
+fi
+
+echo -n "\nApplication user-visible version name (string) ($AppVersionName): "
+read var
+if [ -n "$var" ] ; then
+	AppVersionName="$var"
+fi
+
 echo -n "\nOptional shared libraries to compile - removing some of them will save space\nMP3 support by libMAD is encumbered by patents and libMAD is GPL-ed\n"
 grep 'Available libraries:' project/jni/Application.mk 
 grep 'depends on' project/jni/Application.mk
@@ -89,6 +101,8 @@ echo DownloadToSdcard=$DownloadToSdcard >> AppSettings.cfg
 echo SdlVideoResize=$SdlVideoResize >> AppSettings.cfg
 echo NeedDepthBuffer=$NeedDepthBuffer >> AppSettings.cfg
 echo MultiABI=$MultiABI >> AppSettings.cfg
+echo AppVersionCode=$AppVersionCode >> AppSettings.cfg
+echo AppVersionName=$\"AppVersionName\" >> AppSettings.cfg
 echo CompiledLibraries=\"$CompiledLibraries\" >> AppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AppSettings.cfg
 
@@ -137,7 +151,9 @@ ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 echo Patching project/AndroidManifest.xml
 cat project/AndroidManifest.xml | \
 	sed "s/package=.*/package=\"$AppFullName\"/" | \
-	sed "s/android:screenOrientation=.*/android:screenOrientation=\"$ScreenOrientation1\"/" > \
+	sed "s/android:screenOrientation=.*/android:screenOrientation=\"$ScreenOrientation1\"/" | \
+	sed "s^android:versionCode=.*^android:versionCode=\"$AppVersionCode\"^" | \
+	sed "s^android:versionName=.*^android:versionName=\"$AppVersionName\"^" > \
 	project/AndroidManifest.xml.1
 mv -f project/AndroidManifest.xml.1 project/AndroidManifest.xml
 

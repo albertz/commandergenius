@@ -21,7 +21,8 @@ Keys Home, Search and End Call will force application quit, and because
 of a bug in my SDL implementation application will crash.
 Back key is mapped to Escape, and both Menu and cursor keys center / trackball click are mapped to Enter.
 Newer Android phones like HTC Evo have no keyboard at all, so there are just 3 usable keys - 
-Menu, Volume Up and Volume Down. Because of that the accelerometer is configured to trigger cursor key events.
+Menu, Volume Up and Volume Down (and Escape of course).
+Because of that the accelerometer is configured to trigger cursor key events.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
 remove all files from project/jni/application/src and put glxgears.c there to check if it works.
@@ -35,6 +36,9 @@ HTC G1/Nexus One has native screen resolution 480x320, HTC Evo has 800x480, so d
 any screen resolution.
 SDL_ListModes()[0] will always return native screen resolution, you may use 640x480 or 800x600
 but it will be resized to fit the screen.
+Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
+texture on HTC G1. Software surfaces may be of any size of course (but you don't want to do expensive memcpy).
+There is a trick to make 
 
 To compile your own app, put your app sources into project/jni/application dir (remove Alien Blaster first),
 and launch script ChangeAppSettings.sh - it will put the name of your app in several places in sources.
