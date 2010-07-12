@@ -77,7 +77,7 @@ void Infoscreen::draw() {
   SDL_Rect r;
   r.x = 250;
   r.y = 0;
-  r.w = 1;
+  r.w = 2;
   r.h = screen->h;
   SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0, 255, 0) );
 

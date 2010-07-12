@@ -95,7 +95,7 @@ Game::Game() {
   // for arcadeMode
   gameOverSprite = surfaceDB.loadSurface( FN_GAME_OVER );
 
-  nukeEffectSurface = surfaceDB.loadSurface( FN_NUKE_EFFECT, true );
+  nukeEffectSurface = surfaceDB.loadSurface( FN_NUKE_EFFECT );
 
   bossAlarm = Mixer::mixer().loadSample( FN_SOUND_BOSS_ALARM, 60 );
 
@@ -656,6 +656,7 @@ void Game::drawNukeEffect() {
 
   SDL_BlitSurface( nukeEffectSurface, 0, screen, 0 );
 
+  /*
   int randRange = (int)
     (( ((NUKE_EFFECT_DURATION / 2.0) - timeFromMaximum) * NUKE_QUAKE_EFFECT /
 	     (NUKE_EFFECT_DURATION / 2.0 ) ) + 0.5);
@@ -690,6 +691,7 @@ void Game::drawNukeEffect() {
   }
 
   SDL_BlitSurface( screen, &src, screen, &dest );
+  */
 }
 
 
