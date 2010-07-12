@@ -291,6 +291,7 @@ SDL_StreamLength(SDL_AudioStreamer * stream)
 }
 
 /* Initialize the stream by allocating the buffer and setting the read/write heads to the beginning */
+#if 0
 static int
 SDL_StreamInit(SDL_AudioStreamer * stream, int max_len, Uint8 silence)
 {
@@ -309,6 +310,7 @@ SDL_StreamInit(SDL_AudioStreamer * stream, int max_len, Uint8 silence)
 
     return 0;
 }
+#endif
 
 /* Deinitialize the stream simply by freeing the buffer */
 static void

@@ -45,6 +45,7 @@
 #include "ddraw.h"
 #endif
 
+#include "SDL_win32clipboard.h"
 #include "SDL_win32events.h"
 #include "SDL_win32gamma.h"
 #include "SDL_win32keyboard.h"
@@ -60,6 +61,7 @@
 #define WIN_StringToUTF8(S) SDL_iconv_string("UTF-8", "ASCII", (char *)S, (SDL_strlen(S)+1))
 #define WIN_UTF8ToString(S) SDL_iconv_string("ASCII", "UTF-8", (char *)S, SDL_strlen(S)+1)
 #endif
+extern void WIN_SetError(const char *prefix);
 
 /* Private display data */
 
@@ -73,6 +75,8 @@ typedef struct SDL_VideoData
     HANDLE ddrawDLL;
     IDirectDraw *ddraw;
 #endif
+
+    DWORD clipboard_count;
 
     const SDL_scancode *key_layout;
 } SDL_VideoData;

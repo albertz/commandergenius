@@ -35,6 +35,19 @@
 static int WIN_VideoInit(_THIS);
 static void WIN_VideoQuit(_THIS);
 
+/* Sets an error message based on GetLastError() */
+void
+WIN_SetError(const char *prefix)
+{
+    TCHAR buffer[1024];
+    char *message;
+    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), 0,
+                  buffer, SDL_arraysize(buffer), NULL);
+    message = WIN_StringToUTF8(buffer);
+    SDL_SetError("%s%s%s", prefix ? prefix : "", prefix ? ": " : "", message);
+    SDL_free(message);
+}
+
 /* WIN32 driver bootstrap functions */
 
 static int
@@ -162,6 +175,10 @@ WIN_CreateDevice(int devindex)
     device->GL_SwapWindow = WIN_GL_SwapWindow;
     device->GL_DeleteContext = WIN_GL_DeleteContext;
 #endif
+
+    device->SetClipboardText = WIN_SetClipboardText;
+    device->GetClipboardText = WIN_GetClipboardText;
+    device->HasClipboardText = WIN_HasClipboardText;
 
     device->free = WIN_DeleteDevice;
 

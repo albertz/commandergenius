@@ -184,7 +184,6 @@ WIN_CreateWindow(_THIS, SDL_Window * window)
 {
     SDL_VideoDisplay *display = window->display;
     HWND hwnd;
-    HWND top;
     RECT rect;
     SDL_Rect bounds;
     DWORD style = (WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
@@ -202,11 +201,6 @@ WIN_CreateWindow(_THIS, SDL_Window * window)
     }
 
     /* Figure out what the window area will be */
-    if (window->flags & SDL_WINDOW_FULLSCREEN) {
-        top = HWND_TOPMOST;
-    } else {
-        top = HWND_NOTOPMOST;
-    }
     rect.left = 0;
     rect.top = 0;
     rect.right = window->w;
@@ -216,9 +210,17 @@ WIN_CreateWindow(_THIS, SDL_Window * window)
     h = (rect.bottom - rect.top);
 
     WIN_GetDisplayBounds(_this, display, &bounds);
+    if (window->flags & SDL_WINDOW_FULLSCREEN) {
+        /* The bounds when this window is visible is the fullscreen mode */
+        SDL_DisplayMode fullscreen_mode;
+        if (SDL_GetWindowDisplayMode(window, &fullscreen_mode) == 0) {
+            bounds.w = fullscreen_mode.w;
+            bounds.h = fullscreen_mode.h;
+        }
+    }
     if ((window->flags & SDL_WINDOW_FULLSCREEN)
         || window->x == SDL_WINDOWPOS_CENTERED) {
-        x = bounds.x + (bounds.w - window->w) / 2;
+        x = bounds.x + (bounds.w - w) / 2;
     } else if (window->x == SDL_WINDOWPOS_UNDEFINED) {
         if (bounds.x == 0) {
             x = CW_USEDEFAULT;
@@ -230,7 +232,7 @@ WIN_CreateWindow(_THIS, SDL_Window * window)
     }
     if ((window->flags & SDL_WINDOW_FULLSCREEN)
         || window->y == SDL_WINDOWPOS_CENTERED) {
-        y = bounds.y + (bounds.h - window->h) / 2;
+        y = bounds.y + (bounds.h - h) / 2;
     } else if (window->x == SDL_WINDOWPOS_UNDEFINED) {
         if (bounds.x == 0) {
             y = CW_USEDEFAULT;
@@ -387,6 +389,7 @@ WIN_SetWindowPosition(_THIS, SDL_Window * window)
     HWND top;
     BOOL menu;
     int x, y;
+    int w, h;
 
     /* Figure out what the window area will be */
     if (window->flags & SDL_WINDOW_FULLSCREEN) {
@@ -405,17 +408,27 @@ WIN_SetWindowPosition(_THIS, SDL_Window * window)
     menu = (style & WS_CHILDWINDOW) ? FALSE : (GetMenu(hwnd) != NULL);
 #endif
     AdjustWindowRectEx(&rect, style, menu, 0);
+    w = (rect.right - rect.left);
+    h = (rect.bottom - rect.top);
 
     WIN_GetDisplayBounds(_this, display, &bounds);
+    if (window->flags & SDL_WINDOW_FULLSCREEN) {
+        /* The bounds when this window is visible is the fullscreen mode */
+        SDL_DisplayMode fullscreen_mode;
+        if (SDL_GetWindowDisplayMode(window, &fullscreen_mode) == 0) {
+            bounds.w = fullscreen_mode.w;
+            bounds.h = fullscreen_mode.h;
+        }
+    }
     if ((window->flags & SDL_WINDOW_FULLSCREEN)
         || window->x == SDL_WINDOWPOS_CENTERED) {
-        x = bounds.x + (bounds.w - window->w) / 2;
+        x = bounds.x + (bounds.w - w) / 2;
     } else {
         x = bounds.x + window->x + rect.left;
     }
     if ((window->flags & SDL_WINDOW_FULLSCREEN)
         || window->y == SDL_WINDOWPOS_CENTERED) {
-        y = bounds.y + (bounds.h - window->h) / 2;
+        y = bounds.y + (bounds.h - h) / 2;
     } else {
         y = bounds.y + window->y + rect.top;
     }
@@ -620,8 +633,7 @@ SDL_HelperWindowCreate(void)
     /* Register the class. */
     SDL_HelperWindowClass = RegisterClass(&wce);
     if (SDL_HelperWindowClass == 0) {
-        SDL_SetError("Unable to create Helper Window Class: error %d.",
-                     GetLastError());
+        WIN_SetError("Unable to create Helper Window Class");
         return -1;
     }
 
@@ -639,8 +651,7 @@ SDL_HelperWindowCreate(void)
                                       hInstance, NULL);
     if (SDL_HelperWindow == NULL) {
         UnregisterClass(SDL_HelperWindowClassName, hInstance);
-        SDL_SetError("Unable to create Helper Window: error %d.",
-                     GetLastError());
+        WIN_SetError("Unable to create Helper Window");
         return -1;
     }
 
@@ -659,8 +670,7 @@ SDL_HelperWindowDestroy(void)
     /* Destroy the window. */
     if (SDL_HelperWindow != NULL) {
         if (DestroyWindow(SDL_HelperWindow) == 0) {
-            SDL_SetError("Unable to destroy Helper Window: error %d.",
-                         GetLastError());
+            WIN_SetError("Unable to destroy Helper Window");
             return;
         }
         SDL_HelperWindow = NULL;
@@ -669,8 +679,7 @@ SDL_HelperWindowDestroy(void)
     /* Unregister the class. */
     if (SDL_HelperWindowClass != 0) {
         if ((UnregisterClass(SDL_HelperWindowClassName, hInstance)) == 0) {
-            SDL_SetError("Unable to destroy Helper Window Class: error %d.",
-                         GetLastError());
+            WIN_SetError("Unable to destroy Helper Window Class");
             return;
         }
         SDL_HelperWindowClass = 0;
