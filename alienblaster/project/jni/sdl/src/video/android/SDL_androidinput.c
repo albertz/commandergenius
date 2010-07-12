@@ -232,12 +232,15 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	float normal = sqrt(accPosX*accPosX+accPosY*accPosY+accPosZ*accPosZ);
 	if(normal <= 0.0000001f)
 		normal = 1.0f;
+	/*
 	static int count = 0;
 	count++;
 	if(count > 50)
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accel: %-1.3f %-1.3f %-1.3f", accPosX/normal, accPosY/normal, accPosZ/normal);
 	}
+	*/
+	
 	updateOrientation (accPosX/normal, accPosY/normal, 0.0f);
 }
 
