@@ -102,7 +102,7 @@ echo SdlVideoResize=$SdlVideoResize >> AppSettings.cfg
 echo NeedDepthBuffer=$NeedDepthBuffer >> AppSettings.cfg
 echo MultiABI=$MultiABI >> AppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AppSettings.cfg
-echo AppVersionName=$\"AppVersionName\" >> AppSettings.cfg
+echo AppVersionName=\"$AppVersionName\" >> AppSettings.cfg
 echo CompiledLibraries=\"$CompiledLibraries\" >> AppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AppSettings.cfg
 
@@ -143,8 +143,6 @@ LibrariesToLoad="System.loadLibrary(\\\"sdl\\\");"
 for lib in $CompiledLibraries; do
 	LibrariesToLoad="$LibrariesToLoad System.loadLibrary(\\\"$lib\\\");"
 done
-echo CompiledLibraries $CompiledLibraries
-echo LibrariesToLoad $LibrariesToLoad
 
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 
