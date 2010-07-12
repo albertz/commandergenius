@@ -97,6 +97,8 @@ static void updateOrientation ( float accX, float accY, float accZ )
 	static float midX = 0, midY = 0, midZ = 0;
 	static int pressLeft = 0, pressRight = 0, pressUp = 0, pressDown = 0, pressR = 0, pressL = 0;
 	
+	midX = 0.0f; // Do not remember old value for phone tilt, it feels weird
+	
 	if( accX < midX - dx )
 	{
 		if( !pressLeft )
