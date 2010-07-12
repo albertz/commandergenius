@@ -68,7 +68,11 @@ SdlCompat_AcceleratedSurface *Video::init(){
   SDL_ShowCursor(SDL_DISABLE);
 
   __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Initializing video done");
-  //empty = surfaceDB.loadSurface(FN_ALIENBLASTER_INTRO);
+
+  screen3 = SDL_CreateRGBSurface( 0, 16, 16, 16, 0xff, 0x00ff, 0x0000ff, 0 );
+  SDL_FillRect(screen3, NULL, SDL_MapRGB(screen3->format, 0, 0, 0) );
+  empty = SdlCompat_CreateAcceleratedSurface(screen3);
+  SDL_FreeSurface(screen3);
 
   return screen;
 }
@@ -76,14 +80,15 @@ SdlCompat_AcceleratedSurface *Video::init(){
 
 void Video::clearScreen() {
   // clear the screen
-  
+  /*
   SDL_Rect r;
   r.x = 0;
   r.y = 0;
   r.w = screen->w;
   r.h = screen->h;
   SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0, 0, 0) );
-  //SDL_BlitSurface(empty, NULL, screen, NULL);
+  */
+  SDL_BlitSurface(empty, NULL, screen, NULL);
 }
 
 void Video::toggleFullscreen() {
