@@ -186,7 +186,7 @@ mv -f project/jni/Android.mk.1 project/jni/Android.mk
 
 echo Patching project/jni/Application.mk
 cat project/jni/Application.mk | \
-	sed "s/APP_MODULES := .*/APP_MODULES := application sdl_main stlport tremor png jpeg freetype $CompiledLibraries/" | \
+	sed "s/APP_MODULES := .*/APP_MODULES := application sdl sdl_main stlport tremor png jpeg freetype $CompiledLibraries/" | \
 	sed "s/APP_ABI := .*/APP_ABI := $MultiABI/" > \
 	project/jni/Application.mk.1
 mv -f project/jni/Application.mk.1 project/jni/Application.mk
