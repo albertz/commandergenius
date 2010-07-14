@@ -20,6 +20,7 @@ import android.view.WindowManager;
 
 import android.widget.TextView;
 import java.lang.Thread;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 class DemoRenderer extends GLSurfaceView_SDL.Renderer {
@@ -54,6 +55,10 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 
 	public int swapBuffers() // Called from native code, returns 1 on success, 0 when GL context lost (user put app to background)
 	{
+		synchronized (this) {
+			this.notify();
+		}
+		//Thread.yield();
 		return super.SwapBuffers() ? 1 : 0;
 	}
 
@@ -72,8 +77,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	private EGLDisplay mEglDisplay = null;
 	private EGLSurface mEglSurface = null;
 	private EGLContext mEglContext = null;
-	private int skipFrames = 0;
-
 }
 
 class DemoGLSurfaceView extends GLSurfaceView_SDL {
@@ -100,8 +103,14 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		if (  action >= 0 ) {
 			nativeMouse( (int)event.getX(), (int)event.getY(), action );
 		}
+		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
+		synchronized (mRenderer) {
+			try {
+				mRenderer.wait(300L);
+			} catch (InterruptedException e) { }
+		}
 		return true;
-	}
+	};
 
 	 public void exitApp() {
 		 mRenderer.exitApp();

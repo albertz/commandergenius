@@ -82,14 +82,21 @@ public class MainActivity extends Activity {
 		 if( keyCode == KeyEvent.KEYCODE_BACK && !downloader.DownloadComplete )
 			 onStop();
 		 return true;
-	 }
+	}
 	
 	@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event) {
 		 if( mGLView != null )
 			 mGLView.nativeKey( keyCode, 0 );
 		 return true;
-	 }
+	}
+	
+	@Override
+	public boolean dispatchTouchEvent(MotionEvent ev) {
+		if(mGLView != null)
+			mGLView.onTouchEvent(ev);
+		return true;
+	}
 
 	private DemoGLSurfaceView mGLView = null;
 	private LoadLibrary mLoadLibraryStub = null;
