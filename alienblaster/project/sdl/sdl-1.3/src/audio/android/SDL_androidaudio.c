@@ -22,6 +22,7 @@
     This file written by Ryan C. Gordon (icculus@icculus.org)
 */
 #include "SDL_config.h"
+#include "SDL_version.h"
 
 #include "SDL_rwops.h"
 #include "SDL_timer.h"
@@ -39,10 +40,8 @@
 
 #define _THIS	SDL_AudioDevice *this
 
-// TODO: make audio single-threaded, the same way as video
-
 /* Audio driver functions */
-static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture);
+
 static void ANDROIDAUD_WaitAudio(_THIS);
 static void ANDROIDAUD_PlayAudio(_THIS);
 static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS);
@@ -50,11 +49,9 @@ static void ANDROIDAUD_CloseAudio(_THIS);
 static void ANDROIDAUD_ThreadInit(_THIS);
 static void ANDROIDAUD_ThreadDeinit(_THIS);
 
-/* Audio driver bootstrap functions */
-static int ANDROIDAUD_Available(void)
-{
-	return(1);
-}
+#if SDL_VERSION_ATLEAST(1,3,0)
+
+static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture);
 
 static void ANDROIDAUD_DeleteDevice()
 {
@@ -62,6 +59,7 @@ static void ANDROIDAUD_DeleteDevice()
 
 static int ANDROIDAUD_CreateDevice(SDL_AudioDriverImpl * impl)
 {
+
 	/* Set the function pointers */
 	impl->OpenDevice = ANDROIDAUD_OpenAudio;
 	impl->WaitDevice = ANDROIDAUD_WaitAudio;
@@ -80,6 +78,54 @@ AudioBootStrap ANDROIDAUD_bootstrap = {
 	"android", "SDL Android audio driver",
 	ANDROIDAUD_CreateDevice, 0
 };
+
+#else
+
+static int ANDROIDAUD_OpenAudio(_THIS, SDL_AudioSpec *spec);
+
+static int ANDROIDAUD_Available(void)
+{
+	return(1);
+}
+
+static void ANDROIDAUD_DeleteDevice(SDL_AudioDevice *device)
+{
+	SDL_free(device);
+}
+
+static SDL_AudioDevice *ANDROIDAUD_CreateDevice(int devindex)
+{
+	SDL_AudioDevice *this;
+
+	/* Initialize all variables that we clean on shutdown */
+	this = (SDL_AudioDevice *)SDL_malloc(sizeof(SDL_AudioDevice));
+	if ( this ) {
+		SDL_memset(this, 0, (sizeof *this));
+		this->hidden = NULL;
+	} else {
+		SDL_OutOfMemory();
+		return(0);
+	}
+
+	/* Set the function pointers */
+	this->OpenAudio = ANDROIDAUD_OpenAudio;
+	this->WaitAudio = ANDROIDAUD_WaitAudio;
+	this->PlayAudio = ANDROIDAUD_PlayAudio;
+	this->GetAudioBuf = ANDROIDAUD_GetAudioBuf;
+	this->CloseAudio = ANDROIDAUD_CloseAudio;
+	this->ThreadInit = ANDROIDAUD_ThreadInit;
+	this->WaitDone = ANDROIDAUD_ThreadDeinit;
+	this->free = ANDROIDAUD_DeleteDevice;
+
+	return this;
+}
+
+AudioBootStrap ANDROIDAUD_bootstrap = {
+	ANDROIDAUD_DRIVER_NAME, "SDL Android audio driver",
+	ANDROIDAUD_Available, ANDROIDAUD_CreateDevice
+};
+
+#endif
 
 
 static unsigned char * audioBuffer = NULL;

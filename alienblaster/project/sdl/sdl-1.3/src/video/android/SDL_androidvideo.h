@@ -26,8 +26,11 @@
 
 #include "../SDL_sysvideo.h"
 
-extern void ANDROID_PumpEvents(_THIS);
 extern void ANDROID_InitOSKeymap();
+
+extern int SDL_ANDROID_sWindowWidth;
+extern int SDL_ANDROID_sWindowHeight;
+extern int SDL_ANDROID_CallJavaSwapBuffers();
 
 
 // Keycodes ripped from Java SDK
