@@ -3,6 +3,12 @@
 
 var=""
 
+echo -n "\nlibSDL version to use (1.2 or 1.3), 1.2 is not HW accelerated yet ($LibSdlVersion): "
+read var
+if [ -n "$var" ] ; then
+	LibSdlVersion="$var"
+fi
+
 echo -n "\nSpecify application name (e.x. My Application) ($AppName): "
 read var
 if [ -n "$var" ] ; then
@@ -93,6 +99,7 @@ fi
 echo
 
 cat /dev/null > AppSettings.cfg
+echo LibSdlVersion=$LibSdlVersion >> AppSettings.cfg
 echo AppName=\"$AppName\" >> AppSettings.cfg
 echo AppFullName=$AppFullName >> AppSettings.cfg
 echo ScreenOrientation=$ScreenOrientation >> AppSettings.cfg
@@ -145,6 +152,10 @@ for lib in $CompiledLibraries; do
 done
 
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
+
+echo Creating symlink to libSDL
+rm -f project/jni/sdl
+ln -s ../sdl/sdl-$LibSdlVersion project/jni/sdl
 
 echo Patching project/AndroidManifest.xml
 cat project/AndroidManifest.xml | \
