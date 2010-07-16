@@ -121,7 +121,7 @@ static SDL_AudioDevice *ANDROIDAUD_CreateDevice(int devindex)
 }
 
 AudioBootStrap ANDROIDAUD_bootstrap = {
-	ANDROIDAUD_DRIVER_NAME, "SDL Android audio driver",
+	"android", "SDL Android audio driver",
 	ANDROIDAUD_Available, ANDROIDAUD_CreateDevice
 };
 
@@ -144,9 +144,17 @@ static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS)
 	return(audioBuffer);
 }
 
-static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+static int ANDROIDAUD_OpenAudio (_THIS, const char *devname, int iscapture)
 {
 	SDL_AudioSpec *audioFormat = &this->spec;
+
+#else
+static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
+{
+	SDL_AudioSpec *audioFormat = spec;
+#endif
 	int bytesPerSample;
 	JNIEnv * jniEnv = NULL;
 
@@ -157,7 +165,7 @@ static int ANDROIDAUD_OpenAudio(_THIS, const char *devname, int iscapture)
 	}
 	SDL_memset(this->hidden, 0, (sizeof *this->hidden));
 
-	if( ! (this->spec.format == AUDIO_S8 || this->spec.format == AUDIO_S16) )
+	if( ! (audioFormat->format == AUDIO_S8 || audioFormat->format == AUDIO_S16) )
 	{
 		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "Application requested unsupported audio format - only S8 and S16 are supported");
 		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL

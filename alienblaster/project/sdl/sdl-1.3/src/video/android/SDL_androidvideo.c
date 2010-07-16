@@ -31,6 +31,7 @@
 #include <string.h> // for memset()
 
 #include "SDL_config.h"
+#include "SDL_version.h"
 
 #include "SDL_video.h"
 #include "SDL_mouse.h"
@@ -80,7 +81,11 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoRenderer_nativeDone) ( JNIEnv*  env, jobject  thiz )
 {
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "quitting...");
+#if SDL_VERSION_ATLEAST(1,3,0)
 	SDL_SendQuit();
+#else
+	SDL_PrivateQuit();
+#endif
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "quit OK");
 }
 

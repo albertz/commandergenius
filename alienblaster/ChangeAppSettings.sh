@@ -3,6 +3,7 @@
 
 var=""
 
+LibSdlVersionOld=$LibSdlVersion
 echo -n "\nlibSDL version to use (1.2 or 1.3), 1.2 is not HW accelerated yet ($LibSdlVersion): "
 read var
 if [ -n "$var" ] ; then
@@ -215,5 +216,8 @@ touch project/jni/sdl/src/video/SDL_video.c
 touch project/jni/sdl/src/video/SDL_renderer_gles.c
 touch project/jni/sdl/src/audio/android/*.c
 rm -rf project/libs/*
+if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
+	rm -rf project/bin/ndk/local/armeabi/objs/sdl project/bin/ndk/local/armeabi/libsdl.so
+fi
 
 echo Done

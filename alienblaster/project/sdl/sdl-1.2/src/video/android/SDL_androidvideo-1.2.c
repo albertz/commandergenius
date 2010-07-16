@@ -27,7 +27,6 @@
 #include "SDL_thread.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
-#include "../../events/SDL_events_c.h"
 
 #include "SDL_androidvideo.h"
 
@@ -41,6 +40,7 @@
 #include <math.h>
 #include <string.h> // for memset()
 
+#define _THIS	SDL_VideoDevice *this
 
 /* Initialization/Query functions */
 static int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat);
@@ -56,6 +56,7 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface);
 static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface);
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface);
 static void ANDROID_GL_SwapBuffers(_THIS);
+static void ANDROID_PumpEvents(_THIS);
 
 // Stubs to get rid of crashing in OpenGL mode
 // The implementation dependent data for the window manager cursor
@@ -114,8 +115,6 @@ static jclass JavaRendererClass = NULL;
 static jobject JavaRenderer = NULL;
 static jmethodID JavaSwapBuffers = NULL;
 
-
-static SDLKey keymap[KEYCODE_LAST+1];
 
 static void SdlGlRenderInit();
 
@@ -378,8 +377,6 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	}
 
 	SDL_ANDROID_CallJavaSwapBuffers();
-
-	processAndroidTrackballKeyDelays( -1, 0 );
 
 	SDL_Delay(10);
 	

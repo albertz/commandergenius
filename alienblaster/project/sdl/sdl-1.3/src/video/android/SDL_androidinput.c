@@ -36,13 +36,19 @@
 #include "SDL_thread.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
+#include "SDL_events.h"
+#if (SDL_VERSION_ATLEAST(1,3,0))
 #include "../../events/SDL_events_c.h"
 #include "../../events/SDL_keyboard_c.h"
 #include "../../events/SDL_mouse_c.h"
-
-#include "SDL_androidvideo.h"
 #include "SDL_scancode.h"
 #include "SDL_compat.h"
+#else
+#include "SDL_keysym.h"
+#include "../../events/SDL_events_c.h"
+#endif
+
+#include "SDL_androidvideo.h"
 
 
 static SDLKey keymap[KEYCODE_LAST+1];
@@ -85,6 +91,13 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 
 #define SDL_KEY(X) SDL_SCANCODE_ ## X
 
+static SDL_scancode TranslateKey(int scancode, SDL_keysym *keysym)
+{
+	if ( scancode >= SDL_arraysize(keymap) )
+		scancode = KEYCODE_UNKNOWN;
+	return keymap[scancode];
+}
+
 #else
 
 #define SDL_KEY2(X) SDLK_ ## X
@@ -105,26 +118,73 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 #define KP_9 KP9
 #define NUMLOCKCLEAR NUMLOCK
 #define GRAVE DOLLAR
+#define APOSTROPHE QUOTE
+#define LGUI LMETA
+// Overkill haha
+#define A a
+#define B b
+#define C c
+#define D d
+#define E e
+#define F f
+#define G g
+#define H h
+#define I i
+#define J j
+#define K k
+#define L l
+#define M m
+#define N n
+#define O o
+#define P p
+#define Q q
+#define R r
+#define S s
+#define T t
+#define U u
+#define V v
+#define W w
+#define X x
+#define Y y
+#define Z z
+
+#define SDL_scancode SDLKey
+
+static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
+{
+	/* Sanity check */
+	if ( scancode >= SDL_arraysize(keymap) )
+		scancode = KEYCODE_UNKNOWN;
+
+	/* Set the keysym information */
+	keysym->scancode = scancode;
+	keysym->sym = keymap[scancode];
+	keysym->mod = KMOD_NONE;
+
+	/* If UNICODE is on, get the UNICODE value for the key */
+	keysym->unicode = 0;
+	if ( SDL_TranslateUNICODE ) {
+		/* Populate the unicode field with the ASCII value */
+		keysym->unicode = scancode;
+	}
+	return(keysym);
+}
 
 #endif
 
-static SDL_scancode TranslateKey(int scancode)
-{
-	if ( scancode >= SDL_arraysize(keymap) )
-		scancode = KEYCODE_UNKNOWN;
-	return keymap[scancode];
-}
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint key, jint action )
 {
 	//if( ! processAndroidTrackballKeyDelays(key, action) )
-	SDL_SendKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key) );
+	SDL_keysym keysym;
+	SDL_SendKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key ,&keysym) );
 }
 
 
 static void updateOrientation ( float accX, float accY, float accZ )
 {
+	SDL_keysym keysym;
 	// TODO: use accelerometer as joystick, make this configurable
 	// Currenly it's used as cursor + KP7/KP9 keys
 	static const float dx = 0.04, dy = 0.1, dz = 0.1;
@@ -140,7 +200,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press left, acc %f mid %f d %f", accX, midX, dx);
 			pressLeft = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_LEFT );
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_LEFT, &keysym) );
 		}
 	}
 	else
@@ -149,7 +209,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release left, acc %f mid %f d %f", accX, midX, dx);
 			pressLeft = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_LEFT );
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT, &keysym) );
 		}
 	}
 	if( accX < midX - dx*2 )
@@ -161,7 +221,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press right, acc %f mid %f d %f", accX, midX, dx);
 			pressRight = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_RIGHT );
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_RIGHT, &keysym) );
 		}
 	}
 	else
@@ -170,7 +230,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release right, acc %f mid %f d %f", accX, midX, dx);
 			pressRight = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_RIGHT );
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT, &keysym) );
 		}
 	}
 	if( accX > midX + dx*2 )
@@ -182,7 +242,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press up, acc %f mid %f d %f", accY, midY, dy);
 			pressUp = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_DOWN );
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_DOWN, &keysym) );
 		}
 	}
 	else
@@ -191,7 +251,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release up, acc %f mid %f d %f", accY, midY, dy);
 			pressUp = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_DOWN );
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN, &keysym) );
 		}
 	}
 	if( accY < midY - dy*2 )
@@ -203,7 +263,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press down, acc %f mid %f d %f", accY, midY, dy);
 			pressDown = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_UP );
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_UP, &keysym) );
 		}
 	}
 	else
@@ -212,7 +272,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release down, acc %f mid %f d %f", accY, midY, dy);
 			pressDown = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_UP );
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP, &keysym) );
 		}
 	}
 	if( accY > midY + dy*2 )
@@ -223,7 +283,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		if( !pressL )
 		{
 			pressL = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_KP_7 );
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_ALT_LEFT, &keysym) );
 		}
 	}
 	else
@@ -231,7 +291,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		if( pressL )
 		{
 			pressL = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_KP_7 );
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_ALT_LEFT, &keysym) );
 		}
 	}
 	if( accZ < midZ - dz*2 )
@@ -242,7 +302,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		if( !pressR )
 		{
 			pressR = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, SDL_SCANCODE_KP_9 );
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_ALT_RIGHT, &keysym) );
 		}
 	}
 	else
@@ -250,7 +310,7 @@ static void updateOrientation ( float accX, float accY, float accZ )
 		if( pressR )
 		{
 			pressR = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, SDL_SCANCODE_KP_9 );
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_ALT_RIGHT, &keysym) );
 		}
 	}
 	if( accZ > midZ + dz*2 )
@@ -397,10 +457,12 @@ void ANDROID_InitOSKeymap()
   keymap[KEYCODE_SYM] = SDL_KEY(LGUI);
   keymap[KEYCODE_NUM] = SDL_KEY(NUMLOCKCLEAR);
 
+  keymap[KEYCODE_ALT_LEFT] = SDL_KEY(KP_7);
+  keymap[KEYCODE_ALT_RIGHT] = SDL_KEY(KP_9);
+
   // TODO: Too lazy to define that
+
 /*
-  keymap[KEYCODE_ALT_LEFT] = SDL_KEY(AC_BACK);
-  keymap[KEYCODE_ALT_RIGHT] = SDL_KEY(AC_FORWARD);
   keymap[KEYCODE_SHIFT_LEFT] = SDL_KEY(VOLUMEUP);
   keymap[KEYCODE_SHIFT_RIGHT] = SDL_KEY(VOLUMEDOWN);
 

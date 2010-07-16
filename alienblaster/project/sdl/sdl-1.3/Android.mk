@@ -18,6 +18,7 @@ LOCAL_CFLAGS := -I$(LOCAL_PATH)/include \
 SDL_SRCS := \
 	src/*.c \
 	src/audio/*.c \
+	src/cdrom/*.c \
 	src/cpuinfo/*.c \
 	src/events/*.c \
 	src/file/*.c \
@@ -32,6 +33,7 @@ SDL_SRCS := \
 	src/thread/pthread/*.c \
 	src/timer/unix/*.c \
 	src/audio/android/*.c \
+	src/cdrom/dummy/*.c \
 	src/video/android/*.c \
 	src/joystick/dummy/*.c \
 	src/haptic/dummy/*.c \
