@@ -22,16 +22,20 @@ public class MainActivity extends Activity {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				   WindowManager.LayoutParams.FLAG_FULLSCREEN); 
 
-		TextView tv = new TextView(this);
-		tv.setText("Initializing");
-		setContentView(tv);
-		downloader = new DataDownloader(this, tv);
+		_tv = new TextView(this);
+		_tv.setText("Initializing");
+		setContentView(_tv);
+		if( downloader == null )
+			downloader = new DataDownloader(this, _tv);
+		mLoadLibraryStub = new LoadLibrary();
+		mAudioThread = new AudioThread(this);
 	}
 
 	public void initSDL()
 	{
-		mLoadLibraryStub = new LoadLibrary();
-		mAudioThread = new AudioThread(this);
+		if(sdlInited)
+			return;
+		sdlInited = true;
 		mGLView = new DemoGLSurfaceView(this);
 		setContentView(mGLView);
 		// Receive keyboard events
@@ -45,6 +49,9 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onPause() {
+		synchronized( downloader ) {
+				downloader.setParent(null, null);
+		}
 		// TODO: if application pauses it's screen is messed up
 		if( wakeLock != null )
 			wakeLock.release();
@@ -60,11 +67,19 @@ public class MainActivity extends Activity {
 		super.onResume();
 		if( mGLView != null )
 			mGLView.onResume();
+		synchronized( downloader ) {
+			downloader.setParent(this, _tv);
+			if( downloader.DownloadComplete )
+				initSDL();
+		}
 	}
 
 	@Override
 	protected void onStop() 
 	{
+		synchronized( downloader ) {
+				downloader.setParent(null, null);
+		}
 		if( wakeLock != null )
 			wakeLock.release();
 		
@@ -102,6 +117,8 @@ public class MainActivity extends Activity {
 	private LoadLibrary mLoadLibraryStub = null;
 	private AudioThread mAudioThread = null;
 	private PowerManager.WakeLock wakeLock = null;
-	private DataDownloader downloader = null;
+	private static DataDownloader downloader = null;
+	private TextView _tv = null;
+	private boolean sdlInited = false;
 
 }

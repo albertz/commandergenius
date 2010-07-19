@@ -95,6 +95,13 @@ class DataDownloader extends Thread
 			Status = _Status;
 			Parent = _Parent;
 		}
+		public void setParent( TextView _Status, MainActivity _Parent )
+		{
+			synchronized(DataDownloader.this) {
+				Status = _Status;
+				Parent = _Parent;
+			}
+		}
 		
 		public void setText(final String str)
 		{
@@ -107,10 +114,13 @@ class DataDownloader extends Thread
 					Status.setText(text + "\n" + Globals.ReadmeText);
 				}
 			}
-			Callback cb = new Callback();
-			cb.text = new String(str);
-			cb.Status = Status;
-			Parent.runOnUiThread(cb);
+			synchronized(DataDownloader.this) {
+				Callback cb = new Callback();
+				cb.text = new String(str);
+				cb.Status = Status;
+				if( Parent != null && Status != null )
+					Parent.runOnUiThread(cb);
+			}
 		}
 		
 	}
@@ -120,7 +130,18 @@ class DataDownloader extends Thread
 		DownloadComplete = false;
 		Status = new StatusWriter( _Status, _Parent );
 		Status.setText( "Connecting to " + Globals.DataDownloadUrl );
+		outFilesDir = Parent.getFilesDir().getAbsolutePath();
+		if( Globals.DownloadToSdcard )
+			outFilesDir = "/sdcard/" + Globals.ApplicationName;
 		this.start();
+	}
+	
+	public void setParent(MainActivity _Parent, TextView _Status)
+	{
+		synchronized(this) {
+			Parent = _Parent;
+			Status.setParent( _Status, _Parent );
+		}
 	}
 
 	@Override
@@ -296,23 +317,25 @@ class DataDownloader extends Thread
 			public MainActivity Parent;
 			public void run()
 			{
-					Parent.initSDL();
+				Parent.initSDL();
 			}
 		}
 		Callback cb = new Callback();
-		cb.Parent = Parent;
-		Parent.runOnUiThread(cb);
+		synchronized(this) {
+			cb.Parent = Parent;
+			if(Parent != null)
+				Parent.runOnUiThread(cb);
+		}
 	}
 	
 	private String getOutFilePath(final String filename)
 	{
-		if( Globals.DownloadToSdcard )
-			return	"/sdcard/" + Globals.ApplicationName + "/" + filename;
-		return Parent.getFilesDir().getAbsolutePath() + "/" + filename;
+		return outFilesDir + "/" + filename;
 	};
 	
 	public boolean DownloadComplete;
 	public StatusWriter Status;
 	private MainActivity Parent;
+	private String outFilesDir = null;
 }
 
