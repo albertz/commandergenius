@@ -2371,12 +2371,6 @@ SDL_RenderClear()
 
 #if SDL_VIDEO_RENDER_RESIZE
 
-#if ( SDL_VIDEO_RENDER_RESIZE == 2 )
-#define SDL_VIDEO_RENDER_RESIZE_ALWAYS 1
-#else
-#define SDL_VIDEO_RENDER_RESIZE_ALWAYS
-#endif
-
 static inline void
 SDL_RESIZE_resizePoints(int realW, int fakeW, int realH, int fakeH,
                         const SDL_Point * src, SDL_Point * dest, int count )
@@ -2402,6 +2396,7 @@ SDL_RESIZE_resizeRects(int realW, int fakeW, int realH, int fakeH,
         dest[i].h = (src[i]->h + src[i]->y) * realH / fakeH - dest[i].y;
     }
 }
+
 #endif
 
 int
@@ -2445,9 +2440,7 @@ SDL_RenderDrawPoints(const SDL_Point * points, int count)
     realH = renderer->window->display->current_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
-#if !(SDL_VIDEO_RENDER_RESIZE_ALWAYS)
-    if( fakeW > realW || fakeH > realH )
-#endif
+    //if( fakeW > realW || fakeH > realH )
     {
         SDL_Point * resized = SDL_stack_alloc( SDL_Point, count );
         if( ! resized ) {
@@ -2506,9 +2499,7 @@ SDL_RenderDrawLines(const SDL_Point * points, int count)
     realH = renderer->window->display->current_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
-#if !(SDL_VIDEO_RENDER_RESIZE_ALWAYS)
-    if( fakeW > realW || fakeH > realH )
-#endif
+    //if( fakeW > realW || fakeH > realH )
     {
         SDL_Point * resized = SDL_stack_alloc( SDL_Point, count );
         if( ! resized ) {
@@ -2577,9 +2568,7 @@ SDL_RenderDrawRects(const SDL_Rect ** rects, int count)
     realH = renderer->window->display->current_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
-#if !(SDL_VIDEO_RENDER_RESIZE_ALWAYS)
-    if( fakeW > realW || fakeH > realH )
-#endif
+    //if( fakeW > realW || fakeH > realH )
     {
         SDL_Rect * resized = SDL_stack_alloc( SDL_Rect, count );
         if( ! resized ) {
@@ -2659,9 +2648,7 @@ SDL_RenderFillRects(const SDL_Rect ** rects, int count)
     realH = renderer->window->display->current_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
-#if !(SDL_VIDEO_RENDER_RESIZE_ALWAYS)
-    if( fakeW > realW || fakeH > realH )
-#endif
+    //if( fakeW > realW || fakeH > realH )
     {
         SDL_Rect * resized = SDL_stack_alloc( SDL_Rect, count );
         if( ! resized ) {
@@ -2758,9 +2745,7 @@ SDL_RenderCopy(SDL_Texture * texture, const SDL_Rect * srcrect,
     realH = window->display->current_mode.h;
     fakeW = window->w;
     fakeH = window->h;
-#if !(SDL_VIDEO_RENDER_RESIZE_ALWAYS)
-    if( fakeW > realW || fakeH > realH )
-#endif
+    //if( fakeW > realW || fakeH > realH )
     {
         // Calculate bottom-right corner instead of width/height, and substract upper-left corner,
         // otherwise we'll have rounding errors and holes between textures

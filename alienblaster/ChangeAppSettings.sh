@@ -40,7 +40,7 @@ if [ -n "$var" ] ; then
 	DownloadToSdcard="$var"
 fi
 
-echo -n "\nApplication window should be resized to fit into 480x320 screen,\n(y) or (n) or (a)lways resize, even if screen is bigger ($SdlVideoResize): "
+echo -n "\nApplication window should be resized to fit into 480x320 screen (y) or (n) ($SdlVideoResize): "
 read var
 if [ -n "$var" ] ; then
 	SdlVideoResize="$var"
@@ -132,8 +132,6 @@ fi
 AppDataDownloadUrl1="`echo $AppDataDownloadUrl | sed 's/[&]/%26/g'`"
 if [ "$SdlVideoResize" = "y" ] ; then
 	SdlVideoResize=1
-elif [ "$SdlVideoResize" = "a" ] ; then
-	SdlVideoResize=2
 else
 	SdlVideoResize=0
 fi
