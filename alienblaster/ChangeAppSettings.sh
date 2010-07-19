@@ -217,7 +217,7 @@ touch project/jni/sdl/src/video/SDL_renderer_gles.c
 touch project/jni/sdl/src/audio/android/*.c
 rm -rf project/libs/*
 if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
-	rm -rf project/bin/ndk/local/armeabi/objs/sdl project/bin/ndk/local/armeabi/libsdl.so
+	rm -rf project/bin/ndk/local/*/objs/sdl* project/bin/ndk/local/*/libsdl*.so
 fi
 
 echo Done
