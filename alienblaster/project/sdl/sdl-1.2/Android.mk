@@ -1,0 +1,1 @@
+../sdl-1.3/Android.mk
