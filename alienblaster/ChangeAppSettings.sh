@@ -213,7 +213,7 @@ touch project/jni/sdl/src/video/android/*.c
 touch project/jni/sdl/src/video/SDL_video.c
 touch project/jni/sdl/src/video/SDL_renderer_gles.c
 touch project/jni/sdl/src/audio/android/*.c
-rm -rf project/libs/*
+#rm -rf project/libs/*
 if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
 	rm -rf project/bin/ndk/local/*/objs/sdl* project/bin/ndk/local/*/libsdl*.so
 fi
