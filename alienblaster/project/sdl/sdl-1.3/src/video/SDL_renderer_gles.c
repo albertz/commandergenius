@@ -29,6 +29,9 @@
 #include "SDL_pixels_c.h"
 #include "SDL_rect_c.h"
 #include "SDL_yuv_sw_c.h"
+#ifdef ANDROID
+#include <android/log.h>
+#endif
 
 #if defined(__QNXNTO__)
 /* Include QNX system header to check QNX version later */
@@ -351,9 +354,15 @@ GLES_ActivateRenderer(SDL_Renderer * renderer)
         data->glLoadIdentity();
         data->glMatrixMode(GL_MODELVIEW);
         data->glLoadIdentity();
+#if SDL_VIDEO_RENDER_RESIZE
+        data->glViewport(0, 0, window->display->desktop_mode.w, window->display->desktop_mode.h);
+        data->glOrthof(0.0, (GLfloat) window->display->desktop_mode.w, (GLfloat) window->display->desktop_mode.h,
+                       0.0, 0.0, 1.0);
+#else
         data->glViewport(0, 0, window->w, window->h);
-        data->glOrthof(0.0, (GLfloat) window->w, (GLfloat) window->h, 0.0,
-                       0.0, 1.0);
+        data->glOrthof(0.0, (GLfloat) window->w, (GLfloat) window->h, 
+                       0.0, 0.0, 1.0);
+#endif
         data->updateSize = SDL_FALSE;
     }
     return 0;
@@ -911,9 +920,10 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
         cropRect[3] = -srcrect->h;
         data->glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES,
                                cropRect);
-        data->glDrawTexiOES(dstrect->x, 
+        //__android_log_print(ANDROID_LOG_INFO, "libSDL", "GLES_RenderCopy glDrawTexiOES(%d, %d, %d, %d) cropRect %d:%d:%d:%d", dstrect->x, window->display->desktop_mode.h - dstrect->y - dstrect->h, dstrect->w, dstrect->h, cropRect[0], cropRect[1], cropRect[2], cropRect[3]);
+        data->glDrawTexiOES(dstrect->x,
 #if SDL_VIDEO_RENDER_RESIZE
-                            window->display->current_mode.h - dstrect->y - dstrect->h,
+                            window->display->desktop_mode.h - dstrect->y - dstrect->h,
 #else
                             window->h - dstrect->y - dstrect->h,
 #endif

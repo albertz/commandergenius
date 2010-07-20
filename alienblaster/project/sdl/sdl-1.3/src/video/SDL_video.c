@@ -33,6 +33,9 @@
 #include "SDL_renderer_sw.h"
 #include "../events/SDL_sysevents.h"
 #include "../events/SDL_events_c.h"
+#ifdef ANDROID
+#include <android/log.h>
+#endif
 
 #if SDL_VIDEO_OPENGL_ES
 #include "SDL_opengles.h"
@@ -2436,8 +2439,8 @@ SDL_RenderDrawPoints(const SDL_Point * points, int count)
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
-    realW = renderer->window->display->current_mode.w;
-    realH = renderer->window->display->current_mode.h;
+    realW = renderer->window->display->desktop_mode.w;
+    realH = renderer->window->display->desktop_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
     //if( fakeW > realW || fakeH > realH )
@@ -2495,8 +2498,8 @@ SDL_RenderDrawLines(const SDL_Point * points, int count)
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
-    realW = renderer->window->display->current_mode.w;
-    realH = renderer->window->display->current_mode.h;
+    realW = renderer->window->display->desktop_mode.w;
+    realH = renderer->window->display->desktop_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
     //if( fakeW > realW || fakeH > realH )
@@ -2564,8 +2567,8 @@ SDL_RenderDrawRects(const SDL_Rect ** rects, int count)
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
-    realW = renderer->window->display->current_mode.w;
-    realH = renderer->window->display->current_mode.h;
+    realW = renderer->window->display->desktop_mode.w;
+    realH = renderer->window->display->desktop_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
     //if( fakeW > realW || fakeH > realH )
@@ -2644,8 +2647,8 @@ SDL_RenderFillRects(const SDL_Rect ** rects, int count)
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
-    realW = renderer->window->display->current_mode.w;
-    realH = renderer->window->display->current_mode.h;
+    realW = renderer->window->display->desktop_mode.w;
+    realH = renderer->window->display->desktop_mode.h;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
     //if( fakeW > realW || fakeH > realH )
@@ -2741,8 +2744,8 @@ SDL_RenderCopy(SDL_Texture * texture, const SDL_Rect * srcrect,
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
-    realW = window->display->current_mode.w;
-    realH = window->display->current_mode.h;
+    realW = window->display->desktop_mode.w;
+    realH = window->display->desktop_mode.h;
     fakeW = window->w;
     fakeH = window->h;
     //if( fakeW > realW || fakeH > realH )
@@ -2755,6 +2758,7 @@ SDL_RenderCopy(SDL_Texture * texture, const SDL_Rect * srcrect,
         real_dstrect.y = real_dstrect.y * realH / fakeH;
         real_dstrect.w -= real_dstrect.x;
         real_dstrect.h -= real_dstrect.y;
+        //__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_RenderCopy dest %d:%d+%d+%d desktop_mode %d:%d", (int)real_dstrect.x, (int)real_dstrect.y, (int)real_dstrect.w, (int)real_dstrect.h, (int)realW, (int)realH);
     }
 #endif
 
