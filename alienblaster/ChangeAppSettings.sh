@@ -209,10 +209,10 @@ mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
 
 # Force rebuild of C-Java bindings and updated settings
 touch project/jni/sdl_main/*.c
-touch project/jni/sdl/src/video/android/*.c
-touch project/jni/sdl/src/video/SDL_video.c
-touch project/jni/sdl/src/video/SDL_renderer_gles.c
-touch project/jni/sdl/src/audio/android/*.c
+touch project/sdl/sdl-$LibSdlVersion/src/video/android/*.c
+touch project/sdl/sdl-$LibSdlVersion/src/video/SDL_video.c
+touch project/sdl/sdl-$LibSdlVersion/src/video/SDL_renderer_gles.c
+touch project/sdl/sdl-$LibSdlVersion/src/audio/android/*.c
 #rm -rf project/libs/*
 if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
 	rm -rf project/bin/ndk/local/*/objs/sdl* project/bin/ndk/local/*/libsdl*.so
