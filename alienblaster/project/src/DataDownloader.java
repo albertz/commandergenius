@@ -190,16 +190,36 @@ class DataDownloader extends Thread
 			} catch( java.io.IOException e ) {};
 		}
 		
-		HttpGet request = new HttpGet(Globals.DataDownloadUrl);
-		request.addHeader("Accept", "*/*");
 		HttpResponse response = null;
-		try {
-			DefaultHttpClient client = new DefaultHttpClient();
-			client.getParams().setBooleanParameter("http.protocol.handle-redirects", true);
-			response = client.execute(request);
-		} catch (IOException e) { } ;
+		String [] downloadUrls = Globals.DataDownloadUrl.split("[|]");
+		int downloadUrlIndex = 0;
+		while( downloadUrlIndex < downloadUrls.length && response == null ) 
+		{
+			System.out.println("Connecting to " + downloadUrls[downloadUrlIndex]);
+			Status.setText( "Connecting to " + downloadUrls[downloadUrlIndex] );
+			HttpGet request = new HttpGet(downloadUrls[downloadUrlIndex]);
+			request.addHeader("Accept", "*/*");
+			try {
+				DefaultHttpClient client = new DefaultHttpClient();
+				client.getParams().setBooleanParameter("http.protocol.handle-redirects", true);
+				response = client.execute(request);
+			} catch (IOException e) {
+				System.out.println("Failed to connect to " + downloadUrls[downloadUrlIndex]);
+				downloadUrlIndex++;
+			};
+			if( response != null )
+			{
+				if( response.getStatusLine().getStatusCode() != 200 )
+				{
+					response = null;
+					System.out.println("Failed to connect to " + downloadUrls[downloadUrlIndex]);
+					downloadUrlIndex++;
+				}
+			}
+		}
 		if( response == null )
 		{
+			System.out.println("Error connecting to " + Globals.DataDownloadUrl);
 			Status.setText( "Error connecting to " + Globals.DataDownloadUrl );
 			return;
 		}

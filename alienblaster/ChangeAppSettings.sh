@@ -28,7 +28,7 @@ if [ -n "$var" ] ; then
 	ScreenOrientation="$var"
 fi
 
-echo -n "\nSpecify URL to download application data in zip archive ($AppDataDownloadUrl): "
+echo -n "\nSpecify URL to download application data in zip archive, you may specify backup URLs delimited by '|'\n($AppDataDownloadUrl):\n"
 read var
 if [ -n "$var" ] ; then
 	AppDataDownloadUrl="$var"
