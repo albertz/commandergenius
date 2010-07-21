@@ -457,22 +457,18 @@ void ANDROID_InitOSKeymap()
   keymap[KEYCODE_SYM] = SDL_KEY(LGUI);
   keymap[KEYCODE_NUM] = SDL_KEY(NUMLOCKCLEAR);
 
-  keymap[KEYCODE_ALT_LEFT] = SDL_KEY(KP_7);
-  keymap[KEYCODE_ALT_RIGHT] = SDL_KEY(KP_9);
+  keymap[KEYCODE_ALT_LEFT] = SDL_KEY(KP_7); // Used by orientation sensor code, do not change
+  keymap[KEYCODE_ALT_RIGHT] = SDL_KEY(KP_9); // Used by orientation sensor code, do not change
 
-  // TODO: Too lazy to define that
+  keymap[KEYCODE_SHIFT_LEFT] = SDL_KEY(F1);
+  keymap[KEYCODE_SHIFT_RIGHT] = SDL_KEY(F2);
 
-/*
-  keymap[KEYCODE_SHIFT_LEFT] = SDL_KEY(VOLUMEUP);
-  keymap[KEYCODE_SHIFT_RIGHT] = SDL_KEY(VOLUMEDOWN);
+  keymap[KEYCODE_EXPLORER] = SDL_KEY(F3);
+  keymap[KEYCODE_ENVELOPE] = SDL_KEY(F4);
 
-  keymap[KEYCODE_EXPLORER] = SDL_KEY(WWW);
-  keymap[KEYCODE_ENVELOPE] = SDL_KEY(MAIL);
-
-  keymap[KEYCODE_HEADSETHOOK] = SDL_KEY(AC_SEARCH);
-  keymap[KEYCODE_FOCUS] = SDL_KEY(AC_REFRESH);
-  keymap[KEYCODE_NOTIFICATION] = SDL_KEY(AC_BOOKMARKS);
-*/
+  keymap[KEYCODE_HEADSETHOOK] = SDL_KEY(F5);
+  keymap[KEYCODE_FOCUS] = SDL_KEY(F6);
+  keymap[KEYCODE_NOTIFICATION] = SDL_KEY(F7);
 
 }
 

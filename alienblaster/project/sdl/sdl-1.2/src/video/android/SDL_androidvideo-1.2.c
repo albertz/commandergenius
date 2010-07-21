@@ -109,12 +109,6 @@ static int sdl_opengl = 0;
 // Some wicked GLES stuff
 static GLuint texture = 0;
 
-// Extremely wicked JNI environment to call Java functions from C code
-static JNIEnv* JavaEnv = NULL;
-static jclass JavaRendererClass = NULL;
-static jobject JavaRenderer = NULL;
-static jmethodID JavaSwapBuffers = NULL;
-
 
 static void SdlGlRenderInit();
 
@@ -361,10 +355,7 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	if( ! sdl_opengl )
 	{
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
-		if( SDL_ANDROID_sWindowHeight < memY || SDL_ANDROID_sWindowWidth < memX )
-			glDrawTexiOES(0, 0, 1, SDL_ANDROID_sWindowWidth, SDL_ANDROID_sWindowHeight);  // Larger than screen - shrink to fit
-		else
-			glDrawTexiOES(0, SDL_ANDROID_sWindowHeight-memY, 1, memX, memY);  // Smaller than screen - do not scale, it's faster that way
+		glDrawTexiOES(0, 0, 1, SDL_ANDROID_sWindowWidth, SDL_ANDROID_sWindowHeight);  // Stretch to screen
 
 		if( surface->flags & SDL_DOUBLEBUF )
 		{
@@ -378,14 +369,12 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 
 	SDL_ANDROID_CallJavaSwapBuffers();
 
-	SDL_Delay(10);
-	
 	return(0);
 };
 
 void ANDROID_GL_SwapBuffers(_THIS)
 {
-	ANDROID_FlipHWSurface(this, NULL);
+	SDL_ANDROID_CallJavaSwapBuffers();
 };
 
 int ANDROID_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors)
