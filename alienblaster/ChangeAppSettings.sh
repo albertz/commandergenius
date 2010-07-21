@@ -153,8 +153,10 @@ done
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 
 echo Creating symlink to libSDL
-rm -f project/jni/sdl
-ln -s ../sdl/sdl-$LibSdlVersion project/jni/sdl
+if [ "`readlink project/jni/sdl`" '!=' "../sdl/sdl-$LibSdlVersion" ]; then
+	rm -f project/jni/sdl
+	ln -s ../sdl/sdl-$LibSdlVersion project/jni/sdl
+fi
 
 echo Patching project/AndroidManifest.xml
 cat project/AndroidManifest.xml | \
