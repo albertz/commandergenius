@@ -54,6 +54,7 @@ SdlCompat_AcceleratedSurface *Video::init(){
     __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", "Couldn't set %dx%d, %dbit video mode: %s\n", SCREEN_WIDTH, SCREEN_HEIGHT, BIT_DEPTH, SDL_GetError());
     exit(2);
   }
+#if SDL_VERSION_ATLEAST(1,3,0)
   // Dummy texture
   screen2 = SDL_CreateRGBSurface( 0, 16, 16, 16, 0xff, 0x00ff, 0x0000ff, 0 );
   SDL_Surface * screen3 = SDL_DisplayFormat( screen2 );
@@ -62,17 +63,19 @@ SdlCompat_AcceleratedSurface *Video::init(){
   screen->w = SCREEN_WIDTH;
   screen->h = SCREEN_HEIGHT;
   SDL_FreeSurface(screen3);
-  
+#else
+  screen = screen2;
+#endif
   SDL_WM_SetCaption("AlienBlaster", "AlienBlaster");
   SDL_WM_SetIcon(SDL_LoadBMP( FN_ALIENBLASTER_ICON.c_str() ), NULL);
   SDL_ShowCursor(SDL_DISABLE);
 
   __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "Initializing video done");
 
-  screen3 = SDL_CreateRGBSurface( 0, 16, 16, 16, 0xff, 0x00ff, 0x0000ff, 0 );
-  SDL_FillRect(screen3, NULL, SDL_MapRGB(screen3->format, 0, 0, 0) );
-  empty = SdlCompat_CreateAcceleratedSurface(screen3);
-  SDL_FreeSurface(screen3);
+  SDL_Surface * empty2 = SDL_CreateRGBSurface( 0, 16, 16, 16, 0xff, 0x00ff, 0x0000ff, 0 );
+  SDL_FillRect(empty2, NULL, SDL_MapRGB(empty2->format, 0, 0, 0) );
+  empty = SdlCompat_CreateAcceleratedSurface(empty2);
+  SDL_FreeSurface(empty2);
 
   return screen;
 }

@@ -130,7 +130,7 @@ typedef SDL_Surface SdlCompat_AcceleratedSurface;
 
 static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(SDL_Surface * surface)
 {
-	return SDL_ConvertSurface(surface, surface->format, 0); // Just copy it
+	return SDL_ConvertSurface(surface, surface->format, surface->flags | SDL_HWSURFACE);
 };
 
 #endif
