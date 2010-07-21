@@ -368,8 +368,8 @@ void initAllSurfaces() {
   surfaceDB.loadSurface("./images/heavyFighterDeflector.bmp", true);
   //surfaceDB.loadSurface("./images/font-20red");
   //surfaceDB.loadSurface("./images/font-20blue");
-  surfaceDB.loadSurface("./images/explosion.bmp");
-  surfaceDB.loadSurface("./images/explosionEnemy.bmp");
+  surfaceDB.loadSurface("./images/explosion.bmp", true);
+  surfaceDB.loadSurface("./images/explosionEnemy.bmp", true);
   surfaceDB.loadSurface("./images/bannerExcellent.bmp", true);
   surfaceDB.loadSurface("./images/bannerYouRule.bmp", true);
   surfaceDB.loadSurface("./images/bannerHeiho.bmp", true);

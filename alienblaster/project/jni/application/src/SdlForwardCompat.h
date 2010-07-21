@@ -28,7 +28,8 @@ static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(
 	
 	// Allocate accelerated surface even if that means loss of color quality
 	Uint32 format;
-	
+
+	/*
 	if( surface->flags & SDL_SRCALPHA )
 	{
 		format = SDL_PIXELFORMAT_RGBA4444;
@@ -59,17 +60,33 @@ static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(
 		format = SDL_PIXELFORMAT_RGB565;
 		ret->t = SDL_CreateTextureFromSurface(format, surface);
 	}
+	*/
+
+	format = SDL_PIXELFORMAT_RGB565;
+
+	if( surface->flags & SDL_SRCCOLORKEY )
+		format = SDL_PIXELFORMAT_RGBA5551;
+	ret->t = SDL_CreateTextureFromSurface(format, surface);
 
 	ret->w = surface->w;
 	ret->h = surface->h;
+	ret->format = new SDL_PixelFormat();
+	*(ret->format) = *(surface->format);
 	
 	if( ! ret->t )
 	{
 		SDL_SetError("SdlCompat_CreateAcceleratedSurface: Cannot allocate HW texture, W %d H %d format %x surface->flags %x", ret->w, ret->h, format, surface->flags );
+		return ret;
 	}
-	
-	ret->format = new SDL_PixelFormat();
-	*(ret->format) = *(surface->format);
+
+	if( surface->flags & SDL_SRCALPHA )
+	{
+		SDL_SetTextureBlendMode( ret->t, SDL_BLENDMODE_BLEND );
+		Uint8 alpha = 128;
+		if( SDL_GetSurfaceAlphaMod( surface, &alpha ) < 0 )
+			alpha = 128;
+		SDL_SetTextureAlphaMod( ret->t, alpha );
+	}
 	
 	return ret;
 };

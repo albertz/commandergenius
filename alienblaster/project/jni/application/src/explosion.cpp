@@ -26,7 +26,7 @@ using namespace std;
 
 Explosion::Explosion(string fn, const Vector2D &position, 
 		     const Vector2D &velocity, const ExplosionTypes &explosionType) {
-  sprite = surfaceDB.loadSurface(fn);
+  sprite = surfaceDB.loadSurface(fn, true);
 
   nrAnimStages = sprite->w / sprite->h;
   expired = false;

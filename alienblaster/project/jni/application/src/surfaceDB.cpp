@@ -93,14 +93,7 @@ SdlCompat_AcceleratedSurface *SurfaceDB::loadSurface( string fn, bool alpha ) {
   }
 
   if ( alpha ) {
-    hwSurface = SDL_DisplayFormatAlpha(newSurface);
-    if( hwSurface ) {
-      SDL_FreeSurface(newSurface);
-      newSurface = hwSurface;
-    }
     SDL_SetAlpha( newSurface, SDL_SRCALPHA, 128 );
-    SDL_SetColorKey( newSurface, SDL_SRCCOLORKEY, 
-		   SDL_MapRGB(newSurface->format, transR, transG, transB) );
   }
 
   surfaceDB[ fn ] = SdlCompat_CreateAcceleratedSurface( newSurface );
