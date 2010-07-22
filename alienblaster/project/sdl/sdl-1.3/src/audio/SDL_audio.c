@@ -74,14 +74,14 @@ extern AudioBootStrap ANDROIDAUD_bootstrap;
 
 /* Available audio drivers */
 static const AudioBootStrap *const bootstrap[] = {
-#if SDL_AUDIO_DRIVER_BSD
-    &BSD_AUDIO_bootstrap,
-#endif
 #if SDL_AUDIO_DRIVER_PULSEAUDIO
     &PULSEAUDIO_bootstrap,
 #endif
 #if SDL_AUDIO_DRIVER_ALSA
     &ALSA_bootstrap,
+#endif
+#if SDL_AUDIO_DRIVER_BSD
+    &BSD_AUDIO_bootstrap,
 #endif
 #if SDL_AUDIO_DRIVER_OSS
     &DSP_bootstrap,

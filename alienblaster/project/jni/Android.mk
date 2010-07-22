@@ -25,7 +25,7 @@ SDL_VIDEO_RENDER_RESIZE := 1
 
 COMPILED_LIBRARIES := sdl_mixer sdl_image
 
-APPLICATION_ADDITIONAL_CFLAGS := 
+APPLICATION_ADDITIONAL_CFLAGS := -finline-functions -O2
 
 # If SDL_Mixer should link to libMAD
 SDL_MIXER_USE_LIBMAD :=
