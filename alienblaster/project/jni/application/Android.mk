@@ -14,6 +14,8 @@ LOCAL_CFLAGS := $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../sdl_net \
 				-I$(LOCAL_PATH)/../sdl_blitpool \
 				-I$(LOCAL_PATH)/../stlport/stlport \
+				-I$(LOCAL_PATH)/../png \
+				-I$(LOCAL_PATH)/../jpeg \
 
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
 

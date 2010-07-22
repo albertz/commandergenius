@@ -69,7 +69,19 @@ So it's best to debug with code like:
 	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
 and then watching "adb logcat" output.
 
-
+There is limited support for "configure" scripts, I've managed to compile lbreakout2 that way,
+though ./configure scripts tend to have stupid bugs in various places, avoid using that method if you can.
+1. Download lbreakout2-2.6.1.tar.gz from http://lgames.sourceforge.net/, unpack it to project/jni/application dir.
+2. Determine libraries needed for your app, launch ChangeAppSettings.sh, select correct libSDL version
+   (1.2 for lbreakout2), and correct libs (sdl_mixer sdl_image sdl_net for lbreakout2), also change name etc.
+3. Launch ./build.sh, wait till it builds all .so files
+4. Go to project/jni/application/lbreakout2-2.6.1 dir, and launch command
+   ../launchConfigure.sh --disable-install --enable-sdl-net --disable-nls
+5. Watch how ./configure configures, if it fails fix launchConfigure.sh, rinse and repeat.
+6. Launch make, and pray. If you're lucky it will create application binary (lbreakout2-2.6.1/client/lbreakout2)
+7. Move the application binary to dir project/libs/armeabi, rename it to libapplication.so (overwrite old file)
+8. Run command "arm-eabi-strip --strip-debug libapplication.so", you can find arm-eabi-strip under your NDK dir.
+9. Run "ant debug" or "ant release" from project dir, install to device & enjoy.
 
 Known bugs:
 

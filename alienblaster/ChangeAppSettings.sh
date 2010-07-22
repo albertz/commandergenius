@@ -77,6 +77,7 @@ grep 'Available libraries:' project/jni/Application.mk
 grep 'depends on' project/jni/Application.mk
 echo -n "Current: $CompiledLibraries\n\n: "
 read var
+CompiledLibrariesOld=$CompiledLibraries
 if [ -n "$var" ] ; then
 	CompiledLibraries="$var"
 fi
@@ -237,6 +238,9 @@ touch project/sdl/sdl-$LibSdlVersion/src/audio/android/*.c
 if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
 	rm -rf project/bin/ndk/local/*/objs/sdl* project/bin/ndk/local/*/libsdl*.so
 	rm -rf project/bin/ndk/local/*/objs/application project/bin/ndk/local/*/libapplication.so
+fi
+if [ "$CompiledLibrariesOld" '!=' "$CompiledLibraries" ]; then
+	rm -rf project/bin/ndk/local/*/*.so
 fi
 
 echo Done
