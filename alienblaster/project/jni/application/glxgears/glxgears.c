@@ -451,11 +451,19 @@ main(int argc, char *argv[])
           break;
       }
     }
+#if SDL_VERSION_ATLEAST(1,3,0)
     keys = SDL_GetKeyboardState(NULL);
 
     if ( keys[SDL_SCANCODE_ESCAPE] ) {
       done = 1;
     }
+#else
+    keys = SDL_GetKeyState(NULL);
+
+    if ( keys[SDLK_ESCAPE] ) {
+      done = 1;
+    }
+#endif
 
     run_gears();
   }
