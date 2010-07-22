@@ -13,6 +13,8 @@ LOCAL_CFLAGS := $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../sdl_mixer \
 				-I$(LOCAL_PATH)/../sdl_image \
 				-I$(LOCAL_PATH)/../sdl_ttf \
+				-I$(LOCAL_PATH)/../sdl_net \
+				-I$(LOCAL_PATH)/../sdl_blitpool \
 				-I$(LOCAL_PATH)/../stlport/stlport \
 
 
