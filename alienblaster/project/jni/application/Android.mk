@@ -17,6 +17,7 @@ LOCAL_CFLAGS := $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../sdl_blitpool \
 				-I$(LOCAL_PATH)/../stlport/stlport \
 
+LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
 
 #Change C++ file extension as appropriate
 LOCAL_CPP_EXTENSION := .cpp

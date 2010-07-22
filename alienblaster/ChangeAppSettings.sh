@@ -3,6 +3,8 @@
 
 var=""
 
+echo -n "\n===== libSDL on Android configuration =====\n\nIf you will supply empty string as answer the previous value will be used\n"
+
 LibSdlVersionOld=$LibSdlVersion
 echo -n "\nlibSDL version to use (1.2 or 1.3), 1.2 is not HW accelerated yet ($LibSdlVersion): "
 read var
@@ -79,6 +81,12 @@ if [ -n "$var" ] ; then
 	CompiledLibraries="$var"
 fi
 
+echo -n "\nAditional CFLAGS for application ($AppCflags): "
+read var
+if [ -n "$var" ] ; then
+	AppCflags="$var"
+fi
+
 echo -n "\nHere you may type some short readme text that will be shown when app data is downloaded."
 echo -n "\nCurrent text:\n"
 echo -n "`echo $ReadmeText | tr '^' '\\n'`"
@@ -112,6 +120,7 @@ echo MultiABI=$MultiABI >> AppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AppSettings.cfg
 echo CompiledLibraries=\"$CompiledLibraries\" >> AppSettings.cfg
+echo AppCflags=\'$AppCflags\' >> AppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AppSettings.cfg
 
 AppShortName=`echo $AppName | sed 's/ //g'`
@@ -192,16 +201,25 @@ cat project/jni/Android.mk | \
 	sed "s/SDL_JAVA_PACKAGE_PATH := .*/SDL_JAVA_PACKAGE_PATH := $AppFullNameUnderscored/" | \
 	sed "s^SDL_CURDIR_PATH := .*^SDL_CURDIR_PATH := $DataPath^" | \
 	sed "s^SDL_VIDEO_RENDER_RESIZE := .*^SDL_VIDEO_RENDER_RESIZE := $SdlVideoResize^" | \
-	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" > \
+	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" |
+	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" > \
 	project/jni/Android.mk.1
-mv -f project/jni/Android.mk.1 project/jni/Android.mk
+if [ -n "`diff -w project/jni/Android.mk.1 project/jni/Android.mk`" ] ; then
+	mv -f project/jni/Android.mk.1 project/jni/Android.mk
+else
+	rm -rf project/jni/Android.mk.1
+fi
 
 echo Patching project/jni/Application.mk
 cat project/jni/Application.mk | \
 	sed "s/APP_MODULES := .*/APP_MODULES := application sdl sdl_main stlport tremor png jpeg freetype $CompiledLibraries/" | \
 	sed "s/APP_ABI := .*/APP_ABI := $MultiABI/" > \
 	project/jni/Application.mk.1
-mv -f project/jni/Application.mk.1 project/jni/Application.mk
+if [ -n "`diff -w project/jni/Application.mk.1 project/jni/Application.mk`" ] ; then
+	mv -f project/jni/Application.mk.1 project/jni/Application.mk
+else
+	rm -rf project/jni/Application.mk.1
+fi
 
 echo Patching project/res/values/strings.xml
 cat project/res/values/strings.xml | \

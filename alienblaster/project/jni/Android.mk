@@ -25,6 +25,8 @@ SDL_VIDEO_RENDER_RESIZE := 1
 
 COMPILED_LIBRARIES := sdl_mixer sdl_image
 
+APPLICATION_ADDITIONAL_CFLAGS := 
+
 # If SDL_Mixer should link to libMAD
 SDL_MIXER_USE_LIBMAD :=
 ifneq ($(strip $(filter mad, $(COMPILED_LIBRARIES))),)
