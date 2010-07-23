@@ -158,12 +158,7 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 	int bytesPerSample;
 	JNIEnv * jniEnv = NULL;
 
-	this->hidden = (struct SDL_PrivateAudioData *) SDL_malloc((sizeof *this->hidden));
-	if ( this->hidden == NULL ) {
-		SDL_OutOfMemory();
-		return(-1);
-	}
-	SDL_memset(this->hidden, 0, (sizeof *this->hidden));
+	this->hidden = NULL;
 
 	if( ! (audioFormat->format == AUDIO_S8 || audioFormat->format == AUDIO_S16) )
 	{
@@ -200,13 +195,14 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 	audioFormat->size = audioBufferSize;
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): app opened audio bytespersample %d freq %d channels %d bufsize %d", bytesPerSample, audioFormat->freq, (jint)audioFormat->channels, audioBufferSize);
 
-	SDL_CalculateAudioSpec(&this->spec);
+	SDL_CalculateAudioSpec(audioFormat);
 	
-	return(1);
+	return(0);
 }
 
 static void ANDROIDAUD_CloseAudio(_THIS)
 {
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_CloseAudio()");
 	JNIEnv * jniEnv = NULL;
 	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
 
@@ -220,10 +216,6 @@ static void ANDROIDAUD_CloseAudio(_THIS)
 	/* We cannot call DetachCurrentThread() from main thread or we'll crash */
 	/* (*jniVM)->DetachCurrentThread(jniVM); */
 	
-	if ( this->hidden != NULL ) {
-		SDL_free(this->hidden);
-		this->hidden = NULL;
-	}
 }
 
 /* This function waits until it is possible to write a full sound buffer */
@@ -257,12 +249,13 @@ static void ANDROIDAUD_ThreadInit(_THIS)
 	audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetByteArrayElements(jniEnvPlaying, audioBufferJNI, &isCopy);
 	if( !audioBuffer )
 	{
-		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_PlayAudio() JNI::GetByteArrayElements() failed! we will crash now");
+		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_ThreadInit() JNI::GetByteArrayElements() failed! we will crash now");
 		return;
 	}
 	if( isCopy == JNI_TRUE )
-		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_OpenAudio(): JNI returns a copy of byte array - no audio will be played");
+		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_ThreadInit(): JNI returns a copy of byte array - no audio will be played");
 
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_ThreadInit()");
 	SDL_memset(audioBuffer, this->spec.silence, this->spec.size);
 };
 
@@ -273,6 +266,7 @@ static void ANDROIDAUD_ThreadDeinit(_THIS)
 
 static void ANDROIDAUD_PlayAudio(_THIS)
 {
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio()");
 	jboolean isCopy = JNI_TRUE;
 
 	(*jniEnvPlaying)->ReleaseByteArrayElements(jniEnvPlaying, audioBufferJNI, (jbyte *)audioBuffer, 0);
