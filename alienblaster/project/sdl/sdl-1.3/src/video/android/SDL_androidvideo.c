@@ -45,7 +45,7 @@
 
 
 // The device screen dimensions to draw on
-int SDL_ANDROID_sWindowWidth  = 320;
+int SDL_ANDROID_sWindowWidth  = 640;
 int SDL_ANDROID_sWindowHeight = 480;
 
 // Extremely wicked JNI environment to call Java functions from C code

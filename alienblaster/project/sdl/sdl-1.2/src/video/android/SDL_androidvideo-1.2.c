@@ -101,6 +101,8 @@ struct SDL_PrivateVideoData {
 // Pointer to in-memory video surface
 static int memX = 0;
 static int memY = 0;
+int SDL_ANDROID_sFakeWindowWidth = 640;
+int SDL_ANDROID_sFakeWindowHeight = 480;
 // In-memory surfaces
 static void * memBuffer1 = NULL;
 static void * memBuffer2 = NULL;
@@ -235,6 +237,8 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 
 	memX = width;
 	memY = height;
+	SDL_ANDROID_sFakeWindowWidth = width;
+	SDL_ANDROID_sFakeWindowHeight = height;
 	
 	if( ! sdl_opengl )
 	{
@@ -355,7 +359,11 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 	if( ! sdl_opengl )
 	{
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
+#if SDL_VIDEO_RENDER_RESIZE
 		glDrawTexiOES(0, 0, 1, SDL_ANDROID_sWindowWidth, SDL_ANDROID_sWindowHeight);  // Stretch to screen
+#else
+		glDrawTexiOES(0, SDL_ANDROID_sWindowHeight - SDL_ANDROID_sFakeWindowHeight, 1, SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight);  // Do not stretch
+#endif
 
 		if( surface->flags & SDL_DOUBLEBUF )
 		{

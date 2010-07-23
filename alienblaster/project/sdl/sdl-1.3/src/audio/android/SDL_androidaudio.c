@@ -198,6 +198,7 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 
 	audioFormat->samples = audioBufferSize / bytesPerSample / audioFormat->channels;
 	audioFormat->size = audioBufferSize;
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): app opened audio bytespersample %d freq %d channels %d bufsize %d", bytesPerSample, audioFormat->freq, (jint)audioFormat->channels, audioBufferSize);
 
 	SDL_CalculateAudioSpec(&this->spec);
 	

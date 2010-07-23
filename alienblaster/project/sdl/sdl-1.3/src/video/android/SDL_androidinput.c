@@ -69,6 +69,23 @@ enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action )
 {
+#if SDL_VIDEO_RENDER_RESIZE
+	// Translate mouse coordinates
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+	SDL_Renderer *renderer;
+	renderer = SDL_GetCurrentRenderer(SDL_TRUE);
+	if( renderer && renderer->window ) {
+		x = x * renderer->window->w / renderer->window->display->desktop_mode.w;
+		y = y * renderer->window->h / renderer->window->display->desktop_mode.h;
+	}
+#else
+	x = x * SDL_ANDROID_sFakeWindowWidth / SDL_ANDROID_sWindowWidth;
+	y = y * SDL_ANDROID_sFakeWindowHeight / SDL_ANDROID_sWindowHeight;
+#endif
+
+#endif
+
 	if( action == MOUSE_DOWN || action == MOUSE_UP )
 	{
 #if SDL_VERSION_ATLEAST(1,3,0)
