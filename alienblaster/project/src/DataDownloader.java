@@ -89,6 +89,7 @@ class DataDownloader extends Thread
 	{
 		private TextView Status;
 		private MainActivity Parent;
+		private String oldText = "";
 
 		public StatusWriter( TextView _Status, MainActivity _Parent )
 		{
@@ -100,6 +101,7 @@ class DataDownloader extends Thread
 			synchronized(DataDownloader.this) {
 				Status = _Status;
 				Parent = _Parent;
+				setText( oldText );
 			}
 		}
 		
@@ -116,6 +118,7 @@ class DataDownloader extends Thread
 			}
 			synchronized(DataDownloader.this) {
 				Callback cb = new Callback();
+				oldText = new String(str);
 				cb.text = new String(str);
 				cb.Status = Status;
 				if( Parent != null && Status != null )

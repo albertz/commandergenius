@@ -36,12 +36,6 @@ if [ -n "$var" ] ; then
 	AppDataDownloadUrl="$var"
 fi
 
-echo -n "\nSpecify if application data should be saved to SD Card (y) or (n),\nsay (y) if app data is bigger than 5 megabytes ($DownloadToSdcard): "
-read var
-if [ -n "$var" ] ; then
-	DownloadToSdcard="$var"
-fi
-
 echo -n "\nApplication window should be resized to fit into 480x320 screen (y) or (n) ($SdlVideoResize): "
 read var
 if [ -n "$var" ] ; then
@@ -114,7 +108,6 @@ echo AppName=\"$AppName\" >> AppSettings.cfg
 echo AppFullName=$AppFullName >> AppSettings.cfg
 echo ScreenOrientation=$ScreenOrientation >> AppSettings.cfg
 echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AppSettings.cfg
-echo DownloadToSdcard=$DownloadToSdcard >> AppSettings.cfg
 echo SdlVideoResize=$SdlVideoResize >> AppSettings.cfg
 echo NeedDepthBuffer=$NeedDepthBuffer >> AppSettings.cfg
 echo MultiABI=$MultiABI >> AppSettings.cfg
@@ -125,12 +118,7 @@ echo AppCflags=\'$AppCflags\' >> AppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AppSettings.cfg
 
 AppShortName=`echo $AppName | sed 's/ //g'`
-DataPath="/data/data/$AppFullName/files"
-DownloadToSdcard1=false
-if [ "$DownloadToSdcard" = "y" ] ; then
-	DownloadToSdcard1=true
-	DataPath="/sdcard/$AppShortName"
-fi
+DataPath="$AppFullName"
 AppFullNameUnderscored=`echo $AppFullName | sed 's/[.]/_/g'`
 AppSharedLibrariesPath=/data/data/$AppFullName/lib
 ScreenOrientation1=portrait
@@ -189,7 +177,6 @@ echo Patching project/src/Globals.java
 cat project/src/Globals.java | \
 	sed "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" | \
 	sed "s^public static String DataDownloadUrl = \".*\";^public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";^" | \
-	sed "s/public static boolean DownloadToSdcard = .*;/public static boolean DownloadToSdcard = $DownloadToSdcard1;/" | \
 	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
 	sed "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \

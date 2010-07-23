@@ -25,10 +25,17 @@ public class MainActivity extends Activity {
 		_tv = new TextView(this);
 		_tv.setText("Initializing");
 		setContentView(_tv);
-		if( downloader == null )
-			downloader = new DataDownloader(this, _tv);
+
+		Settings.Load(this);
+
 		mLoadLibraryStub = new LoadLibrary();
 		mAudioThread = new AudioThread(this);
+	}
+	
+	public void startDownloader()
+	{
+		if( downloader == null )
+			downloader = new DataDownloader(this, _tv);
 	}
 
 	public void initSDL()
@@ -49,8 +56,10 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onPause() {
-		synchronized( downloader ) {
-				downloader.setParent(null, null);
+		if( downloader != null ) {
+			synchronized( downloader ) {
+					downloader.setParent(null, null);
+			}
 		}
 		// TODO: if application pauses it's screen is messed up
 		if( wakeLock != null )
@@ -67,18 +76,22 @@ public class MainActivity extends Activity {
 		super.onResume();
 		if( mGLView != null )
 			mGLView.onResume();
-		synchronized( downloader ) {
-			downloader.setParent(this, _tv);
-			if( downloader.DownloadComplete )
-				initSDL();
+		if( downloader != null ) {
+			synchronized( downloader ) {
+				downloader.setParent(this, _tv);
+				if( downloader.DownloadComplete )
+					initSDL();
+			}
 		}
 	}
 
 	@Override
 	protected void onStop() 
 	{
-		synchronized( downloader ) {
-				downloader.setParent(null, null);
+		if( downloader != null ) {
+			synchronized( downloader ) {
+					downloader.setParent(null, null);
+			}
 		}
 		if( wakeLock != null )
 			wakeLock.release();
