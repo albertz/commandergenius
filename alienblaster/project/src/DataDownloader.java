@@ -135,7 +135,7 @@ class DataDownloader extends Thread
 		Status.setText( "Connecting to " + Globals.DataDownloadUrl );
 		outFilesDir = Parent.getFilesDir().getAbsolutePath();
 		if( Globals.DownloadToSdcard )
-			outFilesDir = "/sdcard/" + Globals.ApplicationName;
+			outFilesDir = "/sdcard/" + Globals.class.getPackage().getName();
 		this.start();
 	}
 	
@@ -176,21 +176,12 @@ class DataDownloader extends Thread
 		}
 		checkFile = null;
 		
-		// Create output directory
+		// Create output directory (not necessary for phone storage)
 		if( Globals.DownloadToSdcard )
 		{
 			try {
-				(new File( "/sdcard/" + Globals.ApplicationName )).mkdirs();
+				(new File( outFilesDir )).mkdirs();
 			} catch( SecurityException e ) { };
-		}
-		else
-		{
-			try {
-				FileOutputStream dummy = Parent.openFileOutput( "dummy", Parent.MODE_WORLD_READABLE );
-				dummy.write(0);
-				dummy.flush();
-			} catch( FileNotFoundException e ) {
-			} catch( java.io.IOException e ) {};
 		}
 		
 		HttpResponse response = null;

@@ -33,7 +33,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz )
 	char curdir[512];
 	if( isSdcardUsed )
 	{
-		strcpy(curdir, "/sdcard");
+		strcpy(curdir, "/sdcard/");
 		strcat(curdir, SDL_CURDIR_PATH);
 	}
 	else
