@@ -36,7 +36,7 @@ if [ -n "$var" ] ; then
 	AppDataDownloadUrl="$var"
 fi
 
-echo -n "\nApplication window should be resized to fit into 480x320 screen (y) or (n) ($SdlVideoResize): "
+echo -n "\nApplication window should be resized to fit into native device screen (480x320 or 800x480) (y) or (n) ($SdlVideoResize): "
 read var
 if [ -n "$var" ] ; then
 	SdlVideoResize="$var"
