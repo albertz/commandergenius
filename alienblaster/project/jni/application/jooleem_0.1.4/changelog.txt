@@ -1,0 +1,170 @@
+Jooleem changelog
+=================
+
+Changes relevant to developers are marked with *
+Changes relevant to users are marked with **
+
+0.1.0 (Beta 1) [2005-08-08]
+** First public release
+
+0.1.1
+[2005-08-08]
+* Added PushUserEvent() to event.h
+** Clicking a selected marble deselects it
+** Executable installer
+** Added link to website in the about window
+** Fixed button behavior when clicking and dragging
+-----
+
+0.1.2
+[2005-08-27]
+** All new original sound effects by Dale North
+** All new music track by Ryan Reilly
+** When completing a rectangle, the points earned are shown
+** Improved sound and music support
+** Improved resource loading
+** Minor fixes so the game compiles on OS X (GCC 4.0)
+** Browser can now be launched on OS X
+** Exceptions are shown in an OS specific message dialog
+
+
+[2005-08-09]
+* Fixed Level messages during game
+
+[2005-08-10]
+* Add redraw to label's text change, button's align etc
+* Add to events.h - MakeUserEvent(&event, EVENT_CODE)
+
+[2005-08-11]
+** Minor fixes so it compiles on OS X (GCC 4.0)
+
+[2005-08-12]
+** Browser can now be launched on OS X
+
+[2005-08-13]
+** Exceptions are shown in an OS specific message dialog, and not in stderr
+* Switched from strstream (deprecated) to sstream in trap.h
+
+[2005-08-14]
+* Added support for data fields to PushUserEvent
+* Revised about window's layout
+
+[2005-08-15]
+* Renamed events: EVENT_SCORE -> EVENT_RECT_COMPLETE, EVENT_GAMEOVER -> EVENT_GAME_OVER, EVENT_LEVELOVER -> EVENT_NEW_LEVEL, EVENT_HISCORES -> EVENT_HIGH_SCORES
+* Added CoordToPixels(), PixelsToCoord() and CoordToSDLRect() to Board
+* On rectangle completion, the rectangle's screen location is pushed as data for EVENT_RECT_COMPLETE
+** When completing a rectangle, the points earned are shown
+* Added TextEffect and EffectManager classes
+** Fixed: Two or more sounds can now play simultaneously
+
+[2005-08-19]
+* Added HandleUserEvents() to IntroState, GameOnState, gets called from HandleEvents
+* Renamed: ChunkManager -> SoundManager
+* Added events: EVENT_SELECTION_ADD, EVENT_SELECTION_CANCEL, EVENT_SELECTION_INVALID
+
+[2005-08-20]
+** The game can now handle music
+* Added MusicManager class
+* Added events: EVENT_TRACK_OVER
+* Added folder: data/music
+* Renamed folder: data/tiles -> data/marbles
+* Added music loading and playing to various classes
+* Removed Mix_Chunk member from all game classes (not UI), replaced with SoundManager::PlaySound()
+
+[2005-08-24]
+** All new original sound effects by Dale North
+* Added Engine::LoadSounds()
+
+
+[2005-08-26]
+** Improved resource loading
+* Replaced Engine::LoadSounds() with Engine::LoadResources()
+* Moved all resource loading to Engine::LoadResources()
+* Add Engine::InitStates()
+* Added common/filenames.h - contains all resource file names
+* Fixed Trap macro
+* Removed AddResources() from all windows
+* Changed all reference to "tiles" to "marbles"
+* Added SetVolume() to music and sound manager
+
+[2005-08-27]
+** All new music track by Ryan Reilly
+
+---
+
+0.1.3
+[2005-08-27]
+* Fixed - music now loops properly in game mode
+
+---
+
+0.1.4
+[2005-09-25]
+New features:
+* New Music track by Ryan Reily
+* 4 new sound effects by Dale North
+* When time is low, the time bar begins to flash and an alarm is sounded
+* Pressing F12 takes a screenshot
+* Upgraded to SDL 1.2.9
+Fixes:
+* When right clicking, the marble deselect sound is only played if any marbles are actually selected
+* Fixed sound corruption issue that appeared on some systems (thanks to Malte Thiesen)
+
+
+[2005-08-28]
+** Upgraded to SDL 1.2.9
+* Moved Blit from Font to SurfaceManager
+* SoundManager assigns a channel to each new sound, and keeps track of it
+* Added SoundManager::StopSound()
+* Added events: EVENT_TIME_LOW,	EVENT_TIME_OK
+** Fixed: When right clicking, the marble deselect sound is only played if marbles are selected
+
+[2005-08-30]
+* Fixed TextEffect::Update so transparency will not underflow and make the effects opaque again
+* Minor compile-pleasing warning-stomping
+
+[2005-08-31]
+* Minor fixes so it compiles on linux (case sensitivy, files end with a newline). Thanks to Jani Huhtanen.
+
+[2005-09-01]
+* Removed FULLSCREEN flag
+* Changed post-increment to pre-increment for all loops (i++ to ++i)
+* Moved all board related consts from common.h to board.h 
+* Converted sound effect files from WAV to Ogg
+
+[2005-09-02]
+** Fixed: The computer can keep playing indefinitely in the intro demo (thanks to mein@stare.nl)
+
+[2005-09-03]
+* Added UIProgressBar class
+* Added SoundManager::StopAll()
+** When time is low, the time bar begins to flash and an alert is sounded
+* When restarting via the Game Over window, the music is restarted as well
+* Changed audio buffer size to 2048, this may fix audio corruption
+* Added DEFAULT_VOLUME to SoundManager and MusicManager
+* Added Engine::GetMute()
+
+[2005-09-04]
+* Added visibility array to Board (bool m_isVisible[][])
+
+[2005-09-05]
+* Added new music track (track_01.ogg)
+
+[2005-09-08]
+* Added ScreenShot() to common.h
+** Pressing F12 takes a screenshot
+* Added EffectManager::AddGameOverEffect()
+
+[2005-09-10]
+* Added __FILE__ and __LINE__ to TRAP
+
+[2005-10-10]
+* Added game over effect to GameOverState::Enter
+* Removed font objects from EffectManager, they are now loaded into the font manager
+* Fixed in Engine::InitSDL(): Allocated audio channels to required number of effects 
+* Added Board::DropRectLogic, Board::ChangeVisibility, Board::RenderDroppingRect
+* Added marble dropping effect to Board, currently diabled. define MARBLE_DROP to try it out
+
+[2005-10-11]
+* UIButton no longer contains a Mix_chunk, and uses the sound manager to play the click sound
+* Added SoundManager::SetVolume(string, float) - set a sample's volume
