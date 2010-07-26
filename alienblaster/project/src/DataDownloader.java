@@ -135,7 +135,7 @@ class DataDownloader extends Thread
 		Status.setText( "Connecting to " + Globals.DataDownloadUrl );
 		outFilesDir = Parent.getFilesDir().getAbsolutePath();
 		if( Globals.DownloadToSdcard )
-			outFilesDir = "/sdcard/" + Globals.class.getPackage().getName();
+			outFilesDir = "/sdcard/app-data/" + Globals.class.getPackage().getName();
 		this.start();
 	}
 	

@@ -20,6 +20,7 @@
     slouken@libsdl.org
 */
 #include "SDL_config.h"
+#include "SDL_rect.h"
 
 typedef struct SDL_DirtyRect
 {

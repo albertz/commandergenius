@@ -125,7 +125,6 @@ static inline int SDL_SetAlpha(SdlCompat_AcceleratedSurface * surface, Uint32 fl
 
 #else
 
-// TODO: did not check if SDL 1.2 part compiles
 typedef SDL_Surface SdlCompat_AcceleratedSurface;
 
 static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(SDL_Surface * surface)

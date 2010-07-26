@@ -21,11 +21,12 @@
 */
 #include "SDL_config.h"
 
-#ifndef _SDL_sysvideo_h
-#define _SDL_sysvideo_h
+#ifndef _SDL_sysvideo_1_3_h
+#define _SDL_sysvideo_1_3_h
 
 #include "SDL_mouse.h"
 #include "SDL_keysym.h"
+#include "SDL_rect.h"
 
 /* The SDL video driver */
 

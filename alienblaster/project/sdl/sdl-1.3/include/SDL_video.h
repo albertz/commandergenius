@@ -26,13 +26,17 @@
  *  Header file for SDL video functions.
  */
 
-#ifndef _SDL_video_h
-#define _SDL_video_h
+#ifndef _SDL_video_1_3_h
+#define _SDL_video_1_3_h
 
 #include "SDL_stdinc.h"
-#include "SDL_pixels.h"
 #include "SDL_rect.h"
+#include "SDL_pixels.h"
 #include "SDL_surface.h"
+#include "SDL_version.h"
+#if ! SDL_VERSION_ATLEAST(1,3,0)
+#include "SDL_video.h"
+#endif
 
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
@@ -256,6 +260,7 @@ typedef struct SDL_Texture SDL_Texture;
  */
 typedef void *SDL_GLContext;
 
+#if SDL_VERSION_ATLEAST(1,3,0)
 /**
  *  \brief OpenGL configuration attributes
  */
@@ -281,7 +286,7 @@ typedef enum
     SDL_GL_CONTEXT_MAJOR_VERSION,
     SDL_GL_CONTEXT_MINOR_VERSION
 } SDL_GLattr;
-
+#endif
 
 /* Function prototypes */
 
