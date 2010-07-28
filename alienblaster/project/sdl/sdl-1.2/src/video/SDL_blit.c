@@ -26,6 +26,7 @@
 #include "SDL_blit.h"
 #include "SDL_RLEaccel_c.h"
 #include "SDL_pixels_c.h"
+#include <android/log.h>
 
 #if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)) && SDL_ASSEMBLY_ROUTINES
 #define MMX_ASMBLIT
@@ -242,6 +243,7 @@ int SDL_CalculateBlit(SDL_Surface *surface)
 
 	/* Figure out if an accelerated hardware blit is possible */
 	surface->flags &= ~SDL_HWACCEL;
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_CalculateBlit(): identity %d src hw %d dst hw %d video hw %d", (int)surface->map->identity, (int)(surface->flags & SDL_HWSURFACE), (int)(surface->map->dst->flags & SDL_HWSURFACE), (int)(current_video->info.blit_hw));
 	if ( surface->map->identity ) {
 		int hw_blit_ok;
 

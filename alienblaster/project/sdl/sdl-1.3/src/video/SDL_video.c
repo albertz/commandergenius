@@ -1485,6 +1485,8 @@ SDL_GetFocusWindow(void)
     return NULL;
 }
 
+#endif
+
 void
 SDL_DestroyWindow(SDL_Window * window)
 {
@@ -1500,15 +1502,19 @@ SDL_DestroyWindow(SDL_Window * window)
         SDL_DestroyRenderer(window);
     }
 
+#if SDL_VERSION_ATLEAST(1,3,0)
     /* Restore video mode, etc. */
     SDL_UpdateFullscreenMode(window, SDL_FALSE);
+#endif
 
     if (_this->DestroyWindow) {
         _this->DestroyWindow(_this, window);
     }
+#if SDL_VERSION_ATLEAST(1,3,0)
     if (window->flags & SDL_WINDOW_OPENGL) {
         SDL_GL_UnloadLibrary();
     }
+#endif
 
     /* Unlink the window from the list */
     display = window->display;
@@ -1523,8 +1529,6 @@ SDL_DestroyWindow(SDL_Window * window)
 
     SDL_free(window);
 }
-
-#endif
 
 void
 SDL_AddRenderDriver(SDL_VideoDisplay * display, const SDL_RenderDriver * driver)

@@ -176,15 +176,6 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->WarpWMCursor = ANDROID_WarpWMCursor;
 	device->MoveWMCursor = ANDROID_MoveWMCursor;
 	
-	device->info.hw_available = 1;
-	device->info.blit_hw = 1;
-	device->info.blit_hw_CC = 1;
-	device->info.blit_hw_A = 1;
-	device->info.blit_fill = 1;
-	device->info.video_mem = 128 * 1024;
-	device->info.current_w = SDL_ANDROID_sWindowWidth;
-	device->info.current_h = SDL_ANDROID_sWindowHeight;
-
 	return device;
 }
 
@@ -272,13 +263,13 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		
 		// We're not allowing locking videosurface yet
 		/*
-		memBuffer = SDL_malloc(memX * memY * ANDROID_BYTESPERPIXEL);
+		memBuffer = SDL_malloc(width * height * ANDROID_BYTESPERPIXEL);
 		if ( ! memBuffer ) {
 			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
 			SDL_SetError("Couldn't allocate buffer for requested mode");
 			return(NULL);
 		}
-		SDL_memset(memBuffer, 0, memX * memY * ANDROID_BYTESPERPIXEL);
+		SDL_memset(memBuffer, 0, width * height * ANDROID_BYTESPERPIXEL);
 		*/
 	}
 
@@ -297,12 +288,21 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	}
 
 	/* Set up the new mode framebuffer */
-	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_OPENGL) | SDL_DOUBLEBUF | SDL_HWSURFACE;
+	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_OPENGL) | SDL_DOUBLEBUF | SDL_HWSURFACE | SDL_HWACCEL;
 	current->w = width;
 	current->h = height;
 	current->pitch = SDL_ANDROID_sFakeWindowWidth * ANDROID_BYTESPERPIXEL;
 	current->pixels = memBuffer;
 	SDL_CurrentVideoSurface = current;
+
+	this->info.hw_available = 1;
+	this->info.blit_hw = 1;
+	this->info.blit_hw_CC = 1;
+	this->info.blit_hw_A = 1;
+	this->info.blit_fill = 1;
+	this->info.video_mem = 128 * 1024;
+	this->info.current_w = SDL_ANDROID_sWindowWidth;
+	this->info.current_h = SDL_ANDROID_sWindowHeight;
 	
 	/* We're done */
 	return(current);
@@ -316,6 +316,8 @@ void ANDROID_VideoQuit(_THIS)
 	if( ! sdl_opengl )
 	{
 		SDL_CurrentVideoSurface = NULL;
+		SDL_DestroyWindow(SDL_VideoWindow);
+		SDL_VideoWindow = NULL;
 	}
 
 	SDL_ANDROID_sFakeWindowWidth = 0;
@@ -346,6 +348,7 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 	if ( ! (surface->w && surface->h) )
 		return(-1);
 
+	//Uint32 format = SDL_PIXELFORMAT_RGB565;
 	Uint32 format = SDL_PIXELFORMAT_RGBA5551; // 1-bit alpha for color key, every surface will have colorkey so it's easier for us
 	if( surface->format->Amask )
 	{
@@ -380,6 +383,8 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 		return(-1);
 	}
 	
+	surface->flags |= SDL_HWSURFACE | SDL_HWACCEL;
+	
 	return 0;
 }
 
@@ -406,6 +411,7 @@ static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)
 static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 {
 	SDL_PixelFormat format;
+	//Uint32 hwformat = SDL_PIXELFORMAT_RGB565;
 	Uint32 hwformat = SDL_PIXELFORMAT_RGBA5551;
 	int bpp;
 	SDL_Surface * converted = NULL;
@@ -434,6 +440,9 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 	}
 	else
 	{
+		converted = surface;
+		// TODO: crashes here, manual conversion routine necessary?
+		/*
 		Uint8 oldAlpha = surface->format->alpha;
 		converted = SDL_CreateRGBSurface(SDL_SWSURFACE, surface->w, surface->h, format.BitsPerPixel,
 											format.Rmask, format.Gmask, format.Bmask, format.Amask);
@@ -443,8 +452,13 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 		}
 		SDL_FillRect( converted, NULL, 0 ); // Fill with transparency
 		surface->format->alpha = SDL_ALPHA_OPAQUE;
-		SDL_LowerBlit( surface, NULL, converted, NULL ); // Should take into account colorkey
+		SDL_Rect src, dst;
+		src.x = dst.x = src.y = dst.y = 0;
+		src.w = dst.w = surface->w;
+		src.h = dst.h = surface->h;
+		SDL_UpperBlit( surface, &src, converted, &dst ); // Should take into account colorkey
 		surface->format->alpha = oldAlpha;
+		*/
 	}
 
 	SDL_Rect rect;
@@ -461,10 +475,12 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 // We're only blitting HW surface to screen, no other options provided (and if you need them your app designed wrong)
 int ANDROID_HWBlit(SDL_Surface* src, SDL_Rect* srcrect, SDL_Surface* dst, SDL_Rect* dstrect)
 {
-	if( dst != SDL_CurrentVideoSurface || ! src->hwdata )
+	if( dst != SDL_CurrentVideoSurface || (! src->hwdata) )
 	{
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_HWBlit(): blitting SW");
 		return(src->map->sw_blit(src, srcrect, dst, dstrect));
 	}
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_HWBlit(): blitting HW");
 	
 	return SDL_RenderCopy((struct SDL_Texture *)src->hwdata, srcrect, dstrect);
 };
@@ -476,7 +492,9 @@ static int ANDROID_CheckHWBlit(_THIS, SDL_Surface *src, SDL_Surface *dst)
 	if( dst != SDL_CurrentVideoSurface || ! src->hwdata )
 		return(-1);
 	*/
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_CheckHWBlit()");
 	src->map->hw_blit = ANDROID_HWBlit;
+	src->flags |= SDL_HWACCEL;
 	return(0);
 };
 
@@ -525,12 +543,15 @@ static int ANDROID_SetHWAlpha(_THIS, SDL_Surface *surface, Uint8 value)
 
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_UpdateRects()");
 	// Used only in single-buffer mode
 	ANDROID_FlipHWSurface(this, SDL_CurrentVideoSurface);
 }
 
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 {
+
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_FlipHWSurface()");
 
 	SDL_ANDROID_CallJavaSwapBuffers();
 

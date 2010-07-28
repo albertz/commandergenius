@@ -133,7 +133,7 @@ void ANDROID_PumpEvents(_THIS)
 
 void ANDROID_GL_SwapBuffers(_THIS, SDL_Window * window)
 {
-	//SDL_ANDROID_CallJavaSwapBuffers();
+	SDL_ANDROID_CallJavaSwapBuffers();
 };
 
 SDL_GLContext ANDROID_GL_CreateContext(_THIS, SDL_Window * window)
