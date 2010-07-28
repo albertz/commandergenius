@@ -1,11 +1,21 @@
-This is Alien Blaster game ported to Google Android (original sources: http://www.schwardtnet.de/alienblaster/ ).
-I did not change anything in Alien Blaster sources, except for SCREEN_WIDTH,
-SCREEN_HEIGHT and BIT_DEPTH constants in global.h, to support 320x480x16bpp video mode,
-and also made audio initialize after main() has been called, not inside static initializers.
+This is libSDL 1.2 and 1.3 ported to Google Android (also bunch of other libs included).
+Alien Blaster game is used as working example (original sources: http://www.schwardtnet.de/alienblaster/ ).
+
+Installation
+============
 
 This should be compiled with Android 2.2 SDK and NDK r4 - google for them and install them as described in their docs
-(the application will run on Android 1.6 and above, 2.2 is the first version where you can debug it).
+(the application will run on Android 1.6 and above).
 You'll need to install Ant too.
+The most supported environnment for that port is Linux, MacOs should be okay too, 
+however if you'll use launchConfigure.sh script you'll have to replace "linux-x86" to "darwin-x86" inside it.
+If you're developing on Windows you'd better install andLinux or Ubuntu+Wubi, to get proper Linux environment
+running inside Windows, then install Linux toolchain on it. I was told andLinux compiles faster than Cygwin.
+Also you'll need full set of Linux utils and symlinks support to launch ChangeAppSettings.sh (sh, grep, sed, tr).
+
+How to compile Alien Blaster demo application
+=============================================
+
 Go to "project" directory and launch command
 	android update project -p .
 Then go back, edit file build.sh if needed to add NDK dir to your PATH, then launch it.
@@ -25,49 +35,44 @@ Menu, Volume Up and Volume Down (and Escape of course).
 Because of that the accelerometer is configured to trigger cursor key events.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
-remove all files from project/jni/application/src and put glxgears.c there to check if it works.
+remove project/jni/application/src symlink and make new one pointing to glxgears, 
+also you'll have to enable Z-Buffer in ChangeAppSettings.sh.
 Note that GL ES is NOT pure OpenGL - there are no glBegin() and glEnd() call and other widely used functions,
 and generally it will take a lot of effort to port pure OpenGL application to GL ES.
 
+How to compile your own application
+===================================
+
 When porting you own app, first of all ensure that your application supports
 native RGB_565 pixel format and AUDIO_S8 or AUDIO_S16 audio format
-(yes, there is RGB_565 pixelformat even for OpenGL, not BGR_565 as all other OpenGL implementation have).
-HTC G1/Nexus One has native screen resolution 480x320, HTC Evo has 800x480, so design your app to support
-any screen resolution.
-SDL_ListModes()[0] will always return native screen resolution, you may use 640x480 or 800x600
-but it will be resized to fit the screen.
+(there is RGB_565 pixelformat even for OpenGL, not BGR_565 as all other OpenGL implementation have).
+Colorkey images are supported using RGBA_5551 pixelformat with 1-bit alpha,
+alpha surfaces have RGBA_4444 format. See file project/jni/application/alienblaster/SdlForwardCompat.h
+to learn how to make your application use SDL 1.3 instead of SDL 1.2 without much pain.
+HTC G1/Nexus One has native screen resolution 480x320, HTC Evo has 800x480, you may toggle automatic
+screen resizing in ChangeAppSettings.sh and draw to virtual 640x480 screen - 
+it will be HW accelerated and will not impact performance much.
+SDL_ListModes()[0] will always return native screen resolution.
 Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
 texture on HTC G1. Software surfaces may be of any size of course (but you don't want to do expensive memcpy).
-There is a trick to make 
 
-To compile your own app, put your app sources into project/jni/application dir (remove Alien Blaster first),
-and launch script ChangeAppSettings.sh - it will put the name of your app in several places in sources.
+To compile your own app, put your app sources into project/jni/application dir, and change symlink "src"
+to point to your app, then launch script ChangeAppSettings.sh - it will ask few questions and modify some Java code.
 The C++ files shall have .cpp extension to be compiled, rename them if necessary.
-Then you should launch script ChangeAppSettings.sh - it will ask you few questions,
-and change several values across project files.
 Also you can replace icon image at project/res/drawable/icon.png.
-Then you can launch build.sh and hope for the best.
+Then you can launch build.sh.
 
 Application data is not bundled with app itself - it should be downloaded from net on first run.
 Create .ZIP file with your application data, and put it somewhere on HTTP server - ChangeAppSettings.sh
 will ask you for the URL.
-If your app data is bigger than 5 megabytes it's better to store it on SD card,
-internal flash on Android is very limited.
 If you'll release new version of data files you should change download URL and update your app as well -
 the app will re-download the data if URL does not match the saved URL from previous download.
 
 If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
 add libname to project/jni/<yourapp>/Android.mk
 
-To debug your application add tag 'android:debuggable="true"' to 'application' element in AndroidManifest.xml,
-recmpile and reinstall your app to Android 2.2 emulator or Android 2.2 device, go to "project" dir and launch command
-	ndk-gdb --verbose --start --force
-then when it fails enter command
-	target remote:5039 (then it will fail again)
-Note that it's extremely buggy, and I had no any success in debugging my app with ndk-gdb.
-So it's best to debug with code like:
-	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
-and then watching "adb logcat" output.
+How to compile your own application using automake/configure scripts
+====================================================================
 
 There is limited support for "configure" scripts, I've managed to compile lbreakout2 that way,
 though ./configure scripts tend to have stupid bugs in various places, avoid using that method if you can.
@@ -83,7 +88,47 @@ though ./configure scripts tend to have stupid bugs in various places, avoid usi
 8. Run command "arm-eabi-strip --strip-debug libapplication.so", you can find arm-eabi-strip under your NDK dir.
 9. Run "ant debug" or "ant release" from project dir, install to device & enjoy.
 
-Known bugs:
+Quick guide to debug native code
+================================
+
+To debug your application add tag 'android:debuggable="true"' to 'application' element in AndroidManifest.xml,
+recmpile and reinstall your app to Android 2.2 emulator or Android 2.2 device, go to "project" dir and launch command
+	ndk-gdb --verbose --start --force
+then when it fails enter command
+	target remote:5039 (then it will fail again)
+Note that it's extremely buggy, and I had no any success in debugging my app with ndk-gdb.
+So it's best to debug with code like:
+	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
+and then watching "adb logcat" output.
+
+If your application crashed, you should use following steps:
+
+1. Gather the crash report from "adb logcat" - it should contain stack trace, if it does not then you're unlucky,
+
+I/DEBUG   (   51): *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+I/DEBUG   (   51): Build fingerprint: 'sprint/htc_supersonic/supersonic/supersonic:2.1-update1/ERE27/194487:userdebug/test-keys'
+I/DEBUG   (   51): pid: 915, tid: 924  >>> de.schwardtnet.alienblaster <<<
+I/DEBUG   (   51): signal 11 (SIGSEGV), fault addr deadbaad
+I/DEBUG   (   51):  r0 00000000  r1 afe133f1  r2 00000027  r3 00000058
+I/DEBUG   (   51):  r4 afe3ae08  r5 00000000  r6 00000000  r7 70477020
+I/DEBUG   (   51):  r8 000000b0  r9 ffffff20  10 48552868  fp 00000234
+I/DEBUG   (   51):  ip 00002ee4  sp 485527f8  lr deadbaad  pc afe10aac  cpsr 60000030
+I/DEBUG   (   51):          #00  pc 00010aac  /system/lib/libc.so
+I/DEBUG   (   51):          #01  pc 0000c00e  /system/lib/libc.so
+I/DEBUG   (   51):          #02  pc 0000c0a4  /system/lib/libc.so
+I/DEBUG   (   51):          #03  pc 0002ca00  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
+I/DEBUG   (   51):          #04  pc 00028b6e  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
+I/DEBUG   (   51):          #05  pc 0002d080  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
+
+2. Go to project/bin/ndk/local/armeabi dir, find there the library mentioned in stacktrace 
+(libsdl.so in our example), copy the address of the first line of stacktrace (0002ca00), and execute command
+
+gdb libsdl.so -ex "list *0x0002ca00"
+
+It will output the exact line in your source where the application crashed.
+
+Known bugs
+==========
 
 0. Revert to widely-used SDL 1.2, backport changes that enable hardware acceleration from SDL 1.3
 Ideally ChangeAppSettings.sh should ask you what SDL version you want to use.
