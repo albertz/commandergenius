@@ -24,8 +24,6 @@
 #ifndef _SDL_androidvideo_h
 #define _SDL_androidvideo_h
 
-#include "../SDL_sysvideo.h"
-
 extern void ANDROID_InitOSKeymap();
 
 extern int SDL_ANDROID_sWindowWidth;
@@ -33,7 +31,8 @@ extern int SDL_ANDROID_sWindowHeight;
 extern int SDL_ANDROID_sFakeWindowWidth; // SDL 1.2 only
 extern int SDL_ANDROID_sFakeWindowHeight; // SDL 1.2 only
 extern int SDL_ANDROID_CallJavaSwapBuffers();
-
+// typedef struct SDL_VideoDevice SDL_VideoDevice;
+extern SDL_VideoDevice *ANDROID_CreateDevice_1_3(int devindex);
 
 // Keycodes ripped from Java SDK
 enum KEYCODES_ANDROID 

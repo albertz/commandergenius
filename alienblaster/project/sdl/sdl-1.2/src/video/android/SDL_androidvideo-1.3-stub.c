@@ -19,31 +19,16 @@
     Sam Lantinga
     slouken@libsdl.org
 */
-
-#include <jni.h>
-#include <android/log.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
-#include <sys/time.h>
-#include <time.h>
-#include <stdint.h>
-#include <math.h>
-#include <string.h> // for memset()
-
 #include "SDL_config.h"
 
-#include "SDL_video.h"
-#include "SDL_mouse.h"
-#include "SDL_mutex.h"
-#include "SDL_thread.h"
-#include "../SDL_sysvideo.h"
-#include "../SDL_pixels_c.h"
-#include "../../events/SDL_events_c.h"
-
+#include "SDL_pixels.h"
+#include "SDL_video-1.3.h"
+#include "SDL_sysvideo-1.3.h"
 #include "SDL_androidvideo.h"
 
+#include <stdint.h>
+#include <string.h> // for memset()
 
-/* Initialization/Query functions */
 static int ANDROID_VideoInit(_THIS);
 static int ANDROID_GetDisplayBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect);
 static void ANDROID_GetDisplayModes(_THIS, SDL_VideoDisplay * display);
@@ -57,14 +42,12 @@ static int ANDROID_GL_MakeCurrent (_THIS, SDL_Window * window, SDL_GLContext con
 static void ANDROID_GL_DeleteContext (_THIS, SDL_GLContext context);
 static void ANDROID_PumpEvents(_THIS);
 
-/* ANDROID driver bootstrap functions */
-
 static void ANDROID_DeleteDevice(SDL_VideoDevice *device)
 {
 	SDL_free(device);
 }
 
-static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
+SDL_VideoDevice *ANDROID_CreateDevice_1_3(int devindex)
 {
 	SDL_VideoDevice *device;
 
@@ -85,7 +68,6 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->VideoInit = ANDROID_VideoInit;
 	device->GetDisplayBounds = ANDROID_GetDisplayBounds;
 	device->GetDisplayModes = ANDROID_GetDisplayModes;
-	device->SetDisplayMode = ANDROID_SetDisplayMode;
 	device->PumpEvents = ANDROID_PumpEvents;
 	device->VideoQuit = ANDROID_VideoQuit;
 	device->free = ANDROID_DeleteDevice;
@@ -97,12 +79,6 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 
 	return device;
 }
-
-VideoBootStrap ANDROID_bootstrap = {
-	"android", "SDL Android video driver",
-	ANDROID_Available, ANDROID_CreateDevice
-};
-
 
 int ANDROID_VideoInit(_THIS)
 {
@@ -121,9 +97,8 @@ int ANDROID_VideoInit(_THIS)
 	display.driverdata = NULL;
 	SDL_AddVideoDisplay(&display);
 
-	return 1;
+	return 0;
 }
-
 
 void ANDROID_GetDisplayModes(_THIS, SDL_VideoDisplay * display)
 {
@@ -148,10 +123,6 @@ int ANDROID_SetDisplayMode(_THIS, SDL_VideoDisplay * display, SDL_DisplayMode * 
 	return 1;
 };
 
-
-/* Note:  If we are terminated, this could be called in the middle of
-   another SDL video routine -- notably UpdateRects.
-*/
 void ANDROID_VideoQuit(_THIS)
 {
 }
@@ -162,7 +133,7 @@ void ANDROID_PumpEvents(_THIS)
 
 void ANDROID_GL_SwapBuffers(_THIS, SDL_Window * window)
 {
-	SDL_ANDROID_CallJavaSwapBuffers();
+	//SDL_ANDROID_CallJavaSwapBuffers();
 };
 
 SDL_GLContext ANDROID_GL_CreateContext(_THIS, SDL_Window * window)

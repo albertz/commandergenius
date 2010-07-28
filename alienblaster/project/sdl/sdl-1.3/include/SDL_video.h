@@ -323,8 +323,13 @@ extern DECLSPEC const char *SDLCALL SDL_GetVideoDriver(int index);
  *  
  *  \sa SDL_VideoQuit()
  */
-extern DECLSPEC int SDLCALL SDL_VideoInit(const char *driver_name,
-                                          Uint32 flags);
+extern DECLSPEC int SDLCALL 
+#if SDL_VERSION_ATLEAST(1,3,0)
+SDL_VideoInit
+#else
+SDL_VideoInit_1_3
+#endif
+(const char *driver_name, Uint32 flags);
 
 /**
  *  \brief Shuts down the video subsystem.

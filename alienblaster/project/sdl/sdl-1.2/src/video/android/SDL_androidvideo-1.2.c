@@ -28,6 +28,9 @@
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 
+#include "SDL_pixels.h"
+#include "SDL_video-1.3.h"
+#include "SDL_surface.h"
 #include "SDL_androidvideo.h"
 
 #include <jni.h>
@@ -57,6 +60,10 @@ static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface);
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface);
 static void ANDROID_GL_SwapBuffers(_THIS);
 static void ANDROID_PumpEvents(_THIS);
+static int ANDROID_CheckHWBlit(_THIS, SDL_Surface *src, SDL_Surface *dst);
+static int ANDROID_FillHWRect(_THIS, SDL_Surface *dst, SDL_Rect *rect, Uint32 color);
+static int ANDROID_SetHWColorKey(_THIS, SDL_Surface *surface, Uint32 key);
+static int ANDROID_SetHWAlpha(_THIS, SDL_Surface *surface, Uint8 value);
 
 // Stubs to get rid of crashing in OpenGL mode
 // The implementation dependent data for the window manager cursor
@@ -91,25 +98,19 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 /* Private display data */
 
 #define SDL_NUMMODES 4
-struct SDL_PrivateVideoData {
-	SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
-};
+static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
-#define SDL_modelist		(this->hidden->SDL_modelist)
+//#define SDL_modelist		(this->hidden->SDL_modelist)
 
+enum { ANDROID_BYTESPERPIXEL = 2, ANDROID_BITSPERPIXEL = 16 };
+typedef struct SDL_Texture private_hwdata;
 
 // Pointer to in-memory video surface
-static int memX = 0;
-static int memY = 0;
 int SDL_ANDROID_sFakeWindowWidth = 640;
 int SDL_ANDROID_sFakeWindowHeight = 480;
-// In-memory surfaces
-static void * memBuffer1 = NULL;
-static void * memBuffer2 = NULL;
-static void * memBuffer = NULL;
 static int sdl_opengl = 0;
-// Some wicked GLES stuff
-static GLuint texture = 0;
+static SDL_Window *SDL_VideoWindow = NULL;
+static SDL_Surface *SDL_CurrentVideoSurface = NULL;
 
 
 static void SdlGlRenderInit();
@@ -136,17 +137,10 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device = (SDL_VideoDevice *)SDL_malloc(sizeof(SDL_VideoDevice));
 	if ( device ) {
 		SDL_memset(device, 0, (sizeof *device));
-		device->hidden = (struct SDL_PrivateVideoData *)
-				SDL_malloc((sizeof *device->hidden));
-	}
-	if ( (device == NULL) || (device->hidden == NULL) ) {
+	} else {
 		SDL_OutOfMemory();
-		if ( device ) {
-			SDL_free(device);
-		}
 		return(0);
 	}
-	SDL_memset(device->hidden, 0, (sizeof *device->hidden));
 
 	/* Set the function pointers */
 	device->VideoInit = ANDROID_VideoInit;
@@ -157,10 +151,10 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->UpdateRects = ANDROID_UpdateRects;
 	device->VideoQuit = ANDROID_VideoQuit;
 	device->AllocHWSurface = ANDROID_AllocHWSurface;
-	device->CheckHWBlit = NULL;
-	device->FillHWRect = NULL;
-	device->SetHWColorKey = NULL;
-	device->SetHWAlpha = NULL;
+	device->CheckHWBlit = ANDROID_CheckHWBlit;
+	device->FillHWRect = ANDROID_FillHWRect;
+	device->SetHWColorKey = ANDROID_SetHWColorKey;
+	device->SetHWAlpha = ANDROID_SetHWAlpha;
 	device->LockHWSurface = ANDROID_LockHWSurface;
 	device->UnlockHWSurface = ANDROID_UnlockHWSurface;
 	device->FlipHWSurface = ANDROID_FlipHWSurface;
@@ -181,6 +175,15 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->ShowWMCursor = ANDROID_ShowWMCursor;
 	device->WarpWMCursor = ANDROID_WarpWMCursor;
 	device->MoveWMCursor = ANDROID_MoveWMCursor;
+	
+	device->info.hw_available = 1;
+	device->info.blit_hw = 1;
+	device->info.blit_hw_CC = 1;
+	device->info.blit_hw_A = 1;
+	device->info.blit_fill = 1;
+	device->info.video_mem = 128 * 1024;
+	device->info.current_w = SDL_ANDROID_sWindowWidth;
+	device->info.current_h = SDL_ANDROID_sWindowHeight;
 
 	return device;
 }
@@ -190,14 +193,26 @@ VideoBootStrap ANDROID_bootstrap = {
 	ANDROID_Available, ANDROID_CreateDevice
 };
 
-
 int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 {
 	int i;
+	static SDL_PixelFormat alphaFormat;
+
 	/* Determine the screen depth (use default 16-bit depth) */
 	/* we change this during the SDL_SetVideoMode implementation... */
-	vformat->BitsPerPixel = 16;
-	vformat->BytesPerPixel = 2;
+	if( vformat ) {
+		vformat->BitsPerPixel = ANDROID_BITSPERPIXEL;
+		vformat->BytesPerPixel = ANDROID_BYTESPERPIXEL;
+	}
+
+	int bpp;
+	SDL_zero(alphaFormat);
+	SDL_PixelFormatEnumToMasks( SDL_PIXELFORMAT_RGBA4444, &bpp,
+								&alphaFormat.Rmask, &alphaFormat.Gmask, 
+								&alphaFormat.Bmask, &alphaFormat.Amask );
+	alphaFormat.BitsPerPixel = ANDROID_BITSPERPIXEL;
+	alphaFormat.BytesPerPixel = ANDROID_BYTESPERPIXEL;
+	this->displayformatalphapixel = &alphaFormat;
 
 	for ( i=0; i<SDL_NUMMODES; ++i ) {
 		SDL_modelist[i] = SDL_malloc(sizeof(SDL_Rect));
@@ -209,6 +224,8 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[2]->w = 320; SDL_modelist[2]->h = 240; // Always available on any screen and any orientation
 	SDL_modelist[3]->w = 320; SDL_modelist[3]->h = 200; // Always available on any screen and any orientation
 	SDL_modelist[4] = NULL;
+	
+	SDL_VideoInit_1_3(NULL, 0);
 
 	/* We're done! */
 	return(0);
@@ -216,7 +233,7 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 
 SDL_Rect **ANDROID_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags)
 {
-	if(format->BitsPerPixel != 16)
+	if(format->BitsPerPixel != ANDROID_BITSPERPIXEL)
 		return NULL;
 	return SDL_modelist;
 }
@@ -224,64 +241,69 @@ SDL_Rect **ANDROID_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags)
 SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 				int width, int height, int bpp, Uint32 flags)
 {
-    __android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): application requested mode %dx%d", width, height);
-
-	if ( memBuffer1 )
-		SDL_free( memBuffer1 );
-	if ( memBuffer2 )
-		SDL_free( memBuffer2 );
-
-	memBuffer = memBuffer1 = memBuffer2 = NULL;
+	void * memBuffer = NULL;
+	SDL_PixelFormat format;
+	int bpp1;
+	
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): application requested mode %dx%d", width, height);
 
 	sdl_opengl = (flags & SDL_OPENGL) ? 1 : 0;
 
-	memX = width;
-	memY = height;
 	SDL_ANDROID_sFakeWindowWidth = width;
 	SDL_ANDROID_sFakeWindowHeight = height;
 	
 	if( ! sdl_opengl )
 	{
-		memBuffer1 = SDL_malloc(memX * memY * (bpp / 8));
-		if ( ! memBuffer1 ) {
+		SDL_DisplayMode mode;
+		SDL_RendererInfo SDL_VideoRendererInfo;
+		
+		SDL_SelectVideoDisplay(0);
+		SDL_VideoWindow = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
+
+		SDL_zero(mode);
+		mode.format = SDL_PIXELFORMAT_RGB565;
+		SDL_SetWindowDisplayMode(SDL_VideoWindow, &mode);
+		
+		if (SDL_CreateRenderer(SDL_VideoWindow, -1, 0) < 0) {
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): Error creating renderer");
+			return NULL;
+		}
+		SDL_GetRendererInfo(&SDL_VideoRendererInfo);
+		
+		// We're not allowing locking videosurface yet
+		/*
+		memBuffer = SDL_malloc(memX * memY * ANDROID_BYTESPERPIXEL);
+		if ( ! memBuffer ) {
 			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
 			SDL_SetError("Couldn't allocate buffer for requested mode");
 			return(NULL);
 		}
-		SDL_memset(memBuffer1, 0, memX * memY * (bpp / 8));
-
-		if( flags & SDL_DOUBLEBUF )
-		{
-			memBuffer2 = SDL_malloc(memX * memY * (bpp / 8));
-			if ( ! memBuffer2 ) {
-				__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
-				SDL_SetError("Couldn't allocate buffer for requested mode");
-				return(NULL);
-			}
-			SDL_memset(memBuffer2, 0, memX * memY * (bpp / 8));
-		}
-		memBuffer = memBuffer1;
+		SDL_memset(memBuffer, 0, memX * memY * ANDROID_BYTESPERPIXEL);
+		*/
 	}
 
 	/* Allocate the new pixel format for the screen */
-	if ( ! SDL_ReallocFormat(current, bpp, 0, 0, 0, 0) ) {
-		if(memBuffer)
-			SDL_free(memBuffer);
-		memBuffer = NULL;
+	SDL_zero(format);
+	SDL_PixelFormatEnumToMasks( SDL_PIXELFORMAT_RGB565, &bpp1,
+								&format.Rmask, &format.Gmask,
+								&format.Bmask, &format.Amask );
+	format.BitsPerPixel = bpp1;
+	format.BytesPerPixel = ANDROID_BYTESPERPIXEL;
+
+	if ( ! SDL_ReallocFormat(current, ANDROID_BITSPERPIXEL, format.Rmask, format.Gmask, format.Bmask, format.Amask) ) {
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate new pixel format for requested mode");
 		SDL_SetError("Couldn't allocate new pixel format for requested mode");
 		return(NULL);
 	}
 
 	/* Set up the new mode framebuffer */
-	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_DOUBLEBUF) | (flags & SDL_OPENGL);
+	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_OPENGL) | SDL_DOUBLEBUF | SDL_HWSURFACE;
 	current->w = width;
 	current->h = height;
-	current->pitch = memX * (bpp / 8);
+	current->pitch = SDL_ANDROID_sFakeWindowWidth * ANDROID_BYTESPERPIXEL;
 	current->pixels = memBuffer;
+	SDL_CurrentVideoSurface = current;
 	
-	SdlGlRenderInit();
-
 	/* We're done */
 	return(current);
 }
@@ -293,19 +315,11 @@ void ANDROID_VideoQuit(_THIS)
 {
 	if( ! sdl_opengl )
 	{
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glDeleteTextures(1, &texture);
+		SDL_CurrentVideoSurface = NULL;
 	}
 
-	memX = 0;
-	memY = 0;
-	memBuffer = NULL;
-	SDL_free( memBuffer1 );
-	memBuffer1 = NULL;
-	if( memBuffer2 )
-		SDL_free( memBuffer2 );
-	memBuffer2 = NULL;
+	SDL_ANDROID_sFakeWindowWidth = 0;
+	SDL_ANDROID_sFakeWindowWidth = 0;
 
 	int i;
 	
@@ -327,53 +341,196 @@ void ANDROID_PumpEvents(_THIS)
 {
 }
 
-/* We don't actually allow hardware surfaces other than the main one */
-// TODO: use OpenGL textures here
 static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 {
-	return(-1);
-}
-static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface)
-{
-	return;
+	if ( ! (surface->w && surface->h) )
+		return(-1);
+
+	Uint32 format = SDL_PIXELFORMAT_RGBA5551; // 1-bit alpha for color key, every surface will have colorkey so it's easier for us
+	if( surface->format->Amask )
+	{
+		SDL_PixelFormat format1;
+		int bpp;
+		format = SDL_PIXELFORMAT_RGBA4444;
+		SDL_zero(format1);
+		SDL_PixelFormatEnumToMasks( format, &bpp,
+									&format1.Rmask, &format1.Gmask,
+									&format1.Bmask, &format1.Amask );
+		if( surface->format->BitsPerPixel != bpp ||
+			surface->format->Rmask != format1.Rmask ||
+			surface->format->Gmask != format1.Gmask ||
+			surface->format->Bmask != format1.Bmask ||
+			surface->format->Amask != format1.Amask )
+			return(-1); // Do not allow alpha-surfaces with format other than RGBA4444 (it will be pain to lock/copy them)
+	}
+
+	surface->pitch = surface->w * surface->format->BytesPerPixel;
+	surface->pixels = SDL_malloc(surface->h * surface->w * surface->format->BytesPerPixel);
+	if ( surface->pixels == NULL ) {
+		SDL_OutOfMemory();
+		return(-1);
+	}
+	SDL_memset(surface->pixels, 0, surface->h*surface->pitch);
+
+	surface->hwdata = (struct private_hwdata *)SDL_CreateTexture(format, SDL_TEXTUREACCESS_STATIC, surface->w, surface->h);
+	if( !surface->hwdata ) {
+		SDL_free(surface->pixels);
+		surface->pixels = NULL;
+		SDL_OutOfMemory();
+		return(-1);
+	}
+	
+	return 0;
 }
 
-/* We need to wait for vertical retrace on page flipped displays */
+static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface)
+{
+	if( !surface->hwdata )
+		return;
+	SDL_DestroyTexture((struct SDL_Texture *)surface->hwdata);
+}
+
 static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)
 {
+	if( surface == SDL_CurrentVideoSurface )
+	{
+		return -1; // Do not allow that, we're HW accelerated
+	}
+	
+	if( !surface->hwdata )
+		return(-1);
+
 	return(0);
 }
 
 static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 {
-	return;
+	SDL_PixelFormat format;
+	Uint32 hwformat = SDL_PIXELFORMAT_RGBA5551;
+	int bpp;
+	SDL_Surface * converted = NULL;
+
+	if( !surface->hwdata )
+		return;
+	
+	if( surface->format->Amask )
+		hwformat = SDL_PIXELFORMAT_RGBA4444;
+	
+		/* Allocate the new pixel format for the screen */
+	SDL_zero(format);
+	SDL_PixelFormatEnumToMasks( hwformat, &bpp,
+								&format.Rmask, &format.Gmask,
+								&format.Bmask, &format.Amask );
+	format.BytesPerPixel = ANDROID_BYTESPERPIXEL;
+	format.BitsPerPixel = bpp;
+	
+	if( format.BitsPerPixel == surface->format->BitsPerPixel &&
+		format.Rmask == surface->format->Rmask &&
+		format.Gmask == surface->format->Gmask &&
+		format.Bmask == surface->format->Bmask &&
+		format.Amask == surface->format->Amask )
+	{
+		converted = surface;
+	}
+	else
+	{
+		Uint8 oldAlpha = surface->format->alpha;
+		converted = SDL_CreateRGBSurface(SDL_SWSURFACE, surface->w, surface->h, format.BitsPerPixel,
+											format.Rmask, format.Gmask, format.Bmask, format.Amask);
+		if( !converted ) {
+			SDL_OutOfMemory();
+			return;
+		}
+		SDL_FillRect( converted, NULL, 0 ); // Fill with transparency
+		surface->format->alpha = SDL_ALPHA_OPAQUE;
+		SDL_LowerBlit( surface, NULL, converted, NULL ); // Should take into account colorkey
+		surface->format->alpha = oldAlpha;
+	}
+
+	SDL_Rect rect;
+	rect.x = 0;
+	rect.y = 0;
+	rect.w = surface->w;
+	rect.h = surface->h;
+	SDL_UpdateTexture((struct SDL_Texture *)surface->hwdata, &rect, converted->pixels, converted->pitch);
+	
+	if( converted != surface )
+		SDL_FreeSurface(converted);
 }
+
+// We're only blitting HW surface to screen, no other options provided (and if you need them your app designed wrong)
+int ANDROID_HWBlit(SDL_Surface* src, SDL_Rect* srcrect, SDL_Surface* dst, SDL_Rect* dstrect)
+{
+	if( dst != SDL_CurrentVideoSurface || ! src->hwdata )
+	{
+		return(src->map->sw_blit(src, srcrect, dst, dstrect));
+	}
+	
+	return SDL_RenderCopy((struct SDL_Texture *)src->hwdata, srcrect, dstrect);
+};
+
+static int ANDROID_CheckHWBlit(_THIS, SDL_Surface *src, SDL_Surface *dst)
+{
+	// This part is ignored by SDL (though it should not be)
+	/*
+	if( dst != SDL_CurrentVideoSurface || ! src->hwdata )
+		return(-1);
+	*/
+	src->map->hw_blit = ANDROID_HWBlit;
+	return(0);
+};
+
+static int ANDROID_FillHWRect(_THIS, SDL_Surface *dst, SDL_Rect *rect, Uint32 color)
+{
+	Uint8 r, g, b, a;
+	if( dst != SDL_CurrentVideoSurface )
+	{
+		// TODO: hack
+		current_video->info.blit_fill = 0;
+		SDL_FillRect( dst, rect, color );
+		current_video->info.blit_fill = 1;
+		return(0);
+	}
+	SDL_GetRGBA(color, dst->format, &r, &g, &b, &a);
+	SDL_SetRenderDrawColor( r, g, b, a );
+	SDL_RenderFillRect(rect);
+};
+
+static int ANDROID_SetHWColorKey(_THIS, SDL_Surface *surface, Uint32 key)
+{
+	SDL_PixelFormat format;
+	SDL_Surface * converted = NULL;
+	
+	if( !surface->hwdata )
+		return(-1);
+	if( surface->format->Amask )
+		return(-1);
+
+	ANDROID_UnlockHWSurface(this, surface); // Convert surface using colorkey
+	return 0;
+};
+
+static int ANDROID_SetHWAlpha(_THIS, SDL_Surface *surface, Uint8 value)
+{
+	if( !surface->hwdata )
+		return(-1);
+
+	if( value == SDL_ALPHA_OPAQUE )
+		SDL_SetTextureBlendMode((struct SDL_Texture *)surface->hwdata, SDL_BLENDMODE_NONE);
+	else
+		SDL_SetTextureBlendMode((struct SDL_Texture *)surface->hwdata, SDL_BLENDMODE_BLEND);
+	
+	return SDL_SetTextureAlphaMod((struct SDL_Texture *)surface->hwdata, value);
+};
 
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
-	ANDROID_FlipHWSurface(this, SDL_VideoSurface);
+	// Used only in single-buffer mode
+	ANDROID_FlipHWSurface(this, SDL_CurrentVideoSurface);
 }
 
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 {
-	if( ! sdl_opengl )
-	{
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, memX, memY, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, memBuffer);
-#if SDL_VIDEO_RENDER_RESIZE
-		glDrawTexiOES(0, 0, 1, SDL_ANDROID_sWindowWidth, SDL_ANDROID_sWindowHeight);  // Stretch to screen
-#else
-		glDrawTexiOES(0, SDL_ANDROID_sWindowHeight - SDL_ANDROID_sFakeWindowHeight, 1, SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight);  // Do not stretch
-#endif
-
-		if( surface->flags & SDL_DOUBLEBUF )
-		{
-			if( memBuffer == memBuffer1 )
-				memBuffer = memBuffer2;
-			else
-				memBuffer = memBuffer1;
-			surface->pixels = memBuffer;
-		}
-	}
 
 	SDL_ANDROID_CallJavaSwapBuffers();
 
@@ -390,116 +547,3 @@ int ANDROID_SetColors(_THIS, int firstcolor, int ncolors, SDL_Color *colors)
 	return(1);
 }
 
-void SdlGlRenderInit()
-{
-	// Set up an array of values to use as the sprite vertices.
-	static GLfloat vertices[] =
-	{
-		0, 0,
-		1, 0,
-		0, 1,
-		1, 1,
-	};
-	
-	// Set up an array of values for the texture coordinates.
-	static GLfloat texcoords[] =
-	{
-		0, 0,
-		1, 0,
-		0, 1,
-		1, 1,
-	};
-	
-	static GLint texcoordsCrop[] =
-	{
-		0, 0, 0, 0,
-	};
-	
-	static float clearColor = 0.0f;
-	static int clearColorDir = 1;
-	int textX, textY;
-	void * memBufferTemp;
-	
-	if( !sdl_opengl && memBuffer )
-	{
-			// Texture sizes should be 2^n
-			textX = memX;
-			textY = memY;
-
-			if( textX <= 256 )
-				textX = 256;
-			else if( textX <= 512 )
-				textX = 512;
-			else
-				textX = 1024;
-
-			if( textY <= 256 )
-				textY = 256;
-			else if( textY <= 512 )
-				textY = 512;
-			else
-				textY = 1024;
-
-			glViewport(0, 0, textX, textY);
-
-			glClearColor(0,0,0,0);
-			// Set projection
-			glMatrixMode( GL_PROJECTION );
-			glLoadIdentity();
-			#if defined(GL_VERSION_ES_CM_1_0)
-				#define glOrtho glOrthof
-			#endif
-			glOrtho( 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f );
-
-			// Now Initialize modelview matrix
-			glMatrixMode( GL_MODELVIEW );
-			glLoadIdentity();
-			
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
-			glDisable(GL_DITHER);
-			glDisable(GL_MULTISAMPLE);
-
-			glEnable(GL_TEXTURE_2D);
-			
-			glGenTextures(1, &texture);
-
-			glBindTexture(GL_TEXTURE_2D, texture);
-	
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-		
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-			void * textBuffer = SDL_malloc( textX*textY*2 );
-			SDL_memset( textBuffer, 0, textX*textY*2 );
-			
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textX, textY, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, textBuffer);
-
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-			glVertexPointer(2, GL_FLOAT, 0, vertices);
-			glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
-
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-			texcoordsCrop[0] = 0;
-			texcoordsCrop[1] = memY;
-			texcoordsCrop[2] = memX;
-			texcoordsCrop[3] = -memY;
-
-			glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, texcoordsCrop);
-			
-			glFinish();
-			
-			SDL_free( textBuffer );
-	}
-}

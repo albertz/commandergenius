@@ -31,6 +31,7 @@
 #else
 #include "SDL_video-1.3.h"
 #include "SDL_sysvideo-1.3.h"
+#include "SDL_androidvideo.h"
 #endif
 #include "SDL_blit.h"
 #include "SDL_pixels_c.h"
@@ -190,11 +191,10 @@ SDL_GetVideoDriver(int index)
 /*
  * Initialize the video and event subsystems -- determine native pixel format
  */
-int
 #if SDL_VERSION_ATLEAST(1,3,0)
-SDL_VideoInit
+int SDL_VideoInit
 #else
-SDL_VideoInit_1_3
+int SDL_VideoInit_1_3
 #endif
 (const char *driver_name, Uint32 flags)
 {
@@ -207,6 +207,7 @@ SDL_VideoInit_1_3
         SDL_VideoQuit();
     }
 
+#if SDL_VERSION_ATLEAST(1,3,0)
     /* Toggle the event thread flags, based on OS requirements */
 #if defined(MUST_THREAD_EVENTS)
     flags |= SDL_INIT_EVENTTHREAD;
@@ -221,10 +222,11 @@ SDL_VideoInit_1_3
     if (SDL_StartEventLoop(flags) < 0) {
         return -1;
     }
-
+#endif
     /* Select the proper video driver */
     index = 0;
     video = NULL;
+#if SDL_VERSION_ATLEAST(1,3,0)
     if (driver_name == NULL) {
         driver_name = SDL_getenv("SDL_VIDEODRIVER");
     }
@@ -253,8 +255,14 @@ SDL_VideoInit_1_3
         }
         return -1;
     }
+
     _this = video;
     _this->name = bootstrap[i]->name;
+#else
+    video = ANDROID_CreateDevice_1_3(0);
+    _this = video;
+    _this->name = "android";
+#endif
     _this->next_object_id = 1;
 
 
@@ -900,6 +908,8 @@ SDL_GetDisplayPalette(SDL_Color * colors, int firstcolor, int ncolors)
     return SDL_GetPaletteForDisplay(SDL_CurrentDisplay, colors, firstcolor, ncolors);
 }
 
+#endif
+
 SDL_Window *
 SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
 {
@@ -911,6 +921,7 @@ SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
     SDL_VideoDisplay *display;
     SDL_Window *window;
 
+#if SDL_VERSION_ATLEAST(1,3,0)
     if (!_this) {
         /* Initialize the video system if needed */
         if (SDL_VideoInit(NULL, 0) < 0) {
@@ -924,6 +935,8 @@ SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
         }
         SDL_GL_LoadLibrary(NULL);
     }
+#endif
+
     display = SDL_CurrentDisplay;
     window = (SDL_Window *)SDL_calloc(1, sizeof(*window));
     window->magic = &_this->window_magic;
@@ -940,6 +953,7 @@ SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
     }
     display->windows = window;
 
+#if SDL_VERSION_ATLEAST(1,3,0)
     if (_this->CreateWindow && _this->CreateWindow(_this, window) < 0) {
         SDL_DestroyWindow(window);
         return NULL;
@@ -958,9 +972,12 @@ SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
         SDL_ShowWindow(window);
     }
     SDL_UpdateWindowGrab(window);
+#endif
 
     return window;
 }
+
+#if SDL_VERSION_ATLEAST(1,3,0)
 
 SDL_Window *
 SDL_CreateWindowFrom(const void *data)
@@ -1558,6 +1575,7 @@ SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
     /* Free any existing renderer */
     SDL_DestroyRenderer(window);
 
+#if SDL_VERSION_ATLEAST(1,3,0)
     if (index < 0) {
         char *override = SDL_getenv("SDL_VIDEO_RENDERER");
         int n = SDL_GetNumRenderDrivers();
@@ -1611,6 +1629,9 @@ SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
         /* Create a new renderer instance */
         window->renderer = SDL_CurrentDisplay->render_drivers[index].CreateRenderer(window, flags);
     }
+#else
+    window->renderer = GL_ES_RenderDriver.CreateRenderer(window, flags);
+#endif
 
     if (window->renderer == NULL) {
         /* Assuming renderer set its error */
