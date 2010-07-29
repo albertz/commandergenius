@@ -1101,7 +1101,8 @@ void Racer::handlePlayerEvent( PlayerEvent pEvent, bool keyDown ) {
   case PE_DOWN: if ( keyDown ) backwards = true; else backwards = false; break;
   case PE_LEFT: if ( keyDown ) left = true; else left = false; break;
   case PE_RIGHT: if ( keyDown ) right = true; else right = false; break;
-  case PE_FIRE_WEAPONS: if ( keyDown ) fireWeapons = true; else fireWeapons = false; break;
+  case PE_FIRE_SPECIALS:// PE_FIRE_WEAPONS: 
+  if ( keyDown ) fireWeapons = true; else fireWeapons = false; break;
   case PE_CHOOSE_WEAPON_SECONDARY: 
     {
       if ( !keyDown ) { 
@@ -1116,7 +1117,7 @@ void Racer::handlePlayerEvent( PlayerEvent pEvent, bool keyDown ) {
       }
       break;
     }
-  case PE_FIRE_SPECIALS: 
+  case PE_FIRE_WEAPONS: // PE_FIRE_SPECIALS: 
     {
       if ( keyDown ) {
 	useSpecial = true; 

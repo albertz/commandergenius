@@ -102,9 +102,6 @@ const SDLKey Input::translate(const SDL_Event& event) {
   if (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_JOYBUTTONUP) {
     return (SDLKey) (1040 + event.jbutton.button);
   }    
-  if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
-    return SDLK_LCTRL; // settings->getPlayerEventKeys(0).find(PE_FIRE_WEAPONS)->second;
-  }    
   return (SDLKey) 0;
 }    
 
