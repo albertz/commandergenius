@@ -6,7 +6,7 @@ var=""
 echo -n "\n===== libSDL on Android configuration =====\n\nIf you will supply empty string as answer the previous value will be used\n"
 
 LibSdlVersionOld=$LibSdlVersion
-echo -n "\nlibSDL version to use (1.2 or 1.3), 1.2 is not HW accelerated yet ($LibSdlVersion): "
+echo -n "\nlibSDL version to use (1.2 or 1.3) ($LibSdlVersion): "
 read var
 if [ -n "$var" ] ; then
 	LibSdlVersion="$var"
