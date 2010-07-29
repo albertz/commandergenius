@@ -23,7 +23,7 @@ class Globals {
 	public static boolean HorizontalOrientation = true;
 	
 	// Readme text to be shown on download page
-	public static String ReadmeText = "^You can press \"Home\" now - the data will be downloaded in background^In game press \"Menu\" for secondary fire, press \"Volume Up/Down\" to cycle through weapons".replace("^","\n");
+	public static String ReadmeText = "^You can press \"Home\" now - the data will be downloaded in background^In game press \"Menu\" for secondary fire, \"Volume Up/Down\" to cycle weapons^If your phone doesnt have joystick or trackball the accelerometer will be used".replace("^","\n");
 	
 	public static boolean AppUsesMouse = false;
 

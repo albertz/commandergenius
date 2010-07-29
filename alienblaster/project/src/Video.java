@@ -21,6 +21,60 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import java.lang.Thread;
 import java.util.concurrent.locks.ReentrantLock;
+import android.os.Build;
+
+	abstract class DifferentTouchInput
+	{
+		public static DifferentTouchInput getInstance()
+		{
+			if (Integer.parseInt(Build.VERSION.SDK) <= 4)
+				return SingleTouchInput.Holder.sInstance;
+			else
+				return MultiTouchInput.Holder.sInstance;
+		}
+		public abstract void process(final MotionEvent event);
+		private static class SingleTouchInput extends DifferentTouchInput
+		{
+			private static class Holder 
+			{
+				private static final SingleTouchInput sInstance = new SingleTouchInput();
+			}
+			public void process(final MotionEvent event)
+			{
+				int action = -1;
+				if( event.getAction() == MotionEvent.ACTION_DOWN )
+					action = 0;
+				if( event.getAction() == MotionEvent.ACTION_UP )
+					action = 1;
+				if( event.getAction() == MotionEvent.ACTION_MOVE )
+					action = 2;
+				if ( action >= 0 )
+					DemoGLSurfaceView.nativeMouse( (int)event.getX(), (int)event.getY(), action, 0 );
+			}
+		}
+		private static class MultiTouchInput extends DifferentTouchInput
+		{
+			private static class Holder 
+			{
+				private static final MultiTouchInput sInstance = new MultiTouchInput();
+			}
+			public void process(final MotionEvent event)
+			{
+				for( int i = 0; i < event.getPointerCount(); i++ )
+				{
+					int action = -1;
+					if( event.getAction() == MotionEvent.ACTION_DOWN )
+						action = 0;
+					if( event.getAction() == MotionEvent.ACTION_UP )
+						action = 1;
+					if( event.getAction() == MotionEvent.ACTION_MOVE )
+						action = 2;
+					if ( action >= 0 )
+						DemoGLSurfaceView.nativeMouse( (int)event.getX(event.getPointerId(i)), (int)event.getY(event.getPointerId(i)), action, event.getPointerId(i) );
+				}
+			}
+		}
+	}
 
 
 class DemoRenderer extends GLSurfaceView_SDL.Renderer {
@@ -84,26 +138,19 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public DemoGLSurfaceView(Activity context) {
 		super(context);
 		mParent = context;
+		touchInput = DifferentTouchInput.getInstance();
 		setEGLConfigChooser(Globals.NeedDepthBuffer);
 		accelerometer = new AccelerometerReader(context);
 		mRenderer = new DemoRenderer(context);
 		setRenderer(mRenderer);
 	}
 
+
 	@Override
 	public boolean onTouchEvent(final MotionEvent event) 
 	{
+		touchInput.process(event);
 		// TODO: add multitouch support (added in Android 2.0 SDK)
-		int action = -1;
-		if( event.getAction() == MotionEvent.ACTION_DOWN )
-			action = 0;
-		if( event.getAction() == MotionEvent.ACTION_UP )
-			action = 1;
-		if( event.getAction() == MotionEvent.ACTION_MOVE )
-			action = 2;
-		if (  action >= 0 ) {
-			nativeMouse( (int)event.getX(), (int)event.getY(), action );
-		}
 		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
 		synchronized (mRenderer) {
 			try {
@@ -134,9 +181,10 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	DemoRenderer mRenderer;
 	Activity mParent;
 	AccelerometerReader accelerometer = null;
+	DifferentTouchInput touchInput = null;
 
-	public native void nativeMouse( int x, int y, int action );
-	public native void nativeKey( int keyCode, int down );
+	public static native void nativeMouse( int x, int y, int action, int pointerId );
+	public static native void nativeKey( int keyCode, int down );
 }
 
 

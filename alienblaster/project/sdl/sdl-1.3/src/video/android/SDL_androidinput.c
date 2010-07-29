@@ -158,7 +158,7 @@ static SDL_Joystick *CurrentJoystick = NULL;
 enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action )
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId )
 {
 	if( !isMouseUsed )
 	{
@@ -277,9 +277,9 @@ void ANDROID_InitOSKeymap()
   // TODO: make this configurable
   keymap[KEYCODE_MENU] = SDL_KEY(RETURN);
   if( !isMouseUsed )
-    keymap[KEYCODE_MENU] = SDL_KEY(RCTRL);
+    keymap[KEYCODE_MENU] = SDL_KEY(LCTRL);
 
-  keymap[KEYCODE_CALL] = SDL_KEY(LCTRL);
+  keymap[KEYCODE_CALL] = SDL_KEY(RCTRL);
   keymap[KEYCODE_ENDCALL] = SDL_KEY(LSHIFT);
   keymap[KEYCODE_CAMERA] = SDL_KEY(RSHIFT);
   keymap[KEYCODE_POWER] = SDL_KEY(RALT);

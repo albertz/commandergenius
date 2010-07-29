@@ -120,7 +120,7 @@ public class MainActivity extends Activity {
 	}
 	
 	@Override
-	public boolean dispatchTouchEvent(MotionEvent ev) {
+	public boolean dispatchTouchEvent(final MotionEvent ev) {
 		if(mGLView != null)
 			mGLView.onTouchEvent(ev);
 		return true;

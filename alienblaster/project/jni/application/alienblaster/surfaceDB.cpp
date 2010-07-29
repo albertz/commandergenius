@@ -90,11 +90,11 @@ SdlCompat_AcceleratedSurface *SurfaceDB::loadSurface( string fn, bool alpha ) {
     newSurface = hwSurface;
   }
 
+  SDL_SetColorKey( newSurface, SDL_SRCCOLORKEY, 
+		   SDL_MapRGB(newSurface->format, transR, transG, transB) );
+
   surfaceDB[ fn ] = SdlCompat_CreateAcceleratedSurface( newSurface );
   SDL_FreeSurface(newSurface);
-
-  SDL_SetColorKey( surfaceDB[ fn ], SDL_SRCCOLORKEY, 
-		   SDL_MapRGB(surfaceDB[ fn ]->format, transR, transG, transB) );
 
   if ( alpha ) {
     SDL_SetAlpha( surfaceDB[ fn ], SDL_SRCALPHA, 128 );
