@@ -597,7 +597,11 @@ SDL_CalculatePitch(SDL_Surface * surface)
     default:
         break;
     }
+// 4-byte aligning adds extra memcpy() with OpenGL ES renderer
+// TODO: check if we really can disable that for Android
+#ifndef ANDROID
     pitch = (pitch + 3) & ~3;   /* 4-byte aligning */
+#endif
     return (pitch);
 }
 

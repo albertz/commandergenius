@@ -952,10 +952,6 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
         /* this code is a little funny because the viewport is upside down vs SDL's coordinate system */
         SDL_Window *window = renderer->window;
 
-        __android_log_print(ANDROID_LOG_INFO, "libSDL", "GLES_RenderCopy(): %dx%d+%d+%d -> %dx%d+%d+%d", 
-        					(int)srcrect->x, (int)srcrect->y, (int)srcrect->w, (int)srcrect->h,
-        					(int)dstrect->x, (int)dstrect->y, (int)dstrect->w, (int)dstrect->h);
-
         GLint cropRect[4];
         cropRect[0] = srcrect->x;
         cropRect[1] = srcrect->y + srcrect->h;
