@@ -23,7 +23,14 @@ class Globals {
 	public static boolean HorizontalOrientation = true;
 	
 	// Readme text to be shown on download page
-	public static String ReadmeText = "^Use accelerometer to navigate menus and control ship^Press \"Menu\" to select menu and for secondary fire^Press \"Call\" or touch screen for primary fire^Press \"Volume Up/Down\" to cycle through weapons".replace("^","\n");
+	public static String ReadmeText = "^You can press \"Home\" now - the data will be downloaded in background^In game press \"Menu\" for secondary fire, press \"Volume Up/Down\" to cycle through weapons".replace("^","\n");
+	
+	public static boolean AppUsesMouse = false;
+
+	// We have to use accelerometer as arrow keys
+	public static boolean AppNeedsArrowKeys = true;
+	
+	public static boolean AppUsesJoystick = false;
 }
 
 class LoadLibrary {

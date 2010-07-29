@@ -35,7 +35,6 @@ SDL_SRCS := \
 	src/audio/android/*.c \
 	src/cdrom/dummy/*.c \
 	src/video/android/*.c \
-	src/joystick/dummy/*.c \
 	src/haptic/dummy/*.c \
 	src/loadso/dlopen/*.c \
 	src/atomic/dummy/*.c \

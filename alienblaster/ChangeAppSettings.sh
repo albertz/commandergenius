@@ -48,6 +48,24 @@ if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
 fi
 
+echo -n "\nApplication uses mouse (y) or (n), if (n) the screen touch will be mapped to Enter ($AppUsesMouse): "
+read var
+if [ -n "$var" ] ; then
+	AppUsesMouse="$var"
+fi
+
+echo -n "\nApplication needs arrow keys (y) or (n), if (y) the accelerometer will be used\nas arrow keys if phone does not have dpad/trackball ($AppNeedsArrowKeys): "
+read var
+if [ -n "$var" ] ; then
+	AppNeedsArrowKeys="$var"
+fi
+
+echo -n "\nApplication uses joystick (y) or (n), the accelerometer (2-axis) or orientation sensor (3-axis)\nwill be used as joystick if not used as arrow keys ($AppUsesJoystick): "
+read var
+if [ -n "$var" ] ; then
+	AppUsesJoystick="$var"
+fi
+
 echo -n "\nEnable multi-ABI binary, with hardware FPU support - \nit will also work on old devices, but .apk size is 2x bigger (y) or (n) ($MultiABI): "
 read var
 if [ -n "$var" ] ; then
@@ -110,6 +128,9 @@ echo ScreenOrientation=$ScreenOrientation >> AppSettings.cfg
 echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AppSettings.cfg
 echo SdlVideoResize=$SdlVideoResize >> AppSettings.cfg
 echo NeedDepthBuffer=$NeedDepthBuffer >> AppSettings.cfg
+echo AppUsesMouse=$AppUsesMouse >> AppSettings.cfg
+echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AppSettings.cfg
+echo AppUsesJoystick=$AppUsesJoystick >> AppSettings.cfg
 echo MultiABI=$MultiABI >> AppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AppSettings.cfg
@@ -138,6 +159,22 @@ if [ "$NeedDepthBuffer" = "y" ] ; then
 else
 	NeedDepthBuffer=false
 fi
+if [ "$AppUsesMouse" = "y" ] ; then
+	AppUsesMouse=true
+else
+	AppUsesMouse=false
+fi
+if [ "$AppNeedsArrowKeys" = "y" ] ; then
+	AppNeedsArrowKeys=true
+else
+	AppNeedsArrowKeys=false
+fi
+if [ "$AppUsesJoystick" = "y" ] ; then
+	AppUsesJoystick=true
+else
+	AppUsesJoystick=false
+fi
+
 if [ "$MultiABI" = "y" ] ; then
 	MultiABI="armeabi armeabi-v7a"
 else
@@ -179,6 +216,9 @@ cat project/src/Globals.java | \
 	sed "s^public static String DataDownloadUrl = \".*\";^public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";^" | \
 	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
 	sed "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" | \
+	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \
+	sed "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" | \
+	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
 	sed "s/public LoadLibrary() .*/public LoadLibrary() { $LibrariesToLoad };/" > \
 	project/src/Globals.java.1

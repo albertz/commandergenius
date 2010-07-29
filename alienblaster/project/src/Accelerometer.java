@@ -10,27 +10,33 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.os.Vibrator;
 import android.hardware.SensorManager;
-import android.hardware.SensorListener;
+import android.hardware.SensorEventListener;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
 
 import android.widget.TextView;
 
 
-// Accelerometer code partially ripped from http://karanar.net/
-class AccelerometerReader implements SensorListener {
+class AccelerometerReader implements SensorEventListener {
 
-	private float [] v;
-	
 	private SensorManager _manager = null;
 
 	public AccelerometerReader(Activity context) {
-		v = new float[3];
 		_manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 		if( _manager != null )
 		{
-			int mask = 0;
-			//mask |= SensorManager.SENSOR_ORIENTATION;
-			mask |= SensorManager.SENSOR_ACCELEROMETER;
-			_manager.registerListener(this, mask, SensorManager.SENSOR_DELAY_GAME);
+			if( Globals.AppNeedsArrowKeys )
+			{
+				_manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
+			}
+			else
+			{
+				if( Globals.AppUsesJoystick )
+				{
+					if( ! _manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_GAME) )
+						_manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
+				}
+			}
 		}
 	}
 	
@@ -41,40 +47,22 @@ class AccelerometerReader implements SensorListener {
 		}
 	}
 
-	public synchronized void onSensorChanged(int sensor, float[] values) {
+	public synchronized void onSensorChanged(SensorEvent event) {
 
-		v[0] = values[0];
-		v[1] = values[1];
-		v[2] = values[2];
-		
-		if (sensor == SensorManager.SENSOR_ACCELEROMETER) {
-			/*
-			if( Globals.HorizontalOrientation )
-			{
-				v[0] = values[2];
-				v[1] = values[1];
-				v[2] = values[0];
-			}
-			*/
-			nativeAccelerometer(v[0], v[1], v[2]);
+		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) 
+		{
+			nativeAccelerometer(event.values[0], event.values[1], event.values[2]);
 		}
-		if (sensor == SensorManager.SENSOR_ORIENTATION) {
-			nativeOrientation(v[0], v[1], v[2]);
+		else
+		{
+			nativeOrientation(event.values[0], event.values[1], event.values[2]);
 		}
 		
 	}
 
-	public synchronized void onAccuracyChanged(int i, int i1) {
+	public synchronized void onAccuracyChanged(Sensor s, int a) {
 	}
 	
-	public synchronized float[] readAccelerometer()
-	{
-		float [] ret = new float[3];
-		ret[0] = v[0];
-		ret[1] = v[1];
-		ret[2] = v[2];
-		return ret;
-	};
 
 	private native void nativeAccelerometer(float accX, float accY, float accZ);
 	private native void nativeOrientation(float accX, float accY, float accZ);

@@ -39,7 +39,6 @@
 
 #define SDL_CDROM_DISABLED 1
 
-#define SDL_JOYSTICK_DUMMY 1 // TODO: add joystick and remove that
 #define SDL_JOYSTICK_ANDROID 1
 
 #define SDL_HAPTIC_DUMMY 1 // TODO: add vibrator and remove that

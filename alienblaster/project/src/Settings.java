@@ -13,6 +13,7 @@ import android.util.Log;
 import java.io.*;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 
 class Settings
 {
@@ -22,6 +23,7 @@ class Settings
 		try {
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
 			Globals.DownloadToSdcard = settingsFile.readBoolean();
+			Globals.AppNeedsArrowKeys = settingsFile.readBoolean();
 
 			startDownloader(p);
 			return;
@@ -29,6 +31,17 @@ class Settings
 		} catch( SecurityException e ) {
 		} catch ( IOException e ) {};
 		
+		Configuration c = new Configuration();
+		c.setToDefaults();
+		
+		if( c.navigation == Configuration.NAVIGATION_TRACKBALL || 
+			c.navigation == Configuration.NAVIGATION_DPAD ||
+			c.navigation == Configuration.NAVIGATION_WHEEL )
+		{
+			Globals.AppNeedsArrowKeys = false;
+		}
+
+
 		final CharSequence[] items = {"Phone storage", "SD card"};
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -39,9 +52,8 @@ class Settings
 			{
 				Globals.DownloadToSdcard = (item == 1);
 
-				Save(p);
 				dialog.dismiss();
-				startDownloader(p);
+				showAccelermoeterConfig(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -50,11 +62,41 @@ class Settings
 		
 	};
 	
+	static void showAccelermoeterConfig(final MainActivity p)
+	{
+		if( Globals.AppNeedsArrowKeys || Globals.AppUsesJoystick ) 
+		{
+			Save(p);
+			startDownloader(p);
+			return;
+		}
+		
+		final CharSequence[] items = {"Do not use accelerometer", "Use accelerometer as navigation keys"};
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle("Your phone has navigation keys, you may optionally use accelerometer as another navigation keys");
+		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.AppNeedsArrowKeys = (item == 1);
+
+				Save(p);
+				dialog.dismiss();
+				startDownloader(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+	
 	static void Save(final MainActivity p)
 	{
 		try {
 			ObjectOutputStream out = new ObjectOutputStream(p.openFileOutput( SettingsFileName, p.MODE_WORLD_READABLE ));
 			out.writeBoolean(Globals.DownloadToSdcard);
+			out.writeBoolean(Globals.AppNeedsArrowKeys);
 			out.close();
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
@@ -65,6 +107,17 @@ class Settings
 	static void Apply()
 	{
 		nativeIsSdcardUsed( Globals.DownloadToSdcard ? 1 : 0 );
+		Configuration c = new Configuration();
+		c.setToDefaults();
+		
+		if( c.navigation == Configuration.NAVIGATION_TRACKBALL )
+		{
+			nativeSetTrackballUsed();
+		}
+		if( Globals.AppUsesMouse )
+			nativeSetMouseUsed();
+		if( Globals.AppUsesJoystick && !Globals.AppNeedsArrowKeys )
+			nativeSetJoystickUsed();
 	}
 	
 	static void startDownloader(MainActivity p)
@@ -84,5 +137,8 @@ class Settings
 	
 
 	private static native int nativeIsSdcardUsed(int flag);
+	private static native int nativeSetTrackballUsed();
+	private static native int nativeSetMouseUsed();
+	private static native int nativeSetJoystickUsed();
 }
 
