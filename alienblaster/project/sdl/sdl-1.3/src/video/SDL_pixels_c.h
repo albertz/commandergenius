@@ -20,7 +20,6 @@
     slouken@libsdl.org
 */
 #include "SDL_config.h"
-#include "SDL_version.h"
 
 /* Useful functions and variables from SDL_pixel.c */
 

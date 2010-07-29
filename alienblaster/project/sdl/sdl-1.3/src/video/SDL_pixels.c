@@ -20,32 +20,22 @@
     slouken@libsdl.org
 */
 #include "SDL_config.h"
-#include "SDL_version.h"
 
 /* General (mostly internal) pixel/color manipulation routines for SDL */
 
 #include "SDL_endian.h"
-#if SDL_VERSION_ATLEAST(1,3,0)
 #include "SDL_video.h"
 #include "SDL_sysvideo.h"
-#else
-#include "SDL_video-1.3.h"
-#include "SDL_sysvideo-1.3.h"
-#endif
 #include "SDL_blit.h"
 #include "SDL_pixels_c.h"
-#if SDL_VERSION_ATLEAST(1,3,0)
 #include "SDL_RLEaccel_c.h"
-#endif
 
-#if SDL_VERSION_ATLEAST(1,3,0)
 struct SDL_PaletteWatch
 {
     SDL_PaletteChangedFunc callback;
     void *userdata;
     struct SDL_PaletteWatch *next;
 };
-#endif
 
 /* Helper functions */
 
@@ -298,7 +288,7 @@ SDL_MasksToPixelFormatEnum(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
     return SDL_PIXELFORMAT_UNKNOWN;
 }
 
-#if SDL_VERSION_ATLEAST(1,3,0)
+
 SDL_Palette *
 SDL_AllocPalette(int ncolors)
 {
@@ -438,8 +428,6 @@ SDL_AllocFormat(int bpp,
     return SDL_InitFormat(format, bpp, Rmask, Gmask, Bmask, Amask);
 }
 
-#endif
-
 SDL_PixelFormat *
 SDL_InitFormat(SDL_PixelFormat * format, int bpp, Uint32 Rmask, Uint32 Gmask,
                Uint32 Bmask, Uint32 Amask)
@@ -520,8 +508,6 @@ SDL_InitFormat(SDL_PixelFormat * format, int bpp, Uint32 Rmask, Uint32 Gmask,
     return format;
 }
 
-#if SDL_VERSION_ATLEAST(1,3,0)
-
 /*
  * Change any previous mappings from/to the new surface format
  */
@@ -597,11 +583,7 @@ SDL_CalculatePitch(SDL_Surface * surface)
     default:
         break;
     }
-// 4-byte aligning adds extra memcpy() with OpenGL ES renderer
-// TODO: check if we really can disable that for Android
-#ifndef ANDROID
     pitch = (pitch + 3) & ~3;   /* 4-byte aligning */
-#endif
     return (pitch);
 }
 
@@ -931,6 +913,5 @@ SDL_FreeBlitMap(SDL_BlitMap * map)
         SDL_free(map);
     }
 }
-#endif
 
 /* vi: set ts=4 sw=4 expandtab: */

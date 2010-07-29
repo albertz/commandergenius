@@ -31,11 +31,8 @@
 
 #include "SDL_stdinc.h"
 #include "SDL_error.h"
+#include "SDL_pixels.h"
 #include "SDL_rwops.h"
-#include "SDL_version.h"
-#if ! SDL_VERSION_ATLEAST(1,3,0)
-#include "SDL_video.h"
-#endif
 
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
@@ -66,13 +63,11 @@ typedef struct
  *  \sa SDL_UnionRect
  *  \sa SDL_EnclosePoints
  */
-#if SDL_VERSION_ATLEAST(1,3,0)
 typedef struct SDL_Rect
 {
     int x, y;
     int w, h;
 } SDL_Rect;
-#endif
 
 /**
  *  \brief Returns true if the rectangle has no area.

@@ -29,14 +29,6 @@
 #ifndef _SDL_pixels_h
 #define _SDL_pixels_h
 
-#include "SDL_version.h"
-
-#if SDL_VERSION_ATLEAST(1,3,0)
-#include "SDL_video.h"
-#else
-#include "SDL_video-1.3.h"
-#endif
-
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -227,7 +219,6 @@ enum
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_ARGB,
                                SDL_PACKEDLAYOUT_2101010, 32, 4),
 
-#if SDL_VERSION_ATLEAST(1,3,0)
     SDL_PIXELFORMAT_YV12 =      /**< Planar mode: Y + V + U  (3 planes) */
         SDL_DEFINE_PIXELFOURCC('Y', 'V', '1', '2'),
     SDL_PIXELFORMAT_IYUV =      /**< Planar mode: Y + U + V  (3 planes) */
@@ -238,10 +229,8 @@ enum
         SDL_DEFINE_PIXELFOURCC('U', 'Y', 'V', 'Y'),
     SDL_PIXELFORMAT_YVYU =      /**< Packed mode: Y0+V0+Y1+U0 (1 plane) */
         SDL_DEFINE_PIXELFOURCC('Y', 'V', 'Y', 'U')
-#endif
 };
 
-#if SDL_VERSION_ATLEAST(1,3,0)
 typedef struct SDL_Color
 {
     Uint8 r;
@@ -285,7 +274,6 @@ typedef struct SDL_PixelFormat
     Uint32 Bmask;
     Uint32 Amask;
 } SDL_PixelFormat;
-#endif
 
 /**
  *  \brief Convert one of the enumerated pixel formats to a bpp and RGBA masks.
@@ -332,7 +320,6 @@ extern DECLSPEC SDL_Palette *SDLCALL SDL_AllocPalette(int ncolors);
  *  
  *  \sa SDL_DelPaletteWatch()
  */
-#if SDL_VERSION_ATLEAST(1,3,0)
 extern DECLSPEC int SDLCALL SDL_AddPaletteWatch(SDL_Palette * palette,
                                                 SDL_PaletteChangedFunc
                                                 callback, void *userdata);
@@ -346,7 +333,7 @@ extern DECLSPEC int SDLCALL SDL_AddPaletteWatch(SDL_Palette * palette,
 extern DECLSPEC void SDLCALL SDL_DelPaletteWatch(SDL_Palette * palette,
                                                  SDL_PaletteChangedFunc
                                                  callback, void *userdata);
-#endif
+
 /**
  *  \brief Set a range of colors in a palette.
  *  
