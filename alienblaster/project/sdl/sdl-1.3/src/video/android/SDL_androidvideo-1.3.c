@@ -98,6 +98,12 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	return device;
 }
 
+static int
+ANDROID_Available(void)
+{
+	return 1;
+}
+
 VideoBootStrap ANDROID_bootstrap = {
 	"android", "SDL Android video driver",
 	ANDROID_Available, ANDROID_CreateDevice

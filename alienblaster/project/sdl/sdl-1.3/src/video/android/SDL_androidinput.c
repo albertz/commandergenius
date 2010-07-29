@@ -76,6 +76,8 @@ static SDL_scancode TranslateKey(int scancode, SDL_keysym *keysym)
 	return keymap[scancode];
 }
 
+#define SDL_SendKeyboardKey(X, Y) SDL_SendKeyboardKey(X, Y, SDL_FALSE)
+
 #else
 
 #define SDL_KEY2(X) SDLK_ ## X
@@ -170,11 +172,10 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	// Translate mouse coordinates
 
 #if SDL_VERSION_ATLEAST(1,3,0)
-	SDL_Renderer *renderer;
-	renderer = SDL_GetCurrentRenderer(SDL_TRUE);
-	if( renderer && renderer->window ) {
-		x = x * renderer->window->w / renderer->window->display->desktop_mode.w;
-		y = y * renderer->window->h / renderer->window->display->desktop_mode.h;
+	SDL_Window * window = SDL_GetFocusWindow();
+	if( window && window->renderer->window ) {
+		x = x * window->w / window->display->desktop_mode.w;
+		y = y * window->h / window->display->desktop_mode.h;
 	}
 #else
 	x = x * SDL_ANDROID_sFakeWindowWidth / SDL_ANDROID_sWindowWidth;
