@@ -155,6 +155,7 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 {
 	SDL_AudioSpec *audioFormat = spec;
 #endif
+
 	int bytesPerSample;
 	JNIEnv * jniEnv = NULL;
 
@@ -197,7 +198,7 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 
 	SDL_CalculateAudioSpec(audioFormat);
 	
-	return(0);
+	return(1);
 }
 
 static void ANDROIDAUD_CloseAudio(_THIS)

@@ -24,6 +24,7 @@ class Settings
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
 			Globals.DownloadToSdcard = settingsFile.readBoolean();
 			Globals.AppNeedsArrowKeys = settingsFile.readBoolean();
+			Globals.PhoneHasTrackball = settingsFile.readBoolean();
 
 			startDownloader(p);
 			return;
@@ -31,6 +32,8 @@ class Settings
 		} catch( SecurityException e ) {
 		} catch ( IOException e ) {};
 		
+		// This code fails for both of my phones!
+		/*
 		Configuration c = new Configuration();
 		c.setToDefaults();
 		
@@ -40,7 +43,15 @@ class Settings
 		{
 			Globals.AppNeedsArrowKeys = false;
 		}
-
+		
+		System.out.println( "libSDL: Phone keypad type: " + 
+				(
+				c.navigation == Configuration.NAVIGATION_TRACKBALL ? "Trackball" :
+				c.navigation == Configuration.NAVIGATION_DPAD ? "Dpad" :
+				c.navigation == Configuration.NAVIGATION_WHEEL ? "Wheel" :
+				c.navigation == Configuration.NAVIGATION_NONAV ? "None" :
+				"Unknown" ) );
+		*/
 
 		final CharSequence[] items = {"Phone storage", "SD card"};
 
@@ -53,7 +64,7 @@ class Settings
 				Globals.DownloadToSdcard = (item == 1);
 
 				dialog.dismiss();
-				showAccelermoeterConfig(p);
+				showKeyboardConfig(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -61,6 +72,35 @@ class Settings
 		alert.show();
 		
 	};
+
+	static void showKeyboardConfig(final MainActivity p)
+	{
+		if( ! Globals.AppNeedsArrowKeys ) 
+		{
+			Save(p);
+			startDownloader(p);
+			return;
+		}
+		
+		final CharSequence[] items = {"Arrows / joystick / dpad", "Trackball", "None, only touchscreen"};
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle("What kind of navigation keys does your phone have?");
+		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.AppNeedsArrowKeys = (item == 2);
+				Globals.PhoneHasTrackball = (item == 1);
+
+				dialog.dismiss();
+				showAccelermoeterConfig(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
 	
 	static void showAccelermoeterConfig(final MainActivity p)
 	{
@@ -74,7 +114,7 @@ class Settings
 		final CharSequence[] items = {"Do not use accelerometer", "Use accelerometer as navigation keys"};
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("Your phone has navigation keys, you may optionally use accelerometer as another navigation keys");
+		builder.setTitle("You may optionally use accelerometer as another navigation keys");
 		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
@@ -97,6 +137,7 @@ class Settings
 			ObjectOutputStream out = new ObjectOutputStream(p.openFileOutput( SettingsFileName, p.MODE_WORLD_READABLE ));
 			out.writeBoolean(Globals.DownloadToSdcard);
 			out.writeBoolean(Globals.AppNeedsArrowKeys);
+			out.writeBoolean(Globals.PhoneHasTrackball);
 			out.close();
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
@@ -107,13 +148,9 @@ class Settings
 	static void Apply()
 	{
 		nativeIsSdcardUsed( Globals.DownloadToSdcard ? 1 : 0 );
-		Configuration c = new Configuration();
-		c.setToDefaults();
 		
-		if( c.navigation == Configuration.NAVIGATION_TRACKBALL )
-		{
+		if( Globals.PhoneHasTrackball )
 			nativeSetTrackballUsed();
-		}
 		if( Globals.AppUsesMouse )
 			nativeSetMouseUsed();
 		if( Globals.AppUsesJoystick && !Globals.AppNeedsArrowKeys )

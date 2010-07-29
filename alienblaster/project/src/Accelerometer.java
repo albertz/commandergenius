@@ -51,11 +51,17 @@ class AccelerometerReader implements SensorEventListener {
 
 		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) 
 		{
-			nativeAccelerometer(event.values[0], event.values[1], event.values[2]);
+			if( Globals.HorizontalOrientation )
+				nativeAccelerometer(event.values[1], -event.values[0], event.values[2]);
+			else
+				nativeAccelerometer(event.values[0], event.values[1], event.values[2]);
 		}
 		else
 		{
-			nativeOrientation(event.values[0], event.values[1], event.values[2]);
+			if( Globals.HorizontalOrientation )
+				nativeOrientation(event.values[1], -event.values[0], event.values[2]);
+			else
+				nativeOrientation(event.values[0], event.values[1], event.values[2]);
 		}
 		
 	}

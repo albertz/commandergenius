@@ -31,6 +31,8 @@ class Globals {
 	public static boolean AppNeedsArrowKeys = true;
 	
 	public static boolean AppUsesJoystick = false;
+
+	public static boolean PhoneHasTrackball = false;
 }
 
 class LoadLibrary {

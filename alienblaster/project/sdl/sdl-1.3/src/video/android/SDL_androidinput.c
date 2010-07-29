@@ -542,95 +542,94 @@ int processAndroidTrackball(int key, int action)
 {
 	static int leftPressed = 0, rightPressed = 0, upPressed = 0, downPressed = 0;
 	SDL_keysym keysym;
+	
+	if( ! action && (
+		key == KEYCODE_DPAD_UP ||
+		key == KEYCODE_DPAD_DOWN ||
+		key == KEYCODE_DPAD_LEFT ||
+		key == KEYCODE_DPAD_RIGHT ) )
+		return 1;
 
 	if( key == KEYCODE_DPAD_UP )
 	{
-		downPressed = 0;
-		SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN ,&keysym) );
+		if( downPressed )
+		{
+			downPressed = 0;
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN ,&keysym) );
+			return 1;
+		}
 		if( !upPressed )
 		{
-			if( action )
-			{
-				upPressed = 1;
-				SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
-			}
+			upPressed = 1;
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
 		}
 		else
 		{
-			if( action )
-			{
-				SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
-				SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
-			}
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
 		}
 		return 1;
 	}
 
 	if( key == KEYCODE_DPAD_DOWN )
 	{
-		upPressed = 0;
-		SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP ,&keysym) );
+		if( upPressed )
+		{
+			upPressed = 0;
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP ,&keysym) );
+			return 1;
+		}
 		if( !upPressed )
 		{
-			if( action )
-			{
-				downPressed = 1;
-				SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
-			}
+			downPressed = 1;
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
 		}
 		else
 		{
-			if( action )
-			{
-				SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
-				SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
-			}
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
 		}
 		return 1;
 	}
 
 	if( key == KEYCODE_DPAD_LEFT )
 	{
-		rightPressed = 0;
-		SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT ,&keysym) );
+		if( rightPressed )
+		{
+			rightPressed = 0;
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT ,&keysym) );
+			return 1;
+		}
 		if( !leftPressed )
 		{
-			if( action )
-			{
-				leftPressed = 1;
-				SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
-			}
+			leftPressed = 1;
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
 		}
 		else
 		{
-			if( action )
-			{
-				SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
-				SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
-			}
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
 		}
 		return 1;
 	}
 
 	if( key == KEYCODE_DPAD_RIGHT )
 	{
-		leftPressed = 0;
-		SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT ,&keysym) );
+		if( leftPressed )
+		{
+			leftPressed = 0;
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT ,&keysym) );
+			return 1;
+		}
 		if( !rightPressed )
 		{
-			if( action )
-			{
-				rightPressed = 1;
-				SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
-			}
+			rightPressed = 1;
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
 		}
 		else
 		{
-			if( action )
-			{
-				SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
-				SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
-			}
+			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
+			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
 		}
 		return 1;
 	}
