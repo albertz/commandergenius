@@ -241,7 +241,6 @@ SDL_Rect **ANDROID_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags)
 SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 				int width, int height, int bpp, Uint32 flags)
 {
-	void * memBuffer = NULL;
 	SDL_PixelFormat format;
 	int bpp1;
 	
@@ -251,6 +250,12 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 
 	SDL_ANDROID_sFakeWindowWidth = width;
 	SDL_ANDROID_sFakeWindowHeight = height;
+
+	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_OPENGL) | SDL_DOUBLEBUF | ( flags & SDL_HWSURFACE );
+	current->w = width;
+	current->h = height;
+	current->pitch = SDL_ANDROID_sFakeWindowWidth * ANDROID_BYTESPERPIXEL;
+	current->pixels = NULL;
 	
 	if( ! sdl_opengl )
 	{
@@ -270,16 +275,24 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		}
 		SDL_GetRendererInfo(&SDL_VideoRendererInfo);
 		
-		// We're not allowing locking videosurface yet
-		/*
-		memBuffer = SDL_malloc(width * height * ANDROID_BYTESPERPIXEL);
-		if ( ! memBuffer ) {
-			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
-			SDL_SetError("Couldn't allocate buffer for requested mode");
-			return(NULL);
+		current->hwdata = NULL;
+		if( ! (flags & SDL_HWSURFACE) )
+		{
+			current->pixels = SDL_malloc(width * height * ANDROID_BYTESPERPIXEL);
+			if ( ! current->pixels ) {
+				__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
+				SDL_SetError("Couldn't allocate buffer for requested mode");
+				return(NULL);
+			}
+			SDL_memset(current->pixels, 0, width * height * ANDROID_BYTESPERPIXEL);
+			current->hwdata = (struct private_hwdata *)SDL_CreateTexture(SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STATIC, width, height);
+			if( !current->hwdata ) {
+				SDL_free(current->pixels);
+				current->pixels = NULL;
+				SDL_OutOfMemory();
+				return(-1);
+			}
 		}
-		SDL_memset(memBuffer, 0, width * height * ANDROID_BYTESPERPIXEL);
-		*/
 	}
 
 	/* Allocate the new pixel format for the screen */
@@ -297,11 +310,6 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	}
 
 	/* Set up the new mode framebuffer */
-	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_OPENGL) | SDL_DOUBLEBUF | SDL_HWSURFACE | SDL_HWACCEL;
-	current->w = width;
-	current->h = height;
-	current->pitch = SDL_ANDROID_sFakeWindowWidth * ANDROID_BYTESPERPIXEL;
-	current->pixels = memBuffer;
 	SDL_CurrentVideoSurface = current;
 
 	/* We're done */
@@ -315,6 +323,11 @@ void ANDROID_VideoQuit(_THIS)
 {
 	if( ! sdl_opengl )
 	{
+		if( SDL_CurrentVideoSurface->hwdata )
+			SDL_DestroyTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata);
+		if( SDL_CurrentVideoSurface->pixels )
+			SDL_free(SDL_CurrentVideoSurface->pixels);
+		SDL_CurrentVideoSurface->pixels = NULL;
 		SDL_CurrentVideoSurface = NULL;
 		SDL_DestroyWindow(SDL_VideoWindow);
 		SDL_VideoWindow = NULL;
@@ -325,11 +338,6 @@ void ANDROID_VideoQuit(_THIS)
 
 	int i;
 	
-	if (this->screen->pixels != NULL)
-	{
-		SDL_free(this->screen->pixels);
-		this->screen->pixels = NULL;
-	}
 	/* Free video mode lists */
 	for ( i=0; i<SDL_NUMMODES; ++i ) {
 		if ( SDL_modelist[i] != NULL ) {
@@ -556,7 +564,11 @@ int ANDROID_HWBlit(SDL_Surface* src, SDL_Rect* srcrect, SDL_Surface* dst, SDL_Re
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_HWBlit(): blitting SW");
 		return(src->map->sw_blit(src, srcrect, dst, dstrect));
 	}
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_HWBlit(): blitting HW");
+	if( src == SDL_CurrentVideoSurface )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_HWBlit(): reading from screen surface not supported");
+		return(-1);
+	}
 	
 	return SDL_RenderCopy((struct SDL_Texture *)src->hwdata, srcrect, dstrect);
 };
@@ -635,6 +647,15 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 {
 
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_FlipHWSurface()");
+	if( SDL_CurrentVideoSurface->hwdata && SDL_CurrentVideoSurface->pixels )
+	{
+		SDL_Rect rect;
+		rect.x = 0;
+		rect.y = 0;
+		rect.w = SDL_CurrentVideoSurface->w;
+		rect.h = SDL_CurrentVideoSurface->h;
+		SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, SDL_CurrentVideoSurface->pixels, SDL_CurrentVideoSurface->pitch);
+	}
 
 	SDL_ANDROID_CallJavaSwapBuffers();
 
