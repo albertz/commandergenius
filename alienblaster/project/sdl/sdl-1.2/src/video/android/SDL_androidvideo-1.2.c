@@ -290,7 +290,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 				SDL_free(current->pixels);
 				current->pixels = NULL;
 				SDL_OutOfMemory();
-				return(-1);
+				return(NULL);
 			}
 		}
 	}

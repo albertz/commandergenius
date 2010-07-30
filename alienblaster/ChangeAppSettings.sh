@@ -48,7 +48,7 @@ if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
 fi
 
-echo -n "\nApplication uses mouse (y) or (n), if (n) the screen touch will be mapped to Enter ($AppUsesMouse): "
+echo -n "\nApplication uses mouse (y) or (n) or (KEYCODE), if (KEYCODE) the screen touch will be mapped to KEYCODE ($AppUsesMouse): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesMouse="$var"
@@ -64,6 +64,12 @@ echo -n "\nApplication uses joystick (y) or (n), the accelerometer (2-axis) or o
 read var
 if [ -n "$var" ] ; then
 	AppUsesJoystick="$var"
+fi
+
+echo -n "\nRedefine common keys - MENU SEARCH VOLUMEUP VOLUMEDOWN ($RedefinedKeys): "
+read var
+if [ -n "$var" ] ; then
+	RedefinedKeys="$var"
 fi
 
 echo -n "\nEnable multi-ABI binary, with hardware FPU support - \nit will also work on old devices, but .apk size is 2x bigger (y) or (n) ($MultiABI): "
@@ -131,6 +137,7 @@ echo NeedDepthBuffer=$NeedDepthBuffer >> AppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AppSettings.cfg
+echo RedefinedKeys=\"$RedefinedKeys\" >> AppSettings.cfg
 echo MultiABI=$MultiABI >> AppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AppSettings.cfg
@@ -159,9 +166,13 @@ if [ "$NeedDepthBuffer" = "y" ] ; then
 else
 	NeedDepthBuffer=false
 fi
+MouseKeycode=UNKNOWN
 if [ "$AppUsesMouse" = "y" ] ; then
 	AppUsesMouse=true
+elif [ "$AppUsesMouse" = "n" ] ; then
+	AppUsesMouse=false
 else
+	MouseKeycode=$AppUsesMouse
 	AppUsesMouse=false
 fi
 if [ "$AppNeedsArrowKeys" = "y" ] ; then
@@ -174,6 +185,14 @@ if [ "$AppUsesJoystick" = "y" ] ; then
 else
 	AppUsesJoystick=false
 fi
+
+
+RedefinedKeycodes="-DSDL_ANDROID_KEYCODE_MOUSE=$MouseKeycode"
+KEY2=0
+for KEY in $RedefinedKeys; do
+	RedefinedKeycodes="$RedefinedKeycodes -DSDL_ANDROID_KEYCODE_$KEY2=$KEY"
+	KEY2=`expr $KEY2 '+' 1`
+done
 
 if [ "$MultiABI" = "y" ] ; then
 	MultiABI="armeabi armeabi-v7a"
@@ -230,7 +249,8 @@ cat project/jni/Android.mk | \
 	sed "s^SDL_CURDIR_PATH := .*^SDL_CURDIR_PATH := $DataPath^" | \
 	sed "s^SDL_VIDEO_RENDER_RESIZE := .*^SDL_VIDEO_RENDER_RESIZE := $SdlVideoResize^" | \
 	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" |
-	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" > \
+	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
+	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes^" > \
 	project/jni/Android.mk.1
 if [ -n "`diff -w project/jni/Android.mk.1 project/jni/Android.mk`" ] ; then
 	mv -f project/jni/Android.mk.1 project/jni/Android.mk

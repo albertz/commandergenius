@@ -288,9 +288,9 @@ void JE_helpSystem( JE_byte startTopic )
 								break;
 						}
 					}
-				} while (!(lastkey_sym == SDLK_ESCAPE || lastkey_sym == SDLK_RETURN));
+				} while (!(lastkey_sym == SDLK_ESCAPE || lastkey_sym == SDLK_RETURN || lastkey_sym == SDLK_SPACE));
 
-				if (lastkey_sym == SDLK_RETURN)
+				if (lastkey_sym == SDLK_RETURN || lastkey_sym == SDLK_SPACE)
 				{
 					page = topicStart[menu-1];
 					JE_playSampleNum(S_CLICK);
@@ -655,6 +655,7 @@ void JE_loadScreen( void )
 				}
 				break;
 			case SDLK_RETURN:
+			case SDLK_SPACE:
 				if (sel < max)
 				{
 					if (saveFiles[sel - 1].level > 0)
@@ -994,6 +995,7 @@ void JE_highScoreScreen( void )
 			switch (lastkey_sym)
 			{
 			case SDLK_RETURN:
+			case SDLK_SPACE:
 			case SDLK_ESCAPE:
 				quit = true;
 				break;
@@ -1215,6 +1217,7 @@ JE_boolean JE_inGameSetup( void )
 			switch (lastkey_sym)
 			{
 				case SDLK_RETURN:
+				case SDLK_SPACE:
 					JE_playSampleNum(S_SELECT);
 					switch (sel)
 					{
@@ -1597,7 +1600,7 @@ void JE_highScoreCheck( void )
 						lastkey_char = toupper(lastkey_char);
 						switch(lastkey_char)
 						{
-							case ' ':
+							//case ' ':
 							case '-':
 							case '.':
 							case ',':
@@ -1640,6 +1643,7 @@ void JE_highScoreCheck( void )
 								cancel = true;
 								break;
 							case SDLK_RETURN:
+							case SDLK_SPACE:
 								quit = true;
 								break;
 						}
@@ -2428,7 +2432,7 @@ void JE_operation( JE_byte slot )
 				lastkey_char = toupper(lastkey_char);
 				switch (lastkey_char)
 				{
-					case ' ':
+					//case ' ':
 					case '-':
 					case '.':
 					case ',':
@@ -2473,6 +2477,7 @@ void JE_operation( JE_byte slot )
 						JE_playSampleNum(S_SPRING);
 						break;
 					case SDLK_RETURN:
+					case SDLK_SPACE:
 						quit = true;
 						JE_saveGame(slot, stemp);
 						JE_playSampleNum(S_SELECT);

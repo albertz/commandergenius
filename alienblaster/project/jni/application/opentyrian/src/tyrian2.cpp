@@ -3678,6 +3678,7 @@ bool JE_titleScreen( JE_boolean animate )
 					quit = true;
 					break;
 				case SDLK_RETURN:
+				case SDLK_SPACE:
 					JE_playSampleNum(S_SELECT);
 					switch (menu)
 					{

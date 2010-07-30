@@ -76,6 +76,11 @@ static SDL_scancode TranslateKey(int scancode, SDL_keysym *keysym)
 	return keymap[scancode];
 }
 
+static SDL_scancode GetKeysym(SDL_scancode scancode, SDL_keysym *keysym)
+{
+	return scancode;
+}
+
 #define SDL_SendKeyboardKey(X, Y) SDL_SendKeyboardKey(X, Y, SDL_FALSE)
 
 #else
@@ -150,7 +155,27 @@ static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
 	return(keysym);
 }
 
+static SDL_keysym *GetKeysym(SDLKey scancode, SDL_keysym *keysym)
+{
+	/* Sanity check */
+
+	/* Set the keysym information */
+	keysym->scancode = scancode;
+	keysym->sym = scancode;
+	keysym->mod = KMOD_NONE;
+
+	/* If UNICODE is on, get the UNICODE value for the key */
+	keysym->unicode = 0;
+	if ( SDL_TranslateUNICODE ) {
+		/* Populate the unicode field with the ASCII value */
+		keysym->unicode = scancode;
+	}
+	return(keysym);
+}
+
 #endif
+
+#define SDL_KEY_VAL(X) X
 
 static int isTrackballUsed = 0;
 static int isMouseUsed = 0;
@@ -164,9 +189,13 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 {
 	if( !isMouseUsed )
 	{
+		#ifndef SDL_ANDROID_KEYCODE_MOUSE
+		#define SDL_ANDROID_KEYCODE_MOUSE RETURN
+		#endif
 		SDL_keysym keysym;
-		if( action != MOUSE_MOVE )
-			SDL_SendKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, TranslateKey(KEYCODE_ENTER ,&keysym) );
+		if( action != MOUSE_MOVE && SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_MOUSE)) != SDL_KEY(UNKNOWN) )
+			SDL_SendKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, GetKeysym(SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_MOUSE)) ,&keysym) );
+		return;
 	}
 #if SDL_VIDEO_RENDER_RESIZE
 	// Translate mouse coordinates
@@ -274,13 +303,28 @@ void ANDROID_InitOSKeymap()
 
   keymap[KEYCODE_BACK] = SDL_KEY(ESCAPE);
 
-  // HTC Evo has only two keys - Menu and Back, and all games require Enter. (Also Volume Up/Down, but they are hard to reach) 
-  // TODO: make this configurable
-  keymap[KEYCODE_MENU] = SDL_KEY(RETURN);
-  if( !isMouseUsed )
-    keymap[KEYCODE_MENU] = SDL_KEY(LCTRL);
+#ifndef SDL_ANDROID_KEYCODE_0
+#define SDL_ANDROID_KEYCODE_0 LCTRL
+#define SDL_ANDROID_KEYCODE_1 END
+#define SDL_ANDROID_KEYCODE_2 PAGEUP
+#define SDL_ANDROID_KEYCODE_3 PAGEDOWN
+#endif
 
-  keymap[KEYCODE_CALL] = SDL_KEY(RCTRL);
+  // TODO: make this configurable
+  keymap[KEYCODE_MENU] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_0));
+
+  keymap[KEYCODE_SEARCH] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
+  keymap[KEYCODE_CALL] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
+  keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
+
+  //keymap[KEYCODE_CALL] = SDL_KEY(RCTRL);
+  //keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(LALT);
+  
+  keymap[KEYCODE_VOLUME_UP] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_2));
+  keymap[KEYCODE_VOLUME_DOWN] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_3));
+  
+  keymap[KEYCODE_HOME] = SDL_KEY(HOME); // Cannot be used in application
+
   keymap[KEYCODE_ENDCALL] = SDL_KEY(LSHIFT);
   keymap[KEYCODE_CAMERA] = SDL_KEY(RSHIFT);
   keymap[KEYCODE_POWER] = SDL_KEY(RALT);
@@ -302,16 +346,11 @@ void ANDROID_InitOSKeymap()
   keymap[KEYCODE_DPAD_DOWN] = SDL_KEY(DOWN);
   keymap[KEYCODE_DPAD_LEFT] = SDL_KEY(LEFT);
   keymap[KEYCODE_DPAD_RIGHT] = SDL_KEY(RIGHT);
-  keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(LALT);
 
   keymap[KEYCODE_SOFT_LEFT] = SDL_KEY(KP_4);
   keymap[KEYCODE_SOFT_RIGHT] = SDL_KEY(KP_6);
   keymap[KEYCODE_ENTER] = SDL_KEY(RETURN); //SDL_KEY(KP_ENTER);
 
-  keymap[KEYCODE_VOLUME_UP] = SDL_KEY(PAGEUP);
-  keymap[KEYCODE_VOLUME_DOWN] = SDL_KEY(PAGEDOWN);
-  keymap[KEYCODE_SEARCH] = SDL_KEY(END);
-  keymap[KEYCODE_HOME] = SDL_KEY(HOME);
 
   keymap[KEYCODE_CLEAR] = SDL_KEY(BACKSPACE);
   keymap[KEYCODE_A] = SDL_KEY(A);
@@ -368,8 +407,8 @@ void ANDROID_InitOSKeymap()
   keymap[KEYCODE_SYM] = SDL_KEY(LGUI);
   keymap[KEYCODE_NUM] = SDL_KEY(NUMLOCKCLEAR);
 
-  keymap[KEYCODE_ALT_LEFT] = SDL_KEY(KP_7); // Used by orientation sensor code, do not change
-  keymap[KEYCODE_ALT_RIGHT] = SDL_KEY(KP_9); // Used by orientation sensor code, do not change
+  keymap[KEYCODE_ALT_LEFT] = SDL_KEY(KP_7);
+  keymap[KEYCODE_ALT_RIGHT] = SDL_KEY(KP_9);
 
   keymap[KEYCODE_SHIFT_LEFT] = SDL_KEY(F1);
   keymap[KEYCODE_SHIFT_RIGHT] = SDL_KEY(F2);

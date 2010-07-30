@@ -79,6 +79,7 @@ bool select_gameplay( void )
 				break;
 
 			case SDLK_RETURN:
+			case SDLK_SPACE:
 				if (gameplay == 4)
 				{
 					JE_playSampleNum(S_SPRING);
@@ -155,6 +156,7 @@ bool select_episode( void )
 				break;
 
 			case SDLK_RETURN:
+			case SDLK_SPACE:
 				if (!episodeAvail[episode - 1])
 				{
 					JE_playSampleNum(S_SPRING);
@@ -240,6 +242,7 @@ bool select_difficulty( void )
 				break;
 
 			case SDLK_RETURN:
+			case SDLK_SPACE:
 				JE_playSampleNum(S_SELECT);
 				/* fading handled elsewhere
 				fade_black(10); */

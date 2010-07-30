@@ -22,12 +22,16 @@
 #include "video.h"
 #include "vga256d.h"
 
-#if defined(TARGET_GP2X) || defined(TARGET_DINGUX) || defined(ANDROID)
+#if defined(TARGET_GP2X) || defined(TARGET_DINGUX)
 bool has_mouse = false;
 #else
 bool has_mouse = true;
 #endif
+#if defined(ANDROID)
+bool mouse_has_three_buttons = false;
+#else
 bool mouse_has_three_buttons = true;
+#endif
 
 JE_word lastMouseX, lastMouseY;
 JE_byte mouseCursor;

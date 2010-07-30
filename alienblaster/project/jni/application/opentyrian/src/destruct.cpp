@@ -836,7 +836,7 @@ enum de_mode_t JE_modeSelect( void )
 			mode = MODE_NONE; /* User is quitting, return failure */
 			break;
 		}
-		if (keysactive[SDLK_RETURN])
+		if (keysactive[SDLK_RETURN] || keysactive[SDLK_SPACE])
 		{
 			break; /* User has selected, return choice */
 		}

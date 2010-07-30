@@ -168,6 +168,7 @@ void opentyrian_menu( void )
 					}
 					break;
 				case SDLK_RETURN:
+				case SDLK_SPACE:
 					switch (sel)
 					{
 						case 0: /* About */
