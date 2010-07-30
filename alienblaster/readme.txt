@@ -46,8 +46,9 @@ How to compile your own application
 When porting you own app, first of all ensure that your application supports
 native RGB_565 pixel format and AUDIO_S8 or AUDIO_S16 audio format
 (there is RGB_565 pixelformat even for OpenGL, not BGR_565 as all other OpenGL implementation have).
-Colorkey images are supported using RGBA_5551 pixelformat with 1-bit alpha,
-alpha surfaces have RGBA_4444 format. See file project/jni/application/alienblaster/SdlForwardCompat.h
+Colorkey images are supported using RGBA_5551 pixelformat with 1-bit alpha (SDL does conversion internally,
+for you they are just RGB_565 surfaces), alpha surfaces have RGBA_4444 format. 
+See file project/jni/application/alienblaster/SdlForwardCompat.h
 to learn how to make your application use SDL 1.3 instead of SDL 1.2 without much pain.
 HTC G1/Nexus One has native screen resolution 480x320, HTC Evo has 800x480, you may toggle automatic
 screen resizing in ChangeAppSettings.sh and draw to virtual 640x480 screen - 
@@ -55,6 +56,28 @@ it will be HW accelerated and will not impact performance much.
 SDL_ListModes()[0] will always return native screen resolution.
 Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
 texture on HTC G1. Software surfaces may be of any size of course (but you don't want to do expensive memcpy).
+
+Alternatively, SDL 1.2 is available too, you may use it with SW video as usual, however if you want HW acceleration
+there are few restrictions: you cannot currently blit SW surface to screen, it should be only HW surface,
+also alpha-surfaces seem to not work (did not check it thoroughly) - you still can use per-surface alpha.
+Basically your code should be like:
+
+// Init HW-accelerated video
+SDL_SetVideoMode( 640, 480, 16, SDL_DOUBLEBUF | SDL_HWSURFACE );
+// Load graphics
+SDL_Surface *sprite = IMG_Load( "sprite.png" );
+// Set pink color as transparent
+SDL_SetColorKey( sprite, SDL_SRCCOLORKEY, SDL_MapRGB(sprite->format, 255, 0, 255) );
+// Create HW-accelerated surface
+SDL_Surface * hwSprite = SDL_DisplayFormat(sprite);
+// Set per-surface alpha, if necessary
+SDL_SetAlpha( hwSprite, SDL_SRCALPHA, 128 );
+// Blit it in HW-accelerated way
+SDL_BlitSurface(hwSprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
+// Wrong, blitting SW surfaces to screen not supported
+SDL_BlitSurface(sprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
+// Wrong, copying from video surface not supported
+SDL_BlitSurface(SDL_GetVideoSurface(), sourceRect, sprite, &targetRect);
 
 To compile your own app, put your app sources into project/jni/application dir, and change symlink "src"
 to point to your app, then launch script ChangeAppSettings.sh - it will ask few questions and modify some Java code.

@@ -1,6 +1,6 @@
 
 # The namespace in Java file, with dots replaced with underscores
-SDL_JAVA_PACKAGE_PATH := net_sourceforge_jooleem
+SDL_JAVA_PACKAGE_PATH := com_googlecode_opentyrian
 
 # Path to shared libraries - Android 1.6 cannot load them properly, thus we have to specify absolute path here
 # SDL_SHARED_LIBRARIES_PATH := /data/data/de.schwardtnet.alienblaster/lib
@@ -10,7 +10,7 @@ SDL_JAVA_PACKAGE_PATH := net_sourceforge_jooleem
 # Typically /sdcard/alienblaster 
 # Or /data/data/de.schwardtnet.alienblaster/files if you're planning to unpack data in application private folder
 # Your application will just set current directory there
-SDL_CURDIR_PATH := net.sourceforge.jooleem
+SDL_CURDIR_PATH := com.googlecode.opentyrian
 
 # Android Dev Phone G1 has trackball instead of cursor keys, and 
 # sends trackball movement events as rapid KeyDown/KeyUp events,
@@ -23,7 +23,7 @@ SDL_TRACKBALL_KEYUP_DELAY := 1
 # resized in HW-accelerated way, however it eats a tiny bit of CPU
 SDL_VIDEO_RENDER_RESIZE := 1
 
-COMPILED_LIBRARIES := sdl_mixer sdl_image sdl_ttf
+COMPILED_LIBRARIES := sdl_net
 
 APPLICATION_ADDITIONAL_CFLAGS := -finline-functions -O2
 
