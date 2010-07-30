@@ -655,6 +655,7 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 		rect.w = SDL_CurrentVideoSurface->w;
 		rect.h = SDL_CurrentVideoSurface->h;
 		SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, SDL_CurrentVideoSurface->pixels, SDL_CurrentVideoSurface->pitch);
+		SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &rect);
 	}
 
 	SDL_ANDROID_CallJavaSwapBuffers();
