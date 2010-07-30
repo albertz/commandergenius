@@ -143,7 +143,7 @@ void Engine::Run()
 		m_stateStack.back()->Update(this);
 		
 		// Redraw only if necessary:
-		//if (m_redraw)
+		if (m_redraw)
 			m_stateStack.back()->Draw(this);
 			
 		m_redraw = false;
@@ -277,7 +277,7 @@ void Engine::InitSDL()
 
 	// Set the video mode:
 	if((m_screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, vidInfo->vfmt->BitsPerPixel,
-		SDL_HWSURFACE|SDL_DOUBLEBUF)) == 0) /* The code does not support SDL_DOUBLEBUF, I wonder how it worked before */
+		SDL_SWSURFACE )) == 0) /* The code does not support SDL_DOUBLEBUF, I wonder how it worked before */
 	{
 		ERR("Engine::InitSDL() - SDL_SetVideoMode failed (" << SDL_GetError() << ")");
     }
@@ -306,14 +306,6 @@ void Engine::ShowLoadingScreen()
 	TRAP(surface == NULL, "Engine::ShowLoadingScreen() - File not found");
 
 	SDL_FillRect(m_screen, NULL, 0x000000);
-	
-	SDL_Surface *surface2 = SDL_DisplayFormat(surface);
-	SDL_FreeSurface(surface);
-	surface = surface2;
-
-	SDL_BlitSurface(surface, NULL, m_screen, NULL);
-
-	SDL_Flip(m_screen); 
 
 	SDL_BlitSurface(surface, NULL, m_screen, NULL);
 

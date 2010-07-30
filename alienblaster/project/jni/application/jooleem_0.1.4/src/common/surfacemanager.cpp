@@ -52,19 +52,16 @@ SDL_Surface* SurfaceManager::AddSurface(string ID, string fileName)
 
 	// Load the image:
 	SDL_Surface *surface = IMG_Load(fileName.c_str());
+	
 	TRAP(surface == NULL, "SurfaceManager::AddSurface() - Could not open " << fileName); 
-	SDL_Surface *surface2 = SDL_DisplayFormat(surface);
-	SDL_FreeSurface(surface);
-	surface = surface2;
-	TRAP(surface == NULL, "SurfaceManager::AddSurface() - Could not convert to HW surface " << fileName); 
 
 	// Convert it to the framebuffer's display format:
-	//SDL_Surface *converted = SDL_DisplayFormatAlpha(surface);
-	//SDL_FreeSurface(surface);
+	SDL_Surface *converted = SDL_DisplayFormatAlpha(surface);
+	SDL_FreeSurface(surface);
 
-	m_map[ID] = surface;
+	m_map[ID] = converted;
 
-	return surface;
+	return converted;
 }
 
 
