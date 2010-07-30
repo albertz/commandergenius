@@ -60,10 +60,16 @@ if [ -n "$var" ] ; then
 	AppNeedsArrowKeys="$var"
 fi
 
-echo -n "\nApplication uses joystick (y) or (n), the accelerometer (2-axis) or orientation sensor (3-axis)\nwill be used as joystick if not used as arrow keys ($AppUsesJoystick): "
+echo -n "\nApplication uses joystick (y) or (n), the accelerometer (2-axis) or orientation sensor (3-axis)\nwill be used as joystick 0 if not used as arrow keys ($AppUsesJoystick): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesJoystick="$var"
+fi
+
+echo -n "\nApplication uses multitouch (y) or (n), multitouch events are passed as 4-axis joysticks 1-3, including pressure and size ($AppUsesMultitouch): "
+read var
+if [ -n "$var" ] ; then
+	AppUsesMultitouch="$var"
 fi
 
 echo -n "\nRedefine common keys - MENU SEARCH VOLUMEUP VOLUMEDOWN ($RedefinedKeys): "
@@ -137,6 +143,7 @@ echo NeedDepthBuffer=$NeedDepthBuffer >> AppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AppSettings.cfg
+echo AppUsesMultitouch=$AppUsesMultitouch >> AppSettings.cfg
 echo RedefinedKeys=\"$RedefinedKeys\" >> AppSettings.cfg
 echo MultiABI=$MultiABI >> AppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AppSettings.cfg
@@ -185,7 +192,11 @@ if [ "$AppUsesJoystick" = "y" ] ; then
 else
 	AppUsesJoystick=false
 fi
-
+if [ "$AppUsesMultitouch" = "y" ] ; then
+	AppUsesMultitouch=true
+else
+	AppUsesMultitouch=false
+fi
 
 RedefinedKeycodes="-DSDL_ANDROID_KEYCODE_MOUSE=$MouseKeycode"
 KEY2=0
@@ -238,6 +249,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \
 	sed "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" | \
 	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \
+	sed "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
 	sed "s/public LoadLibrary() .*/public LoadLibrary() { $LibrariesToLoad };/" > \
 	project/src/Globals.java.1
