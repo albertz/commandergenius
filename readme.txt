@@ -170,3 +170,15 @@ where you can toggle on-screen keyboard, bind existing keys like volume up/down 
 and configure other actions like accelerometer tilt as keypresses.
 
 5. Export phone vibrator to SDL - interface is available in SDL 1.3
+
+
+Games to port
+=============
+
+Ur-Quan Masters (epic game, must have)
+LBreakout2
+Commander Genius (only data files for shareware version available for free)
+OpenJazz (only data files for shareware version available for free)
+OpenLieroX (will be damn hard to do, I wrote the code partially)
+TeeWorlds (only if they have nice clean code)
+AdvanceMAME (they already have their own port, yet it's unfinished)
