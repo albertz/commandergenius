@@ -168,8 +168,26 @@ static inline SDL_keysym *GetKeysym(SDLKey scancode, SDL_keysym *keysym)
 
 enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
 
+enum { MAX_MULTITOUCH_POINTERS = 5 };
+
 extern int SDL_android_drawTouchscreenKeyboard();
 
-extern int SDL_android_processTouchscreenKeyboard(int x, int y, int action);
+extern int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointerId);
+
+#ifndef SDL_ANDROID_KEYCODE_0
+#define SDL_ANDROID_KEYCODE_0 RETURN
+#endif
+#ifndef SDL_ANDROID_KEYCODE_1
+#define SDL_ANDROID_KEYCODE_1 END
+#endif
+#ifndef SDL_ANDROID_KEYCODE_2
+#define SDL_ANDROID_KEYCODE_2 PAGEUP
+#endif
+#ifndef SDL_ANDROID_KEYCODE_3
+#define SDL_ANDROID_KEYCODE_3 PAGEDOWN
+#endif
+#ifndef SDL_ANDROID_KEYCODE_4
+#define SDL_ANDROID_KEYCODE_4 LCTRL
+#endif
 
 #endif

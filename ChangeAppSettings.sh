@@ -48,13 +48,13 @@ if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
 fi
 
-echo -n "\nApplication uses mouse (y) or (n) or (KEYCODE), if (KEYCODE) the screen touch will be mapped to KEYCODE ($AppUsesMouse): "
+echo -n "\nApplication uses mouse, disables touchscreen keyboard currently (y) or (n) ($AppUsesMouse): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesMouse="$var"
 fi
 
-echo -n "\nApplication needs arrow keys (y) or (n), if (y) the accelerometer will be used\nas arrow keys if phone does not have dpad/trackball ($AppNeedsArrowKeys): "
+echo -n "\nApplication needs arrow keys (y) or (n), if (y) the accelerometer or touchscreen keyboard will be used\nas arrow keys if phone does not have dpad/trackball ($AppNeedsArrowKeys): "
 read var
 if [ -n "$var" ] ; then
 	AppNeedsArrowKeys="$var"
@@ -66,13 +66,15 @@ if [ -n "$var" ] ; then
 	AppUsesJoystick="$var"
 fi
 
-echo -n "\nApplication uses multitouch (y) or (n), multitouch events are passed as 4-axis joysticks 1-3, including pressure and size ($AppUsesMultitouch): "
+echo -n "\nApplication uses multitouch (y) or (n), multitouch events are passed as 4-axis joysticks 1-5, including pressure and size ($AppUsesMultitouch): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesMultitouch="$var"
 fi
 
-echo -n "\nRedefine common keys - MENU SEARCH VOLUMEUP VOLUMEDOWN ($RedefinedKeys): "
+echo -n "\nRedefine common keys to SDL keysyms: TOUCHSCREEN SEARCH/CALL/DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU"
+echo -n "\nMENU hardware key and TOUCHSCREEN virtual 'key' are available on all devices, other keys may be absent"
+echo -n "\nThe same key values are used if touchscreen keyboard is enabled ($RedefinedKeys): "
 read var
 if [ -n "$var" ] ; then
 	RedefinedKeys="$var"

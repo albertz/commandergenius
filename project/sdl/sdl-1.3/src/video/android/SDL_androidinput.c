@@ -53,18 +53,9 @@
 
 #include "SDL_androidvideo.h"
 #include "SDL_androidinput.h"
-
+#include "jniwrapperstuff.h"
 
 SDLKey SDL_android_keymap[KEYCODE_LAST+1];
-
-/* JNI-C++ wrapper stuff */
-
-#ifndef SDL_JAVA_PACKAGE_PATH
-#error You have to define SDL_JAVA_PACKAGE_PATH to your package path with dots replaced with underscores, for example "com_example_SanAngeles"
-#endif
-#define JAVA_EXPORT_NAME2(name,package) Java_##package##_##name
-#define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
-#define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
 
 static int isTrackballUsed = 0;
@@ -72,14 +63,20 @@ static int isMouseUsed = 0;
 static int isJoystickUsed = 0;
 static int isMultitouchUsed = 0;
 static int isTouchscreenKeyboardUsed = 0;
-static SDL_Joystick *CurrentJoysticks[4] = {NULL, NULL, NULL, NULL};
+static SDL_Joystick *CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL,};
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
 {
+	if(pointerId < 0)
+		pointerId = 0;
+	if(pointerId > MAX_MULTITOUCH_POINTERS)
+		pointerId = MAX_MULTITOUCH_POINTERS;
+
 	if( isTouchscreenKeyboardUsed )
-		if( SDL_android_processTouchscreenKeyboard(x, y, action) )
+		if( SDL_android_processTouchscreenKeyboard(x, y, action, pointerId) )
 			return;
+
 #if SDL_VIDEO_RENDER_RESIZE
 	// Translate mouse coordinates
 
@@ -98,27 +95,20 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 
 	if( isMultitouchUsed )
 	{
-		if(pointerId < 0)
-			pointerId = 0;
-		if(pointerId > 2)
-			pointerId = 2;
 		pointerId++;
 		if( CurrentJoysticks[pointerId] )
 		{
-			SDL_PrivateJoystickAxis(CurrentJoysticks[0], 0, x);
-			SDL_PrivateJoystickAxis(CurrentJoysticks[0], 1, y);
-			SDL_PrivateJoystickAxis(CurrentJoysticks[0], 2, force);
-			SDL_PrivateJoystickAxis(CurrentJoysticks[0], 3, radius);
+			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 0, x);
+			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 1, y);
+			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 2, force);
+			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 3, radius);
 		}
 	}
 	if( !isMouseUsed )
 	{
-		#ifndef SDL_ANDROID_KEYCODE_MOUSE
-		#define SDL_ANDROID_KEYCODE_MOUSE RETURN
-		#endif
 		SDL_keysym keysym;
-		if( action != MOUSE_MOVE && SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_MOUSE)) != SDL_KEY(UNKNOWN) )
-			SDL_SendKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, GetKeysym(SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_MOUSE)) ,&keysym) );
+		if( action != MOUSE_MOVE )
+			SDL_SendKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, GetKeysym(SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_0)) ,&keysym) );
 		return;
 	}
 
@@ -219,15 +209,8 @@ void ANDROID_InitOSKeymap()
 
   keymap[KEYCODE_BACK] = SDL_KEY(ESCAPE);
 
-#ifndef SDL_ANDROID_KEYCODE_0
-#define SDL_ANDROID_KEYCODE_0 LCTRL
-#define SDL_ANDROID_KEYCODE_1 END
-#define SDL_ANDROID_KEYCODE_2 PAGEUP
-#define SDL_ANDROID_KEYCODE_3 PAGEDOWN
-#endif
-
   // TODO: make this configurable
-  keymap[KEYCODE_MENU] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_0));
+  keymap[KEYCODE_MENU] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_4));
 
   keymap[KEYCODE_SEARCH] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
   keymap[KEYCODE_CALL] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
@@ -594,7 +577,7 @@ int processAndroidTrackball(int key, int action)
 
 int SDL_SYS_JoystickInit(void)
 {
-	SDL_numjoysticks = 4;
+	SDL_numjoysticks = MAX_MULTITOUCH_POINTERS+1;
 	return(0);
 }
 
@@ -645,7 +628,7 @@ void SDL_SYS_JoystickClose(SDL_Joystick *joystick)
 void SDL_SYS_JoystickQuit(void)
 {
 	int i;
-	for(i=0; i<4; i++)
+	for(i=0; i<MAX_MULTITOUCH_POINTERS+1; i++)
 		CurrentJoysticks[i] = NULL;
 	return;
 }

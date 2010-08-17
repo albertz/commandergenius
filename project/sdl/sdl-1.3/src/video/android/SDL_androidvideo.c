@@ -42,6 +42,7 @@
 #include "../../events/SDL_events_c.h"
 
 #include "SDL_androidvideo.h"
+#include "jniwrapperstuff.h"
 
 
 // The device screen dimensions to draw on
@@ -59,15 +60,6 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 	return (*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaSwapBuffers );
 }
 
-
-/* JNI-C++ wrapper stuff */
-
-#ifndef SDL_JAVA_PACKAGE_PATH
-#error You have to define SDL_JAVA_PACKAGE_PATH to your package path with dots replaced with underscores, for example "com_example_SanAngeles"
-#endif
-#define JAVA_EXPORT_NAME2(name,package) Java_##package##_##name
-#define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
-#define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint w, jint h )
