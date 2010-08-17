@@ -64,6 +64,7 @@ void load()
 void save()
 {
 	FILE * ff = fopen(fname, "w");
+	fprintf(ff, "/* This file should be edited using Touchscreen Editor utility */\n");
 	fprintf(ff, "#ifndef _TOUCHSCREENFONT_H_\n#define _TOUCHSCREENFONT_H_\n");
 	fprintf(ff, "#include <SDL_types.h>\n");
 	fprintf(ff, "typedef struct font_line_t { Uint8 x1, y1, x2, y2; } font_line_t;\n");
@@ -72,7 +73,7 @@ void save()
 		if( maxLines < font[i].size() )
 			maxLines = font[i].size();
 	fprintf(ff, "enum { FONT_MAX_LINES_PER_CHAR = %i };\n", maxLines);
-	fprintf(ff, "font_line_t font[%d][FONT_MAX_LINES_PER_CHAR] = {\n", (int)font.size());
+	fprintf(ff, "static font_line_t font[%d][FONT_MAX_LINES_PER_CHAR] = {\n", (int)font.size());
 	for( size_t i = 0; i < font.size(); i++ )
 	{
 		fprintf(ff, "\t{\n");

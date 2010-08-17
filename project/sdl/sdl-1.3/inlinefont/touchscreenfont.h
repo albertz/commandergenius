@@ -1,4 +1,4 @@
-
+/* This file should be edited using Touchscreen Editor utility */
 #ifndef _TOUCHSCREENFONT_H_
 #define _TOUCHSCREENFONT_H_
 #include <SDL_types.h>
