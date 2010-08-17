@@ -52,9 +52,10 @@
 #include "../../joystick/SDL_joystick_c.h"
 
 #include "SDL_androidvideo.h"
+#include "SDL_androidinput.h"
 
 
-static SDLKey keymap[KEYCODE_LAST+1];
+SDLKey SDL_android_keymap[KEYCODE_LAST+1];
 
 /* JNI-C++ wrapper stuff */
 
@@ -65,130 +66,20 @@ static SDLKey keymap[KEYCODE_LAST+1];
 #define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
-#if SDL_VERSION_ATLEAST(1,3,0)
-
-#define SDL_KEY2(X) SDL_SCANCODE_ ## X
-#define SDL_KEY(X) SDL_KEY2(X)
-
-static SDL_scancode TranslateKey(int scancode, SDL_keysym *keysym)
-{
-	if ( scancode >= SDL_arraysize(keymap) )
-		scancode = KEYCODE_UNKNOWN;
-	return keymap[scancode];
-}
-
-static SDL_scancode GetKeysym(SDL_scancode scancode, SDL_keysym *keysym)
-{
-	return scancode;
-}
-
-#define SDL_SendKeyboardKey(X, Y) SDL_SendKeyboardKey(X, Y, SDL_FALSE)
-
-#else
-
-#define SDL_KEY2(X) SDLK_ ## X
-#define SDL_KEY(X) SDL_KEY2(X)
-
-#define SDL_SendKeyboardKey SDL_PrivateKeyboard
-
-// Randomly redefining SDL 1.3 scancodes to SDL 1.2 keycodes
-#define KP_0 KP0
-#define KP_1 KP1
-#define KP_2 KP2
-#define KP_3 KP3
-#define KP_4 KP4
-#define KP_5 KP5
-#define KP_6 KP6
-#define KP_7 KP7
-#define KP_8 KP8
-#define KP_9 KP9
-#define NUMLOCKCLEAR NUMLOCK
-#define GRAVE DOLLAR
-#define APOSTROPHE QUOTE
-#define LGUI LMETA
-// Overkill haha
-#define A a
-#define B b
-#define C c
-#define D d
-#define E e
-#define F f
-#define G g
-#define H h
-#define I i
-#define J j
-#define K k
-#define L l
-#define M m
-#define N n
-#define O o
-#define P p
-#define Q q
-#define R r
-#define S s
-#define T t
-#define U u
-#define V v
-#define W w
-#define X x
-#define Y y
-#define Z z
-
-#define SDL_scancode SDLKey
-
-static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
-{
-	/* Sanity check */
-	if ( scancode >= SDL_arraysize(keymap) )
-		scancode = KEYCODE_UNKNOWN;
-
-	/* Set the keysym information */
-	keysym->scancode = scancode;
-	keysym->sym = keymap[scancode];
-	keysym->mod = KMOD_NONE;
-
-	/* If UNICODE is on, get the UNICODE value for the key */
-	keysym->unicode = 0;
-	if ( SDL_TranslateUNICODE ) {
-		/* Populate the unicode field with the ASCII value */
-		keysym->unicode = scancode;
-	}
-	return(keysym);
-}
-
-static SDL_keysym *GetKeysym(SDLKey scancode, SDL_keysym *keysym)
-{
-	/* Sanity check */
-
-	/* Set the keysym information */
-	keysym->scancode = scancode;
-	keysym->sym = scancode;
-	keysym->mod = KMOD_NONE;
-
-	/* If UNICODE is on, get the UNICODE value for the key */
-	keysym->unicode = 0;
-	if ( SDL_TranslateUNICODE ) {
-		/* Populate the unicode field with the ASCII value */
-		keysym->unicode = scancode;
-	}
-	return(keysym);
-}
-
-#endif
-
-#define SDL_KEY_VAL(X) X
 
 static int isTrackballUsed = 0;
 static int isMouseUsed = 0;
 static int isJoystickUsed = 0;
 static int isMultitouchUsed = 0;
+static int isTouchscreenKeyboardUsed = 0;
 static SDL_Joystick *CurrentJoysticks[4] = {NULL, NULL, NULL, NULL};
-
-enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
 {
+	if( isTouchscreenKeyboardUsed )
+		if( SDL_android_processTouchscreenKeyboard(x, y, action) )
+			return;
 #if SDL_VIDEO_RENDER_RESIZE
 	// Translate mouse coordinates
 
@@ -311,6 +202,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMultitouchUsed) ( JNIEnv*  env, jobject thiz)
 void ANDROID_InitOSKeymap()
 {
   int i;
+  SDLKey * keymap = SDL_android_keymap;
 
 #if (SDL_VERSION_ATLEAST(1,3,0))
   SDLKey defaultKeymap[SDL_NUM_SCANCODES];
@@ -320,8 +212,8 @@ void ANDROID_InitOSKeymap()
 
   // TODO: keys are mapped rather randomly
 
-  for (i=0; i<SDL_arraysize(keymap); ++i)
-    keymap[i] = SDL_KEY(UNKNOWN);
+  for (i=0; i<SDL_arraysize(SDL_android_keymap); ++i)
+    SDL_android_keymap[i] = SDL_KEY(UNKNOWN);
 
   keymap[KEYCODE_UNKNOWN] = SDL_KEY(UNKNOWN);
 
