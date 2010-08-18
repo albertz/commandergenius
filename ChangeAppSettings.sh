@@ -319,7 +319,7 @@ if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
 	rm -rf project/bin/ndk/local/*/objs/application project/bin/ndk/local/*/libapplication.so
 fi
 if [ "$CompiledLibrariesOld" '!=' "$CompiledLibraries" ]; then
-	rm -rf project/bin/ndk/local/*/*.so
+	rm -rf project/bin/ndk/local/*/*.so project/bin/ndk/local/*/objs/*
 fi
 
 echo Done

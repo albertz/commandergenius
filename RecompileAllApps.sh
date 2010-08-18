@@ -32,6 +32,8 @@ for APP1 in project/jni/application/*/AppSettings.cfg; do
 	fi
 	rm -f project/jni/application/src
 	ln -s $APP project/jni/application/src
+	rm -rf project/bin/ndk/local/*/libapplication.so project/bin/ndk/local/*/objs/application
+	rm -rf project/bin/ndk/local/*/libsdl*.so project/bin/ndk/local/*/objs/sdl*
 	./ChangeAppSettings.sh -a
 	echo Compiling $APP
 	OLDPATH="`pwd`"
