@@ -36,6 +36,7 @@ for APP1 in project/jni/application/*/AppSettings.cfg; do
 	echo Compiling $APP
 	OLDPATH="`pwd`"
 	( cd project && nice -n5 ndk-build -j2 V=1 && ant release && \
-	jarsigner -keystore "$KEYSTORE" -keypath "$PASSWORD" bin/DemoActivity-unsigned.apk $ALIAS && \
+	jarsigner -verbose -keystore "$KEYSTORE" -storepass "$PASSWORD" bin/DemoActivity-unsigned.apk $ALIAS && \
 	zipalign 4 bin/DemoActivity-unsigned.apk ../$APP.apk && cd .. ) || exit 1
+	exit 0
 done
