@@ -41,6 +41,7 @@
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
 
+#include "../SDL_sysvideo.h"
 #include "SDL_androidvideo.h"
 #include "jniwrapperstuff.h"
 

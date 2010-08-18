@@ -46,6 +46,7 @@
 #include "../../joystick/SDL_sysjoystick.h"
 #include "../../joystick/SDL_joystick_c.h"
 
+#include "../SDL_sysvideo.h"
 #include "SDL_androidvideo.h"
 
 

@@ -24,7 +24,6 @@
 
 #include "SDL_config.h"
 #include "SDL_video.h"
-#include "../SDL_sysvideo.h"
 
 extern void ANDROID_InitOSKeymap();
 
