@@ -20,13 +20,31 @@ import android.os.StatFs;
 class Settings
 {
 	static String SettingsFileName = "libsdl-settings.cfg";
+
+	static void Save(final MainActivity p)
+	{
+		try {
+			ObjectOutputStream out = new ObjectOutputStream(p.openFileOutput( SettingsFileName, p.MODE_WORLD_READABLE ));
+			out.writeBoolean(Globals.DownloadToSdcard);
+			out.writeBoolean(Globals.PhoneHasArrowKeys);
+			out.writeBoolean(Globals.PhoneHasTrackball);
+			out.writeBoolean(Globals.UseAccelerometerAsArrowKeys);
+			out.writeBoolean(Globals.UseTouchscreenKeyboard);
+			out.close();
+		} catch( FileNotFoundException e ) {
+		} catch( SecurityException e ) {
+		} catch ( IOException e ) {};
+	}
+
 	static void Load( final MainActivity p )
 	{
 		try {
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
 			Globals.DownloadToSdcard = settingsFile.readBoolean();
-			Globals.AppNeedsArrowKeys = settingsFile.readBoolean();
+			Globals.PhoneHasArrowKeys = settingsFile.readBoolean();
 			Globals.PhoneHasTrackball = settingsFile.readBoolean();
+			Globals.UseAccelerometerAsArrowKeys = settingsFile.readBoolean();
+			Globals.UseTouchscreenKeyboard = settingsFile.readBoolean();
 
 			startDownloader(p);
 			return;
@@ -86,7 +104,7 @@ class Settings
 
 	static void showKeyboardConfig(final MainActivity p)
 	{
-		if( ! Globals.AppNeedsArrowKeys ) 
+		if( ! Globals.AppNeedsArrowKeys )
 		{
 			Save(p);
 			startDownloader(p);
@@ -101,11 +119,11 @@ class Settings
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
-				Globals.AppNeedsArrowKeys = (item == 2);
+				Globals.PhoneHasArrowKeys = (item == 0);
 				Globals.PhoneHasTrackball = (item == 1);
 
 				dialog.dismiss();
-				showAccelermoeterConfig(p);
+				showAdditionalInputConfig(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -113,24 +131,23 @@ class Settings
 		alert.show();
 	}
 	
-	static void showAccelermoeterConfig(final MainActivity p)
+	static void showAdditionalInputConfig(final MainActivity p)
 	{
-		if( Globals.AppNeedsArrowKeys || Globals.AppUsesJoystick ) 
-		{
-			Save(p);
-			startDownloader(p);
-			return;
-		}
-		
-		final CharSequence[] items = {"Do not use accelerometer", "Use accelerometer as navigation keys"};
+		final CharSequence[] items = {
+			"On-screen keyboard" + ( Globals.AppUsesMouse ? " (disables mouse input)" : ""),
+			"Accelerometer as navigation keys" + ( Globals.AppUsesJoystick ? " (disables joystick input)" : "" ),
+			"Both accelerometer and on-screen keyboard",
+			"No additional controls" + ( Globals.AppNeedsArrowKeys ? " (you won't be able to play without arrow keys)" : " (only if your phone has enough buttons)")
+		};
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("You may optionally use accelerometer as another navigation keys");
+		builder.setTitle("Additional controls to use");
 		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
-				Globals.AppNeedsArrowKeys = (item == 1);
+				Globals.UseTouchscreenKeyboard = (item == 0 || item == 2);
+				Globals.UseAccelerometerAsArrowKeys = (item == 1 || item == 2);
 
 				Save(p);
 				dialog.dismiss();
@@ -142,19 +159,6 @@ class Settings
 		alert.show();
 	}
 	
-	static void Save(final MainActivity p)
-	{
-		try {
-			ObjectOutputStream out = new ObjectOutputStream(p.openFileOutput( SettingsFileName, p.MODE_WORLD_READABLE ));
-			out.writeBoolean(Globals.DownloadToSdcard);
-			out.writeBoolean(Globals.AppNeedsArrowKeys);
-			out.writeBoolean(Globals.PhoneHasTrackball);
-			out.close();
-		} catch( FileNotFoundException e ) {
-		} catch( SecurityException e ) {
-		} catch ( IOException e ) {};
-	}
-	
 	
 	static void Apply()
 	{
@@ -164,10 +168,15 @@ class Settings
 			nativeSetTrackballUsed();
 		if( Globals.AppUsesMouse )
 			nativeSetMouseUsed();
-		if( Globals.AppUsesJoystick && !Globals.AppNeedsArrowKeys )
+		if( Globals.AppUsesJoystick && !Globals.UseAccelerometerAsArrowKeys )
 			nativeSetJoystickUsed();
 		if( Globals.AppUsesMultitouch )
 			nativeSetMultitouchUsed();
+		if( Globals.UseTouchscreenKeyboard )
+		{
+			nativeSetTouchscreenKeyboardUsed();
+			nativeSetupScreenKeyboard(0, 4);
+		}
 	}
 	
 	static void startDownloader(MainActivity p)
@@ -186,10 +195,12 @@ class Settings
 	};
 	
 
-	private static native int nativeIsSdcardUsed(int flag);
-	private static native int nativeSetTrackballUsed();
-	private static native int nativeSetMouseUsed();
-	private static native int nativeSetJoystickUsed();
-	private static native int nativeSetMultitouchUsed();
+	private static native void nativeIsSdcardUsed(int flag);
+	private static native void nativeSetTrackballUsed();
+	private static native void nativeSetMouseUsed();
+	private static native void nativeSetJoystickUsed();
+	private static native void nativeSetMultitouchUsed();
+	private static native void nativeSetTouchscreenKeyboardUsed();
+	private static native void nativeSetupScreenKeyboard(int size, int nbuttons);
 }
 

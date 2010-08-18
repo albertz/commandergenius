@@ -171,8 +171,6 @@ enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
 
 enum { MAX_MULTITOUCH_POINTERS = 5 };
 
-extern int SDL_android_drawTouchscreenKeyboard();
-
 extern int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointerId);
 
 #ifndef SDL_ANDROID_KEYCODE_0

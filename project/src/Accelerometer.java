@@ -25,7 +25,7 @@ class AccelerometerReader implements SensorEventListener {
 		_manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 		if( _manager != null )
 		{
-			if( Globals.AppNeedsArrowKeys )
+			if( Globals.UseAccelerometerAsArrowKeys )
 			{
 				_manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
 			}

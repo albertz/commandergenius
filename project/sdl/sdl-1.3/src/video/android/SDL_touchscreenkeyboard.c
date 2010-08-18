@@ -26,30 +26,11 @@
 #include <stdint.h>
 #include <math.h>
 #include <string.h> // for memset()
+#include <GLES/gl.h>
 
 #include "SDL_config.h"
 
 #include "SDL_version.h"
-#include "SDL_video.h"
-#include "SDL_mouse.h"
-#include "SDL_mutex.h"
-#include "SDL_thread.h"
-#include "../SDL_sysvideo.h"
-#include "../SDL_pixels_c.h"
-#include "SDL_events.h"
-#if (SDL_VERSION_ATLEAST(1,3,0))
-#include "../../events/SDL_events_c.h"
-#include "../../events/SDL_keyboard_c.h"
-#include "../../events/SDL_mouse_c.h"
-#include "SDL_scancode.h"
-#include "SDL_compat.h"
-#else
-#include "SDL_keysym.h"
-#include "../../events/SDL_events_c.h"
-#endif
-#include "SDL_joystick.h"
-#include "../../joystick/SDL_sysjoystick.h"
-#include "../../joystick/SDL_joystick_c.h"
 
 #include "SDL_androidvideo.h"
 #include "SDL_androidinput.h"
@@ -122,7 +103,7 @@ static inline void drawChar(int idx, Uint16 x, Uint16 y, Uint8 r, Uint8 g, Uint8
 
     glPushMatrix();
     glTranslatex( x, y, 0 );
-    glVertexPointer(2, GL_SHORT, 0, vertices);
+    glVertexPointer(2, GL_SHORT, 0, fontGL[idx]);
     glEnableClientState(GL_VERTEX_ARRAY);
     glDrawArrays(GL_LINE_STRIP, 0, fontGL[idx][FONT_CHAR_LINES_COUNT]);
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -198,7 +179,7 @@ int SDL_android_drawTouchscreenKeyboard()
 
 static inline int ArrowKeysPressed(int x, int y)
 {
-	itn ret = 0, dx, dy;
+	int ret = 0, dx, dy;
 	/*
 	if( !InsideRect( &arrows, x, y ) )
 		return 0;
@@ -261,7 +242,7 @@ int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointer
 			return 1;
 		}
 
-		for( int i = 0; i < nbuttons; i++ )
+		for( i = 0; i < nbuttons; i++ )
 		{
 			if( InsideRect( &buttons[i], x, y) )
 			{
@@ -289,12 +270,12 @@ int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointer
 			oldArrows = 0;
 			return 1;
 		}
-		for( int i = 0; i < nbuttons; i++ )
+		for( i = 0; i < nbuttons; i++ )
 		{
 			if( OldCoords[pointerId] == &buttons[i] )
 			{
 				if( ! ( i == 0 && Button1AutoFire ) )
-					SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym(buttonKeysyms[i]) ,&keysym) );
+					SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym(buttonKeysyms[i] ,&keysym) );
 				OldCoords[pointerId] = NULL;
 				return 1;
 			}
@@ -343,4 +324,11 @@ int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointer
 	}
 	return 0;
 };
+
+
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenKeyboardUsed) ( JNIEnv*  env, jobject thiz)
+{
+	isTouchscreenKeyboardUsed = 1;
+}
 

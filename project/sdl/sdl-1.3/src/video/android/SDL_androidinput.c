@@ -30,26 +30,6 @@
 #include "SDL_config.h"
 
 #include "SDL_version.h"
-#include "SDL_video.h"
-#include "SDL_mouse.h"
-#include "SDL_mutex.h"
-#include "SDL_thread.h"
-#include "../SDL_sysvideo.h"
-#include "../SDL_pixels_c.h"
-#include "SDL_events.h"
-#if (SDL_VERSION_ATLEAST(1,3,0))
-#include "../../events/SDL_events_c.h"
-#include "../../events/SDL_keyboard_c.h"
-#include "../../events/SDL_mouse_c.h"
-#include "SDL_scancode.h"
-#include "SDL_compat.h"
-#else
-#include "SDL_keysym.h"
-#include "../../events/SDL_events_c.h"
-#endif
-#include "SDL_joystick.h"
-#include "../../joystick/SDL_sysjoystick.h"
-#include "../../joystick/SDL_joystick_c.h"
 
 #include "SDL_androidvideo.h"
 #include "SDL_androidinput.h"
