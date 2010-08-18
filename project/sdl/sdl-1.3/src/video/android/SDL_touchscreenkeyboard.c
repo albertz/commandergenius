@@ -101,13 +101,19 @@ static inline void drawChar(int idx, Uint16 x, Uint16 y, Uint8 r, Uint8 g, Uint8
 {
     glColor4f((GLfloat) r * inv255f, (GLfloat) g * inv255f, (GLfloat) b * inv255f, (GLfloat) a * inv255f);
 
-    glPushMatrix();
-    glTranslatex( x, y, 0 );
     glVertexPointer(2, GL_SHORT, 0, fontGL[idx]);
     glEnableClientState(GL_VERTEX_ARRAY);
-    glDrawArrays(GL_LINE_STRIP, 0, fontGL[idx][FONT_CHAR_LINES_COUNT]);
-    glDisableClientState(GL_VERTEX_ARRAY);
+    glPushMatrix();
+    glLoadIdentity();
+    //glOrthof(0.0f, (GLfloat) SDL_ANDROID_sWindowWidth, (GLfloat) SDL_ANDROID_sWindowHeight, 0.0f, 0.0f, 1.0f);
+    //glTranslatef( ((GLfloat) x), ((GLfloat) y), 0.0f );
+    // More efficient (or so) GLfixed implementation
+    // (GLfloat) 1.0f is scaled as (GLfixed) 1 * 65536 when calling glOrthox()/glTranslatex()/any other glXXXx() function
+    glOrthox( 0, SDL_ANDROID_sWindowWidth * 0x10000, SDL_ANDROID_sWindowHeight * 0x10000, 0, 0, 1 * 0x10000 );
+    glTranslatex( x * 0x10000, y * 0x10000, 0 );
+    glDrawArrays(GL_LINES, 0, fontGL[idx][FONT_CHAR_LINES_COUNT]);
     glPopMatrix();
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
@@ -180,22 +186,18 @@ int SDL_android_drawTouchscreenKeyboard()
 static inline int ArrowKeysPressed(int x, int y)
 {
 	int ret = 0, dx, dy;
-	/*
-	if( !InsideRect( &arrows, x, y ) )
-		return 0;
-	*/
 	dx = x - arrows.x - arrows.w / 2;
 	dy = y - arrows.y - arrows.h / 2;
 	// Single arrow key pressed
-	if( abs(dx / 2) <= abs(dy) )
+	if( abs(dy / 2) >= abs(dx) )
 	{
-		if( dy > 0 )
+		if( dy < 0 )
 			ret |= ARROW_UP;
 		else
 			ret |= ARROW_DOWN;
 	}
 	else
-	if( abs(dy / 2) <= abs(dx) )
+	if( abs(dx / 2) >= abs(dy) )
 	{
 		if( dx > 0 )
 			ret |= ARROW_RIGHT;
@@ -208,7 +210,8 @@ static inline int ArrowKeysPressed(int x, int y)
 			ret |= ARROW_RIGHT;
 		else
 			ret |= ARROW_LEFT;
-		if( dy > 0 )
+
+		if( dy < 0 )
 			ret |= ARROW_UP;
 		else
 			ret |= ARROW_DOWN;
