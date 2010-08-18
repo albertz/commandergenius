@@ -31,6 +31,7 @@
 
 #include "SDL_version.h"
 
+#include "../SDL_sysvideo.h"
 #include "SDL_androidvideo.h"
 #include "SDL_androidinput.h"
 #include "jniwrapperstuff.h"
