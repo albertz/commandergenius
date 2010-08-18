@@ -50,7 +50,7 @@ import android.os.Build;
 					action = 2;
 				if ( action >= 0 )
 					DemoGLSurfaceView.nativeMouse( (int)event.getX(), (int)event.getY(), action, 0, 
-													(int)(event.getPressure() * 1000.0,
+													(int)(event.getPressure() * 1000.0),
 													(int)(event.getSize() * 1000.0) );
 			}
 		}
