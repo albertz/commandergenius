@@ -49,7 +49,9 @@ import android.os.Build;
 				if( event.getAction() == MotionEvent.ACTION_MOVE )
 					action = 2;
 				if ( action >= 0 )
-					DemoGLSurfaceView.nativeMouse( (int)event.getX(), (int)event.getY(), action, 0, 0, 0 );
+					DemoGLSurfaceView.nativeMouse( (int)event.getX(), (int)event.getY(), action, 0, 
+													(int)(event.getPressure() * 1000.0,
+													(int)(event.getSize() * 1000.0) );
 			}
 		}
 		private static class MultiTouchInput extends DifferentTouchInput
