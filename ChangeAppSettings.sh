@@ -1,11 +1,27 @@
 #!/bin/sh
+
+CHANGE_APP_SETTINGS_VERSION=1
+AUTO=
+
+if [ "X$1" = "X-a" ]; then
+	AUTO=1
+fi
+
 . ./AppSettings.cfg
+
+if [ "$CHANGE_APP_SETTINGS_VERSION" != "$AppSettingVersion" ]; then
+	AUTO=
+fi
+
+LibSdlVersionOld=$LibSdlVersion
+CompiledLibrariesOld=$CompiledLibraries
 
 var=""
 
+if [ -z "$AUTO" ]; then
+
 echo -n "\n===== libSDL on Android configuration =====\n\nIf you will supply empty string as answer the previous value will be used\n"
 
-LibSdlVersionOld=$LibSdlVersion
 echo -n "\nlibSDL version to use (1.2 or 1.3) ($LibSdlVersion): "
 read var
 if [ -n "$var" ] ; then
@@ -103,7 +119,6 @@ grep 'Available libraries:' project/jni/Application.mk
 grep 'depends on' project/jni/Application.mk
 echo -n "Current: $CompiledLibraries\n\n: "
 read var
-CompiledLibrariesOld=$CompiledLibraries
 if [ -n "$var" ] ; then
 	CompiledLibraries="$var"
 fi
@@ -132,9 +147,12 @@ if [ -n "$ReadmeText1" ] ; then
 	ReadmeText="$ReadmeText1"
 fi
 
+fi # AUTO
+
 echo
 
 cat /dev/null > AppSettings.cfg
+echo AppSettingVersion=$CHANGE_APP_SETTINGS_VERSION >> AppSettings.cfg
 echo LibSdlVersion=$LibSdlVersion >> AppSettings.cfg
 echo AppName=\"$AppName\" >> AppSettings.cfg
 echo AppFullName=$AppFullName >> AppSettings.cfg
