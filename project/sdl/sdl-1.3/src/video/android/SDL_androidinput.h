@@ -123,6 +123,7 @@ static inline SDL_scancode GetKeysym(SDL_scancode scancode, SDL_keysym *keysym)
 #define Z z
 
 #define SDL_scancode SDLKey
+#define SDL_GetKeyboardState SDL_GetKeyState
 
 static inline SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
 {

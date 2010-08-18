@@ -57,6 +57,11 @@
 
 #include "touchscreenfont.h"
 
+#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
+#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
+
+static int isTouchscreenKeyboardUsed = 0;
+
 enum {
 FONT_LEFT = 0, FONT_RIGHT = 1, FONT_UP = 2, FONT_DOWN = 3,
 FONT_BTN1 = 4, FONT_BTN2 = 5, FONT_BTN3 = 6, FONT_BTN4 = 7
@@ -66,44 +71,6 @@ enum { MAX_BUTTONS = 4 } ; // Max amount of custom buttons
 
 static GLshort fontGL[sizeof(font)/sizeof(font[0])][FONT_MAX_LINES_PER_CHAR * 4 + 1];
 enum { FONT_CHAR_LINES_COUNT = FONT_MAX_LINES_PER_CHAR * 4 };
-
-void prepareFont(float scale)
-{
-    int i, idx, count = 0;
-
-	for( idx = 0; idx < sizeof(font)/sizeof(font[0]); idx++ )
-	{
-		for( i = 0; i < FONT_MAX_LINES_PER_CHAR; i++ )
-			if( font[idx][i].x1 == 0 && font[idx][i].y1 == 0 && 
-				font[idx][i].x2 == 0 && font[idx][i].y2 == 0 )
-				break;
-		count = i;
-		for (i = 0; i < count; ++i) 
-		{
-			fontGL[idx][4*i+0] = (GLshort)(x + font[idx][i].x1 * scale);
-			fontGL[idx][4*i+1] = (GLshort)(y + font[idx][i].y1 * scale);
-			fontGL[idx][4*i+2] = (GLshort)(x + font[idx][i].x2 * scale);
-			fontGL[idx][4*i+3] = (GLshort)(y + font[idx][i].y2 * scale);
-		}
-		fontGL[idx][FONT_CHAR_LINES_COUNT] = count*2;
-	}
-};
-
-static const float inv255f = 1.0f / 255.0f;
-
-// TODO: use SDL 1.3 renderer routines? It will not be pixel-aligned then, if the screen is resized
-void drawChar(int idx, Uint16 x, Uint16 y, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-    glColor4f((GLfloat) r * inv255f,
-                    (GLfloat) g * inv255f,
-                    (GLfloat) b * inv255f,
-                    (GLfloat) a * inv255f);
-
-    glVertexPointer(2, GL_SHORT, 0, vertices);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glDrawArrays(GL_LINE_STRIP, 0, fontGL[idx][FONT_CHAR_LINES_COUNT]);
-    glDisableClientState(GL_VERTEX_ARRAY);
-}
 
 static SDL_Rect arrows, buttons[MAX_BUTTONS];
 static int nbuttons;
@@ -115,7 +82,52 @@ SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_3))
 };
 
 enum { ARROW_LEFT = 1, ARROW_RIGHT = 2, ARROW_UP = 4, ARROW_DOWN = 8 };
-static int arrowsPressedMask = 0;
+static int oldArrows = 0;
+static int Button1AutoFire = 0, Button1AutoFireX = 0;
+
+static SDL_Rect * OldCoords[MAX_MULTITOUCH_POINTERS] = { NULL };
+
+static const float inv255f = 1.0f / 255.0f;
+
+// Should be called on each char of font before drawing
+static void prepareFontChar(int idx, int w, int h)
+{
+    int i, count = 0;
+    float fw = (float) w / 255.0f;
+    float fh = (float) h / 255.0f;
+
+	//for( idx = 0; idx < sizeof(font)/sizeof(font[0]); idx++ )
+	{
+		for( i = 0; i < FONT_MAX_LINES_PER_CHAR; i++ )
+			if( font[idx][i].x1 == 0 && font[idx][i].y1 == 0 && 
+				font[idx][i].x2 == 0 && font[idx][i].y2 == 0 )
+				break;
+		count = i;
+		for (i = 0; i < count; ++i) 
+		{
+			fontGL[idx][4*i+0] = (GLshort)(((int)font[idx][i].x1 - 128) * fw);
+			fontGL[idx][4*i+1] = (GLshort)(((int)font[idx][i].y1 - 128) * fh);
+			fontGL[idx][4*i+2] = (GLshort)(((int)font[idx][i].x2 - 128) * fw);
+			fontGL[idx][4*i+3] = (GLshort)(((int)font[idx][i].y2 - 128) * fh);
+		}
+		fontGL[idx][FONT_CHAR_LINES_COUNT] = count*2;
+	}
+};
+
+// Draws a char on screen using embedded line font, (x, y) are center of char, not upper-left corner
+// TODO: use SDL 1.3 renderer routines? It will not be pixel-aligned then, if the screen is resized
+static inline void drawChar(int idx, Uint16 x, Uint16 y, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+    glColor4f((GLfloat) r * inv255f, (GLfloat) g * inv255f, (GLfloat) b * inv255f, (GLfloat) a * inv255f);
+
+    glPushMatrix();
+    glTranslatex( x, y, 0 );
+    glVertexPointer(2, GL_SHORT, 0, vertices);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDrawArrays(GL_LINE_STRIP, 0, fontGL[idx][FONT_CHAR_LINES_COUNT]);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glPopMatrix();
+}
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
@@ -127,6 +139,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 {
 	int i;
 	nbuttons = _nbuttons;
+	if( nbuttons > MAX_BUTTONS )
+		nbuttons = MAX_BUTTONS;
 	// TODO: works for horizontal screen orientation only!
 	// TODO: configurable keyboard size
 
@@ -135,12 +149,17 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	arrows.w = SDL_ANDROID_sWindowWidth / 2;
 	arrows.h = arrows.w;
 	arrows.y = SDL_ANDROID_sWindowHeight - arrows.h;
+	prepareFontChar(FONT_LEFT, arrows.w / 2, arrows.h / 2);
+	prepareFontChar(FONT_RIGHT, arrows.w / 2, arrows.h / 2);
+	prepareFontChar(FONT_UP, arrows.w / 2, arrows.h / 2);
+	prepareFontChar(FONT_DOWN, arrows.w / 2, arrows.h / 2);
 
 	// Main button to the lower-right
 	buttons[0].x = SDL_ANDROID_sWindowWidth / 2;
 	buttons[0].w = SDL_ANDROID_sWindowWidth / 2;
 	buttons[0].y = SDL_ANDROID_sWindowHeight / 2;
 	buttons[0].h = SDL_ANDROID_sWindowHeight / 2;
+	prepareFontChar(FONT_BTN1, MIN(buttons[0].h, buttons[0].w) / 2, MIN(buttons[0].h, buttons[0].w) / 2);
 	
 	// Row of secondary buttons to the upper-right
 	for( i = 1; i < nbuttons; i++ )
@@ -149,25 +168,96 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		buttons[i].h = SDL_ANDROID_sWindowHeight / 2;
 		buttons[i].w = (SDL_ANDROID_sWindowWidth / 2) / (nbuttons - 1);
 		buttons[i].x = SDL_ANDROID_sWindowWidth / 2 + buttons[i].w * (i - 1);
+		prepareFontChar(FONT_BTN1 + i, MIN(buttons[i].h, buttons[i].w) / 2, MIN(buttons[i].h, buttons[i].w) / 2);
 	}
 };
 
 int SDL_android_drawTouchscreenKeyboard()
 {
-	// TODO: draw something here
+	int i;
+	if( !isTouchscreenKeyboardUsed )
+		return 0;
+	// Draw arrow keys
+	drawChar( FONT_LEFT, arrows.x + arrows.w / 4, arrows.y + arrows.h / 2, 
+				255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 255 : 0, 128 );
+	drawChar( FONT_RIGHT, arrows.x + arrows.w / 4 * 3, arrows.y + arrows.h / 2, 
+				255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 255 : 0, 128 );
+	drawChar( FONT_UP, arrows.x + arrows.w / 2, arrows.y + arrows.h / 4, 
+				255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 255 : 0, 128 );
+	drawChar( FONT_DOWN, arrows.x + arrows.w / 2, arrows.y + arrows.h / 4 * 3, 
+				255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 255 : 0, 128 );
+
+	// Draw buttons
+	for( i = 0; i < nbuttons; i++ )
+	{
+		drawChar( FONT_BTN1 + i, buttons[i].x + buttons[i].w / 2, buttons[i].y + buttons[i].h / 2,
+					( i == 0 && Button1AutoFire ) ? 0 : 255, 255, SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? 255 : 0, 128 );
+	}
+	return 1;
 };
 
-static SDL_Rect * OldCoords[MAX_MULTITOUCH_POINTERS] = { NULL };
+static inline int ArrowKeysPressed(int x, int y)
+{
+	itn ret = 0, dx, dy;
+	/*
+	if( !InsideRect( &arrows, x, y ) )
+		return 0;
+	*/
+	dx = x - arrows.x - arrows.w / 2;
+	dy = y - arrows.y - arrows.h / 2;
+	// Single arrow key pressed
+	if( abs(dx / 2) <= abs(dy) )
+	{
+		if( dy > 0 )
+			ret |= ARROW_UP;
+		else
+			ret |= ARROW_DOWN;
+	}
+	else
+	if( abs(dy / 2) <= abs(dx) )
+	{
+		if( dx > 0 )
+			ret |= ARROW_RIGHT;
+		else
+			ret |= ARROW_LEFT;
+	}
+	else // Two arrow keys pressed
+	{
+		if( dx > 0 )
+			ret |= ARROW_RIGHT;
+		else
+			ret |= ARROW_LEFT;
+		if( dy > 0 )
+			ret |= ARROW_UP;
+		else
+			ret |= ARROW_DOWN;
+	}
+	return ret;
+}
 
 int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointerId)
 {
 	int i;
+	SDL_keysym keysym;
+
+	if( !isTouchscreenKeyboardUsed )
+		return 0;
+
 	if( action == MOUSE_DOWN )
 	{
 		if( InsideRect( &arrows, x, y ) )
 		{
 			OldCoords[pointerId] = &arrows;
-			// TODO: processing
+			i = ArrowKeysPressed(x, y);
+			if( i & ARROW_UP )
+				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(UP), &keysym) );
+			if( i & ARROW_DOWN )
+				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+			if( i & ARROW_LEFT )
+				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+			if( i & ARROW_RIGHT )
+				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+			oldArrows = i;
 			return 1;
 		}
 
@@ -176,29 +266,41 @@ int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointer
 			if( InsideRect( &buttons[i], x, y) )
 			{
 				OldCoords[pointerId] = &buttons[i];
-				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym(buttonKeysyms[i]) ,&keysym) );
+				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym(buttonKeysyms[i], &keysym) );
+				if( i == 0 )
+				{
+					Button1AutoFireX = x;
+					Button1AutoFire = 0;
+				}
 				return 1;
 			}
 		}
 	}
+	else
 	if( action == MOUSE_UP )
 	{
 		if( OldCoords[pointerId] == &arrows )
 		{
 			OldCoords[pointerId] = NULL;
-			// TODO: processing
+			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
+			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+			oldArrows = 0;
 			return 1;
 		}
 		for( int i = 0; i < nbuttons; i++ )
 		{
 			if( OldCoords[pointerId] == &buttons[i] )
 			{
-				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym(buttonKeysyms[i]) ,&keysym) );
+				if( ! ( i == 0 && Button1AutoFire ) )
+					SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym(buttonKeysyms[i]) ,&keysym) );
 				OldCoords[pointerId] = NULL;
 				return 1;
 			}
 		}
 	}
+	else
 	if( action == MOUSE_MOVE )
 	{
 		if( OldCoords[pointerId] && !InsideRect(OldCoords[pointerId], x, y) )
@@ -206,6 +308,39 @@ int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointer
 			SDL_android_processTouchscreenKeyboard(x, y, MOUSE_UP, pointerId);
 			return SDL_android_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
 		}
+		else
+		if( OldCoords[pointerId] == &arrows )
+		{
+			i = ArrowKeysPressed(x, y);
+			if( i == oldArrows )
+				return 1;
+			if( oldArrows & ARROW_UP && ! (i & ARROW_UP) )
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
+			if( oldArrows & ARROW_DOWN && ! (i & ARROW_DOWN) )
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+			if( oldArrows & ARROW_LEFT && ! (i & ARROW_LEFT) )
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+			if( oldArrows & ARROW_RIGHT && ! (i & ARROW_RIGHT) )
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+			if( i & ARROW_UP )
+				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(UP), &keysym) );
+			if( i & ARROW_DOWN )
+				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+			if( i & ARROW_LEFT )
+				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+			if( i & ARROW_RIGHT )
+				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+			oldArrows = i;
+		}
+		else
+		if( OldCoords[pointerId] == &buttons[0] )
+			Button1AutoFire = abs(Button1AutoFireX - x) > buttons[0].w / 2;
+
+		if( OldCoords[pointerId] )
+			return 1;
+
+		return SDL_android_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
 	}
 	return 0;
 };
+

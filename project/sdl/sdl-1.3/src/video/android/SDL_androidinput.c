@@ -62,8 +62,7 @@ static int isTrackballUsed = 0;
 static int isMouseUsed = 0;
 static int isJoystickUsed = 0;
 static int isMultitouchUsed = 0;
-static int isTouchscreenKeyboardUsed = 0;
-static SDL_Joystick *CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL,};
+static SDL_Joystick *CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL};
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
@@ -73,9 +72,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	if(pointerId > MAX_MULTITOUCH_POINTERS)
 		pointerId = MAX_MULTITOUCH_POINTERS;
 
-	if( isTouchscreenKeyboardUsed )
-		if( SDL_android_processTouchscreenKeyboard(x, y, action, pointerId) )
-			return;
+	if( SDL_android_processTouchscreenKeyboard(x, y, action, pointerId) )
+		return;
 
 #if SDL_VIDEO_RENDER_RESIZE
 	// Translate mouse coordinates

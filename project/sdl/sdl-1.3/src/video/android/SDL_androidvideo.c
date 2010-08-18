@@ -57,6 +57,7 @@ static jmethodID JavaSwapBuffers = NULL;
 
 int SDL_ANDROID_CallJavaSwapBuffers()
 {
+	SDL_android_drawTouchscreenKeyboard();
 	return (*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaSwapBuffers );
 }
 
