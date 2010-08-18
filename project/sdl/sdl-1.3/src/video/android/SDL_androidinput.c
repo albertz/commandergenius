@@ -73,13 +73,16 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 
 	if( isMultitouchUsed )
 	{
-		pointerId++;
 		if( CurrentJoysticks[pointerId] )
 		{
 			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 0, x);
 			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 1, y);
 			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 2, force);
 			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 3, radius);
+			if( action == MOUSE_DOWN )
+				SDL_PrivateJoystickButton(CurrentJoysticks[pointerId+1], 0, SDL_PRESSED);
+			if( action == MOUSE_UP )
+				SDL_PrivateJoystickButton(CurrentJoysticks[pointerId+1], 0, SDL_RELEASED);
 		}
 	}
 	if( !isMouseUsed )
@@ -580,7 +583,10 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 	if( joystick->index == 0 )
 		joystick->naxes = 3;
 	else
+	{
 		joystick->naxes = 4;
+		joystick->nbuttons = 1;
+	}
 	CurrentJoysticks[joystick->index] = joystick;
 	return(0);
 }
