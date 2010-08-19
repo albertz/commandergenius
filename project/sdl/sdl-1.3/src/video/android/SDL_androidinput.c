@@ -306,9 +306,9 @@ void ANDROID_InitOSKeymap()
 void updateOrientation ( float accX, float accY, float accZ )
 {
 	SDL_keysym keysym;
-	// TODO: use accelerometer as joystick, make this configurable
-	// Currenly it's used as cursor + KP7/KP9 keys
 	static const float dx = 0.04, dy = 0.1, dz = 0.1;
+	// TODO: ask user for accelerometer precision from Java
+	//static const float dx = 0.2, dy = 0.25, dz = 0.25;
 
 	static float midX = 0, midY = 0, midZ = 0;
 	static int pressLeft = 0, pressRight = 0, pressUp = 0, pressDown = 0, pressR = 0, pressL = 0;
