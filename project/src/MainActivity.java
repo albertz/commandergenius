@@ -105,9 +105,10 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event) {
 		// Overrides Back key to use in our app
-		 if( mGLView != null )
+		if( mGLView != null )
 			 mGLView.nativeKey( keyCode, 1 );
-		 if( keyCode == KeyEvent.KEYCODE_BACK && !downloader.DownloadComplete )
+		else
+		if( keyCode == KeyEvent.KEYCODE_BACK && downloader != null && !downloader.DownloadComplete )
 			 onStop();
 		 return true;
 	}
