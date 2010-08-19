@@ -107,7 +107,7 @@ void DrawLine(SDL_Surface * bmp, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uin
 	
 	Uint16 d = color;
 	
-	#define proc( bmp, x, y, d )  * (Uint16 *)( bmp->pixels + bmp->pitch * (y) + (x) * 2 ) = d
+	#define proc( bmp, x, y, d )  * (Uint16 *)( ((Uint8 *)bmp->pixels) + bmp->pitch * (y) + (x) * 2 ) = d
 	
 	/* worker macro */
 	#define DO_LINE(pri_sign, pri_c, pri_cond, sec_sign, sec_c, sec_cond)     \
@@ -329,3 +329,16 @@ main(int argc, char *argv[])
   return 0;
 }
 
+#ifdef WIN32
+#include <windows.h>
+int CALLBACK WinMain(
+  HINSTANCE hInstance,
+  HINSTANCE hPrevInstance,
+  LPSTR lpCmdLine,
+  int nCmdShow
+)
+{
+	return main(0, NULL);
+};
+
+#endif
