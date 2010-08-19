@@ -307,19 +307,20 @@ cat project/res/values/strings.xml | \
 	project/res/values/strings.xml.1
 mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
 
+echo Forcing rebuild of specific files
 # Force rebuild of C-Java bindings and updated settings
 touch project/jni/sdl_main/*.c
-touch project/sdl/sdl-$LibSdlVersion/src/video/android/*.c
-touch project/sdl/sdl-$LibSdlVersion/src/video/SDL_video.c
+touch project/sdl/sdl-*/src/audio/android/*.c
+touch project/sdl/sdl-*/src/video/android/*.c
+touch project/sdl/sdl-*/src/video/SDL_video.c
 touch project/sdl/sdl-1.3/src/video/SDL_renderer_gles.c
-touch project/sdl/sdl-$LibSdlVersion/src/audio/android/*.c
-#rm -rf project/libs/*
+rm -rf project/libs/*
 if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
+	# Internal types are different in SDL 1.2 and 1.3, namely SDL_Rect, so all libs using it have to be recompiled
 	rm -rf project/bin/ndk/local/*/objs/sdl* project/bin/ndk/local/*/libsdl*.so
 	rm -rf project/bin/ndk/local/*/objs/application project/bin/ndk/local/*/libapplication.so
 fi
-if [ "$CompiledLibrariesOld" '!=' "$CompiledLibraries" ]; then
-	rm -rf project/bin/ndk/local/*/*.so project/bin/ndk/local/*/objs/*
-fi
+# Do not rebuild libraries that do not need that
+find project/bin/ndk/local -name "*.[oa]" -exec touch '{}' \;
 
 echo Done
