@@ -16,6 +16,7 @@ import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.os.Environment;
 import android.os.StatFs;
+import java.util.Locale;
 
 class Settings
 {
@@ -177,6 +178,12 @@ class Settings
 			nativeSetTouchscreenKeyboardUsed();
 			nativeSetupScreenKeyboard(0, 4);
 		}
+		String lang = new String(Locale.getDefault().getLanguage());
+		if( Locale.getDefault().getCountry().length() > 0 )
+			lang = lang + "_" + Locale.getDefault().getCountry();
+		System.out.println( "libSDL: setting envvar LANG to '" + lang + "'");
+		nativeSetEnv( "LANG", lang );
+		// TODO: get current user name and set envvar USER, the API is not availalbe on Android 1.6 so I don't bother with this
 	}
 	
 	static void startDownloader(MainActivity p)
@@ -202,5 +209,6 @@ class Settings
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
 	private static native void nativeSetupScreenKeyboard(int size, int nbuttons);
+	public static native void nativeSetEnv(final String name, final String value);
 }
 
