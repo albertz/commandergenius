@@ -153,21 +153,19 @@ It will output the exact line in your source where the application crashed.
 Known bugs
 ==========
 
-0. Revert to widely-used SDL 1.2, backport changes that enable hardware acceleration from SDL 1.3
-Ideally ChangeAppSettings.sh should ask you what SDL version you want to use.
-
-1. Application will crash on exit or when you're pressing "Home" button - the correct behavior for Android apps
-is to stay in memory and go to foreground when you're launching app again, that's not working yet because
+0. Application will crash when you're pressing "Home" button or open/close keyboard 
+- the correct behavior for Android apps is to stay in memory and go to foreground 
+when you're launching app again, that's not working yet because
 app will lose OpenGL context (there are rumors that it won't lose GL context in 2.1 SDK).
+Anyway, SDL should sleep inside SDL_Flip() and re-create all HW textures when it gains back video.
 
-2. Multitouch support - it is available since 2.0 SDK, but not on 1.6 - I'll have to follow
-http://devtcg.blogspot.com/2009/12/gracefully-supporting-multiple-android.html to make it compile.
+1. Merge all config screens into single big config screen, make option to rerun config.
 
-3. In the future I'm planning to use accelerometer as a SDL joystick.
+2. Fix on-screen keyboard, add more keys and more options, make possible for application to control it.
 
-4. Many SDL games require keyboard, and newer phones have only touchscreen - there should be configuration screen
-where you can toggle on-screen keyboard, bind existing keys like volume up/down to PgUp/PgDown for example,
-and configure other actions like accelerometer tilt as keypresses.
+3. Add full QWERTY on-screen keyboard.
+
+4. Add trackball sensitivity and accelerometer sensitivity config.
 
 5. Export phone vibrator to SDL - interface is available in SDL 1.3
 
