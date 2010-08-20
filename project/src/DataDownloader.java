@@ -286,11 +286,22 @@ class DataDownloader extends Thread
 				}
 				out.flush();
 				out.close();
+				out = null;
 			} catch( java.io.IOException e ) {
 				Status.setText( "Error writing file " + path );
 				return;
 			}
-
+			
+			try {
+				CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
+				while( check.read(buf, 0, buf.length) > 0 ) {};
+				if( check.getChecksum().getValue() != entry.getCrc() )
+					throw new Exception();
+			} catch( Exception e )
+			{
+				Status.setText( "CRC32 check failed for file " + path );
+				return;
+			}
 		}
 
 		OutputStream out = null;
