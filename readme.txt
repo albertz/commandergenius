@@ -169,6 +169,7 @@ Anyway, SDL should sleep inside SDL_Flip() and re-create all HW textures when it
 
 5. Export phone vibrator to SDL - interface is available in SDL 1.3
 
+6. Java downloading part seems unstable - it often truncates files.
 
 Games to port
 =============
