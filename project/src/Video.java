@@ -110,9 +110,11 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 		System.loadLibrary("application");
 		System.loadLibrary("sdl_main");
 		Settings.Apply();
-		Thread.currentThread().setPriority( (Thread.NORM_PRIORITY + Thread.MIN_PRIORITY) / 2 );
+		// Tweak video thread priority, if user selected big audio buffer
+		if(Globals.AudioBufferConfig >= 2)
+			Thread.currentThread().setPriority( (Thread.NORM_PRIORITY + Thread.MIN_PRIORITY) / 2 ); // Lower than normal
 		nativeInit(); // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
-		System.exit(0);
+		System.exit(0); // The main() returns here - I don't bother with deinit stuff, just terminate process
 	}
 
 	public int swapBuffers() // Called from native code, returns 1 on success, 0 when GL context lost (user put app to background)
