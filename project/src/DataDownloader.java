@@ -183,15 +183,25 @@ class DataDownloader extends Thread
 				(new File( outFilesDir )).mkdirs();
 			} catch( SecurityException e ) { };
 		}
-		
-		HttpResponse response = null;
+
 		String [] downloadUrls = Globals.DataDownloadUrl.split("[|]");
 		int downloadUrlIndex = 0;
+		
+		downloading:
+		while(true)
+		{
+
+		HttpResponse response = null;
+		HttpGet request;
+		long totalLen;
+		CountingInputStream stream;
+		byte[] buf = new byte[16384];
+
 		while( downloadUrlIndex < downloadUrls.length && response == null ) 
 		{
 			System.out.println("Connecting to " + downloadUrls[downloadUrlIndex]);
 			Status.setText( "Connecting to " + downloadUrls[downloadUrlIndex] );
-			HttpGet request = new HttpGet(downloadUrls[downloadUrlIndex]);
+			request = new HttpGet(downloadUrls[downloadUrlIndex]);
 			request.addHeader("Accept", "*/*");
 			try {
 				DefaultHttpClient client = new DefaultHttpClient();
@@ -219,8 +229,7 @@ class DataDownloader extends Thread
 		}
 
 		Status.setText( "Downloading data from " + Globals.DataDownloadUrl );
-		long totalLen = response.getEntity().getContentLength();
-		CountingInputStream stream;
+		totalLen = response.getEntity().getContentLength();
 		try {
 			stream = new CountingInputStream(response.getEntity().getContent());
 		} catch( java.io.IOException e ) {
@@ -228,16 +237,11 @@ class DataDownloader extends Thread
 			return;
 		}
 		
-		ZipInputStream zip = null;
-			zip = new ZipInputStream(stream);
+		ZipInputStream zip = new ZipInputStream(stream);
 		
-		byte[] buf = new byte[16384];
-		
-		ZipEntry entry = null;
-
 		while(true)
 		{
-			entry = null;
+			ZipEntry entry = null;
 			try {
 				entry = zip.getNextEntry();
 			} catch( java.io.IOException e ) {
@@ -253,10 +257,25 @@ class DataDownloader extends Thread
 				} catch( SecurityException e ) { };
 				continue;
 			}
-			
+
 			OutputStream out = null;
 			path = getOutFilePath(entry.getName());
 			
+			try {
+				CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
+				while( check.read(buf, 0, buf.length) > 0 ) {};
+				check.close();
+				if( check.getChecksum().getValue() != entry.getCrc() )
+				{
+					File ff = new File(path);
+					ff.delete();
+					throw new Exception();
+				}
+				continue;
+			} catch( Exception e )
+			{
+			}
+
 			try {
 				out = new FileOutputStream( path );
 			} catch( FileNotFoundException e ) {
@@ -295,12 +314,18 @@ class DataDownloader extends Thread
 			try {
 				CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
 				while( check.read(buf, 0, buf.length) > 0 ) {};
+				check.close();
 				if( check.getChecksum().getValue() != entry.getCrc() )
+				{
+					File ff = new File(path);
+					ff.delete();
 					throw new Exception();
+				}
 			} catch( Exception e )
 			{
 				Status.setText( "CRC32 check failed for file " + path );
-				return;
+				continue downloading; // Start download over from the same URL
+				//return;
 			}
 		}
 
@@ -333,6 +358,8 @@ class DataDownloader extends Thread
 		};
 		
 		initParent();
+		break;
+		}
 	};
 	
 	private void initParent()
