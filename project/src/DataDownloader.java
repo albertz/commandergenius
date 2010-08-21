@@ -293,9 +293,10 @@ class DataDownloader extends Thread
 			
 			try {
 				int len = zip.read(buf);
-				while (len > 0)
+				while (len >= 0)
 				{
-					out.write(buf, 0, len);
+					if(len > 0)
+						out.write(buf, 0, len);
 					len = zip.read(buf);
 
 					percent = "";
