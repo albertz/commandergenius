@@ -341,6 +341,7 @@ mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
 
 echo Forcing rebuild of specific files
 rm -rf project/libs/*
+	rm -rf project/bin/ndk/local/*/objs/sdl_main/* project/bin/ndk/local/*/libsdl_main.so
 if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
 	# Internal types are different in SDL 1.2 and 1.3, namely SDL_Rect, so all libs using it have to be recompiled
 	rm -rf project/bin/ndk/local/*/objs/sdl* project/bin/ndk/local/*/libsdl*.so
@@ -349,7 +350,6 @@ fi
 # Do not rebuild libraries that do not need that
 find project/bin/ndk/local -name "*.[oa]" -exec touch '{}' \;
 # Force rebuild of C-Java bindings and updated settings
-touch project/jni/sdl_main/*.c
 touch project/sdl/sdl-*/src/audio/android/*.c
 touch project/sdl/sdl-*/src/video/android/*.c
 touch project/sdl/sdl-*/src/video/SDL_video.c
