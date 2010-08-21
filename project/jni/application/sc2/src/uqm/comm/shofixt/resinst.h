@@ -1,0 +1,5 @@
+#define SHOFIXTI_PMAP_ANIM "comm.shofixti.graphics"
+#define SHOFIXTI_FONT "comm.shofixti.font"
+#define SHOFIXTI_COLOR_MAP "comm.shofixti.colortable"
+#define SHOFIXTI_CONVERSATION_PHRASES "comm.shofixti.dialogue"
+#define SHOFIXTI_MUSIC "comm.shofixti.music"

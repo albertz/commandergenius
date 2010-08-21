@@ -1,0 +1,6 @@
+#define UTWIG_PMAP_ANIM "comm.utwig.graphics"
+#define UTWIG_FONT "comm.utwig.font"
+#define UTWIG_COLOR_MAP "comm.utwig.colortable"
+#define UTWIG_CONVERSATION_PHRASES "comm.utwig.dialogue"
+#define UTWIG_MUSIC "comm.utwig.music"
+#define UTWIG_ULTRON_MUSIC "comm.utwig.ultron.music"

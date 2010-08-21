@@ -1,0 +1,3 @@
+uqm_SUBDIRS="proto"
+uqm_CFILES="checkbuf.c checksum.c crc.c netconnection.c netinput.c netmelee.c netmisc.c netoptions.c netrcv.c netsend.c netstate.c notify.c notifyall.c packet.c packethandlers.c packetsenders.c packetq.c"
+

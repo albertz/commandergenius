@@ -1,0 +1,7 @@
+uqm_CFILES="socket.c"
+if [ -n "$uqm_USE_WINSOCK" ]; then
+	uqm_CFILES="$uqm_CFILES socket_win.c"
+else
+	uqm_CFILES="$uqm_CFILES socket_bsd.c"
+fi
+

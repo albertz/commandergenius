@@ -1,0 +1,5 @@
+#define PKUNK_PMAP_ANIM "comm.pkunk.graphics"
+#define PKUNK_FONT "comm.pkunk.font"
+#define PKUNK_COLOR_MAP "comm.pkunk.colortable"
+#define PKUNK_CONVERSATION_PHRASES "comm.pkunk.dialogue"
+#define PKUNK_MUSIC "comm.pkunk.music"

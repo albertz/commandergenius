@@ -1,0 +1,8 @@
+uqm_CFILES="ndesc.c"
+if [ -n "$uqm_USE_WINSOCK" ]; then
+	uqm_CFILES="$uqm_CFILES netmanager_win.c"
+else
+	uqm_CFILES="$uqm_CFILES netmanager_bsd.c"
+fi
+
+

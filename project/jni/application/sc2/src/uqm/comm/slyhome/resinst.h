@@ -1,0 +1,5 @@
+#define SLYLANDRO_PMAP_ANIM "comm.slylandro.graphics"
+#define SLYLANDRO_FONT "comm.slylandro.font"
+#define SLYLANDRO_COLOR_MAP "comm.slylandro.colortable"
+#define SLYLANDRO_CONVERSATION_PHRASES "comm.slylandro.dialogue"
+#define SLYLANDRO_MUSIC "comm.slylandro.music"

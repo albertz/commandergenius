@@ -1,0 +1,2 @@
+uqm_CFILES="direct.c filecntl.c getres.c loadres.c stringbank.c
+		propfile.c resinit.c"

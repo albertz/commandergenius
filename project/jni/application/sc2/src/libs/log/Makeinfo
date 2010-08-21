@@ -1,0 +1,13 @@
+uqm_CFILES="uqmlog.c"
+
+case "$HOST_SYSTEM" in
+	Darwin)
+		uqm_MFILES="msgbox_macosx.m"
+		;;
+	MINGW32*|CYGWIN*)
+		uqm_CFILES="$uqm_CFILES msgbox_win.c"
+		;;
+	*)
+		uqm_CFILES="$uqm_CFILES msgbox_stub.c"
+		;;
+esac

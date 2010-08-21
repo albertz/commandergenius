@@ -1,0 +1,5 @@
+#define CHMMR_PMAP_ANIM "comm.chmmr.graphics"
+#define CHMMR_FONT "comm.chmmr.font"
+#define CHMMR_COLOR_MAP "comm.chmmr.colortable"
+#define CHMMR_CONVERSATION_PHRASES "comm.chmmr.dialogue"
+#define CHMMR_MUSIC "comm.chmmr.music"

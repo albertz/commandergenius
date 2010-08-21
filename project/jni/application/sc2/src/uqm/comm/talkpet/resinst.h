@@ -1,0 +1,5 @@
+#define TALKING_PET_PMAP_ANIM "comm.talkingpet.graphics"
+#define TALKING_PET_FONT "comm.talkingpet.font"
+#define TALKING_PET_COLOR_MAP "comm.talkingpet.colortable"
+#define TALKING_PET_CONVERSATION_PHRASES "comm.talkingpet.dialogue"
+#define TALKING_PET_MUSIC "comm.talkingpet.music"

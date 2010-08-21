@@ -1,0 +1,5 @@
+#define SLYLAND_PMAP_ANIM "comm.probe.graphics"
+#define SLYLAND_FONT "comm.probe.font"
+#define SLYLAND_COLOR_MAP "comm.probe.colortable"
+#define SLYLAND_CONVERSATION_PHRASES "comm.probe.dialogue"
+#define SLYLAND_MUSIC "comm.probe.music"

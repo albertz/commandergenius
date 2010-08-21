@@ -1,0 +1,8 @@
+#define COMMANDER_PMAP_ANIM "comm.commander.graphics"
+#define COMMANDER_FONT "comm.commander.font"
+#define COMMANDER_COLOR_MAP "comm.commander.colortable"
+#define COMMANDER_CONVERSATION_PHRASES "comm.commander.dialogue"
+#define STARBASE_CONVERSATION_PHRASES "comm.starbase.dialogue"
+#define COMMANDER_LOWPOW_MUSIC "comm.commander.lowpower.music"
+#define COMMANDER_MUSIC "comm.commander.music"
+#define STARBASE_ALT_MUSIC "comm.starbase.music"
