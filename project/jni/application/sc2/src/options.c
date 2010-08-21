@@ -131,7 +131,7 @@ findFileInDirs (const char *locs[], int numLocs, const char *file)
 void
 prepareContentDir (const char *contentDirName, const char* addonDirName, const char *execFile)
 {
-	const char *testFile = "uqm-0.6.0-content.uqm";
+	const char *testFile = "version";
 	const char *loc;
 
 	if (contentDirName == NULL)
