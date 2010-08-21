@@ -208,9 +208,7 @@ void ANDROID_InitOSKeymap()
   
   keymap[KEYCODE_HOME] = SDL_KEY(HOME); // Cannot be used in application
 
-  keymap[KEYCODE_ENDCALL] = SDL_KEY(LSHIFT);
-  keymap[KEYCODE_CAMERA] = SDL_KEY(RSHIFT);
-  keymap[KEYCODE_POWER] = SDL_KEY(RALT);
+  keymap[KEYCODE_CAMERA] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_6));
 
   keymap[KEYCODE_0] = SDL_KEY(0);
   keymap[KEYCODE_1] = SDL_KEY(1);
@@ -266,7 +264,7 @@ void ANDROID_InitOSKeymap()
   keymap[KEYCODE_PERIOD] = SDL_KEY(PERIOD);
   keymap[KEYCODE_TAB] = SDL_KEY(TAB);
   keymap[KEYCODE_SPACE] = SDL_KEY(SPACE);
-  keymap[KEYCODE_DEL] = SDL_KEY(DELETE);
+  keymap[KEYCODE_DEL] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_8));
   keymap[KEYCODE_GRAVE] = SDL_KEY(GRAVE);
   keymap[KEYCODE_MINUS] = SDL_KEY(KP_MINUS);
   keymap[KEYCODE_PLUS] = SDL_KEY(KP_PLUS);
@@ -302,6 +300,10 @@ void ANDROID_InitOSKeymap()
   keymap[KEYCODE_HEADSETHOOK] = SDL_KEY(F5);
   keymap[KEYCODE_FOCUS] = SDL_KEY(F6);
   keymap[KEYCODE_NOTIFICATION] = SDL_KEY(F7);
+
+  // Cannot be received by application, OS internal
+  keymap[KEYCODE_ENDCALL] = SDL_KEY(LSHIFT);
+  keymap[KEYCODE_POWER] = SDL_KEY(RALT);
 
 }
 

@@ -27,7 +27,6 @@ public class MainActivity extends Activity {
 		setContentView(_tv);
 		mLoadLibraryStub = new LoadLibrary();
 		mAudioThread = new AudioThread(this);
-
 		Settings.Load(this);
 	}
 	

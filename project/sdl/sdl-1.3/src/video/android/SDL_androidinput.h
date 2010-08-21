@@ -48,7 +48,7 @@
 
 #include "../SDL_sysvideo.h"
 #include "SDL_androidvideo.h"
-
+#include "javakeycodes.h"
 
 extern SDLKey SDL_android_keymap[KEYCODE_LAST+1];
 
@@ -191,6 +191,15 @@ extern int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int 
 #endif
 #ifndef SDL_ANDROID_KEYCODE_5
 #define SDL_ANDROID_KEYCODE_5 ESCAPE
+#endif
+#ifndef SDL_ANDROID_KEYCODE_6
+#define SDL_ANDROID_KEYCODE_6 RSHIFT
+#endif
+#ifndef SDL_ANDROID_KEYCODE_7
+#define SDL_ANDROID_KEYCODE_7 RETURN
+#endif
+#ifndef SDL_ANDROID_KEYCODE_8
+#define SDL_ANDROID_KEYCODE_8 DELETE
 #endif
 
 #endif

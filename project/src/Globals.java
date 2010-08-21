@@ -27,6 +27,8 @@ class Globals {
 	
 	public static boolean AppUsesMultitouch = false;
 
+	public static int AppTouchscreenKeyboardKeysAmount = 4;
+
 	// Phone-specific config
 	// It will download app data to /sdcard/alienblaster if set to true,
 	// otherwise it will download it to /data/data/de.schwardtnet.alienblaster/files

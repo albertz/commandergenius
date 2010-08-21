@@ -346,7 +346,7 @@ class Settings
 		if( Globals.UseTouchscreenKeyboard )
 		{
 			nativeSetTouchscreenKeyboardUsed();
-			nativeSetupScreenKeyboard(Globals.TouchscreenKeyboardSize, 4);
+			nativeSetupScreenKeyboard(Globals.TouchscreenKeyboardSize, Globals.AppTouchscreenKeyboardKeysAmount);
 		}
 		nativeSetAccelerometerSensitivity(Globals.AccelerometerSensitivity);
 		nativeSetTrackballDampening(Globals.TrackballDampening);

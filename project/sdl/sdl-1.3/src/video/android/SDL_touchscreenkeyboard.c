@@ -49,7 +49,7 @@ FONT_LEFT = 0, FONT_RIGHT = 1, FONT_UP = 2, FONT_DOWN = 3,
 FONT_BTN1 = 4, FONT_BTN2 = 5, FONT_BTN3 = 6, FONT_BTN4 = 7
 };
 
-enum { MAX_BUTTONS = 4 } ; // Max amount of custom buttons
+enum { MAX_BUTTONS = 7 } ; // Max amount of custom buttons
 
 static GLshort fontGL[sizeof(font)/sizeof(font[0])][FONT_MAX_LINES_PER_CHAR * 4 + 1];
 enum { FONT_CHAR_LINES_COUNT = FONT_MAX_LINES_PER_CHAR * 4 };
@@ -60,7 +60,11 @@ static SDLKey buttonKeysyms[MAX_BUTTONS] = {
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_0)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_2)),
-SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_3))
+SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_3)),
+// 4 and 5 are MENU and BACK, always available as HW keys
+SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_6)),
+SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_7)),
+SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_8))
 };
 
 enum { ARROW_LEFT = 1, ARROW_RIGHT = 2, ARROW_UP = 4, ARROW_DOWN = 8 };
@@ -332,11 +336,20 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	buttons[0].y = SDL_ANDROID_sWindowHeight - buttons[0].h;
 
 	// Row of secondary buttons to the upper-right
-	for( i = 1; i < nbuttons; i++ )
+	for( i = 1; i < MIN(nbuttons, 4); i++ )
 	{
 		buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons - 1) / (size + 2);
 		buttons[i].h = SDL_ANDROID_sWindowHeight / (size + 2);
 		buttons[i].x = SDL_ANDROID_sWindowWidth - buttons[i].w * (nbuttons - i);
+		buttons[i].y = 0;
+	}
+
+	// Row of secondary buttons to the upper-left above arrows
+	for( i = 4; i < MIN(nbuttons, 7); i++ )
+	{
+		buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons - 1) / (size + 2);
+		buttons[i].h = (SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowWidth / 2) * 2 / (size + 2);
+		buttons[i].x = buttons[i].w * (nbuttons - i);
 		buttons[i].y = 0;
 	}
 	
