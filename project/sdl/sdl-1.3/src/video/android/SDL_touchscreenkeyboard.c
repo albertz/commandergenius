@@ -317,6 +317,7 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thiz, jint size, jint _nbuttons )
 {
 	int i;
+	int nbuttons1row, nbuttons2row;
 	nbuttons = _nbuttons;
 	if( nbuttons > MAX_BUTTONS )
 		nbuttons = MAX_BUTTONS;
@@ -336,20 +337,22 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	buttons[0].y = SDL_ANDROID_sWindowHeight - buttons[0].h;
 
 	// Row of secondary buttons to the upper-right
-	for( i = 1; i < MIN(nbuttons, 4); i++ )
+	nbuttons1row = MIN(nbuttons, 4);
+	for( i = 1; i < nbuttons1row; i++ )
 	{
-		buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons - 1) / (size + 2);
+		buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons1row - 1) / (size + 2);
 		buttons[i].h = SDL_ANDROID_sWindowHeight / (size + 2);
-		buttons[i].x = SDL_ANDROID_sWindowWidth - buttons[i].w * (nbuttons - i);
+		buttons[i].x = SDL_ANDROID_sWindowWidth - buttons[i].w * (nbuttons1row - i);
 		buttons[i].y = 0;
 	}
 
 	// Row of secondary buttons to the upper-left above arrows
-	for( i = 4; i < MIN(nbuttons, 7); i++ )
+	nbuttons2row = MIN(nbuttons, 7);
+	for( i = 4; i < nbuttons2row; i++ )
 	{
-		buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons - 1) / (size + 2);
+		buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons2row - 4) / (size + 2);
 		buttons[i].h = (SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowWidth / 2) * 2 / (size + 2);
-		buttons[i].x = buttons[i].w * (nbuttons - i);
+		buttons[i].x = buttons[i].w * (nbuttons2row - i - 1);
 		buttons[i].y = 0;
 	}
 	
