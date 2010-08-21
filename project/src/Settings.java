@@ -58,7 +58,7 @@ class Settings
 			Globals.TrackballDampening = settingsFile.readInt();
 			Globals.AudioBufferConfig = settingsFile.readInt();
 			
-			/*
+			
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle("Phone configuration");
 			builder.setPositiveButton("Change phone configuration", new DialogInterface.OnClickListener() 
@@ -70,6 +70,7 @@ class Settings
 						showDownloadConfig(p);
 				}
 			});
+			/*
 			builder.setNegativeButton("Start", new DialogInterface.OnClickListener() 
 			{
 				public void onClick(DialogInterface dialog, int item) 
@@ -79,6 +80,7 @@ class Settings
 						startDownloader(p);
 				}
 			});
+			*/
 			AlertDialog alert = builder.create();
 			alert.setOwnerActivity(p);
 			changeConfigAlert = alert;
@@ -89,33 +91,21 @@ class Settings
 				Callback( MainActivity _p ) { p = _p; }
 				public void run()
 				{
-					System.out.println("Change phone config: sleeping 2 sec");
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(1500);
 					} catch( InterruptedException e ) {};
 					if( changeConfigAlert == null )
 						return;
-					class Callback2 implements Runnable
-					{
-						public void run()
-						{
-							System.out.println("Change phone config: launching...");
-							changeConfigAlert.dismiss(); // Does not work, eh
-							//changeConfigAlert.getButton(AlertDialog.BUTTON_NEGATIVE).dispatchTouchEvent(MotionEvent.obtain(0l, 0l, MotionEvent.ACTION_DOWN, 0.0f, 0.0f, 0));
-							//changeConfigAlert.getButton(AlertDialog.BUTTON_NEGATIVE).dispatchTouchEvent(MotionEvent.obtain(0l, 0l, MotionEvent.ACTION_UP, 0.0f, 0.0f, 0));
-						}
-					}
-					p.runOnUiThread(new Callback2());
+					changeConfigAlert.dismiss();
+					startDownloader(p);
 				}
 			};
 			changeConfigAlertThread = new Thread(new Callback(p));
-			changeConfigAlertThread.run();
+			changeConfigAlertThread.start();
 
 			alert.show();
-			*/
 			
 			
-			startDownloader(p);
 			return;
 			
 		} catch( FileNotFoundException e ) {
@@ -142,9 +132,9 @@ class Settings
 				c.navigation == Configuration.NAVIGATION_NONAV ? "None" :
 				"Unknown" ) );
 		*/
-		
-			showDownloadConfig(p);
-		}
+
+		showDownloadConfig(p);
+	}
 
 	static void showDownloadConfig(final MainActivity p) {
 

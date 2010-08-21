@@ -25,11 +25,10 @@ public class MainActivity extends Activity {
 		_tv = new TextView(this);
 		_tv.setText("Initializing");
 		setContentView(_tv);
-
-		Settings.Load(this);
-
 		mLoadLibraryStub = new LoadLibrary();
 		mAudioThread = new AudioThread(this);
+
+		Settings.Load(this);
 	}
 	
 	public void startDownloader()
@@ -125,6 +124,24 @@ public class MainActivity extends Activity {
 		if(mGLView != null)
 			mGLView.onTouchEvent(ev);
 		return true;
+	}
+	
+	public void setText(final String t)
+	{
+		class Callback implements Runnable
+		{
+			public TextView Status;
+			public String text;
+			public void run()
+			{
+				if(Status != null)
+					Status.setText(text);
+			}
+		}
+		Callback cb = new Callback();
+		cb.text = new String(t);
+		cb.Status = _tv;
+		this.runOnUiThread(cb);
 	}
 
 	private DemoGLSurfaceView mGLView = null;
