@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHANGE_APP_SETTINGS_VERSION=3
+CHANGE_APP_SETTINGS_VERSION=4
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -46,10 +46,26 @@ if [ -n "$var" ] ; then
 	ScreenOrientation="$var"
 fi
 
-echo -n "\nSpecify URL to download application data in zip archive, you may specify backup URLs delimited by '|'\n($AppDataDownloadUrl):\n"
-read var
-if [ -n "$var" ] ; then
-	AppDataDownloadUrl="$var"
+echo -n "\nSpecify path to download application data in zip archive in the form 'Description|URL|BackupURL|...'"
+echo -n "\nYou may specify paths to optional game content delimited by newlines (empty line to finish)"
+echo -n "\nIf the URL starts with '-' symbol it will be downloaded as-is to game dir and not unzipped\n\n"
+echo -n "`echo $AppDataDownloadUrl | tr '^' '\\n'`"
+echo
+AppDataDownloadUrl1=""
+while true; do
+	read var
+	if [ -n "$var" ] ; then
+		if [ -z "$AppDataDownloadUrl1" ]; then
+			AppDataDownloadUrl1="$var"
+		else
+			AppDataDownloadUrl1="$AppDataDownloadUrl1^$var"
+		fi
+	else
+		break
+	fi
+done
+if [ -n "$AppDataDownloadUrl1" ] ; then
+	AppDataDownloadUrl="$AppDataDownloadUrl1"
 fi
 
 echo -n "\nApplication window should be resized to fit into native device screen (480x320 or 800x480) (y) or (n) ($SdlVideoResize): "
@@ -70,7 +86,7 @@ if [ -n "$var" ] ; then
 	AppUsesMouse="$var"
 fi
 
-echo -n "\nApplication needs arrow keys (y) or (n), if (y) the accelerometer or touchscreen keyboard\nwill be used as arrow keys if phone does not have dpad/trackball ($AppNeedsArrowKeys)\n: "
+echo -n "\nApplication needs arrow keys (y) or (n), if (y) the accelerometer or touchscreen keyboard\nwill be used as arrow keys if phone does not have dpad/trackball ($AppNeedsArrowKeys): "
 read var
 if [ -n "$var" ] ; then
 	AppNeedsArrowKeys="$var"
@@ -277,7 +293,7 @@ done
 echo Patching project/src/Globals.java
 cat project/src/Globals.java | \
 	sed "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" | \
-	sed "s^public static String DataDownloadUrl = \".*\";^public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";^" | \
+	sed "s@public static String DataDownloadUrl = .*@public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";@" | \
 	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
 	sed "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" | \
 	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \

@@ -148,9 +148,21 @@ class DataDownloader extends Thread
 	}
 
 	@Override
-	public void run() 
+	public void run()
 	{
-		final String DownloadFlagFileName = "libsdl-DownloadFinished.flag";
+		String [] downloadFiles = Globals.DataDownloadUrl.split("[^]");
+		for( int i = 0; i < downloadFiles.length; i++ )
+		{
+			if( downloadFiles[i].length() > 0 && Globals.OptionalDataDownload.length > i && Globals.OptionalDataDownload[i] )
+				DownloadDataFile(downloadFiles[i], "libsdl-DownloadFinished-" + String.valueOf(i) + ".flag");
+		}
+	}
+	public void DownloadDataFile(final String DataDownloadUrl, final String DownloadFlagFileName)
+	{
+		String [] downloadUrls = DataDownloadUrl.split("[|]");
+		if( downloadUrls.length < 2 )
+			return;
+
 		String path = getOutFilePath(DownloadFlagFileName);
 		InputStream checkFile = null;
 		try {
@@ -163,10 +175,13 @@ class DataDownloader extends Thread
 				byte b[] = new byte[ Globals.DataDownloadUrl.getBytes("UTF-8").length + 1 ];
 				int readed = checkFile.read(b);
 				String compare = new String( b, 0, b.length - 1, "UTF-8" );
-				//Log.i("libSDL", "Saved URL '" + compare + "' requested URL '" + Globals.DataDownloadUrl + "'");
 				if( readed != b.length - 1 )
 					throw new IOException();
-				if( compare.compareTo(Globals.DataDownloadUrl) != 0 )
+				boolean matched = false;
+				for( int i = 1; i < downloadUrls.length; i++ )
+					if( compare.compareTo(downloadUrls[i]) == 0 )
+						matched = true;
+				if( ! matched )
 					throw new IOException();
 				Status.setText( "No need to download" );
 				DownloadComplete = true;
@@ -176,6 +191,7 @@ class DataDownloader extends Thread
 		}
 		checkFile = null;
 		
+		int downloadUrlIndex = 1;
 		// Create output directory (not necessary for phone storage)
 		if( Globals.DownloadToSdcard )
 		{
@@ -184,182 +200,223 @@ class DataDownloader extends Thread
 			} catch( SecurityException e ) { };
 		}
 
-		String [] downloadUrls = Globals.DataDownloadUrl.split("[|]");
-		int downloadUrlIndex = 0;
-		
 		downloading:
 		while(true)
 		{
+			HttpResponse response = null;
+			HttpGet request;
+			long totalLen;
+			CountingInputStream stream;
+			byte[] buf = new byte[16384];
+			boolean DoNotUnzip = false;
 
-		HttpResponse response = null;
-		HttpGet request;
-		long totalLen;
-		CountingInputStream stream;
-		byte[] buf = new byte[16384];
-
-		while( downloadUrlIndex < downloadUrls.length && response == null ) 
-		{
-			System.out.println("Connecting to " + downloadUrls[downloadUrlIndex]);
-			Status.setText( "Connecting to " + downloadUrls[downloadUrlIndex] );
-			request = new HttpGet(downloadUrls[downloadUrlIndex]);
-			request.addHeader("Accept", "*/*");
-			try {
-				DefaultHttpClient client = new DefaultHttpClient();
-				client.getParams().setBooleanParameter("http.protocol.handle-redirects", true);
-				response = client.execute(request);
-			} catch (IOException e) {
-				System.out.println("Failed to connect to " + downloadUrls[downloadUrlIndex]);
-				downloadUrlIndex++;
-			};
-			if( response != null )
+			while( downloadUrlIndex < downloadUrls.length && response == null ) 
 			{
-				if( response.getStatusLine().getStatusCode() != 200 )
+				System.out.println("Connecting to " + downloadUrls[downloadUrlIndex]);
+				Status.setText( "Connecting to " + downloadUrls[downloadUrlIndex] );
+				String url = new String(downloadUrls[downloadUrlIndex]);
+				if(url.indexOf("-") == 0)
 				{
-					response = null;
+					url = url.substring(1);
+					DoNotUnzip = true;
+				}
+				request = new HttpGet(url);
+				request.addHeader("Accept", "*/*");
+				try {
+					DefaultHttpClient client = new DefaultHttpClient();
+					client.getParams().setBooleanParameter("http.protocol.handle-redirects", true);
+					response = client.execute(request);
+				} catch (IOException e) {
 					System.out.println("Failed to connect to " + downloadUrls[downloadUrlIndex]);
 					downloadUrlIndex++;
+				};
+				if( response != null )
+				{
+					if( response.getStatusLine().getStatusCode() != 200 )
+					{
+						response = null;
+						System.out.println("Failed to connect to " + downloadUrls[downloadUrlIndex]);
+						downloadUrlIndex++;
+					}
 				}
 			}
-		}
-		if( response == null )
-		{
-			System.out.println("Error connecting to " + Globals.DataDownloadUrl);
-			Status.setText( "Error connecting to " + Globals.DataDownloadUrl );
-			return;
-		}
+			if( response == null )
+			{
+				System.out.println("Error connecting to " + Globals.DataDownloadUrl);
+				Status.setText( "Error connecting to " + Globals.DataDownloadUrl );
+				return;
+			}
 
-		Status.setText( "Downloading data from " + Globals.DataDownloadUrl );
-		totalLen = response.getEntity().getContentLength();
-		try {
-			stream = new CountingInputStream(response.getEntity().getContent());
-		} catch( java.io.IOException e ) {
-			Status.setText( "Error downloading data from " + Globals.DataDownloadUrl );
-			return;
-		}
-		
-		ZipInputStream zip = new ZipInputStream(stream);
-		
-		while(true)
-		{
-			ZipEntry entry = null;
+			Status.setText( "Downloading data from " + Globals.DataDownloadUrl );
+			totalLen = response.getEntity().getContentLength();
 			try {
-				entry = zip.getNextEntry();
+				stream = new CountingInputStream(response.getEntity().getContent());
 			} catch( java.io.IOException e ) {
 				Status.setText( "Error downloading data from " + Globals.DataDownloadUrl );
 				return;
 			}
-			if( entry == null )
-				break;
-			if( entry.isDirectory() )
+			
+			if(DoNotUnzip)
 			{
+				path = downloadUrls[downloadUrlIndex].substring(downloadUrls[downloadUrlIndex].lastIndexOf("/")+1, downloadUrls[downloadUrlIndex].indexOf("?"));
+				OutputStream out = null;
 				try {
-					(new File( getOutFilePath(entry.getName()) )).mkdirs();
+					out = new FileOutputStream( path );
+				} catch( FileNotFoundException e ) {
 				} catch( SecurityException e ) { };
-				continue;
+				if( out == null )
+				{
+					Status.setText( "Error writing to " + path );
+					return;
+				}
+
+				try {
+					int len = stream.read(buf);
+					while (len >= 0)
+					{
+						if(len > 0)
+							out.write(buf, 0, len);
+						len = stream.read(buf);
+
+						String percent = "";
+						if( totalLen > 0 )
+							percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
+						Status.setText( percent + "writing file " + path );
+					}
+					out.flush();
+					out.close();
+					out = null;
+				} catch( java.io.IOException e ) {
+					Status.setText( "Error writing file " + path );
+					return;
+				}
+			}
+			else
+			{
+				ZipInputStream zip = new ZipInputStream(stream);
+				
+				while(true)
+				{
+					ZipEntry entry = null;
+					try {
+						entry = zip.getNextEntry();
+					} catch( java.io.IOException e ) {
+						Status.setText( "Error downloading data from " + Globals.DataDownloadUrl );
+						return;
+					}
+					if( entry == null )
+						break;
+					if( entry.isDirectory() )
+					{
+						try {
+							(new File( getOutFilePath(entry.getName()) )).mkdirs();
+						} catch( SecurityException e ) { };
+						continue;
+					}
+
+					OutputStream out = null;
+					path = getOutFilePath(entry.getName());
+					
+					try {
+						CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
+						while( check.read(buf, 0, buf.length) > 0 ) {};
+						check.close();
+						if( check.getChecksum().getValue() != entry.getCrc() )
+						{
+							File ff = new File(path);
+							ff.delete();
+							throw new Exception();
+						}
+						continue;
+					} catch( Exception e )
+					{
+					}
+
+					try {
+						out = new FileOutputStream( path );
+					} catch( FileNotFoundException e ) {
+					} catch( SecurityException e ) { };
+					if( out == null )
+					{
+						Status.setText( "Error writing to " + path );
+						return;
+					}
+
+					String percent = "";
+					if( totalLen > 0 )
+						percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
+					Status.setText( percent + "writing file " + path );
+					
+					try {
+						int len = zip.read(buf);
+						while (len >= 0)
+						{
+							if(len > 0)
+								out.write(buf, 0, len);
+							len = zip.read(buf);
+
+							percent = "";
+							if( totalLen > 0 )
+								percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
+							Status.setText( percent + "writing file " + path );
+						}
+						out.flush();
+						out.close();
+						out = null;
+					} catch( java.io.IOException e ) {
+						Status.setText( "Error writing file " + path );
+						return;
+					}
+					
+					try {
+						CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
+						while( check.read(buf, 0, buf.length) > 0 ) {};
+						check.close();
+						if( check.getChecksum().getValue() != entry.getCrc() )
+						{
+							File ff = new File(path);
+							ff.delete();
+							throw new Exception();
+						}
+					} catch( Exception e )
+					{
+						Status.setText( "CRC32 check failed for file " + path );
+						continue downloading; // Start download over from the same URL
+						//return;
+					}
+				}
 			}
 
 			OutputStream out = null;
-			path = getOutFilePath(entry.getName());
-			
-			try {
-				CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
-				while( check.read(buf, 0, buf.length) > 0 ) {};
-				check.close();
-				if( check.getChecksum().getValue() != entry.getCrc() )
-				{
-					File ff = new File(path);
-					ff.delete();
-					throw new Exception();
-				}
-				continue;
-			} catch( Exception e )
-			{
-			}
-
+			path = getOutFilePath(DownloadFlagFileName);
 			try {
 				out = new FileOutputStream( path );
+				out.write(downloadUrls[downloadUrlIndex].getBytes("UTF-8"));
+				out.flush();
+				out.close();
 			} catch( FileNotFoundException e ) {
-			} catch( SecurityException e ) { };
+			} catch( SecurityException e ) {
+			} catch( java.io.IOException e ) {
+				Status.setText( "Error writing file " + path );
+				return;
+			};
+			
 			if( out == null )
 			{
 				Status.setText( "Error writing to " + path );
 				return;
 			}
-
-			String percent = "";
-			if( totalLen > 0 )
-				percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
-			Status.setText( percent + "writing file " + path );
+		
+			Status.setText( "Finished" );
+			DownloadComplete = true;
 			
 			try {
-				int len = zip.read(buf);
-				while (len >= 0)
-				{
-					if(len > 0)
-						out.write(buf, 0, len);
-					len = zip.read(buf);
-
-					percent = "";
-					if( totalLen > 0 )
-						percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
-					Status.setText( percent + "writing file " + path );
-				}
-				out.flush();
-				out.close();
-				out = null;
+				stream.close();
 			} catch( java.io.IOException e ) {
-				Status.setText( "Error writing file " + path );
-				return;
-			}
+			};
 			
-			try {
-				CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
-				while( check.read(buf, 0, buf.length) > 0 ) {};
-				check.close();
-				if( check.getChecksum().getValue() != entry.getCrc() )
-				{
-					File ff = new File(path);
-					ff.delete();
-					throw new Exception();
-				}
-			} catch( Exception e )
-			{
-				Status.setText( "CRC32 check failed for file " + path );
-				continue downloading; // Start download over from the same URL
-				//return;
-			}
-		}
-
-		OutputStream out = null;
-		path = getOutFilePath(DownloadFlagFileName);
-		try {
-			out = new FileOutputStream( path );
-			out.write(Globals.DataDownloadUrl.getBytes("UTF-8"));
-			out.flush();
-			out.close();
-		} catch( FileNotFoundException e ) {
-		} catch( SecurityException e ) {
-		} catch( java.io.IOException e ) {
-			Status.setText( "Error writing file " + path );
-			return;
-		};
-		
-		if( out == null )
-		{
-			Status.setText( "Error writing to " + path );
-			return;
-		}
-	
-		Status.setText( "Finished" );
-		DownloadComplete = true;
-		
-		try {
-			stream.close();
-		} catch( java.io.IOException e ) {
-		};
-		
-		initParent();
-		break;
+			initParent();
+			break;
 		}
 	};
 	

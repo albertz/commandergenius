@@ -38,6 +38,9 @@ class Settings
 			out.writeInt(Globals.AccelerometerSensitivity);
 			out.writeInt(Globals.TrackballDampening);
 			out.writeInt(Globals.AudioBufferConfig);
+			out.writeInt(Globals.OptionalDataDownload.length);
+			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
+				out.writeBoolean(Globals.OptionalDataDownload[i]);
 			out.close();
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
@@ -57,7 +60,9 @@ class Settings
 			Globals.AccelerometerSensitivity = settingsFile.readInt();
 			Globals.TrackballDampening = settingsFile.readInt();
 			Globals.AudioBufferConfig = settingsFile.readInt();
-			
+			Globals.OptionalDataDownload = new boolean[settingsFile.readInt()];
+			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
+				Globals.OptionalDataDownload[i] = settingsFile.readBoolean();
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle("Phone configuration");
@@ -148,9 +153,30 @@ class Settings
 		}catch(Exception e) {}
 
 		final CharSequence[] items = {"Phone storage - " + String.valueOf(freePhone) + " Mb free", "SD card - " + String.valueOf(freeSdcard) + " Mb free"};
-
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("Where to download application data");
+		String [] downloadFiles = Globals.DataDownloadUrl.split("[^]");
+		builder.setTitle(downloadFiles[0].split("[|]")[0]);
+		CharSequence[] items2 = null;
+		if(downloadFiles.length > 1)
+		{
+			Globals.OptionalDataDownload = new boolean[downloadFiles.length];
+			items2 = new CharSequence[ downloadFiles.length - 1 ];
+			for(int i = 1; i < downloadFiles.length; i++ )
+				items2[i-1] = new String(downloadFiles[i].split("[|]")[0]);
+			if( items2 != null )
+			builder.setMultiChoiceItems(items2, 
+					Globals.OptionalDataDownload.length == items2.length ? Globals.OptionalDataDownload : null,
+					new DialogInterface.OnMultiChoiceClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+				{
+					Globals.OptionalDataDownload[item+1] = isChecked;
+				}
+			});
+		}
+		if( Globals.OptionalDataDownload == null )
+			Globals.OptionalDataDownload = new boolean[1];
+		Globals.OptionalDataDownload[0] = true;
 		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
