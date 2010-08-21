@@ -22,6 +22,9 @@ class Settings
 {
 	static String SettingsFileName = "libsdl-settings.cfg";
 
+	static AlertDialog changeConfigAlert = null;
+	static Thread changeConfigAlertThread = null;
+
 	static void Save(final MainActivity p)
 	{
 		try {
@@ -31,6 +34,10 @@ class Settings
 			out.writeBoolean(Globals.PhoneHasTrackball);
 			out.writeBoolean(Globals.UseAccelerometerAsArrowKeys);
 			out.writeBoolean(Globals.UseTouchscreenKeyboard);
+			out.writeInt(Globals.TouchscreenKeyboardSize);
+			out.writeInt(Globals.AccelerometerSensitivity);
+			out.writeInt(Globals.TrackballDampening);
+			out.writeInt(Globals.AudioBufferConfig);
 			out.close();
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
@@ -46,9 +53,71 @@ class Settings
 			Globals.PhoneHasTrackball = settingsFile.readBoolean();
 			Globals.UseAccelerometerAsArrowKeys = settingsFile.readBoolean();
 			Globals.UseTouchscreenKeyboard = settingsFile.readBoolean();
+			Globals.TouchscreenKeyboardSize = settingsFile.readInt();
+			Globals.AccelerometerSensitivity = settingsFile.readInt();
+			Globals.TrackballDampening = settingsFile.readInt();
+			Globals.AudioBufferConfig = settingsFile.readInt();
+			
+			/*
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle("Phone configuration");
+			builder.setPositiveButton("Change phone configuration", new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+						changeConfigAlert = null;
+						dialog.dismiss();
+						showDownloadConfig(p);
+				}
+			});
+			builder.setNegativeButton("Start", new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+						changeConfigAlert = null;
+						dialog.dismiss();
+						startDownloader(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			changeConfigAlert = alert;
 
+			class Callback implements Runnable
+			{
+				MainActivity p;
+				Callback( MainActivity _p ) { p = _p; }
+				public void run()
+				{
+					System.out.println("Change phone config: sleeping 2 sec");
+					try {
+						Thread.sleep(5000);
+					} catch( InterruptedException e ) {};
+					if( changeConfigAlert == null )
+						return;
+					class Callback2 implements Runnable
+					{
+						public void run()
+						{
+							System.out.println("Change phone config: launching...");
+							changeConfigAlert.dismiss(); // Does not work, eh
+							//changeConfigAlert.getButton(AlertDialog.BUTTON_NEGATIVE).dispatchTouchEvent(MotionEvent.obtain(0l, 0l, MotionEvent.ACTION_DOWN, 0.0f, 0.0f, 0));
+							//changeConfigAlert.getButton(AlertDialog.BUTTON_NEGATIVE).dispatchTouchEvent(MotionEvent.obtain(0l, 0l, MotionEvent.ACTION_UP, 0.0f, 0.0f, 0));
+						}
+					}
+					p.runOnUiThread(new Callback2());
+				}
+			};
+			changeConfigAlertThread = new Thread(new Callback(p));
+			changeConfigAlertThread.run();
+
+			alert.show();
+			*/
+			
+			
 			startDownloader(p);
 			return;
+			
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
 		} catch ( IOException e ) {};
@@ -73,6 +142,11 @@ class Settings
 				c.navigation == Configuration.NAVIGATION_NONAV ? "None" :
 				"Unknown" ) );
 		*/
+		
+			showDownloadConfig(p);
+		}
+
+	static void showDownloadConfig(final MainActivity p) {
 
 		long freeSdcard = 0;
 		long freePhone = 0;
@@ -100,15 +174,13 @@ class Settings
 		AlertDialog alert = builder.create();
 		alert.setOwnerActivity(p);
 		alert.show();
-		
 	};
 
 	static void showKeyboardConfig(final MainActivity p)
 	{
 		if( ! Globals.AppNeedsArrowKeys )
 		{
-			Save(p);
-			startDownloader(p);
+			showTrackballConfig(p);
 			return;
 		}
 		
@@ -124,6 +196,34 @@ class Settings
 				Globals.PhoneHasTrackball = (item == 1);
 
 				dialog.dismiss();
+				showTrackballConfig(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showTrackballConfig(final MainActivity p)
+	{
+		Globals.TrackballDampening = 0;
+		if( ! Globals.PhoneHasTrackball )
+		{
+			showAdditionalInputConfig(p);
+			return;
+		}
+		
+		final CharSequence[] items = {"No dampening", "Fast", "Medium", "Slow"};
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle("Trackball dampening");
+		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.TrackballDampening = item;
+
+				dialog.dismiss();
 				showAdditionalInputConfig(p);
 			}
 		});
@@ -134,11 +234,16 @@ class Settings
 	
 	static void showAdditionalInputConfig(final MainActivity p)
 	{
+		if( ! Globals.AppNeedsArrowKeys )
+		{
+			showAccelerometerConfig(p);
+			return;
+		}
 		final CharSequence[] items = {
 			"On-screen keyboard" + ( Globals.AppUsesMouse ? " (disables mouse input)" : ""),
 			"Accelerometer as navigation keys" + ( Globals.AppUsesJoystick ? " (disables joystick input)" : "" ),
 			"Both accelerometer and on-screen keyboard",
-			"No additional controls" + ( Globals.AppNeedsArrowKeys ? " (you won't be able to play without arrow keys)" : " (only if your phone has enough buttons)")
+			"No additional controls"
 		};
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -150,9 +255,64 @@ class Settings
 				Globals.UseTouchscreenKeyboard = (item == 0 || item == 2);
 				Globals.UseAccelerometerAsArrowKeys = (item == 1 || item == 2);
 
-				Save(p);
 				dialog.dismiss();
-				startDownloader(p);
+				showAccelerometerConfig(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showAccelerometerConfig(final MainActivity p)
+	{
+		Globals.AccelerometerSensitivity = 0;
+		if( ! Globals.UseAccelerometerAsArrowKeys )
+		{
+			showScreenKeyboardConfig(p);
+			return;
+		}
+		
+		final CharSequence[] items = {"Fast", "Medium", "Slow"};
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle("Accelerometer sensitivity");
+		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.AccelerometerSensitivity = item;
+
+				dialog.dismiss();
+				showScreenKeyboardConfig(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showScreenKeyboardConfig(final MainActivity p)
+	{
+		Globals.TouchscreenKeyboardSize = 0;
+		if( ! Globals.UseTouchscreenKeyboard )
+		{
+			showAudioConfig(p);
+			return;
+		}
+		
+		final CharSequence[] items = {"Big", "Medium", "Small"};
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle("On-screen keyboard size (toggle auto-fire by sliding across Fire button)");
+		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.TouchscreenKeyboardSize = item;
+
+				dialog.dismiss();
+				showAudioConfig(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -160,6 +320,26 @@ class Settings
 		alert.show();
 	}
 	
+	static void showAudioConfig(final MainActivity p)
+	{
+		final CharSequence[] items = {"Small (fast devices)", "Medium", "Large (if sound is choppy)"};
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle("Size of audio buffer");
+		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.AudioBufferConfig = item;
+				dialog.dismiss();
+				Save(p);
+				startDownloader(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
 	
 	static void Apply()
 	{
@@ -176,8 +356,10 @@ class Settings
 		if( Globals.UseTouchscreenKeyboard )
 		{
 			nativeSetTouchscreenKeyboardUsed();
-			nativeSetupScreenKeyboard(0, 4);
+			nativeSetupScreenKeyboard(Globals.TouchscreenKeyboardSize, 4);
 		}
+		nativeSetAccelerometerSensitivity(Globals.AccelerometerSensitivity);
+		nativeSetTrackballDampening(Globals.TrackballDampening);
 		String lang = new String(Locale.getDefault().getLanguage());
 		if( Locale.getDefault().getCountry().length() > 0 )
 			lang = lang + "_" + Locale.getDefault().getCountry();
@@ -204,6 +386,8 @@ class Settings
 
 	private static native void nativeIsSdcardUsed(int flag);
 	private static native void nativeSetTrackballUsed();
+	private static native void nativeSetTrackballDampening(int value);
+	private static native void nativeSetAccelerometerSensitivity(int value);
 	private static native void nativeSetMouseUsed();
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();

@@ -35,6 +35,10 @@ class Globals {
 	public static boolean PhoneHasArrowKeys = false;
 	public static boolean UseAccelerometerAsArrowKeys = false;
 	public static boolean UseTouchscreenKeyboard = false;
+	public static int TouchscreenKeyboardSize = 0;
+	public static int AccelerometerSensitivity = 0;
+	public static int TrackballDampening = 0;
+	public static int AudioBufferConfig = 0;
 }
 
 class LoadLibrary {

@@ -18,6 +18,7 @@ LOCAL_CFLAGS := $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../png \
 				-I$(LOCAL_PATH)/../jpeg \
 				-I$(LOCAL_PATH)/../intl \
+				-I$(LOCAL_PATH)/..
 
 
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
@@ -34,6 +35,8 @@ LOCAL_SHARED_LIBRARIES := sdl $(COMPILED_LIBRARIES)
 LOCAL_STATIC_LIBRARIES := stlport
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
+
+LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
 
 LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
 	for f in $(LOCAL_PATH)/../../libs/armeabi/*.so ; do \

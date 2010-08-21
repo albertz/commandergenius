@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHANGE_APP_SETTINGS_VERSION=1
+CHANGE_APP_SETTINGS_VERSION=2
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -70,7 +70,7 @@ if [ -n "$var" ] ; then
 	AppUsesMouse="$var"
 fi
 
-echo -n "\nApplication needs arrow keys (y) or (n), if (y) the accelerometer or touchscreen keyboard will be used\nas arrow keys if phone does not have dpad/trackball ($AppNeedsArrowKeys): "
+echo -n "\nApplication needs arrow keys (y) or (n), if (y) the accelerometer or touchscreen keyboard\nwill be used as arrow keys if phone does not have dpad/trackball ($AppNeedsArrowKeys)\n: "
 read var
 if [ -n "$var" ] ; then
 	AppNeedsArrowKeys="$var"
@@ -82,15 +82,15 @@ if [ -n "$var" ] ; then
 	AppUsesJoystick="$var"
 fi
 
-echo -n "\nApplication uses multitouch (y) or (n), multitouch events are passed as 4-axis joysticks 1-5, including pressure and size ($AppUsesMultitouch): "
+echo -n "\nApplication uses multitouch (y) or (n), multitouch events are passed as \n4-axis joysticks 1-5, including pressure and size ($AppUsesMultitouch): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesMultitouch="$var"
 fi
 
-echo -n "\nRedefine common keys to SDL keysyms: TOUCHSCREEN SEARCH/CALL/DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU"
-echo -n "\nMENU hardware key and TOUCHSCREEN virtual 'key' are available on all devices, other keys may be absent"
-echo -n "\nThe same key values are used if touchscreen keyboard is enabled ($RedefinedKeys): "
+echo -n "\nRedefine common keys to SDL keysyms: TOUCHSCREEN SEARCH/CALL/DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU BACK"
+echo -n "\nMENU and BACK hardware keys and TOUCHSCREEN virtual 'key' are available on all devices, other keys may be absent"
+echo -n "\nThe same key values are used if touchscreen keyboard is enabled, except for MENU and BACK\n($RedefinedKeys)\n: "
 read var
 if [ -n "$var" ] ; then
 	RedefinedKeys="$var"
@@ -127,6 +127,12 @@ echo -n "\nAditional CFLAGS for application ($AppCflags): "
 read var
 if [ -n "$var" ] ; then
 	AppCflags="$var"
+fi
+
+echo -n "\nAditional LDFLAGS for application ($AppLdflags): "
+read var
+if [ -n "$var" ] ; then
+	AppLdflags="$var"
 fi
 
 echo -n "\nHere you may type some short readme text that will be shown when app data is downloaded."
@@ -170,6 +176,7 @@ echo AppVersionCode=$AppVersionCode >> AppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AppSettings.cfg
 echo CompiledLibraries=\"$CompiledLibraries\" >> AppSettings.cfg
 echo AppCflags=\'$AppCflags\' >> AppSettings.cfg
+echo AppLdflags=\'$AppLdflags\' >> AppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AppSettings.cfg
 
 AppShortName=`echo $AppName | sed 's/ //g'`
@@ -280,8 +287,9 @@ cat project/jni/Android.mk | \
 	sed "s/SDL_JAVA_PACKAGE_PATH := .*/SDL_JAVA_PACKAGE_PATH := $AppFullNameUnderscored/" | \
 	sed "s^SDL_CURDIR_PATH := .*^SDL_CURDIR_PATH := $DataPath^" | \
 	sed "s^SDL_VIDEO_RENDER_RESIZE := .*^SDL_VIDEO_RENDER_RESIZE := $SdlVideoResize^" | \
-	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" |
+	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
+	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
 	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes^" > \
 	project/jni/Android.mk.1
 if [ -n "`diff -w project/jni/Android.mk.1 project/jni/Android.mk`" ] ; then
@@ -308,12 +316,6 @@ cat project/res/values/strings.xml | \
 mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
 
 echo Forcing rebuild of specific files
-# Force rebuild of C-Java bindings and updated settings
-touch project/jni/sdl_main/*.c
-touch project/sdl/sdl-*/src/audio/android/*.c
-touch project/sdl/sdl-*/src/video/android/*.c
-touch project/sdl/sdl-*/src/video/SDL_video.c
-touch project/sdl/sdl-1.3/src/video/SDL_renderer_gles.c
 rm -rf project/libs/*
 if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
 	# Internal types are different in SDL 1.2 and 1.3, namely SDL_Rect, so all libs using it have to be recompiled
@@ -322,5 +324,11 @@ if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
 fi
 # Do not rebuild libraries that do not need that
 find project/bin/ndk/local -name "*.[oa]" -exec touch '{}' \;
+# Force rebuild of C-Java bindings and updated settings
+touch project/jni/sdl_main/*.c
+touch project/sdl/sdl-*/src/audio/android/*.c
+touch project/sdl/sdl-*/src/video/android/*.c
+touch project/sdl/sdl-*/src/video/SDL_video.c
+touch project/sdl/sdl-1.3/src/video/SDL_renderer_gles.c
 
 echo Done

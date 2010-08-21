@@ -50,6 +50,8 @@ class AudioThread {
 					if( AudioTrack.getMinBufferSize( rate, channels, encoding ) > bufSize )
 						bufSize = AudioTrack.getMinBufferSize( rate, channels, encoding );
 
+					bufSize = bufSize * (Globals.AudioBufferConfig * 2 + 1);
+
 					mAudioBuffer = new byte[bufSize];
 
 					mAudio = new AudioTrack(AudioManager.STREAM_MUSIC, 

@@ -189,5 +189,8 @@ extern int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int 
 #ifndef SDL_ANDROID_KEYCODE_4
 #define SDL_ANDROID_KEYCODE_4 LCTRL
 #endif
+#ifndef SDL_ANDROID_KEYCODE_5
+#define SDL_ANDROID_KEYCODE_5 ESCAPE
+#endif
 
 #endif
