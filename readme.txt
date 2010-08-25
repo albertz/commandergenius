@@ -169,16 +169,13 @@ Anyway, SDL should sleep inside SDL_Flip() and re-create all HW textures when it
 
 5. Export phone vibrator to SDL - interface is available in SDL 1.3
 
-6. Java downloading part seems unstable - it often truncates files.
-
 Games to port
 =============
 
-Ur-Quan Masters (epic game, must have)
+TeeWorlds
+SuperTux
 LBreakout2
 Commander Genius (only data files for shareware version available for free)
 OpenJazz (only data files for shareware version available for free)
 OpenLieroX (will be damn hard to do, I wrote the code partially)
-TeeWorlds (only if they have nice clean code)
 AdvanceMAME (they already have their own port, yet it's unfinished)
-Star Flight: The Lost Colony

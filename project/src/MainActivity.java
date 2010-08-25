@@ -10,6 +10,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.os.PowerManager;
 import android.widget.TextView;
+import android.content.res.Configuration;
 
 
 public class MainActivity extends Activity {
@@ -123,6 +124,15 @@ public class MainActivity extends Activity {
 		if(mGLView != null)
 			mGLView.onTouchEvent(ev);
 		return true;
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		if(mGLView != null)
+			setContentView(mGLView);
+		else
+			setContentView(_tv);
 	}
 	
 	public void setText(final String t)
