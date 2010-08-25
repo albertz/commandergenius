@@ -29,6 +29,8 @@ class Globals {
 
 	public static int AppTouchscreenKeyboardKeysAmount = 2;
 
+	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 2;
+
 	// Phone-specific config
 	// It will download app data to /sdcard/alienblaster if set to true,
 	// otherwise it will download it to /data/data/de.schwardtnet.alienblaster/files

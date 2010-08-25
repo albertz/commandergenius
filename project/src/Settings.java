@@ -394,7 +394,7 @@ class Settings
 		if( Globals.UseTouchscreenKeyboard )
 		{
 			nativeSetTouchscreenKeyboardUsed();
-			nativeSetupScreenKeyboard(Globals.TouchscreenKeyboardSize, Globals.AppTouchscreenKeyboardKeysAmount);
+			nativeSetupScreenKeyboard(Globals.TouchscreenKeyboardSize, Globals.AppTouchscreenKeyboardKeysAmount, Globals.AppTouchscreenKeyboardKeysAmountAutoFire);
 		}
 		nativeSetAccelerometerSensitivity(Globals.AccelerometerSensitivity);
 		nativeSetTrackballDampening(Globals.TrackballDampening);
@@ -430,7 +430,7 @@ class Settings
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
-	private static native void nativeSetupScreenKeyboard(int size, int nbuttons);
+	private static native void nativeSetupScreenKeyboard(int size, int nbuttons, int nbuttonsAutoFire);
 	public static native void nativeSetEnv(final String name, final String value);
 }
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHANGE_APP_SETTINGS_VERSION=5
+CHANGE_APP_SETTINGS_VERSION=6
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -118,6 +118,12 @@ if [ -n "$var" ] ; then
 	AppTouchscreenKeyboardKeysAmount="$var"
 fi
 
+echo -n "\nNumber of virtual keyboard keys that support autofire (currently 2 is maximum) ($AppTouchscreenKeyboardKeysAmountAutoFire): "
+read var
+if [ -n "$var" ] ; then
+	AppTouchscreenKeyboardKeysAmountAutoFire="$var"
+fi
+
 echo -n "\nEnable multi-ABI binary, with hardware FPU support - \nit will also work on old devices, but .apk size is 2x bigger (y) or (n) ($MultiABI): "
 read var
 if [ -n "$var" ] ; then
@@ -194,6 +200,7 @@ echo AppUsesJoystick=$AppUsesJoystick >> AppSettings.cfg
 echo AppUsesMultitouch=$AppUsesMultitouch >> AppSettings.cfg
 echo RedefinedKeys=\"$RedefinedKeys\" >> AppSettings.cfg
 echo AppTouchscreenKeyboardKeysAmount=$AppTouchscreenKeyboardKeysAmount >> AppSettings.cfg
+echo AppTouchscreenKeyboardKeysAmountAutoFire=$AppTouchscreenKeyboardKeysAmountAutoFire >> AppSettings.cfg
 echo MultiABI=$MultiABI >> AppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AppSettings.cfg
@@ -301,6 +308,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \
 	sed "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" | \
+	sed "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
 	sed "s/public LoadLibrary() .*/public LoadLibrary() { $LibrariesToLoad };/" > \
 	project/src/Globals.java.1
