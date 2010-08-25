@@ -179,3 +179,13 @@ Commander Genius (only data files for shareware version available for free)
 OpenJazz (only data files for shareware version available for free)
 OpenLieroX (will be damn hard to do, I wrote the code partially)
 AdvanceMAME (they already have their own port, yet it's unfinished)
+
+License information
+===================
+
+The libSDL port itself is licensed under LGPL.
+It contains separate libraries under project/jni, each of which has it's own license,
+I've tried to compile all LGPL-ed libs as shared libs but you should anyway inspect the licenses
+of the libraries you're linking to if you're creating closed-source app.
+
+The "Ultimate Droid" button theme by Sean Stieber is licensed under Creative Commons - Attribution license.
