@@ -35,6 +35,7 @@
 #include "mem.h"
 #include "uioutils.h"
 #include "uioport.h"
+#include "../log.h"
 #ifdef uio_MEM_DEBUG
 #	include "memdebug.h"
 #endif
@@ -193,6 +194,7 @@ uio_mountDir(uio_Repository *destRep, const char *mountPoint,
 			errno = EINVAL;
 			return NULL;
 		}
+		log_add (log_Info, "uio_open %s", sourcePath);
 		handle = uio_open(sourceDir, sourcePath,
 				((flags & uio_MOUNT_RDONLY) == uio_MOUNT_RDONLY ?
 				O_RDONLY : O_RDWR)
@@ -201,12 +203,14 @@ uio_mountDir(uio_Repository *destRep, const char *mountPoint,
 #endif
 				, 0);
 		if (handle == NULL) {
+			log_add (log_Info, "uio_open failed for %s", sourcePath);
 			// errno is set
 			return NULL;
 		}
 	}
 
 	handler = uio_getFileSystemHandler(fsType);
+	log_add (log_Info, "uio_getFileSystemHandler %p", handler);
 	if (handler == NULL) {
 		if (handle)
 			uio_close(handle);

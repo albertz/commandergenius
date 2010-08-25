@@ -464,6 +464,7 @@ mountDirZips (uio_DirHandle *dirHandle, const char *mountPoint,
 		
 		for (i = 0; i < dirList->numNames; i++)
 		{
+			log_add (log_Info, "Mounting ZIP '%s'", dirList->names[i]);
 			if (uio_mountDir (repository, mountPoint, uio_FSTYPE_ZIP,
 					dirHandle, dirList->names[i], "/", autoMount,
 					relativeFlags | uio_MOUNT_RDONLY,
