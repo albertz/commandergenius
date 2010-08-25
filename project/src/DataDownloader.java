@@ -218,9 +218,9 @@ class DataDownloader extends Thread
 				System.out.println("Connecting to " + downloadUrls[downloadUrlIndex]);
 				Status.setText( "Connecting to " + downloadUrls[downloadUrlIndex] );
 				String url = new String(downloadUrls[downloadUrlIndex]);
-				if(url.indexOf("-") == 0)
+				if(url.indexOf(":") == 0)
 				{
-					url = url.substring(1);
+					url = url.substring( url.indexOf(":", 1) + 1 );
 					DoNotUnzip = true;
 				}
 				request = new HttpGet(url);
@@ -261,11 +261,8 @@ class DataDownloader extends Thread
 			
 			if(DoNotUnzip)
 			{
-				path = getOutFilePath(downloadUrls[downloadUrlIndex].substring(
-						downloadUrls[downloadUrlIndex].lastIndexOf("/")+1, 
-						downloadUrls[downloadUrlIndex].indexOf("?") > 0 ? 
-						downloadUrls[downloadUrlIndex].indexOf("?") : 
-						downloadUrls[downloadUrlIndex].length() ));
+				path = getOutFilePath(downloadUrls[downloadUrlIndex].substring( 1,
+						downloadUrls[downloadUrlIndex].indexOf(":", 1) ));
 				OutputStream out = null;
 				try {
 					out = new FileOutputStream( path );

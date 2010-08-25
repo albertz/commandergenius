@@ -8,7 +8,7 @@ class Globals {
 	public static String ApplicationName = "Ur-QuanMasters";
 
 	// Should be zip file
-	public static String DataDownloadUrl = "Game data is 60 Mb|https://sites.google.com/site/xpelyax/Home/sc2-data.zip?attredirects=0%26d=1|http://sitesproxy.goapk.com/site/xpelyax/Home/sc2-data.zip";
+	public static String DataDownloadUrl = "Game data is 14 Mb|https://sites.google.com/site/xpelyax/Home/sc2-data.zip?attredirects=0%26d=1|http://sitesproxy.goapk.com/site/xpelyax/Home/sc2-data.zip^3DO remixed music (19 Mb)|:addons/3domusic/3domusic.zip:https://sites.google.com/site/xpelyax/Home/3domusic.zip?attredirects=0%26d=1|:addons/3domusic/3domusic.zip:http://sitesproxy.goapk.com/site/xpelyax/Home/3domusic.zip^UQM music remix pack 1 (50 Mb)|:addons/remix/uqm-remix-pack1.zip:http://sourceforge.net/projects/sc2/files/UQM%20Remix%20Packs/UQM%20Remix%20Pack%201/uqm-remix-pack1.zip/download^UQM music remix pack 2 (60 Mb)|:addons/remix/uqm-remix-pack2.zip:http://sourceforge.net/projects/sc2/files/UQM%20Remix%20Packs/UQM%20Remix%20Pack%202/uqm-remix-pack2.zip/download^UQM music remix pack 3 (40 Mb)|:addons/remix/uqm-remix-pack3.zip:http://sourceforge.net/projects/sc2/files/UQM%20Remix%20Packs/UQM%20Remix%20Pack%203/uqm-remix-pack3.zip/download";
 
 	// Set this value to true if you're planning to render 3D using OpenGL - it eats some GFX resources, so disabled for 2D
 	public static boolean NeedDepthBuffer = false;
