@@ -18,6 +18,7 @@ import android.os.Environment;
 import android.os.StatFs;
 import java.util.Locale;
 import java.util.ArrayList;
+import java.util.zip.GZIPInputStream;
 
 class Settings
 {
@@ -421,7 +422,7 @@ class Settings
 		byte [] buf = new byte[128];
 		byte [] a = new byte[0];
 		try{
-			InputStream is = p.getResources().openRawResource(res);
+			InputStream is = new GZIPInputStream(p.getResources().openRawResource(res));
 			int readed = 0;
 			while( (readed = is.read(buf)) >= 0 )
 			{
