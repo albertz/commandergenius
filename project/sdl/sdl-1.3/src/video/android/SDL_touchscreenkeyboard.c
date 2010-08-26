@@ -259,8 +259,8 @@ int SDL_ANDROID_drawTouchscreenKeyboard()
 		for( i = 0; i < nbuttons; i++ )
 		{
 			drawCharTex( ( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? &buttonAutoFireImages[i] : 
-							&buttonImages[ SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? i * 2 + 1 : i *2 ],
-							&buttons[i], 255, 255, 255, i % 2 ? 64 : 192);
+							&buttonImages[ SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? (i * 2 + 1) : (i * 2) ],
+							&buttons[i], 255, 255, 255, 128 );
 		}
 		endDrawingTex();
 	}
@@ -490,6 +490,9 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		arrows.h = arrows.w;
 		arrows.x -= arrows.w/2;
 		arrows.y -= arrows.h/2;
+		// Move arrows from the center of the screen
+		arrows.x -= size * SDL_ANDROID_sWindowWidth / 32;
+		arrows.y += size * SDL_ANDROID_sWindowWidth / 32;
 		
 		// Buttons to the lower-right in 2 rows
 		for(i = 0; i < 2; i++)
