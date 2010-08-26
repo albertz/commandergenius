@@ -33,6 +33,8 @@ main(int argc, char *argv[])
 	fwrite( &w, 1, 4, ff );
 	int h = htonl(dst->h);
 	fwrite( &h, 1, 4, ff );
+	int format = htonl(argc <= 3 ? 0 : 1);
+	fwrite( &format, 1, 4, ff );
 	for( int i = 0; i < dst->h; i++ )
 	{
 		for( int ii = 0; ii < dst->w; ii++ )

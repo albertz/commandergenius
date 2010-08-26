@@ -27,11 +27,14 @@
 #include <math.h>
 #include <string.h> // for memset()
 #include <GLES/gl.h>
+#include <GLES/glext.h>
+#include <netinet/in.h>
 
 #include "SDL_config.h"
 
 #include "SDL_version.h"
 
+//#include "SDL_opengles.h"
 #include "../SDL_sysvideo.h"
 #include "SDL_androidvideo.h"
 #include "SDL_androidinput.h"
@@ -76,6 +79,24 @@ static int ButtonAutoFireX[MAX_BUTTONS_AUTOFIRE] = {0, 0};
 static int ButtonAutoFireRot[MAX_BUTTONS_AUTOFIRE] = {0, 0};
 
 static SDL_Rect * OldCoords[MAX_MULTITOUCH_POINTERS] = { NULL };
+
+typedef struct
+{
+    GLuint id;
+    GLfloat w;
+    GLfloat h;
+} GLTexture_t;
+
+static GLTexture_t arrowImages[5] = { {0, 0, 0}, };
+static GLTexture_t buttonAutoFireImages[MAX_BUTTONS_AUTOFIRE] = { {0, 0, 0}, };
+static GLTexture_t buttonImages[MAX_BUTTONS*2] = { {0, 0, 0}, };
+
+
+static inline int InsideRect(const SDL_Rect * r, int x, int y)
+{
+	return ( x >= r->x && x <= r->x + r->w ) && ( y >= r->y && y <= r->y + r->h );
+}
+
 
 // Should be called on each char of font before drawing
 static void prepareFontCharWireframe(int idx, int w, int h)
@@ -122,8 +143,7 @@ static inline void endDrawingWireframe()
 // TODO: use SDL 1.3 renderer routines? It will not be pixel-aligned then, if the screen is resized
 static inline void drawCharWireframe(int idx, Uint16 x, Uint16 y, int rotation, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-    //glColor4f((GLfloat) r * inv255f, (GLfloat) g * inv255f, (GLfloat) b * inv255f, (GLfloat) a * inv255f);
-    glColor4x(r * 0x10000, g * 0x10000, b * 0x10000, a * 0x10000);
+    glColor4x(r * 0x100, g * 0x100, b * 0x100, a * 0x100);
 
     glVertexPointer(2, GL_SHORT, 0, fontGL[idx]);
     glPopMatrix();
@@ -134,9 +154,59 @@ static inline void drawCharWireframe(int idx, Uint16 x, Uint16 y, int rotation, 
     glDrawArrays(GL_LINES, 0, fontGL[idx][FONT_CHAR_LINES_COUNT]);
 }
 
-static inline int InsideRect(const SDL_Rect * r, int x, int y)
+static inline void beginDrawingTex()
 {
-	return ( x >= r->x && x <= r->x + r->w ) && ( y >= r->y && y <= r->y + r->h );
+	glEnable(GL_TEXTURE_2D);
+}
+
+static inline void endDrawingTex()
+{
+	/*
+	GLfloat texColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+	glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, texColor);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glDisable(GL_BLEND);
+	*/
+
+	glDisable(GL_TEXTURE_2D);
+}
+
+
+static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * pos, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	GLint cropRect[4];
+	/*
+	GLfloat texColor[4];
+	static const float onediv255 = 1.0f / 255.0f;
+	*/
+
+	glBindTexture(GL_TEXTURE_2D, tex->id);
+
+	glColor4x(r * 0x100, g * 0x100, b * 0x100,  a * 0x100 );
+
+	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
+	
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	/*
+	texColor[0] = r * onediv255;
+	texColor[1] = g * onediv255;
+	texColor[2] = b * onediv255;
+	texColor[3] = a * onediv255;
+	glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, texColor);
+	*/
+
+	cropRect[0] = 0;
+	cropRect[1] = tex->h;
+	cropRect[2] = tex->w;
+	cropRect[3] = -tex->h;
+	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
+	glDrawTexiOES(pos->x, SDL_ANDROID_sWindowHeight - pos->y - pos->h, 0, pos->w, pos->h);
 }
 
 int SDL_ANDROID_drawTouchscreenKeyboard()
@@ -164,6 +234,35 @@ int SDL_ANDROID_drawTouchscreenKeyboard()
 						( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? 0 : 255, 255, SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? 255 : 0, 128 );
 		}
 		endDrawingWireframe();
+	}
+	else
+	{
+		int blendFactor =	( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 1 : 0 ) + 
+							( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
+							( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
+							( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
+		beginDrawingTex();
+		if( blendFactor == 0 )
+			drawCharTex( &arrowImages[0], &arrows, 255, 255, 255, 128 );
+		else
+		{
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
+				drawCharTex( &arrowImages[1], &arrows, 255, 255, 255, 128 / blendFactor );
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
+				drawCharTex( &arrowImages[2], &arrows, 255, 255, 255, 128 / blendFactor );
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
+				drawCharTex( &arrowImages[3], &arrows, 255, 255, 255, 128 / blendFactor );
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
+				drawCharTex( &arrowImages[4], &arrows, 255, 255, 255, 128 / blendFactor );
+		}
+
+		for( i = 0; i < nbuttons; i++ )
+		{
+			drawCharTex( ( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? &buttonAutoFireImages[i] : 
+							&buttonImages[ SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? i * 2 + 1 : i *2 ],
+							&buttons[i], 255, 255, 255, i % 2 ? 64 : 192);
+		}
+		endDrawingTex();
 	}
 	return 1;
 };
@@ -322,60 +421,95 @@ int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointer
 };
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thiz, jint size, jint _nbuttons, jint nbuttonsAutoFire )
+JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thiz, jint size, jint theme, jint _nbuttons, jint nbuttonsAutoFire )
 {
-	int i;
+	int i, ii;
 	int nbuttons1row, nbuttons2row;
 	nbuttons = _nbuttons;
+	touchscreenKeyboardTheme = theme;
 	if( nbuttons > MAX_BUTTONS )
 		nbuttons = MAX_BUTTONS;
 	AutoFireButtonsNum = nbuttonsAutoFire;
 	if( AutoFireButtonsNum > MAX_BUTTONS_AUTOFIRE )
 		AutoFireButtonsNum = MAX_BUTTONS_AUTOFIRE;
 	// TODO: works for horizontal screen orientation only!
-	// TODO: configurable keyboard size
-
-	// Arrows to the lower-left part of screen
-	arrows.w = SDL_ANDROID_sWindowWidth / (size + 2);
-	arrows.h = arrows.w;
-	arrows.x = 0;
-	arrows.y = SDL_ANDROID_sWindowHeight - arrows.h;
 	
-	// Main button to the lower-right
-	buttons[0].w = SDL_ANDROID_sWindowWidth / (size + 2);
-	buttons[0].h = SDL_ANDROID_sWindowHeight / (size + 2);
-	buttons[0].x = SDL_ANDROID_sWindowWidth - buttons[0].w;
-	buttons[0].y = SDL_ANDROID_sWindowHeight - buttons[0].h;
-
-	// Row of secondary buttons to the upper-right
-	nbuttons1row = MIN(nbuttons, 4);
-	for( i = 1; i < nbuttons1row; i++ )
+	if(touchscreenKeyboardTheme == 0)
 	{
-		buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons1row - 1) / (size + 2);
-		buttons[i].h = SDL_ANDROID_sWindowHeight / (size + 2);
-		buttons[i].x = SDL_ANDROID_sWindowWidth - buttons[i].w * (nbuttons1row - i);
-		buttons[i].y = 0;
-	}
+		// Arrows to the lower-left part of screen
+		arrows.w = SDL_ANDROID_sWindowWidth / (size + 2);
+		arrows.h = arrows.w;
+		arrows.x = 0;
+		arrows.y = SDL_ANDROID_sWindowHeight - arrows.h;
+		
+		// Main button to the lower-right
+		buttons[0].w = SDL_ANDROID_sWindowWidth / (size + 2);
+		buttons[0].h = SDL_ANDROID_sWindowHeight / (size + 2);
+		buttons[0].x = SDL_ANDROID_sWindowWidth - buttons[0].w;
+		buttons[0].y = SDL_ANDROID_sWindowHeight - buttons[0].h;
 
-	// Row of secondary buttons to the upper-left above arrows
-	nbuttons2row = MIN(nbuttons, 7);
-	for( i = 4; i < nbuttons2row; i++ )
-	{
-		buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons2row - 4) / (size + 2);
-		buttons[i].h = (SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowWidth / 2) * 2 / (size + 2);
-		buttons[i].x = buttons[i].w * (nbuttons2row - i - 1);
-		buttons[i].y = 0;
-	}
+		// Row of secondary buttons to the upper-right
+		nbuttons1row = MIN(nbuttons, 4);
+		for( i = 1; i < nbuttons1row; i++ )
+		{
+			buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons1row - 1) / (size + 2);
+			buttons[i].h = SDL_ANDROID_sWindowHeight / (size + 2);
+			buttons[i].x = SDL_ANDROID_sWindowWidth - buttons[i].w * (nbuttons1row - i);
+			buttons[i].y = 0;
+		}
+
+		// Row of secondary buttons to the upper-left above arrows
+		nbuttons2row = MIN(nbuttons, 7);
+		for( i = 4; i < nbuttons2row; i++ )
+		{
+			buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons2row - 4) / (size + 2);
+			buttons[i].h = (SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowWidth / 2) * 2 / (size + 2);
+			buttons[i].x = buttons[i].w * (nbuttons2row - i - 1);
+			buttons[i].y = 0;
+		}
+		
+		// Resize char images
+		prepareFontCharWireframe(FONT_LEFT, arrows.w / 2, arrows.h / 2);
+		prepareFontCharWireframe(FONT_RIGHT, arrows.w / 2, arrows.h / 2);
+		prepareFontCharWireframe(FONT_UP, arrows.w / 2, arrows.h / 2);
+		prepareFontCharWireframe(FONT_DOWN, arrows.w / 2, arrows.h / 2);
 	
-	// Resize char images
-	prepareFontCharWireframe(FONT_LEFT, arrows.w / 2, arrows.h / 2);
-	prepareFontCharWireframe(FONT_RIGHT, arrows.w / 2, arrows.h / 2);
-	prepareFontCharWireframe(FONT_UP, arrows.w / 2, arrows.h / 2);
-	prepareFontCharWireframe(FONT_DOWN, arrows.w / 2, arrows.h / 2);
-
-	for( i = 0; i < nbuttons; i++ )
+		for( i = 0; i < nbuttons; i++ )
+		{
+			prepareFontCharWireframe(FONT_BTN1 + i, MIN(buttons[i].h, buttons[i].w), MIN(buttons[i].h, buttons[i].w));
+		}
+	}
+	else
 	{
-		prepareFontCharWireframe(FONT_BTN1 + i, MIN(buttons[i].h, buttons[i].w), MIN(buttons[i].h, buttons[i].w));
+		if(touchscreenKeyboardTheme == 1)
+			AutoFireButtonsNum = 0; // Theme does not support auto-fire
+		// Arrows to the lower-left part of screen
+		arrows.x = SDL_ANDROID_sWindowWidth / 4;
+		arrows.y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowWidth / 4;
+		arrows.w = SDL_ANDROID_sWindowWidth / (size + 2);
+		arrows.h = arrows.w;
+		arrows.x -= arrows.w/2;
+		arrows.y -= arrows.h/2;
+		
+		// Buttons to the lower-right in 2 rows
+		for(i = 0; i < 2; i++)
+		for(ii = 0; ii < 3; ii++)
+		{
+			// Custom button ordering
+			int iii = ii + i*2;
+			if( ii == 2 )
+				iii = 5 + i;
+			buttons[iii].x = SDL_ANDROID_sWindowWidth - SDL_ANDROID_sWindowWidth / 12 - (SDL_ANDROID_sWindowWidth * ii / 6);
+			buttons[iii].y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowHeight / 8 - (SDL_ANDROID_sWindowHeight * i / 4);
+			buttons[iii].w = SDL_ANDROID_sWindowWidth / (size + 2) / 3;
+			buttons[iii].h = buttons[iii].w;
+			buttons[iii].x -= buttons[iii].w/2;
+			buttons[iii].y -= buttons[iii].h/2;
+		}
+		buttons[6].x = 0;
+		buttons[6].y = 0;
+		buttons[6].w = 30;
+		buttons[6].h = 30;
 	}
 };
 
@@ -386,3 +520,62 @@ JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenKeyboardUsed) ( JNIEnv*  env, jobj
 	isTouchscreenKeyboardUsed = 1;
 }
 
+static int
+power_of_2(int input)
+{
+    int value = 1;
+
+    while (value < input) {
+        value <<= 1;
+    }
+    return value;
+}
+
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButton) ( JNIEnv*  env, jobject thiz, jint buttonID, jbyteArray charBufJava )
+{
+	// TODO: softstretch with antialiasing
+	jboolean isCopy = JNI_TRUE;
+	Uint8 * charBuf = NULL;
+	int w, h, len, format;
+	GLTexture_t * data = NULL;
+	int texture_w, texture_h;
+	len = (*env)->GetArrayLength(env, charBufJava);
+	charBuf = (Uint8 *) (*env)->GetByteArrayElements(env, charBufJava, &isCopy);
+	
+	w = ntohl(((Uint32 *) charBuf)[0]);
+	h = ntohl(((Uint32 *) charBuf)[1]);
+	format = ntohl(((Uint32 *) charBuf)[2]);
+	if( buttonID < 5 )
+		data = &(arrowImages[buttonID]);
+	else
+	if( buttonID < 7 )
+		data = &(buttonAutoFireImages[buttonID-5]);
+	else
+		data = &(buttonImages[buttonID-7]);
+	
+	texture_w = power_of_2(w);
+	texture_h = power_of_2(h);
+	data->w = w;
+	data->h = h;
+
+	glEnable(GL_TEXTURE_2D);
+
+	glGenTextures(1, &data->id);
+	glBindTexture(GL_TEXTURE_2D, data->id);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_w, texture_h, 0, GL_RGBA,
+					format ? GL_UNSIGNED_SHORT_4_4_4_4 : GL_UNSIGNED_SHORT_5_5_5_1, NULL);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA,
+						format ? GL_UNSIGNED_SHORT_4_4_4_4 : GL_UNSIGNED_SHORT_5_5_5_1,
+						charBuf + 12 );
+
+	glDisable(GL_TEXTURE_2D);
+
+	(*env)->ReleaseByteArrayElements(env, charBufJava, (jbyte *)charBuf, 0);
+}
