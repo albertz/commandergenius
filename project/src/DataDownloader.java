@@ -132,7 +132,7 @@ class DataDownloader extends Thread
 		Parent = _Parent;
 		DownloadComplete = false;
 		Status = new StatusWriter( _Status, _Parent );
-		Status.setText( "Connecting to " + Globals.DataDownloadUrl );
+		//Status.setText( "Connecting to " + Globals.DataDownloadUrl );
 		outFilesDir = Parent.getFilesDir().getAbsolutePath();
 		if( Globals.DownloadToSdcard )
 			outFilesDir = "/sdcard/app-data/" + Globals.class.getPackage().getName();
