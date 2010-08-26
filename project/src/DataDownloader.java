@@ -212,12 +212,13 @@ class DataDownloader extends Thread
 			CountingInputStream stream;
 			byte[] buf = new byte[16384];
 			boolean DoNotUnzip = false;
+			String url = "";
 
 			while( downloadUrlIndex < downloadUrls.length && response == null ) 
 			{
 				System.out.println("Connecting to " + downloadUrls[downloadUrlIndex]);
 				Status.setText( "Connecting to " + downloadUrls[downloadUrlIndex] );
-				String url = new String(downloadUrls[downloadUrlIndex]);
+				url = new String(downloadUrls[downloadUrlIndex]);
 				if(url.indexOf(":") == 0)
 				{
 					url = url.substring( url.indexOf(":", 1) + 1 );
@@ -238,19 +239,19 @@ class DataDownloader extends Thread
 					if( response.getStatusLine().getStatusCode() != 200 )
 					{
 						response = null;
-						System.out.println("Failed to connect to " + downloadUrls[downloadUrlIndex]);
+						System.out.println("Failed to connect to " + url);
 						downloadUrlIndex++;
 					}
 				}
 			}
 			if( response == null )
 			{
-				System.out.println("Error connecting to " + Globals.DataDownloadUrl);
-				Status.setText( "Error connecting to " + Globals.DataDownloadUrl );
+				System.out.println("Error connecting to " + url);
+				Status.setText( "Error connecting to " + url );
 				return;
 			}
 
-			Status.setText( "Downloading data from " + Globals.DataDownloadUrl );
+			Status.setText( "Downloading data from " + url );
 			totalLen = response.getEntity().getContentLength();
 			try {
 				stream = new CountingInputStream(response.getEntity().getContent());
@@ -291,7 +292,7 @@ class DataDownloader extends Thread
 					out.close();
 					out = null;
 				} catch( java.io.IOException e ) {
-					Status.setText( "Error writing file " + path );
+					Status.setText( "Error writing file " + path + " from URL " + url );
 					return;
 				}
 			}
@@ -305,7 +306,7 @@ class DataDownloader extends Thread
 					try {
 						entry = zip.getNextEntry();
 					} catch( java.io.IOException e ) {
-						Status.setText( "Error downloading data from " + Globals.DataDownloadUrl );
+						Status.setText( "Error downloading data from " + url );
 						return;
 					}
 					if( entry == null )
@@ -342,7 +343,7 @@ class DataDownloader extends Thread
 					} catch( SecurityException e ) { };
 					if( out == null )
 					{
-						Status.setText( "Error writing to " + path );
+						Status.setText( "Error writing to " + path + " from URL " + url );
 						return;
 					}
 
@@ -368,7 +369,7 @@ class DataDownloader extends Thread
 						out.close();
 						out = null;
 					} catch( java.io.IOException e ) {
-						Status.setText( "Error writing file " + path );
+						Status.setText( "Error writing file " + path + " from URL " + url );
 						return;
 					}
 					
