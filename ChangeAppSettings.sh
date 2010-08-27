@@ -357,7 +357,7 @@ rm -rf project/bin/ndk/local/*/objs/sdl/src/video/SDL_video.o
 rm -rf project/bin/ndk/local/*/objs/sdl/SDL_renderer_gles.o
 if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
 	# Internal types are different in SDL 1.2 and 1.3, namely SDL_Rect, so all libs using it have to be recompiled
-	rm -rf project/bin/ndk/local/*/objs/sdl*
+	rm -rf project/bin/ndk/local/*/objs/sdl* project/bin/ndk/local/*/libsdl*
 	rm -rf project/bin/ndk/local/*/objs/application project/bin/ndk/local/*/libapplication.so
 fi
 # Do not rebuild libraries that do not need that
