@@ -179,6 +179,7 @@ Commander Genius (only data files for shareware version available for free)
 OpenJazz (only data files for shareware version available for free)
 OpenLieroX (will be damn hard to do, I wrote the code partially)
 AdvanceMAME (they already have their own port, yet it's unfinished)
+Widelands (http://wl.widelands.org/)
 
 License information
 ===================
