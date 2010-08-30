@@ -45,7 +45,7 @@
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 
-static int isTouchscreenKeyboardUsed = 0;
+int SDL_ANDROID_isTouchscreenKeyboardUsed = 0;
 static int touchscreenKeyboardTheme = 0;
 static int AutoFireButtonsNum = 0;
 
@@ -212,7 +212,7 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * pos, Uint8 r, Uint8
 int SDL_ANDROID_drawTouchscreenKeyboard()
 {
 	int i;
-	if( !isTouchscreenKeyboardUsed )
+	if( !SDL_ANDROID_isTouchscreenKeyboardUsed )
 		return 0;
 	if( touchscreenKeyboardTheme == 0 )
 	{
@@ -303,13 +303,15 @@ static inline int ArrowKeysPressed(int x, int y)
 	return ret;
 }
 
-int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointerId)
+int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointerId)
 {
 	int i;
 	SDL_keysym keysym;
 
+	/*
 	if( !isTouchscreenKeyboardUsed )
 		return 0;
+	*/
 
 	if( action == MOUSE_DOWN )
 	{
@@ -374,8 +376,8 @@ int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointer
 	{
 		if( OldCoords[pointerId] && !InsideRect(OldCoords[pointerId], x, y) )
 		{
-			SDL_android_processTouchscreenKeyboard(x, y, MOUSE_UP, pointerId);
-			return SDL_android_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
+			SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_UP, pointerId);
+			return SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
 		}
 		else
 		if( OldCoords[pointerId] == &arrows )
@@ -415,7 +417,7 @@ int SDL_android_processTouchscreenKeyboard(int x, int y, int action, int pointer
 		if( OldCoords[pointerId] )
 			return 1;
 
-		return SDL_android_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
+		return SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
 	}
 	return 0;
 };
@@ -520,7 +522,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenKeyboardUsed) ( JNIEnv*  env, jobject thiz)
 {
-	isTouchscreenKeyboardUsed = 1;
+	SDL_ANDROID_isTouchscreenKeyboardUsed = 1;
 }
 
 static int

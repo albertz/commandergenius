@@ -55,7 +55,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	if(pointerId > MAX_MULTITOUCH_POINTERS)
 		pointerId = MAX_MULTITOUCH_POINTERS;
 
-	if( SDL_android_processTouchscreenKeyboard(x, y, action, pointerId) )
+	if( SDL_ANDROID_isTouchscreenKeyboardUsed && SDL_ANDROID_processTouchscreenKeyboard(x, y, action, pointerId) )
 		return;
 
 #if SDL_VIDEO_RENDER_RESIZE
@@ -88,13 +88,16 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 				SDL_PrivateJoystickButton(CurrentJoysticks[pointerId+1], 0, SDL_RELEASED);
 		}
 	}
-	if( !isMouseUsed )
+	if( !isMouseUsed && !SDL_ANDROID_isTouchscreenKeyboardUsed )
 	{
 		SDL_keysym keysym;
 		if( action != MOUSE_MOVE )
 			SDL_SendKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, GetKeysym(SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_0)) ,&keysym) );
 		return;
 	}
+
+	if( !isMouseUsed )
+		return;
 
 	if( action == MOUSE_DOWN || action == MOUSE_UP )
 	{
