@@ -35,6 +35,7 @@
 #include "SDL_version.h"
 
 //#include "SDL_opengles.h"
+#include "SDL_screenkeyboard.h"
 #include "../SDL_sysvideo.h"
 #include "SDL_androidvideo.h"
 #include "SDL_androidinput.h"
@@ -45,22 +46,23 @@
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 
-int SDL_ANDROID_isTouchscreenKeyboardUsed = 0;
-static int touchscreenKeyboardTheme = 0;
-static int AutoFireButtonsNum = 0;
-
 enum {
 FONT_LEFT = 0, FONT_RIGHT = 1, FONT_UP = 2, FONT_DOWN = 3,
 FONT_BTN1 = 4, FONT_BTN2 = 5, FONT_BTN3 = 6, FONT_BTN4 = 7
 };
 
-enum { MAX_BUTTONS = 7, MAX_BUTTONS_AUTOFIRE = 2 } ; // Max amount of custom buttons
-
 static GLshort fontGL[sizeof(font)/sizeof(font[0])][FONT_MAX_LINES_PER_CHAR * 4 + 1];
 enum { FONT_CHAR_LINES_COUNT = FONT_MAX_LINES_PER_CHAR * 4 };
 
-static SDL_Rect arrows, buttons[MAX_BUTTONS];
+enum { MAX_BUTTONS = SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_MAX, MAX_BUTTONS_AUTOFIRE = 2 } ; // Max amount of custom buttons
+
+int SDL_ANDROID_isTouchscreenKeyboardUsed = 0;
+static int touchscreenKeyboardTheme = 0;
+static int touchscreenKeyboardShown = 1;
+static int AutoFireButtonsNum = 0;
 static int nbuttons;
+
+static SDL_Rect arrows, buttons[MAX_BUTTONS];
 static SDLKey buttonKeysyms[MAX_BUTTONS] = { 
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_0)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1)),
@@ -179,6 +181,8 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * pos, Uint8 r, Uint8
 	GLfloat texColor[4];
 	static const float onediv255 = 1.0f / 255.0f;
 	*/
+	if( !pos->h || !pos->w )
+		return;
 
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 
@@ -212,7 +216,7 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * pos, Uint8 r, Uint8
 int SDL_ANDROID_drawTouchscreenKeyboard()
 {
 	int i;
-	if( !SDL_ANDROID_isTouchscreenKeyboardUsed )
+	if( !SDL_ANDROID_isTouchscreenKeyboardUsed || !touchscreenKeyboardShown )
 		return 0;
 	if( touchscreenKeyboardTheme == 0 )
 	{
@@ -308,10 +312,9 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 	int i;
 	SDL_keysym keysym;
 
-	/*
-	if( !isTouchscreenKeyboardUsed )
+	
+	if( !touchscreenKeyboardShown )
 		return 0;
-	*/
 
 	if( action == MOUSE_DOWN )
 	{
@@ -584,3 +587,90 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButton) ( JNIEnv*  env, jobje
 
 	(*env)->ReleaseByteArrayElements(env, charBufJava, (jbyte *)charBuf, 0);
 }
+
+
+int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
+{
+	if( buttonId < 0 || buttonId > SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_MAX || ! pos )
+		return 0;
+	
+	if( buttonId == SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_DPAD )
+	{
+		arrows = *pos;
+		if(touchscreenKeyboardTheme == 0)
+		{
+			prepareFontCharWireframe(FONT_LEFT, arrows.w / 2, arrows.h / 2);
+			prepareFontCharWireframe(FONT_RIGHT, arrows.w / 2, arrows.h / 2);
+			prepareFontCharWireframe(FONT_UP, arrows.w / 2, arrows.h / 2);
+			prepareFontCharWireframe(FONT_DOWN, arrows.w / 2, arrows.h / 2);
+		}
+	}
+	else
+	{
+		buttons[buttonId - SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_0] = *pos;
+		if(touchscreenKeyboardTheme == 0)
+		{
+			int i = buttonId - SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_0;
+			prepareFontCharWireframe(FONT_BTN1 + i, MIN(buttons[i].h, buttons[i].w), MIN(buttons[i].h, buttons[i].w));
+		}
+	}
+	return 1;
+};
+
+int SDL_ANDROID_GetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
+{
+	if( buttonId < 0 || buttonId > SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_MAX || ! pos )
+		return 0;
+	
+	if( buttonId == SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_DPAD )
+	{
+		*pos = arrows;
+	}
+	else
+	{
+		*pos = buttons[buttonId - SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_0];
+	}
+	return 1;
+};
+
+int SDL_ANDROID_SetScreenKeyboardButtonKey(int buttonId, SDLKey key)
+{
+	if( buttonId < 0 || buttonId > SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_MAX || ! key )
+		return 0;
+	if( buttonId == SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_DPAD )
+		return 0;
+	buttonKeysyms[buttonId - SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_0] = key;
+	return 1;
+};
+
+SDLKey SDL_ANDROID_GetScreenKeyboardButtonKey(int buttonId)
+{
+	if( buttonId < 0 || buttonId > SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_MAX )
+		return SDLK_UNKNOWN;
+	if( buttonId == SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_DPAD )
+		return SDLK_UNKNOWN;
+	return buttonKeysyms[buttonId - SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_0];
+};
+
+int SDL_ANDROID_SetScreenKeyboardAutoFireButtonsAmount(int nbuttons)
+{
+	if( nbuttons < 0 || nbuttons > MAX_BUTTONS_AUTOFIRE )
+		return 0;
+	AutoFireButtonsNum = nbuttons;
+	return 1;
+};
+
+int SDL_ANDROID_GetScreenKeyboardAutoFireButtonsAmount()
+{
+	return AutoFireButtonsNum;
+};
+
+int SDL_ANDROID_SetScreenKeyboardShown(int shown)
+{
+	touchscreenKeyboardShown = shown;
+};
+
+int SDL_ANDROID_GetScreenKeyboardShown()
+{
+	return touchscreenKeyboardShown;
+};
