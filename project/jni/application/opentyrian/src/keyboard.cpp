@@ -86,7 +86,9 @@ void wait_noinput( JE_boolean keyboard, JE_boolean mouse, JE_boolean joystick )
 void init_keyboard( void )
 {
 	keysactive = SDL_GetKeyState(&numkeys);
+#ifndef ANDROID
 	SDL_EnableKeyRepeat(500, 60);
+#endif
 
 	newkey = newmouse = false;
 	keydown = mousedown = false;

@@ -351,8 +351,7 @@ echo Forcing rebuild of specific files
 rm -rf project/libs/*
 rm -rf project/bin/ndk/local/*/objs/sdl_main/* project/bin/ndk/local/*/libsdl_main.so
 rm -rf project/bin/ndk/local/*/libsdl.so
-rm -rf project/bin/ndk/local/*/objs/sdl/src/audio/android
-rm -rf project/bin/ndk/local/*/objs/sdl/src/video/android/*.o
+rm -rf project/bin/ndk/local/*/objs/sdl/src/*/android
 rm -rf project/bin/ndk/local/*/objs/sdl/src/video/SDL_video.o
 rm -rf project/bin/ndk/local/*/objs/sdl/SDL_renderer_gles.o
 if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
