@@ -3136,6 +3136,7 @@ redo:
 				service_SDL_events(false);
 
 				/* mouse input */
+				/*
 				if ((inputDevice == 0 || inputDevice == 2) && has_mouse)
 				{
 					button[0] |= mouse_pressed[0];
@@ -3154,18 +3155,24 @@ redo:
 						set_mouse_position(159, 100);
 					}
 				}
+				*/
+
 
 				/* keyboard input */
-				if ((inputDevice == 0 || inputDevice == 1) && !play_demo)
+				if ((inputDevice == 0 || inputDevice == 1 || inputDevice == 2) && !play_demo)
 				{
-					if (keysactive[keySettings[0]])
+					if (keysactive[keySettings[0]] ||
+						(has_mouse && mouse_pressed[0] && mouse_y < this_player->y))
 						this_player->y -= CURRENT_KEY_SPEED;
-					if (keysactive[keySettings[1]])
+					if (keysactive[keySettings[1]] ||
+						(has_mouse && mouse_pressed[0] && mouse_y > this_player->y))
 						this_player->y += CURRENT_KEY_SPEED;
 
-					if (keysactive[keySettings[2]])
+					if (keysactive[keySettings[2]] ||
+						(has_mouse && mouse_pressed[0] && mouse_x < this_player->x))
 						this_player->x -= CURRENT_KEY_SPEED;
-					if (keysactive[keySettings[3]])
+					if (keysactive[keySettings[3]] ||
+						(has_mouse && mouse_pressed[0] && mouse_x > this_player->x))
 						this_player->x += CURRENT_KEY_SPEED;
 
 					button[0] = button[0] || keysactive[keySettings[4]];
@@ -3217,7 +3224,8 @@ redo:
 					*mouseY_ = this_player->y - (*mouseY_ - this_player->y);
 					mouseYC = -mouseYC;
 				}
-
+				
+				
 				accelXC += this_player->x - *mouseX_;
 				accelYC += this_player->y - *mouseY_;
 
@@ -3247,6 +3255,7 @@ redo:
 					accelYC++;
 				else if (mouseYC < -2)
 					accelYC--;
+				
 
 			}   /*endLevel*/
 
