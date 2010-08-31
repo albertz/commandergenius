@@ -8,7 +8,6 @@ import android.view.MotionEvent;
 import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
-import android.os.PowerManager;
 import android.widget.TextView;
 import android.content.res.Configuration;
 
@@ -51,9 +50,6 @@ public class MainActivity extends Activity {
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
 		mGLView.requestFocus();
-		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-		wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, Globals.ApplicationName);
-		wakeLock.acquire();
 	}
 
 	@Override
@@ -63,9 +59,7 @@ public class MainActivity extends Activity {
 				downloader.setParent(null, null);
 			}
 		}
-		// TODO: if application pauses it's screen is messed up
-		if( wakeLock != null )
-			wakeLock.release();
+
 		super.onPause();
 		if( mGLView != null )
 			mGLView.onPause();
@@ -73,8 +67,6 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onResume() {
-		if( wakeLock != null )
-			wakeLock.acquire();
 		super.onResume();
 		if( mGLView != null )
 			mGLView.onResume();
@@ -96,9 +88,6 @@ public class MainActivity extends Activity {
 				downloader.setParent(null, null);
 			}
 		}
-		if( wakeLock != null )
-			wakeLock.release();
-		
 		if( mGLView != null )
 			mGLView.exitApp();
 		super.onStop();
@@ -133,10 +122,7 @@ public class MainActivity extends Activity {
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
-		if(mGLView != null)
-			setContentView(mGLView);
-		else
-			setContentView(_tv);
+		// Do nothing here
 	}
 	
 	public void setText(final String t)
@@ -157,10 +143,9 @@ public class MainActivity extends Activity {
 		this.runOnUiThread(cb);
 	}
 
-	private DemoGLSurfaceView mGLView = null;
+	private static DemoGLSurfaceView mGLView = null;
 	private static LoadLibrary mLoadLibraryStub = null;
 	private static AudioThread mAudioThread = null;
-	private PowerManager.WakeLock wakeLock = null;
 	private static DataDownloader downloader = null;
 	private TextView _tv = null;
 	private boolean sdlInited = false;

@@ -159,7 +159,6 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public boolean onTouchEvent(final MotionEvent event) 
 	{
 		touchInput.process(event);
-		// TODO: add multitouch support (added in Android 2.0 SDK)
 		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
 		synchronized (mRenderer) {
 			try {
