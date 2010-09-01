@@ -168,11 +168,22 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		return true;
 	};
 
-	 public void exitApp() {
-		 mRenderer.exitApp();
-		 accelerometer.stop();
-		 accelerometer = null;
-	 };
+	public void exitApp() {
+		mRenderer.exitApp();
+		accelerometer.stop();
+		accelerometer = null;
+	};
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		System.exit(0); // Not implemented yet
+	};
+
+	@Override
+	public void onResume() {
+		super.onResume();
+	};
 
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event) {
