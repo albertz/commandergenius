@@ -480,23 +480,25 @@ class Settings
 				nativeSetupScreenKeyboardButton(3,  loadRaw(p, R.raw.ultimatedroidupbuttonpressed));
 				nativeSetupScreenKeyboardButton(4,  loadRaw(p, R.raw.ultimatedroiddownbuttonpressed));
 				// Auto-fire
-				nativeSetupScreenKeyboardButton(5,  loadRaw(p, R.raw.ultimatedroidbutton1pressed));
-				nativeSetupScreenKeyboardButton(6,  loadRaw(p, R.raw.ultimatedroidbutton2pressed));
+				nativeSetupScreenKeyboardButton(5,  loadRaw(p, R.raw.ultimatedroidbutton1auto));
+				nativeSetupScreenKeyboardButton(6,  loadRaw(p, R.raw.ultimatedroidbutton1autoanim));
+				nativeSetupScreenKeyboardButton(7,  loadRaw(p, R.raw.ultimatedroidbutton2auto));
+				nativeSetupScreenKeyboardButton(8,  loadRaw(p, R.raw.ultimatedroidbutton2autoanim));
 				// Other buttons
-				nativeSetupScreenKeyboardButton(7,  loadRaw(p, R.raw.ultimatedroidbutton1));
-				nativeSetupScreenKeyboardButton(8,  loadRaw(p, R.raw.ultimatedroidbutton1pressed));
-				nativeSetupScreenKeyboardButton(9,  loadRaw(p, R.raw.ultimatedroidbutton2));
-				nativeSetupScreenKeyboardButton(10, loadRaw(p, R.raw.ultimatedroidbutton2pressed));
-				nativeSetupScreenKeyboardButton(11, loadRaw(p, R.raw.ultimatedroidbutton3));
-				nativeSetupScreenKeyboardButton(12, loadRaw(p, R.raw.ultimatedroidbutton3pressed));
-				nativeSetupScreenKeyboardButton(13, loadRaw(p, R.raw.ultimatedroidbutton4));
-				nativeSetupScreenKeyboardButton(14, loadRaw(p, R.raw.ultimatedroidbutton4pressed));
-				nativeSetupScreenKeyboardButton(15, loadRaw(p, R.raw.ultimatedroidbutton5));
-				nativeSetupScreenKeyboardButton(16, loadRaw(p, R.raw.ultimatedroidbutton5pressed));
-				nativeSetupScreenKeyboardButton(17, loadRaw(p, R.raw.ultimatedroidbutton6));
-				nativeSetupScreenKeyboardButton(18, loadRaw(p, R.raw.ultimatedroidbutton6pressed));
-				nativeSetupScreenKeyboardButton(19, loadRaw(p, R.raw.ultimatedroidbutton7));
-				nativeSetupScreenKeyboardButton(20, loadRaw(p, R.raw.ultimatedroidbutton7));
+				nativeSetupScreenKeyboardButton(9,  loadRaw(p, R.raw.ultimatedroidbutton1));
+				nativeSetupScreenKeyboardButton(10,  loadRaw(p, R.raw.ultimatedroidbutton1pressed));
+				nativeSetupScreenKeyboardButton(11,  loadRaw(p, R.raw.ultimatedroidbutton2));
+				nativeSetupScreenKeyboardButton(12, loadRaw(p, R.raw.ultimatedroidbutton2pressed));
+				nativeSetupScreenKeyboardButton(13, loadRaw(p, R.raw.ultimatedroidbutton3));
+				nativeSetupScreenKeyboardButton(14, loadRaw(p, R.raw.ultimatedroidbutton3pressed));
+				nativeSetupScreenKeyboardButton(15, loadRaw(p, R.raw.ultimatedroidbutton4));
+				nativeSetupScreenKeyboardButton(16, loadRaw(p, R.raw.ultimatedroidbutton4pressed));
+				nativeSetupScreenKeyboardButton(17, loadRaw(p, R.raw.ultimatedroidbutton5));
+				nativeSetupScreenKeyboardButton(18, loadRaw(p, R.raw.ultimatedroidbutton5pressed));
+				nativeSetupScreenKeyboardButton(19, loadRaw(p, R.raw.ultimatedroidbutton6));
+				nativeSetupScreenKeyboardButton(20, loadRaw(p, R.raw.ultimatedroidbutton6pressed));
+				nativeSetupScreenKeyboardButton(21, loadRaw(p, R.raw.ultimatedroidbutton7));
+				nativeSetupScreenKeyboardButton(22, loadRaw(p, R.raw.ultimatedroidbutton7));
 			}
 		}
 		nativeSetAccelerometerSensitivity(Globals.AccelerometerSensitivity);
