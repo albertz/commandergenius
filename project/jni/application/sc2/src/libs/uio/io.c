@@ -707,6 +707,7 @@ uio_open(uio_DirHandle *dir, const char *path, int flags, mode_t mode) {
 			&readMountInfo, &readPDirHandle, NULL,
 			&writeMountInfo, &writePDirHandle, NULL, &name) == -1) {
 		// errno is set
+		log_add (log_Info, "uio_open: uio_getPhysicalAccess  failed for '%s'", path);
 		return NULL;
 	}
 	
@@ -733,6 +734,7 @@ uio_open(uio_DirHandle *dir, const char *path, int flags, mode_t mode) {
 				uio_PDirHandle_unref(readPDirHandle);
 				uio_PDirHandle_unref(writePDirHandle);
 				errno = EEXIST;
+				log_add (log_Info, "uio_open: O_CREAT | O_EXCL: file already exists '%s'", name);
 				return NULL;
 			}
 			if ((flags & O_TRUNC) == O_TRUNC) {
@@ -749,6 +751,7 @@ uio_open(uio_DirHandle *dir, const char *path, int flags, mode_t mode) {
 					uio_PDirHandle_unref(readPDirHandle);
 					uio_PDirHandle_unref(writePDirHandle);
 					errno = savedErrno;
+					log_add (log_Info, "uio_open: uio_copyFilePhysical failed '%s'", name);
 					return NULL;
 				}
 			}
@@ -770,6 +773,7 @@ uio_open(uio_DirHandle *dir, const char *path, int flags, mode_t mode) {
 	handle = (pDirHandle->pRoot->handler->open)(pDirHandle, name, flags, mode);
 			// Also adds a new entry to the physical dir if appropriate.
 	if (handle == NULL) {
+		log_add (log_Info, "uio_open: open file failed '%s'", name);
 		int savedErrno = errno;
 		uio_free(name);
 		uio_PDirHandle_unref(pDirHandle);

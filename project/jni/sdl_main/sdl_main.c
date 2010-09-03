@@ -44,11 +44,8 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz )
 		strcat(curdir, "/files");
 	}
 	chdir(curdir);
-	/*
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Waiting 30s for debugger");
-	sleep(30); // Wait for debugger to attach
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Starting main()");
-	*/
+	setenv("HOME", curdir, 1);
+
 	main( argc, argv );
 };
 

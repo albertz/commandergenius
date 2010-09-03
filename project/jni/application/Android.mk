@@ -18,6 +18,7 @@ LOCAL_CFLAGS := $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../png \
 				-I$(LOCAL_PATH)/../jpeg \
 				-I$(LOCAL_PATH)/../intl \
+				-I$(LOCAL_PATH)/../freetype/include \
 				-I$(LOCAL_PATH)/..
 
 

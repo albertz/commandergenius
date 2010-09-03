@@ -26,6 +26,7 @@
 #include "port.h"
 #include "resintrn.h"
 #include "libs/uio.h"
+#include "libs/log.h"
 
 uio_Stream *
 res_OpenResFile (uio_DirHandle *dir, const char *filename, const char *mode)
@@ -34,7 +35,10 @@ res_OpenResFile (uio_DirHandle *dir, const char *filename, const char *mode)
 	struct stat sb;
 
 	if (uio_stat (dir, filename, &sb) == 0 && S_ISDIR(sb.st_mode))
+	{
+		log_add (log_Debug, "res_OpenResFile('%s', '%s') - cannot open dir as file", filename, mode);
 		return ((uio_Stream *) ~0);
+	}
 
 	fp = uio_fopen (dir, filename, mode);
 
