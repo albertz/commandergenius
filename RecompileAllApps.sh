@@ -2,7 +2,7 @@
 
 KEYSTORE=~/.ssh/android.keystore
 ALIAS=pelya
-APPS_SKIP="src jooleem_0.1.4 lbreakout2-2.6.1 teeworlds glxgears"
+APPS_SKIP="src jooleem_0.1.4 lbreakout2-2.6.1 glxgears"
 
 echo -n "Enter password for keystore at $KEYSTORE alias $ALIAS: "
 stty -echo
