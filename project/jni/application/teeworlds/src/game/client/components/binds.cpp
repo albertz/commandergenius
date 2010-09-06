@@ -109,6 +109,15 @@ void BINDS::set_defaults()
 
 	bind(KEY_F3, "vote yes");
 	bind(KEY_F4, "vote no");	
+
+#ifdef ANDROID
+	bind(KEY_LEFT, "+left");
+	bind(KEY_RIGHT, "+right");
+	bind(KEY_UP, "+jump");
+	bind(KEY_DOWN, "+hook");
+	bind('q', "+nextweapon");
+#endif
+
 }
 
 void BINDS::on_console_init()

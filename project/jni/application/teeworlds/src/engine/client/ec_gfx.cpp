@@ -605,12 +605,20 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	glBindTexture(GL_TEXTURE_2D, textures[tex].tex);
 #ifdef ANDROID
 
-
+/*
 #define CONVERT_RGBA8888_RGBA4444( pixel ) \
 	( ( pixel >> 4 ) & 0xF ) | \
 	( ( pixel >> 8 ) & 0xF0 ) | \
 	( ( pixel >> 12 ) & 0xF00 ) | \
 	( ( pixel >> 16 ) & 0xF000 )
+*/
+
+#define CONVERT_ARGB8888_RGBA4444( pixel ) \
+	( ( pixel >> 28 ) & 0xF ) | \
+	( ( pixel ) & 0xF0 ) | \
+	( ( pixel >> 4 ) & 0xF00 ) | \
+	( ( pixel >> 8 ) & 0xF000 )
+
 
 #define CONVERT_RGB888_RGB565( pixel ) \
 	( ( pixel >> 3 ) & 0x1F ) | \
@@ -633,7 +641,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 			for(y = 0; y < h; y++)
 			for(x = 0; x < w; x++)
 			{
-				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_RGBA8888_RGBA4444( ((Uint32 *)texdata)[ y*w+x ] );
+				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_ARGB8888_RGBA4444( ((Uint32 *)texdata)[ y*w+x ] );
 			}
 		}
 	}

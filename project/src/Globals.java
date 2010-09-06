@@ -8,7 +8,7 @@ class Globals {
 	public static String ApplicationName = "TeeWorlds";
 
 	// Should be zip file
-	public static String DataDownloadUrl = "Game data is 5 Mb|http://sourceforge.net/projects/libsdl-android/files/TeeWorlds/teeworlds.zip/download";
+	public static String DataDownloadUrl = "Game data is 8 Mb|http://sourceforge.net/projects/libsdl-android/files/TeeWorlds/teeworlds.zip/download";
 
 	// Set this value to true if you're planning to render 3D using OpenGL - it eats some GFX resources, so disabled for 2D
 	public static boolean NeedDepthBuffer = false;
@@ -27,9 +27,9 @@ class Globals {
 	
 	public static boolean AppUsesMultitouch = false;
 
-	public static int AppTouchscreenKeyboardKeysAmount = 2;
+	public static int AppTouchscreenKeyboardKeysAmount = 4;
 
-	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 1;
+	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 0;
 
 	// Phone-specific config
 	// It will download app data to /sdcard/alienblaster if set to true,
