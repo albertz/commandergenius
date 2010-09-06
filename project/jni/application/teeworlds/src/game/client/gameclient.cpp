@@ -245,8 +245,13 @@ void GAMECLIENT::dispatch_input()
 {
 	// handle mouse movement
 	int x=0, y=0;
+#ifdef ANDROID
+	// No relative mouse here, we've got touchscreen
+	inp_mouse_absolute(&x, &y);
+#else
 	inp_mouse_relative(&x, &y);
 	if(x || y)
+#endif
 	{
 		for(int h = 0; h < input.num; h++)
 		{

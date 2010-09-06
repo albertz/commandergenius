@@ -52,6 +52,9 @@ bool EMOTICON::on_mousemove(float x, float y)
 		return false;
 	
 	selector_mouse += vec2(x,y);
+#ifdef ANDROID
+	selector_mouse = vec2(x,y);
+#endif
 	return true;
 }
 
@@ -92,10 +95,18 @@ void EMOTICON::on_render()
 	was_active = true;
 	
 	int x, y;
+#ifdef ANDROID
+	// No relative mouse here, we've got touchscreen
+	inp_mouse_absolute(&x, &y);
+
+	selector_mouse.x = x;
+	selector_mouse.y = y;
+#else
 	inp_mouse_relative(&x, &y);
 
 	selector_mouse.x += x;
 	selector_mouse.y += y;
+#endif
 
 	if (length(selector_mouse) > 140)
 		selector_mouse = normalize(selector_mouse) * 140;

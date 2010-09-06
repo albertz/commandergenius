@@ -178,6 +178,9 @@ bool CONTROLS::on_mousemove(float x, float y)
 	if(gameclient.snap.gameobj && gameclient.snap.gameobj->paused)
 		return false;
 	mouse_pos += vec2(x, y); // TODO: ugly
+#ifdef ANDROID
+	mouse_pos = vec2(x, y);
+#endif
 
 	//
 	float camera_max_distance = 200.0f;

@@ -928,6 +928,12 @@ bool MENUS::on_mousemove(float x, float y)
 		
 	mouse_pos.x += x;
 	mouse_pos.y += y;
+
+#ifdef ANDROID
+	mouse_pos.x = x;
+	mouse_pos.y = y;
+#endif
+
 	if(mouse_pos.x < 0) mouse_pos.x = 0;
 	if(mouse_pos.y < 0) mouse_pos.y = 0;
 	if(mouse_pos.x > gfx_screenwidth()) mouse_pos.x = gfx_screenwidth();

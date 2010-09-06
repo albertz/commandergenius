@@ -2698,6 +2698,14 @@ extern "C" void editor_update_and_render()
 	float mx, my, mwx, mwy;
 	int rx, ry;
 	{
+#ifdef ANDROID
+		// No relative mouse here, we've got touchscreen
+		inp_mouse_absolute(&rx, &ry);
+		editor.mouse_delta_x = rx - mouse_x;
+		editor.mouse_delta_y = ry - mouse_y;
+		mouse_x = rx;
+		mouse_y = ry;
+#else
 		inp_mouse_relative(&rx, &ry);
 		editor.mouse_delta_x = rx;
 		editor.mouse_delta_y = ry;
@@ -2707,6 +2715,7 @@ extern "C" void editor_update_and_render()
 			mouse_x += rx;
 			mouse_y += ry;
 		}
+#endif
 		
 		if(mouse_x < 0) mouse_x = 0;
 		if(mouse_y < 0) mouse_y = 0;

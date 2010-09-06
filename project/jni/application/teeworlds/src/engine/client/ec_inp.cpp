@@ -41,6 +41,11 @@ void inp_mouse_relative(int *x, int *y)
 	*y = ny*sens;
 }
 
+void inp_mouse_absolute(int *x, int *y)
+{
+	SDL_GetMouseState(x, y);
+}
+
 enum
 {
 	INPUT_BUFFER_SIZE=32

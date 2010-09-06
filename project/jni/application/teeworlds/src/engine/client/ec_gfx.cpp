@@ -575,6 +575,9 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	else if(format == IMG_ALPHA)
 	{
 		oglformat = GL_ALPHA;
+#ifdef ANDROID
+		oglformat = GL_RGBA; // No pure alpha textures on Android
+#endif
 		glesType = GL_UNSIGNED_SHORT_4_4_4_4;
 	}
 	
@@ -625,7 +628,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_RGB888_RGB565( ((* ((Uint32 *)(texdata+(y*w+x)*3))) & 0xFFFFFF) );
 			}
 		}
-		else // RGBA
+		else // RGBA or ALPHA
 		{
 			for(y = 0; y < h; y++)
 			for(x = 0; x < w; x++)

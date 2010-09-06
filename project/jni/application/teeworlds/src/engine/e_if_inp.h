@@ -38,6 +38,8 @@ typedef struct
 */
 void inp_mouse_relative(int *x, int *y);
 
+void inp_mouse_absolute(int *x, int *y);
+
 /*
 	Function: inp_mouse_scroll
 		TODO

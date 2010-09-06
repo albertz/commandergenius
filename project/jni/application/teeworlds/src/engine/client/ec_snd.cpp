@@ -14,6 +14,10 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#ifdef ANDROID
+#include <strings.h>
+#include <alloca.h>
+#endif
 
 enum
 {
@@ -143,9 +147,17 @@ static int iabs(int i)
 
 static void mix(short *final_out, unsigned frames)
 {
-	int mix_buffer[MAX_FRAMES*2] = {0};
 	int i, s;
 	int master_vol;
+#ifdef ANDROID
+	// The size of buffer SDL returns to us may vary greatly across devices, and will easily exceed MAX_FRAMES size -> segfault
+	// (on older devices the buffer should be large, otherwise the sound will be choppy)
+	// Why didn't they just use SDL_mixer there, and go on with own buggy mixer implementation?
+	int * mix_buffer = (int *)alloca(frames * 2 * sizeof(int));
+	bzero(mix_buffer, frames * 2 * sizeof(int));
+#else
+	int mix_buffer[MAX_FRAMES*2] = {0};
+#endif
 
 	/* aquire lock while we are mixing */
 	lock_wait(sound_lock);
@@ -252,7 +264,7 @@ static void sdlcallback(void *unused, Uint8 *stream, int len)
 
 int snd_init()
 {
-    SDL_AudioSpec format;
+    SDL_AudioSpec format, format2;
 	
 	sound_lock = lock_create();
 	
@@ -270,14 +282,14 @@ int snd_init()
     format.userdata = NULL;
 
     /* Open the audio device and start playing sound! */
-    if(SDL_OpenAudio(&format, NULL) < 0)
+    if(SDL_OpenAudio(&format, &format2) < 0)
 	{
         dbg_msg("client/sound", "unable to open audio: %s", SDL_GetError());
 		return -1;
     }
 	else
         dbg_msg("client/sound", "sound init successful");
-
+	
 	SDL_PauseAudio(0);
 	
 	sound_enabled = 1;
