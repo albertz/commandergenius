@@ -167,8 +167,15 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL
 	}
 
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): app requested audio bytespersample %d freq %d channels %d samples %d", bytesPerSample, audioFormat->freq, (int)audioFormat->channels, (int)audioFormat->samples);
+
 	bytesPerSample = (audioFormat->format & 0xFF) / 8;
 	audioFormat->format = ( bytesPerSample == 2 ) ? AUDIO_S16 : AUDIO_S8;
+	if( audioFormat->samples > 32768 ) // Why anyone need so huge audio buffer?
+		audioFormat->samples = 32768;
+	
+	SDL_CalculateAudioSpec(spec);
+	
 	
 	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
 
@@ -180,7 +187,7 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 
 	audioBufferSize = (*jniEnv)->CallIntMethod( jniEnv, JavaAudioThread, JavaInitAudio, 
 					(jint)audioFormat->freq, (jint)audioFormat->channels, 
-					(jint)(( bytesPerSample == 2 ) ? 1 : 0), (jint)audioFormat->size);
+					(jint)(( bytesPerSample == 2 ) ? 1 : 0), (jint)(audioFormat->size > 0 ? audioFormat->size : 100) );
 
 	if( audioBufferSize == 0 )
 	{
@@ -194,7 +201,7 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 
 	audioFormat->samples = audioBufferSize / bytesPerSample / audioFormat->channels;
 	audioFormat->size = audioBufferSize;
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): app opened audio bytespersample %d freq %d channels %d bufsize %d", bytesPerSample, audioFormat->freq, (jint)audioFormat->channels, audioBufferSize);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): app opened audio bytespersample %d freq %d channels %d bufsize %d", bytesPerSample, audioFormat->freq, (int)audioFormat->channels, audioBufferSize);
 
 	SDL_CalculateAudioSpec(audioFormat);
 	

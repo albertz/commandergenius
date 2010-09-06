@@ -23,9 +23,9 @@ SDL_TRACKBALL_KEYUP_DELAY := 1
 # resized in HW-accelerated way, however it eats a tiny bit of CPU
 SDL_VIDEO_RENDER_RESIZE := 0
 
-COMPILED_LIBRARIES := sdl_image sdl_mixer
+COMPILED_LIBRARIES := sdl_image
 
-APPLICATION_ADDITIONAL_CFLAGS := -O2 -DCONF_FAMILY_UNIX=1
+APPLICATION_ADDITIONAL_CFLAGS := -O2
 
 APPLICATION_ADDITIONAL_LDFLAGS := -Lbin/ndk/local/armeabi -lfreetype
 
