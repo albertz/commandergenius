@@ -149,18 +149,9 @@ static void flush()
 #ifdef ANDROID
 		{
 			int i;
-			for(i = 0; i < num_vertices; i++)
+			for(i = 0; i < num_vertices / 4; i++)
 			{
-				glDrawArrays(GL_TRIANGLE_FAN, 0, num_vertices);
-				glVertexPointer(3, GL_FLOAT,
-						sizeof(VERTEX),
-						(char*)(vertices+i));
-				glTexCoordPointer(2, GL_FLOAT,
-						sizeof(VERTEX),
-						(char*)(vertices+i) + sizeof(float)*3);
-				glColorPointer(4, GL_FLOAT,
-						sizeof(VERTEX),
-						(char*)(vertices+i) + sizeof(float)*5);
+				glDrawArrays(GL_TRIANGLE_FAN, i * 4, 4);
 			}
 		}
 #else
@@ -188,7 +179,9 @@ static int try_init()
 
 #ifdef ANDROID
 	config.gfx_screen_width = SDL_ListModes(NULL, SDL_OPENGL|SDL_GL_DOUBLEBUFFER|SDL_FULLSCREEN)[0]->w;
-	config.gfx_screen_width = SDL_ListModes(NULL, SDL_OPENGL|SDL_GL_DOUBLEBUFFER|SDL_FULLSCREEN)[0]->h;
+	config.gfx_screen_height = SDL_ListModes(NULL, SDL_OPENGL|SDL_GL_DOUBLEBUFFER|SDL_FULLSCREEN)[0]->h;
+
+	dbg_msg("gfx", "Physical display resolution is %dx%d", config.gfx_screen_width, config.gfx_screen_height);
 #endif
 	
 	screen_width = config.gfx_screen_width;

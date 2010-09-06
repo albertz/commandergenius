@@ -67,6 +67,13 @@
 	#define CONF_PLATFORM_STRING "beos"
 #endif
 
+#if defined(ANDROID)
+	#define CONF_FAMILY_UNIX 1
+	#define CONF_FAMILY_STRING "unix"
+	#define CONF_PLATFORM_LINUX 1
+	#define CONF_PLATFORM_STRING "android"
+#endif
+
 
 /* architectures */
 #if defined(i386) || defined(__i386__) || defined(__x86__) || defined(CONF_PLATFORM_WIN32)
@@ -97,6 +104,18 @@
 	#define CONF_ARCH_SPARC 1
 	#define CONF_ARCH_STRING "sparc"
 	#define CONF_ARCH_ENDIAN_BIG 1
+#endif
+
+#if defined(__ARMEB__)
+	#define CONF_ARCH_ARM 1
+	#define CONF_ARCH_STRING "arm"
+	#define CONF_ARCH_ENDIAN_BIG 1
+#endif
+
+#if defined(__ARMEL__)
+	#define CONF_ARCH_ARM 1
+	#define CONF_ARCH_STRING "arm"
+	#define CONF_ARCH_ENDIAN_LITTLE 1
 #endif
 
 
