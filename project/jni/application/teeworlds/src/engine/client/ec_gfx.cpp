@@ -126,10 +126,100 @@ static void flush()
 #ifdef ANDROID
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glVertexPointer(3, GL_FLOAT, // Why do we need Z coord? Let it be just 2 coords
+			sizeof(VERTEX),
+			(char*)vertices);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	
+	if(render_enable)
+	{
+		if(drawing == DRAWING_QUADS)
+		{
+			int i;
+			glTexCoordPointer(2, GL_FLOAT,
+					sizeof(VERTEX),
+					(char*)vertices + sizeof(float)*3);
+
+			glDisableClientState(GL_COLOR_ARRAY);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+			for(i = 0; i < num_vertices / 4; i++)
+			{
+
+#define SINGLE_COLOR_PER_TEXTURE 1
+// #define USE_GL_DRAW_TEX 1
+
+#ifndef SINGLE_COLOR_PER_TEXTURE
+				// GL_COLOR_ARRAY is too damn slow for textures, so we'll set per-texture color
+				glColorPointer(4, GL_FLOAT,
+						sizeof(VERTEX),
+						(char*)vertices + sizeof(float)*5);
+				glEnableClientState(GL_COLOR_ARRAY);
+#else
+				COLOR texcolor = { 
+					( vertices[i * 4 + 0].color.r + vertices[i * 4 + 1].color.r + 
+					  vertices[i * 4 + 2].color.r + vertices[i * 4 + 3].color.r ) / 4.0f,
+					( vertices[i * 4 + 0].color.g + vertices[i * 4 + 1].color.g + 
+					  vertices[i * 4 + 2].color.g + vertices[i * 4 + 3].color.g ) / 4.0f,
+					( vertices[i * 4 + 0].color.b + vertices[i * 4 + 1].color.b + 
+					  vertices[i * 4 + 2].color.b + vertices[i * 4 + 3].color.b ) / 4.0f,
+					( vertices[i * 4 + 0].color.a + vertices[i * 4 + 1].color.a + 
+					  vertices[i * 4 + 2].color.a + vertices[i * 4 + 3].color.a ) / 4.0f,
+				};
+				// Android GL implemetation has swapped R and B color channels, fascinating isn't it?
+				glColor4f(texcolor.b, texcolor.g, texcolor.r, texcolor.a);
+
+#endif
+#ifdef USE_GL_DRAW_TEX
+				// TODO: this code still draws incorrectly
+				if( ( fabsf(vertices[i * 4].pos.x - vertices[i * 4 + 1].pos.x) < 0.01f &&
+					  fabsf(vertices[i * 4].pos.y - vertices[i * 4 + 3].pos.y) < 0.01f ) ||
+					( fabsf(vertices[i * 4].pos.y - vertices[i * 4 + 1].pos.y) < 0.01f &&
+					  fabsf(vertices[i * 4].pos.x - vertices[i * 4 + 3].pos.x) < 0.01f ) )
+				{
+					// No rotation - use faster glDrawTex() implementation
+					/*
+					GLint cropRect[4] = {
+						vertices[i * 4].tex.u, vertices[i * 4].tex.v,
+						vertices[i * 4 + 2].tex.u - vertices[i * 4].tex.u,
+						vertices[i * 4 + 2].tex.v - vertices[i * 4].tex.v
+					};
+					glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
+					*/
+					GLfloat cropRect[4] = {
+						vertices[i * 4].tex.u, vertices[i * 4].tex.v,
+						vertices[i * 4 + 2].tex.u - vertices[i * 4].tex.u,
+						vertices[i * 4 + 2].tex.v - vertices[i * 4].tex.v
+					};
+					
+					glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
+					glDrawTexfOES(vertices[i * 4].pos.x - screen_x0, vertices[i * 4].pos.y - screen_y0, 0,
+										(vertices[i * 4 + 2].pos.x - vertices[i * 4].pos.x) * screen_width / (screen_x1 - screen_x0),
+										(vertices[i * 4 + 2].pos.y - vertices[i * 4].pos.y) * screen_height / (screen_y1 - screen_y0));
+				}
+				else
+#endif
+				{
+					//Rotation - we have to use generic implementation
+					glDrawArrays(GL_TRIANGLE_FAN, i * 4, 4);
+				}
+			}
+			glColor4f(1.0f, 1.0f, 1.0f, 1.0f); // Reset to defaults
+		}
+		else if(drawing == DRAWING_LINES)
+		{
+			glColorPointer(4, GL_FLOAT,
+					sizeof(VERTEX),
+					(char*)vertices + sizeof(float)*5);
+			glEnableClientState(GL_COLOR_ARRAY);
+			glDrawArrays(GL_LINES, 0, num_vertices);
+		}
+	}
+
 #else
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-#endif
 	glVertexPointer(3, GL_FLOAT,
 			sizeof(VERTEX),
 			(char*)vertices);
@@ -146,20 +236,11 @@ static void flush()
 	if(render_enable)
 	{
 		if(drawing == DRAWING_QUADS)
-#ifdef ANDROID
-		{
-			int i;
-			for(i = 0; i < num_vertices / 4; i++)
-			{
-				glDrawArrays(GL_TRIANGLE_FAN, i * 4, 4);
-			}
-		}
-#else
 			glDrawArrays(GL_QUADS, 0, num_vertices);
-#endif
 		else if(drawing == DRAWING_LINES)
 			glDrawArrays(GL_LINES, 0, num_vertices);
 	}
+#endif
 	
 	/* Reset pointer */
 	num_vertices = 0;
@@ -566,7 +647,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	}
 
 	oglformat = GL_RGBA;
-	glesType = GL_UNSIGNED_SHORT_4_4_4_4;
+	glesType = GL_UNSIGNED_SHORT_5_5_5_1;
 	if(format == IMG_RGB)
 	{
 		oglformat = GL_RGB;
@@ -619,6 +700,12 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	( ( pixel >> 4 ) & 0xF00 ) | \
 	( ( pixel >> 8 ) & 0xF000 )
 
+#define CONVERT_ARGB8888_RGBA5551( pixel ) \
+	( ( pixel >> 31 ) & 0x1 ) | \
+	( ( pixel >> 2 ) & 0x3E ) | \
+	( ( pixel >> 5 ) & 0x7C0 ) | \
+	( ( pixel >> 8 ) & 0xF800 )
+
 
 #define CONVERT_RGB888_RGB565( pixel ) \
 	( ( pixel >> 3 ) & 0x1F ) | \
@@ -636,7 +723,16 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_RGB888_RGB565( ((* ((Uint32 *)(texdata+(y*w+x)*3))) & 0xFFFFFF) );
 			}
 		}
-		else // RGBA or ALPHA
+		else
+		if(format == IMG_RGBA)
+		{
+			for(y = 0; y < h; y++)
+			for(x = 0; x < w; x++)
+			{
+				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_ARGB8888_RGBA5551( ((Uint32 *)texdata)[ y*w+x ] );
+			}
+		}
+		else
 		{
 			for(y = 0; y < h; y++)
 			for(x = 0; x < w; x++)

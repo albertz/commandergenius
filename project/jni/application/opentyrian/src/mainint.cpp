@@ -2411,7 +2411,7 @@ void JE_operation( JE_byte slot )
 
 			}
 			while (!newkey && !newmouse);
-
+            /*
 			if (mouseButton > 0)
 			{
 				if (mouseX > 56 && mouseX < 142 && mouseY > 123 && mouseY < 149)
@@ -2426,10 +2426,14 @@ void JE_operation( JE_byte slot )
 					JE_playSampleNum(S_SPRING);
 				}
 			}
-			else if (newkey)
+			else 
+			*/
+			if (newkey || newmouse)
 			{
 				bool validkey = false;
 				lastkey_char = toupper(lastkey_char);
+				if(mouse_pressed[0])
+					lastkey_char = SDLK_SPACE;
 				switch (lastkey_char)
 				{
 					//case ' ':
@@ -3175,7 +3179,7 @@ redo:
 						(has_mouse && mouse_pressed[0] && mouse_x > this_player->x))
 						this_player->x += CURRENT_KEY_SPEED;
 
-					button[0] = button[0] || keysactive[keySettings[4]];
+					button[0] = button[0] || keysactive[keySettings[4]] || mouse_pressed[0];
 					button[3] = button[3] || keysactive[keySettings[5]];
 					button[1] = button[1] || keysactive[keySettings[6]];
 					button[2] = button[2] || keysactive[keySettings[7]];
