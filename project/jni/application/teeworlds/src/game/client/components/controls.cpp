@@ -179,7 +179,16 @@ bool CONTROLS::on_mousemove(float x, float y)
 		return false;
 	mouse_pos += vec2(x, y); // TODO: ugly
 #ifdef ANDROID
-	mouse_pos = vec2(x, y);
+
+	if(gameclient.snap.spectate)
+	{
+		if( inp_key_down(KEY_MOUSE_1) )
+			mouse_pos += vec2((x - gfx_screenwidth()/2) * 2, (y - gfx_screenheight()/2) * 2);
+	}
+	else
+	{
+		mouse_pos = vec2((x - gfx_screenwidth()/2) * 2, (y - gfx_screenheight()/2) * 2);
+	}
 #endif
 
 	//
@@ -208,6 +217,15 @@ bool CONTROLS::on_mousemove(float x, float y)
 			mouse_pos = normalize(mouse_pos)*mouse_max;
 			l = mouse_max;
 		}
+
+#ifdef ANDROID
+		if(l * 2.0f > mouse_max)
+		{
+			if(input_data.fire&1 != 1)
+				input_data.fire++;
+			input_data.fire &= INPUT_STATE_MASK;
+		}
+#endif
 		
 		//float offset_amount = max(l-deadzone, 0.0f) * follow_factor;
 		//if(l > 0.0001f) // make sure that this isn't 0

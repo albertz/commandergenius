@@ -246,6 +246,7 @@ void inp_update();
 void inp_init();
 void inp_mouse_mode_absolute();
 void inp_mouse_mode_relative();
+void inp_warp_mouse(int x, int y);
 
 #ifdef __cplusplus
 }

@@ -46,6 +46,11 @@ void inp_mouse_absolute(int *x, int *y)
 	SDL_GetMouseState(x, y);
 }
 
+void inp_warp_mouse(int x, int y)
+{
+	SDL_WarpMouse(x,y);
+}
+
 enum
 {
 	INPUT_BUFFER_SIZE=32
