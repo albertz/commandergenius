@@ -34,6 +34,10 @@
 #include <stdio.h>
 #include <math.h>
 
+#if defined(ANDROID)
+#include <SDL_screenkeyboard.h>
+#endif
+
 #include "ec_font.h"
 
 /* compressed textures */
@@ -146,9 +150,35 @@ static void flush()
 
 			for(i = 0; i < num_vertices / 4; i++)
 			{
-
+				
 #define SINGLE_COLOR_PER_TEXTURE 1
-// #define USE_GL_DRAW_TEX 1
+// #define USE_GL_DRAW_TEX 1 // Does not work yet
+#define TEXTURE_OUT_OF_SCREEN_CHECK 1 // Some GLES renderers seems to not have this check
+
+#ifdef TEXTURE_OUT_OF_SCREEN_CHECK
+				if( 
+					( vertices[i * 4 + 0].pos.x < screen_x0 &&
+					  vertices[i * 4 + 1].pos.x < screen_x0 &&
+					  vertices[i * 4 + 2].pos.x < screen_x0 &&
+					  vertices[i * 4 + 3].pos.x < screen_x0 ) 
+					||
+					( vertices[i * 4 + 0].pos.x > screen_x1 &&
+					  vertices[i * 4 + 1].pos.x > screen_x1 &&
+					  vertices[i * 4 + 2].pos.x > screen_x1 &&
+					  vertices[i * 4 + 3].pos.x > screen_x1 ) 
+					||
+					( vertices[i * 4 + 0].pos.y < screen_y0 &&
+					  vertices[i * 4 + 1].pos.y < screen_y0 &&
+					  vertices[i * 4 + 2].pos.y < screen_y0 &&
+					  vertices[i * 4 + 3].pos.y < screen_y0 ) 
+					||
+					( vertices[i * 4 + 0].pos.y > screen_y1 &&
+					  vertices[i * 4 + 1].pos.y > screen_y1 &&
+					  vertices[i * 4 + 2].pos.y > screen_y1 &&
+					  vertices[i * 4 + 3].pos.y > screen_y1 )
+					)
+					continue;
+#endif
 
 #ifndef SINGLE_COLOR_PER_TEXTURE
 				// GL_COLOR_ARRAY is too damn slow for textures, so we'll set per-texture color
@@ -268,6 +298,47 @@ static int try_init()
 	screen_width = config.gfx_screen_width;
 	screen_height = config.gfx_screen_height;
 	
+#if defined(ANDROID)
+	// Redefine button layout
+	{
+		SDL_Rect pos = {0, 0, 0, 0};
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_DPAD, &pos);
+		
+		pos.x = screen_width - screen_width / 16;
+		pos.y = screen_height - screen_height / 8;
+		pos.w = screen_width / (SDL_ANDROID_GetScreenKeyboardSize() + 2) / 4;
+		pos.h = pos.w;
+		pos.x -= pos.w/2;
+		pos.y -= pos.h/2;
+
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_0, &pos);
+		
+		pos.x -= screen_width / 8;
+
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_1, &pos);
+
+		pos.x = screen_width / 16;
+		pos.x -= pos.w/2;
+
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_2, &pos);
+
+		pos.x += screen_width / 8;
+
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_3, &pos);
+
+		pos.y = screen_height - screen_height / 8 - screen_height / 4;
+		pos.y -= pos.h/2;
+		pos.x = screen_width / 16;
+		pos.x -= pos.w/2;
+
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_4, &pos);
+
+		pos.x = screen_width - screen_width / 16;
+		pos.x -= pos.w/2;
+
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_5, &pos);
+	}
+#endif
 
 	info = SDL_GetVideoInfo();
 

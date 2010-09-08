@@ -6,6 +6,7 @@ class CONTROLS : public COMPONENT
 public:
 	vec2 mouse_pos;
 	vec2 target_pos;
+	vec2 mouse_pos_old; // for Android
 
 	NETOBJ_PLAYER_INPUT input_data;
 	int input_direction_left;

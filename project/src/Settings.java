@@ -300,8 +300,8 @@ class Settings
 			return;
 		}
 		final CharSequence[] items = {
-			"On-screen keyboard" + ( Globals.AppUsesMouse ? " (disables mouse input)" : ""),
-			"Accelerometer as navigation keys" + ( Globals.AppUsesJoystick ? " (disables joystick input)" : "" ),
+			"On-screen keyboard" /* + ( Globals.AppUsesMouse ? " (disables mouse input)" : "") */ ,
+			"Accelerometer as navigation keys" /* + ( Globals.AppUsesJoystick ? " (disables joystick input)" : "" ) */ ,
 			"Both accelerometer and on-screen keyboard",
 			"No additional controls"
 		};

@@ -27,7 +27,7 @@ MACRO_CONFIG_INT(b_filter_pure, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter ou
 MACRO_CONFIG_INT(b_filter_pure_map, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out non-standard maps in browser")
 MACRO_CONFIG_INT(b_filter_compatversion, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out non-compatible servers in browser")
 
-MACRO_CONFIG_INT(b_sort, 0, 0, 256, CFGFLAG_SAVE|CFGFLAG_CLIENT, "")
+MACRO_CONFIG_INT(b_sort, 1, 0, 256, CFGFLAG_SAVE|CFGFLAG_CLIENT, "") // Sort by ping
 MACRO_CONFIG_INT(b_sort_order, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "")
 MACRO_CONFIG_INT(b_max_requests, 10, 0, 1000, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Number of requests to use when refreshing server browser")
 

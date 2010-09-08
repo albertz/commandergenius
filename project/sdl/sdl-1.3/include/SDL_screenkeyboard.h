@@ -67,6 +67,8 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardAutoFireButtonsAmount()
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardShown(int shown);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardShown();
 
+extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardSize();
+
 #ifdef __cplusplus
 }
 #endif

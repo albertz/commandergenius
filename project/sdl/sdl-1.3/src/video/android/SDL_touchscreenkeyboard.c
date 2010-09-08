@@ -60,7 +60,8 @@ int SDL_ANDROID_isTouchscreenKeyboardUsed = 0;
 static int touchscreenKeyboardTheme = 0;
 static int touchscreenKeyboardShown = 1;
 static int AutoFireButtonsNum = 0;
-static int nbuttons;
+static int nbuttons = 4;
+static int buttonsize = 1;
 
 static SDL_Rect arrows, buttons[MAX_BUTTONS];
 static SDLKey buttonKeysyms[MAX_BUTTONS] = { 
@@ -551,6 +552,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	if( AutoFireButtonsNum > MAX_BUTTONS_AUTOFIRE )
 		AutoFireButtonsNum = MAX_BUTTONS_AUTOFIRE;
 	// TODO: works for horizontal screen orientation only!
+	buttonsize = size;
 	
 	if(touchscreenKeyboardTheme == 0)
 	{
@@ -784,4 +786,9 @@ int SDL_ANDROID_SetScreenKeyboardShown(int shown)
 int SDL_ANDROID_GetScreenKeyboardShown()
 {
 	return touchscreenKeyboardShown;
+};
+
+int SDL_ANDROID_GetScreenKeyboardSize()
+{
+	return buttonsize;
 };

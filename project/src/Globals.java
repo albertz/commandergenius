@@ -27,7 +27,7 @@ class Globals {
 	
 	public static boolean AppUsesMultitouch = false;
 
-	public static int AppTouchscreenKeyboardKeysAmount = 4;
+	public static int AppTouchscreenKeyboardKeysAmount = 6;
 
 	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 0;
 

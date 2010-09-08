@@ -111,11 +111,15 @@ void BINDS::set_defaults()
 	bind(KEY_F4, "vote no");	
 
 #ifdef ANDROID
+	unbindall();
 	bind(KEY_LEFT, "+left");
 	bind(KEY_RIGHT, "+right");
 	bind(KEY_UP, "+jump");
 	bind(KEY_DOWN, "+hook");
+	bind(KEY_RETURN, "+jump");
+	bind(KEY_SPACE, "+hook");
 	bind('q', "+nextweapon");
+	bind('e', "+prevweapon");
 #endif
 
 }

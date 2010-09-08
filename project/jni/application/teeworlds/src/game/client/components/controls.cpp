@@ -182,8 +182,11 @@ bool CONTROLS::on_mousemove(float x, float y)
 
 	if(gameclient.snap.spectate)
 	{
-		if( inp_key_down(KEY_MOUSE_1) )
-			mouse_pos += vec2((x - gfx_screenwidth()/2) * 2, (y - gfx_screenheight()/2) * 2);
+		if( mouse_pos_old != vec2(x, y))
+		{
+			mouse_pos_old = vec2(x, y);
+			mouse_pos += vec2((x - gfx_screenwidth()/2), (y - gfx_screenheight()/2));
+		}
 	}
 	else
 	{
@@ -219,7 +222,7 @@ bool CONTROLS::on_mousemove(float x, float y)
 		}
 
 #ifdef ANDROID
-		if(l * 2.0f > mouse_max)
+		if(l > gfx_screenheight()/4)
 		{
 			if(input_data.fire&1 != 1)
 				input_data.fire++;
