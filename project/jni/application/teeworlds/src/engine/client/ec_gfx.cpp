@@ -199,7 +199,8 @@ static void flush()
 					( vertices[i * 4 + 0].color.a + vertices[i * 4 + 1].color.a + 
 					  vertices[i * 4 + 2].color.a + vertices[i * 4 + 3].color.a ) / 4.0f,
 				};
-				glColor4f(texcolor.r, texcolor.g, texcolor.b, texcolor.a);
+				// R and B channels are swapped on Android
+				glColor4f(texcolor.b, texcolor.g, texcolor.r, texcolor.a);
 				
 #endif
 #ifdef USE_GL_DRAW_TEX
@@ -772,6 +773,14 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	( ( pixel >> 16 ) & 0xF000 )
 */
 
+// R and B channels are swapped on Android
+
+#define SWAP_RB_8888( pixel ) \
+	((pixel & 0xFF) << 16 | \
+	(pixel & 0xFF00) | \
+	(pixel & 0xFF0000) >> 16 | \
+	(pixel & 0xFF000000))
+
 #define CONVERT_ARGB8888_RGBA4444( pixel ) \
 	( ( pixel >> 28 ) & 0xF ) | \
 	( ( pixel ) & 0xF0 ) | \
@@ -798,7 +807,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 			for(y = 0; y < h; y++)
 			for(x = 0; x < w; x++)
 			{
-				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_RGB888_RGB565( ((* ((Uint32 *)(texdata+(y*w+x)*3))) & 0xFFFFFF) );
+				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_RGB888_RGB565( SWAP_RB_8888(((* ((Uint32 *)(texdata+(y*w+x)*3))) & 0xFFFFFF) ) );
 			}
 		}
 		else
@@ -807,7 +816,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 			for(y = 0; y < h; y++)
 			for(x = 0; x < w; x++)
 			{
-				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_ARGB8888_RGBA5551( ((Uint32 *)texdata)[ y*w+x ] );
+				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_ARGB8888_RGBA5551( SWAP_RB_8888((((Uint32 *)texdata)[ y*w+x ]) ) );
 			}
 		}
 		else
@@ -815,7 +824,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 			for(y = 0; y < h; y++)
 			for(x = 0; x < w; x++)
 			{
-				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_ARGB8888_RGBA4444( ((Uint32 *)texdata)[ y*w+x ] );
+				((Uint16 *)tmpdata)[ y*(Uint32)w+x ] = CONVERT_ARGB8888_RGBA4444( SWAP_RB_8888((((Uint32 *)texdata)[ y*w+x ]) ) );
 			}
 		}
 	}

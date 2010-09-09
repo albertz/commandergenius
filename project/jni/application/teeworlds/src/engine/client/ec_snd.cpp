@@ -286,7 +286,7 @@ int snd_init()
 	else
         dbg_msg("client/sound", "sound init successful");
 	
-	mix_buffer = (int *)malloc(format2->samples * 2 * sizeof(int));
+	mix_buffer = (int *)malloc(format2.samples * 2 * sizeof(int));
 	
 	SDL_PauseAudio(0);
 	
