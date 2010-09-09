@@ -24,8 +24,6 @@ enum
 	NUM_SAMPLES = 512,
 	NUM_VOICES = 64,
 	NUM_CHANNELS = 16,
-	
-	MAX_FRAMES = 1024
 };
 
 typedef struct
@@ -68,6 +66,7 @@ static int mixing_rate = 48000;
 static volatile int sound_volume = 100;
 
 static int next_voice = 0;
+static int * mix_buffer = NULL;
 
 void snd_set_channel(int cid, float vol, float pan)
 {
@@ -149,18 +148,15 @@ static void mix(short *final_out, unsigned frames)
 {
 	int i, s;
 	int master_vol;
-#ifdef ANDROID
-	// The size of buffer SDL returns to us may vary greatly across devices, and will easily exceed MAX_FRAMES size -> segfault
-	// (on older devices the buffer should be large, otherwise the sound will be choppy)
-	// Why didn't they just use SDL_mixer there, and go on with own buggy mixer implementation?
-	int * mix_buffer = (int *)alloca(frames * 2 * sizeof(int));
-	bzero(mix_buffer, frames * 2 * sizeof(int));
-#else
-	int mix_buffer[MAX_FRAMES*2] = {0};
-#endif
 
 	/* aquire lock while we are mixing */
 	lock_wait(sound_lock);
+
+#ifdef ANDROID
+	bzero(mix_buffer, frames * 2 * sizeof(int));
+#else
+	memset(mix_buffer, 0, sizeof(mix_buffer));
+#endif
 	
 	master_vol = sound_volume;
 	
@@ -290,6 +286,8 @@ int snd_init()
 	else
         dbg_msg("client/sound", "sound init successful");
 	
+	mix_buffer = (int *)malloc(format2->samples * 2 * sizeof(int));
+	
 	SDL_PauseAudio(0);
 	
 	sound_enabled = 1;
@@ -319,6 +317,9 @@ int snd_shutdown()
 {
 	SDL_CloseAudio();
 	lock_destroy(sound_lock);
+	if( mix_buffer )
+		free(mix_buffer);
+	mix_buffer = NULL;
 	return 0;
 }
 
