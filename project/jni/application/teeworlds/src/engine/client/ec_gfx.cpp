@@ -94,7 +94,7 @@ typedef struct
 	GLuint tex;
 	int memsize;
 	int flags;
-	Uint16 w, h;
+	int w, h;
 	int next;
 } TEXTURE;
 
@@ -156,7 +156,7 @@ static void flush()
 #define SINGLE_COLOR_PER_TEXTURE 1
 #define USE_GL_DRAW_TEX 1
 #define GL_DRAW_TEX_SWAP_UP_DOWN 1
-//#define GL_DRAW_TEX_SWAP_UP_DOWN_TEX 1
+#define GL_DRAW_TEX_SWAP_UP_DOWN_TEX 1
 #define TEXTURE_OUT_OF_SCREEN_CHECK 1 // Some GLES renderers seems to not have this check
 
 #ifdef TEXTURE_OUT_OF_SCREEN_CHECK
@@ -207,7 +207,7 @@ static void flush()
 				
 #endif
 #ifdef USE_GL_DRAW_TEX
-				if( /* active_texture >= 0 && */ // Something fishy here eh, let's revert to generic code and hope OpenGL will handle that
+				if( active_texture >= 0 && // Something fishy here eh, let's revert to generic code and hope OpenGL will handle that
 					(( fabsf(vertices[i * 4].pos.x - vertices[i * 4 + 1].pos.x) < 0.01f &&
 					  fabsf(vertices[i * 4].pos.y - vertices[i * 4 + 3].pos.y) < 0.01f ) ||
 					( fabsf(vertices[i * 4].pos.y - vertices[i * 4 + 1].pos.y) < 0.01f &&
@@ -225,14 +225,26 @@ static void flush()
 					GLfloat cropRect[4] = {
 						vertices[i * 4].tex.u * textures[active_texture].w, 
 #ifdef GL_DRAW_TEX_SWAP_UP_DOWN_TEX
-						textures[active_texture].h -
-#endif
+						vertices[i * 4 + 2].tex.v * textures[active_texture].h,
+#else
 						vertices[i * 4].tex.v * textures[active_texture].h,
+#endif
 						(vertices[i * 4 + 2].tex.u - vertices[i * 4].tex.u) * textures[active_texture].w,
+#ifdef GL_DRAW_TEX_SWAP_UP_DOWN_TEX
+						-
+#endif
 						(vertices[i * 4 + 2].tex.v - vertices[i * 4].tex.v) * textures[active_texture].h
 					};
 					float aspectX = screen_width / (screen_x1 - screen_x0);
 					float aspectY = screen_height / (screen_y1 - screen_y0);
+					
+					/*
+					GLint texid = 0;
+					glGetIntegerv( GL_TEXTURE_BINDING_2D, &texid );
+					if( texid != textures[active_texture].tex )
+						dbg_msg("glDrawTexfOES", "active_texture %d tex %d != real tex %d", active_texture, textures[active_texture].tex, texid);
+					*/
+					
 					glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
 					glDrawTexfOES(	(vertices[i * 4].pos.x - screen_x0) * aspectX, 
 #ifdef GL_DRAW_TEX_SWAP_UP_DOWN
@@ -243,6 +255,7 @@ static void flush()
 									0,
 									(vertices[i * 4 + 2].pos.x - vertices[i * 4].pos.x) * aspectX,
 									(vertices[i * 4 + 2].pos.y - vertices[i * 4].pos.y) * aspectY );
+					
 					/*
 					dbg_msg("glDrawTexfOES", "tex %d screen %fx%f:%fx%f tex UV %fx%f:%fx%f dest rect %fx%f:%fx%f",
 							(int)active_texture,
@@ -251,13 +264,15 @@ static void flush()
 							(float)vertices[i * 4 + 2].tex.u, (float)vertices[i * 4 + 2].tex.v,
 							(float)vertices[i * 4].pos.x, (float)vertices[i * 4].pos.y,
 							(float)vertices[i * 4 + 2].pos.x, (float)vertices[i * 4 + 2].pos.y);
-					dbg_msg("glDrawTexfOES", "crop rect %fx%f:%fx%f screen rect %fx%f:%fx%f",
+					dbg_msg("glDrawTexfOES", "crop rect %fx%f:%fx%f screen rect %fx%f:%fx%f tex WH %dx%d",
 							cropRect[0], cropRect[1], cropRect[2], cropRect[3],
 							(vertices[i * 4].pos.x - screen_x0) * aspectX,
 							(vertices[i * 4].pos.y - screen_y0) * aspectY, 0,
 							(vertices[i * 4 + 2].pos.x - vertices[i * 4].pos.x) * aspectX,
-							(vertices[i * 4 + 2].pos.y - vertices[i * 4].pos.y) * aspectY );
+							(vertices[i * 4 + 2].pos.y - vertices[i * 4].pos.y) * aspectY,
+							(int)textures[active_texture].w, (int)textures[active_texture].h );
 					*/
+					
 				}
 				else
 #endif
@@ -854,7 +869,11 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	gluBuild2DMipmaps(GL_TEXTURE_2D, store_oglformat, w, h, oglformat, GL_UNSIGNED_BYTE, texdata);
 #endif
-	
+	textures[tex].w = w;
+	textures[tex].h = h;
+	active_texture = tex;
+
+
 	/* calculate memory usage */
 	{
 		int pixel_size = 4;
@@ -876,13 +895,10 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 #ifdef ANDROID
 		textures[tex].memsize = power_of_2(w)*power_of_2(h)*2;
 #endif
-		textures[tex].w = w;
-		textures[tex].h = h;
 	}
 	
 	memory_usage += textures[tex].memsize;
 	mem_free(tmpdata);
-	active_texture = tex;
 	return tex;
 }
 
