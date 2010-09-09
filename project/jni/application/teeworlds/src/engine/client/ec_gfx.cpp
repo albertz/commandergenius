@@ -94,6 +94,7 @@ typedef struct
 	GLuint tex;
 	int memsize;
 	int flags;
+	Uint16 w, h;
 	int next;
 } TEXTURE;
 
@@ -105,6 +106,7 @@ enum
 static TEXTURE textures[MAX_TEXTURES];
 static int first_free_texture;
 static int memory_usage = 0;
+static int active_texture = -1;
 
 static SDL_Surface *screen_surface;
 
@@ -152,7 +154,9 @@ static void flush()
 			{
 				
 #define SINGLE_COLOR_PER_TEXTURE 1
-// #define USE_GL_DRAW_TEX 1 // Does not work yet
+#define USE_GL_DRAW_TEX 1
+#define GL_DRAW_TEX_SWAP_UP_DOWN 1
+//#define GL_DRAW_TEX_SWAP_UP_DOWN_TEX 1
 #define TEXTURE_OUT_OF_SCREEN_CHECK 1 // Some GLES renderers seems to not have this check
 
 #ifdef TEXTURE_OUT_OF_SCREEN_CHECK
@@ -197,16 +201,17 @@ static void flush()
 					( vertices[i * 4 + 0].color.a + vertices[i * 4 + 1].color.a + 
 					  vertices[i * 4 + 2].color.a + vertices[i * 4 + 3].color.a ) / 4.0f,
 				};
-				// Android GL implemetation has swapped R and B color channels, fascinating isn't it?
-				glColor4f(texcolor.b, texcolor.g, texcolor.r, texcolor.a);
-
+				// Android GL implemetation seems to have swapped R and B color channels, fascinating isn't it?
+				// I wonder how the texturing works without hacks
+				glColor4f(texcolor.r, texcolor.g, texcolor.b, texcolor.a);
+				
 #endif
 #ifdef USE_GL_DRAW_TEX
-				// TODO: this code still draws incorrectly
-				if( ( fabsf(vertices[i * 4].pos.x - vertices[i * 4 + 1].pos.x) < 0.01f &&
+				if( /* active_texture >= 0 && */ // Something fishy here eh, let's revert to generic code and hope OpenGL will handle that
+					(( fabsf(vertices[i * 4].pos.x - vertices[i * 4 + 1].pos.x) < 0.01f &&
 					  fabsf(vertices[i * 4].pos.y - vertices[i * 4 + 3].pos.y) < 0.01f ) ||
 					( fabsf(vertices[i * 4].pos.y - vertices[i * 4 + 1].pos.y) < 0.01f &&
-					  fabsf(vertices[i * 4].pos.x - vertices[i * 4 + 3].pos.x) < 0.01f ) )
+					  fabsf(vertices[i * 4].pos.x - vertices[i * 4 + 3].pos.x) < 0.01f )) )
 				{
 					// No rotation - use faster glDrawTex() implementation
 					/*
@@ -218,15 +223,41 @@ static void flush()
 					glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
 					*/
 					GLfloat cropRect[4] = {
-						vertices[i * 4].tex.u, vertices[i * 4].tex.v,
-						vertices[i * 4 + 2].tex.u - vertices[i * 4].tex.u,
-						vertices[i * 4 + 2].tex.v - vertices[i * 4].tex.v
+						vertices[i * 4].tex.u * textures[active_texture].w, 
+#ifdef GL_DRAW_TEX_SWAP_UP_DOWN_TEX
+						textures[active_texture].h -
+#endif
+						vertices[i * 4].tex.v * textures[active_texture].h,
+						(vertices[i * 4 + 2].tex.u - vertices[i * 4].tex.u) * textures[active_texture].w,
+						(vertices[i * 4 + 2].tex.v - vertices[i * 4].tex.v) * textures[active_texture].h
 					};
-					
+					float aspectX = screen_width / (screen_x1 - screen_x0);
+					float aspectY = screen_height / (screen_y1 - screen_y0);
 					glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
-					glDrawTexfOES(vertices[i * 4].pos.x - screen_x0, vertices[i * 4].pos.y - screen_y0, 0,
-										(vertices[i * 4 + 2].pos.x - vertices[i * 4].pos.x) * screen_width / (screen_x1 - screen_x0),
-										(vertices[i * 4 + 2].pos.y - vertices[i * 4].pos.y) * screen_height / (screen_y1 - screen_y0));
+					glDrawTexfOES(	(vertices[i * 4].pos.x - screen_x0) * aspectX, 
+#ifdef GL_DRAW_TEX_SWAP_UP_DOWN
+									(screen_y1 - vertices[i * 4 + 2].pos.y) * aspectY,
+#else
+									(vertices[i * 4].pos.y - screen_y0) * aspectY,
+#endif
+									0,
+									(vertices[i * 4 + 2].pos.x - vertices[i * 4].pos.x) * aspectX,
+									(vertices[i * 4 + 2].pos.y - vertices[i * 4].pos.y) * aspectY );
+					/*
+					dbg_msg("glDrawTexfOES", "tex %d screen %fx%f:%fx%f tex UV %fx%f:%fx%f dest rect %fx%f:%fx%f",
+							(int)active_texture,
+							(float)screen_x0, (float)screen_y0, (float)screen_x1, (float)screen_y1,
+							(float)vertices[i * 4].tex.u, (float)vertices[i * 4].tex.v,
+							(float)vertices[i * 4 + 2].tex.u, (float)vertices[i * 4 + 2].tex.v,
+							(float)vertices[i * 4].pos.x, (float)vertices[i * 4].pos.y,
+							(float)vertices[i * 4 + 2].pos.x, (float)vertices[i * 4 + 2].pos.y);
+					dbg_msg("glDrawTexfOES", "crop rect %fx%f:%fx%f screen rect %fx%f:%fx%f",
+							cropRect[0], cropRect[1], cropRect[2], cropRect[3],
+							(vertices[i * 4].pos.x - screen_x0) * aspectX,
+							(vertices[i * 4].pos.y - screen_y0) * aspectY, 0,
+							(vertices[i * 4 + 2].pos.x - vertices[i * 4].pos.x) * aspectX,
+							(vertices[i * 4 + 2].pos.y - vertices[i * 4].pos.y) * aspectY );
+					*/
 				}
 				else
 #endif
@@ -248,6 +279,7 @@ static void flush()
 	}
 
 #else
+	// We're on acceptable hardware, not Android, just draw the texture wthout hacks
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glVertexPointer(3, GL_FLOAT,
@@ -844,10 +876,13 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 #ifdef ANDROID
 		textures[tex].memsize = power_of_2(w)*power_of_2(h)*2;
 #endif
+		textures[tex].w = w;
+		textures[tex].h = h;
 	}
 	
 	memory_usage += textures[tex].memsize;
 	mem_free(tmpdata);
+	active_texture = tex;
 	return tex;
 }
 
@@ -1019,6 +1054,7 @@ void gfx_texture_set(int slot)
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, textures[slot].tex);
 	}
+	active_texture = slot;
 }
 
 void gfx_clear(float r, float g, float b)

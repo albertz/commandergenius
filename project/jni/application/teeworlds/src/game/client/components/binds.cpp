@@ -82,6 +82,20 @@ void BINDS::set_defaults()
 {
 	// set default key bindings
 	unbindall();
+
+#ifdef ANDROID
+
+	bind(KEY_LEFT, "+left");
+	bind(KEY_RIGHT, "+right");
+	bind(KEY_UP, "+jump");
+	bind(KEY_DOWN, "+hook");
+	bind(KEY_RETURN, "+jump");
+	bind(KEY_SPACE, "+hook");
+	bind(KEY_LSHIFT, "+nextweapon");
+	bind(KEY_RSHIFT, "+prevweapon");
+
+#else
+
 	bind(KEY_F1, "toggle_local_console");
 	bind(KEY_F2, "toggle_remote_console");
 	bind(KEY_TAB, "+scoreboard");
@@ -110,16 +124,6 @@ void BINDS::set_defaults()
 	bind(KEY_F3, "vote yes");
 	bind(KEY_F4, "vote no");	
 
-#ifdef ANDROID
-	unbindall();
-	bind(KEY_LEFT, "+left");
-	bind(KEY_RIGHT, "+right");
-	bind(KEY_UP, "+jump");
-	bind(KEY_DOWN, "+hook");
-	bind(KEY_RETURN, "+jump");
-	bind(KEY_SPACE, "+hook");
-	bind('q', "+nextweapon");
-	bind('e', "+prevweapon");
 #endif
 
 }
