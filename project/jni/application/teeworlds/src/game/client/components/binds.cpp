@@ -85,6 +85,7 @@ void BINDS::set_defaults()
 
 #ifdef ANDROID
 
+	bind(KEY_MOUSE_1, "+fire");
 	bind(KEY_LEFT, "+left");
 	bind(KEY_RIGHT, "+right");
 	bind(KEY_UP, "+jump");

@@ -17,8 +17,16 @@ static void con_key_input_state(void *result, void *user_data)
 	((int *)user_data)[0] = console_arg_int(result, 0);
 }
 
+#ifdef ANDROID
+static bool con_key_fire_android_triggered = false;
+#endif
+
 static void con_key_input_counter(void *result, void *user_data)
 {
+#ifdef ANDROID
+	if(!con_key_fire_android_triggered)
+		return;
+#endif
 	int *v = (int *)user_data;
 	if(((*v)&1) != console_arg_int(result, 0))
 		(*v)++;
@@ -220,16 +228,11 @@ bool CONTROLS::on_mousemove(float x, float y)
 			mouse_pos = normalize(mouse_pos)*mouse_max;
 			l = mouse_max;
 		}
-
-#ifdef ANDROID
-		if(l > gfx_screenheight()/4)
-		{
-			if(input_data.fire&1 != 1)
-				input_data.fire++;
-			input_data.fire &= INPUT_STATE_MASK;
-		}
-#endif
 		
+#ifdef ANDROID
+		con_key_fire_android_triggered = (l > mouse_max/4);
+#endif
+
 		//float offset_amount = max(l-deadzone, 0.0f) * follow_factor;
 		//if(l > 0.0001f) // make sure that this isn't 0
 			//camera_offset = normalize(mouse_pos)*offset_amount;

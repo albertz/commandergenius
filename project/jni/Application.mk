@@ -7,4 +7,4 @@ APP_PROJECT_PATH := $(call my-dir)/..
 
 APP_MODULES := application sdl sdl_main stlport tremor png jpeg freetype sdl_image
 
-APP_ABI := armeabi
+APP_ABI := armeabi armeabi-v7a
