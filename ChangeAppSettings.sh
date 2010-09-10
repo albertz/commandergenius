@@ -7,7 +7,7 @@ if [ "X$1" = "X-a" ]; then
 	AUTO=1
 fi
 
-. ./AppSettings.cfg
+. ./AndroidAppSettings.cfg
 
 if [ "$CHANGE_APP_SETTINGS_VERSION" != "$AppSettingVersion" ]; then
 	AUTO=
@@ -185,29 +185,30 @@ fi # AUTO
 
 echo
 
-cat /dev/null > AppSettings.cfg
-echo AppSettingVersion=$CHANGE_APP_SETTINGS_VERSION >> AppSettings.cfg
-echo LibSdlVersion=$LibSdlVersion >> AppSettings.cfg
-echo AppName=\"$AppName\" >> AppSettings.cfg
-echo AppFullName=$AppFullName >> AppSettings.cfg
-echo ScreenOrientation=$ScreenOrientation >> AppSettings.cfg
-echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AppSettings.cfg
-echo SdlVideoResize=$SdlVideoResize >> AppSettings.cfg
-echo NeedDepthBuffer=$NeedDepthBuffer >> AppSettings.cfg
-echo AppUsesMouse=$AppUsesMouse >> AppSettings.cfg
-echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AppSettings.cfg
-echo AppUsesJoystick=$AppUsesJoystick >> AppSettings.cfg
-echo AppUsesMultitouch=$AppUsesMultitouch >> AppSettings.cfg
-echo RedefinedKeys=\"$RedefinedKeys\" >> AppSettings.cfg
-echo AppTouchscreenKeyboardKeysAmount=$AppTouchscreenKeyboardKeysAmount >> AppSettings.cfg
-echo AppTouchscreenKeyboardKeysAmountAutoFire=$AppTouchscreenKeyboardKeysAmountAutoFire >> AppSettings.cfg
-echo MultiABI=$MultiABI >> AppSettings.cfg
-echo AppVersionCode=$AppVersionCode >> AppSettings.cfg
-echo AppVersionName=\"$AppVersionName\" >> AppSettings.cfg
-echo CompiledLibraries=\"$CompiledLibraries\" >> AppSettings.cfg
-echo AppCflags=\'$AppCflags\' >> AppSettings.cfg
-echo AppLdflags=\'$AppLdflags\' >> AppSettings.cfg
-echo ReadmeText=\'$ReadmeText\' >> AppSettings.cfg
+cat /dev/null > AndroidAppSettings.cfg
+echo "# The application settings for Android libSDL port" >> AndroidAppSettings.cfg
+echo AppSettingVersion=$CHANGE_APP_SETTINGS_VERSION >> AndroidAppSettings.cfg
+echo LibSdlVersion=$LibSdlVersion >> AndroidAppSettings.cfg
+echo AppName=\"$AppName\" >> AndroidAppSettings.cfg
+echo AppFullName=$AppFullName >> AndroidAppSettings.cfg
+echo ScreenOrientation=$ScreenOrientation >> AndroidAppSettings.cfg
+echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AndroidAppSettings.cfg
+echo SdlVideoResize=$SdlVideoResize >> AndroidAppSettings.cfg
+echo NeedDepthBuffer=$NeedDepthBuffer >> AndroidAppSettings.cfg
+echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
+echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
+echo AppUsesJoystick=$AppUsesJoystick >> AndroidAppSettings.cfg
+echo AppUsesMultitouch=$AppUsesMultitouch >> AndroidAppSettings.cfg
+echo RedefinedKeys=\"$RedefinedKeys\" >> AndroidAppSettings.cfg
+echo AppTouchscreenKeyboardKeysAmount=$AppTouchscreenKeyboardKeysAmount >> AndroidAppSettings.cfg
+echo AppTouchscreenKeyboardKeysAmountAutoFire=$AppTouchscreenKeyboardKeysAmountAutoFire >> AndroidAppSettings.cfg
+echo MultiABI=$MultiABI >> AndroidAppSettings.cfg
+echo AppVersionCode=$AppVersionCode >> AndroidAppSettings.cfg
+echo AppVersionName=\"$AppVersionName\" >> AndroidAppSettings.cfg
+echo CompiledLibraries=\"$CompiledLibraries\" >> AndroidAppSettings.cfg
+echo AppCflags=\'$AppCflags\' >> AndroidAppSettings.cfg
+echo AppLdflags=\'$AppLdflags\' >> AndroidAppSettings.cfg
+echo ReadmeText=\'$ReadmeText\' >> AndroidAppSettings.cfg
 
 AppShortName=`echo $AppName | sed 's/ //g'`
 DataPath="$AppFullName"
