@@ -975,8 +975,10 @@ void gfx_swap()
 		perf_end();
 	}
 	
+	#ifndef ANDROID
 	if(render_enable && config.gfx_finish)
 		glFinish();
+	#endif
 }
 
 void gfx_screenshot_direct(const char *filename)
@@ -1044,8 +1046,10 @@ void gfx_texture_set(int slot)
 void gfx_clear(float r, float g, float b)
 {
 	if(no_gfx) return;
+	#ifndef ANDROID
 	glClearColor(r,g,b,0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	#endif
 }
 
 void gfx_mapscreen(float tl_x, float tl_y, float br_x, float br_y)
