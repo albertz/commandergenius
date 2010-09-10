@@ -167,12 +167,18 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL
 	}
 
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): app requested audio bytespersample %d freq %d channels %d samples %d", bytesPerSample, audioFormat->freq, (int)audioFormat->channels, (int)audioFormat->samples);
-
 	bytesPerSample = (audioFormat->format & 0xFF) / 8;
 	audioFormat->format = ( bytesPerSample == 2 ) ? AUDIO_S16 : AUDIO_S8;
+
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): app requested audio bytespersample %d freq %d channels %d samples %d", bytesPerSample, audioFormat->freq, (int)audioFormat->channels, (int)audioFormat->samples);
+
+	if(audioFormat->samples <= 0)
+		audioFormat->samples = 128; // Some sane value
 	if( audioFormat->samples > 32768 ) // Why anyone need so huge audio buffer?
+	{
 		audioFormat->samples = 32768;
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): limiting samples size to ", (int)audioFormat->samples);
+	}
 	
 	SDL_CalculateAudioSpec(spec);
 	
@@ -185,9 +191,10 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL
 	}
 
+	// The returned audioBufferSize may be huge, up to 100 Kb for 44100 because user may have selected large audio buffer to get rid of choppy sound
 	audioBufferSize = (*jniEnv)->CallIntMethod( jniEnv, JavaAudioThread, JavaInitAudio, 
 					(jint)audioFormat->freq, (jint)audioFormat->channels, 
-					(jint)(( bytesPerSample == 2 ) ? 1 : 0), (jint)(audioFormat->size > 0 ? audioFormat->size : 100) );
+					(jint)(( bytesPerSample == 2 ) ? 1 : 0), (jint)(audioFormat->size) );
 
 	if( audioBufferSize == 0 )
 	{
