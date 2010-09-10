@@ -5,6 +5,9 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := application
 
 APP_SUBDIRS := $(patsubst $(LOCAL_PATH)/%, %, $(shell find $(LOCAL_PATH)/src/ -type d))
+ifneq ($(APP_SUBDIRS_BUILD),)
+APP_SUBDIRS := $(APP_SUBDIRS_BUILD)
+endif
 
 LOCAL_CFLAGS := $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../sdl/include \

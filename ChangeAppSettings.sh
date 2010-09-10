@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHANGE_APP_SETTINGS_VERSION=6
+CHANGE_APP_SETTINGS_VERSION=7
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -163,6 +163,12 @@ if [ -n "$var" ] ; then
 	AppLdflags="$var"
 fi
 
+echo -n "\nBuild only following subdirs (empty will build all dirs) ($AppSubdirsBuild): "
+read var
+if [ -n "$var" ] ; then
+	AppSubdirsBuild="$var"
+fi
+
 echo -n "\nHere you may type some short readme text that will be shown when app data is downloaded."
 echo -n "\nCurrent text:\n"
 echo -n "`echo $ReadmeText | tr '^' '\\n'`"
@@ -208,6 +214,7 @@ echo AppVersionName=\"$AppVersionName\" >> AndroidAppSettings.cfg
 echo CompiledLibraries=\"$CompiledLibraries\" >> AndroidAppSettings.cfg
 echo AppCflags=\'$AppCflags\' >> AndroidAppSettings.cfg
 echo AppLdflags=\'$AppLdflags\' >> AndroidAppSettings.cfg
+echo AppSubdirsBuild=\'$AppSubdirsBuild\' >> AndroidAppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AndroidAppSettings.cfg
 
 AppShortName=`echo $AppName | sed 's/ //g'`
@@ -323,7 +330,8 @@ cat project/jni/Android.mk | \
 	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
-	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes^" > \
+	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes^" | \
+	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" > \
 	project/jni/Android.mk.1
 if [ -n "`diff -w project/jni/Android.mk.1 project/jni/Android.mk`" ] ; then
 	mv -f project/jni/Android.mk.1 project/jni/Android.mk
