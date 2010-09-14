@@ -169,6 +169,22 @@ Anyway, SDL should sleep inside SDL_Flip() and re-create all HW textures when it
 
 5. Export phone vibrator to SDL - interface is available in SDL 1.3
 
+6. HDMI output (HTC Evo and Samsung Epic support that):
+HDMI output will be tricky - I've read the doc here: 
+https://docs.google.com/View?id=dhtsnvs6_57d2hpqtgr#4_1_HDMI_output_support_338048
+It says that in order to output something to HDMI you need to have a VideoView class visible on screen: 
+http://developer.android.com/reference/android/widget/VideoView.html .
+This class does not have any method like "showMyOwnCustomImage()", 
+it just plays the video from the given path, so obvious solution is to create 
+special FIFO file or open a socket, point the VideoView to play this FIFO or socket, 
+and then write raw uncompressed video frames to that FIFO with some small header so that 
+VideoView will recognize it as a proper video format.
+UQM gives 5 FPS without such hacks, if I'll implement that FPS will drop to 1-2 
+(maybe not that bad, I have to actually try that), because you'll have to do huge memcpy(), 
+plus VideoView will contain some buffer to ensure the playback is smooth, 
+so the data on your TV will lag halfsecond behind the data on the device screen.
+
+
 Games to port
 =============
 
@@ -178,7 +194,7 @@ LBreakout2
 Commander Genius (only data files for shareware version available for free)
 OpenJazz (only data files for shareware version available for free)
 OpenLieroX (will be damn hard to do, I wrote the code partially)
-AdvanceMAME (they already have their own port, yet it's unfinished)
+ScummVM (they already have their own port, yet it's unfinished)
 Widelands (http://wl.widelands.org/)
 
 License information
