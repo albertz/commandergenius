@@ -27,7 +27,7 @@ COMPILED_LIBRARIES :=
 
 APPLICATION_ADDITIONAL_CFLAGS := -finline-functions -O2 -DTREMOR=1 -DBUILD_TYPE=LINUX32 -DTARGET_LNX=1
 
-APPLICATION_ADDITIONAL_LDFLAGS := -Lbin/ndk/local/armeabi -ltremor
+APPLICATION_ADDITIONAL_LDFLAGS := -ltremor
 
 APPLICATION_SUBDIRS_BUILD := src
 
@@ -37,6 +37,11 @@ SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCO
 SDL_MIXER_USE_LIBMAD :=
 ifneq ($(strip $(filter mad, $(COMPILED_LIBRARIES))),)
 SDL_MIXER_USE_LIBMAD := 1
+endif
+
+ifneq ($(findstring -crystax,$(TARGET_CC)),)
+$(info Building with CrystaX toolchain - RTTI and exceptions enabled, STLPort disabled)
+CRYSTAX_TOOLCHAIN=1
 endif
 
 include $(call all-subdir-makefiles)

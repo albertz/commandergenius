@@ -85,6 +85,12 @@ The C++ files shall have .cpp extension to be compiled, rename them if necessary
 Also you can replace icon image at project/res/drawable/icon.png.
 Then you can launch build.sh.
 
+The NDK has RTTI and exceptions disabled for C++ code, if you need them you may download modified NDK from
+http://www.crystax.net/android/ndk-r4.php
+Unzip it, and put in your PATH instead of original NDK - do not rename the target dir, my makefiles will
+check if there's "crystax" string in path to gcc toolchain, and will disable STLPort because CrystaX's
+NDK already contains STL library.
+
 Application data is not bundled with app itself - it should be downloaded from net on first run.
 Create .ZIP file with your application data, and put it somewhere on HTTP server - ChangeAppSettings.sh
 will ask you for the URL.
@@ -184,6 +190,7 @@ UQM gives 5 FPS without such hacks, if I'll implement that FPS will drop to 1-2
 plus VideoView will contain some buffer to ensure the playback is smooth, 
 so the data on your TV will lag halfsecond behind the data on the device screen.
 
+7. Make app data to come inside .apk file in assets instead of downloading it from net.
 
 Games to port
 =============

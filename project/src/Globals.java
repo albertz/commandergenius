@@ -8,7 +8,7 @@ class Globals {
 	public static String ApplicationName = "CommanderGenius";
 
 	// Should be zip file
-	public static String DataDownloadUrl = "Data files size is 1 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-data.zip/download";
+	public static String DataDownloadUrl = "Data files size is 2 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-data.zip/download";
 
 	// Set this value to true if you're planning to render 3D using OpenGL - it eats some GFX resources, so disabled for 2D
 	public static boolean NeedDepthBuffer = false;

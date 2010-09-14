@@ -9,7 +9,13 @@ ifneq ($(APP_SUBDIRS_BUILD),)
 APP_SUBDIRS := $(APP_SUBDIRS_BUILD)
 endif
 
-LOCAL_CFLAGS := $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
+LOCAL_CFLAGS :=
+
+ifeq ($(CRYSTAX_TOOLCHAIN),)
+LOCAL_CFLAGS += -I$(LOCAL_PATH)/../stlport/stlport
+endif
+
+LOCAL_CFLAGS += $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../sdl/include \
 				-I$(LOCAL_PATH)/../sdl_mixer \
 				-I$(LOCAL_PATH)/../sdl_image \
@@ -17,13 +23,11 @@ LOCAL_CFLAGS := $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../sdl_net \
 				-I$(LOCAL_PATH)/../sdl_blitpool \
 				-I$(LOCAL_PATH)/../sdl_gfx \
-				-I$(LOCAL_PATH)/../stlport/stlport \
 				-I$(LOCAL_PATH)/../png \
 				-I$(LOCAL_PATH)/../jpeg \
 				-I$(LOCAL_PATH)/../intl \
 				-I$(LOCAL_PATH)/../freetype/include \
 				-I$(LOCAL_PATH)/..
-
 
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
 
@@ -39,6 +43,12 @@ LOCAL_SHARED_LIBRARIES := sdl $(COMPILED_LIBRARIES)
 LOCAL_STATIC_LIBRARIES := stlport
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
+
+ifeq ($(CRYSTAX_TOOLCHAIN),)
+LOCAL_LDFLAGS := -Lbin/ndk/local/armeabi 
+else
+LOCAL_LDFLAGS := -Lobj/local/armeabi
+endif
 
 LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
 

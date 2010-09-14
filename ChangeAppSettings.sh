@@ -358,17 +358,19 @@ mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
 
 echo Forcing rebuild of specific files
 rm -rf project/libs/*
-rm -rf project/bin/ndk/local/*/objs/sdl_main/* project/bin/ndk/local/*/libsdl_main.so
-rm -rf project/bin/ndk/local/*/libsdl.so
-rm -rf project/bin/ndk/local/*/objs/sdl/src/*/android
-rm -rf project/bin/ndk/local/*/objs/sdl/src/video/SDL_video.o
-rm -rf project/bin/ndk/local/*/objs/sdl/SDL_renderer_gles.o
+for OUT in bin/ndk obj; do
+rm -rf project/$OUT/local/*/objs/sdl_main/* project/$OUT/local/*/libsdl_main.so
+rm -rf project/$OUT/local/*/libsdl.so
+rm -rf project/$OUT/local/*/objs/sdl/src/*/android
+rm -rf project/$OUT/local/*/objs/sdl/src/video/SDL_video.o
+rm -rf project/$OUT/local/*/objs/sdl/SDL_renderer_gles.o
 if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
 	# Internal types are different in SDL 1.2 and 1.3, namely SDL_Rect, so all libs using it have to be recompiled
-	rm -rf project/bin/ndk/local/*/objs/sdl* project/bin/ndk/local/*/libsdl*
-	rm -rf project/bin/ndk/local/*/objs/application project/bin/ndk/local/*/libapplication.so
+	rm -rf project/$OUT/local/*/objs/sdl* project/$OUT/local/*/libsdl*
+	rm -rf project/$OUT/local/*/objs/application project/$OUT/local/*/libapplication.so
 fi
 # Do not rebuild libraries that do not need that
-find project/bin/ndk/local -name "*.[oa]" -exec touch '{}' \;
+find project/$OUT/local -name "*.[oa]" -exec touch '{}' \;
+done
 
 echo Done
