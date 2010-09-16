@@ -5,17 +5,21 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := application
 
 APP_SUBDIRS := $(patsubst $(LOCAL_PATH)/%, %, $(shell find $(LOCAL_PATH)/src/ -type d))
-ifneq ($(APP_SUBDIRS_BUILD),)
-APP_SUBDIRS := $(APP_SUBDIRS_BUILD)
+ifneq ($(APPLICATION_SUBDIRS_BUILD),)
+APP_SUBDIRS := $(APPLICATION_SUBDIRS_BUILD)
 endif
 
 LOCAL_CFLAGS :=
 
 ifeq ($(CRYSTAX_TOOLCHAIN),)
-LOCAL_CFLAGS += -I$(LOCAL_PATH)/../stlport/stlport
+# Paths should be on newline so launchConfigure.sh will work properly
+LOCAL_CFLAGS += \
+				-I$(LOCAL_PATH)/../stlport/stlport
 endif
 
-LOCAL_CFLAGS += $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
+# Paths should be on newline so launchConfigure.sh will work properly
+LOCAL_CFLAGS += \
+				$(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../sdl/include \
 				-I$(LOCAL_PATH)/../sdl_mixer \
 				-I$(LOCAL_PATH)/../sdl_image \
@@ -38,19 +42,20 @@ LOCAL_SRC_FILES := $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wil
 # Uncomment to also add C sources
 LOCAL_SRC_FILES += $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wildcard $(LOCAL_PATH)/$(F)/*.c))))
 
+ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
+LOCAL_SRC_FILES := dummy.c
+endif
+
 LOCAL_SHARED_LIBRARIES := sdl $(COMPILED_LIBRARIES)
 
 LOCAL_STATIC_LIBRARIES := stlport
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
 
-ifeq ($(CRYSTAX_TOOLCHAIN),)
-LOCAL_LDFLAGS := -Lbin/ndk/local/armeabi 
-else
 LOCAL_LDFLAGS := -Lobj/local/armeabi
-endif
 
 LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
+
 
 LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
 	for f in $(LOCAL_PATH)/../../libs/armeabi/*.so ; do \
@@ -76,3 +81,26 @@ $(error Detected libraries with too long symbol names. Remove all files under pr
 endif
 
 include $(BUILD_SHARED_LIBRARY)
+
+ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
+
+$(info LOCAL_PATH $(LOCAL_PATH) )
+$(info $(LOCAL_PATH)/src/libapplication.so )
+$(info $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so) )
+
+LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
+
+$(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh
+
+# $(realpath $(LOCAL_PATH)/../../libs/armeabi/libapplication.so) \
+
+$(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so): $(LOCAL_PATH)/src/libapplication.so OVERRIDE_CUSTOM_LIB
+	cp -f $< $@
+#	$(patsubst %-gcc,%-strip,$(TARGET_CC)) -g $@
+
+.PHONY: OVERRIDE_CUSTOM_LIB
+
+OVERRIDE_CUSTOM_LIB:
+
+endif

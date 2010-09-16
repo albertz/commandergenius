@@ -1,6 +1,6 @@
 
 # The namespace in Java file, with dots replaced with underscores
-SDL_JAVA_PACKAGE_PATH := net_sourceforge_clonekeenplus
+SDL_JAVA_PACKAGE_PATH := net_sourceforge_lgames_lbreakout2
 
 # Path to shared libraries - Android 1.6 cannot load them properly, thus we have to specify absolute path here
 # SDL_SHARED_LIBRARIES_PATH := /data/data/de.schwardtnet.alienblaster/lib
@@ -10,7 +10,7 @@ SDL_JAVA_PACKAGE_PATH := net_sourceforge_clonekeenplus
 # Typically /sdcard/alienblaster 
 # Or /data/data/de.schwardtnet.alienblaster/files if you're planning to unpack data in application private folder
 # Your application will just set current directory there
-SDL_CURDIR_PATH := net.sourceforge.clonekeenplus
+SDL_CURDIR_PATH := net.sourceforge.lgames.lbreakout2
 
 # Android Dev Phone G1 has trackball instead of cursor keys, and 
 # sends trackball movement events as rapid KeyDown/KeyUp events,
@@ -23,15 +23,17 @@ SDL_TRACKBALL_KEYUP_DELAY := 1
 # resized in HW-accelerated way, however it eats a tiny bit of CPU
 SDL_VIDEO_RENDER_RESIZE := 1
 
-COMPILED_LIBRARIES := 
+COMPILED_LIBRARIES := sdl_mixer sdl_image sdl_net intl
 
-APPLICATION_ADDITIONAL_CFLAGS := -finline-functions -O2 -DTREMOR=1 -DBUILD_TYPE=LINUX32 -DTARGET_LNX=1
+APPLICATION_ADDITIONAL_CFLAGS := -DHAVE_CONFIG_H -finline-functions -O2
 
-APPLICATION_ADDITIONAL_LDFLAGS := -ltremor
+APPLICATION_ADDITIONAL_LDFLAGS := 
 
-APPLICATION_SUBDIRS_BUILD := src
+APPLICATION_SUBDIRS_BUILD := src/dummy
 
-SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCODE_0=LCTRL -DSDL_ANDROID_KEYCODE_1=LALT -DSDL_ANDROID_KEYCODE_2=SPACE -DSDL_ANDROID_KEYCODE_3=RETURN -DSDL_ANDROID_KEYCODE_4=RETURN
+APPLICATION_CUSTOM_BUILD_SCRIPT := y
+
+SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCODE_0=RETURN -DSDL_ANDROID_KEYCODE_1=SPACE -DSDL_ANDROID_KEYCODE_2=PAGEUP -DSDL_ANDROID_KEYCODE_3=PAGEDOWN
 
 # If SDL_Mixer should link to libMAD
 SDL_MIXER_USE_LIBMAD :=

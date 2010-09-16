@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHANGE_APP_SETTINGS_VERSION=7
+CHANGE_APP_SETTINGS_VERSION=8
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -151,6 +151,12 @@ if [ -n "$var" ] ; then
 	CompiledLibraries="$var"
 fi
 
+echo -n "\nApplication uses custom build script AndroidBuild.sh instead of Android.mk (y) or (n) ($CustomBuildScript): "
+read var
+if [ -n "$var" ] ; then
+	CustomBuildScript="$var"
+fi
+
 echo -n "\nAditional CFLAGS for application ($AppCflags): "
 read var
 if [ -n "$var" ] ; then
@@ -212,6 +218,7 @@ echo MultiABI=$MultiABI >> AndroidAppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AndroidAppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AndroidAppSettings.cfg
 echo CompiledLibraries=\"$CompiledLibraries\" >> AndroidAppSettings.cfg
+echo CustomBuildScript=$CustomBuildScript >> AndroidAppSettings.cfg
 echo AppCflags=\'$AppCflags\' >> AndroidAppSettings.cfg
 echo AppLdflags=\'$AppLdflags\' >> AndroidAppSettings.cfg
 echo AppSubdirsBuild=\'$AppSubdirsBuild\' >> AndroidAppSettings.cfg
@@ -280,6 +287,10 @@ for lib in $CompiledLibraries; do
 	LibrariesToLoad="$LibrariesToLoad System.loadLibrary(\\\"$lib\\\");"
 done
 
+if [ "$CustomBuildScript" = "n" ] ; then
+	CustomBuildScript=
+fi
+
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 
 echo Creating symlink to libSDL
@@ -331,7 +342,8 @@ cat project/jni/Android.mk | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
 	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes^" | \
-	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" > \
+	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
+	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" > \
 	project/jni/Android.mk.1
 if [ -n "`diff -w project/jni/Android.mk.1 project/jni/Android.mk`" ] ; then
 	mv -f project/jni/Android.mk.1 project/jni/Android.mk
@@ -358,9 +370,10 @@ mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
 
 echo Forcing rebuild of specific files
 rm -rf project/libs/*
-for OUT in bin/ndk obj; do
+for OUT in obj; do
 rm -rf project/$OUT/local/*/objs/sdl_main/* project/$OUT/local/*/libsdl_main.so
 rm -rf project/$OUT/local/*/libsdl.so
+rm -rf project/$OUT/local/*/libstlport.a # Should be re-linked if you're changing toolchain
 rm -rf project/$OUT/local/*/objs/sdl/src/*/android
 rm -rf project/$OUT/local/*/objs/sdl/src/video/SDL_video.o
 rm -rf project/$OUT/local/*/objs/sdl/SDL_renderer_gles.o

@@ -14,9 +14,17 @@ LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 # Hacks for broken configure scripts
-ln -sf libsdl_mixer.so $LOCAL_PATH/../../bin/ndk/local/armeabi/libSDL_mixer.so
-ln -sf libsdl_mixer.so $LOCAL_PATH/../../bin/ndk/local/armeabi/libSDL_Mixer.so
-ln -sf libsdl_net.so $LOCAL_PATH/../../bin/ndk/local/armeabi/libSDL_net.so
+rm -rf $LOCAL_PATH/../../obj/local/armeabi/libSDL_*.so
+rm -rf $LOCAL_PATH/../../obj/local/armeabi/libsdl_main.so
+
+if [ -e $LOCAL_PATH/../../obj/local/armeabi/libsdl_mixer.so ] ; then
+	ln -sf libsdl_mixer.so $LOCAL_PATH/../../obj/local/armeabi/libSDL_Mixer.so
+fi
+
+for F in $LOCAL_PATH/../../obj/local/armeabi/libsdl_*.so; do
+	LIBNAME=`echo $F | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libsdl_\(.*\)[.]so@\1@"`
+	ln -sf libsdl_$LIBNAME.so $LOCAL_PATH/../../obj/local/armeabi/libSDL_$LIBNAME.so
+done
 
 CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums \
@@ -28,9 +36,9 @@ CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 
 LDFLAGS="-nostdlib -Wl,-soname,libapplication.so -Wl,-shared,-Bsymbolic \
 -Wl,--whole-archive  -Wl,--no-whole-archive \
-$LOCAL_PATH/../../bin/ndk/local/armeabi/libstlport.a \
+$LOCAL_PATH/../../obj/local/armeabi/libstlport.a \
 $NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/lib/gcc/arm-eabi/4.4.0/libgcc.a \
-`echo $LOCAL_PATH/../../bin/ndk/local/armeabi/*.so | sed "s@$LOCAL_PATH/../../bin/ndk/local/armeabi/libsdl_main.so@@" | sed "s@$LOCAL_PATH/../../bin/ndk/local/armeabi/libapplication.so@@"` \
+`echo $LOCAL_PATH/../../obj/local/armeabi/*.so | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libsdl_main.so@@" | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libapplication.so@@"` \
 $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
 $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.so \
 $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
@@ -38,7 +46,7 @@ $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
 -L$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib \
 -lGLESv1_CM -ldl -llog -lz \
 -Wl,-rpath-link=$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib \
--L$LOCAL_PATH/../../bin/ndk/local/armeabi"
+-L$LOCAL_PATH/../../obj/local/armeabi"
 
 env PATH=$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \

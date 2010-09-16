@@ -4,7 +4,7 @@ Alien Blaster game is used as working example (original sources: http://www.schw
 Installation
 ============
 
-This should be compiled with Android 2.2 SDK and NDK r4 - google for them and install them as described in their docs
+This should be compiled with Android 2.2 SDK and NDK r4b - google for them and install them as described in their docs
 (the application will run on Android 1.6 and above).
 You'll need to install Ant too.
 The most supported environnment for that port is Linux, MacOs should be okay too, 
@@ -110,7 +110,7 @@ though ./configure scripts tend to have stupid bugs in various places, avoid usi
    (1.2 for lbreakout2), and correct libs (sdl_mixer sdl_image sdl_net for lbreakout2), also change name etc.
 3. Launch ./build.sh, wait till it builds all .so files
 4. Go to project/jni/application/lbreakout2-2.6.1 dir, and launch command
-   ../launchConfigure.sh --disable-install --enable-sdl-net --disable-nls
+   ../launchConfigure.sh --disable-install --enable-sdl-net LIBS=-lintl
 5. Watch how ./configure configures, if it fails fix launchConfigure.sh, rinse and repeat.
 6. Launch make, and pray. If you're lucky it will create application binary (lbreakout2-2.6.1/client/lbreakout2)
 7. Move the application binary to dir project/libs/armeabi, rename it to libapplication.so (overwrite old file)

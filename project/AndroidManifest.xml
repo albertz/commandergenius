@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="net.sourceforge.clonekeenplus"
-      android:versionCode="32201"
-      android:versionName="0.3.2.2.01"
+      package="net.sourceforge.lgames.lbreakout2"
+      android:versionCode="26101"
+      android:versionName="2.6.1.01"
       android:installLocation="preferExternal"
 >
     <application android:label="@string/app_name" 
