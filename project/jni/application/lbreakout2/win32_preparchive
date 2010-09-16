@@ -1,0 +1,22 @@
+rm -rf lbreakout2
+mkdir lbreakout2 lbreakout2/client lbreakout2/server
+cp -R client/gfx client/gui_theme client/levels client/sounds lbreakout2/client
+cp -R server/levels lbreakout2/server
+cp client/lbreakout2.exe lbreakout2/client
+cp server/lbreakout2server.exe lbreakout2/server 
+cp win32dlls/*.dll lbreakout2/client
+cp win32dlls/SDL_net.dll lbreakout2/server 
+cp AUTHORS COPYING INSTALL README TODO Changelog lbreakout2
+
+makefiles=`find lbreakout2 -name Makefile`
+for file in $makefiles; do
+    rm $file
+done 
+makefiles=`find lbreakout2 -name Makefile.am`
+for file in $makefiles; do
+    rm $file
+done 
+makefiles=`find lbreakout2 -name Makefile.in`
+for file in $makefiles; do
+    rm $file
+done 

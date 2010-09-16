@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=LBreakout2
+Comment=A ball-and-paddle game with nice graphics.
+Exec=lbreakout2
+Icon=
+Type=Application
+Categories=Game;
