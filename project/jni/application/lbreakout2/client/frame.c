@@ -158,33 +158,39 @@ void frame_draw()
     /* left and right part are always drawn */
     /* left part */
     stk_surface_alpha_blit( fr_left_shadow, 0,0,-1,-1,
-        offscreen, shadow_size, shadow_size, SHADOW_ALPHA );
-    stk_surface_blit( fr_left, 0,0,-1,-1, offscreen, 0,0 );
+        stk_display, shadow_size, shadow_size, SHADOW_ALPHA );
+    stk_surface_blit( fr_left, 0,0,-1,-1, stk_display, 0,0 );
+    /*
     stk_surface_alpha_blit( fr_left_shadow, 0,0,-1,-1,
         bkgnd, shadow_size, shadow_size, SHADOW_ALPHA );
     stk_surface_blit( fr_left, 0,0,-1,-1, bkgnd, 0,0 );
+    */
     if ( game->game_type == GT_LOCAL ) {
         /* add top */
         stk_surface_alpha_blit( frame_top_shadow, 0,0,-1,-1,
-            offscreen, fr_left->w + shadow_size, shadow_size, SHADOW_ALPHA );
+            stk_display, fr_left->w + shadow_size, shadow_size, SHADOW_ALPHA );
         stk_surface_blit( 
-            frame_top, 0,0,-1,-1, offscreen, fr_left->w,0 );
+            frame_top, 0,0,-1,-1, stk_display, fr_left->w,0 );
+        /*
         stk_surface_alpha_blit( frame_top_shadow, 0,0,-1,-1,
             bkgnd, fr_left->w + shadow_size, shadow_size, SHADOW_ALPHA );
         stk_surface_blit( 
             frame_top, 0,0,-1,-1, bkgnd, fr_left->w,0 );
+        */
     }
     /* right part */
     stk_surface_alpha_blit( fr_right_shadow, 0,0,-1,-1,
-        offscreen, stk_display->w - fr_right_shadow->w + shadow_size, 
+        stk_display, stk_display->w - fr_right_shadow->w + shadow_size, 
         shadow_size, SHADOW_ALPHA );
-    stk_surface_blit( fr_right, 0,0,-1,-1, offscreen, 
+    stk_surface_blit( fr_right, 0,0,-1,-1, stk_display, 
         stk_display->w - fr_right->w,0 );
+    /*
     stk_surface_alpha_blit( fr_right_shadow, 0,0,-1,-1,
         bkgnd, stk_display->w - fr_right_shadow->w + shadow_size, 
         shadow_size, SHADOW_ALPHA );
     stk_surface_blit( fr_right, 0,0,-1,-1, bkgnd, 
         stk_display->w - fr_right->w,0 );
+    */
 }
 /*
 ====================================================================
@@ -205,7 +211,7 @@ void frame_draw_lives( int lives, int max_lives )
             else
                 y = BRICK_HEIGHT * 2;
         stk_surface_blit( lamps, 0,y, BRICK_WIDTH, BRICK_HEIGHT,
-            offscreen, 0, ( MAP_HEIGHT - i - 1 ) * BRICK_HEIGHT );
+            stk_display, 0, ( MAP_HEIGHT - i - 1 ) * BRICK_HEIGHT );
     }
     /* get position of next lamp */
     new_life_y = stk_display->h - lives * BRICK_HEIGHT;

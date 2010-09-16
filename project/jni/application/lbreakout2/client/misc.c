@@ -61,7 +61,7 @@ void bkgnd_draw( SDL_Surface *bkgnd, int id )
 	}
 
 	/* draw to offscreen */
-	stk_surface_blit( bkgnd, 0,0,-1,-1, offscreen, 0,0 );
+	stk_surface_blit( bkgnd, 0,0,-1,-1, stk_display, 0,0 );
 }
 /*
 ====================================================================

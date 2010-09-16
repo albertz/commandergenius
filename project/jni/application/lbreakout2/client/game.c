@@ -347,8 +347,8 @@ static void display_bonus_level_score()
 /* begin frame by hiding all objects */
 static void begin_frame( void )
 {
+	/*
 	int i;
-	
         displays_hide();
         frame_info_hide();
         extras_hide();
@@ -364,12 +364,25 @@ static void begin_frame( void )
         shine_hide();
         exps_hide();
         credit_hide();
+    */
 }
 
 /* end frame by drawing all objects and updating the screen */
 static void end_frame( void )
 {
 	int i;
+
+	if ( game->game_type == GT_LOCAL && cur_player )
+		bkgnd_draw( bkgnd, bkgnd_ids[cur_player->level_id] );
+	else
+		bkgnd_draw( bkgnd, -1 );
+	/* add frame */
+	frame_draw();
+	/* add bricks */
+	bricks_draw();
+	/* draw lives */
+	if ( game->game_type == GT_LOCAL && cur_player )
+		frame_draw_lives( cur_player->lives, game->diff->max_lives );
 	
 	/* show -- some things will be missing if darkness is enabled */
 	balls_show_shadow();

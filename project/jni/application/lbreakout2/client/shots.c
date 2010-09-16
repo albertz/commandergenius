@@ -81,11 +81,13 @@ void shots_show()
 		stk_surface_alpha_blit( shot_pic, (int)shot->cur_fr * shot_w, 0,
 				shot_w, shot_h, stk_display, x, y, shot_alpha );
 
+		/*
 		shot->update_rect.x = x;
 		shot->update_rect.y = y;
 		shot->update_rect.w = shot_w + shadow_size;
 		shot->update_rect.h = shot_h + shadow_size;
 		stk_display_store_rect( &shot->update_rect );
+		*/
 	}
 	stk_surface_clip( stk_display, 0, 0, 0, 0 );
 }

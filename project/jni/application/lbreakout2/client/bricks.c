@@ -165,14 +165,16 @@ static void client_brick_grow( int x, int y, int id )
 		px = x * BRICK_WIDTH;
 		py = y * BRICK_HEIGHT;
 		if (isReplace)
-			brick_draw( offscreen, x, y, 0 );
+			brick_draw( stk_display, x, y, 0 );
 		else
 			brick_draw_complex( x, y, px, py );
+		/*
 		stk_surface_blit( offscreen, px, py, 
 				BRICK_WIDTH + shadow_size, 
 				BRICK_HEIGHT + shadow_size,
 				stk_display, px, py );
 		stk_display_store_drect();
+		*/
 	}
 }
 
@@ -190,13 +192,15 @@ Draw all bricks to offscreen surface.
 void bricks_draw()
 {
 	int i, j;
+	/*
 	if ( offscreen == 0 ) return;
 	stk_surface_clip( offscreen, 0, 0, stk_display->w - BRICK_WIDTH, stk_display->h );
+	*/
 	for ( j = 1; j < MAP_HEIGHT - 1; j++ )
 		for ( i = 1; i < MAP_WIDTH - 1; i++ )
 			if ( game->bricks[i][j].id >= 0 )
-				brick_draw( offscreen, i, j, 1 );
-	stk_surface_clip( offscreen, 0,0,0,0 );
+				brick_draw( stk_display, i, j, 1 );
+	//stk_surface_clip( offscreen, 0,0,0,0 );
 }
 /*
 ====================================================================
@@ -330,13 +334,15 @@ void client_handle_brick_hit( BrickHit *hit )
 /* redraw all bricks (leaving shadows in transparent frame parts) */
 void client_redraw_all_bricks()
 {
-    stk_surface_blit( bkgnd, BRICK_WIDTH, BRICK_HEIGHT, 
-                      stk_display->w - BRICK_WIDTH*2,stk_display->h - BRICK_HEIGHT,
-                      offscreen, BRICK_WIDTH, BRICK_HEIGHT );
+    stk_surface_blit( bkgnd, 0, 0, 
+                      stk_display->w,stk_display->h,
+                      stk_display, 0, 0 );
     bricks_draw();
+    /*
     stk_surface_blit( offscreen, BRICK_WIDTH, BRICK_HEIGHT, 
                       stk_display->w - BRICK_WIDTH*2,stk_display->h - BRICK_HEIGHT,
                       stk_display, BRICK_WIDTH, BRICK_HEIGHT );
 //    stk_display_update( STK_UPDATE_ALL );
     stk_display_store_drect();
+    */
 }

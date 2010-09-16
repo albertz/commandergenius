@@ -209,7 +209,7 @@ void shrapnells_show()
         stk_surface_blit( shr->pic, 
             0,0,shr->pic->w,shr->pic->h,
             stk_display, (int)shr->x, (int)shr->y );
-        stk_display_store_drect();
+        //stk_display_store_drect();
     }
 }
 /*

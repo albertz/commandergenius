@@ -431,6 +431,7 @@ If NULL is passed as 'rect' the whole screen is stored for update.
 */
 void stk_display_store_rect( SDL_Rect *rect )
 {
+	#if 0
     if ( stk_update_rect_count < STK_UPDATE_RECT_LIMIT ) {
         if ( rect ) {
             /* for safety this check is kept although it should be 
@@ -453,6 +454,7 @@ void stk_display_store_rect( SDL_Rect *rect )
         else
             stk_update_rect_count = STK_UPDATE_RECT_LIMIT;
     }
+    #endif
 }
 
 /*
@@ -463,8 +465,10 @@ modified this rectangle to the actually updated clipping region.
 */
 void stk_display_store_drect( void )
 {
+	/*
     if ( stk_update_rect_count < STK_UPDATE_RECT_LIMIT )
         stk_update_rects[stk_update_rect_count++] = stk_drect;
+    */
 }
 
 /*
