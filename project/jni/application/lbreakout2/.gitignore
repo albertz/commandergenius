@@ -3,3 +3,5 @@ Makefile
 config.log
 *.a
 *.so
+.deps
+server/lbreakout2server
