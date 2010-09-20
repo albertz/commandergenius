@@ -155,7 +155,10 @@ class DataDownloader extends Thread
 		{
 			if( downloadFiles[i].length() > 0 && Globals.OptionalDataDownload.length > i && Globals.OptionalDataDownload[i] )
 				if( ! DownloadDataFile(downloadFiles[i], "libsdl-DownloadFinished-" + String.valueOf(i) + ".flag") )
+				{
+					DownloadFailed = true;
 					return;
+				}
 		}
 		DownloadComplete = true;
 		initParent();
@@ -446,6 +449,7 @@ class DataDownloader extends Thread
 	
 	public StatusWriter Status;
 	public boolean DownloadComplete = false;
+	public boolean DownloadFailed = false;
 	private MainActivity Parent;
 	private String outFilesDir = null;
 }

@@ -100,8 +100,13 @@ public class MainActivity extends Activity {
 		if( mGLView != null )
 			 mGLView.nativeKey( keyCode, 1 );
 		else
-		if( keyCode == KeyEvent.KEYCODE_BACK && downloader != null && !downloader.DownloadComplete )
+		if( keyCode == KeyEvent.KEYCODE_BACK && downloader != null )
+		{ 
+			if( downloader.DownloadFailed )
+				System.exit(1);
+			if( !downloader.DownloadComplete )
 			 onStop();
+		}
 		 return true;
 	}
 	
