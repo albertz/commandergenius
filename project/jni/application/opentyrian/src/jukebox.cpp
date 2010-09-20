@@ -156,12 +156,14 @@ void jukebox( void )
 
 			case SDLK_LEFT:
 			case SDLK_UP:
+			case SDLK_LCTRL:
 				play_song((song_playing > 0 ? song_playing : MUSIC_NUM) - 1);
 				stopped = false;
 				break;
 			case SDLK_RETURN:
 			case SDLK_RIGHT:
 			case SDLK_DOWN:
+			case SDLK_LALT:
 				play_song((song_playing + 1) % MUSIC_NUM);
 				stopped = false;
 				break;

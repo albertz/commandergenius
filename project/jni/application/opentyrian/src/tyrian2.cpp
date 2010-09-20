@@ -3547,6 +3547,7 @@ bool JE_titleScreen( JE_boolean animate )
 				switch (lastkey_sym)
 				{
 				case SDLK_UP:
+				case SDLK_LCTRL:
 					if (menu == 0)
 						menu = menunum-1;
 					else
@@ -3554,6 +3555,7 @@ bool JE_titleScreen( JE_boolean animate )
 					JE_playSampleNum(S_CURSOR);
 					break;
 				case SDLK_DOWN:
+				case SDLK_LALT:
 					if (menu == menunum-1)
 						menu = 0;
 					else

@@ -62,6 +62,7 @@ bool select_gameplay( void )
 			switch (lastkey_sym)
 			{
 			case SDLK_UP:
+			case SDLK_LCTRL:
 				gameplay--;
 				if (gameplay < 1)
 				{
@@ -70,6 +71,7 @@ bool select_gameplay( void )
 				JE_playSampleNum(S_CURSOR);
 				break;
 			case SDLK_DOWN:
+			case SDLK_LALT:
 				gameplay++;
 				if (gameplay > gameplay_max)
 				{
@@ -139,6 +141,7 @@ bool select_episode( void )
 			switch (lastkey_sym)
 			{
 			case SDLK_UP:
+			case SDLK_LCTRL:
 				episode--;
 				if (episode < 1)
 				{
@@ -147,6 +150,7 @@ bool select_episode( void )
 				JE_playSampleNum(S_CURSOR);
 				break;
 			case SDLK_DOWN:
+			case SDLK_LALT:
 				episode++;
 				if (episode > episode_max)
 				{
@@ -225,6 +229,7 @@ bool select_difficulty( void )
 			switch (lastkey_sym)
 			{
 			case SDLK_UP:
+			case SDLK_LCTRL:
 				difficultyLevel--;
 				if (difficultyLevel < 1)
 				{
@@ -233,6 +238,7 @@ bool select_difficulty( void )
 				JE_playSampleNum(S_CURSOR);
 				break;
 			case SDLK_DOWN:
+			case SDLK_LALT:
 				difficultyLevel++;
 				if (difficultyLevel > difficulty_max)
 				{

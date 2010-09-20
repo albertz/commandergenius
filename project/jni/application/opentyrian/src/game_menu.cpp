@@ -1030,13 +1030,13 @@ void JE_itemScreen( void )
 						joystick_down |= joystick[j].direction[2];
 					}
 
-					if (keysactive[SDLK_UP] || joystick_up)
+					if (keysactive[SDLK_UP] || keysactive[SDLK_LCTRL] || joystick_up)
 					{
 						yChg = -1;
 						inputDetected = false;
 					}
 
-					if (keysactive[SDLK_DOWN] || joystick_down)
+					if (keysactive[SDLK_DOWN] || keysactive[SDLK_LALT] || joystick_down)
 					{
 						yChg = 1;
 						inputDetected = false;
@@ -1310,6 +1310,7 @@ void JE_itemScreen( void )
 				break;
 
 			case SDLK_UP:
+			case SDLK_LCTRL:
 				keyboardUsed = true;
 				lastDirection = -1;
 
@@ -1335,6 +1336,7 @@ void JE_itemScreen( void )
 				break;
 
 			case SDLK_DOWN:
+			case SDLK_LALT:
 				keyboardUsed = true;
 				lastDirection = 1;
 

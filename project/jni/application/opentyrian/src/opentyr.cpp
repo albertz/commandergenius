@@ -126,6 +126,7 @@ void opentyrian_menu( void )
 			switch (lastkey_sym)
 			{
 				case SDLK_UP:
+				case SDLK_LCTRL:
 					sel--;
 					if (sel < 0)
 					{
@@ -134,6 +135,7 @@ void opentyrian_menu( void )
 					JE_playSampleNum(S_CURSOR);
 					break;
 				case SDLK_DOWN:
+				case SDLK_LALT:
 					sel++;
 					if (sel > maxSel)
 					{

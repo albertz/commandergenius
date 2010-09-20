@@ -840,7 +840,7 @@ enum de_mode_t JE_modeSelect( void )
 		{
 			break; /* User has selected, return choice */
 		}
-		if (keysactive[SDLK_UP])
+		if (keysactive[SDLK_UP] || keysactive[SDLK_LCTRL])
 		{
 			if(mode == MODE_FIRST)
 			{
@@ -854,7 +854,7 @@ enum de_mode_t JE_modeSelect( void )
 				mode--;
 			}
 		}
-		if (keysactive[SDLK_DOWN])
+		if (keysactive[SDLK_DOWN] || keysactive[SDLK_LALT])
 		{
 			if(mode >= MODE_LAST-1)
 			{
