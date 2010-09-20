@@ -5,6 +5,6 @@ APP_PROJECT_PATH := $(call my-dir)/..
 # sdl_image depends on png and jpeg
 # sdl_ttf depends on freetype
 
-APP_MODULES := application sdl sdl_main stlport tremor png jpeg freetype sdl_mixer sdl_image sdl_net intl
+APP_MODULES := application sdl sdl_main stlport tremor png jpeg freetype sdl_image
 
 APP_ABI := armeabi

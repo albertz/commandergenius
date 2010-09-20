@@ -1,6 +1,6 @@
 
 # The namespace in Java file, with dots replaced with underscores
-SDL_JAVA_PACKAGE_PATH := net_sourceforge_lgames_lbreakout2
+SDL_JAVA_PACKAGE_PATH := com_sourceforge_sc2
 
 # Path to shared libraries - Android 1.6 cannot load them properly, thus we have to specify absolute path here
 # SDL_SHARED_LIBRARIES_PATH := /data/data/de.schwardtnet.alienblaster/lib
@@ -10,7 +10,7 @@ SDL_JAVA_PACKAGE_PATH := net_sourceforge_lgames_lbreakout2
 # Typically /sdcard/alienblaster 
 # Or /data/data/de.schwardtnet.alienblaster/files if you're planning to unpack data in application private folder
 # Your application will just set current directory there
-SDL_CURDIR_PATH := net.sourceforge.lgames.lbreakout2
+SDL_CURDIR_PATH := com.sourceforge.sc2
 
 # Android Dev Phone G1 has trackball instead of cursor keys, and 
 # sends trackball movement events as rapid KeyDown/KeyUp events,
@@ -23,17 +23,17 @@ SDL_TRACKBALL_KEYUP_DELAY := 1
 # resized in HW-accelerated way, however it eats a tiny bit of CPU
 SDL_VIDEO_RENDER_RESIZE := 1
 
-COMPILED_LIBRARIES := sdl_mixer sdl_image sdl_net intl
+COMPILED_LIBRARIES := sdl_image
 
-APPLICATION_ADDITIONAL_CFLAGS := -DHAVE_CONFIG_H -finline-functions -O2
+APPLICATION_ADDITIONAL_CFLAGS := -O2 -finline-functions -DTHREADLIB_SDL=1 -DTIMELIB=SDL -DOVCODEC_TREMOR=1 -DNETPLAY=1 -DHAVE_REGEX=1 -DHAVE_GETOPT_LONG=1 -DHAVE_ZIP=1
 
-APPLICATION_ADDITIONAL_LDFLAGS := 
+APPLICATION_ADDITIONAL_LDFLAGS := -Lobj/local/armeabi -ltremor
 
-APPLICATION_SUBDIRS_BUILD := src/dummy
+APPLICATION_SUBDIRS_BUILD := 
 
-APPLICATION_CUSTOM_BUILD_SCRIPT := y
+APPLICATION_CUSTOM_BUILD_SCRIPT := 
 
-SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCODE_0=RETURN -DSDL_ANDROID_KEYCODE_1=SPACE -DSDL_ANDROID_KEYCODE_2=PAGEUP -DSDL_ANDROID_KEYCODE_3=PAGEDOWN
+SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCODE_0=RETURN -DSDL_ANDROID_KEYCODE_1=RSHIFT -DSDL_ANDROID_KEYCODE_2=KP_PLUS -DSDL_ANDROID_KEYCODE_3=KP_MINUS -DSDL_ANDROID_KEYCODE_4=ESCAPE -DSDL_ANDROID_KEYCODE_5=F10
 
 # If SDL_Mixer should link to libMAD
 SDL_MIXER_USE_LIBMAD :=
