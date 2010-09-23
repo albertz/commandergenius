@@ -3177,18 +3177,22 @@ redo:
 				/* keyboard input */
 				if ((inputDevice == 0 || inputDevice == 1 || inputDevice == 2) && !play_demo)
 				{
+					/* Move ship above user finger */
+					int shifted_mouse_y = mouse_y;
+					if( shifted_mouse_y > 160 )
+						shifted_mouse_y += shifted_mouse_y - 160;
 					if (keysactive[keySettings[0]] ||
-						(has_mouse && mouse_pressed[0] && mouse_y < this_player->y))
+						(has_mouse && mouse_pressed[0] && shifted_mouse_y < (this_player->y + 45)))
 						this_player->y -= CURRENT_KEY_SPEED;
 					if (keysactive[keySettings[1]] ||
-						(has_mouse && mouse_pressed[0] && mouse_y > this_player->y))
+						(has_mouse && mouse_pressed[0] && shifted_mouse_y > (this_player->y + 45)))
 						this_player->y += CURRENT_KEY_SPEED;
 
 					if (keysactive[keySettings[2]] ||
-						(has_mouse && mouse_pressed[0] && mouse_x < this_player->x))
+						(has_mouse && mouse_pressed[0] && mouse_x < (this_player->x - 15)))
 						this_player->x -= CURRENT_KEY_SPEED;
 					if (keysactive[keySettings[3]] ||
-						(has_mouse && mouse_pressed[0] && mouse_x > this_player->x))
+						(has_mouse && mouse_pressed[0] && mouse_x > (this_player->x - 15)))
 						this_player->x += CURRENT_KEY_SPEED;
 
 					button[0] = button[0] || keysactive[keySettings[4]] || mouse_pressed[0];
