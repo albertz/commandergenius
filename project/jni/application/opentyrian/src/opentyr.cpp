@@ -60,8 +60,10 @@ const char *opentyrian_menu_items[] =
 	"About OpenTyrian",
 	"Toggle Fullscreen",
 	"Scaler: None",
-	/* "Play Destruct", */
 	"Jukebox",
+#ifdef ANDROID
+	"Play Destruct",
+#endif
 	"Return to Main Menu"
 };
 
@@ -217,6 +219,14 @@ void opentyrian_menu( void )
 							JE_showVGA();
 							fade_in = true;
 							break;
+#ifdef ANDROID
+						case 4: /* Destruct */
+							JE_playSampleNum(S_SELECT);
+							loadDestruct = true;
+							fade_black(10);
+							quit = true;
+							break;
+#endif
 						default: /* Return to main menu */
 							quit = true;
 							JE_playSampleNum(S_SPRING);

@@ -349,6 +349,26 @@ const JE_byte ModeScore[MAX_PLAYERS][MAX_MODES] =
 
 SDLKey defaultKeyConfig[MAX_PLAYERS][MAX_KEY][MAX_KEY_OPTIONS] =
 {
+#ifdef ANDROID
+	{	{SDLK_a},
+		{SDLK_d},
+		{SDLK_w},
+		{SDLK_s},
+		{SDLK_q},
+		{SDLK_e},
+		{SDLK_z},
+		{SDLK_x}
+	},
+	{	{SDLK_LEFT},
+		{SDLK_RIGHT},
+		{SDLK_UP},
+		{SDLK_DOWN},
+		{SDLK_RETURN},
+		{SDLK_SPACE},
+		{SDLK_LCTRL},
+		{SDLK_LALT}
+	}
+#else
 	{	{SDLK_c},
 		{SDLK_v},
 		{SDLK_a},
@@ -367,6 +387,7 @@ SDLKey defaultKeyConfig[MAX_PLAYERS][MAX_KEY][MAX_KEY_OPTIONS] =
 		{SDLK_PAGEUP, SDLK_KP9},
 		{SDLK_PAGEDOWN, SDLK_KP3}
 	}
+#endif
 };
 
 
@@ -399,6 +420,7 @@ enum de_unit_t string_to_unit_enum(const char * str) {
 }
 bool write_default_destruct_config( void ) {
 
+#ifndef ANDROID
 	cJSON * root;
 	cJSON * level1, * level2, * level3, * setting;
 
@@ -570,10 +592,12 @@ bool write_default_destruct_config( void ) {
 
 label_failure:
 	cJSON_Delete(root);
+#endif
 	return(false);
 }
 void load_destruct_config( void ) {
 
+#ifndef ANDROID
 	unsigned int j, k;
 	int i;//enum de_player_t i;
 	enum de_unit_t temp;
@@ -682,6 +706,7 @@ void load_destruct_config( void ) {
 
 	//wrap up
 	cJSON_Delete(root);
+#endif
 }
 void JE_destructGame( void )
 {
@@ -2398,6 +2423,11 @@ void DE_RunTickGetInput( void )
 	 * line up; rather than manually checking left and right we can
 	 * just loop through the indexes and set the actions as needed. */
 	service_SDL_events(true);
+
+#ifdef ANDROID
+	if( mouse_pressed[0] )
+		player[1].moves.actions[KEY_FIRE] = true;
+#endif
 
 	for(player_index = 0; player_index < MAX_PLAYERS; player_index++)
 	{
