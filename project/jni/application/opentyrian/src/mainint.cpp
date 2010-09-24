@@ -3089,7 +3089,8 @@ redo:
 	{
 		*mouseX_ = this_player->x;
 		*mouseY_ = this_player->y;
-		button[1-1] = false;
+		if(autoFireMode != AUTOFIRE_BUTTON)
+			button[1-1] = false;
 		button[2-1] = false;
 		button[3-1] = false;
 		button[4-1] = false;
@@ -3195,7 +3196,14 @@ redo:
 						(has_mouse && mouse_pressed[0] && mouse_x > (this_player->x - 15)))
 						this_player->x += CURRENT_KEY_SPEED;
 
-					button[0] = button[0] || keysactive[keySettings[4]] || mouse_pressed[0];
+					if(autoFireMode == AUTOFIRE_BUTTON)
+					{
+						if(newkey && keydown && lastkey_sym == keySettings[4])
+							button[0] = ! button[0];
+					}
+					else
+						button[0] = button[0] || keysactive[keySettings[4]] || ( mouse_pressed[0] && ( autoFireMode == AUTOFIRE_TOUCHSCREEN ) );
+
 					button[3] = button[3] || keysactive[keySettings[5]];
 					button[1] = button[1] || keysactive[keySettings[6]];
 					button[2] = button[2] || keysactive[keySettings[7]];

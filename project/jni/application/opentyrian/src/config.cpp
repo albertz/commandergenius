@@ -218,6 +218,7 @@ JE_SaveFilesType saveFiles; /*array[1..saveLevelnum] of savefiletype;*/
 JE_SaveGameTemp saveTemp;
 
 JE_word editorLevel;   /*Initial value 800*/
+AutoFireMode_t autoFireMode = AUTOFIRE_TOUCHSCREEN;
 
 
 cJSON *load_json( const char *filename )
@@ -278,6 +279,9 @@ bool load_opentyrian_config( void )
 		
 		if ((setting = cJSON_GetObjectItem(section, "scaler")))
 			set_scaler_by_name(setting->valuestring);
+		
+		if ((setting = cJSON_GetObjectItem(section, "autofire")))
+			autoFireMode = (AutoFireMode_t)setting->valueint;
 	}
 	
 	cJSON_Delete(root);
@@ -304,6 +308,9 @@ bool save_opentyrian_config( void )
 		
 		setting = cJSON_CreateOrGetObjectItem(section, "scaler");
 		cJSON_SetString(setting, scalers[scaler].name);
+
+		setting = cJSON_CreateOrGetObjectItem(section, "autofire");
+		cJSON_SetNumber(setting, autoFireMode);
 	}
 	
 	save_json(root, "opentyrian.conf");

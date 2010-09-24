@@ -140,6 +140,9 @@ extern JE_byte processorType;
 extern JE_SaveFilesType saveFiles;
 extern JE_SaveGameTemp saveTemp;
 extern JE_word editorLevel;
+enum AutoFireMode_t { AUTOFIRE_TOUCHSCREEN, AUTOFIRE_BUTTON, AUTOFIRE_NONE, AUTOFIRE_LAST };
+extern AutoFireMode_t autoFireMode;
+
 
 void JE_initProcessorType( void );
 void JE_setNewGameSpeed( void );
