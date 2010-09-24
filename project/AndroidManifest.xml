@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.googlecode.opentyrian"
-      android:versionCode="2110"
-      android:versionName="2.1.10 - minor fixes here and there"
+      package="com.sourceforge.sc2"
+      android:versionCode="1010"
+      android:versionName="1.0.10 - fixed overwriting savegames, added support for 3DO videos (you should copy them from your 3DO game CD)"
       android:installLocation="preferExternal"
 >
     <application android:label="@string/app_name" 
