@@ -267,6 +267,20 @@ main (int argc, char *argv[])
 	int gfxFlags;
 	int i;
 
+#ifdef ANDROID
+	// Remove save and config files from my previous Andorid releases, where I've messed up save paths, so users will be able to overwrite saves
+	unlink("melee.cfg");
+	unlink("uqm.cfg");
+	unlink("flight.cfg");
+	
+	for(i = 0; i < 50; i++)
+	{
+		char buf[64];
+		sprintf(buf, "save/starcon2.%02d", i);
+		unlink(buf);
+	};
+#endif
+
 	// NOTE: we cannot use the logging facility yet because we may have to
 	//   log to a file, and we'll only get the log file name after parsing
 	//   the options.
