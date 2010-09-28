@@ -219,7 +219,7 @@ JE_SaveGameTemp saveTemp;
 
 JE_word editorLevel;   /*Initial value 800*/
 AutoFireMode_t autoFireMode = AUTOFIRE_TOUCHSCREEN;
-
+TouchscreenMode_t touchscreenMode = TOUCHSCREEN_SHIP_ABOVE_FINGER;
 
 cJSON *load_json( const char *filename )
 {
@@ -282,6 +282,9 @@ bool load_opentyrian_config( void )
 		
 		if ((setting = cJSON_GetObjectItem(section, "autofire")))
 			autoFireMode = (AutoFireMode_t)setting->valueint;
+
+		if ((setting = cJSON_GetObjectItem(section, "touchscreen")))
+			touchscreenMode = (TouchscreenMode_t)setting->valueint;
 	}
 	
 	cJSON_Delete(root);
@@ -311,6 +314,9 @@ bool save_opentyrian_config( void )
 
 		setting = cJSON_CreateOrGetObjectItem(section, "autofire");
 		cJSON_SetNumber(setting, autoFireMode);
+		
+		setting = cJSON_CreateOrGetObjectItem(section, "touchscreen");
+		cJSON_SetNumber(setting, touchscreenMode);
 	}
 	
 	save_json(root, "opentyrian.conf");

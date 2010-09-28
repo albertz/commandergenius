@@ -52,6 +52,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#ifdef ANDROID
+#include <android/log.h>
+#endif
 
 const char *opentyrian_str = "OpenTyrian",
            *opentyrian_version = "Classic (" HG_REV ")";
@@ -246,6 +249,10 @@ void opentyrian_menu( void )
 
 int main( int argc, char *argv[] )
 {
+	#ifdef ANDROID
+	__android_log_print(ANDROID_LOG_INFO, "OpenTyrian", "SDL_main() called" );
+	#endif
+
 	mt_srand(time(NULL));
 
 	printf("\nWelcome to... >> %s %s <<\n\n", opentyrian_str, opentyrian_version);
