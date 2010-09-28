@@ -46,6 +46,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz )
 	chdir(curdir);
 	setenv("HOME", curdir, 1);
 
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Calling SDL_main()" );
 	main( argc, argv );
 };
 
