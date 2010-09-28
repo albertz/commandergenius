@@ -20,15 +20,24 @@
     slouken@libsdl.org
 */
 #include "SDL_config.h"
+#include "SDL_version.h"
 
 #if SDL_VIDEO_RENDER_OGL_ES
 
+#if SDL_VERSION_ATLEAST(1,3,0)
 #include "SDL_video.h"
 #include "SDL_opengles.h"
 #include "SDL_sysvideo.h"
+#else
+#include "SDL_video-1.3.h"
+#include "SDL_sysvideo-1.3.h"
+#endif
+#include "SDL_opengles.h"
 #include "SDL_pixels_c.h"
 #include "SDL_rect_c.h"
+#if SDL_VERSION_ATLEAST(1,3,0)
 #include "SDL_yuv_sw_c.h"
+#endif
 #ifdef ANDROID
 #include <android/log.h>
 #endif
@@ -221,11 +230,13 @@ GLES_CreateRenderer(SDL_Window * window, Uint32 flags)
     GLint value;
     int doublebuffer;
 
+#if SDL_VERSION_ATLEAST(1,3,0)
     if (!(window->flags & SDL_WINDOW_OPENGL)) {
         if (SDL_RecreateWindow(window, window->flags | SDL_WINDOW_OPENGL) < 0) {
             return NULL;
         }
     }
+#endif
 
     renderer = (SDL_Renderer *) SDL_calloc(1, sizeof(*renderer));
     if (!renderer) {
@@ -303,11 +314,15 @@ GLES_CreateRenderer(SDL_Window * window, Uint32 flags)
         renderer->info.flags |= SDL_RENDERER_PRESENTVSYNC;
     }
 
+#if SDL_VERSION_ATLEAST(1,3,0)
+    // Always double-buffered
+#else
     if (SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &doublebuffer) == 0) {
         if (!doublebuffer) {
             renderer->info.flags |= SDL_RENDERER_SINGLEBUFFER;
         }
     }
+#endif
 #if SDL_VIDEO_DRIVER_PANDORA
     data->GL_OES_draw_texture_supported = SDL_FALSE;
     data->useDrawTexture = SDL_FALSE;

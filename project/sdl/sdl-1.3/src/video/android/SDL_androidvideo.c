@@ -55,12 +55,18 @@ static JNIEnv* JavaEnv = NULL;
 static jclass JavaRendererClass = NULL;
 static jobject JavaRenderer = NULL;
 static jmethodID JavaSwapBuffers = NULL;
+static int glContextLost = 0;
 
 int SDL_ANDROID_CallJavaSwapBuffers()
 {
+	glContextLost = 0;
 	SDL_ANDROID_drawTouchscreenKeyboard();
 	SDL_ANDROID_processAndroidTrackballDampening();
-	return (*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaSwapBuffers );
+	(*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaSwapBuffers );
+	if( glContextLost )
+	{
+		glContextLost = 0;
+	}
 }
 
 
@@ -82,6 +88,13 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeDone) ( JNIEnv*  env, jobject  thiz )
 	SDL_PrivateQuit();
 #endif
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "quit OK");
+}
+
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(DemoRenderer_nativeGlContextLost ( JNIEnv*  env, jobject  thiz )
+{
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "OpenGL context lost, waiting for new OpenGL context");
+	glContextLost = 1;
 }
 
 JNIEXPORT void JNICALL 
