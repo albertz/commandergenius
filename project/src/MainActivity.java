@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
 	}
 
 	@Override
-	protected void onStop() 
+	protected void onDestroy() 
 	{
 		if( downloader != null ) {
 			synchronized( downloader ) {
@@ -89,8 +89,8 @@ public class MainActivity extends Activity {
 		}
 		if( mGLView != null )
 			mGLView.exitApp();
-		super.onStop();
-		finish();
+		super.onDestroy();
+		System.exit(0);
 	}
 
 	@Override

@@ -432,6 +432,37 @@ class Settings
 		alert.show();
 	}
 
+	static void Apply(Activity p)
+	{
+		nativeIsSdcardUsed( Globals.DownloadToSdcard ? 1 : 0 );
+		
+		if( Globals.PhoneHasTrackball )
+			nativeSetTrackballUsed();
+		if( Globals.AppUsesMouse )
+			nativeSetMouseUsed();
+		if( Globals.AppUsesJoystick && !Globals.UseAccelerometerAsArrowKeys )
+			nativeSetJoystickUsed();
+		if( Globals.AppUsesMultitouch )
+			nativeSetMultitouchUsed();
+		nativeSetAccelerometerSensitivity(Globals.AccelerometerSensitivity);
+		nativeSetTrackballDampening(Globals.TrackballDampening);
+		if( Globals.UseTouchscreenKeyboard )
+		{
+			nativeSetTouchscreenKeyboardUsed();
+			nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize, 
+										Globals.TouchscreenKeyboardTheme,
+										Globals.AppTouchscreenKeyboardKeysAmount, 
+										Globals.AppTouchscreenKeyboardKeysAmountAutoFire);
+		}
+		SetupTouchscreenKeyboardGraphics(p);
+		String lang = new String(Locale.getDefault().getLanguage());
+		if( Locale.getDefault().getCountry().length() > 0 )
+			lang = lang + "_" + Locale.getDefault().getCountry();
+		System.out.println( "libSDL: setting envvar LANG to '" + lang + "'");
+		nativeSetEnv( "LANG", lang );
+		// TODO: get current user name and set envvar USER, the API is not availalbe on Android 1.6 so I don't bother with this
+	}
+
 	static byte [] loadRaw(Activity p,int res)
 	{
 		byte [] buf = new byte[128];
@@ -452,25 +483,10 @@ class Settings
 		return a;
 	}
 	
-	static void Apply(Activity p)
+	static void SetupTouchscreenKeyboardGraphics(Activity p)
 	{
-		nativeIsSdcardUsed( Globals.DownloadToSdcard ? 1 : 0 );
-		
-		if( Globals.PhoneHasTrackball )
-			nativeSetTrackballUsed();
-		if( Globals.AppUsesMouse )
-			nativeSetMouseUsed();
-		if( Globals.AppUsesJoystick && !Globals.UseAccelerometerAsArrowKeys )
-			nativeSetJoystickUsed();
-		if( Globals.AppUsesMultitouch )
-			nativeSetMultitouchUsed();
 		if( Globals.UseTouchscreenKeyboard )
 		{
-			nativeSetTouchscreenKeyboardUsed();
-			nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize, 
-										Globals.TouchscreenKeyboardTheme,
-										Globals.AppTouchscreenKeyboardKeysAmount, 
-										Globals.AppTouchscreenKeyboardKeysAmountAutoFire);
 			if( Globals.TouchscreenKeyboardTheme == 1 )
 			{
 				// DPAD
@@ -486,8 +502,8 @@ class Settings
 				nativeSetupScreenKeyboardButton(8,  loadRaw(p, R.raw.ultimatedroidbutton2autoanim));
 				// Other buttons
 				nativeSetupScreenKeyboardButton(9,  loadRaw(p, R.raw.ultimatedroidbutton1));
-				nativeSetupScreenKeyboardButton(10,  loadRaw(p, R.raw.ultimatedroidbutton1pressed));
-				nativeSetupScreenKeyboardButton(11,  loadRaw(p, R.raw.ultimatedroidbutton2));
+				nativeSetupScreenKeyboardButton(10, loadRaw(p, R.raw.ultimatedroidbutton1pressed));
+				nativeSetupScreenKeyboardButton(11, loadRaw(p, R.raw.ultimatedroidbutton2));
 				nativeSetupScreenKeyboardButton(12, loadRaw(p, R.raw.ultimatedroidbutton2pressed));
 				nativeSetupScreenKeyboardButton(13, loadRaw(p, R.raw.ultimatedroidbutton3));
 				nativeSetupScreenKeyboardButton(14, loadRaw(p, R.raw.ultimatedroidbutton3pressed));
@@ -501,14 +517,6 @@ class Settings
 				nativeSetupScreenKeyboardButton(22, loadRaw(p, R.raw.ultimatedroidbutton7));
 			}
 		}
-		nativeSetAccelerometerSensitivity(Globals.AccelerometerSensitivity);
-		nativeSetTrackballDampening(Globals.TrackballDampening);
-		String lang = new String(Locale.getDefault().getLanguage());
-		if( Locale.getDefault().getCountry().length() > 0 )
-			lang = lang + "_" + Locale.getDefault().getCountry();
-		System.out.println( "libSDL: setting envvar LANG to '" + lang + "'");
-		nativeSetEnv( "LANG", lang );
-		// TODO: get current user name and set envvar USER, the API is not availalbe on Android 1.6 so I don't bother with this
 	}
 	
 	static void startDownloader(MainActivity p)

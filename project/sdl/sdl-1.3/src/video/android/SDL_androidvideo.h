@@ -33,6 +33,8 @@ extern int SDL_ANDROID_sFakeWindowWidth; // SDL 1.2 only
 extern int SDL_ANDROID_sFakeWindowHeight; // SDL 1.2 only
 extern int SDL_ANDROID_CallJavaSwapBuffers();
 extern int SDL_ANDROID_drawTouchscreenKeyboard();
+extern void SDL_ANDROID_VideoContextLost();
+extern void SDL_ANDROID_VideoContextRecreated();
 extern void SDL_ANDROID_processAndroidTrackballDampening();
 extern SDL_VideoDevice *ANDROID_CreateDevice_1_3(int devindex);
 

@@ -89,6 +89,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	public DemoRenderer(Activity _context)
 	{
 		context = _context;
+		mGlContextLost = false;
 	}
 	
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -99,6 +100,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	}
 	
 	public void onSurfaceDestroyed() {
+		mGlContextLost = true;
 		nativeGlContextLost();
 	};
 
@@ -119,12 +121,18 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 		System.exit(0); // The main() returns here - I don't bother with deinit stuff, just terminate process
 	}
 
-	public int swapBuffers() // Called from native code, returns 1 on success, 0 when GL context lost (user put app to background)
+	public int swapBuffers() // Called from native code
 	{
 		synchronized (this) {
 			this.notify();
 		}
-		return super.SwapBuffers() ? 1 : 0;
+		mGlContextLost = false;
+		super.SwapBuffers();
+		if(mGlContextLost) {
+			mGlContextLost = false;
+			Settings.SetupTouchscreenKeyboardGraphics(context); // Reload on-screen buttons graphics
+		}
+		return 1;
 	}
 
 	public void exitApp() {
@@ -143,6 +151,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	private EGLDisplay mEglDisplay = null;
 	private EGLSurface mEglSurface = null;
 	private EGLContext mEglContext = null;
+	private boolean mGlContextLost = false;
 }
 
 class DemoGLSurfaceView extends GLSurfaceView_SDL {
@@ -155,7 +164,6 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		mRenderer = new DemoRenderer(context);
 		setRenderer(mRenderer);
 	}
-
 
 	@Override
 	public boolean onTouchEvent(final MotionEvent event) 
@@ -172,8 +180,6 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	public void exitApp() {
 		mRenderer.exitApp();
-		accelerometer.stop();
-		accelerometer = null;
 	};
 
 	@Override

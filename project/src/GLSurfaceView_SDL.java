@@ -938,12 +938,14 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
               while(true) { // Loop until we're re-created GL context and successfully called swap()
 
                 int w, h;
-                boolean changed;
+                boolean changed = false;
                 synchronized (this) {
+                    /*
                     Runnable r;
                     while ((r = getEvent()) != null) {
                         r.run();
                     }
+                    */
                     if (mPaused) {
                         mRenderer.onSurfaceDestroyed();
                         mEglHelper.finish();
@@ -956,7 +958,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                     if (mDone) {
                         return false;
                     }
-                    changed = mSizeChanged;
+                    // changed = mSizeChanged;
                     w = mWidth;
                     h = mHeight;
                     mSizeChanged = false;
