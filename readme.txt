@@ -156,14 +156,54 @@ gdb libsdl.so -ex "list *0x0002ca00"
 
 It will output the exact line in your source where the application crashed.
 
+Android Application lifectcle support
+=====================================
+
+Application may be put to background at any time, for example if user gets phone call onto the device.
+The application will lose OpenGL context then, and has to re-create it when put to foreground.
+
+The SDL provides function 
+SDL_ANDROID_SetApplicationPutToBackgroundCallback( callback_t appPutToBackground, callback_t appRestored );
+where callback_t is function pointer of type "void (*) void".
+The default callbacks will call another Android-specific functions:
+SDL_ANDROID_PauseAudioPlayback() and SDL_ANDROID_ResumeAudioPlayback()
+which will pause and resume audio from HW layer, so appplication does not need to destroy and re-init audio.
+
+If you're using pure SDL 1.2 API (with or without HW acceleration) you don't need to worry about anything -
+the SDL itself will re-create GL textures and fill them with pixel data from existing SDL HW surfaces,
+so you may leave the callbacks to defaults.
+
+If you're using SDL 1.3 API and using SDL_Texture, then the textures pixeldata is lost - you will need 
+to call SDL_UpdateTexture() to refill texture pixeldata from appRestored() callback for all your textures.
+If you're using compatibility API with SDL_Surfaces you don't have to worry about that.
+
+If you're using SDL with OpenGL with either SDL 1.2 or SDL 1.3, the situation is even more grim -
+not only all your GL textures are lost, but all GL matrices, blend modes, etc. has to be re-created.
+
+OS may decide there's too little free RAM left on device, and kill background applications 
+without notice, so it vill be good to create temporary savegame etc. from appPutToBackground() callback.
+
+Also it's a good practice to pause any application audio, especially if the user gets phone call,
+and if you won't set your own callbacks the default callbacks will do exactly that.
+There are circumstances when you want to avoid that, for example if the application is audio player,
+or if application gets some notification over network (for example you're running a game server,
+and want a beep when someone connects to you) - you may unpause audio for some short time then.
+
+The application is not allowed to do any GFX output without OpenGL context (or it will crash),
+that's why SDL_Flip() call will block until we're re-acquired context, and the callbacks will be called 
+from inside SDL_Flip(). so you won't receive SDL_WINDOWEVENT_HIDDEN / SDL_WINDOWEVENT_SHOWN,
+because if SDL sends them the application will get them only after SDL_Flip() successfully
+re-acquired GL context, and it's too late to pause audio and save application state,
+so please use callbacks instead of SDL window events on Android OS.
+
+The whole idea behind callbacks is that the existing application should not be modified to
+operate correctly - the whole time in background will just look to app as one very long SDL_Flip(),
+so it's good idea to implement some maximum time cap on game frame, so it won't process
+the game to the end level 'till the app is in background, or calculate the difference in time
+between appPutToBackground() and appRestored() and update game time variables.
+
 Known bugs
 ==========
-
-0. Application will crash when you're pressing "Home" button or open/close keyboard 
-- the correct behavior for Android apps is to stay in memory and go to foreground 
-when you're launching app again, that's not working yet because
-app will lose OpenGL context (there are rumors that it won't lose GL context in 2.1 SDK).
-Anyway, SDL should sleep inside SDL_Flip() and re-create all HW textures when it gains back video.
 
 1. Merge all config screens into single big config screen, make option to rerun config.
 
@@ -191,6 +231,13 @@ plus VideoView will contain some buffer to ensure the playback is smooth,
 so the data on your TV will lag halfsecond behind the data on the device screen.
 
 7. Make app data to come inside .apk file in assets instead of downloading it from net.
+
+8. OpenTyrian: 
+  1. Navigating game menus downwards with trackball skips events, that does not happen
+     when navigting upwards.
+  2. The detail level can be set to WILD by pressing "w" key in gameplay escape menu, expose that through interface.
+
+9. Ur-Quan Masters: add Russian, Deutsch and Slovak translations: http://wiki.uqm.stack.nl/Translations
 
 Games to port
 =============

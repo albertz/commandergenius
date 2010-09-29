@@ -89,6 +89,26 @@ class AudioThread {
 		return 1;
 	}
 	
+	public int pauseAudioPlayback()
+	{
+		if( mAudio != null )
+		{
+			mAudio.pause();
+			return 1;
+		}
+		return 0;
+	}
+
+	public int resumeAudioPlayback()
+	{
+		if( mAudio != null )
+		{
+			mAudio.play();
+			return 1;
+		}
+		return 0;
+	}
+	
 	private native int nativeAudioInitJavaCallbacks();
 }
 

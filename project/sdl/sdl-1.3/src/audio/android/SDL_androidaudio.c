@@ -137,6 +137,8 @@ static JavaVM *jniVM = NULL;
 static jobject JavaAudioThread = NULL;
 static jmethodID JavaInitAudio = NULL;
 static jmethodID JavaDeinitAudio = NULL;
+static jmethodID JavaPauseAudioPlayback = NULL;
+static jmethodID JavaResumeAudioPlayback = NULL;
 
 
 static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS)
@@ -301,6 +303,20 @@ static void ANDROIDAUD_PlayAudio(_THIS)
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio() JNI returns a copy of byte array - that's slow");
 }
 
+int SDL_ANDROID_PauseAudioPlayback(void)
+{
+	JNIEnv * jniEnv = NULL;
+	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
+	return (*jniEnv)->CallIntMethod( jniEnv, JavaAudioThread, JavaPauseAudioPlayback );
+};
+int SDL_ANDROID_ResumeAudioPlayback(void)
+{
+	JNIEnv * jniEnv = NULL;
+	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
+	return (*jniEnv)->CallIntMethod( jniEnv, JavaAudioThread, JavaResumeAudioPlayback );
+};
+
+
 #ifndef SDL_JAVA_PACKAGE_PATH
 #error You have to define SDL_JAVA_PACKAGE_PATH to your package path with dots replaced with underscores, for example "com_example_SanAngeles"
 #endif
@@ -315,10 +331,8 @@ JNIEXPORT jint JNICALL JAVA_EXPORT_NAME(AudioThread_nativeAudioInitJavaCallbacks
 	JavaAudioThreadClass = (*jniEnv)->GetObjectClass(jniEnv, JavaAudioThread);
 	JavaInitAudio = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "initAudio", "(IIII)I");
 	JavaDeinitAudio = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "deinitAudio", "()I");
-	/*
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeAudioInitJavaCallbacks(): JavaAudioThread %p JavaFillBuffer %p JavaInitAudio %p JavaDeinitAudio %p",
-							JavaAudioThread, JavaFillBuffer, JavaInitAudio, JavaDeinitAudio);
-	*/
+	JavaPauseAudioPlayback = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "pauseAudioPlayback", "()I");
+	JavaResumeAudioPlayback = (*jniEnv)->GetMethodID(jniEnv, JavaAudioThreadClass, "resumeAudioPlayback", "()I");
 }
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)

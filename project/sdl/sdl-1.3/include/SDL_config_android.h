@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <sys/mman.h>
 
+
 #define SDL_VIDEO_DRIVER_ANDROID 1
 #define SDL_VIDEO_OPENGL_ES 1
 #define SDL_VIDEO_RENDER_OGL_ES 1
@@ -158,5 +159,30 @@
 #undef HAVE_SYSCTLBYNAME
 #undef SDL_ALTIVEC_BLITTERS
 #define SDL_ASSEMBLY_ROUTINES 1 // There is no assembly code for Arm CPU yet
+
+/* Prototypes for Android-specific functions */
+
+#include "begin_code.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* 
+Sets callbacks to be called when OS decides to put application to background, and restored to foreground.
+*/
+typedef void ( * SDL_ANDROID_ApplicationPutToBackgroundCallback_t ) (void);
+
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetApplicationPutToBackgroundCallback(
+		SDL_ANDROID_ApplicationPutToBackgroundCallback_t appPutToBackground,
+		SDL_ANDROID_ApplicationPutToBackgroundCallback_t appRestored );
+
+/* Use these functions instead of setting volume to 0, that will save CPU and battery on device */
+extern DECLSPEC int SDLCALL SDL_ANDROID_PauseAudioPlayback(void);
+extern DECLSPEC int SDLCALL SDL_ANDROID_ResumeAudioPlayback(void);
+
+#ifdef __cplusplus
+}
+#endif
+#include "close_code.h"
 
 #endif /* _SDL_config_minimal_h */

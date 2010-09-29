@@ -27,7 +27,7 @@
 #include "SDL_video.h"
 #include "SDL_keysym.h"
 
-/* Android-specific functions, mainly on-screen keyboard exposed to the application */
+/* On-screen keyboard exposed to the application, it's yet available on Android platform only */
 
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
@@ -74,4 +74,4 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardSize();
 #endif
 #include "close_code.h"
 
-#endif /* _SDL_config_minimal_h */
+#endif
