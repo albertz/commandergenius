@@ -52,6 +52,25 @@ TFB_GRAPHICS_BACKEND *graphics_backend = NULL;
 volatile int QuitPosted = 0;
 volatile int GameActive = 1; // Track the SDL_ACTIVEEVENT state SDL_APPACTIVE
 
+#ifdef ANDROID
+extern void ResumeMusic (void);
+extern void PauseMusic (void);
+
+void AndroidGamePaused()
+{
+	GameActive = 0;
+	SDL_ANDROID_PauseAudioPlayback();
+	PauseMusic();
+}
+
+void AndroidGameResumed()
+{
+	GameActive = 1;
+	SDL_ANDROID_ResumeAudioPlayback();
+	ResumeMusic();
+}
+#endif
+
 void
 TFB_PreInit (void)
 {
@@ -76,6 +95,9 @@ TFB_PreInit (void)
 		log_add (log_Fatal, "Could not initialize SDL: %s.", SDL_GetError ());
 		exit (EXIT_FAILURE);
 	}
+#ifdef ANDROID
+	SDL_ANDROID_SetApplicationPutToBackgroundCallback(&AndroidGamePaused, &AndroidGameResumed);
+#endif
 }
 
 int

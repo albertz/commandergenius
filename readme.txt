@@ -187,14 +187,16 @@ Also it's a good practice to pause any application audio, especially if the user
 and if you won't set your own callbacks the default callbacks will do exactly that.
 There are circumstances when you want to avoid that, for example if the application is audio player,
 or if application gets some notification over network (for example you're running a game server,
-and want a beep when someone connects to you) - you may unpause audio for some short time then.
+and want a beep when someone connects to you) - you may unpause audio for some short time then,
+that will require another thread to watch the network, because main thread will be blocked inside SDL_Flip().
 
 The application is not allowed to do any GFX output without OpenGL context (or it will crash),
 that's why SDL_Flip() call will block until we're re-acquired context, and the callbacks will be called 
 from inside SDL_Flip(). so you won't receive SDL_WINDOWEVENT_HIDDEN / SDL_WINDOWEVENT_SHOWN,
 because if SDL sends them the application will get them only after SDL_Flip() successfully
 re-acquired GL context, and it's too late to pause audio and save application state,
-so please use callbacks instead of SDL window events on Android OS.
+so please use callbacks instead of SDL window events on Android OS (also if your application
+is single-threaded you don't need any mutexes inside callbacks).
 
 The whole idea behind callbacks is that the existing application should not be modified to
 operate correctly - the whole time in background will just look to app as one very long SDL_Flip(),
