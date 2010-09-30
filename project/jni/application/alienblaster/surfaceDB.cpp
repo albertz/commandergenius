@@ -116,3 +116,10 @@ SdlCompat_AcceleratedSurface *SurfaceDB::getSurface( string fn ) {
   }
 }
 
+void SurfaceDB::reloadAllSurfacesToVideoMemory()
+{
+	for( StringSurfaceMap::iterator it = surfaceDB.begin(); it != surfaceDB.end(); it++ )
+	{
+		SdlCompat_ReloadSurfaceToVideoMemory( it->second );
+	}
+};

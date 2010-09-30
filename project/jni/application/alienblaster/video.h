@@ -32,7 +32,6 @@ class Video {
 
 private:
   SdlCompat_AcceleratedSurface *screen;
-  SdlCompat_AcceleratedSurface *empty;
 
 public:
   Video();

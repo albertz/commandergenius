@@ -18,13 +18,25 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ***************************************************************************/
 #include "game.h"
+#include "surfaceDB.h"
 #include "SDL.h"
 #include <stdlib.h>
 #include <android/log.h>
 
 using namespace std;
 
+static void appPutToBackground()
+{
+  SDL_ANDROID_PauseAudioPlayback();
+}
+static void appPutToForeground()
+{
+  surfaceDB.reloadAllSurfacesToVideoMemory();
+  SDL_ANDROID_ResumeAudioPlayback();
+}
+
 int main(int argc, char *argv[]) {
+  SDL_ANDROID_SetApplicationPutToBackgroundCallback(&appPutToBackground, &appPutToForeground);
   __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", "main() 0");
   SDL_Init(0);
   srand(0);

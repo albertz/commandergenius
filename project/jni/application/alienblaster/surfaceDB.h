@@ -51,6 +51,8 @@ class SurfaceDB {
 
   SdlCompat_AcceleratedSurface *loadSurface( std::string fn, bool alpha=false );
 
+  void reloadAllSurfacesToVideoMemory();
+
   private:
   StringSurfaceMap surfaceDB;
   Uint8 transR, transG, transB;

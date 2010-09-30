@@ -18,55 +18,24 @@
 struct SdlCompat_AcceleratedSurface
 {
 	SDL_Texture * t;
+	SDL_Surface * s;
 	int w, h;
+	int flags;
 	SDL_PixelFormat * format;
 };
 
 static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(SDL_Surface * surface)
 {
 	SdlCompat_AcceleratedSurface * ret = new SdlCompat_AcceleratedSurface();
-	
 	// Allocate accelerated surface even if that means loss of color quality
 	Uint32 format;
-
-	/*
-	if( surface->flags & SDL_SRCALPHA )
-	{
-		format = SDL_PIXELFORMAT_RGBA4444;
-		ret->t = SDL_CreateTextureFromSurface(format, surface);
-	}
-	else if( surface->flags & SDL_SRCCOLORKEY )
-	{
-		// Use 1-bit alpha as colorkey
-		Uint32 key;
-		SDL_GetColorKey(surface, &key);
-		format = SDL_PIXELFORMAT_RGBA5551;
-		int bpp;
-		Uint32 Rmask, Gmask, Bmask, Amask;
-		SDL_PixelFormatEnumToMasks(format, &bpp, &Rmask, &Gmask, &Bmask, &Amask);
-
-		SDL_Surface * temp = SDL_CreateRGBSurface( SDL_SRCALPHA, surface->w, surface->h, bpp, Rmask, Gmask, Bmask, Amask );
-
-		SDL_FillRect( temp, NULL, SDL_MapRGBA(temp->format, 0, 0, 0, SDL_ALPHA_TRANSPARENT) );
-
-		SDL_BlitSurface( surface, NULL, temp, NULL ); // Copies only opaque pixels, and sets their alpha to opaque
-
-		ret->t = SDL_CreateTextureFromSurface(format, temp);
-
-		SDL_FreeSurface(temp);
-	}
-	else
-	{
-		format = SDL_PIXELFORMAT_RGB565;
-		ret->t = SDL_CreateTextureFromSurface(format, surface);
-	}
-	*/
 
 	format = SDL_PIXELFORMAT_RGB565;
 
 	if( surface->flags & SDL_SRCCOLORKEY )
 		format = SDL_PIXELFORMAT_RGBA5551;
-	ret->t = SDL_CreateTextureFromSurface(format, surface);
+	ret->s = SDL_ConvertSurface( surface, surface->format, 0 );
+	ret->t = SDL_CreateTextureFromSurface(format, ret->s);
 
 	ret->w = surface->w;
 	ret->h = surface->h;
@@ -79,6 +48,7 @@ static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(
 		return ret;
 	}
 
+	ret->flags = surface->flags;
 	if( surface->flags & SDL_SRCALPHA )
 	{
 		SDL_SetTextureBlendMode( ret->t, SDL_BLENDMODE_BLEND );
@@ -98,6 +68,8 @@ static inline int SDL_BlitSurface( SdlCompat_AcceleratedSurface * src, SDL_Rect 
 
 static inline void SDL_FreeSurface(SdlCompat_AcceleratedSurface * surface)
 {
+	SDL_DestroyTexture(surface->t);
+	SDL_FreeSurface(surface->s);
 	delete surface->format;
 	delete surface;
 };
@@ -106,8 +78,8 @@ static inline void SDL_FillRect( SdlCompat_AcceleratedSurface * unused, const SD
 {
 	Uint8 r, g, b, a;
 	SDL_GetRGBA( color, SDL_GetVideoSurface()->format, &r, &g, &b, &a );
-	SDL_SetRenderDrawColor(r, g, b, a);
-	SDL_RenderDrawRect(rect);
+	SDL_SetRenderDrawColor(r, g, b, SDL_ALPHA_OPAQUE /* a */);
+	SDL_RenderFillRect(rect);
 };
 
 static inline int SDL_Flip(SdlCompat_AcceleratedSurface * unused)
@@ -123,6 +95,34 @@ static inline int SDL_SetAlpha(SdlCompat_AcceleratedSurface * surface, Uint32 fl
 	return SDL_SetTextureAlphaMod(surface->t, alpha);
 };
 
+static inline void SdlCompat_ReloadSurfaceToVideoMemory(SdlCompat_AcceleratedSurface * surface)
+{
+	SDL_DestroyTexture(surface->t);
+	
+	// Allocate accelerated surface even if that means loss of color quality
+	Uint32 format;
+	format = SDL_PIXELFORMAT_RGB565;
+
+	if( surface->flags & SDL_SRCCOLORKEY )
+		format = SDL_PIXELFORMAT_RGBA5551;
+	surface->t = SDL_CreateTextureFromSurface(format, surface->s);
+	
+	if( ! surface->t )
+	{
+		SDL_SetError("SdlCompat_CreateAcceleratedSurface: Cannot allocate HW texture, W %d H %d format %x surface->flags %x", surface->w, surface->h, format, surface->flags );
+		return;
+	}
+
+	if( surface->flags & SDL_SRCALPHA )
+	{
+		SDL_SetTextureBlendMode( surface->t, SDL_BLENDMODE_BLEND );
+		Uint8 alpha = 128;
+		if( SDL_GetSurfaceAlphaMod( surface->s, &alpha ) < 0 )
+			alpha = 128;
+		SDL_SetTextureAlphaMod( surface->t, alpha );
+	}
+};
+
 #else
 
 typedef SDL_Surface SdlCompat_AcceleratedSurface;
@@ -130,6 +130,10 @@ typedef SDL_Surface SdlCompat_AcceleratedSurface;
 static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(SDL_Surface * surface)
 {
 	return SDL_ConvertSurface(surface, surface->format, surface->flags | SDL_HWSURFACE);
+};
+
+static inline void SdlCompat_ReloadSurfaceToVideoMemory(SDL_Surface * surface)
+{
 };
 
 #endif

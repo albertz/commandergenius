@@ -13,7 +13,7 @@ if [ "$CHANGE_APP_SETTINGS_VERSION" != "$AppSettingVersion" ]; then
 	AUTO=
 fi
 
-LibSdlVersionOld=$LibSdlVersion
+LibSdlVersionOld=`readlink project/jni/sdl | grep -o '[0-9][.][0-9]'`
 CompiledLibrariesOld=$CompiledLibraries
 
 var=""

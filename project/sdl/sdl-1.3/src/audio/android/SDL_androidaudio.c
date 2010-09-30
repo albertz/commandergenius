@@ -182,7 +182,7 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): limiting samples size to ", (int)audioFormat->samples);
 	}
 	
-	SDL_CalculateAudioSpec(spec);
+	SDL_CalculateAudioSpec(audioFormat);
 	
 	
 	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);

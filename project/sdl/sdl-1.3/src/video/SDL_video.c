@@ -3596,4 +3596,35 @@ SDL_SetTextInputRect(SDL_Rect *rect)
     }
 }
 
+#ifdef ANDROID
+void SDL_ANDROID_VideoContextLost()
+{
+	SDL_Texture * tex;
+	if( ! SDL_CurrentDisplay || ! SDL_CurrentRenderer || ! SDL_CurrentRenderer->window || ! SDL_CurrentRenderer->textures || SDL_GetWindowFlags(SDL_CurrentRenderer->window) & SDL_WINDOW_OPENGL )
+		return;
+
+	tex = SDL_CurrentRenderer->textures;
+	while( tex )
+	{
+		SDL_CurrentRenderer->DestroyTexture( SDL_CurrentRenderer, tex );
+		tex = tex->next;
+	}
+}
+
+void SDL_ANDROID_VideoContextRecreated()
+{
+	SDL_Texture * tex;
+	if( ! SDL_CurrentDisplay || ! SDL_CurrentRenderer || ! SDL_CurrentRenderer->window || ! SDL_CurrentRenderer->textures || SDL_GetWindowFlags(SDL_CurrentRenderer->window) & SDL_WINDOW_OPENGL )
+		return;
+
+	tex = SDL_CurrentRenderer->textures;
+	SDL_SelectRenderer(SDL_CurrentRenderer->window); /* Re-apply glOrtho() and blend modes */
+	while( tex )
+	{
+		SDL_CurrentRenderer->CreateTexture( SDL_CurrentRenderer, tex );
+		tex = tex->next;
+	}
+}
+#endif
+
 /* vi: set ts=4 sw=4 expandtab: */
