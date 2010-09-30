@@ -673,7 +673,7 @@ static int setupScreenKeyboardButton( int buttonID, Uint8 * charBuf )
 
 	memcpy(&w, charBuf, sizeof(int));
 	memcpy(&h, charBuf + sizeof(int), sizeof(int));
-	memcpy(&format, charBuf+ 2*sizeof(int), sizeof(int));
+	memcpy(&format, charBuf + 2*sizeof(int), sizeof(int));
 	w = ntohl(w);
 	h = ntohl(h);
 	format = ntohl(format);

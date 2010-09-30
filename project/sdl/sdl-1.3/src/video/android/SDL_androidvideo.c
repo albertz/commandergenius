@@ -47,8 +47,8 @@
 
 
 // The device screen dimensions to draw on
-int SDL_ANDROID_sWindowWidth  = 640;
-int SDL_ANDROID_sWindowHeight = 480;
+int SDL_ANDROID_sWindowWidth  = 0;
+int SDL_ANDROID_sWindowHeight = 0;
 
 // Extremely wicked JNI environment to call Java functions from C code
 static JNIEnv* JavaEnv = NULL;
@@ -88,9 +88,12 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint w, jint h )
 {
-    SDL_ANDROID_sWindowWidth  = w;
-    SDL_ANDROID_sWindowHeight = h;
-    __android_log_print(ANDROID_LOG_INFO, "libSDL", "Physical screen resolution is %dx%d", w, h);
+	if( SDL_ANDROID_sWindowWidth == 0 )
+	{
+		SDL_ANDROID_sWindowWidth = w;
+		SDL_ANDROID_sWindowHeight = h;
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Physical screen resolution is %dx%d", w, h);
+	}
 }
 
 JNIEXPORT void JNICALL 
