@@ -18,6 +18,7 @@ import android.os.Environment;
 import android.os.StatFs;
 import java.util.Locale;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 
 class Settings
@@ -465,18 +466,16 @@ class Settings
 
 	static byte [] loadRaw(Activity p,int res)
 	{
-		byte [] buf = new byte[128];
+		byte [] buf = new byte[65536 * 2];
 		byte [] a = new byte[0];
 		try{
 			InputStream is = new GZIPInputStream(p.getResources().openRawResource(res));
 			int readed = 0;
 			while( (readed = is.read(buf)) >= 0 )
 			{
-				byte [] b = new byte[a.length + readed];
-				for(int i = 0; i < a.length; i++)
-					b[i] = a[i];
-				for(int i = 0; i < readed; i++)
-					b[i+a.length] = buf[i];
+				byte [] b = new byte [a.length + readed];
+				System.arraycopy(a, 0, b, 0, a.length);
+				System.arraycopy(buf, 0, b, a.length, readed);
 				a = b;
 			}
 		} catch(Exception e) {};
@@ -489,32 +488,7 @@ class Settings
 		{
 			if( Globals.TouchscreenKeyboardTheme == 1 )
 			{
-				// DPAD
-				nativeSetupScreenKeyboardButton(0,  loadRaw(p, R.raw.ultimatedroiddpadbutton));
-				nativeSetupScreenKeyboardButton(1,  loadRaw(p, R.raw.ultimatedroidleftbuttonpressed));
-				nativeSetupScreenKeyboardButton(2,  loadRaw(p, R.raw.ultimatedroidrightbuttonpressed));
-				nativeSetupScreenKeyboardButton(3,  loadRaw(p, R.raw.ultimatedroidupbuttonpressed));
-				nativeSetupScreenKeyboardButton(4,  loadRaw(p, R.raw.ultimatedroiddownbuttonpressed));
-				// Auto-fire
-				nativeSetupScreenKeyboardButton(5,  loadRaw(p, R.raw.ultimatedroidbutton1auto));
-				nativeSetupScreenKeyboardButton(6,  loadRaw(p, R.raw.ultimatedroidbutton1autoanim));
-				nativeSetupScreenKeyboardButton(7,  loadRaw(p, R.raw.ultimatedroidbutton2auto));
-				nativeSetupScreenKeyboardButton(8,  loadRaw(p, R.raw.ultimatedroidbutton2autoanim));
-				// Other buttons
-				nativeSetupScreenKeyboardButton(9,  loadRaw(p, R.raw.ultimatedroidbutton1));
-				nativeSetupScreenKeyboardButton(10, loadRaw(p, R.raw.ultimatedroidbutton1pressed));
-				nativeSetupScreenKeyboardButton(11, loadRaw(p, R.raw.ultimatedroidbutton2));
-				nativeSetupScreenKeyboardButton(12, loadRaw(p, R.raw.ultimatedroidbutton2pressed));
-				nativeSetupScreenKeyboardButton(13, loadRaw(p, R.raw.ultimatedroidbutton3));
-				nativeSetupScreenKeyboardButton(14, loadRaw(p, R.raw.ultimatedroidbutton3pressed));
-				nativeSetupScreenKeyboardButton(15, loadRaw(p, R.raw.ultimatedroidbutton4));
-				nativeSetupScreenKeyboardButton(16, loadRaw(p, R.raw.ultimatedroidbutton4pressed));
-				nativeSetupScreenKeyboardButton(17, loadRaw(p, R.raw.ultimatedroidbutton5));
-				nativeSetupScreenKeyboardButton(18, loadRaw(p, R.raw.ultimatedroidbutton5pressed));
-				nativeSetupScreenKeyboardButton(19, loadRaw(p, R.raw.ultimatedroidbutton6));
-				nativeSetupScreenKeyboardButton(20, loadRaw(p, R.raw.ultimatedroidbutton6pressed));
-				nativeSetupScreenKeyboardButton(21, loadRaw(p, R.raw.ultimatedroidbutton7));
-				nativeSetupScreenKeyboardButton(22, loadRaw(p, R.raw.ultimatedroidbutton7));
+				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.ultimatedroid));
 			}
 		}
 	}
@@ -544,7 +518,7 @@ class Settings
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
 	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttons, int nbuttonsAutoFire);
-	private static native void nativeSetupScreenKeyboardButton(int buttonId, byte[] img);
+	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	public static native void nativeSetEnv(final String name, final String value);
 }
 

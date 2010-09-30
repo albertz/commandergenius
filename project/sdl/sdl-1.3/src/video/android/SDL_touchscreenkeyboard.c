@@ -42,6 +42,7 @@
 #include "jniwrapperstuff.h"
 
 #include "touchscreenfont.h"
+// #include "touchscreentheme.h" // Not used yet
 
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
@@ -652,21 +653,13 @@ power_of_2(int input)
     return value;
 }
 
-JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButton) ( JNIEnv*  env, jobject thiz, jint buttonID, jbyteArray charBufJava )
+static int setupScreenKeyboardButton( int buttonID, Uint8 * charBuf )
 {
 	// TODO: softstretch with antialiasing
-	jboolean isCopy = JNI_TRUE;
-	Uint8 * charBuf = NULL;
 	int w, h, len, format;
 	GLTexture_t * data = NULL;
 	int texture_w, texture_h;
-	len = (*env)->GetArrayLength(env, charBufJava);
-	charBuf = (Uint8 *) (*env)->GetByteArrayElements(env, charBufJava, &isCopy);
 	
-	w = ntohl(((Uint32 *) charBuf)[0]);
-	h = ntohl(((Uint32 *) charBuf)[1]);
-	format = ntohl(((Uint32 *) charBuf)[2]);
 	if( buttonID < 5 )
 		data = &(arrowImages[buttonID]);
 	else
@@ -674,6 +667,16 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButton) ( JNIEnv*  env, jobje
 		data = &(buttonAutoFireImages[buttonID-5]);
 	else
 		data = &(buttonImages[buttonID-9]);
+
+	if( buttonID > 22 ) // Error, array too big
+		return 12; // Return value bigger than zero to iterate it
+
+	memcpy(&w, charBuf, sizeof(int));
+	memcpy(&h, charBuf + sizeof(int), sizeof(int));
+	memcpy(&format, charBuf+ 2*sizeof(int), sizeof(int));
+	w = ntohl(w);
+	h = ntohl(h);
+	format = ntohl(format);
 	
 	texture_w = power_of_2(w);
 	texture_h = power_of_2(h);
@@ -694,10 +697,24 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButton) ( JNIEnv*  env, jobje
 	
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA,
 						format ? GL_UNSIGNED_SHORT_4_4_4_4 : GL_UNSIGNED_SHORT_5_5_5_1,
-						charBuf + 12 );
+						charBuf + 3*sizeof(int) );
 
 	glDisable(GL_TEXTURE_2D);
 
+	return 3*sizeof(int) + w * h * 2;
+}
+
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButtons) ( JNIEnv*  env, jobject thiz, jbyteArray charBufJava )
+{
+	jboolean isCopy = JNI_TRUE;
+	int len = (*env)->GetArrayLength(env, charBufJava);
+	Uint8 * charBuf = (Uint8 *) (*env)->GetByteArrayElements(env, charBufJava, &isCopy);
+	int but, pos;
+	
+	for( but = 0, pos = 0; pos < len; but ++ )
+		pos += setupScreenKeyboardButton( but, charBuf + pos );
+	
 	(*env)->ReleaseByteArrayElements(env, charBufJava, (jbyte *)charBuf, 0);
 }
 
