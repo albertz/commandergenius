@@ -28,7 +28,7 @@
 #include <map>
 #include <functional>
 
-typedef std::map<std::string, SdlCompat_AcceleratedSurface *, std::greater<std::string> > StringSurfaceMap;
+typedef std::map<std::string, std::pair< SdlCompat_AcceleratedSurface * , bool >, std::greater<std::string> > StringSurfaceMap;
 
 
 class SurfaceDB;
@@ -56,6 +56,8 @@ class SurfaceDB {
   private:
   StringSurfaceMap surfaceDB;
   Uint8 transR, transG, transB;
+
+  SDL_Surface *loadSurfaceInternal( std::string fn, bool alpha );
 
   SdlCompat_AcceleratedSurface *getSurface( std::string fn );
 };

@@ -41,16 +41,30 @@ SurfaceDB::~SurfaceDB() {
   StringSurfaceMap::iterator pos;
   // free all surfaces
   for ( pos = surfaceDB.begin(); pos != surfaceDB.end(); ++pos ) {
-    SDL_FreeSurface( pos->second );
+    SDL_FreeSurface( pos->second.first );
   }
 }
 
 SdlCompat_AcceleratedSurface *SurfaceDB::loadSurface( string fn, bool alpha ) {
-
   SdlCompat_AcceleratedSurface *searchResult = getSurface( fn );
   if ( searchResult ) {
     return searchResult;
   }
+
+  SDL_Surface * newSurface = loadSurfaceInternal(fn, alpha);
+  
+  surfaceDB[ fn ] = std::make_pair( SdlCompat_CreateAcceleratedSurface( newSurface ), alpha );
+  SDL_FreeSurface(newSurface);
+
+  if ( alpha ) {
+    SDL_SetAlpha( surfaceDB[ fn ].first, SDL_SRCALPHA, 128 );
+  }
+
+  return surfaceDB[ fn ].first;
+}
+
+SDL_Surface *SurfaceDB::loadSurfaceInternal( string fn, bool alpha ) {
+
   __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", (string( "Loading image " ) + fn).c_str() );
   string fn1 = fn;
 
@@ -92,15 +106,8 @@ SdlCompat_AcceleratedSurface *SurfaceDB::loadSurface( string fn, bool alpha ) {
     SDL_FreeSurface(newSurface);
     newSurface = hwSurface;
   }
-
-  surfaceDB[ fn ] = SdlCompat_CreateAcceleratedSurface( newSurface );
-  SDL_FreeSurface(newSurface);
-
-  if ( alpha ) {
-    SDL_SetAlpha( surfaceDB[ fn ], SDL_SRCALPHA, 128 );
-  }
-
-  return surfaceDB[ fn ];
+  
+  return newSurface;
 }
 
 SdlCompat_AcceleratedSurface *SurfaceDB::getSurface( string fn ) {
@@ -111,7 +118,7 @@ SdlCompat_AcceleratedSurface *SurfaceDB::getSurface( string fn ) {
     if ( pos == surfaceDB.end() ) {
       return 0;
     } else {
-      return pos->second;
+      return pos->second.first;
     }
   }
 }
@@ -120,6 +127,6 @@ void SurfaceDB::reloadAllSurfacesToVideoMemory()
 {
 	for( StringSurfaceMap::iterator it = surfaceDB.begin(); it != surfaceDB.end(); it++ )
 	{
-		SdlCompat_ReloadSurfaceToVideoMemory( it->second );
+		SdlCompat_ReloadSurfaceToVideoMemory( it->second.first, loadSurfaceInternal( it->first, it->second.second ) );
 	}
 };

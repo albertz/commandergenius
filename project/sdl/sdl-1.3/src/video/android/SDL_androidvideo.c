@@ -80,7 +80,7 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 		glContextLost = 0;
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "OpenGL context recreated, refreshing textures");
 		SDL_ANDROID_VideoContextRecreated();
-		appRestoredCallbackDefault();
+		appRestoredCallback();
 	}
 }
 
@@ -113,7 +113,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeGlContextLost) ( JNIEnv*  env, jobject  thiz
 {
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "OpenGL context lost, waiting for new OpenGL context");
 	glContextLost = 1;
-	appPutToBackgroundCallbackDefault();
+	appPutToBackgroundCallback();
 	SDL_ANDROID_VideoContextLost();
 }
 
