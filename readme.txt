@@ -168,6 +168,7 @@ where callback_t is function pointer of type "void (*) void".
 The default callbacks will call another Android-specific functions:
 SDL_ANDROID_PauseAudioPlayback() and SDL_ANDROID_ResumeAudioPlayback()
 which will pause and resume audio from HW layer, so appplication does not need to destroy and re-init audio.
+Also, the usual event SDL_ACTIVEEVENT with flag SDL_APPACTIVE will be sent when that happens.
 
 If you're using pure SDL 1.2 API (with or without HW acceleration) you don't need to worry about anything -
 the SDL itself will re-create GL textures and fill them with pixel data from existing SDL HW surfaces,
@@ -191,18 +192,40 @@ and want a beep when someone connects to you) - you may unpause audio for some s
 that will require another thread to watch the network, because main thread will be blocked inside SDL_Flip().
 
 The application is not allowed to do any GFX output without OpenGL context (or it will crash),
-that's why SDL_Flip() call will block until we're re-acquired context, and the callbacks will be called 
-from inside SDL_Flip(). so you won't receive SDL_WINDOWEVENT_HIDDEN / SDL_WINDOWEVENT_SHOWN,
-because if SDL sends them the application will get them only after SDL_Flip() successfully
-re-acquired GL context, and it's too late to pause audio and save application state,
-so please use callbacks instead of SDL window events on Android OS (also if your application
-is single-threaded you don't need any mutexes inside callbacks).
-
+that's why SDL_Flip() call will block until we're re-acquired context, and the callbacks will be called
+from inside SDL_Flip().
 The whole idea behind callbacks is that the existing application should not be modified to
 operate correctly - the whole time in background will just look to app as one very long SDL_Flip(),
 so it's good idea to implement some maximum time cap on game frame, so it won't process
 the game to the end level 'till the app is in background, or calculate the difference in time
 between appPutToBackground() and appRestored() and update game time variables.
+
+Alternatively, you may enable option for unblocked SDL_Flip() in ChangeAppSettings script, 
+then you'll have to implement special event loop right after each SDL_Flip() call:
+
+SDL_Flip();
+SDL_Event evt;
+while( SDL_PollEvent(&evt) )
+{
+	if( evt.type == SDL_ACTIVEEVENT->SDL_APPACTIVE && evt.active.gain == 0 && evt.active.state == SDL_APPACTIVE )
+	{
+		// We've lost GL context, we are not allowed to do any GFX output here, or app will crash!
+		while( 1 )
+		{
+			SDL_PollEvent(&evt);
+			if( evt.type == SDL_ACTIVEEVENT->SDL_APPACTIVE && evt.active.gain && evt.active.state == SDL_APPACTIVE )
+			{
+				SDL_Flip(); // One SDL_Flip() call is required here to restore OpenGL context
+				// Re-load our textures if we're in SDL+OpenGL mode
+				// Now we can draw
+				break;
+			}
+			
+			// Process network stuff, maybe play some sounds using SDL_ANDROID_PauseAudioPlayback() / SDL_ANDROID_ResumeAudioPlayback()
+			SDL_Sleep(200);
+		}
+	}
+}
 
 Known bugs
 ==========

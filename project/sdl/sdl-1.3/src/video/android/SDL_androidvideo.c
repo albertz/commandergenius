@@ -71,17 +71,19 @@ static SDL_ANDROID_ApplicationPutToBackgroundCallback_t appRestoredCallback = ap
 
 int SDL_ANDROID_CallJavaSwapBuffers()
 {
-	glContextLost = 0;
 	SDL_ANDROID_drawTouchscreenKeyboard();
 	SDL_ANDROID_processAndroidTrackballDampening();
-	(*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaSwapBuffers );
+	if( ! (*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaSwapBuffers ) )
+		return 0;
 	if( glContextLost )
 	{
 		glContextLost = 0;
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "OpenGL context recreated, refreshing textures");
 		SDL_ANDROID_VideoContextRecreated();
 		appRestoredCallback();
+		SDL_PrivateAppActive(1, SDL_APPACTIVE|SDL_APPINPUTFOCUS|SDL_APPMOUSEFOCUS);
 	}
+	return 1;
 }
 
 
@@ -114,6 +116,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeGlContextLost) ( JNIEnv*  env, jobject  thiz
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "OpenGL context lost, waiting for new OpenGL context");
 	glContextLost = 1;
 	appPutToBackgroundCallback();
+	SDL_PrivateAppActive(0, SDL_APPACTIVE|SDL_APPINPUTFOCUS|SDL_APPMOUSEFOCUS);
 	SDL_ANDROID_VideoContextLost();
 }
 
