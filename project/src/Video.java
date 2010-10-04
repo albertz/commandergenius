@@ -89,10 +89,13 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	public DemoRenderer(Activity _context)
 	{
 		context = _context;
-		mGlContextLost = false;
 	}
 	
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+		mGlSurfaceCreated = true;
+		if( mGlSurfaceCreated && ! mPaused && ! mFirstTimeStart )
+			nativeGlContextRecreated();
+		mFirstTimeStart = false;
 	}
 
 	public void onSurfaceChanged(GL10 gl, int w, int h) {
@@ -100,6 +103,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	}
 	
 	public void onSurfaceDestroyed() {
+		mGlSurfaceCreated = false;
 		mGlContextLost = true;
 		nativeGlContextLost();
 	};
@@ -145,6 +149,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	private native void nativeResize(int w, int h);
 	private native void nativeDone();
 	private native void nativeGlContextLost();
+	public native void nativeGlContextRecreated();
 
 	private Activity context = null;
 	
@@ -153,6 +158,9 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	private EGLSurface mEglSurface = null;
 	private EGLContext mEglContext = null;
 	private boolean mGlContextLost = false;
+	public boolean mGlSurfaceCreated = false;
+	public boolean mPaused = false;
+	private boolean mFirstTimeStart = true;
 }
 
 class DemoGLSurfaceView extends GLSurfaceView_SDL {
@@ -186,11 +194,15 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	@Override
 	public void onPause() {
 		super.onPause();
+		mRenderer.mPaused = true;
 	};
 
 	@Override
 	public void onResume() {
 		super.onResume();
+		mRenderer.mPaused = false;
+		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused )
+			mRenderer.nativeGlContextRecreated();
 	};
 
 	@Override
