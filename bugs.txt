@@ -1,0 +1,36 @@
+Known bugs
+==========
+
+1. Merge all config screens into single big config screen, make option to rerun config.
+
+2. Fix on-screen keyboard, add more keys and more options, make possible for application to control it.
+
+3. Add full QWERTY on-screen keyboard.
+
+4. Add trackball sensitivity and accelerometer sensitivity config.
+
+5. Export phone vibrator to SDL - interface is available in SDL 1.3
+
+6. HDMI output (HTC Evo and Samsung Epic support that):
+HDMI output will be tricky - I've read the doc here: 
+https://docs.google.com/View?id=dhtsnvs6_57d2hpqtgr#4_1_HDMI_output_support_338048
+It says that in order to output something to HDMI you need to have a VideoView class visible on screen: 
+http://developer.android.com/reference/android/widget/VideoView.html .
+This class does not have any method like "showMyOwnCustomImage()", 
+it just plays the video from the given path, so obvious solution is to create 
+special FIFO file or open a socket, point the VideoView to play this FIFO or socket, 
+and then write raw uncompressed video frames to that FIFO with some small header so that 
+VideoView will recognize it as a proper video format.
+UQM gives 5 FPS without such hacks, if I'll implement that FPS will drop to 1-2 
+(maybe not that bad, I have to actually try that), because you'll have to do huge memcpy(), 
+plus VideoView will contain some buffer to ensure the playback is smooth, 
+so the data on your TV will lag halfsecond behind the data on the device screen.
+
+7. Make app data to come inside .apk file in assets instead of downloading it from net.
+
+8. OpenTyrian: 
+  1. Navigating game menus downwards with trackball skips events, that does not happen
+     when navigting upwards.
+  2. The detail level can be set to WILD by pressing "w" key in gameplay escape menu, expose that through interface.
+
+9. Ur-Quan Masters: add Russian, Deutsch and Slovak translations: http://wiki.uqm.stack.nl/Translations

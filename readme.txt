@@ -23,15 +23,15 @@ Hopefully it will compile a bunch of libs under project/libs/armeabi,
 create file project/bin/DemoActivity-debug.apk and install it on your device or emulator.
 Then you can test it by launching Alien Blaster icon from Android applications menu.
 It's designed for 640x480, so if you have smaller screen it will be resized.
-Note: The game enforces horizontal screen orientation, you may open your keyboard and use it for 
+Note: The game enforces horizontal screen orientation, you may open your keyboard and use it for
 additional keys - the phone will just keep current screen orientation.
 Note that you may use Volume up/down and Camera keys as game inputs -
 you'll have to redefine them in game keyconfig menu.
 Keys Home, Search and End Call will force application quit, and because
 of a bug in my SDL implementation application will crash.
 Back key is mapped to Escape, and Menu is mapped to Enter.
-Newer Android phones like HTC Evo have no keyboard at all, so there are just 3 usable keys - 
-Menu, Volume Up and Volume Down (and Escape of course).
+Newer Android phones like HTC Evo have no keyboard at all, so there are just 4 usable keys -
+Menu, Search, Volume Up and Volume Down (and Escape of course).
 Because of that the accelerometer is configured to trigger cursor key events.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
@@ -216,7 +216,8 @@ while( SDL_PollEvent(&evt) )
 			if( evt.type == SDL_ACTIVEEVENT->SDL_APPACTIVE && evt.active.gain && evt.active.state == SDL_APPACTIVE )
 			{
 				SDL_Flip(); // One SDL_Flip() call is required here to restore OpenGL context
-				// Re-load our textures if we're in SDL+OpenGL mode
+				// Re-load all textures, matrixes and all other GL states if we're in SDL+OpenGL mode
+				// Re-load all images to SDL_Texture if we're using it
 				// Now we can draw
 				break;
 			}
@@ -226,55 +227,6 @@ while( SDL_PollEvent(&evt) )
 		}
 	}
 }
-
-Known bugs
-==========
-
-1. Merge all config screens into single big config screen, make option to rerun config.
-
-2. Fix on-screen keyboard, add more keys and more options, make possible for application to control it.
-
-3. Add full QWERTY on-screen keyboard.
-
-4. Add trackball sensitivity and accelerometer sensitivity config.
-
-5. Export phone vibrator to SDL - interface is available in SDL 1.3
-
-6. HDMI output (HTC Evo and Samsung Epic support that):
-HDMI output will be tricky - I've read the doc here: 
-https://docs.google.com/View?id=dhtsnvs6_57d2hpqtgr#4_1_HDMI_output_support_338048
-It says that in order to output something to HDMI you need to have a VideoView class visible on screen: 
-http://developer.android.com/reference/android/widget/VideoView.html .
-This class does not have any method like "showMyOwnCustomImage()", 
-it just plays the video from the given path, so obvious solution is to create 
-special FIFO file or open a socket, point the VideoView to play this FIFO or socket, 
-and then write raw uncompressed video frames to that FIFO with some small header so that 
-VideoView will recognize it as a proper video format.
-UQM gives 5 FPS without such hacks, if I'll implement that FPS will drop to 1-2 
-(maybe not that bad, I have to actually try that), because you'll have to do huge memcpy(), 
-plus VideoView will contain some buffer to ensure the playback is smooth, 
-so the data on your TV will lag halfsecond behind the data on the device screen.
-
-7. Make app data to come inside .apk file in assets instead of downloading it from net.
-
-8. OpenTyrian: 
-  1. Navigating game menus downwards with trackball skips events, that does not happen
-     when navigting upwards.
-  2. The detail level can be set to WILD by pressing "w" key in gameplay escape menu, expose that through interface.
-
-9. Ur-Quan Masters: add Russian, Deutsch and Slovak translations: http://wiki.uqm.stack.nl/Translations
-
-Games to port
-=============
-
-TeeWorlds
-SuperTux
-LBreakout2
-Commander Genius (only data files for shareware version available for free)
-OpenJazz (only data files for shareware version available for free)
-OpenLieroX (will be damn hard to do, I wrote the code partially)
-ScummVM (they already have their own port, yet it's unfinished)
-Widelands (http://wl.widelands.org/)
 
 License information
 ===================
