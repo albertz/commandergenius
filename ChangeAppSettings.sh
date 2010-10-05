@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHANGE_APP_SETTINGS_VERSION=9
+CHANGE_APP_SETTINGS_VERSION=10
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -183,6 +183,13 @@ if [ -n "$var" ] ; then
 	AppSubdirsBuild="$var"
 fi
 
+echo -n "\nApplication requires C++ RTTI and exceptions - you will need CrystaX toolchain installed at\n"
+echo -n `which ndk-build | sed 's@/[^/]*/ndk-build@/android-ndk-r4-crystax@'` "(y) or (n) ($AppUseCrystaXToolchain): "
+read var
+if [ -n "$var" ] ; then
+	AppUseCrystaXToolchain="$var"
+fi
+
 echo -n "\nHere you may type some short readme text that will be shown when app data is downloaded."
 echo -n "\nCurrent text:\n"
 echo -n "`echo $ReadmeText | tr '^' '\\n'`"
@@ -231,6 +238,7 @@ echo CustomBuildScript=$CustomBuildScript >> AndroidAppSettings.cfg
 echo AppCflags=\'$AppCflags\' >> AndroidAppSettings.cfg
 echo AppLdflags=\'$AppLdflags\' >> AndroidAppSettings.cfg
 echo AppSubdirsBuild=\'$AppSubdirsBuild\' >> AndroidAppSettings.cfg
+echo AppUseCrystaXToolchain=$AppUseCrystaXToolchain >> AndroidAppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AndroidAppSettings.cfg
 
 AppShortName=`echo $AppName | sed 's/ //g'`
@@ -399,7 +407,7 @@ if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
 	rm -rf project/$OUT/local/*/objs/application project/$OUT/local/*/libapplication.so
 fi
 # Do not rebuild libraries that do not need that
-find project/$OUT/local -name "*.[oa]" -exec touch '{}' \;
+# find project/$OUT/local -name "*.[oa]" -exec touch '{}' \;
 done
 
 echo Done

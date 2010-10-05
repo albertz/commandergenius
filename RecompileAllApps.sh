@@ -35,9 +35,13 @@ for APP1 in project/jni/application/*/AppSettings.cfg; do
 	rm -rf project/bin/ndk/local/*/libapplication.so project/bin/ndk/local/*/objs/application
 	rm -rf project/bin/ndk/local/*/libsdl*.so project/bin/ndk/local/*/objs/sdl*
 	./ChangeAppSettings.sh -a
+	NDKBUILD=ndk-build
+	if grep "AppUseCrystaXToolchain=y" AndroidAppSettings.cfg > /dev/null ; then
+		NDKBUILD=`which ndk-build | sed 's@/[^/]*/ndk-build@/android-ndk-r4-crystax@'`/ndk-build
+	fi
 	echo Compiling $APP
 	OLDPATH="`pwd`"
-	( cd project && nice -n5 ndk-build -j2 V=1 && ant release && \
+	( cd project && nice -n5 $NDKBUILD -j2 V=1 && ant release && \
 	jarsigner -verbose -keystore "$KEYSTORE" -storepass "$PASSWORD" bin/DemoActivity-unsigned.apk $ALIAS && \
 	zipalign 4 bin/DemoActivity-unsigned.apk ../$APP.apk && cd .. ) || exit 1
 done

@@ -100,6 +100,18 @@ the app will re-download the data if URL does not match the saved URL from previ
 If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
 add libname to project/jni/<yourapp>/Android.mk
 
+The ARM architecture has some limitations which you have to be aware about -
+if you'll access integer that's not 4-byte aligned you'll get garbage instead of correct value,
+and it's processor-model specific - it may work on some devices and do not work on another ones -
+you may wish to check your code in Android 1.6 emulator from time to time to catch such bugs.
+
+char * p = 0x13; // Non-4 byte aligned pointer
+int i = (int *) p; // We have garbage inside i now
+memcpy( &i, p, sizof(int) ); // The correct way to dereference a non-aligned pointer
+
+This compiler flags will catch most obvious errors, you may add them to AppCflags var in settings:
+-Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
+
 How to compile your own application using automake/configure scripts
 ====================================================================
 
@@ -156,7 +168,7 @@ gdb libsdl.so -ex "list *0x0002ca00"
 
 It will output the exact line in your source where the application crashed.
 
-Android Application lifectcle support
+Android Application lifecycle support
 =====================================
 
 Application may be put to background at any time, for example if user gets phone call onto the device.
