@@ -64,7 +64,7 @@ static int AutoFireButtonsNum = 0;
 static int nbuttons = 4;
 static int buttonsize = 1;
 
-static SDL_Rect arrows, buttons[MAX_BUTTONS];
+static SDL_Rect arrows, buttons[MAX_BUTTONS], buttonsAutoFireRect[MAX_BUTTONS_AUTOFIRE];
 static SDLKey buttonKeysyms[MAX_BUTTONS] = { 
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_0)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1)),
@@ -83,7 +83,7 @@ static int ButtonAutoFireX[MAX_BUTTONS_AUTOFIRE*2] = {0, 0, 0, 0};
 static int ButtonAutoFireRot[MAX_BUTTONS_AUTOFIRE] = {0, 0};
 static int ButtonAutoFireDecay[MAX_BUTTONS_AUTOFIRE] = {0, 0};
 
-static SDL_Rect * OldCoords[MAX_MULTITOUCH_POINTERS] = { NULL };
+static int pointerInButtonRect[MAX_BUTTONS + 1] = {0};
 
 typedef struct
 {
@@ -371,173 +371,231 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 {
 	int i;
 	SDL_keysym keysym;
+	int processed = 0;
 
 	
 	if( !touchscreenKeyboardShown )
 		return 0;
 
+	
 	if( action == MOUSE_DOWN )
 	{
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "touch %03dx%03d ptr %d action %d", x, y, pointerId, action);
 		if( InsideRect( &arrows, x, y ) )
 		{
-			OldCoords[pointerId] = &arrows;
-			i = ArrowKeysPressed(x, y);
-			if( i & ARROW_UP )
-				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(UP), &keysym) );
-			if( i & ARROW_DOWN )
-				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(DOWN), &keysym) );
-			if( i & ARROW_LEFT )
-				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(LEFT), &keysym) );
-			if( i & ARROW_RIGHT )
-				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
-			oldArrows = i;
-			return 1;
+			processed = 1;
+			if( pointerInButtonRect[MAX_BUTTONS] == -1 )
+			{
+				pointerInButtonRect[MAX_BUTTONS] = pointerId;
+				i = ArrowKeysPressed(x, y);
+				if( i & ARROW_UP )
+					SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(UP), &keysym) );
+				if( i & ARROW_DOWN )
+					SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+				if( i & ARROW_LEFT )
+					SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+				if( i & ARROW_RIGHT )
+					SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+				oldArrows = i;
+			}
 		}
 
 		for( i = 0; i < nbuttons; i++ )
 		{
 			if( InsideRect( &buttons[i], x, y) )
 			{
-				OldCoords[pointerId] = &buttons[i];
-				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym(buttonKeysyms[i], &keysym) );
-				if( i < AutoFireButtonsNum )
+				processed = 1;
+				if( pointerInButtonRect[i] == -1 )
 				{
-					ButtonAutoFire[i] = 0;
-					if(touchscreenKeyboardTheme == 0)
+					pointerInButtonRect[i] = pointerId;
+					SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym(buttonKeysyms[i], &keysym) );
+					if( i < AutoFireButtonsNum )
 					{
-						ButtonAutoFireX[i] = x;
-						ButtonAutoFireRot[i] = 0;
-					}
-					else
-					{
-						ButtonAutoFireX[i*2] = 0;
-						ButtonAutoFireX[i*2+1] = 0;
-						ButtonAutoFireRot[i] = x;
-						ButtonAutoFireDecay[i] = SDL_GetTicks();
+						ButtonAutoFire[i] = 0;
+						if(touchscreenKeyboardTheme == 0)
+						{
+							ButtonAutoFireX[i] = x;
+							ButtonAutoFireRot[i] = 0;
+						}
+						else
+						{
+							ButtonAutoFireX[i*2] = 0;
+							ButtonAutoFireX[i*2+1] = 0;
+							ButtonAutoFireRot[i] = x;
+							ButtonAutoFireDecay[i] = SDL_GetTicks();
+						}
 					}
 				}
-				return 1;
 			}
 		}
 	}
 	else
 	if( action == MOUSE_UP )
 	{
-		if( OldCoords[pointerId] == &arrows )
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "touch %03dx%03d ptr %d action %d", x, y, pointerId, action);
+		if( pointerInButtonRect[MAX_BUTTONS] == pointerId )
 		{
-			OldCoords[pointerId] = NULL;
+			processed = 1;
+			pointerInButtonRect[MAX_BUTTONS] = -1;
 			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
 			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
 			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
 			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
 			oldArrows = 0;
-			return 1;
 		}
 		for( i = 0; i < nbuttons; i++ )
 		{
-			if( OldCoords[pointerId] == &buttons[i] )
+			if( pointerInButtonRect[i] == pointerId )
 			{
-				if( ! ( i < AutoFireButtonsNum && ButtonAutoFire[i] ) )
-				{
-					SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym(buttonKeysyms[i] ,&keysym) );
-				}
-				else
+				processed = 1;
+				pointerInButtonRect[i] = -1;
+				if( i < AutoFireButtonsNum && ButtonAutoFire[i] )
 				{
 					ButtonAutoFire[i] = 2;
 				}
-				OldCoords[pointerId] = NULL;
-				if(touchscreenKeyboardTheme == 0)
-				{
-					ButtonAutoFireX[i] = 0;
-				}
 				else
 				{
-					ButtonAutoFireX[i*2] = 0;
-					ButtonAutoFireX[i*2+1] = 0;
+					SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym(buttonKeysyms[i] ,&keysym) );
 				}
-				return 1;
+				if( i < AutoFireButtonsNum )
+				{
+					if(touchscreenKeyboardTheme == 0)
+					{
+						ButtonAutoFireX[i] = 0;
+					}
+					else
+					{
+						ButtonAutoFireX[i*2] = 0;
+						ButtonAutoFireX[i*2+1] = 0;
+					}
+				}
 			}
 		}
 	}
 	else
 	if( action == MOUSE_MOVE )
 	{
-		if( OldCoords[pointerId] && !InsideRect(OldCoords[pointerId], x, y) )
+		// Process cases when pointer enters button area (it won't send keypress twice if button already pressed)
+		processed = SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
+		
+		// Process cases when pointer leaves button area
+		// TODO: huge code size, split it or somehow make it more readable
+		if( pointerInButtonRect[MAX_BUTTONS] == pointerId )
 		{
-			SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_UP, pointerId);
-			return SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
-		}
-		else
-		if( OldCoords[pointerId] == &arrows )
-		{
-			i = ArrowKeysPressed(x, y);
-			if( i == oldArrows )
-				return 1;
-			if( oldArrows & ARROW_UP && ! (i & ARROW_UP) )
-				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
-			if( oldArrows & ARROW_DOWN && ! (i & ARROW_DOWN) )
-				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
-			if( oldArrows & ARROW_LEFT && ! (i & ARROW_LEFT) )
-				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
-			if( oldArrows & ARROW_RIGHT && ! (i & ARROW_RIGHT) )
-				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
-			if( i & ARROW_UP )
-				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(UP), &keysym) );
-			if( i & ARROW_DOWN )
-				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(DOWN), &keysym) );
-			if( i & ARROW_LEFT )
-				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(LEFT), &keysym) );
-			if( i & ARROW_RIGHT )
-				SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
-			oldArrows = i;
-		}
-		else
-		{
-			for(i = 0; i < AutoFireButtonsNum; i++)
-			if( OldCoords[pointerId] == &buttons[i] )
+			processed = 1;
+			if( ! InsideRect( &arrows, x, y ) )
 			{
-				if(touchscreenKeyboardTheme == 0)
+				pointerInButtonRect[MAX_BUTTONS] = -1;
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+				oldArrows = 0;
+			}
+			else
+			{
+				i = ArrowKeysPressed(x, y);
+				if( i != oldArrows )
 				{
-					ButtonAutoFire[i] = abs(ButtonAutoFireX[i] - x) > buttons[i].w / 2;
+					if( oldArrows & ARROW_UP && ! (i & ARROW_UP) )
+						SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
+					if( oldArrows & ARROW_DOWN && ! (i & ARROW_DOWN) )
+						SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+					if( oldArrows & ARROW_LEFT && ! (i & ARROW_LEFT) )
+						SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+					if( oldArrows & ARROW_RIGHT && ! (i & ARROW_RIGHT) )
+						SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+					if( i & ARROW_UP )
+						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(UP), &keysym) );
+					if( i & ARROW_DOWN )
+						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+					if( i & ARROW_LEFT )
+						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+					if( i & ARROW_RIGHT )
+						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+				}
+				oldArrows = i;
+			}
+		}
+		for( i = 0; i < AutoFireButtonsNum; i++ )
+		{
+			if( pointerInButtonRect[i] == pointerId )
+			{
+				processed = 1;
+				if( ! InsideRect( &buttonsAutoFireRect[i], x, y ) )
+				{
+					pointerInButtonRect[i] = -1;
 					if( !ButtonAutoFire[i] )
-						ButtonAutoFireRot[i] = ButtonAutoFireX[i] - x;
+					{
+						SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym(buttonKeysyms[i] ,&keysym) );
+					}
+					else
+					{
+						ButtonAutoFire[i] = 2;
+					}
+					if(touchscreenKeyboardTheme == 0)
+					{
+						ButtonAutoFireX[i] = 0;
+					}
+					else
+					{
+						ButtonAutoFireX[i*2] = 0;
+						ButtonAutoFireX[i*2+1] = 0;
+					}
 				}
 				else
 				{
-					int coeff = (buttonAutoFireImages[i*2+1].w > buttons[i].w) ? buttonAutoFireImages[i*2+1].w / buttons[i].w + 1 : 1;
-					if( ButtonAutoFireRot[i] < x )
-						ButtonAutoFireX[i*2+1] += (x - ButtonAutoFireRot[i]) * coeff;
-					if( ButtonAutoFireRot[i] > x )
-						ButtonAutoFireX[i*2] += (ButtonAutoFireRot[i] - x) * coeff;
-
-					ButtonAutoFireRot[i] = x;
-
-					if( ButtonAutoFireX[i*2] < 0 )
-						ButtonAutoFireX[i*2] = 0;
-					if( ButtonAutoFireX[i*2+1] < 0 )
-						ButtonAutoFireX[i*2+1] = 0;
-					if( ButtonAutoFireX[i*2] > buttonAutoFireImages[i*2+1].w / 2 )
-						ButtonAutoFireX[i*2] = buttonAutoFireImages[i*2+1].w / 2;
-					if( ButtonAutoFireX[i*2+1] > buttonAutoFireImages[i*2+1].w / 2 )
-						ButtonAutoFireX[i*2+1] = buttonAutoFireImages[i*2+1].w / 2;
-
-					if( ButtonAutoFireX[i*2] == buttonAutoFireImages[i*2+1].w / 2 &&
-						ButtonAutoFireX[i*2+1] == buttonAutoFireImages[i*2+1].w / 2 )
+					if(touchscreenKeyboardTheme == 0)
 					{
-						if( ! ButtonAutoFire[i] )
-							ButtonAutoFireDecay[i] = SDL_GetTicks();
-						ButtonAutoFire[i] = 1;
+						ButtonAutoFire[i] = abs(ButtonAutoFireX[i] - x) > buttons[i].w / 2;
+						if( !ButtonAutoFire[i] )
+							ButtonAutoFireRot[i] = ButtonAutoFireX[i] - x;
+					}
+					else
+					{
+						int coeff = (buttonAutoFireImages[i*2+1].w > buttons[i].w) ? buttonAutoFireImages[i*2+1].w / buttons[i].w + 1 : 1;
+						if( ButtonAutoFireRot[i] < x )
+							ButtonAutoFireX[i*2+1] += (x - ButtonAutoFireRot[i]) * coeff;
+						if( ButtonAutoFireRot[i] > x )
+							ButtonAutoFireX[i*2] += (ButtonAutoFireRot[i] - x) * coeff;
+
+						ButtonAutoFireRot[i] = x;
+
+						if( ButtonAutoFireX[i*2] < 0 )
+							ButtonAutoFireX[i*2] = 0;
+						if( ButtonAutoFireX[i*2+1] < 0 )
+							ButtonAutoFireX[i*2+1] = 0;
+						if( ButtonAutoFireX[i*2] > buttonAutoFireImages[i*2+1].w / 2 )
+							ButtonAutoFireX[i*2] = buttonAutoFireImages[i*2+1].w / 2;
+						if( ButtonAutoFireX[i*2+1] > buttonAutoFireImages[i*2+1].w / 2 )
+							ButtonAutoFireX[i*2+1] = buttonAutoFireImages[i*2+1].w / 2;
+
+						if( ButtonAutoFireX[i*2] == buttonAutoFireImages[i*2+1].w / 2 &&
+							ButtonAutoFireX[i*2+1] == buttonAutoFireImages[i*2+1].w / 2 )
+						{
+							if( ! ButtonAutoFire[i] )
+								ButtonAutoFireDecay[i] = SDL_GetTicks();
+							ButtonAutoFire[i] = 1;
+						}
 					}
 				}
 			}
 		}
-
-		if( OldCoords[pointerId] )
-			return 1;
-
-		return SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
+		for( i = AutoFireButtonsNum; i < nbuttons; i++ )
+		{
+			if( pointerInButtonRect[i] == pointerId )
+			{
+				processed = 1;
+				if( ! InsideRect( &buttons[i], x, y ) )
+				{
+					pointerInButtonRect[i] = -1;
+					SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym(buttonKeysyms[i] ,&keysym) );
+				}
+			}
+		}
 	}
-	return 0;
+	
+	return processed;
 };
 
 JNIEXPORT void JNICALL 
@@ -632,6 +690,18 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		buttons[6].y = 0;
 		buttons[6].w = 30;
 		buttons[6].h = 30;
+	}
+	
+	for( i = 0; i < sizeof(pointerInButtonRect)/sizeof(pointerInButtonRect[0]); i++ )
+	{
+		pointerInButtonRect[i] = -1;
+	}
+	for( i = 0; i < nbuttonsAutoFire; i++ )
+	{
+		buttonsAutoFireRect[i].w = buttons[i].w * 2;
+		buttonsAutoFireRect[i].h = buttons[i].h * 2;
+		buttonsAutoFireRect[i].x = buttons[i].x - buttons[i].w / 2;
+		buttonsAutoFireRect[i].y = buttons[i].y - buttons[i].h / 2;
 	}
 };
 
