@@ -204,7 +204,13 @@ class DataDownloader extends Thread
 		{
 			try {
 				(new File( outFilesDir )).mkdirs();
-			} catch( SecurityException e ) { };
+				OutputStream out = new FileOutputStream( getOutFilePath(".nomedia") );
+				out.flush();
+				out.close();
+			}
+			catch( SecurityException e ) {}
+			catch( FileNotFoundException e ) {}
+			catch( IOException e ) {};
 		}
 
 		HttpResponse response = null;
