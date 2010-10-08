@@ -92,22 +92,25 @@ static inline int SDL_SetAlpha(SdlCompat_AcceleratedSurface * surface, Uint32 fl
 
 static inline void SdlCompat_ReloadSurfaceToVideoMemory(SdlCompat_AcceleratedSurface * surface, SDL_Surface * src)
 {
-	SDL_DestroyTexture(surface->t);
-	
 	// Allocate accelerated surface even if that means loss of color quality
 	Uint32 format;
 	format = SDL_PIXELFORMAT_RGB565;
 
 	if( src->flags & SDL_SRCCOLORKEY )
 		format = SDL_PIXELFORMAT_RGBA5551;
-	surface->t = SDL_CreateTextureFromSurface(format, src);
+	//surface->t = SDL_CreateTextureFromSurface(format, src);
 	
-	if( ! surface->t )
-	{
-		SDL_SetError("SdlCompat_CreateAcceleratedSurface: Cannot allocate HW texture, W %d H %d format %x surface->flags %x", surface->w, surface->h, format, src->flags );
-		return;
-	}
-
+	int bpp;
+	Uint32 r,g,b,a;
+	SDL_PixelFormatEnumToMasks(format, &bpp, &r, &g, &b, &a);
+	SDL_Surface * formatsurf = SDL_CreateRGBSurface(0, 1, 1, bpp, r, g, b, a);
+	SDL_Surface * converted = SDL_ConvertSurface( src, formatsurf->format, 0 );
+	
+	SDL_UpdateTexture( surface->t, NULL, converted->pixels, converted->pitch );
+	
+	SDL_FreeSurface(converted);
+	SDL_FreeSurface(formatsurf);
+	
 	if( src->flags & SDL_SRCALPHA )
 	{
 		SDL_SetTextureBlendMode( surface->t, SDL_BLENDMODE_BLEND );

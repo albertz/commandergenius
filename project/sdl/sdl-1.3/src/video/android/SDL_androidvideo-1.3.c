@@ -57,6 +57,9 @@ static int ANDROID_GL_MakeCurrent (_THIS, SDL_Window * window, SDL_GLContext con
 static void ANDROID_GL_DeleteContext (_THIS, SDL_GLContext context);
 static void ANDROID_PumpEvents(_THIS);
 
+static int ANDROID_CreateWindow(_THIS, SDL_Window * window);
+static void ANDROID_DestroyWindow(_THIS, SDL_Window * window);
+
 /* ANDROID driver bootstrap functions */
 
 static void ANDROID_DeleteDevice(SDL_VideoDevice *device)
@@ -94,6 +97,9 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->GL_CreateContext = ANDROID_GL_CreateContext;
 	device->GL_MakeCurrent = ANDROID_GL_MakeCurrent;
 	device->GL_DeleteContext = ANDROID_GL_DeleteContext;
+	
+	device->CreateWindow = ANDROID_CreateWindow;
+	device->DestroyWindow = ANDROID_DestroyWindow;
 
 	return device;
 }
@@ -184,3 +190,12 @@ void ANDROID_GL_DeleteContext (_THIS, SDL_GLContext context)
 };
 
 
+SDL_Window * ANDROID_CurrentWindow = NULL;
+int ANDROID_CreateWindow(_THIS, SDL_Window * window)
+{
+	ANDROID_CurrentWindow = window;
+};
+void ANDROID_DestroyWindow(_THIS, SDL_Window * window)
+{
+	ANDROID_CurrentWindow = NULL;
+};

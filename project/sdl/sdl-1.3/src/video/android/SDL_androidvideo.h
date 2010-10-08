@@ -22,6 +22,7 @@
 #ifndef _SDL_androidvideo_h
 #define _SDL_androidvideo_h
 
+#include "SDL_version.h"
 #include "SDL_config.h"
 #include "SDL_video.h"
 
@@ -37,6 +38,10 @@ extern void SDL_ANDROID_VideoContextLost();
 extern void SDL_ANDROID_VideoContextRecreated();
 extern void SDL_ANDROID_processAndroidTrackballDampening();
 extern SDL_VideoDevice *ANDROID_CreateDevice_1_3(int devindex);
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+extern SDL_Window * ANDROID_CurrentWindow;
+#endif
 
 
 #endif /* _SDL_androidvideo_h */
