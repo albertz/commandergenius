@@ -32,5 +32,13 @@ so the data on your TV will lag halfsecond behind the data on the device screen.
   1. Navigating game menus downwards with trackball skips events, that does not happen
      when navigting upwards.
   2. The detail level can be set to WILD by pressing "w" key in gameplay escape menu, expose that through interface.
+  3. Add ENGAGE mode to menu.
 
-9. Ur-Quan Masters: add Russian, Deutsch and Slovak translations: http://wiki.uqm.stack.nl/Translations
+9. Ur-Quan Masters: 
+  1. Add Russian, Deutsch and Slovak translations: http://wiki.uqm.stack.nl/Translations
+  2. Add accelerated GFX (even at the cost of GFX bugs, if Melee will work smoothly).
+  3. Add proper netplay with masterserver and server list instead of "Enter host IP here" dialog.
+
+10. Add an option to keep aspect ratio of screen
+
+11. Add an option for overlay buttons transparency.
