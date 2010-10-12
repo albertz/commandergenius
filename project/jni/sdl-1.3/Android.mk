@@ -2,7 +2,7 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := sdl
+LOCAL_MODULE := $(lastword $(subst /, ,$(LOCAL_PATH)))
 
 ifndef SDL_JAVA_PACKAGE_PATH
 $(error Please define SDL_JAVA_PACKAGE_PATH to the path of your Java package with dots replaced with underscores, for example "com_example_SanAngeles")

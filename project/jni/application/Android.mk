@@ -20,7 +20,7 @@ endif
 # Paths should be on newline so launchConfigure.sh will work properly
 LOCAL_CFLAGS += \
 				$(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
-				-I$(LOCAL_PATH)/../sdl/include \
+				-I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include \
 				-I$(LOCAL_PATH)/../sdl_mixer \
 				-I$(LOCAL_PATH)/../sdl_image \
 				-I$(LOCAL_PATH)/../sdl_ttf \
@@ -47,7 +47,7 @@ ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
 LOCAL_SRC_FILES := dummy.c
 endif
 
-LOCAL_SHARED_LIBRARIES := sdl $(COMPILED_LIBRARIES)
+LOCAL_SHARED_LIBRARIES := sdl-$(SDL_VERSION) $(COMPILED_LIBRARIES)
 
 LOCAL_STATIC_LIBRARIES := stlport
 

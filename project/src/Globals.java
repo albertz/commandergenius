@@ -50,5 +50,5 @@ class Globals {
 }
 
 class LoadLibrary {
-	public LoadLibrary() { System.loadLibrary("sdl"); System.loadLibrary("sdl_mixer"); System.loadLibrary("sdl_image"); };
+	public LoadLibrary() { System.loadLibrary("sdl-1.3"); System.loadLibrary("sdl_mixer"); System.loadLibrary("sdl_image"); };
 }

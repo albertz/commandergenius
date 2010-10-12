@@ -32,7 +32,7 @@ CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -fno-exceptions -fno-rtti -mthumb -Os \
 -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -Wa,--noexecstack -O2 -DNDEBUG -g \
-`grep '[-]I[$][(]LOCAL_PATH[)]/[.][.]/' $LOCAL_PATH/Android.mk | tr '\n' ' ' | sed 's/[\\]//g' | sed \"s@[\$][(]LOCAL_PATH[)]/@$LOCAL_PATH/@g\" | sed 's/[	 ][	 ]*/ /g'`"
+`grep '[-]I[$][(]LOCAL_PATH[)]/[.][.]/' $LOCAL_PATH/Android.mk | tr '\n' ' ' | sed 's/[\\]//g' | sed \"s@[\$][(]LOCAL_PATH[)]/@$LOCAL_PATH/@g\" | sed 's/[	 ][	 ]*/ /g'` | sed 's@[$][(]SDL_VERSION[)]@1.2@'"
 
 LDFLAGS="-nostdlib -Wl,-soname,libapplication.so -Wl,-shared,-Bsymbolic \
 -Wl,--whole-archive  -Wl,--no-whole-archive \

@@ -47,11 +47,11 @@ while test $# -gt 0; do
       echo -I${prefix}/include -D_GNU_SOURCE=1 -D_REENTRANT
       ;;
     --libs)
-      echo -L${exec_prefix} -lsdl
+      echo -L${exec_prefix} -lsdl-1.2
       ;;
     --static-libs)
 #    --libs|--static-libs)
-      echo -L${exec_prefix} -lsdl
+      echo -L${exec_prefix} -lsdl-1.2
       ;;
     *)
       echo "${usage}" 1>&2

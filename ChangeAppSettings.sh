@@ -13,9 +13,6 @@ if [ "$CHANGE_APP_SETTINGS_VERSION" != "$AppSettingVersion" ]; then
 	AUTO=
 fi
 
-LibSdlVersionOld=`readlink project/jni/sdl | grep -o '[0-9][.][0-9]'`
-CompiledLibrariesOld=$CompiledLibraries
-
 var=""
 
 if [ -z "$AUTO" ]; then
@@ -305,7 +302,7 @@ if [ "$MultiABI" = "y" ] ; then
 else
 	MultiABI="armeabi"
 fi
-LibrariesToLoad="System.loadLibrary(\\\"sdl\\\");"
+LibrariesToLoad="System.loadLibrary(\\\"sdl-$LibSdlVersion\\\");"
 for lib in $CompiledLibraries; do
 	LibrariesToLoad="$LibrariesToLoad System.loadLibrary(\\\"$lib\\\");"
 done
@@ -315,12 +312,6 @@ if [ "$CustomBuildScript" = "n" ] ; then
 fi
 
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
-
-echo Creating symlink to libSDL
-if [ "`readlink project/jni/sdl`" '!=' "../sdl/sdl-$LibSdlVersion" ]; then
-	rm -f project/jni/sdl
-	ln -s ../sdl/sdl-$LibSdlVersion project/jni/sdl
-fi
 
 echo Patching project/AndroidManifest.xml
 cat project/AndroidManifest.xml | \
@@ -367,7 +358,8 @@ cat project/jni/Android.mk | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
 	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes^" | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
-	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" > \
+	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \
+	sed "s^SDL_VERSION :=.*^SDL_VERSION := $LibSdlVersion^"  > \
 	project/jni/Android.mk.1
 if [ -n "`diff -w project/jni/Android.mk.1 project/jni/Android.mk`" ] ; then
 	mv -f project/jni/Android.mk.1 project/jni/Android.mk
@@ -377,7 +369,7 @@ fi
 
 echo Patching project/jni/Application.mk
 cat project/jni/Application.mk | \
-	sed "s/APP_MODULES := .*/APP_MODULES := application sdl sdl_main stlport tremor png jpeg freetype $CompiledLibraries/" | \
+	sed "s/APP_MODULES := .*/APP_MODULES := application sdl-$LibSdlVersion sdl_main stlport tremor png jpeg freetype $CompiledLibraries/" | \
 	sed "s/APP_ABI := .*/APP_ABI := $MultiABI/" > \
 	project/jni/Application.mk.1
 if [ -n "`diff -w project/jni/Application.mk.1 project/jni/Application.mk`" ] ; then
@@ -392,22 +384,14 @@ cat project/res/values/strings.xml | \
 	project/res/values/strings.xml.1
 mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
 
-echo Forcing rebuild of specific files
+echo If you change libSDL version you have to clean all files in project/libs/obj
 rm -rf project/libs/*
 for OUT in obj; do
 rm -rf project/$OUT/local/*/objs/sdl_main/* project/$OUT/local/*/libsdl_main.so
-rm -rf project/$OUT/local/*/libsdl.so
-rm -rf project/$OUT/local/*/libstlport.a # Should be re-linked if you're changing toolchain
-rm -rf project/$OUT/local/*/objs/sdl/src/*/android
-rm -rf project/$OUT/local/*/objs/sdl/src/video/SDL_video.o
-rm -rf project/$OUT/local/*/objs/sdl/SDL_renderer_gles.o
-if [ "$LibSdlVersionOld" '!=' "$LibSdlVersion" ]; then
-	# Internal types are different in SDL 1.2 and 1.3, namely SDL_Rect, so all libs using it have to be recompiled
-	rm -rf project/$OUT/local/*/objs/sdl* project/$OUT/local/*/libsdl*
-	rm -rf project/$OUT/local/*/objs/application project/$OUT/local/*/libapplication.so
-fi
-# Do not rebuild libraries that do not need that
-# find project/$OUT/local -name "*.[oa]" -exec touch '{}' \;
+rm -rf project/$OUT/local/*/libsdl-*.so
+rm -rf project/$OUT/local/*/objs/sdl-*/src/*/android
+rm -rf project/$OUT/local/*/objs/sdl-*/src/video/SDL_video.o
+rm -rf project/$OUT/local/*/objs/sdl-*/SDL_renderer_gles.o
 done
 
 echo Done
