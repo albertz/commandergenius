@@ -30,11 +30,37 @@
 #include "SDL_x11video.h"
 #include "../../events/SDL_events_c.h"
 #include "../../events/SDL_mouse_c.h"
+#include "../../events/SDL_touch_c.h"
 
 #include "SDL_timer.h"
 #include "SDL_syswm.h"
 
+#include <stdio.h>
+
+#ifdef SDL_INPUT_LINUXEV
+//Touch Input/event* includes
+#include <linux/input.h>
+#include <fcntl.h>
+#endif
 /*#define DEBUG_XEVENTS*/
+
+/* Check to see if this is a repeated key.
+   (idea shamelessly lifted from GII -- thanks guys! :)
+ */
+static SDL_bool X11_KeyRepeat(Display *display, XEvent *event)
+{
+    XEvent peekevent;
+
+    if (XPending(display)) {
+        XPeekEvent(display, &peekevent);
+        if ((peekevent.type == KeyPress) &&
+            (peekevent.xkey.keycode == event->xkey.keycode) &&
+            ((peekevent.xkey.time-event->xkey.time) < 2)) {
+            return SDL_TRUE;
+        }
+    }
+    return SDL_FALSE;
+}
 
 static void
 X11_DispatchEvent(_THIS)
@@ -64,7 +90,7 @@ X11_DispatchEvent(_THIS)
 
         SDL_VERSION(&wmmsg.version);
         wmmsg.subsystem = SDL_SYSWM_X11;
-        wmmsg.event.xevent = xevent;
+        wmmsg.x11.event = xevent;
         SDL_SendSysWMEvent(&wmmsg);
     }
 
@@ -103,7 +129,6 @@ X11_DispatchEvent(_THIS)
             SDL_SetMouseFocus(data->window);
         }
         break;
-
         /* Losing mouse coverage? */
     case LeaveNotify:{
 #ifdef DEBUG_XEVENTS
@@ -176,14 +201,14 @@ X11_DispatchEvent(_THIS)
     case KeyPress:{
             KeyCode keycode = xevent.xkey.keycode;
             KeySym keysym = NoSymbol;
+            SDL_scancode scancode;
             char text[SDL_TEXTINPUTEVENT_TEXT_SIZE];
             Status status = 0;
 
 #ifdef DEBUG_XEVENTS
             printf("KeyPress (X11 keycode = 0x%X)\n", xevent.xkey.keycode);
 #endif
-            /* FIXME: How do we tell if this was a key repeat? */
-            SDL_SendKeyboardKey(SDL_PRESSED, videodata->key_layout[keycode], SDL_FALSE);
+            SDL_SendKeyboardKey(SDL_PRESSED, videodata->key_layout[keycode]);
 #if 1
             if (videodata->key_layout[keycode] == SDLK_UNKNOWN) {
                 int min_keycode, max_keycode;
@@ -218,7 +243,11 @@ X11_DispatchEvent(_THIS)
 #ifdef DEBUG_XEVENTS
             printf("KeyRelease (X11 keycode = 0x%X)\n", xevent.xkey.keycode);
 #endif
-            SDL_SendKeyboardKey(SDL_RELEASED, videodata->key_layout[keycode], SDL_FALSE);
+            if (X11_KeyRepeat(display, &xevent)) {
+                /* We're about to get a repeated key down, ignore the key up */
+                break;
+            }
+            SDL_SendKeyboardKey(SDL_RELEASED, videodata->key_layout[keycode]);
         }
         break;
 
@@ -473,6 +502,79 @@ X11_PumpEvents(_THIS)
     while (X11_Pending(data->display)) {
         X11_DispatchEvent(_this);
     }
+
+#ifdef SDL_INPUT_LINUXEV
+    /* Process Touch events - TODO When X gets touch support, use that instead*/
+    int i = 0,rd;
+    char name[256];
+    struct input_event ev[64];
+    int size = sizeof (struct input_event);
+
+    for(i = 0;i < SDL_GetNumTouch();++i) {
+	SDL_Touch* touch = SDL_GetTouchIndex(i);
+	if(!touch) printf("Touch %i/%i DNE\n",i,SDL_GetNumTouch());
+	EventTouchData* data;
+	data = (EventTouchData*)(touch->driverdata);
+	if(data == NULL) {
+	  printf("No driver data\n");
+	  continue;
+	}
+	if(data->eventStream <= 0) 
+	    printf("Error: Couldn't open stream\n");
+	rd = read(data->eventStream, ev, size * 64);
+	//printf("Got %i/%i bytes\n",rd,size);
+	if(rd >= size) {
+	    for (i = 0; i < rd / sizeof(struct input_event); i++) {
+		switch (ev[i].type) {
+		case EV_ABS:
+		    //printf("Got position x: %i!\n",data->x);
+		    switch (ev[i].code) {
+			case ABS_X:
+			    data->x = ev[i].value;
+			    break;
+			case ABS_Y:
+			    data->y = ev[i].value;
+			    break;
+			case ABS_PRESSURE:
+			    data->pressure = ev[i].value;
+			    if(data->pressure < 0) data->pressure = 0;
+			    break;
+			case ABS_MISC:
+			    if(ev[i].value == 0)
+			        data->up = SDL_TRUE;			    
+			    break;
+			}
+		    break;
+		case EV_MSC:
+		    if(ev[i].code == MSC_SERIAL)
+			data->finger = ev[i].value;
+		    break;
+		case EV_SYN:
+		  //printf("Id: %i\n",touch->id); 
+		  if(data->up) {
+		      SDL_SendFingerDown(touch->id,data->finger,
+			  	       SDL_FALSE,data->x,data->y,
+				       data->pressure);		    
+		  }
+		  else if(data->x >= 0 || data->y >= 0)
+		    SDL_SendTouchMotion(touch->id,data->finger, 
+					SDL_FALSE,data->x,data->y,
+					data->pressure);
+		  
+		    //printf("Synched: %i tx: %i, ty: %i\n",
+		    //	   data->finger,data->x,data->y);
+		  data->x = -1;
+		  data->y = -1;
+		  data->pressure = -1;
+		  data->finger = 0;
+		  data->up = SDL_FALSE;
+		    
+		  break;		
+		}
+	    }
+	}
+    }
+#endif
 }
 
 /* This is so wrong it hurts */

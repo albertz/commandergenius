@@ -566,7 +566,7 @@ SDL_ResetKeyboard(void)
 
     for (scancode = 0; scancode < SDL_NUM_SCANCODES; ++scancode) {
         if (keyboard->keystate[scancode] == SDL_PRESSED) {
-            SDL_SendKeyboardKey(SDL_RELEASED, scancode, SDL_FALSE);
+            SDL_SendKeyboardKey(SDL_RELEASED, scancode);
         }
     }
 }
@@ -612,6 +612,14 @@ SDL_SetKeyboardFocus(SDL_Window * window)
     if (keyboard->focus && keyboard->focus != window) {
         SDL_SendWindowEvent(keyboard->focus, SDL_WINDOWEVENT_FOCUS_LOST,
                             0, 0);
+
+        /* Ensures IME compositions are committed */
+        if (SDL_EventState(SDL_TEXTINPUT, SDL_QUERY)) {
+            SDL_VideoDevice *video = SDL_GetVideoDevice();
+            if (video && video->StopTextInput) {
+                video->StopTextInput(video);
+            }
+        }
     }
 
     keyboard->focus = window;
@@ -621,18 +629,22 @@ SDL_SetKeyboardFocus(SDL_Window * window)
                             0, 0);
 
         if (SDL_EventState(SDL_TEXTINPUT, SDL_QUERY)) {
-            SDL_StartTextInput();
+            SDL_VideoDevice *video = SDL_GetVideoDevice();
+            if (video && video->StartTextInput) {
+                video->StartTextInput(video);
+            }
         }
     }
 }
 
 int
-SDL_SendKeyboardKey(Uint8 state, SDL_scancode scancode, SDL_bool repeat)
+SDL_SendKeyboardKey(Uint8 state, SDL_scancode scancode)
 {
     SDL_Keyboard *keyboard = &SDL_keyboard;
     int posted;
     Uint16 modstate;
     Uint32 type;
+    Uint8 repeat;
 
     if (!scancode) {
         return 0;
@@ -732,6 +744,7 @@ SDL_SendKeyboardKey(Uint8 state, SDL_scancode scancode, SDL_bool repeat)
     }
 
     /* Drop events that don't change state */
+    repeat = (state && keyboard->keystate[scancode]);
     if (keyboard->keystate[scancode] == state && !repeat) {
 #if 0
         printf("Keyboard event didn't change state - dropped!\n");
@@ -748,7 +761,7 @@ SDL_SendKeyboardKey(Uint8 state, SDL_scancode scancode, SDL_bool repeat)
         SDL_Event event;
         event.key.type = type;
         event.key.state = state;
-        event.key.repeat = repeat ? 1 : 0;
+        event.key.repeat = repeat;
         event.key.keysym.scancode = scancode;
         event.key.keysym.sym = keyboard->keymap[scancode];
         event.key.keysym.mod = modstate;
@@ -766,7 +779,7 @@ SDL_SendKeyboardText(const char *text)
     int posted;
 
     /* Don't post text events for unprintable characters */
-    if (*text < ' ' || *text == 127) {
+    if ((unsigned char)*text < ' ' || *text == 127) {
         return 0;
     }
 
@@ -776,7 +789,7 @@ SDL_SendKeyboardText(const char *text)
         SDL_Event event;
         event.text.type = SDL_TEXTINPUT;
         event.text.windowID = keyboard->focus ? keyboard->focus->id : 0;
-        SDL_strlcpy(event.text.text, text, SDL_arraysize(event.text.text));
+        SDL_utf8strlcpy(event.text.text, text, SDL_arraysize(event.text.text));
         event.text.windowID = keyboard->focus ? keyboard->focus->id : 0;
         posted = (SDL_PushEvent(&event) > 0);
     }
@@ -797,7 +810,7 @@ SDL_SendEditingText(const char *text, int start, int length)
         event.edit.windowID = keyboard->focus ? keyboard->focus->id : 0;
         event.edit.start = start;
         event.edit.length = length;
-        SDL_strlcpy(event.edit.text, text, SDL_arraysize(event.edit.text));
+        SDL_utf8strlcpy(event.edit.text, text, SDL_arraysize(event.edit.text));
         posted = (SDL_PushEvent(&event) > 0);
     }
     return (posted);

@@ -39,6 +39,7 @@ SDL_X11_SYM(int,XClearWindow,(Display* a,Window b),(a,b),return)
 SDL_X11_SYM(int,XCloseDisplay,(Display* a),(a),return)
 SDL_X11_SYM(int,XConvertSelection,(Display* a,Atom b,Atom c,Atom d,Window e,Time f),(a,b,c,d,e,f),return)
 SDL_X11_SYM(int,XCopyArea,(Display* a,Drawable b,Drawable c,GC d,int e,int f,unsigned int g,unsigned int h,int i,int j),(a,b,c,d,e,f,g,h,i,j),return)
+SDL_X11_SYM(Pixmap,XCreateBitmapFromData,(Display *dpy,Drawable d,_Xconst char *data,unsigned int width,unsigned int height),(dpy,d,data,width,height),return)
 SDL_X11_SYM(Colormap,XCreateColormap,(Display* a,Window b,Visual* c,int d),(a,b,c,d),return)
 SDL_X11_SYM(Cursor,XCreatePixmapCursor,(Display* a,Pixmap b,Pixmap c,XColor* d,XColor* e,unsigned int f,unsigned int g),(a,b,c,d,e,f,g),return)
 SDL_X11_SYM(GC,XCreateGC,(Display* a,Drawable b,unsigned long c,XGCValues* d),(a,b,c,d),return)
@@ -156,6 +157,10 @@ SDL_X11_SYM(SDL_X11_XSynchronizeRetType,XSynchronize,(Display* a,Bool b),(a,b),r
 SDL_X11_SYM(SDL_X11_XESetWireToEventRetType,XESetWireToEvent,(Display* a,int b,SDL_X11_XESetWireToEventRetType c),(a,b,c),return)
 SDL_X11_SYM(SDL_X11_XESetEventToWireRetType,XESetEventToWire,(Display* a,int b,SDL_X11_XESetEventToWireRetType c),(a,b,c),return)
 SDL_X11_SYM(XExtensionErrorHandler,XSetExtensionErrorHandler,(XExtensionErrorHandler a),(a),return)
+SDL_X11_SYM(int,XFillRectangle,(Display *dpy,Drawable d,GC gc,int x,int y,unsigned int width,unsigned int height),(dpy,d,gc,x,y,width,height),return)
+SDL_X11_SYM(int,XSetBackground,(Display *dpy,GC gc,unsigned long background),(dpy,gc,background),return)
+SDL_X11_SYM(Status,XInitImage,(XImage *image),(image),return)
+SDL_X11_SYM(int,XSetClipMask,(Display *dpy,GC gc,Pixmap pixmap),(dpy,gc,pixmap),return)
 
 #if NeedWidePrototypes
 SDL_X11_SYM(KeySym,XKeycodeToKeysym,(Display* a,unsigned int b,int c),(a,b,c),return)
@@ -182,6 +187,7 @@ SDL_X11_SYM(Status,XShmAttach,(Display* a,XShmSegmentInfo* b),(a,b),return)
 SDL_X11_SYM(Status,XShmDetach,(Display* a,XShmSegmentInfo* b),(a,b),return)
 SDL_X11_SYM(Status,XShmPutImage,(Display* a,Drawable b,GC c,XImage* d,int e,int f,int g,int h,unsigned int i,unsigned int j,Bool k),(a,b,c,d,e,f,g,h,i,j,k),return)
 SDL_X11_SYM(XImage*,XShmCreateImage,(Display* a,Visual* b,unsigned int c,int d,char* e,XShmSegmentInfo* f,unsigned int g,unsigned int h),(a,b,c,d,e,f,g,h),return)
+SDL_X11_SYM(Pixmap,XShmCreatePixmap,(Display *a,Drawable b,char* c,XShmSegmentInfo* d, unsigned int e, unsigned int f, unsigned int g),(a,b,c,d,e,f,g),return)
 SDL_X11_SYM(Bool,XShmQueryExtension,(Display* a),(a),return)
 #endif
 
@@ -235,6 +241,47 @@ SDL_X11_MODULE(XSS)
 SDL_X11_SYM(Bool,XScreenSaverQueryExtension,(Display *dpy,int *event_base,int *error_base),(dpy,event_base,error_base),return)
 SDL_X11_SYM(Status,XScreenSaverQueryVersion,(Display *dpy,int *major_versionp,int *minor_versionp),(dpy,major_versionp,minor_versionp),return)
 SDL_X11_SYM(void,XScreenSaverSuspend,(Display *dpy,Bool suspend),(dpy,suspend),return)
+#endif
+
+/* XRender support */
+#if SDL_VIDEO_DRIVER_X11_XRENDER
+SDL_X11_MODULE(XRENDER)
+SDL_X11_SYM(Bool,XRenderQueryExtension,(Display *dpy,int *event_base,int *error_base),(dpy,event_base,error_base),return)
+SDL_X11_SYM(Bool,XRenderQueryVersion,(Display *dpy,int *major,int *minor),(dpy,major,minor),return)
+SDL_X11_SYM(XRenderPictFormat*,XRenderFindVisualFormat,(Display *dpy,_Xconst Visual *visual),(dpy,visual),return)
+SDL_X11_SYM(XRenderPictFormat*,XRenderFindStandardFormat,(Display *dpy,int format),(dpy,format),return)
+SDL_X11_SYM(XRenderPictFormat*,XRenderFindFormat,(Display *dpy,unsigned long mask,_Xconst XRenderPictFormat* templ,int count),(dpy,mask,templ,count),return)
+SDL_X11_SYM(Picture,XRenderCreatePicture,(Display *dpy,Drawable drawable,_Xconst XRenderPictFormat* format,unsigned long valuemask,_Xconst XRenderPictureAttributes* attributes),(dpy,drawable,format,valuemask,attributes),return)
+SDL_X11_SYM(void,XRenderFreePicture,(Display *dpy,Picture picture),(dpy,picture),return)
+SDL_X11_SYM(void,XRenderChangePicture,(Display *dpy,Picture picture,unsigned long valuemask,_Xconst XRenderPictureAttributes* attributes),(dpy,picture,valuemask,attributes),return)
+SDL_X11_SYM(void,XRenderComposite,(Display *dpy,int op,Picture src,Picture mask,Picture dst,int src_x,int src_y,int mask_x,int mask_y,int dst_x,int dst_y,unsigned int width,unsigned int height),(dpy,op,src,mask,dst,src_x,src_y,mask_x,mask_y,dst_x,dst_y,width,height),return)
+SDL_X11_SYM(Picture,XRenderCreateSolidFill,(Display *dpy,const XRenderColor *color),(dpy,color),return)
+SDL_X11_SYM(void,XRenderSetPictureTransform,(Display *dpy,Picture picture,XTransform *transform),(dpy,picture,transform),return)
+SDL_X11_SYM(void,XRenderFillRectangle,(Display *dpy,int op,Picture dst,_Xconst XRenderColor *color,int x,int y,unsigned int width,unsigned int height),(dpy,op,dst,color,x,y,width,height),return)
+SDL_X11_SYM(void,XRenderFillRectangles,(Display *dpy,int op,Picture dst,_Xconst XRenderColor *color,_Xconst XRectangle *rectangles,int n_rects),(dpy,op,dst,color,rectangles,n_rects),return)
+SDL_X11_SYM(void,XRenderSetPictureFilter,(Display *dpy,Picture picture,const char *filter,XFixed *params,int nparams),(dpy,picture,filter,params,nparams),return)
+#endif
+
+#ifdef SDL_VIDEO_DRIVER_X11_XDAMAGE
+SDL_X11_MODULE(XDAMAGE)
+SDL_X11_SYM(Bool,XDamageQueryExtension,(Display *dpy,int *event_base_return,int *error_base_return),(dpy,event_base_return,error_base_return),return)
+SDL_X11_SYM(Status,XDamageQueryVersion,(Display *dpy,int *major,int *minor),(dpy,major,minor),return)
+SDL_X11_SYM(Damage,XDamageCreate,(Display *dpy,Drawable d,int level),(dpy,d,level),return)
+SDL_X11_SYM(void,XDamageSubtract,(Display *dpy,Damage damage,XserverRegion repair,XserverRegion parts),(dpy,damage,repair,parts),return)
+SDL_X11_SYM(void,XDamageDestroy,(Display *dpy,Damage damage),(dpy,damage),return)
+#endif
+
+#ifdef SDL_VIDEO_DRIVER_X11_XFIXES
+SDL_X11_MODULE(XFIXES)
+SDL_X11_SYM(Bool,XFixesQueryExtension,(Display *dpy,int *event_base,int *error_base),(dpy,event_base,error_base),return)
+SDL_X11_SYM(Status,XFixesQueryVersion,(Display *dpy,int *major,int *minor),(dpy,major,minor),return)
+SDL_X11_SYM(void,XFixesSetGCClipRegion,(Display *dpy,GC gc,int clip_x,int clip_y,XserverRegion region),(dpy,gc,clip_x,clip_y,region),return)
+SDL_X11_SYM(void,XFixesSetPictureClipRegion,(Display *dpy,XID picture,int clip_x,int clip_y,XserverRegion region),(dpy,picture,clip_x,clip_y,region),return)
+#endif
+
+#if SDL_VIDEO_DRIVER_X11_XSHAPE
+SDL_X11_MODULE(XSHAPE)
+SDL_X11_SYM(void,XShapeCombineMask,(Display *dpy,Window dest,int dest_kind,int x_off,int y_off,Pixmap src,int op),(dpy,dest,dest_kind,x_off,y_off,src,op),)
 #endif
 
 /* *INDENT-ON* */

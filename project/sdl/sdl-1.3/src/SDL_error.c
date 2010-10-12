@@ -30,10 +30,11 @@
 #include <android/log.h>
 #endif
 
+/*#define DEBUG_ERROR*/
+
 /* Routine to get the thread-specific error variable */
 #if SDL_THREADS_DISABLED
-/* !!! FIXME: what does this comment mean? Victim of Search and Replace? */
-/* The  SDL_arraysize(The ),default (non-thread-safe) global error variable */
+/* The default (non-thread-safe) global error variable */
 static SDL_error SDL_global_error;
 #define SDL_GetErrBuf()	(&SDL_global_error)
 #else
@@ -204,12 +205,12 @@ SDL_GetErrorMsg(char *errstr, unsigned int maxlen)
 }
 
 /* Available for backwards compatibility */
-char *
+const char *
 SDL_GetError(void)
 {
     static char errmsg[SDL_ERRBUFIZE];
 
-    return ((char *) SDL_GetErrorMsg(errmsg, SDL_ERRBUFIZE));
+    return SDL_GetErrorMsg(errmsg, SDL_ERRBUFIZE);
 }
 
 void

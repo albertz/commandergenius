@@ -192,6 +192,7 @@ Cocoa_PumpEvents(_THIS)
         if ( event == nil ) {
             break;
         }
+		
         switch ([event type]) {
         case NSLeftMouseDown:
         case NSOtherMouseDown:

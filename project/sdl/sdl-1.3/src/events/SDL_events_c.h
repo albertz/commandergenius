@@ -26,8 +26,9 @@
 #include "SDL_thread.h"
 #include "SDL_mouse_c.h"
 #include "SDL_keyboard_c.h"
+#include "SDL_touch_c.h"
 #include "SDL_windowevents_c.h"
-
+#include "SDL_gesture_c.h"
 /* Start and stop the event processing loop */
 extern int SDL_StartEventLoop(Uint32 flags);
 extern void SDL_StopEventLoop(void);

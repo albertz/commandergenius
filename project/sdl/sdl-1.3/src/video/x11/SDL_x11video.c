@@ -25,11 +25,13 @@
 
 #include "SDL_video.h"
 #include "SDL_mouse.h"
+#include "SDL_eventtouch.h" 
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 
 #include "SDL_x11video.h"
 #include "SDL_x11render.h"
+#include "SDL_x11shape.h"
 
 #if SDL_VIDEO_DRIVER_PANDORA
 #include "SDL_x11opengles.h"
@@ -204,6 +206,9 @@ X11_CreateDevice(int devindex)
     device->SetWindowGrab = X11_SetWindowGrab;
     device->DestroyWindow = X11_DestroyWindow;
     device->GetWindowWMInfo = X11_GetWindowWMInfo;
+    device->shape_driver.CreateShaper = X11_CreateShaper;
+    device->shape_driver.SetWindowShape = X11_SetWindowShape;
+    device->shape_driver.ResizeWindowShape = X11_ResizeWindowShape;
 #ifdef SDL_VIDEO_OPENGL_GLX
     device->GL_LoadLibrary = X11_GL_LoadLibrary;
     device->GL_GetProcAddress = X11_GL_GetProcAddress;
@@ -354,6 +359,7 @@ X11_VideoInit(_THIS)
     }
     X11_InitMouse(_this);
 
+    X11_InitTouch(_this);
     return 0;
 }
 
@@ -374,6 +380,7 @@ X11_VideoQuit(_THIS)
     X11_QuitModes(_this);
     X11_QuitKeyboard(_this);
     X11_QuitMouse(_this);
+    X11_QuitTouch(_this);
 }
 
 SDL_bool

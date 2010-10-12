@@ -43,12 +43,14 @@
 
 #if SDL_VIDEO_OPENGL
 #include "SDL_opengl.h"
+#endif /* SDL_VIDEO_OPENGL */
+
+#include "SDL_syswm.h"
 
 /* On Windows, windows.h defines CreateWindow */
 #ifdef CreateWindow
 #undef CreateWindow
 #endif
-#endif /* SDL_VIDEO_OPENGL */
 
 /* Available video drivers */
 static VideoBootStrap *bootstrap[] = {
@@ -69,9 +71,6 @@ static VideoBootStrap *bootstrap[] = {
 #endif
 #if SDL_VIDEO_DRIVER_SVGALIB
     &SVGALIB_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_GAPI
-    &GAPI_bootstrap,
 #endif
 #if SDL_VIDEO_DRIVER_WIN32
     &WIN32_bootstrap,
@@ -105,6 +104,9 @@ static VideoBootStrap *bootstrap[] = {
 #endif
 #if SDL_VIDEO_DRIVER_PANDORA
     &PND_bootstrap,
+#endif
+#if SDL_VIDEO_DRIVER_ANDROID
+    &Android_bootstrap,
 #endif
     NULL
 };
@@ -1104,7 +1106,7 @@ SDL_SetWindowTitle(SDL_Window * window, const char *title)
     if (window->title) {
         SDL_free(window->title);
     }
-    if (title) {
+    if (title && *title) {
         window->title = SDL_strdup(title);
     } else {
         window->title = NULL;
@@ -1118,9 +1120,9 @@ SDL_SetWindowTitle(SDL_Window * window, const char *title)
 const char *
 SDL_GetWindowTitle(SDL_Window * window)
 {
-    CHECK_WINDOW_MAGIC(window, NULL);
+    CHECK_WINDOW_MAGIC(window, "");
 
-    return window->title;
+    return window->title ? window->title : "";
 }
 
 void
@@ -1453,7 +1455,6 @@ SDL_DestroyWindow(SDL_Window * window)
     SDL_VideoDisplay *display;
 
     CHECK_WINDOW_MAGIC(window, );
-    window->magic = NULL;
 
     if (window->title) {
         SDL_free(window->title);
@@ -1471,6 +1472,9 @@ SDL_DestroyWindow(SDL_Window * window)
     if (window->flags & SDL_WINDOW_OPENGL) {
         SDL_GL_UnloadLibrary();
     }
+
+    /* Now invalidate magic */
+    window->magic = NULL;
 
     /* Unlink the window from the list */
     display = window->display;
@@ -3561,6 +3565,11 @@ SDL_bool
 SDL_GetWindowWMInfo(SDL_Window * window, struct SDL_SysWMinfo *info)
 {
     CHECK_WINDOW_MAGIC(window, SDL_FALSE);
+
+    if (!info) {
+        return SDL_FALSE;
+    }
+    info->subsystem = SDL_SYSWM_UNKNOWN;
 
     if (!_this->GetWindowWMInfo) {
         return SDL_FALSE;

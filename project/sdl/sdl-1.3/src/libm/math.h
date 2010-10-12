@@ -24,6 +24,16 @@
 
 /* Math routines from uClibc: http://www.uclibc.org */
 
+#ifdef HAVE_ATAN
+#define atan            SDL_uclibc_atan
+#else
+#define atan            SDL_atan
+#endif
+
+#ifndef HAVE_ATAN2
+#define __ieee754_atan2 SDL_atan2
+#endif
+
 #ifdef HAVE_COPYSIGN
 #define copysign        SDL_uclibc_copysign
 #else

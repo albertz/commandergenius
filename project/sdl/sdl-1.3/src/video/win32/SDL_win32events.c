@@ -20,21 +20,19 @@
     slouken@libsdl.org
 */
 
-#if (_WIN32_WINNT < 0x0501)
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501
-#endif
-
 #include "SDL_config.h"
 
 #include "SDL_win32video.h"
+#include "SDL_win32shape.h"
 #include "SDL_syswm.h"
 #include "SDL_vkeys.h"
 #include "../../events/SDL_events_c.h"
 
+
+
 /*#define WMMSG_DEBUG*/
 #ifdef WMMSG_DEBUG
-#include <stdio.h>
+#include <stdio.h>	
 #include "wmmsg.h"
 #endif
 
@@ -56,6 +54,12 @@
 #endif
 #ifndef WM_INPUT
 #define WM_INPUT 0x00ff
+#endif
+#ifndef WM_GESTURE
+#define WM_GESTURE 0x0119
+#endif
+#ifndef WM_TOUCH
+#define WM_TOUCH 0x0240
 #endif
 
 static WPARAM
@@ -109,10 +113,11 @@ WIN_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         SDL_SysWMmsg wmmsg;
 
         SDL_VERSION(&wmmsg.version);
-        wmmsg.hwnd = hwnd;
-        wmmsg.msg = msg;
-        wmmsg.wParam = wParam;
-        wmmsg.lParam = lParam;
+        wmmsg.subsystem = SDL_SYSWM_WINDOWS;
+        wmmsg.win.hwnd = hwnd;
+        wmmsg.win.msg = msg;
+        wmmsg.win.wParam = wParam;
+        wmmsg.win.lParam = lParam;
         SDL_SendSysWMEvent(&wmmsg);
     }
 
@@ -121,9 +126,10 @@ WIN_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     if (!data) {
         return CallWindowProc(DefWindowProc, hwnd, msg, wParam, lParam);
     }
+
 #ifdef WMMSG_DEBUG
-    {
-        FILE *log = fopen("wmmsg.txt", "a");
+    {		
+        FILE *log = fopen("wmmsg.txt", "a");		
         fprintf(log, "Received windows message: %p ", hwnd);
         if (msg > MAX_WMMSG) {
             fprintf(log, "%d", msg);
@@ -133,8 +139,10 @@ WIN_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         fprintf(log, " -- 0x%X, 0x%X\n", wParam, lParam);
         fclose(log);
     }
-
 #endif
+
+    if (IME_HandleMessage(hwnd, msg, wParam, &lParam, data->videodata))
+        return 0;
 
     switch (msg) {
 
@@ -184,6 +192,22 @@ WIN_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
 
 	case WM_MOUSEMOVE:
+#ifdef _WIN32_WCE
+	/* transform coords for VGA, WVGA... */
+	{
+	    SDL_VideoData *videodata = data->videodata;
+	    if(videodata->CoordTransform &&
+		(videodata->render == RENDER_GAPI || videodata->render == RENDER_RAW))
+	    {
+		POINT pt;
+		pt.x = LOWORD(lParam);
+		pt.y = HIWORD(lParam);
+		videodata->CoordTransform(data->window, &pt);
+    		SDL_SendMouseMotion(data->window, 0, pt.x, pt.y);
+		break;
+	    }
+	}
+#endif
         SDL_SendMouseMotion(data->window, 0, LOWORD(lParam), HIWORD(lParam));
         break;
 
@@ -205,14 +229,6 @@ WIN_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
         {
-            SDL_bool repeat;
-
-            if (lParam & REPEATED_KEYMASK) {
-                repeat = SDL_TRUE;
-            } else {
-                repeat = SDL_FALSE;
-            }
-
             wParam = RemapVKEY(wParam, lParam);
             switch (wParam) {
             case VK_CONTROL:
@@ -250,8 +266,7 @@ WIN_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             if (wParam < 256) {
                 SDL_SendKeyboardKey(SDL_PRESSED,
-                                    data->videodata->key_layout[wParam],
-                                    repeat);
+                                    data->videodata->key_layout[wParam]);
             }
         }
         returnCode = 0;
@@ -301,13 +316,11 @@ WIN_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 && SDL_GetKeyboardState(NULL)[SDL_SCANCODE_PRINTSCREEN] ==
                 SDL_RELEASED) {
                 SDL_SendKeyboardKey(SDL_PRESSED,
-                                    data->videodata->key_layout[wParam],
-                                    SDL_FALSE);
+                                    data->videodata->key_layout[wParam]);
             }
             if (wParam < 256) {
                 SDL_SendKeyboardKey(SDL_RELEASED,
-                                    data->videodata->key_layout[wParam],
-                                    SDL_FALSE);
+                                    data->videodata->key_layout[wParam]);
             }
         }
         returnCode = 0;
@@ -353,6 +366,8 @@ WIN_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             BOOL menu;
 
             /* If we allow resizing, let the resize happen naturally */
+            if(SDL_IsShapedWindow(data->window))
+                Win32_ResizeWindowShape(data->window);
             if (SDL_GetWindowFlags(data->window) & SDL_WINDOW_RESIZABLE) {
                 returnCode = 0;
                 break;
@@ -504,7 +519,42 @@ WIN_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         returnCode = 0;
         break;
-    }
+	case WM_TOUCH:
+		{
+			//printf("Got Touch Event!\n");
+    
+#ifdef WMMSG_DEBUG
+			FILE *log = fopen("wmmsg.txt", "a");
+			fprintf(log, "Received Touch Message: %p ", hwnd);
+			if (msg > MAX_WMMSG) {
+				fprintf(log, "%d", msg);
+			} else {
+				fprintf(log, "%s", wmtab[msg]);
+			}
+			fprintf(log, "WM_TOUCH = %d -- 0x%X, 0x%X\n",msg, wParam, lParam);
+			fclose(log);
+#endif
+    
+		}
+		break;
+	case WM_GESTURE:
+		{
+			//printf("Got Touch Event!\n");
+    
+#ifdef WMMSG_DEBUG
+			FILE *log = fopen("wmmsg.txt", "a");
+			fprintf(log, "Received Gesture Message: %p ", hwnd);
+			if (msg > MAX_WMMSG) {
+				fprintf(log, "%d", msg);
+			} else {
+				fprintf(log, "%s", wmtab[msg]);
+			}
+			fprintf(log, "WM_GESTURE = %d -- 0x%X, 0x%X\n",msg, wParam, lParam);
+			fclose(log);
+#endif
+		}
+		break;		
+	}
 
     /* If there's a window proc, assume it's going to handle messages */
     if (data->wndproc) {
@@ -564,7 +614,7 @@ SDL_RegisterApp(char *name, Uint32 style, void *hInst)
     class.hbrBackground = NULL;
     class.hInstance = SDL_Instance;
     class.style = SDL_Appstyle;
-    class.lpfnWndProc = DefWindowProc;
+    class.lpfnWndProc = WIN_WindowProc;
     class.cbWndExtra = 0;
     class.cbClsExtra = 0;
     if (!RegisterClass(&class)) {

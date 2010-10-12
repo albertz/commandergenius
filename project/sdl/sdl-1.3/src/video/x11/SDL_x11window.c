@@ -29,6 +29,7 @@
 #include "SDL_x11video.h"
 #include "SDL_x11mouse.h"
 #include "SDL_x11gamma.h"
+#include "SDL_x11shape.h"
 #include "../Xext/extensions/StdCmap.h"
 
 #ifdef SDL_VIDEO_DRIVER_PANDORA
@@ -94,9 +95,15 @@ X11_GetDisplaySize(_THIS, SDL_Window * window, int *w, int *h)
         (SDL_DisplayData *) window->display->driverdata;
     XWindowAttributes attr;
 
-    XGetWindowAttributes(data->display, RootWindow(data->display,
-                                                   displaydata->screen),
-                         &attr);
+    XGetWindowAttributes(data->display, RootWindow(data->display, displaydata->screen), &attr);
+    if (window->flags & SDL_WINDOW_FULLSCREEN) {
+        /* The bounds when this window is visible is the fullscreen mode */
+        SDL_DisplayMode fullscreen_mode;
+        if (SDL_GetWindowDisplayMode(window, &fullscreen_mode) == 0) {
+            attr.width = fullscreen_mode.w;
+            attr.height = fullscreen_mode.h;
+        }
+    }
     if (w) {
         *w = attr.width;
     }
@@ -876,7 +883,7 @@ X11_SetWindowIcon(_THIS, SDL_Window * window, SDL_Surface * icon)
 
         /* Set the _NET_WM_ICON property */
         propsize = 2 + (icon->w * icon->h);
-        propdata = SDL_malloc(propsize * sizeof(Uint32));
+        propdata = SDL_malloc(propsize * sizeof(long));
         if (propdata) {
             int x, y;
             Uint32 *src;
@@ -935,6 +942,8 @@ X11_SetWindowSize(_THIS, SDL_Window * window)
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
     Display *display = data->videodata->display;
 
+    if(SDL_IsShapedWindow(window))
+        X11_ResizeWindowShape(window);
     XResizeWindow(display, data->xwindow, window->w, window->h);
 }
 
@@ -1116,8 +1125,8 @@ X11_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
     if (info->version.major == SDL_MAJOR_VERSION &&
         info->version.minor == SDL_MINOR_VERSION) {
         info->subsystem = SDL_SYSWM_X11;
-        info->info.x11.display = display;
-        info->info.x11.window = data->xwindow;
+        info->x11.display = display;
+        info->x11.window = data->xwindow;
         return SDL_TRUE;
     } else {
         SDL_SetError("Application not compiled with SDL %d.%d\n",
