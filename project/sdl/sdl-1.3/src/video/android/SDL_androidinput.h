@@ -71,7 +71,7 @@ static inline SDL_scancode GetKeysym(SDL_scancode scancode, SDL_keysym *keysym)
 	return scancode;
 }
 
-#define SDL_SendKeyboardKey(X, Y) SDL_SendKeyboardKey(X, Y, SDL_FALSE)
+//#define SDL_SendKeyboardKey(X, Y, Z) SDL_SendKeyboardKey(X, Y)
 
 #else
 

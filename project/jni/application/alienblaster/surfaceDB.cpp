@@ -125,6 +125,7 @@ SdlCompat_AcceleratedSurface *SurfaceDB::getSurface( string fn ) {
 
 void SurfaceDB::reloadAllSurfacesToVideoMemory()
 {
+	__android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", "Reloading all video surfaces" );
 	for( StringSurfaceMap::iterator it = surfaceDB.begin(); it != surfaceDB.end(); it++ )
 	{
 		SdlCompat_ReloadSurfaceToVideoMemory( it->second.first, loadSurfaceInternal( it->first, it->second.second ) );

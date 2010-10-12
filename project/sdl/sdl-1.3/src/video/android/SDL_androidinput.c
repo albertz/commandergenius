@@ -30,11 +30,16 @@
 #include "SDL_config.h"
 
 #include "SDL_version.h"
+#if SDL_VERSION_ATLEAST(1,3,0)
+#include "SDL_touch.h"
+#include "../../events/SDL_touch_c.h"
+#endif
 
 #include "../SDL_sysvideo.h"
 #include "SDL_androidvideo.h"
 #include "SDL_androidinput.h"
 #include "jniwrapperstuff.h"
+
 
 SDLKey SDL_android_keymap[KEYCODE_LAST+1];
 
@@ -76,6 +81,15 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 
 	if( isMultitouchUsed )
 	{
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+		// Use nifty SDL 1.3 multitouch API
+		if( action == MOUSE_MOVE )
+			SDL_SendTouchMotion(0, pointerId, 0, x, y, force*radius / 16);
+		else
+			SDL_SendFingerDown(0, pointerId, action == MOUSE_DOWN ? 1 : 0, x, y, force*radius / 16);
+#endif
+
 		if( CurrentJoysticks[pointerId] )
 		{
 			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 0, x);
@@ -185,6 +199,24 @@ void ANDROID_InitOSKeymap()
   SDLKey defaultKeymap[SDL_NUM_SCANCODES];
   SDL_GetDefaultKeymap(defaultKeymap);
   SDL_SetKeymap(0, defaultKeymap, SDL_NUM_SCANCODES);
+
+  SDL_Touch touch;
+  memset( &touch, 0, sizeof(touch) );
+  touch.x_min = touch.y_min = touch.pressure_min = 0.0f;
+  touch.pressure_max = 1000000;
+  touch.x_max = SDL_ANDROID_sWindowWidth;
+  touch.y_max = SDL_ANDROID_sWindowHeight;
+
+  // These constants are hardcoded inside SDL_touch.c, which makes no sense for me.
+  touch.xres = touch.yres = 32768;
+  touch.native_xres = touch.native_yres = 32768.0f;
+
+  touch.pressureres = 1;
+  touch.native_pressureres = 1.0f;
+  touch.id = 0;
+
+  SDL_AddTouch(&touch, "Android touch screen");
+
 #endif
 
   // TODO: keys are mapped rather randomly

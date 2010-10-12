@@ -155,6 +155,8 @@
 #define HAVE_SIN 1
 #define HAVE_SINF 1
 #define HAVE_SQRT 1
+#define HAVE_ATAN 1
+#define HAVE_ATAN2 1
 #define HAVE_SYSCONF 1
 #undef HAVE_SYSCTLBYNAME
 #undef SDL_ALTIVEC_BLITTERS

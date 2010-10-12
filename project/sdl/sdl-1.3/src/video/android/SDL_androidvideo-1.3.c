@@ -39,6 +39,8 @@
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
+#include "SDL_touch.h"
+#include "../../events/SDL_touch_c.h"
 
 #include "SDL_androidvideo.h"
 
@@ -194,6 +196,7 @@ SDL_Window * ANDROID_CurrentWindow = NULL;
 int ANDROID_CreateWindow(_THIS, SDL_Window * window)
 {
 	ANDROID_CurrentWindow = window;
+	SDL_SetTouchFocus(0, window);
 };
 void ANDROID_DestroyWindow(_THIS, SDL_Window * window)
 {

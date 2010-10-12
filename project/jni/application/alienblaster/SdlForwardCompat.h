@@ -105,8 +105,19 @@ static inline void SdlCompat_ReloadSurfaceToVideoMemory(SdlCompat_AcceleratedSur
 	SDL_PixelFormatEnumToMasks(format, &bpp, &r, &g, &b, &a);
 	SDL_Surface * formatsurf = SDL_CreateRGBSurface(0, 1, 1, bpp, r, g, b, a);
 	SDL_Surface * converted = SDL_ConvertSurface( src, formatsurf->format, 0 );
-	
+
+	SDL_LockSurface(converted);
+
+	// debug
+	/*
+	for( int x=0; x<converted->w; x++ )
+	for( int y=0; y<converted->h; y++ )
+		*(Sint16 *) ( ((Uint8 *)converted->pixels) + y*converted->pitch + x*2 ) = y*4;
+	*/
+	// end debug
+
 	SDL_UpdateTexture( surface->t, NULL, converted->pixels, converted->pitch );
+	SDL_UnlockSurface(converted);
 	
 	SDL_FreeSurface(converted);
 	SDL_FreeSurface(formatsurf);
