@@ -25,6 +25,9 @@ for APP1 in project/jni/application/*/AndroidAppSettings.cfg; do
 	rm -f $APP.apk
 done
 
+rm -rf apk
+mkdir apk
+
 for APP1 in project/jni/application/*/AndroidAppSettings.cfg; do
 	APP=`echo $APP1 | sed 's@project/jni/application/\([^/]*\)/.*@\1@'`
 	if echo $APPS_SKIP | grep $APP > /dev/null ; then
