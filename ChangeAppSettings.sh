@@ -89,7 +89,7 @@ if [ -n "$var" ] ; then
 	AppNeedsArrowKeys="$var"
 fi
 
-echo -n "\nApplication uses joystick (y) or (n), the accelerometer (2-axis) or orientation sensor (3-axis)\nwill be used as joystick 0 if not used as arrow keys ($AppUsesJoystick): "
+echo -n "\nApplication uses joystick (y) or (n), the accelerometer (2-axis) or orientation sensor (3-axis)\nwill be used as joystick 0, also on-screen DPAD will be used as joystick ($AppUsesJoystick): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesJoystick="$var"
@@ -147,15 +147,6 @@ if [ -n "$var" ] ; then
 	AppVersionName="$var"
 fi
 
-echo -n "\nOptional shared libraries to compile - removing some of them will save space\nMP3 support by libMAD is encumbered by patents and libMAD is GPL-ed\n"
-grep 'Available libraries:' project/jni/Application.mk 
-grep 'depends on' project/jni/Application.mk
-echo -n "Current: $CompiledLibraries\n\n: "
-read var
-if [ -n "$var" ] ; then
-	CompiledLibraries="$var"
-fi
-
 echo -n "\nApplication uses custom build script AndroidBuild.sh instead of Android.mk (y) or (n) ($CustomBuildScript): "
 read var
 if [ -n "$var" ] ; then
@@ -168,13 +159,22 @@ if [ -n "$var" ] ; then
 	AppCflags="$var"
 fi
 
+echo -n "\nOptional shared libraries to compile - removing some of them will save space\nMP3 support by libMAD is encumbered by patents and libMAD is GPL-ed\n"
+grep 'Available' project/jni/Application.mk 
+grep 'depends on' project/jni/Application.mk
+echo -n "Current: $CompiledLibraries\n\n: "
+read var
+if [ -n "$var" ] ; then
+	CompiledLibraries="$var"
+fi
+
 echo -n "\nAditional LDFLAGS for application ($AppLdflags): "
 read var
 if [ -n "$var" ] ; then
 	AppLdflags="$var"
 fi
 
-echo -n "\nBuild only following subdirs (empty will build all dirs) ($AppSubdirsBuild): "
+echo -n "\nBuild only following subdirs (empty will build all dirs, ignored with custom script) ($AppSubdirsBuild): "
 read var
 if [ -n "$var" ] ; then
 	AppSubdirsBuild="$var"
@@ -369,7 +369,7 @@ fi
 
 echo Patching project/jni/Application.mk
 cat project/jni/Application.mk | \
-	sed "s/APP_MODULES := .*/APP_MODULES := application sdl-$LibSdlVersion sdl_main stlport tremor png jpeg freetype $CompiledLibraries/" | \
+	sed "s/APP_MODULES := .*/APP_MODULES := application sdl-$LibSdlVersion sdl_main stlport tremor png jpeg freetype xerces $CompiledLibraries/" | \
 	sed "s/APP_ABI := .*/APP_ABI := $MultiABI/" > \
 	project/jni/Application.mk.1
 if [ -n "`diff -w project/jni/Application.mk.1 project/jni/Application.mk`" ] ; then
@@ -392,6 +392,14 @@ rm -rf project/$OUT/local/*/libsdl-*.so
 rm -rf project/$OUT/local/*/objs/sdl-*/src/*/android
 rm -rf project/$OUT/local/*/objs/sdl-*/src/video/SDL_video.o
 rm -rf project/$OUT/local/*/objs/sdl-*/SDL_renderer_gles.o
+# Do not rebuild several huge libraries that do not depend on SDL version
+for LIB in freetype intl jpeg png lua mad stlport tremor xerces xml2; do
+	for ARCH in armeabi armeabi-v7a; do
+		if [ -e "project/$OUT/local/$ARCH/objs/$LIB" ] ; then
+			find project/$OUT/local/$ARCH/objs/$LIB -name "*.o" | xargs touch -c
+		fi
+	done
+done
 done
 
 echo Done

@@ -32,6 +32,8 @@ LOCAL_CFLAGS += \
 				-I$(LOCAL_PATH)/../intl \
 				-I$(LOCAL_PATH)/../freetype/include \
 				-I$(LOCAL_PATH)/../xml2/include \
+				-I$(LOCAL_PATH)/../xerces/src \
+				-I$(LOCAL_PATH)/../lua/src \
 				-I$(LOCAL_PATH)/..
 
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
