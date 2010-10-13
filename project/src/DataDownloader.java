@@ -22,6 +22,11 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import android.content.Context;
+import android.content.res.Resources;
+import java.lang.String;
+
+
 class CountingInputStream extends BufferedInputStream {
 
 	private long bytesReadMark = 0;
@@ -113,7 +118,7 @@ class DataDownloader extends Thread
 				public String text;
 				public void run()
 				{
-					Status.setText(text + "\n" + Globals.ReadmeText);
+					Status.setText(text);
 				}
 			}
 			synchronized(DataDownloader.this) {
@@ -169,6 +174,8 @@ class DataDownloader extends Thread
 		String [] downloadUrls = DataDownloadUrl.split("[|]");
 		if( downloadUrls.length < 2 )
 			return false;
+		
+		Resources res = Parent.getResources();
 
 		String path = getOutFilePath(DownloadFlagFileName);
 		InputStream checkFile = null;
@@ -193,7 +200,7 @@ class DataDownloader extends Thread
 				System.out.println("Matched: " + String.valueOf(matched));
 				if( ! matched )
 					throw new IOException();
-				Status.setText( "No need to download" );
+				Status.setText( res.getString(R.string.download_unneeded) );
 				return true;
 			} catch ( IOException e ) {};
 		}
@@ -233,7 +240,7 @@ class DataDownloader extends Thread
 				DoNotUnzip = true;
 			}
 			System.out.println("Connecting to " + url);
-			Status.setText( "Connecting to " + url);
+			Status.setText( res.getString(R.string.connecting_to, url) );
 			request = new HttpGet(url);
 			request.addHeader("Accept", "*/*");
 			try {
@@ -259,16 +266,16 @@ class DataDownloader extends Thread
 		if( response == null )
 		{
 			System.out.println("Error connecting to " + url);
-			Status.setText( "Error connecting to " + url );
+			Status.setText( res.getString(R.string.failed_connecting_to, url) );
 			return false;
 		}
 
-		Status.setText( "Downloading data from " + url );
+		Status.setText( res.getString(R.string.dl_from, url) );
 		totalLen = response.getEntity().getContentLength();
 		try {
 			stream = new CountingInputStream(response.getEntity().getContent());
 		} catch( java.io.IOException e ) {
-			Status.setText( "Error downloading data from " + Globals.DataDownloadUrl );
+			Status.setText( res.getString(R.string.error_dl_from, url) );
 			return false;
 		}
 		
@@ -287,7 +294,7 @@ class DataDownloader extends Thread
 			} catch( SecurityException e ) { };
 			if( out == null )
 			{
-				Status.setText( "Error writing to " + path );
+				Status.setText( res.getString(R.string.error_write, path) );
 				return false;
 			}
 
@@ -302,13 +309,13 @@ class DataDownloader extends Thread
 					String percent = "";
 					if( totalLen > 0 )
 						percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
-					Status.setText( percent + "writing file " + path );
+					Status.setText( res.getString(R.string.dl_progress, percent, path) );
 				}
 				out.flush();
 				out.close();
 				out = null;
 			} catch( java.io.IOException e ) {
-				Status.setText( "Error writing file " + path + " from URL " + url );
+				Status.setText( res.getString(R.string.error_write, path) );
 				return false;
 			}
 		}
@@ -322,7 +329,7 @@ class DataDownloader extends Thread
 				try {
 					entry = zip.getNextEntry();
 				} catch( java.io.IOException e ) {
-					Status.setText( "Error downloading data from " + url );
+					Status.setText( res.getString(R.string.error_dl_from, url) );
 					return false;
 				}
 				if( entry == null )
@@ -359,14 +366,14 @@ class DataDownloader extends Thread
 				} catch( SecurityException e ) { };
 				if( out == null )
 				{
-					Status.setText( "Error writing to " + path );
+					Status.setText( res.getString(R.string.error_write, path) );
 					return false;
 				}
 
 				String percent = "";
 				if( totalLen > 0 )
 					percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
-				Status.setText( percent + "writing file " + path );
+				Status.setText( res.getString(R.string.dl_progress, percent, path) );
 				
 				try {
 					int len = zip.read(buf);
@@ -379,13 +386,13 @@ class DataDownloader extends Thread
 						percent = "";
 						if( totalLen > 0 )
 							percent = String.valueOf(stream.getBytesRead() * 100 / totalLen) + "%: ";
-						Status.setText( percent + "writing file " + path );
+						Status.setText( res.getString(R.string.dl_progress, percent, path) );
 					}
 					out.flush();
 					out.close();
 					out = null;
 				} catch( java.io.IOException e ) {
-					Status.setText( "Error writing file " + path + " from URL " + url );
+					Status.setText( res.getString(R.string.error_write, path) );
 					return false;
 				}
 				
@@ -401,7 +408,7 @@ class DataDownloader extends Thread
 					}
 				} catch( Exception e )
 				{
-					Status.setText( "CRC32 check failed for file " + path );
+					Status.setText( res.getString(R.string.error_write, path) );
 					return false;
 				}
 			}
@@ -417,10 +424,10 @@ class DataDownloader extends Thread
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
 		} catch( java.io.IOException e ) {
-			Status.setText( "Error writing file " + path );
+			Status.setText( res.getString(R.string.error_write, path) );
 			return false;
 		};
-		Status.setText( "Finished" );
+		Status.setText( res.getString(R.string.dl_finished) );
 
 		try {
 			stream.close();

@@ -13,13 +13,16 @@ import android.util.Log;
 import java.io.*;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.res.Configuration;
 import android.os.Environment;
 import android.os.StatFs;
 import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
+import android.content.Context;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import java.lang.String;
 
 class Settings
 {
@@ -80,8 +83,9 @@ class Settings
 			settingsLoaded = true;
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle("Phone configuration");
-			builder.setPositiveButton("Change phone configuration", new DialogInterface.OnClickListener() 
+			builder.setTitle(p.getResources().getString(R.string.device_config));
+			builder.setPositiveButton(p.getResources().getString(R.string.device_change_cfg),
+					new DialogInterface.OnClickListener()
 			{
 				public void onClick(DialogInterface dialog, int item) 
 				{
@@ -166,7 +170,8 @@ class Settings
 			freePhone = (long)phone.getAvailableBlocks() * phone.getBlockSize() / 1024 / 1024;
 		}catch(Exception e) {}
 
-		final CharSequence[] items = {"Phone storage - " + String.valueOf(freePhone) + " Mb free", "SD card - " + String.valueOf(freeSdcard) + " Mb free"};
+		final CharSequence[] items = { p.getResources().getString(R.string.storage_phone, freePhone),
+										p.getResources().getString(R.string.storage_sd, freeSdcard) };
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
 		builder.setTitle(downloadFiles[0].split("[|]")[0]);
@@ -188,9 +193,6 @@ class Settings
 	static void showOptionalDownloadConfig(final MainActivity p) {
 
 		String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
-		System.out.println("downloadFiles.length " + String.valueOf(downloadFiles.length));
-		for(int i = 0; i < downloadFiles.length; i++)
-			System.out.println("downloadFiles[" + String.valueOf(i) + "] = '" + downloadFiles[i] + "'");
 		if(downloadFiles.length <= 1)
 		{
 			Globals.OptionalDataDownload = new boolean[1];
@@ -200,7 +202,7 @@ class Settings
 		}
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("Optional packages");
+		builder.setTitle(p.getResources().getString(R.string.optional_downloads));
 
 		CharSequence[] items = new CharSequence[ downloadFiles.length - 1 ];
 		for(int i = 1; i < downloadFiles.length; i++ )
@@ -214,19 +216,13 @@ class Settings
 		{
 			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 			{
-				System.out.println("Globals.OptionalDataDownload: set item " + String.valueOf(item + 1) + " to " + String.valueOf(isChecked));
 				Globals.OptionalDataDownload[item+1] = isChecked;
 			}
 		});
-		builder.setPositiveButton("Done", new DialogInterface.OnClickListener() 
+		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
-
-				System.out.println("Globals.OptionalDataDownload len" + String.valueOf(Globals.OptionalDataDownload.length));
-				for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
-					System.out.println("Globals.OptionalDataDownload[" + String.valueOf(i) + "] = '" + String.valueOf(Globals.OptionalDataDownload[i]) + "'");
-
 				dialog.dismiss();
 				showKeyboardConfig(p);
 			}
@@ -245,10 +241,12 @@ class Settings
 			return;
 		}
 		
-		final CharSequence[] items = {"Arrows / joystick / dpad", "Trackball", "None, only touchscreen"};
+		final CharSequence[] items = { p.getResources().getString(R.string.controls_arrows),
+										p.getResources().getString(R.string.controls_trackball),
+										p.getResources().getString(R.string.controls_touch) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("What kind of navigation keys does your phone have?");
+		builder.setTitle(p.getResources().getString(R.string.controls_question));
 		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
@@ -274,10 +272,13 @@ class Settings
 			return;
 		}
 		
-		final CharSequence[] items = {"No dampening", "Fast", "Medium", "Slow"};
+		final CharSequence[] items = { p.getResources().getString(R.string.trackball_no_dampening),
+										p.getResources().getString(R.string.trackball_fast),
+										p.getResources().getString(R.string.trackball_medium),
+										p.getResources().getString(R.string.trackball_slow) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("Trackball dampening");
+		builder.setTitle(p.getResources().getString(R.string.trackball_question));
 		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
@@ -301,25 +302,31 @@ class Settings
 			return;
 		}
 		final CharSequence[] items = {
-			"On-screen keyboard" /* + ( Globals.AppUsesMouse ? " (disables mouse input)" : "") */ ,
-			"Accelerometer as navigation keys" /* + ( Globals.AppUsesJoystick ? " (disables joystick input)" : "" ) */ ,
-			"Both accelerometer and on-screen keyboard",
-			"No additional controls"
+			p.getResources().getString(R.string.controls_screenkb),
+			p.getResources().getString(R.string.controls_accelnav),
 		};
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("Additional controls to use");
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		builder.setTitle(p.getResources().getString(R.string.controls_additional));
+		builder.setMultiChoiceItems(items, null, new DialogInterface.OnMultiChoiceClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+			{
+				if( item == 0 )
+					Globals.UseTouchscreenKeyboard = isChecked;
+				if( item == 1 )
+				Globals.UseAccelerometerAsArrowKeys = isChecked;
+			}
+		});
+		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
-				Globals.UseTouchscreenKeyboard = (item == 0 || item == 2);
-				Globals.UseAccelerometerAsArrowKeys = (item == 1 || item == 2);
-
 				dialog.dismiss();
 				showAccelerometerConfig(p);
 			}
 		});
+
 		AlertDialog alert = builder.create();
 		alert.setOwnerActivity(p);
 		alert.show();
@@ -334,10 +341,12 @@ class Settings
 			return;
 		}
 		
-		final CharSequence[] items = {"Fast", "Medium", "Slow"};
+		final CharSequence[] items = { p.getResources().getString(R.string.accel_fast),
+										p.getResources().getString(R.string.accel_medium),
+										p.getResources().getString(R.string.accel_slow) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("Accelerometer sensitivity");
+		builder.setTitle(R.string.accel_question);
 		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
@@ -362,10 +371,13 @@ class Settings
 			return;
 		}
 		
-		final CharSequence[] items = {"Big", "Medium", "Small", "Tiny"};
+		final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_large),
+										p.getResources().getString(R.string.controls_screenkb_medium),
+										p.getResources().getString(R.string.controls_screenkb_small),
+										p.getResources().getString(R.string.controls_screenkb_tiny) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("On-screen keyboard size (toggle auto-fire by sliding across Fire button)");
+		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_size));
 		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
@@ -390,10 +402,13 @@ class Settings
 			return;
 		}
 		
-		final CharSequence[] items = {"Ultimate Droid by Sean Stieber", "Ugly Arrows by pelya"};
+		final CharSequence[] items = {
+			p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
+			p.getResources().getString(R.string.controls_screenkb_by, "Ugly Arrows", "pelya")
+			};
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("On-screen keyboard theme");
+		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_theme));
 		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
@@ -414,10 +429,12 @@ class Settings
 	
 	static void showAudioConfig(final MainActivity p)
 	{
-		final CharSequence[] items = {"Small (fast devices)", "Medium", "Large (if sound is choppy)"};
+		final CharSequence[] items = { p.getResources().getString(R.string.audiobuf_small),
+										p.getResources().getString(R.string.audiobuf_medium),
+										p.getResources().getString(R.string.audiobuf_large) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle("Size of audio buffer");
+		builder.setTitle(R.string.audiobuf_question);
 		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 

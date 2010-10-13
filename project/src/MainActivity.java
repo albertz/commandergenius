@@ -23,7 +23,7 @@ public class MainActivity extends Activity {
 				   WindowManager.LayoutParams.FLAG_FULLSCREEN); 
 
 		_tv = new TextView(this);
-		_tv.setText("Initializing");
+		_tv.setText(R.string.init);
 		setContentView(_tv);
 		if(mAudioThread == null) // Starting from background (should not happen)
 		{
