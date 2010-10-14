@@ -294,8 +294,6 @@ class Settings
 		alert.show();
 	}
 	
-	Globals.UseTouchscreenKeyboard = false;
-	Globals.UseAccelerometerAsArrowKeys = false;
 	
 	static void showAdditionalInputConfig(final MainActivity p)
 	{
@@ -308,6 +306,9 @@ class Settings
 			p.getResources().getString(R.string.controls_screenkb),
 			p.getResources().getString(R.string.controls_accelnav),
 		};
+
+		Globals.UseTouchscreenKeyboard = false;
+		Globals.UseAccelerometerAsArrowKeys = false;
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_additional));
