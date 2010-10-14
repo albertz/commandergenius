@@ -3619,17 +3619,23 @@ void SDL_ANDROID_VideoContextLost()
 
 void SDL_ANDROID_VideoContextRecreated()
 {
+	int numTextures = 0;
 	SDL_Texture * tex;
-	if( ! SDL_CurrentDisplay || ! SDL_CurrentRenderer || ! SDL_CurrentRenderer->window || ! SDL_CurrentRenderer->textures || SDL_GetWindowFlags(SDL_CurrentRenderer->window) & SDL_WINDOW_OPENGL )
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_VideoContextRecreated(): SDL_CurrentRenderer %p", SDL_CurrentRenderer);
+	if( ! SDL_CurrentRenderer )
 		return;
 
+	if( SDL_CurrentRenderer->ActivateRenderer ) /* Re-apply glOrtho() and blend modes */
+		SDL_CurrentRenderer->ActivateRenderer(SDL_CurrentRenderer);
+	
 	tex = SDL_CurrentRenderer->textures;
-	SDL_SelectRenderer(SDL_CurrentRenderer->window); /* Re-apply glOrtho() and blend modes */
 	while( tex )
 	{
 		SDL_CurrentRenderer->CreateTexture( SDL_CurrentRenderer, tex );
 		tex = tex->next;
+		numTextures++;
 	}
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_VideoContextRecreated(): re-created %d textures", numTextures);
 }
 #endif
 
