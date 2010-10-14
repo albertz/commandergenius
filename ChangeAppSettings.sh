@@ -43,9 +43,10 @@ if [ -n "$var" ] ; then
 	ScreenOrientation="$var"
 fi
 
-echo -n "\nSpecify path to download application data in zip archive in the form 'Description|http://URL|http://BackupURL|...'"
+echo -n "\nSpecify path to download application data in zip archive in the form 'Description|URL|MirrorURL|...'"
 echo -n "\nYou may specify additional paths to optional game content delimited by newlines (empty line to finish)"
-echo -n "\nIf the URL in in the form ':dir/file.dat:http://URL/' it will be downloaded as-is to game dir and not unzipped\n\n"
+echo -n "\nIf the URL in in the form ':dir/file.dat:http://URL/' it will be downloaded as-is to game dir and not unzipped"
+echo -n "\nIf the URL does not contain 'http://' it is treated as file in 'project/assets' dir (it is bundled in .apk file)\n\n"
 echo -n "`echo $AppDataDownloadUrl | tr '^' '\\n'`"
 echo
 AppDataDownloadUrl1=""

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">enigma</string>
+    <string name="app_name">Alien Blaster</string>
 
 
     <string name="init">Initializing</string>

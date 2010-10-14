@@ -81,6 +81,7 @@ SDL_BlitSurface(SDL_GetVideoSurface(), sourceRect, sprite, &targetRect);
 
 To compile your own app, put your app sources into project/jni/application dir, and change symlink "src"
 to point to your app, then launch script ChangeAppSettings.sh - it will ask few questions and modify some Java code.
+You may take AndroidAppSettings.cfg file from some other application to get some sane defaults.
 The C++ files shall have .cpp extension to be compiled, rename them if necessary.
 Also you can replace icon image at project/res/drawable/icon.png.
 Then you can launch build.sh.
@@ -91,10 +92,11 @@ Unzip it, and put in your PATH instead of original NDK - do not rename the targe
 check if there's "crystax" string in path to gcc toolchain, and will disable STLPort because CrystaX's
 NDK already contains STL library.
 
-Application data is not bundled with app itself - it should be downloaded from net on first run.
-Create .ZIP file with your application data, and put it somewhere on HTTP server - ChangeAppSettings.sh
-will ask you for the URL.
-If you'll release new version of data files you should change download URL and update your app as well -
+Application data may be bundled with app itself, or downloaded from net on first run.
+Create .ZIP file with your application data, and put it on HTTP server, or to "project/assets" dir - 
+ChangeAppSettings.sh will ask you for the URL, if URL won't contain "http://" it will try to open file from assets.
+Note that there is some limit on maximum .APK file size on Market, like 20 Mb or so, so big files should be downloaded by HTTP.
+If you'll release new version of data files you should change download URL or asset file name and update your app as well -
 the app will re-download the data if URL does not match the saved URL from previous download.
 
 If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
