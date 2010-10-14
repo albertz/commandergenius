@@ -8,6 +8,10 @@ NDKBUILD=ndk-build
 if grep "AppUseCrystaXToolchain=y" AndroidAppSettings.cfg > /dev/null ; then
 	NDKBUILD=`which ndk-build | sed 's@/[^/]*/ndk-build@/android-ndk-r4-crystax@'`/ndk-build
 fi
+export `grep "AppFullName=" AndroidAppSettings.cfg`
+if grep "package $AppFullName;" project/src/MainActivity.java > /dev/null ; then true ; else
+	./ChangeAppSettings.sh -a
+fi
 
 cd project && nice -n10 $NDKBUILD -j2 V=1 && ant debug && cd bin && adb install -r DemoActivity-debug.apk
 
