@@ -294,6 +294,9 @@ class Settings
 		alert.show();
 	}
 	
+	Globals.UseTouchscreenKeyboard = false;
+	Globals.UseAccelerometerAsArrowKeys = false;
+	
 	static void showAdditionalInputConfig(final MainActivity p)
 	{
 		if( ! Globals.AppNeedsArrowKeys )
