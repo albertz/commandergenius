@@ -125,45 +125,6 @@ though ./configure scripts tend to have stupid bugs in various places, avoid usi
 8. Run command "arm-eabi-strip --strip-debug libapplication.so", you can find arm-eabi-strip under your NDK dir.
 9. Run "ant debug" or "ant release" from project dir, install to device & enjoy.
 
-Quick guide to debug native code
-================================
-
-To debug your application add tag 'android:debuggable="true"' to 'application' element in AndroidManifest.xml,
-recmpile and reinstall your app to Android 2.2 emulator or Android 2.2 device, go to "project" dir and launch command
-	ndk-gdb --verbose --start --force
-then when it fails enter command
-	target remote:5039 (then it will fail again)
-Note that it's extremely buggy, and I had no any success in debugging my app with ndk-gdb.
-So it's best to debug with code like:
-	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
-and then watching "adb logcat" output.
-
-If your application crashed, you should use following steps:
-
-1. Gather the crash report from "adb logcat" - it should contain stack trace, if it does not then you're unlucky,
-
-I/DEBUG   (   51): *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
-I/DEBUG   (   51): Build fingerprint: 'sprint/htc_supersonic/supersonic/supersonic:2.1-update1/ERE27/194487:userdebug/test-keys'
-I/DEBUG   (   51): pid: 915, tid: 924  >>> de.schwardtnet.alienblaster <<<
-I/DEBUG   (   51): signal 11 (SIGSEGV), fault addr deadbaad
-I/DEBUG   (   51):  r0 00000000  r1 afe133f1  r2 00000027  r3 00000058
-I/DEBUG   (   51):  r4 afe3ae08  r5 00000000  r6 00000000  r7 70477020
-I/DEBUG   (   51):  r8 000000b0  r9 ffffff20  10 48552868  fp 00000234
-I/DEBUG   (   51):  ip 00002ee4  sp 485527f8  lr deadbaad  pc afe10aac  cpsr 60000030
-I/DEBUG   (   51):          #00  pc 00010aac  /system/lib/libc.so
-I/DEBUG   (   51):          #01  pc 0000c00e  /system/lib/libc.so
-I/DEBUG   (   51):          #02  pc 0000c0a4  /system/lib/libc.so
-I/DEBUG   (   51):          #03  pc 0002ca00  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
-I/DEBUG   (   51):          #04  pc 00028b6e  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
-I/DEBUG   (   51):          #05  pc 0002d080  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
-
-2. Go to project/bin/ndk/local/armeabi dir, find there the library mentioned in stacktrace 
-(libsdl.so in our example), copy the address of the first line of stacktrace (0002ca00), and execute command
-
-gdb libsdl.so -ex "list *0x0002ca00"
-
-It will output the exact line in your source where the application crashed.
-
 Android Application lifecycle support
 =====================================
 
@@ -235,6 +196,47 @@ while( SDL_PollEvent(&evt) )
 		}
 	}
 }
+
+Note that I did not test that code yet, so test reports are appreciated.
+
+Quick guide to debug native code
+================================
+
+To debug your application add tag 'android:debuggable="true"' to 'application' element in AndroidManifest.xml,
+recmpile and reinstall your app to Android 2.2 emulator or Android 2.2 device, go to "project" dir and launch command
+	ndk-gdb --verbose --start --force
+then when it fails enter command
+	target remote:5039 (then it will fail again)
+Note that it's extremely buggy, and I had no any success in debugging my app with ndk-gdb.
+So it's best to debug with code like:
+	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
+and then watching "adb logcat" output.
+
+If your application crashed, you should use following steps:
+
+1. Gather the crash report from "adb logcat" - it should contain stack trace, if it does not then you're unlucky,
+
+I/DEBUG   (   51): *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+I/DEBUG   (   51): Build fingerprint: 'sprint/htc_supersonic/supersonic/supersonic:2.1-update1/ERE27/194487:userdebug/test-keys'
+I/DEBUG   (   51): pid: 915, tid: 924  >>> de.schwardtnet.alienblaster <<<
+I/DEBUG   (   51): signal 11 (SIGSEGV), fault addr deadbaad
+I/DEBUG   (   51):  r0 00000000  r1 afe133f1  r2 00000027  r3 00000058
+I/DEBUG   (   51):  r4 afe3ae08  r5 00000000  r6 00000000  r7 70477020
+I/DEBUG   (   51):  r8 000000b0  r9 ffffff20  10 48552868  fp 00000234
+I/DEBUG   (   51):  ip 00002ee4  sp 485527f8  lr deadbaad  pc afe10aac  cpsr 60000030
+I/DEBUG   (   51):          #00  pc 00010aac  /system/lib/libc.so
+I/DEBUG   (   51):          #01  pc 0000c00e  /system/lib/libc.so
+I/DEBUG   (   51):          #02  pc 0000c0a4  /system/lib/libc.so
+I/DEBUG   (   51):          #03  pc 0002ca00  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
+I/DEBUG   (   51):          #04  pc 00028b6e  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
+I/DEBUG   (   51):          #05  pc 0002d080  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
+
+2. Go to project/bin/ndk/local/armeabi dir, find there the library mentioned in stacktrace 
+(libsdl.so in our example), copy the address of the first line of stacktrace (0002ca00), and execute command
+
+gdb libsdl.so -ex "list *0x0002ca00"
+
+It will output the exact line in your source where the application crashed.
 
 License information
 ===================
