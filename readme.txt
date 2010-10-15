@@ -25,14 +25,8 @@ Then you can test it by launching Alien Blaster icon from Android applications m
 It's designed for 640x480, so if you have smaller screen it will be resized.
 Note: The game enforces horizontal screen orientation, you may open your keyboard and use it for
 additional keys - the phone will just keep current screen orientation.
-Note that you may use Volume up/down and Camera keys as game inputs -
-you'll have to redefine them in game keyconfig menu.
-Keys Home, Search and End Call will force application quit, and because
-of a bug in my SDL implementation application will crash.
-Back key is mapped to Escape, and Menu is mapped to Enter.
-Newer Android phones like HTC Evo have no keyboard at all, so there are just 4 usable keys -
-Menu, Search, Volume Up and Volume Down (and Escape of course).
-Because of that the accelerometer is configured to trigger cursor key events.
+Newer Android phones like HTC Evo have no keyboard at all, on-screen keyboard built into libSDL
+is available for such devices (it's rather limited yet, only joystick and 7 keys, no text input).
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
 remove project/jni/application/src symlink and make new one pointing to glxgears, 
@@ -59,8 +53,8 @@ texture on HTC G1. Software surfaces may be of any size of course (but you don't
 
 Alternatively, SDL 1.2 is available too, you may use it with SW video as usual, however if you want HW acceleration
 there are few restrictions: you cannot currently blit SW surface to screen, it should be only HW surface,
-also alpha-surfaces seem to not work (did not check it thoroughly) - you still can use per-surface alpha.
-Basically your code should be like:
+also alpha-surfaces seem to not work (did not check it thoroughly, will be glad for test reports) -
+you still can use per-surface alpha. Basically your code should be like:
 
 // Init HW-accelerated video
 SDL_SetVideoMode( 640, 480, 16, SDL_DOUBLEBUF | SDL_HWSURFACE );
