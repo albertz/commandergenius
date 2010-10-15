@@ -25,8 +25,7 @@
 #include "SDL_version.h"
 #include "SDL_config.h"
 #include "SDL_video.h"
-
-extern void ANDROID_InitOSKeymap();
+#include "SDL_joystick.h"
 
 extern int SDL_ANDROID_sWindowWidth;
 extern int SDL_ANDROID_sWindowHeight;
@@ -43,5 +42,10 @@ extern SDL_VideoDevice *ANDROID_CreateDevice_1_3(int devindex);
 extern SDL_Window * ANDROID_CurrentWindow;
 #endif
 
+// Exports from SDL_androidinput.c - SDL_androidinput.h is too encumbered
+enum { MAX_MULTITOUCH_POINTERS = 16 };
+extern void ANDROID_InitOSKeymap();
+extern int SDL_ANDROID_isJoystickUsed;
+extern SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1];
 
 #endif /* _SDL_androidvideo_h */

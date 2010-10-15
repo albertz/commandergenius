@@ -387,16 +387,27 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 			if( pointerInButtonRect[MAX_BUTTONS] == -1 )
 			{
 				pointerInButtonRect[MAX_BUTTONS] = pointerId;
-				i = ArrowKeysPressed(x, y);
-				if( i & ARROW_UP )
-					SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(UP), &keysym) );
-				if( i & ARROW_DOWN )
-					SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(DOWN), &keysym) );
-				if( i & ARROW_LEFT )
-					SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(LEFT), &keysym) );
-				if( i & ARROW_RIGHT )
-					SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
-				oldArrows = i;
+				if( SDL_ANDROID_isJoystickUsed )
+				{
+					if( SDL_ANDROID_CurrentJoysticks[0] != NULL )
+					{
+						SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 0, -(x - arrows.x - arrows.w / 2) * 65534 / arrows.w );
+						SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 1, -(y - arrows.y - arrows.h / 2) * 65534 / arrows.h );
+					}
+				}
+				else
+				{
+					i = ArrowKeysPressed(x, y);
+					if( i & ARROW_UP )
+						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(UP), &keysym) );
+					if( i & ARROW_DOWN )
+						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+					if( i & ARROW_LEFT )
+						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+					if( i & ARROW_RIGHT )
+						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+					oldArrows = i;
+				}
 			}
 		}
 
@@ -437,11 +448,22 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 		{
 			processed = 1;
 			pointerInButtonRect[MAX_BUTTONS] = -1;
-			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
-			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
-			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
-			SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
-			oldArrows = 0;
+			if( SDL_ANDROID_isJoystickUsed )
+			{
+				if( SDL_ANDROID_CurrentJoysticks[0] )
+				{
+					SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 0, 0 );
+					SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 1, 0 );
+				}
+			}
+			else
+			{
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+				oldArrows = 0;
+			}
 		}
 		for( i = 0; i < nbuttons; i++ )
 		{
@@ -486,35 +508,57 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 			if( ! InsideRect( &arrows, x, y ) )
 			{
 				pointerInButtonRect[MAX_BUTTONS] = -1;
-				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
-				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
-				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
-				SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
-				oldArrows = 0;
+				if( SDL_ANDROID_isJoystickUsed )
+				{
+					if( SDL_ANDROID_CurrentJoysticks[0] )
+					{
+						SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 0, 0 );
+						SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 1, 0 );
+					}
+				}
+				else
+				{
+					SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
+					SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+					SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+					SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+					oldArrows = 0;
+				}
 			}
 			else
 			{
-				i = ArrowKeysPressed(x, y);
-				if( i != oldArrows )
+				if( SDL_ANDROID_isJoystickUsed )
 				{
-					if( oldArrows & ARROW_UP && ! (i & ARROW_UP) )
-						SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
-					if( oldArrows & ARROW_DOWN && ! (i & ARROW_DOWN) )
-						SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
-					if( oldArrows & ARROW_LEFT && ! (i & ARROW_LEFT) )
-						SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
-					if( oldArrows & ARROW_RIGHT && ! (i & ARROW_RIGHT) )
-						SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
-					if( i & ARROW_UP )
-						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(UP), &keysym) );
-					if( i & ARROW_DOWN )
-						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(DOWN), &keysym) );
-					if( i & ARROW_LEFT )
-						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(LEFT), &keysym) );
-					if( i & ARROW_RIGHT )
-						SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+					if( SDL_ANDROID_CurrentJoysticks[0] )
+					{
+						SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 0, -(x - arrows.x - arrows.w / 2) * 65534 / arrows.w );
+						SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 1, -(y - arrows.y - arrows.h / 2) * 65534 / arrows.h );
+					}
 				}
-				oldArrows = i;
+				else
+				{
+					i = ArrowKeysPressed(x, y);
+					if( i != oldArrows )
+					{
+						if( oldArrows & ARROW_UP && ! (i & ARROW_UP) )
+							SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(UP), &keysym) );
+						if( oldArrows & ARROW_DOWN && ! (i & ARROW_DOWN) )
+							SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+						if( oldArrows & ARROW_LEFT && ! (i & ARROW_LEFT) )
+							SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+						if( oldArrows & ARROW_RIGHT && ! (i & ARROW_RIGHT) )
+							SDL_SendKeyboardKey( SDL_RELEASED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+						if( i & ARROW_UP )
+							SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(UP), &keysym) );
+						if( i & ARROW_DOWN )
+							SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(DOWN), &keysym) );
+						if( i & ARROW_LEFT )
+							SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(LEFT), &keysym) );
+						if( i & ARROW_RIGHT )
+							SDL_SendKeyboardKey( SDL_PRESSED, GetKeysym( SDL_KEY(RIGHT), &keysym) );
+					}
+					oldArrows = i;
+				}
 			}
 		}
 		for( i = 0; i < AutoFireButtonsNum; i++ )

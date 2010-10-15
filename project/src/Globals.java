@@ -47,6 +47,7 @@ class Globals {
 	public static int TouchscreenKeyboardSize = 0;
 	public static int TouchscreenKeyboardTheme = 0;
 	public static int AccelerometerSensitivity = 0;
+	public static int AccelerometerCenterPos = 0;
 	public static int TrackballDampening = 0;
 	public static int AudioBufferConfig = 0;
 	public static boolean OptionalDataDownload[] = null;

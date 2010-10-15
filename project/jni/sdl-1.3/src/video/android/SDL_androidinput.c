@@ -46,9 +46,9 @@ SDLKey SDL_android_keymap[KEYCODE_LAST+1];
 
 static int isTrackballUsed = 0;
 static int isMouseUsed = 0;
-static int isJoystickUsed = 0;
+int SDL_ANDROID_isJoystickUsed = 0;
 static int isMultitouchUsed = 0;
-static SDL_Joystick *CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL};
+SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL};
 static int TrackballDampening = 0; // in milliseconds
 static int lastTrackballAction = 0;
 
@@ -90,16 +90,16 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 			SDL_SendFingerDown(0, pointerId, action == MOUSE_DOWN ? 1 : 0, x, y, force*radius / 16);
 #endif
 
-		if( CurrentJoysticks[pointerId] )
+		if( SDL_ANDROID_CurrentJoysticks[pointerId] )
 		{
-			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 0, x);
-			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 1, y);
-			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 2, force);
-			SDL_PrivateJoystickAxis(CurrentJoysticks[pointerId+1], 3, radius);
+			SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[pointerId+1], 0, x);
+			SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[pointerId+1], 1, y);
+			SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[pointerId+1], 2, force);
+			SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[pointerId+1], 3, radius);
 			if( action == MOUSE_DOWN )
-				SDL_PrivateJoystickButton(CurrentJoysticks[pointerId+1], 0, SDL_PRESSED);
+				SDL_PrivateJoystickButton(SDL_ANDROID_CurrentJoysticks[pointerId+1], 0, SDL_PRESSED);
 			if( action == MOUSE_UP )
-				SDL_PrivateJoystickButton(CurrentJoysticks[pointerId+1], 0, SDL_RELEASED);
+				SDL_PrivateJoystickButton(SDL_ANDROID_CurrentJoysticks[pointerId+1], 0, SDL_RELEASED);
 		}
 	}
 	if( !isMouseUsed && !SDL_ANDROID_isTouchscreenKeyboardUsed )
@@ -152,9 +152,11 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	// Calculate two angles from three coordinates - TODO: this is faulty!
 	//float accX = atan2f(-accPosX, sqrtf(accPosY*accPosY+accPosZ*accPosZ) * ( accPosY > 0 ? 1.0f : -1.0f ) ) * M_1_PI * 180.0f;
 	//float accY = atan2f(accPosZ, accPosY) * M_1_PI;
+	
 	float normal = sqrt(accPosX*accPosX+accPosY*accPosY+accPosZ*accPosZ);
 	if(normal <= 0.0000001f)
-		normal = 1.0f;
+		normal = 0.00001f;
+	
 	
 	updateOrientation (accPosX/normal, accPosY/normal, 0.0f);
 }
@@ -163,7 +165,7 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(AccelerometerReader_nativeOrientation) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
 {
-	updateOrientation (accX, accY, accZ);
+	updateOrientation (accX, accY, accZ); // TODO: make values in range 0.0:1.0
 }
 
 JNIEXPORT void JNICALL 
@@ -181,7 +183,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz)
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(Settings_nativeSetJoystickUsed) ( JNIEnv*  env, jobject thiz)
 {
-	isJoystickUsed = 1;
+	SDL_ANDROID_isJoystickUsed = 1;
 }
 
 JNIEXPORT void JNICALL 
@@ -342,20 +344,23 @@ void ANDROID_InitOSKeymap()
 
 }
 
-static float dx = 0.04, dy = 0.1, dz = 0.1; // For accelerometer
+static float dx = 0.04, dy = 0.1, dz = 0.1, joystickSensitivity = 400.0f; // For accelerometer
+enum { ACCELEROMETER_CENTER_FLOATING, ACCELEROMETER_CENTER_FIXED_START, ACCELEROMETER_CENTER_FIXED_HORIZ };
+static int accelerometerCenterPos = ACCELEROMETER_CENTER_FLOATING;
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetAccelerometerSensitivity) ( JNIEnv*  env, jobject thiz, jint value)
+JAVA_EXPORT_NAME(Settings_nativeSetAccelerometerSettings) ( JNIEnv*  env, jobject thiz, jint sensitivity, jint centerPos)
 {
-	dx = 0.04; dy = 0.08; dz = 0.08; // Fast sensitivity
-	if( value == 1 ) // Medium sensitivity
+	dx = 0.04; dy = 0.08; dz = 0.08; joystickSensitivity = 32767.0f * 3.0f; // Fast sensitivity
+	if( sensitivity == 1 )
 	{
-		dx = 0.1; dy = 0.15; dz = 0.15;
+		dx = 0.1; dy = 0.15; dz = 0.15; joystickSensitivity = 32767.0f * 2.0f; // Medium sensitivity
 	}
-	if( value == 2 ) // Slow sensitivity
+	if( sensitivity == 2 )
 	{
-		dx = 0.2; dy = 0.25; dz = 0.25;
+		dx = 0.2; dy = 0.25; dz = 0.25; joystickSensitivity = 32767.0f; // Slow sensitivity
 	}
+	accelerometerCenterPos = centerPos;
 }
 
 JNIEXPORT void JNICALL 
@@ -372,30 +377,41 @@ void updateOrientation ( float accX, float accY, float accZ )
 	static float midX = 0, midY = 0, midZ = 0;
 	static int pressLeft = 0, pressRight = 0, pressUp = 0, pressDown = 0, pressR = 0, pressL = 0;
 	
-	midX = 0.0f; // Do not remember old value for phone tilt, it feels weird
-	
-	if( isJoystickUsed && CurrentJoysticks[0] ) // TODO: mutex for that stuff?
+	if( accelerometerCenterPos == ACCELEROMETER_CENTER_FIXED_START )
 	{
-		SDL_PrivateJoystickAxis(CurrentJoysticks[0], 0, (Sint16)(fmin(32767, fmax(-32768, (accX - midX) * 400.0))));
-		SDL_PrivateJoystickAxis(CurrentJoysticks[0], 1, (Sint16)(fmin(32767, fmax(-32768, (accY - midY) * 400.0))));
-		SDL_PrivateJoystickAxis(CurrentJoysticks[0], 2, (Sint16)(fmin(32767, fmax(-32768, (accZ - midZ) * 400.0))));
+		accelerometerCenterPos = ACCELEROMETER_CENTER_FIXED_HORIZ;
+		midX = accX;
+		midY = accY;
+		midZ = accZ;
+	}
+	
+	// midX = 0.0f; // Do not remember old value for phone tilt, it feels weird
 
-		// TODO: option for fixed/floating center pos
-		if( accY < midY - dy*2 )
-			midY = accY + dy*2;
-		if( accY > midY + dy*2 )
-			midY = accY - dy*2;
-		if( accZ < midZ - dz*2 )
-			midZ = accZ + dz*2;
-		if( accZ > midZ + dz*2 )
-			midZ = accZ - dz*2;
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): %f %f %f", accX, accY, accZ);
+	
+	if( SDL_ANDROID_isJoystickUsed && SDL_ANDROID_CurrentJoysticks[0] ) // TODO: mutex for that stuff?
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): sending joystick event");
+		SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 0, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accX - midX) * joystickSensitivity))));
+		SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 1, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accY - midY) * joystickSensitivity))));
+		SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accZ - midZ) * joystickSensitivity))));
 
+		if( accelerometerCenterPos == ACCELEROMETER_CENTER_FLOATING )
+		{
+			if( accY < midY - dy*2 )
+				midY = accY + dy*2;
+			if( accY > midY + dy*2 )
+				midY = accY - dy*2;
+			if( accZ < midZ - dz*2 )
+				midZ = accZ + dz*2;
+			if( accZ > midZ + dz*2 )
+				midZ = accZ - dz*2;
+		}
 	}
 
-	if(isJoystickUsed)
+	if(SDL_ANDROID_isJoystickUsed)
 		return;
 
-	
 	if( accX < midX - dx )
 	{
 		if( !pressLeft )
@@ -674,7 +690,7 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 		joystick->naxes = 4;
 		joystick->nbuttons = 1;
 	}
-	CurrentJoysticks[joystick->index] = joystick;
+	SDL_ANDROID_CurrentJoysticks[joystick->index] = joystick;
 	return(0);
 }
 
@@ -691,7 +707,7 @@ void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
 /* Function to close a joystick after use */
 void SDL_SYS_JoystickClose(SDL_Joystick *joystick)
 {
-	CurrentJoysticks[joystick->index] = NULL;
+	SDL_ANDROID_CurrentJoysticks[joystick->index] = NULL;
 	return;
 }
 
@@ -700,6 +716,6 @@ void SDL_SYS_JoystickQuit(void)
 {
 	int i;
 	for(i=0; i<MAX_MULTITOUCH_POINTERS+1; i++)
-		CurrentJoysticks[i] = NULL;
+		SDL_ANDROID_CurrentJoysticks[i] = NULL;
 	return;
 }
