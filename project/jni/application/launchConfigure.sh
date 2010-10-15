@@ -6,6 +6,17 @@
 IFS='
 '
 
+MYARCH=linux-x86
+if uname -s | grep -i "linux" ; then
+	MYARCH=linux-x86
+fi
+if uname -s | grep -i "darwin" ; then
+	MYARCH=darwin-x86
+fi
+if uname -s | grep -i "windows" ; then
+	MYARCH=windows-x86
+fi
+
 NDK=`which ndk-build`
 NDK=`dirname $NDK`
 GCCVER=4.4.0
@@ -17,14 +28,15 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 rm -rf $LOCAL_PATH/../../obj/local/armeabi/libSDL_*.so
 rm -rf $LOCAL_PATH/../../obj/local/armeabi/libsdl_main.so
 
-if [ -e $LOCAL_PATH/../../obj/local/armeabi/libsdl_mixer.so ] ; then
-	ln -sf libsdl_mixer.so $LOCAL_PATH/../../obj/local/armeabi/libSDL_Mixer.so
-fi
+# Uncomment if your configure expects SDL libraries in form "libSDL_name.so"
+#if [ -e $LOCAL_PATH/../../obj/local/armeabi/libsdl_mixer.so ] ; then
+#	ln -sf libsdl_mixer.so $LOCAL_PATH/../../obj/local/armeabi/libSDL_Mixer.so
+#fi
 
-for F in $LOCAL_PATH/../../obj/local/armeabi/libsdl_*.so; do
-	LIBNAME=`echo $F | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libsdl_\(.*\)[.]so@\1@"`
-	ln -sf libsdl_$LIBNAME.so $LOCAL_PATH/../../obj/local/armeabi/libSDL_$LIBNAME.so
-done
+#for F in $LOCAL_PATH/../../obj/local/armeabi/libsdl_*.so; do
+#	LIBNAME=`echo $F | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libsdl_\(.*\)[.]so@\1@"`
+#	ln -sf libsdl_$LIBNAME.so $LOCAL_PATH/../../obj/local/armeabi/libSDL_$LIBNAME.so
+#done
 
 CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums \
@@ -36,8 +48,7 @@ CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 
 LDFLAGS="-nostdlib -Wl,-soname,libapplication.so -Wl,-shared,-Bsymbolic \
 -Wl,--whole-archive  -Wl,--no-whole-archive \
-$LOCAL_PATH/../../obj/local/armeabi/libstlport.a \
-$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/lib/gcc/arm-eabi/4.4.0/libgcc.a \
+$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/lib/gcc/arm-eabi/4.4.0/libgcc.a \
 `echo $LOCAL_PATH/../../obj/local/armeabi/*.so | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libsdl_main.so@@" | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libapplication.so@@"` \
 $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
 $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.so \
@@ -48,17 +59,20 @@ $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
 -Wl,-rpath-link=$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib \
 -L$LOCAL_PATH/../../obj/local/armeabi"
 
-env PATH=$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin:$LOCAL_PATH:$PATH \
+# Comment out if you're using CrystaX toolchain
+LDFLAGS="$LDFLAGS $LOCAL_PATH/../../obj/local/armeabi/libstlport.a"
+
+env PATH=$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \
 CXXFLAGS="$CFLAGS" \
 LDFLAGS="$LDFLAGS" \
-CC="$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin/arm-eabi-gcc" \
-CXX="$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin/arm-eabi-g++" \
-RANLIB="$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin/arm-eabi-ranlib" \
-LD="$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin/arm-eabi-gcc" \
-AR="$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin/arm-eabi-ar" \
-CPP="$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin/arm-eabi-cpp $CFLAGS" \
-NM="$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin/arm-eabi-nm" \
-AS="$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin/arm-eabi-as" \
-STRIP="$NDK/build/prebuilt/linux-x86/arm-eabi-$GCCVER/bin/arm-eabi-strip" \
+CC="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-gcc" \
+CXX="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-g++" \
+RANLIB="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-ranlib" \
+LD="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-gcc" \
+AR="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-ar" \
+CPP="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-cpp $CFLAGS" \
+NM="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-nm" \
+AS="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-as" \
+STRIP="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-strip" \
 ./configure --host=arm-eabi "$@"

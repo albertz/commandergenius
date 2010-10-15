@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHANGE_APP_SETTINGS_VERSION=10
+CHANGE_APP_SETTINGS_VERSION=11
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -72,6 +72,13 @@ if [ -n "$var" ] ; then
 	SdlVideoResize="$var"
 fi
 
+echo -n "\nApplication resizing should preserve the aspect ratio, creating black bars  (y) or (n) ($SdlVideoResizeKeepAspect): "
+read var
+if [ -n "$var" ] ; then
+        SdlVideoResizeKeepAspect="$var"
+fi
+
+
 echo -n "\nEnable OpenGL depth buffer (needed only for 3-d applications, small speed decrease) (y) or (n) ($NeedDepthBuffer): "
 read var
 if [ -n "$var" ] ; then
@@ -109,6 +116,13 @@ read var
 if [ -n "$var" ] ; then
 	NonBlockingSwapBuffers="$var"
 fi
+
+echo -n "\nPrevent device from going to suspend mode while application is running (y/n) ($InhibitSuspend): "
+read var
+if [ -n "$var" ] ; then
+        InhibitSuspend="$var"
+fi
+
 
 echo -n "\nRedefine common keys to SDL keysyms: TOUCHSCREEN SEARCH/CALL/DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU BACK CAMERA ENTER DEL"
 echo -n "\nMENU and BACK hardware keys and TOUCHSCREEN virtual 'key' are available on all devices, other keys may be absent"
@@ -217,8 +231,10 @@ echo LibSdlVersion=$LibSdlVersion >> AndroidAppSettings.cfg
 echo AppName=\"$AppName\" >> AndroidAppSettings.cfg
 echo AppFullName=$AppFullName >> AndroidAppSettings.cfg
 echo ScreenOrientation=$ScreenOrientation >> AndroidAppSettings.cfg
+echo InhibitSuspend=$InhibitSuspend >> AndroidAppSettings.cfg
 echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AndroidAppSettings.cfg
 echo SdlVideoResize=$SdlVideoResize >> AndroidAppSettings.cfg
+echo SdlVideoResizeKeepAspect=$SdlVideoResizeKeepAspect >> AndroidAppSettings.cfg
 echo NeedDepthBuffer=$NeedDepthBuffer >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
@@ -245,21 +261,38 @@ AppFullNameUnderscored=`echo $AppFullName | sed 's/[.]/_/g'`
 AppSharedLibrariesPath=/data/data/$AppFullName/lib
 ScreenOrientation1=portrait
 HorizontalOrientation=false
+
 if [ "$ScreenOrientation" = "h" ] ; then
 	ScreenOrientation1=landscape
 	HorizontalOrientation=true
 fi
+
 AppDataDownloadUrl1="`echo $AppDataDownloadUrl | sed 's/[&]/%26/g'`"
+
 if [ "$SdlVideoResize" = "y" ] ; then
 	SdlVideoResize=1
 else
 	SdlVideoResize=0
 fi
+
+if [ "$SdlVideoResizeKeepAspect" = "y" ] ; then
+	SdlVideoResizeKeepAspect=1
+else
+	SdlVideoResizeKeepAspect=0
+fi
+
+if [ "$InhibitSuspend" = "y" ] ; then
+	InhibitSuspend=true
+else
+	InhibitSuspend=false
+fi
+
 if [ "$NeedDepthBuffer" = "y" ] ; then
 	NeedDepthBuffer=true
 else
 	NeedDepthBuffer=false
 fi
+
 MouseKeycode=UNKNOWN
 if [ "$AppUsesMouse" = "y" ] ; then
 	AppUsesMouse=true
@@ -269,16 +302,19 @@ else
 	MouseKeycode=$AppUsesMouse
 	AppUsesMouse=false
 fi
+
 if [ "$AppNeedsArrowKeys" = "y" ] ; then
 	AppNeedsArrowKeys=true
 else
 	AppNeedsArrowKeys=false
 fi
+
 if [ "$AppUsesJoystick" = "y" ] ; then
 	AppUsesJoystick=true
 else
 	AppUsesJoystick=false
 fi
+
 if [ "$AppUsesMultitouch" = "y" ] ; then
 	AppUsesMultitouch=true
 else
@@ -337,6 +373,7 @@ cat project/src/Globals.java | \
 	sed "s@public static String DataDownloadUrl = .*@public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";@" | \
 	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
 	sed "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" | \
+	sed "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" | \
 	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \
 	sed "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" | \
 	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \
@@ -354,6 +391,7 @@ cat project/jni/Android.mk | \
 	sed "s/SDL_JAVA_PACKAGE_PATH := .*/SDL_JAVA_PACKAGE_PATH := $AppFullNameUnderscored/" | \
 	sed "s^SDL_CURDIR_PATH := .*^SDL_CURDIR_PATH := $DataPath^" | \
 	sed "s^SDL_VIDEO_RENDER_RESIZE := .*^SDL_VIDEO_RENDER_RESIZE := $SdlVideoResize^" | \
+	sed "s^SDL_VIDEO_RENDER_RESIZE_KEEP_ASPECT := .*^SDL_VIDEO_RENDER_RESIZE_KEEP_ASPECT := $SdlVideoResizeKeepAspect^" | \
 	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
