@@ -230,6 +230,7 @@ Application::Application() : wizard_mode (false), nograb (false), language (""),
 
 void Application::init(int argc, char **argv) 
 {
+
     progCallPath = argv[0];
     copy(argv+1, argv+argc, back_inserter(args));
     
@@ -270,6 +271,7 @@ void Application::init(int argc, char **argv)
     // initialize XML -- needs log, datapaths
     initXerces();
     
+
     // initialize LUA - Run initialization scripts
     lua_State *L = lua::GlobalState();
     lua::CheckedDoFile(L, app.systemFS, "startup.lua");
@@ -290,7 +292,7 @@ void Application::init(int argc, char **argv)
 
     // initialize user data paths -- needs preferences, system datapaths
     initUserDatapaths();
-    
+
     // set message language
     init_i18n();
     
@@ -306,6 +308,9 @@ void Application::init(int argc, char **argv)
 //    SDL_putenv("SDL_VIDEODRIVER=directx");  //needed for SDL 1.2.12 that favors GDI which crashes on SetGamma
 #endif
     int sdl_flags = SDL_INIT_VIDEO;
+#ifdef ANDROID
+    sdl_flags |= SDL_INIT_JOYSTICK;
+#endif
     if (enigma::WizardMode)
         sdl_flags |= SDL_INIT_NOPARACHUTE;
     if (SDL_Init(sdl_flags) < 0) {
@@ -483,7 +488,7 @@ void Application::initSysDatapaths(const std::string &prefFilename)
     if (!systemCmdDataPath.empty())
          systemFS->prepend_dir(systemCmdDataPath);
     Log << "systemFS = \"" << systemFS->getDataPath() << "\"\n"; 
-    
+
     // l10nPath
     l10nPath = LOCALEDIR;    // defined in src/Makefile.am
 #ifdef __MINGW32__
@@ -627,10 +632,11 @@ void Application::initUserDatapaths() {
         userPath = userStdPath;
 #endif
     } else {
+
         userPath = XMLtoLocal(Utf8ToXML(userPath.c_str()).x_str()).c_str();
     }
     Log << "userPath = \"" << userPath << "\"\n"; 
-    
+
     // userImagePath
     userImagePath = prefs->getString("UserImagePath");
     if (userImagePath.empty()) {
@@ -657,6 +663,7 @@ void Application::initUserDatapaths() {
         resourceFS->prepend_dir(std::string(path)+"/Application Support/Enigma");
     }
 #endif
+
     if (!systemCmdDataPath.empty())
 	resourceFS->prepend_dir(systemCmdDataPath);    
     resourceFS->prepend_dir(userPath);
