@@ -46,7 +46,7 @@ fi
 echo -n "\nSpecify path to download application data in zip archive in the form 'Description|URL|MirrorURL|...'"
 echo -n "\nYou may specify additional paths to optional game content delimited by newlines (empty line to finish)"
 echo -n "\nIf the URL in in the form ':dir/file.dat:http://URL/' it will be downloaded as-is to game dir and not unzipped"
-echo -n "\nIf the URL does not contain 'http://' it is treated as file in 'project/assets' dir (it is bundled in .apk file)\n\n"
+echo -n "\nIf the URL does not contain 'http://' it is treated as file in 'project/assets' dir, which is bundled in .apk file\n\n"
 echo -n "`echo $AppDataDownloadUrl | tr '^' '\\n'`"
 echo
 AppDataDownloadUrl1=""
@@ -72,7 +72,7 @@ if [ -n "$var" ] ; then
 	SdlVideoResize="$var"
 fi
 
-echo -n "\nApplication resizing should preserve the aspect ratio, creating black bars  (y) or (n) ($SdlVideoResizeKeepAspect): "
+echo -n "\nApplication resizing should use 4:3 aspect ratio, creating black bars (y) or (n) ($SdlVideoResizeKeepAspect): "
 read var
 if [ -n "$var" ] ; then
         SdlVideoResizeKeepAspect="$var"
@@ -97,7 +97,7 @@ if [ -n "$var" ] ; then
 	AppNeedsArrowKeys="$var"
 fi
 
-echo -n "\nApplication uses joystick (y) or (n), the accelerometer (2-axis) or orientation sensor (3-axis)\nwill be used as joystick 0, also on-screen DPAD will be used as joystick ($AppUsesJoystick): "
+echo -n "\nApplication uses joystick (y) or (n), the accelerometer (2-axis) or orientation sensor (3-axis)\nwill be used as joystick 0, also on-screen DPAD will be used as joystick -\nmake sure you can navigate all app menus with joystick or mouse ($AppUsesJoystick): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesJoystick="$var"
@@ -340,8 +340,16 @@ else
 	MultiABI="armeabi"
 fi
 LibrariesToLoad="System.loadLibrary(\\\"sdl-$LibSdlVersion\\\");"
+StaticLibraries=`grep 'APP_AVAILABLE_STATIC_LIBS' project/jni/Application.mk | sed 's/.*=\(.*\)/\1/'`
+echo StaticLibraries $StaticLibraries
 for lib in $CompiledLibraries; do
-	LibrariesToLoad="$LibrariesToLoad System.loadLibrary(\\\"$lib\\\");"
+	process=true
+	for lib1 in $StaticLibraries; do
+		if [ "$lib" = "$lib1" ]; then process=false; fi
+	done
+	if $process; then
+		LibrariesToLoad="$LibrariesToLoad System.loadLibrary(\\\"$lib\\\");"
+	fi
 done
 
 if [ "$CustomBuildScript" = "n" ] ; then

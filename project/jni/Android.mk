@@ -25,11 +25,11 @@ SDL_VIDEO_RENDER_RESIZE := 1
 
 SDL_VIDEO_RENDER_RESIZE_KEEP_ASPECT := 1
 
-COMPILED_LIBRARIES := sdl_mixer sdl_image sdl_ttf intl lua
+COMPILED_LIBRARIES := sdl_mixer sdl_image sdl_ttf intl lua png xerces
 
 APPLICATION_ADDITIONAL_CFLAGS := -finline-functions -O2
 
-APPLICATION_ADDITIONAL_LDFLAGS := -lpng -lxerces
+APPLICATION_ADDITIONAL_LDFLAGS := 
 
 APPLICATION_SUBDIRS_BUILD := 
 
