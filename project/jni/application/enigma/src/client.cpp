@@ -619,7 +619,7 @@ void Client::tick (double dtime)
 {
     const double timestep = 0.01; // 10ms
     #ifdef ANDROID
-    Sint16 joy_x, joy_y;
+    Sint32 joy_x, joy_y;
     SDL_Joystick *joy;
     #endif
 
