@@ -1,17 +1,15 @@
 Known bugs
 ==========
 
-1. Merge all config screens into single big config screen, make option to rerun config.
+- Merge all config screens into single big config screen.
 
-2. Fix on-screen keyboard, add more keys and more options, make possible for application to control it.
+- Fix on-screen keyboard, add more keys and more options, possibility to create custom key layout.
 
-3. Add full QWERTY on-screen keyboard.
+- Add full QWERTY on-screen keyboard.
 
-4. Add trackball sensitivity and accelerometer sensitivity config.
+- Export phone vibrator to SDL - interface is available in SDL 1.3
 
-5. Export phone vibrator to SDL - interface is available in SDL 1.3
-
-6. HDMI output (HTC Evo and Samsung Epic support that):
+- HDMI output (HTC Evo and Samsung Epic support that):
 HDMI output will be tricky - I've read the doc here: 
 https://docs.google.com/View?id=dhtsnvs6_57d2hpqtgr#4_1_HDMI_output_support_338048
 It says that in order to output something to HDMI you need to have a VideoView class visible on screen: 
@@ -26,20 +24,20 @@ UQM gives 5 FPS without such hacks, if I'll implement that FPS will drop to 1-2
 plus VideoView will contain some buffer to ensure the playback is smooth, 
 so the data on your TV will lag halfsecond behind the data on the device screen.
 
-7. Make app data to come inside .apk file in assets instead of downloading it from net.
-
-8. OpenTyrian: 
+- OpenTyrian: 
   1. Navigating game menus downwards with trackball skips events, that does not happen
      when navigting upwards.
   2. The detail level can be set to WILD by pressing "w" key in gameplay escape menu, expose that through interface.
   3. Add ENGAGE mode to menu.
 
-9. Ur-Quan Masters: 
+- Ur-Quan Masters: 
   1. Add Russian, Deutsch and Slovak translations: http://wiki.uqm.stack.nl/Translations
   2. Add accelerated GFX (even at the cost of GFX bugs, if Melee will work smoothly).
   3. Add proper netplay with masterserver and server list instead of "Enter host IP here" dialog.
   4. Add more control options such as joystick with absolute positioning.
 
-10. Add an option to keep aspect ratio of screen
+- Add an option to keep aspect ratio of screen
 
-11. Add an option for overlay buttons transparency.
+- Add an option for overlay buttons transparency.
+
+- Somehow make this port into main libSDL repository
