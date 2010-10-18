@@ -583,6 +583,9 @@ SDL_CalculatePitch(SDL_Surface * surface)
     default:
         break;
     }
+#ifdef ANDROID
+    if( surface->format->BytesPerPixel != 2 ) /* Avoid extra memcpy() when calling SDL_UpdateTexture() */
+#endif
     pitch = (pitch + 3) & ~3;   /* 4-byte aligning */
     return (pitch);
 }
