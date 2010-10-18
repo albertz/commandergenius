@@ -392,7 +392,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 	if( SDL_ANDROID_isJoystickUsed && SDL_ANDROID_CurrentJoysticks[0] ) // TODO: mutex for that stuff?
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): sending joystick event");
-		SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 0, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accX - midX) * joystickSensitivity))));
+		SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 0, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accX - midX) * joystickSensitivity))));
 		SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 1, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accY - midY) * joystickSensitivity))));
 		SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accZ - midZ) * joystickSensitivity))));
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHANGE_APP_SETTINGS_VERSION=11
+CHANGE_APP_SETTINGS_VERSION=12
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -46,7 +46,7 @@ fi
 echo -n "\nSpecify path to download application data in zip archive in the form 'Description|URL|MirrorURL|...'"
 echo -n "\nYou may specify additional paths to optional game content delimited by newlines (empty line to finish)"
 echo -n "\nIf the URL in in the form ':dir/file.dat:http://URL/' it will be downloaded as-is to game dir and not unzipped"
-echo -n "\nIf the URL does not contain 'http://' it is treated as file in 'project/assets' dir, which is bundled in .apk file\n\n"
+echo -n "\nIf the URL does not contain 'http://' it is treated as file in 'project/jni/application/src/AndroidData' dir\n\n"
 echo -n "`echo $AppDataDownloadUrl | tr '^' '\\n'`"
 echo
 AppDataDownloadUrl1=""
@@ -103,6 +103,12 @@ if [ -n "$var" ] ; then
 	AppUsesJoystick="$var"
 fi
 
+echo -n "\nApplication will handle joystick center and sensitivity itself, \nSDL will send raw accelerometer data and won't show 'Accelerometer sensitivity' dialog (y) or (n) ($AppHandlesJoystickSensitivity): "
+read var
+if [ -n "$var" ] ; then
+	AppHandlesJoystickSensitivity="$var"
+fi
+
 echo -n "\nApplication uses multitouch (y) or (n), multitouch events are passed as 4-axis joysticks 1-5, with pressure and size,\nor additionally as SDL_FINGERDOWN/UP/MOTION events in SDL 1.3, with SDL pressure = Android pressure * Andorid touchspot size ($AppUsesMultitouch): "
 read var
 if [ -n "$var" ] ; then
@@ -117,7 +123,7 @@ if [ -n "$var" ] ; then
 	NonBlockingSwapBuffers="$var"
 fi
 
-echo -n "\nPrevent device from going to suspend mode while application is running (y/n) ($InhibitSuspend): "
+echo -n "\nPrevent device from going to sleep while application is running (y) or (n) - this setting is\napplied automatically if you're using accelerometer, but may be useful for video players etc ($InhibitSuspend): "
 read var
 if [ -n "$var" ] ; then
         InhibitSuspend="$var"
@@ -239,6 +245,7 @@ echo NeedDepthBuffer=$NeedDepthBuffer >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AndroidAppSettings.cfg
+echo AppHandlesJoystickSensitivity=$AppHandlesJoystickSensitivity >> AndroidAppSettings.cfg
 echo AppUsesMultitouch=$AppUsesMultitouch >> AndroidAppSettings.cfg
 echo NonBlockingSwapBuffers=$NonBlockingSwapBuffers >> AndroidAppSettings.cfg
 echo RedefinedKeys=\"$RedefinedKeys\" >> AndroidAppSettings.cfg
@@ -315,6 +322,12 @@ else
 	AppUsesJoystick=false
 fi
 
+if [ "$AppHandlesJoystickSensitivity" = "y" ] ; then
+	AppHandlesJoystickSensitivity=true
+else
+	AppHandlesJoystickSensitivity=false
+fi
+
 if [ "$AppUsesMultitouch" = "y" ] ; then
 	AppUsesMultitouch=true
 else
@@ -385,6 +398,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \
 	sed "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" | \
 	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \
+	sed "s/public static boolean AppHandlesJoystickSensitivity = .*;/public static boolean AppHandlesJoystickSensitivity = $AppHandlesJoystickSensitivity;/" | \
 	sed "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" | \
 	sed "s/public static boolean NonBlockingSwapBuffers = .*;/public static boolean NonBlockingSwapBuffers = $NonBlockingSwapBuffers;/" | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" | \
@@ -448,5 +462,11 @@ for LIB in freetype intl jpeg png lua mad stlport tremor xerces xml2; do
 	done
 done
 done
+
+rm -f project/assets/*
+if [ -d "project/jni/application/src/AndroidData" ] ; then
+	echo Copying asset files
+	cp project/jni/application/src/AndroidData/* project/assets/
+fi
 
 echo Done
