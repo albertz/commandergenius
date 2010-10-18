@@ -87,10 +87,10 @@ check if there's "crystax" string in path to gcc toolchain, and will disable STL
 NDK already contains STL library.
 
 Application data may be bundled with app itself, or downloaded from net on first run.
-Create .ZIP file with your application data, and put it on HTTP server, or to "project/assets" dir - 
-ChangeAppSettings.sh will ask you for the URL, if URL won't contain "http://" it will try to open file from assets.
-Note that there is some limit on maximum .APK file size on Market, like 20 Mb or so, so big files should be downloaded by HTTP.
-If you'll release new version of data files you should change download URL or asset file name and update your app as well -
+Create .ZIP file with your application data, and put it on HTTP server, or to "project/jni/application/src/AndroidData" dir - 
+ChangeAppSettings.sh will ask you for the URL, if URL won't contain "http://" it will try to unzip file from AndroidData dir.
+Note that there is limit on maximum .APK file size on Market, like 20 Mb or so, so big files should be downloaded by HTTP.
+If you'll release new version of data files you should change download URL or data file name and update your app as well -
 the app will re-download the data if URL does not match the saved URL from previous download.
 
 If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
