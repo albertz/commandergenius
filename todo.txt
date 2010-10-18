@@ -1,7 +1,6 @@
 Games to port
 =============
 
-TeeWorlds
 SuperTux
 LBreakout2
 OpenJazz (only data files for shareware version available for free)

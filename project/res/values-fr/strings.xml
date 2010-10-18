@@ -30,7 +30,7 @@
 
     <string name="controls_additional">Des contrôles supplémentaires à utiliser</string>
     <string name="controls_screenkb">Le clavier à l\'écran</string>
-    <string name="controls_accelnav">Accéléromètre que les touches de navigation</string>
+    <string name="controls_accelnav">Accéléromètre</string>
 
     <string name="controls_screenkb_size">Sur l\'écran la taille du clavier</string>
     <string name="controls_screenkb_large">Grand</string>

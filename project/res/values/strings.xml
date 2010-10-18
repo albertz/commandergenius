@@ -33,7 +33,7 @@
 
     <string name="controls_additional">Additional controls to use</string>
     <string name="controls_screenkb">On-screen keyboard</string>
-    <string name="controls_accelnav">Accelerometer as navigation keys</string>
+    <string name="controls_accelnav">Accelerometer</string>
 
     <string name="controls_screenkb_size">On-screen keyboard size</string>
     <string name="controls_screenkb_large">Large</string>
