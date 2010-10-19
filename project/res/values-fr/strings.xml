@@ -51,6 +51,12 @@
     <string name="accel_slow">Slow</string>
     <string name="accel_question">Sensibilité de l\'accéléromètre</string>
 
+    <string name="accel_floating">Flottante</string>
+    <string name="accel_fixed_start">Déterminée au démarrage de l\'application</string>
+    <string name="accel_fixed_horiz">Orientaton de la table</string>
+    <string name="accel_question_center">Position du centre de l\'accéléromètre</string>
+
+    <string name="audiobuf_verysmall">Très petite (appareils rapides, peu de délai)</string>
     <string name="audiobuf_small">Petite (appareils rapides)</string>
     <string name="audiobuf_medium">Moyenne</string>
     <string name="audiobuf_large">Grande (en cas de son par saccades)</string>
