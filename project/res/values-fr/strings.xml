@@ -3,8 +3,8 @@
     <string name="init">Démarrage</string>
     <string name="please_wait">Veuillez patienter pendant ques les données sont téléchargées</string>
 
-    <string name="device_config">Configuration de l\'apparel</string>
-    <string name="device_change_cfg">Changer la configuration de l\'apparel</string>
+    <string name="device_config">Configuration de l\'appareil</string>
+    <string name="device_change_cfg">Changer la configuration</string>
 
     <string name="download_unneeded">Inutile de télécharger</string>
     <string name="connecting_to">Connexion à %s</string>
@@ -19,25 +19,25 @@
     <string name="storage_phone">Stockage interne - %d Mo de libre</string>
     <string name="storage_sd">Carte SD - %d Mo de libre</string>
     <string name="storage_question">Où télécharger les données</string>
-	<string name="optional_downloads">Téléchargements en option</string>
+    <string name="optional_downloads">Téléchargements en option</string>
     <string name="ok">Fait</string>
-	
+
     <string name="controls_arrows">Flèches / joystick / dpad</string>
     <string name="controls_trackball">Trackball</string>
     <string name="controls_accel">Accéléromètre</string>
     <string name="controls_touch">Écran tactile</string>
     <string name="controls_question">Quel type de touches votre appareil a-t-il?</string>
 
-    <string name="controls_additional">Des contrôles supplémentaires à utiliser</string>
-    <string name="controls_screenkb">Le clavier à l\'écran</string>
+    <string name="controls_additional">Contrôles supplémentaires</string>
+    <string name="controls_screenkb">Clavier à l\'écran</string>
     <string name="controls_accelnav">Accéléromètre</string>
 
-    <string name="controls_screenkb_size">Sur l\'écran la taille du clavier</string>
-    <string name="controls_screenkb_large">Grand</string>
-    <string name="controls_screenkb_medium">Moyennes</string>
-    <string name="controls_screenkb_small">Petit</string>
+    <string name="controls_screenkb_size">Taille du clavier à l\'écran</string>
+    <string name="controls_screenkb_large">Grande</string>
+    <string name="controls_screenkb_medium">Moyenne</string>
+    <string name="controls_screenkb_small">Petite</string>
     <string name="controls_screenkb_tiny">Minuscule</string>
-    <string name="controls_screenkb_theme">Le thème de clavier à l\'écran</string>
+    <string name="controls_screenkb_theme">Thème du clavier à l\'écran</string>
     <string name="controls_screenkb_by">%s par %s</string>
 
     <string name="trackball_no_dampening">Sans limite</string>
