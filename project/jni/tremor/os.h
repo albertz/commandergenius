@@ -18,7 +18,7 @@
  ********************************************************************/
 
 #include <math.h>
-#include "os_types.h"
+#include <ogg/os_types.h>
 
 #ifndef _V_IFDEFJAIL_H_
 #  define _V_IFDEFJAIL_H_
@@ -45,7 +45,7 @@
 #  define BYTE_ORDER LITTLE_ENDIAN
 #endif
 
-#ifdef __ARMEB__
+#if defined(__ARMEB__)
 #define BIG_ENDIAN 1
 #define BYTE_ORDER BIG_ENDIAN
 #elif defined(__ARMEL__)
