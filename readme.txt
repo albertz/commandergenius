@@ -77,7 +77,7 @@ To compile your own app, put your app sources into project/jni/application dir, 
 to point to your app, then launch script ChangeAppSettings.sh - it will ask few questions and modify some Java code.
 You may take AndroidAppSettings.cfg file from some other application to get some sane defaults.
 The C++ files shall have .cpp extension to be compiled, rename them if necessary.
-Also you can replace icon image at project/res/drawable/icon.png.
+Also you can replace icon image at project/res/drawable/icon.png and image project/res/drawable/publisherlogo.png.
 Then you can launch build.sh.
 
 The NDK has RTTI and exceptions disabled for C++ code, if you need them you may download modified NDK from
