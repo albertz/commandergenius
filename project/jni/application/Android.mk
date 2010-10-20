@@ -35,6 +35,9 @@ LOCAL_CFLAGS += \
 				-I$(LOCAL_PATH)/../xml2/include \
 				-I$(LOCAL_PATH)/../xerces/src \
 				-I$(LOCAL_PATH)/../lua/src \
+				-I$(LOCAL_PATH)/../flac/include \
+				-I$(LOCAL_PATH)/../ogg/include \
+				-I$(LOCAL_PATH)/../vorbis/include \
 				-I$(LOCAL_PATH)/..
 
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)

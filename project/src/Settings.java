@@ -28,9 +28,8 @@ class Settings
 {
 	static String SettingsFileName = "libsdl-settings.cfg";
 
-	static AlertDialog changeConfigAlert = null;
-	static Thread changeConfigAlertThread = null;
 	static boolean settingsLoaded = false;
+	static boolean settingsChanged = false;
 
 	static void Save(final MainActivity p)
 	{
@@ -43,6 +42,7 @@ class Settings
 			out.writeBoolean(Globals.UseTouchscreenKeyboard);
 			out.writeInt(Globals.TouchscreenKeyboardSize);
 			out.writeInt(Globals.AccelerometerSensitivity);
+			out.writeInt(Globals.AccelerometerCenterPos);
 			out.writeInt(Globals.TrackballDampening);
 			out.writeInt(Globals.AudioBufferConfig);
 			out.writeInt(Globals.OptionalDataDownload.length);
@@ -61,9 +61,9 @@ class Settings
 	{
 		if(settingsLoaded) // Prevent starting twice
 		{
-			startDownloader(p);
 			return;
 		}
+		System.out.println("libSDL: Settings.Load(): enter");
 		try {
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
 			Globals.DownloadToSdcard = settingsFile.readBoolean();
@@ -73,6 +73,7 @@ class Settings
 			Globals.UseTouchscreenKeyboard = settingsFile.readBoolean();
 			Globals.TouchscreenKeyboardSize = settingsFile.readInt();
 			Globals.AccelerometerSensitivity = settingsFile.readInt();
+			Globals.AccelerometerCenterPos = settingsFile.readInt();
 			Globals.TrackballDampening = settingsFile.readInt();
 			Globals.AudioBufferConfig = settingsFile.readInt();
 			Globals.OptionalDataDownload = new boolean[settingsFile.readInt()];
@@ -81,54 +82,9 @@ class Settings
 			Globals.TouchscreenKeyboardTheme = settingsFile.readInt();
 			
 			settingsLoaded = true;
+
+			System.out.println("libSDL: Settings.Load(): loaded settings successfully");
 			
-			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(p.getResources().getString(R.string.device_config));
-			builder.setPositiveButton(p.getResources().getString(R.string.device_change_cfg),
-					new DialogInterface.OnClickListener()
-			{
-				public void onClick(DialogInterface dialog, int item) 
-				{
-						changeConfigAlert = null;
-						dialog.dismiss();
-						showDownloadConfig(p);
-				}
-			});
-			/*
-			builder.setNegativeButton("Start", new DialogInterface.OnClickListener() 
-			{
-				public void onClick(DialogInterface dialog, int item) 
-				{
-						changeConfigAlert = null;
-						dialog.dismiss();
-						startDownloader(p);
-				}
-			});
-			*/
-			AlertDialog alert = builder.create();
-			alert.setOwnerActivity(p);
-			changeConfigAlert = alert;
-
-			class Callback implements Runnable
-			{
-				MainActivity p;
-				Callback( MainActivity _p ) { p = _p; }
-				public void run()
-				{
-					try {
-						Thread.sleep(2000);
-					} catch( InterruptedException e ) {};
-					if( changeConfigAlert == null )
-						return;
-					changeConfigAlert.dismiss();
-					startDownloader(p);
-				}
-			};
-			changeConfigAlertThread = new Thread(new Callback(p));
-			changeConfigAlertThread.start();
-
-			alert.show();
-
 			return;
 			
 		} catch( FileNotFoundException e ) {
@@ -156,6 +112,12 @@ class Settings
 				"Unknown" ) );
 		*/
 
+		System.out.println("libSDL: Settings.Load(): loading settings failed, running config dialog");
+		showConfig(p);
+	}
+	
+	public static void showConfig(final MainActivity p) {
+		settingsChanged = true;
 		showDownloadConfig(p);
 	}
 
@@ -478,7 +440,7 @@ class Settings
 				Globals.AudioBufferConfig = item;
 				dialog.dismiss();
 				Save(p);
-				startDownloader(p);
+				p.startDownloader();
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -546,22 +508,6 @@ class Settings
 		}
 	}
 	
-	static void startDownloader(MainActivity p)
-	{
-		class Callback implements Runnable
-		{
-			public MainActivity Parent;
-			public void run()
-			{
-				Parent.startDownloader();
-			}
-		}
-		Callback cb = new Callback();
-		cb.Parent = p;
-		p.runOnUiThread(cb);
-	};
-	
-
 	private static native void nativeIsSdcardUsed(int flag);
 	private static native void nativeSetTrackballUsed();
 	private static native void nativeSetTrackballDampening(int value);

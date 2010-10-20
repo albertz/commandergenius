@@ -8,7 +8,12 @@ import android.view.MotionEvent;
 import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.content.res.Configuration;
 
 
@@ -25,27 +30,110 @@ public class MainActivity extends Activity {
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-		_tv = new TextView(this);
-		_tv.setText(R.string.init);
-		setContentView(_tv);
+		System.out.println("libSDL: Creating startup screen");
+		_layout = new LinearLayout(this);
+		_layout.setOrientation(LinearLayout.VERTICAL);
+		_layout.setLayoutParams(new LinearLayout.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+		_layout2 = new LinearLayout(this);
+		_layout2.setLayoutParams(new LinearLayout.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+		_btn = new Button(this);
+		_btn.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+		_btn.setText(getResources().getString(R.string.device_change_cfg));
+		class onClickListener implements View.OnClickListener
+		{
+				public MainActivity p;
+				onClickListener( MainActivity _p ) { p = _p; }
+				public void onClick(View v)
+				{
+					System.out.println("libSDL: User clicked change phone config button");
+					Settings.showConfig(p);
+				}
+		};
+		_btn.setOnClickListener(new onClickListener(this));
+
+		_layout2.addView(_btn);
+
+		_layout.addView(_layout2);
+		
+		ImageView img = new ImageView(this);
+
+		img.setScaleType(ImageView.ScaleType.FIT_CENTER /* FIT_XY */ );
+		img.setImageResource(R.drawable.publisherlogo);
+		img.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+		_layout.addView(img);
+		
+		setContentView(_layout);
+
 		if(mAudioThread == null) // Starting from background (should not happen)
 		{
+				System.out.println("libSDL: Loading libraries");
 			mLoadLibraryStub = new LoadLibrary();
 			mAudioThread = new AudioThread(this);
+			System.out.println("libSDL: Loading settings");
 			Settings.Load(this);
 		}
+
+		if( !Settings.settingsChanged )
+		{
+			System.out.println("libSDL: 3-second timeout in startup screen");
+			class Callback implements Runnable
+			{
+				MainActivity p;
+				Callback( MainActivity _p ) { p = _p; }
+				public void run()
+				{
+					try {
+						Thread.sleep(3000);
+					} catch( InterruptedException e ) {};
+					if( Settings.settingsChanged )
+						return;
+					System.out.println("libSDL: Timeout reached in startup screen, process with downloader");
+					p.startDownloader();
+				}
+			};
+			Thread changeConfigAlertThread = null;
+			changeConfigAlertThread = new Thread(new Callback(this));
+			changeConfigAlertThread.start();
+		}
 	}
-	
+
 	public void startDownloader()
 	{
-		if( downloader == null )
-			downloader = new DataDownloader(this, _tv);
+		System.out.println("libSDL: Starting data downloader");
+		class Callback implements Runnable
+		{
+			public MainActivity Parent;
+			public void run()
+			{
+				System.out.println("libSDL: Removing button from startup screen and adding status text");
+				if( Parent._btn != null )
+				{
+					Parent._layout2.removeView(Parent._btn);
+					Parent._btn = null;
+				}
+				if( Parent._tv == null )
+				{
+					Parent._tv = new TextView(Parent);
+					Parent._tv.setText(R.string.init);
+					Parent._layout2.addView(Parent._tv);
+				}
+
+				System.out.println("libSDL: Starting downloader");
+				if( Parent.downloader == null )
+					Parent.downloader = new DataDownloader(Parent, Parent._tv);
+			}
+		}
+		Callback cb = new Callback();
+		cb.Parent = this;
+		this.runOnUiThread(cb);
 	}
 
 	public void initSDL()
 	{
 		if(sdlInited)
 			return;
+		System.out.println("libSDL: Initializing video and SDL application");
 		sdlInited = true;
 		if(Globals.UseAccelerometerAsArrowKeys)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
@@ -126,6 +214,8 @@ public class MainActivity extends Activity {
 	public boolean dispatchTouchEvent(final MotionEvent ev) {
 		if(mGLView != null)
 			mGLView.onTouchEvent(ev);
+		else if( _btn != null )
+			return _btn.dispatchTouchEvent(ev);
 		return true;
 	}
 
@@ -158,6 +248,9 @@ public class MainActivity extends Activity {
 	private static AudioThread mAudioThread = null;
 	private static DataDownloader downloader = null;
 	private TextView _tv = null;
+	private Button _btn = null;
+	private LinearLayout _layout = null;
+	private LinearLayout _layout2 = null;
 	private boolean sdlInited = false;
 
 }
