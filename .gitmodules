@@ -1,0 +1,3 @@
+[submodule "project/jni/application/commandergenius"]
+	path = project/jni/application/commandergenius
+	url = git://clonekeenplus.git.sourceforge.net/gitroot/clonekeenplus/clonekeenplus
