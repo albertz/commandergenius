@@ -1,6 +1,6 @@
 
 # The namespace in Java file, with dots replaced with underscores
-SDL_JAVA_PACKAGE_PATH := org_enigmagame_enigma
+SDL_JAVA_PACKAGE_PATH := net_sourceforge_clonekeenplus
 
 # Path to shared libraries - Android 1.6 cannot load them properly, thus we have to specify absolute path here
 # SDL_SHARED_LIBRARIES_PATH := /data/data/de.schwardtnet.alienblaster/lib
@@ -10,7 +10,7 @@ SDL_JAVA_PACKAGE_PATH := org_enigmagame_enigma
 # Typically /sdcard/alienblaster 
 # Or /data/data/de.schwardtnet.alienblaster/files if you're planning to unpack data in application private folder
 # Your application will just set current directory there
-SDL_CURDIR_PATH := org.enigmagame.enigma
+SDL_CURDIR_PATH := net.sourceforge.clonekeenplus
 
 # Android Dev Phone G1 has trackball instead of cursor keys, and 
 # sends trackball movement events as rapid KeyDown/KeyUp events,
@@ -23,19 +23,19 @@ SDL_TRACKBALL_KEYUP_DELAY := 1
 # resized in HW-accelerated way, however it eats a tiny bit of CPU
 SDL_VIDEO_RENDER_RESIZE := 1
 
-SDL_VIDEO_RENDER_RESIZE_KEEP_ASPECT := 1
+SDL_VIDEO_RENDER_RESIZE_KEEP_ASPECT := 0
 
-COMPILED_LIBRARIES := sdl_mixer sdl_image sdl_ttf intl lua png xerces
+COMPILED_LIBRARIES := tremor ogg
 
-APPLICATION_ADDITIONAL_CFLAGS := -finline-functions -O2
+APPLICATION_ADDITIONAL_CFLAGS := -finline-functions -O2 -DTREMOR=1 -DBUILD_TYPE=LINUX32 -DTARGET_LNX=1 -Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
 
-APPLICATION_ADDITIONAL_LDFLAGS := 
+APPLICATION_ADDITIONAL_LDFLAGS := -ltremor
 
-APPLICATION_SUBDIRS_BUILD := 
+APPLICATION_SUBDIRS_BUILD := src/*
 
 APPLICATION_CUSTOM_BUILD_SCRIPT := 
 
-SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCODE_0=RETURN -DSDL_ANDROID_KEYCODE_1=LCTRL -DSDL_ANDROID_KEYCODE_2=PAGEUP -DSDL_ANDROID_KEYCODE_3=PAGEDOWN -DSDL_ANDROID_KEYCODE_4=LCTRL
+SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCODE_0=LCTRL -DSDL_ANDROID_KEYCODE_1=LALT -DSDL_ANDROID_KEYCODE_2=SPACE -DSDL_ANDROID_KEYCODE_3=RETURN -DSDL_ANDROID_KEYCODE_4=RETURN
 
 SDL_VERSION := 1.2
 

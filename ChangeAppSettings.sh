@@ -430,7 +430,7 @@ fi
 
 echo Patching project/jni/Application.mk
 cat project/jni/Application.mk | \
-	sed "s/APP_MODULES := .*/APP_MODULES := application sdl-$LibSdlVersion sdl_main stlport ogg flac tremor vorbis png jpeg freetype xerces $CompiledLibraries/" | \
+	sed "s/APP_MODULES := .*/APP_MODULES := application sdl-$LibSdlVersion sdl_main stlport jpeg png ogg flac vorbis freetype $CompiledLibraries/" | \
 	sed "s/APP_ABI := .*/APP_ABI := $MultiABI/" > \
 	project/jni/Application.mk.1
 if [ -n "`diff -w project/jni/Application.mk.1 project/jni/Application.mk`" ] ; then
