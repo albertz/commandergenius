@@ -45,6 +45,9 @@
 
 #define _THIS	SDL_VideoDevice *this
 
+#define DEBUGOUT(...)
+//#define DEBUGOUT(...) __android_log_print(ANDROID_LOG_INFO, "libSDL", __VA_ARGS__)
+
 /* Initialization/Query functions */
 static int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat);
 static SDL_Rect **ANDROID_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags);
@@ -259,8 +262,10 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	current->pitch = SDL_ANDROID_sFakeWindowWidth * ANDROID_BYTESPERPIXEL;
 	current->pixels = NULL;
 	current->hwdata = NULL;
+
 	HwSurfaceCount = 0;
 	HwSurfaceList = NULL;
+	DEBUGOUT("ANDROID_SetVideoMode() HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 	
 	if( ! sdl_opengl )
 	{
@@ -301,6 +306,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 			HwSurfaceCount++;
 			HwSurfaceList = SDL_realloc( HwSurfaceList, HwSurfaceCount * sizeof(SDL_Surface *) );
 			HwSurfaceList[HwSurfaceCount-1] = current;
+			DEBUGOUT("ANDROID_SetVideoMode() HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 		}
 	}
 
@@ -333,10 +339,12 @@ void ANDROID_VideoQuit(_THIS)
 {
 	if( ! sdl_opengl )
 	{
+		DEBUGOUT("ANDROID_VideoQuit() in HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 		HwSurfaceCount = 0;
 		if(HwSurfaceList)
 			SDL_free(HwSurfaceList);
 		HwSurfaceList = NULL;
+		DEBUGOUT("ANDROID_VideoQuit() out HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 
 		if( SDL_CurrentVideoSurface->hwdata )
 			SDL_DestroyTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata);
@@ -371,12 +379,14 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 	if ( ! (surface->w && surface->h) )
 		return(-1);
 
+	DEBUGOUT("ANDROID_AllocHWSurface() surface %p w %d h %d", surface, surface->w, surface->h);
 	Uint32 format = SDL_PIXELFORMAT_RGBA5551; // 1-bit alpha for color key, every surface will have colorkey so it's easier for us
 	if( surface->format->Amask )
 	{
 		SDL_PixelFormat format1;
 		int bpp;
 		format = SDL_PIXELFORMAT_RGBA4444;
+		DEBUGOUT("ANDROID_AllocHWSurface() SDL_PIXELFORMAT_RGBA4444");
 		SDL_zero(format1);
 		SDL_PixelFormatEnumToMasks( format, &bpp,
 									&format1.Rmask, &format1.Gmask,
@@ -390,6 +400,7 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 	}
 	else
 	{
+		DEBUGOUT("ANDROID_AllocHWSurface() SDL_PIXELFORMAT_RGBA5551");
 		// HW-accel surface should be RGB565
 		if( !( SDL_CurrentVideoSurface->format->BitsPerPixel == surface->format->BitsPerPixel &&
 			SDL_CurrentVideoSurface->format->Rmask == surface->format->Rmask &&
@@ -416,9 +427,12 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 	}
 	
 	surface->flags |= SDL_HWSURFACE | SDL_HWACCEL;
-	
+
 	HwSurfaceCount++;
+	DEBUGOUT("ANDROID_AllocHWSurface() in HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 	HwSurfaceList = SDL_realloc( HwSurfaceList, HwSurfaceCount * sizeof(SDL_Surface *) );
+	DEBUGOUT("ANDROID_AllocHWSurface() out HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
+
 	HwSurfaceList[HwSurfaceCount-1] = surface;
 	
 	return 0;
@@ -430,7 +444,10 @@ static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface)
 	if( !surface->hwdata )
 		return;
 	SDL_DestroyTexture((struct SDL_Texture *)surface->hwdata);
+
+	DEBUGOUT("ANDROID_FreeHWSurface() surface %p w %d h %d in HwSurfaceCount %d HwSurfaceList %p", surface, surface->w, surface->h, HwSurfaceCount, HwSurfaceList);
 	
+
 	for( i = 0; i < HwSurfaceCount; i++ )
 	{
 		if( HwSurfaceList[i] == surface )
@@ -439,6 +456,7 @@ static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface)
 			memmove(HwSurfaceList + i, HwSurfaceList + i + 1, sizeof(SDL_Surface *) * (HwSurfaceCount - i) );
 			HwSurfaceList = SDL_realloc( HwSurfaceList, HwSurfaceCount * sizeof(SDL_Surface *) );
 			i = -1;
+			DEBUGOUT("ANDROID_FreeHWSurface() in HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 			break;
 		}
 	}
