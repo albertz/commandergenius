@@ -53,8 +53,12 @@ texture on HTC G1. Software surfaces may be of any size of course (but you don't
 
 Alternatively, SDL 1.2 is available too, you may use it with SW video as usual, however if you want HW acceleration
 there are few restrictions: you cannot currently blit SW surface to screen, it should be only HW surface,
-also alpha-surfaces seem to not work (did not check it thoroughly, will be glad for test reports) -
-you still can use per-surface alpha. Basically your code should be like:
+however you can use colorkey, per-surface alpha and per-pixel alpha.
+Also the screen is always double-buffered, and after each SDL_Flip() there is garbage in pixel buffer,
+so forget about dirty rects and partial screen updates - you have to re-render whole picture each frame.
+Single-buffer rendering might be possible with techniques like glFramebufferTexture2D(),
+however it may not be present on all devices, so I won't do that.
+Basically your code should be like:
 
 // Init HW-accelerated video
 SDL_SetVideoMode( 640, 480, 16, SDL_DOUBLEBUF | SDL_HWSURFACE );
@@ -68,10 +72,13 @@ SDL_Surface * hwSprite = SDL_DisplayFormat(sprite);
 SDL_SetAlpha( hwSprite, SDL_SRCALPHA, 128 );
 // Blit it in HW-accelerated way
 SDL_BlitSurface(hwSprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
+
 // Wrong, blitting SW surfaces to screen not supported
 SDL_BlitSurface(sprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
+
 // Wrong, copying from video surface not supported
 SDL_BlitSurface(SDL_GetVideoSurface(), sourceRect, sprite, &targetRect);
+// In the future I may add implementation to read screen buffer with glReadPixels(), however it will be slow (okay for screenshots).
 
 To compile your own app, put your app sources into project/jni/application dir, and change symlink "src"
 to point to your app, then launch script ChangeAppSettings.sh - it will ask few questions and modify some Java code.
@@ -95,6 +102,9 @@ the app will re-download the data if URL does not match the saved URL from previ
 
 If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
 add libname to project/jni/<yourapp>/Android.mk
+If lib contains "configure" script - go to lib dir and execute command "../launchConfigureLib.sh" - it will
+launch "configure" with appropriate environment and will create the "config.h" file at least, though linking
+will most probably fail because of ranlib - just edit Android.mk to compile lib sources and remove all tools and tests.
 
 The ARM architecture has some limitations which you have to be aware about -
 if you'll access integer that's not 4-byte aligned you'll get garbage instead of correct value,
