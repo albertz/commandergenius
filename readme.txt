@@ -9,7 +9,7 @@ This should be compiled with Android 2.2 SDK and NDK r4b - google for them and i
 You'll need to install Ant too.
 The most supported environnment for that port is Linux, MacOs should be okay too, 
 however if you'll use launchConfigure.sh script you'll have to replace "linux-x86" to "darwin-x86" inside it.
-If you're developing on Windows you'd better install andLinux or Ubuntu+Wubi, to get proper Linux environment
+If you're developing under Windows you'd better install andLinux or Ubuntu+Wubi, to get proper Linux environment
 running inside Windows, then install Linux toolchain on it. I was told andLinux compiles faster than Cygwin.
 Also you'll need full set of Linux utils and symlinks support to launch ChangeAppSettings.sh (sh, grep, sed, tr).
 
@@ -19,13 +19,13 @@ How to compile Alien Blaster demo application
 Go to "project" directory and launch command
 	android update project -p .
 Then go back, edit file build.sh if needed to add NDK dir to your PATH, then launch it.
-Hopefully it will compile a bunch of libs under project/libs/armeabi,
+It will compile a bunch of libs under project/libs/armeabi,
 create file project/bin/DemoActivity-debug.apk and install it on your device or emulator.
 Then you can test it by launching Alien Blaster icon from Android applications menu.
 It's designed for 640x480, so if you have smaller screen it will be resized.
 Note: The game enforces horizontal screen orientation, you may open your keyboard and use it for
 additional keys - the phone will just keep current screen orientation.
-Newer Android phones like HTC Evo have no keyboard at all, on-screen keyboard built into libSDL
+Recent Android phone models like HTC Evo have no keyboard at all, on-screen keyboard built into libSDL
 is available for such devices (it's rather limited yet, only joystick and 7 keys, no text input).
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
@@ -167,7 +167,7 @@ Also it's a good practice to pause any application audio, especially if the user
 and if you won't set your own callbacks the default callbacks will do exactly that.
 There are circumstances when you want to avoid that, for example if the application is audio player,
 or if application gets some notification over network (for example you're running a game server,
-and want a beep when someone connects to you) - you may unpause audio for some short time then,
+and want a beep when someone connects to you) - you may unpause audio for some short time,
 that will require another thread to watch the network, because main thread will be blocked inside SDL_Flip().
 
 The application is not allowed to do any GFX output without OpenGL context (or it will crash),
@@ -179,7 +179,7 @@ so it's good idea to implement some maximum time cap on game frame, so it won't 
 the game to the end level 'till the app is in background, or calculate the difference in time
 between appPutToBackground() and appRestored() and update game time variables.
 
-Alternatively, you may enable option for unblocked SDL_Flip() in ChangeAppSettings script, 
+Alternatively, you may enable option for unblocked SDL_Flip() in ChangeAppSettings script,
 then you'll have to implement special event loop right after each SDL_Flip() call:
 
 SDL_Flip();
@@ -217,7 +217,8 @@ recmpile and reinstall your app to Android 2.2 emulator or Android 2.2 device, g
 	ndk-gdb --verbose --start --force
 then when it fails enter command
 	target remote:5039 (then it will fail again)
-Note that it's extremely buggy, and I had no any success in debugging my app with ndk-gdb.
+Note that it's extremely buggy, and I had no any success in debugging my app with ndk-gdb 
+(I was trying with NDK r4, NDK r4b might work better).
 So it's best to debug with code like:
 	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
 and then watching "adb logcat" output.
@@ -241,7 +242,7 @@ I/DEBUG   (   51):          #03  pc 0002ca00  /data/data/de.schwardtnet.alienbla
 I/DEBUG   (   51):          #04  pc 00028b6e  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
 I/DEBUG   (   51):          #05  pc 0002d080  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
 
-2. Go to project/bin/ndk/local/armeabi dir, find there the library mentioned in stacktrace 
+2. Go to project/bin/ndk/local/armeabi dir, find there the library mentioned in stacktrace
 (libsdl.so in our example), copy the address of the first line of stacktrace (0002ca00), and execute command
 
 gdb libsdl.so -ex "list *0x0002ca00"
@@ -251,9 +252,13 @@ It will output the exact line in your source where the application crashed.
 License information
 ===================
 
-The libSDL port itself is licensed under LGPL.
+The libSDL port itself is licensed under LGPL, so you may use it for commercial app without releasing sources,
+however you'll have to release the file ChangeAppSettings.sh to allow linking newer version of libSDL with
+your compiled application, as LGPL requires.
 It contains separate libraries under project/jni, each of which has it's own license,
 I've tried to compile all LGPL-ed libs as shared libs but you should anyway inspect the licenses
 of the libraries you're linking to if you're creating closed-source app.
+libMAD is licensed under GPL, so if you're planning to make commercial app you should avoid using it,
+otherwise you'll have to release your application sources under GPL too.
 
 The "Ultimate Droid" button theme by Sean Stieber is licensed under Creative Commons - Attribution license.
