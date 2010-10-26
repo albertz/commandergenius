@@ -23,7 +23,7 @@ common_SRC_FILES := \
 
 common_CFLAGS := ## -fomit-frame-pointer
 
-common_C_INCLUDES += -I$(LOCAL_PATH)/include
+common_C_INCLUDES += $(LOCAL_PATH)/include
 
 # For the host
 # =====================================================
