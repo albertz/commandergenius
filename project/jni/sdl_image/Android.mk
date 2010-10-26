@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := sdl_image
 
-LOCAL_CFLAGS := -I$(LOCAL_PATH) -I$(LOCAL_PATH)/../jpeg -I$(LOCAL_PATH)/../png -I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include \
+LOCAL_CFLAGS := -I$(LOCAL_PATH) -I$(LOCAL_PATH)/../jpeg -I$(LOCAL_PATH)/../png -I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include -I$(LOCAL_PATH)/include \
 				-DLOAD_PNG -DLOAD_JPG -DLOAD_GIF -DLOAD_BMP
 
 LOCAL_CPP_EXTENSION := .cpp

@@ -6,7 +6,7 @@ XERCES_SUBDIRS := $(patsubst $(LOCAL_PATH)/%, %, $(shell find $(LOCAL_PATH)/src/
 
 LOCAL_MODULE := xerces
 
-LOCAL_CFLAGS := -DHAVE_CONFIG_H -I$(LOCAL_PATH) -I$(LOCAL_PATH)/src -I$(LOCAL_PATH)/..
+LOCAL_CFLAGS := -DHAVE_CONFIG_H -I$(LOCAL_PATH) -I$(LOCAL_PATH)/src -I$(LOCAL_PATH)/include -I$(LOCAL_PATH)/..
 
 LOCAL_CPP_EXTENSION := .cpp
 

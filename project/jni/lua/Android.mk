@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := lua
 
-LOCAL_CFLAGS := -I$(LOCAL_PATH)/src
+LOCAL_CFLAGS := -I$(LOCAL_PATH)/src -I$(LOCAL_PATH)/include
 
 LOCAL_CPP_EXTENSION := .cpp
 

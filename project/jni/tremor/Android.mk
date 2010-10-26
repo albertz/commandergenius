@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := tremor
 
-LOCAL_CFLAGS := -I$(LOCAL_PATH) -DHAVE_ALLOCA_H -I$(LOCAL_PATH)/../ogg/include/ogg -I$(LOCAL_PATH)/../ogg/include
+LOCAL_CFLAGS := -I$(LOCAL_PATH) -DHAVE_ALLOCA_H -I$(LOCAL_PATH)/../ogg/include/ogg -I$(LOCAL_PATH)/../ogg/include -I$(LOCAL_PATH)/include
 
 LOCAL_CPP_EXTENSION := .cpp
 

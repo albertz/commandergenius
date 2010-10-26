@@ -26,24 +26,7 @@ endif
 LOCAL_CFLAGS += \
 				$(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
 				-I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include \
-				-I$(LOCAL_PATH)/../sdl_mixer \
-				-I$(LOCAL_PATH)/../sdl_image \
-				-I$(LOCAL_PATH)/../sdl_ttf \
-				-I$(LOCAL_PATH)/../sdl_net \
-				-I$(LOCAL_PATH)/../sdl_blitpool \
-				-I$(LOCAL_PATH)/../sdl_gfx \
-				-I$(LOCAL_PATH)/../png \
-				-I$(LOCAL_PATH)/../jpeg \
-				-I$(LOCAL_PATH)/../intl \
-				-I$(LOCAL_PATH)/../freetype/include \
-				-I$(LOCAL_PATH)/../xml2/include \
-				-I$(LOCAL_PATH)/../xerces/src \
-				-I$(LOCAL_PATH)/../lua/src \
-				-I$(LOCAL_PATH)/../flac/include \
-				-I$(LOCAL_PATH)/../ogg/include \
-				-I$(LOCAL_PATH)/../vorbis/include \
-				-I$(LOCAL_PATH)/../mad/include \
-				-I$(LOCAL_PATH)/..
+				$(foreach L, $(COMPILED_LIBRARIES), -I$(LOCAL_PATH)/../$(L)/include)
 
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
 
@@ -104,11 +87,8 @@ LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 $(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg
 	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh
 
-# $(realpath $(LOCAL_PATH)/../../libs/armeabi/libapplication.so) \
-
 $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so): $(LOCAL_PATH)/src/libapplication.so OVERRIDE_CUSTOM_LIB
 	cp -f $< $@
-#	$(patsubst %-gcc,%-strip,$(TARGET_CC)) -g $@
 
 .PHONY: OVERRIDE_CUSTOM_LIB
 
