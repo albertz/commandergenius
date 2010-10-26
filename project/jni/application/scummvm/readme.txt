@@ -1,4 +1,5 @@
 To compile ScummVM add the ScummVM SVN to directory "scummvm" (or make a symlink to it),
+apply the patch 'scummvm-trunk-53822.diff' to the SVN,
 then from dir 'project/jni/application' execute commands
 
 rm src
