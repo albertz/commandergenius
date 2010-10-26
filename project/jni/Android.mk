@@ -1,6 +1,6 @@
 
 # The namespace in Java file, with dots replaced with underscores
-SDL_JAVA_PACKAGE_PATH := net_sourceforge_jooleem
+SDL_JAVA_PACKAGE_PATH := org_scummvm_sdl
 
 # Path to shared libraries - Android 1.6 cannot load them properly, thus we have to specify absolute path here
 # SDL_SHARED_LIBRARIES_PATH := /data/data/de.schwardtnet.alienblaster/lib
@@ -10,7 +10,7 @@ SDL_JAVA_PACKAGE_PATH := net_sourceforge_jooleem
 # Typically /sdcard/alienblaster 
 # Or /data/data/de.schwardtnet.alienblaster/files if you're planning to unpack data in application private folder
 # Your application will just set current directory there
-SDL_CURDIR_PATH := net.sourceforge.jooleem
+SDL_CURDIR_PATH := org.scummvm.sdl
 
 # Android Dev Phone G1 has trackball instead of cursor keys, and 
 # sends trackball movement events as rapid KeyDown/KeyUp events,
@@ -25,17 +25,17 @@ SDL_VIDEO_RENDER_RESIZE := 1
 
 SDL_VIDEO_RENDER_RESIZE_KEEP_ASPECT := 0
 
-COMPILED_LIBRARIES := sdl_mixer sdl_image sdl_ttf
+COMPILED_LIBRARIES := mad tremor flac ogg jpeg png
 
-APPLICATION_ADDITIONAL_CFLAGS := -finline-functions -O2
+APPLICATION_ADDITIONAL_CFLAGS := -finline-functions -O2 -DUSE_OSD -DUSE_RGB_COLOR -DUNIX -DUSE_VORBIS -DUSE_TREMOR -DUSE_FLAC -DUSE_MAD -DUSE_PNG -DUSE_JPEG -DUSE_ZLIB -DENABLE_SCUMM -DENABLE_SCUMM_7_8 -DENABLE_HE -DENABLE_AGI -DENABLE_AGOS -DENABLE_AGOS2 -DENABLE_CINE -DENABLE_CRUISE -DENABLE_DRACI -DENABLE_DRASCULA -DENABLE_GOB -DENABLE_GROOVIE -DENABLE_GROOVIE2 -DENABLE_HUGO -DENABLE_KYRA -DENABLE_LOL -DENABLE_LASTEXPRESS -DENABLE_LURE -DENABLE_M4 -DENABLE_MADE -DENABLE_MOHAWK -DENABLE_PARALLACTION -DENABLE_QUEEN -DENABLE_SAGA -DENABLE_IHNM -DENABLE_SAGA2 -DENABLE_SCI -DENABLE_SCI32 -DENABLE_SKY -DENABLE_SWORD1 -DENABLE_SWORD2 -DENABLE_SWORD25 -DENABLE_TESTBED -DENABLE_TEENAGENT -DENABLE_TINSEL -DENABLE_TOON -DENABLE_TOUCHE -DENABLE_TUCKER
 
 APPLICATION_ADDITIONAL_LDFLAGS := 
 
-APPLICATION_SUBDIRS_BUILD := 
+APPLICATION_SUBDIRS_BUILD := scummvm scummvm/backends scummvm/backends/platform/sdl scummvm/backends/keymapper/* scummvm/backends/events/* scummvm/backends/plugins/sdl scummvm/backends/saves/posix scummvm/backends/saves/default scummvm/backends/saves scummvm/backends/timer/default scummvm/backends/fs/posix scummvm/backends/fs scummvm/backends/vkeybd/* scummvm/backends/midi/* scummvm/base/* scummvm/common/* scummvm/engines/* scummvm/graphics/* scummvm/gui/* scummvm/sound/*
 
 APPLICATION_CUSTOM_BUILD_SCRIPT := 
 
-SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN
+SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCODE_0=SPACE -DSDL_ANDROID_KEYCODE_1=RETURN -DSDL_ANDROID_KEYCODE_2=LCTRL -DSDL_ANDROID_KEYCODE_3=LALT -DSDL_ANDROID_KEYCODE_4=SPACE
 
 SDL_VERSION := 1.2
 
