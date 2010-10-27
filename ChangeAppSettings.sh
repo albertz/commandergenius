@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh                            
 
 CHANGE_APP_SETTINGS_VERSION=12
 AUTO=
@@ -181,8 +181,8 @@ if [ -n "$var" ] ; then
 fi
 
 echo -n "\nOptional shared libraries to compile - removing some of them will save space\nMP3 support by libMAD is encumbered by patents and libMAD is GPL-ed\n"
-grep 'Available' project/jni/Application.mk 
-grep 'depends on' project/jni/Application.mk
+grep 'Available' project/jni/SettingsTemplate.mk 
+grep 'depends on' project/jni/SettingsTemplate.mk
 echo -n "Current: $CompiledLibraries\n\n: "
 read var
 if [ -n "$var" ] ; then
@@ -353,7 +353,7 @@ else
 	MultiABI="armeabi"
 fi
 LibrariesToLoad="System.loadLibrary(\\\"sdl-$LibSdlVersion\\\");"
-StaticLibraries=`grep 'APP_AVAILABLE_STATIC_LIBS' project/jni/Application.mk | sed 's/.*=\(.*\)/\1/'`
+StaticLibraries=`grep 'APP_AVAILABLE_STATIC_LIBS' project/jni/SettingsTemplate.mk | sed 's/.*=\(.*\)/\1/'`
 echo StaticLibraries $StaticLibraries
 for lib in $CompiledLibraries; do
 	process=true
@@ -372,21 +372,21 @@ fi
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 
 echo Patching project/AndroidManifest.xml
-cat project/AndroidManifest.xml | \
+cat project/AndroidManifestTemplate.xml | \
 	sed "s/package=.*/package=\"$AppFullName\"/" | \
 	sed "s/android:screenOrientation=.*/android:screenOrientation=\"$ScreenOrientation1\"/" | \
 	sed "s^android:versionCode=.*^android:versionCode=\"$AppVersionCode\"^" | \
 	sed "s^android:versionName=.*^android:versionName=\"$AppVersionName\"^" > \
-	project/AndroidManifest.xml.1
-mv -f project/AndroidManifest.xml.1 project/AndroidManifest.xml
+	project/AndroidManifest.xml
 
-for F in project/src/*.java; do
+rm -rf project/src
+mkdir -p project/src
+cd project/java
+for F in *.java; do
 	echo Patching $F
-	cat $F | \
-		sed "s/package .*;/package $AppFullName;/" > \
-		$F.1
-	mv -f $F.1 $F
+	cat $F | sed "s/package .*;/package $AppFullName;/" > ../src/$F
 done
+cd ../..
 
 echo Patching project/src/Globals.java
 cat project/src/Globals.java | \
@@ -408,8 +408,10 @@ cat project/src/Globals.java | \
 	project/src/Globals.java.1
 mv -f project/src/Globals.java.1 project/src/Globals.java
 
-echo Patching project/jni/Android.mk
-cat project/jni/Android.mk | \
+echo Patching project/jni/Settings.mk
+cat project/jni/SettingsTemplate.mk | \
+	sed "s/APP_MODULES := .*/APP_MODULES := application sdl-$LibSdlVersion sdl_main stlport jpeg png ogg flac vorbis freetype $CompiledLibraries/" | \
+	sed "s/APP_ABI := .*/APP_ABI := $MultiABI/" | \
 	sed "s/SDL_JAVA_PACKAGE_PATH := .*/SDL_JAVA_PACKAGE_PATH := $AppFullNameUnderscored/" | \
 	sed "s^SDL_CURDIR_PATH := .*^SDL_CURDIR_PATH := $DataPath^" | \
 	sed "s^SDL_VIDEO_RENDER_RESIZE := .*^SDL_VIDEO_RENDER_RESIZE := $SdlVideoResize^" | \
@@ -421,29 +423,16 @@ cat project/jni/Android.mk | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \
 	sed "s^SDL_VERSION :=.*^SDL_VERSION := $LibSdlVersion^"  > \
-	project/jni/Android.mk.1
-if [ -n "`diff -w project/jni/Android.mk.1 project/jni/Android.mk`" ] ; then
-	mv -f project/jni/Android.mk.1 project/jni/Android.mk
-else
-	rm -rf project/jni/Android.mk.1
-fi
+	project/jni/Settings.mk
 
-echo Patching project/jni/Application.mk
-cat project/jni/Application.mk | \
-	sed "s/APP_MODULES := .*/APP_MODULES := application sdl-$LibSdlVersion sdl_main stlport jpeg png ogg flac vorbis freetype $CompiledLibraries/" | \
-	sed "s/APP_ABI := .*/APP_ABI := $MultiABI/" > \
-	project/jni/Application.mk.1
-if [ -n "`diff -w project/jni/Application.mk.1 project/jni/Application.mk`" ] ; then
-	mv -f project/jni/Application.mk.1 project/jni/Application.mk
-else
-	rm -rf project/jni/Application.mk.1
-fi
-
-echo Patching project/res/values/strings.xml
-cat project/res/values/strings.xml | \
+echo Patching strings.xml
+rm -rf project/res/values*
+cd project/java/translations
+for F in */strings.xml; do
+	cat $F | \
 	sed "s^[<]string name=\"app_name\"[>].*^<string name=\"app_name\">$AppName</string>^" > \
-	project/res/values/strings.xml.1
-mv -f project/res/values/strings.xml.1 project/res/values/strings.xml
+	../../res/$F
+cd ../../..
 
 echo If you change libSDL version you have to clean all files in project/libs/obj
 rm -rf project/libs/*

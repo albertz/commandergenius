@@ -1,4 +1,13 @@
 
+# Available libraries: mad (GPL-ed!) sdl_mixer sdl_image sdl_ttf sdl_net sdl_blitpool sdl_gfx intl xml2 lua jpeg png ogg flac tremor vorbis freetype xerces
+APP_MODULES := application sdl-1.2 sdl_main stlport jpeg png ogg flac vorbis freetype tremor ogg
+
+# To filter out static libs from all libs in makefile
+APP_AVAILABLE_STATIC_LIBS := jpeg png tremor freetype xerces ogg tremor vorbis flac
+
+APP_ABI := armeabi
+
+
 # The namespace in Java file, with dots replaced with underscores
 SDL_JAVA_PACKAGE_PATH := net_sourceforge_clonekeenplus
 
@@ -39,15 +48,3 @@ SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCO
 
 SDL_VERSION := 1.2
 
-# If SDL_Mixer should link to libMAD
-SDL_MIXER_USE_LIBMAD :=
-ifneq ($(strip $(filter mad, $(COMPILED_LIBRARIES))),)
-SDL_MIXER_USE_LIBMAD := 1
-endif
-
-ifneq ($(findstring -crystax,$(TARGET_CC)),)
-$(info Building with CrystaX toolchain - RTTI and exceptions enabled, STLPort disabled)
-CRYSTAX_TOOLCHAIN=1
-endif
-
-include $(call all-subdir-makefiles)

@@ -4,4 +4,8 @@ project/gen
 project/libs
 project/assets
 project/obj
+project/src
+project/res/values*
+project/AndroidManifest.xml
+project/jni/Settings.mk
 
