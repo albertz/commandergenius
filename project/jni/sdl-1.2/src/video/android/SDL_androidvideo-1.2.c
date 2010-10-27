@@ -100,7 +100,7 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
 /* Private display data */
 
-#define SDL_NUMMODES 5
+#define SDL_NUMMODES 6
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -226,11 +226,12 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	/* Modes sorted largest to smallest */
 	SDL_modelist[0]->w = SDL_ANDROID_sWindowWidth; 
 	SDL_modelist[0]->h = SDL_ANDROID_sWindowHeight;
-	SDL_modelist[1]->w = 640; SDL_modelist[1]->h = 480; // Will likely be shrinked
-	SDL_modelist[2]->w = 640; SDL_modelist[2]->h = 400; // Will likely be shrinked
-	SDL_modelist[3]->w = 320; SDL_modelist[3]->h = 240; // Always available on any screen and any orientation
-	SDL_modelist[4]->w = 320; SDL_modelist[4]->h = 200; // Always available on any screen and any orientation
-	SDL_modelist[5] = NULL;
+	SDL_modelist[1]->w = 800; SDL_modelist[1]->h = 600; // Will likely be shrinked
+	SDL_modelist[2]->w = 640; SDL_modelist[2]->h = 480; // Will likely be shrinked
+	SDL_modelist[3]->w = 640; SDL_modelist[3]->h = 400; // Will likely be shrinked
+	SDL_modelist[4]->w = 320; SDL_modelist[4]->h = 240; // Always available on any screen and any orientation
+	SDL_modelist[5]->w = 320; SDL_modelist[5]->h = 200; // Always available on any screen and any orientation
+	SDL_modelist[6] = NULL;
 	
 	SDL_VideoInit_1_3(NULL, 0);
 

@@ -33,7 +33,7 @@ void initsdl()
     SDL_WM_SetIcon(SDL_LoadBMP(DATADIR"/Tgfx/icon.bmp"),NULL);
 
     fullscreen=0;
-    screen = SDL_SetVideoMode(screen_w,screen_h,screen_bpp, SDL_HWSURFACE|SDL_DOUBLEBUF);
+    screen = SDL_SetVideoMode(screen_w,screen_h,screen_bpp, /*SDL_HWSURFACE|SDL_DOUBLEBUF*/ SDL_SWSURFACE ); // TODO: fix HW surfaces
     if (screen == NULL)
     {
         fprintf(stderr, "Can't set the video mode. Quitting.\nError; %s\n", SDL_GetError());
