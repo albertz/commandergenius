@@ -425,35 +425,6 @@ GetMenuSounds (MENU_SOUND_FLAGS *s0, MENU_SOUND_FLAGS *s1)
 	*s1 = sound_1;
 }
 
-// Fast arctan2, returns angle in radians as integer, with fractional part in lower 16 bits
-// Stolen from http://www.dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization , precision is said to be 0.07 rads
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-enum { atan2i_coeff_1 = ((int)(M_PI*65536.0/4)), atan2i_coeff_2 = (3*atan2i_coeff_1), atan2i_PI = (int)(M_PI * 65536.0), SHIP_DIRECTIONS = 16 };
-
-static inline int atan2i(int y, int x)
-{
-   int angle;
-   int abs_y = abs(y);
-   if( abs_y == 0 )
-      abs_y = 1;
-   if (x>=0)
-   {
-      angle = atan2i_coeff_1 - atan2i_coeff_1 * (x - abs_y) / (x + abs_y);
-   }
-   else
-   {
-      angle = atan2i_coeff_2 - atan2i_coeff_1 * (x + abs_y) / (abs_y - x);
-   }
-   if (y < 0)
-      return(-angle);     // negate if in quad III or IV
-   else
-      return(angle);
-}
-
-
 static BATTLE_INPUT_STATE
 ControlInputToBattleInput (const int *keyState, int direction)
 {
@@ -479,33 +450,7 @@ ControlInputToBattleInput (const int *keyState, int direction)
 	}
 	else
 	{
-		 // TODO: only joystick #0 supported currently
-		int axisX = VControl_GetJoyAxis(0, 0), axisY = VControl_GetJoyAxis(0, 1);
-		if( axisX != 0 || axisY != 0 )
-		{
-			int angle = atan2i(axisY, axisX), diff;
-			// Convert it to 16 directions used by Melee
-			angle += atan2i_PI / SHIP_DIRECTIONS;
-			if( angle < 0 )
-				angle += atan2i_PI * 2;
-			if( angle > atan2i_PI * 2 )
-				angle -= atan2i_PI * 2;
-			angle = angle * SHIP_DIRECTIONS / atan2i_PI / 2;
-			
-			diff = angle - direction + SHIP_DIRECTIONS / 4;
-			while( diff >= SHIP_DIRECTIONS )
-				diff -= SHIP_DIRECTIONS;
-			while( diff < 0 )
-				diff += SHIP_DIRECTIONS;
-
-			if( diff < SHIP_DIRECTIONS / 2 )
-				InputState |= BATTLE_LEFT;
-			if( diff > SHIP_DIRECTIONS / 2 )
-				InputState |= BATTLE_RIGHT;
-
-			if( ((axisX*axisX)>>1) + ((axisY*axisY)>>1) > (16384*16384)>>1 ) // Force of joystick tilt, equation is clumsy because (axisX*axisX + axisY*axisY) may overflow int32
-				InputState |= BATTLE_THRUST;
-		}
+		InputState |= GetDirectionalJoystickInput(direction);
 	}
 
 	return InputState;
@@ -567,3 +512,80 @@ ConfirmExit (void)
 	return result;
 }
 
+// Fast arctan2, returns angle in radians as integer, with fractional part in lower 16 bits
+// Stolen from http://www.dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization , precision is said to be 0.07 rads
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+enum { atan2i_coeff_1 = ((int)(M_PI*65536.0/4)), atan2i_coeff_2 = (3*atan2i_coeff_1), atan2i_PI = (int)(M_PI * 65536.0), SHIP_DIRECTIONS = 16 };
+
+static inline int atan2i(int y, int x)
+{
+   int angle;
+   int abs_y = abs(y);
+   if( abs_y == 0 )
+      abs_y = 1;
+   if (x>=0)
+   {
+      angle = atan2i_coeff_1 - atan2i_coeff_1 * (x - abs_y) / (x + abs_y);
+   }
+   else
+   {
+      angle = atan2i_coeff_2 - atan2i_coeff_1 * (x + abs_y) / (abs_y - x);
+   }
+   if (y < 0)
+      return(-angle);     // negate if in quad III or IV
+   else
+      return(angle);
+}
+
+
+BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction)
+{
+	BATTLE_INPUT_STATE InputState = 0;
+#ifdef DIRECTIONAL_JOYSTICK_MELEE
+	if(VControl_GetJoysticksAmount() <= 0)
+#endif
+	{
+		if(CurrentInputState.key[PlayerControls[0]][KEY_UP])
+			InputState |= BATTLE_THRUST;
+		if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
+			InputState |= BATTLE_LEFT;
+		if (CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
+			InputState |= BATTLE_RIGHT;
+	}
+#ifdef DIRECTIONAL_JOYSTICK_MELEE
+	else
+	{
+		/* TODO: only joystick #0 supported currently */
+		int axisX = VControl_GetJoyAxis(0, 0), axisY = VControl_GetJoyAxis(0, 1);
+		if( axisX != 0 || axisY != 0 )
+		{
+			int angle = atan2i(axisY, axisX), diff;
+			// Convert it to 16 directions used by Melee
+			angle += atan2i_PI / SHIP_DIRECTIONS;
+			if( angle < 0 )
+				angle += atan2i_PI * 2;
+			if( angle > atan2i_PI * 2 )
+				angle -= atan2i_PI * 2;
+			angle = angle * SHIP_DIRECTIONS / atan2i_PI / 2;
+			
+			diff = angle - direction + SHIP_DIRECTIONS / 4;
+			while( diff >= SHIP_DIRECTIONS )
+				diff -= SHIP_DIRECTIONS;
+			while( diff < 0 )
+				diff += SHIP_DIRECTIONS;
+
+			if( diff < SHIP_DIRECTIONS / 2 )
+				InputState |= BATTLE_LEFT;
+			if( diff > SHIP_DIRECTIONS / 2 )
+				InputState |= BATTLE_RIGHT;
+
+			if( ((axisX*axisX)>>1) + ((axisY*axisY)>>1) > (16384*16384)>>1 ) // Force of joystick tilt, equation is clumsy because (axisX*axisX + axisY*axisY) may overflow int32
+				InputState |= BATTLE_THRUST;
+		}
+	}
+#endif
+	return InputState;
+}

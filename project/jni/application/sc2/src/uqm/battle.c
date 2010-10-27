@@ -144,13 +144,7 @@ frameInputHuman (HumanInputContext *context, STARSHIP *StarShipPtr)
 {
 	(void) StarShipPtr;
 
-	return CurrentInputToBattleInput (context->playerNr,
-#ifdef DIRECTIONAL_JOYSTICK_MELEE
-	StarShipPtr && VControl_GetJoysticksAmount() > 0 && ( GLOBAL (CurrentActivity) & IN_BATTLE ) ? StarShipPtr->ShipFacing : -1
-#else
-	-1
-#endif
-	);
+	return CurrentInputToBattleInput (context->playerNr, StarShipPtr ? StarShipPtr->ShipFacing : -1);
 }
 
 static void

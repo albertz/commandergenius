@@ -112,6 +112,9 @@ BOOLEAN WaitForAnyButtonUntil (BOOLEAN newButton, TimeCount timeOut,
 BOOLEAN WaitForNoInput (TimePeriod duration, BOOLEAN resetInput);
 BOOLEAN WaitForNoInputUntil (TimeCount timeOut, BOOLEAN resetInput);
 
+/* TODO: only joystick #0 and player #0 supported currently */
+extern BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction);
+
 void DoPopupWindow(const char *msg);
 
 typedef void (InputFrameCallback) (void);
