@@ -32,7 +32,6 @@
 #include "libs/inplib.h"
 #include "libs/timelib.h"
 #include "libs/threadlib.h"
-#include "libs/input/sdl/vcontrol.h"
 
 #ifdef ANDROID
 #define ACCELERATION_INCREMENT (ONE_SECOND)
@@ -434,7 +433,7 @@ GetMenuSounds (MENU_SOUND_FLAGS *s0, MENU_SOUND_FLAGS *s1)
 #endif
 enum { atan2i_coeff_1 = ((int)(M_PI*65536.0/4)), atan2i_coeff_2 = (3*atan2i_coeff_1), atan2i_PI = (int)(M_PI * 65536.0), SHIP_DIRECTIONS = 16 };
 
-inline int atan2i(int y, int x)
+static inline int atan2i(int y, int x)
 {
    int angle;
    int abs_y = abs(y);
@@ -469,7 +468,7 @@ ControlInputToBattleInput (const int *keyState, int direction)
 	if (keyState[KEY_DOWN])
 		InputState |= BATTLE_DOWN;
 
-	if(direction < 0 || VControl_GetJoysticksAmount() == 0)
+	if(direction < 0)
 	{
 		if (keyState[KEY_UP])
 			InputState |= BATTLE_THRUST;
@@ -504,7 +503,7 @@ ControlInputToBattleInput (const int *keyState, int direction)
 			if( diff > SHIP_DIRECTIONS / 2 )
 				InputState |= BATTLE_RIGHT;
 
-			if( axisX*axisX - 16384*16384 > axisY*axisY ) // Force of joystick tilt, equation is clumsy because (axisX*axisX + axisY*axisY) may overflow int32
+			if( ((axisX*axisX)>>1) + ((axisY*axisY)>>1) > (16384*16384)>>1 ) // Force of joystick tilt, equation is clumsy because (axisX*axisX + axisY*axisY) may overflow int32
 				InputState |= BATTLE_THRUST;
 		}
 	}

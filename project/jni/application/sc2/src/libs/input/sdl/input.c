@@ -184,6 +184,13 @@ initKeyConfig (void)
 		   directory. */
 		LoadResourceIndex (contentDir, "uqm.key", "keys.");
 	}
+	
+#ifdef ANDROID // TODO: hacky
+	res_PutString("keys.1.up.2", "joystick 0 axis 1 negative");
+	res_PutString("keys.1.down.2", "joystick 0 axis 1 positive");
+	res_PutString("keys.1.left.2", "joystick 0 axis 0 negative");
+	res_PutString("keys.1.right.2", "joystick 0 axis 0 positive");
+#endif
 
 	register_flight_controls ();
 

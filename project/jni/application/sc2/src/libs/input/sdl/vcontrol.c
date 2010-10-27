@@ -67,7 +67,7 @@ static joystick *joysticks;
 
 #endif /* HAVE_JOYSTICK */
 
-static unsigned int joycount;
+static unsigned int joycount = 0;
 static unsigned int num_sdl_keys = 0;
 static keybinding **bindings = NULL;
 
@@ -818,6 +818,9 @@ VControl_ProcessJoyAxis (int port, int axis, int value)
 	if (!joysticks[port].stick)
 		return;
 	joysticks[port].axes[axis].value = value;
+#ifdef ANDROID
+	value = -value; // Axes are swapped, too lazy to fix that on SDL side
+#endif
 	t = joysticks[port].threshold;
 	if (value > t)
 	{

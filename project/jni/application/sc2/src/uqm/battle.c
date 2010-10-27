@@ -16,6 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 #include "battle.h"
 
 #include "battlecontrols.h"
@@ -43,6 +47,8 @@
 #include "libs/graphics/gfx_common.h"
 #include "libs/log.h"
 #include "libs/mathlib.h"
+#include "globdata.h"
+#include "libs/input/sdl/vcontrol.h"
 
 
 BYTE battle_counter[NUM_SIDES];
@@ -137,9 +143,10 @@ BATTLE_INPUT_STATE
 frameInputHuman (HumanInputContext *context, STARSHIP *StarShipPtr)
 {
 	(void) StarShipPtr;
+
 	return CurrentInputToBattleInput (context->playerNr,
 #ifdef DIRECTIONAL_JOYSTICK_MELEE
-	StarShipPtr ? StarShipPtr->ShipFacing : -1
+	StarShipPtr && VControl_GetJoysticksAmount() > 0 && ( GLOBAL (CurrentActivity) & IN_BATTLE ) ? StarShipPtr->ShipFacing : -1
 #else
 	-1
 #endif
