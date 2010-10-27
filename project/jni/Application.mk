@@ -1,4 +1,4 @@
 APP_PROJECT_PATH := $(call my-dir)/..
 
-include Settings.mk
+include jni/Settings.mk
 

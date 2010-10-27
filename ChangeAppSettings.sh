@@ -354,7 +354,6 @@ else
 fi
 LibrariesToLoad="System.loadLibrary(\\\"sdl-$LibSdlVersion\\\");"
 StaticLibraries=`grep 'APP_AVAILABLE_STATIC_LIBS' project/jni/SettingsTemplate.mk | sed 's/.*=\(.*\)/\1/'`
-echo StaticLibraries $StaticLibraries
 for lib in $CompiledLibraries; do
 	process=true
 	for lib1 in $StaticLibraries; do
@@ -429,9 +428,11 @@ echo Patching strings.xml
 rm -rf project/res/values*
 cd project/java/translations
 for F in */strings.xml; do
+	mkdir -p ../../res/`dirname $F`
 	cat $F | \
 	sed "s^[<]string name=\"app_name\"[>].*^<string name=\"app_name\">$AppName</string>^" > \
 	../../res/$F
+done
 cd ../../..
 
 echo If you change libSDL version you have to clean all files in project/libs/obj
