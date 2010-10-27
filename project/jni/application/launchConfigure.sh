@@ -33,10 +33,10 @@ rm -rf $LOCAL_PATH/../../obj/local/armeabi/libsdl_main.so
 #	ln -sf libsdl_mixer.so $LOCAL_PATH/../../obj/local/armeabi/libSDL_Mixer.so
 #fi
 
-#for F in $LOCAL_PATH/../../obj/local/armeabi/libsdl_*.so; do
-#	LIBNAME=`echo $F | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libsdl_\(.*\)[.]so@\1@"`
-#	ln -sf libsdl_$LIBNAME.so $LOCAL_PATH/../../obj/local/armeabi/libSDL_$LIBNAME.so
-#done
+for F in $LOCAL_PATH/../../obj/local/armeabi/libsdl_*.so; do
+	LIBNAME=`echo $F | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libsdl_\(.*\)[.]so@\1@"`
+	ln -sf libsdl_$LIBNAME.so $LOCAL_PATH/../../obj/local/armeabi/libSDL_$LIBNAME.so
+done
 
 CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums \

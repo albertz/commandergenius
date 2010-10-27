@@ -4,8 +4,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := sdl_mixer
 
-LOCAL_CFLAGS := -I$(LOCAL_PATH) -I$(LOCAL_PATH)/.. -I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include -I$(LOCAL_PATH)/include \
-				-I$(LOCAL_PATH)/../mad/include -I$(LOCAL_PATH)/../flac/include -I$(LOCAL_PATH)/../ogg/include -I$(LOCAL_PATH)/../vorbis/include \
+LOCAL_CFLAGS := -I$(LOCAL_PATH) -I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include -I$(LOCAL_PATH)/include \
+				-I$(LOCAL_PATH)/../mad/include -I$(LOCAL_PATH)/../flac/include -I$(LOCAL_PATH)/../ogg/include -I$(LOCAL_PATH)/../vorbis/include -I$(LOCAL_PATH)/../tremor/include \
 					-DWAV_MUSIC -DOGG_USE_TREMOR -DOGG_MUSIC -DFLAC_MUSIC
 
 LOCAL_CPP_EXTENSION := .cpp
