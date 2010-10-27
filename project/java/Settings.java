@@ -456,7 +456,7 @@ class Settings
 			nativeSetTrackballUsed();
 		if( Globals.AppUsesMouse )
 			nativeSetMouseUsed();
-		if( Globals.AppUsesJoystick )
+		if( Globals.AppUsesJoystick && (Globals.UseAccelerometerAsArrowKeys || Globals.UseTouchscreenKeyboard) )
 			nativeSetJoystickUsed();
 		if( Globals.AppUsesMultitouch )
 			nativeSetMultitouchUsed();

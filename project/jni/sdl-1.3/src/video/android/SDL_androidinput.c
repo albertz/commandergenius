@@ -661,7 +661,12 @@ void SDL_ANDROID_processAndroidTrackballDampening()
 
 int SDL_SYS_JoystickInit(void)
 {
-	SDL_numjoysticks = MAX_MULTITOUCH_POINTERS+1;
+	SDL_numjoysticks = 0;
+	if( SDL_ANDROID_isJoystickUsed )
+		SDL_numjoysticks = 1;
+	if( isMultitouchUsed )
+		SDL_numjoysticks = MAX_MULTITOUCH_POINTERS+1;
+
 	return(SDL_numjoysticks);
 }
 
