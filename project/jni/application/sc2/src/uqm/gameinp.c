@@ -426,13 +426,14 @@ GetMenuSounds (MENU_SOUND_FLAGS *s0, MENU_SOUND_FLAGS *s1)
 	*s1 = sound_1;
 }
 
+// Fast arctan2, returns angle in radians as integer, with fractional part in lower 16 bits
+// Stolen from http://www.dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization , precision is said to be 0.07 rads
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 enum { atan2i_coeff_1 = ((int)(M_PI*65536.0/4)), atan2i_coeff_2 = (3*atan2i_coeff_1), atan2i_PI = (int)(M_PI * 65536.0), SHIP_DIRECTIONS = 16 };
 
-// Fast arctan2, returns angle in radians as integer, with fractional part in lower 16 bits
-// Stolen from http://www.dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization , precision is said to be 0.07 rads
 inline int atan2i(int y, int x)
 {
    int angle;
@@ -468,7 +469,7 @@ ControlInputToBattleInput (const int *keyState, int direction)
 	if (keyState[KEY_DOWN])
 		InputState |= BATTLE_DOWN;
 
-	if(direction < 0)
+	if(direction < 0 || VControl_GetJoysticksAmount() == 0)
 	{
 		if (keyState[KEY_UP])
 			InputState |= BATTLE_THRUST;
@@ -503,7 +504,7 @@ ControlInputToBattleInput (const int *keyState, int direction)
 			if( diff > SHIP_DIRECTIONS / 2 )
 				InputState |= BATTLE_RIGHT;
 
-			if( axisX*axisX + axisY*axisY > 16384*16384 ) // Force of joystick tilt
+			if( axisX*axisX - 16384*16384 > axisY*axisY ) // Force of joystick tilt, equation is clumsy because (axisX*axisX + axisY*axisY) may overflow int32
 				InputState |= BATTLE_THRUST;
 		}
 	}

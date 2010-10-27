@@ -399,9 +399,6 @@ event2gesture (SDL_Event *e, VCONTROL_GESTURE *g)
 		g->gesture.axis.port = e->jaxis.which;
 		g->gesture.axis.index = e->jaxis.axis;
 		g->gesture.axis.polarity = (e->jaxis.value < 0) ? -1 : 1;
-#ifdef ANDROID
-		g->gesture.axis.polarity = - g->gesture.axis.polarity; // Too lazy to swap it on SDL side
-#endif
 		break;
 	case SDL_JOYHATMOTION:
 		g->type = VCONTROL_JOYHAT;
@@ -909,6 +906,11 @@ VControl_GetJoyAxis(int port, int axis)
 #else
 	return 0;
 #endif /* HAVE_JOYSTICK */
+};
+
+int VControl_GetJoysticksAmount()
+{
+	return joycount;
 };
 
 void
