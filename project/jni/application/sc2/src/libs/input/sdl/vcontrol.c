@@ -46,6 +46,7 @@ typedef struct vcontrol_keypool {
 typedef struct vcontrol_joystick_axis {
 	keybinding *neg, *pos;
 	int polarity;
+	int value;
 } axis_type;
 
 typedef struct vcontrol_joystick_hat {
@@ -398,6 +399,9 @@ event2gesture (SDL_Event *e, VCONTROL_GESTURE *g)
 		g->gesture.axis.port = e->jaxis.which;
 		g->gesture.axis.index = e->jaxis.axis;
 		g->gesture.axis.polarity = (e->jaxis.value < 0) ? -1 : 1;
+#ifdef ANDROID
+		g->gesture.axis.polarity = - g->gesture.axis.polarity; // Too lazy to swap it on SDL side
+#endif
 		break;
 	case SDL_JOYHATMOTION:
 		g->type = VCONTROL_JOYHAT;
@@ -816,6 +820,7 @@ VControl_ProcessJoyAxis (int port, int axis, int value)
 	int t;
 	if (!joysticks[port].stick)
 		return;
+	joysticks[port].axes[axis].value = value;
 	t = joysticks[port].threshold;
 	if (value > t)
 	{
@@ -891,6 +896,20 @@ VControl_ProcessJoyHat (int port, int which, Uint8 value)
 	(void) value;
 #endif /* HAVE_JOYSTICK */
 }
+
+int
+VControl_GetJoyAxis(int port, int axis)
+{
+#ifdef HAVE_JOYSTICK
+	if( joycount <= port )
+		return 0;
+	if (!joysticks[port].stick || joysticks[port].numaxes <= axis )
+		return 0;
+	return joysticks[port].axes[axis].value;
+#else
+	return 0;
+#endif /* HAVE_JOYSTICK */
+};
 
 void
 VControl_ResetInput (void)

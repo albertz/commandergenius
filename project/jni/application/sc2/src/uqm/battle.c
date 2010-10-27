@@ -137,7 +137,13 @@ BATTLE_INPUT_STATE
 frameInputHuman (HumanInputContext *context, STARSHIP *StarShipPtr)
 {
 	(void) StarShipPtr;
-	return CurrentInputToBattleInput (context->playerNr);
+	return CurrentInputToBattleInput (context->playerNr,
+#ifdef DIRECTIONAL_JOYSTICK_MELEE
+	StarShipPtr ? StarShipPtr->ShipFacing : -1
+#else
+	-1
+#endif
+	);
 }
 
 static void

@@ -76,6 +76,8 @@ void VControl_ProcessJoyButtonUp (int port, int button);
 void VControl_ProcessJoyAxis (int port, int axis, int value);
 void VControl_ProcessJoyHat (int port, int which, Uint8 value);
 
+int VControl_GetJoyAxis(int port, int axis);
+
 /* Force the input into the blank state.  For preventing "sticky" keys. */
 void VControl_ResetInput (void);
 

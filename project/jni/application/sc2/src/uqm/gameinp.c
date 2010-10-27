@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdlib.h>
 #include "controls.h"
 #include "battlecontrols.h"
 #include "init.h"
@@ -31,7 +32,7 @@
 #include "libs/inplib.h"
 #include "libs/timelib.h"
 #include "libs/threadlib.h"
-
+#include "libs/input/sdl/vcontrol.h"
 
 #ifdef ANDROID
 #define ACCELERATION_INCREMENT (ONE_SECOND)
@@ -425,17 +426,39 @@ GetMenuSounds (MENU_SOUND_FLAGS *s0, MENU_SOUND_FLAGS *s1)
 	*s1 = sound_1;
 }
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+enum { atan2i_coeff_1 = ((int)(M_PI*65536.0/4)), atan2i_coeff_2 = (3*atan2i_coeff_1), atan2i_PI = (int)(M_PI * 65536.0), SHIP_DIRECTIONS = 16 };
+
+// Fast arctan2, returns angle in radians as integer, with fractional part in lower 16 bits
+// Stolen from http://www.dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization , precision is said to be 0.07 rads
+inline int atan2i(int y, int x)
+{
+   int angle;
+   int abs_y = abs(y);
+   if( abs_y == 0 )
+      abs_y = 1;
+   if (x>=0)
+   {
+      angle = atan2i_coeff_1 - atan2i_coeff_1 * (x - abs_y) / (x + abs_y);
+   }
+   else
+   {
+      angle = atan2i_coeff_2 - atan2i_coeff_1 * (x + abs_y) / (abs_y - x);
+   }
+   if (y < 0)
+      return(-angle);     // negate if in quad III or IV
+   else
+      return(angle);
+}
+
+
 static BATTLE_INPUT_STATE
-ControlInputToBattleInput (const int *keyState)
+ControlInputToBattleInput (const int *keyState, int direction)
 {
 	BATTLE_INPUT_STATE InputState = 0;
 
-	if (keyState[KEY_UP])
-		InputState |= BATTLE_THRUST;
-	if (keyState[KEY_LEFT])
-		InputState |= BATTLE_LEFT;
-	if (keyState[KEY_RIGHT])
-		InputState |= BATTLE_RIGHT;
 	if (keyState[KEY_WEAPON])
 		InputState |= BATTLE_WEAPON;
 	if (keyState[KEY_SPECIAL])
@@ -445,21 +468,61 @@ ControlInputToBattleInput (const int *keyState)
 	if (keyState[KEY_DOWN])
 		InputState |= BATTLE_DOWN;
 
+	if(direction < 0)
+	{
+		if (keyState[KEY_UP])
+			InputState |= BATTLE_THRUST;
+		if (keyState[KEY_LEFT])
+			InputState |= BATTLE_LEFT;
+		if (keyState[KEY_RIGHT])
+			InputState |= BATTLE_RIGHT;
+	}
+	else
+	{
+		 // TODO: only joystick #0 supported currently
+		int axisX = VControl_GetJoyAxis(0, 0), axisY = VControl_GetJoyAxis(0, 1);
+		if( axisX != 0 || axisY != 0 )
+		{
+			int angle = atan2i(axisY, axisX), diff;
+			// Convert it to 16 directions used by Melee
+			angle += atan2i_PI / SHIP_DIRECTIONS;
+			if( angle < 0 )
+				angle += atan2i_PI * 2;
+			if( angle > atan2i_PI * 2 )
+				angle -= atan2i_PI * 2;
+			angle = angle * SHIP_DIRECTIONS / atan2i_PI / 2;
+			
+			diff = angle - direction + SHIP_DIRECTIONS / 4;
+			while( diff >= SHIP_DIRECTIONS )
+				diff -= SHIP_DIRECTIONS;
+			while( diff < 0 )
+				diff += SHIP_DIRECTIONS;
+
+			if( diff < SHIP_DIRECTIONS / 2 )
+				InputState |= BATTLE_LEFT;
+			if( diff > SHIP_DIRECTIONS / 2 )
+				InputState |= BATTLE_RIGHT;
+
+			if( axisX*axisX + axisY*axisY > 16384*16384 ) // Force of joystick tilt
+				InputState |= BATTLE_THRUST;
+		}
+	}
+
 	return InputState;
 }
 
 BATTLE_INPUT_STATE
-CurrentInputToBattleInput (COUNT player)
+CurrentInputToBattleInput (COUNT player, int direction)
 {
 	return ControlInputToBattleInput(
-			CurrentInputState.key[PlayerControls[player]]);
+			CurrentInputState.key[PlayerControls[player]], direction);
 }
 
 BATTLE_INPUT_STATE
 PulsedInputToBattleInput (COUNT player)
 {
 	return ControlInputToBattleInput(
-			PulsedInputState.key[PlayerControls[player]]);
+			PulsedInputState.key[PlayerControls[player]], -1);
 }
 
 BOOLEAN
