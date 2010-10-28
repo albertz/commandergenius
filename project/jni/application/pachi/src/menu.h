@@ -102,7 +102,7 @@ void do_menu()
     if(menuvalue == 7) font = menufont1; else font = menufont;
     print_text(font, screen, 32, 32 ,305, menustartpos+(6*40), " EXIT");
 
-    SDL_UpdateRect(screen, 300, 160, 240, 300);
+    //SDL_UpdateRect(screen, 300, 160, 240, 300);
 }
 				
 void menu_loop()
@@ -119,15 +119,18 @@ void menu()
     float alpha=0;
     while(alpha<255)
     {
-    	alpha=intro_blit(background,0,0,800,600,alpha,200,0);
-	delta_time();
+		SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
+		alpha=intro_blit(background,0,0,800,600,alpha,200,0);
+	    SDL_Flip(screen);
+		delta_time();
     }
-    SDL_Flip(screen);
     menuvalue=1;    
     while(gameexit==0 && startgame==0 && help==0 && hiscores==0)
     {
+	    SDL_BlitSurface(background, NULL, screen, NULL);
         menu_events();
-	menu_loop();
+		menu_loop();
+	    SDL_Flip(screen);
     }
     unload_menudata();
     stop_music();

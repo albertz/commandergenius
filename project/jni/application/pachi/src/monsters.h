@@ -206,7 +206,7 @@ void print_monsters()
 	    monsterposreal.x = monsterpos.x + R_gamearea_x;
 	    monsterposreal.y = monsterpos.y + R_gamearea_y;
 
-	    SDL_BlitSurface(screenbak, &oldmonsterpos, screen, &oldmonsterposreal);
+	    //SDL_BlitSurface(screenbak, &oldmonsterpos, screen, &oldmonsterposreal);
 	    SDL_BlitSurface(monsters, &monstersrc, screen, &monsterposreal);
 	    //SDL_UpdateRect(screen,oldmonsterposreal.x,oldmonsterposreal.y,M_w,M_h);
 	    //SDL_UpdateRect(screen,monsterposreal.x,monsterposreal.y,M_w,M_h);

@@ -20,12 +20,12 @@ void screen_mode()
 {
     if(fullscreen)
     {
-        screen = SDL_SetVideoMode(screen_w,screen_h,screen_bpp,0);
+        screen = SDL_SetVideoMode(screen_w,screen_h,screen_bpp, SDL_HWSURFACE|SDL_DOUBLEBUF /* SDL_SWSURFACE */);
         fullscreen = 0;
     }
     else
     {
-        screen = SDL_SetVideoMode(screen_w,screen_h,screen_bpp,SDL_FULLSCREEN);
+        screen = SDL_SetVideoMode(screen_w,screen_h,screen_bpp, SDL_SWSURFACE);
         fullscreen = 1;
     }
 }
@@ -148,8 +148,8 @@ void blinkscreen(int R,int G, int B, int A)
 {
     SDL_FillRect(screen,NULL,SDL_MapRGBA(screen->format,R,G,B,A));
     SDL_Flip(screen);
-    setback();
-    SDL_Flip(screen);
+    //setback();
+    //SDL_Flip(screen);
 }
 
 void print_room()
@@ -213,6 +213,10 @@ void print_room()
 
 void showcode(char *str)
 {
+    escape_exit=0;
+    while(escape_exit==0)
+    {
+	SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
     SDL_Rect code;
 	code.x=280; code.y=220;code.w=240;code.h=50;
     SDL_FillRect(screen,&code,SDL_MapRGB(screen->format,255,255,255));
@@ -223,9 +227,6 @@ void showcode(char *str)
     print_text(scorefont1,screen,16,16,code.x+90,code.y+27,"%s",str);
     //SDL_UpdateRect(screen, code.x, code.y, code.w, code.h);
     SDL_Flip(screen);
-    escape_exit=0;
-    while(escape_exit==0)
-    {
 	credits_events();
 	SDL_Delay(1);
     }
@@ -244,13 +245,14 @@ void fadesurface(SDL_Surface *surface, int x, int y, int speed)
     float alpha=0;
     while(alpha<255)
     {
-	//SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
+	SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
 	delta_time();
 	SDL_SetAlpha(surface, SDL_SRCALPHA, int(alpha));
 	SDL_BlitSurface(surface, NULL, screen, &dst);
 	SDL_Flip(screen);
 	alpha+=(speed*imove);
     }
+	SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
     SDL_SetAlpha(surface, 0, 0);
     SDL_BlitSurface(surface, NULL, screen, &dst);
     SDL_Flip(screen);
@@ -266,7 +268,8 @@ float intro_blit(SDL_Surface *surface, int x, int y, int w, int h, float blit_al
     SDL_SetAlpha(surface, SDL_SRCALPHA, alpha);
     blit_alpha+=(speed*imove);
     SDL_BlitSurface(surface, NULL, screen, &dst);
-    SDL_UpdateRect(screen, dst.x, dst.y, dst.w, dst.h);
+    //SDL_UpdateRect(screen, dst.x, dst.y, dst.w, dst.h);
+    /*
     if(back==1)
     {
 	if(blit_alpha<255)
@@ -281,11 +284,13 @@ float intro_blit(SDL_Surface *surface, int x, int y, int w, int h, float blit_al
     {
 	SDL_SetAlpha(surface, 0, 0);
 	SDL_BlitSurface(surface, NULL, screen, &dst);
-	SDL_Flip(screen);
+	//SDL_Flip(screen);
     }
+    */
     return(blit_alpha);
 }
 
+/*
 float fade(SDL_Surface *surface, int x, int y, int w, int h, int R, int G, int B, int speed, float blit_alpha)
 {
     SDL_Rect dst;
@@ -298,6 +303,7 @@ float fade(SDL_Surface *surface, int x, int y, int w, int h, int R, int G, int B
     SDL_UpdateRect(screen, dst.x, dst.y, dst.w, dst.h);
     return(blit_alpha);
 }
+*/
 
 void showposter(int num)
 {

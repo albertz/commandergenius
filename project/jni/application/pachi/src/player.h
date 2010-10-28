@@ -335,7 +335,7 @@ void clean_player()
     oldplayerposreal.x = oldplayerpos.x + R_gamearea_x;
     oldplayerposreal.y = oldplayerpos.y + R_gamearea_y;
 
-    SDL_BlitSurface(screenbak,&oldplayerpos,screen, &oldplayerposreal);
+    //SDL_BlitSurface(screenbak,&oldplayerpos,screen, &oldplayerposreal);
 }
 void print_player()
 {

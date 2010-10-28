@@ -344,6 +344,7 @@ void chk_sequence()
 
 void game_loop()
 {
+	SDL_BlitSurface(background,NULL,screen,NULL);
 	print_room();
 	delta_time();
 	do_gametimer(); // esta rutina decrementa e imprime el timer

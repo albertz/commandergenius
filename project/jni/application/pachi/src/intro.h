@@ -56,58 +56,65 @@ void intro()
     int n=1;
     while(escape_exit==0)
     {
-	if(n<=4) // 4 son los pasos a realizar en la primer parte de la intro
+	SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
+	//if(n<=4) // 4 son los pasos a realizar en la primer parte de la intro
 	{
-	    if(title_alpha<255) 
 	    {
 		switch(n)
 		{
-		    case 1:
-		        title_alpha=intro_blit(dragontech, 160, 100, 480, 170, title_alpha, 80, 1);
-			break;
+		    default:
+				if(n==3)
+			        title_alpha=intro_blit(line2, 160, 350, 600, 40, title_alpha, 80, 1);
+			    else
+			    	intro_blit(line2, 160, 350, 600, 40, 255, 80, 1);
 		    case 2:
-		        title_alpha=intro_blit(line1, 60, 300, 600, 40, title_alpha, 80, 1);
-			break;
-		    case 3:
-		        title_alpha=intro_blit(line2, 160, 350, 600, 40, title_alpha, 80, 1);
-			break;
-	    	    case 4:
-			if(introtime>15)
-			    title_alpha=intro_blit(black, 0,0,800,600, title_alpha, 80, 0);
-	    		break;
+				if(n==2)
+		        	title_alpha=intro_blit(line1, 60, 300, 600, 40, title_alpha, 80, 1);
+		        else
+		        	intro_blit(line1, 60, 300, 600, 40, 255, 80, 1);
+		    case 1:
+		    	if(n==1)
+			        title_alpha=intro_blit(dragontech, 160, 100, 480, 170, title_alpha, 80, 1);
+			    else
+			    	intro_blit(dragontech, 160, 100, 480, 170, 255, 80, 1);
 		}
 	    }
-	    else
+	    if(title_alpha>=255) 
 	    {
 		title_alpha=0;
 		n++;
 	    }
 	}
+	SDL_Flip(screen);
 	credits_events();
 	delta_time();
 	introtime+=imove;
 	SDL_Delay(1);
-	if(introtime>20)
+	if(introtime>15)
 	    escape_exit=1;
     }
 
     escape_exit=0; n=1; title_alpha=0; introtime=0;
     while(escape_exit==0)
     {
-	if(title_alpha<255) 
+	SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
 	{
-	    title_alpha=intro_blit(comic_01, 0, 0, 800, 600, title_alpha, 60, 0);
+		if(n == 1)
+	    	title_alpha=intro_blit(comic_01, 0, 0, 800, 600, title_alpha, 60, 0);
+	    else
+	    	intro_blit(comic_01, 0, 0, 800, 600, 255, 60, 0);
 	}
-	else
+	if(title_alpha>=255) 
 	{
 	    title_alpha=0;
 	    n++;
 	}
+	SDL_Flip(screen);
 	credits_events();
 	delta_time();
 	introtime+=imove;
 	SDL_Delay(1);
-	if(introtime>25)
+	if(introtime>15)
 	    escape_exit=1;
     }
 

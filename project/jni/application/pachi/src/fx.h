@@ -6,50 +6,52 @@ SDL_Rect fadingpos; // posicion del objeto que esta desvaneciendose
 SDL_Rect realfadingpos; // posicion del objeto que esta desvaneciendose en el area de juego
 float fade_y;
 
-float scanpos_y=R_gamearea_y - (P_h*P_h);
+int scanpos_y=0;
 
 
 void respawn() // rutina que hace reaparecer a Pachi
 {
     int scanspeed=1500;
-    SDL_Rect P_oldscansrect[P_h];
-    SDL_Rect P_scansrect[P_h];
-    SDL_Rect P_srcscan[P_h];
+    SDL_Rect P_scansrect;
+    SDL_Rect P_srcscan;
 //imprimimos los scans
-    for(int a=P_h-1;a>=0;a--)
-    {
-	P_scansrect[a].x=int(mplayer[dificulty].x+R_gamearea_x);P_scansrect[a].w=mplayer[dificulty].w;P_scansrect[a].h=1;
-	P_scansrect[a].y=int(scanpos_y+(a*P_h));
-	P_srcscan[a].h=1;P_srcscan[a].w=mplayer[dificulty].w;P_srcscan[a].x=(mplayer[dificulty].w*(mplayer[dificulty].frame));P_srcscan[a].y=0+a;
-	P_oldscansrect[a]=P_scansrect[a];
+    SDL_BlitSurface(background,NULL,screen,NULL);
+    print_room();
 
-	if((P_scansrect[a].y<mplayer[dificulty].y+R_gamearea_y+P_h-(P_h-a))&&(P_scansrect[a].y>R_gamearea_y))
-	{
-	    SDL_BlitSurface(player,&P_srcscan[a],screen,&P_scansrect[a]);
-	    //SDL_UpdateRect(screen,P_scansrect[a].x,P_scansrect[a].y,P_scansrect[a].w,P_scansrect[a].h);
-	}
+	P_srcscan.h=1;
+	P_srcscan.y=P_h - scanpos_y;
+	P_srcscan.w=mplayer[dificulty].w;
+	P_srcscan.x=(mplayer[dificulty].w*(mplayer[dificulty].frame));
+	P_scansrect.x=mplayer[dificulty].start_x+R_gamearea_x;
+	P_scansrect.w=mplayer[dificulty].w;
+	P_scansrect.h=1;
+
+    for(int a=0;a<=R_gamearea_y + mplayer[dificulty].start_y + P_h - scanpos_y;a++)
+    {
+		P_scansrect.y=a;
+		SDL_BlitSurface(player,&P_srcscan,screen,&P_scansrect);
     }
-    if(scanpos_y<mplayer[dificulty].y+P_h)
-	scanpos_y+=scanspeed*imove;
+	P_srcscan.h=scanpos_y;
+	P_srcscan.y=P_h - scanpos_y;
+	P_scansrect.h=scanpos_y;
+	P_scansrect.y=R_gamearea_y + mplayer[dificulty].start_y + P_h - scanpos_y;
+	SDL_BlitSurface(player,&P_srcscan,screen,&P_scansrect);
+    
+	SDL_Flip(screen);
+	SDL_Delay(1);
+
+    if(scanpos_y<P_h)
+	scanpos_y+=1;
     else
     {
-	scanpos_y=R_gamearea_y - (P_h*P_h);
+	scanpos_y=0;
 	respawned=1;
 	imove=0.01;
-	SDL_Flip(screen);
     }
 
 //borramos los scans recuperando el fondo que habia antes    
 
-    SDL_Rect bakscansrect[P_h];
-    for(int a=P_h-1;a>=0;a--)
-    {
-	bakscansrect[a]=P_oldscansrect[a];
-	P_oldscansrect[a].x-=R_gamearea_x;
-	P_oldscansrect[a].y-=R_gamearea_y;
 
-        SDL_BlitSurface(screenbak,&P_oldscansrect[a],screen,&bakscansrect[a]);
-    }
 }
 
 
@@ -74,15 +76,15 @@ float fade_object(float alpha)
     SDL_SetAlpha(fadeobject,SDL_SRCALPHA,fadealpha);
     realfadingpos.x=R_gamearea_x+fadingpos.x;realfadingpos.y=R_gamearea_y+fadingpos.y;realfadingpos.w=fadingpos.w;realfadingpos.h=fadingpos.h;
 
-    SDL_BlitSurface(screenbak,&fadingpos,screen,&realfadingpos);
+    //SDL_BlitSurface(screenbak,&fadingpos,screen,&realfadingpos);
     SDL_BlitSurface(fadeobject,NULL,screen,&realfadingpos);
     //SDL_UpdateRect(screen,realfadingpos.x,realfadingpos.y,realfadingpos.w,realfadingpos.h+2);
     if(fadealpha<5)
     {
     	fadingobject=0;
-	SDL_BlitSurface(screenbak,&fadingpos,screen,&realfadingpos);
-	print_room();
-	SDL_Flip(screen);
+	//SDL_BlitSurface(screenbak,&fadingpos,screen,&realfadingpos);
+	//print_room();
+	//SDL_Flip(screen);
     }
     else
     {
@@ -107,10 +109,10 @@ void screen_fx()
 	    {
 		Mix_PlayChannel(7,storm,0);
 		blinkscreen(220,220,255,128);
-		load_room();
-		print_room();
-    	    }
-	}    
+		//load_room();
+		//print_room();
+	    }
+	}
     }
 }
 
@@ -137,7 +139,7 @@ void bright_obj(int bright_x, int bright_y)
 	objdstreal.y=bright_y*R_tileside+R_gamearea_y;
 	objdstreal.w=R_tileside;objdst.h=R_tileside;
 
-    SDL_BlitSurface(screenbak,&brdst,screen,&brdstreal);
+    //SDL_BlitSurface(screenbak,&brdst,screen,&brdstreal);
 //    SDL_BlitSurface(tiles,&objsrc,screen,&objdstreal);
     SDL_BlitSurface(bright,&brsrc,screen,&brdstreal);
     //SDL_UpdateRect(screen,brdstreal.x,brdstreal.y,brdstreal.w,brdstreal.h);
@@ -156,8 +158,8 @@ void show_arrow(int arrow, int show)
 	    src.x=dst.x-R_gamearea_x;
 	    if(show==1)
 		SDL_BlitSurface(left, NULL, screen, &dst);
-	    else
-		SDL_BlitSurface(screenbak, &src, screen, &dst);
+	    //else
+		//SDL_BlitSurface(screenbak, &src, screen, &dst);
 		
 	    //SDL_UpdateRect(screen, dst.x, dst.y, dst.w, dst.h);
 	    break;
@@ -166,8 +168,8 @@ void show_arrow(int arrow, int show)
 	    src.x=dst.x-R_gamearea_x;
 	    if(show==1)
 		SDL_BlitSurface(right, NULL, screen, &dst);
-	    else
-		SDL_BlitSurface(screenbak, &src, screen, &dst);
+	    //else
+		//SDL_BlitSurface(screenbak, &src, screen, &dst);
 
 	    //SDL_UpdateRect(screen, dst.x, dst.y, dst.w, dst.h);
 	    break;
