@@ -699,6 +699,7 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_UpdateRects()");
 	// Used only in single-buffer mode
+	//if( SDL_CurrentVideoSurface && !(SDL_CurrentVideoSurface->flags & SDL_HWSURFACE) )
 	ANDROID_FlipHWSurface(this, SDL_CurrentVideoSurface);
 }
 

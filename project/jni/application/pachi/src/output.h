@@ -93,7 +93,8 @@ void print_credits()
     SDL_SetColorKey(creditsbuffer, SDL_SRCCOLORKEY, SDL_MapRGB(creditsbuffer->format, 0, 255, 0));
     SDL_SetAlpha(creditsbuffer, SDL_SRCALPHA, 128);
 	SDL_BlitSurface(creditsbuffer, &cbuffer1, screen, &creditspos);
-	SDL_UpdateRect(screen,100,100,600,400);
+	//SDL_UpdateRect(screen,100,100,600,400);
+	SDL_Flip(screen);
 	SDL_Delay(50);
 	
 	linegone++;
@@ -140,7 +141,7 @@ void print_monitor()
     print_text(scorefont,screen,16,16,30,528, "LIVES:%d", mplayer[dificulty].lives);
     print_text(scorefont,screen,16,16,30,546, "STAGE:%d", stage);
     print_text(scorefont,screen,16,16,30,564, "ITEMS:%d/%d",mplayer[dificulty].objects,mstage[stage-1].objects);
-    SDL_UpdateRect(screen, 30, 482, 500, 100); 
+    //SDL_UpdateRect(screen, 30, 482, 500, 100); 
 }
 
 void blinkscreen(int R,int G, int B, int A)
@@ -207,7 +208,7 @@ void print_room()
     }
     SDL_BlitSurface(screen,&gamearea,screenbak,NULL);
     print_monitor(); //imprime la informacion del jugador (vidas, puntos, etc)
-    SDL_Flip(screen);
+    //SDL_Flip(screen);
 }
 
 void showcode(char *str)
@@ -220,7 +221,8 @@ void showcode(char *str)
 	code.x=280; code.y=220;code.w=240;code.h=50;
     print_text(scorefont,screen,16,16,code.x+8,code.y+7,"STAGE CODE IS:");
     print_text(scorefont1,screen,16,16,code.x+90,code.y+27,"%s",str);
-    SDL_UpdateRect(screen, code.x, code.y, code.w, code.h);
+    //SDL_UpdateRect(screen, code.x, code.y, code.w, code.h);
+    SDL_Flip(screen);
     escape_exit=0;
     while(escape_exit==0)
     {
@@ -242,6 +244,7 @@ void fadesurface(SDL_Surface *surface, int x, int y, int speed)
     float alpha=0;
     while(alpha<255)
     {
+	//SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
 	delta_time();
 	SDL_SetAlpha(surface, SDL_SRCALPHA, int(alpha));
 	SDL_BlitSurface(surface, NULL, screen, &dst);
@@ -257,6 +260,7 @@ void fadesurface(SDL_Surface *surface, int x, int y, int speed)
 float intro_blit(SDL_Surface *surface, int x, int y, int w, int h, float blit_alpha, int speed, int back)
 {
     SDL_Rect dst;
+    //SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
 	dst.x=x; dst.y=y; dst.w=w; dst.h=h;
     int alpha=int(blit_alpha);
     SDL_SetAlpha(surface, SDL_SRCALPHA, alpha);

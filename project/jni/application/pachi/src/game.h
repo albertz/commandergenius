@@ -93,7 +93,7 @@ void stage_up()
     if(stage+1 != CEMETERY && stage+1 != CAVES && stage+1 != CASTLE && stage+1 != LAB)
     {
 	SDL_FillRect(screen, &scorerect, 0); // limpiamos el cuadrado de los marcadores
-	SDL_UpdateRect(screen, scorerect.x, scorerect.y, scorerect.w, scorerect.h);
+	//SDL_UpdateRect(screen, scorerect.x, scorerect.y, scorerect.w, scorerect.h);
     }
     mplayer[dificulty].objects = 0; mplayer[dificulty].stageup = 0;
     mplayer[dificulty].left = 0; mplayer[dificulty].right = 0;
@@ -112,6 +112,7 @@ void stage_up()
 	    Mix_PlayChannel(0,timer,0);
 	    print_monitor();
 	    print_timer();
+	    SDL_Flip(screen);
 	    SDL_Delay(20);
 	}
     }
@@ -148,7 +149,8 @@ void start_game()
     LoadT(&font,DATADIR"/fonts/font16d.T");
     SDL_SetColorKey(font, SDL_SRCCOLORKEY, SDL_MapRGB(font->format,0,0,0));
     print_text(font,screen,16,16,140,90,"LOADING GAME DATA... PLEASE WAIT");
-    SDL_UpdateRect(screen,140,90,520,16);
+    //SDL_UpdateRect(screen,140,90,520,16);
+    SDL_Flip(screen);
     SDL_FreeSurface(font);
     
     setgame();
@@ -283,7 +285,7 @@ void print_timer()
     else
 	print_text(font,screen,16,16,352,564,"%d:0%d",minutes,seconds);
 
-    SDL_UpdateRect(screen,224,544,208,40);
+    //SDL_UpdateRect(screen,224,544,208,40);
 }
 
 void do_gametimer()
@@ -342,6 +344,7 @@ void chk_sequence()
 
 void game_loop()
 {
+	print_room();
 	delta_time();
 	do_gametimer(); // esta rutina decrementa e imprime el timer
 	play_music();
@@ -354,5 +357,6 @@ void game_loop()
 	print_player();
 	chk_sequence(); // esta rutina se fija cual es el proximo objeto de la sequencia (Bomb Jack feature)
 	chk_state(); // esta rutina chequea si el personaje se murio, o si paso de nivel
+	SDL_Flip(screen);
 	SDL_Delay(1);
 }

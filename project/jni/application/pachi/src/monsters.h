@@ -208,8 +208,8 @@ void print_monsters()
 
 	    SDL_BlitSurface(screenbak, &oldmonsterpos, screen, &oldmonsterposreal);
 	    SDL_BlitSurface(monsters, &monstersrc, screen, &monsterposreal);
-	    SDL_UpdateRect(screen,oldmonsterposreal.x,oldmonsterposreal.y,M_w,M_h);
-	    SDL_UpdateRect(screen,monsterposreal.x,monsterposreal.y,M_w,M_h);
+	    //SDL_UpdateRect(screen,oldmonsterposreal.x,oldmonsterposreal.y,M_w,M_h);
+	    //SDL_UpdateRect(screen,monsterposreal.x,monsterposreal.y,M_w,M_h);
 	}
     }
 }

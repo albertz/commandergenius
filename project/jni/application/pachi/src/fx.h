@@ -26,7 +26,7 @@ void respawn() // rutina que hace reaparecer a Pachi
 	if((P_scansrect[a].y<mplayer[dificulty].y+R_gamearea_y+P_h-(P_h-a))&&(P_scansrect[a].y>R_gamearea_y))
 	{
 	    SDL_BlitSurface(player,&P_srcscan[a],screen,&P_scansrect[a]);
-	    SDL_UpdateRect(screen,P_scansrect[a].x,P_scansrect[a].y,P_scansrect[a].w,P_scansrect[a].h);
+	    //SDL_UpdateRect(screen,P_scansrect[a].x,P_scansrect[a].y,P_scansrect[a].w,P_scansrect[a].h);
 	}
     }
     if(scanpos_y<mplayer[dificulty].y+P_h)
@@ -76,7 +76,7 @@ float fade_object(float alpha)
 
     SDL_BlitSurface(screenbak,&fadingpos,screen,&realfadingpos);
     SDL_BlitSurface(fadeobject,NULL,screen,&realfadingpos);
-    SDL_UpdateRect(screen,realfadingpos.x,realfadingpos.y,realfadingpos.w,realfadingpos.h+2);
+    //SDL_UpdateRect(screen,realfadingpos.x,realfadingpos.y,realfadingpos.w,realfadingpos.h+2);
     if(fadealpha<5)
     {
     	fadingobject=0;
@@ -140,7 +140,7 @@ void bright_obj(int bright_x, int bright_y)
     SDL_BlitSurface(screenbak,&brdst,screen,&brdstreal);
 //    SDL_BlitSurface(tiles,&objsrc,screen,&objdstreal);
     SDL_BlitSurface(bright,&brsrc,screen,&brdstreal);
-    SDL_UpdateRect(screen,brdstreal.x,brdstreal.y,brdstreal.w,brdstreal.h);
+    //SDL_UpdateRect(screen,brdstreal.x,brdstreal.y,brdstreal.w,brdstreal.h);
 }
 
 void show_arrow(int arrow, int show)
@@ -159,7 +159,7 @@ void show_arrow(int arrow, int show)
 	    else
 		SDL_BlitSurface(screenbak, &src, screen, &dst);
 		
-	    SDL_UpdateRect(screen, dst.x, dst.y, dst.w, dst.h);
+	    //SDL_UpdateRect(screen, dst.x, dst.y, dst.w, dst.h);
 	    break;
 	case arrow_right:
 	    dst.x=R_gamearea_x+(R_maxtiles_h*R_tileside)-(10+dst.w);
@@ -169,7 +169,7 @@ void show_arrow(int arrow, int show)
 	    else
 		SDL_BlitSurface(screenbak, &src, screen, &dst);
 
-	    SDL_UpdateRect(screen, dst.x, dst.y, dst.w, dst.h);
+	    //SDL_UpdateRect(screen, dst.x, dst.y, dst.w, dst.h);
 	    break;
 	case arrow_up:
 //fprintf(stderr,"up");
