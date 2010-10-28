@@ -9,7 +9,7 @@ if grep "AppUseCrystaXToolchain=y" AndroidAppSettings.cfg > /dev/null ; then
 	NDKBUILD=`which ndk-build | sed 's@/[^/]*/ndk-build@/android-ndk-r4-crystax@'`/ndk-build
 fi
 export `grep "AppFullName=" AndroidAppSettings.cfg`
-if grep "package $AppFullName;" project/src/MainActivity.java > /dev/null ; then true ; else
+if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && [ "`readlink AndroidAppSettings.cfg`" -ot "project/src/Globals.java" ] ) ; then true ; else
 	./ChangeAppSettings.sh -a
 fi
 
