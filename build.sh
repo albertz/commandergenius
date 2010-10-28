@@ -11,6 +11,8 @@ fi
 export `grep "AppFullName=" AndroidAppSettings.cfg`
 if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && [ "`readlink AndroidAppSettings.cfg`" -ot "project/src/Globals.java" ] ) ; then true ; else
 	./ChangeAppSettings.sh -a
+	sleep 1
+	touch project/src/Globals.java
 fi
 
 cd project && nice -n10 $NDKBUILD -j2 V=1 && ant debug && cd bin && adb install -r DemoActivity-debug.apk
