@@ -104,6 +104,7 @@ void stage_up()
     {
 	for(int a=int(gametimer);a>0;a--)
 	{
+		SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
 	    score=score+(dificulty*45)+(int(dificulty/3)*45);
 	    gametimer--;
 	    minutes = int(gametimer/60);
@@ -146,6 +147,7 @@ void stage_up()
 
 void start_game()
 {
+	SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
     LoadT(&font,DATADIR"/fonts/font16d.T");
     SDL_SetColorKey(font, SDL_SRCCOLORKEY, SDL_MapRGB(font->format,0,0,0));
     print_text(font,screen,16,16,140,90,"LOADING GAME DATA... PLEASE WAIT");

@@ -110,6 +110,7 @@ void do_help()
 {
     load_helpgfx();
     fadesurface(background, 0, 0, 150);
+    SDL_BlitSurface(background, NULL, screen, NULL);
     print_text(scorefont, screen, 16, 16, 72, 68,   "      HOW TO PLAY PACHI EL MARCIANO      ");
     print_text(scorefont1, screen, 16, 16, 72, 120, "KEYS:");
     print_text(scorefont1, screen, 16, 16,100, 140, "RIGHT     : P");
