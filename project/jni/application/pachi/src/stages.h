@@ -76,13 +76,13 @@ void init_stages ()
     mstage[12].music=DATADIR"/music/stage3.s3m.ogg";
     mstage[12].objects=17;
     mstage[12].time=140;
-    mstage[12].code="TWR1";
+    mstage[12].code="TWRF";
 
     mstage[13].title="      THE TWO TOWERS     ";
     mstage[13].music=DATADIR"/music/stage3.s3m.ogg";
     mstage[13].objects=26;
     mstage[13].time=200;
-    mstage[13].code="2TWR";
+    mstage[13].code="STWR";
 
     mstage[14].title="     THE SECRET PLACE    ";
     mstage[14].music=DATADIR"/music/stage3.s3m.ogg";

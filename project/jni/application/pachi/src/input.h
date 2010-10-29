@@ -52,17 +52,50 @@ void hiscore_events()
         {
 	    case SDL_KEYDOWN:
 	    {
+	    if(event.key.keysym.sym == SDLK_UP)
+	    {
+            playername[namechar]--;
+    	    if(playername[namechar]<='A' || playername[namechar]>='Z')
+                playername[namechar]='A';
+	    }
+	    else
+	    if(event.key.keysym.sym == SDLK_DOWN)
+	    {
+            playername[namechar]++;
+    	    if(playername[namechar]<='A' || playername[namechar]>='Z')
+                playername[namechar]='Z';
+	    }
+	    else
+	    if(event.key.keysym.sym == SDLK_RIGHT)
+	    {
+            if(playername[namechar]<='A' || playername[namechar]>='Z')
+                playername[namechar]='A';
+            namechar++;
+            if(namechar > 9)
+                namechar=9;
+	    }
+	    else
+	    if(event.key.keysym.sym == SDLK_LEFT)
+	    {
+            playername[namechar]=' ';
+            namechar--;
+            if(namechar < 0)
+                namechar=0;
+	    }
+	    else
 		if(event.key.keysym.sym>41)
 		{
 		    playername[namechar] = event.key.keysym.sym;
 		    if(playername[namechar]>=97 && playername[namechar]<=122)
 			playername[namechar]=event.key.keysym.sym-32;
+            if(playername[namechar]<='A' || playername[namechar]>='Z')
+                playername[namechar]='A';
 		    if(namechar < 9)
 			namechar++;
 		}
 		else
 		{
-		    if(event.key.keysym.sym==SDLK_RETURN || event.key.keysym.sym == SDLK_ESCAPE)
+		    if(event.key.keysym.sym==SDLK_RETURN || event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_SPACE)
 			inputloop=0;
 		    if(event.key.keysym.sym==SDLK_BACKSPACE)
 		    {
@@ -176,17 +209,50 @@ void code_events()
         {
             case SDL_KEYDOWN:
 	    {
+	    if(event.key.keysym.sym == SDLK_UP)
+	    {
+            code[codechar]--;
+    	    if(code[codechar]<='A' || code[codechar]>='Z')
+                code[codechar]='A';
+	    }
+	    else
+	    if(event.key.keysym.sym == SDLK_DOWN)
+	    {
+            code[codechar]++;
+    	    if(code[codechar]<='A' || code[codechar]>='Z')
+                code[codechar]='Z';
+	    }
+	    else
+	    if(event.key.keysym.sym == SDLK_RIGHT)
+	    {
+            if(code[codechar]<='A' || code[codechar]>='Z')
+                code[codechar]='A';
+            codechar++;
+            if(codechar > 3)
+                codechar=3;
+	    }
+	    else
+	    if(event.key.keysym.sym == SDLK_LEFT)
+	    {
+            code[codechar]='.';
+            codechar--;
+            if(codechar < 0)
+                codechar=0;
+	    }
+		else
 		if(event.key.keysym.sym>41)
 		{
 	    	    code[codechar] = event.key.keysym.sym;
 		    if(code[codechar]>=97 && code[codechar]<=122)
 			code[codechar]=event.key.keysym.sym-32;
+            if(code[codechar]<='A' || code[codechar]>='Z')
+                code[codechar]='A';
 		    if(codechar < 3)
 			codechar++;
 		}
 		else
 		{
-		    if(event.key.keysym.sym== SDLK_RETURN || event.key.keysym.sym == SDLK_ESCAPE)
+		    if(event.key.keysym.sym== SDLK_RETURN || event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_SPACE)
 			inputloop=0;
 		    if(event.key.keysym.sym== SDLK_BACKSPACE)
 		    {

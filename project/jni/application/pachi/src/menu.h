@@ -19,25 +19,30 @@
 void do_code()
 {
     Mix_Volume(3,100);
-    SDL_Rect coderect;
-    coderect.x=300;
-    coderect.y=232;
-    coderect.w=200;
-    coderect.h=50;
-    SDL_FillRect(screen, &coderect, SDL_MapRGB(screen->format,255,255,255));
-    coderect.x=303;
-    coderect.y=235;
-    coderect.w=194;
-    coderect.h=44;
-    SDL_FillRect(screen, &coderect, SDL_MapRGB(screen->format,0,0,0));
     codechar=0;
     inputloop=1;
 //    SDL_SetColorKey(menufont1,0,SDL_MapRGB(menufont1->format,0,255,0));
     while(inputloop==1)
     {
+    SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
+    SDL_Rect coderect;
+    coderect.x=300;
+    coderect.y=232;
+    coderect.w=200;
+    coderect.h=60;
+    SDL_FillRect(screen, &coderect, SDL_MapRGB(screen->format,255,255,255));
+    coderect.x=303;
+    coderect.y=235;
+    coderect.w=194;
+    coderect.h=54;
+    SDL_FillRect(screen, &coderect, SDL_MapRGB(screen->format,0,0,0));
 	code_events();
 	print_text(menufont1, screen, 32, 32, 336, 241, "%s",code);
-        SDL_UpdateRect(screen, 300, 232, 200, 50);
+	char cursor[]="    ";
+	cursor[codechar]='.';
+	print_text(menufont1, screen, 32, 32, 336, 254, "%s",cursor);
+        //SDL_UpdateRect(screen, 300, 232, 200, 50);
+    SDL_Flip(screen);
     }
 //    SDL_SetColorKey(menufont1,SDL_SRCCOLORKEY,SDL_MapRGB(menufont1->format,0,255,0));
 

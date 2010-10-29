@@ -90,6 +90,8 @@ void stop_music()
     }
 }
 
+void save_hiscoredata();
+
 void load_hiscoredata()
 {
     background=LoadT8(DATADIR"/Tgfx/gameover.T8");
@@ -97,24 +99,43 @@ void load_hiscoredata()
     LoadT(&scorefont1,DATADIR"/fonts/font16d.T");
 
     FILE *file = fopen(SCOREDIR"/data/scores.dat","rb");
-    for(int a=0; a < 10; a++)
+    if( file == NULL )
     {
-	for(int b=0; b < 10; b++)
-	{
-	    scorename[a][b]=getc(file);
-	}
-	    scorestage[a]=getc(file);
-	    int lobyte,hibyte,vhibyte;
-	    hibyte=getc(file);
-	    lobyte=getc(file);
-	    scoretime[a]=(hibyte*256)+lobyte;
-	    scoredif[a]=getc(file);
-	    vhibyte=getc(file);
-	    hibyte=getc(file);
-	    lobyte=getc(file);
-	    scorescore[a]=(vhibyte*65536)+(hibyte*256)+lobyte;
+	    for(int a=0; a < 10; a++)
+	    {
+		for(int b=0; b < 10; b++)
+		{
+		    scorename[a][b]=0;
+		}
+		scorestage[a]=0;
+		scoretime[a]=0;
+		scoredif[a]=0;
+		scorescore[a]=0;
+		}
+		save_hiscoredata();
     }
-    fclose(file);
+    else
+    {
+	    for(int a=0; a < 10; a++)
+	    {
+		for(int b=0; b < 10; b++)
+		{
+		    scorename[a][b]=getc(file);
+		}
+		    scorename[a][10] = 0;
+		    scorestage[a]=getc(file);
+		    int lobyte,hibyte,vhibyte;
+		    hibyte=getc(file);
+		    lobyte=getc(file);
+		    scoretime[a]=(hibyte*256)+lobyte;
+		    scoredif[a]=getc(file);
+		    vhibyte=getc(file);
+		    hibyte=getc(file);
+		    lobyte=getc(file);
+		    scorescore[a]=(vhibyte*65536)+(hibyte*256)+lobyte;
+	    }
+	    fclose(file);
+    }
 }
 void unload_hiscoredata()
 {
@@ -124,7 +145,7 @@ void unload_hiscoredata()
 }
 void save_hiscoredata()
 {
-    FILE *file = fopen(SCOREDIR"/data/scores.dat","rb+");
+    FILE *file = fopen(SCOREDIR"/data/scores.dat","wb");
 
     for(int a=0;a<10;a++)
     {    
@@ -136,14 +157,14 @@ void save_hiscoredata()
 
         int lobyte,hibyte,vhibyte;
         hibyte=int(scoretime[a]/256);
-        lobyte=int(scoretime[a]-(hibyte+256));
+        lobyte=int(scoretime[a]-(hibyte*256));
 
         putc(hibyte,file);
         putc(lobyte,file);
         putc(scoredif[a],file);
 
         vhibyte=int(scorescore[a]/65536);
-        hibyte=int((scorescore[a] - (scorescore[a]/65536))/256);
+        hibyte=int((scorescore[a] - (vhibyte*256))/256);
         lobyte=int(scorescore[a] - (vhibyte*65536 + hibyte*256));
 
 	putc(vhibyte,file);

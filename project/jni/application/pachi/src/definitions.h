@@ -46,12 +46,12 @@ float alphade;
 #define arrow_up    3
 #define arrow_down  4
 
-int namechar;
+int namechar=0;
 int gameover=0;
 
 // --- Scores related
 char playername[]="          ";
-char scorename[10][10];
+char scorename[10][11];
 int scorestage[10];
 int scoretime[10];
 int scoredif[10];

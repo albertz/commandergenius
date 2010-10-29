@@ -18,6 +18,8 @@
 
 void show_hiscores()
 {
+	SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
+	SDL_BlitSurface(background,NULL,screen,NULL);
     SDL_SetColorKey(scorefont,SDL_SRCCOLORKEY,SDL_MapRGB(scorefont->format,0,0,0));
     SDL_SetColorKey(scorefont1,SDL_SRCCOLORKEY,SDL_MapRGB(scorefont1->format,0,0,0));
     SDL_SetColorKey(scorefont1,SDL_SRCCOLORKEY,SDL_MapRGB(scorefont1->format,0,0,0));
@@ -100,6 +102,8 @@ void do_gameover()
 	box.x=273;box.y=223;box.w=254;box.h=46;
 	while(inputloop==1)
 	{
+	    SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0));
+		SDL_BlitSurface(background,NULL,screen,NULL);
 	    hiscore_events();
 	    SDL_FillRect(screen,&box,SDL_MapRGB(screen->format,0,0,0));
 	    print_text(scorefont1,screen,16,16,box.x+10,box.y+5,"ENTER YOUR NAME");

@@ -89,7 +89,7 @@ void print_credits()
     SDL_SetAlpha(creditsbuffer, SDL_SRCALPHA, 255);
 	SDL_BlitSurface(creditsbuffer, &cbuffer, creditsbuffer1, &cbuffer1);
 	SDL_BlitSurface(creditsbuffer1, &cbuffer1, creditsbuffer, &cbuffer1);
-	SDL_BlitSurface(background, &bgpos, screen, &bgpos);
+    SDL_BlitSurface(background, NULL, screen, NULL); //SDL_BlitSurface(background, &bgpos, screen, &bgpos);
     SDL_SetColorKey(creditsbuffer, SDL_SRCCOLORKEY, SDL_MapRGB(creditsbuffer->format, 0, 255, 0));
     SDL_SetAlpha(creditsbuffer, SDL_SRCALPHA, 128);
 	SDL_BlitSurface(creditsbuffer, &cbuffer1, screen, &creditspos);

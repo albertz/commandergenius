@@ -264,8 +264,8 @@ double delta_time(void)
     curtime=SDL_GetTicks();
     imove=(curtime-lasttime)/1000.0;
     lasttime=curtime;
-    if(imove>.2)
-	imove=0.01;
+    if(imove>0.2)
+	imove=0.2;
     return imove;
 }
 
