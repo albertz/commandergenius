@@ -36,22 +36,29 @@
 #define CONFIRM_WIN_HEIGHT 22
 
 static void
-DrawConfirmationWindow (BOOLEAN answer)
+DrawConfirmationWindow (int answer)
 {
 	Color oldfg = SetContextForeGroundColor (MENU_TEXT_COLOR);
 	FONT  oldfont = SetContextFont (StarConFont);
 	FRAME oldFontEffect = SetContextFontEffect (NULL);
 	RECT r;
 	TEXT t;
+	int textOffset;
 
 	BatchGraphics ();
 	r.corner.x = (SCREEN_WIDTH - CONFIRM_WIN_WIDTH) >> 1;
 	r.corner.y = (SCREEN_HEIGHT - CONFIRM_WIN_HEIGHT) >> 1;
 	r.extent.width = CONFIRM_WIN_WIDTH;
 	r.extent.height = CONFIRM_WIN_HEIGHT;
+	textOffset = r.extent.width >> 1;
+	if (GLOBAL (CurrentActivity) & IN_BATTLE)
+	{
+		r.corner.x -= CONFIRM_WIN_WIDTH;
+		r.extent.width += CONFIRM_WIN_WIDTH * 2;
+		textOffset = r.extent.width / 3;
+	}
 	DrawShadowedBox (&r, SHADOWBOX_BACKGROUND_COLOR, 
 			SHADOWBOX_DARK_COLOR, SHADOWBOX_MEDIUM_COLOR);
-
 	t.baseline.x = r.corner.x + (r.extent.width >> 1);
 	t.baseline.y = r.corner.y + 8;
 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE); // "Really Quit?"
@@ -59,14 +66,21 @@ DrawConfirmationWindow (BOOLEAN answer)
 	t.CharCount = (COUNT)~0;
 	font_DrawText (&t);
 	t.baseline.y += 10;
-	t.baseline.x = r.corner.x + (r.extent.width >> 2);
+	t.baseline.x = r.corner.x + (textOffset >> 1);
 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE + 1); // "Yes"
-	SetContextForeGroundColor (answer ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
+	SetContextForeGroundColor (answer == 1 ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
 	font_DrawText (&t);
-	t.baseline.x += (r.extent.width >> 1);
+	t.baseline.x += textOffset;
 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE + 2); // "No"
-	SetContextForeGroundColor (answer ? MENU_TEXT_COLOR : MENU_HIGHLIGHT_COLOR);	
+	SetContextForeGroundColor (answer == 0 ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
 	font_DrawText (&t);
+	if (GLOBAL (CurrentActivity) & IN_BATTLE)
+	{
+		t.baseline.x += textOffset;
+		t.pStr = "Escape unit"; // GAME_STRING (QUITMENU_STRING_BASE + 3); // TODO: modify gamestrings.txt 
+		SetContextForeGroundColor (answer == 2 ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
+		font_DrawText (&t);
+	}
 
 	UnbatchGraphics ();
 
@@ -74,6 +88,8 @@ DrawConfirmationWindow (BOOLEAN answer)
 	SetContextFont (oldfont);
 	SetContextForeGroundColor (oldfg);
 }
+
+BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
 
 BOOLEAN
 DoConfirmExit (void)
@@ -90,7 +106,11 @@ DoConfirmExit (void)
 		RECT ctxRect;
 		CONTEXT oldContext;
 		RECT oldRect;
-		BOOLEAN response = FALSE, done;
+		int response = 0;
+		BOOLEAN done;
+		int responseMax = 1;
+		if (GLOBAL (CurrentActivity) & IN_BATTLE)
+			responseMax = 2;
 
 		oldContext = SetContext (ScreenContext);
 		GetContextClipRect (&oldRect);
@@ -118,7 +138,7 @@ DoConfirmExit (void)
 			if (GLOBAL (CurrentActivity) & CHECK_ABORT)
 			{	// something else triggered an exit
 				done = TRUE;
-				response = TRUE;
+				response = 1;
 			}
 			else if (PulsedInputState.menu[KEY_MENU_SELECT])
 			{
@@ -128,11 +148,16 @@ DoConfirmExit (void)
 			else if (PulsedInputState.menu[KEY_MENU_CANCEL])
 			{
 				done = TRUE;
-				response = FALSE;
+				response = 0;
 			}
 			else if (PulsedInputState.menu[KEY_MENU_LEFT] || PulsedInputState.menu[KEY_MENU_RIGHT])
 			{
-				response = !response;
+				
+				response += PulsedInputState.menu[KEY_MENU_LEFT] ? 1 : -1;
+				if(response < 0)
+					response = responseMax;
+				if( response > responseMax )
+					response = 0;
 				DrawConfirmationWindow (response);
 				PlayMenuSound (MENU_SOUND_MOVE);
 			}
@@ -143,14 +168,18 @@ DoConfirmExit (void)
 		DrawStamp (&s);
 		DestroyDrawable (ReleaseDrawable (s.frame));
 		ClearSystemRect ();
-		if (response || (GLOBAL (CurrentActivity) & CHECK_ABORT))
+		if (response == 1 || (GLOBAL (CurrentActivity) & CHECK_ABORT))
 		{
 			result = TRUE;
 			GLOBAL (CurrentActivity) |= CHECK_ABORT;
-		}		
+		}
 		else
 		{
 			result = FALSE;
+		}
+		if( response == 2 )
+		{
+			EmergencyEscapeWarpUnitActivatedFromMenu = TRUE;
 		}
 		ExitRequested = FALSE;
 		GamePaused = FALSE;

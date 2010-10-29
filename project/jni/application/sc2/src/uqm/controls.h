@@ -93,6 +93,7 @@ extern CONTROLLER_INPUT_STATE CurrentInputState;
 extern CONTROLLER_INPUT_STATE PulsedInputState;
 extern volatile CONTROLLER_INPUT_STATE ImmediateInputState;
 extern CONTROL_TEMPLATE PlayerControls[];
+extern BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu;
 
 void UpdateInputState (void);
 extern void FlushInput (void);

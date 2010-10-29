@@ -214,8 +214,11 @@ ProcessInput (void)
 						StarShipPtr->ship_input_state |= SPECIAL;
 
 					if (CanRunAway && cur_player == 0 &&
-							(InputState & BATTLE_ESCAPE))
+							((InputState & BATTLE_ESCAPE) || EmergencyEscapeWarpUnitActivatedFromMenu))
+					{
+						EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
 						DoRunAway (StarShipPtr);
+					}
 				}
 			}
 
