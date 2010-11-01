@@ -428,8 +428,15 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 		SDL_OutOfMemory();
 		return(-1);
 	}
+
+	if( surface->format->Amask )
+	{
+		SDL_SetTextureAlphaMod((struct SDL_Texture *)surface->hwdata, SDL_ALPHA_OPAQUE);
+		SDL_SetTextureBlendMode((struct SDL_Texture *)surface->hwdata, SDL_BLENDMODE_BLEND);
+	}
 	
 	surface->flags |= SDL_HWSURFACE | SDL_HWACCEL;
+	
 
 	HwSurfaceCount++;
 	DEBUGOUT("ANDROID_AllocHWSurface() in HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
@@ -530,38 +537,13 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 		format.Bmask == surface->format->Bmask &&
 		format.Amask == surface->format->Amask )
 	{
+		DEBUGOUT("ANDROID_UnlockHWSurface() no conversion");
 		converted = surface; // No need for conversion
 	}
 	else
 	{
 		Uint16 x, y;
-		// Extra check not necessary
-		/*
-		if( !( SDL_CurrentVideoSurface->format->BitsPerPixel == surface->format->BitsPerPixel &&
-			SDL_CurrentVideoSurface->format->Rmask == surface->format->Rmask &&
-			SDL_CurrentVideoSurface->format->Gmask == surface->format->Gmask &&
-			SDL_CurrentVideoSurface->format->Bmask == surface->format->Bmask &&
-			SDL_CurrentVideoSurface->format->Amask == surface->format->Amask) )
-			return;
-		*/
-		// TODO: crashes here, so I'm using manual conversion routine
-		/*
-		Uint8 oldAlpha = surface->format->alpha;
-		converted = SDL_CreateRGBSurface(SDL_SWSURFACE, surface->w, surface->h, format.BitsPerPixel,
-											format.Rmask, format.Gmask, format.Bmask, format.Amask);
-		if( !converted ) {
-			SDL_OutOfMemory();
-			return;
-		}
-		SDL_FillRect( converted, NULL, 0 ); // Fill with transparency
-		surface->format->alpha = SDL_ALPHA_OPAQUE;
-		SDL_Rect src, dst;
-		src.x = dst.x = src.y = dst.y = 0;
-		src.w = dst.w = surface->w;
-		src.h = dst.h = surface->h;
-		SDL_UpperBlit( surface, &src, converted, &dst ); // Should take into account colorkey
-		surface->format->alpha = oldAlpha;
-		*/
+
 		converted = SDL_CreateRGBSurface(SDL_SWSURFACE, surface->w, surface->h, format.BitsPerPixel,
 											format.Rmask, format.Gmask, format.Bmask, format.Amask);
 		if( !converted ) {
@@ -573,6 +555,7 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 		
 		if( surface->flags & SDL_SRCCOLORKEY )
 		{
+			DEBUGOUT("ANDROID_UnlockHWSurface() CONVERT_RGB565_RGBA5551 + colorkey");
 			for( y = 0; y < surface->h; y++ )
 			{
 				Uint16* src = (Uint16 *)( surface->pixels + surface->pitch * y );
@@ -589,6 +572,7 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 		}
 		else
 		{
+			DEBUGOUT("ANDROID_UnlockHWSurface() CONVERT_RGB565_RGBA5551");
 			for( y = 0; y < surface->h; y++ )
 			{
 				Uint16* src = (Uint16 *)( surface->pixels + surface->pitch * y );
