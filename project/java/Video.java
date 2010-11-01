@@ -22,15 +22,29 @@ import android.widget.TextView;
 import java.lang.Thread;
 import java.util.concurrent.locks.ReentrantLock;
 import android.os.Build;
+import java.lang.reflect.Method;
+
 
 abstract class DifferentTouchInput
 {
 	public static DifferentTouchInput getInstance()
 	{
-		if (Integer.parseInt(Build.VERSION.SDK) <= 4)
-			return SingleTouchInput.Holder.sInstance;
-		else
+		boolean multiTouchAvailable1 = false;
+		boolean multiTouchAvailable2 = false;
+		// Not checking for getX(int), getY(int) etc 'cause I'm lazy
+		Method methods [] = MotionEvent.class.getDeclaredMethods();
+		for(Method m: methods) 
+		{
+			if( m.getName().equals("getPointerCount") )
+				multiTouchAvailable1 = true;
+			if( m.getName().equals("getPointerId") )
+				multiTouchAvailable2 = true;
+		}
+
+		if (multiTouchAvailable1 && multiTouchAvailable2)
 			return MultiTouchInput.Holder.sInstance;
+		else
+			return SingleTouchInput.Holder.sInstance;
 	}
 	public abstract void process(final MotionEvent event);
 	private static class SingleTouchInput extends DifferentTouchInput
