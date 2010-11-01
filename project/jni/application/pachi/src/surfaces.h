@@ -10,6 +10,7 @@ SDL_Surface *menufont1;
 SDL_Surface *screen;
 SDL_Surface *background;
 SDL_Surface *backs;
+SDL_Surface *currentBack = NULL;
 SDL_Surface *tiles;
 SDL_Surface *screenbak;
 

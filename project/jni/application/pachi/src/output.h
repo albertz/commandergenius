@@ -164,26 +164,11 @@ void print_room()
     SDL_FillRect(screen,&gamearea,0);
 
     SDL_Rect backs_dst;
-    SDL_Rect backs_src;
-    SDL_Rect backs_dstbak;
-    backs_src.w = R_back_x;
-    backs_src.h = R_back_y;
-    backs_dst.w = R_back_x;
-    backs_dst.h = R_back_y;
-    for(x=0;x < R_maxbacks_h;x++)
-    {
-        for(y=0;y < R_maxbacks_v;y++)
-        {
-            backs_dst.x = R_gamearea_x + (x*R_back_x);
-            backs_dst.y = R_gamearea_y + (y*R_back_y);
-	    backs_dstbak.x = x*R_back_x;
-	    backs_dstbak.y = y*R_back_y;
-
-            backs_src.y = (int(R_backdata[x][y]/6) * R_back_y);
-            backs_src.x = (R_backdata[x][y] - (int(R_backdata[x][y]/6) * 6))*R_back_x;
-    	    SDL_BlitSurface(backs,&backs_src,screen,&backs_dst);
-        }
-    }
+    backs_dst.w = R_back_x*R_maxbacks_h;
+    backs_dst.h = R_back_y*R_maxbacks_v;
+    backs_dst.x = R_gamearea_x;
+    backs_dst.y = R_gamearea_y;
+    SDL_BlitSurface(currentBack,NULL,screen,&backs_dst);
 
     SDL_Rect tiles_dst;
     SDL_Rect tiles_dstbak;

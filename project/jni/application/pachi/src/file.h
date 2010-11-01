@@ -19,7 +19,7 @@
 void load_gamedata()
 {
     background=LoadT8(DATADIR"/Tgfx/gamepanel.T8");
-    backs=LoadT8(DATADIR"/Tgfx/backgrounds.T8");
+    backs=LoadT8(DATADIR"/Tgfx/backgrounds.T8", false);
     player=LoadT8(DATADIR"/Tgfx/pachi.T8");
     monsters=LoadT8(DATADIR"/Tgfx/monsters.T8");
     tiles=LoadT8(DATADIR"/Tgfx/tiles.T8");
@@ -69,6 +69,10 @@ void unload_gamedata()
     SDL_FreeSurface(menufont);
     SDL_FreeSurface(left);
     SDL_FreeSurface(right);
+
+    if( currentBack )
+        SDL_FreeSurface(currentBack);
+    currentBack = NULL;
     
     Mix_FreeChunk(exitlevel);
     Mix_FreeChunk(jump);
@@ -241,6 +245,34 @@ void load_room()
         }
     }
     fclose(bck);
+
+
+    if( currentBack )
+        SDL_FreeSurface(currentBack);
+    currentBack = SDL_CreateRGBSurface(SDL_HWSURFACE, R_back_x*R_maxbacks_h, R_back_y*R_maxbacks_v, screen->format->BitsPerPixel, 
+    							screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
+    
+    SDL_Rect backs_dst;
+    backs_dst.w = R_back_x;
+    backs_dst.h = R_back_y;
+    
+    SDL_Rect backs_src;
+    backs_src.w = R_back_x;
+    backs_src.h = R_back_y;
+    for(x=0;x < R_maxbacks_h;x++)
+    {
+        for(y=0;y < R_maxbacks_v;y++)
+        {
+            backs_dst.x = (x*R_back_x);
+            backs_dst.y = (y*R_back_y);
+
+            backs_src.y = (int(R_backdata[x][y]/6) * R_back_y);
+            backs_src.x = (R_backdata[x][y] - (int(R_backdata[x][y]/6) * 6))*R_back_x;
+            SDL_BlitSurface(backs,&backs_src,currentBack,&backs_dst);
+        }
+    }
+    
+
 
     FILE *lvl = fopen(DATADIR"/data/rooms_v2.dat","rb");
     filepos  = (200 + ((R_current-1) * (R_maxtiles_h*R_maxtiles_v))+R_current); // filepos es el puntero del archivo, lo utilizamos para leer la habitacion donde estemos

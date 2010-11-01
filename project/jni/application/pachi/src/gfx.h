@@ -69,7 +69,7 @@ void LoadT(SDL_Surface **Tsurface, char *str)
     fclose(Tsrc);
 }
 
-SDL_Surface * LoadT8(char *str)
+SDL_Surface * LoadT8(char *str, bool HW=true)
 {
     SDL_Surface *Tsurface;
     FILE *Tsrc;
@@ -110,7 +110,10 @@ SDL_Surface * LoadT8(char *str)
     }
     if(SDL_MUSTLOCK(temp))
 	SDL_UnlockSurface(temp);
-    Tsurface = SDL_DisplayFormat(temp);
+	if( HW )
+		Tsurface = SDL_DisplayFormat(temp);
+	else
+		Tsurface = SDL_ConvertSurface(temp, screen->format, SDL_SWSURFACE);
     SDL_FreeSurface(temp);
     fclose(Tsrc);
     return(Tsurface);
