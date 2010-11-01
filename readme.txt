@@ -80,8 +80,18 @@ SDL_BlitSurface(sprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
 SDL_BlitSurface(SDL_GetVideoSurface(), sourceRect, sprite, &targetRect);
 // In the future I may add implementation to read screen buffer with glReadPixels(), however it will be slow (okay for screenshots).
 
-To compile your own app, put your app sources into project/jni/application dir, and change symlink "src"
-to point to your app, then launch script ChangeAppSettings.sh - it will ask few questions and modify some Java code.
+To compile your own app, put your app sources into project/jni/application dir (or create symlink to them), 
+and change symlink "src" to point to your app:
+
+	cp -r /path/to/my/app project/jni/application/myapp
+or
+	ln -s /path/to/my/app project/jni/application/myapp
+then
+	rm project/jni/application/src
+	ln -s myapp project/jni/application/src
+(the second one should be relative link without slashes)
+
+Then launch script ChangeAppSettings.sh - it will ask few questions and modify some Java code.
 You may take AndroidAppSettings.cfg file from some other application to get some sane defaults.
 The C++ files shall have .cpp extension to be compiled, rename them if necessary.
 Also you can replace icon image at project/res/drawable/icon.png and image project/res/drawable/publisherlogo.png.
