@@ -62,14 +62,27 @@ Basically your code should be like:
 
 // Init HW-accelerated video
 SDL_SetVideoMode( 640, 480, 16, SDL_DOUBLEBUF | SDL_HWSURFACE );
+
 // Load graphics
 SDL_Surface *sprite = IMG_Load( "sprite.png" );
-// Set pink color as transparent
-SDL_SetColorKey( sprite, SDL_SRCCOLORKEY, SDL_MapRGB(sprite->format, 255, 0, 255) );
-// Create HW-accelerated surface
-SDL_Surface * hwSprite = SDL_DisplayFormat(sprite);
-// Set per-surface alpha, if necessary
-SDL_SetAlpha( hwSprite, SDL_SRCALPHA, 128 );
+SDL_Surface * hwSprite;
+
+if( sprite->format->Amask )
+{
+	// Surface contains per-pixel alpha, convert it to HW-accelerated format
+	hwSprite = SDL_DisplayFormatAlpha(sprite);
+}
+else
+{
+	// Set pink color as transparent
+	SDL_SetColorKey( sprite, SDL_SRCCOLORKEY, SDL_MapRGB(sprite->format, 255, 0, 255) );
+	// Create HW-accelerated surface
+	hwSprite = SDL_DisplayFormat(sprite);
+	// Set per-surface alpha, if necessary
+	SDL_SetAlpha( hwSprite, SDL_SRCALPHA, 128 );
+}
+SDL_FreeSurface(sprite);
+
 // Blit it in HW-accelerated way
 SDL_BlitSurface(hwSprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
 
