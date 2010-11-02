@@ -21,12 +21,12 @@ void load_gamedata()
     background=LoadT8(DATADIR"/Tgfx/gamepanel.T8");
     backs=LoadT8(DATADIR"/Tgfx/backgrounds.T8", false);
     player=LoadT8(DATADIR"/Tgfx/pachi.T8");
-    monsters=LoadT8(DATADIR"/Tgfx/monsters.T8");
+    monstersSW=LoadT8(DATADIR"/Tgfx/monsters.T8", false);
     tiles=LoadT8(DATADIR"/Tgfx/tiles.T8");
     bright=LoadT8(DATADIR"/Tgfx/bright.T8");
     left=LoadT8(DATADIR"/Tgfx/left.T8");
     right=LoadT8(DATADIR"/Tgfx/right.T8");
-    menufont=LoadT8(DATADIR"/fonts/font32v.T8");
+    menufont=LoadT8(DATADIR"/fonts/font32v.T8", false);
     LoadT(&scorefont,DATADIR"/fonts/font16b.T");
     LoadT(&scorefont1,DATADIR"/fonts/font16a.T");
     LoadT(&scorefont2,DATADIR"/fonts/font16c.T");
@@ -35,7 +35,6 @@ void load_gamedata()
     screenbak = SDL_DisplayFormat(temp);
     SDL_FreeSurface(temp);
     SDL_SetColorKey(menufont, SDL_SRCCOLORKEY, SDL_MapRGB(menufont->format,0,255,0));
-    SDL_SetColorKey(monsters, SDL_SRCCOLORKEY, SDL_MapRGB(monsters->format,0,255,0));
     SDL_SetColorKey(player, SDL_SRCCOLORKEY, SDL_MapRGB(player->format,0,0,0)); // el negro es transparente
     SDL_SetColorKey(tiles, SDL_SRCCOLORKEY, SDL_MapRGB(tiles->format,0,255,0));
     SDL_SetColorKey(bright, SDL_SRCCOLORKEY, SDL_MapRGB(bright->format,0,255,0));
@@ -61,7 +60,7 @@ void unload_gamedata()
     SDL_FreeSurface(backs);
     SDL_FreeSurface(player);
     SDL_FreeSurface(bright);
-    SDL_FreeSurface(monsters);
+    SDL_FreeSurface(monstersSW);
     SDL_FreeSurface(screenbak);
     SDL_FreeSurface(scorefont);
     SDL_FreeSurface(scorefont1);
@@ -73,6 +72,14 @@ void unload_gamedata()
     if( currentBack )
         SDL_FreeSurface(currentBack);
     currentBack = NULL;
+
+    for(int n=0;n<M_max4room;n++)
+    {
+    	if(monsters[n])
+    		SDL_FreeSurface(monsters[n]);
+    	monsters[n] = NULL;
+    }
+    
     
     Mix_FreeChunk(exitlevel);
     Mix_FreeChunk(jump);
@@ -195,8 +202,8 @@ void unload_helpgfx()
 
 void load_menudata()
 {
-    menufont=LoadT8(DATADIR"/fonts/font32v.T8");
-    menufont1=LoadT8(DATADIR"/fonts/font32r.T8");
+    menufont=LoadT8(DATADIR"/fonts/font32v.T8", false);
+    menufont1=LoadT8(DATADIR"/fonts/font32r.T8", false);
     background=LoadT8(DATADIR"/Tgfx/intro.T8");
     SDL_SetColorKey(menufont, SDL_SRCCOLORKEY, SDL_MapRGB(menufont->format,0,255,0));
     SDL_SetColorKey(menufont1, SDL_SRCCOLORKEY, SDL_MapRGB(menufont1->format,0,255,0));
@@ -228,6 +235,26 @@ void init_monsters()
 	M_y[n]=getc(mnstr)*R_tileside-M_h+R_tileside;
     }
     fclose(mnstr);
+
+    for(int n=0;n<M_max4room;n++)
+    {
+    	if(monsters[n])
+    		SDL_FreeSurface(monsters[n]);
+    	monsters[n] = NULL;
+    	
+		if(M_type[n] != 0)
+		{
+			SDL_Rect monstersrc;
+			monstersrc.y = M_type[n] * M_h;
+			monstersrc.x = 0;
+			monstersrc.h = M_h;
+			monstersrc.w = M_frames * 2 * M_w;
+			monsters[n] = SDL_CreateRGBSurface(SDL_HWSURFACE, monstersrc.w, monstersrc.h, screen->format->BitsPerPixel, 
+								screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
+			SDL_BlitSurface(monstersSW, &monstersrc, monsters[n], NULL);
+			SDL_SetColorKey(monsters[n], SDL_SRCCOLORKEY, SDL_MapRGB(monsters[n]->format,0,255,0));
+		}
+    }
 }
 
 void load_room()

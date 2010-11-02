@@ -23,7 +23,8 @@ SDL_Surface *left;
 SDL_Surface *right;
 
 // --- Monsters
-SDL_Surface *monsters;
+SDL_Surface *monsters[M_max4room];
+SDL_Surface *monstersSW = NULL;
 
 // --- Player
 SDL_Surface *player;
