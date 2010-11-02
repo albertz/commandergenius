@@ -41,4 +41,22 @@
     <string name="audiobuf_medium">Mittel</string>
     <string name="audiobuf_large">Groß (Wenn Ton "hängt")</string>
     <string name="audiobuf_question">Größe des Audiopuffers</string>
+<string name="optional_downloads">Optional Downloads</string>
+<string name="ok">OK</string>
+<string name="controls_touch">Touchscreen nur</string>
+<string name="controls_additional">Zusätzliche Kontrollen zu verwenden</string>
+<string name="controls_screenkb">On-Screen-Tastatur</string>
+<string name="controls_accelnav">Beschleunigungsmesser</string>
+<string name="controls_screenkb_size">On-Screen-Tastatur Größe</string>
+<string name="controls_screenkb_large">Große</string>
+<string name="controls_screenkb_medium">Medium</string>
+<string name="controls_screenkb_small">Kleine</string>
+<string name="controls_screenkb_tiny">Winzig</string>
+<string name="controls_screenkb_theme">On-Screen-Tastatur Thema</string>
+<string name="controls_screenkb_by">%s von %s</string>
+<string name="accel_floating">Schwimmend</string>
+<string name="accel_fixed_start">Feste, wenn die Anwendung startet</string>
+<string name="accel_fixed_horiz">Fixiert auf Tisch Schreibtisch Orientierung</string>
+<string name="accel_question_center">Beschleunigungsmesser Mittelstellung</string>
+<string name="audiobuf_verysmall">Sehr kleine (schnelle Geräte, weniger Verzögerung)</string>
 </resources>

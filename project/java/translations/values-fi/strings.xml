@@ -40,4 +40,22 @@
     <string name="audiobuf_medium">Keskisuuri</string>
     <string name="audiobuf_large">Suuri (jos ääni pätkii)</string>
     <string name="audiobuf_question">Äänipuskurin koko</string>
+<string name="optional_downloads">Vapaaehtoinen lataukset</string>
+<string name="ok">OK</string>
+<string name="controls_touch">Kosketusnäyttö vain</string>
+<string name="controls_additional">Muita ohjausobjekteja käyttää</string>
+<string name="controls_screenkb">Näyttönäppäimistöllä</string>
+<string name="controls_accelnav">Kiihtyvyysmittari</string>
+<string name="controls_screenkb_size">Näyttönäppäimistöllä koko</string>
+<string name="controls_screenkb_large">Suuri</string>
+<string name="controls_screenkb_medium">Medium</string>
+<string name="controls_screenkb_small">Pienet</string>
+<string name="controls_screenkb_tiny">Tiny</string>
+<string name="controls_screenkb_theme">Näyttönäppäimistöllä teema</string>
+<string name="controls_screenkb_by">%s %s</string>
+<string name="accel_floating">Kelluva</string>
+<string name="accel_fixed_start">Kiinteät kun sovellus käynnistyy</string>
+<string name="accel_fixed_horiz">Korjattu taulukko työpöytä suuntautumiseen</string>
+<string name="accel_question_center">Kiihtyvyysmittari keskiasentoon</string>
+<string name="audiobuf_verysmall">Hyvin pieni (nopea laitteita, vähemmän lag)</string>
 </resources>
