@@ -1,10 +1,11 @@
 // --- Fonts
+enum { FONT_CHUNKS = 2};
 SDL_Surface *font;
 SDL_Surface *scorefont;
 SDL_Surface *scorefont1;
 SDL_Surface *scorefont2;
-SDL_Surface *menufont;
-SDL_Surface *menufont1;
+SDL_Surface *menufont[FONT_CHUNKS];
+SDL_Surface *menufont1[FONT_CHUNKS];
 
 // --- Screen
 SDL_Surface *screen;

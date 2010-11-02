@@ -26,7 +26,7 @@ void load_gamedata()
     bright=LoadT8(DATADIR"/Tgfx/bright.T8");
     left=LoadT8(DATADIR"/Tgfx/left.T8");
     right=LoadT8(DATADIR"/Tgfx/right.T8");
-    menufont=LoadT8(DATADIR"/fonts/font32v.T8", false);
+    load_font( menufont, DATADIR"/fonts/font32v.T8" );
     LoadT(&scorefont,DATADIR"/fonts/font16b.T");
     LoadT(&scorefont1,DATADIR"/fonts/font16a.T");
     LoadT(&scorefont2,DATADIR"/fonts/font16c.T");
@@ -34,7 +34,6 @@ void load_gamedata()
     temp = SDL_CreateRGBSurface(SDL_SWSURFACE,736,448,16,0,0,0,0); //esto es para reestablecer la pantalla
     screenbak = SDL_DisplayFormat(temp);
     SDL_FreeSurface(temp);
-    SDL_SetColorKey(menufont, SDL_SRCCOLORKEY, SDL_MapRGB(menufont->format,0,255,0));
     SDL_SetColorKey(player, SDL_SRCCOLORKEY, SDL_MapRGB(player->format,0,0,0)); // el negro es transparente
     SDL_SetColorKey(tiles, SDL_SRCCOLORKEY, SDL_MapRGB(tiles->format,0,255,0));
     SDL_SetColorKey(bright, SDL_SRCCOLORKEY, SDL_MapRGB(bright->format,0,255,0));
@@ -65,7 +64,7 @@ void unload_gamedata()
     SDL_FreeSurface(scorefont);
     SDL_FreeSurface(scorefont1);
     SDL_FreeSurface(scorefont2);
-    SDL_FreeSurface(menufont);
+    unload_font(menufont);
     SDL_FreeSurface(left);
     SDL_FreeSurface(right);
 
@@ -202,11 +201,9 @@ void unload_helpgfx()
 
 void load_menudata()
 {
-    menufont=LoadT8(DATADIR"/fonts/font32v.T8", false);
-    menufont1=LoadT8(DATADIR"/fonts/font32r.T8", false);
+    load_font(menufont, DATADIR"/fonts/font32v.T8");
+    load_font(menufont1, DATADIR"/fonts/font32r.T8");
     background=LoadT8(DATADIR"/Tgfx/intro.T8");
-    SDL_SetColorKey(menufont, SDL_SRCCOLORKEY, SDL_MapRGB(menufont->format,0,255,0));
-    SDL_SetColorKey(menufont1, SDL_SRCCOLORKEY, SDL_MapRGB(menufont1->format,0,255,0));
 
     option=Mix_LoadWAV(DATADIR"/sounds/option.wav");
     coderight=Mix_LoadWAV(DATADIR"/sounds/exit.wav");
@@ -215,8 +212,8 @@ void load_menudata()
 }
 void unload_menudata()
 {
-    SDL_FreeSurface(menufont);
-    SDL_FreeSurface(menufont1);
+    unload_font(menufont);
+    unload_font(menufont1);
     SDL_FreeSurface(background);
     Mix_FreeChunk(option);
     Mix_FreeChunk(coderight);

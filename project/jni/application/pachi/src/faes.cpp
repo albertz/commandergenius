@@ -31,9 +31,9 @@
 #include"proto.h"
 #include"credits.h"
 
+#include"gfx.h"
 #include"text.h"
 #include"init.h"
-#include"gfx.h"
 #include"input.h"
 #include"file.h"
 #include"output.h"

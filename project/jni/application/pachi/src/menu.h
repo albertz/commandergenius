@@ -71,7 +71,7 @@ void do_code()
 void do_menu()
 {
     SDL_Delay(1);
-    font = menufont;
+    SDL_Surface ** font = menufont;
 
     int menustartpos=156;
 
