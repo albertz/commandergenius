@@ -300,6 +300,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 			SDL_memset(current->pixels, 0, width * height * ANDROID_BYTESPERPIXEL);
 			current->hwdata = (struct private_hwdata *)SDL_CreateTexture(SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STATIC, width, height);
 			if( !current->hwdata ) {
+				__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate texture for SDL_CurrentVideoSurface");
 				SDL_free(current->pixels);
 				current->pixels = NULL;
 				SDL_OutOfMemory();
@@ -480,9 +481,49 @@ static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)
 {
 	if( surface == SDL_CurrentVideoSurface )
 	{
-		return -1; // Do not allow that, we're HW accelerated
+		// Copy pixels from pixelbuffer to video surface - this is slow!
+		Uint16 * row = NULL;
+		int fakeH = SDL_ANDROID_sFakeWindowHeight, fakeW = SDL_ANDROID_sFakeWindowWidth;
+		int realH = SDL_ANDROID_sWindowHeight, realW = SDL_ANDROID_sWindowWidth;
+		int x, y;
+		if( ! SDL_CurrentVideoSurface->pixels )
+		{
+			glPixelStorei(GL_PACK_ALIGNMENT, 1);
+			SDL_CurrentVideoSurface->pixels = SDL_malloc(SDL_ANDROID_sFakeWindowWidth * SDL_ANDROID_sFakeWindowHeight * ANDROID_BYTESPERPIXEL);
+			if ( ! SDL_CurrentVideoSurface->pixels ) {
+				__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for SDL_CurrentVideoSurface");
+				SDL_SetError("Couldn't allocate buffer for SDL_CurrentVideoSurface");
+				return(-1);
+			}
+		}
+		if( ! SDL_CurrentVideoSurface->hwdata )
+		{
+			SDL_CurrentVideoSurface->hwdata = (struct private_hwdata *)SDL_CreateTexture(SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STATIC, SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight);
+			if( !SDL_CurrentVideoSurface->hwdata ) {
+				__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate texture for SDL_CurrentVideoSurface");
+				SDL_OutOfMemory();
+				return(-1);
+			}
+			// Register main video texture to be recreated when needed
+			HwSurfaceCount++;
+			HwSurfaceList = SDL_realloc( HwSurfaceList, HwSurfaceCount * sizeof(SDL_Surface *) );
+			HwSurfaceList[HwSurfaceCount-1] = SDL_CurrentVideoSurface;
+			DEBUGOUT("ANDROID_SetVideoMode() HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
+		}
+
+		row = SDL_stack_alloc(Uint16, SDL_ANDROID_sWindowWidth);
+
+		for(y=0; y<fakeH; y++)
+		{
+			glReadPixels(0, realH - 1 - (realH * y / fakeH),
+							realW, 1, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, row);
+			for(x=0; x<fakeW; x++)
+				((Uint16 *)SDL_CurrentVideoSurface->pixels)[ fakeW * y + x ] = row[ x * fakeW / realW ];
+		}
+		
+		SDL_stack_free(row);
 	}
-	
+
 	if( !surface->hwdata )
 		return(-1);
 
@@ -520,7 +561,7 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 	if( surface->format->Amask )
 		hwformat = SDL_PIXELFORMAT_RGBA4444;
 		
-	if( surface == SDL_CurrentVideoSurface ) // Special case - we're restoring GL video context
+	if( surface == SDL_CurrentVideoSurface ) // Special case
 		hwformat = SDL_PIXELFORMAT_RGB565;
 	
 		/* Allocate the new pixel format for the screen */
@@ -594,6 +635,9 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 	rect.w = surface->w;
 	rect.h = surface->h;
 	SDL_UpdateTexture((struct SDL_Texture *)surface->hwdata, &rect, converted->pixels, converted->pitch);
+
+	if( surface == SDL_CurrentVideoSurface ) // Special case
+		SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, NULL, NULL);
 	
 	if( converted != surface )
 		SDL_FreeSurface(converted);
@@ -691,7 +735,7 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 {
 
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_FlipHWSurface()");
-	if( SDL_CurrentVideoSurface->hwdata && SDL_CurrentVideoSurface->pixels )
+	if( SDL_CurrentVideoSurface->hwdata && SDL_CurrentVideoSurface->pixels && ! ( SDL_CurrentVideoSurface->flags & SDL_HWSURFACE ) )
 	{
 		SDL_Rect rect;
 		rect.x = 0;

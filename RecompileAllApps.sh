@@ -2,7 +2,7 @@
 
 KEYSTORE=~/.ssh/android.keystore
 ALIAS=pelya
-APPS_SKIP="src jooleem_0.1.4 lbreakout2 glxgears atari800"
+APPS_SKIP="src jooleem_0.1.4 lbreakout2 glxgears atari800 scummvm"
 
 mkdir -p apk
 

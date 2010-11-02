@@ -86,12 +86,11 @@ SDL_FreeSurface(sprite);
 // Blit it in HW-accelerated way
 SDL_BlitSurface(hwSprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
 
-// Wrong, blitting SW surfaces to screen not supported
+// Supported, but VERY slow (slower than blitting in SW mode)
 SDL_BlitSurface(sprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
 
-// Wrong, copying from video surface not supported
+// Supported, but VERY slow (use in cases where you need to take a screenshot)
 SDL_BlitSurface(SDL_GetVideoSurface(), sourceRect, sprite, &targetRect);
-// In the future I may add implementation to read screen buffer with glReadPixels(), however it will be slow (okay for screenshots).
 
 To compile your own app, put your app sources into project/jni/application dir (or create symlink to them), 
 and change symlink "src" to point to your app:
