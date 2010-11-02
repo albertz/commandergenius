@@ -40,6 +40,8 @@
 #endif
 #ifdef ANDROID
 #include <android/log.h>
+#else
+#define __android_log_print(...)
 #endif
 
 #if defined(__QNXNTO__)
@@ -497,6 +499,9 @@ GLES_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     texture_h = power_of_2(texture->h);
     data->texw = (GLfloat) texture->w / texture_w;
     data->texh = (GLfloat) texture->h / texture_h;
+    if( renderer->info.max_texture_width < texture_w || renderer->info.max_texture_height < texture_h )
+        __android_log_print(ANDROID_LOG_FATAL, "libSDL", "GLES: Allocated texture of size %dx%d which is bigger than largest possible device texture %dx%d",
+                            texture_w, texture_h, renderer->info.max_texture_width, renderer->info.max_texture_height );
 
     data->format = format;
     data->formattype = type;
