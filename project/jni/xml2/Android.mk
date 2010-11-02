@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := xml2
 
-LOCAL_CFLAGS := -I$(LOCAL_PATH) -I$(LOCAL_PATH)/include
+LOCAL_CFLAGS := -Os -I$(LOCAL_PATH) -I$(LOCAL_PATH)/include
 
 LOCAL_CPP_EXTENSION := .cpp
 

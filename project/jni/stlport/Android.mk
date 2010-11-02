@@ -8,7 +8,7 @@ ifneq ($(CRYSTAX_TOOLCHAIN),)
 LOCAL_CPP_EXTENSION := .cpp
 LOCAL_SRC_FILES := dummy.c
 else
-LOCAL_CFLAGS := -I$(LOCAL_PATH)/stlport -I$(LOCAL_PATH)/src
+LOCAL_CFLAGS := -O3 -I$(LOCAL_PATH)/stlport -I$(LOCAL_PATH)/src
 LOCAL_CPP_EXTENSION := .cpp
 LOCAL_SRC_FILES := $(addprefix src/,$(notdir $(wildcard $(LOCAL_PATH)/src/*.cpp $(LOCAL_PATH)/src/*.c)))
 endif

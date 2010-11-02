@@ -276,6 +276,10 @@ class DataDownloader extends Thread
 		{
 			try {
 				stream = new CountingInputStream(Parent.getAssets().open(url));
+				while( stream.skip(65536) > 0 ) { };
+				totalLen = stream.getBytesRead();
+				stream.close();
+				stream = new CountingInputStream(Parent.getAssets().open(url));
 			} catch( IOException e ) {
 				Status.setText( res.getString(R.string.error_dl_from, url) );
 				return false;

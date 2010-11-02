@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := vorbis
 
-LOCAL_CFLAGS := -I$(LOCAL_PATH)/include -I$(LOCAL_PATH)/src -I$(LOCAL_PATH) -DHAVE_CONFIG_H -I$(LOCAL_PATH)/../ogg/include
+LOCAL_CFLAGS := -O3 -I$(LOCAL_PATH)/include -I$(LOCAL_PATH)/src -I$(LOCAL_PATH) -DHAVE_CONFIG_H -I$(LOCAL_PATH)/../ogg/include
 
 LOCAL_CPP_EXTENSION := .cpp
 
