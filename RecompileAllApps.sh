@@ -21,7 +21,7 @@ for APP1 in project/jni/application/*/AndroidAppSettings.cfg; do
 	ln -s $APP project/jni/application/src
 	echo
 	echo ===== Settings for $APP =====
-	./ChangeAppSettings.sh
+	./ChangeAppSettings.sh -v
 	rm -f $APP.apk
 done
 

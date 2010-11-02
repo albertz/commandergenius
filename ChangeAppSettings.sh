@@ -4,7 +4,10 @@ CHANGE_APP_SETTINGS_VERSION=12
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
-	AUTO=1
+	AUTO=a
+fi
+if [ "X$1" = "X-v" ]; then
+	AUTO=v
 fi
 
 . ./AndroidAppSettings.cfg
@@ -15,34 +18,41 @@ fi
 
 var=""
 
-if [ -z "$AUTO" ]; then
-
 echo -n "\n===== libSDL on Android configuration =====\n\nIf you will supply empty string as answer the previous value will be used\n"
 
+if [ -z "$LibSdlVersion" -o -z "$AUTO" ]; then
 echo -n "\nlibSDL version to use (1.2 or 1.3) ($LibSdlVersion): "
 read var
 if [ -n "$var" ] ; then
 	LibSdlVersion="$var"
 fi
+fi
 
+if [ -z "$AppName" -o -z "$AUTO" ]; then
 echo -n "\nSpecify application name (e.x. My Application) ($AppName): "
 read var
 if [ -n "$var" ] ; then
 	AppName="$var"
 fi
+fi
 
+if [ -z "$AppFullName" -o -z "$AUTO" ]; then
 echo -n "\nSpecify reversed site name of application (e.x. com.mysite.myapp) ($AppFullName): "
 read var
 if [ -n "$var" ] ; then
 	AppFullName="$var"
 fi
+fi
 
+if [ -z "$ScreenOrientation" -o -z "$AUTO" ]; then
 echo -n "\nSpecify screen orientation: (v)ertical or (h)orizontal ($ScreenOrientation): "
 read var
 if [ -n "$var" ] ; then
 	ScreenOrientation="$var"
 fi
+fi
 
+if [ -z "$AppDataDownloadUrl" -o -z "$AUTO" ]; then
 echo -n "\nSpecify path to download application data in zip archive in the form 'Description|URL|MirrorURL|...'"
 echo -n "\nYou may specify additional paths to optional game content delimited by newlines (empty line to finish)"
 echo -n "\nIf the URL in in the form ':dir/file.dat:http://URL/' it will be downloaded as-is to game dir and not unzipped"
@@ -65,56 +75,73 @@ done
 if [ -n "$AppDataDownloadUrl1" ] ; then
 	AppDataDownloadUrl="$AppDataDownloadUrl1"
 fi
+fi
 
+if [ -z "$SdlVideoResize" -o -z "$AUTO" ]; then
 echo -n "\nApplication window should be resized to fit into native device screen (480x320 or 800x480) (y) or (n) ($SdlVideoResize): "
 read var
 if [ -n "$var" ] ; then
 	SdlVideoResize="$var"
 fi
+fi
 
+if [ -z "$SdlVideoResizeKeepAspect" -o -z "$AUTO" ]; then
 echo -n "\nApplication resizing should use 4:3 aspect ratio, creating black bars (y) or (n) ($SdlVideoResizeKeepAspect): "
 read var
 if [ -n "$var" ] ; then
-        SdlVideoResizeKeepAspect="$var"
+	SdlVideoResizeKeepAspect="$var"
+fi
 fi
 
-
+if [ -z "$NeedDepthBuffer" -o -z "$AUTO" ]; then
 echo -n "\nEnable OpenGL depth buffer (needed only for 3-d applications, small speed decrease) (y) or (n) ($NeedDepthBuffer): "
 read var
 if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
 fi
+fi
 
+if [ -z "$AppUsesMouse" -o -z "$AUTO" ]; then
 echo -n "\nApplication uses mouse, disables touchscreen keyboard currently (y) or (n) ($AppUsesMouse): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesMouse="$var"
 fi
+fi
 
+if [ -z "$AppNeedsArrowKeys" -o -z "$AUTO" ]; then
 echo -n "\nApplication needs arrow keys (y) or (n), if (y) the accelerometer or touchscreen keyboard\nwill be used as arrow keys if phone does not have dpad/trackball ($AppNeedsArrowKeys): "
 read var
 if [ -n "$var" ] ; then
 	AppNeedsArrowKeys="$var"
 fi
+fi
 
+if [ -z "$AppUsesJoystick" -o -z "$AUTO" ]; then
 echo -n "\nApplication uses joystick (y) or (n), the accelerometer (2-axis) or orientation sensor (3-axis)\nwill be used as joystick 0, also on-screen DPAD will be used as joystick -\nmake sure you can navigate all app menus with joystick or mouse ($AppUsesJoystick): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesJoystick="$var"
 fi
+fi
 
+if [ -z "$AppHandlesJoystickSensitivity" -o -z "$AUTO" ]; then
 echo -n "\nApplication will handle joystick center and sensitivity itself, \nSDL will send raw accelerometer data and won't show 'Accelerometer sensitivity' dialog (y) or (n) ($AppHandlesJoystickSensitivity): "
 read var
 if [ -n "$var" ] ; then
 	AppHandlesJoystickSensitivity="$var"
 fi
+fi
 
+if [ -z "$AppUsesMultitouch" -o -z "$AUTO" ]; then
 echo -n "\nApplication uses multitouch (y) or (n), multitouch events are passed as 4-axis joysticks 1-5, with pressure and size,\nor additionally as SDL_FINGERDOWN/UP/MOTION events in SDL 1.3, with SDL pressure = Android pressure * Andorid touchspot size ($AppUsesMultitouch): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesMultitouch="$var"
 fi
+fi
 
+if [ -z "$NonBlockingSwapBuffers" -o -z "$AUTO" ]; then
 echo -n "\nApplication implements Android-specific routines to put to background, and will not draw anything to screen\n"
 echo -n "between SDL_ACTIVEEVENT->SDL_APPACTIVE lost / gained notifications - you should check for them\n"
 echo -n "rigth after SDL_Flip(), if (n) then SDL_Flip() will block till app in background (y) or (n) ($NonBlockingSwapBuffers): "
@@ -122,14 +149,17 @@ read var
 if [ -n "$var" ] ; then
 	NonBlockingSwapBuffers="$var"
 fi
+fi
 
+if [ -z "$InhibitSuspend" -o -z "$AUTO" ]; then
 echo -n "\nPrevent device from going to sleep while application is running (y) or (n) - this setting is\napplied automatically if you're using accelerometer, but may be useful for video players etc ($InhibitSuspend): "
 read var
 if [ -n "$var" ] ; then
-        InhibitSuspend="$var"
+	InhibitSuspend="$var"
+fi
 fi
 
-
+if [ -z "$RedefinedKeys" -o -z "$AUTO" ]; then
 echo -n "\nRedefine common keys to SDL keysyms: TOUCHSCREEN SEARCH/CALL/DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU BACK CAMERA ENTER DEL"
 echo -n "\nMENU and BACK hardware keys and TOUCHSCREEN virtual 'key' are available on all devices, other keys may be absent"
 echo -n "\nThe same key values are used if touchscreen keyboard is enabled, except for MENU and BACK\n($RedefinedKeys)\n: "
@@ -137,49 +167,65 @@ read var
 if [ -n "$var" ] ; then
 	RedefinedKeys="$var"
 fi
+fi
 
+if [ -z "$AppTouchscreenKeyboardKeysAmount" -o -z "$AUTO" ]; then
 echo -n "\nNumber of virtual keyboard keys (currently 7 is maximum) ($AppTouchscreenKeyboardKeysAmount): "
 read var
 if [ -n "$var" ] ; then
 	AppTouchscreenKeyboardKeysAmount="$var"
 fi
+fi
 
+if [ -z "$AppTouchscreenKeyboardKeysAmountAutoFire" -o -z "$AUTO" ]; then
 echo -n "\nNumber of virtual keyboard keys that support autofire (currently 2 is maximum) ($AppTouchscreenKeyboardKeysAmountAutoFire): "
 read var
 if [ -n "$var" ] ; then
 	AppTouchscreenKeyboardKeysAmountAutoFire="$var"
 fi
+fi
 
+if [ -z "$MultiABI" -o -z "$AUTO" ]; then
 echo -n "\nEnable multi-ABI binary, with hardware FPU support - \nit will also work on old devices, but .apk size is 2x bigger (y) or (n) ($MultiABI): "
 read var
 if [ -n "$var" ] ; then
 	MultiABI="$var"
 fi
+fi
 
+if [ -z "$AppVersionCode" -o "-$AUTO" != "-a" ]; then
 echo -n "\nApplication version code (integer) ($AppVersionCode): "
 read var
 if [ -n "$var" ] ; then
 	AppVersionCode="$var"
 fi
+fi
 
+if [ -z "$AppVersionName" -o "-$AUTO" != "-a" ]; then
 echo -n "\nApplication user-visible version name (string) ($AppVersionName): "
 read var
 if [ -n "$var" ] ; then
 	AppVersionName="$var"
 fi
+fi
 
+if [ -z "$CustomBuildScript" -o -z "$AUTO" ]; then
 echo -n "\nApplication uses custom build script AndroidBuild.sh instead of Android.mk (y) or (n) ($CustomBuildScript): "
 read var
 if [ -n "$var" ] ; then
 	CustomBuildScript="$var"
 fi
+fi
 
+if [ -z "$AUTO" ]; then
 echo -n "\nAditional CFLAGS for application ($AppCflags): "
 read var
 if [ -n "$var" ] ; then
 	AppCflags="$var"
 fi
+fi
 
+if [ -z "$AUTO" ]; then
 echo -n "\nOptional shared libraries to compile - removing some of them will save space\nMP3 support by libMAD is encumbered by patents and libMAD is GPL-ed\n"
 grep 'Available' project/jni/SettingsTemplate.mk 
 grep 'depends on' project/jni/SettingsTemplate.mk
@@ -188,26 +234,34 @@ read var
 if [ -n "$var" ] ; then
 	CompiledLibraries="$var"
 fi
+fi
 
+if [ -z "$AUTO" ]; then
 echo -n "\nAditional LDFLAGS for application ($AppLdflags): "
 read var
 if [ -n "$var" ] ; then
 	AppLdflags="$var"
 fi
+fi
 
+if [ -z "$AUTO" ]; then
 echo -n "\nBuild only following subdirs (empty will build all dirs, ignored with custom script) ($AppSubdirsBuild): "
 read var
 if [ -n "$var" ] ; then
 	AppSubdirsBuild="$var"
 fi
+fi
 
+if [ -z "$AppUseCrystaXToolchain" -o -z "$AUTO" ]; then
 echo -n "\nApplication requires C++ RTTI and exceptions - you will need CrystaX toolchain installed at\n"
 echo -n `which ndk-build | sed 's@/[^/]*/ndk-build@/android-ndk-r4-crystax@'` "(y) or (n) ($AppUseCrystaXToolchain): "
 read var
 if [ -n "$var" ] ; then
 	AppUseCrystaXToolchain="$var"
 fi
+fi
 
+if [ -z "$ReadmeText" -o -z "$AUTO" ]; then
 echo -n "\nHere you may type some short readme text that will be shown when app data is downloaded."
 echo -n "\nCurrent text:\n"
 echo -n "`echo $ReadmeText | tr '^' '\\n'`"
@@ -225,8 +279,7 @@ done
 if [ -n "$ReadmeText1" ] ; then
 	ReadmeText="$ReadmeText1"
 fi
-
-fi # AUTO
+fi
 
 echo
 

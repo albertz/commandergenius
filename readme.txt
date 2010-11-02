@@ -105,13 +105,14 @@ then
 (the second one should be relative link without slashes)
 
 Then launch script ChangeAppSettings.sh - it will ask few questions and modify some Java code.
-You may take AndroidAppSettings.cfg file from some other application to get some sane defaults.
+You may take AndroidAppSettings.cfg file from some other application to get some sane defaults,
+you may launch ChangeAppSettings.sh with -a or -v parameter to skip questions altogether or to ask only version code.
 The C++ files shall have .cpp extension to be compiled, rename them if necessary.
 Also you can replace icon image at project/res/drawable/icon.png and image project/res/drawable/publisherlogo.png.
 Then you can launch build.sh.
 
 The NDK has RTTI and exceptions disabled for C++ code, if you need them you may download modified NDK from
-http://www.crystax.net/android/ndk-r4.php
+http://www.crystax.net/android/ndk-r4.php - note however that you cannot throw exceptions across shared library boundary.
 Unzip it, and put in your PATH instead of original NDK - do not rename the target dir, my makefiles will
 check if there's "crystax" string in path to gcc toolchain, and will disable STLPort because CrystaX's
 NDK already contains STL library.
@@ -136,7 +137,7 @@ you may wish to check your code in Android 1.6 emulator from time to time to cat
 
 char * p = 0x13; // Non-4 byte aligned pointer
 int i = (int *) p; // We have garbage inside i now
-memcpy( &i, p, sizof(int) ); // The correct way to dereference a non-aligned pointer
+memcpy( &i, p, sizeof(int) ); // The correct way to dereference a non-aligned pointer
 
 This compiler flags will catch most obvious errors, you may add them to AppCflags var in settings:
 -Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
@@ -155,7 +156,7 @@ though ./configure scripts tend to have stupid bugs in various places, avoid usi
 5. Watch how ./configure configures, if it fails fix launchConfigure.sh, rinse and repeat.
 6. Launch make, and pray. If you're lucky it will create application binary (lbreakout2-2.6.1/client/lbreakout2)
 7. Move the application binary to dir project/libs/armeabi, rename it to libapplication.so (overwrite old file)
-8. Run command "arm-eabi-strip --strip-debug libapplication.so", you can find arm-eabi-strip under your NDK dir.
+8. Run command "arm-eabi-strip -g libapplication.so", you can find arm-eabi-strip under your NDK dir.
 9. Run "ant debug" or "ant release" from project dir, install to device & enjoy.
 
 Android Application lifecycle support
