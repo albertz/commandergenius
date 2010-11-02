@@ -13,7 +13,7 @@
     <string name="dl_from">Ladataan kohteesta %s</string>
     <string name="error_dl_from">Virhe ladattaessa kohteesta %s</string>
     <string name="error_write">Virhe kirjoittaessa %s</string>
-    <string name="dl_progress">%d%% valmis: tiedosto %s</string>
+    <string name="dl_progress">%.0f%% valmis: tiedosto %s</string>
     <string name="dl_finished">Valmis</string>
 
     <string name="storage_phone">Sisäinen muisti - %d Mt vapaana</string>

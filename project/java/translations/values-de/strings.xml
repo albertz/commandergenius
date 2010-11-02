@@ -14,7 +14,7 @@
     <string name="error_dl_from">Fehler beim Download von %s</string>
     <string name="error_write">Fehler beim schreiben auf %s</string>
     <string name="dl_crc_error">Datei %s fehlerhaft</string>
-    <string name="dl_progress">Zu %d%% abgeschlossen: Datei %s</string>
+    <string name="dl_progress">Zu %.0f%% abgeschlossen: Datei %s</string>
     <string name="dl_finished">Abgeschlossen</string>
 
     <string name="storage_phone">Interner Speicher: %d MiB frei</string>
