@@ -4,6 +4,16 @@ KEYSTORE=~/.ssh/android.keystore
 ALIAS=pelya
 APPS_SKIP="src jooleem_0.1.4 lbreakout2 glxgears atari800"
 
+mkdir -p apk
+
+if [ "-$1" = "--a" ] ; then
+	cd apk
+	for F in *.apk; do
+		APPS_SKIP="$APPS_SKIP `echo $F | sed 's/\(.*\)[.]apk/\1/'`"
+	done
+	cd ..
+fi
+
 echo -n "Enter password for keystore at $KEYSTORE alias $ALIAS: "
 stty -echo
 read PASSWORD
@@ -22,11 +32,8 @@ for APP1 in project/jni/application/*/AndroidAppSettings.cfg; do
 	echo
 	echo ===== Settings for $APP =====
 	./ChangeAppSettings.sh -v
-	rm -f $APP.apk
+	rm -f apk/$APP.apk
 done
-
-rm -rf apk
-mkdir apk
 
 for APP1 in project/jni/application/*/AndroidAppSettings.cfg; do
 	APP=`echo $APP1 | sed 's@project/jni/application/\([^/]*\)/.*@\1@'`
