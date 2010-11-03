@@ -1,0 +1,82 @@
+Index: configure
+===================================================================
+--- configure	(revision 54046)
++++ configure	(working copy)
+@@ -931,6 +931,11 @@
+ 	_host_cpu=arm
+ 	_host_alias=arm-oe-linux-androideabi
+ 	;;
++androidsdl)
++	_host_os=androidsdl
++	_host_cpu=arm
++	_host_alias=arm-eabi
++	;;
+ arm-riscos)
+ 	_host_os=riscos
+ 	_host_cpu=arm
+@@ -1433,6 +1438,11 @@
+ 		_unix=yes
+ 		_seq_midi=no
+ 		;;
++	androidsdl)
++		CXXFLAGS="$CXXFLAGS -Os"
++		_unix=yes
++		_seq_midi=no
++		;;
+ 	beos*)
+ 		DEFINES="$DEFINES -DSYSTEM_NOT_SUPPORTING_D_TYPE"
+ 		# Needs -lbind -lsocket for the timidity MIDI driver
+@@ -1571,6 +1581,13 @@
+ 			_port_mk="backends/platform/android/android.mk"
+ 			_seq_midi=no
+ 			;;
++		androidsdl)
++			DEFINES="$DEFINES -DANDROID"
++			_unix=yes
++			_need_memalign=yes
++			_seq_midi=no
++			_backend="sdl"
++			;;
+ 		arm-linux|arm*-linux-gnueabi|arm-*-linux)
+ 			_unix=yes
+ 			_need_memalign=yes
+@@ -2112,7 +2129,7 @@
+ LIBS            += -ldl
+ '
+ 		;;
+-	linux*|android)
++	linux*|android|androidsdl)
+ _def_plugin='
+ #define PLUGIN_PREFIX	"lib"
+ #define PLUGIN_SUFFIX	".so"
+@@ -2778,7 +2795,7 @@
+ 		case $_host_os in
+ 		# newlib-based system include files suppress non-C89 function
+ 		# declarations under __STRICT_ANSI__
+-		amigaos* | android | ds | dreamcast | gamecube | mingw* | n64 | psp | wii | wince )
++		amigaos* | android | androidsdl | ds | dreamcast | gamecube | mingw* | n64 | psp | wii | wince )
+ 			CXXFLAGS="$CXXFLAGS -W -Wno-unused-parameter"
+ 			;;
+ 		*)
+@@ -2799,7 +2816,7 @@
+ 
+ # Some platforms use certain GNU extensions in header files
+ case $_host_os in
+-android | gamecube | psp | wii)
++android | androidsdl | gamecube | psp | wii)
+ 	;;
+ *)
+ 	CXXFLAGS="$CXXFLAGS -pedantic"
+Index: common/endian.h
+===================================================================
+--- common/endian.h	(revision 54046)
++++ common/endian.h	(working copy)
+@@ -89,7 +89,7 @@
+ 	}
+ 
+ // Test for GCC >= 4.3.0 as this version added the bswap builtin
+-#elif defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
++#elif defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)) && !defined(ANDROID)
+ 
+ 	FORCEINLINE uint32 SWAP_BYTES_32(uint32 a) {
+ 		return __builtin_bswap32(a);
