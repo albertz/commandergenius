@@ -34,7 +34,6 @@ so the data on your TV will lag halfsecond behind the data on the device screen.
   1. Add Russian, Deutsch and Slovak translations: http://wiki.uqm.stack.nl/Translations
   2. Add accelerated GFX (even at the cost of GFX bugs, if Melee will work smoothly).
   3. Add proper netplay with masterserver and server list instead of "Enter host IP here" dialog.
-  4. Add more control options such as joystick with absolute positioning.
 
 - Add an option to keep aspect ratio of screen
 
