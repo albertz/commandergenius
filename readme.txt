@@ -92,7 +92,7 @@ SDL_BlitSurface(sprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
 // Supported, but VERY slow (use in cases where you need to take a screenshot)
 SDL_BlitSurface(SDL_GetVideoSurface(), sourceRect, sprite, &targetRect);
 
-To compile your own app, put your app sources into project/jni/application dir (or create symlink to them), 
+To compile your own app, put your app sources into project/jni/application dir (or create symlink to them),
 and change symlink "src" to point to your app:
 
 	cp -r /path/to/my/app project/jni/application/myapp
@@ -102,6 +102,8 @@ then
 	rm project/jni/application/src
 	ln -s myapp project/jni/application/src
 (the second one should be relative link without slashes)
+
+Also your main() function name should be redefined to SDL_main(), if you'll include SDL.h it will do it automatically.
 
 Then launch script ChangeAppSettings.sh - it will ask few questions and modify some Java code.
 You may take AndroidAppSettings.cfg file from some other application to get some sane defaults,
