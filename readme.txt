@@ -274,8 +274,26 @@ gdb libsdl.so -ex "list *0x0002ca00"
 
 It will output the exact line in your source where the application crashed.
 
-Also, if your application does not work for unknown reasons, there may be the case when it exports some symbol
+If your application does not work for unknown reasons, there may be the case when it exports some symbol
 that clash with exports from system libraries - run checkExports.sh to check this.
+
+If your application fails to load past startup SDL logo with error
+
+I/dalvikvm( 3401): Unable to dlopen(/data/data/com.svc/lib/libapplication.so): Cannot load library: alloc_mem_region[847]: OOPS:  1268 cannot map library 'libapplication.so'. no vspace available.
+
+that means you're allocating huge data buffer in heap (that may be C static or global buffer variable).
+Use command "objdump -x libapplication.so", it might output something like this:
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+ 13 .bss          0b64544c  00051670  00051670  0005066c  2**3
+
+and below
+
+0848c8c8 g     O .bss   0320a000 decoder_svc_PictureBuffer_RefY
+
+which means your BSS segment eats up 191 Mb of RAM, and symbol 'decoder_svc_PictureBuffer_RefY' eats up 52 Mb,
+while heap memory limit on most phones is 16 Mb.
 
 License information
 ===================
