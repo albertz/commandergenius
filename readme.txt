@@ -26,7 +26,9 @@ It's designed for 640x480, so if you have smaller screen it will be resized.
 Note: The game enforces horizontal screen orientation, you may open your keyboard and use it for
 additional keys - the phone will just keep current screen orientation.
 Recent Android phone models like HTC Evo have no keyboard at all, on-screen keyboard built into libSDL
-is available for such devices (it's rather limited yet, only joystick and 7 keys, no text input).
+is available for such devices - it has joystick (which can be configured as arrow buttons or analog joystick),
+and 6 configurable keys, full text input is toggled with 7-th key. Application may redefine button layout
+and returned keycodes, and also toggle full text input - see SDL_screenkeyboard.h.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
 remove project/jni/application/src symlink and make new one pointing to glxgears, 
