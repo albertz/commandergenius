@@ -21,7 +21,7 @@ ln -sf libtremor.a $LOCAL_PATH/../../../obj/local/armeabi/libvorbisidec.a
 ln -sf libflac.a $LOCAL_PATH/../../../obj/local/armeabi/libFLAC.a
 
 if [ \! -f scummvm/config.mk ] ; then
-	../setEnvironment.sh sh -c "cd scummvm && env TREMOR_LIBS='-ltremor -logg' ./configure --host=androidsdl --enable-zlib --enable-tremor --enable-mad --enable-flac --enable-vkeybd --enable-verbose-build --disable-hq-scalers --disable-readline --disable-nasm --datadir=."
+	../setEnvironment.sh sh -c "cd scummvm && env LIBS='-lflac -ltremor -logg -lmad -lz -lgcc' ./configure --host=androidsdl --enable-zlib --enable-tremor --enable-mad --enable-flac --enable-vkeybd --enable-verbose-build --disable-hq-scalers --disable-readline --disable-nasm --datadir=."
 fi
 rm -f ../libapplication.so
 ../setEnvironment.sh make -C scummvm -j2

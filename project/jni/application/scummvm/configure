@@ -1582,7 +1582,7 @@ if test -n "$_host"; then
 			_seq_midi=no
 			;;
 		androidsdl)
-			DEFINES="$DEFINES -DANDROID -DUSE_ARM_SMUSH_ASM"
+			DEFINES="$DEFINES -DANDROID"
 			_unix=yes
 			_need_memalign=yes
 			_seq_midi=no
@@ -2681,9 +2681,6 @@ case $_backend in
 		add_line_to_config_mk 'PLUGIN_LDFLAGS += -Lbuild.tmp -lscummvm'
 		add_line_to_config_mk 'PLUGIN_EXTRA_DEPS += build.tmp/libscummvm.so'
 		;;
-	androidsdl)
-		DEFINES="$DEFINES -DSDL_BACKEND"
-		;;
 	dc)
 		INCLUDES="$INCLUDES "'-I$(srcdir)/backends/platform/dc -isystem $(ronindir)/include'
 		LDFLAGS="$LDFLAGS -Wl,-Ttext,0x8c010000 -nostartfiles "'$(ronindir)/lib/crt0.o -L$(ronindir)/lib'
@@ -2818,7 +2815,7 @@ fi;
 
 # Some platforms use certain GNU extensions in header files
 case $_host_os in
-android | androidsdl | gamecube | psp | wii)
+android | androidsdl | gamecube | psp | wii )
 	;;
 *)
 	CXXFLAGS="$CXXFLAGS -pedantic"
