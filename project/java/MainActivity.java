@@ -204,10 +204,13 @@ public class MainActivity extends Activity {
 		if(_screenKeyboard == null)
 			return;
 		String text = _screenKeyboard.getText().toString();
-		for(int i = 0; i < text.length(); i++)
+		if( mGLView != null )
 		{
-			if( mGLView != null )
+			for(int i = 0; i < text.length(); i++)
+			{
 				 mGLView.nativeTextInput( text.charAt(i), text.codePointAt(i) );
+			}
+			mGLView.nativeTextInput( 13, 13 ); // Send return
 		}
 		_videoLayout.removeView(_screenKeyboard);
 		_screenKeyboard = null;
@@ -273,10 +276,6 @@ public class MainActivity extends Activity {
 	
 	@Override
 	public boolean dispatchTouchEvent(final MotionEvent ev) {
-		// ----- DEBUG -----
-		//if( ev.getX() < 200.0 && ev.getY() < 50.0 && ev.getAction() == MotionEvent.ACTION_DOWN )
-		//	showScreenKeyboard();
-		// ----- DEBUG -----
 		if(_screenKeyboard != null)
 			_screenKeyboard.dispatchTouchEvent(ev);
 		else

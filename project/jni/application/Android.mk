@@ -80,7 +80,11 @@ ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
 
 LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 
-$(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg
+APP_LIB_DEPENDS := $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).so)) \
+					$(foreach LIB, $(LOCAL_STATIC_LIBRARIES), $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).a))
+
+
+$(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg $(APP_LIB_DEPENDS)
 	echo Launching script $(LOCAL_PATH_SDL_APPLICATION)/AndroidBuild.sh
 	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh
 
