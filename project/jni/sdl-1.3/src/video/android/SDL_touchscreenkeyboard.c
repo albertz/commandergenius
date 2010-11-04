@@ -757,8 +757,11 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	}
 	for( i = 0; i < MAX_BUTTONS; i++ )
 	{
-		if( i >= _nbuttons && ( i == BUTTON_TEXT_INPUT && !showTextInput ) )
-			buttons[i].w = buttons[i].h = 0;
+		if( i >= _nbuttons && ( i != BUTTON_TEXT_INPUT || !showTextInput ) )
+		{
+			buttons[i].w = 0;
+			buttons[i].h = 0;
+		}
 	}
 	
 	for( i = 0; i < sizeof(pointerInButtonRect)/sizeof(pointerInButtonRect[0]); i++ )
