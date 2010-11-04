@@ -78,19 +78,17 @@ include $(BUILD_SHARED_LIBRARY)
 
 ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
 
-$(info LOCAL_PATH $(LOCAL_PATH) )
-$(info $(LOCAL_PATH)/src/libapplication.so )
-$(info $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so) )
-
 LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 
 $(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg
+	echo Launching script $(LOCAL_PATH_SDL_APPLICATION)/AndroidBuild.sh
 	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh
 
 $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so): $(LOCAL_PATH)/src/libapplication.so OVERRIDE_CUSTOM_LIB
 	cp -f $< $@
 
 .PHONY: OVERRIDE_CUSTOM_LIB
+.NOTPARALLEL: $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so)
 
 OVERRIDE_CUSTOM_LIB:
 
