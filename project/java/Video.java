@@ -173,7 +173,7 @@ abstract class DifferentTouchInput
 
 class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 
-	public DemoRenderer(Activity _context)
+	public DemoRenderer(MainActivity _context)
 	{
 		context = _context;
 	}
@@ -228,6 +228,22 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 		return 1;
 	}
 
+	public void showScreenKeyboard() // Called from native code
+	{
+		class Callback implements Runnable
+		{
+			public MainActivity parent;
+			public void run()
+			{
+				parent.showScreenKeyboard();
+			}
+		}
+		Callback cb = new Callback();
+		cb.parent = context;
+		context.runOnUiThread(cb);
+		//context.showScreenKeyboard();
+	}
+
 	public void exitApp() {
 		 nativeDone();
 	};
@@ -239,7 +255,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	private native void nativeGlContextLost();
 	public native void nativeGlContextRecreated();
 
-	private Activity context = null;
+	private MainActivity context = null;
 	private AccelerometerReader accelerometer = null;
 	
 	private EGL10 mEgl = null;
@@ -253,7 +269,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 }
 
 class DemoGLSurfaceView extends GLSurfaceView_SDL {
-	public DemoGLSurfaceView(Activity context) {
+	public DemoGLSurfaceView(MainActivity context) {
 		super(context);
 		mParent = context;
 		touchInput = DifferentTouchInput.getInstance();
@@ -306,11 +322,14 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	 }
 
 	DemoRenderer mRenderer;
-	Activity mParent;
+	MainActivity mParent;
 	DifferentTouchInput touchInput = null;
 
 	public static native void nativeMouse( int x, int y, int action, int pointerId, int pressure, int radius );
 	public static native void nativeKey( int keyCode, int down );
+	public static native void nativeTextInput( int ascii, int unicode );
+	public static native void initJavaCallbacks();
+
 }
 
 

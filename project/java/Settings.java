@@ -465,10 +465,11 @@ class Settings
 		if( Globals.UseTouchscreenKeyboard )
 		{
 			nativeSetTouchscreenKeyboardUsed();
-			nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize, 
+			nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize,
 										Globals.TouchscreenKeyboardTheme,
-										Globals.AppTouchscreenKeyboardKeysAmount, 
-										Globals.AppTouchscreenKeyboardKeysAmountAutoFire);
+										Globals.AppTouchscreenKeyboardKeysAmount,
+										Globals.AppTouchscreenKeyboardKeysAmountAutoFire,
+										1, 1);
 		}
 		SetupTouchscreenKeyboardGraphics(p);
 		String lang = new String(Locale.getDefault().getLanguage());
@@ -516,7 +517,7 @@ class Settings
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
-	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttons, int nbuttonsAutoFire);
+	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttons, int nbuttonsAutoFire, int showArrows, int showTextInput);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	public static native void nativeSetEnv(final String name, final String value);
 }

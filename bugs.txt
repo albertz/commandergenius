@@ -5,8 +5,6 @@ Known bugs
 
 - Fix on-screen keyboard, add more keys and more options, possibility to create custom key layout.
 
-- Add full QWERTY on-screen keyboard.
-
 - Export phone vibrator to SDL - interface is available in SDL 1.3
 
 - HDMI output (HTC Evo and Samsung Epic support that):
@@ -24,6 +22,12 @@ UQM gives 5 FPS without such hacks, if I'll implement that FPS will drop to 1-2
 plus VideoView will contain some buffer to ensure the playback is smooth, 
 so the data on your TV will lag halfsecond behind the data on the device screen.
 
+- Add a user option to keep aspect ratio of screen (not compile-time option which is already available)
+
+- Add an option for overlay buttons transparency and button images size.
+
+- Somehow make this port into main libSDL repository
+
 - OpenTyrian: 
   1. Navigating game menus downwards with trackball skips events, that does not happen
      when navigting upwards.
@@ -35,8 +39,3 @@ so the data on your TV will lag halfsecond behind the data on the device screen.
   2. Add accelerated GFX (even at the cost of GFX bugs, if Melee will work smoothly).
   3. Add proper netplay with masterserver and server list instead of "Enter host IP here" dialog.
 
-- Add an option to keep aspect ratio of screen
-
-- Add an option for overlay buttons transparency.
-
-- Somehow make this port into main libSDL repository

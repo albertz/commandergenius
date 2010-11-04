@@ -160,8 +160,9 @@ fi
 fi
 
 if [ -z "$RedefinedKeys" -o -z "$AUTO" ]; then
-echo -n "\nRedefine common keys to SDL keysyms: TOUCHSCREEN SEARCH/CALL/DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU BACK CAMERA ENTER DEL"
+echo -n "\nRedefine common keys to SDL keysyms: TOUCHSCREEN DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU BACK CAMERA ENTER DEL SEARCH CALL"
 echo -n "\nMENU and BACK hardware keys and TOUCHSCREEN virtual 'key' are available on all devices, other keys may be absent"
+echo -n "\nSEARCH and CALL by default return same keycode as DPAD_CENTER - one of those keys is available on most devices"
 echo -n "\nThe same key values are used if touchscreen keyboard is enabled, except for MENU and BACK\n($RedefinedKeys)\n: "
 read var
 if [ -n "$var" ] ; then

@@ -143,6 +143,30 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 	SDL_SendKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key ,&keysym) );
 }
 
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeTextInput) ( JNIEnv*  env, jobject thiz, jint ascii, jint unicode )
+{
+	SDL_keysym keysym;
+	keysym.scancode = ascii;
+	keysym.sym = ascii;
+	keysym.mod = KMOD_NONE;
+	keysym.unicode = 0;
+	if ( SDL_TranslateUNICODE ) {
+		/* Populate the unicode field with the ASCII value */
+		keysym.unicode = unicode;
+	}
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+	char text[2];
+	text[0]=ascii;
+	text[1]=0;
+	SDL_SendKeyboardText(text);
+#else
+	SDL_SendKeyboardKey( SDL_PRESSED, &keysym );
+	SDL_SendKeyboardKey( SDL_RELEASED, &keysym );
+#endif
+}
+
 
 static void updateOrientation ( float accX, float accY, float accZ );
 
@@ -233,9 +257,9 @@ void ANDROID_InitOSKeymap()
   // TODO: make this configurable
   keymap[KEYCODE_MENU] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_4));
 
-  keymap[KEYCODE_SEARCH] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
-  keymap[KEYCODE_CALL] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
   keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
+  keymap[KEYCODE_SEARCH] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_9));
+  keymap[KEYCODE_CALL] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_10));
 
   //keymap[KEYCODE_CALL] = SDL_KEY(RCTRL);
   //keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(LALT);
@@ -724,3 +748,5 @@ void SDL_SYS_JoystickQuit(void)
 		SDL_ANDROID_CurrentJoysticks[i] = NULL;
 	return;
 }
+
+

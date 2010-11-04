@@ -11,10 +11,19 @@ import android.view.WindowManager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.EditText;
+import android.text.Editable;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.FrameLayout;
 import android.content.res.Configuration;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.view.View.OnKeyListener;
+
 
 
 public class MainActivity extends Activity {
@@ -140,7 +149,9 @@ public class MainActivity extends Activity {
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		mGLView = new DemoGLSurfaceView(this);
-		setContentView(mGLView);
+		_videoLayout = new FrameLayout(this);
+		_videoLayout.addView(mGLView);
+		setContentView(_videoLayout);
 		// Receive keyboard events
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
@@ -188,9 +199,55 @@ public class MainActivity extends Activity {
 		System.exit(0);
 	}
 
+	public void hideScreenKeyboard()
+	{
+		if(_screenKeyboard == null)
+			return;
+		String text = _screenKeyboard.getText().toString();
+		for(int i = 0; i < text.length(); i++)
+		{
+			if( mGLView != null )
+				 mGLView.nativeTextInput( text.charAt(i), text.codePointAt(i) );
+		}
+		_videoLayout.removeView(_screenKeyboard);
+		_screenKeyboard = null;
+		mGLView.setFocusableInTouchMode(true);
+		mGLView.setFocusable(true);
+		mGLView.requestFocus();
+	};
+	
+	public void showScreenKeyboard()
+	{
+		if(_screenKeyboard != null)
+			return;
+		class myKeyListener implements OnKeyListener 
+		{
+			MainActivity _parent;
+			myKeyListener(MainActivity parent) { _parent = parent; };
+			public boolean onKey(View v, int keyCode, KeyEvent event) 
+			{
+				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) 
+				{
+					_parent.hideScreenKeyboard();
+					return true;
+				}
+				return false;
+			}
+		};
+		_screenKeyboard = new EditText(this);
+		_screenKeyboard.setOnKeyListener(new myKeyListener(this));
+		_videoLayout.addView(_screenKeyboard);
+		_screenKeyboard.setFocusableInTouchMode(true);
+		_screenKeyboard.setFocusable(true);
+		_screenKeyboard.requestFocus();
+	};
+
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event) {
 		// Overrides Back key to use in our app
+		if(_screenKeyboard != null)
+			_screenKeyboard.onKeyDown(keyCode, event);
+		else
 		if( mGLView != null )
 			 mGLView.nativeKey( keyCode, 1 );
 		else
@@ -206,16 +263,27 @@ public class MainActivity extends Activity {
 	
 	@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event) {
-		 if( mGLView != null )
-			 mGLView.nativeKey( keyCode, 0 );
-		 return true;
+		if(_screenKeyboard != null)
+			_screenKeyboard.onKeyUp(keyCode, event);
+		else
+		if( mGLView != null )
+			mGLView.nativeKey( keyCode, 0 );
+		return true;
 	}
 	
 	@Override
 	public boolean dispatchTouchEvent(final MotionEvent ev) {
+		// ----- DEBUG -----
+		//if( ev.getX() < 200.0 && ev.getY() < 50.0 && ev.getAction() == MotionEvent.ACTION_DOWN )
+		//	showScreenKeyboard();
+		// ----- DEBUG -----
+		if(_screenKeyboard != null)
+			_screenKeyboard.dispatchTouchEvent(ev);
+		else
 		if(mGLView != null)
 			mGLView.onTouchEvent(ev);
-		else if( _btn != null )
+		else
+		if( _btn != null )
 			return _btn.dispatchTouchEvent(ev);
 		return true;
 	}
@@ -244,14 +312,42 @@ public class MainActivity extends Activity {
 		this.runOnUiThread(cb);
 	}
 
+	public void showTaskbarNotification()
+	{
+		showTaskbarNotification("SDL application paused", "SDL application", "Application is paused, click to activate");
+	}
+
+	// Stolen from SDL port by Mamaich
+	public void showTaskbarNotification(String text0, String text1, String text2)
+	{
+		NotificationManager NotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		Intent intent = new Intent(this, MainActivity.class);
+		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
+		Notification n = new Notification(R.drawable.icon, text0, System.currentTimeMillis());
+		n.setLatestEventInfo(this, text1, text2, pendingIntent);
+		NotificationManager.notify(NOTIFY_ID, n);
+	}
+
+	public void hideTaskbarNotification()
+	{
+		NotificationManager NotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		NotificationManager.cancel(NOTIFY_ID);
+	}
+
+	static int NOTIFY_ID = 12367098; // Random ID
+
 	private static DemoGLSurfaceView mGLView = null;
 	private static LoadLibrary mLoadLibraryStub = null;
 	private static AudioThread mAudioThread = null;
 	private static DataDownloader downloader = null;
+
 	private TextView _tv = null;
 	private Button _btn = null;
 	private LinearLayout _layout = null;
 	private LinearLayout _layout2 = null;
+
+	private FrameLayout _videoLayout = null;
+	private EditText _screenKeyboard = null;
 	private boolean sdlInited = false;
 
 }

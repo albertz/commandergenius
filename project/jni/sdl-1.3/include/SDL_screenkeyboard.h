@@ -46,7 +46,7 @@ enum {
 	SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_3,
 	SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_4,
 	SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_5,
-	SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_6,
+	SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_6, /* Button to show screen keyboard */
 
 	SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_MAX = SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_6
 };
@@ -68,6 +68,9 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardShown(int shown);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardShown();
 
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardSize();
+
+/* Show Android on-screen keyboard, and pass entered text back to application when user closes it */
+extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleScreenKeyboardTextInput();
 
 #ifdef __cplusplus
 }
