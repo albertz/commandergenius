@@ -274,6 +274,9 @@ gdb libsdl.so -ex "list *0x0002ca00"
 
 It will output the exact line in your source where the application crashed.
 
+Also, if your application does not work for unknown reasons, there may be the case when it exports some symbol
+that clash with exports from system libraries - run checkExports.sh to check this.
+
 License information
 ===================
 
