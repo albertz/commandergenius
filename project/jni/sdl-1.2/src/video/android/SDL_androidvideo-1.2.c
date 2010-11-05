@@ -141,7 +141,7 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	/* Initialize all variables that we clean on shutdown */
 	device = (SDL_VideoDevice *)SDL_malloc(sizeof(SDL_VideoDevice));
 	if ( device ) {
-		SDL_memset(device, 0, (sizeof *device));
+		SDL_memset(device, 0, sizeof(SDL_VideoDevice));
 	} else {
 		SDL_OutOfMemory();
 		return(0);

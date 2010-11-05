@@ -83,6 +83,7 @@ LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 APP_LIB_DEPENDS := $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).so)) \
 					$(foreach LIB, $(LOCAL_STATIC_LIBRARIES), $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).a))
 
+.NOTPARALLEL: $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so) $(LOCAL_PATH)/src/libapplication.so
 
 $(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg $(APP_LIB_DEPENDS)
 	echo Launching script $(LOCAL_PATH_SDL_APPLICATION)/AndroidBuild.sh
@@ -92,7 +93,6 @@ $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so): $(LOCAL_PAT
 	cp -f $< $@
 
 .PHONY: OVERRIDE_CUSTOM_LIB
-.NOTPARALLEL: $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so)
 
 OVERRIDE_CUSTOM_LIB:
 
