@@ -259,7 +259,7 @@ class Settings
 	
 	static void showAdditionalInputConfig(final MainActivity p)
 	{
-		if( ! Globals.AppNeedsArrowKeys && ! Globals.AppUsesJoystick )
+		if( ! ( Globals.AppNeedsArrowKeys || Globals.AppNeedsTextInput || Globals.AppTouchscreenKeyboardKeysAmount > 0 ) && ! Globals.AppUsesJoystick )
 		{
 			showAccelerometerConfig(p);
 			return;
@@ -469,7 +469,8 @@ class Settings
 										Globals.TouchscreenKeyboardTheme,
 										Globals.AppTouchscreenKeyboardKeysAmount,
 										Globals.AppTouchscreenKeyboardKeysAmountAutoFire,
-										1, 1);
+										Globals.AppNeedsArrowKeys ? 1 : 0,
+										Globals.AppNeedsTextInput ? 1 : 0 );
 		}
 		SetupTouchscreenKeyboardGraphics(p);
 		String lang = new String(Locale.getDefault().getLanguage());

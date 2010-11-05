@@ -1,6 +1,6 @@
 #!/bin/sh                            
 
-CHANGE_APP_SETTINGS_VERSION=12
+CHANGE_APP_SETTINGS_VERSION=13
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -12,9 +12,9 @@ fi
 
 . ./AndroidAppSettings.cfg
 
-if [ "$CHANGE_APP_SETTINGS_VERSION" != "$AppSettingVersion" ]; then
-	AUTO=
-fi
+#if [ "$CHANGE_APP_SETTINGS_VERSION" != "$AppSettingVersion" ]; then
+#	AUTO=
+#fi
 
 var=""
 
@@ -114,6 +114,14 @@ echo -n "\nApplication needs arrow keys (y) or (n), if (y) the accelerometer or 
 read var
 if [ -n "$var" ] ; then
 	AppNeedsArrowKeys="$var"
+fi
+fi
+
+if [ -z "$AppNeedsTextInput" -o -z "$AUTO" ]; then
+echo -n "\nApplication needs text input (y) or (n), enables button for text input on screen ($AppNeedsTextInput): "
+read var
+if [ -n "$var" ] ; then
+	AppNeedsTextInput="$var"
 fi
 fi
 
@@ -298,6 +306,7 @@ echo SdlVideoResizeKeepAspect=$SdlVideoResizeKeepAspect >> AndroidAppSettings.cf
 echo NeedDepthBuffer=$NeedDepthBuffer >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
+echo AppNeedsTextInput=$AppNeedsTextInput >> AndroidAppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AndroidAppSettings.cfg
 echo AppHandlesJoystickSensitivity=$AppHandlesJoystickSensitivity >> AndroidAppSettings.cfg
 echo AppUsesMultitouch=$AppUsesMultitouch >> AndroidAppSettings.cfg
@@ -368,6 +377,12 @@ if [ "$AppNeedsArrowKeys" = "y" ] ; then
 	AppNeedsArrowKeys=true
 else
 	AppNeedsArrowKeys=false
+fi
+
+if [ "$AppNeedsTextInput" = "y" ] ; then
+	AppNeedsTextInput=true
+else
+	AppNeedsTextInput=false
 fi
 
 if [ "$AppUsesJoystick" = "y" ] ; then
@@ -451,6 +466,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" | \
 	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \
 	sed "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" | \
+	sed "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" | \
 	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \
 	sed "s/public static boolean AppHandlesJoystickSensitivity = .*;/public static boolean AppHandlesJoystickSensitivity = $AppHandlesJoystickSensitivity;/" | \
 	sed "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" | \
