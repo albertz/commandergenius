@@ -23,6 +23,8 @@ class Globals {
 	public static String ReadmeText = "^You may press \"Home\" now - the data will be downloaded in background".replace("^","\n");
 
 	public static boolean AppUsesMouse = false;
+	
+	public static boolean AppNeedsTwoButtonMouse = false;
 
 	public static boolean AppNeedsArrowKeys = true;
 
@@ -55,6 +57,14 @@ class Globals {
 	public static int TrackballDampening = 0;
 	public static int AudioBufferConfig = 0;
 	public static boolean OptionalDataDownload[] = null;
+	public static final int RIGHT_CLICK_WITH_MENU_BUTTON = 0;
+	public static final int RIGHT_CLICK_WITH_MULTITOUCH = 1;
+	public static final int RIGHT_CLICK_WITH_PRESSURE = 2;
+	public static int RightClickMethod = RIGHT_CLICK_WITH_MENU_BUTTON;
+	public static boolean LeftClickUsesPressure = false;
+	public static boolean ShowScreenUnderFinger = false;
+	public static int ClickScreenPressure = 0;
+	public static int ClickScreenTouchspotSize = 0;
 }
 
 class LoadLibrary {

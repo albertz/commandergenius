@@ -1,6 +1,6 @@
 #!/bin/sh                            
 
-CHANGE_APP_SETTINGS_VERSION=13
+CHANGE_APP_SETTINGS_VERSION=14
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -102,10 +102,18 @@ fi
 fi
 
 if [ -z "$AppUsesMouse" -o -z "$AUTO" ]; then
-echo -n "\nApplication uses mouse, disables touchscreen keyboard currently (y) or (n) ($AppUsesMouse): "
+echo -n "\nApplication uses mouse (y) or (n) ($AppUsesMouse): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesMouse="$var"
+fi
+fi
+
+if [ -z "$AppNeedsTwoButtonMouse" -o -z "$AUTO" ]; then
+echo -n "\nApplication needs two-button mouse, will also enable advanced point-and-click features (y) or (n) ($AppNeedsTwoButtonMouse): "
+read var
+if [ -n "$var" ] ; then
+	AppNeedsTwoButtonMouse="$var"
 fi
 fi
 
@@ -305,6 +313,7 @@ echo SdlVideoResize=$SdlVideoResize >> AndroidAppSettings.cfg
 echo SdlVideoResizeKeepAspect=$SdlVideoResizeKeepAspect >> AndroidAppSettings.cfg
 echo NeedDepthBuffer=$NeedDepthBuffer >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
+echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
 echo AppNeedsTextInput=$AppNeedsTextInput >> AndroidAppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AndroidAppSettings.cfg
@@ -363,14 +372,16 @@ else
 	NeedDepthBuffer=false
 fi
 
-MouseKeycode=UNKNOWN
 if [ "$AppUsesMouse" = "y" ] ; then
 	AppUsesMouse=true
-elif [ "$AppUsesMouse" = "n" ] ; then
-	AppUsesMouse=false
 else
-	MouseKeycode=$AppUsesMouse
 	AppUsesMouse=false
+fi
+
+if [ "$AppNeedsTwoButtonMouse" = "y" ] ; then
+	AppNeedsTwoButtonMouse=true
+else
+	AppNeedsTwoButtonMouse=false
 fi
 
 if [ "$AppNeedsArrowKeys" = "y" ] ; then

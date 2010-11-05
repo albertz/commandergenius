@@ -59,6 +59,13 @@
     <string name="accel_fixed_horiz">Fixed to table desk orientation</string>
     <string name="accel_question_center">Accelerometer center position</string>
 
+    <string name="rightclick_question">Right mouse click triggered by:</string>
+    <string name="rightclick_menu">Menu key</string>
+    <string name="rightclick_multitouch">Touching screen with second finger (device should support that)</string>
+    <string name="rightclick_pressure">Pressing screen with force (device should support that)</string>
+
+    <string name="rightclick_question">Right mouse click triggered by:</string>
+
     <string name="audiobuf_verysmall">Very small (fast devices, less lag)</string>
     <string name="audiobuf_small">Small</string>
     <string name="audiobuf_medium">Medium</string>

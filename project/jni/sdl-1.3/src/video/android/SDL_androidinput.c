@@ -46,6 +46,12 @@ SDLKey SDL_android_keymap[KEYCODE_LAST+1];
 
 static int isTrackballUsed = 0;
 static int isMouseUsed = 0;
+enum { RIGHT_CLICK_WITH_MENU_BUTTON = 0, RIGHT_CLICK_WITH_MULTITOUCH = 1, RIGHT_CLICK_WITH_PRESSURE = 2 };
+static int rightClickMethod = RIGHT_CLICK_WITH_MENU_BUTTON;
+static int showScreenUnderFinger = 0;
+static int leftClickUsesPressure = 0;
+static int maxForce = 0;
+static int maxRadius = 0;
 int SDL_ANDROID_isJoystickUsed = 0;
 static int isMultitouchUsed = 0;
 SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL};
@@ -199,9 +205,14 @@ JAVA_EXPORT_NAME(Settings_nativeSetTrackballUsed) ( JNIEnv*  env, jobject thiz)
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz)
+JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz, jint RightClickMethod, jint ShowScreenUnderFinger, jint LeftClickUsesPressure, jint MaxForce, jint MaxRadius)
 {
 	isMouseUsed = 1;
+	rightClickMethod = RightClickMethod;
+	showScreenUnderFinger = ShowScreenUnderFinger;
+	leftClickUsesPressure = LeftClickUsesPressure;
+	maxForce = MaxForce;
+	maxRadius = MaxRadius;
 }
 
 JNIEXPORT void JNICALL 
