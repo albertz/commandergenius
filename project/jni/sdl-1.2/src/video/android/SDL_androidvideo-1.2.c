@@ -178,8 +178,8 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->FreeWMCursor = ANDROID_FreeWMCursor;
 	device->CreateWMCursor = ANDROID_CreateWMCursor;
 	device->ShowWMCursor = ANDROID_ShowWMCursor;
-	device->WarpWMCursor = ANDROID_WarpWMCursor;
-	device->MoveWMCursor = ANDROID_MoveWMCursor;
+	//device->WarpWMCursor = ANDROID_WarpWMCursor;
+	//device->MoveWMCursor = ANDROID_MoveWMCursor;
 	
 	return device;
 }
