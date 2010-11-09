@@ -1,0 +1,80 @@
+Index: configure
+===================================================================
+--- configure	(revision 54149)
++++ configure	(working copy)
+@@ -931,6 +931,11 @@
+ 	_host_cpu=arm
+ 	_host_alias=arm-oe-linux-androideabi
+ 	;;
++androidsdl)
++	_host_os=androidsdl
++	_host_cpu=arm
++	_host_alias=arm-eabi
++	;;
+ arm-riscos)
+ 	_host_os=riscos
+ 	_host_cpu=arm
+@@ -1205,9 +1210,9 @@
+ 
+ 	if test -n "$_host"; then
+ 		# In cross-compiling mode, we cannot run the result
+-		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO.o -c tmp_cxx_compiler.cpp" 2> /dev/null && cc_check_clean tmp_cxx_compiler.cpp
++		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO.o -c tmp_cxx_compiler.cpp" && cc_check_clean tmp_cxx_compiler.cpp
+ 	else
+-		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO$HOSTEXEEXT tmp_cxx_compiler.cpp" 2> /dev/null && eval "$TMPO$HOSTEXEEXT 2> /dev/null" && cc_check_clean tmp_cxx_compiler.cpp
++		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO$HOSTEXEEXT tmp_cxx_compiler.cpp" && eval "$TMPO$HOSTEXEEXT 2> /dev/null" && cc_check_clean tmp_cxx_compiler.cpp
+ 	fi
+ }
+ 
+@@ -1433,6 +1438,11 @@
+ 		_unix=yes
+ 		_seq_midi=no
+ 		;;
++	androidsdl)
++		CXXFLAGS="$CXXFLAGS -Os"
++		_unix=yes
++		_seq_midi=no
++		;;
+ 	beos*)
+ 		DEFINES="$DEFINES -DSYSTEM_NOT_SUPPORTING_D_TYPE"
+ 		# Needs -lbind -lsocket for the timidity MIDI driver
+@@ -1571,6 +1581,12 @@
+ 			_port_mk="backends/platform/android/android.mk"
+ 			_seq_midi=no
+ 			;;
++		androidsdl)
++			DEFINES="$DEFINES -DANDROID"
++			_unix=yes
++			_need_memalign=yes
++			_seq_midi=no
++			;;
+ 		arm-linux|arm*-linux-gnueabi|arm-*-linux)
+ 			_unix=yes
+ 			_need_memalign=yes
+@@ -2112,7 +2128,7 @@
+ LIBS            += -ldl
+ '
+ 		;;
+-	linux*|android)
++	linux*|android|androidsdl)
+ _def_plugin='
+ #define PLUGIN_PREFIX	"lib"
+ #define PLUGIN_SUFFIX	".so"
+@@ -2778,7 +2794,7 @@
+ 		case $_host_os in
+ 		# newlib-based system include files suppress non-C89 function
+ 		# declarations under __STRICT_ANSI__
+-		amigaos* | android | ds | dreamcast | gamecube | mingw* | n64 | psp | wii | wince )
++		amigaos* | android | androidsdl | ds | dreamcast | gamecube | mingw* | n64 | psp | wii | wince )
+ 			CXXFLAGS="$CXXFLAGS -W -Wno-unused-parameter"
+ 			;;
+ 		*)
+@@ -2799,7 +2815,7 @@
+ 
+ # Some platforms use certain GNU extensions in header files
+ case $_host_os in
+-android | gamecube | psp | wii)
++android | androidsdl | gamecube | psp | wii )
+ 	;;
+ *)
+ 	CXXFLAGS="$CXXFLAGS -pedantic"
