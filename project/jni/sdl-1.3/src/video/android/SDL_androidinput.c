@@ -46,9 +46,10 @@ SDLKey SDL_android_keymap[KEYCODE_LAST+1];
 
 static int isTrackballUsed = 0;
 static int isMouseUsed = 0;
-enum { RIGHT_CLICK_WITH_MENU_BUTTON = 0, RIGHT_CLICK_WITH_MULTITOUCH = 1, RIGHT_CLICK_WITH_PRESSURE = 2 };
-static int rightClickMethod = RIGHT_CLICK_WITH_MENU_BUTTON;
-static int showScreenUnderFinger = 0;
+enum { RIGHT_CLICK_NONE = 0, RIGHT_CLICK_WITH_MENU_BUTTON = 1, RIGHT_CLICK_WITH_MULTITOUCH = 2, RIGHT_CLICK_WITH_PRESSURE = 3 };
+static int rightClickMethod = RIGHT_CLICK_NONE;
+int SDL_ANDROID_ShowScreenUnderFinger = 0;
+SDL_Rect SDL_ANDROID_ShowScreenUnderFingerRect = {0, 0, 0, 0}, SDL_ANDROID_ShowScreenUnderFingerRectSrc = {0, 0, 0, 0};
 static int leftClickUsesPressure = 0;
 static int maxForce = 0;
 static int maxRadius = 0;
@@ -57,6 +58,58 @@ static int isMultitouchUsed = 0;
 SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL};
 static int TrackballDampening = 0; // in milliseconds
 static int lastTrackballAction = 0;
+
+static inline int InsideRect(const SDL_Rect * r, int x, int y)
+{
+	return ( x >= r->x && x <= r->x + r->w ) && ( y >= r->y && y <= r->y + r->h );
+}
+
+void UpdateScreenUnderFingerRect(int x, int y)
+{
+	int screenX = 320, screenY = 240;
+	if( !SDL_ANDROID_ShowScreenUnderFinger )
+		return;
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+	SDL_Window * window = SDL_GetFocusWindow();
+	if( window && window->renderer->window ) {
+		screenX = window->w;
+		screenY = window->h;
+	}
+#else
+	screenX = SDL_ANDROID_sFakeWindowWidth;
+	screenY = SDL_ANDROID_sFakeWindowHeight;
+#endif
+
+	SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = screenX / 4;
+	SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = screenY / 4;
+	SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = x - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w/2;
+	SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = y - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h/2;
+	if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x < 0 )
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = 0;
+	if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y < 0 )
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = 0;
+	if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x > screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w )
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w;
+	if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y > screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h )
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
+	
+	SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRectSrc.w * 3 / 2;
+	SDL_ANDROID_ShowScreenUnderFingerRect.h = SDL_ANDROID_ShowScreenUnderFingerRectSrc.h * 3 / 2;
+	SDL_ANDROID_ShowScreenUnderFingerRect.x = x + SDL_ANDROID_ShowScreenUnderFingerRect.w/10;
+	SDL_ANDROID_ShowScreenUnderFingerRect.y = y - SDL_ANDROID_ShowScreenUnderFingerRect.h*11/10;
+	if( SDL_ANDROID_ShowScreenUnderFingerRect.x < 0 )
+		SDL_ANDROID_ShowScreenUnderFingerRect.x = 0;
+	if( SDL_ANDROID_ShowScreenUnderFingerRect.y < 0 )
+		SDL_ANDROID_ShowScreenUnderFingerRect.y = 0;
+	if( SDL_ANDROID_ShowScreenUnderFingerRect.x + SDL_ANDROID_ShowScreenUnderFingerRect.w > screenX )
+		SDL_ANDROID_ShowScreenUnderFingerRect.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRect.w;
+	if( SDL_ANDROID_ShowScreenUnderFingerRect.y + SDL_ANDROID_ShowScreenUnderFingerRect.h > screenY )
+		SDL_ANDROID_ShowScreenUnderFingerRect.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRect.h;
+	if( InsideRect(&SDL_ANDROID_ShowScreenUnderFingerRect, x, y) )
+		SDL_ANDROID_ShowScreenUnderFingerRect.x = x - SDL_ANDROID_ShowScreenUnderFingerRect.w*11/10;
+}
+
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
@@ -119,22 +172,51 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	if( !isMouseUsed )
 		return;
 
-	if( action == MOUSE_DOWN || action == MOUSE_UP )
+	if( pointerId == 0 )
 	{
 #if SDL_VERSION_ATLEAST(1,3,0)
 		SDL_SendMouseMotion(NULL, 0, x, y);
-		SDL_SendMouseButton(NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, 1 );
 #else
 		SDL_PrivateMouseMotion(0, 0, x, y);
-		SDL_PrivateMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, 1, x, y );
+#define SDL_SendMouseButton(N, A, B) SDL_PrivateMouseButton( A, B, 0, 0 )
 #endif
+		if( action == MOUSE_UP )
+		{
+			if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT) )
+				SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_LEFT );
+			if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_RIGHT) )
+				SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_RIGHT );
+			SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRect.h = 0;
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = 0;
+		}
+		if( action == MOUSE_DOWN )
+		{
+			if( !leftClickUsesPressure )
+				SDL_SendMouseButton( NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_LEFT );
+			else
+				action == MOUSE_MOVE;
+			UpdateScreenUnderFingerRect(x, y);
+		}
+		if( action == MOUSE_MOVE )
+		{
+			if( rightClickMethod == RIGHT_CLICK_WITH_PRESSURE || leftClickUsesPressure )
+			{
+				int button = leftClickUsesPressure ? SDL_BUTTON_LEFT : SDL_BUTTON_RIGHT;
+				int buttonState = ( force > maxForce || radius > maxRadius );
+				if( button == SDL_BUTTON_RIGHT && (SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT)) )
+					SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_LEFT );
+				if( ( (SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(button)) != 0 ) != buttonState )
+					SDL_SendMouseButton( NULL, buttonState ? SDL_PRESSED : SDL_RELEASED, button );
+			}
+			UpdateScreenUnderFingerRect(x, y);
+		}
 	}
-	if( action == MOUSE_MOVE )
-#if SDL_VERSION_ATLEAST(1,3,0)
-		SDL_SendMouseMotion(NULL, 0, x, y);
-#else
-		SDL_PrivateMouseMotion(0, 0, x, y);
-#endif
+	if( pointerId == 1 && rightClickMethod == RIGHT_CLICK_WITH_MULTITOUCH && (action == MOUSE_DOWN || action == MOUSE_UP) )
+	{
+		if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT) )
+			SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_LEFT );
+		SDL_SendMouseButton( NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
+	}
 }
 
 static int processAndroidTrackball(int key, int action);
@@ -145,6 +227,11 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 	if( isTrackballUsed )
 		if( processAndroidTrackball(key, action) )
 			return;
+	if( key == KEYCODE_MENU && rightClickMethod == RIGHT_CLICK_WITH_MENU_BUTTON )
+	{
+		SDL_SendMouseButton( NULL, action ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
+		return;
+	}
 	SDL_keysym keysym;
 	SDL_SendKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key ,&keysym) );
 }
@@ -209,7 +296,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz, jint
 {
 	isMouseUsed = 1;
 	rightClickMethod = RightClickMethod;
-	showScreenUnderFinger = ShowScreenUnderFinger;
+	SDL_ANDROID_ShowScreenUnderFinger = ShowScreenUnderFinger;
 	leftClickUsesPressure = LeftClickUsesPressure;
 	maxForce = MaxForce;
 	maxRadius = MaxRadius;

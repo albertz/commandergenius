@@ -61,10 +61,15 @@
 
     <string name="rightclick_question">Right mouse click triggered by:</string>
     <string name="rightclick_menu">Menu key</string>
-    <string name="rightclick_multitouch">Touching screen with second finger (device should support that)</string>
-    <string name="rightclick_pressure">Pressing screen with force (device should support that)</string>
+    <string name="rightclick_multitouch">Touch screen with second finger</string>
+    <string name="rightclick_pressure">Touch screen with force</string>
 
-    <string name="rightclick_question">Right mouse click triggered by:</string>
+    <string name="pointandclick_question">Advanced point-and-click features</string>
+    <string name="pointandclick_showcreenunderfinger">Show screen under finger in separate window</string>
+    <string name="pointandclick_usepressure">Left click triggered by touch force</string>
+
+    <string name="measurepressure_touchplease">Please slide finger across the screen for two seconds</string>
+    <string name="measurepressure_response">Pressure %03d radius %03d</string>
 
     <string name="audiobuf_verysmall">Very small (fast devices, less lag)</string>
     <string name="audiobuf_small">Small</string>

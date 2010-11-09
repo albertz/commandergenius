@@ -500,10 +500,10 @@ GLES_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     data->texw = (GLfloat) texture->w / texture_w;
     data->texh = (GLfloat) texture->h / texture_h;
     if( renderer->info.max_texture_width < texture_w || renderer->info.max_texture_height < texture_h )
-        __android_log_print(ANDROID_LOG_WARNING, "libSDL", "GLES: Allocated texture of size %dx%d which is bigger than largest possible device texture %dx%d",
+        __android_log_print(ANDROID_LOG_WARN, "libSDL", "GLES: Allocated texture of size %dx%d which is bigger than largest possible device texture %dx%d",
                             texture_w, texture_h, renderer->info.max_texture_width, renderer->info.max_texture_height );
     else if( texture_w > 1024 || texture_h > 1024 )
-        __android_log_print(ANDROID_LOG_WARNING, "libSDL", "GLES: Allocated texture of size %dx%d which is bigger than 1024x1024 - this code will not work on HTC G1", texture_w, texture_h );
+        __android_log_print(ANDROID_LOG_WARN, "libSDL", "GLES: Allocated texture of size %dx%d which is bigger than 1024x1024 - this code will not work on HTC G1", texture_w, texture_h );
 
     data->format = format;
     data->formattype = type;

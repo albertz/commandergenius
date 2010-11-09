@@ -57,9 +57,10 @@ class Globals {
 	public static int TrackballDampening = 0;
 	public static int AudioBufferConfig = 0;
 	public static boolean OptionalDataDownload[] = null;
-	public static final int RIGHT_CLICK_WITH_MENU_BUTTON = 0;
-	public static final int RIGHT_CLICK_WITH_MULTITOUCH = 1;
-	public static final int RIGHT_CLICK_WITH_PRESSURE = 2;
+	public static final int RIGHT_CLICK_NONE = 0;
+	public static final int RIGHT_CLICK_WITH_MENU_BUTTON = 1;
+	public static final int RIGHT_CLICK_WITH_MULTITOUCH = 2;
+	public static final int RIGHT_CLICK_WITH_PRESSURE = 3;
 	public static int RightClickMethod = RIGHT_CLICK_WITH_MENU_BUTTON;
 	public static boolean LeftClickUsesPressure = false;
 	public static boolean ShowScreenUnderFinger = false;

@@ -744,6 +744,10 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 		rect.h = SDL_CurrentVideoSurface->h;
 		SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, SDL_CurrentVideoSurface->pixels, SDL_CurrentVideoSurface->pitch);
 		SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &rect);
+		if( SDL_ANDROID_ShowScreenUnderFinger )
+		{
+			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &SDL_ANDROID_ShowScreenUnderFingerRectSrc, &SDL_ANDROID_ShowScreenUnderFingerRect);
+		}
 	}
 
 	SDL_ANDROID_CallJavaSwapBuffers();

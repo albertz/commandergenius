@@ -55,6 +55,7 @@ public class MainActivity extends Activity {
 				onClickListener( MainActivity _p ) { p = _p; }
 				public void onClick(View v)
 				{
+					setUpStatusLabel();
 					System.out.println("libSDL: User clicked change phone config button");
 					Settings.showConfig(p);
 				}
@@ -106,6 +107,23 @@ public class MainActivity extends Activity {
 			changeConfigAlertThread.start();
 		}
 	}
+	
+	public void setUpStatusLabel()
+	{
+		MainActivity Parent = this; // Too lazy to rename
+		if( Parent._btn != null )
+		{
+			Parent._layout2.removeView(Parent._btn);
+			Parent._btn = null;
+		}
+		if( Parent._tv == null )
+		{
+			Parent._tv = new TextView(Parent);
+			Parent._tv.setMaxLines(1);
+			Parent._tv.setText(R.string.init);
+			Parent._layout2.addView(Parent._tv);
+		}
+	}
 
 	public void startDownloader()
 	{
@@ -115,20 +133,7 @@ public class MainActivity extends Activity {
 			public MainActivity Parent;
 			public void run()
 			{
-				System.out.println("libSDL: Removing button from startup screen and adding status text");
-				if( Parent._btn != null )
-				{
-					Parent._layout2.removeView(Parent._btn);
-					Parent._btn = null;
-				}
-				if( Parent._tv == null )
-				{
-					Parent._tv = new TextView(Parent);
-					Parent._tv.setMaxLines(1);
-					Parent._tv.setText(R.string.init);
-					Parent._layout2.addView(Parent._tv);
-				}
-
+				setUpStatusLabel();
 				System.out.println("libSDL: Starting downloader");
 				if( Parent.downloader == null )
 					Parent.downloader = new DataDownloader(Parent, Parent._tv);
@@ -284,6 +289,9 @@ public class MainActivity extends Activity {
 		else
 		if( _btn != null )
 			return _btn.dispatchTouchEvent(ev);
+		else
+		if( _touchMeasurementTool != null )
+			_touchMeasurementTool.onTouchEvent(ev);
 		return true;
 	}
 
@@ -297,17 +305,18 @@ public class MainActivity extends Activity {
 	{
 		class Callback implements Runnable
 		{
-			public TextView Status;
+			MainActivity Parent;
 			public String text;
 			public void run()
 			{
-				if(Status != null)
-					Status.setText(text);
+				Parent.setUpStatusLabel();
+				if(Parent._tv != null)
+					Parent._tv.setText(text);
 			}
 		}
 		Callback cb = new Callback();
 		cb.text = new String(t);
-		cb.Status = _tv;
+		cb.Parent = this;
 		this.runOnUiThread(cb);
 	}
 
@@ -348,5 +357,6 @@ public class MainActivity extends Activity {
 	private FrameLayout _videoLayout = null;
 	private EditText _screenKeyboard = null;
 	private boolean sdlInited = false;
+	public Settings.TouchMeasurementTool _touchMeasurementTool = null;
 
 }

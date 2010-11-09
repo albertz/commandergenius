@@ -124,6 +124,7 @@ class Settings
 		*/
 
 		System.out.println("libSDL: Settings.Load(): loading settings failed, running config dialog");
+		p.setUpStatusLabel();
 		showConfig(p);
 	}
 	
@@ -208,6 +209,8 @@ class Settings
 
 	static void showKeyboardConfig(final MainActivity p)
 	{
+		Globals.PhoneHasArrowKeys = false;
+		Globals.PhoneHasTrackball = false;
 		if( ! Globals.AppNeedsArrowKeys )
 		{
 			showTrackballConfig(p);
@@ -270,6 +273,9 @@ class Settings
 	
 	static void showAdditionalInputConfig(final MainActivity p)
 	{
+		Globals.UseTouchscreenKeyboard = false;
+		Globals.UseAccelerometerAsArrowKeys = false;
+
 		if( ! ( Globals.AppNeedsArrowKeys || Globals.AppNeedsTextInput || Globals.AppTouchscreenKeyboardKeysAmount > 0 ) && ! Globals.AppUsesJoystick )
 		{
 			showAccelerometerConfig(p);
@@ -279,9 +285,6 @@ class Settings
 			p.getResources().getString(R.string.controls_screenkb),
 			p.getResources().getString(R.string.controls_accelnav),
 		};
-
-		Globals.UseTouchscreenKeyboard = false;
-		Globals.UseAccelerometerAsArrowKeys = false;
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_additional));
@@ -406,7 +409,7 @@ class Settings
 		Globals.TouchscreenKeyboardTheme = 0;
 		if( ! Globals.UseTouchscreenKeyboard )
 		{
-			showRightClickConfigConfig(p);
+			showAudioConfig(p);
 			return;
 		}
 		
@@ -427,6 +430,29 @@ class Settings
 					Globals.TouchscreenKeyboardTheme = 0;
 
 				dialog.dismiss();
+				showAudioConfig(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showAudioConfig(final MainActivity p)
+	{
+		final CharSequence[] items = {	p.getResources().getString(R.string.audiobuf_verysmall),
+										p.getResources().getString(R.string.audiobuf_small),
+										p.getResources().getString(R.string.audiobuf_medium),
+										p.getResources().getString(R.string.audiobuf_large) };
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(R.string.audiobuf_question);
+		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.AudioBufferConfig = item;
+				dialog.dismiss();
 				showRightClickConfigConfig(p);
 			}
 		});
@@ -437,7 +463,7 @@ class Settings
 
 	static void showRightClickConfigConfig(final MainActivity p)
 	{
-		Globals.RightClickMethod = RIGHT_CLICK_WITH_MENU_BUTTON;
+		Globals.RightClickMethod = Globals.RIGHT_CLICK_NONE;
 		if( ! Globals.AppNeedsTwoButtonMouse )
 		{
 			showAdvancedPointAndClickConfigConfig(p);
@@ -453,7 +479,7 @@ class Settings
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
-				Globals.RightClickMethod = item;
+				Globals.RightClickMethod = item + 1;
 				dialog.dismiss();
 				showAdvancedPointAndClickConfigConfig(p);
 			}
@@ -470,13 +496,16 @@ class Settings
 
 		if( ! Globals.AppNeedsTwoButtonMouse )
 		{
-			showAudioConfig(p);
+			showTouchPressureMeasurementTool(p);
 			return;
 		}
-		final CharSequence[] items = (Globals.RightClickMethod == RIGHT_CLICK_WITH_PRESSURE) ?
-									 {	p.getResources().getString(R.string.pointandclick_showcreenunderfinger) } :
-									 {	p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
-										p.getResources().getString(R.string.pointandclick_usepressure) };
+		CharSequence[] items = {	p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
+									p.getResources().getString(R.string.pointandclick_usepressure) };
+		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE )
+		{
+			CharSequence[] items2 = { p.getResources().getString(R.string.pointandclick_showcreenunderfinger) };
+			items = items2;
+		}
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.pointandclick_question));
@@ -495,7 +524,7 @@ class Settings
 			public void onClick(DialogInterface dialog, int item) 
 			{
 				dialog.dismiss();
-				showAudioConfig(p);
+				showTouchPressureMeasurementTool(p);
 			}
 		});
 
@@ -504,29 +533,72 @@ class Settings
 		alert.show();
 	}
 	
-	static void showAudioConfig(final MainActivity p)
+	public static class TouchMeasurementTool
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.audiobuf_verysmall),
-										p.getResources().getString(R.string.audiobuf_small),
-										p.getResources().getString(R.string.audiobuf_medium),
-										p.getResources().getString(R.string.audiobuf_large) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.audiobuf_question);
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		MainActivity p;
+		ArrayList<Integer> force = new ArrayList<Integer>();
+		ArrayList<Integer> radius = new ArrayList<Integer>();
+		static final int maxEventAmount = 100;
+		
+		public TouchMeasurementTool(MainActivity _p) 
 		{
-			public void onClick(DialogInterface dialog, int item) 
+			p = _p;
+		}
+
+		public void onTouchEvent(final MotionEvent ev)
+		{
+			force.add(new Integer((int)(ev.getPressure() * 1000.0)));
+			radius.add(new Integer((int)(ev.getSize() * 1000.0)));
+			p.setText(p.getResources().getString(R.string.measurepressure_response, force.get(force.size()-1), radius.get(radius.size()-1)));
+			try {
+				Thread.sleep(10L);
+			} catch (InterruptedException e) { }
+			
+			if( force.size() >= maxEventAmount )
 			{
-				Globals.AudioBufferConfig = item;
-				dialog.dismiss();
+				p._touchMeasurementTool = null;
+				Globals.ClickScreenPressure = getAverageForce();
+				Globals.ClickScreenTouchspotSize = getAverageRadius();
+				System.out.println("SDL: measured average force " + Globals.ClickScreenPressure + " radius " + Globals.ClickScreenTouchspotSize);
 				Save(p);
 				p.startDownloader();
 			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+		}
+
+		int getAverageForce()
+		{
+			int avg = 0;
+			for(Integer f: force)
+			{
+				avg += f;
+			}
+			return avg / force.size();
+		}
+		int getAverageRadius()
+		{
+			int avg = 0;
+			for(Integer r: radius)
+			{
+				avg += r;
+			}
+			return avg / radius.size();
+		}
 	}
+	
+	static void showTouchPressureMeasurementTool(final MainActivity p)
+	{
+		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickUsesPressure )
+		{
+			p.setText(p.getResources().getString(R.string.measurepressure_touchplease));
+			p._touchMeasurementTool = new TouchMeasurementTool(p);
+		}
+		else
+		{
+			Save(p);
+			p.startDownloader();
+		}
+	}
+
 
 	static void Apply(Activity p)
 	{

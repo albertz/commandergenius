@@ -31,6 +31,8 @@ extern int SDL_ANDROID_sWindowWidth;
 extern int SDL_ANDROID_sWindowHeight;
 extern int SDL_ANDROID_sFakeWindowWidth; // SDL 1.2 only
 extern int SDL_ANDROID_sFakeWindowHeight; // SDL 1.2 only
+extern int SDL_ANDROID_ShowScreenUnderFinger;
+extern SDL_Rect SDL_ANDROID_ShowScreenUnderFingerRect, SDL_ANDROID_ShowScreenUnderFingerRectSrc;
 extern int SDL_ANDROID_CallJavaSwapBuffers();
 extern void SDL_ANDROID_CallJavaShowScreenKeyboard();
 extern int SDL_ANDROID_drawTouchscreenKeyboard();
