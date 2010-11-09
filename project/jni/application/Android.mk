@@ -86,6 +86,7 @@ LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 .NOTPARALLEL: $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so) $(LOCAL_PATH)/src/libapplication.so
 
 $(shell rm $(LOCAL_PATH)/src/libapplication.so) # Enforce rebuilding
+# $(shell rm $(LOCAL_PATH)/../../obj/local/armeabi/*.so) # libapplication.so may try to link with wrong libraries, prevent that
 
 $(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg $(APP_LIB_DEPENDS)
 	echo Launching script $(LOCAL_PATH_SDL_APPLICATION)/AndroidBuild.sh

@@ -24,6 +24,20 @@ PLATFORMVER=android-8
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
+APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
+APP_AVAILABLE_STATIC_LIBS=`grep 'APP_AVAILABLE_STATIC_LIBS [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
+APP_SHARED_LIBS=$(
+echo $APP_MODULES | xargs -n 1 echo | while read LIB ; do
+	STATIC=`echo $APP_AVAILABLE_STATIC_LIBS | grep "\\\\b$LIB\\\\b"`
+	if [ "$LIB" = "application" ] ; then true
+	elif [ "$LIB" = "sdl_main" ] ; then true
+	elif [ -n "$STATIC" ] ; then true
+	else
+		echo $LIB
+	fi
+done
+)
+
 CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums \
 -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -DANDROID \
@@ -31,12 +45,12 @@ CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -Wa,--noexecstack -DNDEBUG -g \
 -I$LOCAL_PATH/../sdl-1.2/include -I$LOCAL_PATH/../stlport/stlport \
-`grep 'COMPILED_LIBRARIES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@' | sed \"s@\([-a-zA-Z_]\+\)@-I$LOCAL_PATH/../\1/include@g\"`"
+`echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"`"
 
 LDFLAGS="-nostdlib -Wl,-soname,libapplication.so -Wl,-shared,-Bsymbolic \
 -Wl,--whole-archive  -Wl,--no-whole-archive \
 $NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/lib/gcc/arm-eabi/4.4.0/libgcc.a \
-`echo $LOCAL_PATH/../../obj/local/armeabi/*.so | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libsdl_main.so@@" | sed "s@$LOCAL_PATH/../../obj/local/armeabi/libapplication.so@@"` \
+`echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/armeabi/lib\1.so@g\"` \
 $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
 $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.so \
 $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
