@@ -213,7 +213,7 @@ SDL_Flip();
 SDL_Event evt;
 while( SDL_PollEvent(&evt) )
 {
-	if( evt.type == SDL_ACTIVEEVENT->SDL_APPACTIVE && evt.active.gain == 0 && evt.active.state == SDL_APPACTIVE )
+	if( evt.type == SDL_ACTIVEEVENT && evt.active.gain == 0 && evt.active.state == SDL_APPACTIVE )
 	{
 		// We've lost GL context, we are not allowed to do any GFX output here, or app will crash!
 		while( 1 )
