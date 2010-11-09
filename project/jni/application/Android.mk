@@ -74,16 +74,18 @@ please make this library static to avoid problems. ) )
 $(error Detected libraries with too long symbol names. Remove all files under project/libs/armeabi, make these libs static, and recompile)
 endif
 
+APP_LIB_DEPENDS := $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).so)) 
+APP_LIB_DEPENDS += $(foreach LIB, $(LOCAL_STATIC_LIBRARIES), $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).a))
+
 include $(BUILD_SHARED_LIBRARY)
 
 ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
 
 LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 
-APP_LIB_DEPENDS := $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).so)) \
-					$(foreach LIB, $(LOCAL_STATIC_LIBRARIES), $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).a))
-
 .NOTPARALLEL: $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so) $(LOCAL_PATH)/src/libapplication.so
+
+$(shell rm $(LOCAL_PATH)/src/libapplication.so) # Enforce rebuilding
 
 $(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg $(APP_LIB_DEPENDS)
 	echo Launching script $(LOCAL_PATH_SDL_APPLICATION)/AndroidBuild.sh
