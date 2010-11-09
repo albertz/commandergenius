@@ -8,10 +8,10 @@ This should be compiled with Android 2.2 SDK and NDK r4b - google for them and i
 (the application will run on Android 1.6 and above).
 You'll need to install Ant too.
 The most supported environnment for that port is Linux, MacOs should be okay too, 
-however if you'll use launchConfigure.sh script you'll have to replace "linux-x86" to "darwin-x86" inside it.
 If you're developing under Windows you'd better install andLinux or Ubuntu+Wubi, to get proper Linux environment
 running inside Windows, then install Linux toolchain on it. I was told andLinux compiles faster than Cygwin.
 Also you'll need full set of Linux utils and symlinks support to launch ChangeAppSettings.sh (sh, grep, sed, tr).
+http://www.pocketmagic.net/?p=1332 - guide how to set up environment in Cygwin.
 
 How to compile Alien Blaster demo application
 =============================================
