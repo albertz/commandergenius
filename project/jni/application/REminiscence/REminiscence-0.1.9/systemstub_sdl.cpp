@@ -458,7 +458,7 @@ void SystemStub_SDL::startAudio(AudioCallback callback, void *param) {
 	SDL_AudioSpec desired;
 	memset(&desired, 0, sizeof(desired));
 	desired.freq = SOUND_SAMPLE_RATE;
-	desired.format = AUDIO_S8;
+	desired.format = AUDIO_S16;
 	desired.channels = 1;
 	desired.samples = 2048;
 	desired.callback = callback;

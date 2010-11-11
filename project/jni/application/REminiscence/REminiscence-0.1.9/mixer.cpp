@@ -81,9 +81,21 @@ void Mixer::stopAll() {
 	}
 }
 
-void Mixer::mix(int8 *buf, int len) {
+inline void addclamp(int16& a, int b) {
+	int add = a + b;
+	if (add < -32767) {
+		add = -32767;
+	} else if (add > 32767) {
+		add = 32767;
+	}
+	a = add;
+}
+
+void Mixer::mix(int8 *buf1, int len) {
+	int16 *buf = (int16 *)buf1;
 	MutexStack(_stub, _mutex);
 	memset(buf, 0, len);
+	len /= 2;
 	if (_premixHook) {
 		if (!_premixHook(_premixHookData, buf, len)) {
 			_premixHook = 0;
@@ -99,22 +111,13 @@ void Mixer::mix(int8 *buf, int len) {
 					break;
 				}
 				int out = resampleLinear(&ch->chunk, ch->chunkPos, ch->chunkInc, FRAC_BITS);
-				addclamp(buf[pos], out * ch->volume / Mixer::MAX_VOLUME);
+				addclamp(buf[pos], out * Mixer::MIX_AMPLIFICATIION * ch->volume / Mixer::MAX_VOLUME );
 				ch->chunkPos += ch->chunkInc;
 			}
 		}
 	}
 }
 
-void Mixer::addclamp(int8& a, int b) {
-	int add = a + b;
-	if (add < -128) {
-		add = -128;
-	} else if (add > 127) {
-		add = 127;
-	}
-	a = add;
-}
 
 void Mixer::mixCallback(void *param, uint8 *buf, int len) {
 	((Mixer *)param)->mix((int8 *)buf, len);

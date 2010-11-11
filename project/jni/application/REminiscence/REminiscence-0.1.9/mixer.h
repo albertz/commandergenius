@@ -46,12 +46,13 @@ struct MixerChannel {
 struct SystemStub;
 
 struct Mixer {
-	typedef bool (*PremixHook)(void *userData, int8 *buf, int len);
+	typedef bool (*PremixHook)(void *userData, int16 *buf, int len);
 
 	enum {
 		NUM_CHANNELS = 4,
 		FRAC_BITS = 12,
-		MAX_VOLUME = 64
+		MAX_VOLUME = 64,
+		MIX_AMPLIFICATIION = 64 // TODO: edit here to tweak sound
 	};
 
 	void *_mutex;
@@ -69,7 +70,7 @@ struct Mixer {
 	uint32 getSampleRate() const;
 	void mix(int8 *buf, int len);
 
-	static void addclamp(int8 &a, int b);
+	//static void addclamp(int16 &a, int b);
 	static void mixCallback(void *param, uint8 *buf, int len);
 };
 

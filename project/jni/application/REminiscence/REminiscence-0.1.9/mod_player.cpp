@@ -457,11 +457,21 @@ void ModPlayer::handleTick() {
 	}
 }
 
-void ModPlayer::mixSamples(int8 *buf, int samplesLen) {
+inline void addclamp(int16& a, int b) {
+	int add = a + b;
+	if (add < -32767) {
+		add = -32767;
+	} else if (add > 32767) {
+		add = 32767;
+	}
+	a = add;
+}
+
+void ModPlayer::mixSamples(int16 *buf, int samplesLen) {
 	for (int i = 0; i < NUM_TRACKS; ++i) {
 		Track *tk = &_tracks[i];
 		if (tk->sample != 0 && tk->delayCounter == 0) {
-			int8 *mixbuf = buf;
+			int16 *mixbuf = buf;
 			SampleInfo *si = tk->sample;
 			int len = si->len << FRAC_BITS;
 			int loopLen = si->repeatLen << FRAC_BITS;
@@ -487,7 +497,7 @@ void ModPlayer::mixSamples(int8 *buf, int samplesLen) {
 				}
 				while (count--) {
 					int out = resample3Pt(si, pos, deltaPos, FRAC_BITS);
-					Mixer::addclamp(*mixbuf++, out * tk->volume / 64);
+					addclamp(*mixbuf++, out * Mixer::MIX_AMPLIFICATIION * tk->volume / 64);
 					pos += deltaPos;
 				}
 			}
@@ -496,9 +506,9 @@ void ModPlayer::mixSamples(int8 *buf, int samplesLen) {
 	}
 }
 
-bool ModPlayer::mix(int8 *buf, int len) {
+bool ModPlayer::mix(int16 *buf, int len) {
 	if (_playing) {
-		memset(buf, 0, len);
+		memset(buf, 0, len*2);
 		const int samplesPerTick = _mix->getSampleRate() / (50 * _songTempo / 125);
 		while (len != 0) {
 			if (_samplesLeft == 0) {
@@ -518,6 +528,6 @@ bool ModPlayer::mix(int8 *buf, int len) {
 	return _playing;
 }
 
-bool ModPlayer::mixCallback(void *param, int8 *buf, int len) {
+bool ModPlayer::mixCallback(void *param, int16 *buf, int len) {
 	return ((ModPlayer *)param)->mix(buf, len);
 }

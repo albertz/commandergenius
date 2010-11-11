@@ -113,10 +113,10 @@ struct ModPlayer {
 	void applyVibrato(int trackNum);
 	void applyPortamento(int trackNum);
 	void handleEffect(int trackNum, bool tick);
-	void mixSamples(int8 *buf, int len);
-	bool mix(int8 *buf, int len);
+	void mixSamples(int16 *buf, int len);
+	bool mix(int16 *buf, int len);
 
-	static bool mixCallback(void *param, int8 *buf, int len);
+	static bool mixCallback(void *param, int16 *buf, int len);
 };
 
 #endif // __MOD_PLAYER_H__

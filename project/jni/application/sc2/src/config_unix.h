@@ -14,16 +14,16 @@
 #define CONTENTDIR ""
 
 /* Directory where game data will be stored */
-#define USERDIR "config/"
+#define USERDIR "/data/data/com.sourceforge.sc2/files/config/"
 
 /* Directory where config files will be stored */
 #define CONFIGDIR USERDIR
 
 /* Directory where supermelee teams will be stored */
-#define MELEEDIR "teams/"
+#define MELEEDIR "${UQM_CONFIG_DIR}/teams/"
 
 /* Directory where save games will be stored */
-#define SAVEDIR "save/"
+#define SAVEDIR "${UQM_CONFIG_DIR}/save/"
 
 /* Defined if words are stored with the most significant byte first */
 #ifdef __ARMEL__
