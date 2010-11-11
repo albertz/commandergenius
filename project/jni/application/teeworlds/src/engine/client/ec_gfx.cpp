@@ -314,7 +314,7 @@ static int try_init()
 		
 		pos.x = screen_width - screen_width / 16;
 		pos.y = screen_height - screen_height / 8;
-		pos.w = screen_width / (SDL_ANDROID_GetScreenKeyboardSize() + 2) / 4;
+		pos.w = screen_width / 2 /*(SDL_ANDROID_GetScreenKeyboardSize() + 2)*/ / 4;
 		pos.h = pos.w;
 		pos.x -= pos.w/2;
 		pos.y -= pos.h/2;
@@ -334,8 +334,11 @@ static int try_init()
 
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_3, &pos);
 
-		pos.y = screen_height - screen_height / 8 - screen_height / 4;
-		pos.y -= pos.h/2;
+		//pos.y = screen_height - screen_height / 8 - screen_height / 4;
+		//pos.y -= pos.h/2;
+
+		pos.y -= pos.h;
+		
 		pos.x = screen_width / 16;
 		pos.x -= pos.w/2;
 
