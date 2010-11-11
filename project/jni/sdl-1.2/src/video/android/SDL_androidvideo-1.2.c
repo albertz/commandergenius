@@ -100,7 +100,7 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
 /* Private display data */
 
-#define SDL_NUMMODES 6
+#define SDL_NUMMODES 7
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -231,7 +231,8 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[3]->w = 640; SDL_modelist[3]->h = 400; // Will likely be shrinked
 	SDL_modelist[4]->w = 320; SDL_modelist[4]->h = 240; // Always available on any screen and any orientation
 	SDL_modelist[5]->w = 320; SDL_modelist[5]->h = 200; // Always available on any screen and any orientation
-	SDL_modelist[6] = NULL;
+	SDL_modelist[6]->w = 256; SDL_modelist[6]->h = 224; // Always available on any screen and any orientation
+	SDL_modelist[7] = NULL;
 	
 	SDL_VideoInit_1_3(NULL, 0);
 
