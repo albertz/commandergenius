@@ -148,19 +148,13 @@ This compiler flags will catch most obvious errors, you may add them to AppCflag
 How to compile your own application using automake/configure scripts
 ====================================================================
 
-There is limited support for "configure" scripts, I've managed to compile lbreakout2 that way,
+There is limited support for "configure" scripts, I'm compiling scummvm this way,
 though ./configure scripts tend to have stupid bugs in various places, avoid using that method if you can.
-1. Download lbreakout2-2.6.1.tar.gz from http://lgames.sourceforge.net/, unpack it to project/jni/application dir.
-2. Determine libraries needed for your app, launch ChangeAppSettings.sh, select correct libSDL version
-   (1.2 for lbreakout2), and correct libs (sdl_mixer sdl_image sdl_net for lbreakout2), also change name etc.
-3. Launch ./build.sh, wait till it builds all .so files
-4. Go to project/jni/application/lbreakout2-2.6.1 dir, and launch command
-   ../launchConfigure.sh --disable-install --enable-sdl-net LIBS=-lintl
-5. Watch how ./configure configures, if it fails fix launchConfigure.sh, rinse and repeat.
-6. Launch make, and pray. If you're lucky it will create application binary (lbreakout2-2.6.1/client/lbreakout2)
-7. Move the application binary to dir project/libs/armeabi, rename it to libapplication.so (overwrite old file)
-8. Run command "arm-eabi-strip -g libapplication.so", you can find arm-eabi-strip under your NDK dir.
-9. Run "ant debug" or "ant release" from project dir, install to device & enjoy.
+You should enable custom build script in ChangeAppSettings.sh, and you should create script
+AndroidBuild.sh and put it under project/jni/application/src dir. The AndroidBuild.sh script should 
+generate file project/jni/application/src/libapplication.so, which will be copied into .apk file by build system.
+There is helper script project/jni/application/setEnvironment.sh which will set CFLAGS and LDFLAGS
+for configure script and makefile, see AndroidBuild.sh in project/jni/application/scummvm dir for reference.
 
 Android Application lifecycle support
 =====================================

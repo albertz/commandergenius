@@ -23,6 +23,12 @@ GCCVER=4.4.0
 PLATFORMVER=android-8
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
+STL_INCLUDE="-I$LOCAL_PATH/../stlport/stlport"
+STL_LIB="$LOCAL_PATH/../../obj/local/armeabi/libstlport.a"
+if [ -n "`echo $NDK | grep '[-]crystax'`" ] ; then
+	STL_INCLUDE=
+	STL_LIB=
+fi
 
 APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
 APP_AVAILABLE_STATIC_LIBS=`grep 'APP_AVAILABLE_STATIC_LIBS [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
@@ -31,6 +37,7 @@ echo $APP_MODULES | xargs -n 1 echo | while read LIB ; do
 	STATIC=`echo $APP_AVAILABLE_STATIC_LIBS | grep "\\\\b$LIB\\\\b"`
 	if [ "$LIB" = "application" ] ; then true
 	elif [ "$LIB" = "sdl_main" ] ; then true
+	elif [ "$LIB" = "stlport" ] ; then true
 	elif [ -n "$STATIC" ] ; then true
 	else
 		echo $LIB
@@ -44,7 +51,7 @@ CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -fno-exceptions -fno-rtti -mthumb -Os \
 -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -Wa,--noexecstack -DNDEBUG -g \
--I$LOCAL_PATH/../sdl-1.2/include -I$LOCAL_PATH/../stlport/stlport \
+-I$LOCAL_PATH/../sdl-1.2/include $STL_INCLUDE \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"`"
 
 LDFLAGS="-nostdlib -Wl,-soname,libapplication.so -Wl,-shared,-Bsymbolic \
@@ -58,10 +65,7 @@ $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
 -L$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib \
 -lGLESv1_CM -ldl -llog -lz \
 -Wl,-rpath-link=$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib \
--L$LOCAL_PATH/../../obj/local/armeabi"
-
-# Comment out if you're using CrystaX toolchain
-LDFLAGS="$LDFLAGS $LOCAL_PATH/../../obj/local/armeabi/libstlport.a"
+-L$LOCAL_PATH/../../obj/local/armeabi $STL_LIB"
 
 env PATH=$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \
