@@ -1,0 +1,74 @@
+/***************************************************************************
+ *   Copyright (C) 2009 by Andrey Afletdinov <fheroes2@gmail.com>          *
+ *                                                                         *
+ *   Part of the Free Heroes2 Engine:                                      *
+ *   http://sourceforge.net/projects/fheroes2                              *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#ifndef H2GAMEOVER_H
+#define H2GAMEOVER_H
+
+#include <string>
+#include "game.h"
+
+namespace GameOver
+{
+    enum conditions_t
+    {
+	COND_NONE	= 0x0000,
+
+	WINS_ALL	= 0x0001,
+	WINS_TOWN	= 0x0002,
+	WINS_HERO	= 0x0004,
+	WINS_ARTIFACT	= 0x0008,
+	WINS_SIDE	= 0x0010,
+	WINS_GOLD	= 0x0020,
+	WINS            = WINS_ALL | WINS_TOWN | WINS_HERO | WINS_ARTIFACT | WINS_SIDE | WINS_GOLD,
+
+	LOSS_ALL	= 0x0100,
+	LOSS_TOWN	= 0x0200,
+	LOSS_HERO	= 0x0400,
+	LOSS_TIME	= 0x0800,
+	LOSS            = LOSS_ALL | LOSS_TOWN | LOSS_HERO | LOSS_TIME
+    };
+
+    const char* GetString(conditions_t);
+    void GetActualDescription(u16, std::string &);
+
+    void DialogWins(u16);
+    void DialogLoss(u16);
+
+    class Result
+    {
+    public:
+	static Result & Get(void);
+
+	void Reset(void);
+	void SetResult(u16);
+	u16  GetResult(void) const;
+	bool CheckGameOver(Game::menu_t &);
+
+    private:
+	Result();
+
+	u8  colors;
+	u16 result;
+    };
+}
+
+#endif

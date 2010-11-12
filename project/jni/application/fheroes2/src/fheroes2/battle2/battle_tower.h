@@ -1,0 +1,53 @@
+/***************************************************************************
+ *   Copyright (C) 2010 by Andrey Afletdinov <fheroes2@gmail.com>          *
+ *                                                                         *
+ *   Part of the Free Heroes2 Engine:                                      *
+ *   http://sourceforge.net/projects/fheroes2                              *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#ifndef H2BATTLE2_TOWER_H
+#define H2BATTLE2_TOWER_H
+
+#include "army_troop.h"
+#include "gamedefs.h"
+#include "battle_arena.h"
+
+class Castle;
+
+namespace Battle2
+{
+    class Tower : public Army::Troop
+    {
+    public:
+	Tower(const Castle &, u8, Arena &);
+
+	bool isValid(void) const;
+	u8   GetColor(void) const;
+
+	void SetDestroy(void);
+	void Action(void) const;
+	Point GetPortPosition(void) const;
+
+    private:
+	Arena & arena;
+	const u8 type;
+	bool valid;
+    };
+}
+
+#endif

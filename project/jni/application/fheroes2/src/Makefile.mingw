@@ -1,0 +1,5 @@
+include Makefile.unix
+
+ifndef WITHOUT_UNICODE
+LIBS := $(LIBS) -lintl -liconv
+endif

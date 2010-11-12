@@ -1,0 +1,3 @@
+copy fheroes2.pot to ${LANGUAGE_CODE}/LC_MESSAGES/fheroes2.po
+translate, and run:
+msgfmt fheroes2.po -o fheroes2.mo

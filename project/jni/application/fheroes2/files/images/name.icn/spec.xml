@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<icn name="name.icn" count="3">
+ <sprite name="0.png" ox="-12" oy="30"/>
+ <sprite name="1.png" ox="0" oy="0"/>
+ <sprite name="2.png" ox="0" oy="0"/>
+</icn>

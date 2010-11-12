@@ -1,0 +1,8 @@
+Load alternative png images.
+To do this you need to define the parameter "alt resource" in the configuration file.
+The approximate structure:
+name.icn/001.png
+name.icn/002.png
+name.icn/003.png
+
+For more detail see log file.
