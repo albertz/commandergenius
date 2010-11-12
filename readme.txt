@@ -295,7 +295,7 @@ License information
 ===================
 
 The libSDL port itself is licensed under LGPL, so you may use it for commercial app without releasing sources,
-however you'll have to release the file ChangeAppSettings.sh to allow linking newer version of libSDL with
+however you'll have to release the file AndroidAppSettings.cfg to allow linking newer version of libSDL with
 your compiled application, as LGPL requires.
 It contains separate libraries under project/jni, each of which has it's own license,
 I've tried to compile all LGPL-ed libs as shared libs but you should anyway inspect the licenses
