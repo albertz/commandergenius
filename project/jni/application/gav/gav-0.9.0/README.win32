@@ -1,0 +1,13 @@
+Welcome to GAV, a GPL rendition of the popular Arcade Volleyball.
+
+Some of the menu items have not been implemented yet. Themes
+support is there, but unaccessible if not from the code.
+
+The keys are:
+left player: z, c and left shift
+right player: <-, -> and cursor up.
+
+To activate a menu item, SPACE.
+To exit from the game and go back to the menu, ESC
+To switch to fullscreen (much faster), F10
+

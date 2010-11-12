@@ -1,0 +1,41 @@
+# GAV - Gpl Arcade Volleyball
+# Copyright (C) 2002
+# GAV team (http://sourceforge.net/projects/gav/)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+CWD        = $(shell pwd)
+GAV_ROOT    = $(CWD:%/$(RELPATH)=%)
+#comment the following line if you do not want network support
+NET = true
+
+LD = arm-eabi-ld
+CXX = arm-eabi-g++
+
+CXXFLAGS= `sdl-config --cflags` -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -DANDROID -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -fexceptions -fno-rtti -mthumb -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 -g -Wall -DAUDIO -I/home/lubomyr/src/endless_space/android-ndk-r4-crystax/build/platforms/android-8/arch-arm/usr/include -I/home/lubomyr/project/jni/sdl-1.2/include -I/home/lubomyr/project/jni/sdl_image/include -I/home/lubomyr/project/jni/sdl_net/include
+
+ifndef NET
+CXXFLAGS+= -DNONET
+endif
+
+ifdef NET
+LDFLAGS= `sdl-config --libs` -nostdlib -Wl,-soname,libapplication.so -Wl,-shared,-Bsymbolic -Wl,--whole-archive  -Wl,--no-whole-archive /home/lubomyr/src/endless_space/android-ndk-r4-crystax/build/prebuilt/linux-x86/arm-eabi-4.4.0/arm-eabi/lib/libstdc++.a /home/lubomyr/src/endless_space/android-ndk-r4-crystax/build/platforms/android-8/arch-arm/usr/lib/libc.a -L/home/lubomyr/project/obj/local/armeabi -lsdl-1.2 -lsdl_image -lsdl_net -lm -llog -lgcc -L/home/lubomyr/src/endless_space/android-ndk-r4-crystax/build/platforms/android-8/arch-arm/usr/lib
+else
+LDFLAGS= `sdl-config --libs` -nostdlib -Wl,-soname,libapplication.so -Wl,-shared,-Bsymbolic -Wl,--whole-archive  -Wl,--no-whole-archive -L/home/lubomyr/project/obj/local/armeabi -lsdl-1.2 -lsdl_image -lm -L/home/lubomyr/src/endless_space/android-ndk-r4-crystax/build/platforms/android-8/arch-arm/usr/lib
+endif
+
+SRCS	= 	$(wildcard *.cpp)
+OFILES	=	$(SRCS:%.cpp=%.o)  
+

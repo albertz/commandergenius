@@ -1,0 +1,54 @@
+Current CVS:
+- successfully compiled on Mac OS X, files for build added
+- preferences are stored to $HOME/.gav if $HOME exists, to
+  ./gav.ini otherwise.
+- size of the window can be set by the -w and -h commandline parameters
+- joystick support
+- a couple of leaks removed from the code
+- now network game with different themes works correctly
+- network connection phase no longer blocking
+- the network protocol has changed! no longer compatible with old versions
+
+Version 0.8.0 changes:
+- (we hope) *FINAL* patch for stuck on the net problem
+- patch for ball passing over the net bug
+- collision mechanisms improved
+- sound support added (sounds can be found in theme packages)
+- Players classes hierarchy re-designed
+- AI Player improved
+- added default service change and scoring sounds.
+
+Version 0.7.3 added:
+- patch for stuck on the net problem
+- advanced themes configuration support (check the naive theme
+  for an example)
+
+Version 0.7.2 added:
+- char specified as signed (for other architectures than x86)
+- ball speed selectable
+
+Version 0.7.1 added:
+- lots of bugs fixed (collisions, etc.)
+- AI improved in multiplayer mode
+
+Version 0.7.0 added:
+
+- Networking game, in client/server mode
+- modified collisions
+- several themes provided by friendly users
+- selectable "larger" background
+- adjustable frame rate and frame skip values
+- configurable end score
+- vintage monitor effect (works ok only with the default theme)
+
+Version 0.6.0 added:
+
+- Theme support via the 'Extra' menu entry
+  Only a silly modification of the classic theme is
+  available so far, if you are interested in developing
+  more, please do, and let us know!
+- Keys redefinition works
+- You can now activate menu items using the enter key (wow!)
+- You can play more than one-a-side. Cooperative games are supported.
+- Fullscreen can now be triggered via a menu entry
+

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Categories=Application;Game;X-Red-Hat-Extra
+X-Desktop-File-Install-Version=0.2
+Name=Arcade Volleyball
+Comment=GPL remake of the DOS classic
+Icon=gav.png
+Exec=gav
+Terminal=0
+Type=Application

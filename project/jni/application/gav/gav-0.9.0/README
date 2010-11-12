@@ -1,0 +1,61 @@
+Welcome to GAV, a GPL rendition of the popular Arcade Volleyball.
+
+Some menu items might not be implemtented yet.
+
+See CHANGELOG for recent modifications.
+
+Keys:
+default keys are:
+Left player: z, c and left shift
+Right player: left, right and up cursor keys.
+
+use the arrow keys to navigate the menus, spacebar or enter to activate
+items, F10 to switch to fullscreen mode while playing.
+
+Network Game:
+One of the programs must function as server. The server determines
+the parameters of the game (except for the theme, which might be
+different from client to client). Whatever player the server configures
+as "Keyboard/Joy" is local to the server, "Computer/Net" players are controlled
+either by the computer or by a remote client. Starting the server, you
+specify how many clients will attach: each of them will replace a computer
+player. This way, you can play in several different ways: a local player
+against a remote one, a local and AI player against 2 remote ones, an AI
+player against a local and a remote one... Bear in mind that players 1 and 3
+play on the left side, and 2 and 4 on the right side.
+The client need not select anything about the players: just the side it
+will play on (left or right). Currently, only one player per client is
+allowed (while more than one can play on the server). The client's player
+is always controlled by Player 1's controls.
+
+Installing themes:
+themes default to the /usr/share/games/gav/themes directory, but if a
+directory ./themes exists, they are looked for in such a directory. This
+might cause problem if you start GAV from a directory that contains
+a 'themes' subdirectory, but no classic theme, which is the
+default.
+
+Sounds:
+Sounds are looked for in the current theme's directory. If no sound is
+found there, they are looked for in the "default sound" directory,
+which is the directory "sounds" at the same level as the "themes"
+directory. Provided with the game by default (as long as theme
+creators do not come with appropriate sounds for their themes) are the
+default sounds (two 'whistles' at different pitch indicating the
+service change and the scoring of a point). Theme creators interesting in
+setting up sounds, can find the sound filenames, associated with the various
+events, in the array "sound_fnames", found in SoundMgr.cpp.
+
+Thanks:
+- Marius Andreiana, who provided the gnome menu entry.
+- Mark Whittington, who provided patches to compile
+  under Win32, and working on an installer.
+- Fernando "Yisus" Notari, who provided the Yisus, Yisus2 and unnamed themes.
+- El Fabio, who provided the fabeach theme.
+- Serge S. Fukanchik for his feedback and his precious aid to increase
+  GAV efficiency.
+- Aleksander Kam for provinding a useful patch
+
+Authors:
+To contact the authors, please refer to the Sourceforge project page
+http://www.sourceforge.net/projects/gav
