@@ -1,8 +1,8 @@
-To compile ScummVM add the ScummVM SVN branch 1.2.0 to directory "scummvm" (or make a symlink to it),
-apply patch scummvm-1.2.0.diff, then from dir 'project/jni/application' execute commands
-
-rm src
-ln -s scummvm src
-
-Then go to project root and launch 'build.sh' - that should be it.
-You need to have Android SDK 2.2 and NDK r4b installed in your PATH.
+To summarize: you have to download my GIT repo from https://github.com/pelya/commandergenius,
+then install Android SDK 2.2, NDK r4b, and "ant" tool, then you should launch commands
+    rm project/jni/application/src
+    ln -s scummvm project/jni/application/src
+    cd project && android update project -p .
+then download ScummVM 1.2 SVN into the dir project/jni/application/scummvm/scummvm
+(or create a symlink to it if you already have downloaded it), then apply patch project/jni/application/scummvm/scummvm-1.2.0.diff
+onto ScummVM, and launch build.sh. That should be it.
