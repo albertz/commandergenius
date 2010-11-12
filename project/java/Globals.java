@@ -22,6 +22,8 @@ class Globals {
 	// Readme text to be shown on download page
 	public static String ReadmeText = "^You may press \"Home\" now - the data will be downloaded in background".replace("^","\n");
 
+	public static String CommandLine = "";
+
 	public static boolean AppUsesMouse = false;
 	
 	public static boolean AppNeedsTwoButtonMouse = false;

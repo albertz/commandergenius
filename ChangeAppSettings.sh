@@ -1,6 +1,6 @@
 #!/bin/sh                            
 
-CHANGE_APP_SETTINGS_VERSION=14
+CHANGE_APP_SETTINGS_VERSION=15
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -254,7 +254,7 @@ fi
 fi
 
 if [ -z "$AUTO" ]; then
-echo -n "\nAditional LDFLAGS for application ($AppLdflags): "
+echo -n "\nAdditional LDFLAGS for application ($AppLdflags): "
 read var
 if [ -n "$var" ] ; then
 	AppLdflags="$var"
@@ -275,6 +275,14 @@ echo -n `which ndk-build | sed 's@/[^/]*/ndk-build@/android-ndk-r4-crystax@'` "(
 read var
 if [ -n "$var" ] ; then
 	AppUseCrystaXToolchain="$var"
+fi
+fi
+
+if [ -z "$AUTO" ]; then
+echo -n "\nApplication command line parameters, including app name as 0-th param ($AppCmdline): "
+read var
+if [ -n "$var" ] ; then
+	AppCmdline="$var"
 fi
 fi
 
@@ -332,6 +340,7 @@ echo AppCflags=\'$AppCflags\' >> AndroidAppSettings.cfg
 echo AppLdflags=\'$AppLdflags\' >> AndroidAppSettings.cfg
 echo AppSubdirsBuild=\'$AppSubdirsBuild\' >> AndroidAppSettings.cfg
 echo AppUseCrystaXToolchain=$AppUseCrystaXToolchain >> AndroidAppSettings.cfg
+echo AppCmdline=\'$AppCmdline\' >> AndroidAppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AndroidAppSettings.cfg
 
 AppShortName=`echo $AppName | sed 's/ //g'`
@@ -486,6 +495,7 @@ cat project/src/Globals.java | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
+	sed "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" | \
 	sed "s/public LoadLibrary() .*/public LoadLibrary() { $LibrariesToLoad };/" > \
 	project/src/Globals.java.1
 mv -f project/src/Globals.java.1 project/src/Globals.java
