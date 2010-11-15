@@ -7,11 +7,11 @@ LOCAL_MODULE := sdl_mixer
 LOCAL_CFLAGS := -O3 -I$(LOCAL_PATH) -I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include -I$(LOCAL_PATH)/include \
 				-I$(LOCAL_PATH)/../mad/include -I$(LOCAL_PATH)/../flac/include -I$(LOCAL_PATH)/../ogg/include \
 				-I$(LOCAL_PATH)/../vorbis/include -I$(LOCAL_PATH)/../tremor/include -I$(LOCAL_PATH)/../mikmod/include \
-					-DWAV_MUSIC -DOGG_USE_TREMOR -DOGG_MUSIC -DFLAC_MUSIC -DMOD_MUSIC
+					-DWAV_MUSIC -DOGG_USE_TREMOR -DOGG_MUSIC -DFLAC_MUSIC -DMOD_MUSIC -DUSE_TIMIDITY_MIDI
 
 LOCAL_CPP_EXTENSION := .cpp
 
-LOCAL_SRC_FILES := $(notdir $(wildcard $(LOCAL_PATH)/*.c))
+LOCAL_SRC_FILES := $(notdir $(wildcard $(LOCAL_PATH)/*.c)) $(addprefix timidity/, $(notdir $(wildcard $(LOCAL_PATH)/timidity/*.c)))
 
 LOCAL_SHARED_LIBRARIES := sdl-$(SDL_VERSION)
 LOCAL_STATIC_LIBRARIES := flac mikmod

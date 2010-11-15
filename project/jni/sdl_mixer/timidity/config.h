@@ -176,6 +176,10 @@ typedef char int8;
 
 #if defined(__WIN32__) || defined(__OS2__)
 #define DEFAULT_PATH	"C:\\TIMIDITY"
+#elif defined(ANDROID)
+#define DEFAULT_PATH	"timidity"
+#define DEFAULT_PATH1	"/sdcard/timidity"
+#define DEFAULT_PATH2	"/sdcard/app-data/timidity"
 #else
 #define DEFAULT_PATH	"/etc/timidity"
 #define DEFAULT_PATH1	"/usr/share/timidity"
