@@ -1,0 +1,198 @@
+Only in .: acinclude
+Only in /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2: Android.mk
+Only in .: autogen.sh
+Only in .: Borland.html
+Only in .: Borland.zip
+Only in .: build-scripts
+Only in .: configure
+Only in .: configure.in
+Only in .: CWprojects.sea.bin
+Only in .: docs
+Only in .: docs.html
+Only in /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/include: SDL
+Only in /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/include: SDL_config_android.h
+diff -u -r ./include/SDL_config.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/include/SDL_config.h
+--- ./include/SDL_config.h	2009-10-19 14:51:07.000000000 +0300
++++ /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/include/SDL_config.h	2010-05-18 13:09:18.000000000 +0300
+@@ -38,6 +38,8 @@
+ #include "SDL_config_win32.h"
+ #elif defined(__OS2__)
+ #include "SDL_config_os2.h"
++#elif defined(ANDROID)
++#include "SDL_config_android.h"
+ #else
+ #include "SDL_config_minimal.h"
+ #endif /* platform config */
+diff -u -r ./include/SDL_endian.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/include/SDL_endian.h
+diff -u -r ./include/SDL_main.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/include/SDL_main.h
+--- ./include/SDL_main.h	2009-10-13 02:07:19.000000000 +0300
++++ /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/include/SDL_main.h	2010-07-26 12:49:30.000000000 +0300
+@@ -32,7 +32,7 @@
+ #if defined(__WIN32__) || \
+     (defined(__MWERKS__) && !defined(__BEOS__)) || \
+     defined(__MACOS__) || defined(__MACOSX__) || \
+-    defined(__SYMBIAN32__) || defined(QWS)
++    defined(__SYMBIAN32__) || defined(QWS) || defined(ANDROID)
+ 
+ #ifdef __cplusplus
+ #define C_LINKAGE	"C"
+Only in /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/include: SDL_screenkeyboard.h
+diff -u -r ./include/SDL_stdinc.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/include/SDL_stdinc.h
+Only in .: Makefile.dc
+Only in .: Makefile.in
+Only in .: Makefile.minimal
+Only in .: MPWmake.sea.bin
+Only in .: README.AmigaOS
+Only in .: README.BeOS
+Only in .: README.CVS
+Only in .: README.DC
+Only in /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2: README.HG
+Only in .: README.MacOS
+Only in .: README.MacOSX
+Only in .: README.MiNT
+Only in .: README.NanoX
+Only in .: README.NDS
+Only in .: README.OS2
+Only in .: README.PicoGUI
+Only in .: README.PS3
+Only in .: README.QNX
+Only in .: README.Qtopia
+Only in .: README.RISCOS
+Only in .: README.SVN
+Only in .: README.Symbian
+Only in .: README.Watcom
+Only in .: README.WinCE
+Only in .: README.wscons
+Only in .: sdl-1.2-android.diff
+Only in .: sdl-config.in
+Only in .: sdl.m4
+Only in .: sdl.pc.in
+Only in .: SDL.qpg.in
+Only in .: SDL.spec
+Only in .: SDL.spec.in
+diff -u -r ./src/audio/alsa/SDL_alsa_audio.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/alsa/SDL_alsa_audio.c
+Only in /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio: android
+diff -u -r ./src/audio/mint/SDL_mintaudio_it.S /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/mint/SDL_mintaudio_it.S
+diff -u -r ./src/audio/pulse/SDL_pulseaudio.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/pulse/SDL_pulseaudio.c
+diff -u -r ./src/audio/pulse/SDL_pulseaudio.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/pulse/SDL_pulseaudio.h
+diff -u -r ./src/audio/SDL_audio.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/SDL_audio.c
+--- ./src/audio/SDL_audio.c	2009-10-13 13:25:35.000000000 +0300
++++ /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/SDL_audio.c	2010-07-15 18:26:48.000000000 +0300
+@@ -113,6 +113,9 @@
+ #if SDL_AUDIO_DRIVER_EPOCAUDIO
+ 	&EPOCAudio_bootstrap,
+ #endif
++#if SDL_AUDIO_DRIVER_ANDROID
++	&ANDROIDAUD_bootstrap,
++#endif
+ 	NULL
+ };
+ SDL_AudioDevice *current_audio = NULL;
+diff -u -r ./src/audio/SDL_audio_c.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/SDL_audio_c.h
+diff -u -r ./src/audio/SDL_mixer.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/SDL_mixer.c
+diff -u -r ./src/audio/SDL_mixer_m68k.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/SDL_mixer_m68k.c
+diff -u -r ./src/audio/SDL_sysaudio.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/SDL_sysaudio.h
+--- ./src/audio/SDL_sysaudio.h	2009-10-13 02:07:14.000000000 +0300
++++ /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/SDL_sysaudio.h	2010-07-15 18:22:45.000000000 +0300
+@@ -177,6 +179,9 @@
+ #if SDL_AUDIO_DRIVER_EPOCAUDIO
+ extern AudioBootStrap EPOCAudio_bootstrap; 
+ #endif
++#if SDL_AUDIO_DRIVER_ANDROID
++extern AudioBootStrap ANDROIDAUD_bootstrap;
++#endif
+ 
+ /* This is the current audio device */
+ extern SDL_AudioDevice *current_audio;
+diff -u -r ./src/audio/windx5/directx.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/audio/windx5/directx.h
+diff -u -r ./src/cdrom/mint/SDL_syscdrom.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/cdrom/mint/SDL_syscdrom.c
+diff -u -r ./src/cpuinfo/SDL_cpuinfo.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/cpuinfo/SDL_cpuinfo.c
+diff -u -r ./src/joystick/bsd/SDL_sysjoystick.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/joystick/bsd/SDL_sysjoystick.c
+diff -u -r ./src/joystick/linux/SDL_sysjoystick.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/joystick/linux/SDL_sysjoystick.c
+Only in ./src/joystick: os2
+diff -u -r ./src/joystick/SDL_joystick.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/joystick/SDL_joystick.c
+diff -u -r ./src/stdlib/SDL_iconv.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/stdlib/SDL_iconv.c
+diff -u -r ./src/thread/win32/SDL_systhread.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/thread/win32/SDL_systhread.c
+diff -u -r ./src/timer/mint/SDL_vbltimer.S /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/timer/mint/SDL_vbltimer.S
+Only in /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video: android
+diff -u -r ./src/video/ataricommon/SDL_ataric2p.S /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/ataricommon/SDL_ataric2p.S
+diff -u -r ./src/video/ataricommon/SDL_ikbdinterrupt.S /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/ataricommon/SDL_ikbdinterrupt.S
+diff -u -r ./src/video/ataricommon/SDL_xbiosinterrupt.S /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/ataricommon/SDL_xbiosinterrupt.S
+diff -u -r ./src/video/math_private.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/math_private.h
+diff -u -r ./src/video/quartz/SDL_QuartzGL.m /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/quartz/SDL_QuartzGL.m
+diff -u -r ./src/video/quartz/SDL_QuartzVideo.m /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/quartz/SDL_QuartzVideo.m
+diff -u -r ./src/video/quartz/SDL_QuartzWM.m /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/quartz/SDL_QuartzWM.m
+diff -u -r ./src/video/SDL_blit.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/SDL_blit.c
+--- ./src/video/SDL_blit.c	2009-10-13 02:07:15.000000000 +0300
++++ /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/SDL_blit.c	2010-07-28 18:58:30.000000000 +0300
+@@ -26,6 +26,7 @@
+ #include "SDL_blit.h"
+ #include "SDL_RLEaccel_c.h"
+ #include "SDL_pixels_c.h"
++#include <android/log.h>
+ 
+ #if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)) && SDL_ASSEMBLY_ROUTINES
+ #define MMX_ASMBLIT
+@@ -242,6 +243,7 @@
+ 
+ 	/* Figure out if an accelerated hardware blit is possible */
+ 	surface->flags &= ~SDL_HWACCEL;
++	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_CalculateBlit(): identity %d src hw %d dst hw %d video hw %d", (int)surface->map->identity, (int)(surface->flags & SDL_HWSURFACE), (int)(surface->map->dst->flags & SDL_HWSURFACE), (int)(current_video->info.blit_hw));
+ 	if ( surface->map->identity ) {
+ 		int hw_blit_ok;
+ 
+diff -u -r ./src/video/SDL_pixels.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/SDL_pixels.c
+--- ./src/video/SDL_pixels.c	2009-10-13 02:07:15.000000000 +0300
++++ /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/SDL_pixels.c	2010-10-18 12:26:43.000000000 +0300
+@@ -304,7 +304,12 @@
+ 		default:
+ 			break;
+ 	}
++
++#ifdef ANDROID
++    if( surface->format->BytesPerPixel != 2 ) /* Avoid extra memcpy() when updating GLES textures */
++#endif
+ 	pitch = (pitch + 3) & ~3;	/* 4-byte aligning */
++
+ 	return(pitch);
+ }
+ /*
+diff -u -r ./src/video/SDL_sysvideo.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/SDL_sysvideo.h
+--- ./src/video/SDL_sysvideo.h	2009-10-13 02:07:15.000000000 +0300
++++ /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/SDL_sysvideo.h	2010-07-15 18:26:06.000000000 +0300
+@@ -410,6 +410,9 @@
+ #if SDL_VIDEO_DRIVER_CACA
+ extern VideoBootStrap CACA_bootstrap;
+ #endif
++#if SDL_VIDEO_DRIVER_ANDROID
++extern VideoBootStrap ANDROID_bootstrap;
++#endif
+ #if SDL_VIDEO_DRIVER_DUMMY
+ extern VideoBootStrap DUMMY_bootstrap;
+ #endif
+diff -u -r ./src/video/SDL_video.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/SDL_video.c
+--- ./src/video/SDL_video.c	2009-10-13 02:07:15.000000000 +0300
++++ /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/SDL_video.c	2010-08-27 15:41:51.000000000 +0300
+@@ -126,6 +126,9 @@
+ #if SDL_VIDEO_DRIVER_CACA
+ 	&CACA_bootstrap,
+ #endif
++#if SDL_VIDEO_DRIVER_ANDROID
++	&ANDROID_bootstrap,
++#endif
+ #if SDL_VIDEO_DRIVER_DUMMY
+ 	&DUMMY_bootstrap,
+ #endif
+diff -u -r ./src/video/wincommon/SDL_sysevents.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/wincommon/SDL_sysevents.c
+diff -u -r ./src/video/windib/SDL_dibevents.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/windib/SDL_dibevents.c
+diff -u -r ./src/video/windx5/directx.h /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/windx5/directx.h
+diff -u -r ./src/video/windx5/SDL_dx5events.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/windx5/SDL_dx5events.c
+diff -u -r ./src/video/windx5/SDL_dx5yuv.c /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.2/src/video/windx5/SDL_dx5yuv.c
+Only in .: symbian.zip
+Only in .: test
+Only in .: VisualCE.zip
+Only in .: VisualC.html
+Only in .: VisualC.zip
+Only in .: Watcom-OS2.zip
+Only in .: Watcom-Win32.zip
+Only in .: Xcode.tar.gz

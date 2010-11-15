@@ -258,9 +258,6 @@ extern DECLSPEC void SDLCALL SDL_qsort(void *base, size_t nmemb, size_t size,
 extern DECLSPEC void * SDLCALL SDL_memset(void *dst, int c, size_t len);
 #endif
 
-#define SDL_zero(x)	SDL_memset(&(x), 0, sizeof((x)))
-#define SDL_zerop(x)	SDL_memset((x), 0, sizeof(*(x)))
-
 #if defined(__GNUC__) && defined(i386)
 #define SDL_memset4(dst, val, len)				\
 do {								\
