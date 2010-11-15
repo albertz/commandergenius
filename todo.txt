@@ -1,9 +1,16 @@
 Games to port
 =============
 
-SuperTux
-LBreakout2
-OpenJazz (only data files for shareware version available for free)
-OpenLieroX (will be damn hard to do, I wrote the code partially)
-ScummVM (they already have their own port, yet it's unfinished)
-Widelands (http://wl.widelands.org/)
+I'm not planning any more games to port.
+
+
+Bugs to fix
+===========
+
+- Possibility to create custom key layout for on-screen keyboard.
+
+- Add an option for overlay buttons transparency and button images size.
+
+- Add a user option to keep aspect ratio of screen (not compile-time option which is already available)
+
+And that's all, I won't be doing any more development or fix other bugs (see bugs.txt for details).
