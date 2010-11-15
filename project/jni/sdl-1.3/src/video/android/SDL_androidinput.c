@@ -195,7 +195,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 		if( action == MOUSE_DOWN )
 		{
 			if( !leftClickUsesPressure && !leftClickUsesMultitouch )
-				SDL_SendMouseButton( NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_LEFT );
+				SDL_SendMouseButton( NULL, SDL_PRESSED, SDL_BUTTON_LEFT );
 			else
 				action == MOUSE_MOVE;
 			UpdateScreenUnderFingerRect(x, y);
@@ -214,13 +214,13 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 			UpdateScreenUnderFingerRect(x, y);
 		}
 	}
-	if( pointerId == 1 && rightClickMethod == RIGHT_CLICK_WITH_MULTITOUCH && (action == MOUSE_DOWN || action == MOUSE_UP) )
+	if( pointerId == 1 && (action == MOUSE_DOWN || action == MOUSE_UP) )
 	{
 		if( leftClickUsesMultitouch )
 		{
 			SDL_SendMouseButton( NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_LEFT );
 		}
-		else
+		else if( rightClickMethod == RIGHT_CLICK_WITH_MULTITOUCH )
 		{
 			if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT) )
 				SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_LEFT );

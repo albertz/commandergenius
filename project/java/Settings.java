@@ -651,8 +651,9 @@ class Settings
 		String lang = new String(Locale.getDefault().getLanguage());
 		if( Locale.getDefault().getCountry().length() > 0 )
 			lang = lang + "_" + Locale.getDefault().getCountry();
-		System.out.println( "libSDL: setting envvar LANG to '" + lang + "'");
+		System.out.println( "libSDL: setting envvar LANGUAGE to '" + lang + "'");
 		nativeSetEnv( "LANG", lang );
+		nativeSetEnv( "LANGUAGE", lang );
 		// TODO: get current user name and set envvar USER, the API is not availalbe on Android 1.6 so I don't bother with this
 	}
 

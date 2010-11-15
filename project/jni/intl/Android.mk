@@ -13,10 +13,10 @@ LOCAL_CFLAGS := -Os -I$(LOCAL_PATH)/src -I$(LOCAL_PATH)/include -DBUILDING_LIBIN
                 -Dset_relocation_prefix=libintl_set_relocation_prefix \
                 -Drelocate=libintl_relocate -DDEPENDS_ON_LIBICONV=1 \
                 -DNO_XMALLOC -DHAVE_CONFIG_H \
-                -DLOCALEDIR=\"/usr/local/share/locale\" \
-                -DLIBDIR=\"/usr/local/lib\" \
-                -DLOCALE_ALIAS_PATH=\"/usr/local/share/locale\" \
-                -DINSTALLDIR=\"/usr/local/lib\"
+                -DLOCALEDIR=\"\" \
+                -DLIBDIR=\"\" \
+                -DLOCALE_ALIAS_PATH=\"\" \
+                -DINSTALLDIR=\"\"
 
 # -DLOCALE_ALIAS_PATH=\"/usr/local/share/locale\" \
 #   -DINSTALLDIR=\"/usr/local/lib\"
