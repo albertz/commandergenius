@@ -67,6 +67,7 @@
     <string name="pointandclick_question">Advanced point-and-click features</string>
     <string name="pointandclick_showcreenunderfinger">Show screen under finger in separate window</string>
     <string name="pointandclick_usepressure">Left click triggered by touch force</string>
+    <string name="pointandclick_multitouch">Left click triggered by touch with second finger</string>
 
     <string name="measurepressure_touchplease">Please slide finger across the screen for two seconds</string>
     <string name="measurepressure_response">Pressure %03d radius %03d</string>

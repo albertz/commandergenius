@@ -52,6 +52,7 @@ class Settings
 			out.writeInt(Globals.RightClickMethod);
 			out.writeBoolean(Globals.ShowScreenUnderFinger);
 			out.writeBoolean(Globals.LeftClickUsesPressure);
+			out.writeBoolean(Globals.LeftClickUsesMultitouch);
 			out.writeInt(Globals.ClickScreenPressure);
 			out.writeInt(Globals.ClickScreenTouchspotSize);
 
@@ -89,6 +90,7 @@ class Settings
 			Globals.RightClickMethod = settingsFile.readInt();
 			Globals.ShowScreenUnderFinger = settingsFile.readBoolean();
 			Globals.LeftClickUsesPressure = settingsFile.readBoolean();
+			Globals.LeftClickUsesMultitouch = settingsFile.readBoolean();
 			Globals.ClickScreenPressure = settingsFile.readInt();
 			Globals.ClickScreenTouchspotSize = settingsFile.readInt();
 			
@@ -493,17 +495,26 @@ class Settings
 	{
 		Globals.ShowScreenUnderFinger = false;
 		Globals.LeftClickUsesPressure = false;
+		Globals.LeftClickUsesMultitouch = false;
 
 		if( ! Globals.AppNeedsTwoButtonMouse )
 		{
 			showTouchPressureMeasurementTool(p);
 			return;
 		}
-		CharSequence[] items = {	p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
-									p.getResources().getString(R.string.pointandclick_usepressure) };
+		CharSequence[] items = {		p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
+										p.getResources().getString(R.string.pointandclick_usepressure),
+										p.getResources().getString(R.string.pointandclick_multitouch) };
 		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE )
 		{
-			CharSequence[] items2 = { p.getResources().getString(R.string.pointandclick_showcreenunderfinger) };
+			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
+										p.getResources().getString(R.string.pointandclick_multitouch) };
+			items = items2;
+		}
+		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_MULTITOUCH )
+		{
+			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
+										p.getResources().getString(R.string.pointandclick_usepressure) };
 			items = items2;
 		}
 
@@ -516,7 +527,14 @@ class Settings
 				if( item == 0 )
 					Globals.ShowScreenUnderFinger = isChecked;
 				if( item == 1 )
-					Globals.LeftClickUsesPressure = isChecked;
+				{
+					if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE )
+						Globals.LeftClickUsesMultitouch = isChecked;
+					else
+						Globals.LeftClickUsesPressure = isChecked;
+				}
+				if( item == 2 )
+					Globals.LeftClickUsesMultitouch = isChecked;
 			}
 		});
 		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
@@ -610,6 +628,7 @@ class Settings
 			nativeSetMouseUsed( Globals.RightClickMethod,
 								Globals.ShowScreenUnderFinger ? 1 : 0,
 								Globals.LeftClickUsesPressure ? 1 : 0,
+								Globals.LeftClickUsesMultitouch ? 1 : 0,
 								Globals.ClickScreenPressure,
 								Globals.ClickScreenTouchspotSize );
 		if( Globals.AppUsesJoystick && (Globals.UseAccelerometerAsArrowKeys || Globals.UseTouchscreenKeyboard) )
@@ -670,7 +689,7 @@ class Settings
 	private static native void nativeSetTrackballUsed();
 	private static native void nativeSetTrackballDampening(int value);
 	private static native void nativeSetAccelerometerSettings(int sensitivity, int centerPos);
-	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickUsesPressure, int MaxForce, int MaxRadius);
+	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickUsesPressure, int LeftClickUsesMultitouch, int MaxForce, int MaxRadius);
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();

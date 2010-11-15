@@ -65,6 +65,7 @@ class Globals {
 	public static final int RIGHT_CLICK_WITH_PRESSURE = 3;
 	public static int RightClickMethod = RIGHT_CLICK_WITH_MENU_BUTTON;
 	public static boolean LeftClickUsesPressure = false;
+	public static boolean LeftClickUsesMultitouch = false;
 	public static boolean ShowScreenUnderFinger = false;
 	public static int ClickScreenPressure = 0;
 	public static int ClickScreenTouchspotSize = 0;

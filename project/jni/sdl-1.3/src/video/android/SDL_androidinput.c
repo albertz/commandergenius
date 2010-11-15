@@ -51,6 +51,7 @@ static int rightClickMethod = RIGHT_CLICK_NONE;
 int SDL_ANDROID_ShowScreenUnderFinger = 0;
 SDL_Rect SDL_ANDROID_ShowScreenUnderFingerRect = {0, 0, 0, 0}, SDL_ANDROID_ShowScreenUnderFingerRectSrc = {0, 0, 0, 0};
 static int leftClickUsesPressure = 0;
+static int leftClickUsesMultitouch = 0;
 static int maxForce = 0;
 static int maxRadius = 0;
 int SDL_ANDROID_isJoystickUsed = 0;
@@ -193,7 +194,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 		}
 		if( action == MOUSE_DOWN )
 		{
-			if( !leftClickUsesPressure )
+			if( !leftClickUsesPressure && !leftClickUsesMultitouch )
 				SDL_SendMouseButton( NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_LEFT );
 			else
 				action == MOUSE_MOVE;
@@ -215,9 +216,16 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	}
 	if( pointerId == 1 && rightClickMethod == RIGHT_CLICK_WITH_MULTITOUCH && (action == MOUSE_DOWN || action == MOUSE_UP) )
 	{
-		if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT) )
-			SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_LEFT );
-		SDL_SendMouseButton( NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
+		if( leftClickUsesMultitouch )
+		{
+			SDL_SendMouseButton( NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_LEFT );
+		}
+		else
+		{
+			if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT) )
+				SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_LEFT );
+			SDL_SendMouseButton( NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
+		}
 	}
 }
 
@@ -294,12 +302,13 @@ JAVA_EXPORT_NAME(Settings_nativeSetTrackballUsed) ( JNIEnv*  env, jobject thiz)
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz, jint RightClickMethod, jint ShowScreenUnderFinger, jint LeftClickUsesPressure, jint MaxForce, jint MaxRadius)
+JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz, jint RightClickMethod, jint ShowScreenUnderFinger, jint LeftClickUsesPressure, jint LeftClickUsesMultitouch, jint MaxForce, jint MaxRadius)
 {
 	isMouseUsed = 1;
 	rightClickMethod = RightClickMethod;
 	SDL_ANDROID_ShowScreenUnderFinger = ShowScreenUnderFinger;
 	leftClickUsesPressure = LeftClickUsesPressure;
+	leftClickUsesMultitouch = LeftClickUsesMultitouch;
 	maxForce = MaxForce;
 	maxRadius = MaxRadius;
 }
