@@ -175,11 +175,11 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	if( pointerId == 0 )
 	{
 #if SDL_VERSION_ATLEAST(1,3,0)
-		SDL_SendMouseMotion(NULL, 0, x, y);
 #else
-		SDL_PrivateMouseMotion(0, 0, x, y);
+#define SDL_SendMouseMotion(A,B,X,Y) SDL_PrivateMouseMotion(0, 0, X, Y)
 #define SDL_SendMouseButton(N, A, B) SDL_PrivateMouseButton( A, B, 0, 0 )
 #endif
+		SDL_SendMouseMotion(NULL, 0, x, y);
 		if( action == MOUSE_UP )
 		{
 			if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT) )
@@ -188,6 +188,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 				SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_RIGHT );
 			SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRect.h = 0;
 			SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = 0;
+			if( SDL_ANDROID_ShowScreenUnderFinger )
+				SDL_SendMouseMotion(NULL, 0, x > 0 ? x-1 : 0, y); // Move mouse by 1 pixel so it will force screen update and mouse-under-finger window will be removed
 		}
 		if( action == MOUSE_DOWN )
 		{

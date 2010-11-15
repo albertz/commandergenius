@@ -136,8 +136,8 @@ will most probably fail because of ranlib - just edit Android.mk to compile lib 
 MIDI support can be emulated via SDL_mixer lib (it uses Timidity internally)- download file
 http://www.libsdl.org/projects/mixer/timidity/timidity.tar.gz
 unpack it and put "timidity" dir into your game data zipfile.
-Or you may specify this URL directly as an optional download for ChangeAppSettings.sh:
-http://sourceforge.net/projects/libsdl-android/files/timidity.zip/download
+Or you may paste this URL directly as an optional download in ChangeAppSettings.sh:
+MIDI music support (18 Mb)|http://sourceforge.net/projects/libsdl-android/files/timidity.zip/download
 
 The ARM architecture has some limitations which you have to be aware about -
 if you'll access integer that's not 4-byte aligned you'll get garbage instead of correct value,

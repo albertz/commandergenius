@@ -202,7 +202,7 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	}
 
 	int bpp;
-	SDL_zero(alphaFormat);
+	SDL_memset(&alphaFormat, 0, sizeof(alphaFormat));
 	SDL_PixelFormatEnumToMasks( SDL_PIXELFORMAT_RGBA4444, &bpp,
 								&alphaFormat.Rmask, &alphaFormat.Gmask, 
 								&alphaFormat.Bmask, &alphaFormat.Amask );
@@ -279,7 +279,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		SDL_SelectVideoDisplay(0);
 		SDL_VideoWindow = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
 
-		SDL_zero(mode);
+		SDL_memset(&mode, 0, sizeof(mode));
 		mode.format = SDL_PIXELFORMAT_RGB565;
 		SDL_SetWindowDisplayMode(SDL_VideoWindow, &mode);
 		
@@ -316,7 +316,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	}
 
 	/* Allocate the new pixel format for the screen */
-	SDL_zero(format);
+    SDL_memset(&format, 0, sizeof(format));
 	SDL_PixelFormatEnumToMasks( SDL_PIXELFORMAT_RGB565, &bpp1,
 								&format.Rmask, &format.Gmask,
 								&format.Bmask, &format.Amask );
@@ -392,7 +392,7 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 		int bpp;
 		format = SDL_PIXELFORMAT_RGBA4444;
 		DEBUGOUT("ANDROID_AllocHWSurface() SDL_PIXELFORMAT_RGBA4444");
-		SDL_zero(format1);
+	    SDL_memset(&format1, 0, sizeof(format1));
 		SDL_PixelFormatEnumToMasks( format, &bpp,
 									&format1.Rmask, &format1.Gmask,
 									&format1.Bmask, &format1.Amask );
@@ -566,7 +566,7 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 		hwformat = SDL_PIXELFORMAT_RGB565;
 	
 		/* Allocate the new pixel format for the screen */
-	SDL_zero(format);
+    SDL_memset(&format, 0, sizeof(format));
 	SDL_PixelFormatEnumToMasks( hwformat, &bpp,
 								&format.Rmask, &format.Gmask,
 								&format.Bmask, &format.Amask );

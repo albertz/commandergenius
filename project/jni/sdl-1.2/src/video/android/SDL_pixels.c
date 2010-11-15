@@ -447,7 +447,7 @@ SDL_InitFormat(SDL_PixelFormat * format, int bpp, Uint32 Rmask, Uint32 Gmask,
     Uint32 mask;
 
     /* Set up the format */
-    SDL_zerop(format);
+    SDL_memset(format, 0, sizeof(*format));
     format->BitsPerPixel = bpp;
     format->BytesPerPixel = (bpp + 7) / 8;
     if (Rmask || Bmask || Gmask) {      /* Packed pixels with custom mask */

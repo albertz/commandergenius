@@ -343,7 +343,7 @@ SDL_AddBasicVideoDisplay(const SDL_DisplayMode * desktop_mode)
 {
     SDL_VideoDisplay display;
 
-    SDL_zero(display);
+    SDL_memset(&display, 0, sizeof(display));
     if (desktop_mode) {
         display.desktop_mode = *desktop_mode;
     }
@@ -756,7 +756,7 @@ SDL_SetWindowDisplayMode(SDL_Window * window, const SDL_DisplayMode * mode)
     if (mode) {
         window->fullscreen_mode = *mode;
     } else {
-        SDL_zero(window->fullscreen_mode);
+        SDL_memset(&(window->fullscreen_mode), 0, sizeof(window->fullscreen_mode));
     }
     return 0;
 }

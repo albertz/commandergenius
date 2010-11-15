@@ -91,7 +91,7 @@ int ANDROID_VideoInit(_THIS)
 	mode.format = SDL_PIXELFORMAT_RGB565;
 	mode.driverdata = NULL;
 
-	SDL_zero(display);
+	SDL_memset(&display, 0, sizeof(display));
 	display.desktop_mode = mode;
 	display.current_mode = mode;
 	display.driverdata = NULL;
