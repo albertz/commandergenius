@@ -133,6 +133,10 @@ If lib contains "configure" script - go to lib dir and execute command "../launc
 launch "configure" with appropriate environment and will create the "config.h" file at least, though linking
 will most probably fail because of ranlib - just edit Android.mk to compile lib sources and remove all tools and tests.
 
+MIDI support can be emulated via SDL_mixer lib (it uses Timidity internally)- download file
+http://www.libsdl.org/projects/mixer/timidity/timidity.tar.gz
+unpack it and put "timidity" dir into your game data zipfile.
+
 The ARM architecture has some limitations which you have to be aware about -
 if you'll access integer that's not 4-byte aligned you'll get garbage instead of correct value,
 and it's processor-model specific - it may work on some devices and do not work on another ones -
