@@ -167,7 +167,7 @@ public class MainActivity extends Activity {
 	protected void onPause() {
 		if( downloader != null ) {
 			synchronized( downloader ) {
-				downloader.setParent(null, null);
+				downloader.setStatusField(null);
 			}
 		}
 		if( mGLView != null )
@@ -183,7 +183,7 @@ public class MainActivity extends Activity {
 		else
 		if( downloader != null ) {
 			synchronized( downloader ) {
-				downloader.setParent(this, _tv);
+				downloader.setStatusField(_tv);
 				if( downloader.DownloadComplete )
 					initSDL();
 			}
@@ -195,7 +195,7 @@ public class MainActivity extends Activity {
 	{
 		if( downloader != null ) {
 			synchronized( downloader ) {
-				downloader.setParent(null, null);
+				downloader.setStatusField(null);
 			}
 		}
 		if( mGLView != null )

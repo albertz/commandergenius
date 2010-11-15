@@ -144,11 +144,10 @@ class DataDownloader extends Thread
 		this.start();
 	}
 	
-	public void setParent(MainActivity _Parent, TextView _Status)
+	public void setStatusField(TextView _Status)
 	{
 		synchronized(this) {
-			Parent = _Parent;
-			Status.setParent( _Status, _Parent );
+			Status.setParent( _Status, Parent );
 		}
 	}
 
