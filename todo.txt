@@ -1,6 +1,8 @@
 Games to port
 =============
 
+- Finish ScummVM build.
+
 I'm not planning any more games to port.
 
 
