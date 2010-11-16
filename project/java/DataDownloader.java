@@ -496,26 +496,7 @@ class DataDownloader extends Thread
 	
 	private static DefaultHttpClient HttpWithDisabledSslCertCheck()
 	{
-	/*
-		SSLContext sslContext = SSLContext.getInstance("SSL");
-
-		// set up a TrustManager that trusts everything
-		sslContext.init(null, new TrustManager[] { new X509TrustManager() {
-			public X509Certificate[] getAcceptedIssuers() { return null; }
-			public void checkClientTrusted(X509Certificate[] certs, String authType) { }
-
-			public void checkServerTrusted(X509Certificate[] certs, String authType) { }
-		} }, new SecureRandom());
-
-		SocketFactory sf = sslContext.getSocketFactory();
-		Scheme httpsScheme = new Scheme("https", sf, 443);
-		SchemeRegistry schemeRegistry = new SchemeRegistry();
-		schemeRegistry.register(httpsScheme);
-
-		BasicHttpParams params = new BasicHttpParams();
-		ClientConnectionManager cm = new SingleClientConnManager(params, schemeRegistry);
-		return new DefaultHttpClient(cm, params);
-	*/
+		/*
         HostnameVerifier hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
 
         DefaultHttpClient client = new DefaultHttpClient();
@@ -530,6 +511,8 @@ class DataDownloader extends Thread
         HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
 
         return http;
+        */
+        return new DefaultHttpClient();
 	}
 	
 	public StatusWriter Status;
