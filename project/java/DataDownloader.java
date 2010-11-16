@@ -12,8 +12,18 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import org.apache.http.client.methods.*;
 import org.apache.http.*;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.conn.*;
+import org.apache.http.conn.params.*;
+import org.apache.http.conn.scheme.*;
+import org.apache.http.conn.ssl.*;
 import org.apache.http.impl.*;
 import org.apache.http.impl.client.*;
+import org.apache.http.impl.conn.SingleClientConnManager;
+import java.security.cert.*;
+import java.security.SecureRandom;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import java.util.zip.*;
 import java.io.*;
 import android.util.Log;
@@ -251,7 +261,7 @@ class DataDownloader extends Thread
 				request = new HttpGet(url);
 				request.addHeader("Accept", "*/*");
 				try {
-					DefaultHttpClient client = new DefaultHttpClient();
+					DefaultHttpClient client = HttpWithDisabledSslCertCheck();
 					client.getParams().setBooleanParameter("http.protocol.handle-redirects", true);
 					response = client.execute(request);
 				} catch (IOException e) {
@@ -483,6 +493,44 @@ class DataDownloader extends Thread
 	{
 		return outFilesDir + "/" + filename;
 	};
+	
+	private static DefaultHttpClient HttpWithDisabledSslCertCheck()
+	{
+	/*
+		SSLContext sslContext = SSLContext.getInstance("SSL");
+
+		// set up a TrustManager that trusts everything
+		sslContext.init(null, new TrustManager[] { new X509TrustManager() {
+			public X509Certificate[] getAcceptedIssuers() { return null; }
+			public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+
+			public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+		} }, new SecureRandom());
+
+		SocketFactory sf = sslContext.getSocketFactory();
+		Scheme httpsScheme = new Scheme("https", sf, 443);
+		SchemeRegistry schemeRegistry = new SchemeRegistry();
+		schemeRegistry.register(httpsScheme);
+
+		BasicHttpParams params = new BasicHttpParams();
+		ClientConnectionManager cm = new SingleClientConnManager(params, schemeRegistry);
+		return new DefaultHttpClient(cm, params);
+	*/
+        HostnameVerifier hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+
+        DefaultHttpClient client = new DefaultHttpClient();
+
+        SchemeRegistry registry = new SchemeRegistry();
+        SSLSocketFactory socketFactory = SSLSocketFactory.getSocketFactory();
+        socketFactory.setHostnameVerifier((X509HostnameVerifier) hostnameVerifier);
+        registry.register(new Scheme("https", socketFactory, 443));
+        SingleClientConnManager mgr = new SingleClientConnManager(client.getParams(), registry);
+        DefaultHttpClient http = new DefaultHttpClient(mgr, client.getParams());
+
+        HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
+
+        return http;
+	}
 	
 	public StatusWriter Status;
 	public boolean DownloadComplete = false;

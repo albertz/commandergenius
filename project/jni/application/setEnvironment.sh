@@ -23,11 +23,11 @@ GCCVER=4.4.0
 PLATFORMVER=android-8
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
-STL_INCLUDE="-I$LOCAL_PATH/../stlport/stlport"
-STL_LIB="$LOCAL_PATH/../../obj/local/armeabi/libstlport.a"
+STL_INCLUDE="-I$LOCAL_PATH/../stlport/stlport -fno-exceptions -fno-rtti"
+STL_LIB="$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.so $LOCAL_PATH/../../obj/local/armeabi/libstlport.a"
 if [ -n "`echo $NDK | grep '[-]crystax'`" ] ; then
-	STL_INCLUDE=
-	STL_LIB=
+	STL_INCLUDE="-fexceptions -frtti"
+	STL_LIB=""
 fi
 
 APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
@@ -48,7 +48,7 @@ done
 CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums \
 -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -DANDROID \
--Wno-psabi -march=armv5te -mtune=xscale -msoft-float -fno-exceptions -fno-rtti -mthumb -Os \
+-Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os \
 -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -Wa,--noexecstack -DNDEBUG -g \
 -I$LOCAL_PATH/../sdl-1.2/include $STL_INCLUDE \
@@ -59,7 +59,6 @@ LDFLAGS="-nostdlib -Wl,-soname,libapplication.so -Wl,-shared,-Bsymbolic \
 $NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/lib/gcc/arm-eabi/4.4.0/libgcc.a \
 `echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/armeabi/lib\1.so@g\"` \
 $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
-$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.so \
 $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
 -Wl,--no-undefined -Wl,-z,noexecstack \
 -L$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib \
