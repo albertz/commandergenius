@@ -306,7 +306,7 @@ your compiled application, as LGPL requires.
 It contains separate libraries under project/jni, each of which has it's own license,
 I've tried to compile all LGPL-ed libs as shared libs but you should anyway inspect the licenses
 of the libraries you're linking to if you're creating closed-source app.
-libMAD is licensed under GPL, so if you're planning to make commercial app you should avoid using it,
-otherwise you'll have to release your application sources under GPL too.
+libmad and liblzo2 are licensed under GPL, so if you're planning to make commercial app you should avoid 
+using them, otherwise you'll have to release your application sources under GPL too.
 
 The "Ultimate Droid" button theme by Sean Stieber is licensed under Creative Commons - Attribution license.
