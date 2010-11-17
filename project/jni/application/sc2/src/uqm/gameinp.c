@@ -544,9 +544,7 @@ static inline int atan2i(int y, int x)
 BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction)
 {
 	BATTLE_INPUT_STATE InputState = 0;
-#ifdef DIRECTIONAL_JOYSTICK_MELEE
-	if(VControl_GetJoysticksAmount() <= 0)
-#endif
+	if(VControl_GetJoysticksAmount() <= 0 || !optDirectionalJoystick)
 	{
 		if(CurrentInputState.key[PlayerControls[0]][KEY_UP])
 			InputState |= BATTLE_THRUST;
@@ -555,7 +553,6 @@ BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction)
 		if (CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
 			InputState |= BATTLE_RIGHT;
 	}
-#ifdef DIRECTIONAL_JOYSTICK_MELEE
 	else
 	{
 		/* TODO: only joystick #0 supported currently */
@@ -571,7 +568,7 @@ BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction)
 				angle -= atan2i_PI * 2;
 			angle = angle * SHIP_DIRECTIONS / atan2i_PI / 2;
 			
-			diff = angle - direction + SHIP_DIRECTIONS / 4;
+			diff = angle - direction - SHIP_DIRECTIONS / 4;
 			while( diff >= SHIP_DIRECTIONS )
 				diff -= SHIP_DIRECTIONS;
 			while( diff < 0 )
@@ -586,6 +583,5 @@ BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction)
 				InputState |= BATTLE_THRUST;
 		}
 	}
-#endif
 	return InputState;
 }

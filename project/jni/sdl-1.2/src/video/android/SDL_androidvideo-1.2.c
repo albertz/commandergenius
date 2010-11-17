@@ -313,6 +313,8 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 			HwSurfaceList[HwSurfaceCount-1] = current;
 			DEBUGOUT("ANDROID_SetVideoMode() HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 		}
+		glViewport(0, 0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
+		glOrthof(0.0, (GLfloat) SDL_ANDROID_sWindowWidth, (GLfloat) SDL_ANDROID_sWindowHeight, 0.0, 0.0, 1.0);
 	}
 
 	/* Allocate the new pixel format for the screen */

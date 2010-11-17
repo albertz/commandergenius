@@ -37,6 +37,7 @@ extern int optWhichIntro;
 extern int optWhichShield;
 extern int optSmoothScroll;
 extern int optMeleeScale;
+extern int optDirectionalJoystick;
 
 extern BOOLEAN opt3doMusic;
 extern BOOLEAN optRemixMusic;

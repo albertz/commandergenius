@@ -50,6 +50,7 @@ int optWhichIntro;
 int optWhichShield;
 int optSmoothScroll;
 int optMeleeScale;
+int optDirectionalJoystick;
 const char **optAddons;
 
 BOOLEAN opt3doMusic;

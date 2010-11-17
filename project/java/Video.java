@@ -186,7 +186,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	}
 
 	public void onSurfaceChanged(GL10 gl, int w, int h) {
-		nativeResize(w, h);
+		nativeResize(w, h, Globals.KeepAspectRatio ? 1 : 0);
 	}
 	
 	public void onSurfaceDestroyed() {
@@ -250,7 +250,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 
 	private native void nativeInitJavaCallbacks();
 	private native void nativeInit(String CommandLine);
-	private native void nativeResize(int w, int h);
+	private native void nativeResize(int w, int h, int keepAspectRatio);
 	private native void nativeDone();
 	private native void nativeGlContextLost();
 	public native void nativeGlContextRecreated();

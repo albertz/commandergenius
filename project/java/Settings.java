@@ -55,6 +55,7 @@ class Settings
 			out.writeBoolean(Globals.LeftClickUsesMultitouch);
 			out.writeInt(Globals.ClickScreenPressure);
 			out.writeInt(Globals.ClickScreenTouchspotSize);
+			out.writeBoolean(Globals.KeepAspectRatio);
 
 			out.close();
 			settingsLoaded = true;
@@ -93,6 +94,7 @@ class Settings
 			Globals.LeftClickUsesMultitouch = settingsFile.readBoolean();
 			Globals.ClickScreenPressure = settingsFile.readInt();
 			Globals.ClickScreenTouchspotSize = settingsFile.readInt();
+			Globals.KeepAspectRatio = settingsFile.readBoolean();
 			
 			settingsLoaded = true;
 
@@ -497,24 +499,34 @@ class Settings
 		Globals.LeftClickUsesPressure = false;
 		Globals.LeftClickUsesMultitouch = false;
 
+		/*
 		if( ! Globals.AppNeedsTwoButtonMouse )
 		{
 			showTouchPressureMeasurementTool(p);
 			return;
 		}
-		CharSequence[] items = {		p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
+		*/
+		CharSequence[] items = {		p.getResources().getString(R.string.pointandclick_keepaspectratio),
+										p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
 										p.getResources().getString(R.string.pointandclick_usepressure),
 										p.getResources().getString(R.string.pointandclick_multitouch) };
 		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE )
 		{
-			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
+			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_keepaspectratio),
+										p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
 										p.getResources().getString(R.string.pointandclick_multitouch) };
 			items = items2;
 		}
 		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_MULTITOUCH )
 		{
-			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
+			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_keepaspectratio),
+										p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
 										p.getResources().getString(R.string.pointandclick_usepressure) };
+			items = items2;
+		}
+		if( ! Globals.AppNeedsTwoButtonMouse )
+		{
+			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_keepaspectratio) };
 			items = items2;
 		}
 
@@ -525,15 +537,17 @@ class Settings
 			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 			{
 				if( item == 0 )
-					Globals.ShowScreenUnderFinger = isChecked;
+					Globals.KeepAspectRatio = isChecked;
 				if( item == 1 )
+					Globals.ShowScreenUnderFinger = isChecked;
+				if( item == 2 )
 				{
 					if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE )
 						Globals.LeftClickUsesMultitouch = isChecked;
 					else
 						Globals.LeftClickUsesPressure = isChecked;
 				}
-				if( item == 2 )
+				if( item == 3 )
 					Globals.LeftClickUsesMultitouch = isChecked;
 			}
 		});

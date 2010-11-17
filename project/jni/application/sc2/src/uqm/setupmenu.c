@@ -73,7 +73,7 @@ static void clear_control (WIDGET_CONTROLENTRY *widget);
 #endif
 
 #define MENU_COUNT          8
-#define CHOICE_COUNT       22
+#define CHOICE_COUNT       23
 #define SLIDER_COUNT        3
 #define BUTTON_COUNT       10
 #define LABEL_COUNT         4
@@ -96,7 +96,7 @@ typedef int (*HANDLER)(WIDGET *, int);
 static int choice_widths[CHOICE_COUNT] = {
 	3, 2, 3, 3, 2, 2, 2, 2, 2, 2, 
 	2, 2, 3, 2, 2, 3, 3, 2,	3, 3, 
-	3, 2 };
+	3, 2, 2 };
 
 static HANDLER button_handlers[BUTTON_COUNT] = {
 	quit_main_menu, quit_sub_menu, do_graphics, do_engine,
@@ -106,9 +106,9 @@ static HANDLER button_handlers[BUTTON_COUNT] = {
 static int menu_sizes[MENU_COUNT] = {
 	7, 5, 7, 9, 2, 5,
 #ifdef HAVE_OPENGL
-	5,
+	6,
 #else
-	4,
+	5,
 #endif
 	11
 };
@@ -160,6 +160,7 @@ static WIDGET *advanced_widgets[] = {
 	(WIDGET *)(&choices[12]),
 	(WIDGET *)(&choices[15]),
 	(WIDGET *)(&choices[16]),
+	(WIDGET *)(&choices[22]),
 	(WIDGET *)(&buttons[1]) };
 	
 static WIDGET *keyconfig_widgets[] = {
@@ -387,6 +388,7 @@ SetDefaults (void)
 	choices[19].selected = opts.player2;
 	choices[20].selected = 0;
 	choices[21].selected = opts.musicremix;
+	choices[22].selected = opts.directionaljoystick;
 
 	sliders[0].value = opts.musicvol;
 	sliders[1].value = opts.sfxvol;
@@ -418,6 +420,7 @@ PropagateResults (void)
 	opts.player1 = choices[18].selected;
 	opts.player2 = choices[19].selected;
 	opts.musicremix = choices[21].selected;
+	opts.directionaljoystick = choices[22].selected;
 
 	opts.musicvol = sliders[0].value;
 	opts.sfxvol = sliders[1].value;
@@ -1093,6 +1096,7 @@ GetGlobalOptions (GLOBALOPTS *opts)
 	/* These values are read in, but won't change during a run. */
 	opts->music3do = opt3doMusic ? OPTVAL_ENABLED : OPTVAL_DISABLED;
 	opts->musicremix = optRemixMusic ? OPTVAL_ENABLED : OPTVAL_DISABLED;
+	opts->directionaljoystick = optDirectionalJoystick ? OPTVAL_ENABLED : OPTVAL_DISABLED;
 	switch (snddriver) {
 	case audio_DRIVER_OPENAL:
 		opts->adriver = OPTVAL_OPENAL;
@@ -1313,6 +1317,7 @@ SetGlobalOptions (GLOBALOPTS *opts)
 	optWhichShield = (opts->shield == OPTVAL_3DO) ? OPT_3DO : OPT_PC;
 	optMeleeScale = (opts->meleezoom == OPTVAL_3DO) ? TFB_SCALE_TRILINEAR : TFB_SCALE_STEP;
 	optWhichIntro = (opts->intro == OPTVAL_3DO) ? OPT_3DO : OPT_PC;
+	optDirectionalJoystick = (opts->directionaljoystick == OPTVAL_ENABLED) ? TRUE : FALSE;
 	PlayerControls[0] = opts->player1;
 	PlayerControls[1] = opts->player2;
 
@@ -1326,6 +1331,7 @@ SetGlobalOptions (GLOBALOPTS *opts)
 	res_PutBoolean ("config.remixmusic", opts->musicremix == OPTVAL_ENABLED);
 	res_PutBoolean ("config.3domovies", opts->intro == OPTVAL_3DO);
 	res_PutBoolean ("config.showfps", opts->fps == OPTVAL_ENABLED);
+	res_PutBoolean ("config.directionaljoystick", opts->directionaljoystick == OPTVAL_ENABLED);
 	res_PutBoolean ("config.smoothmelee", opts->meleezoom == OPTVAL_3DO);
 	res_PutBoolean ("config.positionalsfx", opts->stereo == OPTVAL_ENABLED); 
 	res_PutBoolean ("config.pulseshield", opts->shield == OPTVAL_3DO);
