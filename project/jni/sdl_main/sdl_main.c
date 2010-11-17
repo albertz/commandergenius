@@ -29,10 +29,12 @@ static int isSdcardUsed = 0;
 extern C_LINKAGE void
 JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring cmdline )
 {
+	int i = 0;
 	char curdir[512];
-	const jbyte *str;
-	int argc = 1;
-	char ** argv = { "sdl" };
+	const jbyte *jstr;
+	const char * str = "sdl";
+	int argc = 0;
+	char ** argv = NULL;
 
 	if( isSdcardUsed )
 	{
@@ -48,15 +50,15 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	chdir(curdir);
 	setenv("HOME", curdir, 1);
 
-	str = (*env)->GetStringUTFChars(env, cmdline, NULL);
+	jstr = (*env)->GetStringUTFChars(env, cmdline, NULL);
 
-	if (str != NULL && strlen(str) > 0) 
+	if (jstr != NULL && strlen(jstr) > 0)
+		str = jstr;
+
 	{
 		char * str1, * str2;
-		argc = 0;
 		str1 = strdup(str);
 		str2 = str1;
-		int i = 0;
 		while(str2)
 		{
 			argc++;
@@ -81,9 +83,11 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 		}
 	}
 
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Calling SDL_main(\"%s\")", str);
+	(*env)->ReleaseStringUTFChars(env, cmdline, jstr);
 
-	(*env)->ReleaseStringUTFChars(env, cmdline, str);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Calling SDL_main(\"%s\")", str);
+	//for( i = 0; i < argc; i++ )
+	//	__android_log_print(ANDROID_LOG_INFO, "libSDL", "param %d = \"%s\"", i, argv[i]);
 
 	main( argc, argv );
 
