@@ -78,3 +78,106 @@ Index: configure
  	;;
  *)
  	CXXFLAGS="$CXXFLAGS -pedantic"
+Index: backends/platform/sdl/events.cpp
+===================================================================
+--- backends/platform/sdl/events.cpp	(revision 54149)
++++ backends/platform/sdl/events.cpp	(working copy)
+@@ -47,6 +47,9 @@
+ #define JOY_BUT_SPACE 4
+ #define JOY_BUT_F5 5
+ 
++#ifdef ANDROID
++static int _lastEventFromKbdMouse = 0;
++#endif
+ 
+ 
+ 
+@@ -347,8 +350,26 @@
+ 	return true;
+ }
+ 
++#ifdef ANDROID
++static void MoveMouseWithArrowKeys(SDL_Event &ev, int x, int y)
++{
++	if( _lastEventFromKbdMouse && abs( ev.button.x - x ) < 50 && abs( ev.button.y - y ) < 50 )
++	{
++		ev.button.x = x;
++		ev.button.y = y;
++	}
++	else
++		_lastEventFromKbdMouse = 0;
++}
++#endif
++
+ bool OSystem_SDL::handleMouseMotion(SDL_Event &ev, Common::Event &event) {
+ 	event.type = Common::EVENT_MOUSEMOVE;
++
++#ifdef ANDROID
++	MoveMouseWithArrowKeys(ev, _km.x, _km.y);
++#endif
++
+ 	fillMouseEvent(event, ev.motion.x, ev.motion.y);
+ 
+ 	setMousePos(event.mouse.x, event.mouse.y);
+@@ -373,6 +394,10 @@
+ 	else
+ 		return false;
+ 
++#ifdef ANDROID
++	MoveMouseWithArrowKeys(ev, _km.x, _km.y);
++#endif
++
+ 	fillMouseEvent(event, ev.button.x, ev.button.y);
+ 
+ 	return true;
+@@ -389,6 +414,11 @@
+ #endif
+ 	else
+ 		return false;
++
++#ifdef ANDROID
++	MoveMouseWithArrowKeys(ev, _km.x, _km.y);
++#endif
++
+ 	fillMouseEvent(event, ev.button.x, ev.button.y);
+ 
+ 	return true;
+@@ -569,5 +599,38 @@
+ 		event.kbd.ascii = mapKey(ev.key.keysym.sym, ev.key.keysym.mod, ev.key.keysym.unicode);
+ 	}
+ #endif
++
++#ifdef ANDROID
++	if (ev.key.keysym.sym == SDLK_LEFT || ev.key.keysym.sym == SDLK_RIGHT || ev.key.keysym.sym == SDLK_UP || ev.key.keysym.sym == SDLK_DOWN) {
++
++		if (ev.key.keysym.sym == SDLK_LEFT || ev.key.keysym.sym == SDLK_RIGHT) {
++			if (ev.type == SDL_KEYDOWN) {
++				_km.x_vel = (ev.key.keysym.sym == SDLK_LEFT ? -1 : 1);
++				_km.x_down_count = 1;
++			} else {
++				_km.x_vel = 0;
++				_km.x_down_count = 0;
++			}
++		}
++
++		if (ev.key.keysym.sym == SDLK_UP || ev.key.keysym.sym == SDLK_DOWN) {
++			if (ev.type == SDL_KEYDOWN) {
++				_km.y_vel = (ev.key.keysym.sym == SDLK_UP ? -1 : 1);
++				_km.y_down_count = 1;
++			} else {
++				_km.y_vel = 0;
++				_km.y_down_count = 0;
++			}
++		}
++
++		event.type = Common::EVENT_MOUSEMOVE;
++		fillMouseEvent(event, _km.x, _km.y);
++		setMousePos(event.mouse.x, event.mouse.y);
++		_lastEventFromKbdMouse = 1;
++
++		return true;
++	}
++#endif
++  
+ 	return false;
+ }
