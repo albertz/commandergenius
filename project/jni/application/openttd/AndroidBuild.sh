@@ -8,6 +8,8 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 #ln -sf libtremor.a $LOCAL_PATH/../../../obj/local/armeabi/libvorbisidec.a
 #ln -sf libflac.a $LOCAL_PATH/../../../obj/local/armeabi/libFLAC.a
 
+# OpenTTD build system is uglier than war.
+
 if [ \! -f openttd/objs/lang/english.lng ] ; then
 	sh -c "cd openttd && ./configure --without-freetype --without-png --without-zlib --without-lzma --without-lzo2 --endian=LE && make lang && make -C objs/release endian_target.h depend"
 	rm -f openttd/Makefile

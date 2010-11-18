@@ -153,7 +153,7 @@ class Settings
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
 		builder.setTitle(downloadFiles[0].split("[|]")[0]);
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.DownloadToSdcard ? 1 : 0, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -189,8 +189,11 @@ class Settings
 		if( Globals.OptionalDataDownload == null || Globals.OptionalDataDownload.length != items.length + 1 )
 			Globals.OptionalDataDownload = new boolean[downloadFiles.length];
 		Globals.OptionalDataDownload[0] = true;
+		boolean defaults[] = new boolean[downloadFiles.length-1];
+		for(int i=1; i<downloadFiles.length; i++)
+			defaults[i-1] = Globals.OptionalDataDownload[i];
 
-		builder.setMultiChoiceItems(items, null, new DialogInterface.OnMultiChoiceClickListener() 
+		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 			{
@@ -213,10 +216,10 @@ class Settings
 
 	static void showKeyboardConfig(final MainActivity p)
 	{
-		Globals.PhoneHasArrowKeys = false;
-		Globals.PhoneHasTrackball = false;
 		if( ! Globals.AppNeedsArrowKeys )
 		{
+			Globals.PhoneHasArrowKeys = false;
+			Globals.PhoneHasTrackball = false;
 			showTrackballConfig(p);
 			return;
 		}
@@ -227,7 +230,7 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_question));
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.PhoneHasArrowKeys ? 0 : ( Globals.PhoneHasTrackball ? 1 : 2 ), new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -245,9 +248,9 @@ class Settings
 
 	static void showTrackballConfig(final MainActivity p)
 	{
-		Globals.TrackballDampening = 0;
 		if( ! Globals.PhoneHasTrackball )
 		{
+			Globals.TrackballDampening = 0;
 			showAdditionalInputConfig(p);
 			return;
 		}
@@ -259,7 +262,7 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.trackball_question));
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.TrackballDampening, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -277,11 +280,11 @@ class Settings
 	
 	static void showAdditionalInputConfig(final MainActivity p)
 	{
-		Globals.UseTouchscreenKeyboard = false;
-		Globals.UseAccelerometerAsArrowKeys = false;
 
 		if( ! ( Globals.AppNeedsArrowKeys || Globals.AppNeedsTextInput || Globals.AppTouchscreenKeyboardKeysAmount > 0 ) && ! Globals.AppUsesJoystick )
 		{
+			Globals.UseTouchscreenKeyboard = false;
+			Globals.UseAccelerometerAsArrowKeys = false;
 			showAccelerometerConfig(p);
 			return;
 		}
@@ -290,9 +293,11 @@ class Settings
 			p.getResources().getString(R.string.controls_accelnav),
 		};
 
+		final boolean defaults[] = { Globals.UseTouchscreenKeyboard, Globals.UseAccelerometerAsArrowKeys };
+		
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_additional));
-		builder.setMultiChoiceItems(items, null, new DialogInterface.OnMultiChoiceClickListener() 
+		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 			{
@@ -318,9 +323,9 @@ class Settings
 
 	static void showAccelerometerConfig(final MainActivity p)
 	{
-		Globals.AccelerometerSensitivity = 2; // Slow, full range
 		if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
 		{
+			Globals.AccelerometerSensitivity = 2; // Slow, full range
 			showAccelerometerCenterConfig(p);
 			return;
 		}
@@ -331,7 +336,7 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.accel_question);
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.AccelerometerSensitivity, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -348,9 +353,9 @@ class Settings
 
 	static void showAccelerometerCenterConfig(final MainActivity p)
 	{
-		Globals.AccelerometerCenterPos = 2; // Fixed horizontal center position
 		if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
 		{
+			Globals.AccelerometerCenterPos = 2; // Fixed horizontal center position
 			showScreenKeyboardConfig(p);
 			return;
 		}
@@ -361,7 +366,7 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.accel_question_center);
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.AccelerometerCenterPos, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -379,9 +384,9 @@ class Settings
 
 	static void showScreenKeyboardConfig(final MainActivity p)
 	{
-		Globals.TouchscreenKeyboardSize = 0;
 		if( ! Globals.UseTouchscreenKeyboard )
 		{
+			Globals.TouchscreenKeyboardSize = 0;
 			showScreenKeyboardThemeConfig(p);
 			return;
 		}
@@ -393,7 +398,7 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_size));
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardSize, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -410,9 +415,9 @@ class Settings
 
 	static void showScreenKeyboardThemeConfig(final MainActivity p)
 	{
-		Globals.TouchscreenKeyboardTheme = 0;
 		if( ! Globals.UseTouchscreenKeyboard )
 		{
+			Globals.TouchscreenKeyboardTheme = 0;
 			showAudioConfig(p);
 			return;
 		}
@@ -424,7 +429,7 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_theme));
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTheme == 1 ? 0 : 1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -451,7 +456,7 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.audiobuf_question);
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.AudioBufferConfig, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -467,9 +472,9 @@ class Settings
 
 	static void showRightClickConfigConfig(final MainActivity p)
 	{
-		Globals.RightClickMethod = Globals.RIGHT_CLICK_NONE;
 		if( ! Globals.AppNeedsTwoButtonMouse )
 		{
+			Globals.RightClickMethod = Globals.RIGHT_CLICK_NONE;
 			showAdvancedPointAndClickConfigConfig(p);
 			return;
 		}
@@ -479,7 +484,7 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.rightclick_question);
-		builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.RightClickMethod-1, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -495,9 +500,6 @@ class Settings
 
 	static void showAdvancedPointAndClickConfigConfig(final MainActivity p)
 	{
-		Globals.ShowScreenUnderFinger = false;
-		Globals.LeftClickUsesPressure = false;
-		Globals.LeftClickUsesMultitouch = false;
 
 		/*
 		if( ! Globals.AppNeedsTwoButtonMouse )
@@ -510,29 +512,41 @@ class Settings
 										p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
 										p.getResources().getString(R.string.pointandclick_usepressure),
 										p.getResources().getString(R.string.pointandclick_multitouch) };
+		boolean defaults[] = { Globals.KeepAspectRatio, Globals.ShowScreenUnderFinger, Globals.LeftClickUsesPressure, Globals.LeftClickUsesMultitouch };
 		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE )
 		{
+			Globals.LeftClickUsesPressure = false;
 			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_keepaspectratio),
 										p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
 										p.getResources().getString(R.string.pointandclick_multitouch) };
+			boolean defaults2[] = { Globals.KeepAspectRatio, Globals.ShowScreenUnderFinger, Globals.LeftClickUsesMultitouch };
 			items = items2;
+			defaults = defaults2;
 		}
 		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_MULTITOUCH )
 		{
+			Globals.LeftClickUsesMultitouch = false;
 			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_keepaspectratio),
 										p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
 										p.getResources().getString(R.string.pointandclick_usepressure) };
+			boolean defaults2[] = { Globals.KeepAspectRatio, Globals.ShowScreenUnderFinger, Globals.LeftClickUsesPressure };
 			items = items2;
+			defaults = defaults2;
 		}
 		if( ! Globals.AppNeedsTwoButtonMouse )
 		{
+			Globals.ShowScreenUnderFinger = false;
+			Globals.LeftClickUsesPressure = false;
+			Globals.LeftClickUsesMultitouch = false;
 			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_keepaspectratio) };
+			boolean defaults2[] = { Globals.KeepAspectRatio };
 			items = items2;
+			defaults = defaults2;
 		}
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.pointandclick_question));
-		builder.setMultiChoiceItems(items, null, new DialogInterface.OnMultiChoiceClickListener() 
+		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 			{
