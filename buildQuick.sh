@@ -4,15 +4,15 @@
 # export PATH=$PATH:~/src/endless_space/android-ndk-r4b
 # Set environment to CrystaX NDK with RTTI and exceptions instead of original NDK
 # export PATH=$PATH:~/src/endless_space/android-ndk-r4-crystax/ndk-build
-NDKBUILD=ndk-build
+NDKBUILDPATH=$PATH
 if grep "AppUseCrystaXToolchain=y" AndroidAppSettings.cfg > /dev/null ; then
-	NDKBUILD=`which ndk-build | sed 's@/[^/]*/ndk-build@/android-ndk-r4-crystax@'`/ndk-build
+	NDKBUILDPATH=`which ndk-build | sed 's@/[^/]*/ndk-build@/android-ndk-r4-crystax@'`:$PATH
 fi
 
 [ -e project/bin/lib ] || ln -s ../libs project/bin/lib
 
 cd project && \
-$NDKBUILD -j2 V=1 && \
+env PATH=$NDKBUILDPATH ndk-build -j2 V=1 && \
 cd bin && \
 rm -rf DemoActivity-debug-unaligned.apk && \
 cp DemoActivity.ap_ DemoActivity-debug-unaligned.apk && \

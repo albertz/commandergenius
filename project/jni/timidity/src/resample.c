@@ -548,6 +548,7 @@ void pre_resample(MidSong *song, MidSample *sp)
   sint32 incr, ofs, newlen, count;
   sint16 *newdata, *dest, *src = (sint16 *) sp->data;
   sint16 v1, v2, v3, v4, *vptr;
+/*
 #ifdef DEBUG_CHATTER
   static const char note_name[12][3] =
   {
@@ -555,9 +556,11 @@ void pre_resample(MidSong *song, MidSample *sp)
   };
 #endif
 
+
   DEBUG_MSG(" * pre-resampling for note %d (%s%d)\n",
 	  sp->note_to_use,
 	  note_name[sp->note_to_use % 12], (sp->note_to_use & 0x7F) / 12);
+*/
 
   a = ((double) (sp->sample_rate) * freq_table[(int) (sp->note_to_use)]) /
     ((double) (sp->root_freq) * song->rate);

@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <android/log.h>
 
 #include "timidity.h"
 #include "timidity_internal.h"
@@ -90,7 +91,11 @@ static int read_config_file(char *name)
   }
 
   if (!(fp=open_file(name)))
+  {
+   __android_log_print(ANDROID_LOG_INFO, "libSDL", "libTimidity: read_config_file(%s) failure", name);
    return -1;
+  }
+   __android_log_print(ANDROID_LOG_INFO, "libSDL", "libTimidity: read_config_file(%s) opened config success", name);
 
   while (__fgets(tmp, sizeof(tmp), fp))
   {
@@ -391,6 +396,9 @@ static int read_config_file(char *name)
     }
   }
   fclose(fp);
+
+   __android_log_print(ANDROID_LOG_INFO, "libSDL", "libTimidity: read_config_file(%s) success", name);
+
   return 0;
 }
 
@@ -422,8 +430,7 @@ int mid_init(char *config_file)
 #ifdef WIN32
   add_to_pathlist("\\TIMIDITY");
 #else
-  add_to_pathlist("/usr/local/lib/timidity");
-  add_to_pathlist("/etc");
+  add_to_pathlist("timidity");
 #endif
 
   mid_init_no_config();

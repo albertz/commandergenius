@@ -1,3 +1,67 @@
+Index: src/sound/sdl_s.cpp
+===================================================================
+--- src/sound/sdl_s.cpp	(revision 21200)
++++ src/sound/sdl_s.cpp	(working copy)
+@@ -20,9 +20,16 @@
+ 
+ static FSoundDriver_SDL iFSoundDriver_SDL;
+ 
++#ifdef ANDROID
++extern void Android_MidiMixMusic(Sint16 *stream, int len);
++#endif
++
+ static void CDECL fill_sound_buffer(void *userdata, Uint8 *stream, int len)
+ {
+ 	MxMixSamples(stream, len / 4);
++#ifdef ANDROID
++	Android_MidiMixMusic((Sint16 *)stream, len / 2);
++#endif
+ }
+ 
+ const char *SoundDriver_SDL::Start(const char * const *parm)
+Index: src/music/libtimidity.cpp
+===================================================================
+--- src/music/libtimidity.cpp	(revision 21200)
++++ src/music/libtimidity.cpp	(working copy)
+@@ -22,10 +22,13 @@
+ #include <sys/stat.h>
+ #include <errno.h>
+ #include <timidity.h>
++#include <SDL.h>
++
+ #if defined(PSP)
+ #include <pspaudiolib.h>
+ #endif /* PSP */
+ 
++
+ enum MidiState {
+ 	MIDI_STOPPED = 0,
+ 	MIDI_PLAYING = 1,
+@@ -50,6 +53,24 @@
+ 	}
+ }
+ #endif /* PSP */
++#ifdef ANDROID
++#define MIN(X ,Y)  ((X) < (Y) ? (X) : (Y))
++void Android_MidiMixMusic(Sint16 *stream, int len)
++{
++	if (_midi.status == MIDI_PLAYING) {
++		Sint16 buf[16384];
++		while( len > 0 )
++		{
++			int minlen = MIN(sizeof(buf), len);
++			mid_song_read_wave(_midi.song, stream, MIN(sizeof(buf), len*2));
++			for( Uint16 i = 0; i < minlen; i++ )
++				stream[i] += buf[i];
++			stream += minlen;
++			len -= minlen;
++		}
++	}
++}
++#endif
+ 
+ static FMusicDriver_LibTimidity iFMusicDriver_LibTimidity;
+ 
 Index: src/os/unix/unix.cpp
 ===================================================================
 --- src/os/unix/unix.cpp	(revision 21200)
@@ -36,3 +100,27 @@ Index: src/network/core/os_abstraction.h
  /* If for any reason ifaddrs.h does not exist on your system, comment out
   *   the following two lines and an alternative way will be used to fetch
   *   the list of IPs from the system. */
+Index: src/debug.cpp
+===================================================================
+--- src/debug.cpp	(revision 21200)
++++ src/debug.cpp	(working copy)
+@@ -16,6 +16,9 @@
+ #include "string_func.h"
+ #include "fileio_func.h"
+ #include "settings_type.h"
++#ifdef ANDROID
++#include <android/log.h>
++#endif
+ 
+ #include <time.h>
+ 
+@@ -76,6 +79,9 @@
+  */
+ static void debug_print(const char *dbg, const char *buf)
+ {
++#ifdef ANDROID
++	__android_log_print(ANDROID_LOG_INFO, "OpenTTD", "[%s] %s", dbg, buf);
++#endif
+ #if defined(ENABLE_NETWORK)
+ 	if (_debug_socket != INVALID_SOCKET) {
+ 		char buf2[1024 + 32];

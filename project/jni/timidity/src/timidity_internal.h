@@ -1,6 +1,7 @@
 #ifndef TIMIDITY_INTERNAL_H
 #define TIMIDITY_INTERNAL_H
 
+#include <android/log.h>
 #include "timidity.h"
 
 #if  defined(__i386__) || defined(__ia64__) || defined(WIN32) || \
@@ -49,11 +50,8 @@
 #define SWAPLE32(x) XCHG_LONG(x)
 #endif
 
-#ifdef DEBUG
-#define DEBUG_MSG(...) fprintf(stderr, __VA_ARGS__)
-#else
+//#define DEBUG_MSG(...) __android_log_print(ANDROID_LOG_INFO, "libSDL", __VA_ARGS__)
 #define DEBUG_MSG(...)
-#endif
 
 
 #define MID_VIBRATO_SAMPLE_INCREMENTS 32

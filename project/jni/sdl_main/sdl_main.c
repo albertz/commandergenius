@@ -83,11 +83,12 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 		}
 	}
 
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Calling SDL_main(\"%s\")", str);
+
 	(*env)->ReleaseStringUTFChars(env, cmdline, jstr);
 
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Calling SDL_main(\"%s\")", str);
-	//for( i = 0; i < argc; i++ )
-	//	__android_log_print(ANDROID_LOG_INFO, "libSDL", "param %d = \"%s\"", i, argv[i]);
+	for( i = 0; i < argc; i++ )
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "param %d = \"%s\"", i, argv[i]);
 
 	main( argc, argv );
 
