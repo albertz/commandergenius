@@ -11,11 +11,11 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 # OpenTTD build system is uglier than war.
 
 if [ \! -f openttd/objs/lang/english.lng ] ; then
-	sh -c "cd openttd && ./configure --without-freetype --without-png --without-zlib --without-lzma --without-lzo2 --endian=LE && make lang && make -C objs/release endian_target.h depend"
+	sh -c "cd openttd && ./configure --without-freetype --without-png --without-zlib --without-lzo2 --endian=LE && make lang && make -C objs/release endian_target.h depend"
 	rm -f openttd/Makefile
 fi
 
 if [ \! -f openttd/Makefile ] ; then
-	../setEnvironment.sh sh -c "cd openttd && ./configure --host=arm-eabi --with-sdl --with-freetype=sdl-config --with-png --with-zlib --with-libtimidity=$LOCAL_PATH/../../../obj/local/armeabi/libtimidity.so --with-lzma=sdl-config --with-lzo2=$LOCAL_PATH/../../../obj/local/armeabi/liblzo2.so --prefix-dir='.' --data-dir='' --without-allegro --without-fontconfig --endian=LE"
+	../setEnvironment.sh sh -c "cd openttd && ./configure --host=arm-eabi --with-sdl --with-freetype=sdl-config --with-png --with-zlib --with-libtimidity=$LOCAL_PATH/../../../obj/local/armeabi/libtimidity.so --with-lzo2=$LOCAL_PATH/../../../obj/local/armeabi/liblzo2.so --prefix-dir='.' --data-dir='' --without-allegro --without-fontconfig --endian=LE"
 fi
 ../setEnvironment.sh sh -c "cd openttd && make -j1 VERBOSE=1 LIBS='-lsdl-1.2 -llzo2 -lpng -ltimidity -lfreetype -lgcc -lz -lc -lstdc++'" && cp -f openttd/objs/release/openttd libapplication.so
