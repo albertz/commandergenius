@@ -65,7 +65,7 @@
     <string name="rightclick_pressure">Touch screen with force</string>
 
     <string name="pointandclick_question">Advanced features</string>
-    <string name="pointandclick_keepaspectratio">Keep 4:3 acreen aspect ratio</string>
+    <string name="pointandclick_keepaspectratio">Keep 4:3 screen aspect ratio</string>
     <string name="pointandclick_showcreenunderfinger">Show screen under finger in separate window</string>
     <string name="pointandclick_usepressure">Left click triggered by touch force</string>
     <string name="pointandclick_multitouch">Left click triggered by touch with second finger</string>
