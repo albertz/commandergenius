@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <string>
+#include <SDL.h>
 
 #include "gamedefs.h"
 #include "engine.h"
@@ -69,11 +70,11 @@ std::string GetCaption(void)
 
 int main(int argc, char **argv)
 {
+	VERBOSE("Free Heroes II, " + conf.BuildVersion());
 	Settings & conf = Settings::Get();
 	int test = 0;
 
 	std::cout << "Free Heroes II, " + conf.BuildVersion() << std::endl;
-	VERBOSE("Free Heroes II, " + conf.BuildVersion());
 
 	LoadConfigFiles(conf, GetDirname(argv[0]));
 
