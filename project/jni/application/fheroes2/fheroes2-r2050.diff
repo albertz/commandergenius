@@ -1,0 +1,165 @@
+diff -u -r -b -x .svn -x '*.o' -x '*.d' /home/pelya/src/endless_space/fheroes2/src/fheroes2/army/army.cpp src/fheroes2/army/army.cpp
+--- /home/pelya/src/endless_space/fheroes2/src/fheroes2/army/army.cpp	2010-11-15 19:17:40.859414020 +0200
++++ src/fheroes2/army/army.cpp	2010-11-12 16:15:26.000000000 +0200
+@@ -728,12 +728,16 @@
+ 
+ void Army::army_t::BattleSetModes(u32 f)
+ {
+-    std::for_each(army.begin(), army.end(), std::bind2nd(std::mem_fun_ref(&Troop::BattleSetModes), f));
++    //std::for_each(army.begin(), army.end(), std::bind2nd(std::mem_fun_ref(&Troop::BattleSetModes), f)); // Cannot call non-const function here
++    for( std::vector<Troop> ::iterator it = army.begin(); it != army.end(); it++ )
++        it->BattleSetModes(f);
+ }
+ 
+ void Army::army_t::BattleResetModes(u32 f)
+ {
+-    std::for_each(army.begin(), army.end(), std::bind2nd(std::mem_fun_ref(&Troop::BattleResetModes), f));
++    //std::for_each(army.begin(), army.end(), std::bind2nd(std::mem_fun_ref(&Troop::BattleResetModes), f)); // Cannot call non-const function here
++    for( std::vector<Troop> ::iterator it = army.begin(); it != army.end(); it++ )
++        it->BattleResetModes(f);
+ }
+ 
+ Army::Troop* Army::army_t::BattleFindModes(u32 f)
+diff -u -r -b -x .svn -x '*.o' -x '*.d' /home/pelya/src/endless_space/fheroes2/src/fheroes2/game/fheroes2.cpp src/fheroes2/game/fheroes2.cpp
+--- /home/pelya/src/endless_space/fheroes2/src/fheroes2/game/fheroes2.cpp	2010-11-15 19:17:40.859414020 +0200
++++ src/fheroes2/game/fheroes2.cpp	2010-11-22 15:16:37.000000000 +0200
+@@ -23,6 +23,7 @@
+ #include <unistd.h>
+ #include <iostream>
+ #include <string>
++#include <SDL.h>
+ 
+ #include "gamedefs.h"
+ #include "engine.h"
+@@ -69,13 +70,18 @@
+ 
+ int main(int argc, char **argv)
+ {
++	VERBOSE("000 - entered SDL_main()");
+ 	Settings & conf = Settings::Get();
+ 	int test = 0;
+ 
+ 	std::cout << "Free Heroes II, " + conf.BuildVersion() << std::endl;
++	VERBOSE("Free Heroes II, " + conf.BuildVersion());
+ 
+ 	LoadConfigFiles(conf, GetDirname(argv[0]));
+ 
++	VERBOSE("001");
++
++#ifndef ANDROID // Crashes for some reason
+ 	// getopt
+ 	{
+ 	    int opt;
+@@ -109,13 +115,20 @@
+                     default:  break;
+ 		}
+ 	}
++#endif
++
++	VERBOSE("002");
+ 
+ 	if(conf.SelectVideoDriver().size()) SetVideoDriver(conf.SelectVideoDriver());
+ 
++	VERBOSE("003");
++
+ 	// random init
+ 	Rand::Init();
+         if(conf.Music()) SetTimidityEnvPath(conf);
+ 
++	VERBOSE("004");
++
+ 	u32 subsystem = INIT_VIDEO | INIT_TIMER;
+ 
+         if(conf.Sound() || conf.Music())
+@@ -128,9 +141,12 @@
+         Network::SetProtocolVersion(static_cast<u16>((conf.MajorVersion() << 8)) | conf.MinorVersion());
+ #endif
+ 
++	VERBOSE("005");
++
+ 	if(SDL::Init(subsystem))
+ 	try
+ 	{
++		VERBOSE("006");
+ 	    std::atexit(SDL::Quit);
+ 
+ 	    if(conf.Unicode()) SetLangEnvPath(conf);
+@@ -163,17 +179,23 @@
+     	    //Ensure the mouse position is updated to prevent bad initial values.
+     	    LocalEvent::Get().GetMouseCursor();
+ 
++		VERBOSE("007");
++
+ #ifdef WITH_ZLIB
+     	    ZSurface zicons;
+ 	    if(zicons.Load(FH2_ICONS_WIDTH, FH2_ICONS_HEIGHT, FH2_ICONS_BPP, fh2_icons_pack, FH2_ICONS_SIZE, true)) Display::SetIcons(zicons);
+ #endif
+ 	    AGG::Cache & cache = AGG::Cache::Get();
+ 
++		VERBOSE("008");
++
+ 	    // read data dir
+ 	    if(! cache.ReadDataDir()) Error::Except("FHeroes2: ", "AGG data files not found.");
+ 
+             if(IS_DEBUG(DBG_GAME, DBG_INFO)) conf.Dump();
+ 
++		VERBOSE("009");
++
+             // load palette
+ 	    cache.LoadPAL();
+ 
+diff -u -r -b -x .svn -x '*.o' -x '*.d' /home/pelya/src/endless_space/fheroes2/src/fheroes2/system/settings.cpp src/fheroes2/system/settings.cpp
+--- /home/pelya/src/endless_space/fheroes2/src/fheroes2/system/settings.cpp	2010-11-15 19:17:34.879413999 +0200
++++ src/fheroes2/system/settings.cpp	2010-11-12 17:31:10.000000000 +0200
+@@ -1424,6 +1419,9 @@
+ {
+     u32 flags = opt_global.Modes(GLOBAL_USESWSURFACE) ? SDL_SWSURFACE : SDL_SWSURFACE | SDL_HWSURFACE;
+     if(opt_global.Modes(GLOBAL_FULLSCREEN)) flags |= SDL_FULLSCREEN;
++    #ifdef ANDROID
++    flags = SDL_SWSURFACE;
++    #endif
+ 
+     return flags;
+ }
+diff -u -r -b -x .svn -x '*.o' -x '*.d' /home/pelya/src/endless_space/fheroes2/src/fheroes2/system/settings.h src/fheroes2/system/settings.h
+--- /home/pelya/src/endless_space/fheroes2/src/fheroes2/system/settings.h	2010-11-15 19:17:34.869414019 +0200
++++ src/fheroes2/system/settings.h	2010-11-12 16:09:03.000000000 +0200
+@@ -27,6 +27,7 @@
+ #include <list>
+ #include <iostream>
+ #include <iomanip>
++#include <sstream>
+ #include "gamedefs.h"
+ #include "difficulty.h"
+ #include "race.h"
+@@ -35,6 +36,9 @@
+ #include "game.h"
+ #include "game_io.h"
+ #include "bitmodes.h"
++#ifdef ANDROID
++#include <android/log.h>
++#endif
+ 
+ #define FORMAT_VERSION_2031 0x07EF
+ #define FORMAT_VERSION_1978 0x07BA
+@@ -71,6 +75,9 @@
+ #ifdef __SYMBIAN32__
+ #define VERBOSE(x)
+ #define DEBUG(x, y, z)
++#elif defined(ANDROID)
++#define VERBOSE(x) { std::ostringstream osss; osss << x; __android_log_print(ANDROID_LOG_INFO, "FHeroes", "%s", osss.str().c_str()); }
++#define DEBUG(x, y, z) if(IS_DEBUG((x), (y))) VERBOSE(z)
+ #else
+ #define VERBOSE(x) std::cout << x << std::endl
+ #define DEBUG(x, y, z) if(IS_DEBUG((x), (y))) VERBOSE(z)
+diff -u -r -b -x .svn -x '*.o' -x '*.d' /home/pelya/src/endless_space/fheroes2/src/xmlccwrap/gzstream.h src/xmlccwrap/gzstream.h
+--- /home/pelya/src/endless_space/fheroes2/src/xmlccwrap/gzstream.h	2010-11-15 19:17:31.869414019 +0200
++++ src/xmlccwrap/gzstream.h	2010-11-12 16:06:58.000000000 +0200
+@@ -33,6 +33,7 @@
+ #include <iostream>
+ #include <fstream>
+ #include <zlib.h>
++#include <stdio.h>
+ 
+ #ifdef GZSTREAM_NAMESPACE
+ namespace GZSTREAM_NAMESPACE {
