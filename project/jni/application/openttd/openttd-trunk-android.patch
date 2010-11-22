@@ -13,7 +13,7 @@ Index: src/sound/sdl_s.cpp
  static void CDECL fill_sound_buffer(void *userdata, Uint8 *stream, int len)
  {
  	MxMixSamples(stream, len / 4);
-+#ifdef ANDROID
++#if defined(ANDROID) && defined(LIBTIMIDITY)
 +	Android_MidiMixMusic((Sint16 *)stream, len / 2);
 +#endif
  }
