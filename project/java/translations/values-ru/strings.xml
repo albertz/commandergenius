@@ -58,4 +58,8 @@
 <string name="audiobuf_medium">Средний</string>
 <string name="audiobuf_large">Большой (для старых устройств, если звук прерывается)</string>
 <string name="audiobuf_question">Размер буфера аудио</string>
+<string name="accel_floating">Плавающей</string>
+<string name="accel_fixed_start">Исправлена при запуске приложения</string>
+<string name="accel_fixed_horiz">Включен в таблице ориентации стол</string>
+<string name="accel_question_center">Акселерометр центральное положение</string>
 </resources>

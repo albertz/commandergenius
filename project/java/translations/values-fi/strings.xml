@@ -68,5 +68,4 @@
 <string name="pointandclick_usepressure">Vasen klikkaus laukaisi kosketus voima</string>
 <string name="pointandclick_multitouch">Vasen klikkaus laukaisi yhteyden toinen sormi</string>
 <string name="measurepressure_touchplease">Ole hyvä ja liu\u0026#39;uttamalla sormea näytöllä kaksi sekuntia</string>
-<string name="measurepressure_response">Paine% 03D säde% 03D</string>
 </resources>

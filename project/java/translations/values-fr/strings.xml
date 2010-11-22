@@ -71,5 +71,4 @@
 <string name="pointandclick_usepressure">Clic gauche déclenchée par la force touch</string>
 <string name="pointandclick_multitouch">Clic gauche déclenchée par contact avec le deuxième doigt</string>
 <string name="measurepressure_touchplease">S\u0026#39;il vous plaît glisser les doigts sur l\u0026#39;écran pendant deux secondes</string>
-<string name="measurepressure_response">% 03d% 03d pression rayon</string>
 </resources>

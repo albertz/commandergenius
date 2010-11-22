@@ -68,5 +68,4 @@
 <string name="pointandclick_usepressure">Linke Maustaste ausgelöst durch Berührung Kraft</string>
 <string name="pointandclick_multitouch">Linke Maustaste ausgelöst durch Berührung mit dem zweiten Finger</string>
 <string name="measurepressure_touchplease">Bitte schieben Sie den Finger über den Bildschirm für zwei Sekunden</string>
-<string name="measurepressure_response">Pressure% 03d% 03d Radius</string>
 </resources>
