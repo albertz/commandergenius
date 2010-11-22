@@ -70,11 +70,12 @@ std::string GetCaption(void)
 
 int main(int argc, char **argv)
 {
-	VERBOSE("Free Heroes II, " + conf.BuildVersion());
+	VERBOSE("000 - entered SDL_main()");
 	Settings & conf = Settings::Get();
 	int test = 0;
 
 	std::cout << "Free Heroes II, " + conf.BuildVersion() << std::endl;
+	VERBOSE("Free Heroes II, " + conf.BuildVersion());
 
 	LoadConfigFiles(conf, GetDirname(argv[0]));
 

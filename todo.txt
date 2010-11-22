@@ -13,6 +13,6 @@ Bugs to fix
 
 - Add an option for overlay buttons transparency and button images size.
 
-- Add a user option to keep aspect ratio of screen (not compile-time option which is already available)
+- Even smaller audio buffer.
 
 And that's all, I won't be doing any more development or fix other bugs (see bugs.txt for details).
