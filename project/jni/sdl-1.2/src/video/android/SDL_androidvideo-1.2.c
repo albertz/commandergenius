@@ -114,6 +114,7 @@ int SDL_ANDROID_sFakeWindowHeight = 480;
 static int sdl_opengl = 0;
 static SDL_Window *SDL_VideoWindow = NULL;
 static SDL_Surface *SDL_CurrentVideoSurface = NULL;
+static Uint32 SDL_VideoThreadID = 0;
 static int HwSurfaceCount = 0;
 static SDL_Surface ** HwSurfaceList = NULL;
 
@@ -218,6 +219,7 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	this->info.video_mem = 128 * 1024; // Random value
 	this->info.current_w = SDL_ANDROID_sWindowWidth;
 	this->info.current_h = SDL_ANDROID_sWindowHeight;
+	SDL_VideoThreadID = SDL_ThreadID();
 
 	for ( i=0; i<SDL_NUMMODES; ++i ) {
 		SDL_modelist[i] = SDL_malloc(sizeof(SDL_Rect));
@@ -258,6 +260,11 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	int bpp1;
 	
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): application requested mode %dx%d", width, height);
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		return NULL;
+	}
 
 	sdl_opengl = (flags & SDL_OPENGL) ? 1 : 0;
 
@@ -348,6 +355,11 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 */
 void ANDROID_VideoQuit(_THIS)
 {
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+	}
+
 	if( ! sdl_opengl )
 	{
 		DEBUGOUT("ANDROID_VideoQuit() in HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
@@ -387,6 +399,12 @@ void ANDROID_PumpEvents(_THIS)
 
 static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 {
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		return -1;
+	}
+
 	if ( ! (surface->w && surface->h) )
 		return(-1);
 
@@ -459,12 +477,18 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface)
 {
 	int i;
+
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		return;
+	}
+
 	if( !surface->hwdata )
 		return;
 	SDL_DestroyTexture((struct SDL_Texture *)surface->hwdata);
 
 	DEBUGOUT("ANDROID_FreeHWSurface() surface %p w %d h %d in HwSurfaceCount %d HwSurfaceList %p", surface, surface->w, surface->h, HwSurfaceCount, HwSurfaceList);
-	
 
 	for( i = 0; i < HwSurfaceCount; i++ )
 	{
@@ -486,6 +510,12 @@ static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface)
 
 static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)
 {
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		return -1;
+	}
+
 	if( surface == SDL_CurrentVideoSurface )
 	{
 		// Copy pixels from pixelbuffer to video surface - this is slow!
@@ -561,6 +591,12 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 	Uint32 hwformat = SDL_PIXELFORMAT_RGBA5551;
 	int bpp;
 	SDL_Surface * converted = NULL;
+
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		return;
+	}
 
 	if( !surface->hwdata )
 		return;
@@ -653,6 +689,12 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 // We're only blitting HW surface to screen, no other options provided (and if you need them your app designed wrong)
 int ANDROID_HWBlit(SDL_Surface* src, SDL_Rect* srcrect, SDL_Surface* dst, SDL_Rect* dstrect)
 {
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		return -1;
+	}
+
 	if( dst != SDL_CurrentVideoSurface || (! src->hwdata) )
 	{
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_HWBlit(): blitting SW");
@@ -683,6 +725,13 @@ static int ANDROID_CheckHWBlit(_THIS, SDL_Surface *src, SDL_Surface *dst)
 static int ANDROID_FillHWRect(_THIS, SDL_Surface *dst, SDL_Rect *rect, Uint32 color)
 {
 	Uint8 r, g, b, a;
+
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		return -1;
+	}
+
 	if( dst != SDL_CurrentVideoSurface )
 	{
 		// TODO: hack
@@ -700,6 +749,12 @@ static int ANDROID_SetHWColorKey(_THIS, SDL_Surface *surface, Uint32 key)
 {
 	SDL_PixelFormat format;
 	SDL_Surface * converted = NULL;
+
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		return -1;
+	}
 	
 	if( !surface->hwdata )
 		return(-1);
@@ -717,6 +772,12 @@ static int ANDROID_SetHWColorKey(_THIS, SDL_Surface *surface, Uint32 key)
 
 static int ANDROID_SetHWAlpha(_THIS, SDL_Surface *surface, Uint8 value)
 {
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		return -1;
+	}
+
 	if( !surface->hwdata )
 		return(-1);
 
@@ -732,8 +793,17 @@ static int ANDROID_SetHWAlpha(_THIS, SDL_Surface *surface, Uint8 value)
 
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
-	if(!SDL_CurrentVideoSurface)
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return;
+	}
+
+	if(!SDL_CurrentVideoSurface)
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s without main video surface!", __PRETTY_FUNCTION__);
+		return;
+	}
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_UpdateRects()");
 	// Used only in single-buffer mode
 	//if( SDL_CurrentVideoSurface && !(SDL_CurrentVideoSurface->flags & SDL_HWSURFACE) )
@@ -742,8 +812,17 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 {
-	if(!SDL_CurrentVideoSurface)
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return;
+	}
+
+	if(!SDL_CurrentVideoSurface)
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s without main video surface!", __PRETTY_FUNCTION__);
+		return;
+	}
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_FlipHWSurface()");
 	if( SDL_CurrentVideoSurface->hwdata && SDL_CurrentVideoSurface->pixels && ! ( SDL_CurrentVideoSurface->flags & SDL_HWSURFACE ) )
 	{
@@ -767,6 +846,12 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 
 void ANDROID_GL_SwapBuffers(_THIS)
 {
+	if( SDL_VideoThreadID != SDL_ThreadID() )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		return;
+	}
+
 	SDL_ANDROID_CallJavaSwapBuffers();
 };
 
