@@ -58,4 +58,15 @@
 <string name="accel_fixed_horiz">Fixiert auf Tisch Schreibtisch Orientierung</string>
 <string name="accel_question_center">Beschleunigungsmesser Mittelstellung</string>
 <string name="audiobuf_verysmall">Sehr kleine (schnelle Geräte, weniger Verzögerung)</string>
+<string name="rightclick_question">Rechter Mausklick ausgelöst durch:</string>
+<string name="rightclick_menu">Menütaste</string>
+<string name="rightclick_multitouch">Touch-Screen mit dem zweiten Finger</string>
+<string name="rightclick_pressure">Touchscreen mit Kraft</string>
+<string name="pointandclick_question">Erweiterte Funktionen</string>
+<string name="pointandclick_keepaspectratio">Halten 4:3-Bildschirm Seitenverhältnis</string>
+<string name="pointandclick_showcreenunderfinger">Show-Bildschirm unter dem Finger in einem separaten Fenster</string>
+<string name="pointandclick_usepressure">Linke Maustaste ausgelöst durch Berührung Kraft</string>
+<string name="pointandclick_multitouch">Linke Maustaste ausgelöst durch Berührung mit dem zweiten Finger</string>
+<string name="measurepressure_touchplease">Bitte schieben Sie den Finger über den Bildschirm für zwei Sekunden</string>
+<string name="measurepressure_response">Pressure% 03d% 03d Radius</string>
 </resources>
