@@ -879,6 +879,9 @@ void SDL_ANDROID_VideoContextRecreated()
 	{
 		int i;
 		SDL_SelectRenderer(SDL_VideoWindow); // Re-apply glOrtho() and blend modes
+		// Re-apply our custom 4:3 screen aspect ratio
+		glViewport(0, 0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
+		glOrthof(0.0, (GLfloat) SDL_ANDROID_sWindowWidth, (GLfloat) SDL_ANDROID_sWindowHeight, 0.0, 0.0, 1.0);
 		for( i = 0; i < HwSurfaceCount; i++ )
 		{
 			// Allocate HW texture
