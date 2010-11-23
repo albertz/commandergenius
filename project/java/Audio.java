@@ -20,12 +20,12 @@ import java.lang.Thread;
 
 class AudioThread {
 
-	private Activity mParent;
+	private MainActivity mParent;
 	private AudioTrack mAudio;
 	private byte[] mAudioBuffer;
 	private int mVirtualBufSize;
 
-	public AudioThread(Activity parent)
+	public AudioThread(MainActivity parent)
 	{
 		mParent = parent;
 		mAudio = null;
@@ -35,13 +35,15 @@ class AudioThread {
 	
 	public int fillBuffer()
 	{
-		if( Globals.AudioBufferConfig == 0 && mAudio.getPlaybackHeadPosition() * 1000 / mAudio.getPlaybackRate() >= 30 )
+		if( Globals.AudioBufferConfig == 0 )
+			mAudio.flush();
+		mAudio.write( mAudioBuffer, 0, mVirtualBufSize );
+		if( mParent.isPaused() )
 		{
 			try{
-				Thread.sleep(10);
-			} catch(InterruptedException e) {}
+				Thread.sleep(200);
+			} catch (InterruptedException e) {}
 		}
-		mAudio.write( mAudioBuffer, 0, mVirtualBufSize );
 		
 		return 1;
 	}

@@ -300,6 +300,10 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		super.onPause();
 		mRenderer.mPaused = true;
 	};
+	
+	public boolean isPaused() {
+		return mRenderer.mPaused;
+	}
 
 	@Override
 	public void onResume() {

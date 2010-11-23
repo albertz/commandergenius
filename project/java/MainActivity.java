@@ -170,6 +170,7 @@ public class MainActivity extends Activity {
 				downloader.setStatusField(null);
 			}
 		}
+		_isPaused = true;
 		if( mGLView != null )
 			mGLView.onPause();
 		super.onPause();
@@ -188,6 +189,12 @@ public class MainActivity extends Activity {
 					initSDL();
 			}
 		}
+		_isPaused = false;
+	}
+	
+	public boolean isPaused()
+	{
+		return _isPaused;
 	}
 
 	@Override
@@ -358,5 +365,6 @@ public class MainActivity extends Activity {
 	private EditText _screenKeyboard = null;
 	private boolean sdlInited = false;
 	public Settings.TouchMeasurementTool _touchMeasurementTool = null;
+	boolean _isPaused = false;
 
 }
