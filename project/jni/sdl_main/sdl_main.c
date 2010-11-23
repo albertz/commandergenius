@@ -30,7 +30,7 @@ extern C_LINKAGE void
 JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring cmdline )
 {
 	int i = 0;
-	char curdir[512];
+	char curdir[512], realcurdir[512];
 	const jbyte *jstr;
 	const char * str = "sdl";
 	int argc = 0;
@@ -47,8 +47,10 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 		strcat(curdir, SDL_CURDIR_PATH);
 		strcat(curdir, "/files");
 	}
-	chdir(curdir);
-	setenv("HOME", curdir, 1);
+	if( realpath(curdir, realcurdir) == NULL )
+		strcpy(realcurdir, curdir);
+	chdir(realcurdir);
+	setenv("HOME", realcurdir, 1);
 
 	jstr = (*env)->GetStringUTFChars(env, cmdline, NULL);
 
