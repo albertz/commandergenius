@@ -1,6 +1,6 @@
 Index: src/sound/sdl_s.cpp
 ===================================================================
---- src/sound/sdl_s.cpp	(revision 21200)
+--- src/sound/sdl_s.cpp	(revision 21293)
 +++ src/sound/sdl_s.cpp	(working copy)
 @@ -20,9 +20,16 @@
  
@@ -13,7 +13,7 @@ Index: src/sound/sdl_s.cpp
  static void CDECL fill_sound_buffer(void *userdata, Uint8 *stream, int len)
  {
  	MxMixSamples(stream, len / 4);
-+#if defined(ANDROID) && defined(LIBTIMIDITY)
++#ifdef ANDROID
 +	Android_MidiMixMusic((Sint16 *)stream, len / 2);
 +#endif
  }
@@ -21,9 +21,9 @@ Index: src/sound/sdl_s.cpp
  const char *SoundDriver_SDL::Start(const char * const *parm)
 Index: src/music/libtimidity.cpp
 ===================================================================
---- src/music/libtimidity.cpp	(revision 21200)
+--- src/music/libtimidity.cpp	(revision 21293)
 +++ src/music/libtimidity.cpp	(working copy)
-@@ -22,10 +22,13 @@
+@@ -23,10 +23,13 @@
  #include <sys/stat.h>
  #include <errno.h>
  #include <timidity.h>
@@ -37,7 +37,7 @@ Index: src/music/libtimidity.cpp
  enum MidiState {
  	MIDI_STOPPED = 0,
  	MIDI_PLAYING = 1,
-@@ -50,6 +53,24 @@
+@@ -51,6 +54,24 @@
  	}
  }
  #endif /* PSP */
@@ -64,7 +64,7 @@ Index: src/music/libtimidity.cpp
  
 Index: src/os/unix/unix.cpp
 ===================================================================
---- src/os/unix/unix.cpp	(revision 21200)
+--- src/os/unix/unix.cpp	(revision 21293)
 +++ src/os/unix/unix.cpp	(working copy)
 @@ -24,7 +24,7 @@
  
@@ -75,7 +75,7 @@ Index: src/os/unix/unix.cpp
  	#define HAS_STATVFS
  #endif
  
-@@ -245,6 +245,11 @@
+@@ -239,6 +239,11 @@
  void cocoaReleaseAutoreleasePool();
  #endif
  
@@ -87,11 +87,27 @@ Index: src/os/unix/unix.cpp
  int CDECL main(int argc, char *argv[])
  {
  	int ret;
+Index: src/os/unix/crashlog_unix.cpp
+===================================================================
+--- src/os/unix/crashlog_unix.cpp	(revision 21293)
++++ src/os/unix/crashlog_unix.cpp	(working copy)
+@@ -141,7 +141,11 @@
+ };
+ 
+ /** The signals we want our crash handler to handle. */
++#ifdef ANDROID
++static const int _signals_to_handle[] = { }; // Default Android signal handler will give us stack trace
++#else
+ static const int _signals_to_handle[] = { SIGSEGV, SIGABRT, SIGFPE, SIGBUS, SIGILL };
++#endif
+ 
+ /**
+  * Entry point for the crash handler.
 Index: src/network/core/os_abstraction.h
 ===================================================================
---- src/network/core/os_abstraction.h	(revision 21200)
+--- src/network/core/os_abstraction.h	(revision 21293)
 +++ src/network/core/os_abstraction.h	(working copy)
-@@ -161,7 +161,7 @@
+@@ -159,7 +159,7 @@
  #		include <net/if.h>
  /* According to glibc/NEWS, <ifaddrs.h> appeared in glibc-2.3. */
  #		if !defined(__sgi__) && !defined(SUNOS) && !defined(__MORPHOS__) && !defined(__BEOS__) && !defined(__HAIKU__) && !defined(__INNOTEK_LIBC__) \
@@ -102,7 +118,7 @@ Index: src/network/core/os_abstraction.h
   *   the list of IPs from the system. */
 Index: src/debug.cpp
 ===================================================================
---- src/debug.cpp	(revision 21200)
+--- src/debug.cpp	(revision 21293)
 +++ src/debug.cpp	(working copy)
 @@ -16,6 +16,9 @@
  #include "string_func.h"
@@ -114,8 +130,8 @@ Index: src/debug.cpp
  
  #include <time.h>
  
-@@ -76,6 +79,9 @@
-  */
+@@ -70,6 +73,9 @@
+ 
  static void debug_print(const char *dbg, const char *buf)
  {
 +#ifdef ANDROID

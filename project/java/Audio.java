@@ -35,7 +35,14 @@ class AudioThread {
 	
 	public int fillBuffer()
 	{
+		if( Globals.AudioBufferConfig == 0 && mAudio.getPlaybackHeadPosition() * 1000 / mAudio.getPlaybackRate() >= 30 )
+		{
+			try{
+				Thread.sleep(10);
+			} catch(InterruptedException e) {}
+		}
 		mAudio.write( mAudioBuffer, 0, mVirtualBufSize );
+		
 		return 1;
 	}
 	

@@ -115,6 +115,8 @@ void UpdateScreenUnderFingerRect(int x, int y)
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
 {
+	if( !SDL_CurrentVideoSurface )
+		return;
 	if(pointerId < 0)
 		pointerId = 0;
 	if(pointerId > MAX_MULTITOUCH_POINTERS)
@@ -234,6 +236,8 @@ static int processAndroidTrackball(int key, int action);
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint key, jint action )
 {
+	if( !SDL_CurrentVideoSurface )
+		return;
 	if( isTrackballUsed )
 		if( processAndroidTrackball(key, action) )
 			return;
@@ -276,6 +280,8 @@ static void updateOrientation ( float accX, float accY, float accZ );
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobject  thiz, jfloat accPosX, jfloat accPosY, jfloat accPosZ )
 {
+	if( !SDL_CurrentVideoSurface )
+		return;
 	// Calculate two angles from three coordinates - TODO: this is faulty!
 	//float accX = atan2f(-accPosX, sqrtf(accPosY*accPosY+accPosZ*accPosZ) * ( accPosY > 0 ? 1.0f : -1.0f ) ) * M_1_PI * 180.0f;
 	//float accY = atan2f(accPosZ, accPosY) * M_1_PI;
@@ -292,6 +298,8 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(AccelerometerReader_nativeOrientation) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
 {
+	if( !SDL_CurrentVideoSurface )
+		return;
 	updateOrientation (accX, accY, accZ); // TODO: make values in range 0.0:1.0
 }
 

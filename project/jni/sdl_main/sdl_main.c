@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <jni.h>
 #include <android/log.h>
 #include "SDL_thread.h"
@@ -30,7 +31,8 @@ extern C_LINKAGE void
 JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring cmdline )
 {
 	int i = 0;
-	char curdir[512], realcurdir[512];
+	char curdir[PATH_MAX] = "";
+	char realcurdir[PATH_MAX] = "";
 	const jbyte *jstr;
 	const char * str = "sdl";
 	int argc = 0;
