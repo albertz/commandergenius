@@ -547,6 +547,7 @@ for LIB in freetype intl jpeg png lua mad stlport tremor xerces xml2; do
 done
 done
 
+mkdir -p project/assets
 rm -f project/assets/*
 if [ -d "project/jni/application/src/AndroidData" ] ; then
 	echo Copying asset files
