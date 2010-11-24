@@ -18,4 +18,4 @@ fi
 if [ \! -f openttd/Makefile ] ; then
 	../setEnvironment.sh sh -c "cd openttd && ./configure --host=arm-eabi --with-sdl --with-freetype=sdl-config --with-png --with-zlib --with-libtimidity=$LOCAL_PATH/../../../obj/local/armeabi/libtimidity.so --with-lzo2=$LOCAL_PATH/../../../obj/local/armeabi/liblzo2.so --prefix-dir='.' --data-dir='' --without-allegro --without-fontconfig --endian=LE"
 fi
-../setEnvironment.sh sh -c "cd openttd && make -j1 VERBOSE=1 LIBS='-lsdl-1.2 -llzo2 -lpng -ltimidity -lfreetype -lgcc -lz -lc -lstdc++'" && cp -f openttd/objs/release/openttd libapplication.so
+../setEnvironment.sh sh -c "cd openttd && make -j1 VERBOSE=1 STRIP='' LIBS='-lsdl-1.2 -llzo2 -lpng -ltimidity -lfreetype -lgcc -lz -lc -lstdc++'" && cp -f openttd/objs/release/openttd libapplication.so

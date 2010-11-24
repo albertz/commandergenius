@@ -1,6 +1,20 @@
+Index: src/video/sdl_v.cpp
+===================================================================
+--- src/video/sdl_v.cpp	(revision 21311)
++++ src/video/sdl_v.cpp	(working copy)
+@@ -485,6 +485,9 @@
+ 	SDL_CALL SDL_EnableUNICODE(1);
+ 
+ 	_draw_threaded = GetDriverParam(parm, "no_threads") == NULL && GetDriverParam(parm, "no_thread") == NULL;
++#ifdef ANDROID
++	_draw_threaded = false;
++#endif
+ 
+ 	return NULL;
+ }
 Index: src/sound/sdl_s.cpp
 ===================================================================
---- src/sound/sdl_s.cpp	(revision 21293)
+--- src/sound/sdl_s.cpp	(revision 21311)
 +++ src/sound/sdl_s.cpp	(working copy)
 @@ -20,9 +20,16 @@
  
@@ -21,7 +35,7 @@ Index: src/sound/sdl_s.cpp
  const char *SoundDriver_SDL::Start(const char * const *parm)
 Index: src/music/libtimidity.cpp
 ===================================================================
---- src/music/libtimidity.cpp	(revision 21293)
+--- src/music/libtimidity.cpp	(revision 21311)
 +++ src/music/libtimidity.cpp	(working copy)
 @@ -23,10 +23,13 @@
  #include <sys/stat.h>
@@ -64,7 +78,7 @@ Index: src/music/libtimidity.cpp
  
 Index: src/os/unix/unix.cpp
 ===================================================================
---- src/os/unix/unix.cpp	(revision 21293)
+--- src/os/unix/unix.cpp	(revision 21311)
 +++ src/os/unix/unix.cpp	(working copy)
 @@ -24,7 +24,7 @@
  
@@ -89,7 +103,7 @@ Index: src/os/unix/unix.cpp
  	int ret;
 Index: src/os/unix/crashlog_unix.cpp
 ===================================================================
---- src/os/unix/crashlog_unix.cpp	(revision 21293)
+--- src/os/unix/crashlog_unix.cpp	(revision 21311)
 +++ src/os/unix/crashlog_unix.cpp	(working copy)
 @@ -141,7 +141,11 @@
  };
@@ -105,7 +119,7 @@ Index: src/os/unix/crashlog_unix.cpp
   * Entry point for the crash handler.
 Index: src/network/core/os_abstraction.h
 ===================================================================
---- src/network/core/os_abstraction.h	(revision 21293)
+--- src/network/core/os_abstraction.h	(revision 21311)
 +++ src/network/core/os_abstraction.h	(working copy)
 @@ -159,7 +159,7 @@
  #		include <net/if.h>
@@ -118,7 +132,7 @@ Index: src/network/core/os_abstraction.h
   *   the list of IPs from the system. */
 Index: src/debug.cpp
 ===================================================================
---- src/debug.cpp	(revision 21293)
+--- src/debug.cpp	(revision 21311)
 +++ src/debug.cpp	(working copy)
 @@ -16,6 +16,9 @@
  #include "string_func.h"
