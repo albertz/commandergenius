@@ -154,3 +154,17 @@ Index: src/debug.cpp
  #if defined(ENABLE_NETWORK)
  	if (_debug_socket != INVALID_SOCKET) {
  		char buf2[1024 + 32];
+Index: src/main_gui.cpp
+===================================================================
+--- src/main_gui.cpp	(revision 21311)
++++ src/main_gui.cpp	(working copy)
+@@ -275,6 +275,9 @@
+ 			}
+ 
+ 			case WKC_ESC: ResetObjectToPlace(); break;
++#ifdef ANDROID
++			case WKC_DELETE: DeleteAllNonVitalWindows(); break;
++#endif
+ 			case WKC_DELETE: DeleteNonVitalWindows(); break;
+ 			case WKC_DELETE | WKC_SHIFT: DeleteAllNonVitalWindows(); break;
+ 			case 'R' | WKC_CTRL: MarkWholeScreenDirty(); break;
