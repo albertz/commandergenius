@@ -94,18 +94,12 @@ using _STLP_VENDOR_CSTD::wctomb;
 #    endif
 using _STLP_VENDOR_CSTD::qsort;
 using _STLP_VENDOR_CSTD::labs;
-#    if !defined (ANDROID)
-// this function doesn't exist on Android
 using _STLP_VENDOR_CSTD::ldiv;
-#    endif
 #    if defined (_STLP_LONG_LONG) && !defined (_STLP_NO_VENDOR_STDLIB_L)
 #      if !defined(__sun)
 using _STLP_VENDOR_CSTD::llabs;
-#        if !defined (ANDROID)
-// these types don't exist on Android
 using _STLP_VENDOR_CSTD::lldiv_t;
 using _STLP_VENDOR_CSTD::lldiv;
-#        endif
 #      else
 using ::llabs;
 using ::lldiv_t;
@@ -140,9 +134,8 @@ inline _STLP_VENDOR_CSTD::div_t div(int __x, int __y) { return _STLP_VENDOR_CSTD
 inline long abs(long __x) { return _STLP_VENDOR_CSTD::labs(__x); }
 #  endif
 
-/** VC since version 8 has this, the platform SDK and CE SDKs hanging behind.
- *  Android doesn't have ldiv_t. */
-#  if (!defined (_STLP_MSVC_LIB) || (_STLP_MSVC_LIB < 1400) || defined (_STLP_USING_PLATFORM_SDK_COMPILER) || defined(UNDER_CE)) && !defined (ANDROID)
+/** VC since version 8 has this, the platform SDK and CE SDKs hanging behind. */
+#  if (!defined (_STLP_MSVC_LIB) || (_STLP_MSVC_LIB < 1400) || defined (_STLP_USING_PLATFORM_SDK_COMPILER) || defined(UNDER_CE))
 inline _STLP_VENDOR_CSTD::ldiv_t div(long __x, long __y) { return _STLP_VENDOR_CSTD::ldiv(__x, __y); }
 #  endif
 
@@ -158,10 +151,7 @@ inline _STLP_VENDOR_CSTD::ldiv_t div(long __x, long __y) { return _STLP_VENDOR_C
 #  if !defined (_STLP_NO_VENDOR_STDLIB_L)
 #    if !defined (__sun)
 inline _STLP_LONG_LONG  abs(_STLP_LONG_LONG __x) { return _STLP_VENDOR_CSTD::llabs(__x); }
-#      if !defined (ANDROID)
-// Android doesn't have lldiv_t.
 inline lldiv_t div(_STLP_LONG_LONG __x, _STLP_LONG_LONG __y) { return _STLP_VENDOR_CSTD::lldiv(__x, __y); }
-#      endif
 #    else
 inline _STLP_LONG_LONG  abs(_STLP_LONG_LONG __x) { return ::llabs(__x); }
 inline lldiv_t div(_STLP_LONG_LONG __x, _STLP_LONG_LONG __y) { return ::lldiv(__x, __y); }
@@ -185,8 +175,6 @@ inline _STLP_LONG_LONG  abs(_STLP_LONG_LONG __x) { return __x < 0 ? -__x : __x; 
 // ad hoc, don't replace with _STLP_VENDOR_CSTD::abs here! - ptr 2005-03-05
 _STLP_BEGIN_NAMESPACE
 using ::abs;
-#  if !defined (ANDROID)
-// Android doesn't have div_t or ldiv_t.
 #    if !defined (N_PLAT_NLM)
 using ::div;
 #    else
@@ -194,7 +182,6 @@ using ::div;
 inline div_t div(int __x, int __y) { div_t d; d.quot = __x / __y; d.rem = __x % __y; return d; }
 inline ldiv_t div(long __x, long __y) { ldiv_t d; d.quot = __x / __y; d.rem = __x % __y; return d; }
 #    endif
-#  endif
 _STLP_END_NAMESPACE
 #endif
 

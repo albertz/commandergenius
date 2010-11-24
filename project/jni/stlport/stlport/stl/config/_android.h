@@ -72,12 +72,12 @@
 #define _STLP_NATIVE_CPP_RUNTIME_HEADER(header) <../../usr/include/header>
 
 #ifdef __cplusplus
-#include <stddef.h>
-//inline void* operator new(size_t, void* p) { return p; }
-//inline void* operator new[](size_t, void* p) { return p; }
 // Hack to prevent including buggy stl_pair.h system header, introduced in Android 1.6 NDK
 #define _CPP_UTILITY 1
 #define __SGI_STL_INTERNAL_PAIR_H 1
+#include <stddef.h>
+//inline void* operator new(size_t, void* p) { return p; }
+//inline void* operator new[](size_t, void* p) { return p; }
 #endif
 
 #endif /* __stl_config__android_h */
