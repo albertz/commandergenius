@@ -13,6 +13,10 @@ Bugs to fix
 
 - Add an option for overlay buttons transparency and button images size.
 
-- Even smaller audio buffer.
+- Option to move mouse with arrow keys.
+
+- Left-click with double-tap option.
+
+- Zoom and rotate multitouch gestures should return some keycodes.
 
 And that's all, I won't be doing any more development or fix other bugs (see bugs.txt for details).
