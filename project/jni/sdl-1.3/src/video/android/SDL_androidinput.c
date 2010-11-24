@@ -30,6 +30,8 @@
 #include "SDL_config.h"
 
 #include "SDL_version.h"
+#include "SDL_mutex.h"
+#include "SDL_events.h"
 #if SDL_VERSION_ATLEAST(1,3,0)
 #include "SDL_touch.h"
 #include "../../events/SDL_touch_c.h"
@@ -41,7 +43,14 @@
 #include "jniwrapperstuff.h"
 
 
-SDLKey SDL_android_keymap[KEYCODE_LAST+1];
+static SDLKey SDL_android_keymap[KEYCODE_LAST+1];
+
+static inline SDL_scancode TranslateKey(int scancode)
+{
+	if ( scancode >= SDL_arraysize(SDL_android_keymap) )
+		scancode = KEYCODE_UNKNOWN;
+	return SDL_android_keymap[scancode];
+}
 
 
 static int isTrackballUsed = 0;
@@ -59,6 +68,7 @@ static int isMultitouchUsed = 0;
 SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL};
 static int TrackballDampening = 0; // in milliseconds
 static int lastTrackballAction = 0;
+
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
@@ -147,28 +157,25 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 #if SDL_VERSION_ATLEAST(1,3,0)
 		// Use nifty SDL 1.3 multitouch API
 		if( action == MOUSE_MOVE )
-			SDL_SendTouchMotion(0, pointerId, 0, x, y, force*radius / 16);
+			SDL_ANDROID_MainThreadPushMultitouchMotion(pointerId, x, y, force*radius / 16);
 		else
-			SDL_SendFingerDown(0, pointerId, action == MOUSE_DOWN ? 1 : 0, x, y, force*radius / 16);
+			SDL_ANDROID_MainThreadPushMultitouchButton(pointerId, action == MOUSE_DOWN ? 1 : 0, x, y, force*radius / 16);
 #endif
 
-		if( SDL_ANDROID_CurrentJoysticks[pointerId] )
-		{
-			SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[pointerId+1], 0, x);
-			SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[pointerId+1], 1, y);
-			SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[pointerId+1], 2, force);
-			SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[pointerId+1], 3, radius);
-			if( action == MOUSE_DOWN )
-				SDL_PrivateJoystickButton(SDL_ANDROID_CurrentJoysticks[pointerId+1], 0, SDL_PRESSED);
-			if( action == MOUSE_UP )
-				SDL_PrivateJoystickButton(SDL_ANDROID_CurrentJoysticks[pointerId+1], 0, SDL_RELEASED);
-		}
+		SDL_ANDROID_MainThreadPushJoystickAxis(pointerId+1, 0, x);
+		SDL_ANDROID_MainThreadPushJoystickAxis(pointerId+1, 1, y);
+		SDL_ANDROID_MainThreadPushJoystickAxis(pointerId+1, 2, force);
+		SDL_ANDROID_MainThreadPushJoystickAxis(pointerId+1, 3, radius);
+		if( action == MOUSE_DOWN )
+			SDL_ANDROID_MainThreadPushJoystickButton(pointerId+1, 0, SDL_PRESSED);
+		if( action == MOUSE_UP )
+			SDL_ANDROID_MainThreadPushJoystickButton(pointerId+1, 0, SDL_RELEASED);
 	}
 	if( !isMouseUsed && !SDL_ANDROID_isTouchscreenKeyboardUsed )
 	{
 		SDL_keysym keysym;
 		if( action != MOUSE_MOVE )
-			SDL_SendKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, GetKeysym(SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_0)) ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_0)) );
 		return;
 	}
 
@@ -177,27 +184,22 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 
 	if( pointerId == 0 )
 	{
-#if SDL_VERSION_ATLEAST(1,3,0)
-#else
-#define SDL_SendMouseMotion(A,B,X,Y) SDL_PrivateMouseMotion(0, 0, X, Y)
-#define SDL_SendMouseButton(N, A, B) SDL_PrivateMouseButton( A, B, 0, 0 )
-#endif
-		SDL_SendMouseMotion(NULL, 0, x, y);
+		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
 		if( action == MOUSE_UP )
 		{
 			if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT) )
-				SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_LEFT );
+				SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
 			if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_RIGHT) )
-				SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_RIGHT );
+				SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_RIGHT );
 			SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRect.h = 0;
 			SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = 0;
 			if( SDL_ANDROID_ShowScreenUnderFinger )
-				SDL_SendMouseMotion(NULL, 0, x > 0 ? x-1 : 0, y); // Move mouse by 1 pixel so it will force screen update and mouse-under-finger window will be removed
+				SDL_ANDROID_MainThreadPushMouseMotion(x > 0 ? x-1 : 0, y); // Move mouse by 1 pixel so it will force screen update and mouse-under-finger window will be removed
 		}
 		if( action == MOUSE_DOWN )
 		{
 			if( !leftClickUsesPressure && !leftClickUsesMultitouch )
-				SDL_SendMouseButton( NULL, SDL_PRESSED, SDL_BUTTON_LEFT );
+				SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
 			else
 				action == MOUSE_MOVE;
 			UpdateScreenUnderFingerRect(x, y);
@@ -209,9 +211,9 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 				int button = leftClickUsesPressure ? SDL_BUTTON_LEFT : SDL_BUTTON_RIGHT;
 				int buttonState = ( force > maxForce || radius > maxRadius );
 				if( button == SDL_BUTTON_RIGHT && (SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT)) )
-					SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_LEFT );
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
 				if( ( (SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(button)) != 0 ) != buttonState )
-					SDL_SendMouseButton( NULL, buttonState ? SDL_PRESSED : SDL_RELEASED, button );
+					SDL_ANDROID_MainThreadPushMouseButton( buttonState ? SDL_PRESSED : SDL_RELEASED, button );
 			}
 			UpdateScreenUnderFingerRect(x, y);
 		}
@@ -220,13 +222,13 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	{
 		if( leftClickUsesMultitouch )
 		{
-			SDL_SendMouseButton( NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_LEFT );
+			SDL_ANDROID_MainThreadPushMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_LEFT );
 		}
 		else if( rightClickMethod == RIGHT_CLICK_WITH_MULTITOUCH )
 		{
 			if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT) )
-				SDL_SendMouseButton( NULL, SDL_RELEASED, SDL_BUTTON_LEFT );
-			SDL_SendMouseButton( NULL, (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
+				SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
+			SDL_ANDROID_MainThreadPushMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
 		}
 	}
 }
@@ -243,35 +245,17 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 			return;
 	if( key == KEYCODE_MENU && rightClickMethod == RIGHT_CLICK_WITH_MENU_BUTTON )
 	{
-		SDL_SendMouseButton( NULL, action ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
+		SDL_ANDROID_MainThreadPushMouseButton( action ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
 		return;
 	}
 	SDL_keysym keysym;
-	SDL_SendKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key ,&keysym) );
+	SDL_ANDROID_MainThreadPushKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key) );
 }
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeTextInput) ( JNIEnv*  env, jobject thiz, jint ascii, jint unicode )
 {
-	SDL_keysym keysym;
-	keysym.scancode = ascii;
-	keysym.sym = ascii;
-	keysym.mod = KMOD_NONE;
-	keysym.unicode = 0;
-	if ( SDL_TranslateUNICODE ) {
-		/* Populate the unicode field with the ASCII value */
-		keysym.unicode = unicode;
-	}
-
-#if SDL_VERSION_ATLEAST(1,3,0)
-	char text[2];
-	text[0]=ascii;
-	text[1]=0;
-	SDL_SendKeyboardText(text);
-#else
-	SDL_SendKeyboardKey( SDL_PRESSED, &keysym );
-	SDL_SendKeyboardKey( SDL_RELEASED, &keysym );
-#endif
+	SDL_ANDROID_MainThreadPushText(ascii, unicode);
 }
 
 
@@ -530,12 +514,12 @@ void updateOrientation ( float accX, float accY, float accZ )
 
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): %f %f %f", accX, accY, accZ);
 	
-	if( SDL_ANDROID_isJoystickUsed && SDL_ANDROID_CurrentJoysticks[0] ) // TODO: mutex for that stuff?
+	if( SDL_ANDROID_isJoystickUsed ) // TODO: mutex for that stuff?
 	{
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): sending joystick event");
-		SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 0, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accX - midX) * joystickSensitivity))));
-		SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 1, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accY - midY) * joystickSensitivity))));
-		SDL_PrivateJoystickAxis(SDL_ANDROID_CurrentJoysticks[0], 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accZ - midZ) * joystickSensitivity))));
+		SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accX - midX) * joystickSensitivity))));
+		SDL_ANDROID_MainThreadPushJoystickAxis(0, 1, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accY - midY) * joystickSensitivity))));
+		SDL_ANDROID_MainThreadPushJoystickAxis(0, 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accZ - midZ) * joystickSensitivity))));
 
 		if( accelerometerCenterPos == ACCELEROMETER_CENTER_FLOATING )
 		{
@@ -559,7 +543,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press left, acc %f mid %f d %f", accX, midX, dx);
 			pressLeft = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_LEFT, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_LEFT) );
 		}
 	}
 	else
@@ -568,7 +552,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release left, acc %f mid %f d %f", accX, midX, dx);
 			pressLeft = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT) );
 		}
 	}
 	if( accX < midX - dx*2 )
@@ -580,7 +564,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press right, acc %f mid %f d %f", accX, midX, dx);
 			pressRight = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_RIGHT, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_RIGHT) );
 		}
 	}
 	else
@@ -589,7 +573,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release right, acc %f mid %f d %f", accX, midX, dx);
 			pressRight = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT) );
 		}
 	}
 	if( accX > midX + dx*2 )
@@ -601,7 +585,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press up, acc %f mid %f d %f", accY, midY, dy);
 			pressUp = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_DOWN, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_DOWN) );
 		}
 	}
 	else
@@ -610,7 +594,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release up, acc %f mid %f d %f", accY, midY, dy);
 			pressUp = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN) );
 		}
 	}
 	if( accY < midY - dy*2 )
@@ -622,7 +606,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press down, acc %f mid %f d %f", accY, midY, dy);
 			pressDown = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_UP, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_UP) );
 		}
 	}
 	else
@@ -631,7 +615,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release down, acc %f mid %f d %f", accY, midY, dy);
 			pressDown = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP) );
 		}
 	}
 	if( accY > midY + dy*2 )
@@ -642,7 +626,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		if( !pressL )
 		{
 			pressL = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_ALT_LEFT, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_ALT_LEFT) );
 		}
 	}
 	else
@@ -650,7 +634,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		if( pressL )
 		{
 			pressL = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_ALT_LEFT, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_ALT_LEFT) );
 		}
 	}
 	if( accZ < midZ - dz*2 )
@@ -661,7 +645,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		if( !pressR )
 		{
 			pressR = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_ALT_RIGHT, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_ALT_RIGHT) );
 		}
 	}
 	else
@@ -669,7 +653,7 @@ void updateOrientation ( float accX, float accY, float accZ )
 		if( pressR )
 		{
 			pressR = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_ALT_RIGHT, &keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_ALT_RIGHT) );
 		}
 	}
 	if( accZ > midZ + dz*2 )
@@ -696,18 +680,18 @@ int processAndroidTrackball(int key, int action)
 		if( downPressed )
 		{
 			downPressed = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN) );
 			return 1;
 		}
 		if( !upPressed )
 		{
 			upPressed = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
 		}
 		else
 		{
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
 		}
 		return 1;
 	}
@@ -717,18 +701,18 @@ int processAndroidTrackball(int key, int action)
 		if( upPressed )
 		{
 			upPressed = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP) );
 			return 1;
 		}
 		if( !upPressed )
 		{
 			downPressed = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
 		}
 		else
 		{
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
 		}
 		return 1;
 	}
@@ -738,18 +722,18 @@ int processAndroidTrackball(int key, int action)
 		if( rightPressed )
 		{
 			rightPressed = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT) );
 			return 1;
 		}
 		if( !leftPressed )
 		{
 			leftPressed = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
 		}
 		else
 		{
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
 		}
 		return 1;
 	}
@@ -759,18 +743,18 @@ int processAndroidTrackball(int key, int action)
 		if( leftPressed )
 		{
 			leftPressed = 0;
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT) );
 			return 1;
 		}
 		if( !rightPressed )
 		{
 			rightPressed = 1;
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
 		}
 		else
 		{
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(key ,&keysym) );
-			SDL_SendKeyboardKey( SDL_PRESSED, TranslateKey(key ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
 		}
 		return 1;
 	}
@@ -786,13 +770,13 @@ void SDL_ANDROID_processAndroidTrackballDampening()
 	if( SDL_GetTicks() - lastTrackballAction > TrackballDampening )
 	{
 		if( upPressed )
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP) );
 		if( downPressed )
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN) );
 		if( leftPressed )
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT) );
 		if( rightPressed )
-			SDL_SendKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT ,&keysym) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT) );
 		upPressed = 0;
 		downPressed = 0;
 		leftPressed = 0;
@@ -866,4 +850,268 @@ void SDL_SYS_JoystickQuit(void)
 	return;
 }
 
+
+enum { MAX_BUFFERED_EVENTS = 64 };
+static SDL_Event BufferedEvents[MAX_BUFFERED_EVENTS];
+static int BufferedEventsStart = 0, BufferedEventsEnd = 0;
+static SDL_mutex * BufferedEventsMutex = NULL;
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+
+#define SDL_SendKeyboardKey(state, keysym) SDL_SendKeyboardKey(state, (keysym)->sym)
+
+#else
+
+#define SDL_SendMouseMotion(A,B,X,Y) SDL_PrivateMouseMotion(0, 0, X, Y)
+#define SDL_SendMouseButton(N, A, B) SDL_PrivateMouseButton( A, B, 0, 0 )
+#define SDL_SendKeyboardKey(state, keysym) SDL_PrivateKeyboard(state, keysym)
+
+#endif
+
+extern void SDL_ANDROID_PumpEvents()
+{
+	if( !BufferedEventsMutex )
+		BufferedEventsMutex = SDL_CreateMutex();
+	SDL_mutexP(BufferedEventsMutex);
+	while( BufferedEventsStart != BufferedEventsEnd )
+	{
+		SDL_Event * ev = &BufferedEvents[BufferedEventsStart];
+		
+		switch( ev->type )
+		{
+			case SDL_MOUSEMOTION:
+				SDL_SendMouseMotion(NULL, 0, ev->motion.x, ev->motion.y);
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				SDL_SendMouseButton( NULL, ev->button.state, ev->button.button );
+				break;
+			case SDL_KEYDOWN:
+				SDL_SendKeyboardKey( ev->key.state, &ev->key.keysym );
+				break;
+			case SDL_JOYAXISMOTION:
+				if( ev->jaxis.which < MAX_MULTITOUCH_POINTERS+1 && SDL_ANDROID_CurrentJoysticks[ev->jaxis.which] )
+					SDL_PrivateJoystickAxis( SDL_ANDROID_CurrentJoysticks[ev->jaxis.which], ev->jaxis.axis, ev->jaxis.value );
+				break;
+			case SDL_JOYBUTTONDOWN:
+				if( ev->jbutton.which < MAX_MULTITOUCH_POINTERS+1 && SDL_ANDROID_CurrentJoysticks[ev->jbutton.which] )
+					SDL_PrivateJoystickButton( SDL_ANDROID_CurrentJoysticks[ev->jbutton.which], ev->jbutton.button, ev->jbutton.state );
+				break;
+#if SDL_VERSION_ATLEAST(1,3,0)
+			case SDL_FINGERMOTION:
+				SDL_SendTouchMotion(0, ev->tfinger.fingerId, 0, ev->tfinger.x, ev->tfinger.y, ev->tfinger.pressure);
+				break;
+			case SDL_FINGERDOWN:
+				SDL_SendFingerDown(0, ev->tfinger.fingerId, ev->tfinger.state ? 1 : 0, ev->tfinger.x, ev->tfinger.y, ev->tfinger.pressure);
+				break;
+			case SDL_TEXTINPUT:
+				SDL_SendKeyboardText(ev->text.text);
+				break;
+#endif
+		}
+		
+		ev->type = 0;
+		BufferedEventsStart++;
+		if( BufferedEventsStart >= MAX_BUFFERED_EVENTS )
+			BufferedEventsStart = 0;
+	}
+	SDL_mutexV(BufferedEventsMutex);
+};
+// Queue events to main thread
+static int getNextEvent()
+{
+	int nextEvent;
+	if( !BufferedEventsMutex )
+		return -1;
+	SDL_mutexP(BufferedEventsMutex);
+	nextEvent = BufferedEventsEnd;
+	nextEvent++;
+	if( nextEvent >= MAX_BUFFERED_EVENTS )
+		nextEvent = 0;
+	while( nextEvent == BufferedEventsStart )
+	{
+		SDL_mutexV(BufferedEventsMutex);
+		SDL_Delay(100);
+		SDL_mutexP(BufferedEventsMutex);
+		nextEvent = BufferedEventsEnd;
+		nextEvent++;
+		if( nextEvent >= MAX_BUFFERED_EVENTS )
+			nextEvent = 0;
+	}
+	return nextEvent;
+}
+
+extern void SDL_ANDROID_MainThreadPushMouseMotion(int x, int y)
+{
+	int nextEvent = getNextEvent();
+	if( nextEvent == -1 )
+		return;
+	
+	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+	
+	ev->type = SDL_MOUSEMOTION;
+	ev->motion.x = x;
+	ev->motion.y = y;
+	
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+};
+extern void SDL_ANDROID_MainThreadPushMouseButton(int pressed, int button)
+{
+	int nextEvent = getNextEvent();
+	if( nextEvent == -1 )
+		return;
+	
+	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+	
+	ev->type = SDL_MOUSEBUTTONDOWN;
+	ev->button.state = pressed;
+	ev->button.button = button;
+	
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+};
+
+extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode scancode)
+{
+	int nextEvent = getNextEvent();
+	if( nextEvent == -1 )
+		return;
+	
+	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+	
+	ev->type = SDL_KEYDOWN;
+	ev->key.state = pressed;
+	ev->key.keysym.scancode = scancode;
+	ev->key.keysym.sym = scancode;
+	ev->key.keysym.mod = KMOD_NONE;
+	ev->key.keysym.unicode = 0;
+	if ( SDL_TranslateUNICODE )
+		ev->key.keysym.unicode = scancode;
+	
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+};
+extern void SDL_ANDROID_MainThreadPushJoystickAxis(int joy, int axis, int value)
+{
+	if( ! ( joy < MAX_MULTITOUCH_POINTERS+1 && SDL_ANDROID_CurrentJoysticks[joy] ) )
+		return;
+
+	int nextEvent = getNextEvent();
+	if( nextEvent == -1 )
+		return;
+	
+	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+	
+	ev->type = SDL_JOYAXISMOTION;
+	ev->jaxis.which = joy;
+	ev->jaxis.axis = axis;
+	ev->jaxis.value = value;
+	
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+};
+extern void SDL_ANDROID_MainThreadPushJoystickButton(int joy, int button, int pressed)
+{
+	if( ! ( joy < MAX_MULTITOUCH_POINTERS+1 && SDL_ANDROID_CurrentJoysticks[joy] ) )
+		return;
+
+	int nextEvent = getNextEvent();
+	if( nextEvent == -1 )
+		return;
+	
+	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+	
+	ev->type = SDL_JOYBUTTONDOWN;
+	ev->jbutton.which = joy;
+	ev->jbutton.button = button;
+	ev->jbutton.state = pressed;
+	
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+};
+extern void SDL_ANDROID_MainThreadPushMultitouchButton(int id, int pressed, int x, int y, int force)
+{
+#if SDL_VERSION_ATLEAST(1,3,0)
+	int nextEvent = getNextEvent();
+	if( nextEvent == -1 )
+		return;
+	
+	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+	
+	ev->type = SDL_FINGERDOWN:
+	ev->tfinger.fingerId = id;
+	ev->tfinger.state = pressed;
+	ev->tfinger.x = x;
+	ev->tfinger.y = y;
+	ev->tfinger.pressure = force;
+	
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+#endif
+};
+extern void SDL_ANDROID_MainThreadPushMultitouchMotion(int id, int x, int y, int force)
+{
+#if SDL_VERSION_ATLEAST(1,3,0)
+	int nextEvent = getNextEvent();
+	if( nextEvent == -1 )
+		return;
+	
+	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+	
+	ev->type = SDL_FINGERMOTION:
+	ev->tfinger.fingerId = id;
+	ev->tfinger.x = x;
+	ev->tfinger.y = y;
+	ev->tfinger.pressure = force;
+	
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+#endif
+};
+extern void SDL_ANDROID_MainThreadPushText( int scancode, int unicode )
+{
+	int nextEvent = getNextEvent();
+	if( nextEvent == -1 )
+		return;
+	
+	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+	
+#if SDL_VERSION_ATLEAST(1,3,0)
+
+	// TODO: convert to UTF-8
+	ev->type = SDL_TEXTINPUT;
+	ev->text.text[0] = scancode;
+	ev->text.text[1] = 0;
+
+#else
+
+	ev->type = SDL_KEYDOWN;
+	ev->key.state = SDL_PRESSED;
+	ev->key.keysym.scancode = scancode;
+	ev->key.keysym.sym = scancode;
+	ev->key.keysym.mod = KMOD_NONE;
+	ev->key.keysym.unicode = 0;
+	if ( SDL_TranslateUNICODE )
+		ev->key.keysym.unicode = unicode;
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+
+	nextEvent = getNextEvent();
+	{
+		SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+		ev->type = SDL_KEYUP;
+		ev->key.state = SDL_PRESSED;
+		ev->key.keysym.scancode = scancode;
+		ev->key.keysym.sym = scancode;
+		ev->key.keysym.mod = KMOD_NONE;
+		ev->key.keysym.unicode = 0;
+		if ( SDL_TranslateUNICODE )
+			ev->key.keysym.unicode = unicode;
+	}
+
+#endif
+	
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+};
 

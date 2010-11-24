@@ -397,6 +397,7 @@ void ANDROID_VideoQuit(_THIS)
 
 void ANDROID_PumpEvents(_THIS)
 {
+	SDL_ANDROID_PumpEvents();
 }
 
 static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
@@ -797,7 +798,11 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
 	if( SDL_VideoThreadID != SDL_ThreadID() )
 	{
+		static count = 100;
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
+		count--;
+		if(count <=0 )
+			abort();
 		return;
 	}
 

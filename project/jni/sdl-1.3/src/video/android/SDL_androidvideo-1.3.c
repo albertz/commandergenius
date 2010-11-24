@@ -172,6 +172,7 @@ void ANDROID_VideoQuit(_THIS)
 
 void ANDROID_PumpEvents(_THIS)
 {
+	SDL_ANDROID_PumpEvents();
 }
 
 void ANDROID_GL_SwapBuffers(_THIS, SDL_Window * window)

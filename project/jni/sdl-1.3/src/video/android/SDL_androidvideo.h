@@ -26,6 +26,7 @@
 #include "SDL_config.h"
 #include "SDL_video.h"
 #include "SDL_joystick.h"
+#include "SDL_events.h"
 
 extern int SDL_ANDROID_sWindowWidth;
 extern int SDL_ANDROID_sWindowHeight;
@@ -53,6 +54,8 @@ extern SDL_Window * ANDROID_CurrentWindow;
 enum { MAX_MULTITOUCH_POINTERS = 16 };
 extern void ANDROID_InitOSKeymap();
 extern int SDL_ANDROID_isJoystickUsed;
-extern SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1];
+// Events have to be sent only from main thread from PumpEvents(), so we'll buffer them here
+extern void SDL_ANDROID_PumpEvents();
+
 
 #endif /* _SDL_androidvideo_h */
