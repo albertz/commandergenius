@@ -35,14 +35,18 @@ class AudioThread {
 	
 	public int fillBuffer()
 	{
-		if( Globals.AudioBufferConfig == 0 )
-			mAudio.flush();
-		mAudio.write( mAudioBuffer, 0, mVirtualBufSize );
 		if( mParent.isPaused() )
 		{
 			try{
 				Thread.sleep(200);
 			} catch (InterruptedException e) {}
+		}
+		else
+		{
+			//if( Globals.AudioBufferConfig == 0 ) // Gives too much spam to logcat, makes things worse
+			//	mAudio.flush();
+
+			mAudio.write( mAudioBuffer, 0, mVirtualBufSize );
 		}
 		
 		return 1;
