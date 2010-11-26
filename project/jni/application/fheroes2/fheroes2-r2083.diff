@@ -1,0 +1,86 @@
+Index: files/lang/fheroes2.pot
+===================================================================
+Index: src/fheroes2/system/settings.cpp
+===================================================================
+--- src/fheroes2/system/settings.cpp	(revision 2083)
++++ src/fheroes2/system/settings.cpp	(working copy)
+@@ -1427,6 +1427,9 @@
+ {
+     u32 flags = opt_global.Modes(GLOBAL_USESWSURFACE) ? SDL_SWSURFACE : SDL_SWSURFACE | SDL_HWSURFACE;
+     if(opt_global.Modes(GLOBAL_FULLSCREEN)) flags |= SDL_FULLSCREEN;
++    #ifdef ANDROID
++    flags = SDL_SWSURFACE;
++    #endif
+ 
+ #ifdef ANDROID
+     flags = SDL_SWSURFACE;
+Index: src/fheroes2/system/settings.h
+===================================================================
+--- src/fheroes2/system/settings.h	(revision 2083)
++++ src/fheroes2/system/settings.h	(working copy)
+@@ -36,6 +36,9 @@
+ #include "game.h"
+ #include "game_io.h"
+ #include "bitmodes.h"
++#ifdef ANDROID
++#include <android/log.h>
++#endif
+ 
+ #ifdef ANDROID
+ #include <android/log.h>
+Index: src/fheroes2/network/server.cpp
+===================================================================
+--- src/fheroes2/network/server.cpp	(revision 2083)
++++ src/fheroes2/network/server.cpp	(working copy)
+@@ -307,7 +307,8 @@
+     for(Color::color_t color = Color::BLUE; color != Color::GRAY; ++color) if(color & conf.PlayersColors())
+ 	world.GetKingdom(color).SetControl(Game::REMOTE);
+ 
+-    std::for_each(clients.begin(), clients.end(), std::bind2nd(std::mem_fun_ref(&FH2RemoteClient::SetModes), ST_INGAME));
++    for( std::vector<FH2RemoteClient> :: iterator it = clients.begin(); it != clients.end(); it++ )
++        it->SetModes(ST_INGAME);
+ 
+     GameOver::Result::Get().Reset();
+     std::vector<FH2RemoteClient>::iterator it;
+Index: src/fheroes2/network/network.cpp
+===================================================================
+--- src/fheroes2/network/network.cpp	(revision 2083)
++++ src/fheroes2/network/network.cpp	(working copy)
+@@ -154,7 +154,9 @@
+     Network::SetProtocolVersion(static_cast<u16>((conf.MajorVersion() << 8)) | conf.MinorVersion());
+     
+     if(SDL::Init(INIT_TIMER))
++#ifndef ANDROID
+     try
++#endif
+     {
+         std::atexit(SDL::Quit);
+ 
+@@ -171,6 +173,7 @@
+ 
+         return FH2Server::callbackCreateThread(&server);
+     }
++#ifndef ANDROID
+     catch(std::bad_alloc)
+     {
+     }
+@@ -178,6 +181,7 @@
+     {
+         conf.Dump();
+     }
++#endif
+ 
+     return 0;
+ }
+Index: src/fheroes2/maps/pairs.h
+===================================================================
+--- src/fheroes2/maps/pairs.h	(revision 2083)
++++ src/fheroes2/maps/pairs.h	(working copy)
+@@ -23,6 +23,7 @@
+ #ifndef H2PAIRS_H
+ #define H2PAIRS_H
+ 
++#include <list>
+ #include <utility>
+ #include <list>
+ #include "maps_tiles.h"
