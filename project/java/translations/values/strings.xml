@@ -70,7 +70,7 @@
     <string name="leftclick_near_cursor">Touch near mouse cursor</string>
     <string name="leftclick_multitouch">Touch screen with second finger</string>
     <string name="leftclick_pressure">Touch screen with force</string>
-    <string name="leftclick_dpadcenter">Trackball click / select key</string>
+    <string name="leftclick_dpadcenter">Trackball click / joystick center</string>
 
     <string name="pointandclick_question">Advanced features</string>
     <string name="pointandclick_keepaspectratio">Keep 4:3 screen aspect ratio</string>

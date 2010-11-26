@@ -1055,12 +1055,35 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key)
 		if( clickDoesNotMoveMouseX < 0 )
 			SDL_GetMouseState( &clickDoesNotMoveMouseX, &clickDoesNotMoveMouseY );
 
-		if( key == SDL_KEY(LEFT) || key == SDL_KEY(RIGHT) )
-			clickDoesNotMoveMouseXspeed += key == SDL_KEY(LEFT) ? -1 : 1;
+		if( key == SDL_KEY(LEFT) )
+		{
+			if( clickDoesNotMoveMouseXspeed > 0 )
+				clickDoesNotMoveMouseXspeed = 0;
+			clickDoesNotMoveMouseXspeed --;
+		}
+		else if( key == SDL_KEY(RIGHT) )
+		{
+			if( clickDoesNotMoveMouseXspeed < 0 )
+				clickDoesNotMoveMouseXspeed = 0;
+			clickDoesNotMoveMouseXspeed ++;
+		}
 		else
 			clickDoesNotMoveMouseXspeed = 0;
-		if( key == SDL_KEY(UP) || key == SDL_KEY(DOWN) )
-			clickDoesNotMoveMouseYspeed += key == SDL_KEY(UP) ? -1 : 1;
+
+		if( key == SDL_KEY(UP) )
+		{
+			if( clickDoesNotMoveMouseYspeed > 0 )
+				clickDoesNotMoveMouseYspeed = 0;
+			clickDoesNotMoveMouseYspeed --;
+		}
+		else if( key == SDL_KEY(DOWN) )
+		{
+			if( clickDoesNotMoveMouseYspeed < 0 )
+				clickDoesNotMoveMouseYspeed = 0;
+			clickDoesNotMoveMouseYspeed ++;
+		}
+		else
+			clickDoesNotMoveMouseYspeed = 0;
 
 		clickDoesNotMoveMouseX += clickDoesNotMoveMouseXspeed;
 		clickDoesNotMoveMouseY += clickDoesNotMoveMouseYspeed;
