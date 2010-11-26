@@ -317,25 +317,6 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 		return;
 	}
 
-	if( moveMouseWithArrowKeys && (
-		key == KEYCODE_DPAD_UP || key == KEYCODE_DPAD_DOWN ||
-		key == KEYCODE_DPAD_LEFT || key == KEYCODE_DPAD_RIGHT) )
-	{
-		if( clickDoesNotMoveMouseX < 0 )
-			SDL_GetMouseState( &clickDoesNotMoveMouseX, &clickDoesNotMoveMouseY );
-
-		if( key == KEYCODE_DPAD_LEFT || key == KEYCODE_DPAD_RIGHT )
-			clickDoesNotMoveMouseXspeed += key == KEYCODE_DPAD_LEFT ? -1 : 1;
-		else
-			clickDoesNotMoveMouseXspeed = 0;
-		if( key == KEYCODE_DPAD_UP || key == KEYCODE_DPAD_DOWN )
-			clickDoesNotMoveMouseYspeed += key == KEYCODE_DPAD_UP ? -1 : 1;
-
-		clickDoesNotMoveMouseX += clickDoesNotMoveMouseXspeed;
-		clickDoesNotMoveMouseY += clickDoesNotMoveMouseYspeed;
-		SDL_ANDROID_MainThreadPushMouseMotion(clickDoesNotMoveMouseX, clickDoesNotMoveMouseY);
-		return;
-	}
 	SDL_ANDROID_MainThreadPushKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key) );
 }
 
@@ -1058,7 +1039,7 @@ extern void SDL_ANDROID_MainThreadPushMouseButton(int pressed, int button)
 	SDL_mutexV(BufferedEventsMutex);
 };
 
-extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode scancode)
+extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key)
 {
 	int nextEvent = getNextEvent();
 	if( nextEvent == -1 )
@@ -1066,14 +1047,38 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode scan
 	
 	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
 	
+
+	if( moveMouseWithArrowKeys && (
+		key == SDL_KEY(UP) || key == SDL_KEY(DOWN) ||
+		key == SDL_KEY(LEFT) || key == SDL_KEY(RIGHT) ) )
+	{
+		if( clickDoesNotMoveMouseX < 0 )
+			SDL_GetMouseState( &clickDoesNotMoveMouseX, &clickDoesNotMoveMouseY );
+
+		if( key == SDL_KEY(LEFT) || key == SDL_KEY(RIGHT) )
+			clickDoesNotMoveMouseXspeed += key == SDL_KEY(LEFT) ? -1 : 1;
+		else
+			clickDoesNotMoveMouseXspeed = 0;
+		if( key == SDL_KEY(UP) || key == SDL_KEY(DOWN) )
+			clickDoesNotMoveMouseYspeed += key == SDL_KEY(UP) ? -1 : 1;
+
+		clickDoesNotMoveMouseX += clickDoesNotMoveMouseXspeed;
+		clickDoesNotMoveMouseY += clickDoesNotMoveMouseYspeed;
+
+		SDL_mutexV(BufferedEventsMutex);
+
+		SDL_ANDROID_MainThreadPushMouseMotion(clickDoesNotMoveMouseX, clickDoesNotMoveMouseY);
+		return;
+	}
+
 	ev->type = SDL_KEYDOWN;
 	ev->key.state = pressed;
-	ev->key.keysym.scancode = scancode;
-	ev->key.keysym.sym = scancode;
+	ev->key.keysym.scancode = key;
+	ev->key.keysym.sym = key;
 	ev->key.keysym.mod = KMOD_NONE;
 	ev->key.keysym.unicode = 0;
 	if ( SDL_TranslateUNICODE )
-		ev->key.keysym.unicode = scancode;
+		ev->key.keysym.unicode = key;
 	
 	BufferedEventsEnd = nextEvent;
 	SDL_mutexV(BufferedEventsMutex);
