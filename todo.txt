@@ -13,9 +13,9 @@ Bugs to fix
 
 - Add an option for overlay buttons transparency and button images size.
 
-- Option to move mouse with arrow keys.
+- Generic keycode remapper.
 
-- Left-click with double-tap option.
+- Show/hide screen controls with longpress on Text Edit button.
 
 - Zoom and rotate multitouch gestures should return some keycodes.
 

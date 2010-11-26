@@ -51,8 +51,8 @@ class Settings
 			out.writeInt(Globals.TouchscreenKeyboardTheme);
 			out.writeInt(Globals.RightClickMethod);
 			out.writeBoolean(Globals.ShowScreenUnderFinger);
-			out.writeBoolean(Globals.LeftClickUsesPressure);
-			out.writeBoolean(Globals.LeftClickUsesMultitouch);
+			out.writeInt(Globals.LeftClickMethod);
+			out.writeBoolean(Globals.MoveMouseWithJoystick);
 			out.writeInt(Globals.ClickScreenPressure);
 			out.writeInt(Globals.ClickScreenTouchspotSize);
 			out.writeBoolean(Globals.KeepAspectRatio);
@@ -90,8 +90,8 @@ class Settings
 			Globals.TouchscreenKeyboardTheme = settingsFile.readInt();
 			Globals.RightClickMethod = settingsFile.readInt();
 			Globals.ShowScreenUnderFinger = settingsFile.readBoolean();
-			Globals.LeftClickUsesPressure = settingsFile.readBoolean();
-			Globals.LeftClickUsesMultitouch = settingsFile.readBoolean();
+			Globals.LeftClickMethod = settingsFile.readInt();
+			Globals.MoveMouseWithJoystick = settingsFile.readBoolean();
 			Globals.ClickScreenPressure = settingsFile.readInt();
 			Globals.ClickScreenTouchspotSize = settingsFile.readInt();
 			Globals.KeepAspectRatio = settingsFile.readBoolean();
@@ -175,7 +175,7 @@ class Settings
 		{
 			Globals.OptionalDataDownload = new boolean[1];
 			Globals.OptionalDataDownload[0] = true;
-			showKeyboardConfig(p);
+			showAdditionalInputConfig(p);
 			return;
 		}
 		
@@ -205,7 +205,7 @@ class Settings
 			public void onClick(DialogInterface dialog, int item) 
 			{
 				dialog.dismiss();
-				showKeyboardConfig(p);
+				showAdditionalInputConfig(p);
 			}
 		});
 
@@ -213,87 +213,24 @@ class Settings
 		alert.setOwnerActivity(p);
 		alert.show();
 	};
-
-	static void showKeyboardConfig(final MainActivity p)
-	{
-		if( ! Globals.AppNeedsArrowKeys )
-		{
-			Globals.PhoneHasArrowKeys = false;
-			Globals.PhoneHasTrackball = false;
-			showTrackballConfig(p);
-			return;
-		}
-		
-		final CharSequence[] items = { p.getResources().getString(R.string.controls_arrows),
-										p.getResources().getString(R.string.controls_trackball),
-										p.getResources().getString(R.string.controls_touch) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_question));
-		builder.setSingleChoiceItems(items, Globals.PhoneHasArrowKeys ? 0 : ( Globals.PhoneHasTrackball ? 1 : 2 ), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.PhoneHasArrowKeys = (item == 0);
-				Globals.PhoneHasTrackball = (item == 1);
-
-				dialog.dismiss();
-				showTrackballConfig(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showTrackballConfig(final MainActivity p)
-	{
-		if( ! Globals.PhoneHasTrackball )
-		{
-			Globals.TrackballDampening = 0;
-			showAdditionalInputConfig(p);
-			return;
-		}
-		
-		final CharSequence[] items = { p.getResources().getString(R.string.trackball_no_dampening),
-										p.getResources().getString(R.string.trackball_fast),
-										p.getResources().getString(R.string.trackball_medium),
-										p.getResources().getString(R.string.trackball_slow) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.trackball_question));
-		builder.setSingleChoiceItems(items, Globals.TrackballDampening, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.TrackballDampening = item;
-
-				dialog.dismiss();
-				showAdditionalInputConfig(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-	
 	
 	static void showAdditionalInputConfig(final MainActivity p)
 	{
-
-		if( ! ( Globals.AppNeedsArrowKeys || Globals.AppNeedsTextInput || Globals.AppTouchscreenKeyboardKeysAmount > 0 ) && ! Globals.AppUsesJoystick )
-		{
-			Globals.UseTouchscreenKeyboard = false;
-			Globals.UseAccelerometerAsArrowKeys = false;
-			showAccelerometerConfig(p);
-			return;
-		}
 		final CharSequence[] items = {
 			p.getResources().getString(R.string.controls_screenkb),
 			p.getResources().getString(R.string.controls_accelnav),
+			p.getResources().getString(R.string.pointandclick_keepaspectratio),
+			p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
+			p.getResources().getString(R.string.pointandclick_joystickmouse)
 		};
 
-		final boolean defaults[] = { Globals.UseTouchscreenKeyboard, Globals.UseAccelerometerAsArrowKeys };
+		final boolean defaults[] = { 
+			Globals.UseTouchscreenKeyboard,
+			Globals.UseAccelerometerAsArrowKeys,
+			Globals.KeepAspectRatio,
+			Globals.ShowScreenUnderFinger,
+			Globals.MoveMouseWithJoystick
+		};
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_additional));
@@ -305,9 +242,23 @@ class Settings
 					Globals.UseTouchscreenKeyboard = isChecked;
 				if( item == 1 )
 					Globals.UseAccelerometerAsArrowKeys = isChecked;
+				if( item == 2 )
+					Globals.KeepAspectRatio = isChecked;
+				if( item == 3 )
+					Globals.ShowScreenUnderFinger = isChecked;
+				if( item == 4 )
+					Globals.MoveMouseWithJoystick = isChecked;
 			}
 		});
 		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				dialog.dismiss();
+				showAccelerometerConfig(p);
+			}
+		});
+		builder.setNegativeButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -462,7 +413,7 @@ class Settings
 			{
 				Globals.AudioBufferConfig = item;
 				dialog.dismiss();
-				showRightClickConfigConfig(p);
+				showLeftClickConfig(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -470,27 +421,58 @@ class Settings
 		alert.show();
 	}
 
-	static void showRightClickConfigConfig(final MainActivity p)
+	static void showLeftClickConfig(final MainActivity p)
+	{
+		if( ! Globals.AppUsesMouse )
+		{
+			Globals.LeftClickMethod = Globals.LEFT_CLICK_NORMAL;
+			showRightClickConfig(p);
+			return;
+		}
+		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_normal),
+										p.getResources().getString(R.string.leftclick_near_cursor),
+										p.getResources().getString(R.string.leftclick_multitouch),
+										p.getResources().getString(R.string.leftclick_pressure),
+										p.getResources().getString(R.string.leftclick_dpadcenter) };
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(R.string.leftclick_question);
+		builder.setSingleChoiceItems(items, Globals.LeftClickMethod, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.LeftClickMethod = item;
+				dialog.dismiss();
+				showRightClickConfig(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showRightClickConfig(final MainActivity p)
 	{
 		if( ! Globals.AppNeedsTwoButtonMouse )
 		{
 			Globals.RightClickMethod = Globals.RIGHT_CLICK_NONE;
-			showAdvancedPointAndClickConfigConfig(p);
+			showKeyboardConfig(p);
 			return;
 		}
-		final CharSequence[] items = {	p.getResources().getString(R.string.rightclick_menu),
+		final CharSequence[] items = {	p.getResources().getString(R.string.rightclick_none),
 										p.getResources().getString(R.string.rightclick_multitouch),
-										p.getResources().getString(R.string.rightclick_pressure) };
+										p.getResources().getString(R.string.rightclick_pressure),
+										p.getResources().getString(R.string.rightclick_menu) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.rightclick_question);
-		builder.setSingleChoiceItems(items, Globals.RightClickMethod-1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.RightClickMethod, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
-				Globals.RightClickMethod = item + 1;
+				Globals.RightClickMethod = item;
 				dialog.dismiss();
-				showAdvancedPointAndClickConfigConfig(p);
+				showKeyboardConfig(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -498,87 +480,83 @@ class Settings
 		alert.show();
 	}
 
-	static void showAdvancedPointAndClickConfigConfig(final MainActivity p)
+	static void showKeyboardConfig(final MainActivity p)
 	{
-
-		/*
-		if( ! Globals.AppNeedsTwoButtonMouse )
+		if( ! Globals.AppNeedsArrowKeys && ! Globals.MoveMouseWithJoystick )
 		{
-			showTouchPressureMeasurementTool(p);
+			Globals.PhoneHasArrowKeys = false;
+			Globals.PhoneHasTrackball = false;
+			showTrackballConfig(p);
 			return;
 		}
-		*/
-		CharSequence[] items = {		p.getResources().getString(R.string.pointandclick_keepaspectratio),
-										p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
-										p.getResources().getString(R.string.pointandclick_usepressure),
-										p.getResources().getString(R.string.pointandclick_multitouch) };
-		boolean defaults[] = { Globals.KeepAspectRatio, Globals.ShowScreenUnderFinger, Globals.LeftClickUsesPressure, Globals.LeftClickUsesMultitouch };
-		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE )
-		{
-			Globals.LeftClickUsesPressure = false;
-			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_keepaspectratio),
-										p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
-										p.getResources().getString(R.string.pointandclick_multitouch) };
-			boolean defaults2[] = { Globals.KeepAspectRatio, Globals.ShowScreenUnderFinger, Globals.LeftClickUsesMultitouch };
-			items = items2;
-			defaults = defaults2;
-		}
-		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_MULTITOUCH )
-		{
-			Globals.LeftClickUsesMultitouch = false;
-			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_keepaspectratio),
-										p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
-										p.getResources().getString(R.string.pointandclick_usepressure) };
-			boolean defaults2[] = { Globals.KeepAspectRatio, Globals.ShowScreenUnderFinger, Globals.LeftClickUsesPressure };
-			items = items2;
-			defaults = defaults2;
-		}
-		if( ! Globals.AppNeedsTwoButtonMouse )
-		{
-			Globals.ShowScreenUnderFinger = false;
-			Globals.LeftClickUsesPressure = false;
-			Globals.LeftClickUsesMultitouch = false;
-			CharSequence[] items2 = {	p.getResources().getString(R.string.pointandclick_keepaspectratio) };
-			boolean defaults2[] = { Globals.KeepAspectRatio };
-			items = items2;
-			defaults = defaults2;
-		}
+		
+		final CharSequence[] items = { p.getResources().getString(R.string.controls_arrows),
+										p.getResources().getString(R.string.controls_trackball),
+										p.getResources().getString(R.string.controls_touch) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.pointandclick_question));
-		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
-			{
-				if( item == 0 )
-					Globals.KeepAspectRatio = isChecked;
-				if( item == 1 )
-					Globals.ShowScreenUnderFinger = isChecked;
-				if( item == 2 )
-				{
-					if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE )
-						Globals.LeftClickUsesMultitouch = isChecked;
-					else
-						Globals.LeftClickUsesPressure = isChecked;
-				}
-				if( item == 3 )
-					Globals.LeftClickUsesMultitouch = isChecked;
-			}
-		});
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+		builder.setTitle(p.getResources().getString(R.string.controls_question));
+		builder.setSingleChoiceItems(items, Globals.PhoneHasArrowKeys ? 0 : ( Globals.PhoneHasTrackball ? 1 : 2 ), new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
+				Globals.PhoneHasArrowKeys = (item == 0);
+				Globals.PhoneHasTrackball = (item == 1);
+
+				dialog.dismiss();
+				showTrackballConfig(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showTrackballConfig(final MainActivity p)
+	{
+		if( ! Globals.PhoneHasTrackball )
+		{
+			Globals.TrackballDampening = 0;
+			showTouchPressureMeasurementTool(p);
+			return;
+		}
+		
+		final CharSequence[] items = { p.getResources().getString(R.string.trackball_no_dampening),
+										p.getResources().getString(R.string.trackball_fast),
+										p.getResources().getString(R.string.trackball_medium),
+										p.getResources().getString(R.string.trackball_slow) };
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(p.getResources().getString(R.string.trackball_question));
+		builder.setSingleChoiceItems(items, Globals.TrackballDampening, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.TrackballDampening = item;
+
 				dialog.dismiss();
 				showTouchPressureMeasurementTool(p);
 			}
 		});
-
 		AlertDialog alert = builder.create();
 		alert.setOwnerActivity(p);
 		alert.show();
 	}
-	
+
+	static void showTouchPressureMeasurementTool(final MainActivity p)
+	{
+		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Globals.LEFT_CLICK_WITH_PRESSURE )
+		{
+			p.setText(p.getResources().getString(R.string.measurepressure_touchplease));
+			p._touchMeasurementTool = new TouchMeasurementTool(p);
+		}
+		else
+		{
+			Save(p);
+			p.startDownloader();
+		}
+	}
+
 	public static class TouchMeasurementTool
 	{
 		MainActivity p;
@@ -631,21 +609,6 @@ class Settings
 		}
 	}
 	
-	static void showTouchPressureMeasurementTool(final MainActivity p)
-	{
-		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickUsesPressure )
-		{
-			p.setText(p.getResources().getString(R.string.measurepressure_touchplease));
-			p._touchMeasurementTool = new TouchMeasurementTool(p);
-		}
-		else
-		{
-			Save(p);
-			p.startDownloader();
-		}
-	}
-
-
 	static void Apply(Activity p)
 	{
 		nativeIsSdcardUsed( Globals.DownloadToSdcard ? 1 : 0 );
@@ -655,8 +618,8 @@ class Settings
 		if( Globals.AppUsesMouse )
 			nativeSetMouseUsed( Globals.RightClickMethod,
 								Globals.ShowScreenUnderFinger ? 1 : 0,
-								Globals.LeftClickUsesPressure ? 1 : 0,
-								Globals.LeftClickUsesMultitouch ? 1 : 0,
+								Globals.LeftClickMethod,
+								Globals.MoveMouseWithJoystick ? 1 : 0,
 								Globals.ClickScreenPressure,
 								Globals.ClickScreenTouchspotSize );
 		if( Globals.AppUsesJoystick && (Globals.UseAccelerometerAsArrowKeys || Globals.UseTouchscreenKeyboard) )
@@ -718,7 +681,7 @@ class Settings
 	private static native void nativeSetTrackballUsed();
 	private static native void nativeSetTrackballDampening(int value);
 	private static native void nativeSetAccelerometerSettings(int sensitivity, int centerPos);
-	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickUsesPressure, int LeftClickUsesMultitouch, int MaxForce, int MaxRadius);
+	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickMethod, int MoveMouseWithJoystick, int MaxForce, int MaxRadius);
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();

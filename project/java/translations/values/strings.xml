@@ -59,16 +59,23 @@
     <string name="accel_fixed_horiz">Fixed to table desk orientation</string>
     <string name="accel_question_center">Accelerometer center position</string>
 
-    <string name="rightclick_question">Right mouse click triggered by:</string>
+    <string name="rightclick_question">Right mouse click:</string>
     <string name="rightclick_menu">Menu key</string>
     <string name="rightclick_multitouch">Touch screen with second finger</string>
     <string name="rightclick_pressure">Touch screen with force</string>
+    <string name="rightclick_none">Disable right mouse click</string>
+
+    <string name="leftclick_question">Left mouse click:</string>
+    <string name="leftclick_normal">Normal</string>
+    <string name="leftclick_near_cursor">Touch near mouse cursor</string>
+    <string name="leftclick_multitouch">Touch screen with second finger</string>
+    <string name="leftclick_pressure">Touch screen with force</string>
+    <string name="leftclick_dpadcenter">Trackball click / select key</string>
 
     <string name="pointandclick_question">Advanced features</string>
     <string name="pointandclick_keepaspectratio">Keep 4:3 screen aspect ratio</string>
     <string name="pointandclick_showcreenunderfinger">Show screen under finger in separate window</string>
-    <string name="pointandclick_usepressure">Left click triggered by touch force</string>
-    <string name="pointandclick_multitouch">Left click triggered by touch with second finger</string>
+    <string name="pointandclick_joystickmouse">Move mouse with joystick or trackball</string>
 
     <string name="measurepressure_touchplease">Please slide finger across the screen for two seconds</string>
     <string name="measurepressure_response">Pressure %03d radius %03d</string>
