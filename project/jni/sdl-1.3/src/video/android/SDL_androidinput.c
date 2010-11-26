@@ -77,20 +77,23 @@ static inline int InsideRect(const SDL_Rect * r, int x, int y)
 
 void UpdateScreenUnderFingerRect(int x, int y)
 {
+#if SDL_VERSION_ATLEAST(1,3,0)
+	return;
+	/*
 	int screenX = 320, screenY = 240;
 	if( !SDL_ANDROID_ShowScreenUnderFinger )
 		return;
 
-#if SDL_VERSION_ATLEAST(1,3,0)
 	SDL_Window * window = SDL_GetFocusWindow();
 	if( window && window->renderer->window ) {
 		screenX = window->w;
 		screenY = window->h;
 	}
+	*/
 #else
-	screenX = SDL_ANDROID_sFakeWindowWidth;
-	screenY = SDL_ANDROID_sFakeWindowHeight;
-#endif
+	int screenX = SDL_ANDROID_sFakeWindowWidth, screenY = SDL_ANDROID_sFakeWindowHeight;
+	if( !SDL_ANDROID_ShowScreenUnderFinger )
+		return;
 
 	SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = screenX / 4;
 	SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = screenY / 4;
@@ -113,12 +116,13 @@ void UpdateScreenUnderFingerRect(int x, int y)
 		SDL_ANDROID_ShowScreenUnderFingerRect.x = 0;
 	if( SDL_ANDROID_ShowScreenUnderFingerRect.y < 0 )
 		SDL_ANDROID_ShowScreenUnderFingerRect.y = 0;
-	if( SDL_ANDROID_ShowScreenUnderFingerRect.x + SDL_ANDROID_ShowScreenUnderFingerRect.w > screenX )
-		SDL_ANDROID_ShowScreenUnderFingerRect.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRect.w;
-	if( SDL_ANDROID_ShowScreenUnderFingerRect.y + SDL_ANDROID_ShowScreenUnderFingerRect.h > screenY )
-		SDL_ANDROID_ShowScreenUnderFingerRect.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRect.h;
+	if( SDL_ANDROID_ShowScreenUnderFingerRect.x + SDL_ANDROID_ShowScreenUnderFingerRect.w >= screenX )
+		SDL_ANDROID_ShowScreenUnderFingerRect.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRect.w - 1;
+	if( SDL_ANDROID_ShowScreenUnderFingerRect.y + SDL_ANDROID_ShowScreenUnderFingerRect.h >= screenY )
+		SDL_ANDROID_ShowScreenUnderFingerRect.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRect.h - 1;
 	if( InsideRect(&SDL_ANDROID_ShowScreenUnderFingerRect, x, y) )
-		SDL_ANDROID_ShowScreenUnderFingerRect.x = x - SDL_ANDROID_ShowScreenUnderFingerRect.w*11/10;
+		SDL_ANDROID_ShowScreenUnderFingerRect.x = x - SDL_ANDROID_ShowScreenUnderFingerRect.w*11/10 - 1;
+#endif
 }
 
 

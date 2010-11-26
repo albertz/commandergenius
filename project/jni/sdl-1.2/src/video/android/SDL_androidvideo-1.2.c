@@ -847,9 +847,36 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 		rect.h = SDL_CurrentVideoSurface->h;
 		SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, SDL_CurrentVideoSurface->pixels, SDL_CurrentVideoSurface->pitch);
 		SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &rect);
-		if( SDL_ANDROID_ShowScreenUnderFinger )
+		if( SDL_ANDROID_ShowScreenUnderFinger && SDL_ANDROID_ShowScreenUnderFingerRect.w > 0 )
 		{
 			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &SDL_ANDROID_ShowScreenUnderFingerRectSrc, &SDL_ANDROID_ShowScreenUnderFingerRect);
+			SDL_Rect frame = SDL_ANDROID_ShowScreenUnderFingerRect;
+			// For some reason this code fails - it just outputs nothing to screen
+			/*
+			SDL_SetRenderDrawColor(0, 0, 0, SDL_ALPHA_OPAQUE);
+			SDL_RenderFillRect(&SDL_ANDROID_ShowScreenUnderFingerRect);
+			SDL_SetRenderDrawColor(255, 255, 255, SDL_ALPHA_OPAQUE);
+			SDL_RenderDrawRect(&SDL_ANDROID_ShowScreenUnderFingerRectSrc);
+			SDL_SetRenderDrawColor(0, 0, 0, SDL_ALPHA_OPAQUE);
+			SDL_RenderDrawRect(&frame);
+			*/
+			// Do it old-fashioned way with direct GL calls
+			glPushMatrix();
+			glLoadIdentity();
+			glOrthox( 0, SDL_ANDROID_sFakeWindowWidth * 0x10000, SDL_ANDROID_sFakeWindowHeight * 0x10000, 0, 0, 1 * 0x10000 );
+			glColor4x(0, 0, 0, 0x10000);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glColor4x(0, 0, 0, 0x10000);
+			GLshort vertices[] = {	frame.x, frame.y,
+									frame.x + frame.w, frame.y,
+									frame.x + frame.w, frame.y + frame.h,
+									frame.x, frame.y + frame.h };
+			glVertexPointer(2, GL_SHORT, 0, vertices);
+			glDrawArrays(GL_LINE_LOOP, 0, 4);
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glPopMatrix();
+			glFlush();
+
 		}
 	}
 
