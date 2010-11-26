@@ -371,13 +371,17 @@ void ANDROID_VideoQuit(_THIS)
 		HwSurfaceList = NULL;
 		DEBUGOUT("ANDROID_VideoQuit() out HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 
-		if( SDL_CurrentVideoSurface->hwdata )
-			SDL_DestroyTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata);
-		if( SDL_CurrentVideoSurface->pixels )
-			SDL_free(SDL_CurrentVideoSurface->pixels);
-		SDL_CurrentVideoSurface->pixels = NULL;
+		if( SDL_CurrentVideoSurface )
+		{
+			if( SDL_CurrentVideoSurface->hwdata )
+				SDL_DestroyTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata);
+			if( SDL_CurrentVideoSurface->pixels )
+				SDL_free(SDL_CurrentVideoSurface->pixels);
+			SDL_CurrentVideoSurface->pixels = NULL;
+		}
 		SDL_CurrentVideoSurface = NULL;
-		SDL_DestroyWindow(SDL_VideoWindow);
+		if(SDL_VideoWindow)
+			SDL_DestroyWindow(SDL_VideoWindow);
 		SDL_VideoWindow = NULL;
 	}
 
