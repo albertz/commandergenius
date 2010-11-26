@@ -65,7 +65,14 @@
 <string name="pointandclick_question">Erweiterte Funktionen</string>
 <string name="pointandclick_keepaspectratio">Halten 4:3-Bildschirm Seitenverhältnis</string>
 <string name="pointandclick_showcreenunderfinger">Show-Bildschirm unter dem Finger in einem separaten Fenster</string>
-<string name="pointandclick_usepressure">Linke Maustaste ausgelöst durch Berührung Kraft</string>
-<string name="pointandclick_multitouch">Linke Maustaste ausgelöst durch Berührung mit dem zweiten Finger</string>
 <string name="measurepressure_touchplease">Bitte schieben Sie den Finger über den Bildschirm für zwei Sekunden</string>
+<string name="rightclick_none">Deaktivieren der rechten Maustaste</string>
+<string name="leftclick_question">Linke Maustaste:</string>
+<string name="leftclick_normal">Normal</string>
+<string name="leftclick_near_cursor">Tippen Sie auf nahe Mauszeiger</string>
+<string name="leftclick_multitouch">Touch-Screen mit dem zweiten Finger</string>
+<string name="leftclick_pressure">Touchscreen mit Kraft</string>
+<string name="leftclick_dpadcenter">Trackball klicken Select-Taste</string>
+<string name="pointandclick_joystickmouse">Bewegen Sie die Maus mit Joystick oder Trackball</string>
+<string name="measurepressure_response">Pressure %03d Radius %03d</string>
 </resources>

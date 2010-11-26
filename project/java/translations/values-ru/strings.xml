@@ -49,8 +49,6 @@
 <string name="pointandclick_question">Расширенные функции</string>
 <string name="pointandclick_keepaspectratio">Сохранять соотношение сторон 4:3 на экране</string>
 <string name="pointandclick_showcreenunderfinger">Экранная лупа</string>
-<string name="pointandclick_usepressure">Левая кнопка мыши при нажатии на экран с силой</string>
-<string name="pointandclick_multitouch">Левая кнопка мыши при нажатии на экран вторым пальцем</string>
 <string name="measurepressure_touchplease">Пожалуйста, проведите пальцем по экрану в течение двух секунд</string>
 <string name="measurepressure_response">Давление %03d радиус %03d </string>
 <string name="audiobuf_verysmall">Очень мало (быстрые устройства)</string>
@@ -58,8 +56,16 @@
 <string name="audiobuf_medium">Средний</string>
 <string name="audiobuf_large">Большой (для старых устройств, если звук прерывается)</string>
 <string name="audiobuf_question">Размер буфера аудио</string>
-<string name="accel_floating">Плавающей</string>
-<string name="accel_fixed_start">Исправлена при запуске приложения</string>
-<string name="accel_fixed_horiz">Включен в таблице ориентации стол</string>
-<string name="accel_question_center">Акселерометр центральное положение</string>
+<string name="accel_floating">Плавающее</string>
+<string name="accel_fixed_start">Фиксировано при запуске приложения</string>
+<string name="accel_fixed_horiz">Фиксировано на горизонт</string>
+<string name="accel_question_center">Центральное положение акселерометра</string>
+<string name="rightclick_none">Правая кнопка мыши отключена</string>
+<string name="leftclick_question">Левая кнопка мыши:</string>
+<string name="leftclick_normal">Нормальный</string>
+<string name="leftclick_near_cursor">Касание возле курсора мыши</string>
+<string name="leftclick_multitouch">Касание двумя пальцами</string>
+<string name="leftclick_pressure">Нажатие с силой</string>
+<string name="leftclick_dpadcenter">Нажатие на трекбол / центр джойстика</string>
+<string name="pointandclick_joystickmouse">Перемещение мыши при помощи джойстика или трекбола</string>
 </resources>

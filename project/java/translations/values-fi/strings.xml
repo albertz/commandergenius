@@ -65,7 +65,14 @@
 <string name="pointandclick_question">Lisäominaisuudet</string>
 <string name="pointandclick_keepaspectratio">Pidä 04:03 kuvasuhde</string>
 <string name="pointandclick_showcreenunderfinger">Näytä näytön alle sormi erillisessä ikkunassa</string>
-<string name="pointandclick_usepressure">Vasen klikkaus laukaisi kosketus voima</string>
-<string name="pointandclick_multitouch">Vasen klikkaus laukaisi yhteyden toinen sormi</string>
 <string name="measurepressure_touchplease">Ole hyvä ja liu\u0026#39;uttamalla sormea näytöllä kaksi sekuntia</string>
+<string name="rightclick_none">Poista oikealla hiiren klikkauksella</string>
+<string name="leftclick_question">Vasen hiiren nappi:</string>
+<string name="leftclick_normal">Normaali</string>
+<string name="leftclick_near_cursor">Touch lähellä hiiren kursori</string>
+<string name="leftclick_multitouch">Kosketusnäyttö on toinen sormi</string>
+<string name="leftclick_pressure">Kosketusnäyttö voimalla</string>
+<string name="leftclick_dpadcenter">Trackball Valitse / Select-näppäintä</string>
+<string name="pointandclick_joystickmouse">Siirrä hiiren ohjaimella tai trackball</string>
+<string name="measurepressure_response">Paine %03d säde %03d</string>
 </resources>

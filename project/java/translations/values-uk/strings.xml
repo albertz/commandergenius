@@ -49,8 +49,6 @@
 <string name="pointandclick_question">Розширені функції</string>
 <string name="pointandclick_keepaspectratio">Зберігати співвідношення сторін 4:3 на екрані</string>
 <string name="pointandclick_showcreenunderfinger">Наекранна лупа</string>
-<string name="pointandclick_usepressure">Ліва кнопка миші при натиску на екран силою</string>
-<string name="pointandclick_multitouch">Ліва кнопка миші при натиску на екран другим пальцем</string>
 <string name="measurepressure_touchplease">Будь-ласка, проведіть пальцем по екрану на протязі двох секунд</string>
 <string name="measurepressure_response">Тиск %03d радіус %03d </string>
 <string name="audiobuf_verysmall">Дуже мало (швидкі пристрої)</string>
@@ -58,4 +56,16 @@
 <string name="audiobuf_medium">Середній</string>
 <string name="audiobuf_large">Великий (для старих пристроїв, якщо звук переривається)</string>
 <string name="audiobuf_question">Розмір буферу аудіо</string>
+<string name="accel_floating">Плаваюче</string>
+<string name="accel_fixed_start">Фiксоване під час запуску програми</string>
+<string name="accel_fixed_horiz">Фiксоване до горизонту</string>
+<string name="accel_question_center">Центральне положення акселерометра</string>
+<string name="rightclick_none">Вiдключена</string>
+<string name="leftclick_question">Ліва кнопка миші:</string>
+<string name="leftclick_normal">Нормальна</string>
+<string name="leftclick_near_cursor">Дотик біля курсору миші</string>
+<string name="leftclick_multitouch">Натиск на екран другим пальцем</string>
+<string name="leftclick_pressure">>Натиск на екран з силою</string>
+<string name="leftclick_dpadcenter">Натиск на трекбол / центр джойстику</string>
+<string name="pointandclick_joystickmouse">Переміщення миші за допомогою джойстика або трекбола</string>
 </resources>
