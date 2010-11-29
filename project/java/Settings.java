@@ -136,7 +136,7 @@ class Settings
 	
 	public static void showConfig(final MainActivity p) {
 		settingsChanged = true;
-		showDownloadConfig(p);
+		showConfigMainMenu(p);
 	}
 
 	static int MainMenuLastSelected = 0;
