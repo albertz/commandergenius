@@ -63,7 +63,6 @@ class Globals {
 	public static final int LEFT_CLICK_NEAR_CURSOR = 1;
 	public static final int LEFT_CLICK_WITH_MULTITOUCH = 2;
 	public static final int LEFT_CLICK_WITH_PRESSURE = 3;
-	public static final int LEFT_CLICK_WITH_DPAD_CENTER = 4;
 	public static int LeftClickMethod = LEFT_CLICK_NORMAL;
 	public static final int RIGHT_CLICK_NONE = 0;
 	public static final int RIGHT_CLICK_WITH_MULTITOUCH = 1;
@@ -71,6 +70,7 @@ class Globals {
 	public static final int RIGHT_CLICK_WITH_MENU_BUTTON = 3;
 	public static int RightClickMethod = RIGHT_CLICK_NONE;
 	public static boolean MoveMouseWithJoystick = false;
+	public static boolean ClickMouseWithDpad = false;
 	public static boolean ShowScreenUnderFinger = false;
 	public static boolean KeepAspectRatio = false;
 	public static int ClickScreenPressure = 0;

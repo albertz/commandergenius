@@ -53,6 +53,7 @@ class Settings
 			out.writeBoolean(Globals.ShowScreenUnderFinger);
 			out.writeInt(Globals.LeftClickMethod);
 			out.writeBoolean(Globals.MoveMouseWithJoystick);
+			out.writeBoolean(Globals.ClickMouseWithDpad);
 			out.writeInt(Globals.ClickScreenPressure);
 			out.writeInt(Globals.ClickScreenTouchspotSize);
 			out.writeBoolean(Globals.KeepAspectRatio);
@@ -92,6 +93,7 @@ class Settings
 			Globals.ShowScreenUnderFinger = settingsFile.readBoolean();
 			Globals.LeftClickMethod = settingsFile.readInt();
 			Globals.MoveMouseWithJoystick = settingsFile.readBoolean();
+			Globals.ClickMouseWithDpad = settingsFile.readBoolean();
 			Globals.ClickScreenPressure = settingsFile.readInt();
 			Globals.ClickScreenTouchspotSize = settingsFile.readInt();
 			Globals.KeepAspectRatio = settingsFile.readBoolean();
@@ -221,7 +223,8 @@ class Settings
 			p.getResources().getString(R.string.controls_accelnav),
 			p.getResources().getString(R.string.pointandclick_keepaspectratio),
 			p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
-			p.getResources().getString(R.string.pointandclick_joystickmouse)
+			p.getResources().getString(R.string.pointandclick_joystickmouse),
+			p.getResources().getString(R.string.leftclick_dpadcenter)
 		};
 
 		final boolean defaults[] = { 
@@ -229,7 +232,8 @@ class Settings
 			Globals.UseAccelerometerAsArrowKeys,
 			Globals.KeepAspectRatio,
 			Globals.ShowScreenUnderFinger,
-			Globals.MoveMouseWithJoystick
+			Globals.MoveMouseWithJoystick,
+			Globals.ClickMouseWithDpad
 		};
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -248,6 +252,8 @@ class Settings
 					Globals.ShowScreenUnderFinger = isChecked;
 				if( item == 4 )
 					Globals.MoveMouseWithJoystick = isChecked;
+				if( item == 5 )
+					Globals.ClickMouseWithDpad = isChecked;
 			}
 		});
 		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
@@ -432,8 +438,7 @@ class Settings
 		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_normal),
 										p.getResources().getString(R.string.leftclick_near_cursor),
 										p.getResources().getString(R.string.leftclick_multitouch),
-										p.getResources().getString(R.string.leftclick_pressure),
-										p.getResources().getString(R.string.leftclick_dpadcenter) };
+										p.getResources().getString(R.string.leftclick_pressure) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.leftclick_question);
@@ -681,7 +686,7 @@ class Settings
 	private static native void nativeSetTrackballUsed();
 	private static native void nativeSetTrackballDampening(int value);
 	private static native void nativeSetAccelerometerSettings(int sensitivity, int centerPos);
-	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickMethod, int MoveMouseWithJoystick, int MaxForce, int MaxRadius);
+	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickMethod, int MoveMouseWithJoystick, int ClickMouseWithDpad, int MaxForce, int MaxRadius);
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();

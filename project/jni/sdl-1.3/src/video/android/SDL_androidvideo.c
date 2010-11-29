@@ -82,6 +82,7 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 	{
 		SDL_ANDROID_drawTouchscreenKeyboard();
 		SDL_ANDROID_processAndroidTrackballDampening();
+		SDL_ANDROID_processMoveMouseWithKeyboard();
 	}
 	
 	// Clear part of screen not used by SDL - on Android the screen contains garbage after each frame

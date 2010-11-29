@@ -114,9 +114,14 @@ int SDL_ANDROID_sFakeWindowHeight = 480;
 static int sdl_opengl = 0;
 static SDL_Window *SDL_VideoWindow = NULL;
 SDL_Surface *SDL_CurrentVideoSurface = NULL;
-static Uint32 SDL_VideoThreadID = 0;
 static int HwSurfaceCount = 0;
 static SDL_Surface ** HwSurfaceList = NULL;
+
+static Uint32 SDL_VideoThreadID = 0;
+int SDL_ANDROID_InsideVideoThread()
+{
+	return SDL_VideoThreadID == SDL_ThreadID();
+}
 
 
 static void SdlGlRenderInit();
@@ -262,7 +267,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	int bpp1;
 	
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): application requested mode %dx%d", width, height);
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( ! SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return NULL;
@@ -357,7 +362,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 */
 void ANDROID_VideoQuit(_THIS)
 {
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 	}
@@ -406,7 +411,7 @@ void ANDROID_PumpEvents(_THIS)
 
 static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 {
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return -1;
@@ -485,7 +490,7 @@ static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface)
 {
 	int i;
 
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return;
@@ -517,7 +522,7 @@ static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface)
 
 static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)
 {
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return -1;
@@ -599,7 +604,7 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 	int bpp;
 	SDL_Surface * converted = NULL;
 
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return;
@@ -696,7 +701,7 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 // We're only blitting HW surface to screen, no other options provided (and if you need them your app designed wrong)
 int ANDROID_HWBlit(SDL_Surface* src, SDL_Rect* srcrect, SDL_Surface* dst, SDL_Rect* dstrect)
 {
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return -1;
@@ -733,7 +738,7 @@ static int ANDROID_FillHWRect(_THIS, SDL_Surface *dst, SDL_Rect *rect, Uint32 co
 {
 	Uint8 r, g, b, a;
 
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return -1;
@@ -757,7 +762,7 @@ static int ANDROID_SetHWColorKey(_THIS, SDL_Surface *surface, Uint32 key)
 	SDL_PixelFormat format;
 	SDL_Surface * converted = NULL;
 
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return -1;
@@ -779,7 +784,7 @@ static int ANDROID_SetHWColorKey(_THIS, SDL_Surface *surface, Uint32 key)
 
 static int ANDROID_SetHWAlpha(_THIS, SDL_Surface *surface, Uint8 value)
 {
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return -1;
@@ -800,7 +805,7 @@ static int ANDROID_SetHWAlpha(_THIS, SDL_Surface *surface, Uint8 value)
 
 static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 {
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		/*
 		// Crash to get stack trace and determine culprit thread
@@ -826,7 +831,7 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 
 static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 {
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return;
@@ -887,7 +892,7 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 
 void ANDROID_GL_SwapBuffers(_THIS)
 {
-	if( SDL_VideoThreadID != SDL_ThreadID() )
+	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return;
