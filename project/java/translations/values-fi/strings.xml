@@ -58,7 +58,7 @@
 <string name="accel_fixed_horiz">Korjattu taulukko työpöytä suuntautumiseen</string>
 <string name="accel_question_center">Kiihtyvyysmittari keskiasentoon</string>
 <string name="audiobuf_verysmall">Hyvin pieni (nopea laitteita, vähemmän lag)</string>
-<string name="rightclick_question">Napsauta hiiren kakkospainikkeella alkunsa:</string>
+<string name="rightclick_question">Napsauta hiiren kakkospainikkeella alkunsa</string>
 <string name="rightclick_menu">Valikkonäppäin</string>
 <string name="rightclick_multitouch">Kosketusnäyttö on toinen sormi</string>
 <string name="rightclick_pressure">Kosketusnäyttö voimalla</string>
@@ -67,7 +67,7 @@
 <string name="pointandclick_showcreenunderfinger">Näytä näytön alle sormi erillisessä ikkunassa</string>
 <string name="measurepressure_touchplease">Ole hyvä ja liu\u0026#39;uttamalla sormea näytöllä kaksi sekuntia</string>
 <string name="rightclick_none">Poista oikealla hiiren klikkauksella</string>
-<string name="leftclick_question">Vasen hiiren nappi:</string>
+<string name="leftclick_question">Vasen hiiren nappi</string>
 <string name="leftclick_normal">Normaali</string>
 <string name="leftclick_near_cursor">Touch lähellä hiiren kursori</string>
 <string name="leftclick_multitouch">Kosketusnäyttö on toinen sormi</string>

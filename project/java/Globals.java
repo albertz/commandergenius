@@ -47,15 +47,15 @@ class Globals {
 	// Phone-specific config
 	// It will download app data to /sdcard/alienblaster if set to true,
 	// otherwise it will download it to /data/data/de.schwardtnet.alienblaster/files
-	public static boolean DownloadToSdcard = false;
+	public static boolean DownloadToSdcard = true;
 	public static boolean PhoneHasTrackball = false;
 	public static boolean PhoneHasArrowKeys = false;
 	public static boolean UseAccelerometerAsArrowKeys = false;
-	public static boolean UseTouchscreenKeyboard = false;
+	public static boolean UseTouchscreenKeyboard = true;
 	public static int TouchscreenKeyboardSize = 0;
-	public static int TouchscreenKeyboardTheme = 0;
-	public static int AccelerometerSensitivity = 0;
-	public static int AccelerometerCenterPos = 0;
+	public static int TouchscreenKeyboardTheme = 1;
+	public static int AccelerometerSensitivity = 2;
+	public static int AccelerometerCenterPos = 2;
 	public static int TrackballDampening = 0;
 	public static int AudioBufferConfig = 0;
 	public static boolean OptionalDataDownload[] = null;

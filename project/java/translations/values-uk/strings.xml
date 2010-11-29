@@ -42,7 +42,7 @@
 <string name="accel_medium">середньо</string>
 <string name="accel_slow">повільно</string>
 <string name="accel_question">Чутливість акселерометру</string>
-<string name="rightclick_question">Права кнопка миші:</string>
+<string name="rightclick_question">Права кнопка миші</string>
 <string name="rightclick_menu">Кнопка меню</string>
 <string name="rightclick_multitouch">Торкання екрана другим пальцем</string>
 <string name="rightclick_pressure">Натиск на екран силою</string>
@@ -61,7 +61,7 @@
 <string name="accel_fixed_horiz">Фiксоване до горизонту</string>
 <string name="accel_question_center">Центральне положення акселерометра</string>
 <string name="rightclick_none">Вiдключена</string>
-<string name="leftclick_question">Ліва кнопка миші:</string>
+<string name="leftclick_question">Ліва кнопка миші</string>
 <string name="leftclick_normal">Нормальна</string>
 <string name="leftclick_near_cursor">Дотик біля курсору миші</string>
 <string name="leftclick_multitouch">Натиск на екран другим пальцем</string>

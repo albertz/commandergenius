@@ -59,13 +59,13 @@
     <string name="accel_fixed_horiz">Fixed to table desk orientation</string>
     <string name="accel_question_center">Accelerometer center position</string>
 
-    <string name="rightclick_question">Right mouse click:</string>
+    <string name="rightclick_question">Right mouse click</string>
     <string name="rightclick_menu">Menu key</string>
     <string name="rightclick_multitouch">Touch screen with second finger</string>
     <string name="rightclick_pressure">Touch screen with force</string>
     <string name="rightclick_none">Disable right mouse click</string>
 
-    <string name="leftclick_question">Left mouse click:</string>
+    <string name="leftclick_question">Left mouse click</string>
     <string name="leftclick_normal">Normal</string>
     <string name="leftclick_near_cursor">Touch near mouse cursor</string>
     <string name="leftclick_multitouch">Touch screen with second finger</string>

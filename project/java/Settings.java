@@ -139,22 +139,84 @@ class Settings
 		showDownloadConfig(p);
 	}
 
+	static int MainMenuLastSelected = 0;
 	static void showConfigMainMenu(final MainActivity p)
 	{
-		final CharSequence[] items = { p.getResources().getString(R.string.storage_question),
-										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_slow) };
+		ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
+
+		items.add(p.getResources().getString(R.string.storage_question));
+
+		if( Globals.DataDownloadUrl.split("\\^").length > 1 )
+			items.add(p.getResources().getString(R.string.optional_downloads));
+
+		items.add(p.getResources().getString(R.string.controls_additional));
+
+		if( Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick )
+			items.add(p.getResources().getString(R.string.controls_question));
+
+		if( ! ( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity ) )
+			items.add(p.getResources().getString(R.string.accel_question));
+
+		if( Globals.UseTouchscreenKeyboard )
+			items.add(p.getResources().getString(R.string.controls_screenkb));
+
+		if( Globals.AppUsesMouse )
+			items.add(p.getResources().getString(R.string.leftclick_question));
+
+		items.add(p.getResources().getString(R.string.audiobuf_question));
+
+		items.add(p.getResources().getString(R.string.ok));
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.accel_question);
-		builder.setSingleChoiceItems(items, Globals.AccelerometerSensitivity, new DialogInterface.OnClickListener() 
+		//builder.setTitle();
+		builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
-				Globals.AccelerometerSensitivity = item;
-
+				MainMenuLastSelected = item;
 				dialog.dismiss();
-				showAccelerometerCenterConfig(p);
+
+				if( item == 0 )
+					showDownloadConfig(p);
+
+				if( Globals.DataDownloadUrl.split("\\^").length <= 1 )
+					item += 1;
+				else
+					if( item == 1 )
+						showOptionalDownloadConfig(p);
+
+				if( item == 2 )
+					showAdditionalInputConfig(p);
+
+				if( ! Globals.AppNeedsArrowKeys && ! Globals.MoveMouseWithJoystick )
+					item += 1;
+				else
+					if( item == 3 )
+						showKeyboardConfig(p);
+
+				if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
+					item += 1;
+				else
+					if( item == 4 )
+						showAccelerometerConfig(p);
+		
+				if( ! Globals.UseTouchscreenKeyboard )
+					item += 1;
+				else
+					if( item == 5 )
+						showScreenKeyboardConfig(p);
+
+				if( ! Globals.AppUsesMouse )
+					item += 1;
+				else
+					if( item == 6 )
+						showLeftClickConfig(p);
+
+				if( item == 7 )
+					showAudioConfig(p);
+				
+				if( item == 8 )
+					showTouchPressureMeasurementTool(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -186,7 +248,7 @@ class Settings
 				Globals.DownloadToSdcard = (item == 1);
 
 				dialog.dismiss();
-				showOptionalDownloadConfig(p);
+				showConfigMainMenu(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -201,7 +263,7 @@ class Settings
 		{
 			Globals.OptionalDataDownload = new boolean[1];
 			Globals.OptionalDataDownload[0] = true;
-			showAdditionalInputConfig(p);
+			showConfigMainMenu(p);
 			return;
 		}
 		
@@ -231,7 +293,7 @@ class Settings
 			public void onClick(DialogInterface dialog, int item) 
 			{
 				dialog.dismiss();
-				showAdditionalInputConfig(p);
+				showConfigMainMenu(p);
 			}
 		});
 
@@ -285,15 +347,7 @@ class Settings
 			public void onClick(DialogInterface dialog, int item) 
 			{
 				dialog.dismiss();
-				showAccelerometerConfig(p);
-			}
-		});
-		builder.setNegativeButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				dialog.dismiss();
-				showAccelerometerConfig(p);
+				showConfigMainMenu(p);
 			}
 		});
 
@@ -337,7 +391,7 @@ class Settings
 		if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
 		{
 			Globals.AccelerometerCenterPos = 2; // Fixed horizontal center position
-			showScreenKeyboardConfig(p);
+			showConfigMainMenu(p);
 			return;
 		}
 		
@@ -354,7 +408,7 @@ class Settings
 				Globals.AccelerometerCenterPos = item;
 
 				dialog.dismiss();
-				showScreenKeyboardConfig(p);
+				showConfigMainMenu(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -399,7 +453,7 @@ class Settings
 		if( ! Globals.UseTouchscreenKeyboard )
 		{
 			Globals.TouchscreenKeyboardTheme = 0;
-			showAudioConfig(p);
+			showConfigMainMenu(p);
 			return;
 		}
 		
@@ -420,7 +474,7 @@ class Settings
 					Globals.TouchscreenKeyboardTheme = 0;
 
 				dialog.dismiss();
-				showAudioConfig(p);
+				showConfigMainMenu(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -443,7 +497,7 @@ class Settings
 			{
 				Globals.AudioBufferConfig = item;
 				dialog.dismiss();
-				showLeftClickConfig(p);
+				showConfigMainMenu(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -485,7 +539,7 @@ class Settings
 		if( ! Globals.AppNeedsTwoButtonMouse )
 		{
 			Globals.RightClickMethod = Globals.RIGHT_CLICK_NONE;
-			showKeyboardConfig(p);
+			showConfigMainMenu(p);
 			return;
 		}
 		final CharSequence[] items = {	p.getResources().getString(R.string.rightclick_none),
@@ -501,7 +555,7 @@ class Settings
 			{
 				Globals.RightClickMethod = item;
 				dialog.dismiss();
-				showKeyboardConfig(p);
+				showConfigMainMenu(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -546,7 +600,7 @@ class Settings
 		if( ! Globals.PhoneHasTrackball )
 		{
 			Globals.TrackballDampening = 0;
-			showTouchPressureMeasurementTool(p);
+			showConfigMainMenu(p);
 			return;
 		}
 		
@@ -564,7 +618,7 @@ class Settings
 				Globals.TrackballDampening = item;
 
 				dialog.dismiss();
-				showTouchPressureMeasurementTool(p);
+				showConfigMainMenu(p);
 			}
 		});
 		AlertDialog alert = builder.create();

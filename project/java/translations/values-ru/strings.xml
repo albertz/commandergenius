@@ -42,7 +42,7 @@
 <string name="accel_medium">Средний</string>
 <string name="accel_slow">Медленно</string>
 <string name="accel_question">Чувствительность акселерометра</string>
-<string name="rightclick_question">Правая кнопка мыши:</string>
+<string name="rightclick_question">Правая кнопка мыши</string>
 <string name="rightclick_menu">Клавиша меню</string>
 <string name="rightclick_multitouch">Касание экрана вторым пальцем</string>
 <string name="rightclick_pressure">Нажатие на экран с силой</string>
@@ -61,7 +61,7 @@
 <string name="accel_fixed_horiz">Фиксировано на горизонт</string>
 <string name="accel_question_center">Центральное положение акселерометра</string>
 <string name="rightclick_none">Правая кнопка мыши отключена</string>
-<string name="leftclick_question">Левая кнопка мыши:</string>
+<string name="leftclick_question">Левая кнопка мыши</string>
 <string name="leftclick_normal">Нормальный</string>
 <string name="leftclick_near_cursor">Касание возле курсора мыши</string>
 <string name="leftclick_multitouch">Касание двумя пальцами</string>

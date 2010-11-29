@@ -61,7 +61,7 @@
     <string name="audiobuf_medium">Moyenne</string>
     <string name="audiobuf_large">Grande (en cas de son par saccades)</string>
     <string name="audiobuf_question">Taille du tampon audio</string>
-<string name="rightclick_question">Faites un clic droit déclenchée par:</string>
+<string name="rightclick_question">Faites un clic droit déclenchée par</string>
 <string name="rightclick_menu">Sur la touche Menu</string>
 <string name="rightclick_multitouch">écran tactile avec le deuxième doigt</string>
 <string name="rightclick_pressure">écran tactile avec une force</string>
@@ -70,7 +70,7 @@
 <string name="pointandclick_showcreenunderfinger">Afficher l\u0026#39;écran sous le doigt dans une fenêtre séparée</string>
 <string name="measurepressure_touchplease">S\u0026#39;il vous plaît glisser les doigts sur l\u0026#39;écran pendant deux secondes</string>
 <string name="rightclick_none">cliquez sur Désactiver droit de la souris</string>
-<string name="leftclick_question">cliquez gauche de la souris:</string>
+<string name="leftclick_question">cliquez gauche de la souris</string>
 <string name="leftclick_normal">Normal</string>
 <string name="leftclick_near_cursor">curseur de la souris près Touch</string>
 <string name="leftclick_multitouch">écran tactile avec le deuxième doigt</string>
