@@ -139,6 +139,30 @@ class Settings
 		showDownloadConfig(p);
 	}
 
+	static void showConfigMainMenu(final MainActivity p)
+	{
+		final CharSequence[] items = { p.getResources().getString(R.string.storage_question),
+										p.getResources().getString(R.string.accel_medium),
+										p.getResources().getString(R.string.accel_slow) };
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(R.string.accel_question);
+		builder.setSingleChoiceItems(items, Globals.AccelerometerSensitivity, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.AccelerometerSensitivity = item;
+
+				dialog.dismiss();
+				showAccelerometerCenterConfig(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+
 	static void showDownloadConfig(final MainActivity p) {
 
 		long freeSdcard = 0;

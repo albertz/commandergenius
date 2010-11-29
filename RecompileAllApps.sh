@@ -50,10 +50,11 @@ for APP1 in project/jni/application/*/AndroidAppSettings.cfg; do
 		NDKBUILD=`which ndk-build | sed 's@/[^/]*/ndk-build@/android-ndk-r4-crystax@'`/ndk-build
 	fi
 	echo Compiling $APP
+	APPVERSION=`grep 'AppVersionCode=' AndroidAppSettings.cfg | sed 's/AppVersionCode=\(.*\)/\1/'`
 	OLDPATH="`pwd`"
 	( cd project && nice -n5 $NDKBUILD -j2 V=1 && ant release && \
 	jarsigner -verbose -keystore "$KEYSTORE" -storepass "$PASSWORD" bin/DemoActivity-unsigned.apk $ALIAS && \
 	zipalign 4 bin/DemoActivity-unsigned.apk ../apk/$APP.apk && \
-	mkdir -p debuginfo/$APP && cp -f obj/local/armeabi/libapplication.so obj/local/armeabi/libsdl-*.so debuginfo/$APP &&
+	mkdir -p debuginfo/$APP-$APPVERSION && cp -f obj/local/armeabi/libapplication.so obj/local/armeabi/libsdl-*.so debuginfo/$APP-$APPVERSION &&
 	cd .. ) || exit 1
 done
