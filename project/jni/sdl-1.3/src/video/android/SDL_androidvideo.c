@@ -129,6 +129,9 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint 
 	{
 		SDL_ANDROID_sRealWindowWidth = w;
 		SDL_ANDROID_sRealWindowHeight = h;
+#if SDL_VERSION_ATLEAST(1,3,0)
+		// Not supported in SDL 1.3
+#else
 		if( keepRatio )
 		{
 			// TODO: tweak that parameters when app calls SetVideoMode(), not here - app may request something else than 640x480, it's okay for most apps though
@@ -147,9 +150,10 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint 
 				SDL_ANDROID_ForceClearScreenRect.y = SDL_ANDROID_sWindowHeight;
 				SDL_ANDROID_ForceClearScreenRect.w = w;
 				SDL_ANDROID_ForceClearScreenRect.h = SDL_ANDROID_sWindowHeight - h; // OpenGL vertical coord is inverted
- 			}
- 		}
+			}
+		}
 		else
+#endif
 		{
 			SDL_ANDROID_ForceClearScreenRect.w = 0;
 			SDL_ANDROID_ForceClearScreenRect.h = 0;

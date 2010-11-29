@@ -133,8 +133,19 @@ void UpdateScreenUnderFingerRect(int x, int y)
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
 {
+#if SDL_VERSION_ATLEAST(1,3,0)
+
+	SDL_Window * window = SDL_GetFocusWindow();
+	if( !window )
+		return;
+
+#define SDL_ANDROID_sFakeWindowWidth window->w
+#define SDL_ANDROID_sFakeWindowHeight window->h
+
+#else
 	if( !SDL_CurrentVideoSurface )
 		return;
+#endif
 	if(pointerId < 0)
 		pointerId = 0;
 	if(pointerId > MAX_MULTITOUCH_POINTERS)
@@ -146,16 +157,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 #if SDL_VIDEO_RENDER_RESIZE
 	// Translate mouse coordinates
 
-#if SDL_VERSION_ATLEAST(1,3,0)
-	SDL_Window * window = SDL_GetFocusWindow();
-	if( window && window->renderer->window ) {
-		x = x * window->w / window->display->desktop_mode.w;
-		y = y * window->h / window->display->desktop_mode.h;
-	}
-#else
 	x = x * SDL_ANDROID_sFakeWindowWidth / SDL_ANDROID_sWindowWidth;
 	y = y * SDL_ANDROID_sFakeWindowHeight / SDL_ANDROID_sWindowHeight;
-#endif
 
 #endif
 
@@ -301,8 +304,11 @@ static int processAndroidTrackball(int key, int action);
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint key, jint action )
 {
+#if SDL_VERSION_ATLEAST(1,3,0)
+#else
 	if( !SDL_CurrentVideoSurface )
 		return;
+#endif
 	if( isTrackballUsed )
 		if( processAndroidTrackball(key, action) )
 			return;
@@ -332,8 +338,11 @@ static void updateOrientation ( float accX, float accY, float accZ );
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobject  thiz, jfloat accPosX, jfloat accPosY, jfloat accPosZ )
 {
+#if SDL_VERSION_ATLEAST(1,3,0)
+#else
 	if( !SDL_CurrentVideoSurface )
 		return;
+#endif
 	// Calculate two angles from three coordinates - TODO: this is faulty!
 	//float accX = atan2f(-accPosX, sqrtf(accPosY*accPosY+accPosZ*accPosZ) * ( accPosY > 0 ? 1.0f : -1.0f ) ) * M_1_PI * 180.0f;
 	//float accY = atan2f(accPosZ, accPosY) * M_1_PI;
@@ -350,8 +359,11 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(AccelerometerReader_nativeOrientation) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
 {
+#if SDL_VERSION_ATLEAST(1,3,0)
+#else
 	if( !SDL_CurrentVideoSurface )
 		return;
+#endif
 	updateOrientation (accX, accY, accZ); // TODO: make values in range 0.0:1.0
 }
 
@@ -1100,8 +1112,11 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key)
 	ev->key.keysym.sym = key;
 	ev->key.keysym.mod = KMOD_NONE;
 	ev->key.keysym.unicode = 0;
+#if SDL_VERSION_ATLEAST(1,3,0)
+#else
 	if ( SDL_TranslateUNICODE )
 		ev->key.keysym.unicode = key;
+#endif
 	
 	BufferedEventsEnd = nextEvent;
 	SDL_mutexV(BufferedEventsMutex);
@@ -1153,7 +1168,7 @@ extern void SDL_ANDROID_MainThreadPushMultitouchButton(int id, int pressed, int 
 	
 	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
 	
-	ev->type = SDL_FINGERDOWN:
+	ev->type = SDL_FINGERDOWN;
 	ev->tfinger.fingerId = id;
 	ev->tfinger.state = pressed;
 	ev->tfinger.x = x;
@@ -1173,7 +1188,7 @@ extern void SDL_ANDROID_MainThreadPushMultitouchMotion(int id, int x, int y, int
 	
 	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
 	
-	ev->type = SDL_FINGERMOTION:
+	ev->type = SDL_FINGERMOTION;
 	ev->tfinger.fingerId = id;
 	ev->tfinger.x = x;
 	ev->tfinger.y = y;
