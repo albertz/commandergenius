@@ -625,6 +625,7 @@ class Settings
 								Globals.ShowScreenUnderFinger ? 1 : 0,
 								Globals.LeftClickMethod,
 								Globals.MoveMouseWithJoystick ? 1 : 0,
+								Globals.ClickMouseWithDpad ? 1 : 0,
 								Globals.ClickScreenPressure,
 								Globals.ClickScreenTouchspotSize );
 		if( Globals.AppUsesJoystick && (Globals.UseAccelerometerAsArrowKeys || Globals.UseTouchscreenKeyboard) )
