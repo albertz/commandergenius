@@ -73,7 +73,7 @@ int SDL_ANDROID_isJoystickUsed = 0;
 static int isMultitouchUsed = 0;
 SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL};
 static int TrackballDampening = 0; // in milliseconds
-static int lastTrackballAction = 0;
+static Uint32 lastTrackballAction = 0;
 
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
@@ -403,157 +403,6 @@ JAVA_EXPORT_NAME(Settings_nativeSetMultitouchUsed) ( JNIEnv*  env, jobject thiz)
 	isMultitouchUsed = 1;
 }
 
-void ANDROID_InitOSKeymap()
-{
-  int i;
-  SDLKey * keymap = SDL_android_keymap;
-
-#if (SDL_VERSION_ATLEAST(1,3,0))
-  SDLKey defaultKeymap[SDL_NUM_SCANCODES];
-  SDL_GetDefaultKeymap(defaultKeymap);
-  SDL_SetKeymap(0, defaultKeymap, SDL_NUM_SCANCODES);
-
-  SDL_Touch touch;
-  memset( &touch, 0, sizeof(touch) );
-  touch.x_min = touch.y_min = touch.pressure_min = 0.0f;
-  touch.pressure_max = 1000000;
-  touch.x_max = SDL_ANDROID_sWindowWidth;
-  touch.y_max = SDL_ANDROID_sWindowHeight;
-
-  // These constants are hardcoded inside SDL_touch.c, which makes no sense for me.
-  touch.xres = touch.yres = 32768;
-  touch.native_xres = touch.native_yres = 32768.0f;
-
-  touch.pressureres = 1;
-  touch.native_pressureres = 1.0f;
-  touch.id = 0;
-
-  SDL_AddTouch(&touch, "Android touch screen");
-
-#endif
-
-  // TODO: keys are mapped rather randomly
-
-  for (i=0; i<SDL_arraysize(SDL_android_keymap); ++i)
-    SDL_android_keymap[i] = SDL_KEY(UNKNOWN);
-
-  keymap[KEYCODE_UNKNOWN] = SDL_KEY(UNKNOWN);
-
-  keymap[KEYCODE_BACK] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_5));
-
-  // TODO: make this configurable
-  keymap[KEYCODE_MENU] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_4));
-
-  keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
-  keymap[KEYCODE_SEARCH] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_9));
-  keymap[KEYCODE_CALL] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_10));
-
-  //keymap[KEYCODE_CALL] = SDL_KEY(RCTRL);
-  //keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(LALT);
-  
-  keymap[KEYCODE_VOLUME_UP] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_2));
-  keymap[KEYCODE_VOLUME_DOWN] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_3));
-  
-  keymap[KEYCODE_HOME] = SDL_KEY(HOME); // Cannot be used in application
-
-  keymap[KEYCODE_CAMERA] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_6));
-
-  keymap[KEYCODE_0] = SDL_KEY(0);
-  keymap[KEYCODE_1] = SDL_KEY(1);
-  keymap[KEYCODE_2] = SDL_KEY(2);
-  keymap[KEYCODE_3] = SDL_KEY(3);
-  keymap[KEYCODE_4] = SDL_KEY(4);
-  keymap[KEYCODE_5] = SDL_KEY(5);
-  keymap[KEYCODE_6] = SDL_KEY(6);
-  keymap[KEYCODE_7] = SDL_KEY(7);
-  keymap[KEYCODE_8] = SDL_KEY(8);
-  keymap[KEYCODE_9] = SDL_KEY(9);
-  keymap[KEYCODE_STAR] = SDL_KEY(KP_DIVIDE);
-  keymap[KEYCODE_POUND] = SDL_KEY(KP_MULTIPLY);
-
-  keymap[KEYCODE_DPAD_UP] = SDL_KEY(UP);
-  keymap[KEYCODE_DPAD_DOWN] = SDL_KEY(DOWN);
-  keymap[KEYCODE_DPAD_LEFT] = SDL_KEY(LEFT);
-  keymap[KEYCODE_DPAD_RIGHT] = SDL_KEY(RIGHT);
-
-  keymap[KEYCODE_SOFT_LEFT] = SDL_KEY(KP_4);
-  keymap[KEYCODE_SOFT_RIGHT] = SDL_KEY(KP_6);
-  keymap[KEYCODE_ENTER] = SDL_KEY(RETURN); //SDL_KEY(KP_ENTER);
-
-
-  keymap[KEYCODE_CLEAR] = SDL_KEY(BACKSPACE);
-  keymap[KEYCODE_A] = SDL_KEY(A);
-  keymap[KEYCODE_B] = SDL_KEY(B);
-  keymap[KEYCODE_C] = SDL_KEY(C);
-  keymap[KEYCODE_D] = SDL_KEY(D);
-  keymap[KEYCODE_E] = SDL_KEY(E);
-  keymap[KEYCODE_F] = SDL_KEY(F);
-  keymap[KEYCODE_G] = SDL_KEY(G);
-  keymap[KEYCODE_H] = SDL_KEY(H);
-  keymap[KEYCODE_I] = SDL_KEY(I);
-  keymap[KEYCODE_J] = SDL_KEY(J);
-  keymap[KEYCODE_K] = SDL_KEY(K);
-  keymap[KEYCODE_L] = SDL_KEY(L);
-  keymap[KEYCODE_M] = SDL_KEY(M);
-  keymap[KEYCODE_N] = SDL_KEY(N);
-  keymap[KEYCODE_O] = SDL_KEY(O);
-  keymap[KEYCODE_P] = SDL_KEY(P);
-  keymap[KEYCODE_Q] = SDL_KEY(Q);
-  keymap[KEYCODE_R] = SDL_KEY(R);
-  keymap[KEYCODE_S] = SDL_KEY(S);
-  keymap[KEYCODE_T] = SDL_KEY(T);
-  keymap[KEYCODE_U] = SDL_KEY(U);
-  keymap[KEYCODE_V] = SDL_KEY(V);
-  keymap[KEYCODE_W] = SDL_KEY(W);
-  keymap[KEYCODE_X] = SDL_KEY(X);
-  keymap[KEYCODE_Y] = SDL_KEY(Y);
-  keymap[KEYCODE_Z] = SDL_KEY(Z);
-  keymap[KEYCODE_COMMA] = SDL_KEY(COMMA);
-  keymap[KEYCODE_PERIOD] = SDL_KEY(PERIOD);
-  keymap[KEYCODE_TAB] = SDL_KEY(TAB);
-  keymap[KEYCODE_SPACE] = SDL_KEY(SPACE);
-  keymap[KEYCODE_DEL] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_8));
-  keymap[KEYCODE_GRAVE] = SDL_KEY(GRAVE);
-  keymap[KEYCODE_MINUS] = SDL_KEY(KP_MINUS);
-  keymap[KEYCODE_PLUS] = SDL_KEY(KP_PLUS);
-  keymap[KEYCODE_EQUALS] = SDL_KEY(EQUALS);
-  keymap[KEYCODE_LEFT_BRACKET] = SDL_KEY(LEFTBRACKET);
-  keymap[KEYCODE_RIGHT_BRACKET] = SDL_KEY(RIGHTBRACKET);
-  keymap[KEYCODE_BACKSLASH] = SDL_KEY(BACKSLASH);
-  keymap[KEYCODE_SEMICOLON] = SDL_KEY(SEMICOLON);
-  keymap[KEYCODE_APOSTROPHE] = SDL_KEY(APOSTROPHE);
-  keymap[KEYCODE_SLASH] = SDL_KEY(SLASH);
-  keymap[KEYCODE_AT] = SDL_KEY(KP_PERIOD);
-
-  keymap[KEYCODE_MEDIA_PLAY_PAUSE] = SDL_KEY(KP_2);
-  keymap[KEYCODE_MEDIA_STOP] = SDL_KEY(HELP);
-  keymap[KEYCODE_MEDIA_NEXT] = SDL_KEY(KP_8);
-  keymap[KEYCODE_MEDIA_PREVIOUS] = SDL_KEY(KP_5);
-  keymap[KEYCODE_MEDIA_REWIND] = SDL_KEY(KP_1);
-  keymap[KEYCODE_MEDIA_FAST_FORWARD] = SDL_KEY(KP_3);
-  keymap[KEYCODE_MUTE] = SDL_KEY(KP_0);
-
-  keymap[KEYCODE_SYM] = SDL_KEY(LGUI);
-  keymap[KEYCODE_NUM] = SDL_KEY(NUMLOCKCLEAR);
-
-  keymap[KEYCODE_ALT_LEFT] = SDL_KEY(KP_7);
-  keymap[KEYCODE_ALT_RIGHT] = SDL_KEY(KP_9);
-
-  keymap[KEYCODE_SHIFT_LEFT] = SDL_KEY(F1);
-  keymap[KEYCODE_SHIFT_RIGHT] = SDL_KEY(F2);
-
-  keymap[KEYCODE_EXPLORER] = SDL_KEY(F3);
-  keymap[KEYCODE_ENVELOPE] = SDL_KEY(F4);
-
-  keymap[KEYCODE_HEADSETHOOK] = SDL_KEY(F5);
-  keymap[KEYCODE_FOCUS] = SDL_KEY(F6);
-  keymap[KEYCODE_NOTIFICATION] = SDL_KEY(F7);
-
-  // Cannot be received by application, OS internal
-  keymap[KEYCODE_ENDCALL] = SDL_KEY(LSHIFT);
-  keymap[KEYCODE_POWER] = SDL_KEY(RALT);
-
-}
 
 static float dx = 0.04, dy = 0.1, dz = 0.1, joystickSensitivity = 400.0f; // For accelerometer
 enum { ACCELEROMETER_CENTER_FLOATING, ACCELEROMETER_CENTER_FIXED_START, ACCELEROMETER_CENTER_FIXED_HORIZ };
@@ -850,10 +699,9 @@ int processAndroidTrackball(int key, int action)
 
 void SDL_ANDROID_processAndroidTrackballDampening()
 {
-	SDL_keysym keysym;
 	if( !TrackballDampening )
 		return;
-	if( SDL_GetTicks() - lastTrackballAction > TrackballDampening )
+	if( SDL_GetTicks() > TrackballDampening + lastTrackballAction  )
 	{
 		if( upPressed )
 			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP) );
@@ -956,6 +804,9 @@ static SDL_mutex * BufferedEventsMutex = NULL;
 
 extern void SDL_ANDROID_PumpEvents()
 {
+	SDL_ANDROID_processAndroidTrackballDampening();
+	SDL_ANDROID_processMoveMouseWithKeyboard();
+
 	if( !BufferedEventsMutex )
 		BufferedEventsMutex = SDL_CreateMutex();
 	SDL_mutexP(BufferedEventsMutex);
@@ -1271,15 +1122,178 @@ extern void SDL_ANDROID_MainThreadPushText( int scancode, int unicode )
 	SDL_mutexV(BufferedEventsMutex);
 };
 
+
+Uint32 lastMoveMouseWithKeyboardUpdate = 0;
+
 void SDL_ANDROID_processMoveMouseWithKeyboard()
 {
+	if( moveMouseWithKbUpdateSpeedX == 0 && moveMouseWithKbUpdateSpeedY == 0 )
+		return;
+
+	Uint32 ticks = SDL_GetTicks();
+
+	if( ticks - lastMoveMouseWithKeyboardUpdate < 20 ) // Update at 50 FPS max, or it will not work properlty on very fast devices
+		return;
+
+	lastMoveMouseWithKeyboardUpdate = ticks;
+
 	moveMouseWithKbXspeed += moveMouseWithKbUpdateSpeedX;
 	moveMouseWithKbYspeed += moveMouseWithKbUpdateSpeedY;
-	
-	if( moveMouseWithKbXspeed != 0 || moveMouseWithKbYspeed != 0)
-	{
-		moveMouseWithKbX += moveMouseWithKbXspeed;
-		moveMouseWithKbY += moveMouseWithKbYspeed;
-		SDL_ANDROID_MainThreadPushMouseMotion(moveMouseWithKbX, moveMouseWithKbY);
-	}
+
+	moveMouseWithKbX += moveMouseWithKbXspeed;
+	moveMouseWithKbY += moveMouseWithKbYspeed;
+	SDL_ANDROID_MainThreadPushMouseMotion(moveMouseWithKbX, moveMouseWithKbY);
 };
+
+
+void ANDROID_InitOSKeymap()
+{
+  int i;
+  SDLKey * keymap = SDL_android_keymap;
+
+#if (SDL_VERSION_ATLEAST(1,3,0))
+  SDLKey defaultKeymap[SDL_NUM_SCANCODES];
+  SDL_GetDefaultKeymap(defaultKeymap);
+  SDL_SetKeymap(0, defaultKeymap, SDL_NUM_SCANCODES);
+
+  SDL_Touch touch;
+  memset( &touch, 0, sizeof(touch) );
+  touch.x_min = touch.y_min = touch.pressure_min = 0.0f;
+  touch.pressure_max = 1000000;
+  touch.x_max = SDL_ANDROID_sWindowWidth;
+  touch.y_max = SDL_ANDROID_sWindowHeight;
+
+  // These constants are hardcoded inside SDL_touch.c, which makes no sense for me.
+  touch.xres = touch.yres = 32768;
+  touch.native_xres = touch.native_yres = 32768.0f;
+
+  touch.pressureres = 1;
+  touch.native_pressureres = 1.0f;
+  touch.id = 0;
+
+  SDL_AddTouch(&touch, "Android touch screen");
+
+#endif
+
+  // TODO: keys are mapped rather randomly
+
+  for (i=0; i<SDL_arraysize(SDL_android_keymap); ++i)
+    SDL_android_keymap[i] = SDL_KEY(UNKNOWN);
+
+  keymap[KEYCODE_UNKNOWN] = SDL_KEY(UNKNOWN);
+
+  keymap[KEYCODE_BACK] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_5));
+
+  // TODO: make this configurable
+  keymap[KEYCODE_MENU] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_4));
+
+  keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
+  keymap[KEYCODE_SEARCH] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_9));
+  keymap[KEYCODE_CALL] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_10));
+
+  //keymap[KEYCODE_CALL] = SDL_KEY(RCTRL);
+  //keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(LALT);
+  
+  keymap[KEYCODE_VOLUME_UP] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_2));
+  keymap[KEYCODE_VOLUME_DOWN] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_3));
+  
+  keymap[KEYCODE_HOME] = SDL_KEY(HOME); // Cannot be used in application
+
+  keymap[KEYCODE_CAMERA] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_6));
+
+  keymap[KEYCODE_0] = SDL_KEY(0);
+  keymap[KEYCODE_1] = SDL_KEY(1);
+  keymap[KEYCODE_2] = SDL_KEY(2);
+  keymap[KEYCODE_3] = SDL_KEY(3);
+  keymap[KEYCODE_4] = SDL_KEY(4);
+  keymap[KEYCODE_5] = SDL_KEY(5);
+  keymap[KEYCODE_6] = SDL_KEY(6);
+  keymap[KEYCODE_7] = SDL_KEY(7);
+  keymap[KEYCODE_8] = SDL_KEY(8);
+  keymap[KEYCODE_9] = SDL_KEY(9);
+  keymap[KEYCODE_STAR] = SDL_KEY(KP_DIVIDE);
+  keymap[KEYCODE_POUND] = SDL_KEY(KP_MULTIPLY);
+
+  keymap[KEYCODE_DPAD_UP] = SDL_KEY(UP);
+  keymap[KEYCODE_DPAD_DOWN] = SDL_KEY(DOWN);
+  keymap[KEYCODE_DPAD_LEFT] = SDL_KEY(LEFT);
+  keymap[KEYCODE_DPAD_RIGHT] = SDL_KEY(RIGHT);
+
+  keymap[KEYCODE_SOFT_LEFT] = SDL_KEY(KP_4);
+  keymap[KEYCODE_SOFT_RIGHT] = SDL_KEY(KP_6);
+  keymap[KEYCODE_ENTER] = SDL_KEY(RETURN); //SDL_KEY(KP_ENTER);
+
+
+  keymap[KEYCODE_CLEAR] = SDL_KEY(BACKSPACE);
+  keymap[KEYCODE_A] = SDL_KEY(A);
+  keymap[KEYCODE_B] = SDL_KEY(B);
+  keymap[KEYCODE_C] = SDL_KEY(C);
+  keymap[KEYCODE_D] = SDL_KEY(D);
+  keymap[KEYCODE_E] = SDL_KEY(E);
+  keymap[KEYCODE_F] = SDL_KEY(F);
+  keymap[KEYCODE_G] = SDL_KEY(G);
+  keymap[KEYCODE_H] = SDL_KEY(H);
+  keymap[KEYCODE_I] = SDL_KEY(I);
+  keymap[KEYCODE_J] = SDL_KEY(J);
+  keymap[KEYCODE_K] = SDL_KEY(K);
+  keymap[KEYCODE_L] = SDL_KEY(L);
+  keymap[KEYCODE_M] = SDL_KEY(M);
+  keymap[KEYCODE_N] = SDL_KEY(N);
+  keymap[KEYCODE_O] = SDL_KEY(O);
+  keymap[KEYCODE_P] = SDL_KEY(P);
+  keymap[KEYCODE_Q] = SDL_KEY(Q);
+  keymap[KEYCODE_R] = SDL_KEY(R);
+  keymap[KEYCODE_S] = SDL_KEY(S);
+  keymap[KEYCODE_T] = SDL_KEY(T);
+  keymap[KEYCODE_U] = SDL_KEY(U);
+  keymap[KEYCODE_V] = SDL_KEY(V);
+  keymap[KEYCODE_W] = SDL_KEY(W);
+  keymap[KEYCODE_X] = SDL_KEY(X);
+  keymap[KEYCODE_Y] = SDL_KEY(Y);
+  keymap[KEYCODE_Z] = SDL_KEY(Z);
+  keymap[KEYCODE_COMMA] = SDL_KEY(COMMA);
+  keymap[KEYCODE_PERIOD] = SDL_KEY(PERIOD);
+  keymap[KEYCODE_TAB] = SDL_KEY(TAB);
+  keymap[KEYCODE_SPACE] = SDL_KEY(SPACE);
+  keymap[KEYCODE_DEL] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_8));
+  keymap[KEYCODE_GRAVE] = SDL_KEY(GRAVE);
+  keymap[KEYCODE_MINUS] = SDL_KEY(KP_MINUS);
+  keymap[KEYCODE_PLUS] = SDL_KEY(KP_PLUS);
+  keymap[KEYCODE_EQUALS] = SDL_KEY(EQUALS);
+  keymap[KEYCODE_LEFT_BRACKET] = SDL_KEY(LEFTBRACKET);
+  keymap[KEYCODE_RIGHT_BRACKET] = SDL_KEY(RIGHTBRACKET);
+  keymap[KEYCODE_BACKSLASH] = SDL_KEY(BACKSLASH);
+  keymap[KEYCODE_SEMICOLON] = SDL_KEY(SEMICOLON);
+  keymap[KEYCODE_APOSTROPHE] = SDL_KEY(APOSTROPHE);
+  keymap[KEYCODE_SLASH] = SDL_KEY(SLASH);
+  keymap[KEYCODE_AT] = SDL_KEY(KP_PERIOD);
+
+  keymap[KEYCODE_MEDIA_PLAY_PAUSE] = SDL_KEY(KP_2);
+  keymap[KEYCODE_MEDIA_STOP] = SDL_KEY(HELP);
+  keymap[KEYCODE_MEDIA_NEXT] = SDL_KEY(KP_8);
+  keymap[KEYCODE_MEDIA_PREVIOUS] = SDL_KEY(KP_5);
+  keymap[KEYCODE_MEDIA_REWIND] = SDL_KEY(KP_1);
+  keymap[KEYCODE_MEDIA_FAST_FORWARD] = SDL_KEY(KP_3);
+  keymap[KEYCODE_MUTE] = SDL_KEY(KP_0);
+
+  keymap[KEYCODE_SYM] = SDL_KEY(LGUI);
+  keymap[KEYCODE_NUM] = SDL_KEY(NUMLOCKCLEAR);
+
+  keymap[KEYCODE_ALT_LEFT] = SDL_KEY(KP_7);
+  keymap[KEYCODE_ALT_RIGHT] = SDL_KEY(KP_9);
+
+  keymap[KEYCODE_SHIFT_LEFT] = SDL_KEY(F1);
+  keymap[KEYCODE_SHIFT_RIGHT] = SDL_KEY(F2);
+
+  keymap[KEYCODE_EXPLORER] = SDL_KEY(F3);
+  keymap[KEYCODE_ENVELOPE] = SDL_KEY(F4);
+
+  keymap[KEYCODE_HEADSETHOOK] = SDL_KEY(F5);
+  keymap[KEYCODE_FOCUS] = SDL_KEY(F6);
+  keymap[KEYCODE_NOTIFICATION] = SDL_KEY(F7);
+
+  // Cannot be received by application, OS internal
+  keymap[KEYCODE_ENDCALL] = SDL_KEY(LSHIFT);
+  keymap[KEYCODE_POWER] = SDL_KEY(RALT);
+
+}
