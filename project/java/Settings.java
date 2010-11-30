@@ -310,8 +310,7 @@ class Settings
 			p.getResources().getString(R.string.pointandclick_keepaspectratio),
 			p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
 			p.getResources().getString(R.string.pointandclick_joystickmouse),
-			p.getResources().getString(R.string.leftclick_dpadcenter)
-		};
+			p.getResources().getString(R.string.leftclick_dpadcenter) };
 
 		final boolean defaults[] = { 
 			Globals.UseTouchscreenKeyboard,
@@ -321,6 +320,24 @@ class Settings
 			Globals.MoveMouseWithJoystick,
 			Globals.ClickMouseWithDpad
 		};
+
+		if( ! Globals.AppUsesMouse )
+		{
+			final CharSequence[] items2 = {
+				p.getResources().getString(R.string.controls_screenkb),
+				p.getResources().getString(R.string.controls_accelnav),
+				p.getResources().getString(R.string.pointandclick_keepaspectratio),
+				p.getResources().getString(R.string.pointandclick_showcreenunderfinger) };
+
+			final boolean defaults2[] = { 
+				Globals.UseTouchscreenKeyboard,
+				Globals.UseAccelerometerAsArrowKeys,
+				Globals.KeepAspectRatio,
+				Globals.ShowScreenUnderFinger };
+
+				items = items2;
+				defaults = defaults2;
+		}
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_additional));
