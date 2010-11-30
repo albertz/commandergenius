@@ -304,7 +304,7 @@ class Settings
 	
 	static void showAdditionalInputConfig(final MainActivity p)
 	{
-		final CharSequence[] items = {
+		CharSequence[] items = {
 			p.getResources().getString(R.string.controls_screenkb),
 			p.getResources().getString(R.string.controls_accelnav),
 			p.getResources().getString(R.string.pointandclick_keepaspectratio),
@@ -312,7 +312,7 @@ class Settings
 			p.getResources().getString(R.string.pointandclick_joystickmouse),
 			p.getResources().getString(R.string.leftclick_dpadcenter) };
 
-		final boolean defaults[] = { 
+		boolean defaults[] = { 
 			Globals.UseTouchscreenKeyboard,
 			Globals.UseAccelerometerAsArrowKeys,
 			Globals.KeepAspectRatio,
@@ -323,13 +323,13 @@ class Settings
 
 		if( ! Globals.AppUsesMouse )
 		{
-			final CharSequence[] items2 = {
+			CharSequence[] items2 = {
 				p.getResources().getString(R.string.controls_screenkb),
 				p.getResources().getString(R.string.controls_accelnav),
 				p.getResources().getString(R.string.pointandclick_keepaspectratio),
 				p.getResources().getString(R.string.pointandclick_showcreenunderfinger) };
 
-			final boolean defaults2[] = { 
+			boolean defaults2[] = { 
 				Globals.UseTouchscreenKeyboard,
 				Globals.UseAccelerometerAsArrowKeys,
 				Globals.KeepAspectRatio,
