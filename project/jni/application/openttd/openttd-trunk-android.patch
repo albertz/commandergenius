@@ -158,13 +158,15 @@ Index: src/main_gui.cpp
 ===================================================================
 --- src/main_gui.cpp	(revision 21311)
 +++ src/main_gui.cpp	(working copy)
-@@ -275,6 +275,9 @@
+@@ -275,7 +275,11 @@
  			}
  
  			case WKC_ESC: ResetObjectToPlace(); break;
 +#ifdef ANDROID
 +			case WKC_DELETE: DeleteAllNonVitalWindows(); break;
-+#endif
++#else
  			case WKC_DELETE: DeleteNonVitalWindows(); break;
++#endif
  			case WKC_DELETE | WKC_SHIFT: DeleteAllNonVitalWindows(); break;
  			case 'R' | WKC_CTRL: MarkWholeScreenDirty(); break;
+ 
