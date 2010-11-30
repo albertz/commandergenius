@@ -72,7 +72,7 @@ class AudioThread {
 					}
 					mAudioBuffer = new byte[bufSize];
 
-					mAudio = new AudioTrack(AudioManager.STREAM_RING,
+					mAudio = new AudioTrack(AudioManager.STREAM_MUSIC,
 												rate,
 												channels,
 												encoding,
