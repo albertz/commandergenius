@@ -136,6 +136,11 @@ class Settings
 	
 	public static void showConfig(final MainActivity p) {
 		settingsChanged = true;
+
+		if( Globals.OptionalDataDownload == null )
+			Globals.OptionalDataDownload = new boolean[Globals.DataDownloadUrl.split("\\^").length];
+		Globals.OptionalDataDownload[0] = true;
+
 		showConfigMainMenu(p);
 	}
 
