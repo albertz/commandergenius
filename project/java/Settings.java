@@ -173,7 +173,7 @@ class Settings
 		items.add(p.getResources().getString(R.string.ok));
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		//builder.setTitle();
+		builder.setTitle(p.getResources().getString(R.string.device_config));
 		builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
