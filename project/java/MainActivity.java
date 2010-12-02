@@ -241,10 +241,15 @@ public class MainActivity extends Activity {
 			myKeyListener(MainActivity parent) { _parent = parent; };
 			public boolean onKey(View v, int keyCode, KeyEvent event) 
 			{
-				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) 
+				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER))
 				{
 					_parent.hideScreenKeyboard();
 					return true;
+				}
+				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR))
+				{
+					mGLView.nativeTextInput( 8, 8 ); // send backspace keycode
+					return false; // and proceed to delete text in keyboard input field
 				}
 				return false;
 			}
