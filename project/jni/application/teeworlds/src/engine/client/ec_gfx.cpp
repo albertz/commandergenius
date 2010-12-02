@@ -309,45 +309,54 @@ static int try_init()
 #if defined(ANDROID)
 	// Redefine button layout
 	{
+		// Disable DPAD
 		SDL_Rect pos = {0, 0, 0, 0};
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_DPAD, &pos);
-		
-		pos.x = screen_width - screen_width / 16;
-		pos.y = screen_height - screen_height / 8;
-		pos.w = screen_width / 2 /*(SDL_ANDROID_GetScreenKeyboardSize() + 2)*/ / 4;
-		pos.h = pos.w;
-		pos.x -= pos.w/2;
-		pos.y -= pos.h/2;
+
+		// Rope button in lower-right
+		pos.x = screen_width;
+		pos.y = screen_height;
+		pos.w = screen_width / 6;
+		pos.h = pos.w * 2 / 3;
+		pos.x -= pos.w;
+		pos.y -= pos.h;
 
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_0, &pos);
 		
-		pos.x -= screen_width / 8;
-
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_1, &pos);
-
-		pos.x = screen_width / 16;
-		pos.x -= pos.w/2;
+		// Move and jump buttons overlapped in lower-left
+		pos.x = 0;
+		pos.y = screen_height;
+		pos.w = screen_width / 8;
+		pos.h = pos.w*1.5;
+		pos.y -= pos.h;
 
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_2, &pos);
 
-		pos.x += screen_width / 8;
+		pos.x += pos.w;
 
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_3, &pos);
 
-		//pos.y = screen_height - screen_height / 8 - screen_height / 4;
-		//pos.y -= pos.h/2;
+		pos.w *= 2;
+		pos.h = pos.w*2/3;
+		pos.x = 0;
+		pos.y -= pos.h/2;
 
-		pos.y -= pos.h;
-		
-		pos.x = screen_width / 16;
-		pos.x -= pos.w/2;
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_1, &pos);
+
+		// weapprev weapnext buttons
+
+		pos.x = screen_width;
+		pos.y = screen_height / 6;
+		pos.w = screen_width / 10;
+		pos.h = pos.w;
+		pos.x -= pos.w;
+
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_5, &pos);
+
+		pos.x = 0;
 
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_4, &pos);
 
-		pos.x = screen_width - screen_width / 16;
-		pos.x -= pos.w/2;
-
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_5, &pos);
 	}
 #endif
 

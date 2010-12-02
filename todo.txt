@@ -19,4 +19,8 @@ Bugs to fix
 
 - Zoom and rotate multitouch gestures should return some keycodes.
 
+- Adjustable speed for moving mouse via joystick
+
+- Mouse buttons assigned to hw buttons only
+
 And that's all, I won't be doing any more development or fix other bugs (see bugs.txt for details).

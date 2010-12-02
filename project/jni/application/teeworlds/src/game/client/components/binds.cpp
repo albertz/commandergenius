@@ -92,6 +92,7 @@ void BINDS::set_defaults()
 	bind(KEY_DOWN, "+hook");
 	bind(KEY_RETURN, "+jump");
 	bind(KEY_SPACE, "+hook");
+	bind(KEY_MOUSE_2, "+hook");
 	bind(KEY_LSHIFT, "+nextweapon");
 	bind(KEY_RSHIFT, "+prevweapon");
 
