@@ -733,8 +733,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		}
 		buttons[6].x = 0;
 		buttons[6].y = 0;
-		buttons[6].w = SDL_ANDROID_sWindowHeight/15;
-		buttons[6].h = SDL_ANDROID_sWindowHeight/15;
+		buttons[6].w = SDL_ANDROID_sWindowHeight/10;
+		buttons[6].h = SDL_ANDROID_sWindowHeight/10;
 	}
 
 	if( !showArrows )
