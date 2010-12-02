@@ -74,6 +74,9 @@ static int isMultitouchUsed = 0;
 SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL};
 static int TrackballDampening = 0; // in milliseconds
 static Uint32 lastTrackballAction = 0;
+enum { TOUCH_PTR_UP = 0, TOUCH_PTR_MOUSE = 1, TOUCH_PTR_SCREENKB = 2 };
+int touchPointers[MAX_MULTITOUCH_POINTERS] = {0};
+int firstMousePointerId = -1;
 
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
@@ -135,6 +138,7 @@ void UpdateScreenUnderFingerRect(int x, int y)
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
 {
+	int i;
 #if SDL_VERSION_ATLEAST(1,3,0)
 
 	SDL_Window * window = SDL_GetFocusWindow();
@@ -152,9 +156,36 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 		pointerId = 0;
 	if(pointerId > MAX_MULTITOUCH_POINTERS)
 		pointerId = MAX_MULTITOUCH_POINTERS;
-
-	if( SDL_ANDROID_isTouchscreenKeyboardUsed && SDL_ANDROID_processTouchscreenKeyboard(x, y, action, pointerId) )
-		return;
+	
+	// The ouch is passed either to on-screen keyboard or as mouse event for all duration of touch between down and up,
+	// even if the finger is not anymore above screen kb button it will not acr as mouse event, and if it's initially
+	// touches the screen outside of screen kb it won't trigger button keypress -
+	// I think it's more logical this way
+	if( SDL_ANDROID_isTouchscreenKeyboardUsed && ( action == MOUSE_DOWN || touchPointers[pointerId] == TOUCH_PTR_SCREENKB ) )
+	{
+		if( SDL_ANDROID_processTouchscreenKeyboard(x, y, action, pointerId) && action == MOUSE_DOWN )
+			touchPointers[pointerId] = TOUCH_PTR_SCREENKB;
+		if( touchPointers[pointerId] == TOUCH_PTR_SCREENKB )
+		{
+			if( action == MOUSE_UP )
+				touchPointers[pointerId] = TOUCH_PTR_UP;
+			return;
+		}
+	}
+	
+	if( action == MOUSE_DOWN )
+	{
+		touchPointers[pointerId] = TOUCH_PTR_MOUSE;
+		firstMousePointerId = -1;
+		for( i = 0; i < MAX_MULTITOUCH_POINTERS; i++ )
+		{
+			if( touchPointers[i] == TOUCH_PTR_MOUSE )
+			{
+				firstMousePointerId = i;
+				break;
+			}
+		}
+	}
 
 #if SDL_VIDEO_RENDER_RESIZE
 	// Translate mouse coordinates
@@ -195,7 +226,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	if( !isMouseUsed )
 		return;
 
-	if( pointerId == 0 )
+	if( pointerId == firstMousePointerId )
 	{
 		int oldX, oldY;
 		SDL_GetMouseState( &oldX, &oldY );
@@ -286,7 +317,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 			UpdateScreenUnderFingerRect(x, y);
 		}
 	}
-	if( pointerId == 1 && (action == MOUSE_DOWN || action == MOUSE_UP) )
+	if( pointerId != firstMousePointerId && (action == MOUSE_DOWN || action == MOUSE_UP) )
 	{
 		if( leftClickMethod == LEFT_CLICK_WITH_MULTITOUCH )
 		{
@@ -297,6 +328,20 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 			if( SDL_GetMouseState( NULL, NULL ) & SDL_BUTTON(SDL_BUTTON_LEFT) )
 				SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
 			SDL_ANDROID_MainThreadPushMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
+		}
+	}
+
+	if( action == MOUSE_UP )
+	{
+		touchPointers[pointerId] = TOUCH_PTR_UP;
+		firstMousePointerId = -1;
+		for( i = 0; i < MAX_MULTITOUCH_POINTERS; i++ )
+		{
+			if( touchPointers[i] == TOUCH_PTR_MOUSE )
+			{
+				firstMousePointerId = i;
+				break;
+			}
 		}
 	}
 }
