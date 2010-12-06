@@ -75,4 +75,8 @@
 <string name="leftclick_dpadcenter">Trackball klicken Select-Taste</string>
 <string name="pointandclick_joystickmouse">Bewegen Sie die Maus mit Joystick oder Trackball</string>
 <string name="measurepressure_response">Pressure %03d Radius %03d</string>
+<string name="click_with_dpadcenter">Linker Mausklick mit Trackball / Joystick Zentrum</string>
+<string name="pointandclick_joystickmousespeed">Bewegen Sie die Maus mit Joystick-Geschwindigkeit</string>
+<string name="pointandclick_joystickmouseaccel">Bewegen Sie die Maus mit Joystick-Beschleunigung</string>
+<string name="none">Keine</string>
 </resources>

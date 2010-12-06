@@ -71,11 +71,15 @@
     <string name="leftclick_multitouch">Touch screen with second finger</string>
     <string name="leftclick_pressure">Touch screen with force</string>
     <string name="leftclick_dpadcenter">Trackball click / joystick center</string>
+    <string name="click_with_dpadcenter">Left mouse click with trackball / joystick center</string>
 
     <string name="pointandclick_question">Advanced features</string>
     <string name="pointandclick_keepaspectratio">Keep 4:3 screen aspect ratio</string>
     <string name="pointandclick_showcreenunderfinger">Show screen under finger in separate window</string>
     <string name="pointandclick_joystickmouse">Move mouse with joystick or trackball</string>
+    <string name="pointandclick_joystickmousespeed">Move mouse with joystick speed</string>
+    <string name="pointandclick_joystickmouseaccel">Move mouse with joystick acceleration</string>
+    <string name="none">None</string>
 
     <string name="measurepressure_touchplease">Please slide finger across the screen for two seconds</string>
     <string name="measurepressure_response">Pressure %03d radius %03d</string>

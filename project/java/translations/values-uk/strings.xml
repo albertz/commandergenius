@@ -68,4 +68,8 @@
 <string name="leftclick_pressure">>Натиск на екран з силою</string>
 <string name="leftclick_dpadcenter">Натиск на трекбол / центр джойстику</string>
 <string name="pointandclick_joystickmouse">Переміщення миші за допомогою джойстика або трекбола</string>
+<string name="click_with_dpadcenter">Лівий клік миші за допомогою трекбола / центра джойстика</string>
+<string name="pointandclick_joystickmousespeed">Переміщення миші джойстиком - швидкiсть</string>
+<string name="pointandclick_joystickmouseaccel">Переміщення миші джойстиком - прискорення</string>
+<string name="none">Немає</string>
 </resources>

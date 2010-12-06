@@ -75,4 +75,8 @@
 <string name="leftclick_dpadcenter">Trackball Valitse / Select-näppäintä</string>
 <string name="pointandclick_joystickmouse">Siirrä hiiren ohjaimella tai trackball</string>
 <string name="measurepressure_response">Paine %03d säde %03d</string>
+<string name="click_with_dpadcenter">Vasen hiiren klikkaus trackball-ohjaimella keskusta</string>
+<string name="pointandclick_joystickmousespeed">Siirrä hiiri ohjainta nopeasti</string>
+<string name="pointandclick_joystickmouseaccel">Siirrä hiiri ohjainta kiihtyvyys</string>
+<string name="none">Ei</string>
 </resources>

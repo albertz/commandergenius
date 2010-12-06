@@ -57,6 +57,8 @@ class Settings
 			out.writeInt(Globals.ClickScreenPressure);
 			out.writeInt(Globals.ClickScreenTouchspotSize);
 			out.writeBoolean(Globals.KeepAspectRatio);
+			out.writeInt(Globals.MoveMouseWithJoystickSpeed);
+			out.writeInt(Globals.MoveMouseWithJoystickAccel);
 
 			out.close();
 			settingsLoaded = true;
@@ -97,6 +99,8 @@ class Settings
 			Globals.ClickScreenPressure = settingsFile.readInt();
 			Globals.ClickScreenTouchspotSize = settingsFile.readInt();
 			Globals.KeepAspectRatio = settingsFile.readBoolean();
+			Globals.MoveMouseWithJoystickSpeed = settingsFile.readInt();
+			Globals.MoveMouseWithJoystickAccel = settingsFile.readInt();
 			
 			settingsLoaded = true;
 
@@ -167,6 +171,9 @@ class Settings
 
 		if( Globals.AppUsesMouse )
 			items.add(p.getResources().getString(R.string.leftclick_question));
+		
+		if( Globals.MoveMouseWithJoystick )
+			items.add(p.getResources().getString(R.string.pointandclick_joystickmouse));
 
 		items.add(p.getResources().getString(R.string.audiobuf_question));
 
@@ -180,48 +187,65 @@ class Settings
 			{
 				MainMenuLastSelected = item;
 				dialog.dismiss();
+				int selected = 0;
 
-				if( item == 0 )
+				if( item == selected )
 					showDownloadConfig(p);
+				selected++;
 
 				if( Globals.DataDownloadUrl.split("\\^").length <= 1 )
 					item += 1;
 				else
-					if( item == 1 )
+					if( item == selected )
 						showOptionalDownloadConfig(p);
+				selected++;
 
 				if( item == 2 )
 					showAdditionalInputConfig(p);
+				selected++;
 
 				if( ! Globals.AppNeedsArrowKeys && ! Globals.MoveMouseWithJoystick )
 					item += 1;
 				else
-					if( item == 3 )
+					if( item == selected )
 						showKeyboardConfig(p);
+				selected++;
 
 				if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
 					item += 1;
 				else
-					if( item == 4 )
+					if( item == selected )
 						showAccelerometerConfig(p);
-		
+				selected++;
+
 				if( ! Globals.UseTouchscreenKeyboard )
 					item += 1;
 				else
-					if( item == 5 )
+					if( item == selected )
 						showScreenKeyboardConfig(p);
+				selected++;
 
 				if( ! Globals.AppUsesMouse )
 					item += 1;
 				else
-					if( item == 6 )
+					if( item == selected )
 						showLeftClickConfig(p);
-
-				if( item == 7 )
-					showAudioConfig(p);
+				selected++;
 				
-				if( item == 8 )
+				if( ! Globals.MoveMouseWithJoystick )
+					item += 1;
+				else
+					if( item == selected )
+						showJoystickMouseConfig(p);
+				selected++;
+
+				if( item == selected )
+					showAudioConfig(p);
+				selected++;
+				
+				if( item == selected )
 					showTouchPressureMeasurementTool(p);
+				selected++;
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -315,7 +339,7 @@ class Settings
 			p.getResources().getString(R.string.pointandclick_keepaspectratio),
 			p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
 			p.getResources().getString(R.string.pointandclick_joystickmouse),
-			p.getResources().getString(R.string.leftclick_dpadcenter) };
+			p.getResources().getString(R.string.click_with_dpadcenter) };
 
 		boolean defaults[] = { 
 			Globals.UseTouchscreenKeyboard,
@@ -538,7 +562,8 @@ class Settings
 		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_normal),
 										p.getResources().getString(R.string.leftclick_near_cursor),
 										p.getResources().getString(R.string.leftclick_multitouch),
-										p.getResources().getString(R.string.leftclick_pressure) };
+										p.getResources().getString(R.string.leftclick_pressure),
+										p.getResources().getString(R.string.leftclick_dpadcenter) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.leftclick_question);
@@ -648,6 +673,67 @@ class Settings
 		alert.show();
 	}
 
+	static void showJoystickMouseConfig(final MainActivity p)
+	{
+		if( ! Globals.MoveMouseWithJoystick )
+		{
+			Globals.MoveMouseWithJoystickSpeed = 0;
+			showJoystickMouseAccelConfig(p);
+			return;
+		}
+		
+		final CharSequence[] items = {	p.getResources().getString(R.string.accel_slow),
+										p.getResources().getString(R.string.accel_medium),
+										p.getResources().getString(R.string.accel_fast) };
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(R.string.pointandclick_joystickmousespeed);
+		builder.setSingleChoiceItems(items, Globals.MoveMouseWithJoystickSpeed, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.MoveMouseWithJoystickSpeed = item;
+
+				dialog.dismiss();
+				showJoystickMouseAccelConfig(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showJoystickMouseAccelConfig(final MainActivity p)
+	{
+		if( ! Globals.MoveMouseWithJoystick )
+		{
+			Globals.MoveMouseWithJoystickAccel = 0;
+			showConfigMainMenu(p);
+			return;
+		}
+		
+		final CharSequence[] items = {	p.getResources().getString(R.string.none),
+										p.getResources().getString(R.string.accel_slow),
+										p.getResources().getString(R.string.accel_medium),
+										p.getResources().getString(R.string.accel_fast) };
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(R.string.pointandclick_joystickmousespeed);
+		builder.setSingleChoiceItems(items, Globals.MoveMouseWithJoystickAccel, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.MoveMouseWithJoystickAccel = item;
+
+				dialog.dismiss();
+				showConfigMainMenu(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
 	static void showTouchPressureMeasurementTool(final MainActivity p)
 	{
 		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Globals.LEFT_CLICK_WITH_PRESSURE )
@@ -727,7 +813,9 @@ class Settings
 								Globals.MoveMouseWithJoystick ? 1 : 0,
 								Globals.ClickMouseWithDpad ? 1 : 0,
 								Globals.ClickScreenPressure,
-								Globals.ClickScreenTouchspotSize );
+								Globals.ClickScreenTouchspotSize,
+								Globals.MoveMouseWithJoystickSpeed,
+								Globals.MoveMouseWithJoystickAccel );
 		if( Globals.AppUsesJoystick && (Globals.UseAccelerometerAsArrowKeys || Globals.UseTouchscreenKeyboard) )
 			nativeSetJoystickUsed();
 		if( Globals.AppUsesMultitouch )
@@ -787,7 +875,9 @@ class Settings
 	private static native void nativeSetTrackballUsed();
 	private static native void nativeSetTrackballDampening(int value);
 	private static native void nativeSetAccelerometerSettings(int sensitivity, int centerPos);
-	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickMethod, int MoveMouseWithJoystick, int ClickMouseWithDpad, int MaxForce, int MaxRadius);
+	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickMethod, 
+													int MoveMouseWithJoystick, int ClickMouseWithDpad, int MaxForce, int MaxRadius,
+													int MoveMouseWithJoystickSpeed, int MoveMouseWithJoystickAccel);
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
