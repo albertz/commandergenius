@@ -23,4 +23,8 @@ Bugs to fix
 
 - Mouse buttons assigned to hw buttons only
 
+- Option to calibrate touch area of the screen
+
+- Calling SDL_SetVideoMode() with SDL 1.3 makes it crash
+
 And that's all, I won't be doing any more development or fix other bugs (see bugs.txt for details).
