@@ -160,7 +160,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	if(pointerId > MAX_MULTITOUCH_POINTERS)
 		pointerId = MAX_MULTITOUCH_POINTERS;
 	
-	// The ouch is passed either to on-screen keyboard or as mouse event for all duration of touch between down and up,
+	// The touch is passed either to on-screen keyboard or as mouse event for all duration of touch between down and up,
 	// even if the finger is not anymore above screen kb button it will not acr as mouse event, and if it's initially
 	// touches the screen outside of screen kb it won't trigger button keypress -
 	// I think it's more logical this way

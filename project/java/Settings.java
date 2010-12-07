@@ -177,6 +177,11 @@ class Settings
 
 		items.add(p.getResources().getString(R.string.audiobuf_question));
 
+		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Globals.LEFT_CLICK_WITH_PRESSURE )
+			items.add(p.getResources().getString(R.string.measurepressure));
+		
+		items.add(p.getResources().getString(R.string.remap_hwkeys));
+
 		items.add(p.getResources().getString(R.string.ok));
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -242,9 +247,24 @@ class Settings
 				if( item == selected )
 					showAudioConfig(p);
 				selected++;
+
+				if( ! ( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE ||
+						Globals.LeftClickMethod == Globals.LEFT_CLICK_WITH_PRESSURE ) )
+					item += 1;
+				else
+					if( item == selected )
+						showTouchPressureMeasurementTool(p);
+				selected++;
+
+				if( item == selected )
+					showRemapHwKeysConfig(p);
+				selected++;
 				
 				if( item == selected )
-					showTouchPressureMeasurementTool(p);
+				{
+					Save(p);
+					p.startDownloader();
+				}
 				selected++;
 			}
 		});
@@ -734,21 +754,30 @@ class Settings
 		alert.show();
 	}
 
+	public interface TouchEventsListener
+	{
+		public void onTouchEvent(final MotionEvent ev);
+	}
+
+	public interface KeyEventsListener
+	{
+		public void onKeyEvent(final int keyCode);
+	}
+
 	static void showTouchPressureMeasurementTool(final MainActivity p)
 	{
 		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Globals.LEFT_CLICK_WITH_PRESSURE )
 		{
 			p.setText(p.getResources().getString(R.string.measurepressure_touchplease));
-			p._touchMeasurementTool = new TouchMeasurementTool(p);
+			p.touchMeasurementTool = new TouchMeasurementTool(p);
 		}
 		else
 		{
-			Save(p);
-			p.startDownloader();
+			showConfigMainMenu(p);
 		}
 	}
 
-	public static class TouchMeasurementTool
+	public static class TouchMeasurementTool implements TouchEventsListener
 	{
 		MainActivity p;
 		ArrayList<Integer> force = new ArrayList<Integer>();
@@ -771,12 +800,11 @@ class Settings
 			
 			if( force.size() >= maxEventAmount )
 			{
-				p._touchMeasurementTool = null;
+				p.touchMeasurementTool = null;
 				Globals.ClickScreenPressure = getAverageForce();
 				Globals.ClickScreenTouchspotSize = getAverageRadius();
 				System.out.println("SDL: measured average force " + Globals.ClickScreenPressure + " radius " + Globals.ClickScreenTouchspotSize);
-				Save(p);
-				p.startDownloader();
+				showConfigMainMenu(p);
 			}
 		}
 
@@ -797,6 +825,55 @@ class Settings
 				avg += r;
 			}
 			return avg / radius.size();
+		}
+	}
+	
+	static void showRemapHwKeysConfig(final MainActivity p)
+	{
+		p.setText(p.getResources().getString(R.string.remap_hwkeys_press));
+		p.keyRemapTool = new KeyRemapTool(p);
+	}
+
+	public static class KeyRemapTool implements KeyEventsListener
+	{
+		MainActivity p;
+		public KeyRemapTool(MainActivity _p)
+		{
+			p = _p;
+		}
+		
+		public void onKeyEvent(final int keyCode)
+		{
+			p.keyRemapTool = null;
+			int keyIndex = -1;
+			for( int i = 0; i < Globals.RemapHwKeycodeJava.size(); i++ )
+			{
+				if( Globals.RemapHwKeycodeJava.get(i) == keyCode )
+					keyIndex = i;
+			}
+			if( keyIndex == -1 )
+			{
+				keyIndex = Globals.RemapHwKeycodeJava.size();
+				Globals.RemapHwKeycodeJava.add(keyCode);
+				Globals.RemapHwKeycodeSdl.add(0); // SDLK_UNKNOWN
+			}
+
+			final int KeyIndexFinal = keyIndex;
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.remap_hwkeys_select);
+			builder.setSingleChoiceItems(SDL_Keys.names, Globals.RemapHwKeycodeSdl.get(keyIndex), new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item)
+				{
+					Globals.RemapHwKeycodeSdl.set(KeyIndexFinal, item);
+
+					dialog.dismiss();
+					showConfigMainMenu(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
 		}
 	}
 	

@@ -350,6 +350,11 @@ AppSharedLibrariesPath=/data/data/$AppFullName/lib
 ScreenOrientation1=portrait
 HorizontalOrientation=false
 
+UsingSdl13=false
+if [ "$LibSdlVersion" = "1.3" ] ; then
+	UsingSdl13=true
+fi
+
 if [ "$ScreenOrientation" = "h" ] ; then
 	ScreenOrientation1=landscape
 	HorizontalOrientation=true
@@ -480,6 +485,7 @@ cd ../..
 echo Patching project/src/Globals.java
 cat project/src/Globals.java | \
 	sed "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" | \
+	sed "s/public static final boolean Using_SDL_1_3 = .*;/public static final boolean Using_SDL_1_3 = $UsingSdl13;/" | \
 	sed "s@public static String DataDownloadUrl = .*@public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";@" | \
 	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
 	sed "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" | \

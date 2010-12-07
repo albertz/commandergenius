@@ -278,7 +278,12 @@ public class MainActivity extends Activity {
 			if( !downloader.DownloadComplete )
 			 onStop();
 		}
-		 return true;
+		else
+		if( keyRemapTool != null )
+		{
+			keyRemapTool.onKeyEvent(keyCode);
+		}
+		return true;
 	}
 	
 	@Override
@@ -302,8 +307,8 @@ public class MainActivity extends Activity {
 		if( _btn != null )
 			return _btn.dispatchTouchEvent(ev);
 		else
-		if( _touchMeasurementTool != null )
-			_touchMeasurementTool.onTouchEvent(ev);
+		if( touchMeasurementTool != null )
+			touchMeasurementTool.onTouchEvent(ev);
 		return true;
 	}
 
@@ -369,7 +374,8 @@ public class MainActivity extends Activity {
 	private FrameLayout _videoLayout = null;
 	private EditText _screenKeyboard = null;
 	private boolean sdlInited = false;
-	public Settings.TouchMeasurementTool _touchMeasurementTool = null;
+	public Settings.TouchEventsListener touchMeasurementTool = null;
+	public Settings.KeyEventsListener keyRemapTool = null;
 	boolean _isPaused = false;
 
 }

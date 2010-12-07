@@ -3,9 +3,12 @@ package net.sourceforge.clonekeenplus;
 
 import android.app.Activity;
 import android.content.Context;
+import java.util.Vector;
 
 class Globals {
 	public static String ApplicationName = "CommanderGenius";
+
+	public static final boolean Using_SDL_1_3 = false;
 
 	// Should be zip file
 	public static String DataDownloadUrl = "Data files are 2 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-data.zip/download^High-quality GFX and music - 40 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-hqp.zip/download";
@@ -78,6 +81,8 @@ class Globals {
 	public static boolean KeepAspectRatio = false;
 	public static int ClickScreenPressure = 0;
 	public static int ClickScreenTouchspotSize = 0;
+	public static Vector<Integer> RemapHwKeycodeJava = new Vector<Integer>();
+	public static Vector<Integer> RemapHwKeycodeSdl = new Vector<Integer>();
 }
 
 class LoadLibrary {
