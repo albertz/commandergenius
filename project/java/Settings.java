@@ -59,6 +59,11 @@ class Settings
 			out.writeBoolean(Globals.KeepAspectRatio);
 			out.writeInt(Globals.MoveMouseWithJoystickSpeed);
 			out.writeInt(Globals.MoveMouseWithJoystickAccel);
+			out.writeInt(SDL_Keys.JAVA_KEYCODE_LAST);
+			for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
+			{
+				out.writeInt(RemapHwKeycode[i]);
+			}
 
 			out.close();
 			settingsLoaded = true;
@@ -75,6 +80,11 @@ class Settings
 			return;
 		}
 		System.out.println("libSDL: Settings.Load(): enter");
+		nativeInitKeymap();
+		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
+		{
+			RemapHwKeycode[i] = nativeGetKeymapKey(i);
+		}
 		try {
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
 			Globals.DownloadToSdcard = settingsFile.readBoolean();
@@ -101,6 +111,12 @@ class Settings
 			Globals.KeepAspectRatio = settingsFile.readBoolean();
 			Globals.MoveMouseWithJoystickSpeed = settingsFile.readInt();
 			Globals.MoveMouseWithJoystickAccel = settingsFile.readInt();
+			if( settingsFile.readInt() != SDL_Keys.JAVA_KEYCODE_LAST )
+				throw new IOException();
+			for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
+			{
+				RemapHwKeycode[i] = settingsFile.readInt();
+			}
 			
 			settingsLoaded = true;
 
@@ -845,27 +861,20 @@ class Settings
 		public void onKeyEvent(final int keyCode)
 		{
 			p.keyRemapTool = null;
-			int keyIndex = -1;
-			for( int i = 0; i < Globals.RemapHwKeycodeJava.size(); i++ )
-			{
-				if( Globals.RemapHwKeycodeJava.get(i) == keyCode )
-					keyIndex = i;
-			}
-			if( keyIndex == -1 )
-			{
-				keyIndex = Globals.RemapHwKeycodeJava.size();
-				Globals.RemapHwKeycodeJava.add(keyCode);
-				Globals.RemapHwKeycodeSdl.add(0); // SDLK_UNKNOWN
-			}
+			int keyIndex = keyCode;
+			if( keyIndex < 0 )
+				keyIndex = 0;
+			if( keyIndex > SDL_Keys.JAVA_KEYCODE_LAST )
+				keyIndex = 0;
 
 			final int KeyIndexFinal = keyIndex;
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(R.string.remap_hwkeys_select);
-			builder.setSingleChoiceItems(SDL_Keys.names, Globals.RemapHwKeycodeSdl.get(keyIndex), new DialogInterface.OnClickListener()
+			builder.setSingleChoiceItems(SDL_Keys.names, Globals.RemapHwKeycode[keyIndex], new DialogInterface.OnClickListener()
 			{
 				public void onClick(DialogInterface dialog, int item)
 				{
-					Globals.RemapHwKeycodeSdl.set(KeyIndexFinal, item);
+					Globals.RemapHwKeycode[KeyIndexFinal] = item;
 
 					dialog.dismiss();
 					showConfigMainMenu(p);
@@ -910,6 +919,11 @@ class Settings
 										Globals.AppNeedsTextInput ? 1 : 0 );
 		}
 		SetupTouchscreenKeyboardGraphics(p);
+		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
+		{
+			nativeSetKeymapKey(i, RemapHwKeycode[i]);
+		}
+
 		String lang = new String(Locale.getDefault().getLanguage());
 		if( Locale.getDefault().getCountry().length() > 0 )
 			lang = lang + "_" + Locale.getDefault().getCountry();
@@ -960,6 +974,9 @@ class Settings
 	private static native void nativeSetTouchscreenKeyboardUsed();
 	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttons, int nbuttonsAutoFire, int showArrows, int showTextInput);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
+	private static native void nativeInitKeymap();
+	private static native int nativeGetKeymapKey(int key);
+	private static native void nativeSetKeymapKey(int javakey, int key);
 	public static native void nativeSetEnv(final String name, final String value);
 }
 

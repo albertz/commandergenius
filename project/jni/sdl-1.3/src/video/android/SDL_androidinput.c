@@ -1202,12 +1202,8 @@ void SDL_ANDROID_processMoveMouseWithKeyboard()
 	SDL_ANDROID_MainThreadPushMouseMotion(moveMouseWithKbX, moveMouseWithKbY);
 };
 
-
 void ANDROID_InitOSKeymap()
 {
-  int i;
-  SDLKey * keymap = SDL_android_keymap;
-
 #if (SDL_VERSION_ATLEAST(1,3,0))
   SDLKey defaultKeymap[SDL_NUM_SCANCODES];
   SDL_GetDefaultKeymap(defaultKeymap);
@@ -1229,8 +1225,30 @@ void ANDROID_InitOSKeymap()
   touch.id = 0;
 
   SDL_AddTouch(&touch, "Android touch screen");
-
 #endif
+}
+
+JNIEXPORT jint JNICALL 
+JAVA_EXPORT_NAME(Settings_nativeGetKeymapKey) ( JNIEnv*  env, jobject thiz, jint code)
+{
+	if( code < 0 || code > KEYCODE_LAST )
+		return SDL_KEY(UNKNOWN);
+	return SDL_android_keymap[code];
+}
+
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(Settings_nativeSetKeymapKey) ( JNIEnv*  env, jobject thiz, jint javakey, jint key)
+{
+	if( javakey < 0 || javakey > KEYCODE_LAST )
+		return;
+	SDL_android_keymap[javakey] = key;
+}
+
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )
+{
+  int i;
+  SDLKey * keymap = SDL_android_keymap;
 
   // TODO: keys are mapped rather randomly
 
@@ -1241,16 +1259,12 @@ void ANDROID_InitOSKeymap()
 
   keymap[KEYCODE_BACK] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_5));
 
-  // TODO: make this configurable
   keymap[KEYCODE_MENU] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_4));
 
   keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_1));
   keymap[KEYCODE_SEARCH] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_9));
   keymap[KEYCODE_CALL] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_10));
 
-  //keymap[KEYCODE_CALL] = SDL_KEY(RCTRL);
-  //keymap[KEYCODE_DPAD_CENTER] = SDL_KEY(LALT);
-  
   keymap[KEYCODE_VOLUME_UP] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_2));
   keymap[KEYCODE_VOLUME_DOWN] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_3));
   

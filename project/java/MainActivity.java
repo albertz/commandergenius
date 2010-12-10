@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
 		// fullscreen mode
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-				   WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		if(Globals.InhibitSuspend)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -77,7 +77,7 @@ public class MainActivity extends Activity {
 
 		if(mAudioThread == null) // Starting from background (should not happen)
 		{
-				System.out.println("libSDL: Loading libraries");
+			System.out.println("libSDL: Loading libraries");
 			mLoadLibraryStub = new LoadLibrary();
 			mAudioThread = new AudioThread(this);
 			System.out.println("libSDL: Loading settings");

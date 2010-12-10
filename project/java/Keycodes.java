@@ -495,6 +495,8 @@ class SDL_Keys
 {
 	public static String [] names = null;
 	public static Integer [] values = null;
+	
+	static final JAVA_KEYCODE_LAST = android.view.KeyEvent.KEYCODE_MUTE; // = 91
 
 	static
 	{

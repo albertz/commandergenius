@@ -81,8 +81,7 @@ class Globals {
 	public static boolean KeepAspectRatio = false;
 	public static int ClickScreenPressure = 0;
 	public static int ClickScreenTouchspotSize = 0;
-	public static Vector<Integer> RemapHwKeycodeJava = new Vector<Integer>();
-	public static Vector<Integer> RemapHwKeycodeSdl = new Vector<Integer>();
+	public static int RemapHwKeycode[] = new int[SDL_Keys.JAVA_KEYCODE_LAST];
 }
 
 class LoadLibrary {
