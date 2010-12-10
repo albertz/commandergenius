@@ -23,6 +23,7 @@ import java.lang.Thread;
 import java.util.concurrent.locks.ReentrantLock;
 import android.os.Build;
 import java.lang.reflect.Method;
+import java.util.LinkedList;
 
 
 abstract class DifferentTouchInput
@@ -225,6 +226,18 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 			mGlContextLost = false;
 			Settings.SetupTouchscreenKeyboardGraphics(context); // Reload on-screen buttons graphics
 		}
+		
+		// Pass just one char per frame, many SDL games cannot handle multiple events in a single frame
+		synchronized(context.textInput) {
+			if( context.textInput.size() >= 2 )
+			{
+				if( context.textInput.getFirst() != 0 )
+					nativeTextInput( context.textInput.getFirst(), context.textInput.get(1) );
+				context.textInput.removeFirst();
+				context.textInput.removeFirst();
+			}
+		}
+
 		return 1;
 	}
 
@@ -254,6 +267,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	private native void nativeDone();
 	private native void nativeGlContextLost();
 	public native void nativeGlContextRecreated();
+	public static native void nativeTextInput( int ascii, int unicode );
 
 	private MainActivity context = null;
 	private AccelerometerReader accelerometer = null;
@@ -331,7 +345,6 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	public static native void nativeMouse( int x, int y, int action, int pointerId, int pressure, int radius );
 	public static native void nativeKey( int keyCode, int down );
-	public static native void nativeTextInput( int ascii, int unicode );
 	public static native void initJavaCallbacks();
 
 }

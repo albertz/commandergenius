@@ -23,7 +23,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.view.View.OnKeyListener;
-
+import java.util.LinkedList;
 
 
 public class MainActivity extends Activity {
@@ -218,11 +218,17 @@ public class MainActivity extends Activity {
 		String text = _screenKeyboard.getText().toString();
 		if( mGLView != null )
 		{
-			for(int i = 0; i < text.length(); i++)
-			{
-				 mGLView.nativeTextInput( text.charAt(i), text.codePointAt(i) );
+			synchronized(textInput) {
+				textInput.addFirst(0); // Dummy keycode to skip first frame
+				textInput.addFirst(0);
+				for(int i = 0; i < text.length(); i++)
+				{
+					textInput.addLast((int)text.charAt(i));
+					textInput.addLast((int)text.codePointAt(i));
+				}
+				textInput.addLast(13); // send return
+				textInput.addLast(13);
 			}
-			mGLView.nativeTextInput( 13, 13 ); // Send return
 		}
 		_videoLayout.removeView(_screenKeyboard);
 		_screenKeyboard = null;
@@ -248,7 +254,10 @@ public class MainActivity extends Activity {
 				}
 				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR))
 				{
-					mGLView.nativeTextInput( 8, 8 ); // send backspace keycode
+					synchronized(textInput) {
+						textInput.addLast(8); // send backspace keycode
+						textInput.addLast(8);
+					}
 					return false; // and proceed to delete text in keyboard input field
 				}
 				return false;
@@ -377,5 +386,7 @@ public class MainActivity extends Activity {
 	public Settings.TouchEventsListener touchMeasurementTool = null;
 	public Settings.KeyEventsListener keyRemapTool = null;
 	boolean _isPaused = false;
+
+	public LinkedList<Integer> textInput = new LinkedList<Integer> ();
 
 }

@@ -377,7 +377,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeTextInput) ( JNIEnv*  env, jobject thiz, jint ascii, jint unicode )
+JAVA_EXPORT_NAME(DemoRenderer_nativeTextInput) ( JNIEnv*  env, jobject thiz, jint ascii, jint unicode )
 {
 	SDL_ANDROID_MainThreadPushText(ascii, unicode);
 }
@@ -1163,8 +1163,8 @@ extern void SDL_ANDROID_MainThreadPushText( int scancode, int unicode )
 	nextEvent = getNextEvent();
 	{
 		SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
-		ev->type = SDL_KEYUP;
-		ev->key.state = SDL_PRESSED;
+		ev->type = SDL_KEYDOWN;
+		ev->key.state = SDL_RELEASED;
 		ev->key.keysym.scancode = scancode;
 		ev->key.keysym.sym = scancode;
 		ev->key.keysym.mod = KMOD_NONE;
