@@ -62,7 +62,7 @@ class Settings
 			out.writeInt(SDL_Keys.JAVA_KEYCODE_LAST);
 			for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
 			{
-				out.writeInt(RemapHwKeycode[i]);
+				out.writeInt(Globals.RemapHwKeycode[i]);
 			}
 
 			out.close();
@@ -83,7 +83,12 @@ class Settings
 		nativeInitKeymap();
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
 		{
-			RemapHwKeycode[i] = nativeGetKeymapKey(i);
+			int sdlKey = nativeGetKeymapKey(i);
+			int idx = 0;
+			for(int ii = 0; ii < SDL_Keys.values.length; ii++)
+				if(SDL_Keys.values[ii] == sdlKey)
+					idx = ii;
+			Globals.RemapHwKeycode[i] = idx;
 		}
 		try {
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
@@ -115,7 +120,7 @@ class Settings
 				throw new IOException();
 			for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
 			{
-				RemapHwKeycode[i] = settingsFile.readInt();
+				Globals.RemapHwKeycode[i] = settingsFile.readInt();
 			}
 			
 			settingsLoaded = true;
@@ -921,7 +926,7 @@ class Settings
 		SetupTouchscreenKeyboardGraphics(p);
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
 		{
-			nativeSetKeymapKey(i, RemapHwKeycode[i]);
+			nativeSetKeymapKey(i, SDL_Keys.values[Globals.RemapHwKeycode[i]]);
 		}
 
 		String lang = new String(Locale.getDefault().getLanguage());
