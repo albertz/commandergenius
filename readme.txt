@@ -117,8 +117,10 @@ Then you can launch build.sh.
 The NDK has RTTI and exceptions disabled for C++ code, if you need them you may download modified NDK from
 http://www.crystax.net/android/ndk-r4.php - note however that you cannot throw exceptions across shared library boundary.
 Unzip it, and put in your PATH instead of original NDK - do not rename the target dir, my makefiles will
-check if there's "crystax" string in path to gcc toolchain, and will disable STLPort because CrystaX's
+check if there's "crystax" string in path to gcc toolchain, and will disable STLPort because CrystaX
 NDK already contains STL library.
+One bug is reported with CrystaX NDK - the app crashes when trying to output to std::cout stream on SmartQ V7 device -
+probably some exported symbol is duplicated in system libraries and the CrystaX STL lib.
 
 Application data may be bundled with app itself, or downloaded from net on first run.
 Create .ZIP file with your application data, and put it on HTTP server, or to "project/jni/application/src/AndroidData" dir - 
