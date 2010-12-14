@@ -1,0 +1,381 @@
+GemRB git (2bd6d0e):
+  New features:
+    - 
+
+  Improved features:
+    - 
+    - bugfixes
+
+  Applied patches:
+
+GemRB V0.6.3 git (2010-11-21)
+  New features:
+    - IWD:HoW is now completable!
+    - casting sounds and footsteps
+    - autodetection of secret doors, detect illusions
+    - basic bardsong support and selective magic resistance (bg2-style)
+    - proper store economics, ergonomics and dragging
+    - custom blood color (creature-dependant)
+    - new actions, iwd effects and triggers
+    - Importing a SoA game into ToB
+
+  Improved features:
+    - actor selection and action bar (for summons and illusions too!)
+    - door bashing and traps
+    - loading screens, ambushes, worldmap
+    - sparkles, panic and other effects
+    - actions, dialogs, object matching
+    - personal items support (swap/equip/remove)
+    - bugfixes
+
+  Applied patches:
+	iwd regression fix from Eggert Jón Magnússon
+
+GemRB V0.6.2 (2010-08-21):
+  New features:
+    - a basic SDL_mixer plugin for faster, but lower-quality audio
+    - dualclassing for bg1 and iwd
+    - new triggers, actions, infravision
+    - feet circle flickering on portrait hover, coloration in dialog
+    - wisdom xp bonus (pst)
+
+  Improved features:
+    - actions, triggers, object matching
+    - item loading and ability selection, inventory
+    - projectiles, effects, subtitles, verbal constants
+    - the core and guiscript design was cleaned up in many places
+    - bugfixes
+
+  Applied patches:
+    backslash check patch from anthiste
+    bg1 character generation patch from Maighstir
+    a crosscompiling fix from F.Fischer
+
+GemRB V0.6.1 (2010-06-16):
+  New features:
+    - a minimal dataset
+    - reputation penalties on death or injury
+    - casting level bonus/malus (wild mages, clerics)
+    - tinting for different times of the day and weather effects
+    - a BI(n)K player plugin for the IWD2 movies
+    - new actions, turn undead
+
+  Improved features:
+    - the internal design was cleaned up in many places
+    - game saving, modal actions, combat, effects, spawns
+    - magic missiles are now drawn properly
+    - various guiscripts (no more flickering!)
+    - bugfixes
+
+  Applied patches:
+    two patches from Brendan Molloy
+
+GemRB V0.6.0 (2009-11-03):
+  New features:
+    - BG1 and IWD are roughly completable!
+    - levelup support for bg1 and iwd, dream cutscenes in ToB
+    - more hardcoded projectiles and avatar animations
+    - evasion, backstabbing and basic hide in shadows
+    - compatibility with the widescreen mod (unreleased) allows for multiple
+      custom resolutions
+    - contingency and sequencer spells, beginnings of wild magic support
+
+  Improved features:
+    - combat, travelling and feedback
+    - better spellcasting timing
+    - actions, effects and triggers
+    - various guiscripts
+    - bugfixes
+
+  Applied patches:
+    a few patches from nugrud for how/totl support
+
+GemRB V0.5.1 (2009-08-27):
+  New features:
+    - BG2:SoA is roughly completable!
+    - almost all missing IE's hardcoded projectiles, spell hit projectiles,
+      projectile trails, projectile failure (spell), projectile effectlists
+    - auto-reloading of projectile weapons in case the ammo stack runs out
+    - damage resistance
+    - sorcerer style spellbooks, reading of iwd2 spellbooks
+    - target following to other areas
+    - the null sound plugin is now always loaded last by default; for old
+      installs see the provided configuration example (DelayPlugin)
+    - intelligence and wisdom dictated lore bonus
+    - a GUIEnhancements config option (on by default) that enables a few
+      extra controls (for convenience and larger mods)
+    - PST death counters (don't anger the Lady)
+    - initial support for targetting by portrait
+
+  Improved features:
+    - actions, effects and triggers
+    - pathfinding, feet circles, fog of war and worldmap travel
+    - combat and spellcasting (especially summoning)
+    - projectiles
+    - config and default table value parsing is smarter about spaces
+    - various guiscripts
+    - bugfixes
+
+  Applied patches:
+    various patches from nugrud for bg2 gui enhancements
+    fix compilation (with cmake) on OS X, by hanicka
+
+GemRB V0.5.0 (2009-06-25):
+  New features:
+    - SoA, ToB and PST are roughly playable beyond their first levels
+    - combat: dual-wielding, APR, proficiency and style boni, dexterity
+      bonus, initiatitive and speed factor, individual combat rounds
+    - many IE's hardcoded projectiles and support for projectile sounds
+    - IWD2 GUI now works after chargen too
+    - bg2 chargen now levels to the correct level
+    - summoned and charmed creatures can be ordered around
+    - actor tooltips (name and injury status)
+    - running, initial variable values and portal animations in PST
+    - hardcoded monk bonuses
+
+  Improved features:
+    - dialog, actions and triggers
+    - combat mechanics, animation, feedback, ranged combat
+    - matters of time and matter
+    - levelup, dual classing, multiclass handling
+    - focus: scrolling while paused is now possible
+    - animations (projectile, creature)
+    - pathfinding
+    - area music restarts when there's no music playing
+    - disarm trap checks skills
+    - various guiscripts
+    - bugfixes
+
+  Applied patches:
+    #2802190 jbmetz (improve the rpm spec handling)
+    #2802437 danamin (patch bomb sanitizing bg1 chargen + bg2 code share)
+
+GemRB V0.4.0 (2009-05-25):
+  New features:
+    - level up support in bg2
+    - basic party reordering
+    - bashing of containers and doors
+    - persistent area effects (cloudkill, stinking cloud, web, etc.)
+    - item amount window for stack splitting (shift+click or doubleclick)
+    - depletion of item charges
+    - opcodes: disable spellcasting, cutscene2 (pocketplane travel), knock,
+      clear air, polymorph, disable button
+    - dynamic scrollbar creation (display of more than 10 kits, 24 spells)
+    - portrait effect icons
+    - item ability selection
+    - character customization
+
+  Improved features:
+    - fog of war
+    - party reformation
+    - iwd and how guiscripts have been merged
+    - traps
+    - pst dialogs
+    - regeneration, hp bonuses, healing
+    - animations and projectiles
+    - rewritten MVE player
+    - ranged combat
+    - various guiscripts
+    - bugfixes
+
+  Applied patches:
+    #2770564 Whiteclone (pst options window bug)
+    numerous patches from mattinm finishing the level up support
+    a few patches from ape fixing and extending iwd
+    #2579743 jbmetz added RPM spec files
+
+GemRB V0.3.2 (2009-02-16):
+  New features:
+    - default cancel button, bound to the escape key
+    - tooltip animations and a shortcut (tab)
+    - wrapper python classes that simplified the GUIScripts
+    - trap detection, removal, triggering, xp, feedback, autopause
+    - modal effects
+    - proper xp award for dual- and multiclass actors
+    - double click (used in the map window)
+    - click-and-hold incrementing/decrementing
+    - accumulate kill statistics
+    - characters can move while the map is open
+    - sound on item equip
+    - arbitrary feat prerequisites in iwd2
+    - hard pause for all games (originally a ToB feature); triggered with 'h'
+    - extended night areas (originally a bg2 feature)
+
+  Improved features:
+    - walking animation timing
+    - formations (arbitrary sizes, rotation, cursor)
+    - ppc support (no more crashes)
+    - container/door/infopoint cursor and highlight handling
+    - various guiscripts
+    - cmake build system (now really works on *nix)
+    - magic item exclusion
+    - stores and bags
+    - fixed attack loop when target dies
+    - bugfixes
+
+  Applied patches:
+    #2159734 Zefklop (Mouse activity during movies)
+    #2243323 Zefklop (correct Openal cleanup)
+    #2263333 Whiteclone (bg1 guiinv)
+    #2380891 Amikrop (iwd1 guicommonwindows)
+
+GemRB V0.3.1 (2008-09-25):
+  New features:
+    - mouse scroll support
+    - starting tob inventory
+    - character import in iwd and how
+    - spritecover for area animations
+    - proper XP bonus for thieving and learning spells
+
+  Improved features:
+    - gcc 4.3 compatibility
+    - PST bestiary
+    - bg2 and tob game modes have been merged
+    - bg2 and iwd2 character generation was simplified and improved
+    - stricter dualclassing prerequisites
+    - the cmake build system is available for other platforms too
+    - pathfinding
+    - starting time is now at day 0
+    - less memory leaks
+    - bugfixes
+
+GemRB V0.3.0 (2008-02-17):
+  New features:
+    - TLK override handling (custom biographies and map notes)
+    - weapon immunities
+    - party AI
+    - expansion playmode
+    - more actions, triggers and effects
+    - loading of projectile explosion animations
+    - kit information window
+    - optional CMake build system (windows only)
+
+  Improved features:
+    - sound (now perfect!)
+    - character generation
+    - opcodes
+    - character record window
+    - pathfinding
+    - tooltip delay
+    - bugfixes
+
+GemRB V0.2.9 (2007-07-06):
+  New features:
+    - thieving
+    - tracking
+    - graphical feedback (color pulse, blur, mirror image, vvc overlays etc)
+    - projectiles
+    - spell casting
+    - item use
+    - challenge rating calculation
+
+  Improved features:
+    - more opcodes
+    - bugfixes
+    - shop/inventory gui
+
+GemRB V0.2.8 (2006-12-24):
+  New features:
+    - equipment is rendered both on paperdoll and avatar
+    - weather (snow/rain) is now rendered
+
+  Improved features:
+    - action menus
+    - game scripting (actions/triggers)
+
+GemRB V0.2.7 (2006-08-30):
+  New features:
+    - large animations
+    - worldmap travel
+    - dialogue portraits
+    - translucent shadows option
+    - personal space of actors
+    - combat
+    - many new effects
+    - overlay animation
+
+  Improved features:
+    - Script fixes
+    - Action menus
+    - TextScreen
+    - doors
+    - animated overlays
+    - new actions
+
+GemRB V0.2.6 (2005-12-06):
+  New features:
+    - Effects are in a different plugin
+    - DoxyGen docs
+    - Wallgroup covers
+    - Door triggers
+    - Action menus (talk/attack)
+    - party/protagonist death handled
+
+  Improved features:
+    - Textscreen graphic fixed
+    - script workflow
+    - compilation and running on different systems (MacOSX, PPC Linux)
+    - various leaks/instabilities fixed
+    - Saving games
+    - inventory screens in many games
+
+GemRB V0.2.5 (2005-08-22):
+  New features:
+    - Save game
+    - Effects are now loaded
+    - Equipping effects in items
+    - Spawn points in areas
+    - Textscreen (scrolled text between chapters)
+
+  Improved features:
+    - GameScript is now much more reliable: Action override works, triggers fire once and then get cleared
+    - fully working Store screen 
+    - fixed padding of message window rows (in dialogs)
+
+GemRB V0.2.4 (2005-05-29):
+  New features:
+    - Store dialogs (Temple, Inn, Container, Tavern, Store)
+    - Fog of war with line of sight
+    - Doors block path and line of sight
+    - Window frames at higher resolutions
+    - Animated buttons (PST portraits, Donation window)
+    - Store opens when appropriate
+    - Containers
+
+  Improved features:
+    - Fixed dialogs
+    - new GUIScript functions with documentation
+    - Fog of war/door/store related gamescript actions
+    - fixed object distance and area variable handling in gamescript
+    - other new gamescript actions/triggers
+    - Implemented PCs fidget animations
+
+  Documentation:
+    - Introduction to writing GUIScript scripts
+
+GemRB v0.2.3 (2005-02-13):
+  New features:
+    - GUI for most of the games, especially interactive Inventory and Spellbook
+    - Map and WorldMap
+    - Load screen interstitials with progress bar
+    - Spell and item cache to speed up object management
+    - Added gamescript actions/triggers 
+    - Selection of spells during character generation
+    - First attempt on effects code
+    - First attempt on Fog-Of-War
+    - Tooltips
+    - Overhead text
+    - Ambient sounds
+    - Volume control
+    - Manual page gemrb(1)
+    - Documentation for GemRB Python API and our custom override files
+
+  Improved features:
+    - Character generation
+    - GUI
+    - Build infrastructure on Linux and Un*x systems
+    - Progress towards portability to 64 bit and big endian machines
+    - Many bugfixes and new bugs as well ;-)
+    - Shortened version numbers
+    - Simplified user configuration, game specific settings are now
+      in gemrb/override dir

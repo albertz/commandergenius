@@ -1,0 +1,1 @@
+ADD_GEMRB_PLUGIN (BMPWriter BMPWriter.cpp)
