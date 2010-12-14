@@ -1,0 +1,171 @@
+diff -ru orig/hexen2source-1.4.3/hexen2/Makefile hexen2source-1.4.3/hexen2/Makefile
+--- orig/hexen2source-1.4.3/hexen2/Makefile	2008-04-03 19:37:23.000000000 -0400
++++ hexen2source-1.4.3/hexen2/Makefile	2010-12-03 14:35:44.000000000 -0500
+@@ -107,26 +107,27 @@
+ #
+ # if building a debug version :		make DEBUG=1 [other stuff]
+ #
+-
++MYFLAGS=$(CFLAGS) -DPLATFORM_UNIX
++MYLDFLAGS=$(LDFLAGS)
+ # Path settings:
+ # main uhexen2 relative path
+ UHEXEN2_TOP:=..
+ 
+ # General options (see explanations at the top)
+ USE_SOUND=yes
+-USE_ALSA=yes
+-USE_OSS=yes
+-USE_SUNAUDIO=yes
++USE_ALSA=no
++USE_OSS=no
++USE_SUNAUDIO=no
+ USE_SDLAUDIO=yes
+-USE_MIDI=yes
+-USE_CDAUDIO=yes
++USE_MIDI=no
++USE_CDAUDIO=no
+ USE_SDLCD=no
+ WITH_SPLASHES=yes
+ LINK_DIRECTX=no
+-OPT_EXTRA=yes
++OPT_EXTRA=no
+ LINK_GL_LIBS=no
+-USE_3DFXGAMMA=yes
+-USE_X86_ASM=yes
++USE_3DFXGAMMA=no
++USE_X86_ASM=no
+ COMPILE_32BITS=no
+ 
+ # include the common dirty stuff
+@@ -179,7 +180,7 @@
+ 
+ else
+ 
+-CFLAGS := $(CPUFLAGS) -O2 -Wall -ffast-math -fexpensive-optimizations
++CFLAGS := $(CPUFLAGS) -O2 -Wall -ffast-math -fexpensive-optimizations $(MYFLAGS)
+ 
+ ifdef NO_UNIT_AT_A_TIME
+ CFLAGS := $(CFLAGS) $(call check_gcc,-fno-unit-at-a-time,)
+@@ -227,8 +228,8 @@
+ endif
+ ifeq ($(TARGET_OS),unix)
+ # Main unix specific includes and flags
+-INCLUDES:= -I$(X11BASE)/include -I.
+-LDFLAGS := $(LIBSOCKET)
++INCLUDES:= -I.
++LDFLAGS := $(LIBSOCKET) $(MYLDFLAGS)
+ endif
+ 
+ ifeq ($(COMPILE_32BITS),yes)
+Only in hexen2source-1.4.3/hexen2: Makefile~
+Only in hexen2source-1.4.3/hexen2: cd_null.o
+Only in hexen2source-1.4.3/hexen2: cfgfile.o
+Only in hexen2source-1.4.3/hexen2: chase.o
+Only in hexen2source-1.4.3/hexen2: cl_cmd.o
+Only in hexen2source-1.4.3/hexen2: cl_demo.o
+Only in hexen2source-1.4.3/hexen2: cl_effect.o
+Only in hexen2source-1.4.3/hexen2: cl_input.o
+Only in hexen2source-1.4.3/hexen2: cl_main.o
+Only in hexen2source-1.4.3/hexen2: cl_parse.o
+Only in hexen2source-1.4.3/hexen2: cl_tent.o
+Only in hexen2source-1.4.3/hexen2: cmd.o
+diff -ru orig/hexen2source-1.4.3/hexen2/common.h hexen2source-1.4.3/hexen2/common.h
+--- orig/hexen2source-1.4.3/hexen2/common.h	2008-01-29 05:47:01.000000000 -0500
++++ hexen2source-1.4.3/hexen2/common.h	2010-12-03 14:26:50.000000000 -0500
+@@ -28,6 +28,14 @@
+ #define	F_OK	0		/* Test for existence.  */
+ #endif
+ 
++#if defined(ANDROID) && !defined(F_OK)
++// values for the mode argument of access(). MS does not define them
++#define	R_OK	4		/* Test for read permission.  */
++#define	W_OK	2		/* Test for write permission.  */
++#define	X_OK	1		/* Test for execute permission.  */
++#define	F_OK	0		/* Test for existence.  */
++#endif
++
+ #if defined(PLATFORM_WINDOWS)
+ #define q_strncasecmp	_strnicmp
+ #define q_strcasecmp	_stricmp
+Only in hexen2source-1.4.3/hexen2: common.h~
+Only in hexen2source-1.4.3/hexen2: common.o
+Only in hexen2source-1.4.3/hexen2: console.o
+Only in hexen2source-1.4.3/hexen2: crc.o
+Only in hexen2source-1.4.3/hexen2: cvar.o
+Only in hexen2source-1.4.3/hexen2: d_edge.o
+Only in hexen2source-1.4.3/hexen2: d_fill.o
+Only in hexen2source-1.4.3/hexen2: d_init.o
+Only in hexen2source-1.4.3/hexen2: d_modech.o
+Only in hexen2source-1.4.3/hexen2: d_part.o
+Only in hexen2source-1.4.3/hexen2: d_polyse.o
+Only in hexen2source-1.4.3/hexen2: d_scan.o
+Only in hexen2source-1.4.3/hexen2: d_sky.o
+Only in hexen2source-1.4.3/hexen2: d_sprite.o
+Only in hexen2source-1.4.3/hexen2: d_surf.o
+Only in hexen2source-1.4.3/hexen2: d_vars.o
+Only in hexen2source-1.4.3/hexen2: d_zpoint.o
+Only in hexen2source-1.4.3/hexen2: debuglog.o
+Only in hexen2source-1.4.3/hexen2: draw.o
+Only in hexen2source-1.4.3/hexen2: host.o
+Only in hexen2source-1.4.3/hexen2: host_cmd.o
+Only in hexen2source-1.4.3/hexen2: in_sdl.o
+Only in hexen2source-1.4.3/hexen2: keys.o
+Only in hexen2source-1.4.3/hexen2: link_ops.o
+Only in hexen2source-1.4.3/hexen2: mathlib.o
+Only in hexen2source-1.4.3/hexen2: menu.o
+Only in hexen2source-1.4.3/hexen2: midi_nul.o
+Only in hexen2source-1.4.3/hexen2: model.o
+Only in hexen2source-1.4.3/hexen2: msg_io.o
+Only in hexen2source-1.4.3/hexen2: net_bsd.o
+Only in hexen2source-1.4.3/hexen2: net_dgrm.o
+Only in hexen2source-1.4.3/hexen2: net_loop.o
+Only in hexen2source-1.4.3/hexen2: net_main.o
+Only in hexen2source-1.4.3/hexen2: net_udp.c~
+Only in hexen2source-1.4.3/hexen2: net_udp.h~
+Only in hexen2source-1.4.3/hexen2: net_udp.o
+Only in hexen2source-1.4.3/hexen2: pr_cmds.o
+Only in hexen2source-1.4.3/hexen2: pr_edict.o
+Only in hexen2source-1.4.3/hexen2: pr_exec.o
+Only in hexen2source-1.4.3/hexen2: pr_strng.o
+Only in hexen2source-1.4.3/hexen2: q_endian.o
+Only in hexen2source-1.4.3/hexen2: quakefs.o
+Only in hexen2source-1.4.3/hexen2: r_aclip.o
+Only in hexen2source-1.4.3/hexen2: r_alias.o
+Only in hexen2source-1.4.3/hexen2: r_bsp.o
+Only in hexen2source-1.4.3/hexen2: r_draw.o
+Only in hexen2source-1.4.3/hexen2: r_edge.o
+Only in hexen2source-1.4.3/hexen2: r_efrag.o
+Only in hexen2source-1.4.3/hexen2: r_light.o
+Only in hexen2source-1.4.3/hexen2: r_main.o
+Only in hexen2source-1.4.3/hexen2: r_misc.o
+Only in hexen2source-1.4.3/hexen2: r_part.o
+Only in hexen2source-1.4.3/hexen2: r_sky.o
+Only in hexen2source-1.4.3/hexen2: r_sprite.o
+Only in hexen2source-1.4.3/hexen2: r_surf.o
+Only in hexen2source-1.4.3/hexen2: r_vars.o
+Only in hexen2source-1.4.3/hexen2: sbar.o
+Only in hexen2source-1.4.3/hexen2: screen.o
+Only in hexen2source-1.4.3/hexen2: sizebuf.o
+Only in hexen2source-1.4.3/hexen2: snd_alsa.o
+Only in hexen2source-1.4.3/hexen2: snd_dma.o
+Only in hexen2source-1.4.3/hexen2: snd_mem.o
+Only in hexen2source-1.4.3/hexen2: snd_mix.o
+Only in hexen2source-1.4.3/hexen2: snd_oss.o
+Only in hexen2source-1.4.3/hexen2: snd_sdl2.o
+Only in hexen2source-1.4.3/hexen2: snd_sun.o
+Only in hexen2source-1.4.3/hexen2: snd_sys.o
+Only in hexen2source-1.4.3/hexen2: strlcat.o
+Only in hexen2source-1.4.3/hexen2: strlcpy.o
+Only in hexen2source-1.4.3/hexen2: sv_effect.o
+Only in hexen2source-1.4.3/hexen2: sv_main.o
+Only in hexen2source-1.4.3/hexen2: sv_move.o
+Only in hexen2source-1.4.3/hexen2: sv_phys.o
+Only in hexen2source-1.4.3/hexen2: sv_user.o
+Only in hexen2source-1.4.3/hexen2: sys_unix.o
+Only in hexen2source-1.4.3/hexen2: vid_sdl.c~
+Only in hexen2source-1.4.3/hexen2: vid_sdl.o
+Only in hexen2source-1.4.3/hexen2: view.o
+Only in hexen2source-1.4.3/hexen2: wad.o
+Only in hexen2source-1.4.3/hexen2: world.o
+Only in hexen2source-1.4.3/hexen2: zone.o
