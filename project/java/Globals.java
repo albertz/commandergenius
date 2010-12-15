@@ -82,6 +82,8 @@ class Globals {
 	public static int ClickScreenPressure = 0;
 	public static int ClickScreenTouchspotSize = 0;
 	public static int RemapHwKeycode[] = new int[SDL_Keys.JAVA_KEYCODE_LAST];
+	public static int RemapScreenKbKeycode[] = new int[10];
+	public static boolean ScreenKbControlsShown[] = new boolean[12];
 }
 
 class LoadLibrary {

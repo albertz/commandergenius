@@ -13,7 +13,7 @@
     <string name="dl_from">Téléchargement à partir de %s</string>
     <string name="error_dl_from">Erreur lors du téléchargement à partir de %s</string>
     <string name="error_write">Erreur d\'écriture dans %s</string>
-    <string name="dl_progress">%.0f%% fait: fichier %s</string>
+    <string name="dl_progress">%1$.0f%% fait: fichier %2$s</string>
     <string name="dl_finished">Fini</string>
 
     <string name="storage_phone">Stockage interne - %d Mo de libre</string>
@@ -38,7 +38,7 @@
     <string name="controls_screenkb_small">Petite</string>
     <string name="controls_screenkb_tiny">Minuscule</string>
     <string name="controls_screenkb_theme">Thème du clavier à l\'écran</string>
-    <string name="controls_screenkb_by">%s par %s</string>
+    <string name="controls_screenkb_by">%1$s par %2$s</string>
 
     <string name="trackball_no_dampening">Sans limite</string>
     <string name="trackball_fast">Rapide</string>
@@ -77,7 +77,7 @@
 <string name="leftclick_pressure">écran tactile avec une force</string>
 <string name="leftclick_dpadcenter">Trackball cliquez / touche de sélection</string>
 <string name="pointandclick_joystickmouse">Déplacez la souris ou un trackball avec joystick</string>
-<string name="measurepressure_response">pression %03d rayon %03d</string>
+<string name="measurepressure_response">pression %1$03d rayon %2$03d</string>
 <string name="click_with_dpadcenter">cliquez gauche de la souris avec trackball centre du joystick /</string>
 <string name="pointandclick_joystickmousespeed">Déplacez la souris avec la vitesse joystick</string>
 <string name="pointandclick_joystickmouseaccel">Déplacez la souris avec une accélération joystick</string>

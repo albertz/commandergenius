@@ -64,6 +64,17 @@ class Settings
 			{
 				out.writeInt(Globals.RemapHwKeycode[i]);
 			}
+			out.writeInt(Globals.RemapScreenKbKeycode.length);
+			for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
+			{
+				out.writeInt(Globals.RemapScreenKbKeycode[i]);
+			}
+			out.writeInt(Globals.ScreenKbControlsShown.length);
+			for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
+			{
+				out.writeBoolean(Globals.ScreenKbControlsShown[i]);
+				out.writeInt(Globals.RemapScreenKbKeycode[i]);
+			}
 
 			out.close();
 			settingsLoaded = true;
@@ -90,6 +101,23 @@ class Settings
 					idx = ii;
 			Globals.RemapHwKeycode[i] = idx;
 		}
+		for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
+		{
+			int sdlKey = nativeGetKeymapKeyScreenKb(i);
+			int idx = 0;
+			for(int ii = 0; ii < SDL_Keys.values.length; ii++)
+				if(SDL_Keys.values[ii] == sdlKey)
+					idx = ii;
+			Globals.RemapHwKeycode[i] = idx;
+			Globals.RemapScreenKbKeycode[i] = idx;
+		}
+		Globals.ScreenKbControlsShown[0] = Globals.AppNeedsArrowKeys;
+		for( int i = 1; i < 7; i++ )
+			Globals.ScreenKbControlsShown[i] = ( i <= Globals.AppTouchscreenKeyboardKeysAmount );
+		Globals.ScreenKbControlsShown[7] = Globals.AppNeedsTextInput;
+		for( int i = 8; i < 12; i++ )
+			Globals.ScreenKbControlsShown[i] = true;
+
 		try {
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
 			Globals.DownloadToSdcard = settingsFile.readBoolean();
@@ -116,11 +144,23 @@ class Settings
 			Globals.KeepAspectRatio = settingsFile.readBoolean();
 			Globals.MoveMouseWithJoystickSpeed = settingsFile.readInt();
 			Globals.MoveMouseWithJoystickAccel = settingsFile.readInt();
-			if( settingsFile.readInt() != SDL_Keys.JAVA_KEYCODE_LAST )
-				throw new IOException();
-			for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
+			int readKeys = settingsFile.readInt();
+			for( int i = 0; i < readKeys; i++ )
 			{
 				Globals.RemapHwKeycode[i] = settingsFile.readInt();
+			}
+			if( settingsFile.readInt() != Globals.RemapScreenKbKeycode.length )
+				throw new IOException();
+			for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
+			{
+				Globals.RemapScreenKbKeycode[i] = settingsFile.readInt();
+			}
+			if( settingsFile.readInt() != Globals.ScreenKbControlsShown.length )
+				throw new IOException();
+			for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
+			{
+				Globals.ScreenKbControlsShown[i] = settingsFile.readBoolean();
+				Globals.RemapScreenKbKeycode[i] = settingsFile.readInt();
 			}
 			
 			settingsLoaded = true;
@@ -158,6 +198,8 @@ class Settings
 		p.setUpStatusLabel();
 		showConfig(p);
 	}
+
+	// ===============================================================================================
 	
 	public static void showConfig(final MainActivity p) {
 		settingsChanged = true;
@@ -202,6 +244,8 @@ class Settings
 			items.add(p.getResources().getString(R.string.measurepressure));
 		
 		items.add(p.getResources().getString(R.string.remap_hwkeys));
+
+		items.add(p.getResources().getString(R.string.remap_screenkb));
 
 		items.add(p.getResources().getString(R.string.ok));
 
@@ -279,6 +323,10 @@ class Settings
 
 				if( item == selected )
 					showRemapHwKeysConfig(p);
+				selected++;
+
+				if( item == selected )
+					showRemapScreenKbConfig(p);
 				selected++;
 				
 				if( item == selected )
@@ -545,20 +593,17 @@ class Settings
 		}
 		
 		final CharSequence[] items = {
-			p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
-			p.getResources().getString(R.string.controls_screenkb_by, "Ugly Arrows", "pelya")
+			p.getResources().getString(R.string.controls_screenkb_by, "Ugly Arrows", "pelya"),
+			p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber")
 			};
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_theme));
-		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTheme == 1 ? 0 : 1, new DialogInterface.OnClickListener() 
+		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTheme, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
-				if( item == 0 )
-					Globals.TouchscreenKeyboardTheme = 1;
-				if( item == 1 )
-					Globals.TouchscreenKeyboardTheme = 0;
+				Globals.TouchscreenKeyboardTheme = item;
 
 				dialog.dismiss();
 				showConfigMainMenu(p);
@@ -890,7 +935,132 @@ class Settings
 			alert.show();
 		}
 	}
-	
+
+	static void showRemapScreenKbConfig(final MainActivity p)
+	{
+		CharSequence[] items = {
+			p.getResources().getString(R.string.remap_screenkb_joystick),
+			p.getResources().getString(R.string.remap_screenkb_button_text),
+			p.getResources().getString(R.string.remap_screenkb_button) + " 1",
+			p.getResources().getString(R.string.remap_screenkb_button) + " 2",
+			p.getResources().getString(R.string.remap_screenkb_button) + " 3",
+			p.getResources().getString(R.string.remap_screenkb_button) + " 4",
+			p.getResources().getString(R.string.remap_screenkb_button) + " 5",
+			p.getResources().getString(R.string.remap_screenkb_button) + " 6",
+			p.getResources().getString(R.string.remap_screenkb_button_zoomin),
+			p.getResources().getString(R.string.remap_screenkb_button_zoomout),
+			p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
+			p.getResources().getString(R.string.remap_screenkb_button_rotateright),
+		};
+
+		boolean defaults[] = { 
+			Globals.ScreenKbControlsShown[0],
+			Globals.ScreenKbControlsShown[1],
+			Globals.ScreenKbControlsShown[2],
+			Globals.ScreenKbControlsShown[3],
+			Globals.ScreenKbControlsShown[4],
+			Globals.ScreenKbControlsShown[5],
+			Globals.ScreenKbControlsShown[6],
+			Globals.ScreenKbControlsShown[7],
+			Globals.ScreenKbControlsShown[8],
+			Globals.ScreenKbControlsShown[9],
+			Globals.ScreenKbControlsShown[10],
+			Globals.ScreenKbControlsShown[11],
+		};
+		
+		if( ! Globals.UseTouchscreenKeyboard )
+		{
+			for( int i = 0; i < 8; i++ )
+				Globals.ScreenKbControlsShown[i] = false;
+			
+			CharSequence[] items2 = {
+				p.getResources().getString(R.string.remap_screenkb_button_zoomin),
+				p.getResources().getString(R.string.remap_screenkb_button_zoomout),
+				p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
+				p.getResources().getString(R.string.remap_screenkb_button_rotateright),
+			};
+
+			boolean defaults2[] = { 
+				Globals.ScreenKbControlsShown[8],
+				Globals.ScreenKbControlsShown[9],
+				Globals.ScreenKbControlsShown[10],
+				Globals.ScreenKbControlsShown[11],
+			};
+
+			items = items2;
+			defaults = defaults2;
+		}
+		
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(p.getResources().getString(R.string.remap_screenkb));
+		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+			{
+				if( ! Globals.UseTouchscreenKeyboard )
+					item += 8;
+				Globals.ScreenKbControlsShown[item] = isChecked;
+			}
+		});
+		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				dialog.dismiss();
+				showRemapScreenKbConfig2(p, 0);
+			}
+		});
+
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showRemapScreenKbConfig2(final MainActivity p, final int currentButton)
+	{
+		CharSequence[] items = {
+			p.getResources().getString(R.string.remap_screenkb_button) + " 1",
+			p.getResources().getString(R.string.remap_screenkb_button) + " 2",
+			p.getResources().getString(R.string.remap_screenkb_button) + " 3",
+			p.getResources().getString(R.string.remap_screenkb_button) + " 4",
+			p.getResources().getString(R.string.remap_screenkb_button) + " 5",
+			p.getResources().getString(R.string.remap_screenkb_button) + " 6",
+			p.getResources().getString(R.string.remap_screenkb_button_zoomin),
+			p.getResources().getString(R.string.remap_screenkb_button_zoomout),
+			p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
+			p.getResources().getString(R.string.remap_screenkb_button_rotateright),
+		};
+		
+		if( currentButton >= Globals.RemapScreenKbKeycode.length )
+		{
+			showConfigMainMenu(p);
+			return;
+		}
+		if( ! Globals.ScreenKbControlsShown[currentButton + 2] )
+		{
+			showRemapScreenKbConfig2(p, currentButton + 1);
+			return;
+		}
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(items[currentButton]);
+		builder.setSingleChoiceItems(SDL_Keys.names, Globals.RemapScreenKbKeycode[currentButton], new DialogInterface.OnClickListener()
+		{
+			public void onClick(DialogInterface dialog, int item)
+			{
+				Globals.RemapScreenKbKeycode[currentButton] = item;
+
+				dialog.dismiss();
+				showRemapScreenKbConfig2(p, currentButton + 1);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	// ===============================================================================================
+
 	static void Apply(Activity p)
 	{
 		nativeIsSdcardUsed( Globals.DownloadToSdcard ? 1 : 0 );
@@ -927,6 +1097,11 @@ class Settings
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
 		{
 			nativeSetKeymapKey(i, SDL_Keys.values[Globals.RemapHwKeycode[i]]);
+		}
+
+		for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
+		{
+			nativeSetKeymapKeyScreenKb(i, i >= 2 ? SDL_Keys.values[Globals.RemapScreenKbKeycode[i-2]] : 0, Globals.ScreenKbControlsShown[i] ? 1 : 0);
 		}
 
 		String lang = new String(Locale.getDefault().getLanguage());
@@ -981,7 +1156,9 @@ class Settings
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	private static native void nativeInitKeymap();
 	private static native int nativeGetKeymapKey(int key);
+	private static native int nativeGetKeymapKeyScreenKb(int key);
 	private static native void nativeSetKeymapKey(int javakey, int key);
+	private static native void nativeSetKeymapKeyScreenKb(int javakey, int key, int used);
 	public static native void nativeSetEnv(final String name, final String value);
 }
 

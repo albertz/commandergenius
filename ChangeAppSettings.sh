@@ -1,6 +1,6 @@
 #!/bin/sh                            
 
-CHANGE_APP_SETTINGS_VERSION=15
+CHANGE_APP_SETTINGS_VERSION=16
 AUTO=
 
 if [ "X$1" = "X-a" ]; then
@@ -176,10 +176,12 @@ fi
 fi
 
 if [ -z "$RedefinedKeys" -o -z "$AUTO" ]; then
-echo -n "\nRedefine common keys to SDL keysyms: TOUCHSCREEN DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU BACK CAMERA ENTER DEL SEARCH CALL"
+echo -n "\nRedefine common keys to SDL keysyms"
 echo -n "\nMENU and BACK hardware keys and TOUCHSCREEN virtual 'key' are available on all devices, other keys may be absent"
 echo -n "\nSEARCH and CALL by default return same keycode as DPAD_CENTER - one of those keys is available on most devices"
-echo -n "\nThe same key values are used if touchscreen keyboard is enabled, except for MENU and BACK\n($RedefinedKeys)\n: "
+echo -n "\nTOUCHSCREEN DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU BACK CAMERA ENTER DEL SEARCH CALL - Java keycodes"
+echo -n "\n$RedefinedKeys - current SDL keycodes"
+echo -n "\n: "
 read var
 if [ -n "$var" ] ; then
 	RedefinedKeys="$var"
@@ -199,6 +201,16 @@ echo -n "\nNumber of virtual keyboard keys that support autofire (currently 2 is
 read var
 if [ -n "$var" ] ; then
 	AppTouchscreenKeyboardKeysAmountAutoFire="$var"
+fi
+fi
+
+if [ -z "$RedefinedKeysScreenKb" -o -z "$AUTO" ]; then
+echo -n "\nRedefine on-screen keyboard keys to SDL keysyms - 6 keyboard keys + 4 multitouch gestures (zoom and rotate)"
+echo -n "\n$RedefinedKeysScreenKb - current SDL keycodes"
+echo -n "\n: "
+read var
+if [ -n "$var" ] ; then
+	RedefinedKeysScreenKb="$var"
 fi
 fi
 
@@ -331,6 +343,7 @@ echo NonBlockingSwapBuffers=$NonBlockingSwapBuffers >> AndroidAppSettings.cfg
 echo RedefinedKeys=\"$RedefinedKeys\" >> AndroidAppSettings.cfg
 echo AppTouchscreenKeyboardKeysAmount=$AppTouchscreenKeyboardKeysAmount >> AndroidAppSettings.cfg
 echo AppTouchscreenKeyboardKeysAmountAutoFire=$AppTouchscreenKeyboardKeysAmountAutoFire >> AndroidAppSettings.cfg
+echo RedefinedKeysScreenKb=\"$RedefinedKeysScreenKb\" >> AndroidAppSettings.cfg
 echo MultiABI=$MultiABI >> AndroidAppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AndroidAppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AndroidAppSettings.cfg
@@ -434,10 +447,15 @@ else
 	NonBlockingSwapBuffers=false
 fi
 
-RedefinedKeycodes="-DSDL_ANDROID_KEYCODE_MOUSE=$MouseKeycode"
 KEY2=0
 for KEY in $RedefinedKeys; do
 	RedefinedKeycodes="$RedefinedKeycodes -DSDL_ANDROID_KEYCODE_$KEY2=$KEY"
+	KEY2=`expr $KEY2 '+' 1`
+done
+
+KEY2=0
+for KEY in $RedefinedKeysScreenKb; do
+	RedefinedKeycodesScreenKb="$RedefinedKeycodesScreenKb -DSDL_ANDROID_SCREENKB_KEYCODE_$KEY2=$KEY"
 	KEY2=`expr $KEY2 '+' 1`
 done
 
@@ -518,7 +536,7 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
-	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes^" | \
+	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes $RedefinedKeycodesScreenKb^" | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \
 	sed "s^SDL_VERSION :=.*^SDL_VERSION := $LibSdlVersion^"  >> \

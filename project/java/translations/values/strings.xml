@@ -16,7 +16,7 @@
     <string name="dl_from">Downloading data from %s</string>
     <string name="error_dl_from">Error downloading data from %s</string>
     <string name="error_write">Error writing to %s</string>
-    <string name="dl_progress">%.0f%% done: file %s</string>
+    <string name="dl_progress">%1$.0f%% done: file %2$s</string>
     <string name="dl_finished">Finished</string>
 
     <string name="storage_phone">Internal storage - %d MB free</string>
@@ -41,7 +41,7 @@
     <string name="controls_screenkb_small">Small</string>
     <string name="controls_screenkb_tiny">Tiny</string>
     <string name="controls_screenkb_theme">On-screen keyboard theme</string>
-    <string name="controls_screenkb_by">%s by %s</string>
+    <string name="controls_screenkb_by">%1$s by %1$s</string>
 
     <string name="trackball_no_dampening">No dampening</string>
     <string name="trackball_fast">Fast</string>
@@ -83,7 +83,7 @@
 
     <string name="measurepressure">Calibrate touchscreen pressure</string>
     <string name="measurepressure_touchplease">Please slide finger across the screen for two seconds</string>
-    <string name="measurepressure_response">Pressure %03d radius %03d</string>
+    <string name="measurepressure_response">Pressure %1$03d radius %2$03d</string>
 
     <string name="audiobuf_verysmall">Very small (fast devices, less lag)</string>
     <string name="audiobuf_small">Small</string>
@@ -94,5 +94,14 @@
     <string name="remap_hwkeys">Remap physical keys</string>
     <string name="remap_hwkeys_press">Press any key except HOME and POWER, you may use volume keys</string>
     <string name="remap_hwkeys_select">Select SDL keycode</string>
+
+    <string name="remap_screenkb">Remap on-screen controls</string>
+    <string name="remap_screenkb_joystick">On-screen joystick</string>
+    <string name="remap_screenkb_button">On-screen button</string>
+    <string name="remap_screenkb_button_text">On-screen text input button</string>
+    <string name="remap_screenkb_button_zoomin">Zoom in two-finger gesture</string>
+    <string name="remap_screenkb_button_zoomout">Zoom out two-finger gesture</string>
+    <string name="remap_screenkb_button_rotateleft">Rotate left two-finger gesture</string>
+    <string name="remap_screenkb_button_rotateright">Rotate right two-finger gesture</string>
 
 </resources>

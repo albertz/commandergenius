@@ -13,7 +13,7 @@
     <string name="dl_from">Ladataan kohteesta %s</string>
     <string name="error_dl_from">Virhe ladattaessa kohteesta %s</string>
     <string name="error_write">Virhe kirjoittaessa %s</string>
-    <string name="dl_progress">%.0f%% valmis: tiedosto %s</string>
+    <string name="dl_progress">%1$.0f%% valmis: tiedosto %2$s</string>
     <string name="dl_finished">Valmis</string>
 
     <string name="storage_phone">Sisäinen muisti - %d Mt vapaana</string>
@@ -52,7 +52,7 @@
 <string name="controls_screenkb_small">Pienet</string>
 <string name="controls_screenkb_tiny">Tiny</string>
 <string name="controls_screenkb_theme">Näyttönäppäimistöllä teema</string>
-<string name="controls_screenkb_by">%s %s</string>
+<string name="controls_screenkb_by">%1$s %2$s</string>
 <string name="accel_floating">Kelluva</string>
 <string name="accel_fixed_start">Kiinteät kun sovellus käynnistyy</string>
 <string name="accel_fixed_horiz">Korjattu taulukko työpöytä suuntautumiseen</string>
@@ -74,7 +74,7 @@
 <string name="leftclick_pressure">Kosketusnäyttö voimalla</string>
 <string name="leftclick_dpadcenter">Trackball Valitse / Select-näppäintä</string>
 <string name="pointandclick_joystickmouse">Siirrä hiiren ohjaimella tai trackball</string>
-<string name="measurepressure_response">Paine %03d säde %03d</string>
+<string name="measurepressure_response">Paine %1$03d säde %2$03d</string>
 <string name="click_with_dpadcenter">Vasen hiiren klikkaus trackball-ohjaimella keskusta</string>
 <string name="pointandclick_joystickmousespeed">Siirrä hiiri ohjainta nopeasti</string>
 <string name="pointandclick_joystickmouseaccel">Siirrä hiiri ohjainta kiihtyvyys</string>

@@ -496,7 +496,7 @@ class SDL_Keys
 	public static String [] names = null;
 	public static Integer [] values = null;
 	
-	static final int JAVA_KEYCODE_LAST = android.view.KeyEvent.KEYCODE_MUTE; // = 91
+	static final int JAVA_KEYCODE_LAST = 110; // Android 2.3 added several new gaming keys, it ends up at keycode 110 currently - plz keep in sync with javakeycodes.h
 
 	static
 	{

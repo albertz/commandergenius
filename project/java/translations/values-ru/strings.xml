@@ -11,7 +11,7 @@
 <string name="dl_from">Загрузка данных с %s</string>
 <string name="error_dl_from">Ошибка при загрузке данных с %s</string>
 <string name="error_write">Ошибка записи в %s</string>
-<string name="dl_progress">%.0f%% готово: файл %s</string>
+<string name="dl_progress">%1$.0f%% готово: файл %2$s</string>
 <string name="dl_finished">Завершенный</string>
 <string name="storage_phone">Внутреннее хранение - %d Мб</string>
 <string name="storage_sd">SD карта - %d Мб</string>
@@ -32,7 +32,7 @@
 <string name="controls_screenkb_small">Малые</string>
 <string name="controls_screenkb_tiny">Крошечный</string>
 <string name="controls_screenkb_theme">Тема клавиатуры</string>
-<string name="controls_screenkb_by">%s от %s</string>
+<string name="controls_screenkb_by">%1$s от %2$s</string>
 <string name="trackball_no_dampening">Нет</string>
 <string name="trackball_fast">Быстрое</string>
 <string name="trackball_medium">Среднее</string>
@@ -50,7 +50,7 @@
 <string name="pointandclick_keepaspectratio">Сохранять соотношение сторон 4:3 на экране</string>
 <string name="pointandclick_showcreenunderfinger">Экранная лупа</string>
 <string name="measurepressure_touchplease">Пожалуйста, проведите пальцем по экрану в течение двух секунд</string>
-<string name="measurepressure_response">Давление %03d радиус %03d </string>
+<string name="measurepressure_response">Давление %1$03d радиус %2$03d </string>
 <string name="audiobuf_verysmall">Очень мало (быстрые устройства)</string>
 <string name="audiobuf_small">Малый</string>
 <string name="audiobuf_medium">Средний</string>

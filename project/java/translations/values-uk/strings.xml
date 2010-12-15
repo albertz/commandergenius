@@ -11,7 +11,7 @@
 <string name="dl_from">Завантаження даних з %s</string>
 <string name="error_dl_from">Помилка при завантаженні даних з %s</string>
 <string name="error_write">Помилка запису в %s</string>
-<string name="dl_progress">%.0f%% готово: файл %s</string>
+<string name="dl_progress">%1$.0f%% готово: файл %2$s</string>
 <string name="dl_finished">Завершений</string>
 <string name="storage_phone">Внутрішнє зберігання - %d Мб</string>
 <string name="storage_sd">SD карта - %d Мб</string>
@@ -32,7 +32,7 @@
 <string name="controls_screenkb_small">Малий</string>
 <string name="controls_screenkb_tiny">Дрібний</string>
 <string name="controls_screenkb_theme">Тема кнопок</string>
-<string name="controls_screenkb_by">%s від %s</string>
+<string name="controls_screenkb_by">%1$s від %2$s</string>
 <string name="trackball_no_dampening">Немає</string>
 <string name="trackball_fast">Швидке</string>
 <string name="trackball_medium">Середнє</string>
@@ -50,7 +50,7 @@
 <string name="pointandclick_keepaspectratio">Зберігати співвідношення сторін 4:3 на екрані</string>
 <string name="pointandclick_showcreenunderfinger">Наекранна лупа</string>
 <string name="measurepressure_touchplease">Будь-ласка, проведіть пальцем по екрану на протязі двох секунд</string>
-<string name="measurepressure_response">Тиск %03d радіус %03d </string>
+<string name="measurepressure_response">Тиск %1$03d радіус %2$03d </string>
 <string name="audiobuf_verysmall">Дуже мало (швидкі пристрої)</string>
 <string name="audiobuf_small">Малий</string>
 <string name="audiobuf_medium">Середній</string>
