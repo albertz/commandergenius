@@ -311,7 +311,7 @@ static int try_init()
 	{
 		// Disable DPAD
 		SDL_Rect pos = {0, 0, 0, 0};
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_DPAD, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, &pos);
 
 		// Rope button in lower-right
 		pos.x = screen_width;
@@ -321,7 +321,7 @@ static int try_init()
 		pos.x -= pos.w;
 		pos.y -= pos.h;
 
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_0, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &pos);
 		
 		// Move and jump buttons overlapped in lower-left
 		pos.x = 0;
@@ -330,18 +330,18 @@ static int try_init()
 		pos.h = pos.w*1.5;
 		pos.y -= pos.h;
 
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_2, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &pos);
 
 		pos.x += pos.w;
 
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_3, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &pos);
 
 		pos.w *= 2;
 		pos.h = pos.w*2/3;
 		pos.x = 0;
 		pos.y -= pos.h/2;
 
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_1, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &pos);
 
 		// weapprev weapnext buttons
 
@@ -351,11 +351,11 @@ static int try_init()
 		pos.h = pos.w;
 		pos.x -= pos.w;
 
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_5, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_5, &pos);
 
 		pos.x = 0;
 
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDRIOD_SCREENKEYBOARD_BUTTON_4, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_4, &pos);
 
 	}
 #endif

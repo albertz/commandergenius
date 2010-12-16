@@ -205,7 +205,10 @@ fi
 fi
 
 if [ -z "$RedefinedKeysScreenKb" -o -z "$AUTO" ]; then
-echo -n "\nRedefine on-screen keyboard keys to SDL keysyms - 6 keyboard keys + 4 multitouch gestures (zoom and rotate)"
+if [ -z "$RedefinedKeysScreenKb" ]; then
+	RedefinedKeysScreenKb="$RedefinedKeys"
+fi
+echo -n "\nRedefine on-screen keyboard keys to SDL keysyms - 6 keyboard keys + 4 multitouch gestures (zoom in/out and rotate left/right)"
 echo -n "\n$RedefinedKeysScreenKb - current SDL keycodes"
 echo -n "\n: "
 read var

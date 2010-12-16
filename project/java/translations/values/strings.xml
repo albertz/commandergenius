@@ -41,7 +41,7 @@
     <string name="controls_screenkb_small">Small</string>
     <string name="controls_screenkb_tiny">Tiny</string>
     <string name="controls_screenkb_theme">On-screen keyboard theme</string>
-    <string name="controls_screenkb_by">%1$s by %1$s</string>
+    <string name="controls_screenkb_by">%1$s by %2$s</string>
 
     <string name="trackball_no_dampening">No dampening</string>
     <string name="trackball_fast">Fast</string>

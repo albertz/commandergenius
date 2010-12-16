@@ -40,6 +40,7 @@
 #include "../SDL_sysvideo.h"
 #include "SDL_androidvideo.h"
 #include "SDL_androidinput.h"
+#include "SDL_screenkeyboard.h"
 #include "jniwrapperstuff.h"
 
 
@@ -1242,6 +1243,44 @@ JAVA_EXPORT_NAME(Settings_nativeSetKeymapKey) ( JNIEnv*  env, jobject thiz, jint
 	if( javakey < 0 || javakey > KEYCODE_LAST )
 		return;
 	SDL_android_keymap[javakey] = key;
+}
+
+JNIEXPORT jint JNICALL 
+JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyScreenKb) ( JNIEnv*  env, jobject thiz, jint keynum)
+{
+	if( keynum < 0 || keynum > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 + 4 )
+		return SDL_KEY(UNKNOWN);
+		
+	if( keynum <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
+		return SDL_ANDROID_GetScreenKeyboardButtonKey(keynum + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0);
+
+	return SDL_KEY(UNKNOWN);
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetKeymapKeyScreenKb) ( JNIEnv*  env, jobject thiz, jint keynum, jint key)
+{
+	if( keynum < 0 || keynum > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 + 4 )
+		return;
+		
+	if( keynum <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
+		SDL_ANDROID_SetScreenKeyboardButtonKey(keynum + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, key);
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyUsed) ( JNIEnv*  env, jobject thiz, jint keynum, jint used)
+{
+	SDL_Rect rect = {0, 0, 0, 0};
+	int key = -1;
+	if( keynum == 0 )
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD;
+	if( keynum == 1 )
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT;
+	if( keynum - 2 > 0 && keynum - 2 < SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
+		key = keynum - 2 + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
+		
+	if( key >= 0 && !used )
+		SDL_ANDROID_SetScreenKeyboardButtonPos(key, &rect);
 }
 
 JNIEXPORT void JNICALL 

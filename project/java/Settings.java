@@ -73,7 +73,6 @@ class Settings
 			for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
 			{
 				out.writeBoolean(Globals.ScreenKbControlsShown[i]);
-				out.writeInt(Globals.RemapScreenKbKeycode[i]);
 			}
 
 			out.close();
@@ -101,20 +100,19 @@ class Settings
 					idx = ii;
 			Globals.RemapHwKeycode[i] = idx;
 		}
-		for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
+		for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
 		{
 			int sdlKey = nativeGetKeymapKeyScreenKb(i);
 			int idx = 0;
 			for(int ii = 0; ii < SDL_Keys.values.length; ii++)
 				if(SDL_Keys.values[ii] == sdlKey)
 					idx = ii;
-			Globals.RemapHwKeycode[i] = idx;
 			Globals.RemapScreenKbKeycode[i] = idx;
 		}
 		Globals.ScreenKbControlsShown[0] = Globals.AppNeedsArrowKeys;
-		for( int i = 1; i < 7; i++ )
-			Globals.ScreenKbControlsShown[i] = ( i <= Globals.AppTouchscreenKeyboardKeysAmount );
-		Globals.ScreenKbControlsShown[7] = Globals.AppNeedsTextInput;
+		Globals.ScreenKbControlsShown[1] = Globals.AppNeedsTextInput;
+		for( int i = 2; i < 7; i++ )
+			Globals.ScreenKbControlsShown[i] = ( i - 2 < Globals.AppTouchscreenKeyboardKeysAmount );
 		for( int i = 8; i < 12; i++ )
 			Globals.ScreenKbControlsShown[i] = true;
 
@@ -160,7 +158,6 @@ class Settings
 			for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
 			{
 				Globals.ScreenKbControlsShown[i] = settingsFile.readBoolean();
-				Globals.RemapScreenKbKeycode[i] = settingsFile.readInt();
 			}
 			
 			settingsLoaded = true;
@@ -245,7 +242,8 @@ class Settings
 		
 		items.add(p.getResources().getString(R.string.remap_hwkeys));
 
-		items.add(p.getResources().getString(R.string.remap_screenkb));
+		if( Globals.UseTouchscreenKeyboard )
+    		items.add(p.getResources().getString(R.string.remap_screenkb));
 
 		items.add(p.getResources().getString(R.string.ok));
 
@@ -325,8 +323,11 @@ class Settings
 					showRemapHwKeysConfig(p);
 				selected++;
 
-				if( item == selected )
-					showRemapScreenKbConfig(p);
+				if( ! Globals.UseTouchscreenKeyboard )
+					item += 1;
+				else
+					if( item == selected )
+						showRemapScreenKbConfig(p);
 				selected++;
 				
 				if( item == selected )
@@ -947,10 +948,13 @@ class Settings
 			p.getResources().getString(R.string.remap_screenkb_button) + " 4",
 			p.getResources().getString(R.string.remap_screenkb_button) + " 5",
 			p.getResources().getString(R.string.remap_screenkb_button) + " 6",
+			// Not implemented yet!
+			/*
 			p.getResources().getString(R.string.remap_screenkb_button_zoomin),
 			p.getResources().getString(R.string.remap_screenkb_button_zoomout),
 			p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
 			p.getResources().getString(R.string.remap_screenkb_button_rotateright),
+			*/
 		};
 
 		boolean defaults[] = { 
@@ -962,11 +966,15 @@ class Settings
 			Globals.ScreenKbControlsShown[5],
 			Globals.ScreenKbControlsShown[6],
 			Globals.ScreenKbControlsShown[7],
+			// Not implemented yet!
+			/*
 			Globals.ScreenKbControlsShown[8],
 			Globals.ScreenKbControlsShown[9],
 			Globals.ScreenKbControlsShown[10],
 			Globals.ScreenKbControlsShown[11],
+			*/
 		};
+		
 		
 		if( ! Globals.UseTouchscreenKeyboard )
 		{
@@ -1025,13 +1033,16 @@ class Settings
 			p.getResources().getString(R.string.remap_screenkb_button) + " 4",
 			p.getResources().getString(R.string.remap_screenkb_button) + " 5",
 			p.getResources().getString(R.string.remap_screenkb_button) + " 6",
+			// Not implemented yet!
+			/*
 			p.getResources().getString(R.string.remap_screenkb_button_zoomin),
 			p.getResources().getString(R.string.remap_screenkb_button_zoomout),
 			p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
 			p.getResources().getString(R.string.remap_screenkb_button_rotateright),
+			*/
 		};
 		
-		if( currentButton >= Globals.RemapScreenKbKeycode.length )
+		if( currentButton >= items.length ) // Globals.RemapScreenKbKeycode.length )
 		{
 			showConfigMainMenu(p);
 			return;
@@ -1088,10 +1099,10 @@ class Settings
 			nativeSetTouchscreenKeyboardUsed();
 			nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize,
 										Globals.TouchscreenKeyboardTheme,
-										Globals.AppTouchscreenKeyboardKeysAmount,
+										7, // Globals.AppTouchscreenKeyboardKeysAmount, - set later by nativeSetScreenKbKeyUsed()
 										Globals.AppTouchscreenKeyboardKeysAmountAutoFire,
-										Globals.AppNeedsArrowKeys ? 1 : 0,
-										Globals.AppNeedsTextInput ? 1 : 0 );
+										1, //Globals.AppNeedsArrowKeys ? 1 : 0,
+										1 ); //Globals.AppNeedsTextInput ? 1 : 0 );
 		}
 		SetupTouchscreenKeyboardGraphics(p);
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
@@ -1101,7 +1112,9 @@ class Settings
 
 		for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
 		{
-			nativeSetKeymapKeyScreenKb(i, i >= 2 ? SDL_Keys.values[Globals.RemapScreenKbKeycode[i-2]] : 0, Globals.ScreenKbControlsShown[i] ? 1 : 0);
+			nativeSetScreenKbKeyUsed(i, Globals.ScreenKbControlsShown[i] ? 1 : 0);
+			if( i >= 2 )
+				nativeSetKeymapKeyScreenKb(i, SDL_Keys.values[Globals.RemapScreenKbKeycode[i-2]]);
 		}
 
 		String lang = new String(Locale.getDefault().getLanguage());
@@ -1156,9 +1169,10 @@ class Settings
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	private static native void nativeInitKeymap();
 	private static native int nativeGetKeymapKey(int key);
-	private static native int nativeGetKeymapKeyScreenKb(int key);
 	private static native void nativeSetKeymapKey(int javakey, int key);
-	private static native void nativeSetKeymapKeyScreenKb(int javakey, int key, int used);
+	private static native int nativeGetKeymapKeyScreenKb(int keynum);
+	private static native void nativeSetKeymapKeyScreenKb(int keynum, int key);
+	private static native void nativeSetScreenKbKeyUsed(int keynum, int used);
 	public static native void nativeSetEnv(final String name, final String value);
 }
 
