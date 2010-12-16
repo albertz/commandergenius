@@ -26,6 +26,11 @@
 #include "alMain.h"
 #include "AL/al.h"
 #include "AL/alc.h"
+#include "AL/android.h"
+
+static int doPause=0;
+int resumeHandled;
+int pauseHandled;
 
 static const ALCchar android_device[] = "Android Default";
 
@@ -39,6 +44,7 @@ static jmethodID mPlay;
 static jmethodID mStop;
 static jmethodID mRelease;
 static jmethodID mWrite;
+static jmethodID mPause;
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
@@ -88,29 +94,42 @@ static void* thread_function(void* arg)
     jobject track = (*env)->NewObject(env, cAudioTrack, mAudioTrack,
         STREAM_MUSIC, sampleRateInHz, channelConfig, audioFormat, device->NumUpdates * bufferSizeInBytes, MODE_STREAM);
 
-    (*env)->CallNonvirtualVoidMethod(env, track, cAudioTrack, mPlay);
+	//(*env)->CallNonvirtualVoidMethod(env, track, cAudioTrack, mPlay);
 
-    jarray buffer = (*env)->NewByteArray(env, bufferSizeInBytes);
+	jarray buffer = (*env)->NewByteArray(env, bufferSizeInBytes);
 
-    while (data->running)
-    {
-        void* pBuffer = (*env)->GetPrimitiveArrayCritical(env, buffer, NULL);
+	pauseHandled=0;
+	resumeHandled=0;
+	while (data->running)
+	{
+		if(doPause && !pauseHandled)
+		{
+			(*env)->CallNonvirtualVoidMethod(env, track, cAudioTrack, mPause);
+			pauseHandled=1;
+		}
+		if(!doPause && !resumeHandled)
+		{
+			(*env)->CallNonvirtualVoidMethod(env, track, cAudioTrack, mPlay);
+			resumeHandled=1;
+		}
+		
+		void* pBuffer = (*env)->GetPrimitiveArrayCritical(env, buffer, NULL);
 
-        if (pBuffer)
-        {
-            aluMixData(device, pBuffer, bufferSizeInSamples);
-            (*env)->ReleasePrimitiveArrayCritical(env, buffer, pBuffer, 0);
+		if (pBuffer)
+		{
+			aluMixData(device, pBuffer, bufferSizeInSamples);
+			(*env)->ReleasePrimitiveArrayCritical(env, buffer, pBuffer, 0);
 
-            (*env)->CallNonvirtualIntMethod(env, track, cAudioTrack, mWrite, buffer, 0, bufferSizeInBytes);
-        }
-        else
-        {
-            AL_PRINT("Failed to get pointer to array bytes");
-        }
-    }
-    
-    (*env)->CallNonvirtualVoidMethod(env, track, cAudioTrack, mStop);
-    (*env)->CallNonvirtualVoidMethod(env, track, cAudioTrack, mRelease);
+			(*env)->CallNonvirtualIntMethod(env, track, cAudioTrack, mWrite, buffer, 0, bufferSizeInBytes);
+		}
+		else
+		{
+			AL_PRINT("Failed to get pointer to array bytes");
+		}
+	}
+	
+	(*env)->CallNonvirtualVoidMethod(env, track, cAudioTrack, mStop);
+	(*env)->CallNonvirtualVoidMethod(env, track, cAudioTrack, mRelease);
 
     (*env)->PopLocalFrame(env, NULL);
 
@@ -130,7 +149,6 @@ static ALCboolean android_open_playback(ALCdevice *device, const ALCchar *device
         /* Cache AudioTrack class and it's method id's
          * And do this only once!
          */
-
         cAudioTrack = (*env)->FindClass(env, "android/media/AudioTrack");
         if (!cAudioTrack)
         {
@@ -143,6 +161,7 @@ static ALCboolean android_open_playback(ALCdevice *device, const ALCchar *device
         mAudioTrack = (*env)->GetMethodID(env, cAudioTrack, "<init>", "(IIIIII)V");
         mGetMinBufferSize = (*env)->GetStaticMethodID(env, cAudioTrack, "getMinBufferSize", "(III)I");
         mPlay = (*env)->GetMethodID(env, cAudioTrack, "play", "()V");
+		mPause = (*env)->GetMethodID(env, cAudioTrack, "pause", "()V");
         mStop = (*env)->GetMethodID(env, cAudioTrack, "stop", "()V");
         mRelease = (*env)->GetMethodID(env, cAudioTrack, "release", "()V");
         mWrite = (*env)->GetMethodID(env, cAudioTrack, "write", "([BII)I");
@@ -240,6 +259,7 @@ static ALCuint android_available_samples(ALCdevice *pDevice)
     return 0;
 }
 
+
 static const BackendFuncs android_funcs = {
     android_open_playback,
     android_close_playback,
@@ -276,4 +296,16 @@ void alc_android_probe(int type)
     {
         AppendAllDeviceList(android_device);
     }
+}
+AL_API void AL_APIENTRY al_android_pause_playback()
+{
+	doPause=1;
+	pauseHandled=0;
+	AL_PRINT("Audio paused.");
+}
+AL_API void AL_APIENTRY al_android_resume_playback()
+{
+	doPause=0;
+	resumeHandled=0;
+	AL_PRINT("Audio resumed.");
 }
