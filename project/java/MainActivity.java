@@ -219,8 +219,6 @@ public class MainActivity extends Activity {
 		if( mGLView != null )
 		{
 			synchronized(textInput) {
-				textInput.addFirst(0); // Dummy keycode to skip first frame
-				textInput.addFirst(0);
 				for(int i = 0; i < text.length(); i++)
 				{
 					textInput.addLast((int)text.charAt(i));
