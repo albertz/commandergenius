@@ -200,7 +200,6 @@ void ANDROID_GL_DeleteContext (_THIS, SDL_GLContext context)
 {
 };
 
-
 SDL_Window * ANDROID_CurrentWindow = NULL;
 int ANDROID_CreateWindow(_THIS, SDL_Window * window)
 {

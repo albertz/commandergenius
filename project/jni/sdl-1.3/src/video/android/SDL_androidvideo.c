@@ -117,6 +117,7 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 		showScreenKeyboardDeferred = 0;
 		(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard );
 	}
+	SDL_ANDROID_DeferredTextInput();
 	return 1;
 }
 
@@ -208,6 +209,10 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeGlContextRecreated) ( JNIEnv*  env, jobject 
 void SDL_ANDROID_CallJavaShowScreenKeyboard()
 {
 	showScreenKeyboardDeferred = 1;
+	// Move mouse by 1 pixel to force screen update
+	int x, y;
+	SDL_GetMouseState( &x, &y );
+	SDL_ANDROID_MainThreadPushMouseMotion(x > 0 ? x-1 : 0, y);
 }
 
 JNIEXPORT void JNICALL 

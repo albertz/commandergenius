@@ -221,11 +221,13 @@ public class MainActivity extends Activity {
 			synchronized(textInput) {
 				for(int i = 0; i < text.length(); i++)
 				{
-					textInput.addLast((int)text.charAt(i));
-					textInput.addLast((int)text.codePointAt(i));
+					DemoRenderer.nativeTextInput( (int)text.charAt(i), (int)text.codePointAt(i) );
+					//textInput.addLast((int)text.charAt(i));
+					//textInput.addLast((int)text.codePointAt(i));
 				}
-				textInput.addLast(13); // send return
-				textInput.addLast(13);
+				DemoRenderer.nativeTextInput( 13, 13 ); // send return
+				//textInput.addLast(13);
+				//textInput.addLast(13);
 			}
 		}
 		_videoLayout.removeView(_screenKeyboard);
@@ -253,8 +255,9 @@ public class MainActivity extends Activity {
 				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR))
 				{
 					synchronized(textInput) {
-						textInput.addLast(8); // send backspace keycode
-						textInput.addLast(8);
+						DemoRenderer.nativeTextInput( 8, 8 );
+						//textInput.addLast(8); // send backspace keycode
+						//textInput.addLast(8);
 					}
 					return false; // and proceed to delete text in keyboard input field
 				}

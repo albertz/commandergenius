@@ -49,7 +49,7 @@ enum {
 
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, /* Button to show screen keyboard */
 
-	SDL_ANDROID_SCREENKEYBOARD_BUTTON_MAX = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT
+	SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM
 };
 
 /* All functions return 0 on failure and 1 on success */

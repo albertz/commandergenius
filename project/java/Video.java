@@ -227,6 +227,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 			Settings.SetupTouchscreenKeyboardGraphics(context); // Reload on-screen buttons graphics
 		}
 		
+		/*
 		// Pass just one char per frame, many SDL games cannot handle multiple events in a single frame
 		synchronized(context.textInput) {
 			if( context.textInput.size() >= 2 )
@@ -237,6 +238,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 				context.textInput.removeFirst();
 			}
 		}
+		*/
 
 		return 1;
 	}

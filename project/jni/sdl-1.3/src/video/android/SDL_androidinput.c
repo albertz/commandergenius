@@ -875,6 +875,7 @@ extern void SDL_ANDROID_PumpEvents()
 				SDL_SendMouseButton( NULL, ev->button.state, ev->button.button );
 				break;
 			case SDL_KEYDOWN:
+				//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_KEYDOWN: %i %i", ev->key.keysym.sym, ev->key.state);
 				SDL_SendKeyboardKey( ev->key.state, &ev->key.keysym );
 				break;
 			case SDL_JOYAXISMOTION:
@@ -1133,8 +1134,63 @@ extern void SDL_ANDROID_MainThreadPushMultitouchMotion(int id, int x, int y, int
 	SDL_mutexV(BufferedEventsMutex);
 #endif
 };
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+extern void SDL_ANDROID_DeferredTextInput()
+{
+};
+#else
+
+enum { DEFERRED_TEXT_COUNT = 128 };
+static struct { int scancode; int unicode; int down; } deferredText[DEFERRED_TEXT_COUNT];
+static int deferredTextIdx1 = 0;
+static int deferredTextIdx2 = 0;
+static SDL_mutex * deferredTextMutex = NULL;
+
+extern void SDL_ANDROID_DeferredTextInput()
+{
+	int count = 2;
+	if( !deferredTextMutex )
+		deferredTextMutex = SDL_CreateMutex();
+
+	SDL_mutexP(deferredTextMutex);
+	
+	while( deferredTextIdx1 != deferredTextIdx2 && count > 0 )
+	{
+		int nextEvent = getNextEvent();
+		if( nextEvent == -1 )
+		{
+			SDL_mutexV(deferredTextMutex);
+			return;
+		}
+		SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+		
+		deferredTextIdx1++;
+		if( deferredTextIdx1 >= DEFERRED_TEXT_COUNT )
+			deferredTextIdx1 = 0;
+		
+		ev->type = SDL_KEYDOWN;
+		ev->key.state = deferredText[deferredTextIdx1].down;
+		ev->key.keysym.scancode = deferredText[deferredTextIdx1].scancode;
+		ev->key.keysym.sym = deferredText[deferredTextIdx1].scancode;
+		ev->key.keysym.mod = KMOD_NONE;
+		ev->key.keysym.unicode = 0;
+		if ( SDL_TranslateUNICODE )
+			ev->key.keysym.unicode = deferredText[deferredTextIdx1].unicode;
+		
+		BufferedEventsEnd = nextEvent;
+		SDL_mutexV(BufferedEventsMutex);
+		count --;
+	}
+	
+	SDL_mutexV(deferredTextMutex);
+};
+#endif
+
 extern void SDL_ANDROID_MainThreadPushText( int scancode, int unicode )
 {
+
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_MainThreadPushText(): %i %i", scancode, unicode);
 	int nextEvent = getNextEvent();
 	if( nextEvent == -1 )
 		return;
@@ -1150,22 +1206,17 @@ extern void SDL_ANDROID_MainThreadPushText( int scancode, int unicode )
 
 #else
 
-	ev->type = SDL_KEYDOWN;
-	ev->key.state = SDL_PRESSED;
-	ev->key.keysym.scancode = scancode;
-	ev->key.keysym.sym = scancode;
-	ev->key.keysym.mod = KMOD_NONE;
-	ev->key.keysym.unicode = 0;
-	if ( SDL_TranslateUNICODE )
-		ev->key.keysym.unicode = unicode;
-	BufferedEventsEnd = nextEvent;
-	SDL_mutexV(BufferedEventsMutex);
+	if( !deferredTextMutex )
+		deferredTextMutex = SDL_CreateMutex();
 
-	nextEvent = getNextEvent();
+	SDL_mutexP(deferredTextMutex);
+
+	ev->type = 0;
+	
+	if( deferredTextIdx1 == deferredTextIdx2 )
 	{
-		SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
 		ev->type = SDL_KEYDOWN;
-		ev->key.state = SDL_RELEASED;
+		ev->key.state = SDL_PRESSED;
 		ev->key.keysym.scancode = scancode;
 		ev->key.keysym.sym = scancode;
 		ev->key.keysym.mod = KMOD_NONE;
@@ -1173,6 +1224,24 @@ extern void SDL_ANDROID_MainThreadPushText( int scancode, int unicode )
 		if ( SDL_TranslateUNICODE )
 			ev->key.keysym.unicode = unicode;
 	}
+	else
+	{
+		deferredTextIdx2++;
+		if( deferredTextIdx2 >= DEFERRED_TEXT_COUNT )
+			deferredTextIdx2 = 0;
+		deferredText[deferredTextIdx2].down = SDL_PRESSED;
+		deferredText[deferredTextIdx2].scancode = scancode;
+		deferredText[deferredTextIdx2].unicode = unicode;
+	}
+
+	deferredTextIdx2++;
+	if( deferredTextIdx2 >= DEFERRED_TEXT_COUNT )
+		deferredTextIdx2 = 0;
+	deferredText[deferredTextIdx2].down = SDL_RELEASED;
+	deferredText[deferredTextIdx2].scancode = scancode;
+	deferredText[deferredTextIdx2].unicode = unicode;
+
+	SDL_mutexV(deferredTextMutex);
 
 #endif
 	
@@ -1276,7 +1345,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyUsed) ( JNIEnv*  env, jobject thiz
 		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD;
 	if( keynum == 1 )
 		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT;
-	if( keynum - 2 > 0 && keynum - 2 < SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
+	if( keynum - 2 >= 0 && keynum - 2 <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
 		key = keynum - 2 + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
 		
 	if( key >= 0 && !used )

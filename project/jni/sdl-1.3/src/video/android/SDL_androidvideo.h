@@ -47,6 +47,7 @@ extern void SDL_ANDROID_processAndroidTrackballDampening();
 extern void SDL_ANDROID_processMoveMouseWithKeyboard();
 extern int SDL_ANDROID_InsideVideoThread();
 extern SDL_VideoDevice *ANDROID_CreateDevice_1_3(int devindex);
+extern void SDL_ANDROID_DeferredTextInput();
 
 #if SDL_VERSION_ATLEAST(1,3,0)
 extern SDL_Window * ANDROID_CurrentWindow;
