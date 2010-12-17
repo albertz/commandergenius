@@ -48,8 +48,6 @@ class Globals {
 	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 1;
 
 	// Phone-specific config
-	// It will download app data to /sdcard/alienblaster if set to true,
-	// otherwise it will download it to /data/data/de.schwardtnet.alienblaster/files
 	public static boolean DownloadToSdcard = true;
 	public static boolean PhoneHasTrackball = false;
 	public static boolean PhoneHasArrowKeys = false;

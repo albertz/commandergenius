@@ -28,7 +28,7 @@
 static int isSdcardUsed = 0;
 
 extern C_LINKAGE void
-JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring cmdline )
+JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring jcurdir, jstring cmdline )
 {
 	int i = 0;
 	char curdir[PATH_MAX] = "";
@@ -49,6 +49,12 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 		strcat(curdir, SDL_CURDIR_PATH);
 		strcat(curdir, "/files");
 	}
+
+	jstr = (*env)->GetStringUTFChars(env, jcurdir, NULL);
+	if (jstr != NULL && strlen(jstr) > 0)
+		strcpy(curdir, jstr);
+	(*env)->ReleaseStringUTFChars(env, jcurdir, jstr);
+
 	if( realpath(curdir, realcurdir) == NULL )
 		strcpy(realcurdir, curdir);
 	chdir(realcurdir);
@@ -94,9 +100,6 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	for( i = 0; i < argc; i++ )
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "param %d = \"%s\"", i, argv[i]);
 	
-	//freopen("/dev/null", "w", stdout); // It crashes on Smartq V7 anyway, inside these lines
-	//freopen("/dev/null", "w", stderr);
-
 	main( argc, argv );
 
 };

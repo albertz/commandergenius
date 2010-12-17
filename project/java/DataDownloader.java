@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
+import android.os.Environment;
 
 import android.widget.TextView;
 import org.apache.http.client.methods.*;
@@ -149,7 +150,7 @@ class DataDownloader extends Thread
 		//Status.setText( "Connecting to " + Globals.DataDownloadUrl );
 		outFilesDir = Parent.getFilesDir().getAbsolutePath();
 		if( Globals.DownloadToSdcard )
-			outFilesDir = "/sdcard/app-data/" + Globals.class.getPackage().getName();
+			outFilesDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName();
 		DownloadComplete = false;
 		this.start();
 	}
