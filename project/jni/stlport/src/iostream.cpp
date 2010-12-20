@@ -15,6 +15,14 @@
  * modified is included with the above copyright notice.
  *
  */
+
+/* Outputting anything to cout/cerr WILL CRASH YOUR PROGRAM on specific devices -
+   x5a/x6d Android 2.1 tablet, and some other tablets,
+   however the same code runs on my HTC Evo without problem.
+   So I've just disabled them altogether.
+*/
+#ifndef ANDROID
+
 #include "stlport_prefix.h"
 
 #include <istream>
@@ -393,6 +401,8 @@ bool _STLP_CALL ios_base::sync_with_stdio(bool sync) {
 }
 
 _STLP_END_NAMESPACE
+
+#endif /* ANDROID */
 
 // Local Variables:
 // mode:C++
