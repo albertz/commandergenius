@@ -28,6 +28,10 @@
 #ifndef _STLP_INTERNAL_EXCEPTION
 #define _STLP_INTERNAL_EXCEPTION
 
+#if defined(ANDROID) || defined(__ANDROID__)
+#  define _STLP_NO_EXCEPTION_HEADER 1
+#endif
+
 #if !defined (_STLP_NO_EXCEPTION_HEADER)
 
 #  if defined ( _UNCAUGHT_EXCEPTION )

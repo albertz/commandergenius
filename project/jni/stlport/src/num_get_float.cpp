@@ -27,7 +27,7 @@
 #  include <stdint.h>
 #endif
 
-#if defined (__linux__)
+#if defined (__linux__) && !defined(__ANDROID__)
 #  include <ieee754.h>
 
 union _ll {
@@ -413,7 +413,7 @@ static inline double _Stl_atod(char *buffer, int ndigit, int dexp) {
 
 #else  /* IEEE representation */
 
-#  if !defined (__linux__)
+#  if !defined (__linux__) || defined(__ANDROID__)
 static double _Stl_atod(char *buffer, int ndigit, int dexp) {
   uint64 value;         /* Value develops as follows:
                                  * 1) decimal digits as an integer
