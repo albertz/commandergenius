@@ -1,0 +1,11 @@
+Michael Speck <kulkanie@gmx.net>
+
+**** Contributions ****
+
+- expert mode with unbalanced properties for next block to make it
+difficult to fit. - chkno
+
+Guiding lines. - Ingo van Lil
+
+Check for highscore chart so that it isn't overwritten when updating the
+game. - Sean Holt

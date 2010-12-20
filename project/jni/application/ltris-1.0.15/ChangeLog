@@ -1,0 +1,169 @@
+1.0.15:
+- reenabled compiler option -Wall and fixed some warnings (20/09/10 MS)
+- renamed (unused) full non-ascii turkish and portugese localizations to 
+  prevent warnings (20/09/10 MS)
+- added italian localization (20/09/10 Kenyu)
+
+1.0.14:
+- added missing include for locale (25/12/09 CT)
+- fixed too short size in several memset calls (25/12/09 MS)
+- increased range for horizontal block delay to 9 (24/12/09 CT)
+- fixed incorrect english (penalty instead of malus) (24/12/09 CT)
+- added XDG support (24/12/09 MS)
+
+1.0.13:
+- enable block drop shadow per default (09/10/25 MS)
+- use translation independent chart ids (09/10/25 MS)
+- added swedish translation (08/08/26 NG)
+- added french translation and special character free pt and tr versions
+  (08/04/06 JJ)
+
+1.0.12:
+- added portugese translation (08/03/29 JJ)
+- removed -Wall from CC arguments for better portability
+  (06/04/01 PM)
+- l10n of yes/no keys (05/10/10 R.S.)
+
+1.0.11:
+- i18n support and german l10n added (05/10/04 M.S.)
+- smooth_hori is 0 by default (looks less nice but is better to handle)
+  (05/10/04 M.S.)
+  
+1.0.10:
+- added configure option to let all lines, sent in one go to your
+  opponents in a multiplayer game, have the holes at the same 
+  positions (05/02/14 K.M.)
+- adjusted size of game type names array (05/02/14 K.M.)
+- allow clearing keystate of all keys after a block insertion
+  (05/02/14 K.M.)
+
+1.0.9:
+- security issue fixed: a buffer overflow in the highscores file
+could be used to run code with another's user id (05/01/25 U.H.)
+
+1.0.8:
+- added case '\0' (empty line) to fix reading the config file in 
+  windows (04/09/06 Murlock)
+
+1.0.7:
+- added missing newlines which caused SDL error message not to
+  be seen (03/05/14 P.H)
+- added range check for the starting level to prevent abnormally
+  high scores when setting this level too high (03/05/14 P.H)
+- configure option --with-hiscore-path has been replaced with
+  autoconf option --localstatedir (04/06/14 M.S.)
+- data files will be installed to $datadir/ltris instead
+  of $datadir/games/ltris (04/06/14 M.S.)
+
+1.0.6:
+- option added to give all players the same blocks in the same order
+  for a multiplayer game when expert mode is off (03/01/19 M.S.)
+- if the next new block is the same as the current block the
+  random selection is repeated only once (instead of until 
+  different) thus there may be several equal blocks in a row
+  now (03/01/18 M.S.)
+- in expert mode there is now a 50% chance of balanced properties
+  (03/01/18 M.S.)
+- bugfix: in mode 'figures' tiles and lines are no longer added 
+  while game is paused (03/01/18 M.S.)
+- changed URL from lgames.org to lgames.sf.net (03/01/18 M.S.)
+
+1.0.5:
+- windows manager's close button works (03/10/05 M.S.)
+- expert mode with unbalanced properties for next block to make it
+difficult to fit (03/10/05 chkno)
+
+1.0.4:
+- fixed security holes created by improper use of sprintf 
+  (02/11/24 S.K.)
+
+1.0.3:
+- option for asynchron collision check that allows to move a block
+  below others though 'smooth drop' is enabled (02/07/25 M.S.)
+- config is now plain text (02/07/25 M.S.)
+- guiding lines implemented in addition to the helping shadow 
+  (02/07/20 I.v.L)
+
+1.0.2:
+- changed 'wholes' to 'holes' (me no native speaker! but thanks
+  goes to Pascal Hakim)
+- fixed a two-player bug where the wrong guy won if lines were sent
+  (thanks to Jeff Shute)
+- option to modify audio buffer size to fix sound problems
+
+1.0.1:
+-the clearance of the 'Down' key after inserting a block is now
+optional
+-preview boxes for two-player are now at the same height level
+-allowed more keys for controls (keypad, home, pos, end, pageup, 
+pagedown, space)
+-highscores aren't overwritten when updating (thanks to Sean Holt)
+-adjusted chart so it can handle the CPU scores
+-CPU style/delay option instead of difficulty (better customization) 
+-improved CPU (increased average score from 5,7 Mio to 583,6 Mio!)
+-added an option to disable the background change
+-opponent controls in 'Vs Human' no longer assigned to CPU
+-bonus score of a bowl is added directly after its game's over
+-default for animations set correctly
+-a multiplayer winner gains additional 50,000 score in the end
+
+1.0:
+-menu improved
+-graphics improved
+-added AI
+-added three-player mode
+-rewrote engine (c++ --> c)
+-removed assembler code
+-fixed some minor warnings
+
+010310:
+-added fullscreen option
+-fixed infinite loop in level 13 of 'advanced' game
+-score is counted faster
+-animations disappear faster
+-doesn't crash when config file comes from an older version
+
+001115:
+-fixed various bugs
+-when paused only resume game if 'p' is pressed
+-fixed segfault in multiplayer mode (when Options/Game/Help was 'on')
+
+001102:
+-added a 'drop' key
+-does not get so fast in the beginning
+-two game speeds (slow/normal)
+
+001017:
+-fixed some bugs
+-optional block-by-block drop
+-added some missing '#include <string.h>' and newlines
+
+001014:
+-smooth horizontal movement
+-segfault bug in multiplayer mode fixed
+-you can see where the block will touch the ground (optional)
+-sound is default (configure)
+
+000930:
+-compatible with SDL version 1.1.5 or better
+-improved the installation
+
+000705:
+-fonts improved
+-tile graphics improved
+
+000422:
+-fixed a bug in the menu
+-added various backgrounds
+
+000418:
+-added a multiplayer mode
+-improved some parts of the source code
+-released the source
+
+000314:
+-added sound
+
+000313:
+-initial public release
+-compiled for ix86

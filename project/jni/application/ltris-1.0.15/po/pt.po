@@ -1,0 +1,742 @@
+# translation of ltris_pt_prod.po to portugues
+# Portuguese translations for ltris package.
+# Copyright (C) 2008 Michael Speck
+# This file is distributed under the same license as the ltris package.
+#
+# jose <lists.jjorge@free.fr>, 2008.
+# Jose Jorge <jjorge@free.fr>, 2008.
+msgid ""
+msgstr ""
+"Project-Id-Version: ltris_pt_prod\n"
+"Report-Msgid-Bugs-To: lgames.sf.net/contact.php\n"
+"POT-Creation-Date: 2009-12-25 10:55+0100\n"
+"PO-Revision-Date: 2008-03-30 22:19+0200\n"
+"Last-Translator: Jose Jorge <jjorge@free.fr>\n"
+"Language-Team: portugues <pt@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#: src/manager.c:65
+msgid "Enable/disable these quick hints."
+msgstr "Activar/desactivar estes conselhos."
+
+#: src/manager.c:66
+msgid "Set player controls and horizontal speed."
+msgstr "Definir o controlo dos jogadores e a velocidade horizontal."
+
+#: src/manager.c:67
+msgid "Here you may customize the graphical appearance of LTris."
+msgstr "Aqui pode configurar a aparencia grafica do LTris."
+
+#: src/manager.c:68
+msgid "Audio Settings."
+msgstr "Opcoes Audio."
+
+#: src/manager.c:69
+msgid "Get back to nasty work."
+msgstr "Voltar ao trabalho chato."
+
+#: src/manager.c:70
+msgid "Setup and run a cool game!"
+msgstr "Configurar e iniciar um bom jogo!"
+
+#: src/manager.c:71
+msgid "If animations disturb you you may turn them off."
+msgstr "Se as animacoes o perturbam pode desligar-las."
+
+#: src/manager.c:72
+msgid "You may play LTris either in window of fullscreen mode."
+msgstr "Voce pode jogar LTris seja numa janela ou em todo o ecra."
+
+#: src/manager.c:73
+msgid ""
+"If you don't want LTris to consume all of your CPU limit the frame rate."
+msgstr ""
+"Se nao quizer que LTris gaste todo o seu processador limite o numero de "
+"imagens por segundo."
+
+#: src/manager.c:74
+msgid ""
+"Horizontally move block either tile-by-tile or smooth. This is just eye-"
+"candy and doesn't effect the moving speed at all."
+msgstr ""
+"Move horizontalmente o bloco seja passo a passo ou suavemente. Isto e so "
+"para decorar e nao muda nada da velocidade de movimento."
+
+#: src/manager.c:75
+msgid ""
+"Drop block tile-by-tile or smooth.##NOTE: While tile-by-tile allows you to "
+"move a block below a tile multiple times you'll only be able to do so one "
+"time when choosing 'smooth'!#See 'Advanced Options/Collision Check' to "
+"improve this."
+msgstr ""
+"Largar o bloco passo-a-passo ou suavemente.##NOTA: Enquanto que passo-a-"
+"passo permite-lhe de move um bloco debaixode outro varias vezes, so vai "
+"poder fazer isso uma ves se escolher 'suave'!#Veja 'Opcoes Avancadas/Testar "
+"Colisoes' para melhorar isto."
+
+#: src/manager.c:76
+msgid ""
+"The less delay you take the faster the block will horizontally move and the "
+"more sensitive the input is handled."
+msgstr ""
+"Menos tempo mete mais depressa o bloco vai mover horizontalmente e mais "
+"sensivel o teclado vai ser."
+
+#: src/manager.c:77
+msgid ""
+"Each control value needs a unique key for handling.##Left/Right: horizontal "
+"movement#Rotate Left/Right: block rotation#Down: faster Dropping#Drop: "
+"INSTANT drop"
+msgstr ""
+"Cada valor de controlo indica uma tecla unica para agir.##Esquerda/Direita: "
+"movimentos horizontais#Rotacao Esquerda/Direita: Rodar os blocos#Descer: "
+"Descer mais depressa#Largar: Cair INSTANTANEAMENTE"
+
+#: src/manager.c:78
+msgid "Let's get it on!!!!"
+msgstr "Vamos a isto!!!!"
+
+#: src/manager.c:79
+msgid "Human player names. If you play against CPU it will be named as CPU-x."
+msgstr ""
+"Nome dos jogadores humanos. Se jogar contra o computador o nome sera CPU-x."
+
+#: src/manager.c:80
+#, fuzzy, c-format
+msgid ""
+"This is your starting level which will be ignored for game 'Figures' (you'll "
+"always start at level 0 there).##Each starting level up adds you 1.5% score "
+"in the end!"
+msgstr ""
+"Este e o nivel de inicio que sera ignorado no modo 'Figuras' (onde arranca "
+"sempre em nivel 0).##Cada nivel superior de inicio ajunta 1.5% a pontuacao "
+"final!"
+
+#: src/manager.c:81
+#, c-format
+msgid ""
+"Enable/Disable block preview.##If disabled you'll gain 15% score in the end!"
+msgstr ""
+"Activar/Desactivar a antevisao do bloco.##Se for desactivada vai obter mais "
+"15% score no fim!"
+
+#: src/manager.c:82
+msgid ""
+"Shows guiding lines or a shadow of the currently dropping block so you see "
+"where it'll hit the ground.##This option has no penalty/bonus."
+msgstr ""
+"Mostra linhas de guia ou uma sombra do bloco que esta caindo para que para "
+"ver onde ele vai tocar o chao.#Esta opcao nao tem malus/bonus."
+
+#: src/manager.c:83
+msgid "Some multiplayer and CPU settings."
+msgstr "Algumas opcoes multi-jogadores e CPU."
+
+#: src/manager.c:84
+msgid ""
+"A line send to your opponent's bowl will have this number of holes in it. "
+"The more holes the harder it will be to remove this line so you should "
+"choose a low value (e.g. 1 or 2) for long multiplayer games."
+msgstr ""
+"A linha enviada para os seus adversarios vai ter este numero de buracos. "
+"Mais buracos ha, mais dificil e de tirar a linha, portanto e aconselhado de "
+"escolher um valor baixo (1 ou 2) para jogos compridos em multi-jogadores."
+
+#: src/manager.c:85
+msgid ""
+"This option controls how the holes in the lines are created when more than "
+"one line is sent. If the option is on, the holes will appear randomly for "
+"each line. If the option is off, all the lines that are sent in one go, will "
+"have the holes in the same spot."
+msgstr ""
+"Esta opcao controla como os buracos nas linhas sao criados quando mais de "
+"uma linha e enviada. Se activada, os buracos aparecem aleatoriamente em cada "
+"linha. Senao, todas as linhas enviadas de uma ves terao os buracos no mesmo "
+"sitio."
+
+#: src/manager.c:86
+msgid ""
+"You'll have to complete more than one line to send any lines to your "
+"opponent. If this option is enabled all lines will be send else one will be "
+"substracted.##If disabled:#3 Line send -> 2 lines received##If enabled:#3 "
+"lines send -> 3 lines received"
+msgstr ""
+"Voce deve completar mais de uma linha para enviar todas as linhas as seus "
+"adversarios. Se isto for activado todas as linhas serao enviadas menos uma."
+"##Se for desactivado:#3 Linhas enviadas -> 2 linhas recebidas##Se for "
+"desactivado:#3 Linhas enviadas -> 3 linhas recebidas"
+
+#: src/manager.c:87
+msgid ""
+"If this option is enabled your opponent will receive all four lines of your "
+"tetris ignoring the 'Send All' setting."
+msgstr ""
+"Se isto for activado os seus adversarios vao receber todas as quatro linhas "
+"dos seus tetris sem ter em conta a opcao 'Enviar Todos'"
+
+#: src/manager.c:88
+msgid ""
+"This is the delay in milliseconds the CPU waits before dropping a block."
+msgstr ""
+"Este e em milisegundos o tempo que o CPU espera antes de largar um bloco."
+
+#: src/manager.c:89
+msgid ""
+"The more aggressive the style is the more priority is put on completing "
+"multiple lines at the expense of a balanced bowl contents."
+msgstr ""
+"O mais agressivo o estilo for, mais prioridade e metida em completar linhas "
+"multiplas no lugar de um jogo equilibrado."
+
+#: src/manager.c:90
+msgid "Some advanced options."
+msgstr "Algumas opcoes avancadas."
+
+#: src/manager.c:91
+msgid ""
+"Test the CPU analyze algorithm in cpu.c and give an average score for a "
+"number of games."
+msgstr ""
+"Testar o algoritmo de analise do computador em cpu.c e dar o resultado medio "
+"para um certo numero de jogos."
+
+#: src/manager.c:92
+msgid ""
+"If you turn visualization off the results will be computed faster. If you "
+"turn them on you can see a general game behaviour and judge the algorithm by "
+"this behaviour."
+msgstr ""
+"Se desligar a visualizacao os resultados vao ser calculados mais depressa. "
+"Se a ligar vai ver o comportamento geral do jogo e poder avaliar o algoritmo "
+"seguinte esse comportamento."
+
+#: src/manager.c:93
+msgid ""
+"There are basically three different game types:##CLASSIC:#The classic tetris "
+"game. Starts with an empty bowl and goes as long as you make it.#FIGURES:"
+"#Each level a nice figure will be added to the ground of you bowl. From "
+"level 7-12 there will be randomly appearing single tiles and from level "
+"13-... there will be whole lines appearing at the bottom of your bowl. Fun!"
+"#TWO/THREE-PLAYER:#Either play against other humans or CPU. If you complete "
+"multiple lines they'll be send to your opponents according to the "
+"multiplayer settings you made.##And in DEMO you can see your CPU do the "
+"work. So relax! ;-)"
+msgstr ""
+"Ha 3 tipos de jogos:##CLASSICO:#O jogo tetris classico. Comeca com um chao "
+"vazio e continua enquanto que voce aguentar.#FIGURAS:#Em cada nivel uma "
+"linda figura vai ser metida no chao. Nos niveis 7-12 vao aparecer "
+"aleotoriamente pecas e a partir do nivel 13-... vao aparecer aleatoriamente "
+"linhas inteiras no chao. Giro!#2/3 JOGADORES:#Joga contra outros jogadores "
+"ou CPU. Se completar linhas multiplas vao ser enviadas para os seus "
+"adversarios seguinte a regras de multi-jogadores que voce escolher.##E em "
+"DEMONSTRACAO vai poder ver o seu CPU fazer o trabalho. Entao aproveite! ;-)"
+
+#: src/manager.c:99
+msgid ""
+"If you turn this on the background will change every level else it's always "
+"the same."
+msgstr ""
+"Se isto for activado o fundo vai mudar a cada nivel, senao fica sempre igual."
+
+#: src/manager.c:100
+msgid ""
+"If you enable this option the keystate of either the 'Down' key or all the "
+"keys are cleared so you can't accidently move the next block."
+msgstr ""
+"Se isto for activado o estado das teclas e apagado para evitar to mexa por "
+"erro no bloco seguinte."
+
+#: src/manager.c:101
+msgid ""
+"If this is enabled the preview in Two-Player is centered in the middle of "
+"the screen instead that one is drawn at the bottom and one at the top."
+msgstr ""
+"Se isto for activado a previsualisacao em modo 2 Jogadores e centrada no "
+"meio do ecra no inves de ser uma em baixo e outra em cima."
+
+#: src/manager.c:102
+msgid ""
+"This option is only useful when 'Graphics/Drop' is 'Smooth'#(In opposite to "
+"'Tile-By-Tile' the block is inserted as soon as it hits the ground giving no "
+"possibility to move the block below another one.)#If you set this option to "
+"'Async' you may move the block below others but on the cost of slight "
+"graphical errors."
+msgstr ""
+"Esta opcao so faz sentido se 'Graficos/Mover' esta em 'Suave'#(Na contrario "
+"do Passo-a-Passo os blocos sao inseridos mal tocam no chao, ficando "
+"impossivel mover o bloco debaixo doutro.)#Se voce escolher 'Asinc' vai poder "
+"mover o bloco debaixo de outro, ao preco de alguns erros visuais."
+
+#: src/manager.c:107
+msgid ""
+"In expert mode the propabilities for the next blocks are uneven to give a "
+"block that is most likely difficult to fit anywhere. The game becomes really "
+"hard by this so all score is doubled in the end."
+msgstr ""
+"Em modo perito a probabilidade de obter um bloco que nao cabe bem e "
+"superior. O jogo fica muito mais dificil por isso todas as pontuacoes sao "
+"dobradas no fim."
+
+#: src/manager.c:110
+msgid ""
+"If ON all players will get exactly the same blocks. So there is no "
+"disadvantage to any player due to random blocks. This does not work in "
+"expert mode as the block selection depends on your actions there."
+msgstr ""
+"Se ACTIVADO todos os jogadores vao obter exactamente os mesmos blocos. Assim "
+"nao havera desvantagem para algum jogador devido aos blocos aleatorios. Isto "
+"nao funciona em modo perito pois neste mode a seleccao dos blocos depende "
+"das suas accoes."
+
+#: src/manager.c:139 src/manager.c:140
+msgid "<CREATE SET>"
+msgstr "<CREATE SET>"
+
+#: src/manager.c:140
+#, c-format
+msgid "You cannot delete '%s'!\n"
+msgstr "Voce nao pode apagar '%s'!\n"
+
+#: src/manager.c:209
+msgid "No Limit"
+msgstr "Sem Limite"
+
+#: src/manager.c:209
+msgid "50 FPS"
+msgstr "50 IPS"
+
+#: src/manager.c:209
+msgid "100 FPS"
+msgstr "100 IPS"
+
+#: src/manager.c:209
+msgid "200 FPS"
+msgstr "200 IPS"
+
+#: src/manager.c:210
+msgid "Defensive"
+msgstr "Defensivo"
+
+#: src/manager.c:210
+msgid "Normal"
+msgstr "Normal"
+
+#: src/manager.c:210
+msgid "Aggressive"
+msgstr "Agressivo"
+
+#: src/manager.c:210
+msgid "Kamikaze"
+msgstr "Doido"
+
+#: src/manager.c:211 src/manager.c:322 src/manager.c:332 src/manager.c:352
+#: src/manager.c:354 src/manager.c:356 src/manager.c:363 src/manager.c:366
+#: src/manager.c:367 src/manager.c:368 src/manager.c:426 src/manager.c:430
+#: src/manager.c:435
+msgid "Off"
+msgstr "Nao"
+
+#: src/manager.c:211
+msgid "Shadow"
+msgstr "Sombra"
+
+#: src/manager.c:211
+msgid "Lines"
+msgstr "Linhas"
+
+#: src/manager.c:212
+msgid "None"
+msgstr "Nenhum"
+
+#: src/manager.c:212 src/value.c:44
+msgid "Down"
+msgstr "Descer"
+
+#: src/manager.c:212
+msgid "All"
+msgstr "Tudo"
+
+#: src/manager.c:278
+msgid "Menu"
+msgstr "Menu"
+
+#: src/manager.c:279 src/manager.c:301 src/manager.c:314
+msgid "Graphics"
+msgstr "Graficos"
+
+#: src/manager.c:280 src/manager.c:295
+msgid "New Game"
+msgstr "Novo Jogo"
+
+#: src/manager.c:281 src/manager.c:300 src/manager.c:313
+msgid "Controls"
+msgstr "Controlo"
+
+#: src/manager.c:282 src/manager.c:375
+msgid "Player1"
+msgstr "Jogador1"
+
+#: src/manager.c:283 src/manager.c:376
+msgid "Player2"
+msgstr "Jogador2"
+
+#: src/manager.c:284 src/manager.c:377
+msgid "Player3"
+msgstr "Jogador3"
+
+#: src/manager.c:285 src/manager.c:359
+msgid "Multiplayer Options"
+msgstr "Opcoes multi-jogadores"
+
+#: src/manager.c:286 src/manager.c:308
+msgid "Advanced Options"
+msgstr "Opcoes Avancadas"
+
+#: src/manager.c:288 src/manager.c:298
+msgid "Options"
+msgstr "Opcoes"
+
+#: src/manager.c:291 src/manager.c:303 src/manager.c:305 src/manager.c:315
+#: src/manager.c:316
+msgid "Audio"
+msgstr "Audio"
+
+#: src/manager.c:310 src/menu.c:171
+msgid "Quit"
+msgstr "Sair"
+
+#: src/manager.c:318 src/manager.c:329 src/manager.c:342 src/manager.c:361
+#: src/manager.c:373 src/manager.c:381 src/manager.c:414 src/manager.c:419
+#: src/manager.c:424 src/manager.c:438 src/menu.c:168
+msgid "Back"
+msgstr "Voltar"
+
+#: src/manager.c:322
+msgid "Sound:"
+msgstr "Som:"
+
+#: src/manager.c:322 src/manager.c:332 src/manager.c:352 src/manager.c:354
+#: src/manager.c:356 src/manager.c:363 src/manager.c:366 src/manager.c:367
+#: src/manager.c:368 src/manager.c:426 src/manager.c:430 src/manager.c:435
+msgid "On"
+msgstr "Sim"
+
+#: src/manager.c:325
+msgid "Volume:"
+msgstr "Nivel:"
+
+#: src/manager.c:332
+msgid "Animations:"
+msgstr "Animacoes:"
+
+#: src/manager.c:333
+msgid "Move:"
+msgstr "Mover:"
+
+#: src/manager.c:333 src/manager.c:334
+msgid "Tile By Tile"
+msgstr "Passo a Passo"
+
+#: src/manager.c:333 src/manager.c:334
+msgid "Smooth"
+msgstr "Suave"
+
+#: src/manager.c:334 src/manager.c:388 src/manager.c:394 src/manager.c:400
+msgid "Drop:"
+msgstr "Largar:"
+
+#: src/manager.c:335
+msgid "Change Background:"
+msgstr "Modificar o Fundo:"
+
+#: src/manager.c:335
+msgid "Yes"
+msgstr "Sim"
+
+#: src/manager.c:335
+msgid "No"
+msgstr "Nao"
+
+#: src/manager.c:337
+msgid "Display:"
+msgstr "Video:"
+
+#: src/manager.c:337
+msgid "Window"
+msgstr "Janela"
+
+#: src/manager.c:337
+msgid "Fullscreen"
+msgstr "Todo o Ecra"
+
+#: src/manager.c:340
+msgid "Frame Rate:"
+msgstr "Velocidade:"
+
+#: src/manager.c:344
+msgid "Start Game"
+msgstr "Iniciar o Jogo"
+
+#: src/manager.c:346
+msgid "1st Player:"
+msgstr "1ro Jogador:"
+
+#: src/manager.c:347
+msgid "2nd Player:"
+msgstr "2do Jogador:"
+
+#: src/manager.c:348
+msgid "3rd Player:"
+msgstr "3ro Jogador:"
+
+#: src/manager.c:350
+msgid "Game:"
+msgstr "Jogo:"
+
+#: src/manager.c:351
+msgid "Starting Level:"
+msgstr "Nivel de Inicio:"
+
+#: src/manager.c:352
+msgid "Preview:"
+msgstr "Antevisao:"
+
+#: src/manager.c:353
+msgid "Help:"
+msgstr "Ajuda:"
+
+#: src/manager.c:354
+msgid "Expert Mode:"
+msgstr "Modo Perito:"
+
+#: src/manager.c:356
+msgid "Slow:"
+msgstr "Lento:"
+
+#: src/manager.c:363
+msgid "Same Blocks For All:"
+msgstr "Blocos Iguais:"
+
+#: src/manager.c:365
+msgid "Holes:"
+msgstr "Buracos:"
+
+#: src/manager.c:366
+msgid "Random Holes:"
+msgstr "Buracos Aleatorios:"
+
+#: src/manager.c:367
+msgid "Send All Lines:"
+msgstr "Enviar Todas Linhas:"
+
+#: src/manager.c:368
+msgid "Always Send Tetris:"
+msgstr "Enviar Tetris:"
+
+#: src/manager.c:370
+msgid "CPU Style:"
+msgstr "Estilo de CPU:"
+
+#: src/manager.c:371
+msgid "CPU Drop Delay:"
+msgstr "Atraso do CPU:"
+
+#: src/manager.c:379
+msgid "Horizontal Delay:"
+msgstr "Atraso Horizontal:"
+
+#: src/manager.c:383 src/manager.c:389 src/manager.c:395
+msgid "Left:"
+msgstr "Esquerda:"
+
+#: src/manager.c:384 src/manager.c:390 src/manager.c:396
+msgid "Right:"
+msgstr "Direita:"
+
+#: src/manager.c:385 src/manager.c:391 src/manager.c:397
+msgid "Rotate Left:"
+msgstr "Rodar Esquerda:"
+
+#: src/manager.c:386 src/manager.c:392 src/manager.c:398
+msgid "Rotate Right:"
+msgstr "Rodar Direita:"
+
+#: src/manager.c:387 src/manager.c:393 src/manager.c:399
+msgid "Down:"
+msgstr "Descer:"
+
+#: src/manager.c:426
+msgid "Quick Help:"
+msgstr "Ajuda Rapida:"
+
+#: src/manager.c:429
+msgid "Clear Keystate:"
+msgstr "Limpar Teclas:"
+
+#: src/manager.c:430
+msgid "Center Preview:"
+msgstr "Centrar Antevisao:"
+
+#: src/manager.c:431
+msgid "Collision Check:"
+msgstr "Testar Colisoes:"
+
+#: src/manager.c:431
+msgid "Sync"
+msgstr "Sinc"
+
+#: src/manager.c:431
+msgid "Async"
+msgstr "Asinc"
+
+#: src/manager.c:434
+msgid "Test CPU Algorithm"
+msgstr "Testar o Algoritmo do CPU"
+
+#: src/manager.c:435
+msgid "Visualization"
+msgstr "Visualizacao"
+
+#: src/tetris.c:129
+msgid "y"
+msgstr ""
+
+#: src/tetris.c:130
+#, fuzzy
+msgid "n"
+msgstr "Sim"
+
+#: src/tetris.c:392
+msgid "End Game? y/n"
+msgstr "Terminar o Jogo? y/n"
+
+#: src/bowl.c:523 src/bowl.c:524
+msgid "Game Over"
+msgstr "Fim do Jogo"
+
+#: src/bowl.c:1233
+#, c-format
+msgid "%i Lvl: %i"
+msgstr "%i Nvl: %i"
+
+#: src/bowl.c:1479
+msgid "Player:"
+msgstr "Jogador:"
+
+#: src/bowl.c:1483
+msgid "Score:"
+msgstr "Pontuacao:"
+
+#: src/bowl.c:1485
+msgid "Lines:"
+msgstr "Linhas:"
+
+#: src/chart.c:187
+msgid "Name      Level    Score"
+msgstr "Nome     Nivel    Pontos"
+
+#: src/chart.c:212
+msgid "Level"
+msgstr "Nivel"
+
+#: src/main.c:66
+msgid "Demo"
+msgstr "Demonstracao"
+
+#: src/main.c:67
+msgid "Classic"
+msgstr "Classico"
+
+#: src/main.c:68
+msgid "Figures"
+msgstr "Figuras"
+
+#: src/main.c:69
+msgid "Vs Human"
+msgstr "Contra 1 Jogador"
+
+#: src/main.c:70
+msgid "Vs CPU"
+msgstr "Contra o CPU"
+
+#: src/main.c:71
+msgid "Vs Human&Human"
+msgstr "Contra 2 Jogadores"
+
+#: src/main.c:72
+msgid "Vs Human&CPU"
+msgstr "Contra Jogador&CPU"
+
+#: src/main.c:73
+msgid "Vs CPU&CPU"
+msgstr "Contra dois CPU"
+
+#: src/value.c:40
+msgid "Space"
+msgstr "Espaco"
+
+#: src/value.c:41
+msgid "Left"
+msgstr "Esquerda"
+
+#: src/value.c:42
+msgid "Right"
+msgstr "Direita"
+
+#: src/value.c:43
+msgid "Up"
+msgstr "Subir"
+
+#: src/value.c:45
+msgid "Right Shift"
+msgstr "Shift Direita"
+
+#: src/value.c:46
+msgid "Left Shift"
+msgstr "Shift Esquerda"
+
+#: src/value.c:47
+msgid "Right Ctrl"
+msgstr "Ctrl Direita"
+
+#: src/value.c:48
+msgid "Left Ctrl"
+msgstr "Ctrl Esquerda"
+
+#: src/value.c:49
+msgid "Right Alt"
+msgstr "Alt Direita"
+
+#: src/value.c:50
+msgid "Left Alt"
+msgstr "Alt Esquerda"
+
+#: src/value.c:51
+msgid "Insert"
+msgstr "Inserir"
+
+#: src/value.c:52
+msgid "End"
+msgstr "Fim"
+
+#: src/value.c:53
+msgid "PageUp"
+msgstr "Pagina Anterior"
+
+#: src/value.c:54
+msgid "PageDown"
+msgstr "Pagina Seguinte"
+
+#: src/value.c:55
+msgid "Home"
+msgstr "Inicio"
+
+#~ msgid "Two-Player"
+#~ msgstr "Dois Jogadores"
+
+#~ msgid "Three-Player"
+#~ msgstr "Tres Jogadores"

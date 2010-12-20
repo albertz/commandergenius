@@ -1,0 +1,88 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(Makefile.am)
+
+AC_CANONICAL_TARGET
+
+AM_CONFIG_HEADER(config.h)
+
+AM_INIT_AUTOMAKE(ltris,1.0.15)
+
+dnl Checks for programs.
+AM_GNU_GETTEXT
+AC_PROG_CC
+AC_PROG_RANLIB
+
+CFLAGS="$CFLAGS -Wall"
+
+dnl Checks for libraries.
+AC_CHECK_LIB(m, main,, AC_MSG_ERROR(lib math is needed))
+
+dnl Check Zarus install
+AC_ARG_ENABLE( zaurus,
+[  --enable-zaurus         Compile for Zaurus], CFLAGS="$CFLAGS -DZAURUS")
+AC_ARG_ENABLE( softfloat,
+[  --enable-softfloat      Use Softfloat for CPUs without FPU], CFLAGS="$CFLAGS -msoft-float"; LIBS="$LIBS $float")
+
+dnl check SDL version
+sdl_flag=""
+AM_PATH_SDL(1.0.0,, AC_MSG_ERROR(lib SDL is needed))
+CFLAGS="$CFLAGS $SDL_CFLAGS"
+LIBS="$LIBS $SDL_LIBS"
+AM_PATH_SDL(1.1.5, sdl_flag="-DSDL_1_1_5",)
+CFLAGS="$CFLAGS $sdl_flag"
+
+dnl check sound
+sound_flag="-DSOUND"
+mixer_flag="-lSDL_mixer"
+
+AC_ARG_ENABLE( sound,
+[  --disable-sound         Disables sound], sound_flag=""; mixer_flag="")
+
+dnl check if SDL_mixer's installed
+dnl if not: clear sound_flag and mixer_flag
+AC_CHECK_LIB(SDL_mixer, main,
+AC_MSG_RESULT("SDL_Mixer found"), 
+AC_MSG_RESULT("SDL_Mixer NOT found: Audio disabled"); sound_flag=""; mixer_flag="")
+
+AC_SUBST(sound_flag)
+AC_SUBST(mixer_flag)
+
+dnl set sound buffer size
+buf_flag="-DAUDIO_BUFFER_SIZE=256"
+AC_ARG_WITH( buffer-size,
+[  --with-buffer-size=BUFSIZE       Set this value to 2048 if you encounter sound delay.],
+buf_flag="-DAUDIO_BUFFER_SIZE=$withval",)
+AC_SUBST(buf_flag)
+
+dnl set localedir
+localedir=$datadir/locale
+locdir_flag="-DLOCALEDIR=\\\"$localedir\\\""
+
+dnl installation path
+inst_dir=$datadir/ltris
+hi_dir=$localstatedir
+
+dnl check if installation was disabled
+dis_flag=""
+AC_ARG_ENABLE( install,
+[  --disable-install           No installation. Played from the source directory.], 
+inst_dir="." hi_dir="." dis_flag="-DDISABLE_INSTALL"
+locdir_flag="-DLOCALEDIR=\\\"../dict\\\"" 
+    rm -rf dict; mkdir dict
+    for lang in `cat po/LINGUAS`; do
+        mkdir dict/$lang; mkdir dict/$lang/LC_MESSAGES
+        ln -s ../../../po/$lang.gmo dict/$lang/LC_MESSAGES/$PACKAGE.mo
+    done
+)
+
+inst_flag="-DSRC_DIR=\\\"$inst_dir\\\""
+hi_inst_flag="-DHI_DIR=\\\"$hi_dir\\\""
+
+AC_SUBST(inst_dir)
+AC_SUBST(hi_dir)
+AC_SUBST(inst_flag)
+AC_SUBST(hi_inst_flag)
+AC_SUBST(dis_flag)
+AC_SUBST(locdir_flag)
+
+AC_OUTPUT(Makefile src/Makefile icons/Makefile src/sounds/Makefile src/gfx/Makefile intl/Makefile po/Makefile.in m4/Makefile )

@@ -1,0 +1,94 @@
+
+                                 LTris
+				
+                        a tetris clone for Linux
+                             by Michael Speck
+			      
+
+********************
+I.   Requirements
+II.  Installation
+III. Troubleshooting
+IV.  Localization
+V.   Feedback
+********************
+
+********************
+I.   Requirements
+********************
+LTris runs in X and uses SDL (any version though >= 1.1.4
+is recommended) and SDL_mixer (optional for sound). Both libraries
+can be found at http://libsdl.org. 
+
+********************
+II.  Installation
+********************
+Enter your favorite shell and type in the following stuff (in the
+directory you extracted the LTris source)
+> ./configure [--disable-sound] [--disable-install] [--disable-nls]
+              [--localstatedir=HIDIR]
+    --disable-sound:       no sound
+    --with-buffer-size:    modify audio buffer size (set this value
+                           to 2048 if you encounter any sound delays)
+    --disable-install:     no installation; play from source directory
+    --localstatedir:       install global highscores to this directory
+                           REPLACES --with-highscore-path TO COMPLY 
+                           WITH AUTOCONF; THE DEFAULT LOCATION NOW 
+                           DEPENDS ON YOUR DISTRIBUTION: PREVIOUSLY 
+                           IT WAS /var/lib/games. USE
+                           --localstatedir=/var/lib/games
+                           FOR EXISTING HIGHSCORES.
+    --disable-nls          disable gettext support
+> make
+> su (become root)
+> make install (if install wasn't disabled)
+> exit (become user again)
+> ltris (run game)
+
+********************
+III. Troubleshooting
+********************
+If you have SDL_mixer installed but configure tells you that it can't 
+find it, remember that you have to install the development package
+for compiling!
+---
+If you can't compile because LTris' timestamps are slightly in 
+the future run 'touchall' (found in the configure directory).
+---
+If the SDL sound seems to be out of sync first try
+to modify the audio buffer by using configure option 
+--with-buffer-size (set to 2048). If this fails set
+SDL_AUDIODRIVER to dma (export SDL_AUDIODRIVER=dma).
+  
+********************
+IV.  Localization
+********************
+This game now supports i18n. If you want to add l10n for your native language,
+please contact me first, to prevent overlapping translations. A thorough
+documentation can be found at 
+  http://www.gnu.org/software/gettext/manual/html_mono/gettext.html
+Basically, you will have to do the following:
+  1) cd po
+  2) add your language code (e.g., de for German) to the existing line in 
+LINGUAS merely separated from the other languages by a blank
+  3) run `msginit -o <LL>.po` with <LL> replaced by your language code
+  4) translate the english message IDs in <LL>.po
+  5) run make <LL>.gmo
+Whenever you change something in your translation you'll have to repeat 
+step 5). I strongly recommend to configure the program with --disable-install
+while working on a translation. Otherwise you'd have to copy and rename the 
+.gmo file as root every time you want to see your changes. If the source has 
+been compiled without installation, only step 5) and simply running the game 
+is required. (Of course, the enviroment variable LANG must be set to your 
+locale.)
+This should suffice. If not, please read the excellent documentation at 
+gnu.org. The fonts do only contain the basic latin letters. No special letters
+(like the german umlauts or any accents for example) are supported, so a l10n 
+should not use them. If a string has a single %, meant as a percent sign, 
+you'll have to manually remove the 'format' comment above the id (if any).
+
+********************
+V.   Feedback
+********************
+LGames URL:  http://lgames.sf.net
+e-Mail:      http://lgames.sf.net/contact.php

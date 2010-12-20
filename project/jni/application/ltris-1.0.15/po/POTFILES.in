@@ -1,0 +1,7 @@
+src/manager.c
+src/tetris.c
+src/bowl.c
+src/menu.c
+src/chart.c
+src/main.c
+src/value.c

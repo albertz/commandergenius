@@ -1,0 +1,746 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Michael Speck
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: LTris 1.0.12 (problem med å,ä och ö)\n"
+"Report-Msgid-Bugs-To: lgames.sf.net/contact.php\n"
+"POT-Creation-Date: 2009-12-25 10:55+0100\n"
+"PO-Revision-Date: 2008-08-26 18:20+0100\n"
+"Last-Translator: Niklas Grahn <raewolusjoon@yahoo.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Swedish\n"
+"X-Poedit-Country: SWEDEN\n"
+
+#: src/manager.c:65
+msgid "Enable/disable these quick hints."
+msgstr "Aktivera/avaktivera dessa snabba ledtraudar."
+
+#: src/manager.c:66
+msgid "Set player controls and horizontal speed."
+msgstr "Konfigurera spelarkontroller och horisontella hastighet."
+
+#: src/manager.c:67
+msgid "Here you may customize the graphical appearance of LTris."
+msgstr "Haer kan du skraeddarsy LTris grafiska utseende."
+
+#: src/manager.c:68
+msgid "Audio Settings."
+msgstr "Ljudinstaellningar."
+
+#: src/manager.c:69
+msgid "Get back to nasty work."
+msgstr "Autergau till otrevligt arbete."
+
+#: src/manager.c:70
+msgid "Setup and run a cool game!"
+msgstr "Ordna och spela ett coolt spel!"
+
+#: src/manager.c:71
+msgid "If animations disturb you you may turn them off."
+msgstr "Om animationerna stoer dig kan du staenga av dem."
+
+#: src/manager.c:72
+msgid "You may play LTris either in window of fullscreen mode."
+msgstr "Du kan spela LTris i antingen foenster- eller helskaermslaege."
+
+#: src/manager.c:73
+msgid ""
+"If you don't want LTris to consume all of your CPU limit the frame rate."
+msgstr ""
+"Om du inte vill att LTris ska kaeka upp all din dators processorkraft kan du "
+"begraensa bildfrekvensen."
+
+#: src/manager.c:74
+msgid ""
+"Horizontally move block either tile-by-tile or smooth. This is just eye-"
+"candy and doesn't effect the moving speed at all."
+msgstr ""
+"Flytta block horisontellt antingen rad-foer-rad eller mjukt. Det haer aer "
+"bara oegongodis och pauverkar inte transporthastigheten alls."
+
+#: src/manager.c:75
+msgid ""
+"Drop block tile-by-tile or smooth.##NOTE: While tile-by-tile allows you to "
+"move a block below a tile multiple times you'll only be able to do so one "
+"time when choosing 'smooth'!#See 'Advanced Options/Collision Check' to "
+"improve this."
+msgstr ""
+"Slaepp block rad-foer-rad eller mjukt.##NOTERA:  Funktionen rad-foer-rad "
+"tillauter dig att flytta ett block nedanfoer en rad flera gaunger men det "
+"kan bara goeras en gaung om du valt 'mjukt'!#Se Avancerade instaellningar/"
+"Kollisonskontroll foer att foerbaettra detta."
+
+#: src/manager.c:76
+msgid ""
+"The less delay you take the faster the block will horizontally move and the "
+"more sensitive the input is handled."
+msgstr ""
+"Ju mindre foerdroejning du anvaender, desto snabbare kommer blocket "
+"horisontellt att roera sig och the more sensitive the input is handled."
+
+#: src/manager.c:77
+msgid ""
+"Each control value needs a unique key for handling.##Left/Right: horizontal "
+"movement#Rotate Left/Right: block rotation#Down: faster Dropping#Drop: "
+"INSTANT drop"
+msgstr ""
+"Varje kontrollvaerde behoever en unik tangentknapp foer att kunna fungera."
+"##Vaenster/hoeger: horisontell foerflyttning#Rotera vaenster/hoeger: "
+"blockrotation#Ned: kvickare slaepp#Slaepp: OMEDELBART slaepp"
+
+#: src/manager.c:78
+msgid "Let's get it on!!!!"
+msgstr "Nu koer vi!!!!"
+
+#: src/manager.c:79
+msgid "Human player names. If you play against CPU it will be named as CPU-x."
+msgstr ""
+"Maenskliga spelarnamn. Om du spelar mot datorn kommer den namnges som CPU-x."
+
+#: src/manager.c:80
+#, c-format
+msgid ""
+"This is your starting level which will be ignored for game 'Figures' (you'll "
+"always start at level 0 there).##Each starting level up adds you 1.5% score "
+"in the end!"
+msgstr ""
+"Detta aer din inledande bana vilken kommer att ignoreras i speltypen "
+"'Figurer' (daer kommer du alltid fau starta pau bana noll).##Each starting "
+"level up adds you 1.5% score in the end!"
+
+#: src/manager.c:81
+#, c-format
+msgid ""
+"Enable/Disable block preview.##If disabled you'll gain 15% score in the end!"
+msgstr ""
+"Enable/Disable block preview.##If disabled you'll gain 15% score in the end!"
+
+#: src/manager.c:82
+#, fuzzy
+msgid ""
+"Shows guiding lines or a shadow of the currently dropping block so you see "
+"where it'll hit the ground.##This option has no penalty/bonus."
+msgstr ""
+"Visar vaegledande linjer eller en skugga av det aktuella fallande blocket "
+"sau att du kan se var det kommer traeffa marken.##Denna instaellning har "
+"ingen malus/bonus."
+
+#: src/manager.c:83
+msgid "Some multiplayer and CPU settings."
+msgstr "Naugra flerspelarlaeges- och datorinstaellningar."
+
+#: src/manager.c:84
+msgid ""
+"A line send to your opponent's bowl will have this number of holes in it. "
+"The more holes the harder it will be to remove this line so you should "
+"choose a low value (e.g. 1 or 2) for long multiplayer games."
+msgstr ""
+"En rad som skickas till din motstaundares skaul kommer ha dessa antalet haul "
+"i sig. Ju fler haul, desto svaurare kommer det bli att fau bort denna rad, "
+"sau du boer vaelja ett laugt vaerde (alltsau 1 eller 2) foer laengre "
+"spelomgaungar i flerspelarlaege."
+
+#: src/manager.c:85
+msgid ""
+"This option controls how the holes in the lines are created when more than "
+"one line is sent. If the option is on, the holes will appear randomly for "
+"each line. If the option is off, all the lines that are sent in one go, will "
+"have the holes in the same spot."
+msgstr ""
+"Denna instaellning kontrollerar hur haulen i raderna skapas dau fler aen en "
+"rad skickas. Om instaellningen anvaends kommer haulen slumpvis uppenbara sig "
+"foer varje rad. Om instaellningen aer avaktiverad kommer alla raderna som "
+"skickas pau en gaung att ha haulen pau samma staelle."
+
+#: src/manager.c:86
+msgid ""
+"You'll have to complete more than one line to send any lines to your "
+"opponent. If this option is enabled all lines will be send else one will be "
+"substracted.##If disabled:#3 Line send -> 2 lines received##If enabled:#3 "
+"lines send -> 3 lines received"
+msgstr ""
+"Du mauste tillintetgoera mer aen en rad foer att kunna skicka oever rader "
+"till din motstaundare. Om denna instaellning aer aktiverad kommer alla rader "
+"utom en att skickas.##Om avaktiverad:#tre rader skickas -> tvau rader "
+"mottages##Om aktiverad:#tre rader skickas -> tre rader mottages"
+
+#: src/manager.c:87
+msgid ""
+"If this option is enabled your opponent will receive all four lines of your "
+"tetris ignoring the 'Send All' setting."
+msgstr ""
+"Om denna instaellning aer aktiverad kommer din motstaundare att fau alla "
+"dina fyra tetrisrader genom att ignorera instaellningen 'Skicka alla'."
+
+#: src/manager.c:88
+msgid ""
+"This is the delay in milliseconds the CPU waits before dropping a block."
+msgstr ""
+"Detta aer foerdroejningen i millisekunder dau datorn vaentar innan den "
+"slaepper ett block."
+
+#: src/manager.c:89
+msgid ""
+"The more aggressive the style is the more priority is put on completing "
+"multiple lines at the expense of a balanced bowl contents."
+msgstr ""
+"Ju aggressivare stilen aer, desto hoegre prioriteras foermaugan att kunna "
+"avlaegsna flertalet rader. Detta sker dock till bekostnad av ett balanserat "
+"skaulinnehaull."
+
+#: src/manager.c:90
+msgid "Some advanced options."
+msgstr "Naugra avancerade instaellningar."
+
+#: src/manager.c:91
+msgid ""
+"Test the CPU analyze algorithm in cpu.c and give an average score for a "
+"number of games."
+msgstr ""
+"Testa datoralgoritmen i cpu.c och ge ett genomsnittligt betyg foer ett antal "
+"spelomgaungar."
+
+#: src/manager.c:92
+msgid ""
+"If you turn visualization off the results will be computed faster. If you "
+"turn them on you can see a general game behaviour and judge the algorithm by "
+"this behaviour."
+msgstr ""
+"Om du avaktiverar visualisering kommer resultaten att beraeknas snabbare. Om "
+"du aktiverar dem kommer du se ett allmaent speluppfoerande och kan dau "
+"bedoema algoritmen utifraun detta."
+
+#: src/manager.c:93
+msgid ""
+"There are basically three different game types:##CLASSIC:#The classic tetris "
+"game. Starts with an empty bowl and goes as long as you make it.#FIGURES:"
+"#Each level a nice figure will be added to the ground of you bowl. From "
+"level 7-12 there will be randomly appearing single tiles and from level "
+"13-... there will be whole lines appearing at the bottom of your bowl. Fun!"
+"#TWO/THREE-PLAYER:#Either play against other humans or CPU. If you complete "
+"multiple lines they'll be send to your opponents according to the "
+"multiplayer settings you made.##And in DEMO you can see your CPU do the "
+"work. So relax! ;-)"
+msgstr ""
+"Det finns i grund och botten tre olika speltyper:##Klassisk:#Det klassiska "
+"tetrisspelet. Startar med en tom skaul och fortsaetter sau laenge du klarar "
+"av det.#FIGURER:#Efter varje bana placeras en laecker figur i botten pau din "
+"skaul. Fraun och med bana 7-12 kommer slumpvisa enskilda rader att uppenbara "
+"sig och efter bana 13-...kommer hela rader att visa sig i botten av din "
+"skaul. Kul!#TVAU/TRE SPELARE:#Spela antingen mot andra maenniskor eller mot "
+"datorn. Ifall du klarar att avlaegsna flertalet rader kommer de skickas "
+"oever till dina motstaundare enligt de flerspelarupplaegg du har skapat."
+"##Och i DEMO kan du se datorn goera jobbet. Sau slappna av! ;-)"
+
+#: src/manager.c:99
+msgid ""
+"If you turn this on the background will change every level else it's always "
+"the same."
+msgstr ""
+"Om du aktiverar den haer kommer bakgrunden aendras efter varje bana, om inte "
+"foerblir den likadan."
+
+#: src/manager.c:100
+msgid ""
+"If you enable this option the keystate of either the 'Down' key or all the "
+"keys are cleared so you can't accidently move the next block."
+msgstr ""
+"Om du aktiverar denna instaellning kommer tangentknappen foer antingen 'Ned' "
+"eller alla tangentknappar att rensas sau du inte oavsiktligt flyttar naesta "
+"block."
+
+#: src/manager.c:101
+msgid ""
+"If this is enabled the preview in Two-Player is centered in the middle of "
+"the screen instead that one is drawn at the bottom and one at the top."
+msgstr ""
+"Om denna instaellning aktiveras kommer foerhandstitten i tvau-spelar-laeget "
+"att centreras i mitten av skaermen istaellet foer i botten och toppen."
+
+#: src/manager.c:102
+msgid ""
+"This option is only useful when 'Graphics/Drop' is 'Smooth'#(In opposite to "
+"'Tile-By-Tile' the block is inserted as soon as it hits the ground giving no "
+"possibility to move the block below another one.)#If you set this option to "
+"'Async' you may move the block below others but on the cost of slight "
+"graphical errors."
+msgstr ""
+"Denna instaellning aer endast anvaendbar naer 'Grafik/Slaepp' aer 'Mjukt'#(i "
+"motsats till 'Rad-foer-rad' laeggs blocken in sau fort som det traeffar "
+"marken vilket hindrar moejligheten att flytta ett block nedanfoer ett annat.)"
+"#Om denna instaellning staells in till 'Async' kan du flytta ett block "
+"nedanfoer andra men till priset av grafiska fel."
+
+#: src/manager.c:107
+msgid ""
+"In expert mode the propabilities for the next blocks are uneven to give a "
+"block that is most likely difficult to fit anywhere. The game becomes really "
+"hard by this so all score is doubled in the end."
+msgstr ""
+"In expert mode the propabilities for the next blocks are uneven to give a "
+"block that is most likely difficult to fit anywhere. The game becomes really "
+"hard by this so all score is doubled in the end."
+
+#: src/manager.c:110
+msgid ""
+"If ON all players will get exactly the same blocks. So there is no "
+"disadvantage to any player due to random blocks. This does not work in "
+"expert mode as the block selection depends on your actions there."
+msgstr ""
+"Om denna aktiveras kommer alla spelare fau exakt likadana block. Pau grund "
+"av slumpvisa block spelar alla pau lika villkor. Detta fungerar inte i "
+"expertlaege eftersom blockurvalet beror vad du goer daer."
+
+#: src/manager.c:139 src/manager.c:140
+msgid "<CREATE SET>"
+msgstr "<SKAPA UPPSAETTNING>"
+
+#: src/manager.c:140
+#, c-format
+msgid "You cannot delete '%s'!\n"
+msgstr "Du kan inte radera '%s'!\n"
+
+#: src/manager.c:209
+msgid "No Limit"
+msgstr "Begraensa ej"
+
+#: src/manager.c:209
+msgid "50 FPS"
+msgstr "50 FPS"
+
+#: src/manager.c:209
+msgid "100 FPS"
+msgstr "100 FPS"
+
+#: src/manager.c:209
+msgid "200 FPS"
+msgstr "200 FPS"
+
+#: src/manager.c:210
+msgid "Defensive"
+msgstr "Defensiv"
+
+#: src/manager.c:210
+msgid "Normal"
+msgstr "Normal"
+
+#: src/manager.c:210
+msgid "Aggressive"
+msgstr "Aggressiv"
+
+#: src/manager.c:210
+msgid "Kamikaze"
+msgstr "Kamikaze (sjaelvmord)"
+
+#: src/manager.c:211 src/manager.c:322 src/manager.c:332 src/manager.c:352
+#: src/manager.c:354 src/manager.c:356 src/manager.c:363 src/manager.c:366
+#: src/manager.c:367 src/manager.c:368 src/manager.c:426 src/manager.c:430
+#: src/manager.c:435
+msgid "Off"
+msgstr "Av"
+
+#: src/manager.c:211
+msgid "Shadow"
+msgstr "Skugga"
+
+#: src/manager.c:211
+msgid "Lines"
+msgstr "Linjer"
+
+#: src/manager.c:212
+msgid "None"
+msgstr "Ingen"
+
+#: src/manager.c:212 src/value.c:44
+msgid "Down"
+msgstr "Ned"
+
+#: src/manager.c:212
+msgid "All"
+msgstr "Alla"
+
+#: src/manager.c:278
+msgid "Menu"
+msgstr "Meny"
+
+#: src/manager.c:279 src/manager.c:301 src/manager.c:314
+msgid "Graphics"
+msgstr "Grafik"
+
+#: src/manager.c:280 src/manager.c:295
+msgid "New Game"
+msgstr "Nytt spel"
+
+#: src/manager.c:281 src/manager.c:300 src/manager.c:313
+msgid "Controls"
+msgstr "Kontroller"
+
+#: src/manager.c:282 src/manager.c:375
+msgid "Player1"
+msgstr "Spelare 1"
+
+#: src/manager.c:283 src/manager.c:376
+msgid "Player2"
+msgstr "Spelare 2"
+
+#: src/manager.c:284 src/manager.c:377
+msgid "Player3"
+msgstr "Spelare 3"
+
+#: src/manager.c:285 src/manager.c:359
+msgid "Multiplayer Options"
+msgstr "Multiplayerinstaellningar"
+
+#: src/manager.c:286 src/manager.c:308
+msgid "Advanced Options"
+msgstr "Avancerade instaelln."
+
+#: src/manager.c:288 src/manager.c:298
+msgid "Options"
+msgstr "Instaellningar"
+
+#: src/manager.c:291 src/manager.c:303 src/manager.c:305 src/manager.c:315
+#: src/manager.c:316
+msgid "Audio"
+msgstr "Ljud"
+
+#: src/manager.c:310 src/menu.c:171
+msgid "Quit"
+msgstr "Avsluta"
+
+#: src/manager.c:318 src/manager.c:329 src/manager.c:342 src/manager.c:361
+#: src/manager.c:373 src/manager.c:381 src/manager.c:414 src/manager.c:419
+#: src/manager.c:424 src/manager.c:438 src/menu.c:168
+msgid "Back"
+msgstr "Tillbaka"
+
+#: src/manager.c:322
+msgid "Sound:"
+msgstr "Ljud:"
+
+#: src/manager.c:322 src/manager.c:332 src/manager.c:352 src/manager.c:354
+#: src/manager.c:356 src/manager.c:363 src/manager.c:366 src/manager.c:367
+#: src/manager.c:368 src/manager.c:426 src/manager.c:430 src/manager.c:435
+msgid "On"
+msgstr "Pau"
+
+#: src/manager.c:325
+msgid "Volume:"
+msgstr "Volym:"
+
+#: src/manager.c:332
+msgid "Animations:"
+msgstr "Animationer:"
+
+#: src/manager.c:333
+msgid "Move:"
+msgstr "Flytta:"
+
+#: src/manager.c:333 src/manager.c:334
+msgid "Tile By Tile"
+msgstr "Rad-foer-rad"
+
+#: src/manager.c:333 src/manager.c:334
+msgid "Smooth"
+msgstr "Mjuk"
+
+#: src/manager.c:334 src/manager.c:388 src/manager.c:394 src/manager.c:400
+msgid "Drop:"
+msgstr "Slaepp:"
+
+#: src/manager.c:335
+msgid "Change Background:"
+msgstr "Aendra bakgrund:"
+
+#: src/manager.c:335
+msgid "Yes"
+msgstr "Ja"
+
+#: src/manager.c:335
+msgid "No"
+msgstr "Nej"
+
+#: src/manager.c:337
+msgid "Display:"
+msgstr "Skaerm:"
+
+#: src/manager.c:337
+msgid "Window"
+msgstr "Foensterlaege"
+
+#: src/manager.c:337
+msgid "Fullscreen"
+msgstr "Helskaermslaege"
+
+#: src/manager.c:340
+msgid "Frame Rate:"
+msgstr "Bildfrekvens:"
+
+#: src/manager.c:344
+msgid "Start Game"
+msgstr "Starta spel"
+
+#: src/manager.c:346
+msgid "1st Player:"
+msgstr "Foersta spelare:"
+
+#: src/manager.c:347
+msgid "2nd Player:"
+msgstr "Andra spelare:"
+
+#: src/manager.c:348
+msgid "3rd Player:"
+msgstr "Tredje spelare:"
+
+#: src/manager.c:350
+msgid "Game:"
+msgstr "Spel:"
+
+#: src/manager.c:351
+msgid "Starting Level:"
+msgstr "Inledande bana:"
+
+#: src/manager.c:352
+msgid "Preview:"
+msgstr "Foerhandstitt:"
+
+#: src/manager.c:353
+msgid "Help:"
+msgstr "Hjaelp:"
+
+#: src/manager.c:354
+msgid "Expert Mode:"
+msgstr "Expertlaege"
+
+#: src/manager.c:356
+msgid "Slow:"
+msgstr "Laungsam:"
+
+#: src/manager.c:363
+msgid "Same Blocks For All:"
+msgstr "Samma block foer alla:"
+
+#: src/manager.c:365
+msgid "Holes:"
+msgstr "Haul:"
+
+#: src/manager.c:366
+msgid "Random Holes:"
+msgstr "Slumpvisa haul:"
+
+#: src/manager.c:367
+msgid "Send All Lines:"
+msgstr "Skicka alla rader:"
+
+#: src/manager.c:368
+msgid "Always Send Tetris:"
+msgstr "Skicka alltid Tetris:"
+
+#: src/manager.c:370
+msgid "CPU Style:"
+msgstr "Datorstil:"
+
+#: src/manager.c:371
+msgid "CPU Drop Delay:"
+msgstr "CPU Drop Delay:"
+
+#: src/manager.c:379
+msgid "Horizontal Delay:"
+msgstr "Horisontell foerdroejning:"
+
+#: src/manager.c:383 src/manager.c:389 src/manager.c:395
+msgid "Left:"
+msgstr "Pil vaenster"
+
+#: src/manager.c:384 src/manager.c:390 src/manager.c:396
+msgid "Right:"
+msgstr "Pil hoeger"
+
+#: src/manager.c:385 src/manager.c:391 src/manager.c:397
+msgid "Rotate Left:"
+msgstr "Rotera vaenster:"
+
+#: src/manager.c:386 src/manager.c:392 src/manager.c:398
+msgid "Rotate Right:"
+msgstr "Rotera hoeger:"
+
+#: src/manager.c:387 src/manager.c:393 src/manager.c:399
+msgid "Down:"
+msgstr "Pil ned:"
+
+#: src/manager.c:426
+msgid "Quick Help:"
+msgstr "Snabbhjaelp:"
+
+#: src/manager.c:429
+msgid "Clear Keystate:"
+msgstr "Rensa tangentkontroll:"
+
+#: src/manager.c:430
+msgid "Center Preview:"
+msgstr "Center Preview:"
+
+#: src/manager.c:431
+msgid "Collision Check:"
+msgstr "Kollisionskontroll:"
+
+#: src/manager.c:431
+msgid "Sync"
+msgstr "Sync"
+
+#: src/manager.c:431
+msgid "Async"
+msgstr "Async"
+
+#: src/manager.c:434
+msgid "Test CPU Algorithm"
+msgstr "Testa datoralgoritm"
+
+#: src/manager.c:435
+msgid "Visualization"
+msgstr "Visualisering"
+
+#: src/tetris.c:129
+msgid "y"
+msgstr "y"
+
+#: src/tetris.c:130
+msgid "n"
+msgstr "n"
+
+#: src/tetris.c:392
+msgid "End Game? y/n"
+msgstr "Avsluta spel? y/n"
+
+#: src/bowl.c:523 src/bowl.c:524
+msgid "Game Over"
+msgstr "Spelet aer slut"
+
+#: src/bowl.c:1233
+#, c-format
+msgid "%i Lvl: %i"
+msgstr "%i Lvl: %i"
+
+#: src/bowl.c:1479
+msgid "Player:"
+msgstr "Spelare:"
+
+#: src/bowl.c:1483
+msgid "Score:"
+msgstr "Poaeng:"
+
+#: src/bowl.c:1485
+msgid "Lines:"
+msgstr "Rader:"
+
+#: src/chart.c:187
+msgid "Name      Level    Score"
+msgstr "Namn      Bana    Poaeng"
+
+#: src/chart.c:212
+msgid "Level"
+msgstr "Bana"
+
+#: src/main.c:66
+msgid "Demo"
+msgstr "Demo"
+
+#: src/main.c:67
+msgid "Classic"
+msgstr "Klassisk"
+
+#: src/main.c:68
+msgid "Figures"
+msgstr "Figurer"
+
+#: src/main.c:69
+msgid "Vs Human"
+msgstr "Vs Maenniska"
+
+#: src/main.c:70
+msgid "Vs CPU"
+msgstr "Vs dator"
+
+#: src/main.c:71
+msgid "Vs Human&Human"
+msgstr "Vs Maenniska&Maenniska"
+
+#: src/main.c:72
+msgid "Vs Human&CPU"
+msgstr "Vs Maenniska&dator"
+
+#: src/main.c:73
+msgid "Vs CPU&CPU"
+msgstr "Vs dator&dator"
+
+#: src/value.c:40
+msgid "Space"
+msgstr "Mellanslag"
+
+#: src/value.c:41
+msgid "Left"
+msgstr "Vaenster"
+
+#: src/value.c:42
+msgid "Right"
+msgstr "Hoeger"
+
+#: src/value.c:43
+msgid "Up"
+msgstr "Upp"
+
+#: src/value.c:45
+msgid "Right Shift"
+msgstr "Hoeger shift"
+
+#: src/value.c:46
+msgid "Left Shift"
+msgstr "Vaenster shift"
+
+#: src/value.c:47
+msgid "Right Ctrl"
+msgstr "Hoeger ctrl"
+
+#: src/value.c:48
+msgid "Left Ctrl"
+msgstr "Vaenster ctrl"
+
+#: src/value.c:49
+msgid "Right Alt"
+msgstr "Hoeger alt"
+
+#: src/value.c:50
+msgid "Left Alt"
+msgstr "Vaenster alt"
+
+#: src/value.c:51
+msgid "Insert"
+msgstr "Insert"
+
+#: src/value.c:52
+msgid "End"
+msgstr "End"
+
+#: src/value.c:53
+msgid "PageUp"
+msgstr "PageUp"
+
+#: src/value.c:54
+msgid "PageDown"
+msgstr "PageDown"
+
+#: src/value.c:55
+msgid "Home"
+msgstr "Home"
+
+#~ msgid "Two-Player"
+#~ msgstr "Tvau spelare"
+
+#~ msgid "Three-Player"
+#~ msgstr "Tre spelare"
