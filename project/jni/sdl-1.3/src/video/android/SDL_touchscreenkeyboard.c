@@ -722,7 +722,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 			// Custom button ordering
 			int iii = ii + i*2;
 			if( ii == 2 )
-				iii = 5 + i;
+				iii = 4 + i;
 			buttons[iii].x = SDL_ANDROID_sWindowWidth - SDL_ANDROID_sWindowWidth / 12 - (SDL_ANDROID_sWindowWidth * ii / 6);
 			buttons[iii].y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowHeight / 8 - (SDL_ANDROID_sWindowHeight * i / 4);
 			buttons[iii].w = SDL_ANDROID_sWindowWidth / (size + 2) / 3;
