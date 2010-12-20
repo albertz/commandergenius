@@ -1,0 +1,2244 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Michael Speck
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://lgames.sf.net/contact.php\n"
+"POT-Creation-Date: 2010-10-05 20:28+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: client/chart.c:159
+#, c-format
+msgid "Converting highscore chart as format changed.\n"
+msgstr ""
+
+#: client/chart.c:168
+#, c-format
+msgid "Highscore chart doesn't exist in '%s'... creating new one.\n"
+msgstr ""
+
+#: client/chart.c:175
+#, c-format
+msgid "Write permission for '%s' denied.\n"
+msgstr ""
+
+#: client/chart.c:206
+#, c-format
+msgid "Unable to access highscore chart in '%s'.\n"
+msgstr ""
+
+#: client/chart.c:207
+#, c-format
+msgid "Trying to use config directory '%s'.\n"
+msgstr ""
+
+#: client/chart.c:209
+#, c-format
+msgid ""
+"Unable to access highscore chart in config directory... won't be able to "
+"save any results. Sorry.\n"
+msgstr ""
+
+#: client/chart.c:214
+#, c-format
+msgid "Saving highscore chart in: %s\n"
+msgstr ""
+
+#: client/chart.c:216 client/chart.c:347
+msgid "Name      Level Score"
+msgstr ""
+
+#: client/chart.c:222
+msgid "name.-----"
+msgstr ""
+
+#: client/chart.c:222
+msgid "Level"
+msgstr ""
+
+#: client/chart.c:259
+#, c-format
+msgid "??? Highscore chart loaded properly but cannot save? (%s)\n"
+msgstr ""
+
+#: client/chart.c:407
+#, c-format
+msgid "First chart query for '%s'. Creating this chart.\n"
+msgstr ""
+
+#: client/chart.c:420
+#, c-format
+msgid "Chart index '%i' is out of range!\n"
+msgstr ""
+
+#: client/client.c:86
+msgid ""
+"Specify the game server as address:port where the address can be a name or a "
+"dotted IP.#If the connection fails have a look at the messages in the chat "
+"window to see the reason."
+msgstr ""
+
+#: client/client.c:264
+msgid "Server:"
+msgstr ""
+
+#: client/client.c:271
+msgid "Username:"
+msgstr ""
+
+#: client/client.c:278 client/client.c:369
+msgid "Connect"
+msgstr ""
+
+#: client/client.c:281 client/client.c:301 client/client.c:395
+#: client/manager.c:767
+msgid "Cancel"
+msgstr ""
+
+#: client/client.c:285 client/client.c:293
+msgid "no info"
+msgstr ""
+
+#: client/client.c:289 client/client.c:407 client/client.c:420
+#: client/client.c:434
+msgid "Close"
+msgstr ""
+
+#: client/client.c:297
+msgid "OK"
+msgstr ""
+
+#: client/client.c:314
+msgid "Send"
+msgstr ""
+
+#: client/client.c:316
+msgid "Whisper"
+msgstr ""
+
+#: client/client.c:324 server/server.c:1108
+msgid "MAIN"
+msgstr ""
+
+#: client/client.c:327
+msgid "C"
+msgstr ""
+
+#: client/client.c:334
+msgid "Levelsets"
+msgstr ""
+
+#: client/client.c:343 client/manager.c:685
+msgid "Difficulty:"
+msgstr ""
+
+#: client/client.c:348
+msgid "Rounds:"
+msgstr ""
+
+#: client/client.c:353
+msgid "Frags:"
+msgstr ""
+
+#: client/client.c:358 client/manager.c:728
+msgid "Balls:"
+msgstr ""
+
+#: client/client.c:365
+msgid "Challenge"
+msgstr ""
+
+#: client/client.c:373 client/manager.c:640
+msgid "Quit"
+msgstr ""
+
+#: client/client.c:377
+msgid "Help"
+msgstr ""
+
+#: client/client.c:384
+msgid "Channel:"
+msgstr ""
+
+#: client/client.c:392
+msgid "Enter"
+msgstr ""
+
+#: client/client.c:399
+msgid "Statistics"
+msgstr ""
+
+#: client/client.c:405 client/client_handlers.c:548
+msgid "Awaiting stats..."
+msgstr ""
+
+#: client/client.c:424
+msgid "Network Quick Help"
+msgstr ""
+
+#: client/client.c:459
+#, c-format
+msgid "Client finalized\n"
+msgstr ""
+
+#: client/client.c:490
+msgid "Press 'Connect' to connect to a game server."
+msgstr ""
+
+#: client/client_data.c:146
+msgid "Challenges"
+msgstr ""
+
+#: client/client_data.c:147
+msgid "Channels"
+msgstr ""
+
+#: client/client_data.c:148
+msgid "Console Commands"
+msgstr ""
+
+#: client/client_data.c:149
+msgid "Game Rules"
+msgstr ""
+
+#: client/client_data.c:150
+msgid "Transfers"
+msgstr ""
+
+#: client/client_data.c:152
+msgid ""
+"To challenge a user you first have to select him/her in the upper right list "
+"and the levelset you want to play from the list below. Then you adjust the "
+"game settings to your likings and hit the 'Challenge' button which will send "
+"your challenge to the other user who will either accept or decline. If (s)he "
+"accepts a direct connection will be established and the game will start."
+"##DIFFICULTY: This influences ball speed, paddle size and score as for "
+"single player modus. (1 = Easy, 2 = Medium, 3 = Hard)##ROUNDS: This is the "
+"number of rounds played per level. Winning a round scores one point and the "
+"player with the most points wins the match.##FRAGS: In a pingpong level (no "
+"bricks) a player gains a frag everytime the opponent looses a ball. 'frag' "
+"is a bad name for this, should be pingpong winning score or something but "
+"'frags' is simply shorter. The player who hits this limit first wins the "
+"round.#In levels with bricks this option is ignored and the level is over "
+"after all bricks were cleared.##BALLS: In a pingpong level (no bricks) each "
+"player may fire multiple balls up to this number. If a player looses a ball "
+"he may fire it again.#In normal levels (with bricks) this option is ignored "
+"and a gets a new ball after five seconds penalty time."
+msgstr ""
+
+#: client/client_data.c:175
+msgid ""
+"To switch a channel hit the 'C' button above the user list. You can enter "
+"either an existing or a new channel. You can only talk to and challenge "
+"users in the same channel."
+msgstr ""
+
+#: client/client_data.c:179
+msgid ""
+"User Console Commands:##/search <USER>#Search for a user in all channels.##/"
+"version#Display version of transmission protocol.##/info#Display current "
+"userlimit and frame rate.##Admin Console Commands:##/admin_says "
+"<MSG>#Broadcast a message to all chatting users.##/kick <USER>#Kick user by "
+"that name.##/addbot <NAME> <SPEED>#Add a paddle bot. The speed is defined in "
+"pixels per second. 800 to 1000 is a good value.##/delbot <NAME>#Delete "
+"paddle bot.##/set <VAR> <VALUE>#Set a variable to a new value:#  userlimit: "
+"is the number of users that may login. If decreased with too many users "
+"online no one is kicked. This limit does not matter for admin login.#  fps: "
+"is how many times a second the server calls up the communication and sends/"
+"receives packets. This should not be too high to prevent network flooding. "
+"40 is a good value.#  packetlimit: if not -1 this is the number of packets "
+"parsed in one communication step. -1 which is the default means the queue is "
+"parsed until empty##/addset <NAME>#Load a new levelset that has been copied "
+"to the levels directory and make it available to the users.##/halt#Halt "
+"server after 5 seconds and inform all users, even the playing ones, about "
+"this."
+msgstr ""
+
+#: client/client_data.c:208
+#, no-c-format
+msgid ""
+"Basically you play the game as in single player mode but their are some "
+"special things you might find useful to know.##PINGPONG:#The point here is "
+"to play it fast and to use all of your balls. Use the right and left mouse "
+"button to fire the balls while moving the paddle. Your opponent will have "
+"trouble to reflect all balls if you do it right. If you are not sure wether "
+"you got balls left click anyway. Keep the button pressed for a while! The "
+"fire rate is restricted to one ball every 500 milliseconds.##NORMAL:#Your "
+"goal here is too gain more score than your opponent to win a round. "
+"Basically you do this by clearing bricks and collecting extras but there are "
+"some other ways as well:#1) To loose a ball means to loose 10% score. After "
+"five seconds penalty a new ball is created and you can continue playing.#2) "
+"Hitting your opponents paddle with the plasma weapon will give you 1000 "
+"points while stealing him/her the same amount.#3) Bonus/penalty magnet will "
+"attract _all_ bonuses/penalties even those released by your opponent.##Note: "
+"If you pause the game by pressing 'p' a chat will pop up and you can talk to "
+"your opponent."
+msgstr ""
+
+#: client/client_data.c:231
+msgid ""
+"You cannot offer someone your levelset unless this user wants to receive "
+"your set which requires the following steps:#1) select the user to whom you "
+"want to listen#2) press the 'L' button above the levelset list#3) wait for "
+"offer or cancel 'listening'#The receiver is now ready and the sender has to:"
+"#1) select the listening user#2) select the levelset (s)he wants to "
+"transfer#3) hit the 'T' button above the levelset list#If the receiver has "
+"this levelset already located in ~/.lgames/lbreakout2-levels and it is up-to-"
+"date the transfer does not take place otherwise the receiver is asked to "
+"confirm and if (s)he does so the set is transferred to the home directory "
+"and directly available if intended for network. (starts with 'MP_')#NOTE: "
+"Only the challenger is required to have the levelset so you don not have to "
+"transfer sets to play with someone. However if your opponent likes your set "
+"and wants to challenge others with it both can engage into a transfer."
+msgstr ""
+
+#: client/client_handlers.c:114
+#, c-format
+msgid "disconnected from %s"
+msgstr ""
+
+#: client/client_handlers.c:151
+#, c-format
+msgid "ERROR: address %s does not resolve"
+msgstr ""
+
+#: client/client_handlers.c:165
+msgid "unused"
+msgstr ""
+
+#: client/client_handlers.c:170
+msgid "connecting"
+msgstr ""
+
+#: client/client_handlers.c:170
+msgid "retry"
+msgstr ""
+
+#: client/client_handlers.c:188
+#, c-format
+msgid "%s: connected!"
+msgstr ""
+
+#: client/client_handlers.c:192
+#, c-format
+msgid "ERROR: connection refused: %s"
+msgstr ""
+
+#: client/client_handlers.c:200
+msgid "ERROR: server does not respond"
+msgstr ""
+
+#: client/client_handlers.c:322
+msgid "You must select a user to whisper!"
+msgstr ""
+
+#: client/client_handlers.c:408
+msgid "You must select a user for a challenge."
+msgstr ""
+
+#: client/client_handlers.c:412
+msgid "You must select a levelset for a challenge."
+msgstr ""
+
+#: client/client_handlers.c:416
+msgid "You can't challenge yourself."
+msgstr ""
+
+#: client/client_handlers.c:439
+#, c-format
+msgid "You have challenged %s. Let's see what (s)he says..."
+msgstr ""
+
+#: client/client_recv.c:128
+#, c-format
+msgid "ERROR: %s"
+msgstr ""
+
+#: client/client_recv.c:135
+#, c-format
+msgid "%s is busy at the moment."
+msgstr ""
+
+#: client/client_recv.c:145 client/comm.c:212
+#, c-format
+msgid "comm_delay set to %i\n"
+msgstr ""
+
+#: client/client_recv.c:233
+#, c-format
+msgid ""
+"    You have been challenged!##    Challenger: %13s#    Levelset:   %13s#    "
+"Difficulty: %13s#    Rounds:     %13i#    Frag Limit: %13i#    Balls:      %"
+"13i"
+msgstr ""
+
+#: client/client_recv.c:249
+#, c-format
+msgid "%s is too scared to accept your challenge."
+msgstr ""
+
+#: client/client_recv.c:256
+#, c-format
+msgid "%s got cold feet."
+msgstr ""
+
+#: client/client_recv.c:313
+#, c-format
+msgid "chat: state %i: invalid message %x: skipping %i bytes\n"
+msgstr ""
+
+#: client/comm.c:221
+msgid "You've been disconnected."
+msgstr ""
+
+#: client/comm.c:245
+msgid "corrupted level data"
+msgstr ""
+
+#: client/comm.c:266
+msgid "Remote player has paused the game."
+msgstr ""
+
+#: client/comm.c:377
+#, c-format
+msgid "game: state %i: invalid message %x: skipping %i bytes\n"
+msgstr ""
+
+#: client/config.c:71
+msgid "Mr.X"
+msgstr ""
+
+#: client/config.c:72
+msgid "Mr.Y"
+msgstr ""
+
+#: client/config.c:73
+msgid "Mr.Z"
+msgstr ""
+
+#: client/config.c:122
+msgid "player"
+msgstr ""
+
+#: client/editor.c:266
+#, c-format
+msgid "Location: %s"
+msgstr ""
+
+#: client/editor.c:270
+#, c-format
+msgid "Current Level: %i/%i (Free: %i)"
+msgstr ""
+
+#: client/editor.c:276
+#, c-format
+msgid "*** Level %i Marked For Swap ***"
+msgstr ""
+
+#: client/editor.c:281
+#, c-format
+msgid "Version: %s "
+msgstr ""
+
+#: client/editor.c:286
+#, c-format
+msgid "Title: %s"
+msgstr ""
+
+#: client/editor.c:289
+#, c-format
+msgid "Author: %s"
+msgstr ""
+
+#: client/editor.c:400
+msgid "noname"
+msgstr ""
+
+#: client/editor.c:400
+msgid "untitled"
+msgstr ""
+
+#: client/editor.c:484
+msgid "Discard All Changes? y/n"
+msgstr ""
+
+#: client/editor.c:494
+msgid "Save Changes? y/n"
+msgstr ""
+
+#: client/editor.c:498
+msgid "Clear Level? y/n"
+msgstr ""
+
+#: client/editor.c:509
+msgid "Add Level? y/n"
+msgstr ""
+
+#: client/editor.c:516
+msgid "Insert Level? y/n"
+msgstr ""
+
+#: client/editor.c:526
+msgid "Delete Level? y/n"
+msgstr ""
+
+#: client/editor.c:548
+msgid "Levelset Version:"
+msgstr ""
+
+#: client/editor.c:641
+msgid "Author's Name:"
+msgstr ""
+
+#: client/editor.c:646
+msgid "Title:"
+msgstr ""
+
+#: client/editor.c:785
+msgid "Quit Editor? y/n"
+msgstr ""
+
+#: client/game.c:314
+#, c-format
+msgid ""
+"%s, you hit %d Jumping Jacks!##Your average ratio: %5d%%#        Your score: "
+"%6d"
+msgstr ""
+
+#: client/game.c:319
+#, c-format
+msgid ""
+"%s, you stopped %d Outbreaks!##Your average ratio: %5d%%#        Your score: "
+"%6d"
+msgstr ""
+
+#: client/game.c:324
+#, c-format
+msgid ""
+"%s, you broke through %d Barriers!##Your average ratio: %5d%%#        Your "
+"score: %6d"
+msgstr ""
+
+#: client/game.c:329
+#, c-format
+msgid "%s, you shot %d Sitting Ducks!##Your score: %6d"
+msgstr ""
+
+#: client/game.c:334
+#, c-format
+msgid ""
+"%s, you hunted down %d bricks!##Your average ratio: %5d%%#        Your "
+"score: %6d"
+msgstr ""
+
+#: client/game.c:339
+#, c-format
+msgid ""
+"%s, you stopped %d waves#killing a total of %d invaders!##Your average "
+"ratio: %5d%%#        Your score: %6d"
+msgstr ""
+
+#: client/game.c:540
+msgid "Pause"
+msgstr ""
+
+#: client/game.c:543
+msgid "You have paused the game."
+msgstr ""
+
+#: client/game.c:583
+msgid ""
+"Quit Game? y/n#(If yes, this game may be resumed later.#No highscore entry "
+"is created yet.)"
+msgstr ""
+
+#: client/game.c:585
+msgid "Quit Game? y/n"
+msgstr ""
+
+#: client/game.c:593
+msgid "Restart Level? y/n"
+msgstr ""
+
+#: client/game.c:642
+msgid "Warp to next level? y/n"
+msgstr ""
+
+#: client/game.c:788
+#, c-format
+msgid ""
+"***** Round %i *****###You control the %s paddle in this level!#To fire a "
+"ball keep the mouse button PRESSED.#Don't just click.###Press any key when "
+"you are ready...###(You can pause the game with 'p' any time.)###NOTE: Due "
+"to latency, bonuses on the server are closer than they appear! I'll try to "
+"work on that."
+msgstr ""
+
+#: client/game.c:793
+msgid "BOTTOM"
+msgstr ""
+
+#: client/game.c:793
+msgid "TOP"
+msgstr ""
+
+#: client/game.c:800
+msgid "DRAW"
+msgstr ""
+
+#: client/game.c:804
+msgid "You have won this round!"
+msgstr ""
+
+#: client/game.c:806
+msgid "You have lost this round."
+msgstr ""
+
+#: client/game.c:829
+#, c-format
+msgid ""
+"             Result: %s              ##                  %12s %"
+"12s##Wins:             %12i %12i#Losses:           %12i %"
+"12i#Draws:            %12i %12i##Total Score:      %12i %12i##Balls "
+"Kept:       %11i%% %11i%%#Bricks Cleared:   %11i%% %11i%%#Extras Collected: %"
+"11i%% %11i%%##(Press SPACE to continue)"
+msgstr ""
+
+#: client/game.c:841
+msgid "VICTORY"
+msgstr ""
+
+#: client/game.c:841
+msgid " DEFEAT"
+msgstr ""
+
+#: client/game.c:841
+msgid "   DRAW"
+msgstr ""
+
+#: client/game.c:873
+#, c-format
+msgid "ERROR: couldn't save game!\n"
+msgstr ""
+
+#: client/game.c:983
+msgid "nobody"
+msgstr ""
+
+#: client/game.c:1046 client/game.c:1261
+msgid "Receiving level data..."
+msgstr ""
+
+#: client/game.c:1200 client/game.c:1258 client/game.c:1458
+msgid "Receiving final stats..."
+msgstr ""
+
+#: client/game.c:1219
+#, c-format
+msgid "Next Player: %s"
+msgstr ""
+
+#: client/game.c:1337
+msgid "You've cleared all levels...#Congratulations!!!"
+msgstr ""
+
+#: client/game.c:1373
+#, c-format
+msgid ""
+"You've lost all lives...#Do you want to buy a continue#for 100%% of your "
+"score? y/n"
+msgstr ""
+
+#: client/game.c:1384
+msgid "Game Over!"
+msgstr ""
+
+#: client/game.c:1411 client/misc.c:149
+msgid "y"
+msgstr ""
+
+#: client/game.c:1411 client/misc.c:150
+msgid "n"
+msgstr ""
+
+#: client/game.c:1470
+#, c-format
+msgid "warp penalty: -%d\n"
+msgstr ""
+
+#: client/game.c:1507
+#, c-format
+msgid "Time: %.2f, Frames: %i -> FPS: %.2f\n"
+msgstr ""
+
+#: client/help.c:48 client/manager.c:623
+msgid "Quick Help"
+msgstr ""
+
+#: client/help.c:63
+#, c-format
+msgid "<ESCAPE>: Quit  <LEFT BUTTON>: Next Page  <RIGHT BUTTON>: Previous Page"
+msgstr ""
+
+#: client/help.c:114
+msgid "Bonuses:"
+msgstr ""
+
+#: client/help.c:115
+msgid "Expand paddle"
+msgstr ""
+
+#: client/help.c:116
+msgid "Extra life"
+msgstr ""
+
+#: client/help.c:117
+msgid "Sticky paddle"
+msgstr ""
+
+#: client/help.c:118
+msgid "Plasma weapon"
+msgstr ""
+
+#: client/help.c:119
+msgid "200 - 10,000 points extra score"
+msgstr ""
+
+#: client/help.c:120
+msgid "Extra ball"
+msgstr ""
+
+#: client/help.c:121
+msgid "Energy balls (penetrate bricks)"
+msgstr ""
+
+#: client/help.c:122
+msgid "Bonus floor"
+msgstr ""
+
+#: client/help.c:123
+msgid "Deccelerate balls to minimum speed"
+msgstr ""
+
+#: client/help.c:124
+msgid "1,000 points extra score from bricks with no bonus"
+msgstr ""
+
+#: client/help.c:125
+msgid "Instantly collect all bonuses and destroy all penalties"
+msgstr ""
+
+#: client/help.c:126
+msgid "Explosive balls"
+msgstr ""
+
+#: client/help.c:127
+msgid "Paddle attracts bonuses"
+msgstr ""
+
+#: client/help.c:131
+msgid "Penalties:"
+msgstr ""
+
+#: client/help.c:132
+msgid "Shrink paddle"
+msgstr ""
+
+#: client/help.c:133
+msgid "Accelerate balls"
+msgstr ""
+
+#: client/help.c:134
+msgid "Freeze paddle"
+msgstr ""
+
+#: client/help.c:135
+msgid "Random ball reflection at bricks"
+msgstr ""
+
+#: client/help.c:136
+msgid "Darkness"
+msgstr ""
+
+#: client/help.c:137
+msgid "Paddle attracts penalties"
+msgstr ""
+
+#: client/help.c:138
+msgid "Paddle disappears when not moving"
+msgstr ""
+
+#: client/help.c:139
+#, no-c-format
+msgid "40% chance that a ball doesn't damage brick"
+msgstr ""
+
+#: client/help.c:169
+msgid "Hints:"
+msgstr ""
+
+#: client/help.c:171
+msgid "<<'In Game'-Keys>>"
+msgstr ""
+
+#: client/help.c:172
+msgid " p      Pause game. (and enter chatroom in network game)"
+msgstr ""
+
+#: client/help.c:173
+msgid " s      Enable/Disable sound."
+msgstr ""
+
+#: client/help.c:174
+msgid " a      Change animation level (off/low/high)."
+msgstr ""
+
+#: client/help.c:175
+msgid " f      Switch fullscreen/windowed mode."
+msgstr ""
+
+#: client/help.c:176
+msgid "        NOTE: Changing resolution takes a while so this is done best"
+msgstr ""
+
+#: client/help.c:177
+msgid "        when game's paused."
+msgstr ""
+
+#: client/help.c:178
+msgid " r      Restart level."
+msgstr ""
+
+#: client/help.c:179
+msgid " d      Disintegrate single bricks. (AddOn's only)"
+msgstr ""
+
+#: client/help.c:180
+msgid ""
+" w      Warp to next level after enough bricks where cleared. (AddOn's only)"
+msgstr ""
+
+#: client/help.c:181
+msgid " Shift  Shows highest score of set instead of your score as long as you"
+msgstr ""
+
+#: client/help.c:182
+msgid "        hold it down."
+msgstr ""
+
+#: client/help.c:183
+msgid " Tab    Take a screenshot."
+msgstr ""
+
+#: client/help.c:184
+msgid " Esc    Quit game."
+msgstr ""
+
+#: client/help.c:186
+msgid "Pressing the left or right mouse button will fire attached balls either"
+msgstr ""
+
+#: client/help.c:187
+msgid ""
+"to the left or right direction if 'Ball Fire Angle' in 'Advanced Options'"
+msgstr ""
+
+#: client/help.c:188
+msgid "is not set to 'Random'."
+msgstr ""
+
+#: client/help.c:209
+msgid "Neutral Power-Ups:"
+msgstr ""
+
+#: client/help.c:211
+msgid "Any of the listed bonuses/penalties."
+msgstr ""
+
+#: client/help.c:212
+msgid "Resets all active bonuses and penalties."
+msgstr ""
+
+#: client/help.c:213
+msgid "Adds 7 seconds to all active bonuses/penalties."
+msgstr ""
+
+#: client/help.c:217
+msgid "Special Bricks:"
+msgstr ""
+
+#: client/help.c:219
+msgid "Indestructible."
+msgstr ""
+
+#: client/help.c:220
+msgid "May only be destroyed by energy ball else it's indestructible."
+msgstr ""
+
+#: client/help.c:221
+msgid "As above and balls are reflected randomly at this brick."
+msgstr ""
+
+#: client/help.c:222
+msgid "Needs three hits to be destroyed."
+msgstr ""
+
+#: client/help.c:223
+msgid "As above and regenerates durability every 4 seconds."
+msgstr ""
+
+#: client/help.c:224
+msgid "Explodes and destroys all nearby bricks."
+msgstr ""
+
+#: client/help.c:225
+msgid "Creates up to 8 bricks on destruction."
+msgstr ""
+
+#: client/help.c:249
+msgid "Troubleshooting:"
+msgstr ""
+
+#: client/help.c:251
+msgid ""
+"* In fullscreen mode the window keeps it size just adding a black frame?"
+msgstr ""
+
+#: client/help.c:252
+msgid "  - Maybe you do not have 640x480 as resolution available? Check your"
+msgstr ""
+
+#: client/help.c:253
+msgid "    X configuration."
+msgstr ""
+
+#: client/help.c:254
+msgid "* Sounds seem to be out of sync and are played with some delay?"
+msgstr ""
+
+#: client/help.c:255
+msgid ""
+"  - Set SDL_AUDIODRIVER to dma (export SDL_AUDIODRIVER=dma). If this results"
+msgstr ""
+
+#: client/help.c:256
+msgid "    in a lot of errors killing artsd (or esd) may help."
+msgstr ""
+
+#: client/help.c:257
+msgid "* LBreakout2 gets mute while playing when switching on/off sounds?"
+msgstr ""
+
+#: client/help.c:258
+msgid ""
+"  - SDL_mixer seems to mute active channels. You shouldn't enable/disable"
+msgstr ""
+
+#: client/help.c:259
+msgid "    sounds to often as you'll propably loose all channels then."
+msgstr ""
+
+#: client/help.c:263
+msgid "Manual:"
+msgstr ""
+
+#: client/help.c:264
+msgid ""
+"This is just a quick help with the most important facts about LBreakout2."
+msgstr ""
+
+#: client/help.c:265
+msgid ""
+"If you want more and better information check out the manual installed to"
+msgstr ""
+
+#: client/help.c:266
+msgid "/usr/doc/lbreakout2 or the online version at http://lgames.sf.net."
+msgstr ""
+
+#: client/help.c:267
+msgid ""
+"And if you have questions (not answered by the manual) or you found a bug"
+msgstr ""
+
+#: client/help.c:268
+msgid "or you just want to drop a general note about LBreakout2 just mail to:"
+msgstr ""
+
+#: client/help.c:269
+msgid "  kulkanie@gmx.net"
+msgstr ""
+
+#: client/help.c:270
+msgid "                         Enjoy the game!"
+msgstr ""
+
+#: client/help.c:271
+msgid "                                                 Michael Speck"
+msgstr ""
+
+#: client/main.c:193
+msgid "Set Name:"
+msgstr ""
+
+#: client/manager.c:58
+msgid "There's nasty work out there waiting for you... better stay here!"
+msgstr ""
+
+#: client/manager.c:59
+msgid ""
+"If you turn animations low there'll be less details which will speed up the "
+"game a great deal."
+msgstr ""
+
+#: client/manager.c:60
+msgid "Enable/disable transparency of bonuses and animations."
+msgstr ""
+
+#: client/manager.c:61
+msgid ""
+"If you disable shadows it will speed up the game but won't look that "
+"good. ;-)"
+msgstr ""
+
+#: client/manager.c:62
+msgid ""
+"If this is enabled you'll see the time left for all bonuses and penalties at "
+"the right side of the screen."
+msgstr ""
+
+#: client/manager.c:63
+msgid ""
+"You may run LBreakout2 either fullscreen or windowed. This switch may be "
+"done anywhere by pressing 'f'."
+msgstr ""
+
+#: client/manager.c:64
+msgid ""
+"You you don't want LBreakout2 to consume all of your CPU (best performance) "
+"limit the frame rate."
+msgstr ""
+
+#: client/manager.c:65
+msgid ""
+"As long as this option is enabled the paddle is treated as convex allowing "
+"easy aiming. If you disable this option the real physics will show up and "
+"you'll have to influence the ball by paddle movement and the hemispherical "
+"ends. For cracks only!"
+msgstr ""
+
+#: client/manager.c:68
+msgid ""
+"If you can't see the ball because of thousands of bonuses coming down set "
+"this option to 'Above Bonuses'"
+msgstr ""
+
+#: client/manager.c:69
+msgid ""
+"If you can't see the ball because of all the debris coming down set this "
+"option to 'Below Balls'"
+msgstr ""
+
+#: client/manager.c:70
+msgid ""
+"Enable/disable these quick hints. See the manual for more information about "
+"how to use LBreakout2!"
+msgstr ""
+
+#: client/manager.c:71
+msgid "Adjust the paddle speed for movement by keys. (pixels per second)"
+msgstr ""
+
+#: client/manager.c:72
+msgid ""
+"These are the number of players and their names. If one player looses a ball "
+"or restarts the level it's the next player's turn."
+msgstr ""
+
+#: client/manager.c:73
+msgid ""
+"KIDS:#Lives: 9 (max. 12)#Paddle Size: 252 (max. 396)#Ball Speed: 100-"
+"200#Bonus: -50% (no penalties, no bad speech)##EASY:#Lives: 6 (max. 9)"
+"#Paddle Size: 72 (max. 180)#Ball Speed: 240-400 pixels/sec#Bonus: -20%"
+"##MEDIUM:#Lives: 5 (max. 7)#Paddle Size: 54 (max. 144)#Ball Speed: 270-430 "
+"pixels/sec##HARD:#Lives: 4 (max. 5)#Paddle Size: 54 (max. 108)#Ball Speed: "
+"300-450 pixels/sec#Bonus: +30%"
+msgstr ""
+
+#: client/manager.c:77
+msgid "Play the original LBreakout2 levelset."
+msgstr ""
+
+#: client/manager.c:78
+msgid "Play the additional levelset selected below."
+msgstr ""
+
+#: client/manager.c:79
+msgid ""
+"This is the list of the levelsets found in ~/.lgames/lbreakout2-levels which "
+"you may edit. If you choose <CREATE SET> and click on 'Edit Set' below "
+"you'll be asked to enter a levelsetname and the new levelset will be saved "
+"in a file by this name."
+msgstr ""
+
+#: client/manager.c:82
+msgid ""
+"Click here to edit the levelset chosen above.##NOTE: To switch to the bonus "
+"set you'll have to right-click on the brick set and vice versa!"
+msgstr ""
+
+#: client/manager.c:83
+msgid "Click here to delete the chosen levelset (after confirmation)."
+msgstr ""
+
+#: client/manager.c:84
+msgid ""
+"If you use the keyboard for input these are the keys for moving the paddle "
+"('Paddle Turbo' will double the speed while pressed.), firing balls/shots "
+"and returning the ball to paddle after a timeout of ten seconds.##Note: If "
+"balls are fired at a random angle (which has become the default) there is no "
+"difference between the left or right fire key. A sticky paddle stops a ball "
+"until any fire button is pressed but the movement angle is the one from the "
+"normal reflection. To reset the movement angle to -50 or +50 degrees check "
+"out 'Ball Fire Angle' in 'Advanced Options'.##While pressed, the 'Ball "
+"Turbo' will bring all balls to the maximum speed defined in 'Advanced "
+"Options'."
+msgstr ""
+
+#: client/manager.c:89
+msgid ""
+"This modifies the relative motion of the mouse. (percent) The higher this "
+"value is the faster the mouse moves."
+msgstr ""
+
+#: client/manager.c:91
+msgid ""
+"If for some reason your mouse movement is inverted you can fix it with this "
+"option."
+msgstr ""
+
+#: client/manager.c:92
+msgid ""
+"If a ball does not damage a brick within ten seconds it is allowed to return "
+"to the paddle. If this option is set to 'Auto' it will automatically return "
+"and if this option is set to 'By Click' you'll have to press the middle "
+"mousebutton or the 'back'-key (default is Backspace)."
+msgstr ""
+
+#: client/manager.c:95
+msgid ""
+"Click here to apply the theme you selected above. Please check the manual at "
+"lgames.sf.net for information on how to create a theme."
+msgstr ""
+
+#: client/manager.c:97
+msgid ""
+"IP address of the game server as xxx.xxx.xxx.xxx.#DO NOT use 'localhost' if "
+"you run the server on your computer. You won't be able to challenge others. "
+"Use your IP queried by /sbin/ifconfig instead."
+msgstr ""
+
+#: client/manager.c:98
+msgid "Port the game server is bound to."
+msgstr ""
+
+#: client/manager.c:99
+msgid ""
+"If you're successfully connected to the game server this is your nickname "
+"there."
+msgstr ""
+
+#: client/manager.c:100
+msgid "Connect to game server."
+msgstr ""
+
+#: client/manager.c:101
+msgid "A local game with up to 4 alternating players."
+msgstr ""
+
+#: client/manager.c:102
+msgid "A two-player or deathmatch game via Internet or LAN."
+msgstr ""
+
+#: client/manager.c:105
+msgid ""
+"This is the levelset you actually want to play. Note, that each levelset got "
+"it's own highscore chart (left/right-click on the chart on the right). A "
+"levelset is either load from ~/.lgames/lbreakout2-levels or the installation "
+"directory."
+msgstr ""
+
+#: client/manager.c:108
+msgid ""
+"This is the list of available themes. Choose any theme and click 'Apply' to "
+"select it"
+msgstr ""
+
+#: client/manager.c:109
+msgid ""
+"After you destroyed this percentage of bricks you MAY warp to the next level "
+"by pressing 'w'. That is indicated by a small icon at the bottom right-hand "
+"side of the screen.#If you set this option to 0 you may instantly warp "
+"whereas 100 means you have to destroy all bricks.##Note, that this option "
+"does not apply for the levelsets 'Original' and 'LBreakout1'!"
+msgstr ""
+
+#: client/manager.c:111
+msgid ""
+"In this menu you can change the appearance of LBreakout. Included to the "
+"release are the three winning themes from the Linux Game Tome contest "
+"'absoluteB','Oz' and 'Moiree' along with the old graphics as theme 'Classic'."
+"#For more themes check out http://lgames.sf.net."
+msgstr ""
+
+#: client/manager.c:112
+msgid ""
+"Linear:#++ There is no chance for balls to get infinitely stuck in a brick "
+"bounce combo.#-- It is quite hard for balls to enter narrow passages."
+"##Spherical:#++ Feels better and balls can easily pass through small gaps."
+"#-- There is a chance for balls to get infinitely stuck within a series of "
+"indestructible brick reflections if the level is too wrinkled. However, with "
+"the auto return option this is no problem so 'Spherical' is the default."
+msgstr ""
+
+#: client/manager.c:118
+msgid ""
+"Network communication is handled by a single UDP socket which will be bound "
+"to this port number."
+msgstr ""
+
+#: client/manager.c:120
+msgid ""
+"If '50' the ball is shot at an angle of 50 degrees to the left or right, "
+"depending on which fire button has been pressed. If it is set to 'random' "
+"the ball is fired at a random angle. In this case a sticky paddle simply "
+"halts the normal reflection until any fire button has been pressed."
+msgstr ""
+
+#: client/manager.c:124
+msgid ""
+"While you keep the middle mouse button pressed (or the acceleration key) all "
+"balls will go this velocity. (in pixels per second)"
+msgstr ""
+
+#: client/manager.c:126
+msgid ""
+"If on, normal levelsets will have a random bonus level every four normal "
+"levels.##Note: You can skip a bonus level any time by loosing the ball. This "
+"will not loose a life but bring you directly to the next level."
+msgstr ""
+
+#: client/manager.c:129
+msgid "Play *ALL* available levels in a random order."
+msgstr ""
+
+#: client/manager.c:130
+msgid "The complete levelset of LBreakout1 with just minor modifications."
+msgstr ""
+
+#: client/manager.c:131
+msgid ""
+"There is only one brick with a limited lifetime. Your task is to hit it "
+"before it vanishes. If you succeed, the brick is reset somewhere else with "
+"less lifetime. If you don't, the game is over. The faster you hit a brick, "
+"the more score you will gain. How much seconds a brick is still there, you "
+"can see at the lower right-hand side of the screen.##Loosing your ball means "
+"going to the next level.##HAVE 'ACC. BALL SPEED' SET TO 900 IN 'ADVANCED "
+"OPTIONS AND MAKE EXCESSIVE USE OF YOUR MIDDLE MOUSE BUTTON! Otherwise you "
+"won't stand a chance as these levels require a lot of skill!"
+msgstr ""
+
+#: client/manager.c:140
+msgid ""
+"Your task is to prevent an outbreak by clearing all bricks. Every few "
+"seconds a new one will appear somewhere, forcing you to act quickly. If you "
+"succeed in clearing a level, it is reset to five bricks, but this time new "
+"ones will spring into existence faster. You loose, if you cannot manage to "
+"clear the screen before 50 bricks were created (which does not mean 50 "
+"bricks are on the screen!). How far you are away from that limit you can see "
+"in the lower right-hand side of the screen. Score is only gained for a "
+"complete clearance, not for destroying single bricks! The farther you are "
+"way from the 50 bricks limit the more it will be.##Loosing your ball means "
+"going to the next level.##HAVE 'ACC. BALL SPEED' SET TO 900 IN 'ADVANCED "
+"OPTIONS AND MAKE EXCESSIVE USE OF YOUR MIDDLE MOUSE BUTTON! Otherwise you "
+"won't stand a chance as these levels require a lot of skill!"
+msgstr ""
+
+#: client/manager.c:153
+msgid ""
+"This time you have to crush through a wall and hit some bricks behind it. If "
+"you succeed the wall is reset and one line bigger next time. The earlier you "
+"manage to break through, the more score you'll get. No surprise, is it? What "
+"makes this fun, is the fact that the wall is moving towards you. If it "
+"reaches your paddle, you are out. Whenever you successfully broke through, "
+"the ball will return the paddle and get attached. You then have to fire it "
+"again. The wall cannot grow bigger than 12 lines. How many lines the barrier "
+"is away from your paddle, is shown in the lower right-hand side of the "
+"screen.##Loosing your ball means going to the next level.##HAVE 'ACC. BALL "
+"SPEED' SET TO 900 IN 'ADVANCED OPTIONS AND MAKE EXCESSIVE USE OF YOUR MIDDLE "
+"MOUSE BUTTON! Otherwise you won't stand a chance as these levels require a "
+"lot of skill!"
+msgstr ""
+
+#: client/manager.c:165
+msgid ""
+"There are eight bricks and the ball is attached in the middle at the "
+"ceiling. When it is released, one brick is highlighted and your task is to "
+"hit this brick. If you manage to do so, you'll get some score and the "
+"situation is reset. If you do not hit the highlighted brick AS THE VERY "
+"FIRST THING, it will be destroyed until all bricks are gone. The more bricks "
+"you hit in a row, the more score you will get for the next one. The score's "
+"worth of the next brick you can see in the lower right-hand side of the "
+"screen.##Loosing your ball means going to the next level."
+msgstr ""
+
+#: client/manager.c:174
+msgid ""
+"Your task is to hunt down bricks by moving a chaos brick indirectly. "
+"Therefore each side of the playing field has a brick color and you can hit "
+"small pads bearing these colors. When you hit one, the chaos brick will move "
+"toward the appropriate side. You must not hit the bordering bricks and you "
+"must get to the brick within a time limit, as always displayed in the lower "
+"right-hand side of the screen. The faster you are, the more score you'll "
+"gain.##Loosing your ball means going to the next level.##HAVE 'ACC. BALL "
+"SPEED' SET TO 900 IN 'ADVANCED OPTIONS AND MAKE EXCESSIVE USE OF YOUR MIDDLE "
+"MOUSE BUTTON! Otherwise you won't stand a chance as these levels require a "
+"lot of skill!"
+msgstr ""
+
+#: client/manager.c:184
+msgid ""
+"Stop the invading brick waves! Each waves consists of 50 bricks which will "
+"get faster and faster. Each brick will give you some score. If you clear the "
+"screen completely, the wave will also be over and you will receive some "
+"extra score depending on the number of remaining wave bricks. One way or the "
+"other, if a wave is over, the next one will start with higher speed and more "
+"score until you let a brick come down to paddle level.##Loosing your ball "
+"means going to the next level.##HAVE 'ACC. BALL SPEED' SET TO 900 IN "
+"'ADVANCED OPTIONS AND MAKE EXCESSIVE USE OF YOUR MIDDLE MOUSE BUTTON! "
+"Otherwise you won't stand a chance as these levels require a lot of skill!"
+msgstr ""
+
+#: client/manager.c:242 client/manager.c:434
+msgid "!JUMPING_JACK!"
+msgstr ""
+
+#: client/manager.c:243 client/manager.c:437
+msgid "!OUTBREAK!"
+msgstr ""
+
+#: client/manager.c:244 client/manager.c:440
+msgid "!BARRIER!"
+msgstr ""
+
+#: client/manager.c:245 client/manager.c:443
+msgid "!SITTING_DUCKS!"
+msgstr ""
+
+#: client/manager.c:246 client/manager.c:446
+msgid "!HUNTER!"
+msgstr ""
+
+#: client/manager.c:247 client/manager.c:449
+msgid "!INVADERS!"
+msgstr ""
+
+#: client/manager.c:376
+#, c-format
+msgid "You cannot delete '%s'!\n"
+msgstr ""
+
+#: client/manager.c:456
+#, c-format
+msgid "%s v%i.%02i#Author: %s"
+msgstr ""
+
+#: client/manager.c:463
+#, c-format
+msgid "No info available."
+msgstr ""
+
+#: client/manager.c:506
+msgid "No Limit"
+msgstr ""
+
+#: client/manager.c:506
+msgid "100 FPS"
+msgstr ""
+
+#: client/manager.c:507 client/manager.c:652 client/manager.c:655
+#: client/manager.c:664 client/manager.c:718 client/manager.c:722
+#: client/manager.c:731 client/manager.c:739
+msgid "Off"
+msgstr ""
+
+#: client/manager.c:507
+msgid "Low"
+msgstr ""
+
+#: client/manager.c:507 client/manager.c:508
+msgid "Medium"
+msgstr ""
+
+#: client/manager.c:507
+msgid "High"
+msgstr ""
+
+#: client/manager.c:508
+msgid "Kids"
+msgstr ""
+
+#: client/manager.c:508
+msgid "Easy"
+msgstr ""
+
+#: client/manager.c:508
+msgid "Hard"
+msgstr ""
+
+#: client/manager.c:603
+msgid "Menu"
+msgstr ""
+
+#: client/manager.c:605 client/manager.c:627
+msgid "Options"
+msgstr ""
+
+#: client/manager.c:607 client/manager.c:630 client/manager.c:644
+msgid "Graphics"
+msgstr ""
+
+#: client/manager.c:608 client/manager.c:619
+msgid "Local Game"
+msgstr ""
+
+#: client/manager.c:609 client/manager.c:629 client/manager.c:643
+msgid "Controls"
+msgstr ""
+
+#: client/manager.c:610 client/manager.c:636
+msgid "Advanced Options"
+msgstr ""
+
+#: client/manager.c:612 client/manager.c:632 client/manager.c:634
+#: client/manager.c:645 client/manager.c:646
+msgid "Audio"
+msgstr ""
+
+#: client/manager.c:614 client/manager.c:638
+msgid "Editor"
+msgstr ""
+
+#: client/manager.c:615 client/manager.c:750
+msgid "Delete Set"
+msgstr ""
+
+#: client/manager.c:616 client/manager.c:671
+msgid "Select Theme"
+msgstr ""
+
+#: client/manager.c:621
+msgid "Network Game"
+msgstr ""
+
+#: client/manager.c:648 client/manager.c:660 client/manager.c:673
+#: client/manager.c:693 client/manager.c:720 client/manager.c:741
+#: client/manager.c:752
+msgid "Back"
+msgstr ""
+
+#: client/manager.c:652
+msgid "Sound:"
+msgstr ""
+
+#: client/manager.c:652 client/manager.c:655 client/manager.c:664
+#: client/manager.c:718 client/manager.c:722 client/manager.c:731
+#: client/manager.c:739
+msgid "On"
+msgstr ""
+
+#: client/manager.c:655
+msgid "Speech:"
+msgstr ""
+
+#: client/manager.c:656
+msgid "Volume:"
+msgstr ""
+
+#: client/manager.c:663
+msgid "Animations:"
+msgstr ""
+
+#: client/manager.c:664
+msgid "Bonus Info:"
+msgstr ""
+
+#: client/manager.c:666
+msgid "Display:"
+msgstr ""
+
+#: client/manager.c:666
+msgid "Window"
+msgstr ""
+
+#: client/manager.c:666
+msgid "Fullscreen"
+msgstr ""
+
+#: client/manager.c:669
+msgid "Frame Rate:"
+msgstr ""
+
+#: client/manager.c:675
+msgid "Resume Last Game"
+msgstr ""
+
+#: client/manager.c:678
+msgid "Start Original Set"
+msgstr ""
+
+#: client/manager.c:679
+msgid "Start AddOn"
+msgstr ""
+
+#: client/manager.c:681
+msgid "AddOn:"
+msgstr ""
+
+#: client/manager.c:687
+msgid "Players:"
+msgstr ""
+
+#: client/manager.c:688
+msgid "1st:"
+msgstr ""
+
+#: client/manager.c:689
+msgid "2nd:"
+msgstr ""
+
+#: client/manager.c:690
+msgid "3rd:"
+msgstr ""
+
+#: client/manager.c:691
+msgid "4th:"
+msgstr ""
+
+#: client/manager.c:695
+msgid "Left:"
+msgstr ""
+
+#: client/manager.c:696
+msgid "Right:"
+msgstr ""
+
+#: client/manager.c:697
+msgid "Left Fire:"
+msgstr ""
+
+#: client/manager.c:698
+msgid "Right Fire:"
+msgstr ""
+
+#: client/manager.c:699
+msgid "Paddle Turbo:"
+msgstr ""
+
+#: client/manager.c:700
+msgid "Ball Turbo:"
+msgstr ""
+
+#: client/manager.c:701
+msgid "Return:"
+msgstr ""
+
+#: client/manager.c:712
+msgid "Key Speed:"
+msgstr ""
+
+#: client/manager.c:715
+msgid "Motion Modifier:"
+msgstr ""
+
+#: client/manager.c:718
+msgid "Invert Motion:"
+msgstr ""
+
+#: client/manager.c:722
+msgid "Convex Paddle:"
+msgstr ""
+
+#: client/manager.c:725
+msgid "Ball Fire Angle:"
+msgstr ""
+
+#: client/manager.c:727
+msgid "Random"
+msgstr ""
+
+#: client/manager.c:728
+msgid "Below Bonuses"
+msgstr ""
+
+#: client/manager.c:728
+msgid "Above Bonuses"
+msgstr ""
+
+#: client/manager.c:729
+msgid "Debris:"
+msgstr ""
+
+#: client/manager.c:729
+msgid "Below Balls"
+msgstr ""
+
+#: client/manager.c:729
+msgid "Above Balls"
+msgstr ""
+
+#: client/manager.c:730
+msgid "Return Balls:"
+msgstr ""
+
+#: client/manager.c:730
+msgid "Auto"
+msgstr ""
+
+#: client/manager.c:730
+msgid "By Click"
+msgstr ""
+
+#: client/manager.c:731
+msgid "Use Hints:"
+msgstr ""
+
+#: client/manager.c:734
+msgid "Warp Limit:"
+msgstr ""
+
+#: client/manager.c:735
+msgid "Local UDP Port:"
+msgstr ""
+
+#: client/manager.c:736
+msgid "Acc. Ball Speed:"
+msgstr ""
+
+#: client/manager.c:739
+msgid "Add Bonus Levels:"
+msgstr ""
+
+#: client/manager.c:744
+msgid "Set:"
+msgstr ""
+
+#: client/manager.c:749
+msgid "Edit Set"
+msgstr ""
+
+#: client/manager.c:754
+msgid "Yes"
+msgstr ""
+
+#: client/manager.c:757
+msgid "No"
+msgstr ""
+
+#: client/manager.c:759
+msgid "Theme:"
+msgstr ""
+
+#: client/manager.c:764
+msgid "Apply"
+msgstr ""
+
+#: client/theme.c:703
+msgid "NO INFO AVAILABLE"
+msgstr ""
+
+#: client/value.c:40
+msgid "Space"
+msgstr ""
+
+#: client/value.c:41
+msgid "Left"
+msgstr ""
+
+#: client/value.c:42
+msgid "Right"
+msgstr ""
+
+#: client/value.c:43
+msgid "Up"
+msgstr ""
+
+#: client/value.c:44
+msgid "Down"
+msgstr ""
+
+#: client/value.c:45
+msgid "Right Shift"
+msgstr ""
+
+#: client/value.c:46
+msgid "Left Shift"
+msgstr ""
+
+#: client/value.c:47
+msgid "Right Ctrl"
+msgstr ""
+
+#: client/value.c:48
+msgid "Left Ctrl"
+msgstr ""
+
+#: client/value.c:49
+msgid "Right Alt"
+msgstr ""
+
+#: client/value.c:50
+msgid "Left Alt"
+msgstr ""
+
+#: client/value.c:51
+msgid "BackSpace"
+msgstr ""
+
+#: client/misc.c:212
+msgid "Waiting for remote answer..."
+msgstr ""
+
+#: client/misc.c:231
+#, no-c-format
+msgid "remote player cancelled the game\n"
+msgstr ""
+
+#: client/misc.c:418
+#, c-format
+msgid "Plane Of Inner Stability entered (Score: %i)"
+msgstr ""
+
+#: client/misc.c:436
+#, no-c-format
+msgid "Disintegrate Brick? (Costs 5% of your score.) y/n"
+msgstr ""
+
+#: common/net.c:68
+#, c-format
+msgid "unable to resolve %s: %s\n"
+msgstr ""
+
+#: common/net.c:172
+#, c-format
+msgid "UDP socket bound to %s:%i\n"
+msgstr ""
+
+#: game/game.c:67
+#, c-format
+msgid "Jumping Jack"
+msgstr ""
+
+#: game/game.c:68 game/game.c:72 game/game.c:76 game/game.c:80 game/game.c:84
+#: game/game.c:88
+#, c-format
+msgid "Bonus Level"
+msgstr ""
+
+#: game/game.c:71
+#, c-format
+msgid "Outbreak"
+msgstr ""
+
+#: game/game.c:75
+#, c-format
+msgid "Barrier"
+msgstr ""
+
+#: game/game.c:79
+#, c-format
+msgid "Sitting Ducks"
+msgstr ""
+
+#: game/game.c:83
+#, c-format
+msgid "Hunter"
+msgstr ""
+
+#: game/game.c:87
+#, c-format
+msgid "Defender"
+msgstr ""
+
+#: game/game.c:91
+#, c-format
+msgid "Unknown Level Type"
+msgstr ""
+
+#: game/levels.h:23
+msgid "<CREATE SET>"
+msgstr ""
+
+#: game/levels.h:24
+msgid "!FREAKOUT!"
+msgstr ""
+
+#: server/server.c:76
+#, c-format
+msgid "server is going down...\n"
+msgstr ""
+
+#: server/server.c:80
+#, c-format
+msgid "SERVER IS GOING DOWN!!!"
+msgstr ""
+
+#: server/server.c:111
+#, c-format
+msgid "channel added: %s\n"
+msgstr ""
+
+#: server/server.c:120
+#, c-format
+msgid "channel deleted: %s (%i users)\n"
+msgstr ""
+
+#: server/server.c:208
+#, c-format
+msgid "user added: %s (%i) from %s\n"
+msgstr ""
+
+#: server/server.c:238
+#, c-format
+msgid "user removed: %s (%i)\n"
+msgstr ""
+
+#: server/server.c:275
+#, c-format
+msgid "You have been kicked! Reason: %s"
+msgstr ""
+
+#: server/server.c:281
+#, c-format
+msgid "user kicked (%s): %s (%i)\n"
+msgstr ""
+
+#: server/server.c:316
+#, c-format
+msgid "you have entered a new channel: %s"
+msgstr ""
+
+#: server/server.c:455
+#, c-format
+msgid "Login data corrupted, please retry."
+msgstr ""
+
+#: server/server.c:460
+msgid "Your username may only contain letters, digits and underscores.\n"
+msgstr ""
+
+#: server/server.c:473
+#, c-format
+msgid "Your protocol is out of date, please update."
+msgstr ""
+
+#: server/server.c:475
+#, c-format
+msgid "Server uses an older protocol (%i), sorry."
+msgstr ""
+
+#: server/server.c:480
+#, c-format
+msgid "Server is full!"
+msgstr ""
+
+#: server/server.c:484
+#, c-format
+msgid "Please enter a name!"
+msgstr ""
+
+#: server/server.c:488
+#, c-format
+msgid "Your name must not contain blanks! (But can have underscores.)"
+msgstr ""
+
+#: server/server.c:491 server/server.c:503
+msgid "admin"
+msgstr ""
+
+#: server/server.c:492
+#, c-format
+msgid "This name is already in use. Please choose another one."
+msgstr ""
+
+#: server/server.c:527
+msgid "1 user online"
+msgstr ""
+
+#: server/server.c:529
+#, c-format
+msgid "%i users online"
+msgstr ""
+
+#: server/server.c:586
+msgid "search"
+msgstr ""
+
+#: server/server.c:588
+msgid "search: specify a user name!"
+msgstr ""
+
+#: server/server.c:592
+msgid "search: user is not online."
+msgstr ""
+
+#: server/server.c:594
+#, c-format
+msgid "search: %s: in channel %s: %s"
+msgstr ""
+
+#: server/server.c:596
+msgid "playing"
+msgstr ""
+
+#: server/server.c:596
+msgid "chatting"
+msgstr ""
+
+#: server/server.c:600
+msgid "version"
+msgstr ""
+
+#: server/server.c:601
+#, c-format
+msgid "transmission protocol: %i"
+msgstr ""
+
+#: server/server.c:604
+msgid "info"
+msgstr ""
+
+#: server/server.c:605
+#, c-format
+msgid "user limit: %i#frame rate: %i#packet limit: %i"
+msgstr ""
+
+#: server/server.c:609
+msgid "addset"
+msgstr ""
+
+#: server/server.c:611
+msgid "addset: name missing"
+msgstr ""
+
+#: server/server.c:627
+#, c-format
+msgid "addset: file %s corrupted"
+msgstr ""
+
+#: server/server.c:630
+#, c-format
+msgid "addset: file %s not found"
+msgstr ""
+
+#: server/server.c:632
+msgid "addbot"
+msgstr ""
+
+#: server/server.c:634
+msgid "addbot: name missing"
+msgstr ""
+
+#: server/server.c:638
+#, c-format
+msgid "addbot: bot '%s' exists"
+msgstr ""
+
+#: server/server.c:642
+msgid "addbot: strength missing"
+msgstr ""
+
+#: server/server.c:648
+msgid "delbot"
+msgstr ""
+
+#: server/server.c:650
+msgid "delbot: name missing"
+msgstr ""
+
+#: server/server.c:654
+#, c-format
+msgid "delbot: bot '%s' not found"
+msgstr ""
+
+#: server/server.c:659
+msgid "set"
+msgstr ""
+
+#: server/server.c:661
+msgid "set: variable missing"
+msgstr ""
+
+#: server/server.c:665
+msgid "set: value missing"
+msgstr ""
+
+#: server/server.c:669
+msgid "userlimit"
+msgstr ""
+
+#: server/server.c:671
+#, c-format
+msgid "userlimit: set to %i"
+msgstr ""
+
+#: server/server.c:674
+msgid "packetlimit"
+msgstr ""
+
+#: server/server.c:676
+#, c-format
+msgid "packetlimit: set to %i"
+msgstr ""
+
+#: server/server.c:679
+msgid "fps"
+msgstr ""
+
+#: server/server.c:682
+#, c-format
+msgid "fps: set to %i"
+msgstr ""
+
+#: server/server.c:691
+msgid "kick"
+msgstr ""
+
+#: server/server.c:693
+msgid "kick: specify a user name!"
+msgstr ""
+
+#: server/server.c:697
+msgid "kick: user is not online."
+msgstr ""
+
+#: server/server.c:706
+#, c-format
+msgid "Sorry, but your opponent has been kicked!"
+msgstr ""
+
+#: server/server.c:714
+#, c-format
+msgid "ADMIN has kicked %s."
+msgstr ""
+
+#: server/server.c:716
+msgid "admin kick"
+msgstr ""
+
+#: server/server.c:720
+msgid "admin_says"
+msgstr ""
+
+#: server/server.c:722
+msgid "info: a message is required!"
+msgstr ""
+
+#: server/server.c:729
+#, c-format
+msgid "ADMIN says: %s"
+msgstr ""
+
+#: server/server.c:732
+msgid "halt"
+msgstr ""
+
+#: server/server.c:736
+#, c-format
+msgid "unknown command: %s"
+msgstr ""
+
+#: server/server.c:771 server/server_game.c:397
+#, c-format
+msgid "%s (%i) disconnected\n"
+msgstr ""
+
+#: server/server.c:802
+#, c-format
+msgid "There is no user by that name."
+msgstr ""
+
+#: server/server.c:821
+#, c-format
+msgid "Channel name must not contain blanks!"
+msgstr ""
+
+#: server/server.c:841
+#, c-format
+msgid "OpenGame message corrupted!"
+msgstr ""
+
+#: server/server.c:843
+#, c-format
+msgid "User with id %i does not exist!"
+msgstr ""
+
+#: server/server.c:850
+#, c-format
+msgid "channel %i: %s: invalid message %x: skipping %i bytes\n"
+msgstr ""
+
+#: server/server.c:913
+msgid "Remote player has disconnected!"
+msgstr ""
+
+#: server/server.c:916
+msgid "zombie"
+msgstr ""
+
+#: server/server.c:981
+#, c-format
+msgid "couldn't open directory %s!\n"
+msgstr ""
+
+#: server/server.c:990
+#, c-format
+msgid "loaded %i levelsets from directory %s\n"
+msgstr ""
+
+#: server/server.c:1000
+#, c-format
+msgid ""
+"Usage:\n"
+"  lbreakout2server\n"
+msgstr ""
+
+#: server/server.c:1001
+#, c-format
+msgid "    [-p <SERVER_PORT>]      Bind server to this port (Default: %i).\n"
+msgstr ""
+
+#: server/server.c:1002
+#, c-format
+msgid ""
+"    [-l <USER_LIMIT>]       Maximum number of users that can login to "
+"server.\n"
+msgstr ""
+
+#: server/server.c:1003
+#, c-format
+msgid ""
+"    [-m <WELCOME_FILE>]     The text in this file is send to new users on "
+"login.\n"
+msgstr ""
+
+#: server/server.c:1004
+#, c-format
+msgid ""
+"    [-a <ADMIN_PWD>]        The user logging in as <ADMIN_PWD> will become\n"
+msgstr ""
+
+#: server/server.c:1005
+#, c-format
+msgid "                            the administrator named 'admin'.\n"
+msgstr ""
+
+#: server/server.c:1009
+#, c-format
+msgid ""
+"    [-f <FRAMERATE>]        Number of send/recv handlings in a second.\n"
+msgstr ""
+
+#: server/server.c:1010
+#, c-format
+msgid "                            (Default: 33)\n"
+msgstr ""
+
+#: server/server.c:1011
+#, c-format
+msgid ""
+"    [-b <BOTNUM>]           Number of paddle bots with 800 and 1000 "
+"strength\n"
+msgstr ""
+
+#: server/server.c:1012
+#, c-format
+msgid "                            each. (Default: 0)\n"
+msgstr ""
+
+#: server/server.c:1044
+#, c-format
+msgid "greetings file not found, setting directly: %s\n"
+msgstr ""
+
+#: server/server.c:1051
+#, c-format
+msgid "greetings loaded: %s\n"
+msgstr ""
+
+#: server/server.c:1084
+#, c-format
+msgid "server halted\n"
+msgstr ""
+
+#: server/server.c:1105
+#, c-format
+msgid "Welcome to LBreakout2 online!"
+msgstr ""
+
+#: server/server.c:1125
+#, c-format
+msgid "user limit is %i\n"
+msgstr ""
+
+#: server/server.c:1126
+#, c-format
+msgid "FPS: %i (delay: %i ms)\n"
+msgstr ""
+
+#: server/server.c:1134
+#, c-format
+msgid "BOT%i-800"
+msgstr ""
+
+#: server/server.c:1139
+#, c-format
+msgid "BOT%i-1000"
+msgstr ""
+
+#: server/server.c:1189
+#, c-format
+msgid "LBreakout2 has been compiled without network support.\n"
+msgstr ""
+
+#: server/server_game.c:301
+#, c-format
+msgid "game added: %s (%i): %i rounds: %s vs. %s\n"
+msgstr ""
+
+#: server/server_game.c:312
+#, c-format
+msgid "game deleted: %s (%i)\n"
+msgstr ""
+
+#: server/server_game.c:394
+msgid "Remote player has disconnected..."
+msgstr ""
+
+#: server/server_game.c:406
+msgid "Remote player has left the game..."
+msgstr ""
+
+#: server/server_game.c:533
+#, c-format
+msgid "game %i: %s: state %i: invalid message %x: skipping %i bytes\n"
+msgstr ""

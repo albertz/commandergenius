@@ -1,0 +1,155 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(Makefile.am)
+
+AC_CANONICAL_TARGET
+
+AC_USE_SYSTEM_EXTENSIONS
+
+AM_CONFIG_HEADER(config.h)
+
+AM_INIT_AUTOMAKE(lbreakout2,2.6.2)
+
+dnl Checks for programs.
+AM_GNU_GETTEXT
+AC_PROG_CC
+AC_PROG_RANLIB
+AC_EXEEXT
+
+dnl Checks for libraries.
+AC_CHECK_LIB(m, main,, AC_MSG_ERROR(lib math is needed))
+AC_CHECK_LIB(z, main,, AC_MSG_ERROR(libz is needed))
+AC_CHECK_LIB(png, main,, AC_MSG_ERROR(libpng is needed))
+
+dnl check SDL version
+AM_PATH_SDL(1.2.0,, AC_MSG_ERROR(lib SDL is needed))
+CFLAGS="$CFLAGS $SDL_CFLAGS"
+LIBS="$LIBS $SDL_LIBS"
+
+dnl check warp mouse flag
+warp_flag=""
+AC_ARG_ENABLE( warp,
+[  --enable-warp               Enable mouse warp (for BeOS and Mac)], warp_flag="-DMOUSE_WARP")
+AC_SUBST(warp_flag)
+
+dnl check sound
+audio_flag="-DAUDIO_ENABLED"
+mixer_flag="-lSDL_mixer"
+AC_ARG_ENABLE( audio,
+[  --disable-audio             Disables Audio], audio_flag=""; mixer_flag="")
+
+dnl check if SDL_mixer's installed
+dnl if not: clear sound_flag and mixer_flag
+AC_CHECK_LIB(SDL_mixer, main,
+AC_MSG_RESULT("SDL_Mixer found"), 
+AC_MSG_RESULT("SDL_Mixer NOT found \(http://libsdl.org\): Audio disabled"); audio_flag=""; mixer_flag="")
+
+AC_SUBST(audio_flag)
+AC_SUBST(mixer_flag)
+
+dnl documentation path
+doc_dir="/usr/doc"
+dnl check if manually overwriting doc path
+AC_ARG_WITH( docdir,
+[  --with-docdir=DPATH       Directory where documentation is saved.],
+doc_dir="$withval",)
+AC_SUBST(doc_dir)
+
+dnl network support
+network_flag="-DNETWORK_ENABLED"
+AC_ARG_ENABLE( network,
+[  --disable-network           No network support.], network_flag="" )
+AC_SUBST(network_flag)
+
+dnl SDL_net usage
+sdlnet_flag=""
+sdlnet_lib_flag=""
+AC_ARG_ENABLE( sdl-net,
+[  --enable-sdl-net           Use SDL_Net for networking.], sdlnet_flag="-DSDL_NET_ENABLED"; sdlnet_lib_flag="-lSDL_net" )
+AC_SUBST(sdlnet_flag)
+AC_SUBST(sdlnet_lib_flag)
+if test "$sdlnet_flag" == "-DSDL_NET_ENABLED" ; then
+  dnl check if SDL_net is installed
+  AC_CHECK_LIB(SDL_net, main,
+  AC_MSG_RESULT("SDL_net found"), 
+  AC_MSG_RESULT("SDL_net NOT found \(http://libsdl.org\): Networking disabled"); sdlnet_flag=""; sdlnet_lib_flag=""; network_flag="")
+fi
+
+dnl network debug
+netdebug_flag=""
+AC_ARG_ENABLE( netdebug,
+[  --enable-netdebug           Enable net packet debugging.], netdebug_flag="-DNET_DEBUG_MSG" )
+AC_SUBST(netdebug_flag)
+
+dnl set localedir
+localedir=$datadir/locale
+locdir_flag="-DLOCALEDIR=\\\"$localedir\\\""
+
+dnl installation&highscore path
+inst_dir="$datadir/lbreakout2"
+hi_dir=$localstatedir
+
+dnl check if installation was disabled
+AC_ARG_ENABLE( install,
+[  --disable-install           No installation. Played from the source directory.], 
+inst_dir="." hi_dir="." 
+locdir_flag="-DLOCALEDIR=\\\"../dict\\\"" 
+    rm -rf dict; mkdir dict
+    for lang in `cat po/LINGUAS`; do
+        mkdir dict/$lang; mkdir dict/$lang/LC_MESSAGES
+        ln -s ../../../po/$lang.gmo dict/$lang/LC_MESSAGES/$PACKAGE.mo
+    done
+)
+
+inst_flag="-DSRC_DIR=\\\"$inst_dir\\\""
+hi_inst_flag="-DHI_DIR=\\\"$hi_dir\\\""
+
+AC_SUBST(inst_flag)
+AC_SUBST(hi_inst_flag)
+AC_SUBST(inst_dir)
+AC_SUBST(hi_dir)
+AC_SUBST(locdir_flag)
+
+case "$host" in
+	*-mingw32)
+		win32="yes"
+		win32_inst_script="`pwd -W`/installer.iss"
+		arch_flag="-march=i586"
+		win32_deps="lbreakout2res.o" ;;
+	*) 
+		win32="no"
+		win32_inst_script=""
+		arch_flag=""
+		win32_deps="" ;;	
+esac
+
+AC_SUBST(win32_deps)
+AC_SUBST(arch_flag)
+
+if test "x$win32" = xyes; then 
+	AC_PROG_AWK
+dnl	AC_PROG_STRIP      since SuSE does not know it???
+dnl	AC_PROG_ISCC
+	AC_SUBST(win32_inst_script)
+fi
+
+appname="LBreakout2"
+AC_SUBST(appname)
+
+AC_OUTPUT(  
+Makefile 
+docs/Makefile 
+common/Makefile 
+game/Makefile
+gui/Makefile 
+client/Makefile 
+client/gui_theme/Makefile
+client/gfx/Makefile 
+client/gfx/AbsoluteB/Makefile 
+client/gfx/Oz/Makefile 
+client/gfx/Moiree/Makefile 
+client/gfx/Classic/Makefile 
+client/sounds/Makefile 
+client/levels/Makefile 
+server/Makefile
+server/levels/Makefile
+intl/Makefile po/Makefile.in m4/Makefile)
