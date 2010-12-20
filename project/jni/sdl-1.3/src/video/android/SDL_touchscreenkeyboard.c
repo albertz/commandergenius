@@ -649,7 +649,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	int i, ii;
 	int nbuttons1row, nbuttons2row;
 	touchscreenKeyboardTheme = theme;
-	if( _nbuttons > MAX_BUTTONS )
+	if( _nbuttons >= MAX_BUTTONS )
 		_nbuttons = MAX_BUTTONS;
 	AutoFireButtonsNum = nbuttonsAutoFire;
 	if( AutoFireButtonsNum > MAX_BUTTONS_AUTOFIRE )
@@ -736,6 +736,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		buttons[6].h = SDL_ANDROID_sWindowHeight/10;
 	}
 
+	for( i = 0; i < MAX_BUTTONS; i++ )
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboard(): button %d pos %d %d %d %d", i, (int)buttons[i].x, (int)buttons[i].y, (int)buttons[i].w, (int)buttons[i].h);
 	if( !showArrows )
 	{
 		arrows.w = 0;
@@ -761,6 +763,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		buttonsAutoFireRect[i].x = buttons[i].x - buttons[i].w / 2;
 		buttonsAutoFireRect[i].y = buttons[i].y - buttons[i].h / 2;
 	}
+	for( i = 0; i < MAX_BUTTONS; i++ )
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboard() 2: button %d pos %d %d %d %d", i, (int)buttons[i].x, (int)buttons[i].y, (int)buttons[i].w, (int)buttons[i].h);
 };
 
 
@@ -855,6 +859,7 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	if( buttonId == SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD )
 	{
 		arrows = *pos;
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "SetScreenKeyboardButtonPos(): arrows %dx%d-%dx%d", (int)pos->x, (int)pos->y, (int)pos->w, (int)pos->h);
 		if(touchscreenKeyboardTheme == 0)
 		{
 			prepareFontCharWireframe(FONT_LEFT, arrows.w / 2, arrows.h / 2);
@@ -866,6 +871,7 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	else
 	{
 		buttons[buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0] = *pos;
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "SetScreenKeyboardButtonPos(): button %d %dx%d-%dx%d", buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, (int)pos->x, (int)pos->y, (int)pos->w, (int)pos->h);
 		if(touchscreenKeyboardTheme == 0)
 		{
 			int i = buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
@@ -895,6 +901,7 @@ int SDL_ANDROID_SetScreenKeyboardButtonKey(int buttonId, SDLKey key)
 {
 	if( buttonId < SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 || buttonId > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 || ! key )
 		return 0;
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SetScreenKeyboardButtonKey(): %d %d", buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, key);
 	buttonKeysyms[buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0] = key;
 	return 1;
 };

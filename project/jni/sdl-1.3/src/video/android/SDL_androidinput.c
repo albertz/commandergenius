@@ -1329,6 +1329,7 @@ JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyScreenKb) ( JNIEnv*  env, jobject th
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetKeymapKeyScreenKb) ( JNIEnv*  env, jobject thiz, jint keynum, jint key)
 {
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeSetKeymapKeyScreenKb(): %d %d", keynum, key);
 	if( keynum < 0 || keynum > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 + 4 )
 		return;
 		
@@ -1340,6 +1341,7 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyUsed) ( JNIEnv*  env, jobject thiz, jint keynum, jint used)
 {
 	SDL_Rect rect = {0, 0, 0, 0};
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeSetScreenKbKeyUsed(): %d %d", keynum, used);
 	int key = -1;
 	if( keynum == 0 )
 		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD;

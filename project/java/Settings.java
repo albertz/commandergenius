@@ -1099,7 +1099,7 @@ class Settings
 			nativeSetTouchscreenKeyboardUsed();
 			nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize,
 										Globals.TouchscreenKeyboardTheme,
-										7, // Globals.AppTouchscreenKeyboardKeysAmount, - set later by nativeSetScreenKbKeyUsed()
+										8, // Globals.AppTouchscreenKeyboardKeysAmount, - set later by nativeSetScreenKbKeyUsed()
 										Globals.AppTouchscreenKeyboardKeysAmountAutoFire,
 										1, //Globals.AppNeedsArrowKeys ? 1 : 0,
 										1 ); //Globals.AppNeedsTextInput ? 1 : 0 );
@@ -1113,8 +1113,10 @@ class Settings
 		for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
 		{
 			nativeSetScreenKbKeyUsed(i, Globals.ScreenKbControlsShown[i] ? 1 : 0);
-			if( i >= 2 )
-				nativeSetKeymapKeyScreenKb(i, SDL_Keys.values[Globals.RemapScreenKbKeycode[i-2]]);
+		}
+		for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
+		{
+			nativeSetKeymapKeyScreenKb(i, SDL_Keys.values[Globals.RemapScreenKbKeycode[i]]);
 		}
 
 		String lang = new String(Locale.getDefault().getLanguage());
