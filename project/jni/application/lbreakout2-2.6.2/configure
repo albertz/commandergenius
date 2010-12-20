@@ -11907,20 +11907,20 @@ fi
 
 
 audio_flag="-DAUDIO_ENABLED"
-mixer_flag="-lSDL_mixer"
+mixer_flag="-lsdl_mixer"
 # Check whether --enable-audio was given.
 if test "${enable_audio+set}" = set; then
   enableval=$enable_audio; audio_flag=""; mixer_flag=""
 fi
 
 
-{ echo "$as_me:$LINENO: checking for main in -lSDL_mixer" >&5
-echo $ECHO_N "checking for main in -lSDL_mixer... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking for main in -lsdl_mixer" >&5
+echo $ECHO_N "checking for main in -lsdl_mixer... $ECHO_C" >&6; }
 if test "${ac_cv_lib_SDL_mixer_main+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lSDL_mixer  $LIBS"
+LIBS="-lsdl_mixer  $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -12002,19 +12002,19 @@ sdlnet_flag=""
 sdlnet_lib_flag=""
 # Check whether --enable-sdl-net was given.
 if test "${enable_sdl_net+set}" = set; then
-  enableval=$enable_sdl_net; sdlnet_flag="-DSDL_NET_ENABLED"; sdlnet_lib_flag="-lSDL_net"
+  enableval=$enable_sdl_net; sdlnet_flag="-DSDL_NET_ENABLED"; sdlnet_lib_flag="-lsdl_net"
 fi
 
 
 
 if test "$sdlnet_flag" == "-DSDL_NET_ENABLED" ; then
-    { echo "$as_me:$LINENO: checking for main in -lSDL_net" >&5
-echo $ECHO_N "checking for main in -lSDL_net... $ECHO_C" >&6; }
+    { echo "$as_me:$LINENO: checking for main in -lsdl_net" >&5
+echo $ECHO_N "checking for main in -lsdl_net... $ECHO_C" >&6; }
 if test "${ac_cv_lib_SDL_net_main+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lSDL_net  $LIBS"
+LIBS="-lsdl_net  $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
