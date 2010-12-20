@@ -16,6 +16,13 @@
  *
  */
 
+/* Outputting anything to cout/cerr WILL CRASH YOUR PROGRAM on specific devices -
+   x5a/x6d Android 2.1 tablet, and some other tablets,
+   however the same code runs on my HTC Evo without problem.
+   So I've just disabled them altogether.
+*/
+#ifndef ANDROID
+
 #include "stlport_prefix.h"
 
 #include <istream>
@@ -56,29 +63,6 @@ using _STLP_VENDOR_CSTD::_streams;
 //  (3) Create streambufs for the global stream objects, and initialize
 //      the stream objects by calling the init() member function.
 
-#if defined (ANDROID_NO_COUT)
-/* Outputting anything to cout/cerr WILL CRASH YOUR PROGRAM on specific devices -
-   x5a/x6d Android 2.1 tablet, and some other tablets,
-   however the same code runs on my HTC Evo without problem.
-   So I've just disabled cin/cout/cerr altogether.
-*/
-
-long ios_base::Init::_S_count = 0;
-
-ios_base::Init::Init() {
-  if (_S_count++ == 0) {
-    _Locale_init();
-    _Filebuf_base::_S_initialize();
-  }
-}
-
-ios_base::Init::~Init() {
-  if (--_S_count == 0) {
-    _Locale_final();
-  }
-}
-
-#else
 
 #if defined (_STLP_USE_NOT_INIT_SEGMENT)
 
@@ -416,9 +400,9 @@ bool _STLP_CALL ios_base::sync_with_stdio(bool sync) {
   return was_synced;
 }
 
-#endif /* ANDROID */
-
 _STLP_END_NAMESPACE
+
+#endif /* ANDROID */
 
 // Local Variables:
 // mode:C++

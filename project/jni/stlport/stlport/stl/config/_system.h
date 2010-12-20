@@ -66,10 +66,6 @@
 #  elif defined (__HP_aCC)
 #    include <stl/config/_hpacc.h>
 #  endif
-#elif defined (ANDROID) || defined (__ANDROID__)
-   /* Android mobile phone platform. Somewhat but not entirely GNU/Linux-like */
-#  include <stl/config/_android.h>
-#  include <stl/config/_gcc.h>
 #elif defined (linux) || defined (__linux__)
 #  include <stl/config/_linux.h>
 /* Intel's icc define __GNUC__! */
@@ -177,6 +173,10 @@
 #  endif
 
 #  include <stl/config/_windows.h>
+#elif defined (ANDROID)
+   /* Android mobile phone platform. Somewhat but not entirely GNU/Linux-like */
+#  include <stl/config/_android.h>
+#  include <stl/config/_gcc.h>
 #else
 #  error Unknown platform !!
 #endif

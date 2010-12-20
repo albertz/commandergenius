@@ -16,7 +16,7 @@ endif
 
 LOCAL_CFLAGS :=
 
-ifeq ($(CRYSTAX_TOOLCHAIN),)
+ifeq ($(CRYSTAX_TOOLCHAIN)$(NDK_R5_TOOLCHAIN),)
 LOCAL_CFLAGS += -I$(LOCAL_PATH)/../stlport/stlport
 endif
 
@@ -40,7 +40,11 @@ LOCAL_SHARED_LIBRARIES := sdl-$(SDL_VERSION) $(filter-out $(APP_AVAILABLE_STATIC
 
 LOCAL_STATIC_LIBRARIES := $(filter $(APP_AVAILABLE_STATIC_LIBS), $(COMPILED_LIBRARIES))
 
+ifneq ($(NDK_R5_TOOLCHAIN),)
 LOCAL_STATIC_LIBRARIES += stlport
+else
+LOCAL_SHARED_LIBRARIES += stlport_shared
+endif
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
 ifneq ($(NDK_R5_TOOLCHAIN),)
@@ -49,6 +53,8 @@ endif
 LOCAL_LDFLAGS := -Lobj/local/armeabi
 
 LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
+
+ifneq (,)
 
 LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
 	for f in $(LOCAL_PATH)/../../obj/local/armeabi/*.so ; do \
@@ -71,6 +77,8 @@ $(info Library $(F) contains symbol names longer than 128 bytes, \
 YOUR CODE WILL DEADLOCK WITHOUT ANY WARNING when you'll access such function - \
 please make this library static to avoid problems. ) )
 $(error Detected libraries with too long symbol names. Remove all files under project/obj/local/armeabi, make these libs static, and recompile)
+endif
+
 endif
 
 APP_LIB_DEPENDS := $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).so)) 

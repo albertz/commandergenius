@@ -9,7 +9,7 @@ $(info Building with CrystaX toolchain - RTTI and exceptions enabled, STLPort di
 CRYSTAX_TOOLCHAIN = 1
 endif
 ifneq ($(findstring android-ndk-r5,$(TARGET_CC)),)
-$(info Building with NDK r5)
+$(info Building with NDK r5 - internal STLPort disabled)
 NDK_R5_TOOLCHAIN = 1
 endif
 
