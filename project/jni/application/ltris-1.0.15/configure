@@ -11913,7 +11913,7 @@ rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
 CFLAGS="$CFLAGS $sdl_flag"
 
 sound_flag="-DSOUND"
-mixer_flag="-lSDL_mixer"
+mixer_flag="-lsdl_mixer"
 
 # Check whether --enable-sound was given.
 if test "${enable_sound+set}" = set; then
@@ -11921,13 +11921,13 @@ if test "${enable_sound+set}" = set; then
 fi
 
 
-{ echo "$as_me:$LINENO: checking for main in -lSDL_mixer" >&5
-echo $ECHO_N "checking for main in -lSDL_mixer... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking for main in -lsdl_mixer" >&5
+echo $ECHO_N "checking for main in -lsdl_mixer... $ECHO_C" >&6; }
 if test "${ac_cv_lib_SDL_mixer_main+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lSDL_mixer  $LIBS"
+LIBS="-lsdl_mixer  $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
