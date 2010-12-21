@@ -54,7 +54,7 @@ SDL_Surface *clean_alpha(SDL_Surface *s)
 	}
 
 	SDL_LockSurface(work);
-	pixels = work->pixels;
+	pixels = (Uint32 *)work->pixels;
 	pp = work->pitch / sizeof(Uint32);
 	for(y = 0; y < work->h; ++y)
 		for(x = 0; x < work->w; ++x)
@@ -179,7 +179,7 @@ void print_num(SDL_Surface *dst, SDL_Surface *font, int x, int y, float value)
 ballfield_t *ballfield_init(void)
 {
 	int i;
-	ballfield_t *bf = calloc(sizeof(ballfield_t), 1);
+	ballfield_t *bf = (ballfield_t *)calloc(sizeof(ballfield_t), 1);
 	if(!bf)
 		return NULL;
 	for(i = 0; i < BALLS; ++i)
@@ -210,7 +210,7 @@ static int ballfield_init_frames(ballfield_t *bf)
 	/*
 	 * Set up source rects for all frames
 	 */
-	bf->frames = calloc(sizeof(SDL_Rect), bf->gfx[0]->w);
+	bf->frames = (SDL_Rect *)calloc(sizeof(SDL_Rect), bf->gfx[0]->w);
 	if(!bf->frames)
 	{
 		fprintf(stderr, "No memory for frame rects!\n");
