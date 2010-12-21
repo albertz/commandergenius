@@ -595,7 +595,8 @@ class Settings
 		
 		final CharSequence[] items = {
 			p.getResources().getString(R.string.controls_screenkb_by, "Ugly Arrows", "pelya"),
-			p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber")
+			p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
+			p.getResources().getString(R.string.controls_screenkb_by, "Simple Theme", "Beholder")
 			};
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -1153,6 +1154,10 @@ class Settings
 			if( Globals.TouchscreenKeyboardTheme == 1 )
 			{
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.ultimatedroid));
+			}
+			if( Globals.TouchscreenKeyboardTheme == 2 )
+			{
+				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.simpletheme));
 			}
 		}
 	}
