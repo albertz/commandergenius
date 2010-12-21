@@ -53,6 +53,8 @@
 // thrown in any case)
 #define _STLP_NEW_DONT_THROW_BAD_ALLOC 1
 
+#define _STLP_NO_LONG_DOUBLE 1
+
 // Use __new_alloc instead of __node_alloc, so we don't need static functions.
 //#define _STLP_USE_SIMPLE_NODE_ALLOC 1
 
@@ -65,17 +67,16 @@
 #define _STLP_NO_VENDOR_MATH_L 1
 
 // Define how to include our native headers.
-#define _STLP_NATIVE_HEADER(header) <../../usr/include/header>
-#define _STLP_NATIVE_C_HEADER(header) <../include/header>
-#define _STLP_NATIVE_CPP_C_HEADER(header) <../../usr/include/header>
-#define _STLP_NATIVE_OLD_STREAMS_HEADER(header) <../../usr/include/header>
-#define _STLP_NATIVE_CPP_RUNTIME_HEADER(header) <../../usr/include/header>
+#if defined(__ANDROID__) /* NDK r5 */
+#  define _STLP_NATIVE_CPP_C_INCLUDE_PATH ../../../cxx-stl/system/include
+#  define _STLP_NATIVE_CPP_RUNTIME_INCLUDE_PATH ../../../cxx-stl/system/include
+#endif
 
 #ifdef __cplusplus
 // Hack to prevent including buggy stl_pair.h system header, introduced in Android 1.6 NDK
 #define _CPP_UTILITY 1
 #define __SGI_STL_INTERNAL_PAIR_H 1
-#include <stddef.h>
+//#include <stddef.h>
 //inline void* operator new(size_t, void* p) { return p; }
 //inline void* operator new[](size_t, void* p) { return p; }
 #endif

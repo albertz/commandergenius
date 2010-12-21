@@ -523,7 +523,7 @@ cat project/src/Globals.java | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
 	sed "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" | \
-	sed "s/public LoadLibrary() .*/public LoadLibrary() { System.loadLibrary(\"stlport_shared\"); $LibrariesToLoad };/" > \
+	sed "s/public LoadLibrary() .*/public LoadLibrary() { $LibrariesToLoad };/" > \
 	project/src/Globals.java.1
 mv -f project/src/Globals.java.1 project/src/Globals.java
 
