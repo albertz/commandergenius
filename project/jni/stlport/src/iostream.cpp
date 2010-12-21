@@ -139,6 +139,8 @@ void outputchar(char c)
 		buf[pos] = 0;
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "%s", buf);
 		pos = 0;
+		buf[pos] = 0;
+		return;
 	};
 	buf[pos] = c;
 	pos++;
