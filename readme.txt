@@ -119,10 +119,7 @@ http://www.crystax.net/android/ndk-r4.php - note however that you cannot throw e
 Unzip it, and put in your PATH instead of original NDK - do not rename the target dir, my makefiles will
 check if there's "crystax" string in path to gcc toolchain, and will disable STLPort because CrystaX
 NDK already contains STL library.
-Additionally, the NDK r5 now contains full support for RTTI/exceptions, however I did not check it yet.
-There is one bug with STLPort - the app crashes when trying to output to std::cout stream
-on SmartQ V7 device, and on x5a/x6d Android 2.1 tablet, so i've disabled cin/cout/cerr totally.
-If you really need them you have to define your own versions, which are initialized after main() has been called.
+Additionally, the NDK r5 now contains full support for RTTI/exceptions, however I did not integrate it yet.
 
 Application data may be bundled with app itself, or downloaded from net on first run.
 Create .ZIP file with your application data, and put it on HTTP server, or to "project/jni/application/src/AndroidData" dir - 
