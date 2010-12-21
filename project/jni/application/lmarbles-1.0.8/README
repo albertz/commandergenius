@@ -1,0 +1,82 @@
+
+			 	 LMarbles
+				 
+			   an Atomix-like game	
+			    by Michael Speck
+
+********************
+I.  Requirements
+II.  Installation
+III. Manual
+IV. Feedback
+********************
+
+********************
+I.   Requirements
+********************
+LMarbles runs in X and requires SDL and SDL_mixer. (both any version)
+
+********************
+II.  Installation
+********************
+Enter your favorite shell and type in the following stuff (in the
+directory you extracted the LBreakout source)
+> ./configure [--disable-sound] [--disable-install] [--enable-ascii]
+              [--localstatedir=HIDIR]
+    --disable-sound:       no sound
+    --disable-install:     no installation; play from source directory
+    --enable-asci:         for big-endian machines
+    --localstatedir:       install global highscores to this directory
+                           REPLACES --with-profile-path TO COMPLY 
+                           WITH AUTOCONF; THE DEFAULT LOCATION NOW 
+                           DEPENDS ON YOUR DISTRIBUTION: PREVIOUSLY 
+                           IT WAS /var/lib/games. USE
+			   --localstatedir=/var/lib/games
+			   FOR EXISTING HIGHSCORES.
+> make
+> su (become root)
+> make install (if install wasn't disabled)
+> exit (become user again)
+> lmarbles
+	
+Building on Win32:
+    1) Install the following win32 tools:
+        MinGW
+        MSYS
+        Inno Setup 2
+    2) Install the following win32 libaries:
+        SDL (you might need to edit sdl-config)
+	SDL_mixer
+    3) From the build root, create win32dll directory and copy the following
+       win32 dlls to it:
+        SDL.dll
+	SDL_mixer.dll
+        msvcrt.dll (freely available from Microsoft)
+    4) configure will need to find SDL.dll. You can either register SDL.dll
+       or simply copy it to the root build directory.
+    5) Setup environment.  To get things to compile, I setup the following
+       environment variables:
+        SDL_CONFIG  - fully qualified path to sdl-config
+        CFLAGS      - tell build process where to find include files
+        LDFLAGS     - tell build process where to find libraries
+        PATH        - ensure that Inno Setup 2 iscc is in the PATH
+    6) Do a full build by issueing the following commands:
+       configure --disable-install
+        make
+    7) Create a win32 installer by issueing the following command:
+        make win32_installer
+
+    You'll find lmarbles-<version>-win32.exe in the build directory.  It
+    is a standalone installer for marbles.
+
+********************
+III. Manual
+********************
+For more information about the game see src/manual/manual.html.
+
+********************
+IV. Feedback
+********************
+Please visit http://lgames.sf.net if you have any suggestions or 
+problems.
+

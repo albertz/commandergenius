@@ -1,0 +1,359 @@
+<!doctype html public "-//w3c//dtd html 4.0//en">
+
+<html>
+
+<head>
+
+<title>LMarbles Manual Page</title>
+
+</head>
+
+<body bgcolor=#cccccc text=#000000 link=#0000ff vlink=#9632aa alink=#ffffff>
+
+<!-- title -->
+<h1 align=center>LMarbles</h1>
+<p align=center>
+Copyright 2000 Michael Speck<br>
+Released under GPL<br><br>
+<hr>
+</p>
+
+<!-- contents -->
+<p>
+<h2><a name="toc"> Table of Contents</a></h2>
+<ol type=I>
+<li><a href="#options">Menu</a></li>
+<li><a href="#game">How To Play</a></li>
+<li><a href="#controls">Controls</a></li>
+<li><a href="#levels">Creating Your Own Levels</a></li>
+</ol>
+<hr>
+</p>
+
+<!-- menu -->
+<h3><a name="options">Menu</a></h3>
+<p>
+<ul type=circle>
+<li><i>[New Game]</i> (submenu)
+  <ul>
+  <li><i>[Start]</i><br>
+  Starts a game.</li>
+  <li><i>[Difficulty]</i><br>
+  <UL>
+  <LI><I>Brainstorm:</I>You play against my solution made after some time passed. 
+  I had to play the levels for real so this is a fair move limit.</LI>
+  <LI><I>Easy:</I> You play against my solution +100% (-20% per chapter).</LI>
+  <LI><I>Normal:</I> You play against my solution +50%moves (-10%per chapter).</LI>
+  <LI><I>Hard:</I>You play against my solution +25% moves (-5% per chapter).</LI>
+  </UL>
+  <I>Hard</I> gives you twice the score and <I>Brainstorm</I> five times
+    the score of a <I>Normal</I> game. <I>Easy</I> cuts your score in half.
+   </li>
+  <li><i>[Levelset]</i><br>
+  Set of levels you want to play (e.g. 'Original').</li>
+  <li><i>[Profile]</i><br>
+  Profile you want to play with (e.g. 'Michael'). Any progress and score will be written to this profile.</li>
+  <li><i>[Edit Profiles]</i> (submenu)
+    <ul>
+    <li><i>[Create Profile]</i> (submenu)<br>
+    Enter a profile name (eg your own name) and simply create it. Now choose this new profile at <i>[New Game]/[Profile]</i>
+    and start the game.
+    </li>
+    <li><i>[Clear Profile]</i> (submenu)<br>
+    This will clear score and any level progress of the choosen profile.
+    </li>
+    <li><i>[Delete Profile]</i> (submenu)<br>
+    This will remove a profile. Of course, a new one using the same name can be recreated (which would be same
+    like simply clear it).
+    </li>
+    </ul>
+  </li>
+  </li>
+  </ul>
+</li>
+<li><i>[Best Profiles]</i><br>
+A list of the ten best players with the following information: name (left side), number of levels finished (middle),
+score (right side), average time needed in percent (in brackets; 100%-not even one second needed(impossible); 0%-every single second has been used).
+</li>
+<li><i>[Options]</i> (submenu)
+  <ul type=circle>
+  <li><i>[Graphics]</i> (submenu) </li>
+    <ul>
+    <li><i>[Animations]</i><br> Enables/Disables animations.</li>
+    <li><i>[Fullscreen]</i><br> Switches between windowed and fullscreen mode.</li>
+    <li><i>[Dim Effect]</i><br> Enables/Disables dim effect. ('Disabled' is recommended when using SDL older than version 1.1.4.)</li>
+    </ul>
+  <li><i>[Audio]</i> (submenu) </li>
+    <ul>
+    <li><i>[Sound]</i><br> Enables/Disables sound.</li>
+    <li><i>[Volume]</i><br> Sets volume of sound.</li>
+    </ul>
+  </ul>
+</li>
+<li><i>[Quit]</i><br>
+Quits the game!
+</li>
+</ul>
+</p>
+<a href="#toc">ToC</a><br><br>
+<hr>
+
+<!-- how to play -->
+<h3><a name="game">How To Play</a></h3>
+<p>
+<p>
+Marbles is very similiar to Atomix and was heavily inspired by it. Goal is to create a more or less
+complex figure out of single marbles within a time limit to reach the next level.<br>
+Sounds easy? Well, there is a problem: If a marble starts to move it will not stop until it hits a
+wall or marble.
+</p>
+<p>
+There are also some obstacles:<br>
+<img src="arrow.jpg" alt="arrow" width=32 height=32><br>
+If a marble moves on such an arrow it will change its direction to the direction the arrow points at.
+If a marble comes from the direction the arrow points at it will stop before the arrow.<br>
+<img src="arrow2.jpg" alt="arrow2" width=32 height=32><br>
+These yellow and black stripes mean this tile can neither be accessed from these sides nor from the side the
+arrow points at. So there is only one way to get past this obstacle.<br>
+<img src="teleport.jpg" alt="teleport" width=32 height=32><br>
+If a marble encounters such a teleport it will teleport to the second one of the same color and keep on moving
+in the same direction.<br>
+<img src="crumble.jpg" alt="crumble" width=32 height=32><br>
+Such a crumbling wall takes one, two or three hits before it vanishes completely. The number of hits left is
+displayed by a small digit in the lower right corner of the crumbling wall.
+</p>
+<P>
+You play against a move limit and you'll gain the following score when you finished
+a level:
+<TABLE border=2 cellpadding=10 cellspacing=0>
+<TR><TD>Difficulty</TD><TD>Level Bonus</TD><TD>Bonus per remaining move</TD><TR>
+<TR><TD>Easy</TD><TD>500</TD><TD>25</TD></TR>
+<TR><TD>Normal</TD><TD>1000</TD><TD>50</TD></TR>
+<TR><TD>Hard</TD><TD>2000</TD><TD>100</TD></TR>
+<TR><TD>Brainstorm</TD><TD>5000</TD><TD>250</TD></TR>
+</TABLE>
+<i>You will <strong>not</strong> gain points twice for the same level!</i></P>
+</P>
+<p>
+If you run Marbles the very first time only one profile (named 'Michael') exists. You probably want to play with
+a profile named like you. How to create and use a new profile is described in <a href="#options">Menu</a>.<br>
+Levels are grouped in chapters and chapters are grouped in levelsets. Right now, Marbles comes with just one
+levelset called 'Original' containing three chapters with ten levels each. Of course, you can <a href="#levels">create your own levelsets</a>.<br>
+<i>You have unlimited tries to solve a level! The order in which you solve levels of one chapter does not matter! There are small lights in the right lower
+corner of the screen of one of the following colors: red(cannot be accessed), orange(can be accessed, not solved yet) and
+green (already solved, you will not gain any score for solving it again). Just click on a light and confirm
+to change the level. To enter a new chapter ALL previous levels have to be solved.</i>
+</p>
+Although the interface is quite intuitive you should take a look at the <a href="#controls">controls</a>.
+</p>
+<a href="#toc">ToC</a><br><br>
+<hr>
+
+<!-- controls -->
+<h3><a name="controls">Controls</a></h3>
+<p>
+Use your mouse to:<br>
+<i>Select a marble:</i> Left-click on it. (You can simply change selection by clicking on another marble)<br>
+<i>Release a marble:</i> Right-click anywhere.<br>
+<i>Move a marble:</i> When you selected a marble move the mouse pointer into the wanted direction. If movement is
+possible the mouse pointer will change into a big arrow pointing into the direction. Then simply left-click.<br>
+<i>Change the level:</i> As written in <a href="#game">'How To Play'</a> these lights in the right lower corner
+represent the levels. Simply left-click on a green or orange one and confirm the change. (If you choose the
+current level (white frame) this will be the same as restarting this level.)<br>
+<i>Confirm:</i> When you quit, restart or change the level you will be asked to confirm first by pressing 'y' or
+'n'. You can do this with left-click(yes) or right-click(no) as well.
+</p>
+<p>
+Important keys:<br>
+[Escape]: Quits the game after confirmation.<br>
+[r]: Restarts level after confirmation.<br>
+[p]: Pauses game.<br>
+[Space]: If you think your last movement was wrong you can restore the old position by pressing Space as
+long as the marble did not hit a crumbling wall (can be redefined in options/controls).<br>
+<br>
+You can use the cursor keys to move a marble (can also be redefined)!<br>
+<br>
+<i>
+If your difficulty is 'Training' press a movement key or left mouse button while a marble is moving to 'warp' it to its destination!
+</i>
+</p>
+<a href="#toc">ToC</a><br><br>
+<hr>
+
+<!-- own levels -->
+<h3><a name="levels">Creating Your Own Levels</a></h3>
+<p>
+As described in <a href="#game">'How To Play'</a> levels are grouped in chapters and chapters are grouped in
+levelsets. A levelset is a file in Marbles' subdirectory 'levels' without any extension. When finished with the
+creation you must become root and copy it to the install directory usually
+/usr/local/share/games/marbles/levels (if you installed marbles). That's it. Of course, you must test and change
+a lot while developing so you should extract Marbles' source somewhere temporary, run configure with the option
+--disable-install which allows you to work in Marbles' temporary 'levels' directory where you can simply edit and test
+your levelset. (the 'levels' directory should already contain a file called 'Original').
+</p>
+<p>
+Once again step by step:
+<ul>
+<li>temporarily extract the source somewhere (e.g. /tmp)</li>
+<li>change to this source directory</li>
+<li>run './configure --disable-install'; 'make' (do not type 'make install'!!!)</li>
+<li>change to ./marbles/levels</li>
+<li>create an empty file without any extension (e.g. 'Brainstorm')</li>
+<li><b>edit this file properly</b> (as described below)</li>
+<li>test it by running Marbles (binary can be found in the parent directory of 'levels')</li>
+<li>when everything works fine, become root and install it to Marbles' install directory (usually
+/usr/local/share/games/marbles/levels - <i>of course, you must have installed Marbles before doing this</i>)
+</ul>
+</p>
+<p>
+When testing your levelsets you should use a separate profile (e.g. called 'Testing').<br>
+If you start creating a new levelset with, say, ten levels per chapter but you have made only one level so
+far Marbles will stop parsing the file and ask for confirmation if you try to start this levelset (press 'y' or
+left-click). All levels before the error can be played without problems but because Marbles stopped parsing
+further levels does not exist. Changing to such a non-existing level might result in an infinite loop. But when
+you are finished with creating your levelset no errors or warnings should occur! (If you run Marbles in an xterm
+errors and warnings will be displayed.)
+</p>
+<p>
+<i>If you have problems writing the file, take a look at 'Original'.</i>
+</p>
+<p>
+<b>How to write the file:</b>
+</p>
+<p>
+<u>Syntax:</u><br>
+<i>&lt;subsection&gt;</i><br> starts a subsection (e.g. &lt;level&gt;)<br>
+<i>&lt;/subsection&gt;</i><br> ends a subsection (e.g. &lt;/level&gt;)<br>
+<i>(comment)</i><br> such a comment <strong>must not</strong> contain any '&lt;' or '&gt;' or ';'<br>
+<i>normal entry;</i><br> (e.g. in subsection map of a level: ...a  1  aa...;)<br>
+<i>variable = value;</i><br> (e.g. author = Michael Speck;)<br>
+</p>
+<p><i>
+Normal entries and initializations <strong>have to</strong> end with a semicolon! Subsections and comments <strong>must not</strong> end with a semicolon!
+</i></p>
+<p>
+Each levelset starts with a subsection called 'info' containing information about the number of levels per
+chapter and the number of chapters.<br>
+<b>
+&lt;info&gt;<br>
+levels = levels_per_chapter; </b>(maximum is 10)<b><br>
+chapters = chapter_number; </b>(maximum is 10)<b><br>
+&lt;/info&gt;<br>
+</b>
+</p>
+<p>
+It follows the definition of each chapter containing information about name, author, used graphics set, whether this
+chapter is open from the very beginning and definition of each level (number of levels as you defined in
+&lt;info&gt;). Usually only the first chapter is open for playing from the very beginning.<br>
+<b>
+&lt;chapter&gt;<br>
+name = Name Of The Chapter;<br>
+author = Your Name;<br>
+gfx_set = GfxSet; </b>(either 'stone' or 'metal' or 'wood'; e.g. gfx_set = stone)<b><br>
+open = Open?; </b>(1 = open; 0 = all previous levels have to be completed first)<b><br>
+<br>
+...levels<br>
+<br>
+&lt;/chapter&gt;<br>
+</b>
+</p>
+<p>
+A level is defined as follows. It contains information about the time (in seconds), size of the map, size of
+the figure and two subsections with the figure and the map.<br>
+<b>
+&lt;level&gt;<br>
+time = time_in_seconds; </b>(e.g. time = 90;)<b><br>
+map_w = map_width; </b>(ranges between 4 and 13)<b><br>
+map_h = map_height; </b>(ranges between 4 and 14)<b><br>
+fig_w = figure_width; </b>(ranges between 2 and 10)<b><br>
+fig_h = figure_height; </b>(ranges between 1 and 10)<b><br>
+&lt;figure&gt;<br>
+...<br>
+&lt;/figure&gt;<br>
+&lt;map&gt;<br>
+...<br>
+&lt;/map&gt;<br>
+&lt;/level&gt;<br>
+</b>
+</p>
+<p>
+A figure tile is either a marble ID from 0 to 9 or [Space] for no marble.<br>
+<img src="marbles.jpg" alt="marbles" width=320 height=32><br>
+<pre>
+Example:
+&lt;figure&gt;
+ 1 2 ;
+23454;
+ 1 2 ;
+&lt;/figure&gt;
+</pre>
+</p>
+<p>
+Valid map tiles are:<br>
+'a', 'b', 'c' - different walls<br>
+'A', 'B', 'C' - crumbling walls ('C' three, 'B' two, 'A' one hit)<br>
+[Space] - floor<br>
+'.' - background<br>
+'u','d','r','l' - arrows without barriers (up, down, right, left)<br>
+'U','D','R','L' - arrows with barriers (up, down, right, left)<br>
+'w','x','y','z' - teleports of different colors<br>
+'0'..'9' - marbles<br>
+<pre>
+Example:
+&lt;map&gt;
+....aaaa;
+..aaa 2a;
+.aa1  xa;
+aa  u aa;
+a 2  xa.;
+aaaaaaa.;
+&lt;/map&gt;
+</pre>
+</p>
+<p>
+So this is the structure of a levelset:<br>
+<b>
+&lt;info&gt;<br>
+...<br>
+&lt;/info&gt;<br>
+<br>
+&lt;chapter&gt;<br>
+...<br>
+<br>
+&lt;level&gt;<br>
+...<br>
+&lt;figure&gt;<br>
+...<br>
+&lt;/figure&gt;<br>
+&lt;map&gt;<br>
+...<br>
+&lt;/map&gt;<br>
+&lt;/level&gt;<br>
+<br>
+...(more levels)<br>
+<br>
+&lt;/chapter&gt;<br>
+<br>
+...(more chapters)<br>
+</b>
+</p>
+<p>
+Once again: Taking a look at 'Original' might help you a lot...
+</p>
+<a href="#toc">ToC</a><br><br>
+<hr>
+
+<!-- credits -->
+<p>
+<center><br><a href="mailto:kulkanie@gmx.net">Contact</a></center>
+<br>
+
+<font size=-1>
+<div align=right>Last Update: December 9th 2000<br></div>
+</font>
+</p>
+
+</body>
+
+</html>
+

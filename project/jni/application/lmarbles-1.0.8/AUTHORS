@@ -1,0 +1,6 @@
+Michael Speck <kulkanie@gmx.net>
+
+**** Contributions ****
+
+Fix for input bug in Win32, a better installation
+system and memory leak fixes. - Lee Read

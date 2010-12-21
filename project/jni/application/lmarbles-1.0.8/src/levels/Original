@@ -1,0 +1,768 @@
+<info>
+levels = 8; (per chapter)
+chapters = 4;
+limit = moves; (either moves or limit)
+</info>
+
+<chapter>
+name = Tutorial;
+author = Michael Speck;
+gfx_set = stone;
+open = 1;
+
+<level>
+limit = 11;
+map_w = 8; map_h = 8;
+fig_w = 2; fig_h = 2;
+<figure>
+56;
+65;
+</figure>
+<map>
+cccccccc;
+c 5  b c;
+cbb    c;
+c  6 b6c;
+cccc b c;
+...c b c;
+...c 5 c;
+...ccccc;
+</map>
+</level>
+
+<level>
+limit = 18; 
+map_w = 10; map_h = 9;
+fig_w = 4; fig_h = 2;
+<figure>
+  1 ;
+1898;
+</figure>
+<map>
+aaaaaaaaaa;
+a  1  8  a;
+a bb  bb a;
+a b    b a;
+a   8    a;
+a  aaaa  a;
+a  a..a  a;
+a9 a..a 1a;
+aaaa..aaaa;
+</map>
+</level>
+
+<level>
+limit = 22; 
+map_w = 11; map_h = 9;
+fig_w = 3; fig_h = 3;
+<figure>
+ 4 ;
+6 6;
+ 4 ;
+</figure>
+<map>
+.aaaaaaaaa.;
+.a      4a.;
+.a   cc caa;
+.a  4c    a;
+aac cc  c a;
+a       c a;
+a6     cc a;
+aaaaaaaa6 a;
+.......aaaa;
+</map>
+</level>
+
+<level>
+limit = 22; 
+map_w = 10; map_h = 10;
+fig_w = 3; fig_h = 1;
+<figure>
+313;
+</figure>
+<map>
+bbbbbbbbbb;
+b       1b;
+b      aab;
+ba a  aa3b;
+b  a   a b;
+b 3a     b;
+b     a  b;
+b a  aa  b;
+b a  a   b;
+bbbbbbbbbb;
+</map>
+</level>
+
+<level>
+limit = 25; 
+map_w = 9; map_h = 9;
+fig_w = 3; fig_h = 3;
+<figure>
+ 2 ;
+787;
+ 2 ;
+</figure>
+<map>
+aaaaaaaaa;
+a2c c7  a;
+a   cc  a;
+acc c  ca;
+a       a;
+a8c c cca;
+acc   c2a;
+a7      a;
+aaaaaaaaa;
+</map>
+</level>
+
+<level>
+limit = 21; 
+map_w = 10; map_h = 12;
+fig_w = 3; fig_h = 3;
+<figure>
+7 9;
+ 8 ;
+9 7;
+</figure>
+<map>
+bbbbb;
+b 8 b;
+b b b;
+b b b;
+b b b;
+b   bbbbbb;
+bbb      b;
+b9  bbbb7b;
+bbb      b;
+b      bbb;
+b7b     9b;
+bbbbbbbbbb;
+</map>
+</level>
+
+<level>
+limit = 31; (seconds or moves)
+map_w = 10; map_h = 10;
+fig_w = 4; fig_h = 3;
+<figure>
+  5 ;
+2343;
+  5 ;
+</figure>
+<map>
+aaaaaaaaaa;
+a5      2a;
+abb b4b  a;
+a3b b b  a;
+a        a;
+a b b b  a;
+a b5  b  a;
+a bbb b  a;
+a     3  a;
+aaaaaaaaaa;
+</map>
+</level>
+
+<level>
+limit = 63; 
+map_w = 13; map_h = 12;
+fig_w = 5; fig_h = 3;
+<figure>
+ 55 5;
+5000 ;
+ 5  5;
+</figure>
+<map>
+...ccccccccc.;
+...c   a  5c.;
+...c0a     c.;
+...ca    aac.;
+cccc  aa  5c.;
+c0a   5  ccc.;
+c         c..;
+c a5a aaaaccc;
+c   a 5     c;
+c5 aa   0aadc;
+cc  l       c;
+.cccccccccccc;
+</map>
+</level>
+
+</chapter>
+
+<chapter>
+name = A few problems;
+author = Michael Speck;
+gfx_set = wood;
+open = 0;
+
+<level>
+limit = 16;
+map_w = 8; map_h = 7;
+fig_w = 3; fig_h = 3;
+<figure>
+1 1;
+232;
+1 1;
+</figure>
+<map>
+bbbbbbbb;
+b1 c  2b;
+b  R  cb;
+bc2 1 3b;
+b  L  cb;
+b1 c  1b;
+bbbbbbbb;
+</map>
+</level>
+
+<level>
+limit = 35; 
+map_w = 12; map_h = 9;
+fig_w = 5; fig_h = 3;
+<figure>
+ 55  ;
+50015;
+ 5   ;
+</figure>
+<map>
+bbbbbbbbbbbb;
+b    5  c 5b;
+b y ccc    b;
+b5  0l   y b;
+ccc cc  c  b;
+.c   5   c b;
+.c 0cc c1l b;
+.c   5 cbbbb;
+.ccccccc....;
+</map>
+</level>
+
+<level>
+limit = 19;
+map_w = 8; map_h = 8;
+fig_w = 3; fig_h = 3;
+<figure>
+  1;
+ 2 ;
+1  ;
+</figure>
+<map>
+cccccccc;
+c  1   c;
+c ccc cc;
+c  2   c;
+c ccc cc;
+c  1   c;
+c   c  c;
+cccccccc;
+</map>
+</level>
+
+<level>
+limit = 22;
+map_w = 11; map_h = 10;
+fig_w = 3; fig_h = 4;
+<figure>
+ 9 ;
+ 8 ;
+ 8 ;
+393;
+</figure>
+<map>
+....bbb....;
+....b3b....;
+....b b....;
+bbbbb bbbbb;
+b         b;
+b8bbbbbbb8b;
+b b.....b b;
+b9bbbbbbb9b;
+b    3    b;
+bbbbbbbbbbb;
+</map>
+</level>
+
+<level>
+limit = 54;
+map_w = 12; map_h = 7;
+fig_w = 4; fig_h = 3;
+<figure>
+8   ;
+7997;
+  1 ;
+</figure>
+<map>
+bbbbbbbbbbbb;
+b7     c  9b;
+b c c1 c  cb;
+b c        b;
+b c    c  cb;
+b9    7c  8b;
+bbbbbbbbbbbb;
+</map>
+</level>
+
+<level>
+limit = 30; (!)
+map_w = 13; map_h = 13;
+fig_w = 6; fig_h = 3;
+<figure>
+  99  ;
+77  77;
+  88  ;
+</figure>
+<map>
+....ccccccccc;
+....c     9 c;
+....c bbbbb7c;
+....c       c;
+ccc.c  b  b c;
+c7ccc 7b  b c;
+c     b   b c;
+c          8c;
+c bbbb8cccccc;
+c b..b c.....;
+c7bbbb c.....;
+c 9    c.....;
+cccccccc.....;
+</map>
+</level>
+
+<level>
+limit = 64;
+map_w = 13; map_h = 13;
+fig_w = 5; fig_h = 5;
+<figure>
+ 5 5 ;
+5 1 5;
+ 1 1 ;
+5 1 5;
+ 5 5 ;
+</figure>
+<map>
+bbbbbb.......;
+b5   b.......;
+b aa5b.......;
+b 1a bbbbbbbb;
+b  a a     1b;
+b  5   a5  ab;
+b aa a      b;
+b 1a a      b;
+b   5a5   a5b;
+bbbbbbbb 1a b;
+.......b aa b;
+.......b  5 b;
+.......bbbbbb;
+</map>
+</level>
+
+<level>
+limit = 16;
+map_w = 11; map_h = 9;
+fig_w = 5; fig_h = 3;
+<figure>
+  4  ;
+ 8 8 ;
+1 1 1;
+</figure>
+<map>
+bbbbbbbbbbb;
+b8b b b b8b;
+b   AAA   b;
+bbA 1 1 Abb;
+b         b;
+bb   4   bb;
+b  AA AA  b;
+b b b1b b b;
+bbbbbbbbbbb;
+</map>
+</level>
+
+</chapter>
+
+<chapter>
+name = Sometimes Tricky;
+author = Michael Speck;
+gfx_set = metal;
+open = 0;
+
+<level>
+limit = 24;
+map_w = 13; map_h = 12;
+fig_w = 4; fig_h = 3;
+<figure>
+5  5;
+ 77 ;
+5  5;
+</figure>
+<map>
+..aaaaaaaaaaa;
+..a7       5a;
+aaa b bb b  a;
+a        b  a;
+a   b       a;
+a  bb5b bb  a;
+a   b b     a;
+a     b 5b aa;
+aa bb   bb a.;
+.a      b  a.;
+.aaa5     7a.;
+...aaaaaaaaa.;
+</map>
+</level>
+
+<level>
+limit = 42; 
+map_w = 12; map_h = 8;
+fig_w = 4; fig_h = 4;
+<figure>
+ 2  ;
+21  ;
+  89;
+  9 ;
+</figure>
+<map>
+aaaaa.......;
+a a aaaaaaa.;
+a    9a x a.;
+a   98aa aaa;
+aaa aa12   a;
+.a x a2    a;
+.aaaaaaa a a;
+.......aaaaa;
+</map>
+</level>
+
+<level>
+limit = 98;
+map_w = 11; map_h = 11;
+fig_w = 5; fig_h = 4;
+<figure>
+ 555 ;
+10701;
+ 232 ;
+  9  ;
+</figure>
+<map>
+cccccccccc.;
+c0 5c2   cc;
+c      c0 c;
+c ccucccc c;
+c 3c   9c c;
+c  l l lc1c;
+c 5cu   c c;
+c ccc     c;
+c2  c cc 5c;
+cc 1c 7  cc;
+.ccccccccc.;
+</map>
+</level>
+
+<level>
+limit = 28;
+map_w = 11; map_h = 10;
+fig_w = 3; fig_h = 4;
+<figure>
+ 1 ;
+32 ;
+ 23;
+ 1 ;
+</figure>
+<map>
+bbbbbbbbbbb;
+bx 1c c  3b;
+b     c c b;
+bccc  c c b;
+b    xc2  b;
+b  2cy    b;
+b c c  cccb;
+b c c     b;
+b3  c c1 yb;
+bbbbbbbbbbb;
+</map>
+</level>
+
+<level>
+limit = 38;
+map_w = 9; map_h = 11;
+fig_w = 3; fig_h = 3;
+<figure>
+  7;
+98 ;
+  7;
+</figure>
+<map>
+ccccccc..;
+cz  7 c..;
+cb bb ccc;
+c9      c;
+c b bbbuc;
+c b  z  c;
+c      dc;
+c bbbbb c;
+c b    8c;
+c7  ccccc;
+ccccc....;
+</map>
+</level>
+
+<level>
+limit = 20; (!)
+map_w = 12; map_h = 9;
+fig_w = 3; fig_h = 2;
+<figure>
+ 5 ;
+4 4;
+</figure>
+<map>
+......aaaaaa;
+......a A 4a;
+aaaaaaa    a;
+a     a    a;
+ay   wauwdaa;
+a    5a   a.;
+aaaaaaadyuaa;
+.....a4    a;
+.....aaaaaaa;
+</map>
+</level>
+
+<level>
+limit = 42;
+map_w = 12; map_h = 9;
+fig_w = 4; fig_h = 3;
+<figure>
+ 99 ;
+7887;
+ 9  ;
+</figure>
+<map>
+bbbbb..bbbb;
+b 9 bbbb xb;
+b a  9 d  b;
+b wa  a7  b;
+b a w   a8b;
+b7l  a8x  b;
+bbb    a bb;
+..bbbb r9b.;
+.....bbbbb.;
+</map>
+</level>
+
+<level>
+limit = 22; 
+map_w = 9; map_h = 7;
+fig_w = 4; fig_h = 2;
+<figure>
+1289;
+ 3  ;
+</figure>
+<map>
+...aaa...;
+.aaa3aaa.;
+aa a a aa;
+a9  2  1a;
+aa a a aa;
+.a a8a a.;
+.aaaaaaa.;
+</map>
+</level>
+</chapter>
+
+<chapter>
+name = Hardcore;
+author = Michael Speck;
+gfx_set = metal;
+open = 0;
+
+<level>
+limit = 44; 
+map_w = 12; map_h = 12;
+fig_w = 5; fig_h = 3;
+<figure>
+  8  ;
+97 79;
+  8  ;
+</figure>
+<map>
+.....aaaaaaa;
+.aaaaa     a;
+.a    9aaa a;
+.a aaa   a a;
+.a a  u  a a;
+aa a  8R 9 a;
+a 7 L8  a aa;
+a a  d  a a.;
+a a   aaa a.;
+a aaa7    a.;
+a     aaaaa.;
+aaaaaaa.....;
+</map>
+</level>
+
+<level>
+limit = 37; 
+map_w = 11; map_h = 11;
+fig_w = 3; fig_h = 5;
+<figure>
+ 7 ;
+ 7 ;
+ 3 ;
+9 9;
+ 3 ;
+</figure>
+<map>
+aaaaaaaaaa.;
+a7   a  9a.;
+a  a     aa;
+a aaa ya 3a;
+a  az aaa a;
+a3    xa  a;
+aa zax    a;
+.a aaa  7aa;
+.a ya  aaa.;
+.a9    a...;
+.aaaaaaa...;
+</map>
+</level>
+
+<level>
+limit = 14; 
+map_w = 8; map_h = 8;
+fig_w = 3; fig_h = 2;
+<figure>
+131;
+ 2 ;
+</figure>
+<map>
+cccccccc;
+c1 w  1c;
+c      c;
+cx y  xc;
+cccc  3c;
+...cy wc;
+...c2  c;
+...ccccc;
+</map>
+</level>
+
+<level>
+limit = 44; 
+map_w = 13; map_h = 9;
+fig_w = 3; fig_h = 3;
+<figure>
+232;
+7 7;
+232;
+</figure>
+<map>
+..aaaaaaaaa..;
+..a2aa7aa2a..;
+cca a y a acc;
+c2 y     z 2c;
+ccc   z   ccc;
+..cc3 a 3cc..;
+...ccU7Dcc...;
+....c   c....;
+....ccccc....;
+</map>
+</level>
+
+<level>
+limit = 35; 
+map_w = 10; map_h = 12;
+fig_w = 3; fig_h = 4;
+<figure>
+ 6 ;
+656;
+ 6 ;
+ 4 ;
+</figure>
+<map>
+......aaaa;
+......a 4a;
+....aaa  a;
+....a6 uwa;
+..aaa l  a;
+..a6 ryaaa;
+aaawl 6a..;
+a  r aaa..;
+ayd 6a....;
+a  aaa....;
+a5 a......;
+aaaa......;
+</map>
+</level>
+
+<level>
+limit = 47; 
+map_w = 9; map_h = 9;
+fig_w = 3; fig_h = 4;
+<figure>
+4 4;
+ 5 ;
+ 6 ;
+ 5 ;
+</figure>
+<map>
+ccccccccc;
+c4 d r 5c;
+c a a a c;
+cr r d lc;
+c a6a a c;
+cu d l dc;
+c a a a c;
+c5 l u 4c;
+ccccccccc;
+</map>
+</level>
+
+<level>
+limit = 43; 
+map_w = 11; map_h = 11;
+fig_w = 5; fig_h = 3;
+<figure>
+ 1 1 ;
+59395;
+ 191 ;
+</figure>
+<map>
+....bbb....;
+.bbbbybbbb.;
+.b 5   5 b.;
+.b1aa3aa1b.;
+bb ax za bb;
+bz       wb;
+bb  w y  bb;
+.b1 a9a 1b.;
+.b 9   9 b.;
+.bbbbxbbbb.;
+....bbb....;
+</map>
+</level>
+
+<level>
+limit = 23; 
+map_w = 10; map_h = 9;
+fig_w = 3; fig_h = 3;
+<figure>
+ 2 ;
+1 1;
+ 2 ;
+</figure>
+<map>
+..aaaaaaaa;
+..ax   A a;
+aaa    aaa;
+a2a    a1a;
+ar  xw  la;
+a1a    a2a;
+aaa    aaa;
+a A   wa..;
+aaaaaaaa..;
+</map>
+</level>
+
+</chapter>

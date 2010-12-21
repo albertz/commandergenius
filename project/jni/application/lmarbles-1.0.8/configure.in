@@ -1,0 +1,89 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(Makefile.am)
+
+AC_CANONICAL_TARGET
+AC_USE_SYSTEM_EXTENSIONS
+
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(lmarbles,1.0.8)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_RANLIB
+AC_EXEEXT
+AC_CANONICAL_HOST
+
+dnl check for libraries
+AC_CHECK_LIB(m, main,, AC_MSG_ERROR(lib math is needed))
+
+dnl check SDL version
+AM_PATH_SDL(1.0.0,, AC_MSG_ERROR(lib SDL is needed))
+CFLAGS="$CFLAGS $SDL_CFLAGS"
+LIBS="$LIBS $SDL_LIBS"
+AM_PATH_SDL(1.1.5, CFLAGS="$CFLAGS -DSDL_1_1_5",)
+
+dnl check sound
+sound_flag="-DSOUND"
+mixer_flag="-lSDL_mixer"
+AC_ARG_ENABLE( sound,
+[  --disable-sound         Disables sound], sound_flag=""; mixer_flag="")
+
+dnl check if SDL_mixer's installed
+dnl if not: clear sound_flag and mixer_flag
+AC_CHECK_LIB(SDL_mixer, main,
+AC_MSG_RESULT("SDL_Mixer found"),
+AC_MSG_RESULT("SDL_Mixer NOT found: Audio disabled"); sound_flag=""; mixer_flag="")
+
+AC_SUBST(sound_flag)
+AC_SUBST(mixer_flag)
+
+dnl check ascii-flag
+ascii_flag=""
+AC_ARG_ENABLE( ascii,
+[  --enable-ascii          Enables 'save as ascii' option (for big-endian)], ascii_flag="-DASCII")
+AC_SUBST(ascii_flag)
+
+dnl installation & prefix path
+inst_dir="$datadir/lmarbles"
+prf_dir=$localstatedir
+
+dnl check if installation was disabled
+AC_ARG_ENABLE( install,
+[  --disable-install       No installation. Played from the source directory.], 
+inst_dir="." prf_dir=".")
+
+inst_flag="-DSRC_DIR=\\\"$inst_dir\\\""
+prf_flag="-DPRF_DIR=\\\"$prf_dir\\\""
+
+AC_SUBST(inst_flag)
+AC_SUBST(prf_flag)
+AC_SUBST(inst_dir)
+AC_SUBST(prf_dir)
+
+case "$host" in
+        *-mingw32)
+                win32="yes"
+                win32_inst_script="`pwd -W`/installer.iss"
+                arch_flag="-march=i586"
+                win32_deps="lmarblesres.o" ;;
+        *)
+                win32="no"
+                win32_inst_script=""
+                arch_flag=""
+                win32_deps="" ;;
+esac
+
+AC_SUBST(win32_deps)
+AC_SUBST(arch_flag)
+
+if test "x$win32" = xyes; then
+	AC_PROG_AWK
+dnl	AC_PROG_STRIP
+dnl	AC_PROG_ISCC
+	AC_SUBST(win32_inst_script)
+fi
+
+appname="LMarbles"
+AC_SUBST(appname)
+
+AC_OUTPUT(Makefile src/Makefile)

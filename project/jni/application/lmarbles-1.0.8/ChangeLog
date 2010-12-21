@@ -1,0 +1,90 @@
+1.0.8:
+- added XDG desktop support (09/10/26 MS)
+- fixed configuration process (09/10/26 MS)
+- removed -Wall from CC arguments for better portability
+  (06/04/01 PM)
+
+1.0.7:
+- configure option --with-profile-path has been replaced with
+  autoconf option --localstatedir (04/06/14 M.S.)
+- data files will be installed to $datadir/lmarbles instead
+  of $datadir/games/lmarbles (04/06/14 M.S.)
+- replaced strlen with sizeof when building config path (04/06/09 M.S.)
+- renamed marbles.prfs to lmarbles.prfs in the Makefile (04/06/09 M.S.)
+- included header for NetBSD (03/09/30 H.F.)
+
+1.0.6:
+- renamed project to LMarbles (02/11/24 M.S.)
+- fixed security holes created by improper use of sprintf 
+  (02/11/24 M.S.)
+
+1.0.5:
+- switched to SDL_mixer (02/08/10 L.R.)
+- bunch of memory leaks fixed (02/08/10 L.R.)
+- for Win32: (02/08/10 L.R.)
+  - edit bug fixed
+  - installation details added to README
+  - much improved installation system
+  - files are always opened in binary mode
+  - transparency bug fix
+
+1.0.4:
+- fixed a bug in the sound server that caused Marbles to crash
+  when exiting too fast (01/07/02 M.S.)
+- fixed a bug that caused Marbles to forget the last used profile 
+  (01/07/02 M.S.)
+- fixed a bug in autoswitch which restarted the level when
+  the figure was completed with the last move (01/07/02 M.S.)
+- fixed a bug in restart routine that allowed selection of
+  a ghost marble (01/07/02 M.S.)
+
+1.0.3:
+- score is now properly modified (02/06/24 M.S.)
+- fixed a bug that caused an infinite loop when left-clicking
+  an empty tile directly after deselecting a marble (02/06/22 M.S.)
+- added a missing include at top of timer.c
+
+1.0.2
+-compileable for Win32 with MinGW
+-fixed more color keys
+-using gettimeofday() instead of ftime() for compatibility with FreeBSD
+
+1.0.1:
+-no crash when pressing move key when no marble is selected
+-configure option 'with-profile-path' named correctly
+-color key of marbles set correctly
+
+1.0:
+-moved config file to ~/.lgames/marbles.conf
+-rearranged the levelsets into one set with 32 levels
+where each level has now a move limit instead of a time
+limit (now you'll have time to think)
+-fixed some warnings
+-profile path is no longer hard-coded
+-profile directory is created if not existing
+-not 100% cputime consumed
+-ASCII option ( big-endian ) works again
+-man page properly installed
+
+010307:
+-minor bug fixes
+-added an 'experimental' levelset with a move limit instead of a time limit
+(tell me what you think of this!)
+-on a graphic a marble blinks
+-added manual page (thanks to Uwe Hermann)
+-fixed all '-Wall' warnings (thanks again)
+-script 'missing' is now executable (and again :)
+
+001211:
+-various difficulty levels (e.g. 'Training' with no time limit)
+-marbles move faster; in 'training mode' they can even be 'warped'
+-you can use your keyboard to move a marble
+-'save as ascii' configure option (for big-endian)
+-works with any bit depth (16 bits no longer hard-coded)
+
+001126:
+-various bug fixes (most important: chapters are opened properly, profile file 
+included)
+
+001124:
+-initial public release
