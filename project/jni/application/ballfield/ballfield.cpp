@@ -16,7 +16,9 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
+#include "test.h"
 #include "ballfield.h"
+
 
 
 /*----------------------------------------------------------
@@ -358,6 +360,8 @@ int main(int argc, char* argv[])
 	int		fps_count = 0;
 	int		fps_start = 0;
 	float		x_speed, y_speed, z_speed;
+
+	__android_log_print(ANDROID_LOG_INFO, "==TEST==", "SDL_Main: test::initCount %d test::initCount2", test::initCount, test::initCount2);
 
 	SDL_Init(SDL_INIT_VIDEO);
 

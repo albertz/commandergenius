@@ -57,6 +57,7 @@ using _STLP_VENDOR_CSTD::_streams;
 //      the stream objects by calling the init() member function.
 
 #if defined (ANDROID_NO_COUT)
+#include <android/log.h>
 /* Outputting anything to cout/cerr WILL CRASH YOUR PROGRAM on specific devices -
    x5a/x6d Android 2.1 tablet, and some other tablets,
    however the same code runs on my HTC Evo without problem.
@@ -64,19 +65,129 @@ using _STLP_VENDOR_CSTD::_streams;
 */
 
 long ios_base::Init::_S_count = 0;
+// by default, those are synced
+bool ios_base::_S_was_synced = true;
 
 ios_base::Init::Init() {
   if (_S_count++ == 0) {
     _Locale_init();
+    //ios_base::_S_initialize();
     _Filebuf_base::_S_initialize();
   }
 }
 
 ios_base::Init::~Init() {
   if (--_S_count == 0) {
+    //ios_base::_S_uninitialize();
     _Locale_final();
   }
 }
+
+class _android_debugbuf: public streambuf
+{
+ public:
+ _android_debugbuf()
+ {
+    pos = 0;
+    buf[0] = 0;
+ }
+
+ protected:
+
+
+virtual int overflow(int c = EOF)
+{
+	if (EOF == c)
+	{
+		return '\0';  // returning EOF indicates an error
+	}
+	else
+	{
+		outputchar(c);
+		return c;
+	}
+};
+
+
+// we don’t do input so always return EOF
+virtual int uflow() {return EOF;}
+
+// we don’t do input so always return 0 chars read
+virtual int xsgetn(char *, int) {return 0;}
+
+// Calls outputchar() for each character.
+virtual int xsputn(const char *s, int n)
+{
+	for (int i = 0; i < n; ++i)
+	{
+		outputchar(s[i]);
+	}
+	return n;// we always process all of the chars
+};
+
+private:
+
+// the buffer
+char buf[256];
+int pos;
+
+void outputchar(char c)
+{
+	// TODO: mutex
+	if( pos >= sizeof(buf)-1 || c == '\n' || c == '\r' || c == 0 )
+	{
+		buf[pos] = 0;
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "%s", buf);
+		pos = 0;
+	};
+	buf[pos] = c;
+	pos++;
+};
+
+};
+
+class debugbufinit
+{
+ static unsigned int count;
+ public:
+ debugbufinit();
+
+    // Our destructor is not virtual. It is important that objects of this class have no 
+    // memory footprint. We will end up with one object of this class per translation 
+    // unit (.cp file). If this class has any virtual member functions then objects of 
+    // this class would have v tables in memory. Since this is not intended to be a 
+    // base class for other class, there is no need to be virtual.
+
+ ~debugbufinit();
+};
+
+static filebuf*
+_Stl_create_filebuf(int f, ios_base::openmode mode ) {
+  basic_filebuf<char, char_traits<char> >* result =
+    new basic_filebuf<char, char_traits<char> >();
+
+  _STLP_TRY {
+    result->_M_open(f, mode);
+  }
+  _STLP_CATCH_ALL {}
+
+  if (!result->is_open()) {
+    delete result;
+    result = 0;
+  }
+  return result;
+}
+
+static ios_base::Init _IosInit;
+
+bool _STLP_CALL ios_base::sync_with_stdio(bool sync)
+{
+}
+
+_STLP_DECLSPEC istream cin(_Stl_create_filebuf(0, ios_base::in));
+_STLP_DECLSPEC ostream cout(new _android_debugbuf());
+_STLP_DECLSPEC ostream cerr(new _android_debugbuf());
+_STLP_DECLSPEC ostream clog(new _android_debugbuf());
 
 #else
 

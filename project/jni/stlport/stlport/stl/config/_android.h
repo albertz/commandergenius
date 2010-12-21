@@ -70,15 +70,15 @@
 #if defined(__ANDROID__) /* NDK r5 */
 #  define _STLP_NATIVE_CPP_C_INCLUDE_PATH ../../../cxx-stl/system/include
 #  define _STLP_NATIVE_CPP_RUNTIME_INCLUDE_PATH ../../../cxx-stl/system/include
+#else /* NDK r4b */
+#  define _STLP_NATIVE_CPP_C_INCLUDE_PATH ../../usr/include
+#  define _STLP_NATIVE_CPP_RUNTIME_INCLUDE_PATH ../../usr/include
 #endif
 
 #ifdef __cplusplus
 // Hack to prevent including buggy stl_pair.h system header, introduced in Android 1.6 NDK
 #define _CPP_UTILITY 1
 #define __SGI_STL_INTERNAL_PAIR_H 1
-//#include <stddef.h>
-//inline void* operator new(size_t, void* p) { return p; }
-//inline void* operator new[](size_t, void* p) { return p; }
 #endif
 
 #endif /* __stl_config__android_h */
