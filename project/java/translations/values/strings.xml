@@ -59,6 +59,7 @@
     <string name="accel_fixed_horiz">Fixed to table desk orientation</string>
     <string name="accel_question_center">Accelerometer center position</string>
 
+    <string name="mouse_emulation">Mouse emulation</string>
     <string name="rightclick_question">Right mouse click</string>
     <string name="rightclick_menu">Menu key</string>
     <string name="rightclick_multitouch">Touch screen with second finger</string>
