@@ -568,7 +568,7 @@ BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction)
 				angle -= atan2i_PI * 2;
 			angle = angle * SHIP_DIRECTIONS / atan2i_PI / 2;
 			
-			diff = angle - direction - SHIP_DIRECTIONS / 4;
+			diff = angle - direction + SHIP_DIRECTIONS / 4;
 			while( diff >= SHIP_DIRECTIONS )
 				diff -= SHIP_DIRECTIONS;
 			while( diff < 0 )

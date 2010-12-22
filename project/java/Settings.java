@@ -76,6 +76,7 @@ class Settings
 			{
 				out.writeBoolean(Globals.ScreenKbControlsShown[i]);
 			}
+			out.writeInt(Globals.TouchscreenKeyboardTransparency);
 
 			out.close();
 			settingsLoaded = true;
@@ -161,6 +162,7 @@ class Settings
 			{
 				Globals.ScreenKbControlsShown[i] = settingsFile.readBoolean();
 			}
+			Globals.TouchscreenKeyboardTransparency = settingsFile.readInt();
 			
 			settingsLoaded = true;
 
@@ -386,9 +388,11 @@ class Settings
 	{
 		ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
 
+		items.add(p.getResources().getString(R.string.controls_screenkb_theme));
+
 		items.add(p.getResources().getString(R.string.controls_screenkb_size));
 
-		items.add(p.getResources().getString(R.string.controls_screenkb_theme));
+		items.add(p.getResources().getString(R.string.controls_screenkb_transparency));
 
 		items.add(p.getResources().getString(R.string.remap_screenkb));
 
@@ -405,11 +409,15 @@ class Settings
 				int selected = 0;
 
 				if( item == selected )
+					showScreenKeyboardThemeConfig(p);
+				selected++;
+
+				if( item == selected )
 					showScreenKeyboardSizeConfig(p);
 				selected++;
 
 				if( item == selected )
-					showScreenKeyboardThemeConfig(p);
+					showScreenKeyboardTransparencyConfig(p);
 				selected++;
 
 				if( item == selected )
@@ -607,13 +615,6 @@ class Settings
 
 	static void showScreenKeyboardSizeConfig(final MainActivity p)
 	{
-		if( ! Globals.UseTouchscreenKeyboard )
-		{
-			Globals.TouchscreenKeyboardSize = 0;
-			showScreenKeyboardConfigMainMenu(p);
-			return;
-		}
-		
 		final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_large),
 										p.getResources().getString(R.string.controls_screenkb_medium),
 										p.getResources().getString(R.string.controls_screenkb_small),
@@ -638,13 +639,6 @@ class Settings
 
 	static void showScreenKeyboardThemeConfig(final MainActivity p)
 	{
-		if( ! Globals.UseTouchscreenKeyboard )
-		{
-			Globals.TouchscreenKeyboardTheme = 0;
-			showScreenKeyboardConfigMainMenu(p);
-			return;
-		}
-		
 		final CharSequence[] items = {
 			p.getResources().getString(R.string.controls_screenkb_by, "Ugly Arrows", "pelya"),
 			p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
@@ -658,6 +652,32 @@ class Settings
 			public void onClick(DialogInterface dialog, int item) 
 			{
 				Globals.TouchscreenKeyboardTheme = item;
+
+				dialog.dismiss();
+				showScreenKeyboardConfigMainMenu(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showScreenKeyboardTransparencyConfig(final MainActivity p)
+	{
+		final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_trans_0),
+										p.getResources().getString(R.string.controls_screenkb_trans_1),
+										p.getResources().getString(R.string.controls_screenkb_trans_2),
+										p.getResources().getString(R.string.controls_screenkb_trans_3),
+										p.getResources().getString(R.string.controls_screenkb_trans_4),
+		};
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_transparency));
+		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTransparency, new DialogInterface.OnClickListener()
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.TouchscreenKeyboardTransparency = item;
 
 				dialog.dismiss();
 				showScreenKeyboardConfigMainMenu(p);
@@ -1204,10 +1224,8 @@ class Settings
 			nativeSetTouchscreenKeyboardUsed();
 			nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize,
 										Globals.TouchscreenKeyboardTheme,
-										8, // Globals.AppTouchscreenKeyboardKeysAmount, - set later by nativeSetScreenKbKeyUsed()
 										Globals.AppTouchscreenKeyboardKeysAmountAutoFire,
-										1, //Globals.AppNeedsArrowKeys ? 1 : 0,
-										1 ); //Globals.AppNeedsTextInput ? 1 : 0 );
+										Globals.TouchscreenKeyboardTransparency );
 		}
 		SetupTouchscreenKeyboardGraphics(p);
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
@@ -1276,7 +1294,7 @@ class Settings
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
-	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttons, int nbuttonsAutoFire, int showArrows, int showTextInput);
+	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttonsAutoFire, int transparency);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	private static native void nativeInitKeymap();
 	private static native int nativeGetKeymapKey(int key);

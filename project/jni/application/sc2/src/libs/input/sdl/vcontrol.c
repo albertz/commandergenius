@@ -817,9 +817,6 @@ VControl_ProcessJoyAxis (int port, int axis, int value)
 	int t;
 	if (!joysticks[port].stick)
 		return;
-#ifdef ANDROID
-	value = -value; // Axes are swapped, too lazy to fix that on SDL side
-#endif
 	joysticks[port].axes[axis].value = value;
 	t = joysticks[port].threshold;
 	if (value > t)

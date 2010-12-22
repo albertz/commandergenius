@@ -42,6 +42,12 @@
     <string name="controls_screenkb_tiny">Tiny</string>
     <string name="controls_screenkb_theme">On-screen keyboard theme</string>
     <string name="controls_screenkb_by">%1$s by %2$s</string>
+    <string name="controls_screenkb_transparency">On-screen keyboard transparency</string>
+    <string name="controls_screenkb_trans_0">Invisible</string>
+    <string name="controls_screenkb_trans_1">Almost invisible</string>
+    <string name="controls_screenkb_trans_2">Transparent</string>
+    <string name="controls_screenkb_trans_3">Semi-transparent</string>
+    <string name="controls_screenkb_trans_4">Non-transparent</string>
 
     <string name="trackball_no_dampening">No dampening</string>
     <string name="trackball_fast">Fast</string>

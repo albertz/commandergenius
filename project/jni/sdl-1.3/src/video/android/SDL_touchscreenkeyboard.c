@@ -62,6 +62,7 @@ static int touchscreenKeyboardTheme = 0;
 static int touchscreenKeyboardShown = 1;
 static int AutoFireButtonsNum = 0;
 static int buttonsize = 1;
+static int transparency = 128;
 
 static SDL_Rect arrows, buttons[MAX_BUTTONS], buttonsAutoFireRect[MAX_BUTTONS_AUTOFIRE];
 static SDLKey buttonKeysyms[MAX_BUTTONS] = { 
@@ -231,13 +232,13 @@ int SDL_ANDROID_drawTouchscreenKeyboard()
 		beginDrawingWireframe();
 		// Draw arrow keys
 		drawCharWireframe( FONT_LEFT, arrows.x + arrows.w / 4, arrows.y + arrows.h / 2, 0, 
-					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 255 : 0, 128 );
+					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 255 : 0, transparency );
 		drawCharWireframe( FONT_RIGHT, arrows.x + arrows.w / 4 * 3, arrows.y + arrows.h / 2, 0,
-					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 255 : 0, 128 );
+					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 255 : 0, transparency );
 		drawCharWireframe( FONT_UP, arrows.x + arrows.w / 2, arrows.y + arrows.h / 4, 0, 
-					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 255 : 0, 128 );
+					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 255 : 0, transparency );
 		drawCharWireframe( FONT_DOWN, arrows.x + arrows.w / 2, arrows.y + arrows.h / 4 * 3, 0, 
-					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 255 : 0, 128 );
+					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 255 : 0, transparency );
 
 		// Draw buttons
 		for( i = 0; i < MAX_BUTTONS; i++ )
@@ -245,7 +246,7 @@ int SDL_ANDROID_drawTouchscreenKeyboard()
 			if( ! buttons[i].h || ! buttons[i].w )
 				continue;
 			drawCharWireframe( FONT_BTN1 + i, buttons[i].x + buttons[i].w / 2, buttons[i].y + buttons[i].h / 2, ( i < AutoFireButtonsNum ? ButtonAutoFireRot[i] * 0x10000 : 0 ),
-						( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? 0 : 255, 255, SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? 255 : 0, 128 );
+						( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? 0 : 255, 255, SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? 255 : 0, transparency );
 		}
 		endDrawingWireframe();
 	}
@@ -257,17 +258,17 @@ int SDL_ANDROID_drawTouchscreenKeyboard()
 							( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
 		beginDrawingTex();
 		if( blendFactor == 0 )
-			drawCharTex( &arrowImages[0], NULL, &arrows, 255, 255, 255, 128 );
+			drawCharTex( &arrowImages[0], NULL, &arrows, 255, 255, 255, transparency );
 		else
 		{
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
-				drawCharTex( &arrowImages[1], NULL, &arrows, 255, 255, 255, 128 / blendFactor );
+				drawCharTex( &arrowImages[1], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
-				drawCharTex( &arrowImages[2], NULL, &arrows, 255, 255, 255, 128 / blendFactor );
+				drawCharTex( &arrowImages[2], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
-				drawCharTex( &arrowImages[3], NULL, &arrows, 255, 255, 255, 128 / blendFactor );
+				drawCharTex( &arrowImages[3], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
-				drawCharTex( &arrowImages[4], NULL, &arrows, 255, 255, 255, 128 / blendFactor );
+				drawCharTex( &arrowImages[4], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
 		}
 
 		for( i = 0; i < MAX_BUTTONS; i++ )
@@ -303,7 +304,7 @@ int SDL_ANDROID_drawTouchscreenKeyboard()
 				autoFireDest.w = pos1dst;
 				
 				drawCharTex( &buttonImages[i*2+1],
-							&autoFireCrop, &autoFireDest, 255, 255, 255, 128 );
+							&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
 
 				autoFireCrop.x = pos2src;
 				autoFireCrop.w = buttonImages[i*2+1].w - pos2src;
@@ -311,7 +312,7 @@ int SDL_ANDROID_drawTouchscreenKeyboard()
 				autoFireDest.w = buttons[i].w - pos2dst;
 
 				drawCharTex( &buttonImages[i*2+1],
-							&autoFireCrop, &autoFireDest, 255, 255, 255, 128 );
+							&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
 				
 				autoFireCrop.x = pos1src;
 				autoFireCrop.w = pos2src - pos1src;
@@ -319,13 +320,13 @@ int SDL_ANDROID_drawTouchscreenKeyboard()
 				autoFireDest.w = pos2dst - pos1dst;
 
 				drawCharTex( &buttonAutoFireImages[i*2+1],
-							&autoFireCrop, &autoFireDest, 255, 255, 255, 128 );
+							&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
 			}
 			else
 			{
 				drawCharTex( ( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? &buttonAutoFireImages[i*2] :
 							&buttonImages[ SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? (i * 2 + 1) : (i * 2) ],
-							NULL, &buttons[i], 255, 255, 255, 128 );
+							NULL, &buttons[i], 255, 255, 255, transparency );
 			}
 		}
 		endDrawingTex();
@@ -390,8 +391,8 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 				pointerInButtonRect[MAX_BUTTONS] = pointerId;
 				if( SDL_ANDROID_isJoystickUsed )
 				{
-					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, -(x - arrows.x - arrows.w / 2) * 65534 / arrows.w );
-					SDL_ANDROID_MainThreadPushJoystickAxis(0, 1, -(y - arrows.y - arrows.h / 2) * 65534 / arrows.h );
+					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, (x - arrows.x - arrows.w / 2) * 65534 / arrows.w );
+					SDL_ANDROID_MainThreadPushJoystickAxis(0, 1, (y - arrows.y - arrows.h / 2) * 65534 / arrows.h );
 				}
 				else
 				{
@@ -644,18 +645,26 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 };
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thiz, jint size, jint theme, jint _nbuttons, jint nbuttonsAutoFire, jint showArrows, jint showTextInput )
+JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thiz, jint size, jint theme, jint nbuttonsAutoFire, jint _transparency )
 {
 	int i, ii;
 	int nbuttons1row, nbuttons2row;
+	int _nbuttons = MAX_BUTTONS;
 	touchscreenKeyboardTheme = theme;
-	if( _nbuttons >= MAX_BUTTONS )
-		_nbuttons = MAX_BUTTONS;
 	AutoFireButtonsNum = nbuttonsAutoFire;
 	if( AutoFireButtonsNum > MAX_BUTTONS_AUTOFIRE )
 		AutoFireButtonsNum = MAX_BUTTONS_AUTOFIRE;
 	// TODO: works for horizontal screen orientation only!
 	buttonsize = size;
+	switch(_transparency)
+	{
+		case 0: transparency = 16; break;
+		case 1: transparency = 32; break;
+		case 2: transparency = 64; break;
+		case 3: transparency = 128; break;
+		case 4: transparency = 192; break;
+		default: transparency = 128; break;
+	}
 	
 	if(touchscreenKeyboardTheme == 0)
 	{
@@ -736,22 +745,6 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		buttons[6].h = SDL_ANDROID_sWindowHeight/10;
 	}
 
-	for( i = 0; i < MAX_BUTTONS; i++ )
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboard(): button %d pos %d %d %d %d", i, (int)buttons[i].x, (int)buttons[i].y, (int)buttons[i].w, (int)buttons[i].h);
-	if( !showArrows )
-	{
-		arrows.w = 0;
-		arrows.h = 0;
-	}
-	for( i = 0; i < MAX_BUTTONS; i++ )
-	{
-		if( i >= _nbuttons && ( i != BUTTON_TEXT_INPUT || !showTextInput ) )
-		{
-			buttons[i].w = 0;
-			buttons[i].h = 0;
-		}
-	}
-	
 	for( i = 0; i < sizeof(pointerInButtonRect)/sizeof(pointerInButtonRect[0]); i++ )
 	{
 		pointerInButtonRect[i] = -1;
@@ -763,8 +756,6 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		buttonsAutoFireRect[i].x = buttons[i].x - buttons[i].w / 2;
 		buttonsAutoFireRect[i].y = buttons[i].y - buttons[i].h / 2;
 	}
-	for( i = 0; i < MAX_BUTTONS; i++ )
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboard() 2: button %d pos %d %d %d %d", i, (int)buttons[i].x, (int)buttons[i].y, (int)buttons[i].w, (int)buttons[i].h);
 };
 
 
