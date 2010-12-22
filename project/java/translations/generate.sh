@@ -7,8 +7,8 @@ grep '<string name=' values/strings.xml | while read str; do
 	if [ "$var" = "app_name" ]; then
 		continue
 	fi
+	PRINTEN=true
 	echo 
-	echo en: $var: $text
 	for dir in values-*; do
 		lang=`echo $dir | sed 's/[^-]*-\(..\).*/\1/'`
 		trans=`grep "<string name=\"$var\">" $dir/strings.xml`
@@ -19,6 +19,10 @@ grep '<string name=' values/strings.xml | while read str; do
 			echo "<string name=\"$var\">$transtext</string>" >> $dir/strings.1.xml
 			echo "</resources>" >> $dir/strings.1.xml
 			mv -f $dir/strings.1.xml $dir/strings.xml
+			if $PRINTEN ; then
+				echo en: $var: $text
+				PRINTEN=false
+			fi
 			echo $lang: $var: $transtext
 		fi
 	done
