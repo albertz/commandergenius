@@ -24,6 +24,8 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import java.lang.String;
 
+
+// TODO: too much code here, split into multiple files
 class Settings
 {
 	static String SettingsFileName = "libsdl-settings.cfg";
@@ -220,24 +222,21 @@ class Settings
 
 		items.add(p.getResources().getString(R.string.controls_additional));
 
+		if( Globals.UseTouchscreenKeyboard )
+			items.add(p.getResources().getString(R.string.controls_screenkb));
+
+		if( Globals.AppUsesMouse )
+			items.add(p.getResources().getString(R.string.mouse_emulation));
+
 		if( Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick )
 			items.add(p.getResources().getString(R.string.controls_question));
 
 		if( Globals.UseAccelerometerAsArrowKeys || ! Globals.AppHandlesJoystickSensitivity )
 			items.add(p.getResources().getString(R.string.accel_question));
 
-		if( Globals.UseTouchscreenKeyboard )
-			items.add(p.getResources().getString(R.string.controls_screenkb));
-
-		if( Globals.AppUsesMouse )
-			items.add(p.getResources().getString(R.string.mouse_emulation));
-		
 		items.add(p.getResources().getString(R.string.audiobuf_question));
 
 		items.add(p.getResources().getString(R.string.remap_hwkeys));
-
-		if( Globals.UseTouchscreenKeyboard )
-    		items.add(p.getResources().getString(R.string.remap_screenkb));
 
 		items.add(p.getResources().getString(R.string.ok));
 
@@ -266,9 +265,23 @@ class Settings
 					showAdditionalInputConfig(p);
 				selected++;
 
+				if( Globals.UseTouchscreenKeyboard ) {
+					if( item == selected )
+						showScreenKeyboardConfigMainMenu(p);
+				} else
+					item++;
+				selected++;
+
+				if( Globals.AppUsesMouse ) {
+					if( item == selected )
+						showMouseConfigMainMenu(p);
+				} else
+					item++;
+				selected++;
+
 				if( Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick ) {
 					if( item == selected )
-						showKeyboardConfig(p);
+						showArrowKeysConfig(p);
 				} else
 					item++;
 				selected++;
@@ -280,20 +293,6 @@ class Settings
 					item++;
 				selected++;
 
-				if( Globals.UseTouchscreenKeyboard ) {
-					if( item == selected )
-						showScreenKeyboardConfig(p);
-				} else
-					item++;
-				selected++;
-
-				if( Globals.AppUsesMouse ) {
-					if( item == selected )
-						showMouseConfigMainMenu(p);
-				} else
-					item++;
-				selected++;
-				
 				if( item == selected )
 					showAudioConfig(p);
 				selected++;
@@ -302,13 +301,6 @@ class Settings
 					showRemapHwKeysConfig(p);
 				selected++;
 
-				if( Globals.UseTouchscreenKeyboard ) {
-					if( item == selected )
-						showRemapScreenKbConfig(p);
-				} else
-					item++;
-				selected++;
-				
 				if( item == selected )
 				{
 					Save(p);
@@ -380,6 +372,50 @@ class Settings
 					item++;
 				selected++;
 
+				if( item == selected )
+					showConfigMainMenu(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static int KeyboardConfigMainMenuLastSelected = 0;
+	static void showScreenKeyboardConfigMainMenu(final MainActivity p)
+	{
+		ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
+
+		items.add(p.getResources().getString(R.string.controls_screenkb_size));
+
+		items.add(p.getResources().getString(R.string.controls_screenkb_theme));
+
+		items.add(p.getResources().getString(R.string.remap_screenkb));
+
+		items.add(p.getResources().getString(R.string.ok));
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(p.getResources().getString(R.string.controls_screenkb));
+		builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), KeyboardConfigMainMenuLastSelected, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				KeyboardConfigMainMenuLastSelected = item;
+				dialog.dismiss();
+				int selected = 0;
+
+				if( item == selected )
+					showScreenKeyboardSizeConfig(p);
+				selected++;
+
+				if( item == selected )
+					showScreenKeyboardThemeConfig(p);
+				selected++;
+
+				if( item == selected )
+					showRemapScreenKbConfig(p);
+				selected++;
+				
 				if( item == selected )
 					showConfigMainMenu(p);
 			}
@@ -569,12 +605,12 @@ class Settings
 	}
 
 
-	static void showScreenKeyboardConfig(final MainActivity p)
+	static void showScreenKeyboardSizeConfig(final MainActivity p)
 	{
 		if( ! Globals.UseTouchscreenKeyboard )
 		{
 			Globals.TouchscreenKeyboardSize = 0;
-			showScreenKeyboardThemeConfig(p);
+			showScreenKeyboardConfigMainMenu(p);
 			return;
 		}
 		
@@ -592,7 +628,7 @@ class Settings
 				Globals.TouchscreenKeyboardSize = item;
 
 				dialog.dismiss();
-				showScreenKeyboardThemeConfig(p);
+				showScreenKeyboardConfigMainMenu(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -605,7 +641,7 @@ class Settings
 		if( ! Globals.UseTouchscreenKeyboard )
 		{
 			Globals.TouchscreenKeyboardTheme = 0;
-			showConfigMainMenu(p);
+			showScreenKeyboardConfigMainMenu(p);
 			return;
 		}
 		
@@ -624,7 +660,7 @@ class Settings
 				Globals.TouchscreenKeyboardTheme = item;
 
 				dialog.dismiss();
-				showConfigMainMenu(p);
+				showScreenKeyboardConfigMainMenu(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -766,7 +802,7 @@ class Settings
 	}
 
 
-	static void showKeyboardConfig(final MainActivity p)
+	static void showArrowKeysConfig(final MainActivity p)
 	{
 		if( ! Globals.AppNeedsArrowKeys && ! Globals.MoveMouseWithJoystick )
 		{
@@ -1113,7 +1149,7 @@ class Settings
 		
 		if( currentButton >= items.length ) // Globals.RemapScreenKbKeycode.length )
 		{
-			showConfigMainMenu(p);
+			showScreenKeyboardConfigMainMenu(p);
 			return;
 		}
 		if( ! Globals.ScreenKbControlsShown[currentButton + 2] )
