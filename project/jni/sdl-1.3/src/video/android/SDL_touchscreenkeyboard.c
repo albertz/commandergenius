@@ -890,7 +890,6 @@ int SDL_ANDROID_SetScreenKeyboardButtonKey(int buttonId, SDLKey key)
 {
 	if( buttonId < SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 || buttonId > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 || ! key )
 		return 0;
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SetScreenKeyboardButtonKey(): %d %d", buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, key);
 	buttonKeysyms[buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0] = key;
 	return 1;
 };

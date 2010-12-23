@@ -460,9 +460,6 @@ int main(int argc, char* argv[])
 		SDL_Rect r;
 		if(SDL_PollEvent(&event) > 0)
 		{
-			if(event.type == SDL_MOUSEBUTTONDOWN)
-				break;
-
 			if(event.type & (SDL_KEYUP | SDL_KEYDOWN))
 			{
 				Uint8	*keys = SDL_GetKeyState(&i);

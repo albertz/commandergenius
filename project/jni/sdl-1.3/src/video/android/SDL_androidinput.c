@@ -42,6 +42,7 @@
 #include "SDL_androidinput.h"
 #include "SDL_screenkeyboard.h"
 #include "jniwrapperstuff.h"
+#include "atan2i.h"
 
 
 static SDLKey SDL_android_keymap[KEYCODE_LAST+1];
@@ -52,7 +53,6 @@ static inline SDL_scancode TranslateKey(int scancode)
 		scancode = KEYCODE_UNKNOWN;
 	return SDL_android_keymap[scancode];
 }
-
 
 static int isTrackballUsed = 0;
 static int isMouseUsed = 0;
@@ -81,7 +81,19 @@ static Uint32 lastTrackballAction = 0;
 enum { TOUCH_PTR_UP = 0, TOUCH_PTR_MOUSE = 1, TOUCH_PTR_SCREENKB = 2 };
 int touchPointers[MAX_MULTITOUCH_POINTERS] = {0};
 int firstMousePointerId = -1;
-
+enum { MAX_MULTITOUCH_GESTURES = 4 };
+int multitouchGestureKeycode[MAX_MULTITOUCH_GESTURES] = {
+SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_6)),
+SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_7)),
+SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_8)),
+SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_9))
+};
+int multitouchGestureKeyPressed[MAX_MULTITOUCH_GESTURES] = { 0, 0, 0, 0 };
+int multitouchGestureSensitivity = 0;
+int multitouchGestureDist = -1;
+int multitouchGestureAngle = 0;
+int multitouchGestureX = -1;
+int multitouchGestureY = -1;
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
@@ -196,12 +208,111 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 
 	x = x * SDL_ANDROID_sFakeWindowWidth / SDL_ANDROID_sWindowWidth;
 	y = y * SDL_ANDROID_sFakeWindowHeight / SDL_ANDROID_sWindowHeight;
+	if( x < 0 )
+		x = 0;
+	if( x > SDL_ANDROID_sWindowWidth )
+		x = SDL_ANDROID_sWindowWidth;
+	if( y < 0 )
+		y = 0;
+	if( y > SDL_ANDROID_sWindowHeight )
+		y = SDL_ANDROID_sWindowHeight;
 
 #endif
 
+	if( action == MOUSE_UP )
+	{
+		multitouchGestureX = -1;
+		multitouchGestureY = -1;
+		multitouchGestureDist = -1;
+		for(i = 0; i < MAX_MULTITOUCH_GESTURES; i++)
+		{
+			if( multitouchGestureKeyPressed[i] )
+			{
+				multitouchGestureKeyPressed[i] = 0;
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[i] );
+			}
+		}
+	}
+	else
+	{
+		if( firstMousePointerId != pointerId )
+		{
+			multitouchGestureX = x;
+			multitouchGestureY = y;
+		}
+		if( firstMousePointerId == pointerId && multitouchGestureX >= 0 )
+		{
+			int dist = abs( x - multitouchGestureX ) + abs( y - multitouchGestureY );
+			int angle = atan2i( y - multitouchGestureY, x - multitouchGestureX );
+			if( multitouchGestureDist < 0 )
+			{
+				multitouchGestureDist = dist;
+				multitouchGestureAngle = angle;
+			}
+			else
+			{
+				int distMaxDiff = SDL_ANDROID_sFakeWindowHeight / ( 1 + (1 + multitouchGestureSensitivity) * 2 );
+				int angleMaxDiff = atan2i_PI / ( 1 + (1 + multitouchGestureSensitivity) * 2 );
+				if( dist - multitouchGestureDist > distMaxDiff )
+				{
+					multitouchGestureKeyPressed[0] = 1;
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[0] );
+				}
+				else
+				if( multitouchGestureKeyPressed[0] )
+				{
+					multitouchGestureKeyPressed[0] = 0;
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[0] );
+				}
+				if( multitouchGestureDist - dist > distMaxDiff )
+				{
+					multitouchGestureKeyPressed[1] = 1;
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[1] );
+				}
+				else
+				if( multitouchGestureKeyPressed[1] )
+				{
+					multitouchGestureKeyPressed[1] = 0;
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[1] );
+				}
+
+				int angleDiff = angle - multitouchGestureAngle;
+
+				while( angleDiff < atan2i_PI )
+					angleDiff += atan2i_PI * 2;
+				while( angleDiff > atan2i_PI )
+					angleDiff -= atan2i_PI * 2;
+
+				if( angleDiff < -angleMaxDiff )
+				{
+					multitouchGestureKeyPressed[2] = 1;
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[2] );
+				}
+				else
+				if( multitouchGestureKeyPressed[2] )
+				{
+					multitouchGestureKeyPressed[2] = 0;
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[2] );
+				}
+				if( angleDiff > angleMaxDiff )
+				{
+					multitouchGestureKeyPressed[3] = 1;
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[3] );
+				}
+				else
+				if( multitouchGestureKeyPressed[3] )
+				{
+					multitouchGestureKeyPressed[3] = 0;
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[3] );
+				}
+				__android_log_print(ANDROID_LOG_INFO, "libSDL", "x %d y %d multitouchGestureX %d multitouchGestureY %d dist %d multitouchGestureDist %d angle %08X multitouchGestureAngle %08X angleDiff %09d",
+					x, y, multitouchGestureX, multitouchGestureY, dist, multitouchGestureDist, angle, multitouchGestureAngle, angleDiff );
+			}
+		}
+	}
+
 	if( isMultitouchUsed )
 	{
-
 #if SDL_VERSION_ATLEAST(1,3,0)
 		// Use nifty SDL 1.3 multitouch API
 		if( action == MOUSE_MOVE )
@@ -223,7 +334,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	{
 		SDL_keysym keysym;
 		if( action != MOUSE_MOVE )
-			SDL_ANDROID_MainThreadPushKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_0)) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, SDL_ANDROID_GetScreenKeyboardButtonKey(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0) );
 		return;
 	}
 
@@ -1314,7 +1425,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetKeymapKey) ( JNIEnv*  env, jobject thiz, jint
 	SDL_android_keymap[javakey] = key;
 }
 
-JNIEXPORT jint JNICALL 
+JNIEXPORT jint JNICALL
 JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyScreenKb) ( JNIEnv*  env, jobject thiz, jint keynum)
 {
 	if( keynum < 0 || keynum > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 + 4 )
@@ -1351,6 +1462,29 @@ JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyUsed) ( JNIEnv*  env, jobject thiz
 	if( key >= 0 && !used )
 		SDL_ANDROID_SetScreenKeyboardButtonPos(key, &rect);
 }
+
+JNIEXPORT jint JNICALL
+JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyMultitouchGesture) ( JNIEnv*  env, jobject thiz, jint keynum)
+{
+	if( keynum < 0 || keynum >= MAX_MULTITOUCH_GESTURES )
+		return SDL_KEY(UNKNOWN);
+	return multitouchGestureKeycode[keynum];
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetKeymapKeyMultitouchGesture) ( JNIEnv*  env, jobject thiz, jint keynum, jint keycode)
+{
+	if( keynum < 0 || keynum >= MAX_MULTITOUCH_GESTURES )
+		return SDL_KEY(UNKNOWN);
+	multitouchGestureKeycode[keynum] = keycode;
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetMultitouchGestureSensitivity) ( JNIEnv*  env, jobject thiz, jint sensitivity)
+{
+	multitouchGestureSensitivity = sensitivity;
+}
+
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )

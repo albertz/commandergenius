@@ -79,4 +79,26 @@
 <string name="pointandclick_joystickmousespeed">Bewegen Sie die Maus mit Joystick-Geschwindigkeit</string>
 <string name="pointandclick_joystickmouseaccel">Bewegen Sie die Maus mit Joystick-Beschleunigung</string>
 <string name="none">Keine</string>
+<string name="controls_screenkb_transparency">On-Screen-Tastatur Transparenz</string>
+<string name="controls_screenkb_trans_0">Nicht sichtbar</string>
+<string name="controls_screenkb_trans_1">Fast unsichtbar</string>
+<string name="controls_screenkb_trans_2">Transparente</string>
+<string name="controls_screenkb_trans_3">Semi-transparent</string>
+<string name="controls_screenkb_trans_4">Non-transparent</string>
+<string name="mouse_emulation">Maus-Emulation</string>
+<string name="measurepressure">Kalibrieren Touchscreen Druck</string>
+<string name="remap_hwkeys">Remap physischen Tasten</string>
+<string name="remap_hwkeys_press">Drücken Sie eine beliebige Taste außer HOME und POWER, können Sie Lautstärke-Tasten</string>
+<string name="remap_hwkeys_select">Wählen Sie SDL Schlüsselcode</string>
+<string name="remap_screenkb">Remap On-Screen-Steuerung</string>
+<string name="remap_screenkb_joystick">On-Screen-Joystick</string>
+<string name="remap_screenkb_button">On-Screen-Taste</string>
+<string name="remap_screenkb_button_text">On-Screen-Texteingabe-Taste</string>
+<string name="remap_screenkb_button_zoomin">Zoom in Zwei-Finger-Geste</string>
+<string name="remap_screenkb_button_zoomout">Verkleinern Zwei-Finger-Geste</string>
+<string name="remap_screenkb_button_rotateleft">Nach links drehen Zwei-Finger-Geste</string>
+<string name="remap_screenkb_button_rotateright">Nach rechts drehen Zwei-Finger-Geste</string>
+<string name="remap_screenkb_button_gestures">Zwei-Finger-Gesten</string>
+<string name="accel_veryfast">Sehr schnell</string>
+<string name="remap_screenkb_button_gestures_sensitivity">Zwei-Finger-Gesten Bildschirm Empfindlichkeit</string>
 </resources>

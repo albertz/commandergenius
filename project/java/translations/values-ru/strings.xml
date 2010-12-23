@@ -72,4 +72,26 @@
 <string name="pointandclick_joystickmousespeed">Перемещение мыши джойстиком - скорость</string>
 <string name="pointandclick_joystickmouseaccel">Перемещение мыши джойстиком - ускорение</string>
 <string name="none">Нет</string>
+<string name="controls_screenkb_transparency">О прозрачности клавиатура-экран</string>
+<string name="controls_screenkb_trans_0">Невидимый</string>
+<string name="controls_screenkb_trans_1">Почти невидимый</string>
+<string name="controls_screenkb_trans_2">Прозрачный</string>
+<string name="controls_screenkb_trans_3">Полупрозрачные</string>
+<string name="controls_screenkb_trans_4">Непрозрачные</string>
+<string name="mouse_emulation">Эмуляции мыши</string>
+<string name="measurepressure">Калибровка сенсорного давления</string>
+<string name="remap_hwkeys">Переназначение физических клавиш</string>
+<string name="remap_hwkeys_press">Нажмите любую клавишу, кроме HOME и POWER, вы можете использовать клавиши регулировки громкости</string>
+<string name="remap_hwkeys_select">Выберите код кнопки SDL</string>
+<string name="remap_screenkb">Переназначение экранных кнопок</string>
+<string name="remap_screenkb_joystick">Экранный джойстик</string>
+<string name="remap_screenkb_button">Экранные кнопки</string>
+<string name="remap_screenkb_button_text">Экранная кнопка ввода текста</string>
+<string name="remap_screenkb_button_zoomin">Увеличить двумя пальцами жест</string>
+<string name="remap_screenkb_button_zoomout">Уменьшить двумя пальцами жест</string>
+<string name="remap_screenkb_button_rotateleft">Повернуть налево двумя пальцами жест</string>
+<string name="remap_screenkb_button_rotateright">Повернуть вправо двумя пальцами жест</string>
+<string name="remap_screenkb_button_gestures">Жест двумя пальцами по экрану</string>
+<string name="accel_veryfast">Очень быстро</string>
+<string name="remap_screenkb_button_gestures_sensitivity">Чувствительность жеста двумя пальцами по экрану</string>
 </resources>

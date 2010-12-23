@@ -82,4 +82,26 @@
 <string name="pointandclick_joystickmousespeed">Déplacez la souris avec la vitesse joystick</string>
 <string name="pointandclick_joystickmouseaccel">Déplacez la souris avec une accélération joystick</string>
 <string name="none">Aucun</string>
+<string name="controls_screenkb_transparency">Sur la transparence du clavier à l\u0026#39;écran</string>
+<string name="controls_screenkb_trans_0">Invisible</string>
+<string name="controls_screenkb_trans_1">Presque invisible</string>
+<string name="controls_screenkb_trans_2">Transparent</string>
+<string name="controls_screenkb_trans_3">Semi-transparent</string>
+<string name="controls_screenkb_trans_4">Non-transparent</string>
+<string name="mouse_emulation">l\u0026#39;émulation de la souris</string>
+<string name="measurepressure">Calibrer la pression tactile</string>
+<string name="remap_hwkeys">Reconfigurer les touches physiques</string>
+<string name="remap_hwkeys_press">Appuyez sur n\u0026#39;importe quelle touche sauf HOME et POWER, vous pouvez utiliser les touches de volume</string>
+<string name="remap_hwkeys_select">Sélectionnez SDL keycode</string>
+<string name="remap_screenkb">Reconfigurer les contrôles à l\u0026#39;écran</string>
+<string name="remap_screenkb_joystick">Le joystick à l\u0026#39;écran</string>
+<string name="remap_screenkb_button">Le bouton à l\u0026#39;écran</string>
+<string name="remap_screenkb_button_text">Sur l\u0026#39;écran de saisie de texte bouton</string>
+<string name="remap_screenkb_button_zoomin">Zoom sur deux doigts geste</string>
+<string name="remap_screenkb_button_zoomout">Zoom sur deux doigts geste</string>
+<string name="remap_screenkb_button_rotateleft">Tournez à gauche geste de deux doigts</string>
+<string name="remap_screenkb_button_rotateright">Tournez à droite geste de deux doigts</string>
+<string name="remap_screenkb_button_gestures">Deux doigts gestes</string>
+<string name="accel_veryfast">Très rapide</string>
+<string name="remap_screenkb_button_gestures_sensitivity">Deux doigts écran gestes sensibilité</string>
 </resources>

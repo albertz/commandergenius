@@ -77,6 +77,13 @@ class Settings
 				out.writeBoolean(Globals.ScreenKbControlsShown[i]);
 			}
 			out.writeInt(Globals.TouchscreenKeyboardTransparency);
+			out.writeInt(Globals.RemapMultitouchGestureKeycode.length);
+			for( int i = 0; i < Globals.RemapMultitouchGestureKeycode.length; i++ )
+			{
+				out.writeInt(Globals.RemapMultitouchGestureKeycode[i]);
+				out.writeBoolean(Globals.MultitouchGesturesUsed[i]);
+			}
+			out.writeInt(Globals.MultitouchGestureSensitivity);
 
 			out.close();
 			settingsLoaded = true;
@@ -114,10 +121,19 @@ class Settings
 		}
 		Globals.ScreenKbControlsShown[0] = Globals.AppNeedsArrowKeys;
 		Globals.ScreenKbControlsShown[1] = Globals.AppNeedsTextInput;
-		for( int i = 2; i < 8; i++ )
+		for( int i = 2; i < Globals.ScreenKbControlsShown.length; i++ )
 			Globals.ScreenKbControlsShown[i] = ( i - 2 < Globals.AppTouchscreenKeyboardKeysAmount );
-		for( int i = 8; i < 12; i++ )
-			Globals.ScreenKbControlsShown[i] = true;
+		for( int i = 0; i < Globals.RemapMultitouchGestureKeycode.length; i++ )
+		{
+			int sdlKey = nativeGetKeymapKeyMultitouchGesture(i);
+			int idx = 0;
+			for(int ii = 0; ii < SDL_Keys.values.length; ii++)
+				if(SDL_Keys.values[ii] == sdlKey)
+					idx = ii;
+			Globals.RemapMultitouchGestureKeycode[i] = idx;
+		}
+		for( int i = 0; i < Globals.MultitouchGesturesUsed.length; i++ )
+			Globals.MultitouchGesturesUsed[i] = true;
 
 		try {
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
@@ -163,6 +179,14 @@ class Settings
 				Globals.ScreenKbControlsShown[i] = settingsFile.readBoolean();
 			}
 			Globals.TouchscreenKeyboardTransparency = settingsFile.readInt();
+			if( settingsFile.readInt() != Globals.RemapMultitouchGestureKeycode.length )
+				throw new IOException();
+			for( int i = 0; i < Globals.RemapMultitouchGestureKeycode.length; i++ )
+			{
+				Globals.RemapMultitouchGestureKeycode[i] = settingsFile.readInt();
+				Globals.MultitouchGesturesUsed[i] = settingsFile.readBoolean();
+			}
+			Globals.MultitouchGestureSensitivity = settingsFile.readInt();
 			
 			settingsLoaded = true;
 
@@ -240,6 +264,8 @@ class Settings
 
 		items.add(p.getResources().getString(R.string.remap_hwkeys));
 
+		items.add(p.getResources().getString(R.string.remap_screenkb_button_gestures));
+
 		items.add(p.getResources().getString(R.string.ok));
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -301,6 +327,10 @@ class Settings
 
 				if( item == selected )
 					showRemapHwKeysConfig(p);
+				selected++;
+
+				if( item == selected )
+					showScreenGesturesConfig(p);
 				selected++;
 
 				if( item == selected )
@@ -1073,13 +1103,6 @@ class Settings
 			p.getResources().getString(R.string.remap_screenkb_button) + " 4",
 			p.getResources().getString(R.string.remap_screenkb_button) + " 5",
 			p.getResources().getString(R.string.remap_screenkb_button) + " 6",
-			// Not implemented yet!
-			/*
-			p.getResources().getString(R.string.remap_screenkb_button_zoomin),
-			p.getResources().getString(R.string.remap_screenkb_button_zoomout),
-			p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
-			p.getResources().getString(R.string.remap_screenkb_button_rotateright),
-			*/
 		};
 
 		boolean defaults[] = { 
@@ -1091,38 +1114,7 @@ class Settings
 			Globals.ScreenKbControlsShown[5],
 			Globals.ScreenKbControlsShown[6],
 			Globals.ScreenKbControlsShown[7],
-			// Not implemented yet!
-			/*
-			Globals.ScreenKbControlsShown[8],
-			Globals.ScreenKbControlsShown[9],
-			Globals.ScreenKbControlsShown[10],
-			Globals.ScreenKbControlsShown[11],
-			*/
 		};
-		
-		
-		if( ! Globals.UseTouchscreenKeyboard )
-		{
-			for( int i = 0; i < 8; i++ )
-				Globals.ScreenKbControlsShown[i] = false;
-			
-			CharSequence[] items2 = {
-				p.getResources().getString(R.string.remap_screenkb_button_zoomin),
-				p.getResources().getString(R.string.remap_screenkb_button_zoomout),
-				p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
-				p.getResources().getString(R.string.remap_screenkb_button_rotateright),
-			};
-
-			boolean defaults2[] = { 
-				Globals.ScreenKbControlsShown[8],
-				Globals.ScreenKbControlsShown[9],
-				Globals.ScreenKbControlsShown[10],
-				Globals.ScreenKbControlsShown[11],
-			};
-
-			items = items2;
-			defaults = defaults2;
-		}
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.remap_screenkb));
@@ -1158,16 +1150,9 @@ class Settings
 			p.getResources().getString(R.string.remap_screenkb_button) + " 4",
 			p.getResources().getString(R.string.remap_screenkb_button) + " 5",
 			p.getResources().getString(R.string.remap_screenkb_button) + " 6",
-			// Not implemented yet!
-			/*
-			p.getResources().getString(R.string.remap_screenkb_button_zoomin),
-			p.getResources().getString(R.string.remap_screenkb_button_zoomout),
-			p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
-			p.getResources().getString(R.string.remap_screenkb_button_rotateright),
-			*/
 		};
 		
-		if( currentButton >= items.length ) // Globals.RemapScreenKbKeycode.length )
+		if( currentButton >= Globals.RemapScreenKbKeycode.length )
 		{
 			showScreenKeyboardConfigMainMenu(p);
 			return;
@@ -1188,6 +1173,108 @@ class Settings
 
 				dialog.dismiss();
 				showRemapScreenKbConfig2(p, currentButton + 1);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+	
+	static void showScreenGesturesConfig(final MainActivity p)
+	{
+		CharSequence[] items = {
+			p.getResources().getString(R.string.remap_screenkb_button_zoomin),
+			p.getResources().getString(R.string.remap_screenkb_button_zoomout),
+			p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
+			p.getResources().getString(R.string.remap_screenkb_button_rotateright),
+		};
+
+		boolean defaults[] = { 
+			Globals.MultitouchGesturesUsed[0],
+			Globals.MultitouchGesturesUsed[1],
+			Globals.MultitouchGesturesUsed[2],
+			Globals.MultitouchGesturesUsed[3],
+		};
+		
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(p.getResources().getString(R.string.remap_screenkb_button_gestures));
+		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+			{
+				Globals.MultitouchGesturesUsed[item] = isChecked;
+			}
+		});
+		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				dialog.dismiss();
+				showScreenGesturesConfig2(p);
+			}
+		});
+
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showScreenGesturesConfig2(final MainActivity p)
+	{
+		final CharSequence[] items = {
+			p.getResources().getString(R.string.accel_slow),
+			p.getResources().getString(R.string.accel_medium),
+			p.getResources().getString(R.string.accel_fast),
+			p.getResources().getString(R.string.accel_veryfast)
+		};
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(R.string.remap_screenkb_button_gestures_sensitivity);
+		builder.setSingleChoiceItems(items, Globals.MultitouchGestureSensitivity, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.MultitouchGestureSensitivity = item;
+
+				dialog.dismiss();
+				showScreenGesturesConfig3(p, 0);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showScreenGesturesConfig3(final MainActivity p, final int currentButton)
+	{
+		CharSequence[] items = {
+			p.getResources().getString(R.string.remap_screenkb_button_zoomin),
+			p.getResources().getString(R.string.remap_screenkb_button_zoomout),
+			p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
+			p.getResources().getString(R.string.remap_screenkb_button_rotateright),
+		};
+		
+		if( currentButton >= Globals.RemapMultitouchGestureKeycode.length )
+		{
+			showConfigMainMenu(p);
+			return;
+		}
+		if( ! Globals.MultitouchGesturesUsed[currentButton] )
+		{
+			showScreenGesturesConfig3(p, currentButton + 1);
+			return;
+		}
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(items[currentButton]);
+		builder.setSingleChoiceItems(SDL_Keys.names, Globals.RemapMultitouchGestureKeycode[currentButton], new DialogInterface.OnClickListener()
+		{
+			public void onClick(DialogInterface dialog, int item)
+			{
+				Globals.RemapMultitouchGestureKeycode[currentButton] = item;
+
+				dialog.dismiss();
+				showScreenGesturesConfig3(p, currentButton + 1);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1229,18 +1316,15 @@ class Settings
 		}
 		SetupTouchscreenKeyboardGraphics(p);
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
-		{
 			nativeSetKeymapKey(i, SDL_Keys.values[Globals.RemapHwKeycode[i]]);
-		}
 
 		for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
-		{
 			nativeSetScreenKbKeyUsed(i, Globals.ScreenKbControlsShown[i] ? 1 : 0);
-		}
 		for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
-		{
 			nativeSetKeymapKeyScreenKb(i, SDL_Keys.values[Globals.RemapScreenKbKeycode[i]]);
-		}
+		for( int i = 0; i < Globals.RemapMultitouchGestureKeycode.length; i++ )
+			nativeSetKeymapKeyMultitouchGesture(i, Globals.MultitouchGesturesUsed[i] ? SDL_Keys.values[Globals.RemapMultitouchGestureKeycode[i]] : 0);
+		nativeSetMultitouchGestureSensitivity(Globals.MultitouchGestureSensitivity);
 
 		String lang = new String(Locale.getDefault().getLanguage());
 		if( Locale.getDefault().getCountry().length() > 0 )
@@ -1297,11 +1381,14 @@ class Settings
 	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttonsAutoFire, int transparency);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	private static native void nativeInitKeymap();
-	private static native int nativeGetKeymapKey(int key);
+	private static native int  nativeGetKeymapKey(int key);
 	private static native void nativeSetKeymapKey(int javakey, int key);
-	private static native int nativeGetKeymapKeyScreenKb(int keynum);
+	private static native int  nativeGetKeymapKeyScreenKb(int keynum);
 	private static native void nativeSetKeymapKeyScreenKb(int keynum, int key);
 	private static native void nativeSetScreenKbKeyUsed(int keynum, int used);
-	public static native void nativeSetEnv(final String name, final String value);
+	private static native int  nativeGetKeymapKeyMultitouchGesture(int keynum);
+	private static native void nativeSetKeymapKeyMultitouchGesture(int keynum, int key);
+	private static native void nativeSetMultitouchGestureSensitivity(int sensitivity);
+	public static native void  nativeSetEnv(final String name, final String value);
 }
 

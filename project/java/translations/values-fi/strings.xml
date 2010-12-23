@@ -79,4 +79,26 @@
 <string name="pointandclick_joystickmousespeed">Siirrä hiiri ohjainta nopeasti</string>
 <string name="pointandclick_joystickmouseaccel">Siirrä hiiri ohjainta kiihtyvyys</string>
 <string name="none">Ei</string>
+<string name="controls_screenkb_transparency">Näyttönäppäimistöllä avoimuutta</string>
+<string name="controls_screenkb_trans_0">Näkymätön</string>
+<string name="controls_screenkb_trans_1">Lähes näkymätön</string>
+<string name="controls_screenkb_trans_2">Läpinäkyvä</string>
+<string name="controls_screenkb_trans_3">Semi-avoimet</string>
+<string name="controls_screenkb_trans_4">Ei-läpinäkyvä</string>
+<string name="mouse_emulation">Hiiren emulointi</string>
+<string name="measurepressure">Kalibroi kosketusnäyttö paine</string>
+<string name="remap_hwkeys">Remap fyysiset näppäimet</string>
+<string name="remap_hwkeys_press">Paina mitä tahansa näppäintä paitsi koti-ja POWER, voit käyttää äänenvoimakkuusnäppäimiä</string>
+<string name="remap_hwkeys_select">Valitse SDL näppäinkoodien</string>
+<string name="remap_screenkb">Remap näytön valvonnan</string>
+<string name="remap_screenkb_joystick">Näytöllä ohjainta</string>
+<string name="remap_screenkb_button">Ruutunäyttöpainike</string>
+<string name="remap_screenkb_button_text">Näytön tekstin tulopainiketta</string>
+<string name="remap_screenkb_button_zoomin">Suurenna kahden sormen elettä</string>
+<string name="remap_screenkb_button_zoomout">Pienennä kahden sormen elettä</string>
+<string name="remap_screenkb_button_rotateleft">Kierrä vasemmalle kahden sormen elettä</string>
+<string name="remap_screenkb_button_rotateright">Kierrä oikealle kahden sormen elettä</string>
+<string name="remap_screenkb_button_gestures">Kahden sormen eleitä</string>
+<string name="accel_veryfast">Erittäin nopea</string>
+<string name="remap_screenkb_button_gestures_sensitivity">Kahden sormen näytön eleet herkkyys</string>
 </resources>
