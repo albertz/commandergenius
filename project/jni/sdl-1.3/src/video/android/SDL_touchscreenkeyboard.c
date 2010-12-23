@@ -850,7 +850,6 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	if( buttonId == SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD )
 	{
 		arrows = *pos;
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "SetScreenKeyboardButtonPos(): arrows %dx%d-%dx%d", (int)pos->x, (int)pos->y, (int)pos->w, (int)pos->h);
 		if(touchscreenKeyboardTheme == 0)
 		{
 			prepareFontCharWireframe(FONT_LEFT, arrows.w / 2, arrows.h / 2);
@@ -862,7 +861,6 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	else
 	{
 		buttons[buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0] = *pos;
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "SetScreenKeyboardButtonPos(): button %d %dx%d-%dx%d", buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, (int)pos->x, (int)pos->y, (int)pos->w, (int)pos->h);
 		if(touchscreenKeyboardTheme == 0)
 		{
 			int i = buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;

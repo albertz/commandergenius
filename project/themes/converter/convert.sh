@@ -65,10 +65,10 @@ rm -f ../../res/raw/simpletheme.raw
 
 for F in \
 dpad \
-pad_left \
-pad_right \
-pad_up \
-pad_down \
+dpad_left \
+dpad_right \
+dpad_up \
+dpad_down \
 \
 1auto_pressed \
 1auto \

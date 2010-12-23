@@ -114,7 +114,7 @@ class Settings
 		}
 		Globals.ScreenKbControlsShown[0] = Globals.AppNeedsArrowKeys;
 		Globals.ScreenKbControlsShown[1] = Globals.AppNeedsTextInput;
-		for( int i = 2; i < 7; i++ )
+		for( int i = 2; i < 8; i++ )
 			Globals.ScreenKbControlsShown[i] = ( i - 2 < Globals.AppTouchscreenKeyboardKeysAmount );
 		for( int i = 8; i < 12; i++ )
 			Globals.ScreenKbControlsShown[i] = true;
