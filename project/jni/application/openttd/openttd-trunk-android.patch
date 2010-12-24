@@ -2,7 +2,16 @@ Index: src/video/sdl_v.cpp
 ===================================================================
 --- src/video/sdl_v.cpp	(revision 21311)
 +++ src/video/sdl_v.cpp	(working copy)
-@@ -485,6 +485,9 @@
+@@ -354,6 +354,8 @@
+ 	if (sym->scancode == 49) key = WKC_BACKSPACE;
+ #elif defined(__sgi__)
+ 	if (sym->scancode == 22) key = WKC_BACKQUOTE;
++#elif defined(ANDROID)
++	if (sym->scancode == SDLK_BACKQUOTE) key = WKC_BACKQUOTE;
+ #else
+ 	if (sym->scancode == 49) key = WKC_BACKQUOTE;
+ #endif
+@@ -485,6 +487,9 @@
  	SDL_CALL SDL_EnableUNICODE(1);
  
  	_draw_threaded = GetDriverParam(parm, "no_threads") == NULL && GetDriverParam(parm, "no_thread") == NULL;
