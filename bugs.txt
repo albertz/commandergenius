@@ -1,40 +1,30 @@
 Known bugs
 ==========
 
-- Merge all config screens into single big config screen.
+- Split Settings.java into several files
 
-- Fix on-screen keyboard, add more keys and more options, possibility to create custom key layout.
+- There's no double-buffered SW mode, only single-buffered.
+
+Requested features
+==================
 
 - Export phone vibrator to SDL - interface is available in SDL 1.3
 
 - HDMI output (HTC Evo and Samsung Epic support that):
-HDMI output will be tricky - I've read the doc here: 
+HDMI output will be tricky - I've read the doc here:
 https://docs.google.com/View?id=dhtsnvs6_57d2hpqtgr#4_1_HDMI_output_support_338048
-It says that in order to output something to HDMI you need to have a VideoView class visible on screen: 
+It says that in order to output something to HDMI you need to have a VideoView class visible on screen:
 http://developer.android.com/reference/android/widget/VideoView.html .
-This class does not have any method like "showMyOwnCustomImage()", 
-it just plays the video from the given path, so obvious solution is to create 
-special FIFO file or open a socket, point the VideoView to play this FIFO or socket, 
-and then write raw uncompressed video frames to that FIFO with some small header so that 
+This class does not have any method like "showMyOwnCustomImage()",
+it just plays the video from the given path, so obvious solution is to create
+special FIFO file or open a socket, point the VideoView to play this FIFO or socket,
+and then write raw uncompressed video frames to that FIFO with some small header so that
 VideoView will recognize it as a proper video format.
-UQM gives 5 FPS without such hacks, if I'll implement that FPS will drop to 1-2 
-(maybe not that bad, I have to actually try that), because you'll have to do huge memcpy(), 
-plus VideoView will contain some buffer to ensure the playback is smooth, 
+UQM gives 5 FPS without such hacks, if I'll implement that FPS will drop to 1-2
+(maybe not that bad, I have to actually try that), because you'll have to do huge memcpy(),
+plus VideoView will contain some buffer to ensure the playback is smooth,
 so the data on your TV will lag halfsecond behind the data on the device screen.
 
-- Add a user option to keep aspect ratio of screen (not compile-time option which is already available)
-
-- Add an option for overlay buttons transparency and button images size.
-
-- Somehow make this port into main libSDL repository
-
-- OpenTyrian:
-  1. Navigating game menus downwards with trackball skips events, that does not happen
-     when navigting upwards.
-  2. The detail level can be set to WILD by pressing "w" key in gameplay escape menu, expose that through interface.
-  3. Add ENGAGE mode to menu.
-
-- Ur-Quan Masters:
-  2. Add accelerated GFX (even at the cost of GFX bugs, if Melee will work smoothly).
-  3. Add proper netplay with masterserver and server list instead of "Enter host IP here" dialog.
+- Somehow make this port into main libSDL repository - that's rather impossible,
+because the original sources are modified badly, plus Java code does not fit anywhere.
 

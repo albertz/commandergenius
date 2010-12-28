@@ -1,8 +1,6 @@
 Games to port
 =============
 
-- Finish ScummVM build.
-
 I'm not planning any more games to port.
 
 
@@ -11,20 +9,16 @@ Bugs to fix
 
 - Possibility to create custom key layout for on-screen keyboard.
 
-- Add an option for overlay buttons transparency and button images size.
+- Add an option for button images size.
 
 - Running OpenGL SwapBuffers in a separate thread - huge speed improvement expected.
 
 - Show/hide screen controls with longpress on Text Edit button.
 
-- Zoom and rotate multitouch gestures should return some keycodes.
-
 - Right click by longpress.
 
-- Option to calibrate touch area of the screen.
+- Calling SDL_SetVideoMode() with SDL 1.3 several times makes it crash.
 
-- Calling SDL_SetVideoMode() with SDL 1.3 makes it crash.
-
-- Support for NDK r5.
+- Support for NDK r5b, when it's released.
 
 And that's all, I won't be doing any more development or fix other bugs (see bugs.txt for details).

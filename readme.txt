@@ -13,6 +13,9 @@ running inside Windows, then install Linux toolchain on it. I was told andLinux 
 Also you'll need full set of Linux utils and symlinks support to launch ChangeAppSettings.sh (sh, grep, sed, tr).
 http://www.pocketmagic.net/?p=1332 - guide how to set up environment in Cygwin.
 
+Please don't use NDK r5, it is buggy, wait for NDK r5b:
+http://groups.google.com/group/android-ndk/browse_thread/thread/6b35728eec7ef52f/b57f52776842041d
+
 How to compile Alien Blaster demo application
 =============================================
 
@@ -31,68 +34,22 @@ and 6 configurable keys, full text input is toggled with 7-th key. Application m
 and returned keycodes, and also toggle full text input - see SDL_screenkeyboard.h.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
-remove project/jni/application/src symlink and make new one pointing to glxgears, 
-also you'll have to enable Z-Buffer in ChangeAppSettings.sh.
+remove project/jni/application/src symlink and make new one pointing to glxgears, then run build.sh
 Note that GL ES is NOT pure OpenGL - there are no glBegin() and glEnd() call and other widely used functions,
 and generally it will take a lot of effort to port pure OpenGL application to GL ES.
 
 How to compile your own application
 ===================================
 
-When porting you own app, first of all ensure that your application supports
-native RGB_565 pixel format and AUDIO_S8 or AUDIO_S16 audio format
-(there is RGB_565 pixelformat even for OpenGL, not BGR_565 as all other OpenGL implementation have).
-Colorkey images are supported using RGBA_5551 pixelformat with 1-bit alpha (SDL does conversion internally,
-for you they are just RGB_565 surfaces), alpha surfaces have RGBA_4444 format. 
-See file project/jni/application/alienblaster/SdlForwardCompat.h
-to learn how to make your application use SDL 1.3 instead of SDL 1.2 without much pain.
-HTC G1/Nexus One has native screen resolution 480x320, HTC Evo has 800x480, you may toggle automatic
-screen resizing in ChangeAppSettings.sh and draw to virtual 640x480 screen - 
-it will be HW accelerated and will not impact performance much.
-SDL_ListModes()[0] will always return native screen resolution.
-Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
-texture on HTC G1. Software surfaces may be of any size of course (but you don't want to do expensive memcpy).
+If you're porting existing app which uses SDL 1.2 please always use SW mode: 
+neither SDL_SetVideoMode() call nor SDL_CreateRGBSurface() etc functions shall contain SDL_HWSURFACE flags.
+The BPP in SDL_SetVideoMode() shall be set to 16, and audio format - to AUDIO_S8 or AUDIO_S16.
 
-Alternatively, SDL 1.2 is available too, you may use it with SW video as usual, however if you want HW acceleration
-there are few restrictions: you cannot currently blit SW surface to screen, it should be only HW surface,
-however you can use colorkey, per-surface alpha and per-pixel alpha.
-Also the screen is always double-buffered, and after each SDL_Flip() there is garbage in pixel buffer,
-so forget about dirty rects and partial screen updates - you have to re-render whole picture each frame.
-Single-buffer rendering might be possible with techniques like glFramebufferTexture2D(),
-however it may not be present on all devices, so I won't do that.
-Basically your code should be like:
+The native Android pixel format is RGB_565, even for OpenGL, not BGR_565 as all other OpenGL implementation have.
 
-// Init HW-accelerated video
-SDL_SetVideoMode( 640, 480, 16, SDL_DOUBLEBUF | SDL_HWSURFACE );
-
-// Load graphics
-SDL_Surface *sprite = IMG_Load( "sprite.png" );
-SDL_Surface * hwSprite;
-
-if( sprite->format->Amask )
-{
-	// Surface contains per-pixel alpha, convert it to HW-accelerated format
-	hwSprite = SDL_DisplayFormatAlpha(sprite);
-}
-else
-{
-	// Set pink color as transparent
-	SDL_SetColorKey( sprite, SDL_SRCCOLORKEY, SDL_MapRGB(sprite->format, 255, 0, 255) );
-	// Create HW-accelerated surface
-	hwSprite = SDL_DisplayFormat(sprite);
-	// Set per-surface alpha, if necessary
-	SDL_SetAlpha( hwSprite, SDL_SRCALPHA, 128 );
-}
-SDL_FreeSurface(sprite);
-
-// Blit it in HW-accelerated way
-SDL_BlitSurface(hwSprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
-
-// Supported, but VERY slow (slower than blitting in SW mode)
-SDL_BlitSurface(sprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
-
-// Supported, but VERY slow (use in cases where you need to take a screenshot)
-SDL_BlitSurface(SDL_GetVideoSurface(), sourceRect, sprite, &targetRect);
+Colorkey images are supported using RGBA_5551 pixelformat with 1-bit alpha -
+SDL does conversion internally, for you they are just RGB_565 surfaces.
+Alpha surfaces have RGBA_4444 format.
 
 To compile your own app, put your app sources into project/jni/application dir (or create symlink to them),
 and change symlink "src" to point to your app:
@@ -117,9 +74,11 @@ Then you can launch build.sh.
 The NDK has RTTI and exceptions disabled for C++ code, if you need them you may download modified NDK from
 http://www.crystax.net/android/ndk-r4.php - note however that you cannot throw exceptions across shared library boundary.
 Unzip it, and put in your PATH instead of original NDK - do not rename the target dir, my makefiles will
-check if there's "crystax" string in path to gcc toolchain, and will disable STLPort because CrystaX
-NDK already contains STL library.
-Additionally, the NDK r5 now contains full support for RTTI/exceptions, however I did not integrate it yet.
+check if there's "crystax" string in path to gcc toolchain, and will disable STLPort because CrystaX NDK
+already contains STL library.
+The NDK r5 now contains full support for RTTI/exceptions, however I did not integrate it yet.
+Also STL imlpementations from NDK r5 and from CrystaX NDK will crash on x5a/x6d tablet, and possibly on Smartq V7,
+when you try to output anything to std::cout or std::cerr, the STLPort included in this port will not crash.
 
 Application data may be bundled with app itself, or downloaded from net on first run.
 Create .ZIP file with your application data, and put it on HTTP server, or to "project/jni/application/src/AndroidData" dir - 
@@ -127,6 +86,57 @@ ChangeAppSettings.sh will ask you for the URL, if URL won't contain "http://" it
 Note that there is limit on maximum .APK file size on Market, like 20 Mb or so, so big files should be downloaded by HTTP.
 If you'll release new version of data files you should change download URL or data file name and update your app as well -
 the app will re-download the data if URL does not match the saved URL from previous download.
+
+All devices have different screen resolutions, you may toggle automatic
+screen resizing in ChangeAppSettings.sh and draw to virtual 640x480 screen -
+it will be HW accelerated and will not impact performance much.
+SDL_ListModes()[0] will always return native screen resolution.
+Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
+texture on HTC G1. Software surfaces may be of any size of course (but you don't want to do expensive memcpy).
+
+If you want HW acceleration there are some things to remember:
+You cannot blit SW surface to screen, it should be only HW surface.
+You can use colorkey, per-surface alpha and per-pixel alpha with HW surfaces.
+If you're using SDL 1.3 always use SDL_Texture, if you'll be using SDL_Surface with SDL 1.3 it will switch to SW mode.
+Also the screen is always double-buffered, and after each SDL_Flip() there is garbage in pixel buffer,
+so forget about dirty rects and partial screen updates - you have to re-render whole picture each frame.
+Single-buffer rendering might be possible with techniques like glFramebufferTexture2D(),
+however it may not be present on all devices, so I won't do that.
+Basically your code should be like this for SDL 1.2:
+
+// ----- HW-accelerated video output for Android example
+// Init HW-accelerated video
+SDL_SetVideoMode( 640, 480, 16, SDL_DOUBLEBUF | SDL_HWSURFACE );
+
+// Load graphics
+SDL_Surface *sprite = IMG_Load( "sprite.png" );
+SDL_Surface * hwSprite;
+
+if( sprite->format->Amask )
+{
+	// Surface contains per-pixel alpha, convert it to HW-accelerated format
+	hwSprite = SDL_DisplayFormatAlpha(sprite);
+}
+else
+{
+	// Set pink color as transparent
+	SDL_SetColorKey( sprite, SDL_SRCCOLORKEY, SDL_MapRGB(sprite->format, 255, 0, 255) );
+	// Create HW-accelerated surface
+	hwSprite = SDL_DisplayFormat(sprite);
+	// Set per-surface alpha, if necessary
+	SDL_SetAlpha( hwSprite, SDL_SRCALPHA, 128 );
+}
+
+// Blit it in HW-accelerated way
+SDL_BlitSurface(hwSprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
+
+// Supported, but VERY slow (slower than blitting in SW mode)
+SDL_BlitSurface(sprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
+
+// Supported, but VERY slow (use in cases where you need to take a screenshot)
+SDL_BlitSurface(SDL_GetVideoSurface(), sourceRect, sprite, &targetRect);
+
+// ----- End of example
 
 If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
 add libname to project/jni/<yourapp>/Android.mk
@@ -242,14 +252,13 @@ Note that I did not test that code yet, so test reports are appreciated.
 Quick guide to debug native code
 ================================
 
+The debugging of multi-threaded apps is not supported with NDK r4 or r4b, you'll need NDK r5 and Android 2.3 emulatir or device.
 To debug your application add tag 'android:debuggable="true"' to 'application' element in AndroidManifest.xml,
-recmpile and reinstall your app to Android 2.2 emulator or Android 2.2 device, go to "project" dir and launch command
+recmpile and reinstall your app, go to "project" dir and launch command
 	ndk-gdb --verbose --start --force
-then when it fails enter command
-	target remote:5039 (then it will fail again)
-Note that it's extremely buggy, and I had no any success in debugging my app with ndk-gdb 
-(I was trying with NDK r4, NDK r4b might work better).
-So it's best to debug with code like:
+then if it fails enter command
+	target remote:5039
+You can also debug by adding extensive logs to your app:
 	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
 and then watching "adb logcat" output.
 
@@ -275,7 +284,7 @@ I/DEBUG   (   51):          #05  pc 0002d080  /data/data/de.schwardtnet.alienbla
 2. Go to project/bin/ndk/local/armeabi dir, find there the library mentioned in stacktrace
 (libsdl.so in our example), copy the address of the first line of stacktrace (0002ca00), and execute command
 
-gdb libsdl.so -ex "list *0x0002ca00"
+<your NDK path>/build/prebuilt/linux-x86/arm-eabi-4.4.0/bin/arm-eabi-gdb libsdl.so -ex "list *0x0002ca00"
 
 It will output the exact line in your source where the application crashed.
 
