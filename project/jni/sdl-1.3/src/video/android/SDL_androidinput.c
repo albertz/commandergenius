@@ -94,6 +94,10 @@ int multitouchGestureDist = -1;
 int multitouchGestureAngle = 0;
 int multitouchGestureX = -1;
 int multitouchGestureY = -1;
+int SDL_ANDROID_TouchscreenCalibrationWidth = 480;
+int SDL_ANDROID_TouchscreenCalibrationHeight = 320;
+int SDL_ANDROID_TouchscreenCalibrationX = 0;
+int SDL_ANDROID_TouchscreenCalibrationY = 0;
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
@@ -203,11 +207,13 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 		}
 	}
 
+	x -= SDL_ANDROID_TouchscreenCalibrationX;
+	y -= SDL_ANDROID_TouchscreenCalibrationY;
 #if SDL_VIDEO_RENDER_RESIZE
 	// Translate mouse coordinates
 
-	x = x * SDL_ANDROID_sFakeWindowWidth / SDL_ANDROID_sWindowWidth;
-	y = y * SDL_ANDROID_sFakeWindowHeight / SDL_ANDROID_sWindowHeight;
+	x = x * SDL_ANDROID_sFakeWindowWidth / SDL_ANDROID_TouchscreenCalibrationWidth;
+	y = y * SDL_ANDROID_sFakeWindowHeight / SDL_ANDROID_TouchscreenCalibrationHeight;
 	if( x < 0 )
 		x = 0;
 	if( x > SDL_ANDROID_sFakeWindowWidth )
@@ -216,7 +222,9 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 		y = 0;
 	if( y > SDL_ANDROID_sFakeWindowHeight )
 		y = SDL_ANDROID_sFakeWindowHeight;
-
+#else
+	x = x * SDL_ANDROID_sRealWindowWidth / SDL_ANDROID_TouchscreenCalibrationWidth;
+	y = y * SDL_ANDROID_sRealWindowHeight / SDL_ANDROID_TouchscreenCalibrationHeight;
 #endif
 
 	if( action == MOUSE_UP )
@@ -305,8 +313,6 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 					multitouchGestureKeyPressed[3] = 0;
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[3] );
 				}
-				__android_log_print(ANDROID_LOG_INFO, "libSDL", "x %d y %d multitouchGestureX %d multitouchGestureY %d dist %d multitouchGestureDist %d angle %08X multitouchGestureAngle %08X angleDiff %09d",
-					x, y, multitouchGestureX, multitouchGestureY, dist, multitouchGestureDist, angle, multitouchGestureAngle, angleDiff );
 			}
 		}
 	}
@@ -1485,6 +1491,14 @@ JAVA_EXPORT_NAME(Settings_nativeSetMultitouchGestureSensitivity) ( JNIEnv*  env,
 	multitouchGestureSensitivity = sensitivity;
 }
 
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenCalibration) (JNIEnv*  env, jobject thiz, jint x1, jint y1, jint x2, jint y2)
+{
+	SDL_ANDROID_TouchscreenCalibrationX = x1;
+	SDL_ANDROID_TouchscreenCalibrationY = y1;
+	SDL_ANDROID_TouchscreenCalibrationWidth = x2 - x1;
+	SDL_ANDROID_TouchscreenCalibrationHeight = y2 - y1;
+}
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )

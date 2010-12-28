@@ -163,6 +163,8 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint 
 			SDL_ANDROID_sWindowHeight = h;
 		}
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Physical screen resolution is %dx%d, virtual screen %dx%d", w, h, SDL_ANDROID_sWindowWidth, SDL_ANDROID_sWindowHeight );
+		SDL_ANDROID_TouchscreenCalibrationWidth = SDL_ANDROID_sWindowWidth;
+		SDL_ANDROID_TouchscreenCalibrationHeight = SDL_ANDROID_sWindowHeight;
 	}
 }
 

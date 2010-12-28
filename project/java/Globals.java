@@ -47,7 +47,7 @@ class Globals {
 
 	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 1;
 
-	// Phone-specific config
+	// Phone-specific config, TODO: move this to settings
 	public static boolean DownloadToSdcard = true;
 	public static boolean PhoneHasTrackball = false;
 	public static boolean PhoneHasArrowKeys = false;
@@ -86,6 +86,7 @@ class Globals {
 	public static int RemapMultitouchGestureKeycode[] = new int[4];
 	public static boolean MultitouchGesturesUsed[] = new boolean[4];
 	public static int MultitouchGestureSensitivity = 1;
+	public static int TouchscreenCalibration[] = new int[4];
 }
 
 class LoadLibrary {

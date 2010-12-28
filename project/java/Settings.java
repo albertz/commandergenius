@@ -23,6 +23,15 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import java.lang.String;
+import android.graphics.Matrix;
+import android.graphics.RectF;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.FrameLayout;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
+
 
 
 // TODO: too much code here, split into multiple files
@@ -84,6 +93,8 @@ class Settings
 				out.writeBoolean(Globals.MultitouchGesturesUsed[i]);
 			}
 			out.writeInt(Globals.MultitouchGestureSensitivity);
+			for( int i = 0; i < Globals.TouchscreenCalibration.length; i++ )
+				out.writeInt(Globals.TouchscreenCalibration[i]);
 
 			out.close();
 			settingsLoaded = true;
@@ -187,6 +198,8 @@ class Settings
 				Globals.MultitouchGesturesUsed[i] = settingsFile.readBoolean();
 			}
 			Globals.MultitouchGestureSensitivity = settingsFile.readInt();
+			for( int i = 0; i < Globals.TouchscreenCalibration.length; i++ )
+				Globals.TouchscreenCalibration[i] = settingsFile.readInt();
 			
 			settingsLoaded = true;
 
@@ -363,6 +376,8 @@ class Settings
 		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Globals.LEFT_CLICK_WITH_PRESSURE )
 			items.add(p.getResources().getString(R.string.measurepressure));
 		
+		items.add(p.getResources().getString(R.string.calibrate_touchscreen));
+		
 		items.add(p.getResources().getString(R.string.ok));
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -402,6 +417,10 @@ class Settings
 						showTouchPressureMeasurementTool(p);
 				} else
 					item++;
+				selected++;
+
+				if( item == selected )
+					showCalibrateTouchscreenMenu(p);
 				selected++;
 
 				if( item == selected )
@@ -988,15 +1007,8 @@ class Settings
 
 	static void showTouchPressureMeasurementTool(final MainActivity p)
 	{
-		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Globals.LEFT_CLICK_WITH_PRESSURE )
-		{
-			p.setText(p.getResources().getString(R.string.measurepressure_touchplease));
-			p.touchMeasurementTool = new TouchMeasurementTool(p);
-		}
-		else
-		{
-			showMouseConfigMainMenu(p);
-		}
+		p.setText(p.getResources().getString(R.string.measurepressure_touchplease));
+		p.touchListener = new TouchMeasurementTool(p);
 	}
 
 	public static class TouchMeasurementTool implements TouchEventsListener
@@ -1022,7 +1034,7 @@ class Settings
 			
 			if( force.size() >= maxEventAmount )
 			{
-				p.touchMeasurementTool = null;
+				p.touchListener = null;
 				Globals.ClickScreenPressure = getAverageForce();
 				Globals.ClickScreenTouchspotSize = getAverageRadius();
 				System.out.println("SDL: measured average force " + Globals.ClickScreenPressure + " radius " + Globals.ClickScreenTouchspotSize);
@@ -1053,7 +1065,7 @@ class Settings
 	static void showRemapHwKeysConfig(final MainActivity p)
 	{
 		p.setText(p.getResources().getString(R.string.remap_hwkeys_press));
-		p.keyRemapTool = new KeyRemapTool(p);
+		p.keyListener = new KeyRemapTool(p);
 	}
 
 	public static class KeyRemapTool implements KeyEventsListener
@@ -1066,7 +1078,7 @@ class Settings
 		
 		public void onKeyEvent(final int keyCode)
 		{
-			p.keyRemapTool = null;
+			p.touchListener = null;
 			int keyIndex = keyCode;
 			if( keyIndex < 0 )
 				keyIndex = 0;
@@ -1281,6 +1293,77 @@ class Settings
 		alert.setOwnerActivity(p);
 		alert.show();
 	}
+	
+	static void showCalibrateTouchscreenMenu(final MainActivity p)
+	{
+		p.setText(p.getResources().getString(R.string.calibrate_touchscreen_touch));
+		Globals.TouchscreenCalibration[0] = 0;
+		Globals.TouchscreenCalibration[1] = 0;
+		Globals.TouchscreenCalibration[2] = 0;
+		Globals.TouchscreenCalibration[3] = 0;
+		ScreenEdgesCalibrationTool tool = new ScreenEdgesCalibrationTool(p);
+		p.touchListener = tool;
+		p.keyListener = tool;
+	}
+
+	public static class ScreenEdgesCalibrationTool implements TouchEventsListener, KeyEventsListener
+	{
+		MainActivity p;
+		ImageView img;
+		Bitmap bmp;
+		
+		public ScreenEdgesCalibrationTool(MainActivity _p) 
+		{
+			p = _p;
+			img = new ImageView(p);
+			img.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+			img.setScaleType(ImageView.ScaleType.MATRIX);
+			bmp = BitmapFactory.decodeResource( p.getResources(), R.drawable.calibrate );
+			img.setImageBitmap(bmp);
+			Matrix m = new Matrix();
+			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
+			RectF dst = new RectF(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1], 
+									Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
+			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+			img.setImageMatrix(m);
+			p.getVideoLayout().addView(img);
+		}
+
+		public void onTouchEvent(final MotionEvent ev)
+		{
+			if( Globals.TouchscreenCalibration[0] == Globals.TouchscreenCalibration[1] &&
+				Globals.TouchscreenCalibration[1] == Globals.TouchscreenCalibration[2] &&
+				Globals.TouchscreenCalibration[2] == Globals.TouchscreenCalibration[3] )
+			{
+				Globals.TouchscreenCalibration[0] = (int)ev.getX();
+				Globals.TouchscreenCalibration[1] = (int)ev.getY();
+				Globals.TouchscreenCalibration[2] = (int)ev.getX();
+				Globals.TouchscreenCalibration[3] = (int)ev.getY();
+			}
+			if( ev.getX() < Globals.TouchscreenCalibration[0] )
+				Globals.TouchscreenCalibration[0] = (int)ev.getX();
+			if( ev.getY() < Globals.TouchscreenCalibration[1] )
+				Globals.TouchscreenCalibration[1] = (int)ev.getY();
+			if( ev.getX() > Globals.TouchscreenCalibration[2] )
+				Globals.TouchscreenCalibration[2] = (int)ev.getX();
+			if( ev.getY() > Globals.TouchscreenCalibration[3] )
+				Globals.TouchscreenCalibration[3] = (int)ev.getY();
+			Matrix m = new Matrix();
+			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
+			RectF dst = new RectF(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1], 
+									Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
+			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+			img.setImageMatrix(m);
+		}
+
+		public void onKeyEvent(final int keyCode)
+		{
+			p.touchListener = null;
+			p.keyListener = null;
+			p.getVideoLayout().removeView(img);
+			showMouseConfigMainMenu(p);
+		}
+	}
 
 	// ===============================================================================================
 
@@ -1325,6 +1408,7 @@ class Settings
 		for( int i = 0; i < Globals.RemapMultitouchGestureKeycode.length; i++ )
 			nativeSetKeymapKeyMultitouchGesture(i, Globals.MultitouchGesturesUsed[i] ? SDL_Keys.values[Globals.RemapMultitouchGestureKeycode[i]] : 0);
 		nativeSetMultitouchGestureSensitivity(Globals.MultitouchGestureSensitivity);
+		nativeSetTouchscreenCalibration(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1], Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
 
 		String lang = new String(Locale.getDefault().getLanguage());
 		if( Locale.getDefault().getCountry().length() > 0 )
@@ -1389,6 +1473,7 @@ class Settings
 	private static native int  nativeGetKeymapKeyMultitouchGesture(int keynum);
 	private static native void nativeSetKeymapKeyMultitouchGesture(int keynum, int key);
 	private static native void nativeSetMultitouchGestureSensitivity(int sensitivity);
+	private static native void nativeSetTouchscreenCalibration(int x1, int y1, int x2, int y2);
 	public static native void  nativeSetEnv(final String name, final String value);
 }
 

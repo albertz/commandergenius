@@ -73,7 +73,10 @@ public class MainActivity extends Activity {
 		img.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 		_layout.addView(img);
 		
-		setContentView(_layout);
+		_videoLayout = new FrameLayout(this);
+		_videoLayout.addView(_layout);
+		
+		setContentView(_videoLayout);
 
 		if(mAudioThread == null) // Starting from background (should not happen)
 		{
@@ -153,10 +156,15 @@ public class MainActivity extends Activity {
 		if(Globals.UseAccelerometerAsArrowKeys)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		mGLView = new DemoGLSurfaceView(this);
+		_videoLayout.removeView(_layout);
+		_layout = null;
+		_layout2 = null;
+		_btn = null;
+		_tv = null;
 		_videoLayout = new FrameLayout(this);
-		_videoLayout.addView(mGLView);
 		setContentView(_videoLayout);
+		mGLView = new DemoGLSurfaceView(this);
+		_videoLayout.addView(mGLView);
 		// Receive keyboard events
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
@@ -289,9 +297,9 @@ public class MainActivity extends Activity {
 			 onStop();
 		}
 		else
-		if( keyRemapTool != null )
+		if( keyListener != null )
 		{
-			keyRemapTool.onKeyEvent(keyCode);
+			keyListener.onKeyEvent(keyCode);
 		}
 		return true;
 	}
@@ -317,8 +325,8 @@ public class MainActivity extends Activity {
 		if( _btn != null )
 			return _btn.dispatchTouchEvent(ev);
 		else
-		if( touchMeasurementTool != null )
-			touchMeasurementTool.onTouchEvent(ev);
+		if( touchListener != null )
+			touchListener.onTouchEvent(ev);
 		return true;
 	}
 
@@ -369,6 +377,8 @@ public class MainActivity extends Activity {
 		NotificationManager.cancel(NOTIFY_ID);
 	}
 
+	public FrameLayout getVideoLayout() { return _videoLayout; }
+
 	static int NOTIFY_ID = 12367098; // Random ID
 
 	private static DemoGLSurfaceView mGLView = null;
@@ -384,8 +394,8 @@ public class MainActivity extends Activity {
 	private FrameLayout _videoLayout = null;
 	private EditText _screenKeyboard = null;
 	private boolean sdlInited = false;
-	public Settings.TouchEventsListener touchMeasurementTool = null;
-	public Settings.KeyEventsListener keyRemapTool = null;
+	public Settings.TouchEventsListener touchListener = null;
+	public Settings.KeyEventsListener keyListener = null;
 	boolean _isPaused = false;
 
 	public LinkedList<Integer> textInput = new LinkedList<Integer> ();
