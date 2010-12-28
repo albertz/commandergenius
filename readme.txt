@@ -41,6 +41,8 @@ and generally it will take a lot of effort to port pure OpenGL application to GL
 How to compile your own application
 ===================================
 
+You may find quick Android game porting manual at http://anddev.at.ua/src/porting_manual.txt
+
 If you're porting existing app which uses SDL 1.2 please always use SW mode: 
 neither SDL_SetVideoMode() call nor SDL_CreateRGBSurface() etc functions shall contain SDL_HWSURFACE flags.
 The BPP in SDL_SetVideoMode() shall be set to 16, and audio format - to AUDIO_S8 or AUDIO_S16.
