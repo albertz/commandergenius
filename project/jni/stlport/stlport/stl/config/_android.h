@@ -70,9 +70,11 @@
 #if defined(__ANDROID__) /* NDK r5 */
 #  define _STLP_NATIVE_CPP_C_INCLUDE_PATH ../../../cxx-stl/system/include
 #  define _STLP_NATIVE_CPP_RUNTIME_INCLUDE_PATH ../../../cxx-stl/system/include
+//#  warning ("Detected Android NDK r5 or newer")
 #else /* NDK r4b */
 #  define _STLP_NATIVE_CPP_C_INCLUDE_PATH ../../usr/include
 #  define _STLP_NATIVE_CPP_RUNTIME_INCLUDE_PATH ../../usr/include
+//#  warning ("Detected Android NDK r4b")
 #endif
 
 #ifdef __cplusplus

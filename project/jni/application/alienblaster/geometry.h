@@ -52,6 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GEOMETRY_HH
 
 #include <math.h>         // needed for M_PI constant
+#include <vector>         // To fix include dependencies
 #include <iostream>
 using namespace std;
 
