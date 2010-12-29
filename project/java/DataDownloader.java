@@ -198,14 +198,14 @@ class DataDownloader extends Thread
 				int readed = checkFile.read(b);
 				String compare = new String( b, 0, readed, "UTF-8" );
 				boolean matched = false;
-				System.out.println("Read URL: '" + compare + "'");
+				//System.out.println("Read URL: '" + compare + "'");
 				for( int i = 1; i < downloadUrls.length; i++ )
 				{
-					System.out.println("Comparing: '" + downloadUrls[i] + "'");
+					//System.out.println("Comparing: '" + downloadUrls[i] + "'");
 					if( compare.compareTo(downloadUrls[i]) == 0 )
 						matched = true;
 				}
-				System.out.println("Matched: " + String.valueOf(matched));
+				//System.out.println("Matched: " + String.valueOf(matched));
 				if( ! matched )
 					throw new IOException();
 				Status.setText( res.getString(R.string.download_unneeded) );
@@ -215,6 +215,7 @@ class DataDownloader extends Thread
 		checkFile = null;
 		
 		// Create output directory (not necessary for phone storage)
+		System.out.println("Downloading data to: '" + outFilesDir + "'");
 		try {
 			(new File( outFilesDir )).mkdirs();
 			OutputStream out = new FileOutputStream( getOutFilePath(".nomedia") );
@@ -245,15 +246,16 @@ class DataDownloader extends Thread
 				url = url.substring( url.indexOf(":", 1) + 1 );
 				DoNotUnzip = true;
 			}
-			System.out.println("Connecting to " + url);
 			Status.setText( res.getString(R.string.connecting_to, url) );
 			if( url.indexOf("http://") == -1 && url.indexOf("https://") == -1 ) // File inside assets
 			{
+				System.out.println("Fetching file from assets: " + url);
 				FileInAssets = true;
 				break;
 			}
 			else
 			{
+				System.out.println("Connecting to: " + url);
 				request = new HttpGet(url);
 				request.addHeader("Accept", "*/*");
 				try {
@@ -261,7 +263,7 @@ class DataDownloader extends Thread
 					client.getParams().setBooleanParameter("http.protocol.handle-redirects", true);
 					response = client.execute(request);
 				} catch (IOException e) {
-					System.out.println("Failed to connect to " + downloadUrls[downloadUrlIndex]);
+					System.out.println("Failed to connect to " + url);
 					downloadUrlIndex++;
 				};
 				if( response != null )
@@ -279,6 +281,7 @@ class DataDownloader extends Thread
 		}
 		if( FileInAssets )
 		{
+			System.out.println("Unpacking from assets: '" + url + "'");
 			try {
 				stream = new CountingInputStream(Parent.getAssets().open(url));
 				while( stream.skip(65536) > 0 ) { };
@@ -287,6 +290,7 @@ class DataDownloader extends Thread
 				stream = new CountingInputStream(Parent.getAssets().open(url));
 			} catch( IOException e ) {
 				Status.setText( res.getString(R.string.error_dl_from, url) );
+				System.out.println("Unpacking from assets '" + url + "' - error: " + e.toString());
 				return false;
 			}
 		}
@@ -313,6 +317,7 @@ class DataDownloader extends Thread
 		{
 			path = getOutFilePath(downloadUrls[downloadUrlIndex].substring( 1,
 					downloadUrls[downloadUrlIndex].indexOf(":", 1) ));
+			System.out.println("Saving file '" + path + "'");
 			OutputStream out = null;
 			try {
 				try {
@@ -321,10 +326,14 @@ class DataDownloader extends Thread
 
 				out = new FileOutputStream( path );
 			} catch( FileNotFoundException e ) {
-			} catch( SecurityException e ) { };
+				System.out.println("Saving file '" + path + "' - error creating output file: " + e.toString());
+			} catch( SecurityException e ) {
+				System.out.println("Saving file '" + path + "' - error creating output file: " + e.toString());
+			};
 			if( out == null )
 			{
 				Status.setText( res.getString(R.string.error_write, path) );
+				System.out.println("Saving file '" + path + "' - error creating output file");
 				return false;
 			}
 
@@ -346,8 +355,10 @@ class DataDownloader extends Thread
 				out = null;
 			} catch( java.io.IOException e ) {
 				Status.setText( res.getString(R.string.error_write, path) );
+				System.out.println("Saving file '" + path + "' - error writing: " + e.toString());
 				return false;
 			}
+			System.out.println("Saving file '" + path + "' done");
 		}
 		else
 		{
@@ -366,6 +377,7 @@ class DataDownloader extends Thread
 					break;
 				if( entry.isDirectory() )
 				{
+					System.out.println("Creating dir '" + getOutFilePath(entry.getName()) + "'");
 					try {
 						(new File( getOutFilePath(entry.getName()) )).mkdirs();
 					} catch( SecurityException e ) { };
@@ -374,6 +386,12 @@ class DataDownloader extends Thread
 
 				OutputStream out = null;
 				path = getOutFilePath(entry.getName());
+
+				System.out.println("Saving file '" + path + "'");
+
+				try {
+					(new File( path.substring(0, path.lastIndexOf("/") ))).mkdirs();
+				} catch( SecurityException e ) { };
 				
 				try {
 					CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
@@ -385,6 +403,7 @@ class DataDownloader extends Thread
 						ff.delete();
 						throw new Exception();
 					}
+					System.out.println("File '" + path + "' exists and passed CRC check - not overwriting it");
 					continue;
 				} catch( Exception e )
 				{
@@ -393,10 +412,14 @@ class DataDownloader extends Thread
 				try {
 					out = new FileOutputStream( path );
 				} catch( FileNotFoundException e ) {
-				} catch( SecurityException e ) { };
+					System.out.println("Saving file '" + path + "' - cannot create file: " + e.toString());
+				} catch( SecurityException e ) {
+					System.out.println("Saving file '" + path + "' - cannot create file: " + e.toString());
+				};
 				if( out == null )
 				{
 					Status.setText( res.getString(R.string.error_write, path) );
+					System.out.println("Saving file '" + path + "' - cannot create file");
 					return false;
 				}
 
@@ -423,6 +446,7 @@ class DataDownloader extends Thread
 					out = null;
 				} catch( java.io.IOException e ) {
 					Status.setText( res.getString(R.string.error_write, path) );
+					System.out.println("Saving file '" + path + "' - error writing or downloading: " + e.toString());
 					return false;
 				}
 				
@@ -439,8 +463,10 @@ class DataDownloader extends Thread
 				} catch( Exception e )
 				{
 					Status.setText( res.getString(R.string.error_write, path) );
+					System.out.println("Saving file '" + path + "' - CRC check failed");
 					return false;
 				}
+				System.out.println("Saving file '" + path + "' done");
 			}
 		};
 
