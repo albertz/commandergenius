@@ -528,17 +528,18 @@ class Settings
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
-				Globals.DownloadToSdcard = (item != 0);
-				Globals.DataDir = Globals.DownloadToSdcard ?
-								Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
-								p.getFilesDir().getAbsolutePath();
-
 				dialog.dismiss();
 
 				if( item == 2 )
 					showCustomDownloadDirConfig(p);
 				else
+				{
+					Globals.DownloadToSdcard = (item != 0);
+					Globals.DataDir = Globals.DownloadToSdcard ?
+									Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
+									p.getFilesDir().getAbsolutePath();
 					showConfigMainMenu(p);
+				}
 			}
 		});
 		AlertDialog alert = builder.create();
