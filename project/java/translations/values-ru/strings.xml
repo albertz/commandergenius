@@ -94,4 +94,8 @@
 <string name="remap_screenkb_button_gestures">Жест двумя пальцами по экрану</string>
 <string name="accel_veryfast">Очень быстро</string>
 <string name="remap_screenkb_button_gestures_sensitivity">Чувствительность жеста двумя пальцами по экрану</string>
+<string name="storage_custom">Укажите каталог</string>
+<string name="storage_commandline">Укажите параметры командной строки</string>
+<string name="calibrate_touchscreen">Калибровка сенсорного экрана</string>
+<string name="calibrate_touchscreen_touch">Дотроньтесь до всех четырех краев экрана, потом нажмите Назад</string>
 </resources>

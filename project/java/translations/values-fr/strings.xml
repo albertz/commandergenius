@@ -104,4 +104,8 @@
 <string name="remap_screenkb_button_gestures">Deux doigts gestes</string>
 <string name="accel_veryfast">Très rapide</string>
 <string name="remap_screenkb_button_gestures_sensitivity">Deux doigts écran gestes sensibilité</string>
+<string name="storage_custom">Spécifiez le répertoire</string>
+<string name="storage_commandline">Spécifier les paramètres de ligne de commande</string>
+<string name="calibrate_touchscreen">Calibrer écran tactile</string>
+<string name="calibrate_touchscreen_touch">Touchez les quatre bords de l\u0026#39;écran, appuyez sur Retour lorsque vous avez terminé</string>
 </resources>

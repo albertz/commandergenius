@@ -283,14 +283,20 @@ class DataDownloader extends Thread
 		{
 			System.out.println("Unpacking from assets: '" + url + "'");
 			try {
+				System.out.println("Unpacking from assets: '" + url + "' 1");
 				stream = new CountingInputStream(Parent.getAssets().open(url));
+				System.out.println("Unpacking from assets: '" + url + "' 2");
 				while( stream.skip(65536) > 0 ) { };
+				System.out.println("Unpacking from assets: '" + url + "' 3");
 				totalLen = stream.getBytesRead();
+				System.out.println("Unpacking from assets: '" + url + "' 4 totalLen = " + String.valueOf(totalLen));
 				stream.close();
+				System.out.println("Unpacking from assets: '" + url + "' 5");
 				stream = new CountingInputStream(Parent.getAssets().open(url));
+				System.out.println("Unpacking from assets: '" + url + "' 6");
 			} catch( IOException e ) {
-				Status.setText( res.getString(R.string.error_dl_from, url) );
 				System.out.println("Unpacking from assets '" + url + "' - error: " + e.toString());
+				Status.setText( res.getString(R.string.error_dl_from, url) );
 				return false;
 			}
 		}
@@ -362,6 +368,7 @@ class DataDownloader extends Thread
 		}
 		else
 		{
+			System.out.println("Reading from zip file '" + url + "'");
 			ZipInputStream zip = new ZipInputStream(stream);
 			
 			while(true)
@@ -369,12 +376,17 @@ class DataDownloader extends Thread
 				ZipEntry entry = null;
 				try {
 					entry = zip.getNextEntry();
+					System.out.println("Reading from zip file '" + url + "' entry '" + entry.getName() + "'");
 				} catch( java.io.IOException e ) {
 					Status.setText( res.getString(R.string.error_dl_from, url) );
+					System.out.println("Error reading from zip file '" + url + "': " + e.toString());
 					return false;
 				}
 				if( entry == null )
+				{
+					System.out.println("Reading from zip file '" + url + "' finished");
 					break;
+				}
 				if( entry.isDirectory() )
 				{
 					System.out.println("Creating dir '" + getOutFilePath(entry.getName()) + "'");

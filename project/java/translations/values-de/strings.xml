@@ -101,4 +101,8 @@
 <string name="remap_screenkb_button_gestures">Zwei-Finger-Gesten</string>
 <string name="accel_veryfast">Sehr schnell</string>
 <string name="remap_screenkb_button_gestures_sensitivity">Zwei-Finger-Gesten Bildschirm Empfindlichkeit</string>
+<string name="storage_custom">Geben Sie direkt</string>
+<string name="storage_commandline">Geben Kommandozeilenparameter</string>
+<string name="calibrate_touchscreen">Kalibrieren Touchscreen</string>
+<string name="calibrate_touchscreen_touch">Touch allen vier Rändern des Bildschirms, wenn Sie fertig sind, drücken Sie Zurück</string>
 </resources>

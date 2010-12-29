@@ -101,4 +101,8 @@
 <string name="remap_screenkb_button_gestures">Kahden sormen eleitä</string>
 <string name="accel_veryfast">Erittäin nopea</string>
 <string name="remap_screenkb_button_gestures_sensitivity">Kahden sormen näytön eleet herkkyys</string>
+<string name="storage_custom">Määritä hakemisto</string>
+<string name="storage_commandline">Määritä komentoriviparametrit</string>
+<string name="calibrate_touchscreen">Kalibroi kosketusnäyttö</string>
+<string name="calibrate_touchscreen_touch">Touch kaikki neljä reunaa näytön, paina Takaisin, kun olet valmis</string>
 </resources>
