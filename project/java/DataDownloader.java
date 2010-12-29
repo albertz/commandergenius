@@ -148,9 +148,7 @@ class DataDownloader extends Thread
 		Parent = _Parent;
 		Status = new StatusWriter( _Status, _Parent );
 		//Status.setText( "Connecting to " + Globals.DataDownloadUrl );
-		outFilesDir = Parent.getFilesDir().getAbsolutePath();
-		if( Globals.DownloadToSdcard )
-			outFilesDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName();
+		outFilesDir = Globals.DataDir;
 		DownloadComplete = false;
 		this.start();
 	}
@@ -217,18 +215,15 @@ class DataDownloader extends Thread
 		checkFile = null;
 		
 		// Create output directory (not necessary for phone storage)
-		if( Globals.DownloadToSdcard )
-		{
-			try {
-				(new File( outFilesDir )).mkdirs();
-				OutputStream out = new FileOutputStream( getOutFilePath(".nomedia") );
-				out.flush();
-				out.close();
-			}
-			catch( SecurityException e ) {}
-			catch( FileNotFoundException e ) {}
-			catch( IOException e ) {};
+		try {
+			(new File( outFilesDir )).mkdirs();
+			OutputStream out = new FileOutputStream( getOutFilePath(".nomedia") );
+			out.flush();
+			out.close();
 		}
+		catch( SecurityException e ) {}
+		catch( FileNotFoundException e ) {}
+		catch( IOException e ) {};
 
 		HttpResponse response = null;
 		HttpGet request;

@@ -25,40 +25,27 @@
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
 
-static int isSdcardUsed = 0;
-
 extern C_LINKAGE void
 JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring jcurdir, jstring cmdline )
 {
 	int i = 0;
 	char curdir[PATH_MAX] = "";
-	char realcurdir[PATH_MAX] = "";
 	const jbyte *jstr;
 	const char * str = "sdl";
 	int argc = 0;
 	char ** argv = NULL;
 
-	if( isSdcardUsed )
-	{
-		strcpy(curdir, "/sdcard/app-data/");
-		strcat(curdir, SDL_CURDIR_PATH);
-	}
-	else
-	{
-		strcpy(curdir, "/data/data/");
-		strcat(curdir, SDL_CURDIR_PATH);
-		strcat(curdir, "/files");
-	}
+	strcpy(curdir, "/sdcard/app-data/");
+	strcat(curdir, SDL_CURDIR_PATH);
 
 	jstr = (*env)->GetStringUTFChars(env, jcurdir, NULL);
 	if (jstr != NULL && strlen(jstr) > 0)
 		strcpy(curdir, jstr);
 	(*env)->ReleaseStringUTFChars(env, jcurdir, jstr);
 
-	if( realpath(curdir, realcurdir) == NULL )
-		strcpy(realcurdir, curdir);
-	chdir(realcurdir);
-	setenv("HOME", realcurdir, 1);
+	chdir(curdir);
+	setenv("HOME", curdir, 1);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Changing curdir to \"%s\"", curdir);
 
 	jstr = (*env)->GetStringUTFChars(env, cmdline, NULL);
 
@@ -103,12 +90,6 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	main( argc, argv );
 
 };
-
-extern C_LINKAGE void
-JAVA_EXPORT_NAME(Settings_nativeIsSdcardUsed) ( JNIEnv*  env, jobject thiz, jint flag )
-{
-	isSdcardUsed = flag;
-}
 
 extern C_LINKAGE void
 JAVA_EXPORT_NAME(Settings_nativeSetEnv) ( JNIEnv*  env, jobject thiz, jstring j_name, jstring j_value )

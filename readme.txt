@@ -16,27 +16,32 @@ http://www.pocketmagic.net/?p=1332 - guide how to set up environment in Cygwin.
 Please don't use NDK r5, it is buggy, wait for NDK r5b:
 http://groups.google.com/group/android-ndk/browse_thread/thread/6b35728eec7ef52f/b57f52776842041d
 
-How to compile Alien Blaster demo application
-=============================================
+How to compile demo application
+===============================
 
 Go to "project" directory and launch command
 	android update project -p .
+	rm project/jni/application/src
+	ln -s ballfield project/jni/application/src
 Then go back, edit file build.sh if needed to add NDK dir to your PATH, then launch it.
 It will compile a bunch of libs under project/libs/armeabi,
 create file project/bin/DemoActivity-debug.apk and install it on your device or emulator.
-Then you can test it by launching Alien Blaster icon from Android applications menu.
-It's designed for 640x480, so if you have smaller screen it will be resized.
+Then you can test it by launching Ballfield icon from Android applications menu.
+It's designed for 320x240, so if you have smaller screen it will be resized.
 Note: The game enforces horizontal screen orientation, you may open your keyboard and use it for
 additional keys - the phone will just keep current screen orientation.
 Recent Android phone models like HTC Evo have no keyboard at all, on-screen keyboard built into libSDL
 is available for such devices - it has joystick (which can be configured as arrow buttons or analog joystick),
-and 6 configurable keys, full text input is toggled with 7-th key. Application may redefine button layout
-and returned keycodes, and also toggle full text input - see SDL_screenkeyboard.h.
+and 6 configurable keys, full text input is toggled with 7-th key. Both user and application may redefine
+button layout and returned keycodes, and also toggle full text input - see SDL_screenkeyboard.h.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
 remove project/jni/application/src symlink and make new one pointing to glxgears, then run build.sh
 Note that GL ES is NOT pure OpenGL - there are no glBegin() and glEnd() call and other widely used functions,
 and generally it will take a lot of effort to port pure OpenGL application to GL ES.
+
+Previously The Alien Blaster was the default demo application, however it uses SDL 1.3 and I'm breaking
+the compilation too often, so if something does not compile please try to use some older revision.
 
 How to compile your own application
 ===================================

@@ -31,6 +31,9 @@ import android.widget.FrameLayout;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
+import android.widget.TextView;
+import android.widget.EditText;
+import android.text.Editable;
 
 
 
@@ -95,6 +98,12 @@ class Settings
 			out.writeInt(Globals.MultitouchGestureSensitivity);
 			for( int i = 0; i < Globals.TouchscreenCalibration.length; i++ )
 				out.writeInt(Globals.TouchscreenCalibration[i]);
+			out.writeInt(Globals.DataDir.length());
+			for( int i = 0; i < Globals.DataDir.length(); i++ )
+				out.writeChar(Globals.DataDir.charAt(i));
+			out.writeInt(Globals.CommandLine.length());
+			for( int i = 0; i < Globals.CommandLine.length(); i++ )
+				out.writeChar(Globals.CommandLine.charAt(i));
 
 			out.close();
 			settingsLoaded = true;
@@ -200,6 +209,17 @@ class Settings
 			Globals.MultitouchGestureSensitivity = settingsFile.readInt();
 			for( int i = 0; i < Globals.TouchscreenCalibration.length; i++ )
 				Globals.TouchscreenCalibration[i] = settingsFile.readInt();
+			StringBuilder b = new StringBuilder();
+			int len = settingsFile.readInt();
+			for( int i = 0; i < len; i++ )
+				b.append( settingsFile.readChar() );
+			Globals.DataDir = b.toString();
+
+			b = new StringBuilder();
+			len = settingsFile.readInt();
+			for( int i = 0; i < len; i++ )
+				b.append( settingsFile.readChar() );
+			Globals.CommandLine = b.toString();
 			
 			settingsLoaded = true;
 
@@ -210,6 +230,11 @@ class Settings
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
 		} catch ( IOException e ) {};
+		
+		if( Globals.DataDir.length() == 0 )
+			Globals.DataDir = Globals.DownloadToSdcard ?
+								Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
+								p.getFilesDir().getAbsolutePath();
 		
 		// This code fails for both of my phones!
 		/*
@@ -494,7 +519,8 @@ class Settings
 		}catch(Exception e) {}
 
 		final CharSequence[] items = { p.getResources().getString(R.string.storage_phone, freePhone),
-										p.getResources().getString(R.string.storage_sd, freeSdcard) };
+										p.getResources().getString(R.string.storage_sd, freeSdcard),
+										p.getResources().getString(R.string.storage_custom) };
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
 		builder.setTitle(downloadFiles[0].split("[|]")[0]);
@@ -502,8 +528,65 @@ class Settings
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
-				Globals.DownloadToSdcard = (item == 1);
+				Globals.DownloadToSdcard = (item != 0);
+				Globals.DataDir = Globals.DownloadToSdcard ?
+								Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
+								p.getFilesDir().getAbsolutePath();
 
+				dialog.dismiss();
+
+				if( item == 2 )
+					showCustomDownloadDirConfig(p);
+				else
+					showConfigMainMenu(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	};
+
+	static void showCustomDownloadDirConfig(final MainActivity p) {
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(p.getResources().getString(R.string.storage_custom));
+
+		final EditText edit = new EditText(p);
+		edit.setFocusableInTouchMode(true);
+		edit.setFocusable(true);
+		edit.setText(Globals.DataDir);
+		builder.setView(edit);
+
+		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.DataDir = edit.getText().toString();
+				dialog.dismiss();
+				showCommandLineConfig(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	};
+
+	static void showCommandLineConfig(final MainActivity p) {
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(p.getResources().getString(R.string.storage_commandline));
+
+		final EditText edit = new EditText(p);
+		edit.setFocusableInTouchMode(true);
+		edit.setFocusable(true);
+		edit.setText(Globals.CommandLine);
+		builder.setView(edit);
+
+		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.CommandLine = edit.getText().toString();
 				dialog.dismiss();
 				showConfigMainMenu(p);
 			}
@@ -1369,8 +1452,6 @@ class Settings
 
 	static void Apply(Activity p)
 	{
-		nativeIsSdcardUsed( Globals.DownloadToSdcard ? 1 : 0 );
-		
 		if( Globals.PhoneHasTrackball )
 			nativeSetTrackballUsed();
 		if( Globals.AppUsesMouse )
@@ -1452,7 +1533,6 @@ class Settings
 		}
 	}
 	
-	private static native void nativeIsSdcardUsed(int flag);
 	private static native void nativeSetTrackballUsed();
 	private static native void nativeSetTrackballDampening(int value);
 	private static native void nativeSetAccelerometerSettings(int sensitivity, int centerPos);

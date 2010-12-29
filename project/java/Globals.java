@@ -83,10 +83,12 @@ class Globals {
 	public static int RemapHwKeycode[] = new int[SDL_Keys.JAVA_KEYCODE_LAST];
 	public static int RemapScreenKbKeycode[] = new int[6];
 	public static boolean ScreenKbControlsShown[] = new boolean[8]; /* Also joystick and text input button added */
+	public static int ScreenKbControlsLayout[][] = new int[8][4];
 	public static int RemapMultitouchGestureKeycode[] = new int[4];
 	public static boolean MultitouchGesturesUsed[] = new boolean[4];
 	public static int MultitouchGestureSensitivity = 1;
 	public static int TouchscreenCalibration[] = new int[4];
+	public static String DataDir = new String("");
 }
 
 class LoadLibrary {
