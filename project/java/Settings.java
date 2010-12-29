@@ -1490,7 +1490,8 @@ class Settings
 		for( int i = 0; i < Globals.RemapMultitouchGestureKeycode.length; i++ )
 			nativeSetKeymapKeyMultitouchGesture(i, Globals.MultitouchGesturesUsed[i] ? SDL_Keys.values[Globals.RemapMultitouchGestureKeycode[i]] : 0);
 		nativeSetMultitouchGestureSensitivity(Globals.MultitouchGestureSensitivity);
-		nativeSetTouchscreenCalibration(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1], Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
+		if( Globals.TouchscreenCalibration[2] > Globals.TouchscreenCalibration[0] )
+			nativeSetTouchscreenCalibration(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1], Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
 
 		String lang = new String(Locale.getDefault().getLanguage());
 		if( Locale.getDefault().getCountry().length() > 0 )
