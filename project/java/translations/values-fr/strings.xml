@@ -107,5 +107,5 @@
 <string name="storage_custom">Spécifiez le répertoire</string>
 <string name="storage_commandline">Spécifier les paramètres de ligne de commande</string>
 <string name="calibrate_touchscreen">Calibrer écran tactile</string>
-<string name="calibrate_touchscreen_touch">Touchez les quatre bords de l\u0026#39;écran, appuyez sur Retour lorsque vous avez terminé</string>
+<string name="calibrate_touchscreen_touch">Touchez les quatre bords de l\u0026#39;écran, appuyez sur MENU lorsque vous avez terminé</string>
 </resources>

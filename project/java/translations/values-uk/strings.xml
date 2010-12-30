@@ -97,5 +97,5 @@
 <string name="storage_custom">Вкажіть каталог</string>
 <string name="storage_commandline">Вкажіть параметри командного рядка</string>
 <string name="calibrate_touchscreen">Калібрування сенсорного екрану</string>
-<string name="calibrate_touchscreen_touch">Доторкнiться до всіх чотирьох країв екрану, потiм натисніть Назад</string>
+<string name="calibrate_touchscreen_touch">Доторкнiться до всіх чотирьох країв екрану, потiм натисніть MENU</string>
 </resources>

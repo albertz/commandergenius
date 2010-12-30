@@ -860,11 +860,18 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	}
 	else
 	{
-		buttons[buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0] = *pos;
+		int i = buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
+		buttons[i] = *pos;
 		if(touchscreenKeyboardTheme == 0)
 		{
-			int i = buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
 			prepareFontCharWireframe(FONT_BTN1 + i, MIN(buttons[i].h, buttons[i].w), MIN(buttons[i].h, buttons[i].w));
+		}
+		if( i < AutoFireButtonsNum )
+		{
+			buttonsAutoFireRect[i].w = buttons[i].w * 2;
+			buttonsAutoFireRect[i].h = buttons[i].h * 2;
+			buttonsAutoFireRect[i].x = buttons[i].x - buttons[i].w / 2;
+			buttonsAutoFireRect[i].y = buttons[i].y - buttons[i].h / 2;
 		}
 	}
 	return 1;

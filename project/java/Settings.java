@@ -104,6 +104,10 @@ class Settings
 			out.writeInt(Globals.CommandLine.length());
 			for( int i = 0; i < Globals.CommandLine.length(); i++ )
 				out.writeChar(Globals.CommandLine.charAt(i));
+			out.writeInt(Globals.ScreenKbControlsLayout.length);
+			for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+				for( int ii = 0; ii < 4; ii++ )
+					out.writeInt(Globals.ScreenKbControlsLayout[i][ii]);
 
 			out.close();
 			settingsLoaded = true;
@@ -220,6 +224,12 @@ class Settings
 			for( int i = 0; i < len; i++ )
 				b.append( settingsFile.readChar() );
 			Globals.CommandLine = b.toString();
+
+			if( settingsFile.readInt() != Globals.ScreenKbControlsLayout.length )
+				throw new IOException();
+			for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+				for( int ii = 0; ii < 4; ii++ )
+					Globals.ScreenKbControlsLayout[i][ii] = settingsFile.readInt();
 			
 			settingsLoaded = true;
 
@@ -470,6 +480,8 @@ class Settings
 
 		items.add(p.getResources().getString(R.string.remap_screenkb));
 
+		items.add(p.getResources().getString(R.string.screenkb_custom_layout));
+
 		items.add(p.getResources().getString(R.string.ok));
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -496,6 +508,10 @@ class Settings
 
 				if( item == selected )
 					showRemapScreenKbConfig(p);
+				selected++;
+
+				if( item == selected )
+					showCustomizeScreenKbLayout(p);
 				selected++;
 				
 				if( item == selected )
@@ -752,6 +768,10 @@ class Settings
 										p.getResources().getString(R.string.controls_screenkb_medium),
 										p.getResources().getString(R.string.controls_screenkb_small),
 										p.getResources().getString(R.string.controls_screenkb_tiny) };
+
+		for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+			for( int ii = 0; ii < 4; ii++ )
+				Globals.ScreenKbControlsLayout[i][ii] = 0;
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_size));
@@ -1390,7 +1410,7 @@ class Settings
 		p.keyListener = tool;
 	}
 
-	public static class ScreenEdgesCalibrationTool implements TouchEventsListener, KeyEventsListener
+	static class ScreenEdgesCalibrationTool implements TouchEventsListener, KeyEventsListener
 	{
 		MainActivity p;
 		ImageView img;
@@ -1449,6 +1469,119 @@ class Settings
 		}
 	}
 
+	static void showCustomizeScreenKbLayout(final MainActivity p)
+	{
+		p.setText(p.getResources().getString(R.string.screenkb_custom_layout_help));
+		CustomizeScreenKbLayoutTool tool = new CustomizeScreenKbLayoutTool(p);
+		p.touchListener = tool;
+		p.keyListener = tool;
+	};
+
+	static class CustomizeScreenKbLayoutTool implements TouchEventsListener, KeyEventsListener
+	{
+		MainActivity p;
+		FrameLayout layout = null;
+		ImageView imgs[] =  new ImageView[Globals.ScreenKbControlsLayout.length];
+		Bitmap bmps[] = new Bitmap[Globals.ScreenKbControlsLayout.length];
+		int currentButton = 0;
+		int buttons[] = {
+			R.drawable.dpad,
+			R.drawable.keyboard,
+			R.drawable.b1,
+			R.drawable.b2,
+			R.drawable.b3,
+			R.drawable.b4,
+			R.drawable.b5,
+			R.drawable.b6
+		};
+		
+		public CustomizeScreenKbLayoutTool(MainActivity _p) 
+		{
+			p = _p;
+			layout = new FrameLayout(p);
+			p.getVideoLayout().addView(layout);
+			currentButton = 0;
+			setupButton(true);
+		}
+		
+		void setupButton(boolean undo)
+		{
+			do {
+				currentButton += undo ? -1 : 1;
+				if(currentButton >= Globals.ScreenKbControlsLayout.length)
+				{
+					p.getVideoLayout().removeView(layout);
+					layout = null;
+					p.touchListener = null;
+					p.keyListener = null;
+					showScreenKeyboardConfigMainMenu(p);
+					return;
+				}
+				if(currentButton < 0)
+				{
+					currentButton = 0;
+					undo = false;
+				}
+			} while( ! Globals.ScreenKbControlsShown[currentButton] );
+			
+			if( imgs[currentButton] == null )
+			{
+				imgs[currentButton] = new ImageView(p);
+				imgs[currentButton].setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+				imgs[currentButton].setScaleType(ImageView.ScaleType.MATRIX);
+				bmps[currentButton] = BitmapFactory.decodeResource( p.getResources(), buttons[currentButton] );
+				imgs[currentButton].setImageBitmap(bmps[currentButton]);
+				layout.addView(imgs[currentButton]);
+			}
+			Matrix m = new Matrix();
+			RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
+			RectF dst = new RectF(Globals.ScreenKbControlsLayout[currentButton][0], Globals.ScreenKbControlsLayout[currentButton][1],
+									Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
+			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+			imgs[currentButton].setImageMatrix(m);
+		}
+
+		public void onTouchEvent(final MotionEvent ev)
+		{
+			if( ev.getAction() == MotionEvent.ACTION_DOWN )
+			{
+				Globals.ScreenKbControlsLayout[currentButton][0] = (int)ev.getX();
+				Globals.ScreenKbControlsLayout[currentButton][1] = (int)ev.getY();
+				Globals.ScreenKbControlsLayout[currentButton][2] = (int)ev.getX();
+				Globals.ScreenKbControlsLayout[currentButton][3] = (int)ev.getY();
+			}
+			if( ev.getAction() == MotionEvent.ACTION_MOVE )
+			{
+				if( Globals.ScreenKbControlsLayout[currentButton][0] > (int)ev.getX() )
+					Globals.ScreenKbControlsLayout[currentButton][0] = (int)ev.getX();
+				if( Globals.ScreenKbControlsLayout[currentButton][1] > (int)ev.getY() )
+					Globals.ScreenKbControlsLayout[currentButton][1] = (int)ev.getY();
+				if( Globals.ScreenKbControlsLayout[currentButton][2] < (int)ev.getX() )
+					Globals.ScreenKbControlsLayout[currentButton][2] = (int)ev.getX();
+				if( Globals.ScreenKbControlsLayout[currentButton][3] < (int)ev.getY() )
+					Globals.ScreenKbControlsLayout[currentButton][3] = (int)ev.getY();
+			}
+
+			Matrix m = new Matrix();
+			RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
+			RectF dst = new RectF(Globals.ScreenKbControlsLayout[currentButton][0], Globals.ScreenKbControlsLayout[currentButton][1],
+									Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
+			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+			imgs[currentButton].setImageMatrix(m);
+
+			if( ev.getAction() == MotionEvent.ACTION_UP )
+				setupButton(false);
+		}
+
+		public void onKeyEvent(final int keyCode)
+		{
+			if( layout != null && imgs[currentButton] != null )
+				layout.removeView(imgs[currentButton]);
+			imgs[currentButton] = null;
+			setupButton(true);
+		}
+	}
+
 	// ===============================================================================================
 
 	static void Apply(Activity p)
@@ -1487,11 +1620,16 @@ class Settings
 			nativeSetScreenKbKeyUsed(i, Globals.ScreenKbControlsShown[i] ? 1 : 0);
 		for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
 			nativeSetKeymapKeyScreenKb(i, SDL_Keys.values[Globals.RemapScreenKbKeycode[i]]);
+		for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+			if( Globals.ScreenKbControlsLayout[i][0] < Globals.ScreenKbControlsLayout[i][2] )
+				nativeSetScreenKbKeyLayout( i, Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][1],
+					Globals.ScreenKbControlsLayout[i][2], Globals.ScreenKbControlsLayout[i][3]);
 		for( int i = 0; i < Globals.RemapMultitouchGestureKeycode.length; i++ )
 			nativeSetKeymapKeyMultitouchGesture(i, Globals.MultitouchGesturesUsed[i] ? SDL_Keys.values[Globals.RemapMultitouchGestureKeycode[i]] : 0);
 		nativeSetMultitouchGestureSensitivity(Globals.MultitouchGestureSensitivity);
 		if( Globals.TouchscreenCalibration[2] > Globals.TouchscreenCalibration[0] )
-			nativeSetTouchscreenCalibration(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1], Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
+			nativeSetTouchscreenCalibration(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1],
+				Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
 
 		String lang = new String(Locale.getDefault().getLanguage());
 		if( Locale.getDefault().getCountry().length() > 0 )
@@ -1552,6 +1690,7 @@ class Settings
 	private static native int  nativeGetKeymapKeyScreenKb(int keynum);
 	private static native void nativeSetKeymapKeyScreenKb(int keynum, int key);
 	private static native void nativeSetScreenKbKeyUsed(int keynum, int used);
+	private static native void nativeSetScreenKbKeyLayout(int keynum, int x1, int y1, int x2, int y2);
 	private static native int  nativeGetKeymapKeyMultitouchGesture(int keynum);
 	private static native void nativeSetKeymapKeyMultitouchGesture(int keynum, int key);
 	private static native void nativeSetMultitouchGestureSensitivity(int sensitivity);

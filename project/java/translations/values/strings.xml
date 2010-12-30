@@ -116,7 +116,10 @@
     <string name="remap_screenkb_button_rotateleft">Rotate left two-finger gesture</string>
     <string name="remap_screenkb_button_rotateright">Rotate right two-finger gesture</string>
 
+    <string name="screenkb_custom_layout">Customize on-screen keyboard layout</string>
+    <string name="screenkb_custom_layout_help">Slide screen to add button, press Menu to undo last button</string>
+
     <string name="calibrate_touchscreen">Calibrate touchscreen</string>
-    <string name="calibrate_touchscreen_touch">Touch all four edges of the screen, press Back when done</string>
+    <string name="calibrate_touchscreen_touch">Touch all four edges of the screen, press Menu when done</string>
 
 </resources>

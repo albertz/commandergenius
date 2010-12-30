@@ -104,5 +104,5 @@
 <string name="storage_custom">Geben Sie direkt</string>
 <string name="storage_commandline">Geben Kommandozeilenparameter</string>
 <string name="calibrate_touchscreen">Kalibrieren Touchscreen</string>
-<string name="calibrate_touchscreen_touch">Touch allen vier Rändern des Bildschirms, wenn Sie fertig sind, drücken Sie Zurück</string>
+<string name="calibrate_touchscreen_touch">Touch allen vier Rändern des Bildschirms, drücken Sie Menü, wenn Sie fertig</string>
 </resources>

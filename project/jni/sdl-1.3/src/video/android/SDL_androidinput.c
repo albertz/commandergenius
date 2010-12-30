@@ -1416,7 +1416,7 @@ void ANDROID_InitOSKeymap()
 }
 
 JNIEXPORT jint JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeGetKeymapKey) ( JNIEnv*  env, jobject thiz, jint code)
+JAVA_EXPORT_NAME(Settings_nativeGetKeymapKey) (JNIEnv* env, jobject thiz, jint code)
 {
 	if( code < 0 || code > KEYCODE_LAST )
 		return SDL_KEY(UNKNOWN);
@@ -1424,7 +1424,7 @@ JAVA_EXPORT_NAME(Settings_nativeGetKeymapKey) ( JNIEnv*  env, jobject thiz, jint
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetKeymapKey) ( JNIEnv*  env, jobject thiz, jint javakey, jint key)
+JAVA_EXPORT_NAME(Settings_nativeSetKeymapKey) (JNIEnv* env, jobject thiz, jint javakey, jint key)
 {
 	if( javakey < 0 || javakey > KEYCODE_LAST )
 		return;
@@ -1432,7 +1432,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetKeymapKey) ( JNIEnv*  env, jobject thiz, jint
 }
 
 JNIEXPORT jint JNICALL
-JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyScreenKb) ( JNIEnv*  env, jobject thiz, jint keynum)
+JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyScreenKb) (JNIEnv* env, jobject thiz, jint keynum)
 {
 	if( keynum < 0 || keynum > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 + 4 )
 		return SDL_KEY(UNKNOWN);
@@ -1444,7 +1444,7 @@ JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyScreenKb) ( JNIEnv*  env, jobject th
 }
 
 JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetKeymapKeyScreenKb) ( JNIEnv*  env, jobject thiz, jint keynum, jint key)
+JAVA_EXPORT_NAME(Settings_nativeSetKeymapKeyScreenKb) (JNIEnv* env, jobject thiz, jint keynum, jint key)
 {
 	if( keynum < 0 || keynum > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 + 4 )
 		return;
@@ -1454,7 +1454,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetKeymapKeyScreenKb) ( JNIEnv*  env, jobject th
 }
 
 JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyUsed) ( JNIEnv*  env, jobject thiz, jint keynum, jint used)
+JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyUsed) (JNIEnv*  env, jobject thiz, jint keynum, jint used)
 {
 	SDL_Rect rect = {0, 0, 0, 0};
 	int key = -1;
@@ -1470,7 +1470,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyUsed) ( JNIEnv*  env, jobject thiz
 }
 
 JNIEXPORT jint JNICALL
-JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyMultitouchGesture) ( JNIEnv*  env, jobject thiz, jint keynum)
+JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyMultitouchGesture) (JNIEnv* env, jobject thiz, jint keynum)
 {
 	if( keynum < 0 || keynum >= MAX_MULTITOUCH_GESTURES )
 		return SDL_KEY(UNKNOWN);
@@ -1478,27 +1478,46 @@ JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyMultitouchGesture) ( JNIEnv*  env, j
 }
 
 JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetKeymapKeyMultitouchGesture) ( JNIEnv*  env, jobject thiz, jint keynum, jint keycode)
+JAVA_EXPORT_NAME(Settings_nativeSetKeymapKeyMultitouchGesture) (JNIEnv* env, jobject thiz, jint keynum, jint keycode)
 {
 	if( keynum < 0 || keynum >= MAX_MULTITOUCH_GESTURES )
-		return SDL_KEY(UNKNOWN);
+		return;
 	multitouchGestureKeycode[keynum] = keycode;
 }
 
 JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetMultitouchGestureSensitivity) ( JNIEnv*  env, jobject thiz, jint sensitivity)
+JAVA_EXPORT_NAME(Settings_nativeSetMultitouchGestureSensitivity) (JNIEnv* env, jobject thiz, jint sensitivity)
 {
 	multitouchGestureSensitivity = sensitivity;
 }
 
 JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenCalibration) (JNIEnv*  env, jobject thiz, jint x1, jint y1, jint x2, jint y2)
+JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenCalibration) (JNIEnv* env, jobject thiz, jint x1, jint y1, jint x2, jint y2)
 {
 	SDL_ANDROID_TouchscreenCalibrationX = x1;
 	SDL_ANDROID_TouchscreenCalibrationY = y1;
 	SDL_ANDROID_TouchscreenCalibrationWidth = x2 - x1;
 	SDL_ANDROID_TouchscreenCalibrationHeight = y2 - y1;
 }
+
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyLayout) (JNIEnv* env, jobject thiz, jint keynum, jint x1, jint y1, jint x2, jint y2)
+{
+	SDL_Rect rect = {x1, y1, x2-x1, y2-y1};
+	int key = -1;
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeSetScreenKbKeyLayout: %d %d %d %d", (int)rect.x, (int)rect.y, (int)rect.w, (int)rect.h);
+	if( keynum == 0 )
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD;
+	if( keynum == 1 )
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT;
+	if( keynum - 2 >= 0 && keynum - 2 <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
+		key = keynum - 2 + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
+		
+	if( key >= 0 )
+		SDL_ANDROID_SetScreenKeyboardButtonPos(key, &rect);
+}
+
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )
