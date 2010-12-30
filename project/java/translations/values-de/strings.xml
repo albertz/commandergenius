@@ -105,4 +105,6 @@
 <string name="storage_commandline">Geben Kommandozeilenparameter</string>
 <string name="calibrate_touchscreen">Kalibrieren Touchscreen</string>
 <string name="calibrate_touchscreen_touch">Touch allen vier Rändern des Bildschirms, drücken Sie Menü, wenn Sie fertig</string>
+<string name="screenkb_custom_layout">Passen Sie auf dem Bildschirm Tastatur-Layout</string>
+<string name="screenkb_custom_layout_help">Slide-Bildschirm hinzufügen Taste, drücken Sie Menü zum letzten Knopf rückgängig machen</string>
 </resources>

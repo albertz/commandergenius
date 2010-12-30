@@ -72,7 +72,7 @@
 <string name="pointandclick_joystickmousespeed">Переміщення миші джойстиком - швидкiсть</string>
 <string name="pointandclick_joystickmouseaccel">Переміщення миші джойстиком - прискорення</string>
 <string name="none">Немає</string>
-<string name="controls_screenkb_transparency">Про прозорість клавіатура-екран</string>
+<string name="controls_screenkb_transparency">Прозорість клавіатури</string>
 <string name="controls_screenkb_trans_0">Невидимий</string>
 <string name="controls_screenkb_trans_1">Майже невидимий</string>
 <string name="controls_screenkb_trans_2">Прозорий</string>
@@ -98,4 +98,6 @@
 <string name="storage_commandline">Вкажіть параметри командного рядка</string>
 <string name="calibrate_touchscreen">Калібрування сенсорного екрану</string>
 <string name="calibrate_touchscreen_touch">Доторкнiться до всіх чотирьох країв екрану, потiм натисніть MENU</string>
+<string name="screenkb_custom_layout">Налаштування положення кнопок</string>
+<string name="screenkb_custom_layout_help">Провезiть по екрану, щоб додати кнопку, натисніть клавішу Меню, щоб скасувати останню кнопку</string>
 </resources>
