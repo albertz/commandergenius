@@ -1500,6 +1500,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenCalibration) (JNIEnv* env, jobject
 	SDL_ANDROID_TouchscreenCalibrationHeight = y2 - y1;
 }
 
+static int ScreenKbRedefinedByUser = 0;
 
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyLayout) (JNIEnv* env, jobject thiz, jint keynum, jint x1, jint y1, jint x2, jint y2)
@@ -1515,9 +1516,16 @@ JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyLayout) (JNIEnv* env, jobject thiz
 		key = keynum - 2 + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
 		
 	if( key >= 0 )
+	{
+		ScreenKbRedefinedByUser = 1;
 		SDL_ANDROID_SetScreenKeyboardButtonPos(key, &rect);
+	}
 }
 
+int SDL_ANDROID_GetScreenKeyboardRedefinedByUser()
+{
+	return ScreenKbRedefinedByUser;
+}
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )

@@ -308,6 +308,7 @@ static int try_init()
 	
 #if defined(ANDROID)
 	// Redefine button layout
+	if( ! SDL_ANDROID_GetScreenKeyboardRedefinedByUser() )
 	{
 		// Disable DPAD
 		SDL_Rect pos = {0, 0, 0, 0};
