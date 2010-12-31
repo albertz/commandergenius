@@ -3,6 +3,7 @@
 KEYSTORE=~/.ssh/android.keystore
 ALIAS=pelya
 APPS_SKIP="src scummvm"
+APPS_BUILD="$*"
 
 mkdir -p apk
 
@@ -24,8 +25,12 @@ echo
 # First edit app settings if their format was changed
 for APP1 in project/jni/application/*/AndroidAppSettings.cfg; do
 	APP=`echo $APP1 | sed 's@project/jni/application/\([^/]*\)/.*@\1@'`
-	if echo $APPS_SKIP | grep $APP > /dev/null ; then
-		continue
+	if [ -n "$APPS_BUILD" ] ; then
+		echo "$APPS_BUILD" | grep "$APP" || continue
+	else
+		if echo $APPS_SKIP | grep $APP > /dev/null ; then
+			continue
+		fi
 	fi
 	rm project/jni/application/src
 	ln -s $APP project/jni/application/src
@@ -37,8 +42,12 @@ done
 
 for APP1 in project/jni/application/*/AndroidAppSettings.cfg; do
 	APP=`echo $APP1 | sed 's@project/jni/application/\([^/]*\)/.*@\1@'`
-	if echo $APPS_SKIP | grep $APP > /dev/null ; then
-		continue
+	if [ -n "$APPS_BUILD" ] ; then
+		echo "$APPS_BUILD" | grep "$APP" || continue
+	else
+		if echo $APPS_SKIP | grep $APP > /dev/null ; then
+			continue
+		fi
 	fi
 	rm -f project/jni/application/src
 	ln -s $APP project/jni/application/src
@@ -52,7 +61,7 @@ for APP1 in project/jni/application/*/AndroidAppSettings.cfg; do
 	echo Compiling $APP
 	APPVERSION=`grep 'AppVersionCode=' AndroidAppSettings.cfg | sed 's/AppVersionCode=\(.*\)/\1/'`
 	OLDPATH="`pwd`"
-	( cd project && nice -n5 $NDKBUILD -j2 V=1 && ant release && \
+	( cd project && nice -n5 $NDKBUILD -j4 V=1 && ant release && \
 	jarsigner -verbose -keystore "$KEYSTORE" -storepass "$PASSWORD" bin/DemoActivity-unsigned.apk $ALIAS && \
 	zipalign 4 bin/DemoActivity-unsigned.apk ../apk/$APP.apk && \
 	mkdir -p debuginfo/$APP-$APPVERSION && cp -f obj/local/armeabi/libapplication.so obj/local/armeabi/libsdl-*.so debuginfo/$APP-$APPVERSION &&

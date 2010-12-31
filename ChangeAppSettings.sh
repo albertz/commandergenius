@@ -1,4 +1,4 @@
-#!/bin/sh                            
+#!/bin/sh
 
 CHANGE_APP_SETTINGS_VERSION=16
 AUTO=
