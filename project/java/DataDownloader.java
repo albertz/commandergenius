@@ -376,7 +376,8 @@ class DataDownloader extends Thread
 				ZipEntry entry = null;
 				try {
 					entry = zip.getNextEntry();
-					System.out.println("Reading from zip file '" + url + "' entry '" + entry.getName() + "'");
+					if( entry != null )
+						System.out.println("Reading from zip file '" + url + "' entry '" + entry.getName() + "'");
 				} catch( java.io.IOException e ) {
 					Status.setText( res.getString(R.string.error_dl_from, url) );
 					System.out.println("Error reading from zip file '" + url + "': " + e.toString());
