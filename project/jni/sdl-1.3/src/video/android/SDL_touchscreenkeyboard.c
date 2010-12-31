@@ -530,8 +530,8 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 			{
 				if( SDL_ANDROID_isJoystickUsed )
 				{
-					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, -(x - arrows.x - arrows.w / 2) * 65534 / arrows.w );
-					SDL_ANDROID_MainThreadPushJoystickAxis(0, 1, -(y - arrows.y - arrows.h / 2) * 65534 / arrows.h );
+					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, (x - arrows.x - arrows.w / 2) * 65534 / arrows.w );
+					SDL_ANDROID_MainThreadPushJoystickAxis(0, 1, (y - arrows.y - arrows.h / 2) * 65534 / arrows.h );
 				}
 				else
 				{
