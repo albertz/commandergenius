@@ -11,7 +11,7 @@ Bugs to fix
 
 - Show/hide screen controls with longpress on Text Edit button.
 
-- Right click by longpress, assign any HW key to do left/right click.
+- Right click by longpress.
 
 - Calling SDL_SetVideoMode() with SDL 1.3 several times makes it crash.
 

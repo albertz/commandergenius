@@ -108,6 +108,8 @@ class Settings
 			for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
 				for( int ii = 0; ii < 4; ii++ )
 					out.writeInt(Globals.ScreenKbControlsLayout[i][ii]);
+			out.writeInt(Globals.LeftClickKey);
+			out.writeInt(Globals.RightClickKey);
 
 			out.close();
 			settingsLoaded = true;
@@ -230,6 +232,8 @@ class Settings
 			for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
 				for( int ii = 0; ii < 4; ii++ )
 					Globals.ScreenKbControlsLayout[i][ii] = settingsFile.readInt();
+			Globals.LeftClickKey = settingsFile.readInt();
+			Globals.RightClickKey = settingsFile.readInt();
 			
 			settingsLoaded = true;
 
@@ -876,7 +880,7 @@ class Settings
 										p.getResources().getString(R.string.leftclick_near_cursor),
 										p.getResources().getString(R.string.leftclick_multitouch),
 										p.getResources().getString(R.string.leftclick_pressure),
-										p.getResources().getString(R.string.leftclick_dpadcenter) };
+										p.getResources().getString(R.string.rightclick_key) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.leftclick_question);
@@ -886,7 +890,10 @@ class Settings
 			{
 				Globals.LeftClickMethod = item;
 				dialog.dismiss();
-				showMouseConfigMainMenu(p);
+				if( item == Globals.LEFT_CLICK_WITH_KEY )
+					p.keyListener = new KeyRemapToolMouseClick(p, true);
+				else
+					showMouseConfigMainMenu(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -905,7 +912,7 @@ class Settings
 		final CharSequence[] items = {	p.getResources().getString(R.string.rightclick_none),
 										p.getResources().getString(R.string.rightclick_multitouch),
 										p.getResources().getString(R.string.rightclick_pressure),
-										p.getResources().getString(R.string.rightclick_menu) };
+										p.getResources().getString(R.string.rightclick_key) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.rightclick_question);
@@ -915,12 +922,44 @@ class Settings
 			{
 				Globals.RightClickMethod = item;
 				dialog.dismiss();
-				showMouseConfigMainMenu(p);
+				if( item == Globals.RIGHT_CLICK_WITH_KEY )
+					p.keyListener = new KeyRemapToolMouseClick(p, false);
+				else
+					showMouseConfigMainMenu(p);
 			}
 		});
 		AlertDialog alert = builder.create();
 		alert.setOwnerActivity(p);
 		alert.show();
+	}
+
+	public static class KeyRemapToolMouseClick implements KeyEventsListener
+	{
+		MainActivity p;
+		boolean leftClick;
+		public KeyRemapToolMouseClick(MainActivity _p, boolean leftClick)
+		{
+			p = _p;
+			p.setText(p.getResources().getString(R.string.remap_hwkeys_press));
+			this.leftClick = leftClick;
+		}
+		
+		public void onKeyEvent(final int keyCode)
+		{
+			p.touchListener = null;
+			int keyIndex = keyCode;
+			if( keyIndex < 0 )
+				keyIndex = 0;
+			if( keyIndex > SDL_Keys.JAVA_KEYCODE_LAST )
+				keyIndex = 0;
+
+			if( leftClick )
+				Globals.LeftClickKey = keyIndex;
+			else
+				Globals.RightClickKey = keyIndex;
+
+			showMouseConfigMainMenu(p);
+		}
 	}
 
 	static void showAdditionalMouseConfig(final MainActivity p)
@@ -1597,7 +1636,9 @@ class Settings
 								Globals.ClickScreenPressure,
 								Globals.ClickScreenTouchspotSize,
 								Globals.MoveMouseWithJoystickSpeed,
-								Globals.MoveMouseWithJoystickAccel );
+								Globals.MoveMouseWithJoystickAccel,
+								Globals.LeftClickKey,
+								Globals.RightClickKey );
 		if( Globals.AppUsesJoystick && (Globals.UseAccelerometerAsArrowKeys || Globals.UseTouchscreenKeyboard) )
 			nativeSetJoystickUsed();
 		if( Globals.AppUsesMultitouch )
@@ -1678,7 +1719,8 @@ class Settings
 	private static native void nativeSetAccelerometerSettings(int sensitivity, int centerPos);
 	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickMethod, 
 													int MoveMouseWithJoystick, int ClickMouseWithDpad, int MaxForce, int MaxRadius,
-													int MoveMouseWithJoystickSpeed, int MoveMouseWithJoystickAccel);
+													int MoveMouseWithJoystickSpeed, int MoveMouseWithJoystickAccel,
+													int leftClickKeycode, int rightClickKeycode);
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();

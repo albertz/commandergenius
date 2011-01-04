@@ -4,6 +4,7 @@ package net.sourceforge.clonekeenplus;
 import android.app.Activity;
 import android.content.Context;
 import java.util.Vector;
+import android.view.KeyEvent;
 
 class Globals {
 	public static String ApplicationName = "CommanderGenius";
@@ -65,13 +66,15 @@ class Globals {
 	public static final int LEFT_CLICK_NEAR_CURSOR = 1;
 	public static final int LEFT_CLICK_WITH_MULTITOUCH = 2;
 	public static final int LEFT_CLICK_WITH_PRESSURE = 3;
-	public static final int LEFT_CLICK_WITH_DPAD = 4;
+	public static final int LEFT_CLICK_WITH_KEY = 4;
 	public static int LeftClickMethod = LEFT_CLICK_NORMAL;
+	public static int LeftClickKey = KeyEvent.KEYCODE_DPAD_CENTER;
 	public static final int RIGHT_CLICK_NONE = 0;
 	public static final int RIGHT_CLICK_WITH_MULTITOUCH = 1;
 	public static final int RIGHT_CLICK_WITH_PRESSURE = 2;
-	public static final int RIGHT_CLICK_WITH_MENU_BUTTON = 3;
+	public static final int RIGHT_CLICK_WITH_KEY = 3;
 	public static int RightClickMethod = RIGHT_CLICK_NONE;
+	public static int RightClickKey = KeyEvent.KEYCODE_MENU;
 	public static boolean MoveMouseWithJoystick = false;
 	public static int MoveMouseWithJoystickSpeed = 0;
 	public static int MoveMouseWithJoystickAccel = 0;

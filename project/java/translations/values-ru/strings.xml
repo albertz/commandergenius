@@ -100,4 +100,5 @@
 <string name="calibrate_touchscreen_touch">Дотроньтесь до всех четырех краев экрана, потом нажмите MENU</string>
 <string name="screenkb_custom_layout">Настройка расположения кнопок</string>
 <string name="screenkb_custom_layout_help">Провезите по экрану, чтобы добавить кнопку, нажмите клавишу Меню, чтобы отменить последнюю кнопку</string>
+<string name="rightclick_key">Физическая кнопка</string>
 </resources>

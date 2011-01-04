@@ -57,10 +57,12 @@ static inline SDL_scancode TranslateKey(int scancode)
 static int isTrackballUsed = 0;
 static int isMouseUsed = 0;
 
-enum { RIGHT_CLICK_NONE = 0, RIGHT_CLICK_WITH_MULTITOUCH = 1, RIGHT_CLICK_WITH_PRESSURE = 2, RIGHT_CLICK_WITH_MENU_BUTTON = 3 };
-enum { LEFT_CLICK_NORMAL = 0, LEFT_CLICK_NEAR_CURSOR = 1, LEFT_CLICK_WITH_MULTITOUCH = 2, LEFT_CLICK_WITH_PRESSURE = 3, LEFT_CLICK_WITH_DPAD = 4 };
+enum { RIGHT_CLICK_NONE = 0, RIGHT_CLICK_WITH_MULTITOUCH = 1, RIGHT_CLICK_WITH_PRESSURE = 2, RIGHT_CLICK_WITH_KEY = 3 };
+enum { LEFT_CLICK_NORMAL = 0, LEFT_CLICK_NEAR_CURSOR = 1, LEFT_CLICK_WITH_MULTITOUCH = 2, LEFT_CLICK_WITH_PRESSURE = 3, LEFT_CLICK_WITH_KEY = 4 };
 static int leftClickMethod = LEFT_CLICK_NORMAL;
 static int rightClickMethod = RIGHT_CLICK_NONE;
+static int leftClickKey = KEYCODE_DPAD_CENTER;
+static int rightClickKey = KEYCODE_MENU;
 int SDL_ANDROID_ShowScreenUnderFinger = 0;
 SDL_Rect SDL_ANDROID_ShowScreenUnderFingerRect = {0, 0, 0, 0}, SDL_ANDROID_ShowScreenUnderFingerRectSrc = {0, 0, 0, 0};
 static int moveMouseWithArrowKeys = 0;
@@ -480,12 +482,12 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 	if( isTrackballUsed )
 		if( processAndroidTrackball(key, action) )
 			return;
-	if( key == KEYCODE_MENU && rightClickMethod == RIGHT_CLICK_WITH_MENU_BUTTON )
+	if( key == rightClickKey && rightClickMethod == RIGHT_CLICK_WITH_KEY )
 	{
 		SDL_ANDROID_MainThreadPushMouseButton( action ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
 		return;
 	}
-	if( key == KEYCODE_DPAD_CENTER && ( clickMouseWithDpadCenter || leftClickMethod == LEFT_CLICK_WITH_DPAD ) )
+	if( (key == leftClickKey && leftClickMethod == LEFT_CLICK_WITH_KEY) || (clickMouseWithDpadCenter && key == KEYCODE_DPAD_CENTER) )
 	{
 		SDL_ANDROID_MainThreadPushMouseButton( action ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_LEFT );
 		return;
@@ -546,7 +548,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz,
 		jint RightClickMethod, jint ShowScreenUnderFinger, jint LeftClickMethod,
 		jint MoveMouseWithJoystick, jint ClickMouseWithDpad,
 		jint MaxForce, jint MaxRadius,
-		jint MoveMouseWithJoystickSpeed, jint MoveMouseWithJoystickAccel)
+		jint MoveMouseWithJoystickSpeed, jint MoveMouseWithJoystickAccel,
+		jint LeftClickKeycode, jint RightClickKeycode)
 {
 	isMouseUsed = 1;
 	rightClickMethod = RightClickMethod;
@@ -558,6 +561,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz,
 	maxRadius = MaxRadius;
 	moveMouseWithKbSpeed = MoveMouseWithJoystickSpeed + 1;
 	moveMouseWithKbAccel = MoveMouseWithJoystickAccel;
+	leftClickKey = LeftClickKeycode;
+	rightClickKey = RightClickKeycode;
 }
 
 JNIEXPORT void JNICALL 

@@ -107,4 +107,5 @@
 <string name="calibrate_touchscreen_touch">Touch kaikki neljä reunaa näytön, paina Valikko, kun olet valmis</string>
 <string name="screenkb_custom_layout">Mukauta-ruudun näppäimistö</string>
 <string name="screenkb_custom_layout_help">Työnnä näytön lisätä painikkeen, paina Menu kumota viimeksi painike</string>
+<string name="rightclick_key">Fyysinen avain</string>
 </resources>

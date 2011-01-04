@@ -71,6 +71,7 @@
     <string name="mouse_emulation">Mouse emulation</string>
     <string name="rightclick_question">Right mouse click</string>
     <string name="rightclick_menu">Menu key</string>
+    <string name="rightclick_key">Physical key</string>
     <string name="rightclick_multitouch">Touch screen with second finger</string>
     <string name="rightclick_pressure">Touch screen with force</string>
     <string name="rightclick_none">Disable right mouse click</string>

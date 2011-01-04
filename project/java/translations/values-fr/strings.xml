@@ -110,4 +110,5 @@
 <string name="calibrate_touchscreen_touch">Touchez les quatre bords de l\u0026#39;écran, appuyez sur MENU lorsque vous avez terminé</string>
 <string name="screenkb_custom_layout">Personnalisation de la présentation du clavier à l\u0026#39;écran</string>
 <string name="screenkb_custom_layout_help">Faites glisser l\u0026#39;écran pour ajouter le bouton, appuyez sur Menu pour annuler le dernier bouton</string>
+<string name="rightclick_key">Physique clés</string>
 </resources>
