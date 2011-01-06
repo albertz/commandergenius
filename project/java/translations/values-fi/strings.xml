@@ -109,4 +109,6 @@
 <string name="screenkb_custom_layout_help">Työnnä näytön lisätä painikkeen, paina Menu kumota viimeksi painike</string>
 <string name="rightclick_key">Fyysinen avain</string>
 <string name="pointandclick_showcreenunderfinger2">Näytöllä suurennuslasi</string>
+<string name="video">Videon asetukset</string>
+<string name="video_smooth">Tasainen video</string>
 </resources>

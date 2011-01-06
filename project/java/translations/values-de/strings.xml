@@ -109,4 +109,6 @@
 <string name="screenkb_custom_layout_help">Slide-Bildschirm hinzufügen Taste, drücken Sie Menü zum letzten Knopf rückgängig machen</string>
 <string name="rightclick_key">Physikalische Schlüssel</string>
 <string name="pointandclick_showcreenunderfinger2">On-Screen-Lupe</string>
+<string name="video">Video-Einstellungen</string>
+<string name="video_smooth">Glatte Video</string>
 </resources>

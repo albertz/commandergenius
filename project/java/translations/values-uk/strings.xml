@@ -102,4 +102,6 @@
 <string name="screenkb_custom_layout_help">Провезiть по екрану, щоб додати кнопку, натисніть клавішу Меню, щоб скасувати останню кнопку</string>
 <string name="rightclick_key">Фізична кнопка</string>
 <string name="pointandclick_showcreenunderfinger2">Наекранна лупа</string>
+<string name="video">Налаштування відео</string>
+<string name="video_smooth">Згладити відео</string>
 </resources>

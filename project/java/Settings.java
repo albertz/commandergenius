@@ -110,6 +110,7 @@ class Settings
 					out.writeInt(Globals.ScreenKbControlsLayout[i][ii]);
 			out.writeInt(Globals.LeftClickKey);
 			out.writeInt(Globals.RightClickKey);
+			out.writeBoolean(Globals.SmoothVideo);
 
 			out.close();
 			settingsLoaded = true;
@@ -234,6 +235,7 @@ class Settings
 					Globals.ScreenKbControlsLayout[i][ii] = settingsFile.readInt();
 			Globals.LeftClickKey = settingsFile.readInt();
 			Globals.RightClickKey = settingsFile.readInt();
+			Globals.SmoothVideo = settingsFile.readBoolean();
 			
 			settingsLoaded = true;
 
@@ -318,6 +320,8 @@ class Settings
 
 		items.add(p.getResources().getString(R.string.remap_screenkb_button_gestures));
 
+		items.add(p.getResources().getString(R.string.video));
+
 		items.add(p.getResources().getString(R.string.ok));
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -383,6 +387,10 @@ class Settings
 
 				if( item == selected )
 					showScreenGesturesConfig(p);
+				selected++;
+
+				if( item == selected )
+					showVideoSettingsConfig(p);
 				selected++;
 
 				if( item == selected )
@@ -667,14 +675,12 @@ class Settings
 	{
 		CharSequence[] items = {
 			p.getResources().getString(R.string.controls_screenkb),
-			p.getResources().getString(R.string.controls_accelnav),
-			p.getResources().getString(R.string.pointandclick_keepaspectratio)
+			p.getResources().getString(R.string.controls_accelnav)
 		};
 
 		boolean defaults[] = { 
 			Globals.UseTouchscreenKeyboard,
-			Globals.UseAccelerometerAsArrowKeys,
-			Globals.KeepAspectRatio,
+			Globals.UseAccelerometerAsArrowKeys
 		};
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -687,8 +693,6 @@ class Settings
 					Globals.UseTouchscreenKeyboard = isChecked;
 				if( item == 1 )
 					Globals.UseAccelerometerAsArrowKeys = isChecked;
-				if( item == 2 )
-					Globals.KeepAspectRatio = isChecked;
 			}
 		});
 		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
@@ -964,14 +968,6 @@ class Settings
 
 	static void showAdditionalMouseConfig(final MainActivity p)
 	{
-		if( ! Globals.AppUsesMouse )
-		{
-			Globals.ShowScreenUnderFinger = false;
-			Globals.MoveMouseWithJoystick = false;
-			Globals.ClickMouseWithDpad = false;
-			showMouseConfigMainMenu(p);
-		}
-
 		CharSequence[] items = {
 			p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
 			p.getResources().getString(R.string.pointandclick_joystickmouse),
@@ -1621,10 +1617,67 @@ class Settings
 		}
 	}
 
+	static void showVideoSettingsConfig(final MainActivity p)
+	{
+		CharSequence[] items = {
+			p.getResources().getString(R.string.pointandclick_keepaspectratio),
+			p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
+			p.getResources().getString(R.string.video_smooth)
+		};
+		boolean defaults[] = { 
+			Globals.KeepAspectRatio,
+			Globals.ShowScreenUnderFinger,
+			Globals.SmoothVideo
+		};
+
+		if(Globals.Using_SDL_1_3)
+		{
+			CharSequence[] items2 = {
+				p.getResources().getString(R.string.pointandclick_keepaspectratio),
+				p.getResources().getString(R.string.pointandclick_showcreenunderfinger2)
+			};
+			boolean defaults2[] = { 
+				Globals.KeepAspectRatio,
+				Globals.ShowScreenUnderFinger
+			};
+			items = items2;
+			defaults = defaults2;
+		}
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(p.getResources().getString(R.string.video));
+		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+			{
+				if( item == 0 )
+					Globals.KeepAspectRatio = isChecked;
+				if( item == 1 )
+					Globals.ShowScreenUnderFinger = isChecked;
+				if( item == 2 )
+					Globals.SmoothVideo = isChecked;
+			}
+		});
+		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				dialog.dismiss();
+				showConfigMainMenu(p);
+			}
+		});
+
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
 	// ===============================================================================================
 
 	static void Apply(Activity p)
 	{
+		if(Globals.SmoothVideo)
+			nativeSetSmoothVideo();
 		if( Globals.PhoneHasTrackball )
 			nativeSetTrackballUsed();
 		if( Globals.AppUsesMouse )
@@ -1724,6 +1777,7 @@ class Settings
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
+	private static native void nativeSetSmoothVideo();
 	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttonsAutoFire, int transparency);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	private static native void nativeInitKeymap();

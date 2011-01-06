@@ -325,6 +325,9 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 				SDL_OutOfMemory();
 				return(NULL);
 			}
+			if( SDL_ANDROID_SmoothVideo )
+				SDL_SetTextureScaleMode((SDL_Texture *)current->hwdata, SDL_TEXTURESCALEMODE_SLOW);
+
 			// Register main video texture to be recreated when needed
 			HwSurfaceCount++;
 			HwSurfaceList = SDL_realloc( HwSurfaceList, HwSurfaceCount * sizeof(SDL_Surface *) );
@@ -467,6 +470,9 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 		return(-1);
 	}
 
+	if( SDL_ANDROID_SmoothVideo )
+		SDL_SetTextureScaleMode((SDL_Texture *)surface->hwdata, SDL_TEXTURESCALEMODE_SLOW);
+
 	if( surface->format->Amask )
 	{
 		SDL_SetTextureAlphaMod((struct SDL_Texture *)surface->hwdata, SDL_ALPHA_OPAQUE);
@@ -553,6 +559,8 @@ static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)
 				SDL_OutOfMemory();
 				return(-1);
 			}
+			if( SDL_ANDROID_SmoothVideo )
+				SDL_SetTextureScaleMode((SDL_Texture *)SDL_CurrentVideoSurface->hwdata, SDL_TEXTURESCALEMODE_SLOW);
 			// Register main video texture to be recreated when needed
 			HwSurfaceCount++;
 			HwSurfaceList = SDL_realloc( HwSurfaceList, HwSurfaceCount * sizeof(SDL_Surface *) );
@@ -937,12 +945,15 @@ void SDL_ANDROID_VideoContextRecreated()
 			if( HwSurfaceList[i] == SDL_CurrentVideoSurface )
 				format = SDL_PIXELFORMAT_RGB565;
 			HwSurfaceList[i]->hwdata = (struct private_hwdata *)SDL_CreateTexture(format, SDL_TEXTUREACCESS_STATIC, HwSurfaceList[i]->w, HwSurfaceList[i]->h);
-			if( !HwSurfaceList[i]->hwdata ) 
+			if( !HwSurfaceList[i]->hwdata )
 			{
 				SDL_OutOfMemory();
 				return;
 			}
+			if( SDL_ANDROID_SmoothVideo )
+				SDL_SetTextureScaleMode((SDL_Texture *)HwSurfaceList[i]->hwdata, SDL_TEXTURESCALEMODE_SLOW);
 			ANDROID_UnlockHWSurface(NULL, HwSurfaceList[i]); // Re-fill texture with graphics
 		}
 	}
 };
+

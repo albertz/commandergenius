@@ -63,6 +63,7 @@ static jmethodID JavaSwapBuffers = NULL;
 static jmethodID JavaShowScreenKeyboard = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
+int SDL_ANDROID_SmoothVideo = 0;
 
 static void appPutToBackgroundCallbackDefault(void)
 {
@@ -228,7 +229,6 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaShowScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboard", "()V");
 	
 	ANDROID_InitOSKeymap();
-	
 }
 
 int SDL_ANDROID_SetApplicationPutToBackgroundCallback(
@@ -243,4 +243,10 @@ int SDL_ANDROID_SetApplicationPutToBackgroundCallback(
 
 	if( appRestoredCallback )
 		appRestoredCallback = appRestored;
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetSmoothVideo) (JNIEnv* env, jobject thiz)
+{
+	SDL_ANDROID_SmoothVideo = 1;
 }
