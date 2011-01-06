@@ -407,7 +407,7 @@ class Settings
 		if( Globals.AppNeedsTwoButtonMouse )
 			items.add(p.getResources().getString(R.string.rightclick_question));
 
-		items.add(p.getResources().getString(R.string.controls_additional));
+		items.add(p.getResources().getString(R.string.pointandclick_question));
 
 		if( Globals.MoveMouseWithJoystick )
 			items.add(p.getResources().getString(R.string.pointandclick_joystickmouse));
@@ -973,7 +973,7 @@ class Settings
 		}
 
 		CharSequence[] items = {
-			p.getResources().getString(R.string.pointandclick_showcreenunderfinger),
+			p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
 			p.getResources().getString(R.string.pointandclick_joystickmouse),
 			p.getResources().getString(R.string.click_with_dpadcenter)
 		};
@@ -986,7 +986,7 @@ class Settings
 
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_additional));
+		builder.setTitle(p.getResources().getString(R.string.pointandclick_question));
 		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
