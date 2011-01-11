@@ -124,9 +124,6 @@ int SDL_ANDROID_InsideVideoThread()
 }
 
 
-static void SdlGlRenderInit();
-
-
 /* ANDROID driver bootstrap functions */
 
 static int ANDROID_Available(void)
