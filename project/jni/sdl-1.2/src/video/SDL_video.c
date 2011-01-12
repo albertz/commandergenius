@@ -1423,7 +1423,11 @@ void *SDL_GL_GetProcAddress(const char* proc)
 
 	func = NULL;
 	if ( video->GL_GetProcAddress ) {
+#ifdef ANDROID
+		if ( 1 ) {
+#else
 		if ( video->gl_config.driver_loaded ) {
+#endif
 			func = video->GL_GetProcAddress(this, proc);
 		} else {
 			SDL_SetError("No GL driver has been loaded");

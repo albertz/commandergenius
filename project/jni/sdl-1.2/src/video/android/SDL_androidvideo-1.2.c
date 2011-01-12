@@ -42,6 +42,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <string.h> // for memset()
+#include <dlfcn.h>
 
 #define _THIS	SDL_VideoDevice *this
 
@@ -67,6 +68,7 @@ static int ANDROID_CheckHWBlit(_THIS, SDL_Surface *src, SDL_Surface *dst);
 static int ANDROID_FillHWRect(_THIS, SDL_Surface *dst, SDL_Rect *rect, Uint32 color);
 static int ANDROID_SetHWColorKey(_THIS, SDL_Surface *surface, Uint32 key);
 static int ANDROID_SetHWAlpha(_THIS, SDL_Surface *surface, Uint8 value);
+static void* ANDROID_GL_GetProcAddress(_THIS, const char *proc);
 
 // Stubs to get rid of crashing in OpenGL mode
 // The implementation dependent data for the window manager cursor
@@ -111,11 +113,12 @@ typedef struct SDL_Texture private_hwdata;
 // Pointer to in-memory video surface
 int SDL_ANDROID_sFakeWindowWidth = 640;
 int SDL_ANDROID_sFakeWindowHeight = 480;
-static int sdl_opengl = 0;
+int sdl_opengl = 0;
 static SDL_Window *SDL_VideoWindow = NULL;
 SDL_Surface *SDL_CurrentVideoSurface = NULL;
 static int HwSurfaceCount = 0;
 static SDL_Surface ** HwSurfaceList = NULL;
+void * glLibraryHandle = NULL;
 
 static Uint32 SDL_VideoThreadID = 0;
 int SDL_ANDROID_InsideVideoThread()
@@ -175,6 +178,7 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->InitOSKeymap = ANDROID_InitOSKeymap;
 	device->PumpEvents = ANDROID_PumpEvents;
 	device->GL_SwapBuffers = ANDROID_GL_SwapBuffers;
+	device->GL_GetProcAddress = ANDROID_GL_GetProcAddress;
 	device->free = ANDROID_DeleteDevice;
 
 	// Stubs
@@ -183,6 +187,9 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->ShowWMCursor = ANDROID_ShowWMCursor;
 	//device->WarpWMCursor = ANDROID_WarpWMCursor;
 	//device->MoveWMCursor = ANDROID_MoveWMCursor;
+
+	glLibraryHandle = dlopen("libGLESv1_CM.so", RTLD_NOW);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "dlopen(\"libGLESv1_CM.so\"): %p", glLibraryHandle);
 	
 	return device;
 }
@@ -245,7 +252,7 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[11] = NULL;
 	
 	SDL_VideoInit_1_3(NULL, 0);
-
+	
 	/* We're done! */
 	return(0);
 }
@@ -263,7 +270,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	SDL_PixelFormat format;
 	int bpp1;
 	
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): application requested mode %dx%d", width, height);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): application requested mode %dx%d OpenGL %d HW %d", width, height, flags & SDL_OPENGL, flags & SDL_HWSURFACE);
 	if( ! SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
@@ -351,7 +358,6 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 
 	/* Set up the new mode framebuffer */
 	SDL_CurrentVideoSurface = current;
-	
 
 	/* We're done */
 	return(current);
@@ -954,3 +960,9 @@ void SDL_ANDROID_VideoContextRecreated()
 	}
 };
 
+static void* ANDROID_GL_GetProcAddress(_THIS, const char *proc)
+{
+	void * func = dlsym(glLibraryHandle, proc);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_GL_GetProcAddress(\"%s\"): %p", proc, func);
+	return func;
+};
