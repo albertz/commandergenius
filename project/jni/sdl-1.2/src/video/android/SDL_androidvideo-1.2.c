@@ -903,6 +903,7 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 
 void ANDROID_GL_SwapBuffers(_THIS)
 {
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_GL_SwapBuffers");
 	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
