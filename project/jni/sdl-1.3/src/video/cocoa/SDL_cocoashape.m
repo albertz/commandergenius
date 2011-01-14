@@ -23,13 +23,15 @@
 #include "SDL_cocoavideo.h"
 #include "SDL_shape.h"
 #include "SDL_cocoashape.h"
-#include "../src/video/SDL_sysvideo.h"
+#include "../SDL_sysvideo.h"
 
 SDL_WindowShaper*
 Cocoa_CreateShaper(SDL_Window* window) {
     SDL_WindowData* windata = (SDL_WindowData*)window->driverdata;
     [windata->nswindow setOpaque:NO];
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_6
     [windata->nswindow setStyleMask:NSBorderlessWindowMask];
+#endif
     SDL_WindowShaper* result = result = malloc(sizeof(SDL_WindowShaper));
     result->window = window;
     result->mode.mode = ShapeModeDefault;

@@ -126,8 +126,7 @@ SDL_RenderDriver GL_RenderDriver = {
       SDL_TEXTUREMODULATE_ALPHA),
      (SDL_BLENDMODE_NONE | SDL_BLENDMODE_MASK |
       SDL_BLENDMODE_BLEND | SDL_BLENDMODE_ADD | SDL_BLENDMODE_MOD),
-     (SDL_TEXTURESCALEMODE_NONE | SDL_TEXTURESCALEMODE_FAST |
-      SDL_TEXTURESCALEMODE_SLOW),
+     (SDL_SCALEMODE_NONE | SDL_SCALEMODE_FAST | SDL_SCALEMODE_SLOW),
      15,
      {
       SDL_PIXELFORMAT_INDEX1LSB,
@@ -761,7 +760,8 @@ GL_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
 
     if (!convert_format(renderdata, texture->format, &internalFormat,
                         &format, &type)) {
-        SDL_SetError("Unsupported texture format");
+        SDL_SetError("Texture format %s not supported by OpenGL",
+                     SDL_GetPixelFormatName(texture->format));
         return -1;
     }
     if (texture->format == SDL_PIXELFORMAT_UYVY &&
@@ -1004,17 +1004,17 @@ static int
 GL_SetTextureScaleMode(SDL_Renderer * renderer, SDL_Texture * texture)
 {
     switch (texture->scaleMode) {
-    case SDL_TEXTURESCALEMODE_NONE:
-    case SDL_TEXTURESCALEMODE_FAST:
-    case SDL_TEXTURESCALEMODE_SLOW:
+    case SDL_SCALEMODE_NONE:
+    case SDL_SCALEMODE_FAST:
+    case SDL_SCALEMODE_SLOW:
         return 0;
-    case SDL_TEXTURESCALEMODE_BEST:
+    case SDL_SCALEMODE_BEST:
         SDL_Unsupported();
-        texture->scaleMode = SDL_TEXTURESCALEMODE_SLOW;
+        texture->scaleMode = SDL_SCALEMODE_SLOW;
         return -1;
     default:
         SDL_Unsupported();
-        texture->scaleMode = SDL_TEXTURESCALEMODE_NONE;
+        texture->scaleMode = SDL_SCALEMODE_NONE;
         return -1;
     }
 }
@@ -1181,6 +1181,11 @@ GL_RenderDrawLines(SDL_Renderer * renderer, const SDL_Point * points,
         }
         data->glEnd();
     } else {
+#if defined(__APPLE__) || defined(__WIN32__)
+#else
+        int x1, y1, x2, y2;
+#endif
+
         data->glBegin(GL_LINE_STRIP);
         for (i = 0; i < count; ++i) {
             data->glVertex2f(0.5f + points[i].x, 0.5f + points[i].y);
@@ -1200,10 +1205,10 @@ GL_RenderDrawLines(SDL_Renderer * renderer, const SDL_Point * points,
         data->glVertex2f(0.5f + points[count-1].x, 0.5f + points[count-1].y);
 #else
         /* Linux seems to leave the right-most or bottom-most point open */
-        int x1 = points[0].x;
-        int y1 = points[0].y;
-        int x2 = points[count-1].x;
-        int y2 = points[count-1].y;
+        x1 = points[0].x;
+        y1 = points[0].y;
+        x2 = points[count-1].x;
+        y2 = points[count-1].y;
 
         if (x1 > x2) {
             data->glVertex2f(0.5f + x1, 0.5f + y1);
@@ -1360,15 +1365,15 @@ GL_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
 
     if (texture->scaleMode != data->scaleMode) {
         switch (texture->scaleMode) {
-        case SDL_TEXTURESCALEMODE_NONE:
-        case SDL_TEXTURESCALEMODE_FAST:
+        case SDL_SCALEMODE_NONE:
+        case SDL_SCALEMODE_FAST:
             data->glTexParameteri(texturedata->type, GL_TEXTURE_MIN_FILTER,
                                   GL_NEAREST);
             data->glTexParameteri(texturedata->type, GL_TEXTURE_MAG_FILTER,
                                   GL_NEAREST);
             break;
-        case SDL_TEXTURESCALEMODE_SLOW:
-        case SDL_TEXTURESCALEMODE_BEST:
+        case SDL_SCALEMODE_SLOW:
+        case SDL_SCALEMODE_BEST:
             data->glTexParameteri(texturedata->type, GL_TEXTURE_MIN_FILTER,
                                   GL_LINEAR);
             data->glTexParameteri(texturedata->type, GL_TEXTURE_MAG_FILTER,

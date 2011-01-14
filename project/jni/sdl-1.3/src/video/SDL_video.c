@@ -37,6 +37,11 @@
 #include <android/log.h>
 #endif
 
+#if SDL_VIDEO_DRIVER_WIN32
+#include "win32/SDL_win32video.h"
+extern void IME_Present(SDL_VideoData *videodata);
+#endif
+
 #if SDL_VIDEO_OPENGL_ES
 #include "SDL_opengles.h"
 #endif /* SDL_VIDEO_OPENGL_ES */
@@ -692,6 +697,10 @@ SDL_SetDisplayModeForDisplay(SDL_VideoDisplay * display, const SDL_DisplayMode *
     }
 
     /* Actually change the display mode */
+    if (!_this->SetDisplayMode) {
+        SDL_SetError("Video driver doesn't support changing display mode");
+        return -1;
+    }
     if (_this->SetDisplayMode(_this, display, &display_mode) < 0) {
         return -1;
     }
@@ -1044,11 +1053,19 @@ SDL_GetCurrentRenderer(SDL_bool create)
         return NULL;
     }
     if (!SDL_CurrentRenderer) {
+        SDL_Window *window = NULL;
+
         if (!create) {
             SDL_SetError("Use SDL_CreateRenderer() to create a renderer");
             return NULL;
         }
-        if (SDL_CreateRenderer(0, -1, 0) < 0) {
+
+        /* Get the first window on the first display */
+        if (_this->num_displays > 0) {
+            window = _this->displays[0].windows;
+        }
+
+        if (SDL_CreateRenderer(window, -1, 0) < 0) {
             return NULL;
         }
     }
@@ -1725,13 +1742,15 @@ SDL_CreateTextureFromSurface(Uint32 format, SDL_Surface * surface)
                 SDL_PIXELFORMAT_RGB565,
                 SDL_PIXELFORMAT_BGR565,
                 SDL_PIXELFORMAT_ARGB1555,
-                SDL_PIXELFORMAT_ABGR1555,
                 SDL_PIXELFORMAT_RGBA5551,
+                SDL_PIXELFORMAT_ABGR1555,
+                SDL_PIXELFORMAT_BGRA5551,
                 SDL_PIXELFORMAT_RGB555,
                 SDL_PIXELFORMAT_BGR555,
                 SDL_PIXELFORMAT_ARGB4444,
-                SDL_PIXELFORMAT_ABGR4444,
                 SDL_PIXELFORMAT_RGBA4444,
+                SDL_PIXELFORMAT_ABGR4444,
+                SDL_PIXELFORMAT_BGRA4444,
                 SDL_PIXELFORMAT_RGB444,
                 SDL_PIXELFORMAT_ARGB2101010,
                 SDL_PIXELFORMAT_INDEX8,
@@ -1815,11 +1834,13 @@ SDL_CreateTextureFromSurface(Uint32 format, SDL_Surface * surface)
                 SDL_PIXELFORMAT_ABGR8888,
                 SDL_PIXELFORMAT_BGRA8888,
                 SDL_PIXELFORMAT_ARGB1555,
-                SDL_PIXELFORMAT_ABGR1555,
                 SDL_PIXELFORMAT_RGBA5551,
+                SDL_PIXELFORMAT_ABGR1555,
+                SDL_PIXELFORMAT_BGRA5551,
                 SDL_PIXELFORMAT_ARGB4444,
-                SDL_PIXELFORMAT_ABGR4444,
                 SDL_PIXELFORMAT_RGBA4444,
+                SDL_PIXELFORMAT_ABGR4444,
+                SDL_PIXELFORMAT_BGRA4444,
                 SDL_PIXELFORMAT_ARGB2101010,
                 SDL_PIXELFORMAT_UNKNOWN
             };
@@ -1961,8 +1982,8 @@ SDL_CreateTextureFromSurface(Uint32 format, SDL_Surface * surface)
 
     {
         Uint8 r, g, b, a;
-        int blendMode;
-        int scaleMode;
+        SDL_BlendMode blendMode;
+        SDL_ScaleMode scaleMode;
 
         SDL_GetSurfaceColorMod(surface, &r, &g, &b);
         SDL_SetTextureColorMod(texture, r, g, b);
@@ -1970,8 +1991,13 @@ SDL_CreateTextureFromSurface(Uint32 format, SDL_Surface * surface)
         SDL_GetSurfaceAlphaMod(surface, &a);
         SDL_SetTextureAlphaMod(texture, a);
 
-        SDL_GetSurfaceBlendMode(surface, &blendMode);
-        SDL_SetTextureBlendMode(texture, blendMode);
+        if (surface->map->info.flags & SDL_COPY_COLORKEY) {
+            /* We converted to a texture with alpha format */
+            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+        } else {
+            SDL_GetSurfaceBlendMode(surface, &blendMode);
+            SDL_SetTextureBlendMode(texture, blendMode);
+        }
 
         SDL_GetSurfaceScaleMode(surface, &scaleMode);
         SDL_SetTextureScaleMode(texture, scaleMode);
@@ -2131,7 +2157,7 @@ SDL_GetTextureAlphaMod(SDL_Texture * texture, Uint8 * alpha)
 }
 
 int
-SDL_SetTextureBlendMode(SDL_Texture * texture, int blendMode)
+SDL_SetTextureBlendMode(SDL_Texture * texture, SDL_BlendMode blendMode)
 {
     SDL_Renderer *renderer;
 
@@ -2147,7 +2173,7 @@ SDL_SetTextureBlendMode(SDL_Texture * texture, int blendMode)
 }
 
 int
-SDL_GetTextureBlendMode(SDL_Texture * texture, int *blendMode)
+SDL_GetTextureBlendMode(SDL_Texture * texture, SDL_BlendMode *blendMode)
 {
     CHECK_TEXTURE_MAGIC(texture, -1);
 
@@ -2158,7 +2184,7 @@ SDL_GetTextureBlendMode(SDL_Texture * texture, int *blendMode)
 }
 
 int
-SDL_SetTextureScaleMode(SDL_Texture * texture, int scaleMode)
+SDL_SetTextureScaleMode(SDL_Texture * texture, SDL_ScaleMode scaleMode)
 {
     SDL_Renderer *renderer;
 
@@ -2174,7 +2200,7 @@ SDL_SetTextureScaleMode(SDL_Texture * texture, int scaleMode)
 }
 
 int
-SDL_GetTextureScaleMode(SDL_Texture * texture, int *scaleMode)
+SDL_GetTextureScaleMode(SDL_Texture * texture, SDL_ScaleMode *scaleMode)
 {
     CHECK_TEXTURE_MAGIC(texture, -1);
 
@@ -2317,7 +2343,7 @@ SDL_GetRenderDrawColor(Uint8 * r, Uint8 * g, Uint8 * b, Uint8 * a)
 }
 
 int
-SDL_SetRenderDrawBlendMode(int blendMode)
+SDL_SetRenderDrawBlendMode(SDL_BlendMode blendMode)
 {
     SDL_Renderer *renderer;
 
@@ -2334,7 +2360,7 @@ SDL_SetRenderDrawBlendMode(int blendMode)
 }
 
 int
-SDL_GetRenderDrawBlendMode(int *blendMode)
+SDL_GetRenderDrawBlendMode(SDL_BlendMode *blendMode)
 {
     SDL_Renderer *renderer;
 
@@ -2356,7 +2382,7 @@ SDL_RenderClear()
         return -1;
     }
     if (!renderer->RenderClear) {
-        int blendMode = renderer->blendMode;
+        SDL_BlendMode blendMode = renderer->blendMode;
         int status;
 
         if (blendMode >= SDL_BLENDMODE_BLEND) {
@@ -2864,6 +2890,9 @@ SDL_RenderPresent(void)
     if (!renderer || !renderer->RenderPresent) {
         return;
     }
+#if SDL_VIDEO_DRIVER_WIN32
+    IME_Present((SDL_VideoData *)_this->driverdata);
+#endif
     renderer->RenderPresent(renderer);
 }
 

@@ -117,7 +117,7 @@ SDL_SetError(const char *fmt, ...)
     fprintf(stderr, "SDL_SetError: %s\n", SDL_GetError());
 #endif
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_ERROR, "libSDL", "SDL_SetError: %s", SDL_GetError());
+    __android_log_print(ANDROID_LOG_ERROR, "libSDL", "ERROR: %s", SDL_GetError());
 #endif
 }
 

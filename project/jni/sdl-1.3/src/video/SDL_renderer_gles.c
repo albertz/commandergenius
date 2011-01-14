@@ -126,19 +126,14 @@ SDL_RenderDriver GL_ES_RenderDriver = {
       SDL_TEXTUREMODULATE_ALPHA),
      (SDL_BLENDMODE_NONE | SDL_BLENDMODE_MASK |
       SDL_BLENDMODE_BLEND | SDL_BLENDMODE_ADD | SDL_BLENDMODE_MOD),
-     (SDL_TEXTURESCALEMODE_NONE | SDL_TEXTURESCALEMODE_FAST |
-      SDL_TEXTURESCALEMODE_SLOW), 5,
+     (SDL_SCALEMODE_NONE | SDL_SCALEMODE_FAST | SDL_SCALEMODE_SLOW), 6,
      {
       /* OpenGL ES 1.x supported formats list */
-      SDL_PIXELFORMAT_ABGR4444,
-      SDL_PIXELFORMAT_ABGR1555,
-      SDL_PIXELFORMAT_BGR565,
-#ifdef ANDROID
-      SDL_PIXELFORMAT_RGB565, // Android is special, GL pixelformat has R and B channels not swapped
-      SDL_PIXELFORMAT_RGBA5551,
       SDL_PIXELFORMAT_RGBA4444,
-#endif
-      SDL_PIXELFORMAT_BGR24,
+      SDL_PIXELFORMAT_RGBA5551,
+      SDL_PIXELFORMAT_RGB565,
+      SDL_PIXELFORMAT_RGB24,
+      SDL_PIXELFORMAT_BGR888,
       SDL_PIXELFORMAT_ABGR8888},
      0,
      0}
@@ -423,32 +418,17 @@ GLES_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     GLenum result;
 
     switch (texture->format) {
-    case SDL_PIXELFORMAT_BGR24:
+    case SDL_PIXELFORMAT_RGB24:
         internalFormat = GL_RGB;
         format = GL_RGB;
         type = GL_UNSIGNED_BYTE;
         break;
+    case SDL_PIXELFORMAT_BGR888:
     case SDL_PIXELFORMAT_ABGR8888:
         internalFormat = GL_RGBA;
         format = GL_RGBA;
         type = GL_UNSIGNED_BYTE;
         break;
-    case SDL_PIXELFORMAT_BGR565:
-        internalFormat = GL_RGB;
-        format = GL_RGB;
-        type = GL_UNSIGNED_SHORT_5_6_5;
-        break;
-    case SDL_PIXELFORMAT_ABGR1555:
-        internalFormat = GL_RGBA;
-        format = GL_RGBA;
-        type = GL_UNSIGNED_SHORT_5_5_5_1;
-        break;
-    case SDL_PIXELFORMAT_ABGR4444:
-        internalFormat = GL_RGBA;
-        format = GL_RGBA;
-        type = GL_UNSIGNED_SHORT_4_4_4_4;
-        break;
-#ifdef ANDROID
     case SDL_PIXELFORMAT_RGB565:
         internalFormat = GL_RGB;
         format = GL_RGB;
@@ -464,9 +444,9 @@ GLES_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         format = GL_RGBA;
         type = GL_UNSIGNED_SHORT_4_4_4_4;
         break;
-#endif
     default:
-        SDL_SetError("Unsupported by OpenGL ES texture format");
+        SDL_SetError("Texture format %s not supported by OpenGL ES",
+                     SDL_GetPixelFormatName(texture->format));
         return -1;
     }
 
@@ -598,17 +578,17 @@ static int
 GLES_SetTextureScaleMode(SDL_Renderer * renderer, SDL_Texture * texture)
 {
     switch (texture->scaleMode) {
-    case SDL_TEXTURESCALEMODE_NONE:
-    case SDL_TEXTURESCALEMODE_FAST:
-    case SDL_TEXTURESCALEMODE_SLOW:
+    case SDL_SCALEMODE_NONE:
+    case SDL_SCALEMODE_FAST:
+    case SDL_SCALEMODE_SLOW:
         return 0;
-    case SDL_TEXTURESCALEMODE_BEST:
+    case SDL_SCALEMODE_BEST:
         SDL_Unsupported();
-        texture->scaleMode = SDL_TEXTURESCALEMODE_SLOW;
+        texture->scaleMode = SDL_SCALEMODE_SLOW;
         return -1;
     default:
         SDL_Unsupported();
-        texture->scaleMode = SDL_TEXTURESCALEMODE_NONE;
+        texture->scaleMode = SDL_SCALEMODE_NONE;
         return -1;
     }
 }
@@ -947,15 +927,15 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
     GLES_SetBlendMode(data, texture->blendMode, 0);
 
     switch (texture->scaleMode) {
-    case SDL_TEXTURESCALEMODE_NONE:
-    case SDL_TEXTURESCALEMODE_FAST:
+    case SDL_SCALEMODE_NONE:
+    case SDL_SCALEMODE_FAST:
         data->glTexParameteri(texturedata->type, GL_TEXTURE_MIN_FILTER,
                               GL_NEAREST);
         data->glTexParameteri(texturedata->type, GL_TEXTURE_MAG_FILTER,
                               GL_NEAREST);
         break;
-    case SDL_TEXTURESCALEMODE_SLOW:
-    case SDL_TEXTURESCALEMODE_BEST:
+    case SDL_SCALEMODE_SLOW:
+    case SDL_SCALEMODE_BEST:
         data->glTexParameteri(texturedata->type, GL_TEXTURE_MIN_FILTER,
                               GL_LINEAR);
         data->glTexParameteri(texturedata->type, GL_TEXTURE_MAG_FILTER,

@@ -202,6 +202,14 @@ typedef enum
     SDL_GRAB_ON = 1
 } SDL_GrabMode;
 
+typedef enum
+{
+    SDL_TEXTURESCALEMODE_NONE = SDL_SCALEMODE_NONE,
+    SDL_TEXTURESCALEMODE_FAST = SDL_SCALEMODE_FAST,
+    SDL_TEXTURESCALEMODE_SLOW = SDL_SCALEMODE_SLOW,
+    SDL_TEXTURESCALEMODE_BEST = SDL_SCALEMODE_BEST
+} SDL_TextureScaleMode;
+
 struct SDL_SysWMinfo;
 
 /**
@@ -319,8 +327,9 @@ extern DECLSPEC int SDLCALL SDL_EnableKeyRepeat(int delay, int interval);
 extern DECLSPEC void SDLCALL SDL_GetKeyRepeat(int *delay, int *interval);
 extern DECLSPEC int SDLCALL SDL_EnableUNICODE(int enable);
 
-#define SDL_TextureID SDL_Texture*
-#define SDL_WindowID SDL_Window*
+typedef SDL_Texture* SDL_TextureID;
+typedef SDL_Window* SDL_WindowID;
+
 #define SDL_RenderPoint SDL_RenderDrawPoint
 #define SDL_RenderLine SDL_RenderDrawLine
 #define SDL_RenderFill(X)  (X) ? SDL_RenderFillRect(X) : SDL_RenderClear()

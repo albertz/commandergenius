@@ -57,11 +57,15 @@ static __inline__ void ConvertNSRect(NSRect *r)
     } else {
         [_data->nswindow setDelegate:self];
     }
+// FIXME: Why doesn't this work?
+//    [center addObserver:self selector:@selector(rightMouseDown:) name:[NSString stringWithCString:"rightMouseDown" encoding:NSUTF8StringEncoding] object:[_data->nswindow contentView]];
     [center addObserver:self selector:@selector(windowDidHide:) name:NSApplicationDidHideNotification object:NSApp];
     [center addObserver:self selector:@selector(windowDidUnhide:) name:NSApplicationDidUnhideNotification object:NSApp];
 
     [_data->nswindow setAcceptsMouseMovedEvents:YES];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
     [[_data->nswindow contentView] setAcceptsTouchEvents:YES];
+#endif
 }
 
 - (void)close
@@ -113,7 +117,8 @@ static __inline__ void ConvertNSRect(NSRect *r)
     NSRect rect = [_data->nswindow contentRectForFrameRect:[_data->nswindow frame]];
     w = (int)rect.size.width;
     h = (int)rect.size.height;
-    Cocoa_ResizeWindowShape(_data->window);
+    if (SDL_IsShapedWindow(_data->window))
+        Cocoa_ResizeWindowShape(_data->window);
     SDL_SendWindowEvent(_data->window, SDL_WINDOWEVENT_RESIZED, w, h);
 }
 
@@ -293,6 +298,7 @@ static __inline__ void ConvertNSRect(NSRect *r)
 
 - (void)handleTouches:(cocoaTouchType)type withEvent:(NSEvent *)event
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
     NSSet *touches = 0;
     NSEnumerator *enumerator;
     NSTouch *touch;
@@ -354,6 +360,7 @@ static __inline__ void ConvertNSRect(NSRect *r)
         
         touch = (NSTouch*)[enumerator nextObject];
     }
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6 */
 }
 
 @end
@@ -374,6 +381,30 @@ static __inline__ void ConvertNSRect(NSRect *r)
 {
     return YES;
 }
+@end
+
+@interface SDLView : NSView {
+    Cocoa_WindowListener *listener;
+}
+@end
+
+@implementation SDLView
+
+- (id) initWithFrame: (NSRect) rect
+            listener: (Cocoa_WindowListener *) theListener
+{
+    if (self = [super initWithFrame:rect]) {
+        listener = theListener;
+    }
+
+    return self;
+}
+
+- (void)rightMouseDown:(NSEvent *)theEvent
+{
+    [listener mouseDown:theEvent];
+}
+
 @end
 
 static int
@@ -407,6 +438,14 @@ SetupWindowData(_THIS, SDL_Window * window, NSWindow *nswindow, SDL_bool created
     {
         SDL_Rect bounds;
         NSRect rect = [nswindow contentRectForFrameRect:[nswindow frame]];
+        NSView *contentView = [[SDLView alloc] initWithFrame: rect
+                                                    listener: data->listener];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
+        [contentView setAcceptsTouchEvents:YES];
+#endif
+        [nswindow setContentView: contentView];
+        [contentView release];
+
         ConvertNSRect(&rect);
         Cocoa_GetDisplayBounds(_this, display, &bounds);
         window->x = (int)rect.origin.x - bounds.x;

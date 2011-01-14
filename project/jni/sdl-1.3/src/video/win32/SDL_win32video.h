@@ -44,6 +44,9 @@
 
 #include <imm.h>
 
+#define MAX_CANDLIST    10
+#define MAX_CANDLENGTH  256
+
 #if SDL_VIDEO_RENDER_D3D
 //#include <d3d9.h>
 #define D3D_DEBUG_INFO
@@ -77,6 +80,32 @@ extern void WIN_SetError(const char *prefix);
 
 enum { RENDER_NONE, RENDER_D3D, RENDER_DDRAW, RENDER_GDI, RENDER_GAPI, RENDER_RAW };
 
+#if WINVER < 0x0601
+/* Touch input definitions */
+#define TWF_FINETOUCH	1
+#define TWF_WANTPALM	2
+
+#define TOUCHEVENTF_MOVE 0x0001
+#define TOUCHEVENTF_DOWN 0x0002
+#define TOUCHEVENTF_UP   0x0004
+
+DECLARE_HANDLE(HTOUCHINPUT);
+
+typedef struct _TOUCHINPUT {
+	LONG      x;
+	LONG      y;
+	HANDLE    hSource;
+	DWORD     dwID;
+	DWORD     dwFlags;
+	DWORD     dwMask;
+	DWORD     dwTime;
+	ULONG_PTR dwExtraInfo;
+	DWORD     cxContact;
+	DWORD     cyContact;
+} TOUCHINPUT, *PTOUCHINPUT;
+
+#endif /* WINVER < 0x0601 */
+
 typedef BOOL  (*PFNSHFullScreen)(HWND, DWORD);
 typedef void  (*PFCoordTransform)(SDL_Window*, POINT*);
 
@@ -89,26 +118,26 @@ typedef struct
 
 /* Definition from Win98DDK version of IMM.H */
 typedef struct tagINPUTCONTEXT2 {
-    HWND                hWnd;
-    BOOL                fOpen;
-    POINT               ptStatusWndPos;
-    POINT               ptSoftKbdPos;
-    DWORD               fdwConversion;
-    DWORD               fdwSentence;
-    union   {
-        LOGFONTA        A;
-        LOGFONTW        W;
+    HWND hWnd;
+    BOOL fOpen;
+    POINT ptStatusWndPos;
+    POINT ptSoftKbdPos;
+    DWORD fdwConversion;
+    DWORD fdwSentence;
+    union {
+        LOGFONTA A;
+        LOGFONTW W;
     } lfFont;
-    COMPOSITIONFORM     cfCompForm;
-    CANDIDATEFORM       cfCandForm[4];
-    HIMCC               hCompStr;
-    HIMCC               hCandInfo;
-    HIMCC               hGuideLine;
-    HIMCC               hPrivate;
-    DWORD               dwNumMsgBuf;
-    HIMCC               hMsgBuf;
-    DWORD               fdwInit;
-    DWORD               dwReserve[3];
+    COMPOSITIONFORM cfCompForm;
+    CANDIDATEFORM cfCandForm[4];
+    HIMCC hCompStr;
+    HIMCC hCandInfo;
+    HIMCC hGuideLine;
+    HIMCC hPrivate;
+    DWORD dwNumMsgBuf;
+    HIMCC hMsgBuf;
+    DWORD fdwInit;
+    DWORD dwReserve[3];
 } INPUTCONTEXT2, *PINPUTCONTEXT2, NEAR *NPINPUTCONTEXT2, FAR *LPINPUTCONTEXT2;
 
 /* Private display data */
@@ -132,7 +161,13 @@ typedef struct SDL_VideoData
 #endif
 
     const SDL_scancode *key_layout;
-    DWORD clipboard_count;
+	DWORD clipboard_count;
+
+	/* Touch input functions */
+	HANDLE userDLL;
+	BOOL (WINAPI *CloseTouchInputHandle)( HTOUCHINPUT );
+	BOOL (WINAPI *GetTouchInputInfo)( HTOUCHINPUT, UINT, PTOUCHINPUT, int );
+	BOOL (WINAPI *RegisterTouchWindow)( HWND, ULONG );
 
     SDL_bool ime_com_initialized;
     struct ITfThreadMgr *ime_threadmgr;
@@ -146,6 +181,22 @@ typedef struct SDL_VideoData
     WCHAR ime_composition[SDL_TEXTEDITINGEVENT_TEXT_SIZE];
     WCHAR ime_readingstring[16];
     int ime_cursor;
+
+    SDL_bool ime_candlist;
+    WCHAR ime_candidates[MAX_CANDLIST][MAX_CANDLENGTH];
+    DWORD ime_candcount;
+    DWORD ime_candref;
+    DWORD ime_candsel;
+    UINT ime_candpgsize;
+    int ime_candlistindexbase;
+    SDL_bool ime_candvertical;
+
+    SDL_Texture *ime_candtex;
+    SDL_bool ime_dirty;
+    SDL_Rect ime_rect;
+    SDL_Rect ime_candlistrect;
+    int ime_winwidth;
+    int ime_winheight;
 
     HKL ime_hkl;
     HMODULE ime_himm32;

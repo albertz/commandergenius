@@ -21,12 +21,12 @@
 */
 #include "SDL_config.h"
 
-#ifndef _SDL_eventtouch_h
-#define _SDL_eventtouch_h
+#ifndef _SDL_x11touch_h
+#define _SDL_x11touch_h
 
 
 //What should this be?
-#if SDL_VIDEO_DRIVER_X11_XINPUT
+#ifdef SDL_INPUT_LINUXEV
 typedef struct EventTouchData
 {
     int x,y,pressure,finger; //Temporary Variables until sync
@@ -38,6 +38,6 @@ typedef struct EventTouchData
 extern void X11_InitTouch(_THIS);
 extern void X11_QuitTouch(_THIS);
 
-#endif /* _SDL_eventtouch_h */
+#endif /* _SDL_x11touch_h */
 
 /* vi: set ts=4 sw=4 expandtab: */

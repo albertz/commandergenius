@@ -66,8 +66,8 @@ typedef enum
     SDL_SYSWMEVENT,             /**< System specific event */
 
     /* Keyboard events */
-    SDL_KEYDOWN        = 0x300, /**< Keys pressed */
-    SDL_KEYUP,                  /**< Keys released */
+    SDL_KEYDOWN        = 0x300, /**< Key pressed */
+    SDL_KEYUP,                  /**< Key released */
     SDL_TEXTEDITING,            /**< Keyboard text editing (composition) */
     SDL_TEXTINPUT,              /**< Keyboard text input */
 
@@ -436,8 +436,8 @@ typedef union SDL_Event
     SDL_SysWMEvent syswm;           /**< System dependent window event data */
     SDL_TouchFingerEvent tfinger;   /**< Touch finger event data */
     SDL_TouchButtonEvent tbutton;   /**< Touch button event data */
-    SDL_MultiGestureEvent mgesture; /**< Multi Finger Gesture data*/
-    SDL_DollarGestureEvent dgesture; /**< Multi Finger Gesture data*/
+    SDL_MultiGestureEvent mgesture; /**< Multi Finger Gesture data */
+    SDL_DollarGestureEvent dgesture; /**< Multi Finger Gesture data */
 
     /** Temporarily here for backwards compatibility */
     /*@{*/

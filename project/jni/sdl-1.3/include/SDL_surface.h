@@ -32,6 +32,8 @@
 #include "SDL_stdinc.h"
 #include "SDL_pixels.h"
 #include "SDL_rect.h"
+#include "SDL_blendmode.h"
+#include "SDL_scalemode.h"
 #include "SDL_rwops.h"
 
 #include "begin_code.h"
@@ -88,7 +90,7 @@ typedef struct SDL_Surface
     struct SDL_BlitMap *map;    /**< Private */
 
     /** format version, bumped at every change to invalidate blit maps */
-    unsigned int format_version;        /**< Private */
+    int format_version;         /**< Private */
 
     /** Reference count -- used when freeing surface */
     int refcount;               /**< Read-mostly */
@@ -159,9 +161,9 @@ extern DECLSPEC int SDLCALL SDL_LockSurface(SDL_Surface * surface);
 extern DECLSPEC void SDLCALL SDL_UnlockSurface(SDL_Surface * surface);
 
 /**
- *  Load a surface from a seekable SDL data source (memory or file).
+ *  Load a surface from a seekable SDL data stream (memory or file).
  *  
- *  If \c freesrc is non-zero, the source will be closed after being read.
+ *  If \c freesrc is non-zero, the stream will be closed after being read.
  *  
  *  The new surface should be freed with SDL_FreeSurface().
  *  
@@ -178,9 +180,9 @@ extern DECLSPEC SDL_Surface *SDLCALL SDL_LoadBMP_RW(SDL_RWops * src,
 #define SDL_LoadBMP(file)	SDL_LoadBMP_RW(SDL_RWFromFile(file, "rb"), 1)
 
 /**
- *  Save a surface to a seekable SDL data source (memory or file).
+ *  Save a surface to a seekable SDL data stream (memory or file).
  *  
- *  If \c freedst is non-zero, the source will be closed after being written.
+ *  If \c freedst is non-zero, the stream will be closed after being written.
  *  
  *  \return 0 if successful or -1 if there was an error.
  */
@@ -235,9 +237,9 @@ extern DECLSPEC int SDLCALL SDL_GetColorKey(SDL_Surface * surface,
  *  \brief Set an additional color value used in blit operations.
  *  
  *  \param surface The surface to update.
- *  \param r The red source color value multiplied into blit operations.
- *  \param g The green source color value multiplied into blit operations.
- *  \param b The blue source color value multiplied into blit operations.
+ *  \param r The red color value multiplied into blit operations.
+ *  \param g The green color value multiplied into blit operations.
+ *  \param b The blue color value multiplied into blit operations.
  *  
  *  \return 0 on success, or -1 if the surface is not valid.
  *  
@@ -251,9 +253,9 @@ extern DECLSPEC int SDLCALL SDL_SetSurfaceColorMod(SDL_Surface * surface,
  *  \brief Get the additional color value used in blit operations.
  *  
  *  \param surface The surface to query.
- *  \param r A pointer filled in with the source red color value.
- *  \param g A pointer filled in with the source green color value.
- *  \param b A pointer filled in with the source blue color value.
+ *  \param r A pointer filled in with the current red color value.
+ *  \param g A pointer filled in with the current green color value.
+ *  \param b A pointer filled in with the current blue color value.
  *  
  *  \return 0 on success, or -1 if the surface is not valid.
  *  
@@ -267,7 +269,7 @@ extern DECLSPEC int SDLCALL SDL_GetSurfaceColorMod(SDL_Surface * surface,
  *  \brief Set an additional alpha value used in blit operations.
  *  
  *  \param surface The surface to update.
- *  \param alpha The source alpha value multiplied into blit operations.
+ *  \param alpha The alpha value multiplied into blit operations.
  *  
  *  \return 0 on success, or -1 if the surface is not valid.
  *  
@@ -280,7 +282,7 @@ extern DECLSPEC int SDLCALL SDL_SetSurfaceAlphaMod(SDL_Surface * surface,
  *  \brief Get the additional alpha value used in blit operations.
  *  
  *  \param surface The surface to query.
- *  \param alpha A pointer filled in with the source alpha value.
+ *  \param alpha A pointer filled in with the current alpha value.
  *  
  *  \return 0 on success, or -1 if the surface is not valid.
  *  
@@ -300,7 +302,7 @@ extern DECLSPEC int SDLCALL SDL_GetSurfaceAlphaMod(SDL_Surface * surface,
  *  \sa SDL_GetSurfaceBlendMode()
  */
 extern DECLSPEC int SDLCALL SDL_SetSurfaceBlendMode(SDL_Surface * surface,
-                                                    int blendMode);
+                                                    SDL_BlendMode blendMode);
 
 /**
  *  \brief Get the blend mode used for blit operations.
@@ -313,13 +315,13 @@ extern DECLSPEC int SDLCALL SDL_SetSurfaceBlendMode(SDL_Surface * surface,
  *  \sa SDL_SetSurfaceBlendMode()
  */
 extern DECLSPEC int SDLCALL SDL_GetSurfaceBlendMode(SDL_Surface * surface,
-                                                    int *blendMode);
+                                                    SDL_BlendMode *blendMode);
 
 /**
  *  \brief Set the scale mode used for blit operations.
  *  
  *  \param surface   The surface to update.
- *  \param scaleMode ::SDL_TextureScaleMode to use for blit scaling.
+ *  \param scaleMode ::SDL_ScaleMode to use for blit scaling.
  *  
  *  \return 0 on success, or -1 if the surface is not valid or the scale mode is
  *          not supported.
@@ -331,7 +333,7 @@ extern DECLSPEC int SDLCALL SDL_GetSurfaceBlendMode(SDL_Surface * surface,
  *  \sa SDL_GetSurfaceScaleMode()
  */
 extern DECLSPEC int SDLCALL SDL_SetSurfaceScaleMode(SDL_Surface * surface,
-                                                    int scaleMode);
+                                                    SDL_ScaleMode scaleMode);
 
 /**
  *  \brief Get the scale mode used for blit operations.
@@ -344,7 +346,7 @@ extern DECLSPEC int SDLCALL SDL_SetSurfaceScaleMode(SDL_Surface * surface,
  *  \sa SDL_SetSurfaceScaleMode()
  */
 extern DECLSPEC int SDLCALL SDL_GetSurfaceScaleMode(SDL_Surface * surface,
-                                                    int *scaleMode);
+                                                    SDL_ScaleMode *scaleMode);
 
 /**
  *  Sets the clipping rectangle for the destination surface in a blit.
@@ -413,10 +415,10 @@ extern DECLSPEC int SDLCALL SDL_DrawPoints
  */
 extern DECLSPEC int SDLCALL SDL_BlendPoint
     (SDL_Surface * dst, int x, int y,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 extern DECLSPEC int SDLCALL SDL_BlendPoints
     (SDL_Surface * dst, const SDL_Point * points, int count,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
 /**
  *  Draws a line with \c color.
@@ -438,10 +440,10 @@ extern DECLSPEC int SDLCALL SDL_DrawLines
  */
 extern DECLSPEC int SDLCALL SDL_BlendLine
     (SDL_Surface * dst, int x1, int y1, int x2, int y2,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 extern DECLSPEC int SDLCALL SDL_BlendLines
     (SDL_Surface * dst, const SDL_Point * points, int count,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
 /**
  *  Draws the given rectangle with \c color.
@@ -467,10 +469,10 @@ extern DECLSPEC int SDLCALL SDL_DrawRects
  */
 extern DECLSPEC int SDLCALL SDL_BlendRect
     (SDL_Surface * dst, const SDL_Rect * rect,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 extern DECLSPEC int SDLCALL SDL_BlendRects
     (SDL_Surface * dst, const SDL_Rect ** rects, int count,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
 /**
  *  Performs a fast fill of the given rectangle with \c color.
@@ -496,92 +498,10 @@ extern DECLSPEC int SDLCALL SDL_FillRects
  */
 extern DECLSPEC int SDLCALL SDL_BlendFillRect
     (SDL_Surface * dst, const SDL_Rect * rect,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 extern DECLSPEC int SDLCALL SDL_BlendFillRects
     (SDL_Surface * dst, const SDL_Rect ** rects, int count,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-
-#if 0
-/**
- *  Draws the given circle with \c color.
- *  
- *  The color should be a pixel of the format used by the surface, and 
- *  can be generated by the SDL_MapRGB() function.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_DrawCircle
-    (SDL_Surface * dst, int x, int y, int radius, Uint32 color);
-
-/**
- *  Blends an RGBA value into the outline of the given circle.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_BlendCircle
-    (SDL_Surface * dst, int x, int y, int radius,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-
-/**
- *  Fills the given circle with \c color.
- *  
- *  The color should be a pixel of the format used by the surface, and 
- *  can be generated by the SDL_MapRGB() function.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_FillCircle
-    (SDL_Surface * dst, int x, int y, int radius, Uint32 color);
-
-/**
- *  Blends an RGBA value into the given circle.
- *  
- *  \return This function returns 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_BlendFillCircle
-    (SDL_Surface * dst, int x, int y, int radius,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-
-/**
- *  Draws the given ellipse with \c color.
- *  
- *  The color should be a pixel of the format used by the surface, and 
- *  can be generated by the SDL_MapRGB() function.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_DrawEllipse
-    (SDL_Surface * dst, int x, int y, int w, int h, Uint32 color);
-
-/**
- *  Blends an RGBA value into the outline of the given ellipse.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_BlendEllipse
-    (SDL_Surface * dst, int x, int y, int w, int h,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-
-/**
- *  Fills the given ellipse with \c color.
- *  
- *  The color should be a pixel of the format used by the surface, and 
- *  can be generated by the SDL_MapRGB() function.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_FillEllipse
-    (SDL_Surface * dst, int x, int y, int w, int h, Uint32 color);
-
-/**
- *  Blends an RGBA value into the given ellipse.
- *  
- *  \return This function returns 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_BlendFillEllipse
-    (SDL_Surface * dst, int x, int y, int w, int h,
-     int blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-#endif // 0
+     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
 /**
  *  Performs a fast blit from the source surface to the destination surface.
@@ -665,7 +585,7 @@ extern DECLSPEC int SDLCALL SDL_BlendFillEllipse
  *  rectangle validation and clipping before passing it to SDL_LowerBlit()
  */
 extern DECLSPEC int SDLCALL SDL_UpperBlit
-    (SDL_Surface * src, SDL_Rect * srcrect,
+    (SDL_Surface * src, const SDL_Rect * srcrect,
      SDL_Surface * dst, SDL_Rect * dstrect);
 
 /**
