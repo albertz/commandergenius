@@ -34,6 +34,8 @@
 #include "SDL_pixels.h"
 #include "SDL_surface.h"
 #include "SDL_version.h"
+#include "SDL_blendmode.h"
+#include "SDL_scalemode.h"
 #if ! SDL_VERSION_ATLEAST(1,3,0)
 #include "SDL_video.h"
 #endif
@@ -216,38 +218,6 @@ typedef enum
     SDL_TEXTUREMODULATE_COLOR = 0x00000001,    /**< srcC = srcC * color */
     SDL_TEXTUREMODULATE_ALPHA = 0x00000002     /**< srcA = srcA * alpha */
 } SDL_TextureModulate;
-
-/**
- *  \brief The blend mode used in SDL_RenderCopy() and drawing operations.
- */
-typedef enum
-{
-    SDL_BLENDMODE_NONE = 0x00000000,     /**< No blending */
-    SDL_BLENDMODE_MASK = 0x00000001,     /**< dst = A ? src : dst 
-                                              (alpha is mask) */
-    
-    SDL_BLENDMODE_BLEND = 0x00000002,    /**< dst = (src * A) + (dst * (1-A)) */
-    SDL_BLENDMODE_ADD = 0x00000004,      /**< dst = (src * A) + dst */
-    SDL_BLENDMODE_MOD = 0x00000008       /**< dst = src * dst */
-} SDL_BlendMode;
-
-/**
- *  \brief The texture scale mode used in SDL_RenderCopy().
- */
-typedef enum
-{
-    SDL_TEXTURESCALEMODE_NONE = 0x00000000,     /**< No scaling, rectangles must
-                                                     match dimensions */
-    
-    SDL_TEXTURESCALEMODE_FAST = 0x00000001,     /**< Point sampling or 
-                                                     equivalent algorithm */
-    
-    SDL_TEXTURESCALEMODE_SLOW = 0x00000002,     /**< Linear filtering or 
-                                                     equivalent algorithm */
-    
-    SDL_TEXTURESCALEMODE_BEST = 0x00000004      /**< Bicubic filtering or 
-                                                     equivalent algorithm */
-} SDL_TextureScaleMode;
 
 /**
  *  \brief An efficient driver-specific representation of pixel data

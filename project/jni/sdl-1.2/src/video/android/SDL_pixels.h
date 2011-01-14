@@ -31,9 +31,7 @@
 
 #include "SDL_version.h"
 
-#if SDL_VERSION_ATLEAST(1,3,0)
-#include "SDL_video.h"
-#else
+#if !SDL_VERSION_ATLEAST(1,3,0)
 #include "SDL_video-1.3.h"
 #endif
 
@@ -146,6 +144,7 @@ enum
 #define SDL_ISPIXELFORMAT_FOURCC(format)    \
     ((format) && !((format) & 0x80000000))
 
+/* Note: If you modify this list, update SDL_GetPixelFormatName() */
 enum
 {
     SDL_PIXELFORMAT_UNKNOWN,
@@ -178,20 +177,26 @@ enum
     SDL_PIXELFORMAT_ARGB4444 =
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_ARGB,
                                SDL_PACKEDLAYOUT_4444, 16, 2),
+    SDL_PIXELFORMAT_RGBA4444 =
+        SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_RGBA,
+                               SDL_PACKEDLAYOUT_4444, 16, 2),
     SDL_PIXELFORMAT_ABGR4444 =
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_ABGR,
                                SDL_PACKEDLAYOUT_4444, 16, 2),
-    SDL_PIXELFORMAT_RGBA4444 = /* Android-specific */
-        SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_RGBA,
+    SDL_PIXELFORMAT_BGRA4444 =
+        SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_BGRA,
                                SDL_PACKEDLAYOUT_4444, 16, 2),
     SDL_PIXELFORMAT_ARGB1555 =
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_ARGB,
                                SDL_PACKEDLAYOUT_1555, 16, 2),
+    SDL_PIXELFORMAT_RGBA5551 =
+        SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_RGBA,
+                               SDL_PACKEDLAYOUT_5551, 16, 2),
     SDL_PIXELFORMAT_ABGR1555 =
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_ABGR,
                                SDL_PACKEDLAYOUT_1555, 16, 2),
-    SDL_PIXELFORMAT_RGBA5551 = /* Android-specific */
-        SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_RGBA,
+    SDL_PIXELFORMAT_BGRA5551 =
+        SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_BGRA,
                                SDL_PACKEDLAYOUT_5551, 16, 2),
     SDL_PIXELFORMAT_RGB565 =
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_XRGB,
@@ -288,6 +293,11 @@ typedef struct SDL_PixelFormat
 #endif
 
 /**
+ * \brief Get the human readable name of a pixel format
+ */
+extern DECLSPEC const char* SDLCALL SDL_GetPixelFormatName(Uint32 format);
+
+/**
  *  \brief Convert one of the enumerated pixel formats to a bpp and RGBA masks.
  *  
  *  \return SDL_TRUE, or SDL_FALSE if the conversion wasn't possible.
@@ -327,12 +337,12 @@ extern DECLSPEC Uint32 SDLCALL SDL_MasksToPixelFormatEnum(int bpp,
  */
 extern DECLSPEC SDL_Palette *SDLCALL SDL_AllocPalette(int ncolors);
 
+#if SDL_VERSION_ATLEAST(1,3,0)
 /**
  *  \brief Add a callback function which is called when the palette changes.
  *  
  *  \sa SDL_DelPaletteWatch()
  */
-#if SDL_VERSION_ATLEAST(1,3,0)
 extern DECLSPEC int SDLCALL SDL_AddPaletteWatch(SDL_Palette * palette,
                                                 SDL_PaletteChangedFunc
                                                 callback, void *userdata);
@@ -347,6 +357,7 @@ extern DECLSPEC void SDLCALL SDL_DelPaletteWatch(SDL_Palette * palette,
                                                  SDL_PaletteChangedFunc
                                                  callback, void *userdata);
 #endif
+
 /**
  *  \brief Set a range of colors in a palette.
  *  

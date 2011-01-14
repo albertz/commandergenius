@@ -49,6 +49,54 @@ struct SDL_PaletteWatch
 
 /* Helper functions */
 
+/* Helper functions */
+
+const char*
+SDL_GetPixelFormatName(Uint32 format)
+{
+    switch (format) {
+#define CASE(X) case X: return #X;
+    CASE(SDL_PIXELFORMAT_INDEX1LSB)
+    CASE(SDL_PIXELFORMAT_INDEX1MSB)
+    CASE(SDL_PIXELFORMAT_INDEX4LSB)
+    CASE(SDL_PIXELFORMAT_INDEX4MSB)
+    CASE(SDL_PIXELFORMAT_INDEX8)
+    CASE(SDL_PIXELFORMAT_RGB332)
+    CASE(SDL_PIXELFORMAT_RGB444)
+    CASE(SDL_PIXELFORMAT_RGB555)
+    CASE(SDL_PIXELFORMAT_BGR555)
+    CASE(SDL_PIXELFORMAT_ARGB4444)
+    CASE(SDL_PIXELFORMAT_RGBA4444)
+    CASE(SDL_PIXELFORMAT_ABGR4444)
+    CASE(SDL_PIXELFORMAT_BGRA4444)
+    CASE(SDL_PIXELFORMAT_ARGB1555)
+    CASE(SDL_PIXELFORMAT_RGBA5551)
+    CASE(SDL_PIXELFORMAT_ABGR1555)
+    CASE(SDL_PIXELFORMAT_BGRA5551)
+    CASE(SDL_PIXELFORMAT_RGB565)
+    CASE(SDL_PIXELFORMAT_BGR565)
+    CASE(SDL_PIXELFORMAT_RGB24)
+    CASE(SDL_PIXELFORMAT_BGR24)
+    CASE(SDL_PIXELFORMAT_RGB888)
+    CASE(SDL_PIXELFORMAT_BGR888)
+    CASE(SDL_PIXELFORMAT_ARGB8888)
+    CASE(SDL_PIXELFORMAT_RGBA8888)
+    CASE(SDL_PIXELFORMAT_ABGR8888)
+    CASE(SDL_PIXELFORMAT_BGRA8888)
+    CASE(SDL_PIXELFORMAT_ARGB2101010)
+#if SDL_VERSION_ATLEAST(1,3,0)
+    CASE(SDL_PIXELFORMAT_YV12)
+    CASE(SDL_PIXELFORMAT_IYUV)
+    CASE(SDL_PIXELFORMAT_YUY2)
+    CASE(SDL_PIXELFORMAT_UYVY)
+    CASE(SDL_PIXELFORMAT_YVYU)
+#endif
+#undef CASE
+    default:
+        return "SDL_PIXELFORMAT_UNKNOWN";
+    }
+}
+
 SDL_bool
 SDL_PixelFormatEnumToMasks(Uint32 format, int *bpp, Uint32 * Rmask,
                            Uint32 * Gmask, Uint32 * Bmask, Uint32 * Amask)
@@ -231,6 +279,12 @@ SDL_MasksToPixelFormatEnum(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
         break;
     case 16:
         switch (Rmask) {
+        case 0xF000:
+            return SDL_PIXELFORMAT_RGBA4444;
+        case 0x0F00:
+            return SDL_PIXELFORMAT_ARGB4444;
+        case 0x00F0:
+            return SDL_PIXELFORMAT_BGRA4444;
         case 0x000F:
             return SDL_PIXELFORMAT_ABGR4444;
         case 0x001F:
@@ -238,12 +292,13 @@ SDL_MasksToPixelFormatEnum(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
                 return SDL_PIXELFORMAT_BGR565;
             }
             return SDL_PIXELFORMAT_ABGR1555;
-        case 0x0F00:
-            return SDL_PIXELFORMAT_ARGB4444;
         case 0x7C00:
             return SDL_PIXELFORMAT_ARGB1555;
         case 0xF800:
-            return SDL_PIXELFORMAT_RGB565;
+            if (Gmask == 0x07E0) {
+                return SDL_PIXELFORMAT_RGB565;
+            }
+            return SDL_PIXELFORMAT_RGBA5551;
         }
         break;
     case 24:
@@ -597,11 +652,10 @@ SDL_CalculatePitch(SDL_Surface * surface)
     default:
         break;
     }
-// 4-byte aligning adds extra memcpy() with OpenGL ES renderer
-// TODO: check if we really can disable that for Android
-#ifndef ANDROID
-    pitch = (pitch + 3) & ~3;   /* 4-byte aligning */
+#ifdef ANDROID
+    if( surface->format->BytesPerPixel != 2 ) /* Avoid extra memcpy() when calling SDL_UpdateTexture() */
 #endif
+    pitch = (pitch + 3) & ~3;   /* 4-byte aligning */
     return (pitch);
 }
 
