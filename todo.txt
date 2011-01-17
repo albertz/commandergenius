@@ -15,8 +15,12 @@ Bugs to fix
 
 - Option for touch screen to act like laptop touchpad.
 
+- With 4:3 screen aspect ratio the on-screen buttons are not shown on the inactive part of screen.
+
 - Calling SDL_SetVideoMode() with SDL 1.3 several times makes it crash.
 
 - Support for NDK r5b, when it's released.
+
+- Support of libjnigraphics (it will disable on-screen keyboard)
 
 And that's all, I won't be doing any more development or fix other bugs (see bugs.txt for details).
