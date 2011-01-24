@@ -41,19 +41,10 @@
 #include "SDL_androidinput.h"
 #include "jniwrapperstuff.h"
 
-#include "touchscreenfont.h"
 // #include "touchscreentheme.h" // Not used yet
 
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
-
-enum {
-FONT_LEFT = 0, FONT_RIGHT = 1, FONT_UP = 2, FONT_DOWN = 3,
-FONT_BTN1 = 4, FONT_BTN2 = 5, FONT_BTN3 = 6, FONT_BTN4 = 7
-};
-
-static GLshort fontGL[sizeof(font)/sizeof(font[0])][FONT_MAX_LINES_PER_CHAR * 4 + 1];
-enum { FONT_CHAR_LINES_COUNT = FONT_MAX_LINES_PER_CHAR * 4 };
 
 enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT-1 } ; // Max amount of custom buttons
 
@@ -101,73 +92,49 @@ static inline int InsideRect(const SDL_Rect * r, int x, int y)
 	return ( x >= r->x && x <= r->x + r->w ) && ( y >= r->y && y <= r->y + r->h );
 }
 
-
-// Should be called on each char of font before drawing
-static void prepareFontCharWireframe(int idx, int w, int h)
+static struct ScreenKbGlState_t
 {
-    int i, count = 0;
-    float fw = (float) w / 255.0f;
-    float fh = (float) h / 255.0f;
-
-	//for( idx = 0; idx < sizeof(font)/sizeof(font[0]); idx++ )
-	{
-		for( i = 0; i < FONT_MAX_LINES_PER_CHAR; i++ )
-			if( font[idx][i].x1 == 0 && font[idx][i].y1 == 0 && 
-				font[idx][i].x2 == 0 && font[idx][i].y2 == 0 )
-				break;
-		count = i;
-		for (i = 0; i < count; ++i) 
-		{
-			fontGL[idx][4*i+0] = (GLshort)(((int)font[idx][i].x1 - 128) * fw);
-			fontGL[idx][4*i+1] = (GLshort)(((int)font[idx][i].y1 - 128) * fh);
-			fontGL[idx][4*i+2] = (GLshort)(((int)font[idx][i].x2 - 128) * fw);
-			fontGL[idx][4*i+3] = (GLshort)(((int)font[idx][i].y2 - 128) * fh);
-		}
-		fontGL[idx][FONT_CHAR_LINES_COUNT] = count*2;
-	}
-};
-
-
-static inline void beginDrawingWireframe()
-{
-    glPushMatrix();
-    glLoadIdentity();
-    glOrthox( 0, SDL_ANDROID_sWindowWidth * 0x10000, SDL_ANDROID_sWindowHeight * 0x10000, 0, 0, 1 * 0x10000 );
-    glPushMatrix();
-    glEnableClientState(GL_VERTEX_ARRAY);
+	GLboolean texture2d;
+	GLuint textureId;
+	GLfloat color[4];
+	GLfloat texEnvMode;
+	GLboolean blend;
+	GLenum blend1, blend2;
+	GLint texFilter1, texFilter2;
 }
-static inline void endDrawingWireframe()
-{
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glPopMatrix();
-    glPopMatrix();
-}
-
-// Draws a char on screen using embedded line font, (x, y) are center of char, not upper-left corner
-// TODO: use SDL 1.3 renderer routines? It will not be pixel-aligned then, if the screen is resized
-static inline void drawCharWireframe(int idx, Uint16 x, Uint16 y, int rotation, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-    glColor4x(r * 0x100, g * 0x100, b * 0x100, a * 0x100);
-
-    glVertexPointer(2, GL_SHORT, 0, fontGL[idx]);
-    glPopMatrix();
-    glPushMatrix();
-    glTranslatex( x * 0x10000, y * 0x10000, 0 );
-    if(rotation != 0)
-        glRotatex( rotation, 0, 0, 0x10000 );
-    glDrawArrays(GL_LINES, 0, fontGL[idx][FONT_CHAR_LINES_COUNT]);
-}
+oldGlState;
 
 static inline void beginDrawingTex()
 {
+	// Save OpenGL state
+	oldGlState.texture2d = glIsEnabled(GL_TEXTURE_2D);
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldGlState.textureId);
+	glGetFloatv(GL_CURRENT_COLOR, &(oldGlState.color[0]));
+	glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &oldGlState.texEnvMode);
+	oldGlState.blend = glIsEnabled(GL_BLEND);
+	glGetIntegerv(GL_BLEND_SRC, &oldGlState.blend1);
+	glGetIntegerv(GL_BLEND_DST, &oldGlState.blend2);
+	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &oldGlState.texFilter1);
+	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &oldGlState.texFilter2);
+	// It's very unlikely that some app will use GL_TEXTURE_CROP_RECT_OES, so just skip it
+
 	glEnable(GL_TEXTURE_2D);
 }
 
 static inline void endDrawingTex()
 {
-	glDisable(GL_TEXTURE_2D);
+	// Restore OpenGL state
+	if( oldGlState.texture2d == GL_FALSE)
+		glDisable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, oldGlState.textureId);
+	glColor4f(oldGlState.color[0], oldGlState.color[1], oldGlState.color[2], oldGlState.color[3]);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
+	if( oldGlState.blend == GL_FALSE)
+		glDisable(GL_BLEND);
+	glBlendFunc(oldGlState.blend1, oldGlState.blend2);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, oldGlState.texFilter1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, oldGlState.texFilter2);
 }
-
 
 static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
@@ -185,7 +152,7 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * des
 
 	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
 	
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -199,14 +166,6 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * des
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
-
-	/*
-	texColor[0] = r * onediv255;
-	texColor[1] = g * onediv255;
-	texColor[2] = b * onediv255;
-	texColor[3] = a * onediv255;
-	glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, texColor);
-	*/
 
 	cropRect[0] = 0;
 	cropRect[1] = tex->h;
@@ -226,112 +185,91 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * des
 int SDL_ANDROID_drawTouchscreenKeyboard()
 {
 	int i;
+	int blendFactor;
+
 	if( !SDL_ANDROID_isTouchscreenKeyboardUsed || !touchscreenKeyboardShown )
 		return 0;
-	if( touchscreenKeyboardTheme == 0 )
-	{
-		beginDrawingWireframe();
-		// Draw arrow keys
-		drawCharWireframe( FONT_LEFT, arrows.x + arrows.w / 4, arrows.y + arrows.h / 2, 0, 
-					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 255 : 0, transparency );
-		drawCharWireframe( FONT_RIGHT, arrows.x + arrows.w / 4 * 3, arrows.y + arrows.h / 2, 0,
-					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 255 : 0, transparency );
-		drawCharWireframe( FONT_UP, arrows.x + arrows.w / 2, arrows.y + arrows.h / 4, 0, 
-					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 255 : 0, transparency );
-		drawCharWireframe( FONT_DOWN, arrows.x + arrows.w / 2, arrows.y + arrows.h / 4 * 3, 0, 
-					255, 255, SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 255 : 0, transparency );
 
-		// Draw buttons
-		for( i = 0; i < MAX_BUTTONS; i++ )
-		{
-			if( ! buttons[i].h || ! buttons[i].w )
-				continue;
-			drawCharWireframe( FONT_BTN1 + i, buttons[i].x + buttons[i].w / 2, buttons[i].y + buttons[i].h / 2, ( i < AutoFireButtonsNum ? ButtonAutoFireRot[i] * 0x10000 : 0 ),
-						( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? 0 : 255, 255, SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? 255 : 0, transparency );
-		}
-		endDrawingWireframe();
-	}
+	blendFactor =		( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 1 : 0 ) +
+						( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
+						( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
+						( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
+
+	beginDrawingTex();
+	if( blendFactor == 0 )
+		drawCharTex( &arrowImages[0], NULL, &arrows, 255, 255, 255, transparency );
 	else
 	{
-		int blendFactor =	( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 1 : 0 ) + 
-							( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
-							( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
-							( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
-		beginDrawingTex();
-		if( blendFactor == 0 )
-			drawCharTex( &arrowImages[0], NULL, &arrows, 255, 255, 255, transparency );
+		if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
+			drawCharTex( &arrowImages[1], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
+		if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
+			drawCharTex( &arrowImages[2], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
+		if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
+			drawCharTex( &arrowImages[3], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
+		if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
+			drawCharTex( &arrowImages[4], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
+	}
+
+	for( i = 0; i < MAX_BUTTONS; i++ )
+	{
+		if( ! buttons[i].h || ! buttons[i].w )
+			continue;
+		if( i < AutoFireButtonsNum )
+		{
+			if( ButtonAutoFire[i] == 1 && SDL_GetTicks() - ButtonAutoFireDecay[i] > 1000 )
+			{
+				ButtonAutoFire[i] = 0;
+			}
+			if( ! ButtonAutoFire[i] && SDL_GetTicks() - ButtonAutoFireDecay[i] > 300 )
+			{
+				if( ButtonAutoFireX[i*2] > 0 )
+					ButtonAutoFireX[i*2] --;
+				if( ButtonAutoFireX[i*2+1] > 0 )
+					ButtonAutoFireX[i*2+1] --;
+				ButtonAutoFireDecay[i] = SDL_GetTicks();
+			}
+		}
+
+		if( i < AutoFireButtonsNum && ! ButtonAutoFire[i] && 
+			( ButtonAutoFireX[i*2] > 0 || ButtonAutoFireX[i*2+1] > 0 ) )
+		{
+			int pos1src = buttonImages[i*2+1].w / 2 - ButtonAutoFireX[i*2];
+			int pos1dst = buttons[i].w * pos1src / buttonImages[i*2+1].w;
+			int pos2src = buttonImages[i*2+1].w - ( buttonImages[i*2+1].w / 2 - ButtonAutoFireX[i*2+1] );
+			int pos2dst = buttons[i].w * pos2src / buttonImages[i*2+1].w;
+			
+			SDL_Rect autoFireCrop = { 0, 0, pos1src, buttonImages[i*2+1].h };
+			SDL_Rect autoFireDest = buttons[i];
+			autoFireDest.w = pos1dst;
+			
+			drawCharTex( &buttonImages[i*2+1],
+						&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
+
+			autoFireCrop.x = pos2src;
+			autoFireCrop.w = buttonImages[i*2+1].w - pos2src;
+			autoFireDest.x = buttons[i].x + pos2dst;
+			autoFireDest.w = buttons[i].w - pos2dst;
+
+			drawCharTex( &buttonImages[i*2+1],
+						&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
+			
+			autoFireCrop.x = pos1src;
+			autoFireCrop.w = pos2src - pos1src;
+			autoFireDest.x = buttons[i].x + pos1dst;
+			autoFireDest.w = pos2dst - pos1dst;
+
+			drawCharTex( &buttonAutoFireImages[i*2+1],
+						&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
+		}
 		else
 		{
-			if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
-				drawCharTex( &arrowImages[1], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
-			if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
-				drawCharTex( &arrowImages[2], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
-			if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
-				drawCharTex( &arrowImages[3], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
-			if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
-				drawCharTex( &arrowImages[4], NULL, &arrows, 255, 255, 255, transparency / blendFactor );
+			drawCharTex( ( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? &buttonAutoFireImages[i*2] :
+						&buttonImages[ SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? (i * 2 + 1) : (i * 2) ],
+						NULL, &buttons[i], 255, 255, 255, transparency );
 		}
-
-		for( i = 0; i < MAX_BUTTONS; i++ )
-		{
-			if( ! buttons[i].h || ! buttons[i].w )
-				continue;
-			if( i < AutoFireButtonsNum )
-			{
-				if( ButtonAutoFire[i] == 1 && SDL_GetTicks() - ButtonAutoFireDecay[i] > 1000 )
-				{
-					ButtonAutoFire[i] = 0;
-				}
-				if( ! ButtonAutoFire[i] && SDL_GetTicks() - ButtonAutoFireDecay[i] > 300 )
-				{
-					if( ButtonAutoFireX[i*2] > 0 )
-						ButtonAutoFireX[i*2] --;
-					if( ButtonAutoFireX[i*2+1] > 0 )
-						ButtonAutoFireX[i*2+1] --;
-					ButtonAutoFireDecay[i] = SDL_GetTicks();
-				}
-			}
-
-			if( i < AutoFireButtonsNum && ! ButtonAutoFire[i] && 
-				( ButtonAutoFireX[i*2] > 0 || ButtonAutoFireX[i*2+1] > 0 ) )
-			{
-				int pos1src = buttonImages[i*2+1].w / 2 - ButtonAutoFireX[i*2];
-				int pos1dst = buttons[i].w * pos1src / buttonImages[i*2+1].w;
-				int pos2src = buttonImages[i*2+1].w - ( buttonImages[i*2+1].w / 2 - ButtonAutoFireX[i*2+1] );
-				int pos2dst = buttons[i].w * pos2src / buttonImages[i*2+1].w;
-				
-				SDL_Rect autoFireCrop = { 0, 0, pos1src, buttonImages[i*2+1].h };
-				SDL_Rect autoFireDest = buttons[i];
-				autoFireDest.w = pos1dst;
-				
-				drawCharTex( &buttonImages[i*2+1],
-							&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
-
-				autoFireCrop.x = pos2src;
-				autoFireCrop.w = buttonImages[i*2+1].w - pos2src;
-				autoFireDest.x = buttons[i].x + pos2dst;
-				autoFireDest.w = buttons[i].w - pos2dst;
-
-				drawCharTex( &buttonImages[i*2+1],
-							&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
-				
-				autoFireCrop.x = pos1src;
-				autoFireCrop.w = pos2src - pos1src;
-				autoFireDest.x = buttons[i].x + pos1dst;
-				autoFireDest.w = pos2dst - pos1dst;
-
-				drawCharTex( &buttonAutoFireImages[i*2+1],
-							&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
-			}
-			else
-			{
-				drawCharTex( ( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? &buttonAutoFireImages[i*2] :
-							&buttonImages[ SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? (i * 2 + 1) : (i * 2) ],
-							NULL, &buttons[i], 255, 255, 255, transparency );
-			}
-		}
-		endDrawingTex();
 	}
+	endDrawingTex();
+
 	return 1;
 };
 
@@ -428,18 +366,10 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 					if( i < AutoFireButtonsNum )
 					{
 						ButtonAutoFire[i] = 0;
-						if(touchscreenKeyboardTheme == 0)
-						{
-							ButtonAutoFireX[i] = x;
-							ButtonAutoFireRot[i] = 0;
-						}
-						else
-						{
-							ButtonAutoFireX[i*2] = 0;
-							ButtonAutoFireX[i*2+1] = 0;
-							ButtonAutoFireRot[i] = x;
-							ButtonAutoFireDecay[i] = SDL_GetTicks();
-						}
+						ButtonAutoFireX[i*2] = 0;
+						ButtonAutoFireX[i*2+1] = 0;
+						ButtonAutoFireRot[i] = x;
+						ButtonAutoFireDecay[i] = SDL_GetTicks();
 					}
 				}
 			}
@@ -486,15 +416,8 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 				}
 				if( i < AutoFireButtonsNum )
 				{
-					if(touchscreenKeyboardTheme == 0)
-					{
-						ButtonAutoFireX[i] = 0;
-					}
-					else
-					{
-						ButtonAutoFireX[i*2] = 0;
-						ButtonAutoFireX[i*2+1] = 0;
-					}
+					ButtonAutoFireX[i*2] = 0;
+					ButtonAutoFireX[i*2+1] = 0;
 				}
 			}
 		}
@@ -577,50 +500,34 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 					{
 						ButtonAutoFire[i] = 2;
 					}
-					if(touchscreenKeyboardTheme == 0)
-					{
-						ButtonAutoFireX[i] = 0;
-					}
-					else
-					{
-						ButtonAutoFireX[i*2] = 0;
-						ButtonAutoFireX[i*2+1] = 0;
-					}
+					ButtonAutoFireX[i*2] = 0;
+					ButtonAutoFireX[i*2+1] = 0;
 				}
 				else
 				{
-					if(touchscreenKeyboardTheme == 0)
+					int coeff = (buttonAutoFireImages[i*2+1].w > buttons[i].w) ? buttonAutoFireImages[i*2+1].w / buttons[i].w + 1 : 1;
+					if( ButtonAutoFireRot[i] < x )
+						ButtonAutoFireX[i*2+1] += (x - ButtonAutoFireRot[i]) * coeff;
+					if( ButtonAutoFireRot[i] > x )
+						ButtonAutoFireX[i*2] += (ButtonAutoFireRot[i] - x) * coeff;
+
+					ButtonAutoFireRot[i] = x;
+
+					if( ButtonAutoFireX[i*2] < 0 )
+						ButtonAutoFireX[i*2] = 0;
+					if( ButtonAutoFireX[i*2+1] < 0 )
+						ButtonAutoFireX[i*2+1] = 0;
+					if( ButtonAutoFireX[i*2] > buttonAutoFireImages[i*2+1].w / 2 )
+						ButtonAutoFireX[i*2] = buttonAutoFireImages[i*2+1].w / 2;
+					if( ButtonAutoFireX[i*2+1] > buttonAutoFireImages[i*2+1].w / 2 )
+						ButtonAutoFireX[i*2+1] = buttonAutoFireImages[i*2+1].w / 2;
+
+					if( ButtonAutoFireX[i*2] == buttonAutoFireImages[i*2+1].w / 2 &&
+						ButtonAutoFireX[i*2+1] == buttonAutoFireImages[i*2+1].w / 2 )
 					{
-						ButtonAutoFire[i] = abs(ButtonAutoFireX[i] - x) > buttons[i].w / 2;
-						if( !ButtonAutoFire[i] )
-							ButtonAutoFireRot[i] = ButtonAutoFireX[i] - x;
-					}
-					else
-					{
-						int coeff = (buttonAutoFireImages[i*2+1].w > buttons[i].w) ? buttonAutoFireImages[i*2+1].w / buttons[i].w + 1 : 1;
-						if( ButtonAutoFireRot[i] < x )
-							ButtonAutoFireX[i*2+1] += (x - ButtonAutoFireRot[i]) * coeff;
-						if( ButtonAutoFireRot[i] > x )
-							ButtonAutoFireX[i*2] += (ButtonAutoFireRot[i] - x) * coeff;
-
-						ButtonAutoFireRot[i] = x;
-
-						if( ButtonAutoFireX[i*2] < 0 )
-							ButtonAutoFireX[i*2] = 0;
-						if( ButtonAutoFireX[i*2+1] < 0 )
-							ButtonAutoFireX[i*2+1] = 0;
-						if( ButtonAutoFireX[i*2] > buttonAutoFireImages[i*2+1].w / 2 )
-							ButtonAutoFireX[i*2] = buttonAutoFireImages[i*2+1].w / 2;
-						if( ButtonAutoFireX[i*2+1] > buttonAutoFireImages[i*2+1].w / 2 )
-							ButtonAutoFireX[i*2+1] = buttonAutoFireImages[i*2+1].w / 2;
-
-						if( ButtonAutoFireX[i*2] == buttonAutoFireImages[i*2+1].w / 2 &&
-							ButtonAutoFireX[i*2+1] == buttonAutoFireImages[i*2+1].w / 2 )
-						{
-							if( ! ButtonAutoFire[i] )
-								ButtonAutoFireDecay[i] = SDL_GetTicks();
-							ButtonAutoFire[i] = 1;
-						}
+						if( ! ButtonAutoFire[i] )
+							ButtonAutoFireDecay[i] = SDL_GetTicks();
+						ButtonAutoFire[i] = 1;
 					}
 				}
 			}
@@ -667,84 +574,36 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		default: transparency = 128; break;
 	}
 	
-	if(touchscreenKeyboardTheme == 0)
-	{
-		// Arrows to the lower-left part of screen
-		arrows.w = SDL_ANDROID_sWindowWidth / (size + 2);
-		arrows.h = arrows.w;
-		arrows.x = 0;
-		arrows.y = SDL_ANDROID_sWindowHeight - arrows.h;
-		
-		// Main button to the lower-right
-		buttons[0].w = SDL_ANDROID_sWindowWidth / (size + 2);
-		buttons[0].h = SDL_ANDROID_sWindowHeight / (size + 2);
-		buttons[0].x = SDL_ANDROID_sWindowWidth - buttons[0].w;
-		buttons[0].y = SDL_ANDROID_sWindowHeight - buttons[0].h;
+	// Arrows to the lower-left part of screen
+	arrows.x = SDL_ANDROID_sWindowWidth / 4;
+	arrows.y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowWidth / 4;
+	arrows.w = SDL_ANDROID_sWindowWidth / (size + 2);
+	arrows.h = arrows.w;
+	arrows.x -= arrows.w/2;
+	arrows.y -= arrows.h/2;
+	// Move arrows from the center of the screen
+	arrows.x -= size * SDL_ANDROID_sWindowWidth / 32;
+	arrows.y += size * SDL_ANDROID_sWindowWidth / 32;
 
-		// Row of secondary buttons to the upper-right
-		nbuttons1row = 4;
-		for( i = 1; i < nbuttons1row; i++ )
-		{
-			buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons1row - 1) / (size + 2);
-			buttons[i].h = SDL_ANDROID_sWindowHeight / (size + 2);
-			buttons[i].x = SDL_ANDROID_sWindowWidth - buttons[i].w * (nbuttons1row - i);
-			buttons[i].y = 0;
-		}
-
-		// Row of secondary buttons to the upper-left above arrows
-		nbuttons2row = MAX_BUTTONS;
-		for( i = 4; i < nbuttons2row; i++ )
-		{
-			buttons[i].w = SDL_ANDROID_sWindowWidth / (nbuttons2row - 4) / (size + 2);
-			buttons[i].h = (SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowWidth / 2) * 2 / (size + 2);
-			buttons[i].x = buttons[i].w * (nbuttons2row - i - 1);
-			buttons[i].y = 0;
-		}
-		
-		// Resize char images
-		prepareFontCharWireframe(FONT_LEFT, arrows.w / 2, arrows.h / 2);
-		prepareFontCharWireframe(FONT_RIGHT, arrows.w / 2, arrows.h / 2);
-		prepareFontCharWireframe(FONT_UP, arrows.w / 2, arrows.h / 2);
-		prepareFontCharWireframe(FONT_DOWN, arrows.w / 2, arrows.h / 2);
-	
-		for( i = 0; i < MAX_BUTTONS; i++ )
-		{
-			prepareFontCharWireframe(FONT_BTN1 + i, MIN(buttons[i].h, buttons[i].w), MIN(buttons[i].h, buttons[i].w));
-		}
-	}
-	else
+	// Buttons to the lower-right in 2 rows
+	for(i = 0; i < 2; i++)
+	for(ii = 0; ii < 3; ii++)
 	{
-		// Arrows to the lower-left part of screen
-		arrows.x = SDL_ANDROID_sWindowWidth / 4;
-		arrows.y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowWidth / 4;
-		arrows.w = SDL_ANDROID_sWindowWidth / (size + 2);
-		arrows.h = arrows.w;
-		arrows.x -= arrows.w/2;
-		arrows.y -= arrows.h/2;
-		// Move arrows from the center of the screen
-		arrows.x -= size * SDL_ANDROID_sWindowWidth / 32;
-		arrows.y += size * SDL_ANDROID_sWindowWidth / 32;
-		
-		// Buttons to the lower-right in 2 rows
-		for(i = 0; i < 2; i++)
-		for(ii = 0; ii < 3; ii++)
-		{
-			// Custom button ordering
-			int iii = ii + i*2;
-			if( ii == 2 )
-				iii = 4 + i;
-			buttons[iii].x = SDL_ANDROID_sWindowWidth - SDL_ANDROID_sWindowWidth / 12 - (SDL_ANDROID_sWindowWidth * ii / 6);
-			buttons[iii].y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowHeight / 8 - (SDL_ANDROID_sWindowHeight * i / 4);
-			buttons[iii].w = SDL_ANDROID_sWindowWidth / (size + 2) / 3;
-			buttons[iii].h = buttons[iii].w;
-			buttons[iii].x -= buttons[iii].w/2;
-			buttons[iii].y -= buttons[iii].h/2;
-		}
-		buttons[6].x = 0;
-		buttons[6].y = 0;
-		buttons[6].w = SDL_ANDROID_sWindowHeight/10;
-		buttons[6].h = SDL_ANDROID_sWindowHeight/10;
+		// Custom button ordering
+		int iii = ii + i*2;
+		if( ii == 2 )
+			iii = 4 + i;
+		buttons[iii].x = SDL_ANDROID_sWindowWidth - SDL_ANDROID_sWindowWidth / 12 - (SDL_ANDROID_sWindowWidth * ii / 6);
+		buttons[iii].y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowHeight / 8 - (SDL_ANDROID_sWindowHeight * i / 4);
+		buttons[iii].w = SDL_ANDROID_sWindowWidth / (size + 2) / 3;
+		buttons[iii].h = buttons[iii].w;
+		buttons[iii].x -= buttons[iii].w/2;
+		buttons[iii].y -= buttons[iii].h/2;
 	}
+	buttons[6].x = 0;
+	buttons[6].y = 0;
+	buttons[6].w = SDL_ANDROID_sWindowHeight/10;
+	buttons[6].h = SDL_ANDROID_sWindowHeight/10;
 
 	for( i = 0; i < sizeof(pointerInButtonRect)/sizeof(pointerInButtonRect[0]); i++ )
 	{
@@ -851,22 +710,11 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	if( buttonId == SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD )
 	{
 		arrows = *pos;
-		if(touchscreenKeyboardTheme == 0)
-		{
-			prepareFontCharWireframe(FONT_LEFT, arrows.w / 2, arrows.h / 2);
-			prepareFontCharWireframe(FONT_RIGHT, arrows.w / 2, arrows.h / 2);
-			prepareFontCharWireframe(FONT_UP, arrows.w / 2, arrows.h / 2);
-			prepareFontCharWireframe(FONT_DOWN, arrows.w / 2, arrows.h / 2);
-		}
 	}
 	else
 	{
 		int i = buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
 		buttons[i] = *pos;
-		if(touchscreenKeyboardTheme == 0)
-		{
-			prepareFontCharWireframe(FONT_BTN1 + i, MIN(buttons[i].h, buttons[i].w), MIN(buttons[i].h, buttons[i].w));
-		}
 		if( i < AutoFireButtonsNum )
 		{
 			buttonsAutoFireRect[i].w = buttons[i].w * 2;

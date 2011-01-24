@@ -801,7 +801,6 @@ class Settings
 	static void showScreenKeyboardThemeConfig(final MainActivity p)
 	{
 		final CharSequence[] items = {
-			p.getResources().getString(R.string.controls_screenkb_by, "Ugly Arrows", "pelya"),
 			p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
 			p.getResources().getString(R.string.controls_screenkb_by, "Simple Theme", "Beholder")
 			};
@@ -1700,24 +1699,33 @@ class Settings
 		nativeSetTrackballDampening(Globals.TrackballDampening);
 		if( Globals.UseTouchscreenKeyboard )
 		{
-			nativeSetTouchscreenKeyboardUsed();
-			nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize,
-										Globals.TouchscreenKeyboardTheme,
-										Globals.AppTouchscreenKeyboardKeysAmountAutoFire,
-										Globals.TouchscreenKeyboardTransparency );
+			boolean screenKbReallyUsed = false;
+			for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
+				if( Globals.ScreenKbControlsShown[i] )
+					screenKbReallyUsed = true;
+			if( screenKbReallyUsed )
+			{
+				nativeSetTouchscreenKeyboardUsed();
+				nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize,
+											Globals.TouchscreenKeyboardTheme,
+											Globals.AppTouchscreenKeyboardKeysAmountAutoFire,
+											Globals.TouchscreenKeyboardTransparency );
+				SetupTouchscreenKeyboardGraphics(p);
+				for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
+					nativeSetScreenKbKeyUsed(i, Globals.ScreenKbControlsShown[i] ? 1 : 0);
+				for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
+					nativeSetKeymapKeyScreenKb(i, SDL_Keys.values[Globals.RemapScreenKbKeycode[i]]);
+				for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+					if( Globals.ScreenKbControlsLayout[i][0] < Globals.ScreenKbControlsLayout[i][2] )
+						nativeSetScreenKbKeyLayout( i, Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][1],
+							Globals.ScreenKbControlsLayout[i][2], Globals.ScreenKbControlsLayout[i][3]);
+			}
+			else
+				Globals.UseTouchscreenKeyboard = false;
 		}
-		SetupTouchscreenKeyboardGraphics(p);
+
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
 			nativeSetKeymapKey(i, SDL_Keys.values[Globals.RemapHwKeycode[i]]);
-
-		for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
-			nativeSetScreenKbKeyUsed(i, Globals.ScreenKbControlsShown[i] ? 1 : 0);
-		for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
-			nativeSetKeymapKeyScreenKb(i, SDL_Keys.values[Globals.RemapScreenKbKeycode[i]]);
-		for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
-			if( Globals.ScreenKbControlsLayout[i][0] < Globals.ScreenKbControlsLayout[i][2] )
-				nativeSetScreenKbKeyLayout( i, Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][1],
-					Globals.ScreenKbControlsLayout[i][2], Globals.ScreenKbControlsLayout[i][3]);
 		for( int i = 0; i < Globals.RemapMultitouchGestureKeycode.length; i++ )
 			nativeSetKeymapKeyMultitouchGesture(i, Globals.MultitouchGesturesUsed[i] ? SDL_Keys.values[Globals.RemapMultitouchGestureKeycode[i]] : 0);
 		nativeSetMultitouchGestureSensitivity(Globals.MultitouchGestureSensitivity);
@@ -1756,11 +1764,16 @@ class Settings
 	{
 		if( Globals.UseTouchscreenKeyboard )
 		{
-			if( Globals.TouchscreenKeyboardTheme == 1 )
+			if(Globals.TouchscreenKeyboardTheme < 0)
+				Globals.TouchscreenKeyboardTheme = 0;
+			if(Globals.TouchscreenKeyboardTheme > 1)
+				Globals.TouchscreenKeyboardTheme = 1;
+
+			if( Globals.TouchscreenKeyboardTheme == 0 )
 			{
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.ultimatedroid));
 			}
-			if( Globals.TouchscreenKeyboardTheme == 2 )
+			if( Globals.TouchscreenKeyboardTheme == 1 )
 			{
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.simpletheme));
 			}
