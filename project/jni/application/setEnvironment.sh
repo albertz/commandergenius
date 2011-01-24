@@ -27,7 +27,7 @@ STL_INCLUDE="-I$LOCAL_PATH/../stlport/stlport -fno-exceptions -fno-rtti"
 STL_LIB="$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.so $LOCAL_PATH/../../obj/local/armeabi/libstlport.a"
 if [ -n "`echo $NDK | grep '[-]crystax'`" ] ; then
 	STL_INCLUDE="-fexceptions -frtti"
-	STL_LIB=""
+	STL_LIB="-lstdc++"
 fi
 
 APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
