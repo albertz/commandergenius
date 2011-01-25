@@ -102,7 +102,7 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects);
 
 /* Private display data */
 
-#define SDL_NUMMODES 11
+#define SDL_NUMMODES 12
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -249,7 +249,8 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[8]->h = SDL_ANDROID_sWindowHeight / 2;
 	SDL_modelist[9]->w = 480; SDL_modelist[9]->h = 320; // Virtual wide-screen mode
 	SDL_modelist[10]->w = 800; SDL_modelist[10]->h = 480; // Virtual wide-screen mode
-	SDL_modelist[11] = NULL;
+	SDL_modelist[11]->w = 544; SDL_modelist[11]->h = 332; // I have no idea where this videomode is used
+	SDL_modelist[12] = NULL;
 	
 	SDL_VideoInit_1_3(NULL, 0);
 	
