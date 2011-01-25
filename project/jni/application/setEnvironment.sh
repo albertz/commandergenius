@@ -48,9 +48,9 @@ done
 CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums \
 -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -DANDROID \
--Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os \
+-Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -O2 \
 -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
--Wa,--noexecstack -DNDEBUG -g \
+-Wa,--noexecstack -DNDEBUG -g -D__sF=__SDL_fake_stdout \
 -I$LOCAL_PATH/../sdl-1.2/include $STL_INCLUDE \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"`"
 

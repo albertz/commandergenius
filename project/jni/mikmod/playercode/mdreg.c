@@ -106,7 +106,9 @@ void _mm_registeralldrivers(void)
 	_mm_registerdriver(&drv_pipe);
 #endif
 #ifndef macintosh
+#ifndef ANDROID
 	_mm_registerdriver(&drv_stdout);
+#endif
 #endif
 
 	_mm_registerdriver(&drv_nos);
