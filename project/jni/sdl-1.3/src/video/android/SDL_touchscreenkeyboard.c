@@ -110,7 +110,7 @@ static inline void beginDrawingTex()
 	oldGlState.texture2d = glIsEnabled(GL_TEXTURE_2D);
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldGlState.textureId);
 	glGetFloatv(GL_CURRENT_COLOR, &(oldGlState.color[0]));
-	glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &oldGlState.texEnvMode);
+	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &oldGlState.texEnvMode);
 	oldGlState.blend = glIsEnabled(GL_BLEND);
 	glGetIntegerv(GL_BLEND_SRC, &oldGlState.blend1);
 	glGetIntegerv(GL_BLEND_DST, &oldGlState.blend2);
@@ -128,7 +128,7 @@ static inline void endDrawingTex()
 		glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, oldGlState.textureId);
 	glColor4f(oldGlState.color[0], oldGlState.color[1], oldGlState.color[2], oldGlState.color[3]);
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
 	if( oldGlState.blend == GL_FALSE)
 		glDisable(GL_BLEND);
 	glBlendFunc(oldGlState.blend1, oldGlState.blend2);
@@ -152,7 +152,7 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * des
 
 	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
 	
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
