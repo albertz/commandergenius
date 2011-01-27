@@ -965,6 +965,6 @@ void SDL_ANDROID_VideoContextRecreated()
 static void* ANDROID_GL_GetProcAddress(_THIS, const char *proc)
 {
 	void * func = dlsym(glLibraryHandle, proc);
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_GL_GetProcAddress(\"%s\"): %p", proc, func);
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_GL_GetProcAddress(\"%s\"): %p", proc, func);
 	return func;
 };
