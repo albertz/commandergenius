@@ -19,15 +19,18 @@ fi
 
 NDK=`which ndk-build`
 NDK=`dirname $NDK`
-GCCVER=4.4.0
+
+echo NDK $NDK
+GCCPREFIX=arm-linux-androideabi
+GCCVER=4.4.3
 PLATFORMVER=android-8
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
-STL_INCLUDE="-I$LOCAL_PATH/../stlport/stlport -fno-exceptions -fno-rtti"
-STL_LIB="$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.so $LOCAL_PATH/../../obj/local/armeabi/libstlport.a"
-if [ -n "`echo $NDK | grep '[-]crystax'`" ] ; then
-	STL_INCLUDE="-fexceptions -frtti"
-	STL_LIB="-lstdc++"
+echo LOCAL_PATH $LOCAL_PATH
+
+if [ -z "`echo $NDK | grep 'android-ndk-r5b'`" ] ; then
+	echo "The only supported NDK version is android-ndk-r5b, please download it from http://developer.android.com/"
+	exit 1
 fi
 
 APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
@@ -45,38 +48,42 @@ echo $APP_MODULES | xargs -n 1 echo | while read LIB ; do
 done
 )
 
-CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
--fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums \
--D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -DANDROID \
--Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -O2 \
--fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
--Wa,--noexecstack -DNDEBUG -g -D__sF=__SDL_fake_stdout \
--I$LOCAL_PATH/../sdl-1.2/include $STL_INCLUDE \
+CFLAGS="\
+-fexceptions -frtti \
+-fpic -ffunction-sections -funwind-tables -fstack-protector -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  -Wno-psabi \
+-march=armv5te -mtune=xscale -msoft-float -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
+-I$NDK/platforms/$PLATFORMVER/arch-arm/usr/include -Wa,--noexecstack \
+-DANDROID -D__sF=__SDL_fake_stdout -DNDEBUG -O2 -g \
+-I$NDK/sources/cxx-stl/system/include \
+-I$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include \
+-I$LOCAL_PATH/../stlport/stlport \
+-I$LOCAL_PATH/../sdl-1.2/include \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"`"
 
-LDFLAGS="-nostdlib -Wl,-soname,libapplication.so -Wl,-shared,-Bsymbolic \
--Wl,--whole-archive  -Wl,--no-whole-archive \
-$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/lib/gcc/arm-eabi/4.4.0/libgcc.a \
+LDFLAGS="\
+-fexceptions -frtti \
+-Wl,-soname,libapplication.so -shared --sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
 `echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/armeabi/lib\1.so@g\"` \
-$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
-$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
--Wl,--no-undefined -Wl,-z,noexecstack \
--L$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.so \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
+-L$LOCAL_PATH/../../obj/local/armeabi -Wl,--no-undefined -Wl,-z,noexecstack \
+-L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
 -lGLESv1_CM -ldl -llog -lz \
--Wl,-rpath-link=$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib \
--L$LOCAL_PATH/../../obj/local/armeabi $STL_LIB"
+-Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++ \
+-L$LOCAL_PATH/../../obj/local/armeabi $LOCAL_PATH/../../obj/local/armeabi/libstlport.a"
 
-env PATH=$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin:$LOCAL_PATH:$PATH \
+env PATH=$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \
 CXXFLAGS="$CFLAGS" \
 LDFLAGS="$LDFLAGS" \
-CC="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-gcc" \
-CXX="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-g++" \
-RANLIB="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-ranlib" \
-LD="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-gcc" \
-AR="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-ar" \
-CPP="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-cpp $CFLAGS" \
-NM="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-nm" \
-AS="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-as" \
-STRIP="$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin/arm-eabi-strip" \
+CC="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-gcc" \
+CXX="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-g++" \
+RANLIB="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-ranlib" \
+LD="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-g++" \
+AR="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-ar" \
+CPP="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-cpp $CFLAGS" \
+NM="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-nm" \
+AS="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-as" \
+STRIP="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-strip" \
 $@

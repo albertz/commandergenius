@@ -48,7 +48,7 @@ template <class _Tp, class _Alloc >
 void _Deque_base<_Tp,_Alloc>::_M_initialize_map(size_t __num_elements) {
   size_t __num_nodes = __num_elements / this->buffer_size() + 1 ;
 
-  _M_map_size._M_data = (max)((size_t) _S_initial_map_size, __num_nodes + 2);
+  _M_map_size._M_data = (_STLP_STD_NAME::max)((size_t) _S_initial_map_size, __num_nodes + 2);
   _M_map._M_data = _M_map.allocate(_M_map_size._M_data);
 
   _Tp** __nstart = _M_map._M_data + (_M_map_size._M_data - __num_nodes) / 2;
@@ -778,7 +778,7 @@ void deque<_Tp,_Alloc>::_M_reallocate_map(size_type __nodes_to_add,
   }
   else {
     size_type __new_map_size =
-      this->_M_map_size._M_data + (max)((size_t)this->_M_map_size._M_data, __nodes_to_add) + 2;
+      this->_M_map_size._M_data + (_STLP_STD_NAME::max)((size_t)this->_M_map_size._M_data, __nodes_to_add) + 2;
 
     _Map_pointer __new_map = this->_M_map.allocate(__new_map_size);
     __new_nstart = __new_map + (__new_map_size - __new_num_nodes) / 2

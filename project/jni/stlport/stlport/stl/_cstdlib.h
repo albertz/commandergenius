@@ -49,11 +49,8 @@ namespace std {
 
 #ifdef _STLP_IMPORT_VENDOR_CSTD
 _STLP_BEGIN_NAMESPACE
-#  if !defined (ANDROID)
-// these types don't exist on Android
 using _STLP_VENDOR_CSTD::div_t;
 using _STLP_VENDOR_CSTD::ldiv_t;
-#  endif
 using _STLP_VENDOR_CSTD::size_t;
 
 #  ifndef _STLP_NO_CSTD_FUNCTION_IMPORTS
@@ -61,13 +58,10 @@ using _STLP_VENDOR_CSTD::size_t;
 // these functions just don't exist on Windows CE
 using _STLP_VENDOR_CSTD::abort;
 using _STLP_VENDOR_CSTD::getenv;
-#      if !defined (ANDROID)
-// these functions don't exist on Android
 using _STLP_VENDOR_CSTD::mblen;
 using _STLP_VENDOR_CSTD::mbtowc;
 using _STLP_VENDOR_CSTD::system;
 using _STLP_VENDOR_CSTD::bsearch;
-#      endif
 #    endif
 using _STLP_VENDOR_CSTD::atexit;
 using _STLP_VENDOR_CSTD::exit;
@@ -78,10 +72,7 @@ using _STLP_VENDOR_CSTD::realloc;
 using _STLP_VENDOR_CSTD::atof;
 using _STLP_VENDOR_CSTD::atoi;
 using _STLP_VENDOR_CSTD::atol;
-#    if !defined (ANDROID)
-// this function doesn't exist on Android
 using _STLP_VENDOR_CSTD::mbstowcs;
-#    endif
 using _STLP_VENDOR_CSTD::strtod;
 using _STLP_VENDOR_CSTD::strtol;
 using _STLP_VENDOR_CSTD::strtoul;

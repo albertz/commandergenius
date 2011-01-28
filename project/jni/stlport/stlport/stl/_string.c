@@ -84,7 +84,7 @@ void basic_string<_CharT,_Traits,_Alloc>::reserve(size_type __res_arg) {
   if (__res_arg > max_size())
     this->_M_throw_length_error();
 
-  size_type __n = (max)(__res_arg, size()) + 1;
+  size_type __n = (_STLP_STD_NAME::max)(__res_arg, size()) + 1;
   if (__n <= capacity() + 1)
     return;
 
@@ -109,7 +109,7 @@ basic_string<_CharT,_Traits,_Alloc>::append(size_type __n, _CharT __c) {
   if (__n > max_size() || size() > max_size() - __n)
     this->_M_throw_length_error();
   if (size() + __n > capacity())
-    reserve(size() + (max)(size(), __n));
+    reserve(size() + (_STLP_STD_NAME::max)(size(), __n));
   if (__n > 0) {
 #if defined (_STLP_USE_SHORT_STRING_OPTIM)
     if (this->_M_using_static_buf())
@@ -136,7 +136,7 @@ basic_string<_CharT, _Traits, _Alloc>::_M_append(const _CharT* __first, const _C
     if ((size_type)__n > max_size() || __old_size > max_size() - __n)
       this->_M_throw_length_error();
     if (__old_size + __n > capacity()) {
-      size_type __len = __old_size + (max)(__old_size, (size_t) __n) + 1;
+      size_type __len = __old_size + (_STLP_STD_NAME::max)(__old_size, (size_t) __n) + 1;
       pointer __new_start = this->_M_end_of_storage.allocate(__len, __len);
       pointer __new_finish = __new_start;
       _STLP_TRY {
@@ -217,7 +217,7 @@ _CharT* basic_string<_CharT,_Traits,_Alloc> ::_M_insert_aux(_CharT* __p,
   }
   else {
     const size_type __old_len = size();
-    size_type __len = __old_len + (max)(__old_len, __STATIC_CAST(size_type,1)) + 1;
+    size_type __len = __old_len + (_STLP_STD_NAME::max)(__old_len, __STATIC_CAST(size_type,1)) + 1;
     pointer __new_start = this->_M_end_of_storage.allocate(__len, __len);
     pointer __new_finish = __new_start;
     _STLP_TRY {
@@ -279,7 +279,7 @@ void basic_string<_CharT,_Traits,_Alloc>::insert(iterator __pos,
     }
     else {
       const size_type __old_size = size();
-      size_type __len = __old_size + (max)(__old_size, __n) + 1;
+      size_type __len = __old_size + (_STLP_STD_NAME::max)(__old_size, __n) + 1;
       pointer __new_start = this->_M_end_of_storage.allocate(__len, __len);
       pointer __new_finish = __new_start;
       _STLP_TRY {
@@ -362,7 +362,7 @@ void basic_string<_CharT,_Traits,_Alloc>::_M_insert(iterator __pos,
     }
     else {
       const size_type __old_size = size();
-      size_type __len = __old_size + (max)(__old_size, __STATIC_CAST(const size_type,__n)) + 1;
+      size_type __len = __old_size + (_STLP_STD_NAME::max)(__old_size, __STATIC_CAST(const size_type,__n)) + 1;
       pointer __new_start = this->_M_end_of_storage.allocate(__len, __len);
       pointer __new_finish = __new_start;
       _STLP_TRY {
@@ -472,7 +472,7 @@ basic_string<_CharT,_Traits,_Alloc>::rfind(const _CharT* __s, size_type __pos, s
   if ( __len < __n ) {
     return npos;
   }
-  const_pointer __last = this->_M_Start() + (min)( __len - __n, __pos) + __n;
+  const_pointer __last = this->_M_Start() + (_STLP_STD_NAME::min)( __len - __n, __pos) + __n;
   const_pointer __result = find_end(this->_M_Start(), __last,
                                     __s, __s + __n, _STLP_PRIV _Eq_traits<_Traits>());
   return __result != __last ? __result - this->_M_Start() : npos;
@@ -486,7 +486,7 @@ basic_string<_CharT,_Traits,_Alloc>::rfind(_CharT __c, size_type __pos) const
   if ( __len < 1 ) {
     return npos;
   }
-  const_iterator __last = begin() + (min)(__len - 1, __pos) + 1;
+  const_iterator __last = begin() + (_STLP_STD_NAME::min)(__len - 1, __pos) + 1;
   const_reverse_iterator __rresult =
     _STLP_STD::find_if(const_reverse_iterator(__last), rend(),
                        _STLP_PRIV _Eq_char_bound<_Traits>(__c));
@@ -515,7 +515,7 @@ basic_string<_CharT,_Traits,_Alloc> ::find_last_of(const _CharT* __s, size_type 
   if ( __len < 1 ) {
     return npos;
   }
-  const const_iterator __last = begin() + (min)(__len - 1, __pos) + 1;
+  const const_iterator __last = begin() + (_STLP_STD_NAME::min)(__len - 1, __pos) + 1;
   const const_reverse_iterator __rresult =
     _STLP_PRIV __find_first_of(const_reverse_iterator(__last), rend(),
                                __s, __s + __n,
@@ -558,7 +558,7 @@ basic_string<_CharT,_Traits,_Alloc>::find_last_not_of(const _CharT* __s, size_ty
   if ( __len < 1 ) {
     return npos;
   }
-  const_iterator __last = begin() + (min)(__len - 1, __pos) + 1;
+  const_iterator __last = begin() + (_STLP_STD_NAME::min)(__len - 1, __pos) + 1;
   const_reverse_iterator __rlast = const_reverse_iterator(__last);
   const_reverse_iterator __rresult =
     _STLP_STD::find_if(__rlast, rend(),
@@ -575,7 +575,7 @@ basic_string<_CharT, _Traits, _Alloc>::find_last_not_of(_CharT __c, size_type __
   if ( __len < 1 ) {
     return npos;
   }
-  const_iterator __last = begin() + (min)(__len - 1, __pos) + 1;
+  const_iterator __last = begin() + (_STLP_STD_NAME::min)(__len - 1, __pos) + 1;
   const_reverse_iterator __rlast = const_reverse_iterator(__last);
   const_reverse_iterator __rresult =
     _STLP_STD::find_if(__rlast, rend(),
@@ -591,7 +591,7 @@ template <class _CharT, class _Traits, class _Alloc>
 void _STLP_CALL _S_string_copy(const basic_string<_CharT,_Traits,_Alloc>& __s,
                                _CharT* __buf, size_t __n) {
   if (__n > 0) {
-    __n = (min) (__n - 1, __s.size());
+    __n = (_STLP_STD_NAME::min) (__n - 1, __s.size());
     _STLP_STD::copy(__s.begin(), __s.begin() + __n, __buf);
     __buf[__n] = _CharT();
   }

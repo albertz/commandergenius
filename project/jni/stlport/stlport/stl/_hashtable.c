@@ -354,7 +354,7 @@ void hashtable<_Val,_Key,_HF,_Traits,_ExK,_EqK,_All>
   //Here if max_load_factor is lower than 1.0 the resulting value might not be representable
   //as a size_type. The result concerning the respect of the max_load_factor will then be
   //undefined.
-  __num_buckets_hint = (max) (__num_buckets_hint, (size_type)((float)size() / max_load_factor()));
+  __num_buckets_hint = (_STLP_STD_NAME::max) (__num_buckets_hint, (size_type)((float)size() / max_load_factor()));
   size_type __num_buckets = _STLP_PRIV _Stl_prime_type::_S_next_size(__num_buckets_hint);
   _M_rehash(__num_buckets);
 }
@@ -368,7 +368,7 @@ void hashtable<_Val,_Key,_HF,_Traits,_ExK,_EqK,_All>
     return;
   }
 
-  size_type __num_buckets_hint = (size_type)((float)(max) (__num_elements_hint, size()) / max_load_factor());
+  size_type __num_buckets_hint = (size_type)((float)(_STLP_STD_NAME::max) (__num_elements_hint, size()) / max_load_factor());
   size_type __num_buckets = _STLP_PRIV _Stl_prime_type::_S_next_size(__num_buckets_hint);
 #if defined (_STLP_DEBUG)
   _M_check();

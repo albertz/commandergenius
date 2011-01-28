@@ -10,14 +10,22 @@
 #define _STLP_UNIX 1
 
 // No RTTI support.
-#define _STLP_NO_TYPEINFO 1
-#define _STLP_NO_RTTI 1
+// #define _STLP_NO_TYPEINFO 1
+// #define _STLP_NO_RTTI 1
 
 // Have pthreads support.
 #define _PTHREADS
 
 // Don't have native <cplusplus> headers
 #define _STLP_HAS_NO_NEW_C_HEADERS 1
+// #define _STLP_USE_NEW_C_HEADERS 1
+// #define _STLP_NO_NEW_NEW_HEADER 1
+// #define _STLP_NO_NEW_HEADER 1
+#define _STLP_NEW_DONT_THROW_BAD_ALLOC 1
+#define _STLP_NO_BAD_ALLOC 1
+// No <exception> headers
+#define _STLP_NO_EXCEPTION_HEADER 1
+#define _STLP_OWN_STDEXCEPT 1 // Already inside libsupc++, but we'll define it under different namespace
 
 // Don't use wchar.h etc
 #define _STLP_NO_WCHAR_T 1
@@ -43,15 +51,12 @@
 // Little endian platform.
 #define _STLP_LITTLE_ENDIAN 1
 
-// No <exception> headers
-#define _STLP_NO_EXCEPTION_HEADER 1
-
 // No need to define our own namespace
-#define _STLP_NO_OWN_NAMESPACE 1
+// #define _STLP_NO_OWN_NAMESPACE 1
 
 // Need this to define STLport's own bad_alloc class (which won't be
 // thrown in any case)
-#define _STLP_NEW_DONT_THROW_BAD_ALLOC 1
+// #define _STLP_NEW_DONT_THROW_BAD_ALLOC 1
 
 #define _STLP_NO_LONG_DOUBLE 1
 

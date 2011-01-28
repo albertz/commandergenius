@@ -239,7 +239,7 @@ private:                        // Helper functions for append.
         this->_M_throw_length_error();
       if (__old_size + __n > capacity()) {
         const size_type __len = __old_size +
-          (max)(__old_size, __STATIC_CAST(size_type,__n)) + 1;
+          (_STLP_STD_NAME::max)(__old_size, __STATIC_CAST(size_type,__n)) + 1;
         pointer __new_start = this->_M_end_of_storage.allocate(__len);
         pointer __new_finish = __new_start;
         _STLP_TRY {
@@ -412,7 +412,7 @@ private:  // Helper functions for insert.
   void _M_insert_overflow(iterator __position, _ForwardIter __first, _ForwardIter __last,
                           difference_type __n) {
     const size_type __old_size = this->size();
-    const size_type __len = __old_size + (max)(__old_size, __STATIC_CAST(size_type,__n)) + 1;
+    const size_type __len = __old_size + (_STLP_STD_NAME::max)(__old_size, __STATIC_CAST(size_type,__n)) + 1;
     pointer __new_start = this->_M_end_of_storage.allocate(__len);
     pointer __new_finish = __new_start;
     _STLP_TRY {

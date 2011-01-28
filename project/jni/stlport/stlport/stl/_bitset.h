@@ -638,7 +638,7 @@ public:
 #endif
     reset();
     size_t __tmp = _Nb;
-    const size_t __Nbits = (min) (__tmp, (min) (__n, __s.size() - __pos));
+    const size_t __Nbits = (_STLP_STD_NAME::min) (__tmp, (min) (__n, __s.size() - __pos));
     for ( size_t __i= 0; __i < __Nbits; ++__i) {
       typename _Traits::int_type __k = _Traits::to_int_type(__s[__pos + __Nbits - __i - 1]);
       // boris : widen() ?

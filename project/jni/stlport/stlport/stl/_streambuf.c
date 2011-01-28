@@ -57,7 +57,7 @@ basic_streambuf<_CharT, _Traits>::xsgetn(_CharT* __s, streamsize __n) {
 
   while (__result < __n) {
     if (_M_gnext < _M_gend) {
-      size_t __chunk = (min) (__STATIC_CAST(size_t,_M_gend - _M_gnext),
+      size_t __chunk = (_STLP_STD_NAME::min) (__STATIC_CAST(size_t,_M_gend - _M_gnext),
                               __STATIC_CAST(size_t,__n - __result));
       _Traits::copy(__s, _M_gnext, __chunk);
       __result += __chunk;
@@ -88,7 +88,7 @@ basic_streambuf<_CharT, _Traits>::xsputn(const _CharT* __s, streamsize __n)
 
   while (__result < __n) {
     if (_M_pnext < _M_pend) {
-      size_t __chunk = (min) (__STATIC_CAST(size_t,_M_pend - _M_pnext),
+      size_t __chunk = (_STLP_STD_NAME::min) (__STATIC_CAST(size_t,_M_pend - _M_pnext),
                            __STATIC_CAST(size_t,__n - __result));
       _Traits::copy(_M_pnext, __s, __chunk);
       __result += __chunk;
@@ -116,7 +116,7 @@ basic_streambuf<_CharT, _Traits>::_M_xsputnc(_CharT __c, streamsize __n)
 
   while (__result < __n) {
     if (_M_pnext < _M_pend) {
-      size_t __chunk = (min) (__STATIC_CAST(size_t,_M_pend - _M_pnext),
+      size_t __chunk = (_STLP_STD_NAME::min) (__STATIC_CAST(size_t,_M_pend - _M_pnext),
                            __STATIC_CAST(size_t,__n - __result));
       _Traits::assign(_M_pnext, __chunk, __c);
       __result += __chunk;

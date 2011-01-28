@@ -403,7 +403,7 @@ private:
 #endif /* _STLP_MEMBER_TEMPLATES */
                                size_type __n) {
     const size_type __old_size = size();
-    size_type __len = __old_size + (max)(__old_size, __n);
+    size_type __len = __old_size + (_STLP_STD_NAME::max)(__old_size, __n);
     pointer __new_start = this->_M_end_of_storage.allocate(__len, __len);
     pointer __new_finish = __new_start;
     _STLP_TRY {

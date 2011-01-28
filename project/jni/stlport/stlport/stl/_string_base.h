@@ -99,7 +99,7 @@ protected:
   size_t max_size() const {
     const size_type __string_max_size = size_type(-1) / sizeof(_Tp);
     typename allocator_type::size_type __alloc_max_size = _M_end_of_storage.max_size();
-    return (min)(__alloc_max_size, __string_max_size) - 1;
+    return (_STLP_STD_NAME::min)(__alloc_max_size, __string_max_size) - 1;
   }
 
   _String_base(const allocator_type& __a)

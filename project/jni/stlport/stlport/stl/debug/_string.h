@@ -338,7 +338,7 @@ public:
 
   _Self& assign(const _Self& __s, size_type __pos, size_type __n) {
     if (__pos < __s.size()) {
-      _M_check_assign((min) (__n, __s.size() - __pos));
+      _M_check_assign((_STLP_STD_NAME::min) (__n, __s.size() - __pos));
     }
     _M_non_dbg_impl.assign(__s._M_non_dbg_impl, __pos, __n);
     return *this;
@@ -347,7 +347,7 @@ public:
   _Self& assign(const _CharT* __s, size_type __n) {
     _STLP_FIX_LITERAL_BUG(__s)
     _STLP_VERBOSE_ASSERT((__s != 0), _StlMsg_INVALID_ARGUMENT)
-    _M_check_assign((min) (_Traits::length(__s), __n));
+    _M_check_assign((_STLP_STD_NAME::min) (_Traits::length(__s), __n));
     _M_non_dbg_impl.assign(__s, __s + __n);
     return *this;
   }

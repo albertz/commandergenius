@@ -456,7 +456,7 @@ protected:
         this->_M_finish += difference_type(__n);
       }
       else {
-        size_type __len = size() + (max)(size(), __n);
+        size_type __len = size() + (_STLP_STD_NAME::max)(size(), __n);
         unsigned int* __q = this->_M_bit_alloc(__len);
         iterator __i = copy(begin(), __position, iterator(__q, 0));
         __i = copy(__first, __last, __i);
@@ -723,7 +723,7 @@ public:
       this->_M_finish += __n;
     }
     else {
-      size_type __len = size() + (max)(size(), __n);
+      size_type __len = size() + (_STLP_STD_NAME::max)(size(), __n);
       unsigned int* __q = this->_M_bit_alloc(__len);
       iterator __i = copy(begin(), __position, iterator(__q, 0));
       __i = copy(__first, __last, __i);
@@ -744,7 +744,7 @@ public:
       this->_M_finish += __n;
     }
     else {
-      size_type __len = size() + (max)(size(), __n);
+      size_type __len = size() + (_STLP_STD_NAME::max)(size(), __n);
       unsigned int* __q = this->_M_bit_alloc(__len);
       iterator __i = copy(begin(), __position, iterator(__q, 0));
       __i = copy(__first, __last, __i);
@@ -765,7 +765,7 @@ public:
       this->_M_finish += difference_type(__n);
     }
     else {
-      size_type __len = size() + (max)(size(), __n);
+      size_type __len = size() + (_STLP_STD_NAME::max)(size(), __n);
       unsigned int* __q = this->_M_bit_alloc(__len);
       iterator __i = copy(begin(), __position, iterator(__q, 0));
       fill_n(__i, __n, __x);

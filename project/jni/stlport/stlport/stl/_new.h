@@ -47,6 +47,13 @@ using _STLP_VENDOR_CSTD::malloc;
 #    error Cannot include native new header as new is a macro.
 #  endif
 
+#  ifdef ANDROID
+#    include _STLP_NATIVE_CPP_RUNTIME_HEADER(cstddef)
+namespace std {
+using ::ptrdiff_t;
+using ::size_t;
+}
+#  endif
 #  include _STLP_NATIVE_CPP_RUNTIME_HEADER(new)
 
 #  if defined (_STLP_BROKEN_BAD_ALLOC_CLASS)

@@ -17,6 +17,7 @@
  */
 #include "stlport_prefix.h"
 
+#include <typeinfo>
 #include <hash_map>
 #include <vector>
 

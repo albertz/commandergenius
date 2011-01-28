@@ -15,5 +15,5 @@ if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && [ "`re
 	touch project/src/Globals.java
 fi
 
-cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build -j4 V=1 && ant `test -n "$1" && echo release || echo debug` && test -z "$1" && cd bin && adb install -r DemoActivity-debug.apk
+cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build -j4 V=1 -k && ant `test -n "$1" && echo release || echo debug` && test -z "$1" && cd bin && adb install -r DemoActivity-debug.apk
 
