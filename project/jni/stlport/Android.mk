@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := stlport
 
-ifneq ($(CRYSTAX_TOOLCHAIN),)
+ifneq ($(CRYSTAX_TOOLCHAIN)$(NDK_R5_TOOLCHAIN),)
 LOCAL_CPP_EXTENSION := .cpp
 LOCAL_SRC_FILES := dummy.c
 else

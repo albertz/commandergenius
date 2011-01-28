@@ -16,7 +16,7 @@ endif
 
 LOCAL_CFLAGS :=
 
-ifeq ($(CRYSTAX_TOOLCHAIN),)
+ifeq ($(CRYSTAX_TOOLCHAIN)$(NDK_R5_TOOLCHAIN),)
 LOCAL_CFLAGS += -I$(LOCAL_PATH)/../stlport/stlport
 endif
 
@@ -44,8 +44,6 @@ LOCAL_STATIC_LIBRARIES := $(filter $(APP_AVAILABLE_STATIC_LIBS), $(COMPILED_LIBR
 LOCAL_STATIC_LIBRARIES += stlport
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
-ifneq ($(NDK_R5_TOOLCHAIN),)
-endif
 
 LOCAL_LDFLAGS := -Lobj/local/armeabi
 
@@ -85,8 +83,7 @@ LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 
 .NOTPARALLEL: $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so) $(LOCAL_PATH)/src/libapplication.so
 
-$(shell rm $(LOCAL_PATH)/src/libapplication.so) # Enforce rebuilding
-# $(shell rm $(LOCAL_PATH)/../../obj/local/armeabi/*.so) # libapplication.so may try to link with wrong libraries, prevent that
+$(shell rm -f $(LOCAL_PATH)/src/libapplication.so) # Enforce rebuilding
 
 $(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg $(APP_LIB_DEPENDS)
 	echo Launching script $(LOCAL_PATH_SDL_APPLICATION)/AndroidBuild.sh

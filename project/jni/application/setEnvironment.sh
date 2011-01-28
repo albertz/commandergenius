@@ -54,9 +54,8 @@ CFLAGS="\
 -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -I$NDK/platforms/$PLATFORMVER/arch-arm/usr/include -Wa,--noexecstack \
 -DANDROID -D__sF=__SDL_fake_stdout -DNDEBUG -O2 -g \
--I$NDK/sources/cxx-stl/system/include \
+-I$NDK/sources/cxx-stl/gnu-libstdc++/include \
 -I$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include \
--I$LOCAL_PATH/../stlport/stlport \
 -I$LOCAL_PATH/../sdl-1.2/include \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"`"
 
@@ -65,13 +64,16 @@ LDFLAGS="\
 -Wl,-soname,libapplication.so -shared --sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
 `echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/armeabi/lib\1.so@g\"` \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.so \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
--L$LOCAL_PATH/../../obj/local/armeabi -Wl,--no-undefined -Wl,-z,noexecstack \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libGLESv1_CM.so \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libdl.so \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/liblog.so \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libz.so \
+-L$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi -lstdc++ \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.a \
 -L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
--lGLESv1_CM -ldl -llog -lz \
--Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++ \
--L$LOCAL_PATH/../../obj/local/armeabi $LOCAL_PATH/../../obj/local/armeabi/libstlport.a"
+-L$LOCAL_PATH/../../obj/local/armeabi -Wl,--no-undefined -Wl,-z,noexecstack \
+-Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++"
 
 env PATH=$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \

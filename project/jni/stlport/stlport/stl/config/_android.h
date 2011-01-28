@@ -3,6 +3,8 @@
 
 #define _STLP_PLATFORM "Android"
 
+#include <features.h>
+
 // The Android C library is mostly glibc-like
 #define _STLP_USE_GLIBC 1
 
@@ -15,17 +17,19 @@
 
 // Have pthreads support.
 #define _PTHREADS
+#define _STLP_THREADS
+#define _STLP_PTHREADS
 
 // Don't have native <cplusplus> headers
-#define _STLP_HAS_NO_NEW_C_HEADERS 1
+// #define _STLP_HAS_NO_NEW_C_HEADERS 1
 // #define _STLP_USE_NEW_C_HEADERS 1
 // #define _STLP_NO_NEW_NEW_HEADER 1
 // #define _STLP_NO_NEW_HEADER 1
-#define _STLP_NEW_DONT_THROW_BAD_ALLOC 1
-#define _STLP_NO_BAD_ALLOC 1
+// #define _STLP_NEW_DONT_THROW_BAD_ALLOC 1
+// #define _STLP_NO_BAD_ALLOC 1
 // No <exception> headers
-#define _STLP_NO_EXCEPTION_HEADER 1
-#define _STLP_OWN_STDEXCEPT 1 // Already inside libsupc++, but we'll define it under different namespace
+// #define _STLP_NO_EXCEPTION_HEADER 1
+// #define _STLP_OWN_STDEXCEPT 1 // Already inside libsupc++, but we'll define it under different namespace
 
 // Don't use wchar.h etc
 #define _STLP_NO_WCHAR_T 1
@@ -73,8 +77,8 @@
 
 // Define how to include our native headers.
 #if defined(__ANDROID__) /* NDK r5 */
-#  define _STLP_NATIVE_CPP_C_INCLUDE_PATH ../../../cxx-stl/system/include
-#  define _STLP_NATIVE_CPP_RUNTIME_INCLUDE_PATH ../../../cxx-stl/system/include
+#  define _STLP_NATIVE_CPP_C_INCLUDE_PATH ../../../cxx-stl/gnu-libstdc++/include
+#  define _STLP_NATIVE_CPP_RUNTIME_INCLUDE_PATH ../../../cxx-stl/gnu-libstdc++/include
 //#  warning ("Detected Android NDK r5 or newer")
 #else /* NDK r4b */
 #  define _STLP_NATIVE_CPP_C_INCLUDE_PATH ../../usr/include
