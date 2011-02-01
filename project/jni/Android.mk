@@ -19,7 +19,11 @@ $(info Building with CrystaX toolchain - RTTI and exceptions enabled, STLPort di
 CRYSTAX_TOOLCHAIN = 1
 endif
 ifneq ($(findstring r5b,$(NDK_VERSION)),)
-$(info Building with NDK r5)
+$(info Building with NDK r5b)
+NDK_R5_TOOLCHAIN = 1
+endif
+ifeq ($(NDK_VERSION)-,-)
+$(info Cannot determine NDK version, assuming NDK r5b - please do not rename NDK directory extracted from archive to avoid errors in the future)
 NDK_R5_TOOLCHAIN = 1
 endif
 
