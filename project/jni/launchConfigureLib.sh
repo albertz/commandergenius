@@ -2,6 +2,7 @@
 
 # Set here your own NDK path if needed
 # export PATH=$PATH:~/src/endless_space/android-ndk-r4
+# TODO: this script is for NDK r4b only
 
 IFS='
 '
