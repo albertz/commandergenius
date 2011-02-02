@@ -4,7 +4,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := theora
 
-LOCAL_CFLAGS := -O3 -I$(LOCAL_PATH)/include -I$(LOCAL_PATH)/lib -I$(LOCAL_PATH) -DHAVE_CONFIG_H -I$(LOCAL_PATH)/../ogg/include -I$(LOCAL_PATH)/../vorbis/include
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/lib $(LOCAL_PATH) $(LOCAL_PATH)/../ogg/include $(LOCAL_PATH)/../vorbis/include
+LOCAL_CFLAGS := -O3 -DHAVE_CONFIG_H
 
 LOCAL_CPP_EXTENSION := .cpp
 

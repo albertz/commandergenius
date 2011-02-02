@@ -15,15 +15,17 @@ APP_SUBDIRS := $(APPLICATION_SUBDIRS_BUILD_NONRECURSIVE) $(APPLICATION_SUBDIRS_B
 endif
 
 LOCAL_CFLAGS :=
+LOCAL_C_INCLUDES :=
 
 ifeq ($(CRYSTAX_TOOLCHAIN)$(NDK_R5_TOOLCHAIN),)
-LOCAL_CFLAGS += -I$(LOCAL_PATH)/../stlport/stlport
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../stlport/stlport
 endif
 
-LOCAL_CFLAGS += $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
-				-I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include \
-				$(foreach L, $(COMPILED_LIBRARIES), -I$(LOCAL_PATH)/../$(L)/include) \
-				-D__sF=__SDL_fake_stdout
+LOCAL_C_INCLUDES += $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) \
+					$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include \
+					$(foreach L, $(COMPILED_LIBRARIES), $(LOCAL_PATH)/../$(L)/include)
+
+LOCAL_CFLAGS += -D__sF=__SDL_fake_stdout
 
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
 

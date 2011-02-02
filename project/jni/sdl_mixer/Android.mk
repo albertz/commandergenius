@@ -4,11 +4,13 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := sdl_mixer
 
-LOCAL_CFLAGS := -O3 -I$(LOCAL_PATH) -I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include -I$(LOCAL_PATH)/include \
-				-I$(LOCAL_PATH)/../mad/include -I$(LOCAL_PATH)/../flac/include -I$(LOCAL_PATH)/../ogg/include \
-				-I$(LOCAL_PATH)/../vorbis/include -I$(LOCAL_PATH)/../tremor/include -I$(LOCAL_PATH)/../mikmod/include \
+LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include $(LOCAL_PATH)/include \
+					$(LOCAL_PATH)/../mad/include $(LOCAL_PATH)/../flac/include $(LOCAL_PATH)/../ogg/include \
+					$(LOCAL_PATH)/../vorbis/include $(LOCAL_PATH)/../tremor/include $(LOCAL_PATH)/../mikmod/include \
+					$(LOCAL_PATH)/timidity 
+LOCAL_CFLAGS := -O3 \
 				-DWAV_MUSIC -DOGG_USE_TREMOR -DOGG_MUSIC -DFLAC_MUSIC -DMOD_MUSIC \
-				-I$(LOCAL_PATH)/timidity -DMID_MUSIC -DUSE_TIMIDITY_MIDI
+				-DMID_MUSIC -DUSE_TIMIDITY_MIDI
 
 LOCAL_CPP_EXTENSION := .cpp
 
@@ -28,8 +30,8 @@ endif
 LOCAL_STATIC_LIBRARIES += ogg
 
 ifneq ($(SDL_MIXER_USE_LIBMAD),)
-	LOCAL_CFLAGS += -DMP3_MAD_MUSIC
-	LOCAL_SHARED_LIBRARIES += mad
+LOCAL_CFLAGS += -DMP3_MAD_MUSIC
+LOCAL_SHARED_LIBRARIES += mad
 endif
 
 include $(BUILD_SHARED_LIBRARY)

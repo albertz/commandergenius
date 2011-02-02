@@ -4,7 +4,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := ogg
 
-LOCAL_CFLAGS := -O3 -I$(LOCAL_PATH)/include
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
+LOCAL_CFLAGS := -O3
 
 
 LOCAL_CPP_EXTENSION := .cpp

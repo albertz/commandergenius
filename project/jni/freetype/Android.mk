@@ -6,8 +6,8 @@ LOCAL_MODULE := freetype
 
 APP_SUBDIRS := $(patsubst $(LOCAL_PATH)/%, %, $(shell find $(LOCAL_PATH)/src -type d))
 
-LOCAL_CFLAGS := -Os $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
-				-I$(LOCAL_PATH)/include -DFT2_BUILD_LIBRARY
+LOCAL_C_INCLUDES := $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) $(LOCAL_PATH)/include
+LOCAL_CFLAGS := -Os -DFT2_BUILD_LIBRARY
 
 
 LOCAL_CPP_EXTENSION := .cpp

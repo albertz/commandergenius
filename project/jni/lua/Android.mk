@@ -4,7 +4,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := lua
 
-LOCAL_CFLAGS := -O3 -I$(LOCAL_PATH)/src -I$(LOCAL_PATH)/include -D__sF=__SDL_fake_stdout
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/src $(LOCAL_PATH)/include 
+LOCAL_CFLAGS := -O3 -D__sF=__SDL_fake_stdout
 
 LOCAL_CPP_EXTENSION := .cpp
 

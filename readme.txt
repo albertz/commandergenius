@@ -1,20 +1,17 @@
 This is libSDL 1.2 and 1.3 ported to Google Android (also bunch of other libs included).
-Alien Blaster game is used as working example (original sources: http://www.schwardtnet.de/alienblaster/ ).
 
 Installation
 ============
 
-This should be compiled with Android 2.2 SDK and NDK r4b - google for them and install them as described in their docs
+This should be compiled with Android 2.2 SDK and NDK r4b/r5b (r5b preferred, but it fails with Cygwin) -
+google for them and install them as described in their docs
 (the application will run on Android 1.6 and above).
-You'll need to install Ant too.
+You'll need to install Java Ant too.
 The most supported environnment for that port is Linux, MacOs should be okay too, 
 If you're developing under Windows you'd better install andLinux or Ubuntu+Wubi, to get proper Linux environment
 running inside Windows, then install Linux toolchain on it. I was told andLinux compiles faster than Cygwin.
 Also you'll need full set of Linux utils and symlinks support to launch ChangeAppSettings.sh (sh, grep, sed, tr).
 http://www.pocketmagic.net/?p=1332 - guide how to set up environment in Cygwin.
-
-Please don't use NDK r5, it is buggy, wait for NDK r5b:
-http://groups.google.com/group/android-ndk/browse_thread/thread/6b35728eec7ef52f/b57f52776842041d
 
 How to compile demo application
 ===============================
@@ -39,9 +36,6 @@ This port also supports GL ES + SDL combo - there is GLXGears demo app in projec
 remove project/jni/application/src symlink and make new one pointing to glxgears, then run build.sh
 Note that GL ES is NOT pure OpenGL - there are no glBegin() and glEnd() call and other widely used functions,
 and generally it will take a lot of effort to port pure OpenGL application to GL ES.
-
-Previously The Alien Blaster was the default demo application, however it uses SDL 1.3 and I'm breaking
-the compilation too often, so if something does not compile please try to use some older revision.
 
 How to compile your own application
 ===================================
@@ -78,19 +72,19 @@ The C++ files shall have .cpp extension to be compiled, rename them if necessary
 Also you can replace icon image at project/res/drawable/icon.png and image project/res/drawable/publisherlogo.png.
 Then you can launch build.sh.
 
-The NDK has RTTI and exceptions disabled for C++ code, if you need them you may download modified NDK from
+The NDK r4b has RTTI and exceptions disabled for C++ code, if you need them you may download modified NDK from
 http://www.crystax.net/android/ndk-r4.php - note however that you cannot throw exceptions across shared library boundary.
+The NDK r5b already has support for RTTI and exceptions.
 Unzip it, and put in your PATH instead of original NDK - do not rename the target dir, my makefiles will
 check if there's "crystax" string in path to gcc toolchain, and will disable STLPort because CrystaX NDK
 already contains STL library.
-The NDK r5 now contains full support for RTTI/exceptions, however I did not integrate it yet.
-Also STL imlpementations from NDK r5 and from CrystaX NDK will crash on x5a/x6d tablet, and possibly on Smartq V7,
+STL imlpementations from NDK r5b and from CrystaX NDK will crash on x5a/x6d tablet, and possibly on Smartq V7,
 when you try to output anything to std::cout or std::cerr, the STLPort included in this port will not crash.
 
 Application data may be bundled with app itself, or downloaded from net on first run.
-Create .ZIP file with your application data, and put it on HTTP server, or to "project/jni/application/src/AndroidData" dir - 
+Create .ZIP file with your application data, and put it on HTTP server, or to "project/jni/application/src/AndroidData" dir -
 ChangeAppSettings.sh will ask you for the URL, if URL won't contain "http://" it will try to unzip file from AndroidData dir.
-Note that there is limit on maximum .APK file size on Market, like 20 Mb or so, so big files should be downloaded by HTTP.
+Note that there is limit on maximum .APK file size on Market, like 50 Mb or so, so big files should be downloaded by HTTP.
 If you'll release new version of data files you should change download URL or data file name and update your app as well -
 the app will re-download the data if URL does not match the saved URL from previous download.
 
@@ -101,7 +95,7 @@ SDL_ListModes()[0] will always return native screen resolution.
 Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
 texture on HTC G1. Software surfaces may be of any size of course (but you don't want to do expensive memcpy).
 
-If you want HW acceleration there are some things to remember:
+If you want HW acceleration there are some limitations:
 You cannot blit SW surface to screen, it should be only HW surface.
 You can use colorkey, per-surface alpha and per-pixel alpha with HW surfaces.
 If you're using SDL 1.3 always use SDL_Texture, if you'll be using SDL_Surface with SDL 1.3 it will switch to SW mode.
@@ -259,7 +253,7 @@ Note that I did not test that code yet, so test reports are appreciated.
 Quick guide to debug native code
 ================================
 
-The debugging of multi-threaded apps is not supported with NDK r4 or r4b, you'll need NDK r5 and Android 2.3 emulatir or device.
+The debugging of multi-threaded apps is not supported with NDK r4 or r4b, you'll need NDK r5b and Android 2.3 emulatir or device.
 To debug your application add tag 'android:debuggable="true"' to 'application' element in AndroidManifest.xml,
 recmpile and reinstall your app, go to "project" dir and launch command
 	ndk-gdb --verbose --start --force

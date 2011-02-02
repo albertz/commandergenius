@@ -50,7 +50,7 @@ common_CFLAGS := \
 	-Wpointer-arith -Wwrite-strings -Wunused -Winline -Wnested-externs -Wmissing-declarations -Wmissing-prototypes \
 	-Wno-long-long -Wfloat-equal -Wno-multichar -Wsign-compare -Wno-format-nonliteral -Wendif-labels \
 	-Wstrict-prototypes -Wdeclaration-after-statement -Wno-system-headers -DHAVE_CONFIG_H -std=gnu99 \
-	-I$(LOCAL_PATH)/include -I$(LOCAL_PATH)/include/curl -I$(LOCAL_PATH)/lib -D__sF=__SDL_fake_stdout
+	-D__sF=__SDL_fake_stdout
 
 #########################
 # Build the libcurl library
@@ -70,7 +70,7 @@ CURL_HEADERS := \
 	types.h
 
 LOCAL_SRC_FILES := $(addprefix lib/,$(CSOURCES))
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/include/
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/include/curl $(LOCAL_PATH)/lib
 LOCAL_CFLAGS += $(common_CFLAGS)
 
 LOCAL_MODULE:= libcurl

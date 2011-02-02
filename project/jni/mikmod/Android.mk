@@ -6,8 +6,8 @@ LOCAL_MODULE := mikmod
 
 APP_SUBDIRS := $(patsubst $(LOCAL_PATH)/%, %, $(shell find $(LOCAL_PATH) -type d))
 
-LOCAL_CFLAGS := -O3 $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
-				-I$(LOCAL_PATH)/include -I$(LOCAL_PATH) -DHAVE_CONFIG_H
+LOCAL_C_INCLUDES := $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) $(LOCAL_PATH)/include $(LOCAL_PATH)
+LOCAL_CFLAGS := -O3 -DHAVE_CONFIG_H
 
 
 LOCAL_CPP_EXTENSION := .cpp

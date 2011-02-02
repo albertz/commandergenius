@@ -6,8 +6,9 @@ LOCAL_MODULE := zzip
 
 APP_SUBDIRS := $(patsubst $(LOCAL_PATH)/%, %, $(shell find $(LOCAL_PATH)/zzip -type d))
 
-LOCAL_CFLAGS := -O3 $(foreach D, $(APP_SUBDIRS), -I$(LOCAL_PATH)/$(D)) \
-				-I$(LOCAL_PATH)/include -I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include
+LOCAL_C_INCLUDES := $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) \
+					$(LOCAL_PATH)/include $(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include
+LOCAL_CFLAGS := -O3
 
 
 LOCAL_CPP_EXTENSION := .cpp

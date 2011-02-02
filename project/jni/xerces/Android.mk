@@ -6,11 +6,12 @@ XERCES_SUBDIRS := $(patsubst $(LOCAL_PATH)/%, %, $(shell find $(LOCAL_PATH)/src/
 
 LOCAL_MODULE := xerces
 
-LOCAL_CFLAGS := -Os -DHAVE_CONFIG_H -I$(LOCAL_PATH) -I$(LOCAL_PATH)/src -I$(LOCAL_PATH)/include \
-                -I$(LOCAL_PATH)/.. -I$(LOCAL_PATH)/include/xercesc/util -I$(LOCAL_PATH)/include/xercesc/util/MsgLoaders/InMemory \
-                -I$(LOCAL_PATH)/include/xercesc/dom/ -I$(LOCAL_PATH)/include/xercesc/dom/impl \
-                -I$(LOCAL_PATH)/include/xercesc/validators/schema/identity -I$(LOCAL_PATH)/include/xercesc/util/Transcoders/IconvGNU/ \
-                -I$(LOCAL_PATH)/include/xercesc/sax -D__sF=__SDL_fake_stdout
+LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_PATH)/src $(LOCAL_PATH)/include \
+                    $(LOCAL_PATH)/.. $(LOCAL_PATH)/include/xercesc/util $(LOCAL_PATH)/include/xercesc/util/MsgLoaders/InMemory \
+                    $(LOCAL_PATH)/include/xercesc/dom/ $(LOCAL_PATH)/include/xercesc/dom/impl \
+                    $(LOCAL_PATH)/include/xercesc/validators/schema/identity $(LOCAL_PATH)/include/xercesc/util/Transcoders/IconvGNU/ \
+                    $(LOCAL_PATH)/include/xercesc/sax
+LOCAL_CFLAGS := -Os -DHAVE_CONFIG_H -D__sF=__SDL_fake_stdout
 
 LOCAL_CPP_EXTENSION := .cpp
 

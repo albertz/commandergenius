@@ -4,7 +4,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := xml2
 
-LOCAL_CFLAGS := -Os -I$(LOCAL_PATH) -I$(LOCAL_PATH)/include -D__sF=__SDL_fake_stdout
+LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_PATH)/include 
+LOCAL_CFLAGS := -Os -D__sF=__SDL_fake_stdout
 
 LOCAL_CPP_EXTENSION := .cpp
 

@@ -4,7 +4,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := sdl_ttf
 
-LOCAL_CFLAGS := -Os -I$(LOCAL_PATH) -I$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include -I$(LOCAL_PATH)/../freetype/include -I$(LOCAL_PATH)/include
+LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include $(LOCAL_PATH)/../freetype/include $(LOCAL_PATH)/include
+LOCAL_CFLAGS := -Os
 
 LOCAL_CPP_EXTENSION := .cpp
 
