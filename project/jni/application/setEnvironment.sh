@@ -50,7 +50,7 @@ done
 
 CFLAGS="\
 -fexceptions -frtti \
--fpic -ffunction-sections -funwind-tables -fstack-protector -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  -Wno-psabi \
+-fpic -ffunction-sections -funwind-tables -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  -Wno-psabi \
 -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -I$NDK/platforms/$PLATFORMVER/arch-arm/usr/include -Wa,--noexecstack \
 -DANDROID -D__sF=__SDL_fake_stdout -DNDEBUG -O2 -g \
