@@ -79,11 +79,17 @@ include $(BUILD_SHARED_LIBRARY)
 
 ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
 
+# TODO: here we're digging inside NDK internal build system, that's not portable
+# NDK r5b provided the $(PREBUILT_SHARED_LIBRARY) target, however it requires .so file to be already present on disk
+# Also I cannot just launch AndroidBuild.sh from makefile because other libraries are not rebuilt and linking will fail
+
 LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 
 .NOTPARALLEL: $(realpath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so) $(LOCAL_PATH)/src/libapplication.so
 
-$(shell rm -f $(LOCAL_PATH)/src/libapplication.so) # Enforce rebuilding
+# Enforce rebuilding
+$(shell rm -f $(LOCAL_PATH)/src/libapplication.so)
+$(shell touch $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so)
 
 $(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg $(APP_LIB_DEPENDS)
 	echo Launching script $(LOCAL_PATH_SDL_APPLICATION)/AndroidBuild.sh
