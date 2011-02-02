@@ -74,10 +74,7 @@ Then you can launch build.sh.
 
 The NDK r4b has RTTI and exceptions disabled for C++ code, if you need them you may download modified NDK from
 http://www.crystax.net/android/ndk-r4.php - note however that you cannot throw exceptions across shared library boundary.
-The NDK r5b already has support for RTTI and exceptions.
-Unzip it, and put in your PATH instead of original NDK - do not rename the target dir, my makefiles will
-check if there's "crystax" string in path to gcc toolchain, and will disable STLPort because CrystaX NDK
-already contains STL library.
+The NDK r5b already has support for RTTI and exceptions, so you should use CrystaX NDK only if NDK r5b fails for you.
 STL imlpementations from NDK r5b and from CrystaX NDK will crash on x5a/x6d tablet, and possibly on Smartq V7,
 when you try to output anything to std::cout or std::cerr, the STLPort included in this port will not crash.
 

@@ -29,12 +29,12 @@ public:
   basic_string(_STLP_PRIV __bstr_sum<_CharT, _Traits, _Alloc, _Left, _Right, _StorageDir> const& __s,
                size_type __pos, size_type __n = npos,
                const allocator_type& __a = allocator_type())
-    : _STLP_STRING_SUM_BASE(_Reserve_t(), (__pos <= __s.size()) ? ((_STLP_STD_NAME::min) (__n, __s.size() - __pos)) : 0, __a) {
+    : _STLP_STRING_SUM_BASE(_Reserve_t(), (__pos <= __s.size()) ? ((min) (__n, __s.size() - __pos)) : 0, __a) {
     size_type __size = __s.size();
     if (__pos > __size)
       this->_M_throw_out_of_range();
     else
-      _M_append_sum_pos(__s, __pos, (_STLP_STD_NAME::min) (__n, __size - __pos));
+      _M_append_sum_pos(__s, __pos, (min) (__n, __size - __pos));
   }
 
 private:
@@ -64,7 +64,7 @@ private:
   }
   _CharT* _M_append_fast_pos(_CharT const* __s, size_type __s_size, _CharT *__buf,
                              size_type __pos, size_type __n)
-  { return uninitialized_copy(__s + __pos, __s + __pos + (_STLP_STD_NAME::min)(__n, __s_size - __pos), __buf); }
+  { return uninitialized_copy(__s + __pos, __s + __pos + (min)(__n, __s_size - __pos), __buf); }
   _CharT* _M_append_fast_pos(_STLP_PRIV __cstr_wrapper<_CharT> const& __s, _CharT *__buf,
                              size_type __pos, size_type __n)
   { return _M_append_fast_pos(__s.c_str(), __s.size(), __buf, __pos, __n); }
@@ -124,7 +124,7 @@ private:
       this->_M_throw_length_error();
     size_type __offset_size = _M_get_additional_size(__old_size + __s_size, _Char_Is_POD());
     if (__old_size + __s_size + __offset_size > this->capacity()) {
-      const size_type __len = __old_size + __offset_size + (_STLP_STD_NAME::max)(__old_size, __s_size) + 1;
+      const size_type __len = __old_size + __offset_size + (max)(__old_size, __s_size) + 1;
       pointer __new_start = this->_M_end_of_storage.allocate(__len);
       pointer __new_finish = __new_start;
       _STLP_TRY {
@@ -147,7 +147,7 @@ private:
   template <class _Left, class _Right, class _StorageDir>
   _Self& _M_append_sum_pos(_STLP_PRIV __bstr_sum<_CharT, _Traits, _Alloc, _Left, _Right, _StorageDir> const& __s,
                            size_type __pos, size_type __n) {
-    size_type __s_size = (_STLP_STD_NAME::min)(__s.size() - __pos, __n);
+    size_type __s_size = (min)(__s.size() - __pos, __n);
     if (__s_size == 0)
       return *this;
     const size_type __old_size = this->size();
@@ -155,7 +155,7 @@ private:
       this->_M_throw_length_error();
     size_type __offset_size = _M_get_additional_size(__old_size + __s_size, _Char_Is_POD());
     if (__old_size + __s_size + __offset_size > this->capacity()) {
-      const size_type __len = __old_size + __offset_size + (_STLP_STD_NAME::max)(__old_size, __s_size) + 1;
+      const size_type __len = __old_size + __offset_size + (max)(__old_size, __s_size) + 1;
       pointer __new_start = this->_M_end_of_storage.allocate(__len);
       pointer __new_finish = __new_start;
       _STLP_TRY {

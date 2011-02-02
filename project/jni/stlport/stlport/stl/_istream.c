@@ -649,10 +649,10 @@ __read_buffered(basic_istream<_CharT, _Traits>* __that, basic_streambuf<_CharT, 
       //is larger than ptrdiff_t one.
       _STLP_STATIC_ASSERT(((sizeof(streamsize) > sizeof(ptrdiff_t)) ||
                            (sizeof(streamsize) == sizeof(ptrdiff_t))) && numeric_limits<ptrdiff_t>::is_signed)
-      ptrdiff_t __request = __STATIC_CAST(ptrdiff_t, (_STLP_STD_NAME::min) (__STATIC_CAST(streamsize, (numeric_limits<ptrdiff_t>::max)()), _Num - __n));
+      ptrdiff_t __request = __STATIC_CAST(ptrdiff_t, (min) (__STATIC_CAST(streamsize, (numeric_limits<ptrdiff_t>::max)()), _Num - __n));
 
       const _CharT* __p  = __scan_delim(__first, __last);
-      ptrdiff_t __chunk = (_STLP_STD_NAME::min) (ptrdiff_t(__p - __first), __request);
+      ptrdiff_t __chunk = (min) (ptrdiff_t(__p - __first), __request);
       _Traits::copy(__s, __first, __chunk);
       __s += __chunk;
       __n += __chunk;
@@ -829,13 +829,13 @@ basic_istream<_CharT, _Traits>::readsome(char_type* __s, streamsize __nmax) {
 
       if (__buf->gptr() != __buf->egptr())
         _M_gcount
-          = _STLP_PRIV __read_buffered(this,  __buf, (_STLP_STD_NAME::min) (__avail, __nmax), __s,
+          = _STLP_PRIV __read_buffered(this,  __buf, (min) (__avail, __nmax), __s,
                                        _STLP_PRIV _Constant_unary_fun<bool, int_type>(false),
                                        _STLP_PRIV _Project2nd<const _CharT*, const _CharT*>(),
                                        false, false, false);
       else
         _M_gcount
-          = _STLP_PRIV __read_unbuffered(this,  __buf, (_STLP_STD_NAME::min) (__avail, __nmax), __s,
+          = _STLP_PRIV __read_unbuffered(this,  __buf, (min) (__avail, __nmax), __s,
                                          _STLP_PRIV _Constant_unary_fun<bool, int_type>(false),
                                          false, false, false);
     }

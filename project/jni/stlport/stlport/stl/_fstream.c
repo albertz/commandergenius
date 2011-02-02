@@ -623,7 +623,7 @@ bool basic_filebuf<_CharT, _Traits>::_M_allocate_buffers(_CharT* __buf, streamsi
     _M_int_buf_dynamic = false;
   }
 
-  streamsize __ebufsiz = (_STLP_STD_NAME::max)(__n * __STATIC_CAST(streamsize, _M_width),
+  streamsize __ebufsiz = (max)(__n * __STATIC_CAST(streamsize, _M_width),
                                __STATIC_CAST(streamsize, _M_codecvt->max_length()));
   _M_ext_buf = 0;
   if ((sizeof(streamsize) < sizeof(size_t)) ||
@@ -708,7 +708,7 @@ void basic_filebuf<_CharT, _Traits>::_M_setup_codecvt(const locale& __loc, bool 
     _M_codecvt = &use_facet<_Codecvt>(__loc) ;
     int __encoding    = _M_codecvt->encoding();
 
-    _M_width          = (_STLP_STD_NAME::max)(__encoding, 1);
+    _M_width          = (max)(__encoding, 1);
     _M_max_width      = _M_codecvt->max_length();
     _M_constant_width = __encoding > 0;
     _M_always_noconv  = _M_codecvt->always_noconv();

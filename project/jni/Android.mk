@@ -1,4 +1,4 @@
-# If SDL_Mixer should link to libMAD
+# If SDL_Mixer should link to GPL-polluted libMAD (TODO: move this out of here)
 SDL_MIXER_USE_LIBMAD :=
 ifneq ($(strip $(filter mad, $(COMPILED_LIBRARIES))),)
 SDL_MIXER_USE_LIBMAD := 1
@@ -12,19 +12,18 @@ endif
 ifneq ($(filter r5, $(NDK_VERSION)),)
 $(error Your NDK $(NDK_VERSION) generates invalid code, please use NDK r4b or r5b from http://developer.android.com)
 endif
-
-
-ifneq ($(findstring -crystax,$(NDK_VERSION)),)
-$(info Building with CrystaX toolchain - RTTI and exceptions enabled, STLPort disabled)
-CRYSTAX_TOOLCHAIN = 1
-endif
-ifneq ($(findstring r5b,$(NDK_VERSION)),)
-$(info Building with NDK r5b)
-NDK_R5_TOOLCHAIN = 1
-endif
 ifeq ($(NDK_VERSION)-,-)
 $(info Cannot determine NDK version, assuming NDK r5b - please do not rename NDK directory extracted from archive to avoid errors in the future)
-NDK_R5_TOOLCHAIN = 1
+NDK_VERSION := r5b
+endif
+
+ifneq ($(findstring -crystax,$(NDK_VERSION)),)
+$(info Building with CrystaX toolchain - internal STLPort disabled)
+CRYSTAX_TOOLCHAIN := 1
+endif
+ifneq ($(findstring r5b,$(NDK_VERSION)),)
+$(info Building with NDK r5b - internal STLPort disabled)
+NDK_R5_TOOLCHAIN := 1
 endif
 
 include $(call all-subdir-makefiles)

@@ -803,13 +803,13 @@ bool _S_apply_to_pieces(_CharConsumer& __c,
     _RopeRep* __left =  __conc->_M_left;
     size_t __left_len = __left->_M_size._M_data;
     if (__begin < __left_len) {
-      size_t __left_end = (_STLP_STD_NAME::min) (__left_len, __end);
+      size_t __left_end = (min) (__left_len, __end);
       if (!_S_apply_to_pieces(__c, __left, __begin, __left_end))
         return false;
     }
     if (__end > __left_len) {
       _RopeRep* __right =  __conc->_M_right;
-      size_t __right_start = (_STLP_STD_NAME::max)(__left_len, __begin);
+      size_t __right_start = (max)(__left_len, __begin);
       if (!_S_apply_to_pieces(__c, __right,
                               __right_start - __left_len,
                               __end - __left_len)) {

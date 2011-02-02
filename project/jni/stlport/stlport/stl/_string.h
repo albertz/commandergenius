@@ -198,7 +198,7 @@ public:                         // Constructor, destructor, assignment.
       this->_M_throw_out_of_range();
     else
       _M_range_initialize(__s._M_Start() + __pos,
-                          __s._M_Start() + __pos + (_STLP_STD_NAME::min) (__n, __s.size() - __pos));
+                          __s._M_Start() + __pos + (min) (__n, __s.size() - __pos));
   }
   basic_string(const _Self& __s, size_type __pos, size_type __n,
                const allocator_type& __a)
@@ -208,7 +208,7 @@ public:                         // Constructor, destructor, assignment.
       this->_M_throw_out_of_range();
     else
       _M_range_initialize(__s._M_Start() + __pos,
-                          __s._M_Start() + __pos + (_STLP_STD_NAME::min) (__n, __s.size() - __pos));
+                          __s._M_Start() + __pos + (min) (__n, __s.size() - __pos));
   }
 
 #if !defined (_STLP_DONT_SUP_DFLT_PARAM)
@@ -549,7 +549,7 @@ private: // Helper functions for append.
       if (__STATIC_CAST(size_type,__n) > this->max_size() || __old_size > this->max_size() - __STATIC_CAST(size_type,__n))
         this->_M_throw_length_error();
       if (__old_size + __n > this->capacity()) {
-        size_type __len = __old_size + (_STLP_STD_NAME::max)(__old_size, __STATIC_CAST(size_type,__n)) + 1;
+        size_type __len = __old_size + (max)(__old_size, __STATIC_CAST(size_type,__n)) + 1;
         pointer __new_start = this->_M_end_of_storage.allocate(__len, __len);
         pointer __new_finish = __new_start;
         _STLP_TRY {
@@ -624,7 +624,7 @@ public:
     if (__pos > __s.size())
       this->_M_throw_out_of_range();
     return _M_append(__s._M_Start() + __pos,
-                     __s._M_Start() + __pos + (_STLP_STD_NAME::min) (__n, __s.size() - __pos));
+                     __s._M_Start() + __pos + (min) (__n, __s.size() - __pos));
   }
 
   _Self& append(const _CharT* __s, size_type __n)
@@ -636,7 +636,7 @@ public:
 public:
   void push_back(_CharT __c) {
     if (this->_M_Finish() + 1 == this->_M_end_of_storage._M_data)
-      reserve(size() + (_STLP_STD_NAME::max)(size(), __STATIC_CAST(size_type,1)));
+      reserve(size() + (max)(size(), __STATIC_CAST(size_type,1)));
     _M_construct_null(this->_M_Finish() + 1);
     _Traits::assign(*(this->_M_Finish()), __c);
     ++this->_M_finish;
@@ -657,7 +657,7 @@ public:                         // Assign
     if (__pos > __s.size())
       this->_M_throw_out_of_range();
     return _M_assign(__s._M_Start() + __pos,
-                     __s._M_Start() + __pos + (_STLP_STD_NAME::min) (__n, __s.size() - __pos));
+                     __s._M_Start() + __pos + (min) (__n, __s.size() - __pos));
   }
 
   _Self& assign(const _CharT* __s, size_type __n)
@@ -731,7 +731,7 @@ public:                         // Insert
                 size_type __beg, size_type __n) {
     if (__pos > size() || __beg > __s.size())
       this->_M_throw_out_of_range();
-    size_type __len = (_STLP_STD_NAME::min) (__n, __s.size() - __beg);
+    size_type __len = (min) (__n, __s.size() - __beg);
     if (size() > max_size() - __len)
       this->_M_throw_length_error();
     _M_insert(begin() + __pos,
@@ -803,7 +803,7 @@ protected:  // Helper functions for insert.
   void _M_insert_overflow(iterator __pos, _ForwardIter __first, _ForwardIter __last,
                           difference_type __n) {
     const size_type __old_size = this->size();
-    size_type __len = __old_size + (_STLP_STD_NAME::max)(__old_size, __STATIC_CAST(size_type,__n)) + 1;
+    size_type __len = __old_size + (max)(__old_size, __STATIC_CAST(size_type,__n)) + 1;
     pointer __new_start = this->_M_end_of_storage.allocate(__len, __len);
     pointer __new_finish = __new_start;
     _STLP_TRY {
@@ -954,7 +954,7 @@ public:                         // Erase.
   _Self& erase(size_type __pos = 0, size_type __n = npos) {
     if (__pos > size())
       this->_M_throw_out_of_range();
-    erase(begin() + __pos, begin() + __pos + (_STLP_STD_NAME::min) (__n, size() - __pos));
+    erase(begin() + __pos, begin() + __pos + (min) (__n, size() - __pos));
     return *this;
   }
 
@@ -982,7 +982,7 @@ public:                         // Replace.  (Conceptually equivalent
   _Self& replace(size_type __pos, size_type __n, const _Self& __s) {
     if (__pos > size())
       this->_M_throw_out_of_range();
-    const size_type __len = (_STLP_STD_NAME::min) (__n, size() - __pos);
+    const size_type __len = (min) (__n, size() - __pos);
     if (size() - __len >= max_size() - __s.size())
       this->_M_throw_length_error();
     return _M_replace(begin() + __pos, begin() + __pos + __len,
@@ -993,8 +993,8 @@ public:                         // Replace.  (Conceptually equivalent
                  size_type __pos2, size_type __n2) {
     if (__pos1 > size() || __pos2 > __s.size())
       this->_M_throw_out_of_range();
-    const size_type __len1 = (_STLP_STD_NAME::min) (__n1, size() - __pos1);
-    const size_type __len2 = (_STLP_STD_NAME::min) (__n2, __s.size() - __pos2);
+    const size_type __len1 = (min) (__n1, size() - __pos1);
+    const size_type __len2 = (min) (__n2, __s.size() - __pos2);
     if (size() - __len1 >= max_size() - __len2)
       this->_M_throw_length_error();
     return _M_replace(begin() + __pos1, begin() + __pos1 + __len1,
@@ -1006,7 +1006,7 @@ public:                         // Replace.  (Conceptually equivalent
     _STLP_FIX_LITERAL_BUG(__s)
     if (__pos > size())
       this->_M_throw_out_of_range();
-    const size_type __len = (_STLP_STD_NAME::min) (__n1, size() - __pos);
+    const size_type __len = (min) (__n1, size() - __pos);
     if (__n2 > max_size() || size() - __len >= max_size() - __n2)
       this->_M_throw_length_error();
     return _M_replace(begin() + __pos, begin() + __pos + __len,
@@ -1017,7 +1017,7 @@ public:                         // Replace.  (Conceptually equivalent
     _STLP_FIX_LITERAL_BUG(__s)
     if (__pos > size())
       this->_M_throw_out_of_range();
-    const size_type __len = (_STLP_STD_NAME::min) (__n1, size() - __pos);
+    const size_type __len = (min) (__n1, size() - __pos);
     const size_type __n2 = _Traits::length(__s);
     if (__n2 > max_size() || size() - __len >= max_size() - __n2)
       this->_M_throw_length_error();
@@ -1029,7 +1029,7 @@ public:                         // Replace.  (Conceptually equivalent
                  size_type __n2, _CharT __c) {
     if (__pos > size())
       this->_M_throw_out_of_range();
-    const size_type __len = (_STLP_STD_NAME::min) (__n1, size() - __pos);
+    const size_type __len = (min) (__n1, size() - __pos);
     if (__n2 > max_size() || size() - __len >= max_size() - __n2)
       this->_M_throw_length_error();
     return replace(begin() + __pos, begin() + __pos + __len, __n2, __c);
@@ -1158,7 +1158,7 @@ public:                         // Other modifier member functions.
     _STLP_FIX_LITERAL_BUG(__s)
     if (__pos > size())
       this->_M_throw_out_of_range();
-    const size_type __len = (_STLP_STD_NAME::min) (__n, size() - __pos);
+    const size_type __len = (min) (__n, size() - __pos);
     _Traits::copy(__s, this->_M_Start() + __pos, __len);
     return __len;
   }
@@ -1268,7 +1268,7 @@ public:                         // Compare
     if (__pos1 > size())
       this->_M_throw_out_of_range();
     return _M_compare(this->_M_Start() + __pos1,
-                      this->_M_Start() + __pos1 + (_STLP_STD_NAME::min) (__n1, size() - __pos1),
+                      this->_M_Start() + __pos1 + (min) (__n1, size() - __pos1),
                       __s._M_Start(), __s._M_Finish());
   }
 
@@ -1278,9 +1278,9 @@ public:                         // Compare
     if (__pos1 > size() || __pos2 > __s.size())
       this->_M_throw_out_of_range();
     return _M_compare(this->_M_Start() + __pos1,
-                      this->_M_Start() + __pos1 + (_STLP_STD_NAME::min) (__n1, size() - __pos1),
+                      this->_M_Start() + __pos1 + (min) (__n1, size() - __pos1),
                       __s._M_Start() + __pos2,
-                      __s._M_Start() + __pos2 + (_STLP_STD_NAME::min) (__n2, __s.size() - __pos2));
+                      __s._M_Start() + __pos2 + (min) (__n2, __s.size() - __pos2));
   }
 
   int compare(const _CharT* __s) const {
@@ -1293,7 +1293,7 @@ public:                         // Compare
     if (__pos1 > size())
       this->_M_throw_out_of_range();
     return _M_compare(this->_M_Start() + __pos1,
-                      this->_M_Start() + __pos1 + (_STLP_STD_NAME::min) (__n1, size() - __pos1),
+                      this->_M_Start() + __pos1 + (min) (__n1, size() - __pos1),
                       __s, __s + _Traits::length(__s));
   }
 
@@ -1303,7 +1303,7 @@ public:                         // Compare
     if (__pos1 > size())
       this->_M_throw_out_of_range();
     return _M_compare(this->_M_Start() + __pos1,
-                      this->_M_Start() + __pos1 + (_STLP_STD_NAME::min) (__n1, size() - __pos1),
+                      this->_M_Start() + __pos1 + (min) (__n1, size() - __pos1),
                       __s, __s + __n2);
   }
 
@@ -1313,7 +1313,7 @@ public:                        // Helper functions for compare.
                                    const _CharT* __f2, const _CharT* __l2) {
     const ptrdiff_t __n1 = __l1 - __f1;
     const ptrdiff_t __n2 = __l2 - __f2;
-    const int cmp = _Traits::compare(__f1, __f2, (_STLP_STD_NAME::min) (__n1, __n2));
+    const int cmp = _Traits::compare(__f1, __f2, (min) (__n1, __n2));
     return cmp != 0 ? cmp : (__n1 < __n2 ? -1 : (__n1 > __n2 ? 1 : 0));
   }
 #if defined (_STLP_USE_TEMPLATE_EXPRESSION) && !defined (_STLP_DEBUG) && !defined (_STLP_USE_MSVC6_MEM_T_BUG_WORKAROUND)

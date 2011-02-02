@@ -139,9 +139,7 @@ underflow_error::~underflow_error() _STLP_NOTHROW_INHERENTLY {}
 
 #if !defined(_STLP_WCE_EVC3)
 #  if defined (_STLP_NO_BAD_ALLOC)
-#    ifndef ANDROID
 const nothrow_t nothrow /* = {} */;
-#    endif
 #  endif
 #endif
 

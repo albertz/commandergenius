@@ -547,7 +547,7 @@ _OutputIter random_sample_n(_ForwardIter __first, _ForwardIter __last,
                             _OutputIter __out_ite, const _Distance __n) {
   _STLP_DEBUG_CHECK(_STLP_PRIV __check_range(__first, __last))
   _Distance __remaining = distance(__first, __last);
-  _Distance __m = (_STLP_STD_NAME::min) (__n, __remaining);
+  _Distance __m = (min) (__n, __remaining);
 
   while (__m > 0) {
     if (_STLP_PRIV __random_number(__remaining) < __m) {
@@ -570,7 +570,7 @@ _OutputIter random_sample_n(_ForwardIter __first, _ForwardIter __last,
                             _RandomNumberGenerator& __rand) {
   _STLP_DEBUG_CHECK(_STLP_PRIV __check_range(__first, __last))
   _Distance __remaining = distance(__first, __last);
-  _Distance __m = (_STLP_STD_NAME::min) (__n, __remaining);
+  _Distance __m = (min) (__n, __remaining);
 
   while (__m > 0) {
     if (__rand(__remaining) < __m) {
@@ -1035,7 +1035,7 @@ void __merge_sort_loop(_RandomAccessIter1 __first,
                      __comp);
     __first += __two_step;
   }
-  __step_size = (_STLP_STD_NAME::min) (_Distance(__last - __first), __step_size);
+  __step_size = (min) (_Distance(__last - __first), __step_size);
 
   merge(__first, __first + __step_size,
         __first + __step_size, __last,

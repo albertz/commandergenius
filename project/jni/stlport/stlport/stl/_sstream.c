@@ -258,7 +258,7 @@ basic_stringbuf<_CharT, _Traits, _Alloc>::_M_xsputnc(char_type __c,
     }
 
     // At this point we know we're appending.
-    size_t __app_size = sizeof(streamsize) > sizeof(size_t) ? __STATIC_CAST(size_t, (_STLP_STD_NAME::min)(__n, __STATIC_CAST(streamsize, _M_str.max_size())))
+    size_t __app_size = sizeof(streamsize) > sizeof(size_t) ? __STATIC_CAST(size_t, (min)(__n, __STATIC_CAST(streamsize, _M_str.max_size())))
                                                             : __STATIC_CAST(size_t, __n);
     if (this->_M_mode & ios_base::in) {
       ptrdiff_t __get_offset = this->gptr() - this->eback();
@@ -308,7 +308,7 @@ basic_stringbuf<_CharT, _Traits, _Alloc>::setbuf(_CharT*, streamsize __n) {
     if ((_M_mode & ios_base::out) && !(_M_mode & ios_base::in))
       _M_append_buffer();
 
-    _M_str.reserve(sizeof(streamsize) > sizeof(size_t) ? __STATIC_CAST(size_t, (_STLP_STD_NAME::min)(__n, __STATIC_CAST(streamsize, _M_str.max_size())))
+    _M_str.reserve(sizeof(streamsize) > sizeof(size_t) ? __STATIC_CAST(size_t, (min)(__n, __STATIC_CAST(streamsize, _M_str.max_size())))
                                                        : __STATIC_CAST(size_t, __n));
 
     _CharT* __data_ptr = __CONST_CAST(_CharT*, _M_str.data());

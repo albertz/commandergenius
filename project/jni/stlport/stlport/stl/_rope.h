@@ -493,7 +493,7 @@ public:
   typedef typename _RopeRep::allocator_type allocator_type;
   _Rope_RopeConcatenation(_RopeRep* __l, _RopeRep* __r, allocator_type __a)
     : _Rope_RopeRep<_CharT,_Alloc>(_RopeRep::_S_concat,
-                                   (_STLP_STD_NAME::max)(__l->_M_depth, __r->_M_depth) + 1, false,
+                                   (max)(__l->_M_depth, __r->_M_depth) + 1, false,
                                    __l->_M_size._M_data + __r->_M_size._M_data, __a), _M_left(__l), _M_right(__r)
   {}
 # ifdef _STLP_NO_ARROW_OPERATOR
