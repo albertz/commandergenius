@@ -25,7 +25,7 @@ LOCAL_C_INCLUDES += $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) \
 					$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include \
 					$(foreach L, $(COMPILED_LIBRARIES), $(LOCAL_PATH)/../$(L)/include)
 
-LOCAL_CFLAGS += -D__sF=__SDL_fake_stdout
+LOCAL_CFLAGS += -D__sF=__SDL_fake_stdout -Dcout=__SDL_fake_cout -Dcerr=__SDL_fake_cerr -Dclog=__SDL_fake_clog
 
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
 
