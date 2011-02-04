@@ -1,0 +1,12 @@
+Build instructions
+
+unpack atari800-cfg-pelyaSDL.tar.gz into ~/commandergenius/project/jni/application
+Download latest atari800 source from http://atari800.cvs.sourceforge.net/atari800
+unpack atari800.tar.gz into ~/commandergenius/project/jni/application/atari800
+apply patch atari800-2.2.0rc2-cvs.diff
+
+cd ~/commandergenius/project/jni/application
+rm src
+ln -s atari800 src
+cd ~/commandergenius
+./build.sh
