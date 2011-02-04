@@ -4,7 +4,9 @@
 # export PATH=$PATH:~/src/endless_space/android-ndk-r5b
 NDKBUILDPATH=$PATH
 export `grep "AppFullName=" AndroidAppSettings.cfg`
-if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && [ "`readlink AndroidAppSettings.cfg`" -ot "project/src/Globals.java" ] ) ; then true ; else
+if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && \
+		[ "`readlink AndroidAppSettings.cfg`" -ot "project/src/Globals.java" ] && \
+		[ -z "`find project/java/* -cnewer project/src/Globals.java`" ] ) ; then true ; else
 	./ChangeAppSettings.sh -a
 	sleep 1
 	touch project/src/Globals.java
