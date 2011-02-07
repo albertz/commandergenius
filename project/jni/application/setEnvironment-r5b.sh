@@ -50,7 +50,7 @@ CFLAGS="\
 -fpic -ffunction-sections -funwind-tables -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  -Wno-psabi \
 -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -I$NDK/platforms/$PLATFORMVER/arch-arm/usr/include -Wa,--noexecstack \
--DANDROID -D__sF=__SDL_fake_stdout -Dcout=__SDL_fake_cout -Dcerr=__SDL_fake_cerr -Dclog=__SDL_fake_clog -Dprintf=__SDL_android_printf \
+-DANDROID -include SDL_android_printf.h \
 -DNDEBUG -O2 -g \
 -I$NDK/sources/cxx-stl/gnu-libstdc++/include \
 -I$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include \

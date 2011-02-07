@@ -48,7 +48,7 @@ CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -O2 \
 -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -Wa,--noexecstack -DNDEBUG -g \
--D__sF=__SDL_fake_stdout -Dcout=__SDL_fake_cout -Dcerr=__SDL_fake_cerr -Dclog=__SDL_fake_clog -Dprintf=__SDL_android_printf \
+-include SDL_android_printf.h \
 -I$LOCAL_PATH/../sdl-1.2/include $STL_INCLUDE \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"`"
 
