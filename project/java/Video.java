@@ -219,9 +219,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 
 	public int swapBuffers() // Called from native code
 	{
-		synchronized (this) {
-			this.notify();
-		}
+		this.notify();
 		if( ! super.SwapBuffers() && Globals.NonBlockingSwapBuffers )
 			return 0;
 		if(mGlContextLost) {
@@ -301,7 +299,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	{
 		touchInput.process(event);
 		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
-		synchronized (mRenderer) {
+		if( event.getAction() == MotionEvent.ACTION_MOVE ) {
 			try {
 				mRenderer.wait(300L);
 			} catch (InterruptedException e) { }

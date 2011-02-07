@@ -550,7 +550,9 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz,
 		jint MoveMouseWithJoystick, jint ClickMouseWithDpad,
 		jint MaxForce, jint MaxRadius,
 		jint MoveMouseWithJoystickSpeed, jint MoveMouseWithJoystickAccel,
-		jint LeftClickKeycode, jint RightClickKeycode)
+		jint LeftClickKeycode, jint RightClickKeycode,
+		jint LeftClickTimeout, jint RghtClickTimeout,
+		jint RelativeMovement, jint RelativeMovementSpeed, jint RelativeMovementAccel)
 {
 	isMouseUsed = 1;
 	rightClickMethod = RightClickMethod;

@@ -82,6 +82,15 @@
     <string name="leftclick_multitouch">Touch screen with second finger</string>
     <string name="leftclick_pressure">Touch screen with force</string>
     <string name="leftclick_dpadcenter">Trackball click / joystick center</string>
+    <string name="leftclick_timeout">Hold at the same spot</string>
+    <string name="leftclick_tap">Tap</string>
+    <string name="leftclick_tap_or_timeout">Tap or hold</string>
+    <string name="leftclick_timeout_time">Holding timeout</string>
+    <string name="leftclick_timeout_time_0">0.3 sec</string>
+    <string name="leftclick_timeout_time_1">0.5 sec</string>
+    <string name="leftclick_timeout_time_2">0.7 sec</string>
+    <string name="leftclick_timeout_time_3">1 sec</string>
+    <string name="leftclick_timeout_time_4">1.5 sec</string>
     <string name="click_with_dpadcenter">Left mouse click with trackball / joystick center</string>
 
     <string name="pointandclick_question">Advanced features</string>
@@ -91,6 +100,10 @@
     <string name="pointandclick_joystickmouse">Move mouse with joystick or trackball</string>
     <string name="pointandclick_joystickmousespeed">Move mouse with joystick speed</string>
     <string name="pointandclick_joystickmouseaccel">Move mouse with joystick acceleration</string>
+    <string name="pointandclick_relative">Relative mouse movement (laptop mode)</string>
+    <string name="pointandclick_relative_speed">Relative mouse movement speed</string>
+    <string name="pointandclick_relative_accel">Relative mouse movement acceleration</string>
+
     <string name="none">None</string>
 
     <string name="measurepressure">Calibrate touchscreen pressure</string>
