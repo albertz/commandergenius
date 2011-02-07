@@ -16,8 +16,8 @@ http://www.pocketmagic.net/?p=1332 - guide how to set up environment in Cygwin.
 How to compile demo application
 ===============================
 
-Go to "project" directory and launch command
-	android update project -p .
+Launch commands
+	android update project -p project
 	rm project/jni/application/src
 	ln -s ballfield project/jni/application/src
 Then go back, edit file build.sh if needed to add NDK dir to your PATH, then launch it.
