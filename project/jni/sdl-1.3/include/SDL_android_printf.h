@@ -32,16 +32,18 @@ extern int __SDL_android_printf(const char * fmt, ...) __attribute__((format(pri
 
 #define __sF __SDL_fake_stdout
 
-/* Generates lot of warning messages in standard headers, enable only for ultra debug mode */
-/*
-#define printf __SDL_android_printf
-*/
-
 #ifdef __cplusplus
 #define cout __SDL_fake_cout
 #define cerr __SDL_fake_cerr
 #define clog __SDL_fake_clog
 }
+
+/* Generates lot of warning messages in standard headers, enable only for ultra debug mode */
+/*
+#include <stdio.h>
+#define printf __SDL_android_printf
+*/
+
 #endif
 
 #endif

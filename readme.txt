@@ -259,6 +259,10 @@ then if it fails enter command
 You can also debug by adding extensive logs to your app:
 	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
 and then watching "adb logcat" output.
+You may wish to uncomment line
+#define printf __SDL_android_printf
+inside file project/jni/SDL-1.3/include/SDL_android_printf.h - this will make printf() to output to logcat,
+however it will trigger lot of warnings in system headers, so it's disabled by default.
 
 If your application crashed, you should use following steps:
 
