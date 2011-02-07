@@ -93,6 +93,7 @@ LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 
 # Enforce rebuilding
 $(shell rm -f $(LOCAL_PATH)/src/libapplication.so)
+$(shell mkdir -p $(LOCAL_PATH)/../../obj/local/armeabi)
 $(shell touch $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so)
 
 $(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg $(APP_LIB_DEPENDS)
