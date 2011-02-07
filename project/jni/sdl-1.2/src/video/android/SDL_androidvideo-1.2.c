@@ -92,8 +92,11 @@ WMcursor * ANDROID_CreateWMCursor(_THIS, Uint8 *data, Uint8 *mask, int w, int h,
 int ANDROID_ShowWMCursor(_THIS, WMcursor *cursor) {
     return 1;
 }
-void ANDROID_WarpWMCursor(_THIS, Uint16 x, Uint16 y) { }
-void ANDROID_MoveWMCursor(_THIS, int x, int y) { }
+void ANDROID_WarpWMCursor(_THIS, Uint16 x, Uint16 y)
+{
+	SDL_ANDROID_WarpMouse(x, y);
+}
+//void ANDROID_MoveWMCursor(_THIS, int x, int y) { }
 
 
 /* etc. */
@@ -185,7 +188,7 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->FreeWMCursor = ANDROID_FreeWMCursor;
 	device->CreateWMCursor = ANDROID_CreateWMCursor;
 	device->ShowWMCursor = ANDROID_ShowWMCursor;
-	//device->WarpWMCursor = ANDROID_WarpWMCursor;
+	device->WarpWMCursor = ANDROID_WarpWMCursor;
 	//device->MoveWMCursor = ANDROID_MoveWMCursor;
 
 	glLibraryHandle = dlopen("libGLESv1_CM.so", RTLD_NOW);

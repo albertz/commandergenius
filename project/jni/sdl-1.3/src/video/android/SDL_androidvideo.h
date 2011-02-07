@@ -54,6 +54,7 @@ extern int SDL_ANDROID_InsideVideoThread();
 extern SDL_VideoDevice *ANDROID_CreateDevice_1_3(int devindex);
 extern void SDL_ANDROID_ProcessDeferredEvents();
 extern void SDL_ANDROID_initFakeStdout();
+extern void SDL_ANDROID_WarpMouse(int x, int y);
 
 #if SDL_VERSION_ATLEAST(1,3,0)
 extern SDL_Window * ANDROID_CurrentWindow;

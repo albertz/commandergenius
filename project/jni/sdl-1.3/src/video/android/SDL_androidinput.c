@@ -103,13 +103,15 @@ int SDL_ANDROID_TouchscreenCalibrationX = 0;
 int SDL_ANDROID_TouchscreenCalibrationY = 0;
 int leftClickTimeout = 0;
 int rightClickTimeout = 0;
-int relativeMovement = 0;
-int relativeMovementSpeed = 0;
-int relativeMovementAccel = 0;
 int mouseInitialX = -1;
 int mouseInitialY = -1;
 unsigned int mouseInitialTime = 0;
 int deferredMouseTap = 0;
+int relativeMovement = 0;
+int relativeMovementSpeed = 0;
+int relativeMovementAccel = 0;
+int relativeMovementX = 0;
+int relativeMovementY = 0;
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
@@ -363,6 +365,24 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	{
 		int oldX, oldY;
 		SDL_GetMouseState( &oldX, &oldY );
+		if( relativeMovement )
+		{
+			if( action == MOUSE_DOWN )
+			{
+				relativeMovementX = oldX - x;
+				relativeMovementY = oldY - y;
+			}
+			x += relativeMovementX;
+			y += relativeMovementY;
+			if( x < 0 )
+				x = 0;
+			if( x > SDL_ANDROID_sFakeWindowWidth )
+				x = SDL_ANDROID_sFakeWindowWidth;
+			if( y < 0 )
+				y = 0;
+			if( y > SDL_ANDROID_sFakeWindowHeight )
+				y = SDL_ANDROID_sFakeWindowHeight;
+		}
 		if( action == MOUSE_UP )
 		{
 			if( mouseInitialX >= 0 && mouseInitialY >= 0 && (
@@ -540,6 +560,19 @@ void ProcessDeferredMouseTap()
 			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
 	}
 }
+
+void SDL_ANDROID_WarpMouse(int x, int y)
+{
+	if(!relativeMovement)
+	{
+		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
+	}
+	else
+	{
+		relativeMovementX = x;
+		relativeMovementY = y;
+	}
+};
 
 static int processAndroidTrackball(int key, int action);
 
