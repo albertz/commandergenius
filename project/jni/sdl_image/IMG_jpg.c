@@ -420,7 +420,13 @@ SDL_Surface *IMG_LoadJPG_RW(SDL_RWops *src)
 #endif
 	} else {
 		/* Set 24-bit RGB output */
+#ifdef ANDROID_RGB
+		const SDL_PixelFormat *fmt = SDL_GetVideoInfo()->vfmt;
+		cinfo.out_color_space = (fmt->BitsPerPixel==16) ? JCS_RGB_565 : JCS_RGB;
+#else
 		cinfo.out_color_space = JCS_RGB;
+#endif
+
 		cinfo.quantize_colors = FALSE;
 #ifdef FAST_JPEG
 		cinfo.scale_num   = 1;
@@ -431,6 +437,11 @@ SDL_Surface *IMG_LoadJPG_RW(SDL_RWops *src)
 		lib.jpeg_calc_output_dimensions(&cinfo);
 
 		/* Allocate an output surface to hold the image */
+#ifdef ANDROID_RGB
+		surface = SDL_AllocSurface(SDL_SWSURFACE, cinfo.output_width, cinfo.output_height,
+									(fmt->BitsPerPixel==16) ? 16 : 24,
+									fmt->Rmask, fmt->Gmask, fmt->Bmask, 0);
+#else
 		surface = SDL_AllocSurface(SDL_SWSURFACE,
 		        cinfo.output_width, cinfo.output_height, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
@@ -439,6 +450,7 @@ SDL_Surface *IMG_LoadJPG_RW(SDL_RWops *src)
 		                   0xFF0000, 0x00FF00, 0x0000FF,
 #endif
 		                   0);
+#endif
 	}
 
 	if ( surface == NULL ) {
