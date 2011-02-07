@@ -16,7 +16,6 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
-#include "test.h"
 #include "ballfield.h"
 
 
@@ -361,8 +360,6 @@ int main(int argc, char* argv[])
 	int		fps_start = 0;
 	float		x_speed, y_speed, z_speed;
 
-	__android_log_print(ANDROID_LOG_INFO, "==TEST==", "SDL_Main: test::initCount %d test::initCount2", test::initCount, test::initCount2);
-
 	SDL_Init(SDL_INIT_VIDEO);
 
 	atexit(SDL_Quit);
@@ -384,7 +381,7 @@ int main(int argc, char* argv[])
 			bpp = atoi(&argv[i][1]);
 	}
 
-	screen = SDL_SetVideoMode(SCREEN_W, SCREEN_H, bpp, flags);
+	screen = SDL_SetVideoMode(SCREEN_W, SCREEN_H, bpp, 0 /*flags*/);
 	if(!screen)
 	{
 		fprintf(stderr, "Failed to open screen!\n");
@@ -493,6 +490,28 @@ int main(int argc, char* argv[])
 		}
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
 		++fps_count;
+
+		int mouseX, mouseY;
+		int mouseB = SDL_GetMouseState(&mouseX, &mouseY);
+		r.x = mouseX;
+		r.y = mouseY;
+		r.w = 10;
+		r.h = 1;
+		SDL_FillRect(screen, &r, 0xeeeeeeee);
+
+		if( mouseB & SDL_BUTTON_LMASK )
+		{
+			r.w = 20;
+			r.h = 5;
+			SDL_FillRect(screen, &r, 0xabcdaabb);
+		}
+
+		if( mouseB & SDL_BUTTON_RMASK )
+		{
+			r.w = 5;
+			r.h = 20;
+			SDL_FillRect(screen, &r, 0x67895566);
+		}
 
 		SDL_Flip(screen);
 

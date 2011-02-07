@@ -219,7 +219,9 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 
 	public int swapBuffers() // Called from native code
 	{
-		this.notify();
+		synchronized(this) {
+			this.notify();
+		}
 		if( ! super.SwapBuffers() && Globals.NonBlockingSwapBuffers )
 			return 0;
 		if(mGlContextLost) {
@@ -227,19 +229,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 			Settings.SetupTouchscreenKeyboardGraphics(context); // Reload on-screen buttons graphics
 		}
 		
-		/*
-		// Pass just one char per frame, many SDL games cannot handle multiple events in a single frame
-		synchronized(context.textInput) {
-			if( context.textInput.size() >= 2 )
-			{
-				if( context.textInput.getFirst() != 0 )
-					nativeTextInput( context.textInput.getFirst(), context.textInput.get(1) );
-				context.textInput.removeFirst();
-				context.textInput.removeFirst();
-			}
-		}
-		*/
-
 		return 1;
 	}
 
@@ -256,7 +245,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 		Callback cb = new Callback();
 		cb.parent = context;
 		context.runOnUiThread(cb);
-		//context.showScreenKeyboard();
 	}
 
 	public void exitApp() {
@@ -300,9 +288,11 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		touchInput.process(event);
 		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
 		if( event.getAction() == MotionEvent.ACTION_MOVE ) {
-			try {
-				mRenderer.wait(300L);
-			} catch (InterruptedException e) { }
+			synchronized(mRenderer) {
+				try {
+					mRenderer.wait(300L);
+				} catch (InterruptedException e) { }
+			}
 		}
 		return true;
 	};

@@ -118,7 +118,7 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 		showScreenKeyboardDeferred = 0;
 		(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard );
 	}
-	SDL_ANDROID_DeferredTextInput();
+	SDL_ANDROID_ProcessDeferredEvents();
 	return 1;
 }
 

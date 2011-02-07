@@ -1208,6 +1208,36 @@ class Settings
 		alert.show();
 	}
 
+	static void showRelativeMouseMovementConfig(final MainActivity p)
+	{
+		final CharSequence[] items = {	p.getResources().getString(R.string.accel_fast),
+										p.getResources().getString(R.string.accel_medium),
+										p.getResources().getString(R.string.accel_slow) };
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(R.string.pointandclick_relative_speed);
+		builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementSpeed, new DialogInterface.OnClickListener()
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				Globals.RelativeMouseMovementSpeed = item;
+
+				dialog.dismiss();
+				showRelativeMouseMovementConfig1(p);
+			}
+		});
+		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+		{
+			public void onCancel(DialogInterface dialog)
+			{
+				showConfigMainMenu(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
 	static void showRelativeMouseMovementConfig1(final MainActivity p)
 	{
 		final CharSequence[] items = {	p.getResources().getString(R.string.accel_fast),
@@ -1997,7 +2027,7 @@ class Settings
 								Globals.RightClickKey,
 								Globals.LeftClickTimeout,
 								Globals.RightClickTimeout,
-								Globals.RelativeMouseMovement,
+								Globals.RelativeMouseMovement ? 1 : 0,
 								Globals.RelativeMouseMovementSpeed,
 								Globals.RelativeMouseMovementAccel );
 		if( Globals.AppUsesJoystick && (Globals.UseAccelerometerAsArrowKeys || Globals.UseTouchscreenKeyboard) )
