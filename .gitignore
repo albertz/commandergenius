@@ -9,3 +9,4 @@ project/res/values*
 project/AndroidManifest.xml
 project/jni/Settings.mk
 libapplication.so
+project/proguard.cfg

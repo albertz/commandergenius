@@ -25,7 +25,7 @@ LOCAL_C_INCLUDES += $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) \
 					$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include \
 					$(foreach L, $(COMPILED_LIBRARIES), $(LOCAL_PATH)/../$(L)/include)
 
-LOCAL_CFLAGS += -D__sF=__SDL_fake_stdout -Dcout=__SDL_fake_cout -Dcerr=__SDL_fake_cerr -Dclog=__SDL_fake_clog
+LOCAL_CFLAGS += -D__sF=__SDL_fake_stdout -Dcout=__SDL_fake_cout -Dcerr=__SDL_fake_cerr -Dclog=__SDL_fake_clog -Dprintf=__SDL_android_printf
 
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
 
@@ -51,28 +51,30 @@ LOCAL_LDFLAGS := -Lobj/local/armeabi
 
 LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
 
-LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
-	for f in $(LOCAL_PATH)/../../obj/local/armeabi/*.so ; do \
-		if echo $$f | grep "libapplication[.]so" > /dev/null ; then \
-			continue ; \
-		fi ; \
-		if [ -e "$$f" ] ; then \
-			if nm -g $$f | cut -c 12- | egrep '.{128}' > /dev/null ; then \
-				echo $$f | grep -o 'lib[^/]*[.]so' ; \
-			fi ; \
-		fi ; \
-	done \
-) )
+# Disabled for now 'till I not confirmed it
 
-ifneq "$(LIBS_WITH_LONG_SYMBOLS)" ""
-$(foreach F, $(LIBS_WITH_LONG_SYMBOLS), \
-$(info Library $(F): abusing symbol names are: \
-$(shell nm -g $(LOCAL_PATH)/../../obj/local/armeabi/$(F) | cut -c 12- | egrep '.{128}' ) ) \
-$(info Library $(F) contains symbol names longer than 128 bytes, \
-YOUR CODE WILL DEADLOCK WITHOUT ANY WARNING when you'll access such function - \
-please make this library static to avoid problems. ) )
-$(error Detected libraries with too long symbol names. Remove all files under project/obj/local/armeabi, make these libs static, and recompile)
-endif
+#LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
+#	for f in $(LOCAL_PATH)/../../obj/local/armeabi/*.so ; do \
+#		if echo $$f | grep "libapplication[.]so" > /dev/null ; then \
+#			continue ; \
+#		fi ; \
+#		if [ -e "$$f" ] ; then \
+#			if nm -g $$f | cut -c 12- | egrep '.{128}' > /dev/null ; then \
+#				echo $$f | grep -o 'lib[^/]*[.]so' ; \
+#			fi ; \
+#		fi ; \
+#	done \
+#) )
+
+#ifneq "$(LIBS_WITH_LONG_SYMBOLS)" ""
+#$(foreach F, $(LIBS_WITH_LONG_SYMBOLS), \
+#$(info Library $(F): abusing symbol names are: \
+#$(shell nm -g $(LOCAL_PATH)/../../obj/local/armeabi/$(F) | cut -c 12- | egrep '.{128}' ) ) \
+#$(info Library $(F) contains symbol names longer than 128 bytes, \
+#YOUR CODE WILL DEADLOCK WITHOUT ANY WARNING when you'll access such function - \
+#please make this library static to avoid problems. ) )
+#$(error Detected libraries with too long symbol names. Remove all files under project/obj/local/armeabi, make these libs static, and recompile)
+#endif
 
 APP_LIB_DEPENDS := $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).so)) 
 APP_LIB_DEPENDS += $(foreach LIB, $(LOCAL_STATIC_LIBRARIES), $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).a))
