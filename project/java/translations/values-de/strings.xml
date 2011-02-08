@@ -111,4 +111,17 @@
 <string name="pointandclick_showcreenunderfinger2">On-Screen-Lupe</string>
 <string name="video">Video-Einstellungen</string>
 <string name="video_smooth">Glatte Video</string>
+<string name="accel_veryslow">Sehr langsam</string>
+<string name="leftclick_timeout">Halten Sie an der gleichen Stelle</string>
+<string name="leftclick_tap">Tippen Sie auf</string>
+<string name="leftclick_tap_or_timeout">Tippen Sie auf oder halten</string>
+<string name="leftclick_timeout_time">Holding-Timeout</string>
+<string name="leftclick_timeout_time_0">0,3 Sek.</string>
+<string name="leftclick_timeout_time_1">0,5 Sek.</string>
+<string name="leftclick_timeout_time_2">0,7 Sek.</string>
+<string name="leftclick_timeout_time_3">1 Sek.</string>
+<string name="leftclick_timeout_time_4">1,5 Sek.</string>
+<string name="pointandclick_relative">Relative Bewegung der Maus (Laptop-Modus)</string>
+<string name="pointandclick_relative_speed">Relative Maus Bewegungsgeschwindigkeit</string>
+<string name="pointandclick_relative_accel">Relative Bewegung der Maus Beschleunigung</string>
 </resources>

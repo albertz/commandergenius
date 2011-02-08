@@ -104,4 +104,17 @@
 <string name="pointandclick_showcreenunderfinger2">Наэкранная лупа</string>
 <string name="video">Настройки видео</string>
 <string name="video_smooth">Сгладить видео</string>
+<string name="accel_veryslow">Очень медленно</string>
+<string name="leftclick_timeout">Нажатие с задержкой</string>
+<string name="leftclick_tap">Быстрое нажатие</string>
+<string name="leftclick_tap_or_timeout">Быстрое нажатие либо с задержкой</string>
+<string name="leftclick_timeout_time">Время нажатия</string>
+<string name="leftclick_timeout_time_0">0,3 сек</string>
+<string name="leftclick_timeout_time_1">0,5 сек</string>
+<string name="leftclick_timeout_time_2">0,7 сек</string>
+<string name="leftclick_timeout_time_3">1 сек</string>
+<string name="leftclick_timeout_time_4">1,5 сек</string>
+<string name="pointandclick_relative">Относительное движение мыши (режим ноутбука)</string>
+<string name="pointandclick_relative_speed">Скорость движения мыши</string>
+<string name="pointandclick_relative_accel">Ускорение движения мыши</string>
 </resources>

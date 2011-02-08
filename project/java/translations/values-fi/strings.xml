@@ -111,4 +111,17 @@
 <string name="pointandclick_showcreenunderfinger2">Näytöllä suurennuslasi</string>
 <string name="video">Videon asetukset</string>
 <string name="video_smooth">Tasainen video</string>
+<string name="accel_veryslow">Erittäin hidas</string>
+<string name="leftclick_timeout">Pidä samalla paikalla</string>
+<string name="leftclick_tap">Hana</string>
+<string name="leftclick_tap_or_timeout">Napauta tai pidä</string>
+<string name="leftclick_timeout_time">Holding aikakatkaisu</string>
+<string name="leftclick_timeout_time_0">0,3 sekuntia</string>
+<string name="leftclick_timeout_time_1">0,5 sekuntia</string>
+<string name="leftclick_timeout_time_2">0,7 sekuntia</string>
+<string name="leftclick_timeout_time_3">1 sek</string>
+<string name="leftclick_timeout_time_4">1,5 sek</string>
+<string name="pointandclick_relative">Suhteellinen hiiren liikkeet (kannettavan tietokoneen tilassa)</string>
+<string name="pointandclick_relative_speed">Suhteellinen hiiren liikkeen nopeus</string>
+<string name="pointandclick_relative_accel">Suhteellinen hiiren liikkeen kiihtyvyys</string>
 </resources>
