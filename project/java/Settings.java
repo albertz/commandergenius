@@ -1257,7 +1257,7 @@ class Settings
 				Globals.RelativeMouseMovementAccel = item;
 
 				dialog.dismiss();
-				showConfigMainMenu(p);
+				showMouseConfigMainMenu(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
