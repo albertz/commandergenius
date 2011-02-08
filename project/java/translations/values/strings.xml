@@ -61,6 +61,7 @@
     <string name="accel_fast">Fast</string>
     <string name="accel_medium">Medium</string>
     <string name="accel_slow">Slow</string>
+    <string name="accel_veryslow">Very slow</string>
     <string name="accel_question">Accelerometer sensitivity</string>
 
     <string name="accel_floating">Floating</string>

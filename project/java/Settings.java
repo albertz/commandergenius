@@ -414,7 +414,8 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				Save(p);
+				p.startDownloader();
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1210,9 +1211,11 @@ class Settings
 
 	static void showRelativeMouseMovementConfig(final MainActivity p)
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.accel_fast),
+		final CharSequence[] items = {	p.getResources().getString(R.string.accel_veryslow),
+										p.getResources().getString(R.string.accel_slow),
 										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_slow) };
+										p.getResources().getString(R.string.accel_fast),
+										p.getResources().getString(R.string.accel_veryfast) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.pointandclick_relative_speed);
@@ -1240,9 +1243,10 @@ class Settings
 
 	static void showRelativeMouseMovementConfig1(final MainActivity p)
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.accel_fast),
+		final CharSequence[] items = {	p.getResources().getString(R.string.none),
+										p.getResources().getString(R.string.accel_slow),
 										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_slow) };
+										p.getResources().getString(R.string.accel_fast) };
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(R.string.pointandclick_relative_accel);
