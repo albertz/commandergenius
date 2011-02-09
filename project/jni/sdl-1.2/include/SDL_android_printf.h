@@ -1,1 +1,0 @@
-../../sdl-1.3/include/SDL_android_printf.h

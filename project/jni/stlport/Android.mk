@@ -9,7 +9,7 @@ LOCAL_CPP_EXTENSION := .cpp
 LOCAL_SRC_FILES := dummy.c
 else
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/stlport $(LOCAL_PATH)/src 
-LOCAL_CFLAGS := -O3 -DANDROID_NO_COUT=1 -frtti -fexceptions
+LOCAL_CFLAGS := -O3 -DANDROID_NO_COUT=1
 
 LOCAL_CPP_EXTENSION := .cpp
 LOCAL_SRC_FILES := $(addprefix src/,$(notdir $(wildcard $(LOCAL_PATH)/src/*.cpp $(LOCAL_PATH)/src/*.c)))

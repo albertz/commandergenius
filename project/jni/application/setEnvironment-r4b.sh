@@ -48,7 +48,7 @@ CFLAGS="-I$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/include \
 -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -O2 \
 -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -Wa,--noexecstack -DNDEBUG -g \
--include SDL_android_printf.h \
+-include $LOCAL_PATH/../sdl_fake_stdout/include/SDL_android_printf.h \
 -I$LOCAL_PATH/../sdl-1.2/include $STL_INCLUDE \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"`"
 
@@ -62,7 +62,7 @@ $NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
 -L$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib \
 -lGLESv1_CM -ldl -llog -lz \
 -Wl,-rpath-link=$NDK/build/platforms/$PLATFORMVER/arch-arm/usr/lib \
--L$LOCAL_PATH/../../obj/local/armeabi $STL_LIB"
+-L$LOCAL_PATH/../../obj/local/armeabi $STL_LIB -lsdl_fake_stdout -Wl,-u,_SDL_ANDROID_initFakeStdout"
 
 env PATH=$NDK/build/prebuilt/$MYARCH/arm-eabi-$GCCVER/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \

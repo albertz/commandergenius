@@ -24,6 +24,7 @@
 #define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
+extern C_LINKAGE void SDL_ANDROID_initFakeStdout(void);
 
 extern C_LINKAGE void
 JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring jcurdir, jstring cmdline )
@@ -86,7 +87,9 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 
 	for( i = 0; i < argc; i++ )
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "param %d = \"%s\"", i, argv[i]);
-	
+
+	SDL_ANDROID_initFakeStdout();
+
 	main( argc, argv );
 
 };

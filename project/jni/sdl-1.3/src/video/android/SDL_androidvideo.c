@@ -229,7 +229,6 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaShowScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboard", "()V");
 	
 	ANDROID_InitOSKeymap();
-	SDL_ANDROID_initFakeStdout();
 }
 
 int SDL_ANDROID_SetApplicationPutToBackgroundCallback(
