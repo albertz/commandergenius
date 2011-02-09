@@ -5,6 +5,8 @@ LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 ln -sf libsdl-1.2.so $LOCAL_PATH/../../../obj/local/armeabi/libSDL.so
+ln -sf libsdl_net.so $LOCAL_PATH/../../../obj/local/armeabi/libSDL_net.so
+ln -sf libsdl_sound.so $LOCAL_PATH/../../../obj/local/armeabi/libSDL_sound.so
 
 if [ \! -f dosbox-0.74/configure ] ; then
 	sh -c "cd dosbox-0.74 && ./autogen.sh"
