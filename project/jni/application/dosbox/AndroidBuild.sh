@@ -13,7 +13,7 @@ if [ \! -f dosbox-0.74/configure ] ; then
 fi
 
 if [ \! -f dosbox-0.74/Makefile ] ; then
-	../setEnvironment.sh sh -c "cd dosbox-0.74 && ./configure --build=x86_64-unknown-linux-gnu --host=arm-linux-androideabi"
+	../setEnvironment.sh sh -c "cd dosbox-0.74 && ./configure --build=x86_64-unknown-linux-gnu --host=arm-eabi"
 fi
 
 ../setEnvironment.sh sh -c "cd dosbox-0.74 && make -j1 VERBOSE=1 STRIP='' LIBS='-lsdl-1.2 -lpng -lgcc -lz -lc -lstdc++'" && cp -f dosbox-0.74/src/dosbox libapplication.so
