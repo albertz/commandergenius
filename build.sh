@@ -24,8 +24,8 @@ if uname -s | grep -i "windows" > /dev/null ; then
 fi
 
 cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build -j4 V=1 && \
- { [ -z "`which ndk-build | grep /android-ndk-r5b/`" ] || \
-   grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
+ { grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
+   [ -`which ndk-build | grep /android-ndk-r5b/` != - ] && \
    rm obj/local/armeabi/libapplication.so && \
    cp jni/application/src/libapplication.so obj/local/armeabi && \
    cp jni/application/src/libapplication.so libs/armeabi && \
