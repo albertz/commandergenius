@@ -1,6 +1,10 @@
 Known bugs
 ==========
 
+- With 4:3 screen aspect ratio the on-screen buttons are not shown on the inactive part of screen.
+
+- Calling SDL_SetVideoMode() with SDL 1.3 several times makes it crash.
+
 - Split Settings.java into several files
 
 - There's no double-buffered SW mode, only single-buffered.
