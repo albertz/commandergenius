@@ -3,6 +3,7 @@ package net.sourceforge.clonekeenplus;
 
 import java.lang.String;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.lang.reflect.Field;
 
 
@@ -495,6 +496,10 @@ class SDL_Keys
 {
 	public static String [] names = null;
 	public static Integer [] values = null;
+
+	public static String [] namesSorted = null;
+	public static Integer [] namesSortedIdx = null;
+	public static Integer [] namesSortedBackIdx = null;
 	
 	static final int JAVA_KEYCODE_LAST = 110; // Android 2.3 added several new gaming keys, it ends up at keycode 110 currently - plz keep in sync with javakeycodes.h
 
@@ -535,5 +540,21 @@ class SDL_Keys
 		
 		names = Names.toArray(new String[0]);
 		values = Values.toArray(new Integer[0]);
+		namesSorted = Names.toArray(new String[0]);
+		namesSortedIdx = new Integer[values.length];
+		namesSortedBackIdx = new Integer[values.length];
+		Arrays.sort(namesSorted);
+		for( int i = 0; i < namesSorted.length; i++ )
+		{
+			for( int j = 0; j < namesSorted.length; j++ )
+			{
+				if( namesSorted[i].equals( names[j] ) )
+				{
+					namesSortedIdx[i] = j;
+					namesSortedBackIdx[j] = i;
+					break;
+				}
+			}
+		}
 	}
 }

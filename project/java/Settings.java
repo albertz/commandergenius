@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
+import java.util.Collections;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -1518,11 +1519,11 @@ class Settings
 			final int KeyIndexFinal = keyIndex;
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(R.string.remap_hwkeys_select);
-			builder.setSingleChoiceItems(SDL_Keys.names, Globals.RemapHwKeycode[keyIndex], new DialogInterface.OnClickListener()
+			builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapHwKeycode[keyIndex]], new DialogInterface.OnClickListener()
 			{
 				public void onClick(DialogInterface dialog, int item)
 				{
-					Globals.RemapHwKeycode[KeyIndexFinal] = item;
+					Globals.RemapHwKeycode[KeyIndexFinal] = SDL_Keys.namesSortedIdx[item];
 
 					dialog.dismiss();
 					showConfigMainMenu(p);
@@ -1620,11 +1621,11 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(items[currentButton]);
-		builder.setSingleChoiceItems(SDL_Keys.names, Globals.RemapScreenKbKeycode[currentButton], new DialogInterface.OnClickListener()
+		builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapScreenKbKeycode[currentButton]], new DialogInterface.OnClickListener()
 		{
 			public void onClick(DialogInterface dialog, int item)
 			{
-				Globals.RemapScreenKbKeycode[currentButton] = item;
+				Globals.RemapScreenKbKeycode[currentButton] = SDL_Keys.namesSortedIdx[item];
 
 				dialog.dismiss();
 				showRemapScreenKbConfig2(p, currentButton + 1);
@@ -1742,11 +1743,11 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(items[currentButton]);
-		builder.setSingleChoiceItems(SDL_Keys.names, Globals.RemapMultitouchGestureKeycode[currentButton], new DialogInterface.OnClickListener()
+		builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapMultitouchGestureKeycode[currentButton]], new DialogInterface.OnClickListener()
 		{
 			public void onClick(DialogInterface dialog, int item)
 			{
-				Globals.RemapMultitouchGestureKeycode[currentButton] = item;
+				Globals.RemapMultitouchGestureKeycode[currentButton] = SDL_Keys.namesSortedIdx[item];
 
 				dialog.dismiss();
 				showScreenGesturesConfig3(p, currentButton + 1);

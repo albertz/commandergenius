@@ -564,6 +564,7 @@ rm -rf project/$OUT/local/*/libsdl-*.so
 rm -rf project/$OUT/local/*/objs/sdl-*/src/*/android
 rm -rf project/$OUT/local/*/objs/sdl-*/src/video/SDL_video.o
 rm -rf project/$OUT/local/*/objs/sdl-*/SDL_renderer_gles.o
+rm -rf project/$OUT/local/*/libsdl_fake_stdout.a project/$OUT/local/*/objs/sdl_fake_stdout/*
 # Do not rebuild several huge libraries that do not depend on SDL version
 for LIB in freetype intl jpeg png lua mad stlport tremor xerces xml2; do
 	for ARCH in armeabi armeabi-v7a; do
