@@ -107,6 +107,8 @@ oldGlState;
 static inline void beginDrawingTex()
 {
 	// Save OpenGL state
+	// TODO: this code does not work on 1.6 emulator, and on some devices
+	/*
 	oldGlState.texture2d = glIsEnabled(GL_TEXTURE_2D);
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldGlState.textureId);
 	glGetFloatv(GL_CURRENT_COLOR, &(oldGlState.color[0]));
@@ -117,12 +119,14 @@ static inline void beginDrawingTex()
 	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &oldGlState.texFilter1);
 	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &oldGlState.texFilter2);
 	// It's very unlikely that some app will use GL_TEXTURE_CROP_RECT_OES, so just skip it
+	*/
 
 	glEnable(GL_TEXTURE_2D);
 }
 
 static inline void endDrawingTex()
 {
+	/*
 	// Restore OpenGL state
 	if( oldGlState.texture2d == GL_FALSE)
 		glDisable(GL_TEXTURE_2D);
@@ -134,6 +138,7 @@ static inline void endDrawingTex()
 	glBlendFunc(oldGlState.blend1, oldGlState.blend2);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, oldGlState.texFilter1);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, oldGlState.texFilter2);
+	*/
 }
 
 static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
@@ -669,7 +674,7 @@ static int setupScreenKeyboardButton( int buttonID, Uint8 * charBuf )
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_w, texture_h, 0, GL_RGBA,
 					format ? GL_UNSIGNED_SHORT_4_4_4_4 : GL_UNSIGNED_SHORT_5_5_5_1, NULL);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA,
 						format ? GL_UNSIGNED_SHORT_4_4_4_4 : GL_UNSIGNED_SHORT_5_5_5_1,

@@ -1,6 +1,6 @@
 // Touchscreen theme to be included directly into the code witohut Java resources, not used yet
 unsigned char * UltimateDroidTheme[] = { 00 // Dummy byte, skip it
-,1f,8b,08,00,4a,03,13,4d,02,03,ed,9d,4b,9a,e4,28
+,1f,8b,08,00,e0,c3,53,4d,02,03,ed,9d,4b,9a,e4,28
 ,92,80,05,02,3d,fc,99,95,99,5d,b3,98,d9,e6,4c,9d
 ,61,76,be,f5,a8,3e,41,54,64,6d,7a,5f,67,f0,a3,f9
 ,8d,fa,04,95,2d,01,92,00,01,c2,40,1e,81,3c,71,fb
@@ -453,7 +453,7 @@ unsigned char * UltimateDroidTheme[] = { 00 // Dummy byte, skip it
 ,ff,1f,38,f1,e0,af,04,f2,01,00
 };
 unsigned char * SimpleTheme[] = { 00 // Dummy byte, skip it
-,1f,8b,08,00,4b,03,13,4d,02,03,ec,9d,4f,6c,db,46
+,1f,8b,08,00,e0,c3,53,4d,02,03,ec,9d,4f,6c,db,46
 ,be,c7,29,f9,5f,8e,e6,76,13,fb,68,73,93,5a,c7,75
 ,d4,be,f8,1a,3f,36,75,6e,7d,0e,d8,5a,7b,0a,6a,9b
 ,b5,72,da,d4,6e,19,f7,d8,aa,59,ca,a7,a6,5d,35,a5
