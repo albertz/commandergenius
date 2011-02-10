@@ -1,0 +1,1 @@
+../../../../sdl-1.3/src/video/android/SDL_fake_stdout.c

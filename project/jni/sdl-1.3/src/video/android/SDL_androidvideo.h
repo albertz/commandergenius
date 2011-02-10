@@ -51,6 +51,7 @@ extern void SDL_ANDROID_VideoContextRecreated();
 extern void SDL_ANDROID_processAndroidTrackballDampening();
 extern void SDL_ANDROID_processMoveMouseWithKeyboard();
 extern int SDL_ANDROID_InsideVideoThread();
+extern void SDL_ANDROID_initFakeStdout();
 extern SDL_VideoDevice *ANDROID_CreateDevice_1_3(int devindex);
 extern void SDL_ANDROID_ProcessDeferredEvents();
 extern void SDL_ANDROID_WarpMouse(int x, int y);
