@@ -3,11 +3,14 @@ This is libSDL 1.2 and 1.3 ported to Google Android (also bunch of other libs in
 Installation
 ============
 
-This should be compiled with Android 2.2 SDK and NDK r4b/r5b (r5b preferred, but it fails with Cygwin) -
-google for them and install them as described in their docs
-(the application will run on Android 1.6 and above).
+This should be compiled with Android 2.2 SDK (API level 8) and NDK r4b,
+google for them and install them as described in their docs.
+The application will run on Android OS 1.6 and above, don't mind the 2.2 dependency.
+If you need support for C++ RTTI and exceptions you may use CrystaX NDK based on r4b:
+http://www.crystax.net/android/ndk-r4.php
+NDK r5b WILL CRASH on Android OS lower than 2.2, however SDL build system supports it.
 You'll need to install Java Ant too.
-The most supported environnment for that port is Linux, MacOs should be okay too, 
+The most supported environment for this port is Linux, MacOs should be okay too.
 If you're developing under Windows you'd better install andLinux or Ubuntu+Wubi, to get proper Linux environment
 running inside Windows, then install Linux toolchain on it. I was told andLinux compiles faster than Cygwin.
 Also you'll need full set of Linux utils and symlinks support to launch ChangeAppSettings.sh (sh, grep, sed, tr).
@@ -17,16 +20,18 @@ How to compile demo application
 ===============================
 
 Launch commands
-	android update project -p project
 	rm project/jni/application/src
 	ln -s ballfield project/jni/application/src
-Then go back, edit file build.sh if needed to add NDK dir to your PATH, then launch it.
+	ChangeAppSettings.sh -a
+	android update project -p project
+Then edit file build.sh if needed to add NDK dir to your PATH, then launch it.
 It will compile a bunch of libs under project/libs/armeabi,
 create file project/bin/DemoActivity-debug.apk and install it on your device or emulator.
 Then you can test it by launching Ballfield icon from Android applications menu.
 It's designed for 320x240, so if you have smaller screen it will be resized.
-Note: The game enforces horizontal screen orientation, you may open your keyboard and use it for
-additional keys - the phone will just keep current screen orientation.
+
+The game enforces horizontal screen orientation, you may slide-open your keyboard if you have it
+and use it for additional keys - the device will just keep current screen orientation.
 Recent Android phone models like HTC Evo have no keyboard at all, on-screen keyboard built into libSDL
 is available for such devices - it has joystick (which can be configured as arrow buttons or analog joystick),
 and 6 configurable keys, full text input is toggled with 7-th key. Both user and application may redefine
@@ -42,7 +47,7 @@ How to compile your own application
 
 You may find quick Android game porting manual at http://anddev.at.ua/src/porting_manual.txt
 
-If you're porting existing app which uses SDL 1.2 please always use SW mode: 
+If you're porting existing app which uses SDL 1.2 please always use SW mode:
 neither SDL_SetVideoMode() call nor SDL_CreateRGBSurface() etc functions shall contain SDL_HWSURFACE flags.
 The BPP in SDL_SetVideoMode() shall be set to 16, and audio format - to AUDIO_S8 or AUDIO_S16.
 
@@ -65,23 +70,21 @@ then
 
 Also your main() function name should be redefined to SDL_main(), if you'll include SDL.h it will do it automatically.
 
-Then launch script ChangeAppSettings.sh - it will ask few questions and modify some Java code.
+Then launch script ChangeAppSettings.sh - it will ask few questions and copy some Java files - 
+there's no way around it, because Java does not support preprocessor.
 You may take AndroidAppSettings.cfg file from some other application to get some sane defaults,
 you may launch ChangeAppSettings.sh with -a or -v parameter to skip questions altogether or to ask only version code.
 The C++ files shall have .cpp extension to be compiled, rename them if necessary.
 Also you can replace icon image at project/res/drawable/icon.png and image project/res/drawable/publisherlogo.png.
 Then you can launch build.sh.
 
-The NDK r4b has RTTI and exceptions disabled for C++ code, if you need them you may download modified NDK from
-http://www.crystax.net/android/ndk-r4.php - note however that you cannot throw exceptions across shared library boundary.
-The NDK r5b already has support for RTTI and exceptions, so you should use CrystaX NDK only if NDK r5b fails for you.
-STL imlpementations from NDK r5b and from CrystaX NDK will crash on x5a/x6d tablet, and possibly on Smartq V7,
-when you try to output anything to std::cout or std::cerr, the STLPort included in this port will not crash.
-
 Application data may be bundled with app itself, or downloaded from net on first run.
 Create .ZIP file with your application data, and put it on HTTP server, or to "project/jni/application/src/AndroidData" dir -
 ChangeAppSettings.sh will ask you for the URL, if URL won't contain "http://" it will try to unzip file from AndroidData dir.
 Note that there is limit on maximum .APK file size on Market, like 50 Mb or so, so big files should be downloaded by HTTP.
+Also many older devices cannot extract files bigger than 1 Mb from .apk container, so it's strongly advised to split
+all your data to several small zipfiles if you're putting it inside .apk.
+Also you may specify additional downloads through ChangeAppSettings.sh, such as hi-res texture pack etc.
 If you'll release new version of data files you should change download URL or data file name and update your app as well -
 the app will re-download the data if URL does not match the saved URL from previous download.
 
@@ -90,7 +93,7 @@ screen resizing in ChangeAppSettings.sh and draw to virtual 640x480 screen -
 it will be HW accelerated and will not impact performance much.
 SDL_ListModes()[0] will always return native screen resolution.
 Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
-texture on HTC G1. Software surfaces may be of any size of course (but you don't want to do expensive memcpy).
+texture on HTC G1, and many other low-end devices. Software surfaces may be of any size of course.
 
 If you want HW acceleration there are some limitations:
 You cannot blit SW surface to screen, it should be only HW surface.
@@ -99,7 +102,7 @@ If you're using SDL 1.3 always use SDL_Texture, if you'll be using SDL_Surface w
 Also the screen is always double-buffered, and after each SDL_Flip() there is garbage in pixel buffer,
 so forget about dirty rects and partial screen updates - you have to re-render whole picture each frame.
 Single-buffer rendering might be possible with techniques like glFramebufferTexture2D(),
-however it may not be present on all devices, so I won't do that.
+however it is not present on all devices, so I won't do that.
 Basically your code should be like this for SDL 1.2:
 
 // ----- HW-accelerated video output for Android example
@@ -128,6 +131,9 @@ else
 // Blit it in HW-accelerated way
 SDL_BlitSurface(hwSprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
 
+// Render the resulting video frame to device screen
+SDL_Flip(SDL_GetVideoSurface());
+
 // Supported, but VERY slow (slower than blitting in SW mode)
 SDL_BlitSurface(sprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
 
@@ -138,6 +144,7 @@ SDL_BlitSurface(SDL_GetVideoSurface(), sourceRect, sprite, &targetRect);
 
 If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
 add libname to project/jni/<yourapp>/Android.mk
+Also you'll need to move all include files to <libname>/include dir.
 If lib contains "configure" script - go to lib dir and execute command "../launchConfigureLib.sh" - it will
 launch "configure" with appropriate environment and will create the "config.h" file at least, though linking
 will most probably fail because of ranlib - just edit Android.mk to compile lib sources and remove all tools and tests.
@@ -250,7 +257,7 @@ Note that I did not test that code yet, so test reports are appreciated.
 Quick guide to debug native code
 ================================
 
-The debugging of multi-threaded apps is not supported with NDK r4 or r4b, you'll need NDK r5b and Android 2.3 emulatir or device.
+The debugging of multi-threaded apps is not supported with NDK r4 or r4b, you'll need NDK r5b and Android 2.3 emulator or device.
 To debug your application add tag 'android:debuggable="true"' to 'application' element in AndroidManifest.xml,
 recmpile and reinstall your app, go to "project" dir and launch command
 	ndk-gdb --verbose --start --force
@@ -309,7 +316,7 @@ and below
 0848c8c8 g     O .bss   0320a000 decoder_svc_PictureBuffer_RefY
 
 which means your BSS segment eats up 191 Mb of RAM, and symbol 'decoder_svc_PictureBuffer_RefY' eats up 52 Mb,
-while heap memory limit on most phones is 16 Mb.
+while heap memory limit on most phones is 24 Mb.
 
 License information
 ===================
@@ -320,7 +327,7 @@ your compiled application, as LGPL requires.
 It contains separate libraries under project/jni, each of which has it's own license,
 I've tried to compile all LGPL-ed libs as shared libs but you should anyway inspect the licenses
 of the libraries you're linking to if you're creating closed-source app.
-libmad and liblzo2 are licensed under GPL, so if you're planning to make commercial app you should avoid 
+libmad and liblzo2 are licensed under GPL, so if you're planning to make commercial app you should avoid
 using them, otherwise you'll have to release your application sources under GPL too.
 
 The "Ultimate Droid" button theme by Sean Stieber is licensed under Creative Commons - Attribution license.
