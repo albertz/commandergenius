@@ -586,7 +586,11 @@ void ProcessDeferredMouseTap()
 	{
 		deferredMouseTap--;
 		if( deferredMouseTap <= 0 )
+		{
+			if( oldMouseX + 1 < SDL_ANDROID_sFakeWindowWidth )
+				SDL_ANDROID_MainThreadPushMouseMotion(oldMouseX + 1, oldMouseY);
 			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
+		}
 		else if( oldMouseX > 0 ) // Force application to redraw, and call SDL_Flip()
 			SDL_ANDROID_MainThreadPushMouseMotion(oldMouseX - 1, oldMouseY);
 	}
