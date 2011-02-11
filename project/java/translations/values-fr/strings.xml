@@ -127,4 +127,5 @@
 <string name="pointandclick_relative">mouvement de la souris relative (mode portable)</string>
 <string name="pointandclick_relative_speed">Relative vitesse de déplacement de la souris</string>
 <string name="pointandclick_relative_accel">Relative accélération du mouvement de la souris</string>
+<string name="downloads">Téléchargements</string>
 </resources>

@@ -45,11 +45,13 @@ class Settings
 
 	static boolean settingsLoaded = false;
 	static boolean settingsChanged = false;
+	static final int SETTINGS_FILE_VERSION = 3;
 
 	static void Save(final MainActivity p)
 	{
 		try {
 			ObjectOutputStream out = new ObjectOutputStream(p.openFileOutput( SettingsFileName, p.MODE_WORLD_READABLE ));
+			out.writeInt(SETTINGS_FILE_VERSION);
 			out.writeBoolean(Globals.DownloadToSdcard);
 			out.writeBoolean(Globals.PhoneHasArrowKeys);
 			out.writeBoolean(Globals.PhoneHasTrackball);
@@ -60,9 +62,6 @@ class Settings
 			out.writeInt(Globals.AccelerometerCenterPos);
 			out.writeInt(Globals.TrackballDampening);
 			out.writeInt(Globals.AudioBufferConfig);
-			out.writeInt(Globals.OptionalDataDownload.length);
-			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
-				out.writeBoolean(Globals.OptionalDataDownload[i]);
 			out.writeInt(Globals.TouchscreenKeyboardTheme);
 			out.writeInt(Globals.RightClickMethod);
 			out.writeBoolean(Globals.ShowScreenUnderFinger);
@@ -118,6 +117,10 @@ class Settings
 			out.writeInt(Globals.RelativeMouseMovementSpeed);
 			out.writeInt(Globals.RelativeMouseMovementAccel);
 
+			out.writeInt(Globals.OptionalDataDownload.length);
+			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
+				out.writeBoolean(Globals.OptionalDataDownload[i]);
+
 			out.close();
 			settingsLoaded = true;
 			
@@ -170,6 +173,8 @@ class Settings
 
 		try {
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
+			if( settingsFile.readInt() != SETTINGS_FILE_VERSION )
+				throw new IOException();
 			Globals.DownloadToSdcard = settingsFile.readBoolean();
 			Globals.PhoneHasArrowKeys = settingsFile.readBoolean();
 			Globals.PhoneHasTrackball = settingsFile.readBoolean();
@@ -180,9 +185,6 @@ class Settings
 			Globals.AccelerometerCenterPos = settingsFile.readInt();
 			Globals.TrackballDampening = settingsFile.readInt();
 			Globals.AudioBufferConfig = settingsFile.readInt();
-			Globals.OptionalDataDownload = new boolean[settingsFile.readInt()];
-			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
-				Globals.OptionalDataDownload[i] = settingsFile.readBoolean();
 			Globals.TouchscreenKeyboardTheme = settingsFile.readInt();
 			Globals.RightClickMethod = settingsFile.readInt();
 			Globals.ShowScreenUnderFinger = settingsFile.readBoolean();
@@ -247,6 +249,10 @@ class Settings
 			Globals.RelativeMouseMovement = settingsFile.readBoolean();
 			Globals.RelativeMouseMovementSpeed = settingsFile.readInt();
 			Globals.RelativeMouseMovementAccel = settingsFile.readInt();
+
+			Globals.OptionalDataDownload = new boolean[settingsFile.readInt()];
+			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
+				Globals.OptionalDataDownload[i] = settingsFile.readBoolean();
 			
 			settingsLoaded = true;
 
@@ -295,8 +301,21 @@ class Settings
 		settingsChanged = true;
 
 		if( Globals.OptionalDataDownload == null )
-			Globals.OptionalDataDownload = new boolean[Globals.DataDownloadUrl.split("\\^").length];
-		Globals.OptionalDataDownload[0] = true;
+		{
+			String downloads[] = Globals.DataDownloadUrl.split("\\^");
+			Globals.OptionalDataDownload = new boolean[downloads.length];
+			boolean oldFormat = true;
+			for( int i = 0; i < downloads.length; i++ )
+			{
+				if( downloads[i].indexOf("!") == 0 )
+				{
+					Globals.OptionalDataDownload[i] = true;
+					oldFormat = false;
+				}
+			}
+			if( oldFormat )
+				Globals.OptionalDataDownload[0] = true;
+		}
 
 		showConfigMainMenu(p);
 	}
@@ -308,8 +327,7 @@ class Settings
 
 		items.add(p.getResources().getString(R.string.storage_question));
 
-		if( Globals.DataDownloadUrl.split("\\^").length > 1 )
-			items.add(p.getResources().getString(R.string.optional_downloads));
+		items.add(p.getResources().getString(R.string.downloads));
 
 		items.add(p.getResources().getString(R.string.controls_additional));
 
@@ -339,7 +357,7 @@ class Settings
 		builder.setTitle(p.getResources().getString(R.string.device_config));
 		builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
 		{
-			public void onClick(DialogInterface dialog, int item) 
+			public void onClick(DialogInterface dialog, int item)
 			{
 				MainMenuLastSelected = item;
 				dialog.dismiss();
@@ -349,11 +367,8 @@ class Settings
 					showDownloadConfig(p);
 				selected++;
 
-				if( Globals.DataDownloadUrl.split("\\^").length > 1 ) {
-					if( item == selected )
-						showOptionalDownloadConfig(p);
-				} else
-					item++;
+				if( item == selected )
+					showOptionalDownloadConfig(p);
 				selected++;
 
 				if( item == selected )
@@ -583,8 +598,7 @@ class Settings
 										p.getResources().getString(R.string.storage_sd, freeSdcard),
 										p.getResources().getString(R.string.storage_custom) };
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
-		builder.setTitle(downloadFiles[0].split("[|]")[0]);
+		builder.setTitle(p.getResources().getString(R.string.storage_question));
 		builder.setSingleChoiceItems(items, Globals.DownloadToSdcard ? 1 : 0, new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
@@ -682,33 +696,39 @@ class Settings
 	static void showOptionalDownloadConfig(final MainActivity p) {
 
 		String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
-		if(downloadFiles.length <= 1)
-		{
-			Globals.OptionalDataDownload = new boolean[1];
-			Globals.OptionalDataDownload[0] = true;
-			showConfigMainMenu(p);
-			return;
-		}
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.optional_downloads));
+		builder.setTitle(p.getResources().getString(R.string.downloads));
 
-		CharSequence[] items = new CharSequence[ downloadFiles.length - 1 ];
-		for(int i = 1; i < downloadFiles.length; i++ )
-			items[i-1] = new String(downloadFiles[i].split("[|]")[0]);
+		CharSequence[] items = new CharSequence[downloadFiles.length];
+		for(int i = 0; i < downloadFiles.length; i++ )
+		{
+			items[i] = new String(downloadFiles[i].split("[|]")[0]);
+			if( items[i].toString().indexOf("!") == 0 )
+				items[i] = items[i].toString().substring(1);
+		}
 
-		if( Globals.OptionalDataDownload == null || Globals.OptionalDataDownload.length != items.length + 1 )
+		if( Globals.OptionalDataDownload == null || Globals.OptionalDataDownload.length != items.length )
+		{
 			Globals.OptionalDataDownload = new boolean[downloadFiles.length];
-		Globals.OptionalDataDownload[0] = true;
-		boolean defaults[] = new boolean[downloadFiles.length-1];
-		for(int i=1; i<downloadFiles.length; i++)
-			defaults[i-1] = Globals.OptionalDataDownload[i];
+			boolean oldFormat = true;
+			for( int i = 0; i < downloadFiles.length; i++ )
+			{
+				if( downloadFiles[i].indexOf("!") == 0 )
+				{
+					Globals.OptionalDataDownload[i] = true;
+					oldFormat = false;
+				}
+			}
+			if( oldFormat )
+				Globals.OptionalDataDownload[0] = true;
+		}
 
-		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+		builder.setMultiChoiceItems(items, Globals.OptionalDataDownload, new DialogInterface.OnMultiChoiceClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 			{
-				Globals.OptionalDataDownload[item+1] = isChecked;
+				Globals.OptionalDataDownload[item] = isChecked;
 			}
 		});
 		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 

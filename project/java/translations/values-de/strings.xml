@@ -124,4 +124,5 @@
 <string name="pointandclick_relative">Relative Bewegung der Maus (Laptop-Modus)</string>
 <string name="pointandclick_relative_speed">Relative Maus Bewegungsgeschwindigkeit</string>
 <string name="pointandclick_relative_accel">Relative Bewegung der Maus Beschleunigung</string>
+<string name="downloads">Downloads</string>
 </resources>

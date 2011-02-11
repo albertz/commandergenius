@@ -54,9 +54,11 @@ fi
 
 if [ -z "$AppDataDownloadUrl" -o -z "$AUTO" ]; then
 echo -n "\nSpecify path to download application data in zip archive in the form 'Description|URL|MirrorURL|...'"
-echo -n "\nYou may specify additional paths to optional game content delimited by newlines (empty line to finish)"
-echo -n "\nIf the URL in in the form ':dir/file.dat:http://URL/' it will be downloaded as-is to game dir and not unzipped"
-echo -n "\nIf the URL does not contain 'http://' it is treated as file in 'project/jni/application/src/AndroidData' dir\n\n"
+echo -n "\nYou may specify additional paths to additional downloads delimited by newlines (empty line to finish)"
+echo -n "\nIf you'll start Description with '!' symbol it will be enabled by default,\nother downloads should be selected by user from config menu"
+echo -n "\nIf the URL in in the form ':dir/file.dat:http://URL/' it will be downloaded as-is to the application dir and not unzipped"
+echo -n "\nIf the URL does not contain 'http://' it is treated as file from 'project/jni/application/src/AndroidData' dir -\nthese files are put inside .apk package by build system\n"
+echo -n "\nAlso beware of 'https://' URLs, many Android devices do not have trust certificates and will fail to connect to SF.net over HTTPS\n"
 echo -n "`echo $AppDataDownloadUrl | tr '^' '\\n'`"
 echo
 AppDataDownloadUrl1=""
@@ -580,6 +582,12 @@ mkdir -p project/assets
 rm -f project/assets/*
 if [ -d "project/jni/application/src/AndroidData" ] ; then
 	echo Copying asset files
+	for F in project/jni/application/src/AndroidData/*; do
+		if [ `cat $F | wc -c` -gt 1048576 ] ; then
+			echo "Error: the file $F is bigger than 1048576 bytes - some Android devices will fail to extract such file\nPlease split your data into several small files, or use HTTP download method"
+			exit 1
+		fi
+	done
 	cp project/jni/application/src/AndroidData/* project/assets/
 fi
 

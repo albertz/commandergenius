@@ -25,6 +25,7 @@
     <string name="storage_commandline">Specify command line parameters</string>
     <string name="storage_question">Where to download application data</string>
     <string name="optional_downloads">Optional downloads</string>
+    <string name="downloads">Downloads</string>
     <string name="ok">OK</string>
 
     <string name="controls_arrows">Arrows / joystick / dpad</string>

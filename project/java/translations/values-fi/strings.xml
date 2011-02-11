@@ -124,4 +124,5 @@
 <string name="pointandclick_relative">Suhteellinen hiiren liikkeet (kannettavan tietokoneen tilassa)</string>
 <string name="pointandclick_relative_speed">Suhteellinen hiiren liikkeen nopeus</string>
 <string name="pointandclick_relative_accel">Suhteellinen hiiren liikkeen kiihtyvyys</string>
+<string name="downloads">Downloads</string>
 </resources>

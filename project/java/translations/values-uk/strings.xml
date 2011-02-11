@@ -117,4 +117,5 @@
 <string name="pointandclick_relative">Відносний рух миші (режим ноутбука)</string>
 <string name="pointandclick_relative_speed">Швидкість руху миші</string>
 <string name="pointandclick_relative_accel">Прискорення руху миші</string>
+<string name="downloads">Завантаження</string>
 </resources>
