@@ -9,7 +9,7 @@ Index: configure
 +androidsdl)
 +	_host_os=androidsdl
 +	_host_cpu=arm
-+	_host_alias=arm-linux-androideabi
++	_host_alias=arm-eabi
 +	;;
  arm-riscos)
  	_host_os=riscos
