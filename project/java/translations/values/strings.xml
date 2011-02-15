@@ -141,5 +141,6 @@
 
     <string name="video">Video settings</string>
     <string name="video_smooth">Smooth the video</string>
+    <string name="video_separatethread">Separate thread for video, will increase FPS on some devices</string>
 
 </resources>

@@ -213,7 +213,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 		if(Globals.AudioBufferConfig >= 2)
 			Thread.currentThread().setPriority( (Thread.NORM_PRIORITY + Thread.MIN_PRIORITY) / 2 ); // Lower than normal
 		nativeInit( Globals.DataDir,
-					Globals.CommandLine); // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
+					Globals.CommandLine,
+					( Globals.SwVideoMode && Globals.MultiThreadedVideo ) ? 1 : 0 ); // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
 		System.exit(0); // The main() returns here - I don't bother with deinit stuff, just terminate process
 	}
 
@@ -252,7 +253,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	};
 
 	private native void nativeInitJavaCallbacks();
-	private native void nativeInit(String CurrentPath, String CommandLine);
+	private native void nativeInit(String CurrentPath, String CommandLine, int multiThreadedVideo);
 	private native void nativeResize(int w, int h, int keepAspectRatio);
 	private native void nativeDone();
 	private native void nativeGlContextLost();

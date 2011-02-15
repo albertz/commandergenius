@@ -24,15 +24,25 @@
 #define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
+extern void SDL_ANDROID_MultiThreadedVideoLoopInit();
+extern void SDL_ANDROID_MultiThreadedVideoLoop();
+
+static int argc = 0;
+static char ** argv = NULL;
+
+static int threadedMain(void * unused)
+{
+	SDL_main( argc, argv );
+	exit(0);
+}
+
 extern C_LINKAGE void
-JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring jcurdir, jstring cmdline )
+JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring jcurdir, jstring cmdline, jint multiThreadedVideo )
 {
 	int i = 0;
 	char curdir[PATH_MAX] = "";
 	const jbyte *jstr;
 	const char * str = "sdl";
-	int argc = 0;
-	char ** argv = NULL;
 
 	strcpy(curdir, "/sdcard/app-data/");
 	strcat(curdir, SDL_CURDIR_PATH);
@@ -86,8 +96,14 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	for( i = 0; i < argc; i++ )
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "param %d = \"%s\"", i, argv[i]);
 
-	main( argc, argv );
-
+	if( ! multiThreadedVideo )
+		SDL_main( argc, argv );
+	else
+	{
+		SDL_ANDROID_MultiThreadedVideoLoopInit();
+		SDL_CreateThread(threadedMain, NULL);
+		SDL_ANDROID_MultiThreadedVideoLoop();
+	}
 };
 
 extern C_LINKAGE void
@@ -100,10 +116,5 @@ JAVA_EXPORT_NAME(Settings_nativeSetEnv) ( JNIEnv*  env, jobject thiz, jstring j_
     (*env)->ReleaseStringUTFChars(env, j_name, name);
     (*env)->ReleaseStringUTFChars(env, j_value, value);
 }
-
-#undef JAVA_EXPORT_NAME
-#undef JAVA_EXPORT_NAME1
-#undef JAVA_EXPORT_NAME2
-#undef C_LINKAGE
 
 #endif

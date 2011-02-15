@@ -603,8 +603,12 @@ void SDL_ANDROID_WarpMouse(int x, int y)
 	}
 	else
 	{
+		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
+		// TODO: test and enable it
+		/*
 		relativeMovementX = x;
 		relativeMovementY = y;
+		*/
 	}
 };
 

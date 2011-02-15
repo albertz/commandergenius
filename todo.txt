@@ -7,8 +7,6 @@ I'm not planning any more games to port.
 Bugs to fix
 ===========
 
-- Running OpenGL SwapBuffers in a separate thread - huge speed improvement expected.
-
 - Show/hide screen controls with longpress on Text Edit button.
 
 - Support of libjnigraphics (it will disable on-screen keyboard, only SW SDL screen surface supported)

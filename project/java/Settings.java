@@ -45,7 +45,7 @@ class Settings
 
 	static boolean settingsLoaded = false;
 	static boolean settingsChanged = false;
-	static final int SETTINGS_FILE_VERSION = 3;
+	static final int SETTINGS_FILE_VERSION = 4;
 
 	static void Save(final MainActivity p)
 	{
@@ -116,6 +116,7 @@ class Settings
 			out.writeBoolean(Globals.RelativeMouseMovement);
 			out.writeInt(Globals.RelativeMouseMovementSpeed);
 			out.writeInt(Globals.RelativeMouseMovementAccel);
+			out.writeBoolean(Globals.MultiThreadedVideo);
 
 			out.writeInt(Globals.OptionalDataDownload.length);
 			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
@@ -249,6 +250,7 @@ class Settings
 			Globals.RelativeMouseMovement = settingsFile.readBoolean();
 			Globals.RelativeMouseMovementSpeed = settingsFile.readInt();
 			Globals.RelativeMouseMovementAccel = settingsFile.readInt();
+			Globals.MultiThreadedVideo = settingsFile.readBoolean();
 
 			Globals.OptionalDataDownload = new boolean[settingsFile.readInt()];
 			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
@@ -1982,6 +1984,24 @@ class Settings
 			Globals.SmoothVideo
 		};
 
+		if(Globals.SwVideoMode)
+		{
+			CharSequence[] items2 = {
+				p.getResources().getString(R.string.pointandclick_keepaspectratio),
+				p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
+				p.getResources().getString(R.string.video_smooth),
+				p.getResources().getString(R.string.video_separatethread),
+			};
+			boolean defaults2[] = { 
+				Globals.KeepAspectRatio,
+				Globals.ShowScreenUnderFinger,
+				Globals.SmoothVideo,
+				Globals.MultiThreadedVideo
+			};
+			items = items2;
+			defaults = defaults2;
+		}
+
 		if(Globals.Using_SDL_1_3)
 		{
 			CharSequence[] items2 = {
@@ -2008,6 +2028,8 @@ class Settings
 					Globals.ShowScreenUnderFinger = isChecked;
 				if( item == 2 )
 					Globals.SmoothVideo = isChecked;
+				if( item == 3 )
+					Globals.MultiThreadedVideo = isChecked;
 			}
 		});
 		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
@@ -2036,6 +2058,8 @@ class Settings
 	{
 		if(Globals.SmoothVideo)
 			nativeSetSmoothVideo();
+		if( Globals.SwVideoMode && Globals.MultiThreadedVideo )
+			nativeSetVideoMultithreaded();
 		if( Globals.PhoneHasTrackball )
 			nativeSetTrackballUsed();
 		if( Globals.AppUsesMouse )
@@ -2157,6 +2181,7 @@ class Settings
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
 	private static native void nativeSetSmoothVideo();
+	private static native void nativeSetVideoMultithreaded();
 	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttonsAutoFire, int transparency);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	private static native void nativeInitKeymap();

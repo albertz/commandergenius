@@ -17,6 +17,8 @@ class Globals {
 	// Set this value to true if you're planning to render 3D using OpenGL - it eats some GFX resources, so disabled for 2D
 	public static boolean NeedDepthBuffer = false;
 
+	public static boolean SwVideoMode = false;
+
 	public static boolean HorizontalOrientation = true;
 
 	// prevent device from going to suspend mode
@@ -101,6 +103,7 @@ class Globals {
 	public static int TouchscreenCalibration[] = new int[4];
 	public static String DataDir = new String("");
 	public static boolean SmoothVideo = false;
+	public static boolean MultiThreadedVideo = false;
 }
 
 class LoadLibrary {

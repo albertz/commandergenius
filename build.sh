@@ -26,6 +26,7 @@ fi
 cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build -j4 V=1 && \
  { grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
    [ -`which ndk-build | grep /android-ndk-r5b/` != - ] && \
+   echo Stripping libapplication.so by hand \
    rm obj/local/armeabi/libapplication.so && \
    cp jni/application/src/libapplication.so obj/local/armeabi && \
    cp jni/application/src/libapplication.so libs/armeabi && \

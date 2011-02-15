@@ -39,6 +39,7 @@ extern int SDL_ANDROID_TouchscreenCalibrationHeight;
 extern int SDL_ANDROID_TouchscreenCalibrationX;
 extern int SDL_ANDROID_TouchscreenCalibrationY;
 extern int SDL_ANDROID_SmoothVideo;
+extern int SDL_ANDROID_VideoMultithreaded;
 extern SDL_Surface *SDL_CurrentVideoSurface;
 extern SDL_Rect SDL_ANDROID_ForceClearScreenRect;
 extern int SDL_ANDROID_ShowScreenUnderFinger;

@@ -64,6 +64,7 @@ static jmethodID JavaShowScreenKeyboard = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 int SDL_ANDROID_SmoothVideo = 0;
+int SDL_ANDROID_VideoMultithreaded = 0;
 
 static void appPutToBackgroundCallbackDefault(void)
 {
@@ -251,4 +252,10 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetSmoothVideo) (JNIEnv* env, jobject thiz)
 {
 	SDL_ANDROID_SmoothVideo = 1;
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetVideoMultithreaded) (JNIEnv* env, jobject thiz)
+{
+	SDL_ANDROID_VideoMultithreaded = 1;
 }
