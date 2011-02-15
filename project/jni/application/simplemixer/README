@@ -1,0 +1,28 @@
+
+		Simple Mixer
+		------------
+
+This is about as simple as sound mixing gets.
+Four voices, stereo volume control, 16 bit
+mono sounds. It needs 44.1 kHz 16 bit stereo
+output. (Won't resample, convert or anything.)
+
+There's a primitive and utterly useless
+pattern sequencer in there as well - you may
+just ignore that code if you don't get it;
+it's not important. Or you can make a GUI for
+it and learn some SDL graphics coding in the
+process, maybe...
+
+The sounds were sampled by Michael Fischer,
+from a real Roland TR-808 Rhythm Composer.
+(A vintage analog drum machine.) Please see
+README.SOUND for details. You may get the
+rest of the sounds from here:
+
+    http://freeware.sgi.com/fw-5.3/fw_TR808/
+
+Or just use Google, if that doesn't work.
+
+
+		David Olofson <david@olofson.net>

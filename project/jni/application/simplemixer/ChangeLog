@@ -1,0 +1,8 @@
+simplemixer 1.1:
+	* Endian conversion after SDL_LoadWAV() is now
+	  done on big endian platforms. (Oops...!)
+	* Added some sample format checking.
+	* Minor makefile cleanup
+
+simplemixer 1.0:
+	* Initial release
