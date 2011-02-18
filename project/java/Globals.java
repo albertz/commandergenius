@@ -105,5 +105,5 @@ class Globals {
 	public static int TouchscreenCalibration[] = new int[4];
 	public static String DataDir = new String("");
 	public static boolean SmoothVideo = false;
-	public static boolean MultiThreadedVideo = SwVideoMode;
+	public static boolean MultiThreadedVideo = false;
 }
