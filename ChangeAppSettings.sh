@@ -488,7 +488,7 @@ if [ "$MultiABI" = "y" ] ; then
 else
 	MultiABI="armeabi"
 fi
-LibrariesToLoad="System.loadLibrary(\\\"sdl-$LibSdlVersion\\\");"
+LibrariesToLoad="\\\"sdl-$LibSdlVersion\\\""
 StaticLibraries=`grep 'APP_AVAILABLE_STATIC_LIBS' project/jni/SettingsTemplate.mk | sed 's/.*=\(.*\)/\1/'`
 for lib in $CompiledLibraries; do
 	process=true
@@ -496,7 +496,7 @@ for lib in $CompiledLibraries; do
 		if [ "$lib" = "$lib1" ]; then process=false; fi
 	done
 	if $process; then
-		LibrariesToLoad="$LibrariesToLoad System.loadLibrary(\\\"$lib\\\");"
+		LibrariesToLoad="$LibrariesToLoad, \\\"$lib\\\""
 	fi
 done
 
@@ -545,7 +545,7 @@ cat project/src/Globals.java | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
 	sed "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" | \
-	sed "s/public LoadLibrary() .*/public LoadLibrary() { $LibrariesToLoad };/" > \
+	sed "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" > \
 	project/src/Globals.java.1
 mv -f project/src/Globals.java.1 project/src/Globals.java
 

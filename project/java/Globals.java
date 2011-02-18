@@ -9,6 +9,8 @@ import android.view.KeyEvent;
 class Globals {
 	public static String ApplicationName = "CommanderGenius";
 
+	public static String AppLibraries[] = { "sdl-1.2", };
+
 	public static final boolean Using_SDL_1_3 = false;
 
 	// Should be zip file
@@ -104,8 +106,4 @@ class Globals {
 	public static String DataDir = new String("");
 	public static boolean SmoothVideo = false;
 	public static boolean MultiThreadedVideo = SwVideoMode;
-}
-
-class LoadLibrary {
-	public LoadLibrary() { System.loadLibrary("sdl-1.2"); };
 }

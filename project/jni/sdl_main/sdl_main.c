@@ -33,6 +33,7 @@ static char ** argv = NULL;
 static int threadedMain(void * unused)
 {
 	SDL_main( argc, argv );
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Application closed, calling exit(0)");
 	exit(0);
 }
 

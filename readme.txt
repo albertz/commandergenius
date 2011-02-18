@@ -167,6 +167,16 @@ memcpy( &i, p, sizeof(int) ); // The correct way to dereference a non-aligned po
 This compiler flags will catch most obvious errors, you may add them to AppCflags var in settings:
 -Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
 
+The application will automatically get moved to SD-card on Android 2.2 or newer,
+(or you can install app2sd for older, but rooted phones),
+however the shared libraries have to be stored on the device internal storage,
+and that may be not desired for older phones with very little storage.
+The script app2sd.sh will re-package your .apk file in such a way that
+the shared libraries will not be extracted by Android OS but by application itself,
+and it will remove them from internal storage right after starting up,
+so you still need that space free, but only temporarily.
+
+
 How to compile your own application using automake/configure scripts
 ====================================================================
 

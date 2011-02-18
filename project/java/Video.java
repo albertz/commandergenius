@@ -18,6 +18,7 @@ import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
 import android.os.Environment;
+import java.io.File;
 
 import android.widget.TextView;
 import java.lang.Thread;
@@ -205,8 +206,27 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 		// Thread.currentThread().setPriority((Thread.currentThread().getPriority() + Thread.MIN_PRIORITY)/2);
 		
 		mGlContextLost = false;
-		System.loadLibrary("application");
-		System.loadLibrary("sdl_main");
+		
+		String libs[] = { "application", "sdl_main" };
+		try
+		{
+			for(String l : libs)
+			{
+				System.loadLibrary(l);
+			}
+		}
+		catch ( UnsatisfiedLinkError e )
+		{
+			for(String l : libs)
+			{
+				String libname = System.mapLibraryName(l);
+				File libpath = new File(context.getCacheDir(), libname);
+				System.out.println("libSDL: loading lib " + libpath.getPath());
+				System.load(libpath.getPath());
+				libpath.delete();
+			}
+		}
+
 		Settings.Apply(context);
 		accelerometer = new AccelerometerReader(context);
 		// Tweak video thread priority, if user selected big audio buffer

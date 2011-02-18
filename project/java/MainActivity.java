@@ -24,6 +24,16 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.view.View.OnKeyListener;
 import java.util.LinkedList;
+import java.io.SequenceInputStream;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
+import java.io.File;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
 
 
 public class MainActivity extends Activity {
@@ -81,7 +91,7 @@ public class MainActivity extends Activity {
 		if(mAudioThread == null) // Starting from background (should not happen)
 		{
 			System.out.println("libSDL: Loading libraries");
-			mLoadLibraryStub = new LoadLibrary();
+			LoadLibraries();
 			mAudioThread = new AudioThread(this);
 			System.out.println("libSDL: Loading settings");
 			Settings.Load(this);
@@ -223,19 +233,13 @@ public class MainActivity extends Activity {
 	{
 		if(_screenKeyboard == null)
 			return;
-		String text = _screenKeyboard.getText().toString();
-		if( mGLView != null )
+
+		synchronized(textInput)
 		{
-			synchronized(textInput) {
-				for(int i = 0; i < text.length(); i++)
-				{
-					DemoRenderer.nativeTextInput( (int)text.charAt(i), (int)text.codePointAt(i) );
-					//textInput.addLast((int)text.charAt(i));
-					//textInput.addLast((int)text.codePointAt(i));
-				}
-				DemoRenderer.nativeTextInput( 13, 13 ); // send return
-				//textInput.addLast(13);
-				//textInput.addLast(13);
+			String text = _screenKeyboard.getText().toString();
+			for(int i = 0; i < text.length(); i++)
+			{
+				DemoRenderer.nativeTextInput( (int)text.charAt(i), (int)text.codePointAt(i) );
 			}
 		}
 		_videoLayout.removeView(_screenKeyboard);
@@ -255,12 +259,19 @@ public class MainActivity extends Activity {
 			myKeyListener(MainActivity parent) { _parent = parent; };
 			public boolean onKey(View v, int keyCode, KeyEvent event) 
 			{
-				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER))
+				if ((event.getAction() == KeyEvent.ACTION_UP) && ((keyCode == KeyEvent.KEYCODE_ENTER) || (keyCode == KeyEvent.KEYCODE_BACK)))
 				{
 					_parent.hideScreenKeyboard();
+					if(keyCode == KeyEvent.KEYCODE_ENTER)
+					{
+						synchronized(textInput)
+						{
+							DemoRenderer.nativeTextInput( 13, 13 ); // send return
+						}
+					}
 					return true;
 				}
-				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR))
+				if ((event.getAction() == KeyEvent.ACTION_UP) && (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR))
 				{
 					synchronized(textInput) {
 						DemoRenderer.nativeTextInput( 8, 8 );
@@ -376,13 +387,104 @@ public class MainActivity extends Activity {
 		NotificationManager NotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		NotificationManager.cancel(NOTIFY_ID);
 	}
+	
+	public void LoadLibraries()
+	{
+		try
+		{
+			for(String l : Globals.AppLibraries)
+			{
+				System.loadLibrary(l);
+			}
+		}
+		catch ( UnsatisfiedLinkError e )
+		{
+			try {
+				System.out.println("libSDL: Extracting APP2SD-ed libs");
+				
+				InputStream in = null;
+				try
+				{
+					for( int i = 0; ; i++ )
+					{
+						InputStream in2 = getAssets().open("bindata" + String.valueOf(i));
+						if( in == null )
+							in = in2;
+						else
+							in = new SequenceInputStream( in, in2 );
+					}
+				}
+				catch( IOException ee ) { }
+
+				if( in == null )
+					throw new RuntimeException("libSDL: Extracting APP2SD-ed libs failed, the .apk file packaged incorrectly");
+
+				ZipInputStream zip = new ZipInputStream(in);
+
+				File cacheDir = getCacheDir();
+				try {
+					cacheDir.mkdirs();
+				} catch( SecurityException ee ) { };
+				
+				byte[] buf = new byte[16384];
+				while(true)
+				{
+					ZipEntry entry = null;
+					entry = zip.getNextEntry();
+					/*
+					if( entry != null )
+						System.out.println("Extracting lib " + entry.getName());
+					*/
+					if( entry == null )
+					{
+						System.out.println("Extracting libs finished");
+						break;
+					}
+					if( entry.isDirectory() )
+					{
+						System.out.println("Warning '" + entry.getName() + "' is a directory");
+						continue;
+					}
+
+					OutputStream out = null;
+					String path = cacheDir.getAbsolutePath() + "/" + entry.getName();
+
+					System.out.println("Saving to file '" + path + "'");
+
+					out = new FileOutputStream( path );
+					int len = zip.read(buf);
+					while (len >= 0)
+					{
+						if(len > 0)
+							out.write(buf, 0, len);
+						len = zip.read(buf);
+					}
+
+					out.flush();
+					out.close();
+				}
+
+				for(String l : Globals.AppLibraries)
+				{
+					String libname = System.mapLibraryName(l);
+					File libpath = new File(cacheDir, libname);
+					System.out.println("libSDL: loading lib " + libpath.getPath());
+					System.load(libpath.getPath());
+					libpath.delete();
+				}
+			}
+			catch ( Exception ee )
+			{
+				System.out.println("libSDL: Error: " + e.toString());
+			}
+		}
+	};
 
 	public FrameLayout getVideoLayout() { return _videoLayout; }
 
 	static int NOTIFY_ID = 12367098; // Random ID
 
 	private static DemoGLSurfaceView mGLView = null;
-	private static LoadLibrary mLoadLibraryStub = null;
 	private static AudioThread mAudioThread = null;
 	private static DataDownloader downloader = null;
 
