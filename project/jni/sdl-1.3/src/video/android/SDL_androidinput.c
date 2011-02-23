@@ -1436,21 +1436,62 @@ extern void SDL_ANDROID_DeferredTextInput()
 };
 #else
 
-enum { DEFERRED_TEXT_COUNT = 128 };
+enum { DEFERRED_TEXT_COUNT = 256 };
 static struct { int scancode; int unicode; int down; } deferredText[DEFERRED_TEXT_COUNT];
 static int deferredTextIdx1 = 0;
 static int deferredTextIdx2 = 0;
 static SDL_mutex * deferredTextMutex = NULL;
 
+static SDL_keysym asciiToKeysym(int ascii, int unicode)
+{
+	SDL_keysym keysym;
+	keysym.scancode = ascii;
+	keysym.sym = ascii;
+	keysym.mod = KMOD_NONE;
+	keysym.unicode = 0;
+	if ( SDL_TranslateUNICODE )
+		keysym.unicode = unicode;
+	return keysym;
+}
+
+static int checkShiftRequired( int * sym )
+{
+	switch( *sym )
+	{
+		case '!': *sym = '1'; return 1;
+		case '@': *sym = '2'; return 1;
+		case '#': *sym = '3'; return 1;
+		case '$': *sym = '4'; return 1;
+		case '%': *sym = '5'; return 1;
+		case '^': *sym = '6'; return 1;
+		case '&': *sym = '7'; return 1;
+		case '*': *sym = '8'; return 1;
+		case '(': *sym = '9'; return 1;
+		case ')': *sym = '0'; return 1;
+		case '_': *sym = '-'; return 1;
+		case '+': *sym = '='; return 1;
+		case '|': *sym = '\\';return 1;
+		case '<': *sym = ','; return 1;
+		case '>': *sym = '.'; return 1;
+		case '?': *sym = '/'; return 1;
+		case ':': *sym = ';'; return 1;
+		case '"': *sym = '\'';return 1;
+		case '{': *sym = '['; return 1;
+		case '}': *sym = ']'; return 1;
+		case '~': *sym = '`'; return 1;
+		default: if( *sym >= 'A' && *sym <= 'Z' ) { *sym += 'a' - 'A'; return 1; };
+	}
+	return 0;
+}
+
 void SDL_ANDROID_DeferredTextInput()
 {
-	int count = 2;
 	if( !deferredTextMutex )
 		deferredTextMutex = SDL_CreateMutex();
 
 	SDL_mutexP(deferredTextMutex);
 	
-	while( deferredTextIdx1 != deferredTextIdx2 && count > 0 )
+	if( deferredTextIdx1 != deferredTextIdx2 )
 	{
 		int nextEvent = getNextEvent();
 		if( nextEvent == -1 )
@@ -1466,24 +1507,20 @@ void SDL_ANDROID_DeferredTextInput()
 		
 		ev->type = SDL_KEYDOWN;
 		ev->key.state = deferredText[deferredTextIdx1].down;
-		ev->key.keysym.scancode = deferredText[deferredTextIdx1].scancode;
-		ev->key.keysym.sym = deferredText[deferredTextIdx1].scancode;
-		ev->key.keysym.mod = KMOD_NONE;
-		ev->key.keysym.unicode = 0;
-		if ( SDL_TranslateUNICODE )
-			ev->key.keysym.unicode = deferredText[deferredTextIdx1].unicode;
+		ev->key.keysym = asciiToKeysym( deferredText[deferredTextIdx1].scancode, deferredText[deferredTextIdx1].unicode );
 		
 		BufferedEventsEnd = nextEvent;
 		SDL_mutexV(BufferedEventsMutex);
-		count --;
+		SDL_ANDROID_MainThreadPushMouseMotion(oldMouseX + (oldMouseX % 2 ? -1 : 1), oldMouseY); // Force screen redraw
 	}
 	
 	SDL_mutexV(deferredTextMutex);
 };
 #endif
 
-extern void SDL_ANDROID_MainThreadPushText( int scancode, int unicode )
+extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 {
+	int shiftRequired;
 
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_MainThreadPushText(): %i %i", scancode, unicode);
 	int nextEvent = getNextEvent();
@@ -1496,7 +1533,7 @@ extern void SDL_ANDROID_MainThreadPushText( int scancode, int unicode )
 
 	// TODO: convert to UTF-8
 	ev->type = SDL_TEXTINPUT;
-	ev->text.text[0] = scancode;
+	ev->text.text[0] = ascii;
 	ev->text.text[1] = 0;
 
 #else
@@ -1508,33 +1545,39 @@ extern void SDL_ANDROID_MainThreadPushText( int scancode, int unicode )
 
 	ev->type = 0;
 	
-	if( deferredTextIdx1 == deferredTextIdx2 )
-	{
-		ev->type = SDL_KEYDOWN;
-		ev->key.state = SDL_PRESSED;
-		ev->key.keysym.scancode = scancode;
-		ev->key.keysym.sym = scancode;
-		ev->key.keysym.mod = KMOD_NONE;
-		ev->key.keysym.unicode = 0;
-		if ( SDL_TranslateUNICODE )
-			ev->key.keysym.unicode = unicode;
-	}
-	else
+	shiftRequired = checkShiftRequired(&ascii);
+	
+	if( shiftRequired )
 	{
 		deferredTextIdx2++;
 		if( deferredTextIdx2 >= DEFERRED_TEXT_COUNT )
 			deferredTextIdx2 = 0;
 		deferredText[deferredTextIdx2].down = SDL_PRESSED;
-		deferredText[deferredTextIdx2].scancode = scancode;
-		deferredText[deferredTextIdx2].unicode = unicode;
+		deferredText[deferredTextIdx2].scancode = SDLK_LSHIFT;
+		deferredText[deferredTextIdx2].unicode = SDLK_LSHIFT;
 	}
+	deferredTextIdx2++;
+	if( deferredTextIdx2 >= DEFERRED_TEXT_COUNT )
+		deferredTextIdx2 = 0;
+	deferredText[deferredTextIdx2].down = SDL_PRESSED;
+	deferredText[deferredTextIdx2].scancode = ascii;
+	deferredText[deferredTextIdx2].unicode = unicode;
 
 	deferredTextIdx2++;
 	if( deferredTextIdx2 >= DEFERRED_TEXT_COUNT )
 		deferredTextIdx2 = 0;
 	deferredText[deferredTextIdx2].down = SDL_RELEASED;
-	deferredText[deferredTextIdx2].scancode = scancode;
+	deferredText[deferredTextIdx2].scancode = ascii;
 	deferredText[deferredTextIdx2].unicode = unicode;
+	if( shiftRequired )
+	{
+		deferredTextIdx2++;
+		if( deferredTextIdx2 >= DEFERRED_TEXT_COUNT )
+			deferredTextIdx2 = 0;
+		deferredText[deferredTextIdx2].down = SDL_RELEASED;
+		deferredText[deferredTextIdx2].scancode = SDLK_LSHIFT;
+		deferredText[deferredTextIdx2].unicode = SDLK_LSHIFT;
+	}
 
 	SDL_mutexV(deferredTextMutex);
 
@@ -1716,8 +1759,6 @@ JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )
 {
   int i;
   SDLKey * keymap = SDL_android_keymap;
-
-  // TODO: keys are mapped rather randomly
 
   for (i=0; i<SDL_arraysize(SDL_android_keymap); ++i)
     SDL_android_keymap[i] = SDL_KEY(UNKNOWN);

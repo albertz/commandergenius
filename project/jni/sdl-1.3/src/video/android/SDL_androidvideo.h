@@ -45,7 +45,7 @@ extern SDL_Rect SDL_ANDROID_ForceClearScreenRect;
 extern int SDL_ANDROID_ShowScreenUnderFinger;
 extern SDL_Rect SDL_ANDROID_ShowScreenUnderFingerRect, SDL_ANDROID_ShowScreenUnderFingerRectSrc;
 extern int SDL_ANDROID_CallJavaSwapBuffers();
-extern void SDL_ANDROID_CallJavaShowScreenKeyboard();
+extern void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, int blocking);
 extern int SDL_ANDROID_drawTouchscreenKeyboard();
 extern void SDL_ANDROID_VideoContextLost();
 extern void SDL_ANDROID_VideoContextRecreated();

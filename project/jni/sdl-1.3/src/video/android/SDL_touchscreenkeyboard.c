@@ -360,7 +360,7 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 				{
 					pointerInButtonRect[i] = pointerId;
 					if( i == BUTTON_TEXT_INPUT )
-						SDL_ANDROID_ToggleScreenKeyboardTextInput();
+						SDL_ANDROID_ToggleScreenKeyboardTextInput(NULL);
 					else
 						SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, buttonKeysyms[i] );
 					if( i < AutoFireButtonsNum )
@@ -786,9 +786,21 @@ int SDL_ANDROID_GetScreenKeyboardSize()
 	return buttonsize;
 };
 
-int SDL_ANDROID_ToggleScreenKeyboardTextInput()
+int SDL_ANDROID_ToggleScreenKeyboardTextInput(const char * previousText)
 {
-	SDL_ANDROID_CallJavaShowScreenKeyboard();
+	const char * textIn = previousText;
+	if( textIn == NULL )
+		textIn = "";
+	SDL_ANDROID_CallJavaShowScreenKeyboard(textIn, 0);
+	return 1;
+};
+
+int SDLCALL SDL_ANDROID_GetScreenKeyboardTextInput(const char * previousText, char * outText, int outTextSize)
+{
+	const char * textIn = previousText;
+	if( textIn == NULL )
+		textIn = "";
+	SDL_ANDROID_CallJavaShowScreenKeyboard(textIn, 1);
 	return 1;
 };
 

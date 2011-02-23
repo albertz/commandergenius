@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <android/log.h>
 
 #include "SDL.h"
 #include "SDL_image.h"
@@ -462,6 +463,7 @@ int main(int argc, char* argv[])
 				Uint8	*keys = SDL_GetKeyState(&i);
 				if(keys[SDLK_ESCAPE])
 					break;
+				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL key event: state %d key %d mod %d unicode %d", event.key.state, (int)event.key.keysym.sym, (int)event.key.keysym.mod, (int)event.key.keysym.unicode);
 			}
 		}
 

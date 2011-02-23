@@ -210,7 +210,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeGlContextRecreated) ( JNIEnv*  env, jobject 
 #endif
 }
 
-void SDL_ANDROID_CallJavaShowScreenKeyboard()
+void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, int blocking)
 {
 	showScreenKeyboardDeferred = 1;
 	// Move mouse by 1 pixel to force screen update

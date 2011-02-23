@@ -70,8 +70,11 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardShown();
 
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardSize();
 
-/* Show Android on-screen keyboard, and pass entered text back to application when user closes it */
-extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleScreenKeyboardTextInput();
+/* Show Android on-screen keyboard, and pass entered text back to application as SDL keypress events, previousText may be NULL */
+extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleScreenKeyboardTextInput(const char * previousText);
+
+/* Show Android on-screen keyboard, and pass entered text back to application in a buffer, previousText may be NULL */
+extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardTextInput(const char * previousText, char * outText, int outTextSize);
 
 /* Whether user redefined on-screen keyboard layout via SDL menu, app should not enforce it's own layout in that case */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardRedefinedByUser();
