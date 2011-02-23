@@ -266,7 +266,7 @@ public class MainActivity extends Activity {
 					{
 						synchronized(textInput)
 						{
-							DemoRenderer.nativeTextInput( 13, 13 ); // send return
+							//DemoRenderer.nativeTextInput( 13, 13 ); // send return
 						}
 					}
 					return true;
@@ -275,8 +275,6 @@ public class MainActivity extends Activity {
 				{
 					synchronized(textInput) {
 						DemoRenderer.nativeTextInput( 8, 8 );
-						//textInput.addLast(8); // send backspace keycode
-						//textInput.addLast(8);
 					}
 					return false; // and proceed to delete text in keyboard input field
 				}

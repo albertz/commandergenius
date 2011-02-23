@@ -357,7 +357,8 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.device_config));
-		builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
+		//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
+		builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
 		{
 			public void onClick(DialogInterface dialog, int item)
 			{
@@ -465,7 +466,8 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.mouse_emulation));
-		builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MouseConfigMainMenuLastSelected, new DialogInterface.OnClickListener() 
+		//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MouseConfigMainMenuLastSelected, new DialogInterface.OnClickListener() 
+		builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
@@ -541,7 +543,8 @@ class Settings
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
 		builder.setTitle(p.getResources().getString(R.string.controls_screenkb));
-		builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), KeyboardConfigMainMenuLastSelected, new DialogInterface.OnClickListener() 
+		//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), KeyboardConfigMainMenuLastSelected, new DialogInterface.OnClickListener()
+		builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
