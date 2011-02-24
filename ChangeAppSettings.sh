@@ -579,7 +579,7 @@ done
 cd ../../..
 
 echo Cleaning up dependencies
-rm -rf project/libs/*
+rm -rf project/libs/* project/gen
 for OUT in obj; do
 rm -rf project/$OUT/local/*/objs/sdl_main/* project/$OUT/local/*/libsdl_main.so
 rm -rf project/$OUT/local/*/libsdl-*.so

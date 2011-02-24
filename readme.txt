@@ -174,7 +174,8 @@ and that may be not desired for older phones with very little storage.
 The script app2sd.sh will re-package your .apk file in such a way that
 the shared libraries will not be extracted by Android OS but by application itself,
 and it will remove them from internal storage right after starting up,
-so you still need that space free, but only temporarily.
+so you still need that space free, but only temporarily. 
+However your application will start up slower.
 
 
 How to compile your own application using automake/configure scripts

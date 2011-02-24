@@ -11,4 +11,8 @@ Bugs to fix
 
 - Support of libjnigraphics (it will disable on-screen keyboard, only SW SDL screen surface supported)
 
+- Update screen keyboard text input API
+
+- Floating on-screen joystick
+
 And that's all, I won't be doing any more development or fix other bugs (see bugs.txt for details).

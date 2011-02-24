@@ -117,6 +117,38 @@ int oldMouseX = 0;
 int oldMouseY = 0;
 int oldMouseButtons = 0;
 
+static int UnicodeToUtf8(int src, char * dest)
+{
+	int len = 0;
+    if ( src <= 0x007f) {
+        *dest++ = (char)src;
+        len = 1;
+    } else if (src <= 0x07ff) {
+        *dest++ = (char)0xc0 | (src >> 6);
+        *dest++ = (char)0x80 | (src & 0x003f);
+        len = 2;
+    } else if (src == 0xFEFF) {
+        // nop -- zap the BOM
+    } else if (src >= 0xD800 && src <= 0xDFFF) {
+        // surrogates not supported
+    } else if (src <= 0xffff) {
+        *dest++ = (char)0xe0 | (src >> 12);
+        *dest++ = (char)0x80 | ((src >> 6) & 0x003f);
+        *dest++ = (char)0x80 | (src & 0x003f);
+        len = 3;
+    } else if (src <= 0xffff) {
+        *dest++ = (char)0xf0 | (src >> 18);
+        *dest++ = (char)0x80 | ((src >> 12) & 0x3f);
+        *dest++ = (char)0x80 | ((src >> 6) & 0x3f);
+        *dest++ = (char)0x80 | (src & 0x3f);
+        len = 4;
+    } else {
+        // out of Unicode range
+    }
+    *dest = 0;
+    return len;
+}
+
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
 	return ( x >= r->x && x <= r->x + r->w ) && ( y >= r->y && y <= r->y + r->h );
@@ -639,16 +671,40 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 	SDL_ANDROID_MainThreadPushKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key) );
 }
 
-JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(DemoRenderer_nativeTextInput) ( JNIEnv*  env, jobject thiz, jint ascii, jint unicode )
+static char * textInputBuffer = NULL;
+int textInputBufferLen = 0;
+int textInputBufferPos = 0;
+
+void SDL_ANDROID_TextInputInit(char * buffer, int len)
 {
-	SDL_ANDROID_MainThreadPushText(ascii, unicode);
+	textInputBuffer = buffer;
+	textInputBufferLen = len;
 }
 
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(DemoRenderer_nativeTextInput) ( JNIEnv*  env, jobject thiz, jint ascii, jint unicode )
+{
+	if( !textInputBuffer )
+		SDL_ANDROID_MainThreadPushText(ascii, unicode);
+	else
+	{
+		if( textInputBufferPos < textInputBufferLen + 4 )
+		{
+			textInputBufferPos += UnicodeToUtf8(unicode, textInputBuffer + textInputBufferPos);
+		}
+	}
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(DemoRenderer_nativeTextInputFinished) ( JNIEnv*  env, jobject thiz )
+{
+	textInputBuffer = NULL;
+	SDL_ANDROID_TextInputFinished();
+}
 
 static void updateOrientation ( float accX, float accY, float accZ );
 
-JNIEXPORT void JNICALL 
+JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobject  thiz, jfloat accPosX, jfloat accPosY, jfloat accPosZ )
 {
 #if SDL_VERSION_ATLEAST(1,3,0)
@@ -1531,10 +1587,8 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 	
 #if SDL_VERSION_ATLEAST(1,3,0)
 
-	// TODO: convert to UTF-8
 	ev->type = SDL_TEXTINPUT;
-	ev->text.text[0] = ascii;
-	ev->text.text[1] = 0;
+	UnicodeToUtf8(unicode, ev->text.text);
 
 #else
 

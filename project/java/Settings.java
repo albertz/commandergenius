@@ -45,7 +45,7 @@ class Settings
 
 	static boolean settingsLoaded = false;
 	static boolean settingsChanged = false;
-	static final int SETTINGS_FILE_VERSION = 4;
+	static final int SETTINGS_FILE_VERSION = 5;
 
 	static void Save(final MainActivity p)
 	{

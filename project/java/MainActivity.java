@@ -242,6 +242,7 @@ public class MainActivity extends Activity {
 				DemoRenderer.nativeTextInput( (int)text.charAt(i), (int)text.codePointAt(i) );
 			}
 		}
+		DemoRenderer.nativeTextInputFinished();
 		_videoLayout.removeView(_screenKeyboard);
 		_screenKeyboard = null;
 		mGLView.setFocusableInTouchMode(true);
@@ -249,7 +250,7 @@ public class MainActivity extends Activity {
 		mGLView.requestFocus();
 	};
 	
-	public void showScreenKeyboard()
+	public void showScreenKeyboard(final String oldText)
 	{
 		if(_screenKeyboard != null)
 			return;
@@ -283,6 +284,8 @@ public class MainActivity extends Activity {
 		};
 		_screenKeyboard = new EditText(this);
 		_screenKeyboard.setOnKeyListener(new myKeyListener(this));
+		_screenKeyboard.setHint(R.string.text_edit_click_here);
+		_screenKeyboard.setText(oldText);
 		_videoLayout.addView(_screenKeyboard);
 		_screenKeyboard.setFocusableInTouchMode(true);
 		_screenKeyboard.setFocusable(true);

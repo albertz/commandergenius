@@ -253,18 +253,20 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 		return 1;
 	}
 
-	public void showScreenKeyboard() // Called from native code
+	public void showScreenKeyboard(final String oldText) // Called from native code
 	{
 		class Callback implements Runnable
 		{
 			public MainActivity parent;
+			public String oldText;
 			public void run()
 			{
-				parent.showScreenKeyboard();
+				parent.showScreenKeyboard(oldText);
 			}
 		}
 		Callback cb = new Callback();
 		cb.parent = context;
+		cb.oldText = oldText;
 		context.runOnUiThread(cb);
 	}
 
@@ -279,6 +281,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	private native void nativeGlContextLost();
 	public native void nativeGlContextRecreated();
 	public static native void nativeTextInput( int ascii, int unicode );
+	public static native void nativeTextInputFinished();
 
 	private MainActivity context = null;
 	private AccelerometerReader accelerometer = null;

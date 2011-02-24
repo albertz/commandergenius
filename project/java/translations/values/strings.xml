@@ -143,4 +143,6 @@
     <string name="video_smooth">Smooth the video</string>
     <string name="video_separatethread">Separate thread for video, will increase FPS on some devices</string>
 
+    <string name="text_edit_click_here">Tap to start typing, press Back when done</string>
+
 </resources>

@@ -63,6 +63,7 @@ static jmethodID JavaSwapBuffers = NULL;
 static jmethodID JavaShowScreenKeyboard = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
+static const char * showScreenKeyboardOldText = "";
 int SDL_ANDROID_SmoothVideo = 0;
 int SDL_ANDROID_VideoMultithreaded = 0;
 
@@ -117,7 +118,7 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 	if( showScreenKeyboardDeferred )
 	{
 		showScreenKeyboardDeferred = 0;
-		(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard );
+		(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard, (*JavaEnv)->NewStringUTF(JavaEnv, showScreenKeyboardOldText) );
 	}
 	SDL_ANDROID_ProcessDeferredEvents();
 	return 1;
@@ -210,13 +211,51 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeGlContextRecreated) ( JNIEnv*  env, jobject 
 #endif
 }
 
-void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, int blocking)
+volatile static textInputFinished = 0;
+void SDL_ANDROID_TextInputFinished()
 {
-	showScreenKeyboardDeferred = 1;
-	// Move mouse by 1 pixel to force screen update
-	int x, y;
-	SDL_GetMouseState( &x, &y );
-	SDL_ANDROID_MainThreadPushMouseMotion(x > 0 ? x-1 : 0, y);
+	textInputFinished = 1;
+};
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+#else
+extern int SDL_Flip(SDL_Surface *screen);
+extern SDL_Surface *SDL_GetVideoSurface(void);
+#endif
+
+void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf, int outBufLen)
+{
+	if( !outBuf )
+	{
+		showScreenKeyboardDeferred = 1;
+		showScreenKeyboardOldText = oldText;
+		// Move mouse by 1 pixel to force screen update
+		int x, y;
+		SDL_GetMouseState( &x, &y );
+		SDL_ANDROID_MainThreadPushMouseMotion(x > 0 ? x-1 : 0, y);
+	}
+	else
+	{
+		textInputFinished = 0;
+		SDL_ANDROID_TextInputInit(outBuf, outBufLen);
+
+		if( SDL_ANDROID_VideoMultithreaded )
+		{
+#if SDL_VERSION_ATLEAST(1,3,0)
+#else
+			// Dirty hack: we may call (*JavaEnv)->CallVoidMethod(...) only from video thread
+			showScreenKeyboardDeferred = 1;
+			showScreenKeyboardOldText = oldText;
+			SDL_Flip(SDL_GetVideoSurface());
+#endif
+		}
+		else
+			(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard, (*JavaEnv)->NewStringUTF(JavaEnv, oldText) );
+
+		while( !textInputFinished )
+			SDL_Delay(100);
+		textInputFinished = 0;
+	}
 }
 
 JNIEXPORT void JNICALL 
@@ -227,7 +266,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	
 	JavaRendererClass = (*JavaEnv)->GetObjectClass(JavaEnv, thiz);
 	JavaSwapBuffers = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "swapBuffers", "()I");
-	JavaShowScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboard", "()V");
+	JavaShowScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboard", "(Ljava/lang/String;)V");
 	
 	ANDROID_InitOSKeymap();
 	
