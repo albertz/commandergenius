@@ -118,4 +118,6 @@
 <string name="pointandclick_relative_speed">Швидкість руху миші</string>
 <string name="pointandclick_relative_accel">Прискорення руху миші</string>
 <string name="downloads">Завантаження</string>
+<string name="video_separatethread">Окремий потік для відео, збільшить FPS на деяких пристроях</string>
+<string name="text_edit_click_here">Натисніть, щоб ввести текст, натисніть Назад, коли закiнчете</string>
 </resources>

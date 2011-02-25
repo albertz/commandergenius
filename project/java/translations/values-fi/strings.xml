@@ -125,4 +125,6 @@
 <string name="pointandclick_relative_speed">Suhteellinen hiiren liikkeen nopeus</string>
 <string name="pointandclick_relative_accel">Suhteellinen hiiren liikkeen kiihtyvyys</string>
 <string name="downloads">Downloads</string>
+<string name="video_separatethread">Erillisessä säikeessä video, kasvaa FPS joissakin laitteissa</string>
+<string name="text_edit_click_here">Napauta aloittaa kirjoittamisen, paina Takaisin, kun olet valmis</string>
 </resources>

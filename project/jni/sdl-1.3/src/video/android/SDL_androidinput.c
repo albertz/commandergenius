@@ -1832,7 +1832,9 @@ JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )
   
   keymap[KEYCODE_HOME] = SDL_KEY(HOME); // Cannot be used in application
 
+  // On some devices pressing Camera key will generate Camera keyevent, but releasing it will generate Focus keyevent.
   keymap[KEYCODE_CAMERA] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_6));
+  keymap[KEYCODE_FOCUS] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_KEYCODE_6));
 
   keymap[KEYCODE_0] = SDL_KEY(0);
   keymap[KEYCODE_1] = SDL_KEY(1);
@@ -1922,7 +1924,6 @@ JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )
   keymap[KEYCODE_ENVELOPE] = SDL_KEY(F4);
 
   keymap[KEYCODE_HEADSETHOOK] = SDL_KEY(F5);
-  keymap[KEYCODE_FOCUS] = SDL_KEY(F6);
   keymap[KEYCODE_NOTIFICATION] = SDL_KEY(F7);
 
   // Cannot be received by application, OS internal

@@ -125,4 +125,6 @@
 <string name="pointandclick_relative_speed">Relative Maus Bewegungsgeschwindigkeit</string>
 <string name="pointandclick_relative_accel">Relative Bewegung der Maus Beschleunigung</string>
 <string name="downloads">Downloads</string>
+<string name="video_separatethread">Separaten Thread für Video, FPS bei einigen Geräten zu erhöhen</string>
+<string name="text_edit_click_here">Tippen Sie auf der Eingabe beginnen, drücken Sie Zurück, wenn Sie fertig</string>
 </resources>

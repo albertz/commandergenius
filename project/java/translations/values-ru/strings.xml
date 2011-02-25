@@ -118,4 +118,6 @@
 <string name="pointandclick_relative_speed">Скорость движения мыши</string>
 <string name="pointandclick_relative_accel">Ускорение движения мыши</string>
 <string name="downloads">Загрузки</string>
+<string name="video_separatethread">Отдельный поток для видео, увеличит FPS на некоторых устройствах</string>
+<string name="text_edit_click_here">Нажмите, чтобы ввести текст, нажмите Назад, когда закончите</string>
 </resources>

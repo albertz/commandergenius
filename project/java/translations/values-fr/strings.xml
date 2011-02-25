@@ -128,4 +128,6 @@
 <string name="pointandclick_relative_speed">Relative vitesse de déplacement de la souris</string>
 <string name="pointandclick_relative_accel">Relative accélération du mouvement de la souris</string>
 <string name="downloads">Téléchargements</string>
+<string name="video_separatethread">thread séparé pour la vidéo, va augmenter FPS sur certains appareils</string>
+<string name="text_edit_click_here">Appuyez sur pour commencer à taper, appuyez sur Retour lorsque vous avez terminé</string>
 </resources>
