@@ -250,32 +250,26 @@ public class MainActivity extends Activity {
 		mGLView.requestFocus();
 	};
 	
-	public void showScreenKeyboard(final String oldText)
+	public void showScreenKeyboard(final String oldText, boolean sendBackspace)
 	{
 		if(_screenKeyboard != null)
 			return;
 		class myKeyListener implements OnKeyListener 
 		{
 			MainActivity _parent;
-			myKeyListener(MainActivity parent) { _parent = parent; };
+			boolean sendBackspace;
+			myKeyListener(MainActivity parent, boolean sendBackspace) { _parent = parent; this.sendBackspace = sendBackspace; };
 			public boolean onKey(View v, int keyCode, KeyEvent event) 
 			{
 				if ((event.getAction() == KeyEvent.ACTION_UP) && ((keyCode == KeyEvent.KEYCODE_ENTER) || (keyCode == KeyEvent.KEYCODE_BACK)))
 				{
 					_parent.hideScreenKeyboard();
-					if(keyCode == KeyEvent.KEYCODE_ENTER)
-					{
-						synchronized(textInput)
-						{
-							//DemoRenderer.nativeTextInput( 13, 13 ); // send return
-						}
-					}
 					return true;
 				}
-				if ((event.getAction() == KeyEvent.ACTION_UP) && (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR))
+				if ((sendBackspace && event.getAction() == KeyEvent.ACTION_UP) && (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR))
 				{
 					synchronized(textInput) {
-						DemoRenderer.nativeTextInput( 8, 8 );
+						DemoRenderer.nativeTextInput( 8, 8 ); // Send backspace to native code
 					}
 					return false; // and proceed to delete text in keyboard input field
 				}
@@ -283,7 +277,7 @@ public class MainActivity extends Activity {
 			}
 		};
 		_screenKeyboard = new EditText(this);
-		_screenKeyboard.setOnKeyListener(new myKeyListener(this));
+		_screenKeyboard.setOnKeyListener(new myKeyListener(this, sendBackspace));
 		_screenKeyboard.setHint(R.string.text_edit_click_here);
 		_screenKeyboard.setText(oldText);
 		_videoLayout.addView(_screenKeyboard);

@@ -789,6 +789,8 @@ int SDL_ANDROID_GetScreenKeyboardSize()
 int SDL_ANDROID_ToggleScreenKeyboardTextInput(const char * previousText)
 {
 	static char textIn[255];
+	if( previousText == NULL )
+		previousText = "";
 	strncpy(textIn, previousText, sizeof(textIn));
 	textIn[sizeof(textIn)-1] = 0;
 	SDL_ANDROID_CallJavaShowScreenKeyboard(textIn, NULL, 0);
