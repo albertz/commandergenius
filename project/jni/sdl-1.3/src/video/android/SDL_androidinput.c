@@ -679,6 +679,7 @@ void SDL_ANDROID_TextInputInit(char * buffer, int len)
 {
 	textInputBuffer = buffer;
 	textInputBufferLen = len;
+	textInputBufferPos = 0;
 }
 
 JNIEXPORT void JNICALL
