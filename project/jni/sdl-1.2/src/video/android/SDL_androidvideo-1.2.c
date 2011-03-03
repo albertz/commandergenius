@@ -1044,7 +1044,9 @@ void SDL_ANDROID_MultiThreadedVideoLoop()
 		if( signalNeeded )
 			SDL_CondSignal(videoThread.cond2);
 		if( swapBuffersNeeded )
+		{
 			SDL_ANDROID_CallJavaSwapBuffers();
+		}
 	}
 }
 
@@ -1069,7 +1071,6 @@ SDL_Surface *ANDROID_SetVideoModeMT(_THIS, SDL_Surface *current, int width, int 
 {
 	if( flags & SDL_OPENGL || flags & SDL_HWSURFACE )
 	{
-		__android_log_print(ANDROID_LOG_FATAL, "libSDL", "SDL_SetVideoMode(): cannot use multi-threaded video with SDL_OPENGL or SDL_HWSURFACE flags");
 		return NULL;
 	}
 	SDL_mutexP(videoThread.mutex);
