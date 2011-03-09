@@ -465,6 +465,14 @@ int main(int argc, char* argv[])
 					break;
 				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL key event: state %d key %d mod %d unicode %d", event.key.state, (int)event.key.keysym.sym, (int)event.key.keysym.mod, (int)event.key.keysym.unicode);
 			}
+			if(event.type & SDL_VIDEORESIZE)
+			{
+				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL resize event: %d x %d", event.resize.w, event.resize.h);
+			}
+			if(event.type & SDL_ACTIVEEVENT)
+			{
+				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL active event: gain %d", event.active.gain);
+			}
 		}
 
 		/* Timing */

@@ -201,7 +201,8 @@ where callback_t is function pointer of type "void (*) void".
 The default callbacks will call another Android-specific functions:
 SDL_ANDROID_PauseAudioPlayback() and SDL_ANDROID_ResumeAudioPlayback()
 which will pause and resume audio from HW layer, so appplication does not need to destroy and re-init audio.
-Also, the usual event SDL_ACTIVEEVENT with flag SDL_APPACTIVE will be sent when that happens.
+Also, the usual event SDL_ACTIVEEVENT with flag SDL_APPACTIVE will be sent when that happens,
+and also SDL_VIDEORESIZE event will be sent (the same behavior as in MacOsX SDL implementation).
 If you're using OpenAL for an audio playback you have to call functions al_android_pause_playback()
 and al_android_resume_playback() by yourself when SDL calls your callbacks.
 
