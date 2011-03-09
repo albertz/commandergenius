@@ -63,11 +63,11 @@ if [ -z "$AppDataDownloadUrl" -o -z "$AUTO" ]; then
 echo
 echo "Specify path to download application data in zip archive in the form 'Description|URL|MirrorURL|...'"
 echo "You may specify additional paths to additional downloads delimited by newlines (empty line to finish)"
-echo "If you'll start Description with '!' symbol it will be enabled by default,\nother downloads should be selected by user from config menu"
+echo "If you'll start Description with '!' symbol it will be enabled by default, other downloads should be selected by user from config menu"
 echo "If the URL in in the form ':dir/file.dat:http://URL/' it will be downloaded as-is to the application dir and not unzipped"
 echo "If the URL does not contain 'http://' it is treated as file from 'project/jni/application/src/AndroidData' dir -"
 echo "these files are put inside .apk package by build system"
-echo "Also beware of 'https://' URLs, many Android devices do not have trust certificates and will fail to connect to SF.net over HTTPS"
+echo "Also please avoid 'https://' URLs, many Android devices do not have trust certificates and will fail to connect to SF.net over HTTPS"
 echo "`echo $AppDataDownloadUrl | tr '^' '\\n'`"
 echo
 AppDataDownloadUrl1=""
