@@ -1613,7 +1613,7 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 			deferredTextIdx2 = 0;
 		deferredText[deferredTextIdx2].down = SDL_PRESSED;
 		deferredText[deferredTextIdx2].scancode = SDLK_LSHIFT;
-		deferredText[deferredTextIdx2].unicode = SDLK_LSHIFT;
+		deferredText[deferredTextIdx2].unicode = 0;
 	}
 	deferredTextIdx2++;
 	if( deferredTextIdx2 >= DEFERRED_TEXT_COUNT )
@@ -1635,7 +1635,7 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 			deferredTextIdx2 = 0;
 		deferredText[deferredTextIdx2].down = SDL_RELEASED;
 		deferredText[deferredTextIdx2].scancode = SDLK_LSHIFT;
-		deferredText[deferredTextIdx2].unicode = SDLK_LSHIFT;
+		deferredText[deferredTextIdx2].unicode = 0;
 	}
 
 	SDL_mutexV(deferredTextMutex);

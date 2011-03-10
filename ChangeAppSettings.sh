@@ -68,6 +68,7 @@ echo "If the URL in in the form ':dir/file.dat:http://URL/' it will be downloade
 echo "If the URL does not contain 'http://' it is treated as file from 'project/jni/application/src/AndroidData' dir -"
 echo "these files are put inside .apk package by build system"
 echo "Also please avoid 'https://' URLs, many Android devices do not have trust certificates and will fail to connect to SF.net over HTTPS"
+echo " "
 echo "`echo $AppDataDownloadUrl | tr '^' '\\n'`"
 echo
 AppDataDownloadUrl1=""

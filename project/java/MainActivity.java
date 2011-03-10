@@ -269,7 +269,7 @@ public class MainActivity extends Activity {
 				if ((sendBackspace && event.getAction() == KeyEvent.ACTION_UP) && (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR))
 				{
 					synchronized(textInput) {
-						DemoRenderer.nativeTextInput( 8, 8 ); // Send backspace to native code
+						DemoRenderer.nativeTextInput( 8, 0 ); // Send backspace to native code
 					}
 					return false; // and proceed to delete text in keyboard input field
 				}
