@@ -23,6 +23,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.view.View.OnKeyListener;
+import android.text.method.TextKeyListener;
 import java.util.LinkedList;
 import java.io.SequenceInputStream;
 import java.io.BufferedInputStream;
@@ -277,10 +278,19 @@ public class MainActivity extends Activity {
 			}
 		};
 		_screenKeyboard = new EditText(this);
+		_videoLayout.addView(_screenKeyboard);
 		_screenKeyboard.setOnKeyListener(new myKeyListener(this, sendBackspace));
 		_screenKeyboard.setHint(R.string.text_edit_click_here);
 		_screenKeyboard.setText(oldText);
-		_videoLayout.addView(_screenKeyboard);
+		final Window window = getWindow();
+		_screenKeyboard.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+			public void onFocusChange(View v, boolean hasFocus)
+			{
+				if (hasFocus)
+					window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+			}
+		});
+		_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
 		_screenKeyboard.setFocusableInTouchMode(true);
 		_screenKeyboard.setFocusable(true);
 		_screenKeyboard.requestFocus();
