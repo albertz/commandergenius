@@ -239,27 +239,26 @@ between appPutToBackground() and appRestored() and update game time variables.
 Alternatively, you may enable option for unblocked SDL_Flip() in ChangeAppSettings script,
 then you'll have to implement special event loop right after each SDL_Flip() call:
 
-SDL_Flip();
+SDL_Flip(SDL_GetVideoSurface());
 SDL_Event evt;
 while( SDL_PollEvent(&evt) )
 {
-	if( evt.type == SDL_ACTIVEEVENT && evt.active.gain == 0 && evt.active.state == SDL_APPACTIVE )
+	if( evt.type == SDL_ACTIVEEVENT && evt.active.gain == 0 && evt.active.state & SDL_APPACTIVE )
 	{
 		// We've lost GL context, we are not allowed to do any GFX output here, or app will crash!
 		while( 1 )
 		{
 			SDL_PollEvent(&evt);
-			if( evt.type == SDL_ACTIVEEVENT->SDL_APPACTIVE && evt.active.gain && evt.active.state == SDL_APPACTIVE )
+			if( evt.type == SDL_ACTIVEEVENT && evt.active.gain && evt.active.state & SDL_APPACTIVE )
 			{
-				SDL_Flip(); // One SDL_Flip() call is required here to restore OpenGL context
+				SDL_Flip(SDL_GetVideoSurface()); // One SDL_Flip() call is required here to restore OpenGL context
 				// Re-load all textures, matrixes and all other GL states if we're in SDL+OpenGL mode
 				// Re-load all images to SDL_Texture if we're using it
 				// Now we can draw
 				break;
 			}
-			
 			// Process network stuff, maybe play some sounds using SDL_ANDROID_PauseAudioPlayback() / SDL_ANDROID_ResumeAudioPlayback()
-			SDL_Sleep(200);
+			SDL_Delay(300);
 		}
 	}
 }

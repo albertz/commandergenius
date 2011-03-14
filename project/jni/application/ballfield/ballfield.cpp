@@ -456,24 +456,6 @@ int main(int argc, char* argv[])
 	while(1)
 	{
 		SDL_Rect r;
-		if(SDL_PollEvent(&event) > 0)
-		{
-			if(event.type & (SDL_KEYUP | SDL_KEYDOWN))
-			{
-				Uint8	*keys = SDL_GetKeyState(&i);
-				if(keys[SDLK_ESCAPE])
-					break;
-				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL key event: state %d key %d mod %d unicode %d", event.key.state, (int)event.key.keysym.sym, (int)event.key.keysym.mod, (int)event.key.keysym.unicode);
-			}
-			if(event.type & SDL_VIDEORESIZE)
-			{
-				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL resize event: %d x %d", event.resize.w, event.resize.h);
-			}
-			if(event.type & SDL_ACTIVEEVENT)
-			{
-				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL active event: gain %d", event.active.gain);
-			}
-		}
 
 		/* Timing */
 		tick = SDL_GetTicks();
@@ -523,7 +505,42 @@ int main(int argc, char* argv[])
 			SDL_FillRect(screen, &r, 0x67895566);
 		}
 
-		SDL_Flip(screen);
+		SDL_Flip(SDL_GetVideoSurface());
+		SDL_Event evt;
+		while( SDL_PollEvent(&evt) )
+		{
+			if(evt.type == (SDL_KEYUP | SDL_KEYDOWN))
+			{
+				Uint8	*keys = SDL_GetKeyState(&i);
+				if(keys[SDLK_ESCAPE])
+					break;
+				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL key event: state %d key %d mod %d unicode %d", evt.key.state, (int)evt.key.keysym.sym, (int)evt.key.keysym.mod, (int)evt.key.keysym.unicode);
+			}
+			if(evt.type == SDL_VIDEORESIZE)
+				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL resize event: %d x %d", evt.resize.w, evt.resize.h);
+			if(evt.type == SDL_ACTIVEEVENT)
+				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "======= SDL active event: gain %d state %d", evt.active.gain, evt.active.state);
+			if( evt.type == SDL_ACTIVEEVENT && evt.active.gain == 0 && evt.active.state & SDL_APPACTIVE )
+			{
+				// We've lost GL context, we are not allowed to do any GFX output here, or app will crash!
+				while( 1 )
+				{
+					SDL_PollEvent(&evt);
+					if( evt.type == SDL_ACTIVEEVENT && evt.active.gain && evt.active.state & SDL_APPACTIVE )
+					{
+						__android_log_print(ANDROID_LOG_INFO, "Ballfield", "======= SDL active event: gain %d state %d", evt.active.gain, evt.active.state);
+						SDL_Flip(SDL_GetVideoSurface()); // One SDL_Flip() call is required here to restore OpenGL context
+						// Re-load all textures, matrixes and all other GL states if we're in SDL+OpenGL mode
+						// Re-load all images to SDL_Texture if we're using it
+						// Now we can draw
+						break;
+					}
+					// Process network stuff, maybe play some sounds using SDL_ANDROID_PauseAudioPlayback() / SDL_ANDROID_ResumeAudioPlayback()
+					SDL_Delay(300);
+					__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Waiting");
+				}
+			}
+		}
 
 		/* Animate */
 		x_speed = 500.0 * sin(t * 0.37);

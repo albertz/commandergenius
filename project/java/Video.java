@@ -182,8 +182,9 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer {
 	}
 	
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+		System.out.println("libSDL: DemoRenderer.onSurfaceCreated(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
 		mGlSurfaceCreated = true;
-		if( mGlSurfaceCreated && ! mPaused && ! mFirstTimeStart )
+		if( ! mPaused && ! mFirstTimeStart )
 			nativeGlContextRecreated();
 		mFirstTimeStart = false;
 	}
@@ -341,7 +342,8 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public void onResume() {
 		super.onResume();
 		mRenderer.mPaused = false;
-		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused )
+		System.out.println("libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused);
+		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused || Globals.NonBlockingSwapBuffers )
 			mRenderer.nativeGlContextRecreated();
 	};
 
