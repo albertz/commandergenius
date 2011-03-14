@@ -108,7 +108,8 @@ static int first_free_texture;
 static int memory_usage = 0;
 static int active_texture = -1;
 
-static SDL_Surface *screen_surface;
+extern SDL_Surface *EC_screen_surface;
+SDL_Surface *EC_screen_surface = NULL;
 
 static const unsigned char null_texture_data[] = {
 	0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff, 
@@ -291,6 +292,9 @@ static void add_vertices(int count)
 		flush();
 }
 
+extern SDL_Joystick * EC_joystick;
+SDL_Joystick * EC_joystick = NULL;
+
 static int try_init()
 {
 	const SDL_VideoInfo *info;
@@ -311,50 +315,56 @@ static int try_init()
 	if( ! SDL_ANDROID_GetScreenKeyboardRedefinedByUser() )
 	{
 		// Disable DPAD
-		SDL_Rect pos = {0, 0, 0, 0};
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, &pos);
+		SDL_Rect pos;
 
-		// Rope button in lower-right
 		pos.x = screen_width;
 		pos.y = screen_height;
-		pos.w = screen_width / 6;
-		pos.h = pos.w * 2 / 3;
+		pos.h = screen_height * 3 / 5;
+		pos.w = pos.h;
 		pos.x -= pos.w;
 		pos.y -= pos.h;
 
-		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &pos);
-		
-		// Move and jump buttons overlapped in lower-left
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, &pos);
+
+		// Move buttons overlapped in lower-left
 		pos.x = 0;
 		pos.y = screen_height;
-		pos.w = screen_width / 8;
-		pos.h = pos.w*1.5;
+		pos.h = screen_height / 2;
+		pos.w = pos.h / 2;
 		pos.y -= pos.h;
 
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &pos);
 
 		pos.x += pos.w;
 
+		// Jump button overlaps move buttons
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &pos);
 
 		pos.w *= 2;
-		pos.h = pos.w*2/3;
+		pos.h = pos.w/2;
 		pos.x = 0;
 		pos.y -= pos.h/2;
 
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &pos);
 
+		// Rope button below jump button
+		pos.y = 0;
+		pos.h = pos.h * 2 / 3;
+		pos.y = screen_height - pos.h;
+
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &pos);
+
 		// weapprev weapnext buttons
 
 		pos.x = screen_width;
-		pos.y = screen_height / 6;
-		pos.w = screen_width / 10;
+		pos.y = 0;
+		pos.w = screen_width / 8;
 		pos.h = pos.w;
 		pos.x -= pos.w;
 
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_5, &pos);
 
-		pos.x = 0;
+		pos.x -= pos.w;
 
 		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_4, &pos);
 
@@ -400,13 +410,26 @@ static int try_init()
 	SDL_WM_SetCaption("Teeworlds", "Teeworlds");
 	
 	/* create window */
-	screen_surface = SDL_SetVideoMode(screen_width, screen_height, 0, flags);
-	if(screen_surface == NULL)
+	EC_screen_surface = SDL_SetVideoMode(screen_width, screen_height, 0, flags);
+	if(EC_screen_surface == NULL)
 	{
 		dbg_msg("gfx", "unable to set video mode: %s", SDL_GetError());
 		return -1;
 	}
-	
+#ifdef ANDROID
+	dbg_msg("gfx", "Number of joysticks: %d", SDL_NumJoysticks());
+	if(SDL_NumJoysticks() > 0)
+	{
+		dbg_msg("gfx", "Joystick 0: %s", SDL_JoystickName(0));
+		EC_joystick = SDL_JoystickOpen(0);
+		if( EC_joystick )
+			dbg_msg("gfx", "Opened joystick 0, numaxes %d numbuttons %d", SDL_JoystickNumAxes(EC_joystick), SDL_JoystickNumButtons(EC_joystick));
+		else
+			dbg_msg("gfx", "Error opening joystick 0");
+		SDL_JoystickEventState(SDL_ENABLE);
+	}
+#endif
+
 	return 0;
 }
 
@@ -463,7 +486,11 @@ int gfx_init()
 
 		if(config.cl_eventthread)
 			systems |= SDL_INIT_EVENTTHREAD;
-		
+
+#ifdef ANDROID
+		systems |= SDL_INIT_JOYSTICK;
+#endif
+
 		if(SDL_Init(systems) < 0)
 		{
 			dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());

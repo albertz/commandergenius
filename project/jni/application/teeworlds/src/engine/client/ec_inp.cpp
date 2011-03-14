@@ -6,6 +6,8 @@
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 
+#include <android/log.h>
+
 static struct
 {
 	unsigned char presses;
@@ -19,6 +21,11 @@ static int input_grabbed = 0;
 
 static unsigned int last_release = 0;
 static unsigned int release_delta = -1;
+
+extern SDL_Joystick * EC_joystick;
+extern SDL_Surface *EC_screen_surface;
+
+static void add_event(char c, int key, int flags);
 
 void inp_mouse_relative(int *x, int *y)
 {
@@ -49,6 +56,23 @@ void inp_mouse_absolute(int *x, int *y)
 void inp_warp_mouse(int x, int y)
 {
 	SDL_WarpMouse(x,y);
+}
+
+int inp_process_joystick()
+{
+	if( !EC_joystick || !EC_screen_surface )
+		return 0;
+	int jx = SDL_JoystickGetAxis(EC_joystick, 0);
+	int jy = SDL_JoystickGetAxis(EC_joystick, 1);
+	if( abs(jx) > 10 && abs(jy) > 10 )
+	{
+		jx = (jx + 32768) * EC_screen_surface->w / 65536;
+		jy = (jy + 32768) * EC_screen_surface->h / 65536;
+		SDL_WarpMouse(jx,jy);
+		SDL_PumpEvents();
+		return 1;
+	}
+	return 0;
 }
 
 enum
@@ -144,6 +168,8 @@ int inp_key_was_pressed(int key) { return input_state[input_current^1][key]; }
 int inp_key_down(int key) { return inp_key_pressed(key)&&!inp_key_was_pressed(key); }
 int inp_button_pressed(int button) { return input_state[input_current][button]; }
 
+static int oldjoy = 0;
+
 void inp_update()
 {
 	int i;
@@ -168,6 +194,7 @@ void inp_update()
 	
 	/* these states must always be updated manually because they are not in the GetKeyState from SDL */
 	i = SDL_GetMouseState(NULL, NULL);
+	int joy = inp_process_joystick();
 	if(i&SDL_BUTTON(1)) input_state[input_current][KEY_MOUSE_1] = 1; /* 1 is left */ 
 	if(i&SDL_BUTTON(3)) input_state[input_current][KEY_MOUSE_2] = 1; /* 3 is right */ 
 	if(i&SDL_BUTTON(2)) input_state[input_current][KEY_MOUSE_3] = 1; /* 2 is middle */ 
@@ -175,7 +202,7 @@ void inp_update()
 	if(i&SDL_BUTTON(5)) input_state[input_current][KEY_MOUSE_5] = 1; 
 	if(i&SDL_BUTTON(6)) input_state[input_current][KEY_MOUSE_6] = 1; 
 	if(i&SDL_BUTTON(7)) input_state[input_current][KEY_MOUSE_7] = 1; 
-	if(i&SDL_BUTTON(8)) input_state[input_current][KEY_MOUSE_8] = 1; 	
+	if(i&SDL_BUTTON(8)) input_state[input_current][KEY_MOUSE_8] = 1; 
 	
 	{
 		SDL_Event event;
@@ -221,6 +248,9 @@ void inp_update()
 					
 				/* other messages */
 				case SDL_QUIT:
+#ifdef ANDROID
+				case SDL_VIDEORESIZE:
+#endif
 					/* TODO: cleaner exit */
 					exit(0);
 					break;
@@ -236,5 +266,17 @@ void inp_update()
 			}
 
 		}
+
+		if(joy && !input_state[input_current][KEY_MOUSE_1])
+		{
+			input_count[input_current][KEY_MOUSE_1].presses++;
+			add_event(0, KEY_MOUSE_1, INPFLAG_PRESS);
+		}
+		if(!joy && oldjoy && !(i&SDL_BUTTON(1)))
+		{
+			input_count[input_current][KEY_MOUSE_1].presses++;
+			add_event(0, KEY_MOUSE_1, INPFLAG_RELEASE);
+		}
+		oldjoy = joy;
 	}
 }

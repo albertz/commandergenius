@@ -635,12 +635,10 @@ void SDL_ANDROID_WarpMouse(int x, int y)
 	}
 	else
 	{
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_WarpMouse(): %dx%d rel %dx%d old %dx%d", x, y, relativeMovementX, relativeMovementY, oldMouseX, oldMouseY);
+		relativeMovementX -= oldMouseX-x;
+		relativeMovementY -= oldMouseY-y;
 		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
-		// TODO: test and enable it
-		/*
-		relativeMovementX = x;
-		relativeMovementY = y;
-		*/
 	}
 };
 
