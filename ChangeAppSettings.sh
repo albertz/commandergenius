@@ -201,7 +201,7 @@ fi
 if [ -z "$NonBlockingSwapBuffers" -o -z "$AUTO" ]; then
 echo
 echo "Application implements Android-specific routines to put to background, and will not draw anything to screen"
-echo "between SDL_ACTIVEEVENT->SDL_APPACTIVE lost / gained notifications - you should check for them"
+echo "between SDL_ACTIVEEVENT lost / gained notifications - you should check for them"
 echo -n "rigth after SDL_Flip(), if (n) then SDL_Flip() will block till app in background (y) or (n) ($NonBlockingSwapBuffers): "
 read var
 if [ -n "$var" ] ; then
