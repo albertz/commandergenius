@@ -1,18 +1,2 @@
-Games to port
-=============
-
-I'm not planning any more games to port.
-
-
-Bugs to fix
-===========
-
-- Show/hide screen controls with longpress on Text Edit button.
-
-- Support of libjnigraphics (it will disable on-screen keyboard, only SW SDL screen surface supported)
-
-- Update screen keyboard text input API
-
-- Floating on-screen joystick
-
-And that's all, I won't be doing any more development or fix other bugs (see bugs.txt for details).
+I'm not planning any more games to port, or any development on this SDL port.
+See bugs.txt if you want to contribute.
