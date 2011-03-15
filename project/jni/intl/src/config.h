@@ -59,7 +59,7 @@
 
 /* Define to 1 if realpath() can malloc memory, always gives an absolute path,
    and handles trailing slash correctly. */
-/* #undef FUNC_REALPATH_WORKS */
+#define FUNC_REALPATH_WORKS 1
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module canonicalize-lgpl shall be considered present. */
@@ -784,7 +784,7 @@
 #define HAVE_SETENV 1
 
 /* Define to 1 if you have the `setlocale' function. */
-/* #define HAVE_SETLOCALE 1 */
+#define HAVE_SETLOCALE 1
 
 /* Define to 1 if you have the <signal.h> header file. */
 #define HAVE_SIGNAL_H 1
