@@ -618,6 +618,13 @@ void ProcessDeferredMouseTap()
 		deferredMouseTap--;
 		if( deferredMouseTap <= 0 )
 		{
+#if SDL_VERSION_ATLEAST(1,3,0)
+			SDL_Window * window = SDL_GetFocusWindow();
+			if( !window )
+				return;
+#define SDL_ANDROID_sFakeWindowWidth window->w
+#define SDL_ANDROID_sFakeWindowHeight window->h
+#endif
 			if( oldMouseX + 1 < SDL_ANDROID_sFakeWindowWidth )
 				SDL_ANDROID_MainThreadPushMouseMotion(oldMouseX + 1, oldMouseY);
 			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );

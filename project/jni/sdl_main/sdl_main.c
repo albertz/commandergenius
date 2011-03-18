@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <jni.h>
 #include <android/log.h>
+#include "SDL_version.h"
 #include "SDL_thread.h"
 #include "SDL_main.h"
 
@@ -24,11 +25,13 @@
 #define JAVA_EXPORT_NAME1(name,package) JAVA_EXPORT_NAME2(name,package)
 #define JAVA_EXPORT_NAME(name) JAVA_EXPORT_NAME1(name,SDL_JAVA_PACKAGE_PATH)
 
-extern void SDL_ANDROID_MultiThreadedVideoLoopInit();
-extern void SDL_ANDROID_MultiThreadedVideoLoop();
-
 static int argc = 0;
 static char ** argv = NULL;
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+#else
+extern void SDL_ANDROID_MultiThreadedVideoLoopInit();
+extern void SDL_ANDROID_MultiThreadedVideoLoop();
 
 static int threadedMain(void * unused)
 {
@@ -36,6 +39,7 @@ static int threadedMain(void * unused)
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Application closed, calling exit(0)");
 	exit(0);
 }
+#endif
 
 extern C_LINKAGE void
 JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring jcurdir, jstring cmdline, jint multiThreadedVideo )
@@ -97,6 +101,9 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	for( i = 0; i < argc; i++ )
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "param %d = \"%s\"", i, argv[i]);
 
+#if SDL_VERSION_ATLEAST(1,3,0)
+	SDL_main( argc, argv );
+#else
 	if( ! multiThreadedVideo )
 		SDL_main( argc, argv );
 	else
@@ -105,6 +112,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 		SDL_CreateThread(threadedMain, NULL);
 		SDL_ANDROID_MultiThreadedVideoLoop();
 	}
+#endif
 };
 
 extern C_LINKAGE void
