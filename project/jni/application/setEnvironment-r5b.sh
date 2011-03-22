@@ -25,8 +25,8 @@ LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 echo LOCAL_PATH $LOCAL_PATH
 
-if [ -z "`echo $NDK | grep 'android-ndk-r5b'`" ] ; then
-	echo "The only supported NDK version is android-ndk-r5b, please download it from http://developer.android.com/"
+if [ -z "`echo $NDK | grep 'android-ndk-r5b'``echo $NDK | grep 'android-ndk-r5-crystax'`" ] ; then
+	echo "The only supported NDK versions are android-ndk-r5b or android-ndk-r5-crystax"
 	exit 1
 fi
 

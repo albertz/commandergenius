@@ -17,11 +17,11 @@ $(info Cannot determine NDK version, assuming NDK r5b - please do not rename NDK
 NDK_VERSION := r5b
 endif
 
-ifneq ($(findstring -crystax,$(NDK_VERSION)),)
+ifneq ($(findstring r4-crystax,$(NDK_VERSION)),)
 $(info Building with CrystaX toolchain - internal STLPort disabled)
 CRYSTAX_TOOLCHAIN := 1
 endif
-ifneq ($(findstring r5b,$(NDK_VERSION)),)
+ifneq ($(findstring r5b,$(NDK_VERSION))$(findstring r5-crystax,$(NDK_VERSION)),)
 $(info Building with NDK r5b - internal STLPort disabled)
 NDK_R5_TOOLCHAIN := 1
 endif
