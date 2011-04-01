@@ -61,15 +61,18 @@
 #include "SpellMgr.h"
 #include "StoreMgr.h"
 #include "StringMgr.h"
+#include "SymbolMgr.h"
 #include "TileMap.h"
 #include "Video.h"
 #include "WorldMapMgr.h"
+#include "GameScript/GameScript.h"
 #include "GUI/Button.h"
 #include "GUI/Console.h"
 #include "GUI/GameControl.h"
 #include "GUI/Label.h"
 #include "GUI/MapControl.h"
 #include "GUI/WorldMapControl.h"
+#include "Scriptable/Container.h"
 #include "System/FileStream.h"
 #include "System/VFS.h"
 
@@ -166,6 +169,7 @@ Interface::Interface(int iargc, char* iargv[])
 
 	mousescrollspd = 10;
 
+	strncpy( GameType, "auto", sizeof( GameType )-1);
 	ConsolePopped = false;
 	CheatFlag = false;
 	FogOfWar = 1;
@@ -181,6 +185,7 @@ Interface::Interface(int iargc, char* iargv[])
 	DrawFPS = false;
 	KeepCache = false;
 	TooltipDelay = 100;
+	IgnoreOriginalINI = 0;
 	FullScreen = 0;
 	GUIScriptsPath[0] = 0;
 	GamePath[0] = 0;
@@ -588,6 +593,19 @@ void Interface::HandleEvents()
 	if (EventFlag&EF_CREATEMAZE) {
 		EventFlag&=~EF_CREATEMAZE;
 		guiscript->RunFunction( "Maze", "CreateMaze", false );
+		return;
+	}
+
+	if ((EventFlag&EF_RESETTARGET) && gc) {
+		EventFlag&=~EF_RESETTARGET;
+		EventFlag|=EF_TARGETMODE;
+		gc->ResetTargetMode();
+		return;
+	}
+
+	if ((EventFlag&EF_TARGETMODE) && gc) {
+		EventFlag&=~EF_TARGETMODE;
+		gc->UpdateTargetMode();
 		return;
 	}
 }
@@ -1409,6 +1427,8 @@ int Interface::Init()
 	printStatus( "OK", LIGHT_GREEN );
 
 	if (!LoadConfig()) {
+		printMessage( "Core", "Could not load config file ", YELLOW);
+		printStatus( "ERROR", LIGHT_RED );
 		return GEM_ERROR;
 	}
 	printMessage( "Core", "Starting Plugin Manager...\n", WHITE );
@@ -1488,13 +1508,15 @@ int Interface::Init()
 		gamedata->AddSource(path, "Data", PLUGIN_RESOURCE_DIRECTORY);
 
 		//IWD2 movies are on the CD but not in the BIF
+		char *description = strdup("CD1/data");
 		for (i = 0; i < MAX_CD; i++) {
 			for (size_t j=0;j<CD[i].size();j++) {
-				char description[] = {'C', 'D', '1'+i, '/', 'd', 'a', 't', 'a', '\0'};
+				description[2]='1'+i;				
 				PathJoin( path, CD[i][j].c_str(), GameDataPath, NULL);
 				gamedata->AddSource(path, description, PLUGIN_RESOURCE_DIRECTORY);
 			}
 		}
+		free(description);
 
 		printStatus( "OK", LIGHT_GREEN );
 	}
@@ -1510,26 +1532,46 @@ int Interface::Init()
 		printStatus( "OK", LIGHT_GREEN );
 	}
 
-	printMessage( "Core", "Reading Game Options...\n", WHITE );
-	if (!LoadGemRBINI())
+	printMessage( "Core", "Initializing GUI Script Engine...", WHITE );
+	guiscript = PluginHolder<ScriptEngine>(IE_GUI_SCRIPT_CLASS_ID);
+	if (guiscript == NULL) {
+		printStatus( "ERROR", LIGHT_RED );
+		return GEM_ERROR;
+	}
+	if (!guiscript->Init()) {
+		printStatus( "ERROR", LIGHT_RED );
+		return GEM_ERROR;
+	}
+	printStatus( "OK", LIGHT_GREEN );
+	strcpy( NextScript, "Start" );
+
 	{
+		// re-set the gemrb override path, since we now have the correct GameType if 'auto' was used
+		char path[_MAX_PATH];
+		PathJoin( path, GemRBOverridePath, "override", GameType, NULL);
+		gamedata->AddSource(path, "GemRB Override", PLUGIN_RESOURCE_DIRECTORY, RM_REPLACE_SAME_SOURCE);
+	}
+
+	printMessage( "Core", "Reading Game Options...\n", WHITE );
+	if (!LoadGemRBINI()) {
 		printf( "Cannot Load INI\nTermination in Progress...\n" );
 		return GEM_ERROR;
 	}
 
 	//loading baldur.ini
-	{
+	if (!IgnoreOriginalINI) {
 		char ini_path[_MAX_PATH];
 		PathJoin( ini_path, GamePath, INIConfig, NULL );
 		LoadINI( ini_path );
-		int i;
-		for (i = 0; i < 8; i++) {
-			if (INIConfig[i] == '.')
-				break;
-			GameNameResRef[i] = INIConfig[i];
-		}
-		GameNameResRef[i] = 0;
 	}
+
+	int i;
+	for (i = 0; i < 8; i++) {
+		if (INIConfig[i] == '.')
+			break;
+		GameNameResRef[i] = INIConfig[i];
+	}
+	GameNameResRef[i] = 0;
 
 	printMessage( "Core", "Creating Projectile Server...\n", WHITE );
 	projserv = new ProjectileServer();
@@ -1602,18 +1644,6 @@ int Interface::Init()
 		return GEM_ERROR;
 	}
 	printStatus( "OK", LIGHT_GREEN );
-	printMessage( "Core", "Initializing GUI Script Engine...", WHITE );
-	guiscript = PluginHolder<ScriptEngine>(IE_GUI_SCRIPT_CLASS_ID);
-	if (guiscript == NULL) {
-		printStatus( "ERROR", LIGHT_RED );
-		return GEM_ERROR;
-	}
-	if (!guiscript->Init()) {
-		printStatus( "ERROR", LIGHT_RED );
-		return GEM_ERROR;
-	}
-	printStatus( "OK", LIGHT_GREEN );
-	strcpy( NextScript, "Start" );
 
 	int ret = LoadSprites();
 	if (ret) return ret;
@@ -2054,36 +2084,11 @@ void Interface::SetFeature(int flag, int position)
 	} else {
 		GameFeatures[position>>5] &= ~(1<<(position&31) );
 	}
-/*
-	if (position>=32) {
-		position-=32;
-		if (flag) {
-			GameFeatures2 |= 1 << position;
-		} else {
-			GameFeatures2 &= ~( 1 << position );
-		}
-		return;
-	}
-	if (flag) {
-		GameFeatures |= 1 << position;
-	} else {
-		GameFeatures &= ~( 1 << position );
-	}
-*/
 }
 
 ieDword Interface::HasFeature(int position) const
 {
 	return GameFeatures[position>>5] & (1<<(position&31));
-/*
-	if (position>=64) {
-		return GameFeatures3 & ( 1 << (position-64) );
-	}
-	if (position>=32) {
-		return GameFeatures2 & ( 1 << (position-32) );
-	}
-	return GameFeatures & ( 1 << position );
-*/
 }
 
 /** Search directories and load a config file */
@@ -2192,38 +2197,51 @@ bool Interface::LoadConfig(const char* filename)
 	printf("%s ", filename);
 	config = fopen( filename, "rb" );
 	if (config == NULL) {
-		printStatus("NOT FOUND", LIGHT_RED);
+		printStatus("NOT FOUND", YELLOW);
 		return false;
 	}
-	char name[65], value[_MAX_PATH + 3];
 
+	char line[1024];
+	char *name, *nameend, *value, *valueend;
 	//once GemRB own format is working well, this might be set to 0
 	SaveAsOriginal = 1;
 
+	int lineno = 0;
 	while (!feof( config )) {
-		char rem;
-
-		if (fread( &rem, 1, 1, config ) != 1)
+		if (! fgets( line, sizeof(line), config )) { // also if len == size(line)
 			break;
+		}
+		lineno++;
 
-		if (rem == '#') {
-			//it should always return 0
-			if (fscanf( config, "%*[^\r\n]%*[\r\n]" )!=0)
-				break;
+		// skip leading blanks from name
+		name = line;
+		name += strspn( line, " \t\r\n" );
+
+		// ignore empty or comment lines
+		if (*name == '\0' || *name == '#') {
 			continue;
 		}
-		fseek( config, -1, SEEK_CUR );
-		memset(value,'\0',_MAX_PATH + 3);
-		//the * element is not counted
-		if (fscanf( config, "%64[^= ] = %[^\r\n]%*[\r\n]", name, value )!=2)
+
+		value = strchr( name, '=' );
+		if (!value || value == name) {
+			printf( "Invalid line %d\n", lineno );
 			continue;
-		for (i=_MAX_PATH + 2; i > 0; i--) {
-			if (value[i] == '\0') continue;
-			if (value[i] == ' ') {
-				value[i] = '\0';
-			} else {
-				break;
-			}
+		}
+
+		// trim trailing blanks from name
+		nameend = value;
+		while (nameend > name && strchr( "= \t", *nameend )) {
+			*nameend-- = '\0';
+		}
+
+		value++;
+		// skip leading blanks
+		value += strspn( value, " \t");
+
+		// trim trailing blanks from value
+		valueend = value + strlen( value ) - 1;
+		while (valueend >= value && strchr( " \t\r\n", *valueend )) {
+			*valueend-- = '\0';
 		}
 
 		if (false) {
@@ -2249,6 +2267,7 @@ bool Interface::LoadConfig(const char* filename)
 		CONFIG_INT("SkipIntroVideos", SkipIntroVideos = );
 		CONFIG_INT("TooltipDelay", TooltipDelay = );
 		CONFIG_INT("Width", Width = );
+		CONFIG_INT("IgnoreOriginalINI", IgnoreOriginalINI = );
 #undef CONFIG_INT
 #define CONFIG_STRING(str, var) \
 		} else if (stricmp(name, str) == 0) { \
@@ -2483,6 +2502,8 @@ static const char *game_flags[GF_COUNT+1]={
 		"CastingSounds",      //57GF_CASTING_SOUNDS
 		"EnhancedCastingSounds", //58GF_CASTING_SOUNDS2
 		"ForceAreaScript",    //59GF_FORCE_AREA_SCRIPT
+		"AreaOverride",       //60GF_AREA_OVERRIDE
+		"NoNewVariables",     //61GF_NO_NEW_VARIABLES
 		NULL                  //for our own safety, this marks the end of the pole
 };
 
@@ -2626,6 +2647,8 @@ bool Interface::LoadGemRBINI()
 Palette* Interface::CreatePalette(const Color &color, const Color &back)
 {
 	Palette* pal = new Palette();
+	pal->front = color;
+	pal->back = back;
 	pal->col[0].r = 0;
 	pal->col[0].g = 0xff;
 	pal->col[0].b = 0;
@@ -2706,7 +2729,7 @@ ScriptEngine* Interface::GetGUIScriptEngine() const
 	return guiscript.get();
 }
 
-static EffectRef fx_summon_disable_ref={"AvatarRemovalModifier",NULL,-1};
+static EffectRef fx_summon_disable_ref = { "AvatarRemovalModifier", -1 };
 
 //NOTE: if there were more summoned creatures, it will return only the last
 Actor *Interface::SummonCreature(const ieResRef resource, const ieResRef vvcres, Scriptable *Owner, Actor *target, const Point &position, int eamod, int level, Effect *fx, bool sexmod)
@@ -3219,7 +3242,7 @@ void Interface::GameLoop(void)
 		update_scripts = !(gc->GetDialogueFlags() & DF_FREEZE_SCRIPTS);
 	}
 
-	GSUpdate(update_scripts);
+	update_scripts = GSUpdate(update_scripts);
 
 	//i'm not sure if this should be here
 
@@ -3252,8 +3275,12 @@ void Interface::HandleGUIBehaviour(void)
 			ieDword var = (ieDword) -3;
 			vars->Lookup("DialogChoose", var);
 			if ((int) var == -2) {
+				// TODO: this seems to never be called? (EndDialog is called from elsewhere instead)
 				gc->dialoghandler->EndDialog();
 			} else if ( (int)var !=-3) {
+				if ( (int) var == -1) {
+					guiscript->RunFunction( "GUIWORLD", "DialogStarted" );
+				}
 				gc->dialoghandler->DialogChoose(var);
 				if (!(gc->GetDialogueFlags() & (DF_OPENCONTINUEWINDOW | DF_OPENENDWINDOW)))
 					guiscript->RunFunction( "GUIWORLD", "NextDialogState" );
@@ -3818,7 +3845,12 @@ bool Interface::LoadINI(const char* filename)
 void Interface::SetCutSceneMode(bool active)
 {
 	GameControl *gc = GetGameControl();
+
 	if (gc) {
+		// don't mess with controls/etc if we're already in a cutscene
+		if (active == (gc->GetScreenFlags()&SF_CUTSCENE))
+			return;
+
 		gc->SetCutSceneMode( active );
 	}
 	if (game) {
@@ -3832,9 +3864,26 @@ void Interface::SetCutSceneMode(bool active)
 	video->SetMouseEnabled(!active);
 }
 
+/** returns true if in dialogue or cutscene */
 bool Interface::InCutSceneMode() const
 {
-	return (GetGameControl()->GetScreenFlags()&SF_DISABLEMOUSE)!=0;
+	GameControl *gc = GetGameControl();
+	if (!gc || (gc->GetDialogueFlags()&DF_IN_DIALOG) || (gc->GetScreenFlags()&SF_DISABLEMOUSE) ) {
+		return true;
+	}
+	return false;
+}
+
+/** Updates the Game Script Engine State */
+bool Interface::GSUpdate(bool update_scripts)
+{
+	if(update_scripts) {
+		return timer->Update();
+	}
+	else {
+		timer->Freeze();
+		return false;
+	}
 }
 
 void Interface::QuitGame(int BackToMain)
@@ -4580,7 +4629,13 @@ bool Interface::ReadRandomItems()
 CREItem *Interface::ReadItem(DataStream *str)
 {
 	CREItem *itm = new CREItem();
+	if (ReadItem(str, itm)) return itm;
+	delete itm;
+	return NULL;
+}
 
+CREItem *Interface::ReadItem(DataStream *str, CREItem *itm)
+{
 	str->ReadResRef( itm->ItemResRef );
 	str->ReadWord( &itm->Expired );
 	str->ReadWord( &itm->Usages[0] );
@@ -4590,7 +4645,6 @@ CREItem *Interface::ReadItem(DataStream *str)
 	if (ResolveRandomItem(itm) ) {
 		return itm;
 	}
-	delete itm;
 	return NULL;
 }
 
@@ -4858,19 +4912,24 @@ void Interface::PlaySound(int index)
 
 Actor *Interface::GetFirstSelectedPC(bool forced)
 {
+	Actor *ret = NULL;
+	int slot = 0;
 	int partySize = game->GetPartySize( false );
 	if (!partySize) return NULL;
 	for (int i = 0; i < partySize; i++) {
 		Actor* actor = game->GetPC( i,false );
 		if (actor->IsSelected()) {
-			return actor;
+			if (actor->InParty<slot || !ret) {
+				ret = actor;
+				slot = actor->InParty;
+			}
 		}
 	}
 
-	if (forced) {
-		return game->GetPC(0,false);
+	if (forced && !ret) {
+		return game->FindPC((unsigned int) 0);
 	}
-	return NULL;
+	return ret;
 }
 
 Actor *Interface::GetFirstSelectedActor()
@@ -4925,8 +4984,8 @@ void Interface::ApplySpell(const ieResRef resname, Actor *actor, Scriptable *cas
 		return;
 	}
 
-	level = spell->GetHeaderIndexFromLevel(level);
-	EffectQueue *fxqueue = spell->GetEffectBlock(caster, actor->Pos, level);
+	int header = spell->GetHeaderIndexFromLevel(level);
+	EffectQueue *fxqueue = spell->GetEffectBlock(caster, actor->Pos, header, level);
 
 	ApplyEffectQueue(fxqueue, actor, caster, actor->Pos);
 	delete fxqueue;
@@ -4938,9 +4997,9 @@ void Interface::ApplySpellPoint(const ieResRef resname, Map* area, const Point &
 	if (!spell) {
 		return;
 	}
-	level = spell->GetHeaderIndexFromLevel(level);
-	Projectile *pro = spell->GetProjectile(caster, level, pos);
-	pro->SetCaster(caster->GetGlobalID());
+	int header = spell->GetHeaderIndexFromLevel(level);
+	Projectile *pro = spell->GetProjectile(caster, header, pos);
+	pro->SetCaster(caster->GetGlobalID(), level);
 	area->AddProjectile(pro, caster->Pos, pos);
 }
 
@@ -4982,7 +5041,7 @@ int Interface::ApplyEffectQueue(EffectQueue *fxqueue, Actor *actor, Scriptable *
 		}
 		fxqueue->SetOwner( caster );
 
-		if (fxqueue->AddAllEffects( actor, p )==FX_NOT_APPLIED) {
+		if (fxqueue->AddAllEffects( actor, p)==FX_NOT_APPLIED) {
 			res=0;
 		}
 	}
@@ -5322,7 +5381,7 @@ int Interface::Autopause(ieDword flag)
 	return 0;
 }
 
-void Interface::RegisterOpcodes(int count, const EffectRef *opcodes)
+void Interface::RegisterOpcodes(int count, const EffectDesc *opcodes)
 {
 	EffectQueue_RegisterOpcodes(count, opcodes);
 }

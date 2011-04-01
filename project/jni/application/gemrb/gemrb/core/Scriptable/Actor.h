@@ -21,7 +21,7 @@
 #ifndef ACTOR_H
 #define ACTOR_H
 
-#include "Scriptable/ActorBlock.h"
+#include "Scriptable/Scriptable.h"
 
 #include "Scriptable/PCStatStruct.h"
 
@@ -124,6 +124,9 @@ struct PolymorphCache;
 //(unused and removed, see git history of the commit which
 //added this comment for some clues if you really need it)
 //#define GA_GLOBAL     4096
+
+//line of sight is ignored (for GetAllActorsInRadius)
+#define GA_NO_LOS 4096
 
 // Detect() mode: IDS matching ignores invisibility
 #define GA_DETECT 8192
@@ -571,7 +574,7 @@ public:
 	/* gets the to hit value */
 	int GetToHit(int bonus, ieDword Flags, Actor *target) const;
 	/* gets the defense against an attack */
-	int GetDefense(int DamageType) const;
+	int GetDefense(int DamageType, Actor *attacker) const;
 	/* get the current hit bonus */
 	bool GetCombatDetails(int &tohit, bool leftorright, WeaponInfo &wi, ITMExtHeader *&header, ITMExtHeader *&hittingheader,\
 		ieDword &Flags, int &DamageBonus, int &speed, int &CriticalBonus, int &style, Actor *target) const;

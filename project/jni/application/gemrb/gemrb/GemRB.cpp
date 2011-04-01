@@ -35,17 +35,17 @@
 
 #ifdef ANDROID
 #include <SDL/SDL.h>
-#include "audio.h"
+#include "Audio.h"
 
 // pause audio playing if app goes in background
 static void appPutToBackground()
 {
-  core->GetAudioDrv()->Pause();
+	core->GetAudioDrv()->Pause();
 }
 // resume audio playing if app return to foreground
 static void appPutToForeground()
 {
-  core->GetAudioDrv()->Resume();
+	core->GetAudioDrv()->Resume();
 }
 
 #endif

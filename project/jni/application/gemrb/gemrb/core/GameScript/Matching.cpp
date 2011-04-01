@@ -25,6 +25,9 @@
 #include "Interface.h"
 #include "Game.h"
 #include "TileMap.h"
+#include "Scriptable/Container.h"
+#include "Scriptable/Door.h"
+#include "Scriptable/InfoPoint.h"
 
 /* return a Targets object with a single scriptable inside */
 inline static Targets* ReturnScriptableAsTarget(Scriptable *sc)
@@ -77,7 +80,7 @@ inline static Targets *DoObjectFiltering(Scriptable *Sender, Targets *tgts, Obje
 	return tgts;
 }
 
-static EffectRef fx_protection_creature_ref = { "Protection:Creature", NULL, -1 };
+static EffectRef fx_protection_creature_ref = { "Protection:Creature", -1 };
 
 inline static bool DoObjectChecks(Map *map, Scriptable *Sender, Actor *target, int &dist, bool ignoreinvis=false)
 {

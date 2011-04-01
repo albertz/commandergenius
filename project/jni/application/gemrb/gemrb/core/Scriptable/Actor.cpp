@@ -20,7 +20,7 @@
 
 //This class represents the .cre (creature) files.
 //Any player or non-player character is a creature.
-//Actor is a scriptable object (Scriptable). See ActorBlock.cpp
+//Actor is a scriptable object (Scriptable). See Scriptable.cpp
 
 #include "Scriptable/Actor.h"
 
@@ -115,6 +115,7 @@ struct ItemUseType {
 static ItemUseType *itemuse = NULL;
 static int usecount = -1;
 static bool pstflags = false;
+static bool nocreate = false;
 //used in many places, but different in engines
 static ieDword state_invisible = STATE_INVISIBLE;
 
@@ -1371,6 +1372,7 @@ static void InitActorTables()
 	int i, j;
 
 	pstflags = core->HasFeature(GF_PST_STATE_FLAGS);
+	nocreate = core->HasFeature(GF_NO_NEW_VARIABLES);
 	if (pstflags) {
 		state_invisible=STATE_PST_INVIS;
 	} else {
@@ -1919,20 +1921,20 @@ static void InitActorTables()
 		}
 	}
 
-        //initializing the skill->stats conversion table (used in iwd2)
-        tm.load("skillsta");
-        if (tm) {
-                int rowcount = tm->GetRowCount();
-                skillcount = rowcount;
-                if (rowcount) {
-                        skillstats = (int *) malloc(rowcount * sizeof(int) );
-                        skillabils = (int *) malloc(rowcount * sizeof(int) );
-                        while(rowcount--) {
-                                skillstats[rowcount]=core->TranslateStat(tm->QueryField(rowcount,0));
-                                skillabils[rowcount]=core->TranslateStat(tm->QueryField(rowcount,1));
-                        }
-                }
-        }
+				//initializing the skill->stats conversion table (used in iwd2)
+				tm.load("skillsta");
+				if (tm) {
+					      int rowcount = tm->GetRowCount();
+					      skillcount = rowcount;
+					      if (rowcount) {
+					              skillstats = (int *) malloc(rowcount * sizeof(int) );
+					              skillabils = (int *) malloc(rowcount * sizeof(int) );
+					              while(rowcount--) {
+					                      skillstats[rowcount]=core->TranslateStat(tm->QueryField(rowcount,0));
+					                      skillabils[rowcount]=core->TranslateStat(tm->QueryField(rowcount,1));
+					              }
+					      }
+				}
 }
 
 void Actor::SetLockedPalette(const ieDword *gradients)
@@ -2185,17 +2187,7 @@ void Actor::RefreshEffects(EffectQueue *fx)
 	//put all special cleanup calls here
 	CharAnimations* anims = GetAnims();
 	if (anims) {
-		if (!anims->GlobalColorMod.locked) {
-			anims->GlobalColorMod.type = RGBModifier::NONE;
-			anims->GlobalColorMod.speed = 0;
-		}
-		unsigned int location;
-		for (location = 0; location < 32; ++location) {
-			if (!anims->ColorMods[location].phase) {
-				anims->ColorMods[location].type = RGBModifier::NONE;
-				anims->ColorMods[location].speed = 0;
-			}
-		}
+		anims->CheckColorMod();
 	}
 	spellbook.ClearBonus();
 	/* these apply resrefs should be on a list as a trigger+resref */
@@ -2660,7 +2652,7 @@ void Actor::DialogInterrupt()
 	}
 }
 
-static EffectRef fx_cure_sleep_ref={"Cure:Sleep",NULL,-1};
+static EffectRef fx_cure_sleep_ref = { "Cure:Sleep", -1 };
 
 void Actor::GetHit()
 {
@@ -2687,7 +2679,7 @@ bool Actor::HandleCastingStance(const ieResRef SpellResRef, bool deplete)
 	return false;
 }
 
-static EffectRef fx_sleep_ref={"State:Helpless", NULL, -1};
+static EffectRef fx_sleep_ref = { "State:Helpless", -1 };
 
 //returns actual damage
 int Actor::Damage(int damage, int damagetype, Scriptable *hitter, int modtype)
@@ -2983,7 +2975,7 @@ void Actor::DebugDump()
 	printf( "\nArea:       %.8s   ", Area );
 	printf( "Dialog:     %.8s\n", Dialog );
 	printf( "Global ID:  %d   PartySlot: %d\n", GetGlobalID(), InParty);
-	printf( "Script name:%.32s\n", scriptName );
+	printf( "Script name:%.32s    Current action: %d\n", scriptName, CurrentAction ? CurrentAction->actionID : -1);
 	printf( "TalkCount:  %d   ", TalkCount );
 	printf( "Allegiance: %d   current allegiance:%d\n", BaseStats[IE_EA], Modified[IE_EA] );
 	printf( "Class:      %d   current class:%d\n", BaseStats[IE_CLASS], Modified[IE_CLASS] );
@@ -3210,9 +3202,9 @@ int Actor::GetEncumbrance()
 }
 
 //bg2 and iwd1
-EffectRef control_creature_ref = { "ControlCreature", NULL, -1};
+static EffectRef control_creature_ref = { "ControlCreature", -1 };
 //iwd2
-EffectRef control_undead_ref = { "ControlUndead2", NULL, -1};
+static EffectRef control_undead_ref = { "ControlUndead2", -1 };
 
 //receive turning
 void Actor::Turn(Scriptable *cleric, ieDword turnlevel)
@@ -3242,7 +3234,7 @@ void Actor::Turn(Scriptable *cleric, ieDword turnlevel)
 			LastTurner = cleric->GetGlobalID();
 			if (turnlevel >= level+TURN_DEATH_LVL_MOD) {
 				if (gamedata->Exists("panic", IE_SPL_CLASS_ID)) {
-					core->ApplySpell("panic", this, cleric, 0);
+					core->ApplySpell("panic", this, cleric, level);
 				} else {
 					printf("Panic from turning!\n");
 					Panic(cleric, PANIC_RUNAWAY);
@@ -3305,18 +3297,18 @@ void Actor::Resurrect()
 		ieDword value=0;
 
 		game->kaputz->Lookup(DeathVar, value);
-		if (value) {
+		if (value>0) {
 			game->kaputz->SetAt(DeathVar, value-1);
 		}
 	}
 	//clear effects?
 }
 
-static EffectRef fx_cure_poisoned_state_ref={"Cure:Poison",NULL,-1};
-static EffectRef fx_cure_hold_state_ref={"Cure:Hold",NULL,-1};
-static EffectRef fx_cure_stun_state_ref={"Cure:Stun",NULL,-1};
-static EffectRef fx_remove_portrait_icon_ref={"Icon:Remove",NULL,-1};
-static EffectRef fx_unpause_caster_ref={"Cure:CasterHold",NULL,-1};
+static EffectRef fx_cure_poisoned_state_ref = { "Cure:Poison", -1 };
+static EffectRef fx_cure_hold_state_ref = { "Cure:Hold", -1 };
+static EffectRef fx_cure_stun_state_ref = { "Cure:Stun", -1 };
+static EffectRef fx_remove_portrait_icon_ref = { "Icon:Remove", -1 };
+static EffectRef fx_unpause_caster_ref = { "Cure:CasterHold", -1 };
 
 void Actor::Die(Scriptable *killer)
 {
@@ -3329,7 +3321,6 @@ void Actor::Die(Scriptable *killer)
 	//Can't simply set Selected to false, game has its own little list
 	Game *game = core->GetGame();
 	game->SelectActor(this, false, SELECT_NORMAL);
-	game->OutAttack(GetGlobalID());
 
 	displaymsg->DisplayConstantStringName(STR_DEATH, 0xffffff, this);
 	DisplayStringCore(this, VB_DIE, DS_CONSOLE|DS_CONST );
@@ -3432,18 +3423,22 @@ void Actor::Die(Scriptable *killer)
 
 	// death variables are updated at the moment of death
 	if (KillVar[0]) {
+		//don't use the raw killVar here
 		if (core->HasFeature(GF_HAS_KAPUTZ) ) {
-			game->kaputz->Lookup(KillVar, value);
-			game->kaputz->SetAt(KillVar, value+1);
+			if (AppearanceFlags&APP_DEATHTYPE) {
+				snprintf(varname, 32, "KILL_%s", KillVar);
+				game->kaputz->Lookup(varname, value);
+				game->kaputz->SetAt(varname, value+1, nocreate);
+			}
 		} else {
 			// iwd/iwd2 path *sets* this var, so i changed it, not sure about pst above
-			game->locals->SetAt(KillVar, 1);
+			game->locals->SetAt(KillVar, 1, nocreate);
 		}
 	}
 	if (IncKillVar[0]) {
 		value = 0;
 		game->locals->Lookup(IncKillVar, value);
-		game->locals->SetAt(IncKillVar, value + 1);
+		game->locals->SetAt(IncKillVar, value + 1, nocreate);
 	}
 
 	if (scriptName[0]) {
@@ -3452,29 +3447,24 @@ void Actor::Die(Scriptable *killer)
 			if (AppearanceFlags&APP_DEATHVAR) {
 				snprintf(varname, 32, "%s_DEAD", scriptName);
 				game->kaputz->Lookup(varname, value);
-				game->kaputz->SetAt(varname, value+1);
-			}
-			if (AppearanceFlags&APP_DEATHTYPE) {
-				snprintf(varname, 32, "KILL_%s", KillVar);
-				game->kaputz->Lookup(varname, value);
-				game->kaputz->SetAt(varname, value+1);
+				game->kaputz->SetAt(varname, value+1, nocreate);
 			}
 		} else {
 			snprintf(varname, 32, core->GetDeathVarFormat(), scriptName);
 			game->locals->Lookup(varname, value);
-			game->locals->SetAt(varname, value+1);
+			game->locals->SetAt(varname, value+1, nocreate);
 		}
 
 		if (SetDeathVar) {
 			value = 0;
 			snprintf(varname, 32, "%s_DEAD", scriptName);
 			game->locals->Lookup(varname, value);
-			game->locals->SetAt(varname, 1);
+			game->locals->SetAt(varname, 1, nocreate);
 			if (value) {
 				snprintf(varname, 32, "%s_KILL_CNT", scriptName);
 				value = 1;
 				game->locals->Lookup(varname, value);
-				game->locals->SetAt(varname, value + 1);
+				game->locals->SetAt(varname, value + 1, nocreate);
 			}
 		}
 	}
@@ -3490,7 +3480,7 @@ void Actor::Die(Scriptable *killer)
 				// todo: should probably not set this for humans in iwd?
 				snprintf(varname, 32, "KILL_%s_CNT", raceName);
 				game->locals->Lookup(varname, value);
-				game->locals->SetAt(varname, value+1);
+				game->locals->SetAt(varname, value+1, nocreate);
 			}
 		}
 	}
@@ -3501,7 +3491,7 @@ void Actor::Die(Scriptable *killer)
 		if (AppearanceFlags&j) {
 			ieDword value = 0;
 			game->locals->Lookup(CounterNames[i], value);
-			game->locals->SetAt(CounterNames[i], value+DeathCounters[i]);
+			game->locals->SetAt(CounterNames[i], value+DeathCounters[i], nocreate);
 		}
 		j+=j;
 	}
@@ -4026,8 +4016,8 @@ int Actor::LearnSpell(const ieResRef spellname, ieDword flags)
 		// chance to learn roll
 		int roll = LuckyRoll(1, 100, 0);
 		// adjust the roll for specialist mages
-		// doesn't work in bg1, since its spells don't have PrimaryType set
-		if (GetKitIndex(BaseStats[IE_KIT])) {
+		// doesn't work in bg1, since its spells don't have PrimaryType set (0 is NONE)
+		if (GetKitIndex(BaseStats[IE_KIT]) && spell->PrimaryType) {
 			if ((signed)BaseStats[IE_KIT] == 1<<(spell->PrimaryType+5)) { // +5 since the kit values start at 0x40
 				roll += 15;
 			} else {
@@ -4063,7 +4053,7 @@ int Actor::LearnSpell(const ieResRef spellname, ieDword flags)
 	if (tmp) {
 		displaymsg->DisplayConstantStringName(tmp, 0xbcefbc, this);
 	}
-	if (flags&LS_ADDXP) {
+	if (flags&LS_ADDXP && !(flags&LS_NOXP)) {
 		int xp = CalculateExperience(XP_LEARNSPELL, explev);
 		Game *game = core->GetGame();
 		game->ShareXP(xp, SX_DIVIDE);
@@ -4176,9 +4166,6 @@ int Actor::GetAttackStyle() const
 void Actor::AttackedBy( Actor *attacker)
 {
 	LastAttacker = attacker->GetGlobalID();
-	Game * game = core->GetGame();
-	game->InAttack(GetGlobalID() );
-	game->InAttack(LastAttacker);
 }
 
 void Actor::SetTarget( Scriptable *target)
@@ -4196,7 +4183,6 @@ void Actor::StopAttack()
 {
 	SetStance(IE_ANI_READY);
 	secondround = 0;
-	core->GetGame()->OutAttack(GetGlobalID());
 	InternalFlags|=IF_TARGETGONE; //this is for the trigger!
 	if (InParty) {
 		core->Autopause(AP_NOTARGET);
@@ -4227,46 +4213,11 @@ void Actor::InitRound(ieDword gameTime)
 	lastInit = gameTime;
 	secondround = !secondround;
 
-	//roundTime will equal 0 if we aren't attacking something
-	if (roundTime) {
-		//only perform calculations at the beginning of the round!
-		if (((gameTime-roundTime)%core->Time.round_size != 0) || \
-		(roundTime == lastInit)) {
-			return;
-		}
-	}
-
 	//reset variables used in PerformAttack
 	attackcount = 0;
 	attacksperround = 0;
 	nextattack = 0;
 	lastattack = 0;
-
-	//we set roundTime to zero on any of the following returns, because this
-	//is guaranteed to be the start of a round, and we only want roundTime
-	//if we are attacking this round
-	if (InternalFlags&IF_STOPATTACK) {
-		core->GetGame()->OutAttack(GetGlobalID());
-		roundTime = 0;
-		return;
-	}
-
-	if (!LastTarget) {
-		StopAttack();
-		roundTime = 0;
-		return;
-	}
-
-	//if held or disabled, etc, then cannot continue attacking
-	ieDword state = GetStat(IE_STATE_ID);
-	if (state&STATE_CANTMOVE) {
-		roundTime = 0;
-		return;
-	}
-	if (Immobile()) {
-		roundTime = 0;
-		return;
-	}
 
 	//add one for second round to get an extra attack only if we
 	//are x/2 attacks per round
@@ -4488,8 +4439,9 @@ int Actor::GetToHit(int bonus, ieDword Flags, Actor *target) const
 
 static const int weapon_damagetype[] = {DAMAGE_CRUSHING, DAMAGE_PIERCING,
 	DAMAGE_CRUSHING, DAMAGE_SLASHING, DAMAGE_MISSILE, DAMAGE_STUNNING};
+static EffectRef fx_ac_vs_creature_type_ref = { "ACVsCreatureType", -1 };
 
-int Actor::GetDefense(int DamageType) const
+int Actor::GetDefense(int DamageType, Actor *attacker) const
 {
 	//specific damage type bonus.
 	int defense = 0;
@@ -4542,23 +4494,42 @@ int Actor::GetDefense(int DamageType) const
 		defense += GetStat(IE_ARMORCLASS);
 	}
 	//Dexterity bonus is stored negative in 2da files.
-	return defense + core->GetDexterityBonus(STAT_DEX_AC, GetStat(IE_DEX) );
+	defense += core->GetDexterityBonus(STAT_DEX_AC, GetStat(IE_DEX) );
+	if (attacker) {
+		defense -= fxqueue.BonusAgainstCreature(fx_ac_vs_creature_type_ref,attacker);
+	}
+	return defense;
 }
 
 
-static EffectRef fx_ac_vs_creature_type_ref={"ACVsCreatureType",NULL,-1};
-
 void Actor::PerformAttack(ieDword gameTime)
 {
-	// start a new round if we really don't have one yet
-	if (!roundTime) {
-		printMessage("Actor", "Unregistered attack. We shouldn't be here?\n", RED);
-		secondround = 0;
+	if (InParty) {
+		// TODO: this is temporary hack
+		Game *game = core->GetGame();
+		game->PartyAttack = true;
+	}
+
+	// if held or disabled, etc, then cannot continue attacking
+	// TODO: should be in action
+	ieDword state = GetStat(IE_STATE_ID);
+	if (state&STATE_CANTMOVE || Immobile()) {
+		// this is also part of the UpdateActorState hack below. sorry!
+		lastattack = gameTime;
+		return;
+	}
+
+	if (!roundTime || (gameTime-roundTime > core->Time.round_size)) {
+		// TODO: do we need cleverness for secondround here?
 		InitRound(gameTime);
 	}
 
 	//only return if we don't have any attacks left this round
-	if (attackcount==0) return;
+	if (attackcount==0) {
+		// this is also part of the UpdateActorState hack below. sorry!
+		lastattack = gameTime;
+		return;
+	}
 
 	// this check shouldn't be necessary, but it causes a divide-by-zero below,
 	// so i would like it to be clear if it ever happens
@@ -4712,8 +4683,7 @@ void Actor::PerformAttack(ieDword gameTime)
 
 
 	//get target's defense against attack
-	int defense = target->GetDefense(damagetype);
-	defense -= target->fxqueue.BonusAgainstCreature(fx_ac_vs_creature_type_ref,this);
+	int defense = target->GetDefense(damagetype, this);
 
 	bool success;
 	if(ReverseToHit) {
@@ -4739,10 +4709,10 @@ void Actor::PerformAttack(ieDword gameTime)
 	ResetState();
 }
 
-static EffectRef fx_stoneskin_ref={"StoneSkinModifier",NULL,-1};
-static EffectRef fx_stoneskin2_ref={"StoneSkin2Modifier",NULL,-1};
-static EffectRef fx_mirrorimage_ref={"MirrorImageModifier",NULL,-1};
-static EffectRef fx_aegis_ref={"Aegis",NULL,-1};
+static EffectRef fx_stoneskin_ref = { "StoneSkinModifier", -1 };
+static EffectRef fx_stoneskin2_ref = { "StoneSkin2Modifier", -1 };
+static EffectRef fx_mirrorimage_ref = { "MirrorImageModifier", -1 };
+static EffectRef fx_aegis_ref = { "Aegis", -1 };
 
 void Actor::ModifyDamage(Actor *target, Scriptable *hitter, int &damage, int &resisted, int damagetype, WeaponInfo *wi, bool critical)
 {
@@ -4886,10 +4856,8 @@ void Actor::UpdateActorState(ieDword gameTime) {
 			StopAttack();
 		} else {
 			printMessage("Attack","(Leaving attack)", GREEN);
-			core->GetGame()->OutAttack(GetGlobalID());
 		}
 
-		roundTime = 0;
 		lastattack = 0;
 	}
 
@@ -5775,8 +5743,12 @@ void Actor::SetPortrait(const char* ResRef, int Which)
 	}
 	if(!Which) {
 		for (i = 0; i < 8 && ResRef[i]; i++) {};
-		SmallPortrait[i] = 'S';
-		LargePortrait[i] = 'M';
+		if (SmallPortrait[i-1] != 'S' && SmallPortrait[i-1] != 's') {
+			SmallPortrait[i] = 'S';
+		}
+		if (LargePortrait[i-1] != 'M' && LargePortrait[i-1] != 'm') {
+			LargePortrait[i] = 'M';
+		}
 	}
 }
 
@@ -6047,16 +6019,16 @@ bool Actor::UseItemPoint(ieDword slot, ieDword header, const Point &target, ieDw
 	ChargeItem(slot, header, item, itm, flags&UI_SILENT);
 	gamedata->FreeItem(itm,tmpresref, false);
 	if (pro) {
-		pro->SetCaster(GetGlobalID());
+		pro->SetCaster(GetGlobalID(), ITEM_CASTERLEVEL);
 		GetCurrentArea()->AddProjectile(pro, Pos, target);
 		return true;
 	}
 	return false;
 }
 
-static EffectRef fx_damage_ref={"Damage",NULL,-1};
-static EffectRef fx_melee_ref={"SetMeleeEffect",NULL,-1};
-static EffectRef fx_ranged_ref={"SetRangedEffect",NULL,-1};
+static EffectRef fx_damage_ref = { "Damage", -1 };
+static EffectRef fx_melee_ref = { "SetMeleeEffect", -1 };
+static EffectRef fx_ranged_ref = { "SetRangedEffect", -1 };
 
 bool Actor::UseItem(ieDword slot, ieDword header, Scriptable* target, ieDword flags, int damage)
 {
@@ -6084,7 +6056,7 @@ bool Actor::UseItem(ieDword slot, ieDword header, Scriptable* target, ieDword fl
 	gamedata->FreeItem(itm,tmpresref, false);
 	if (pro) {
 		//ieDword is unsigned!!
-		pro->SetCaster(GetGlobalID());
+		pro->SetCaster(GetGlobalID(), ITEM_CASTERLEVEL);
 		if(((int)header < 0) && !(flags&UI_MISS)) { //using a weapon
 			bool ranged = header == (ieDword)-2;
 			ITMExtHeader *which = itm->GetWeaponHeader(ranged);
@@ -6356,8 +6328,8 @@ int Actor::CheckUsability(Item *item) const
 	return 0;
 }
 
-static EffectRef fx_cant_use_item_ref={"CantUseItem",NULL,-1};
-static EffectRef fx_cant_use_item_type_ref={"CantUseItemType",NULL,-1};
+static EffectRef fx_cant_use_item_ref = { "CantUseItem", -1 };
+static EffectRef fx_cant_use_item_type_ref = { "CantUseItemType", -1 };
 
 //this one is the same, but returns strrefs based on effects
 ieStrRef Actor::Disabled(ieResRef name, ieDword type) const
@@ -6891,7 +6863,7 @@ int Actor::LuckyRoll(int dice, int size, int add, ieDword flags, Actor* opponent
 	return result + add;
 }
 
-static EffectRef fx_remove_invisible_state_ref={"ForceVisible",NULL,-1};
+static EffectRef fx_remove_invisible_state_ref = { "ForceVisible", -1 };
 
 // removes the (normal) invisibility state
 void Actor::CureInvisibility()
@@ -6911,7 +6883,7 @@ void Actor::CureInvisibility()
 	}
 }
 
-static EffectRef fx_remove_sanctuary_ref={"Cure:Sanctuary",NULL,-1};
+static EffectRef fx_remove_sanctuary_ref = { "Cure:Sanctuary", -1 };
 
 // removes the sanctuary effect
 void Actor::CureSanctuary()
@@ -6979,7 +6951,7 @@ bool Actor::ModalSpellSkillCheck() {
 	}
 }
 
-static EffectRef fx_disable_button_ref={ "DisableButton", NULL, -1 };
+static EffectRef fx_disable_button_ref = { "DisableButton", -1 };
 
 inline void HideFailed(Actor* actor)
 {
@@ -7004,9 +6976,20 @@ bool Actor::TryToHide() {
 		return false;
 	}
 
-	// check if the pc is in combat (seen / heard)
-	Game *game = core->GetGame();
-	if (game->PCInCombat(this)) {
+	// check if the actor is seen by enemy
+	Actor** visActors = GetCurrentArea()->GetAllActorsInRadius(Pos, GA_NO_DEAD, Modified[IE_VISUALRANGE]);
+	Actor** poi = visActors;
+	bool seen = false;
+	while (*poi && !seen) {
+		Actor *toCheck = *poi++;
+		if (Modified[IE_EA] >= EA_EVILCUTOFF)
+			seen = toCheck->Modified[IE_EA] < EA_EVILCUTOFF;
+		else
+			seen = toCheck->Modified[IE_EA] > EA_GOODCUTOFF;
+	}
+	free(visActors);
+
+	if (seen) {
 		HideFailed(this);
 		return false;
 	}
@@ -7018,6 +7001,7 @@ bool Actor::TryToHide() {
 		skill = GetStat(IE_STEALTH);
 	}
 
+	Game *game = core->GetGame();
 	// check how bright our spot is
 	ieDword lightness = game->GetCurrentArea()->GetLightLevel(Pos);
 	// seems to be the color overlay at midnight; lightness of a point with rgb (200, 100, 100)

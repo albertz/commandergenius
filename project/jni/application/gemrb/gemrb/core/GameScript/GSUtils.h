@@ -51,6 +51,8 @@ extern int ObjectIDSCount;
 extern int MaxObjectNesting;
 extern bool HasAdditionalRect;
 extern bool HasTriggerPoint;
+extern bool NoCreate;
+extern bool HasKaputz;
 extern ieResRef *ObjectIDSTableNames;
 extern int ObjectFieldsCount;
 extern int ExtraParametersCount;
@@ -90,8 +92,6 @@ void EscapeAreaCore(Scriptable *Sender, const Point &p, const char *area, const 
 void GoNear(Scriptable *Sender, const Point &p);
 void MoveNearerTo(Scriptable *Sender, Scriptable *target, int distance);
 int MoveNearerTo(Scriptable *Sender, const Point &p, int distance, int no_release);
-void GoNearAndRetry(Scriptable *Sender, Scriptable *target, bool destination, int distance);
-void GoNearAndRetry(Scriptable *Sender, const Point &p, int distance);
 
 #define NO_OPERATION -1
 #define LESS_OR_EQUALS 0
@@ -110,8 +110,8 @@ void GoNearAndRetry(Scriptable *Sender, const Point &p, int distance);
 
 GEM_EXPORT int GetGroup(Actor *actor);
 
-void FreeSrc(SrcVector *poi, const ieResRef key);
-SrcVector *LoadSrc(const ieResRef resname);
+GEM_EXPORT void FreeSrc(SrcVector *poi, const ieResRef key);
+GEM_EXPORT SrcVector *LoadSrc(const ieResRef resname);
 Action *ParamCopy(Action *parameters);
 Action *ParamCopyNoOverride(Action *parameters);
 void SetVariable(Scriptable* Sender, const char* VarName, ieDword value);

@@ -36,6 +36,10 @@
 #include "ProjectileServer.h"
 #include "TileMapMgr.h"
 #include "Video.h"
+#include "GameScript/GameScript.h"
+#include "Scriptable/Container.h"
+#include "Scriptable/Door.h"
+#include "Scriptable/InfoPoint.h"
 #include "System/CachedFileStream.h"
 #include "System/FileStream.h"
 
@@ -343,6 +347,12 @@ Map* AREImporter::GetMap(const char *ResRef, bool day_or_night)
 	// small map is *optional*!
 	ResourceHolder<ImageMgr> sm(TmpResRef);
 
+	//if the Script field is empty, the area name will be copied into it on first load
+	//this works only in the iwd branch of the games
+	if (!Script[0] && core->HasFeature(GF_FORCE_AREA_SCRIPT) ) {
+		memcpy(Script, ResRef, sizeof(ieResRef) );
+	}
+
 	if (Script[0]) {
 		//for some reason the area's script is run from the last slot
 		//at least one area script depends on this, if you need something
@@ -417,7 +427,8 @@ Map* AREImporter::GetMap(const char *ResRef, bool day_or_night)
 		ieWord PosX, PosY;
 		ieWord TalkX, TalkY;
 		ieVariable Name, Entrance;
-		ieResRef Script, DialogResRef, KeyResRef, Destination;
+		ieResRef Script, KeyResRef, Destination;
+		ieResRef DialogResRef, WavResRef; //adopted pst specific fields
 		ieStrRef DialogName;
 		str->Read( Name, 32 );
 		Name[32] = 0;
@@ -451,15 +462,11 @@ Map* AREImporter::GetMap(const char *ResRef, bool day_or_night)
 		str->ReadWord( &LaunchY );
 		str->ReadResRef( KeyResRef );
 		str->ReadResRef( Script );
-		//if the Script field is empty, the area name will be copied into it on first load
-		//this works only in the iwd branch of the games
-		if (!Script[0] && core->HasFeature(GF_FORCE_AREA_SCRIPT) ) {
-			memcpy(Script, ResRef, sizeof(ieResRef) );
-		}
 		str->ReadWord( &PosX);
 		str->ReadWord( &PosY);
 		//maybe we have to store this
-		str->Seek( 44, GEM_CURRENT_POS );
+		str->Seek( 36, GEM_CURRENT_POS );
+		str->ReadResRef( WavResRef );
 		str->ReadWord( &TalkX);
 		str->ReadWord( &TalkY);
 		str->ReadDword( &DialogName );
@@ -507,6 +514,7 @@ Map* AREImporter::GetMap(const char *ResRef, bool day_or_night)
 		ip->TalkPos.y=TalkY;
 		ip->DialogName=DialogName;
 		ip->SetDialog(DialogResRef);
+		ip->SetEnter(WavResRef);
 
 		if (Script[0]) {
 			ip->Scripts[0] = new GameScript( Script, ip );
@@ -995,7 +1003,7 @@ Map* AREImporter::GetMap(const char *ResRef, bool day_or_night)
 			str->ReadWord( &anim->sequence );
 			str->ReadWord( &anim->frame );
 			str->ReadDword( &anim->Flags );
-			str->ReadWord( (ieWord *) &anim->height );
+			str->ReadWordSigned( &anim->height );
 			str->ReadWord( &anim->transparency );
 			str->ReadWord( &anim->unknown3c ); //not completely understood, if not 0, sequence is started
 			str->Read( &anim->startchance,1 );
@@ -1009,9 +1017,9 @@ Map* AREImporter::GetMap(const char *ResRef, bool day_or_night)
 			//set up the animation, it cannot be done here
 			//because a StaticSequence action can change
 			//it later
-			anim->InitAnimation();
-
 			map->AddAnimation( anim );
+			//the animation was safely transferred to internal memory
+			delete anim;
 		}
 	}
 
@@ -1166,9 +1174,9 @@ Map* AREImporter::GetMap(const char *ResRef, bool day_or_night)
 		ieDword TrapEffOffset;
 		ieWord TrapSize, ProID;
 		ieWord X,Y;
-		ieDword Unknown1;
-		ieWord Unknown2;
-		ieByte Unknown3;
+		ieDword Ticks;
+		ieWord Unknown;
+		ieByte PartyID;
 		ieByte Owner;
 
 		str->Seek( TrapOffset + ( i * 0x1c ), GEM_STREAM_START );
@@ -1177,11 +1185,11 @@ Map* AREImporter::GetMap(const char *ResRef, bool day_or_night)
 		str->ReadDword( &TrapEffOffset );
 		str->ReadWord( &TrapSize );
 		str->ReadWord( &ProID );
-		str->ReadDword( &Unknown1 );
+		str->ReadDword( &Ticks );
 		str->ReadWord( &X );
 		str->ReadWord( &Y );
-		str->ReadWord( &Unknown2 );
-		str->Read( &Unknown3,1 );
+		str->ReadWord( &Unknown );
+		str->Read( &PartyID,1 );
 		str->Read( &Owner,1 );
 		int TrapEffectCount = TrapSize/0x108;
 		if(TrapEffectCount*0x108!=TrapSize) {
@@ -1200,9 +1208,12 @@ Map* AREImporter::GetMap(const char *ResRef, bool day_or_night)
 		CachedFileStream *fs = new CachedFileStream( (CachedFileStream *) str, TrapEffOffset, TrapSize, true);
 
 		ReadEffects((DataStream *) fs,fxqueue, TrapEffectCount);
-		Actor * caster = core->GetGame()->FindPC(Owner);
+		Actor * caster = core->GetGame()->FindPC(PartyID);
 		pro->SetEffects(fxqueue);
-		if (caster) pro->SetCaster(caster->GetGlobalID());
+		if (caster) {
+			//FIXME: i don't know the level info
+			pro->SetCaster(caster->GetGlobalID(), 10);
+		}
 		Point pos(X,Y);
 		map->AddProjectile( pro, pos, pos);
 	}
@@ -1439,7 +1450,9 @@ int AREImporter::PutHeader(DataStream *stream, Map *map)
 	stream->WriteDword( &VariablesOffset );
 	stream->WriteDword( &VariablesCount );
 	stream->WriteDword( &tmpDword);
-	GameScript *s = map->Scripts[0];
+
+	//the saved area script is in the last script slot!
+	GameScript *s = map->Scripts[MAX_SCRIPTS-1];
 	if (s) {
 		stream->WriteResRef( s->GetName() );
 	} else {
@@ -1695,7 +1708,7 @@ int AREImporter::PutRegions( DataStream *stream, Map *map, ieDword &VertIndex)
 {
 	ieDword tmpDword = 0;
 	ieWord tmpWord;
-	char filling[56];
+	char filling[36];
 
 	memset(filling,0,sizeof(filling) );
 	for (unsigned int i=0;i<InfoPointsCount;i++) {
@@ -1745,8 +1758,9 @@ int AREImporter::PutRegions( DataStream *stream, Map *map, ieDword &VertIndex)
 		stream->WriteWord( &tmpWord);
 		tmpWord = (ieWord) ip->UsePoint.y;
 		stream->WriteWord( &tmpWord);
-		stream->Write( filling, 44); //unknown
+		stream->Write( filling, 36); //unknown
 		//these are probably only in PST
+		stream->WriteResRef( ip->EnterWav);
 		tmpWord = (ieWord) ip->TalkPos.x;
 		stream->WriteWord( &tmpWord);
 		tmpWord = (ieWord) ip->TalkPos.y;

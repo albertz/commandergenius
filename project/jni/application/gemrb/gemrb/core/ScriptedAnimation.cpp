@@ -40,6 +40,7 @@
 #define NINE 16           //nine faces (orientation)
 #define SEVENEYES 32      //special hack for seven eyes
 
+#define DEFAULT_FRAMERATE 15
 #define MAX_CYCLE_TYPE 16
 static const ieByte ctypes[MAX_CYCLE_TYPE]={
 	ILLEGAL, ONE, TWO, THREE, TWO|DOUBLE, ONE|FIVE, THREE|DOUBLE, ILLEGAL,
@@ -75,7 +76,7 @@ void ScriptedAnimation::Init()
 	Fade = 0;
 	SequenceFlags = 0;
 	XPos = YPos = ZPos = 0;
-	FrameRate = 15;
+	FrameRate = DEFAULT_FRAMERATE;
 	FaceTarget = 0;
 	Orientation = 0;
 	Dither = 0;
@@ -86,6 +87,12 @@ void ScriptedAnimation::Init()
 	Phase = P_NOTINITED;
 	effect_owned = false;
 	active = true;
+	Delay = 0;
+	light = NULL;
+	LightX = 0;
+	LightY = 0;
+	LightZ = 0;
+	starttime = 0; 
 }
 
 void ScriptedAnimation::Override(ScriptedAnimation *templ)
@@ -252,11 +259,16 @@ ScriptedAnimation::ScriptedAnimation(DataStream* stream, bool autoFree)
 	ZPos = (signed) tmp;
 	stream->Seek( 4, GEM_CURRENT_POS );
 	stream->ReadDword( &FrameRate );
+
+	if (!FrameRate) FrameRate = DEFAULT_FRAMERATE;
+
 	stream->ReadDword( &FaceTarget );
 	stream->Seek( 16, GEM_CURRENT_POS );
 	stream->ReadDword( &tmp );  //this doesn't affect visibility
 	YPos = (signed) tmp;
-	stream->Seek( 12, GEM_CURRENT_POS );
+	stream->ReadDword( &LightX );
+	stream->ReadDword( &LightY );
+	stream->ReadDword( &LightZ );
 	stream->ReadDword( &Duration );
 	stream->Seek( 8, GEM_CURRENT_POS );
 	stream->ReadDword( &seq1 );
@@ -395,6 +407,9 @@ ScriptedAnimation::~ScriptedAnimation(void)
 		sound_handle->Stop();
 		sound_handle.release();
 	}
+	if(light) {
+		core->GetVideoDriver()->FreeSprite(light);
+	}
 }
 
 void ScriptedAnimation::SetPhase(int arg)
@@ -490,8 +505,17 @@ ieDword ScriptedAnimation::GetSequenceDuration(ieDword multiplier)
 	return 0;
 }
 
+void ScriptedAnimation::SetDelay(ieDword delay)
+{
+	Delay = delay;
+	if (twin) {
+		twin->Delay=delay;
+	}
+}
+
 void ScriptedAnimation::SetDefaultDuration(ieDword duration)
 {
+	if (!(SequenceFlags&(IE_VVC_LOOP|IE_VVC_FREEZE) )) return;
 	if (Duration==0xffffffff) {
 		Duration = duration;
 	}
@@ -517,11 +541,32 @@ void ScriptedAnimation::SetOrientation(int orientation)
 
 bool ScriptedAnimation::HandlePhase(Sprite2D *&frame)
 {
+	unsigned int inc = 0;
+
 	if (justCreated) {
 		if (Phase == P_NOTINITED) {
 			printMessage("ScriptedAnimation", "Not fully initialised VVC!\n", LIGHT_RED);
 			return true;
 		}
+		unsigned long time;
+		time = core->GetGame()->Ticks;
+		if (starttime == 0) {
+		  starttime = time;
+		}
+		if (( time - starttime ) >= ( unsigned long ) ( 1000 / FrameRate )) {
+			inc = (time-starttime)*FrameRate/1000;
+			starttime += inc*1000/FrameRate;
+		}
+
+		if (Delay>inc) {
+			Delay-=inc;
+			return false;
+		}
+
+		if (SequenceFlags&IE_VVC_LIGHTSPOT) {
+			light = core->GetVideoDriver()->CreateLight(LightX, LightZ);
+		}
+
 		if (Duration!=0xffffffff) {
 			Duration += core->GetGame()->GameTime;
 		}
@@ -558,6 +603,10 @@ retry:
 			goto retry;
 		}
 	}
+	if (SequenceFlags&IE_VVC_FREEZE) {
+		return false;
+	}
+
 	//automatically slip from onset to hold to release
 	if (!frame || anims[Phase*MAX_ORIENT+Orientation]->endReached) {
 		if (Phase>=P_RELEASE) {
@@ -594,7 +643,13 @@ bool ScriptedAnimation::Draw(const Region &screen, const Point &Pos, const Color
 	Sprite2D* frame;
 
 	if (HandlePhase(frame)) {
+		//expired
 		return true;
+	}
+
+	//delayed
+	if (justCreated) {
+		return false;
 	}
 
 	ieDword flag = BLIT_TRANSSHADOW;
@@ -614,7 +669,7 @@ bool ScriptedAnimation::Draw(const Region &screen, const Point &Pos, const Color
 		flag |= BLIT_GREY;
 	}
 
-	if (Transparency & IE_VVC_RED_TINT) {
+	if (Transparency & IE_VVC_SEPIA) {
 		flag |= BLIT_RED;
 	}
 
@@ -642,6 +697,9 @@ bool ScriptedAnimation::Draw(const Region &screen, const Point &Pos, const Color
 	}
 
 	video->BlitGameSprite( frame, cx + screen.x, cy + screen.y, flag, tint, cover, palette, &screen);
+	if (light) {
+		video->BlitGameSprite( light, cx + screen.x, cy + screen.y, 0, tint, NULL, NULL, &screen);
+	}
 	return false;
 }
 

@@ -73,14 +73,20 @@ Projectile* PROImporter::GetProjectile(Projectile *s)
 	str->ReadDword( &s->SFlags ); //spark, ignore center, looping sound etc
 	str->ReadResRef( s->SoundRes1 );
 	str->ReadResRef( s->SoundRes2 );
-	str->ReadResRef( s->SoundRes3 );
+	str->ReadResRef( s->TravelVVC ); //no original game data uses this feature
 	str->ReadDword( &s->SparkColor );//enabled by PSF_SPARK
 	str->ReadDword( &s->ExtFlags ) ; //gemrb extension flags
 	str->ReadDword( &s->StrRef );    //gemrb extension strref
 	str->ReadDword( &s->RGB );       //gemrb extension rgb pulse
 	str->ReadWord( &s->ColorSpeed ); //gemrb extension rgb speed
 	str->ReadWord( &s->Shake );      //gemrb extension screen shake
-	str->Seek(196, GEM_CURRENT_POS); //skipping unused (unknown) bytes
+	str->ReadWord( &s->IDSValue);    //gemrb extension IDS targeting
+	str->ReadWord( &s->IDSType);     //gemrb extension IDS targeting
+	str->ReadWord( &s->IDSValue2);   //gemrb extension IDS targeting
+	str->ReadWord( &s->IDSType2);    //gemrb extension IDS targeting
+	str->ReadResRef( s->FailSpell);  //gemrb extension fail effect
+	str->ReadResRef( s->SuccSpell);  //gemrb extension implicit effect
+	str->Seek(172, GEM_CURRENT_POS); //skipping unused (unknown) bytes
 	//we should stand at offset 0x100 now
 	str->ReadDword( &s->TFlags ); //other projectile flags
 	str->ReadResRef( s->BAMRes1 );
@@ -150,8 +156,20 @@ void PROImporter::GetAreaExtension(ProjectileExtension *e)
 	str->ReadResRef( e->Secondary );
 	str->ReadResRef( e->AreaSound );
 	str->ReadDword( &e->APFlags );
+	str->ReadWord( &e->DiceCount );
+	str->ReadWord( &e->DiceSize );
+	str->ReadWord( &e->TileX );
+	str->ReadWord( &e->TileY );
+
+	if (!e->TileX) {
+		e->TileX=64;
+	}
+	if (!e->TileY) {
+		e->TileY=64;
+	}
+
 	//we skip the rest
-	str->Seek(188, GEM_CURRENT_POS);
+	str->Seek(180, GEM_CURRENT_POS);
 }
 
 #include "plugindef.h"

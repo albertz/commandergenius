@@ -35,10 +35,11 @@ static struct {
 	const char* Name;
 	EffectFunction Function;
 	int Strref;
+	int Flags;
 } Opcodes[MAX_EFFECTS];
 
 static int initialized = 0;
-static EffectRef *effectnames = NULL;
+static EffectDesc *effectnames = NULL;
 static int effectnames_count = 0;
 static int pstflags = false;
 
@@ -54,6 +55,13 @@ bool EffectQueue::match_ids(Actor *target, int table, ieDword value)
 	case 2: //EA
 		stat = IE_EA; break;
 	case 3: //GENERAL
+		//this is a hack to support dead only projectiles in PST
+		//if it interferes with something feel free to remove
+		if (value==GEN_DEAD) {
+			if (target->GetStat(IE_STATE_ID)&STATE_DEAD) {
+				return true;
+			}
+		}
 		stat = IE_GENERAL; break;
 	case 4: //RACE
 		stat = IE_RACE; break;
@@ -165,49 +173,25 @@ int find_effect(const void *a, const void *b)
 	return stricmp((const char *) a,((const EffectRef *) b)->Name);
 }
 
-static EffectRef* FindEffect(const char* effectname)
+static EffectDesc* FindEffect(const char* effectname)
 {
 	if( !effectname || !effectnames) {
 		return NULL;
 	}
-	void *tmp = bsearch(effectname, effectnames, effectnames_count, sizeof(EffectRef), find_effect);
+	void *tmp = bsearch(effectname, effectnames, effectnames_count, sizeof(EffectDesc), find_effect);
 	if( !tmp) {
 		printMessage( "EffectQueue", "", YELLOW);
 		printf("Couldn't assign effect: %s\n", effectname );
 	}
-	return (EffectRef *) tmp;
+	return (EffectDesc *) tmp;
 }
 
-static EffectRef fx_protection_from_display_string_ref={"Protection:String",NULL,-1};
-
-//special effects without level check (but with damage dices precalculated)
-static EffectRef diced_effects[] = {
-	//core effects
-	{"Damage",NULL,-1},
-	{"CurrentHPModifier",NULL,-1},
-	{"MaximumHPModifier",NULL,-1},
-	//iwd effects
-	{"BurningBlood",NULL,-1}, //iwd
-	{"ColdDamage",NULL,-1},
-	{"CrushingDamage",NULL,-1},
-	{"VampiricTouch",NULL,-1},
-	{"VitriolicSphere",NULL,-1},
-	//pst effects
-	{"TransferHP",NULL,-1},
-{NULL,NULL,0} };
-
-//special effects without level check (but with damage dices not precalculated)
-static EffectRef diced_effects2[] = {
-	{"BurningBlood2",NULL,-1}, //how/iwd2
-	{"StaticCharge",NULL,-1}, //how/iwd2
-	{"SoulEater",NULL,-1}, //how/iwd2
-	{"LichTouch",NULL,-1}, //how
-{NULL,NULL,0} };
+static EffectRef fx_protection_from_display_string_ref = { "Protection:String", -1 };
 
 inline static void ResolveEffectRef(EffectRef &effect_reference)
 {
 	if( effect_reference.opcode==-1) {
-		EffectRef* ref = FindEffect(effect_reference.Name);
+		EffectDesc* ref = FindEffect(effect_reference.Name);
 		if( ref && ref->opcode>=0) {
 			effect_reference.opcode = ref->opcode;
 			return;
@@ -258,10 +242,11 @@ bool Init_EffectQueue()
 			}
 		}
 
-		EffectRef* poi = FindEffect( effectname );
+		EffectDesc* poi = FindEffect( effectname );
 		if( poi != NULL) {
 			Opcodes[i].Function = poi->Function;
 			Opcodes[i].Name = poi->Name;
+			Opcodes[i].Flags = poi->Flags;
 			//reverse linking opcode number
 			//using this unused field
 			if( (poi->opcode!=-1) && effectname[0]!='*') {
@@ -273,14 +258,6 @@ bool Init_EffectQueue()
 		//printf("-------- FN: %d, %s\n", i, effectname);
 	}
 	core->DelSymbol( eT );
-
-	//additional initialisations
-	for (i=0;diced_effects[i].Name;i++) {
-		ResolveEffectRef(diced_effects[i]);
-	}
-	for (i=0;diced_effects2[i].Name;i++) {
-		ResolveEffectRef(diced_effects2[i]);
-	}
 
 	return true;
 }
@@ -294,21 +271,21 @@ void EffectQueue_ReleaseMemory()
 	effectnames = NULL;
 }
 
-void EffectQueue_RegisterOpcodes(int count, const EffectRef* opcodes)
+void EffectQueue_RegisterOpcodes(int count, const EffectDesc* opcodes)
 {
 	if( ! effectnames) {
-		effectnames = (EffectRef*) malloc( (count+1) * sizeof( EffectRef ) );
+		effectnames = (EffectDesc*) malloc( (count+1) * sizeof( EffectDesc ) );
 	} else {
-		effectnames = (EffectRef*) realloc( effectnames, (effectnames_count + count + 1) * sizeof( EffectRef ) );
+		effectnames = (EffectDesc*) realloc( effectnames, (effectnames_count + count + 1) * sizeof( EffectDesc ) );
 	}
 
-	memcpy( effectnames + effectnames_count, opcodes, count * sizeof( EffectRef ));
+	memcpy( effectnames + effectnames_count, opcodes, count * sizeof( EffectDesc ));
 	effectnames_count += count;
 	effectnames[effectnames_count].Name = NULL;
 	//if we merge two effect lists, then we need to sort their effect tables
 	//actually, we might always want to sort this list, so there is no
 	//need to do it manually (sorted table is needed if we use bsearch)
-	qsort(effectnames, effectnames_count, sizeof(EffectRef), compare_effects);
+	qsort(effectnames, effectnames_count, sizeof(EffectDesc), compare_effects);
 }
 
 EffectQueue::EffectQueue()
@@ -424,7 +401,7 @@ Effect *EffectQueue::CreateEffectCopy(Effect *oldfx, EffectRef &effect_reference
 	return CreateEffectCopy(oldfx, effect_reference.opcode, param1, param2);
 }
 
-static EffectRef fx_unsummon_creature_ref={"UnsummonCreature",NULL,-1};
+static EffectRef fx_unsummon_creature_ref = { "UnsummonCreature", -1 };
 
 Effect *EffectQueue::CreateUnsummonEffect(Effect *fx)
 {
@@ -512,7 +489,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 	switch (fx->Target) {
 	case FX_TARGET_ORIGINAL:
 		fx->SetPosition(self->Pos);
-		
+
 		flg = ApplyEffect( st, fx, 1 );
 		if( fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
 			if( st) {
@@ -611,9 +588,9 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 	case FX_TARGET_PARTY:
 all_party:
 		game = core->GetGame();
-		i = game->GetPartySize(true);
+		i = game->GetPartySize(false);
 		while(i--) {
-			Actor* actor = game->GetPC( i, true );
+			Actor* actor = game->GetPC( i, false );
 			fx->SetPosition(actor->Pos);
 
 			flg = ApplyEffect( actor, fx, 1 );
@@ -703,39 +680,17 @@ int EffectQueue::AddAllEffects(Actor* target, const Point &destination) const
 	return res;
 }
 
-//check if an effect has no level based resistance, but instead the dice sizes/count
-//adjusts Parameter1 (like a damage causing effect)
-inline static bool IsDicedEffect(int opcode)
-{
-	int i;
-
-	for(i=0;diced_effects[i].Name;i++) {
-		if( diced_effects[i].opcode==opcode) {
-			return true;
-		}
-	}
-	return false;
-}
-
-//there is no level based resistance, but Parameter1 cannot be precalculated
-//these effects use the Dice fields in a special way
-inline static bool IsDicedEffect2(int opcode)
-{
-	int i;
-
-	for(i=0;diced_effects2[i].Name;i++) {
-		if( diced_effects2[i].opcode==opcode) {
-			return true;
-		}
-	}
-	return false;
-}
-
 //resisted effect based on level
 inline bool check_level(Actor *target, Effect *fx)
 {
 	//skip non level based effects
-	if( IsDicedEffect((int) fx->Opcode)) {
+	//check if an effect has no level based resistance, but instead the dice sizes/count
+	//adjusts Parameter1 (like a damage causing effect)
+	if( Opcodes[fx->Opcode].Flags & EFFECT_DICED ) {
+		//add the caster level to the dice count
+		if (fx->IsVariable) {
+			fx->DiceThrown+=fx->CasterLevel;
+		}
 		fx->Parameter1 = DICE_ROLL((signed)fx->Parameter1);
 		//this is a hack for PST style diced effects
 		if( core->HasFeature(GF_SAVE_FOR_HALF) ) {
@@ -749,7 +704,9 @@ inline bool check_level(Actor *target, Effect *fx)
 		}
 		return false;
 	}
-	if( IsDicedEffect2((int) fx->Opcode)) {
+	//there is no level based resistance, but Parameter1 cannot be precalculated
+	//these effects use the Dice fields in a special way
+	if( Opcodes[fx->Opcode].Flags & EFFECT_NO_LEVEL_CHECK ) {
 		return false;
 	}
 
@@ -770,7 +727,7 @@ inline bool check_level(Actor *target, Effect *fx)
 	return false;
 }
 
-//roll for the effect probability, there is a high and a low treshold, the d100 
+//roll for the effect probability, there is a high and a low treshold, the d100
 //roll should hit in the middle
 inline bool check_probability(Effect* fx)
 {
@@ -784,36 +741,36 @@ inline bool check_probability(Effect* fx)
 }
 
 //immunity effects
-static EffectRef fx_level_immunity_ref={"Protection:Spelllevel",NULL,-1};
-static EffectRef fx_opcode_immunity_ref={"Protection:Opcode",NULL,-1}; //bg2
-static EffectRef fx_opcode_immunity2_ref={"Protection:Opcode2",NULL,-1};//iwd
-static EffectRef fx_spell_immunity_ref={"Protection:Spell",NULL,-1}; //bg2
-static EffectRef fx_spell_immunity2_ref={"Protection:Spell2",NULL,-1};//iwd
-static EffectRef fx_store_spell_sequencer_ref={"Sequencer:Store",NULL,-1}; //bg2, works against sequencers
-static EffectRef fx_school_immunity_ref={"Protection:School",NULL,-1};
-static EffectRef fx_secondary_type_immunity_ref={"Protection:SecondaryType",NULL,-1};
+static EffectRef fx_level_immunity_ref = { "Protection:Spelllevel", -1 };
+static EffectRef fx_opcode_immunity_ref = { "Protection:Opcode", -1 }; //bg2
+static EffectRef fx_opcode_immunity2_ref = { "Protection:Opcode2", -1 };//iwd
+static EffectRef fx_spell_immunity_ref = { "Protection:Spell", -1 }; //bg2
+static EffectRef fx_spell_immunity2_ref = { "Protection:Spell2", -1 };//iwd
+static EffectRef fx_store_spell_sequencer_ref = { "Sequencer:Store", -1 }; //bg2, works against sequencers
+static EffectRef fx_school_immunity_ref = { "Protection:School", -1 };
+static EffectRef fx_secondary_type_immunity_ref = { "Protection:SecondaryType", -1 };
 
 //decrementing immunity effects
-static EffectRef fx_level_immunity_dec_ref={"Protection:SpellLevelDec",NULL,-1};
-static EffectRef fx_spell_immunity_dec_ref={"Protection:SpellDec",NULL,-1};
-static EffectRef fx_school_immunity_dec_ref={"Protection:SchoolDec",NULL,-1};
-static EffectRef fx_secondary_type_immunity_dec_ref={"Protection:SecondaryTypeDec",NULL,-1};
+static EffectRef fx_level_immunity_dec_ref = { "Protection:SpellLevelDec", -1 };
+static EffectRef fx_spell_immunity_dec_ref = { "Protection:SpellDec", -1 };
+static EffectRef fx_school_immunity_dec_ref = { "Protection:SchoolDec", -1 };
+static EffectRef fx_secondary_type_immunity_dec_ref = { "Protection:SecondaryTypeDec", -1 };
 
 //bounce effects
-static EffectRef fx_level_bounce_ref={"Bounce:SpellLevel",NULL,-1};
-//static EffectRef fx_opcode_bounce_ref={"Bounce:Opcode",NULL,-1};
-static EffectRef fx_spell_bounce_ref={"Bounce:Spell",NULL,-1};
-static EffectRef fx_school_bounce_ref={"Bounce:School",NULL,-1};
-static EffectRef fx_secondary_type_bounce_ref={"Bounce:SecondaryType",NULL,-1};
+static EffectRef fx_level_bounce_ref = { "Bounce:SpellLevel", -1 };
+//static EffectRef fx_opcode_bounce_ref = { "Bounce:Opcode", -1 };
+static EffectRef fx_spell_bounce_ref = { "Bounce:Spell", -1 };
+static EffectRef fx_school_bounce_ref = { "Bounce:School", -1 };
+static EffectRef fx_secondary_type_bounce_ref = { "Bounce:SecondaryType", -1 };
 
 //decrementing bounce effects
-static EffectRef fx_level_bounce_dec_ref={"Bounce:SpellLevelDec",NULL,-1};
-static EffectRef fx_spell_bounce_dec_ref={"Bounce:SpellDec",NULL,-1};
-static EffectRef fx_school_bounce_dec_ref={"Bounce:SchoolDec",NULL,-1};
-static EffectRef fx_secondary_type_bounce_dec_ref={"Bounce:SecondaryTypeDec",NULL,-1};
+static EffectRef fx_level_bounce_dec_ref = { "Bounce:SpellLevelDec", -1 };
+static EffectRef fx_spell_bounce_dec_ref = { "Bounce:SpellDec", -1 };
+static EffectRef fx_school_bounce_dec_ref = { "Bounce:SchoolDec", -1 };
+static EffectRef fx_secondary_type_bounce_dec_ref = { "Bounce:SecondaryTypeDec", -1 };
 
 //spelltrap (multiple decrementing immunity)
-static EffectRef fx_spelltrap={"SpellTrap", NULL,-1};
+static EffectRef fx_spelltrap = { "SpellTrap", -1 };
 
 //this is for whole spell immunity/bounce
 inline static void DecreaseEffect(Effect *efx)
@@ -1078,6 +1035,8 @@ int EffectQueue::ApplyEffect(Actor* target, Effect* fx, ieDword first_apply, ieD
 
 	fx->FirstApply=first_apply;
 	if( first_apply) {
+		if (Owner)
+			fx->CasterID = Owner->GetGlobalID();
 		if( (fx->PosX==0xffffffff) && (fx->PosY==0xffffffff)) {
 			fx->PosX = target->Pos.x;
 			fx->PosY = target->Pos.y;
@@ -1158,6 +1117,10 @@ int EffectQueue::ApplyEffect(Actor* target, Effect* fx, ieDword first_apply, ieD
 	EffectFunction fn = 0;
 	if( fx->Opcode<MAX_EFFECTS) {
 		fn = Opcodes[fx->Opcode].Function;
+		if (!(target || (Opcodes[fx->Opcode].Flags & EFFECT_NO_ACTOR))) {
+			printf("targetless opcode without EFFECT_NO_ACTOR: %d, skipping\n", fx->Opcode);
+			return FX_NOT_APPLIED;
+		}
 	}
 	int res = FX_ABORT;
 	if( fn) {
@@ -1533,7 +1496,7 @@ int EffectQueue::SpecificDamageBonus(ieDword opcode, ieDword param2) const
 	return bonus;
 }
 
-static EffectRef fx_damage_bonus_modifier_ref={"DamageBonusModifier",NULL,-1};
+static EffectRef fx_damage_bonus_modifier_ref = { "DamageBonusModifier", -1 };
 int EffectQueue::SpecificDamageBonus(ieDword damage_type) const
 {
 	ResolveEffectRef(fx_damage_bonus_modifier_ref);
@@ -1625,7 +1588,7 @@ bool EffectQueue::WeaponImmunity(ieDword opcode, int enchantment, ieDword weapon
 	return false;
 }
 
-static EffectRef fx_weapon_immunity_ref={"Protection:Weapons",NULL,-1};
+static EffectRef fx_weapon_immunity_ref = { "Protection:Weapons", -1 };
 
 bool EffectQueue::WeaponImmunity(int enchantment, ieDword weapontype) const
 {
@@ -1659,7 +1622,7 @@ void EffectQueue::AddWeaponEffects(EffectQueue *fxqueue, EffectRef &fx_ref) cons
 }
 
 /* no longer needed, use IE_CASTING stat
-static EffectRef fx_disable_spellcasting_ref={ "DisableCasting", NULL, -1 };
+static EffectRef fx_disable_spellcasting_ref = { "DisableCasting", -1 };
 int EffectQueue::DisabledSpellcasting(int types) const
 {
 	ResolveEffectRef(fx_disable_spellcasting_ref);
@@ -1800,7 +1763,7 @@ bool EffectQueue::HasDuration(Effect *fx)
 	return false;
 }
 
-static EffectRef fx_variable_ref={"Variable:StoreLocalVariable",NULL,-1};
+static EffectRef fx_variable_ref = { "Variable:StoreLocalVariable", -1 };
 
 //returns true if the effect must be saved
 //variables are saved differently

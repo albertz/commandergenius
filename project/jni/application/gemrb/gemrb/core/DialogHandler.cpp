@@ -25,7 +25,9 @@
 #include "DisplayMessage.h"
 #include "Game.h"
 #include "GameData.h"
+#include "ScriptEngine.h"
 #include "Video.h"
+#include "GameScript/GameScript.h"
 #include "GUI/GameControl.h"
 
 //translate section values (journal, solved, unsolved, user)
@@ -89,8 +91,13 @@ int DialogHandler::InitDialog(Scriptable* spk, Scriptable* tgt, const char* dlgr
 	}
 	if (oldTarget) oldTarget->SetCircleSize();
 
+	GameControl *gc = core->GetGameControl();
+
+	if (!gc)
+		return -1;
+
 	//check if we are already in dialog
-	if (core->GetGameControl()->GetDialogueFlags()&DF_IN_DIALOG) {
+	if (gc->GetDialogueFlags()&DF_IN_DIALOG) {
 		return 0;
 	}
 
@@ -100,11 +107,12 @@ int DialogHandler::InitDialog(Scriptable* spk, Scriptable* tgt, const char* dlgr
 	}
 
 	//we need GUI for dialogs
-	core->GetGameControl()->UnhideGUI();
+	//but the guiscript must be in control here
+	//gc->UnhideGUI();
 
 	//no exploring while in dialogue
-	core->GetGameControl()->SetScreenFlags(SF_GUIENABLED|SF_DISABLEMOUSE|SF_LOCKSCROLL, BM_OR);
-	core->GetGameControl()->SetDialogueFlags(DF_IN_DIALOG, BM_OR);
+	gc->SetScreenFlags(/*SF_GUIENABLED|*/SF_DISABLEMOUSE|SF_LOCKSCROLL, BM_OR);
+	gc->SetDialogueFlags(DF_IN_DIALOG, BM_OR);
 
 	if (tgt->Type==ST_ACTOR) {
 		Actor *tar = (Actor *) tgt;
@@ -119,12 +127,13 @@ int DialogHandler::InitDialog(Scriptable* spk, Scriptable* tgt, const char* dlgr
 	video->MoveViewportTo( tgt->Pos.x-vp.w/2, tgt->Pos.y-vp.h/2 );
 	//there are 3 bits, if they are all unset, the dialog freezes scripts
 	if (!(dlg->Flags&7) ) {
-		core->GetGameControl()->SetDialogueFlags(DF_FREEZE_SCRIPTS, BM_OR);
+		gc->SetDialogueFlags(DF_FREEZE_SCRIPTS, BM_OR);
 	}
 	//opening control size to maximum, enabling dialog window
-	core->GetGame()->SetControlStatus(CS_HIDEGUI, BM_NAND);
-	core->GetGame()->SetControlStatus(CS_DIALOG, BM_OR);
-	core->SetEventFlag(EF_PORTRAIT);
+	//but the guiscript must be in control here
+	//core->GetGame()->SetControlStatus(CS_HIDEGUI, BM_NAND);
+	//core->GetGame()->SetControlStatus(CS_DIALOG, BM_OR);
+	//core->SetEventFlag(EF_PORTRAIT);
 	return 0;
 }
 
@@ -157,6 +166,8 @@ void DialogHandler::EndDialog(bool try_to_break)
 		delete dlg;
 		dlg = NULL;
 	}
+	// FIXME: it's not so nice having this here, but things call EndDialog directly :(
+	core->GetGUIScriptEngine()->RunFunction( "GUIWORLD", "DialogEnded" );
 	//restoring original size
 	core->GetGame()->SetControlStatus(CS_DIALOG, BM_NAND);
 	core->GetGameControl()->SetScreenFlags(SF_DISABLEMOUSE|SF_LOCKSCROLL, BM_NAND);
@@ -264,10 +275,15 @@ void DialogHandler::DialogChoose(unsigned int choose)
 			if (target->Type == ST_ACTOR) ((Movable *)target)->ClearPath(); // fuzzie added this
 			target->ClearActions();
 
+			// do not interrupt during dialog actions (needed for aerie.d polymorph block)
+			char buf[20];
+			strcpy(buf, "SetInterrupt(FALSE)");
+			target->AddAction( GenerateAction( buf ) );
 			for (unsigned int i = 0; i < tr->actions.size(); i++) {
 				target->AddAction(tr->actions[i]);
-				//GameScript::ExecuteAction( target, action );
 			}
+			strcpy(buf, "SetInterrupt(TRUE)");
+			target->AddAction( GenerateAction( buf ) );
 		}
 
 		int final_dialog = tr->Flags & IE_DLG_TR_FINAL;
@@ -276,11 +292,6 @@ void DialogHandler::DialogChoose(unsigned int choose)
 			ta->SetMinRow( false );
 			EndDialog();
 		}
-
-		// *** the commented-out line here should no longer be required, with instant handling ***
-		// all dialog actions must be executed immediately
-		//target->ProcessActions(true);
-		// (do not clear actions - final actions can involve waiting/moving)
 
 		if (final_dialog) {
 			return;
@@ -457,11 +468,11 @@ Scriptable *DialogHandler::GetTarget()
 	if (actor) return actor;
 
 	Door *door = area->GetDoorByGlobalID(targetID);
-	if (door) return door;
+	if (door) return (Scriptable *)door;
 	Container *container = area->GetContainerByGlobalID(targetID);
-	if (container) return container;
+	if (container) return (Scriptable *)container;
 	InfoPoint *ip = area->GetInfoPointByGlobalID(targetID);
-	if (ip) return ip;
+	if (ip) return (Scriptable *)ip;
 
 	return NULL;
 }

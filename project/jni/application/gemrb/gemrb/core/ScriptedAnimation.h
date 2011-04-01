@@ -36,17 +36,31 @@
 #define IE_VVC_BLENDED		0x00000008
 #define IE_VVC_MIRRORX    	0x00000010
 #define IE_VVC_MIRRORY   	0x00000020
+#define IE_VVC_CLIPPED  	0x00000040
+#define IE_VVC_3D_BLEND         0x00000200
+#define IE_VVC_NOCOVER_2  	0x00000400
+#define IE_VVC_NO_TIMESTOP      0x00000800   //ignore timestop palette
+#define IE_VVC_NO_SEPIA         0x00001000   //ignore dream palette
+#define IE_VVC_2D_BLEND         0x00002000
 #define IE_VVC_TINT     	0x00030000   //2 bits need to be set for tint
-#define IE_VVC_GREYSCALE	0x00080000
+#define IE_VVC_GREYSCALE	0x00080000   //timestopped palette
 #define IE_VVC_DARKEN           0x00100000   //this is unsure
-#define IE_VVC_GLOWING  	0x00200000
-#define IE_VVC_RED_TINT		0x02000000
+#define IE_VVC_GLOWING  	0x00200000   //internal gamma
+#define IE_VVC_SEPIA		0x02000000   //dream palette
 
 #define IE_VVC_LOOP		0x00000001
+#define IE_VVC_LIGHTSPOT        0x00000002   //draw lightspot
+#define IE_VVC_HEIGHT           0x00000004
 #define IE_VVC_BAM		0x00000008
+#define IE_VVC_OWN_PAL  	0x00000010
 #define IE_VVC_NOCOVER		0x00000040
+#define IE_VVC_MID_BRIGHTEN 	0x00000080
+#define IE_VVC_HIGH_BRIGHTEN	0x00000100
 
-#define IE_VVC_UNUSED           0xe0000000U
+
+//#define IE_VVC_UNUSED           0xe0000000U
+//gemrb specific sequence flags
+#define IE_VVC_FREEZE     0x80000000
 
 //phases
 #define P_NOTINITED -1
@@ -78,10 +92,13 @@ public:
 	int Dither;
 	//these are signed
 	int XPos, YPos, ZPos;
+	ieDword LightX, LightY, LightZ;
+	Sprite2D* light;//this is just a round/halftrans sprite, has no animation
 	ieDword FrameRate;
 	ieDword FaceTarget;
 	ieByte Orientation;
 	ieDword Duration;
+	ieDword Delay;
 	bool justCreated;
 	ieResRef ResName;
 	int Phase;
@@ -90,6 +107,7 @@ public:
 	bool active;
 	bool effect_owned;
 	Holder<SoundHandle> sound_handle;
+	unsigned long starttime;
 public:
 	//draws the next frame of the videocell
 	bool Draw(const Region &screen, const Point &Pos, const Color &tint, Map *area, int dither, int orientation);
@@ -111,6 +129,8 @@ public:
 	SpriteCover* GetSpriteCover() const { return cover; }
 	int GetCurrentFrame();
 	ieDword GetSequenceDuration(ieDword multiplier);
+	/* sets up a delay in the beginning of the vvc */
+	void SetDelay(ieDword delay);
 	/* sets default duration if it wasn't set yet */
 	void SetDefaultDuration(unsigned int duration);
 	/* sets up the direction of the vvc */

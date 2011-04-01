@@ -25,10 +25,12 @@
 #  Game Type [String] Use one of the following      #
 #  values:                                          #
 #                                                   #
+#  auto      Attempt to autodetect game type        #
+#                                                   #
 #  bg1       Baldur's Gate                          #
 #  bg2       Baldur's Gate 2 : SoA or ToB           #
 #  tob       Baldur's Gate 2 : ToB (obsolete)       #
-#  iwd       IceWind Dale                           #
+#  iwd       IceWind Dale (no How or ToTL installed)#
 #  how       IceWind Dale : HoW or ToTL             #
 #  iwd2      IceWind Dale 2                         #
 #  pst       Planescape Torment                     #

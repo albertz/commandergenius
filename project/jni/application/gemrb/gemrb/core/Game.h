@@ -159,20 +159,20 @@ struct GAMLocationEntry {
 
 //pst maze data structures (TODO: create a separate class?)
 struct maze_entry {
-	ieDword unknown00;
+	ieDword override;
 	ieDword accessible;
 	ieDword valid;
 	ieDword trapped;
 	ieDword traptype;
 	ieWord walls;
-	ieDword unknown16;
+	ieDword visited;
 };
 
 struct maze_header {
 	ieDword maze_sizex, maze_sizey;
 	ieDword pos1x, pos1y;  //nordom's position
 	ieDword pos2x, pos2y;  //main hall position
-	ieDword pos3x, pos3y;  //unknown
+	ieDword pos3x, pos3y;  //foyer entrance
 	ieDword pos4x, pos4y;  //unknown
 	ieDword trapcount;     //based on map size
 	ieDword initialized;   //set to 1
@@ -202,18 +202,18 @@ struct maze_header {
 #define MH_UNKNOWN30  11
 
 //maze entry indices
-#define ME_0          0
+#define ME_OVERRIDE   0
 #define ME_VALID      1
 #define ME_ACCESSIBLE 2
 #define ME_TRAP       3
 #define ME_WALLS      4
-#define ME_16         5
+#define ME_VISITED    5
 
 //ME_WALL bitfields
-#define WALL_EAST     1
-#define WALL_WEST     2
-#define WALL_NORTH    4
-#define WALL_SOUTH    8
+#define WALL_SOUTH    1
+#define WALL_NORTH    2
+#define WALL_EAST     4
+#define WALL_WEST     8
 
 #define MAX_CRLEVEL 32
 
@@ -236,7 +236,6 @@ private:
 	std::vector< GAMLocationEntry*> savedpositions;
 	std::vector< GAMLocationEntry*> planepositions;
 	std::vector< char*> mastarea;
-	std::vector< ieDword> Attackers;
 	CRRow *crtable;
 	ieResRef restmovies[8];
 	ieResRef daymovies[8];
@@ -286,6 +285,7 @@ public:
 	EventHandler event_handler; //like in Control
 	bool hasInfra;
 	bool familiarBlock;
+	bool PartyAttack;
 private:
 	/** reads the challenge rating table */
 	void LoadCRTable();
@@ -354,9 +354,6 @@ public:
 	Actor* GetNPC(unsigned int Index);
 	void SwapPCs(unsigned int Index1, unsigned int Index2);
 	bool IsDay();
-	void InAttack(ieDword globalID);
-	void OutAttack(ieDword globalID);
-	int AttackersOf(ieDword globalID, Map *area) const;
 
 	//journal entries
 	/** Deletes one or all journal entries if strref is -1 */
@@ -409,9 +406,6 @@ public:
 		}
 		return Formations[WhichFormation];
 	}
-	size_t GetAttackerCount() const {
-		return Attackers.size();
-	}
 
 	/** converts challenge rating to xp */
 	int GetXPFromCR(int cr);
@@ -419,8 +413,6 @@ public:
 	void ShareXP(int XP, int flags);
 	/** returns true if we should start the party overflow window */
 	bool PartyOverflow() const;
-	/** returns true if actor is an attacker or being attacked */
-	bool PCInCombat(Actor *actor) const;
 	/** returns true if any pc is attacker or being attacked */
 	bool AnyPCInCombat() const;
 	/** returns true if the party death condition is true */

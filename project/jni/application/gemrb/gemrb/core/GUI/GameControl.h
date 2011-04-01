@@ -114,7 +114,7 @@ private:
 	//int action;
 #ifdef TOUCHSCREEN
 	bool touched; // true, if player touched screen (left button down and hold)
-#endif	
+#endif
 public:
 	Door* overDoor;
 	Container* overContainer;
@@ -216,6 +216,7 @@ public:
 	void TryToDisarm(Actor *source, InfoPoint *tgt);
 	void PerformActionOn(Actor *actor);
 	void ResetTargetMode();
+	void UpdateTargetMode();
 
 	// returns the default cursor fitting the targeting mode 
 	int GetDefaultCursor() const;

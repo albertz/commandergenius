@@ -430,8 +430,8 @@ int BIKPlayer::sound_init(bool need_init)
 		sample_rate *= header.channels;
 		s_frame_len *= header.channels;
 		s_channels = 1;
-	if (header.channels == 2)
-		frame_len_bits++;
+		if (header.channels == 2)
+			frame_len_bits++;
 	}
 
 	s_overlap_len   = s_frame_len / 16;
@@ -460,10 +460,10 @@ int BIKPlayer::sound_init(bool need_init)
 	s_first = 1;
 
 	for (i = 0; i < s_channels; i++)
-	s_coeffs_ptr[i] = s_coeffs + i * s_frame_len;
+		s_coeffs_ptr[i] = s_coeffs + i * s_frame_len;
 
 	if (header.audioflag&BINK_AUD_USEDCT)
-		ret = ff_dct_init(&s_trans.dct, frame_len_bits, 0);
+		ret = ff_dct_init(&s_trans.dct, frame_len_bits, 1);
 	else
 		ret = ff_rdft_init(&s_trans.rdft, frame_len_bits, IRIDFT);
 
@@ -596,18 +596,18 @@ const uint8_t ff_log2_tab[256]={
 
 static inline av_const int av_log2(unsigned int v)
 {
-    int n = 0;
-    if (v & 0xffff0000) {
-        v >>= 16;
-        n += 16;
-    }
-    if (v & 0xff00) {
-        v >>= 8;
-        n += 8;
-    }
-    n += ff_log2_tab[v];
+	int n = 0;
+	if (v & 0xffff0000) {
+		v >>= 16;
+		n += 16;
+	}
+	if (v & 0xff00) {
+		v >>= 8;
+		n += 8;
+	}
+	n += ff_log2_tab[v];
 
-    return n;
+	return n;
 }
 
 static inline int float_to_int16_one(const float *src){
@@ -652,12 +652,12 @@ void BIKPlayer::DecodeBlock(short *out)
 	for (ch = 0; ch < s_channels; ch++) {
 		FFTSample *coeffs = s_coeffs_ptr[ch];
 		q = 0.0;
-		coeffs[0] = s_gb.get_float();
-		coeffs[1] = s_gb.get_float();
+		coeffs[0] = s_gb.get_float() * s_root;
+		coeffs[1] = s_gb.get_float() * s_root;
 
 		for (i = 0; i < s_num_bands; i++) {
 			int value = s_gb.get_bits(8);
-			quant[i] = (float) pow(10.0, FFMIN(value, 95) * 0.066399999);
+			quant[i] = (float) pow(10.0, FFMIN(value, 95) * 0.066399999) * s_root;
 		}
 
 		// find band (k)
@@ -701,13 +701,13 @@ void BIKPlayer::DecodeBlock(short *out)
 			}
 		}
 
-		if (header.audioflag&BINK_AUD_USEDCT)
+		if (header.audioflag&BINK_AUD_USEDCT) {
+			coeffs[0] /= 0.5;
 			ff_dct_calc (&s_trans.dct,  coeffs);
-		else
+			for (i = 0; i < s_frame_len; i++)
+				coeffs[i] *= s_frame_len / 2;
+		} else
 			ff_rdft_calc(&s_trans.rdft, coeffs);
-
-		for (i = 0; i < s_frame_len; i++)
-			coeffs[i] *= s_root;
 	}
 
 	ff_float_to_int16_interleave_c(out, (const float **)s_coeffs_ptr, s_frame_len, s_channels);
@@ -767,11 +767,15 @@ int BIKPlayer::DecodeAudioFrame(void *data, int data_size)
  * @param scan  scan order table
  * @return 0 for success, negative value in other cases
  */
-int BIKPlayer::read_dct_coeffs(DCTELEM block[64], const uint8_t *scan)
+int BIKPlayer::read_dct_coeffs(DCTELEM block[64], const uint8_t *scan, bool is_intra)
 {
 	int mode_list[128];
 	int i, t, mask, bits, ccoef, mode;
 	int list_start = 64, list_end = 64, list_pos;
+	int coef_count = 0;
+	int coef_idx[64];
+	int quant_idx;
+	const uint32_t* quant;
 
 	mode_list[list_end++] = ( 4 << 2) | 0;
 	mode_list[list_end++] = (24 << 2) | 0;
@@ -812,6 +816,7 @@ int BIKPlayer::read_dct_coeffs(DCTELEM block[64], const uint8_t *scan)
 							}
 						}
 						block[scan[ccoef]] = t;
+						coef_idx[coef_count++] = ccoef;
 					}
 				}
 				break;
@@ -831,10 +836,20 @@ int BIKPlayer::read_dct_coeffs(DCTELEM block[64], const uint8_t *scan)
 						t = -t;
 				}
 				block[scan[ccoef]] = t;
+				coef_idx[coef_count++] = ccoef;
 				mode_list[list_pos++] = 0;
 				break;
 			}
 		}
+	}
+
+	quant_idx = v_gb.get_bits(4);
+	quant = is_intra ? bink_intra_quant[quant_idx]
+	                 : bink_inter_quant[quant_idx];
+	block[0] = (block[0] * quant[0]) >> 11;
+	for (i = 0; i < coef_count; i++) {
+		int idx = coef_idx[i];
+		block[scan[idx]] = (block[scan[idx]] * quant[idx]) >> 11;
 	}
 
 	return 0;
@@ -1222,39 +1237,39 @@ static void get_pixels(DCTELEM *block, const uint8_t *pixels, int line_size)
 
 static void put_pixels_nonclamped(const DCTELEM *block, uint8_t *pixels, int line_size)
 {
-        int i;
-        /* read the pixels */
-        for(i=0;i<8;i++) {
-                pixels[0] = block[0];
-                pixels[1] = block[1];
-                pixels[2] = block[2];
-                pixels[3] = block[3];
-                pixels[4] = block[4];
-                pixels[5] = block[5];
-                pixels[6] = block[6];
-                pixels[7] = block[7];
-                pixels += line_size;
-                block += 8;
-        }
+	int i;
+	/* read the pixels */
+	for(i=0;i<8;i++) {
+		pixels[0] = block[0];
+		pixels[1] = block[1];
+		pixels[2] = block[2];
+		pixels[3] = block[3];
+		pixels[4] = block[4];
+		pixels[5] = block[5];
+		pixels[6] = block[6];
+		pixels[7] = block[7];
+		pixels += line_size;
+		block += 8;
+	}
 }
 
 static void add_pixels_nonclamped(const DCTELEM *block, uint8_t *pixels, int line_size)
 {
-        int i;
+	int i;
 
-        /* read the pixels */
-        for(i=0;i<8;i++) {
-                pixels[0] += block[0];
-                pixels[1] += block[1];
-                pixels[2] += block[2];
-                pixels[3] += block[3];
-                pixels[4] += block[4];
-                pixels[5] += block[5];
-                pixels[6] += block[6];
-                pixels[7] += block[7];
-                pixels += line_size;
-                block += 8;
-        }
+	/* read the pixels */
+	for(i=0;i<8;i++) {
+		pixels[0] += block[0];
+		pixels[1] += block[1];
+		pixels[2] += block[2];
+		pixels[3] += block[3];
+		pixels[4] += block[4];
+		pixels[5] += block[5];
+		pixels[6] += block[6];
+		pixels[7] += block[7];
+		pixels += line_size;
+		block += 8;
+	}
 }
 
 static inline void copy_block(DCTELEM block[64], const uint8_t *src, uint8_t *dst, int stride)
@@ -1268,78 +1283,78 @@ static inline void copy_block(DCTELEM block[64], const uint8_t *src, uint8_t *ds
 //This replaces the j_rev_dct module
 void bink_idct(DCTELEM *block)
 {
-    int i, t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, tA, tB, tC;
-    int tblock[64];
+	int i, t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, tA, tB, tC;
+	int tblock[64];
 
-    for (i = 0; i < 8; i++) {
-	t0 = block[i+ 0] + block[i+32];
-	t1 = block[i+ 0] - block[i+32];
-	t2 = block[i+16] + block[i+48];
-	t3 = block[i+16] - block[i+48];
-	t3 = ((t3 * 0xB50) >> 11) - t2;
+	for (i = 0; i < 8; i++) {
+		t0 = block[i+ 0] + block[i+32];
+		t1 = block[i+ 0] - block[i+32];
+		t2 = block[i+16] + block[i+48];
+		t3 = block[i+16] - block[i+48];
+		t3 = ((t3 * 0xB50) >> 11) - t2;
 
-	t4 = t0 - t2;
-	t5 = t0 + t2;
-	t6 = t1 + t3;
-	t7 = t1 - t3;
+		t4 = t0 - t2;
+		t5 = t0 + t2;
+		t6 = t1 + t3;
+		t7 = t1 - t3;
 
-	t0 = block[i+40] + block[i+24];
-	t1 = block[i+40] - block[i+24];
-	t2 = block[i+ 8] + block[i+56];
-	t3 = block[i+ 8] - block[i+56];
+		t0 = block[i+40] + block[i+24];
+		t1 = block[i+40] - block[i+24];
+		t2 = block[i+ 8] + block[i+56];
+		t3 = block[i+ 8] - block[i+56];
 
-	t8 = t2 + t0;
-	t9 = t3 + t1;
-	t9 = (0xEC8 * t9) >> 11;
-	tA = ((-0x14E8 * t1) >> 11) + t9 - t8;
-	tB = t2 - t0;
-	tB = ((0xB50 * tB) >> 11) - tA;
-	tC = ((0x8A9 * t3) >> 11) + tB - t9;
+		t8 = t2 + t0;
+		t9 = t3 + t1;
+		t9 = (0xEC8 * t9) >> 11;
+		tA = ((-0x14E8 * t1) >> 11) + t9 - t8;
+		tB = t2 - t0;
+		tB = ((0xB50 * tB) >> 11) - tA;
+		tC = ((0x8A9 * t3) >> 11) + tB - t9;
 
-	tblock[i+ 0] = t5 + t8;
-	tblock[i+56] = t5 - t8;
-	tblock[i+ 8] = t6 + tA;
-	tblock[i+48] = t6 - tA;
-	tblock[i+16] = t7 + tB;
-	tblock[i+40] = t7 - tB;
-	tblock[i+32] = t4 + tC;
-	tblock[i+24] = t4 - tC;
-    }
+		tblock[i+ 0] = t5 + t8;
+		tblock[i+56] = t5 - t8;
+		tblock[i+ 8] = t6 + tA;
+		tblock[i+48] = t6 - tA;
+		tblock[i+16] = t7 + tB;
+		tblock[i+40] = t7 - tB;
+		tblock[i+32] = t4 + tC;
+		tblock[i+24] = t4 - tC;
+	}
 
-    for (i = 0; i < 64; i += 8) {
-	t0 = tblock[i+0] + tblock[i+4];
-	t1 = tblock[i+0] - tblock[i+4];
-	t2 = tblock[i+2] + tblock[i+6];
-	t3 = tblock[i+2] - tblock[i+6];
-	t3 = ((t3 * 0xB50) >> 11) - t2;
+	for (i = 0; i < 64; i += 8) {
+		t0 = tblock[i+0] + tblock[i+4];
+		t1 = tblock[i+0] - tblock[i+4];
+		t2 = tblock[i+2] + tblock[i+6];
+		t3 = tblock[i+2] - tblock[i+6];
+		t3 = ((t3 * 0xB50) >> 11) - t2;
 
-	t4 = t0 - t2;
-	t5 = t0 + t2;
-	t6 = t1 + t3;
-	t7 = t1 - t3;
+		t4 = t0 - t2;
+		t5 = t0 + t2;
+		t6 = t1 + t3;
+		t7 = t1 - t3;
 
-	t0 = tblock[i+5] + tblock[i+3];
-	t1 = tblock[i+5] - tblock[i+3];
-	t2 = tblock[i+1] + tblock[i+7];
-	t3 = tblock[i+1] - tblock[i+7];
+		t0 = tblock[i+5] + tblock[i+3];
+		t1 = tblock[i+5] - tblock[i+3];
+		t2 = tblock[i+1] + tblock[i+7];
+		t3 = tblock[i+1] - tblock[i+7];
 
-	t8 = t2 + t0;
-	t9 = t3 + t1;
-	t9 = (0xEC8 * t9) >> 11;
-	tA = ((-0x14E8 * t1) >> 11) + t9 - t8;
-	tB = t2 - t0;
-	tB = ((0xB50 * tB) >> 11) - tA;
-	tC = ((0x8A9 * t3) >> 11) + tB - t9;
+		t8 = t2 + t0;
+		t9 = t3 + t1;
+		t9 = (0xEC8 * t9) >> 11;
+		tA = ((-0x14E8 * t1) >> 11) + t9 - t8;
+		tB = t2 - t0;
+		tB = ((0xB50 * tB) >> 11) - tA;
+		tC = ((0x8A9 * t3) >> 11) + tB - t9;
 
-	block[i+0] = (t5 + t8 + 0x7F) >> 8;
-	block[i+7] = (t5 - t8 + 0x7F) >> 8;
-	block[i+1] = (t6 + tA + 0x7F) >> 8;
-	block[i+6] = (t6 - tA + 0x7F) >> 8;
-	block[i+2] = (t7 + tB + 0x7F) >> 8;
-	block[i+5] = (t7 - tB + 0x7F) >> 8;
-	block[i+4] = (t4 + tC + 0x7F) >> 8;
-	block[i+3] = (t4 - tC + 0x7F) >> 8;
-    }
+		block[i+0] = (t5 + t8 + 0x7F) >> 8;
+		block[i+7] = (t5 - t8 + 0x7F) >> 8;
+		block[i+1] = (t6 + tA + 0x7F) >> 8;
+		block[i+6] = (t6 - tA + 0x7F) >> 8;
+		block[i+2] = (t7 + tB + 0x7F) >> 8;
+		block[i+5] = (t7 - tB + 0x7F) >> 8;
+		block[i+4] = (t4 + tC + 0x7F) >> 8;
+		block[i+3] = (t4 - tC + 0x7F) >> 8;
+	}
 }
 
 static void idct_put(uint8_t *dest, int line_size, DCTELEM *block)
@@ -1361,7 +1376,6 @@ int BIKPlayer::DecodeVideoFrame(void *data, int data_size)
 	uint8_t *dst, *prev;
 	int v, c1, c2;
 	const uint8_t *scan;
-	const uint32_t *quant;
 	int xoff, yoff;
 #pragma pack(push,16)
 	DCTELEM block[64];
@@ -1457,11 +1471,7 @@ int BIKPlayer::DecodeVideoFrame(void *data, int data_size)
 					case INTRA_BLOCK:
 						clear_block(block);
 						block[0] = get_value(BINK_SRC_INTRA_DC);
-						read_dct_coeffs(block, c_scantable.permutated);
-						quant = bink_intra_quant[v_gb.get_bits(4)];
-						for (i = 0; i < 64; i++) {
-							block[i] = (block[i] * quant[i]) >> 11;
-						}
+						read_dct_coeffs(block, c_scantable.permutated,true);
 						bink_idct(block);
 						for (j = 0; j < 8; j++) {
 							for (i = 0; i < 8; i++) {
@@ -1481,7 +1491,7 @@ int BIKPlayer::DecodeVideoFrame(void *data, int data_size)
 						for (i = 0; i < 8; i++) {
 							v = get_value(BINK_SRC_PATTERN);
 							for (j = 0; j < 8; j++, v >>= 1) {
-								PUT2x2(dst, stride, i, j, (v & 1) ? c2 : c1);
+								PUT2x2(dst, stride, j, i, (v & 1) ? c2 : c1);
 							}
 						}
 						break;
@@ -1541,11 +1551,7 @@ int BIKPlayer::DecodeVideoFrame(void *data, int data_size)
 				case INTRA_BLOCK:
 					clear_block(block);
 					block[0] = get_value(BINK_SRC_INTRA_DC);
-					read_dct_coeffs(block, c_scantable.permutated);
-					quant = bink_intra_quant[v_gb.get_bits(4)];
-					for (i = 0; i < 64; i++) {
-						block[i] = (block[i] * quant[i]) >> 11;
-					}
+					read_dct_coeffs(block, c_scantable.permutated,true);
 					idct_put(dst, stride, block);
 					break;
 				case FILL_BLOCK:
@@ -1560,11 +1566,7 @@ int BIKPlayer::DecodeVideoFrame(void *data, int data_size)
 					copy_block(block, prev + xoff + yoff*stride, dst, stride);
 					clear_block(block);
 					block[0] = get_value(BINK_SRC_INTER_DC);
-					read_dct_coeffs(block, c_scantable.permutated);
-					quant = bink_inter_quant[v_gb.get_bits(4)];
-					for (i = 0; i < 64; i++) {
-						block[i] = (block[i] * quant[i]) >> 11;
-					}
+					read_dct_coeffs(block, c_scantable.permutated,false);
 					idct_add(dst, stride, block);
 					break;
 				case PATTERN_BLOCK:
@@ -1573,7 +1575,7 @@ int BIKPlayer::DecodeVideoFrame(void *data, int data_size)
 					for (i = 0; i < 8; i++) {
 						v = get_value(BINK_SRC_PATTERN);
 						for (j = 0; j < 8; j++, v >>= 1) {
-							dst[i + j*stride] = (v & 1) ? c2 : c1;
+							dst[i*stride+j] = (v & 1) ? c2 : c1;
 						}
 					}
 					break;

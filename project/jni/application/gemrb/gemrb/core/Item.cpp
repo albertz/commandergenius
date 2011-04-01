@@ -74,6 +74,7 @@ EffectQueue *Item::GetEffectBlock(Scriptable *self, const Point &pos, int usage,
 	for (int i=0;i<count;i++) {
 		Effect *fx = features+i;
 		fx->InventorySlot = invslot;
+		fx->CasterLevel = ITEM_CASTERLEVEL; //items all have casterlevel 10
 		if (usage >= 0) {
 			//this is not coming from the item header, but from the recharge flags
 			fx->SourceFlags = ext_headers[usage].RechargeFlags;
@@ -219,7 +220,7 @@ Projectile *Item::GetProjectile(Scriptable *self, int header, const Point &targe
 }
 
 //this is the implementation of the weapon glow effect in PST
-static EffectRef glow_ref ={"Color:PulseRGB",NULL,-1};
+static EffectRef glow_ref = { "Color:PulseRGB", -1 };
 //this type of colour uses PAL32, a PST specific palette
 #define PALSIZE 32
 static Color ActorColor[PALSIZE];

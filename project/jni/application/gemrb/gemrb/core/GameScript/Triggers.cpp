@@ -32,6 +32,9 @@
 #include "Video.h"
 #include "GUI/GameControl.h"
 #include "math.h" //needs for acos
+#include "Scriptable/Container.h"
+#include "Scriptable/Door.h"
+#include "Scriptable/InfoPoint.h"
 
 //-------------------------------------------------------------
 // Trigger Functions
@@ -1129,8 +1132,8 @@ int GameScript::Acquired(Scriptable * Sender, Trigger* parameters)
 	return 0;
 }
 
-/** this trigger accepts a numeric parameter, this number could be: */
-/** 0 - normal, 1 - equipped, 2 - identified, 3 - equipped&identified */
+/** this trigger accepts a numeric parameter, this number is the same as inventory flags
+    like: 1 - identified, 2 - unstealable, 4 - stolen, 8 - undroppable, etc. */
 /** this is a GemRB extension */
 int GameScript::PartyHasItem(Scriptable * /*Sender*/, Trigger* parameters)
 {
@@ -1512,8 +1515,8 @@ int GameScript::NearLocation(Scriptable* Sender, Trigger* parameters)
 		}
 		return 0;
 	}
-	// should this be PersonalDistance?
-	int distance = Distance(parameters->pointParameter, scr);
+	//personaldistance is needed for modron constructs in PST maze
+	int distance = PersonalDistance(parameters->pointParameter, scr);
 	if (distance <= ( parameters->int0Parameter * 10 )) {
 		return 1;
 	}

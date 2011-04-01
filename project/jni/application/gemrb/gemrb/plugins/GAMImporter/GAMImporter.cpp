@@ -212,7 +212,8 @@ Game* GAMImporter::LoadGame(Game *newGame, int ver_override)
 
 	//apparently BG1/IWD2 relies on this, if chapter is unset, it is
 	//set to -1, hopefully it won't break anything
-	newGame->locals->SetAt("CHAPTER", (ieDword) -1);
+	//PST has no chapter variable by default, and would crash on one
+	newGame->locals->SetAt("CHAPTER", (ieDword) -1, core->HasFeature(GF_NO_NEW_VARIABLES));
 
 	// load initial values from var.var
 	newGame->locals->LoadInitialValues("GLOBAL");
@@ -479,7 +480,7 @@ Actor* GAMImporter::GetActor(Holder<ActorMgr> aM, bool is_in_party )
 		}
 		free (Buffer);
 
- 		//torment has them as 0 or -1
+		//torment has them as 0 or -1
 		if (pcInfo.Name[0]!=0 && pcInfo.Name[0]!=UNINITIALIZED_CHAR) {
 			actor->SetName(pcInfo.Name,0); //setting both names
 		}
@@ -1141,13 +1142,13 @@ void GAMImporter::GetMazeEntry(void *memory)
 {
 	maze_entry *h = (maze_entry *) memory;
 
-	str->ReadDword( &h->unknown00 );
+	str->ReadDword( &h->override );
 	str->ReadDword( &h->valid );
 	str->ReadDword( &h->accessible );
-	str->ReadDword( &h->traptype );
 	str->ReadDword( &h->trapped );
+	str->ReadDword( &h->traptype );
 	str->ReadWord( &h->walls );
-	str->ReadDword( &h->unknown16 );
+	str->ReadDword( &h->visited );
 }
 
 void GAMImporter::PutMazeHeader(DataStream *stream, void *memory)
@@ -1172,18 +1173,18 @@ void GAMImporter::PutMazeHeader(DataStream *stream, void *memory)
 void GAMImporter::PutMazeEntry(DataStream *stream, void *memory)
 {
 	maze_entry *h = (maze_entry *) memory;
-	stream->WriteDword( &h->unknown00 );
+	stream->WriteDword( &h->override );
 	stream->WriteDword( &h->valid );
 	stream->WriteDword( &h->accessible );
 	stream->WriteDword( &h->trapped );
 	stream->WriteDword( &h->traptype );
 	stream->WriteWord( &h->walls );
-	stream->WriteDword( &h->unknown16 );
+	stream->WriteDword( &h->visited );
 }
 
 int GAMImporter::PutMaze(DataStream *stream, Game *game)
 {
-	for(int i=0;i<64;i++) {
+	for(int i=0;i<MAZE_ENTRY_COUNT;i++) {
 		PutMazeEntry(stream, game->mazedata+i*MAZE_ENTRY_SIZE);
 	}
 	PutMazeHeader(stream, game->mazedata+MAZE_ENTRY_COUNT*MAZE_ENTRY_SIZE);

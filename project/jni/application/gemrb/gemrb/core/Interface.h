@@ -61,7 +61,7 @@ class Control;
 class DataFileMgr;
 struct Effect;
 class EffectQueue;
-struct EffectRef;
+struct EffectDesc;
 class EventMgr;
 class Factory;
 class Font;
@@ -201,6 +201,8 @@ public:
 #define EF_OPENSTORE     256      //open store window
 #define EF_EXPANSION     512      //upgrade game request
 #define EF_CREATEMAZE    1024     //call the maze generator
+#define EF_RESETTARGET   2048     //reset the mouse cursor
+#define EF_TARGETMODE    4096     //update the mouse cursor
 
 //autopause
 #define AP_UNUSABLE      0
@@ -493,15 +495,7 @@ public:
 	/** returns true if in cutscene mode */
 	bool InCutSceneMode() const;
 	/** Updates the Game Script Engine State */
-	void GSUpdate(bool update_scripts)
-	{
-		if(update_scripts) {
-			timer->Update();
-		}
-		else {
-			timer->Freeze();
-		}
-	}
+	bool GSUpdate(bool update_scripts);
 	/** Get the Party INI Interpreter */
 	DataFileMgr * GetPartyINI() const
 	{
@@ -586,6 +580,7 @@ public:
 	int GetDraggedPortrait() const { return DraggedPortrait; }
 	void SetDraggedPortrait(int dp, int cursor=-1);
 	CREItem *ReadItem(DataStream *str);
+	CREItem *ReadItem(DataStream *str, CREItem *itm);
 	bool ResolveRandomItem(CREItem *itm);
 	ieStrRef GetRumour(const ieResRef resname);
 	Container *GetCurrentContainer();
@@ -653,7 +648,7 @@ public:
 	/** receives an autopause reason, returns 1 if pause was triggered by this call, -1 if it was already triggered */
 	int Autopause(ieDword reason);
 	/** registers engine opcodes */
-	void RegisterOpcodes(int count, const EffectRef *opcodes);
+	void RegisterOpcodes(int count, const EffectDesc *opcodes);
 	/** reads a list of resrefs into an array, returns array size */
 	int ReadResRefTable(const ieResRef tablename, ieResRef *&data);
 	/** frees the data */
@@ -686,8 +681,8 @@ public:
 	static const char *GetDeathVarFormat();
 	int CheckSpecialSpell(ieResRef resref, Actor *actor);
 	int GetSpecialSpell(ieResRef resref);
-	int GetSpecialSpellsCount() { return SpecialSpellsCount; };
-	SpellDescType *GetSpecialSpells() { return SpecialSpells; };
+	int GetSpecialSpellsCount() { return SpecialSpellsCount; }
+	SpellDescType *GetSpecialSpells() { return SpecialSpells; }
 private:
 	int LoadSprites();
 	bool LoadConfig(void);
@@ -748,6 +743,7 @@ public:
 	std::vector<std::string> ModPath;
 	int Width, Height, Bpp, ForceStereo;
 	unsigned int TooltipDelay;
+	int IgnoreOriginalINI;
 	unsigned int FogOfWar;
 	bool CaseSensitive, GameOnCD, SkipIntroVideos, DrawFPS;
 	bool GUIEnhancements;

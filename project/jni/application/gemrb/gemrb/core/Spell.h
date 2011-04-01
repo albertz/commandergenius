@@ -57,6 +57,9 @@ class Projectile;
 //this is not the same as the book types which is 3 or 11)
 #define NUM_SPELL_TYPES 6
 
+#define SPEC_IDENTIFY  1  //spells that don't appear in the casting bar
+#define SPEC_SILENCE   2  //spells that can be cast when silenced
+#define SPEC_DEAD      4  //spells that can target dead actors despite their target type is 1 (pst hack)
 /**
  * @class SPLExtHeader
  * Header for Spell special effects
@@ -160,7 +163,7 @@ public:
 	//converts a wanted level to block index count
 	int GetHeaderIndexFromLevel(int level) const;
 	//-1 will return the cfb
-	EffectQueue *GetEffectBlock(Scriptable *self, const Point &pos, int block_index, ieDword pro=0) const;
+	EffectQueue *GetEffectBlock(Scriptable *self, const Point &pos, int block_index, int level, ieDword pro=0) const;
 	// add appropriate casting glow effect
 	void AddCastingGlow(EffectQueue *fxqueue, ieDword duration, int gender);
 	//returns a projectile created from an extended header

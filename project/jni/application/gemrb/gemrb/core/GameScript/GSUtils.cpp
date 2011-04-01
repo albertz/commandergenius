@@ -37,6 +37,9 @@
 #include "TileMap.h"
 #include "Video.h"
 #include "GUI/GameControl.h"
+#include "Scriptable/Container.h"
+#include "Scriptable/Door.h"
+#include "Scriptable/InfoPoint.h"
 
 #include <cstdio>
 
@@ -57,6 +60,9 @@ int ObjectIDSCount = 7;
 int MaxObjectNesting = 5;
 bool HasAdditionalRect = false;
 bool HasTriggerPoint = false;
+//don't create new variables
+bool NoCreate = false;
+bool HasKaputz = false;
 //released by ReleaseMemory
 ieResRef *ObjectIDSTableNames;
 int ObjectFieldsCount = 7;
@@ -700,6 +706,8 @@ void ChangeAnimationCore(Actor *src, const char *resref, bool effect)
 		map->AddActor( tar );
 		Point pos = src->Pos;
 		tar->SetOrientation(src->GetOrientation(), false );
+		// make sure to copy the HP, to avoid things like magically-healing trolls
+		tar->BaseStats[IE_HITPOINTS]=src->BaseStats[IE_HITPOINTS];
 		src->DestroySelf();
 		// can't SetPosition while the old actor is taking the spot
 		tar->SetPosition(pos, 1);
@@ -1133,15 +1141,19 @@ void MoveToObjectCore(Scriptable *Sender, Action *parameters, ieDword flags, boo
 
 void CreateItemCore(CREItem *item, const char *resref, int a, int b, int c)
 {
-	strncpy(item->ItemResRef, resref, 8);
+	//copy the whole resref, including the terminating zero
+	strnuprcpy(item->ItemResRef, resref, 8);
 	core->ResolveRandomItem(item);
 	if (a==-1) {
-		Item *origitem = gamedata->GetItem(resref);
-		for(int i=0;i<3;i++) {
-			ITMExtHeader *e = origitem->GetExtHeader(i);
-			item->Usages[i]=e?e->Charges:0;
+		//use the default charge counts of the item
+		Item *origitem = gamedata->GetItem(item->ItemResRef);
+		if (origitem) {
+			for(int i=0;i<3;i++) {
+				ITMExtHeader *e = origitem->GetExtHeader(i);
+				item->Usages[i]=e?e->Charges:0;
+			}
+			gamedata->FreeItem(origitem, item->ItemResRef, false);
 		}
-		gamedata->FreeItem(origitem, resref, false);
 	} else {
 		item->Usages[0]=(ieWord) a;
 		item->Usages[1]=(ieWord) b;
@@ -1207,7 +1219,8 @@ void AttackCore(Scriptable *Sender, Scriptable *target, int flags)
 		actor->SetTarget( target );
 	}
 	if ( Sender->GetCurrentArea()!=target->GetCurrentArea() ||
-		(PersonalDistance(Sender, target) > wi.range) ) {
+		(PersonalDistance(Sender, target) > wi.range) ||
+		(!Sender->GetCurrentArea()->IsVisible(Sender->Pos, target->Pos))) {
 		MoveNearerTo(Sender, target, wi.range);
 		return;
 	} else if (target->Type == ST_DOOR) {
@@ -1567,7 +1580,7 @@ void MoveNearerTo(Scriptable *Sender, Scriptable *target, int distance)
 
 	myarea = Sender->GetCurrentArea();
 	hisarea = target->GetCurrentArea();
-	if (hisarea!=myarea) {
+	if (hisarea && hisarea!=myarea) {
 		target = myarea->GetTileMap()->GetTravelTo(hisarea->GetScriptName());
 
 		if (!target) {
@@ -1575,9 +1588,9 @@ void MoveNearerTo(Scriptable *Sender, Scriptable *target, int distance)
 			Sender->ReleaseCurrentAction();
 			return;
 		}
-		((Actor *) Sender)->UseExit(true);
+		((Actor *) Sender)->UseExit(target->GetGlobalID());
 	} else {
-		((Actor *) Sender)->UseExit(false);
+		((Actor *) Sender)->UseExit(0);
 	}
 	// we deliberately don't try GetLikelyPosition here for now,
 	// maybe a future idea if we have a better implementation
@@ -1606,6 +1619,10 @@ int MoveNearerTo(Scriptable *Sender, const Point &p, int distance, int dont_rele
 		return 0;
 	}
 
+	//chasing is unbreakable
+	//TODO: is this true?
+	Sender->CurrentActionInterruptable = false;
+
 	Actor *actor = (Actor *)Sender;
 
 	if (!actor->InMove() || actor->Destination != p) {
@@ -1622,33 +1639,7 @@ int MoveNearerTo(Scriptable *Sender, const Point &p, int distance, int dont_rele
 	}
 	return 0;
 }
-/*
-void GoNearAndRetry(Scriptable *Sender, Scriptable *target, bool flag, int distance)
-{
-	Point p;
-	GetPositionFromScriptable(target,p,flag);
-	GoNearAndRetry(Sender, p, distance);
-}
 
-void GoNearAndRetry(Scriptable *Sender, const Point &p, int distance)
-{
-	if (!Sender->GetCurrentAction() ) {
-		printMessage("GameScript","NULL action retried???\n",LIGHT_RED);
-		return;
-	}
-	Sender->AddActionInFront( Sender->GetCurrentAction() );
-	char Tmp[256];
-	sprintf( Tmp, "MoveToPoint([%hd.%hd])", p.x, p.y );
-	Action * action = GenerateAction( Tmp);
-	//experimental hack, this value means,
-	//MoveToPoint shall pop the next action too if movement fails
-	//and the actor is farther than distance
-	//this will prevent deadlocks
-	//(we have to add 1 because otherwise distance==0 fails, we subtract it in MoveToPoint)
-	action->int0Parameter = distance+1;
-	Sender->AddActionInFront( action );
-}
-*/
 void FreeSrc(SrcVector *poi, const ieResRef key)
 {
 	int res = SrcCache.DecRef((void *) poi, key, true);
@@ -1892,18 +1883,19 @@ void SetVariable(Scriptable* Sender, const char* VarName, const char* Context, i
 		printf( "Setting variable(\"%s%s\", %d)\n", Context,
 			VarName, value );
 	}
+
 	strncpy( newVarName, Context, 6 );
 	newVarName[6]=0;
 	if (strnicmp( newVarName, "MYAREA", 6 ) == 0) {
-		Sender->GetCurrentArea()->locals->SetAt( VarName, value );
+		Sender->GetCurrentArea()->locals->SetAt( VarName, value, NoCreate );
 		return;
 	}
 	if (strnicmp( newVarName, "LOCALS", 6 ) == 0) {
-		Sender->locals->SetAt( VarName, value );
+		Sender->locals->SetAt( VarName, value, NoCreate );
 		return;
 	}
 	Game *game = core->GetGame();
-	if (!strnicmp(newVarName,"KAPUTZ",6) && core->HasFeature(GF_HAS_KAPUTZ) ) {
+	if (HasKaputz && !strnicmp(newVarName,"KAPUTZ",6) ) {
 		game->kaputz->SetAt( VarName, value );
 		return;
 	}
@@ -1911,7 +1903,7 @@ void SetVariable(Scriptable* Sender, const char* VarName, const char* Context, i
 	if (strnicmp(newVarName,"GLOBAL",6) ) {
 		Map *map=game->GetMap(game->FindMap(newVarName));
 		if (map) {
-			map->locals->SetAt( VarName, value);
+			map->locals->SetAt( VarName, value, NoCreate);
 		}
 		else if (InDebug&ID_VARIABLES) {
 			printMessage("GameScript"," ",YELLOW);
@@ -1919,7 +1911,7 @@ void SetVariable(Scriptable* Sender, const char* VarName, const char* Context, i
 		}
 	}
 	else {
-		game->locals->SetAt( VarName, ( ieDword ) value );
+		game->locals->SetAt( VarName, ( ieDword ) value, NoCreate );
 	}
 }
 
@@ -1940,22 +1932,22 @@ void SetVariable(Scriptable* Sender, const char* VarName, ieDword value)
 	strncpy( newVarName, VarName, 6 );
 	newVarName[6]=0;
 	if (strnicmp( newVarName, "MYAREA", 6 ) == 0) {
-		Sender->GetCurrentArea()->locals->SetAt( poi, value );
+		Sender->GetCurrentArea()->locals->SetAt( poi, value, NoCreate );
 		return;
 	}
 	if (strnicmp( newVarName, "LOCALS", 6 ) == 0) {
-		Sender->locals->SetAt( poi, value );
+		Sender->locals->SetAt( poi, value, NoCreate );
 		return;
 	}
 	Game *game = core->GetGame();
-	if (!strnicmp(newVarName,"KAPUTZ",6) && core->HasFeature(GF_HAS_KAPUTZ) ) {
-		game->kaputz->SetAt( poi, value );
+	if (HasKaputz && !strnicmp(newVarName,"KAPUTZ",6) ) {
+		game->kaputz->SetAt( poi, value, NoCreate );
 		return;
 	}
 	if (strnicmp(newVarName,"GLOBAL",6) ) {
 		Map *map=game->GetMap(game->FindMap(newVarName));
 		if (map) {
-			map->locals->SetAt( poi, value);
+			map->locals->SetAt( poi, value, NoCreate);
 		}
 		else if (InDebug&ID_VARIABLES) {
 			printMessage("GameScript"," ",YELLOW);
@@ -1963,7 +1955,7 @@ void SetVariable(Scriptable* Sender, const char* VarName, ieDword value)
 		}
 	}
 	else {
-		game->locals->SetAt( poi, ( ieDword ) value );
+		game->locals->SetAt( poi, ( ieDword ) value, NoCreate );
 	}
 }
 
@@ -1996,7 +1988,7 @@ ieDword CheckVariable(Scriptable* Sender, const char* VarName, bool *valid)
 		return value;
 	}
 	Game *game = core->GetGame();
-	if (!strnicmp(newVarName,"KAPUTZ",6) && core->HasFeature(GF_HAS_KAPUTZ) ) {
+	if (HasKaputz && !strnicmp(newVarName,"KAPUTZ",6) ) {
 		game->kaputz->Lookup( poi, value );
 		if (InDebug&ID_VARIABLES) {
 			printf("CheckVariable %s: %d\n",VarName, value);
@@ -2047,7 +2039,7 @@ ieDword CheckVariable(Scriptable* Sender, const char* VarName, const char* Conte
 		return value;
 	}
 	Game *game = core->GetGame();
-	if (!strnicmp(newVarName,"KAPUTZ",6) && core->HasFeature(GF_HAS_KAPUTZ) ) {
+	if (HasKaputz && !strnicmp(newVarName,"KAPUTZ",6) ) {
 		game->kaputz->Lookup( VarName, value );
 		if (InDebug&ID_VARIABLES) {
 			printf("CheckVariable %s%s: %d\n",Context, VarName, value);
@@ -2173,7 +2165,7 @@ Point GetEntryPoint(const char *areaname, const char *entryname)
 }
 
 /* returns a spell's casting distance, it depends on the caster (level), and targeting mode too
-   the used header is calculated from the caster level */
+ the used header is calculated from the caster level */
 unsigned int GetSpellDistance(const ieResRef spellres, Scriptable *Sender)
 {
 	unsigned int dist;
@@ -2192,11 +2184,11 @@ unsigned int GetSpellDistance(const ieResRef spellres, Scriptable *Sender)
 	}
 
 	gamedata->FreeSpell(spl, spellres, false);
-	return dist*15;
+	return dist*5; //FIXME: this empirical constant shouldn't be needed!
 }
 
 /* returns an item's casting distance, it depends on the used header, and targeting mode too
-   the used header is explictly given */
+ the used header is explictly given */
 unsigned int GetItemDistance(const ieResRef itemres, int header)
 {
 	unsigned int dist;

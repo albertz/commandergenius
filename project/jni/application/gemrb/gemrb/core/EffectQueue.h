@@ -100,6 +100,9 @@ class Scriptable;
 // You will need to get GameTime somehow to use this macro
 #define	PrepareDuration(fx) fx->Duration = (fx->Duration*AI_UPDATE_TIME + GameTime)
 
+//return the caster object
+#define GetCasterObject()  (core->GetGame()->GetActorByGlobalID(fx->CasterID))
+
 // often used stat modifications, usually Parameter2 types 0, 1 and 2
 //these macros should work differently in permanent mode (modify base too)
 #define STAT_GET(stat) (target->Modified[ stat ])
@@ -135,11 +138,25 @@ class Scriptable;
 typedef int (* EffectFunction)(Scriptable*, Actor*, Effect*);
 
 
-/** Links Effect name to a function implementing the effect */
+/** Cached Effect -> opcode mapping */
 struct EffectRef {
 	const char* Name;
-	EffectFunction Function;
 	int opcode;
+};
+
+/** Links Effect name to a function implementing the effect */
+struct EffectDesc {
+	const char* Name;
+	EffectFunction Function;
+	int Flags;
+	int opcode;
+};
+
+enum EffectFlags {
+	EFFECT_NORMAL = 0,
+	EFFECT_DICED = 1,
+	EFFECT_NO_LEVEL_CHECK = 2,
+	EFFECT_NO_ACTOR = 4
 };
 
 /** Initializes table of available spell Effects used by all the queues. */
@@ -147,7 +164,7 @@ struct EffectRef {
 bool Init_EffectQueue();
 
 /** Registers opcodes implemented by an effect plugin */
-void EffectQueue_RegisterOpcodes(int count, const EffectRef *opcodes);
+void EffectQueue_RegisterOpcodes(int count, const EffectDesc *opcodes);
 
 /** release effect list when Interface is destroyed */
 void EffectQueue_ReleaseMemory();
@@ -198,7 +215,7 @@ public:
 	void RemoveAllEffectsWithResource(ieDword opcode, const ieResRef resource) const;
 
 	/* removes any effects (delayed or not) which were using projectile */
- 	void RemoveAllEffectsWithProjectile(ieDword projectile) const;
+	void RemoveAllEffectsWithProjectile(ieDword projectile) const;
 
 	/* removes equipping effects with specified inventory slot code */
 	void RemoveEquippingEffects(ieDwordSigned slotcode) const;

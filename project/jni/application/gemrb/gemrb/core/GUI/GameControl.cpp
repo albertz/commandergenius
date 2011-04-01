@@ -36,6 +36,9 @@
 #include "Video.h"
 #include "damages.h"
 #include "GameScript/GSUtils.h"
+#include "Scriptable/Container.h"
+#include "Scriptable/Door.h"
+#include "Scriptable/InfoPoint.h"
 
 #include <cmath>
 
@@ -44,10 +47,10 @@
 #define DEBUG_SHOW_DOORS	DEBUG_SHOW_CONTAINERS
 #define DEBUG_SHOW_LIGHTMAP     0x08
 
-#ifndef TOUCHSCREEN
-	#define SCROLL_BORDER 5
+#ifdef TOUCHSCREEN
+#	define SCROLL_BORDER 32
 #else
-	#define SCROLL_BORDER 32
+#	define SCROLL_BORDER 5
 #endif
 
 static const Color cyan = {
@@ -73,12 +76,9 @@ static const Color black = {
 static const Color blue = {
 	0x00, 0x00, 0xff, 0x80
 };
-
-#ifdef TOUCHSCREEN
 static const Color gray = {
 	0x80, 0x80, 0x80, 0xff
 };
-#endif
 
 //Animation* effect;
 
@@ -134,11 +134,11 @@ GameControl::GameControl(void)
 	scrolling = false;
 #ifdef TOUCHSCREEN
 	touched=false;
-#endif	
+#endif
 	numScrollCursor = 0;
 	DebugFlags = 0;
 	AIUpdateCounter = 1;
-	EnableRunning = true;  //make this a game flag if you wish
+	EnableRunning = true; //make this a game flag if you wish
 	ieDword tmp=0;
 
 	ResetTargetMode();
@@ -259,14 +259,14 @@ void GameControl::CreateMovement(Actor *actor, const Point &p)
 	Action *action = NULL;
 	if (DoubleClick && EnableRunning) {
 		sprintf( Tmp, "RunToPoint([%d.%d])", p.x, p.y );
- 		action = GenerateAction( Tmp );
+		action = GenerateAction( Tmp );
 		//if it didn't work don't insist
 		if (!action)
 			EnableRunning = false;
 	}
 	if (!action) {
 		sprintf( Tmp, "MoveToPoint([%d.%d])", p.x, p.y );
- 		action = GenerateAction( Tmp );
+		action = GenerateAction( Tmp );
 	}
 
 	actor->AddAction( action );
@@ -499,7 +499,7 @@ void GameControl::Draw(unsigned short x, unsigned short y)
 		Actor *actor = area->GetActorByGlobalID(trackerID);
 
 		if (actor) {
-			Actor **monsters = area->GetAllActorsInRadius(actor->Pos, GA_NO_DEAD, distance);
+			Actor **monsters = area->GetAllActorsInRadius(actor->Pos, GA_NO_DEAD|GA_NO_LOS, distance);
 
 			int i = 0;
 			while(monsters[i]) {
@@ -586,21 +586,21 @@ void GameControl::Draw(unsigned short x, unsigned short y)
 			}
 		}
 	}
-	
+
 #ifdef TOUCHSCREEN
-	if(moveY < 0 && scrolling)
+	if (moveY < 0 && scrolling)
 		video->DrawLine(screen.x+4, screen.y+SCROLL_BORDER, screen.w+screen.x-4, screen.y+SCROLL_BORDER, red);
 	else
 		video->DrawLine(screen.x+4, screen.y+SCROLL_BORDER, screen.w+screen.x-4, screen.y+SCROLL_BORDER, gray);
-	if(moveY > 0 && scrolling)
+	if (moveY > 0 && scrolling)
 		video->DrawLine(screen.x+4, screen.h-SCROLL_BORDER, screen.w+screen.x-4, screen.h-SCROLL_BORDER, red);
 	else
 		video->DrawLine(screen.x+4, screen.h-SCROLL_BORDER, screen.w+screen.x-4, screen.h-SCROLL_BORDER, gray);
-	if(moveX < 0 && scrolling)
+	if (moveX < 0 && scrolling)
 		video->DrawLine(screen.x+SCROLL_BORDER, screen.y+4, screen.x+SCROLL_BORDER, screen.h+screen.y-4, red);
 	else
 		video->DrawLine(screen.x+SCROLL_BORDER, screen.y+4, screen.x+SCROLL_BORDER, screen.h+screen.y-4, gray);
-	if(moveX > 0 && scrolling)
+	if (moveX > 0 && scrolling)
 		video->DrawLine(screen.w+screen.x-SCROLL_BORDER, screen.y+4, screen.w+screen.x-SCROLL_BORDER, screen.h-4, red);
 	else
 		video->DrawLine(screen.w+screen.x-SCROLL_BORDER, screen.y+4, screen.w+screen.x-SCROLL_BORDER, screen.h-4, gray);
@@ -708,8 +708,8 @@ void GameControl::SelectActor(int whom, int type)
 }
 
 //Effect for the ctrl-r cheatkey (resurrect)
-static EffectRef heal_ref={"CurrentHPModifier", NULL, -1};
-static EffectRef damage_ref={"Damage", NULL, -1};
+static EffectRef heal_ref = { "CurrentHPModifier", -1 };
+static EffectRef damage_ref = { "Damage", -1 };
 
 /** Key Release Event */
 void GameControl::OnKeyRelease(unsigned char Key, unsigned short Mod)
@@ -793,9 +793,9 @@ void GameControl::OnKeyRelease(unsigned char Key, unsigned short Mod)
 					if (target) {
 						src->CastSpell( TestSpell, target, false );
 						if (src->LastTarget) {
-							src->CastSpellEnd();
+							src->CastSpellEnd(0);
 						} else {
-							src->CastSpellPointEnd();
+							src->CastSpellPointEnd(0);
 						}
 					}
 				}
@@ -1111,7 +1111,7 @@ void GameControl::DisplayTooltip() {
 							strindex = STR_INJURED2;
 						} else if (hp > maxhp/3) {
 							strindex = STR_INJURED3;
-						} else  {
+						} else {
 							strindex = STR_INJURED4;
 						}
 						strindex = displaymsg->GetStringReference(strindex);
@@ -1229,7 +1229,7 @@ void GameControl::OnMouseOver(unsigned short x, unsigned short y)
 	if (ScreenFlags & SF_DISABLEMOUSE) {
 		return;
 	}
-	
+
 #ifdef TOUCHSCREEN
 	int mousescrollspd = core->GetMouseScrollSpeed();
 	Region region;
@@ -1240,20 +1240,17 @@ void GameControl::OnMouseOver(unsigned short x, unsigned short y)
 	moveY = 0;
 	// Top scroll area
 	region=Region(XPos, YPos, Width, YPos+SCROLL_BORDER);
-	if(region.PointInside(x, y))
-	{
+	if (region.PointInside(x, y)) {
 		// Check for end of map area
-		if(viewport.y > 0)
+		if (viewport.y > 0)
 			moveY = -mousescrollspd;
 	}
 	// Bottom scroll area
 	region=Region(XPos, Height-SCROLL_BORDER, Width, Height);
-	if(region.PointInside(x, y))
-	{
+	if (region.PointInside(x, y)) {
 		// Check for end of map area
 		map = core->GetGame()->GetCurrentArea();
-		if(map != NULL)
-		{
+		if (map != NULL) {
 			mapsize = map->TMap->GetMapSize();
 			if((viewport.y + viewport.h) < mapsize.y)
 				moveY = mousescrollspd;
@@ -1261,40 +1258,34 @@ void GameControl::OnMouseOver(unsigned short x, unsigned short y)
 	}
 	// Left scroll area
 	region=Region(XPos, YPos, XPos+SCROLL_BORDER, Height);
-	if(region.PointInside(x, y))
-	{
+	if (region.PointInside(x, y)) {
 		// Check for end of map area
 		if(viewport.x > 0)
 			moveX = -mousescrollspd;
 	}
 	// Right scroll area
 	region=Region(Width-SCROLL_BORDER, YPos, Width, Height);
-	if(region.PointInside(x, y))
-	{
+	if (region.PointInside(x, y)) {
 		// Check for end of map area
 		map = core->GetGame()->GetCurrentArea();
-		if(map != NULL)
-		{
+		if (map != NULL) {
 			mapsize = map->TMap->GetMapSize();
 			if((viewport.x + viewport.w) < mapsize.x)
 				moveX = mousescrollspd;
 		}
 	}
-	if ((moveX != 0 || moveY != 0) && touched)
-	{
+	if ((moveX != 0 || moveY != 0) && touched) {
 		scrolling = true;
 		return;
-	}
-	else		
-	{
+	} else {
 		moveX = 0;
 		moveY = 0;
 		scrolling = false;
 		Video* video = core->GetVideoDriver();
 		video->SetDragCursor(NULL);
 	}
-
 #endif
+
 	lastMouseX = x;
 	lastMouseY = y;
 	Point p( x,y );
@@ -1459,8 +1450,6 @@ end_function:
 	}
 }
 
-//#define SCROLL_BORDER 5
-
 /** Global Mouse Move Event */
 void GameControl::OnGlobalMouseMove(unsigned short x, unsigned short y)
 {
@@ -1471,6 +1460,7 @@ void GameControl::OnGlobalMouseMove(unsigned short x, unsigned short y)
 	if (Owner->Visible!=WINDOW_VISIBLE) {
 		return;
 	}
+
 #ifndef TOUCHSCREEN
 	int mousescrollspd = core->GetMouseScrollSpeed();
 
@@ -1499,7 +1489,10 @@ void GameControl::OnGlobalMouseMove(unsigned short x, unsigned short y)
 		Video* video = core->GetVideoDriver();
 		video->SetDragCursor(NULL);
 	}
-#endif	
+#else
+(void)x;
+(void)y;
+#endif
 }
 
 void GameControl::UpdateScrolling() {
@@ -1735,18 +1728,18 @@ void GameControl::HandleContainer(Container *container, Actor *actor)
 		return;
 	}
 
+	core->SetEventFlag(EF_RESETTARGET);
+
 	if (target_mode == TARGET_MODE_ATTACK) {
 		actor->ClearPath();
 		actor->ClearActions();
 		snprintf(Tmp, sizeof(Tmp), "BashDoor(\"%s\")", container->GetScriptName());
 		actor->AddAction(GenerateAction(Tmp));
-		ResetTargetMode();
 		return;
 	}
 
 	if ((target_mode == TARGET_MODE_PICK)) {
 		TryToPick(actor, container);
-		ResetTargetMode();
 		return;
 	}
 
@@ -1773,18 +1766,18 @@ void GameControl::HandleDoor(Door *door, Actor *actor)
 		return;
 	}
 
+	core->SetEventFlag(EF_RESETTARGET);
+
 	if (target_mode == TARGET_MODE_ATTACK) {
 		actor->ClearPath();
 		actor->ClearActions();
 		snprintf(Tmp, sizeof(Tmp), "BashDoor(\"%s\")", door->GetScriptName());
 		actor->AddAction(GenerateAction(Tmp));
-		ResetTargetMode();
 		return;
 	}
 
 	if (target_mode == TARGET_MODE_PICK) {
 		TryToPick(actor, door);
-		ResetTargetMode();
 		return;
 	}
 
@@ -1807,7 +1800,6 @@ bool GameControl::HandleActiveRegion(InfoPoint *trap, Actor * actor, Point &p)
 	}
 	if ((target_mode == TARGET_MODE_PICK)) {
 		TryToDisarm(actor, trap);
-		ResetTargetMode();
 		return true;
 	}
 
@@ -1885,7 +1877,7 @@ void GameControl::OnMouseDown(unsigned short x, unsigned short y, unsigned short
 		SelectionRect.h = 0;
 #ifdef TOUCHSCREEN
 		touched=true;
-#endif		
+#endif
 	}
 }
 
@@ -1912,25 +1904,21 @@ void GameControl::OnMouseUp(unsigned short x, unsigned short y, unsigned short B
 
 #ifdef TOUCHSCREEN
 	touched=false;
-	if(scrolling)
-	{
+	if (scrolling) {
 		moveX = 0;
 		moveY = 0;
 		scrolling=false;
 		Video* video = core->GetVideoDriver();
 		video->SetDragCursor(NULL);
-		if (DrawSelectionRect) 
-		{
+		if (DrawSelectionRect) {
 			Actor** ab;
 			unsigned int count = area->GetActorInRect( ab, SelectionRect,true );
-			if (count != 0) 
-			{
+			if (count != 0) {
 				for (i = 0; i < highlighted.size(); i++)
 					highlighted[i]->SetOver( false );
 				highlighted.clear();
 				game->SelectActor( NULL, false, SELECT_NORMAL );
-				for (i = 0; i < count; i++) 
-				{
+				for (i = 0; i < count; i++) {
 					// FIXME: should call handler only once
 					game->SelectActor( ab[i], true, SELECT_NORMAL );
 				}
@@ -1960,7 +1948,7 @@ void GameControl::OnMouseUp(unsigned short x, unsigned short y, unsigned short B
 	}
 
 	//hidden actors are not selectable by clicking on them
-	Actor* actor = area->GetActor( p, GA_DEFAULT | GA_NO_DEAD | GA_NO_HIDDEN);
+	Actor* actor = area->GetActor( p, GA_DEFAULT /*| GA_NO_DEAD */| GA_NO_HIDDEN | target_types);
 	if (Button == GEM_MB_MENU) {
 		if (actor) {
 			//from GSUtils
@@ -2013,6 +2001,7 @@ void GameControl::OnMouseUp(unsigned short x, unsigned short y, unsigned short B
 				}
 			} else {
 				if (HandleActiveRegion(overInfoPoint, pc, p)) {
+					core->SetEventFlag(EF_RESETTARGET);
 					return;
 				}
 			}
@@ -2205,8 +2194,12 @@ void GameControl::SetTargetMode(int mode) {
 }
 
 void GameControl::ResetTargetMode() {
-	SetTargetMode(TARGET_MODE_NONE);
 	target_types = GA_NO_DEAD|GA_NO_HIDDEN;
+	SetTargetMode(TARGET_MODE_NONE);
+}
+
+void GameControl::UpdateTargetMode() {
+	SetTargetMode(target_mode);
 }
 
 /** Special Key Press */
@@ -2635,7 +2628,7 @@ void GameControl::ChangeMap(Actor *pc, bool forced)
 {
 	//swap in the area of the actor
 	Game* game = core->GetGame();
-	if (forced || (stricmp( pc->Area, game->CurrentArea) != 0) ) {
+	if (forced || (pc && stricmp( pc->Area, game->CurrentArea) != 0) ) {
 		dialoghandler->EndDialog();
 		overInfoPoint = NULL;
 		overContainer = NULL;

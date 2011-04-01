@@ -45,17 +45,21 @@
 //projectile phases
 #define P_UNINITED  -1
 #define P_TRAVEL     0   //projectile moves to target
-#define P_TRIGGER    1   //projectile hovers over target, waits for trigger
-#define P_EXPLODING1 2   //projectile explosion spreads
-#define P_EXPLODING2 3   //projectile explosion repeats
-#define P_EXPLODED   4   //projectile spread over area
+#define P_TRAVEL2    1   //projectile hit target
+#define P_TRIGGER    2   //projectile hovers over target, waits for trigger
+#define P_EXPLODING1 3   //projectile explosion spreads
+#define P_EXPLODING2 4   //projectile explosion repeats
+#define P_EXPLODED   5   //projectile spread over area
 #define P_EXPIRED   99   //projectile scheduled for removal (existing parts are still drawn)
 
 //projectile spark flags
 #define PSF_SPARKS  1
 #define PSF_FLYING  2
-#define PSF_LOOPING 4       //looping sound
+#define PSF_LOOPING 4         //looping sound
+#define PSF_LOOPING2 8        //looping second sound
 #define PSF_IGNORE_CENTER 16
+//gemrb specific internal flag
+#define PSF_SOUND2  0x80000000//already started sound2
 
 //projectile travel flags
 #define PTF_COLOUR  1       //fake colours
@@ -68,6 +72,7 @@
 //projectile extended travel flags (gemrb specific)
 #define PEF_BOUNCE     1       //bounce from walls (lightning bolt)
 #define PEF_CONTINUE   2       //continue as a travel projectile after trigger (lightning bolt)
+//TODO: This can probably be replaced by an area projectile trigger (like skull trap, glyph)
 #define PEF_FREEZE     4       //stay around (ice dagger)
 #define PEF_NO_TRAVEL  8       //all instant projectiles (draw upon holy might, finger of death)
 #define PEF_TRAIL      16      //trail bams facing value uses the same field as the travel projectile (otherwise it defaults to 9) (shout in iwd)
@@ -77,7 +82,7 @@
 #define PEF_HALFTRANS  256     //half-transparency (holy might)
 #define PEF_TINT       512     //use palette gradient as tint
 #define PEF_ITERATION  1024    //create another projectile of type-1 (magic missiles)
-#define PEF_TILED      2048    //tiled AOE (bg1 cone of cold/fire)
+#define PEF_DEFSPELL   2048    //always apply the default spell on the caster
 #define PEF_FALLING    4096    //projectile falls down vertically (cow)
 #define PEF_INCOMING   8192    //projectile falls in on trajectory (comet)
 #define PEF_LINE       16384   //solid line between source and target (agannazar's scorcher)
@@ -85,11 +90,17 @@
 #define PEF_BACKGROUND 0x10000 //draw under target,overrides flying (dimension door)
 #define PEF_POP        0x20000 //draw travel bam, then shadow, then travel bam backwards
 #define PEF_UNPOP      0x40000 //draw shadow, then travel bam (this is an internal flag)
-#define PEF_FADE       0x80000 //gradually fade on spot if used with PEF_FREEZE (ice dagger)
+//TODO: The next flag is probably not needed, it is done by a separate area hit animation
+#define PEF_FADE       0x80000 //gradually fade on spot if used with PEF_FREEZE (ice dagger) 
 #define PEF_TEXT       0x100000//display text during setup
 #define PEF_WANDERING  0x200000//random movement (no real path)
 #define PEF_CYCLE      0x400000//random cycle
 #define PEF_RGB        0x800000//rgb pulse on hit
+#define PEF_TOUCH      0x1000000//successful to hit roll needed
+#define PEF_NOTIDS     0x2000000//negate IDS check
+#define PEF_NOTIDS2    0x4000000//negate secondary IDS check
+#define PEF_BOTH       0x8000000//both IDS check must succeed
+#define PEF_DELAY      0x10000000//delay payload until travel projectile cycle ends
 
 //projectile area flags
 #define PAF_VISIBLE    1      //the travel projectile is visible until explosion
@@ -109,7 +120,6 @@
 #define PAF_TRIGGER_D  0x2000 //delayed trigger (only if animation is over 30)
 #define PAF_DELAY      0x4000 //
 #define PAF_AFFECT_ONE 0x8000 //
-
 
 //area projectile flags (in areapro.2da)
 //this functionality was hardcoded in the original engine, so the bit flags are
@@ -132,6 +142,14 @@
 #define APF_MORE      128
 //apply spell on caster if failed to find target
 #define APF_SPELLFAIL 256
+//multiple directions 
+#define APF_MULTIDIR  512
+//target HD counting
+#define APF_COUNT_HD  1024
+//target flag enemy ally switched
+#define APF_INVERT_TARGET 2048
+//tiled AoE animation
+#define APF_TILED 4096
 
 struct ProjectileExtension
 {
@@ -153,6 +171,11 @@ struct ProjectileExtension
 	ieResRef Spread;    //areapro.2da first resref
 	ieResRef Secondary; //areapro.2da third resref
 	ieResRef AreaSound; //areapro.2da second sound resource
+	//used for target or HD counting
+	ieWord DiceCount;
+	ieWord DiceSize;
+	ieWord TileX;
+	ieWord TileY;
 };
 
 class GEM_EXPORT Projectile
@@ -166,13 +189,19 @@ public:
 	ieDword SFlags;
 	ieResRef SoundRes1;
 	ieResRef SoundRes2;
-	ieResRef SoundRes3;
+	ieResRef TravelVVC;
 	ieDword SparkColor;
 	ieDword ExtFlags;
 	ieDword StrRef;
 	ieDword RGB;
 	ieWord ColorSpeed;
 	ieWord Shake;
+	ieWord IDSType;
+	ieWord IDSValue;
+	ieWord IDSType2;
+	ieWord IDSValue2;
+	ieResRef FailSpell;
+	ieResRef SuccSpell;
 	////// gap
 	ieDword TFlags;
 	ieResRef BAMRes1;
@@ -204,9 +233,11 @@ protected:
 	//similar to normal actors
 	Map *area;
 	Point Pos;
+	int ZPos;
 	Point Destination;
 	Point Origin;
 	ieDword Caster;    //the globalID of the caster actor
+	int Level;         //the caster's level
 	ieDword Target;    //the globalID of target actor
 	ieDword FakeTarget; //a globalID for target that isn't followed
 	int phase;
@@ -216,6 +247,7 @@ protected:
 	//these come from the extension area
 	int extension_delay;
 	int extension_explosioncount;
+	int extension_targetcount;
 	Color tint;
 
 	//special (not using char animations)
@@ -226,10 +258,13 @@ protected:
 	Projectile **children;
 	int child_size;
 	int pathcounter;
+	int bend;
+	int drawSpark;
 	Holder<SoundHandle> travel_handle;
 public:
-	void SetCaster(ieDword t);
+	void SetCaster(ieDword t, int level);
 	ieDword GetCaster() const;
+	bool FailedIDS(Actor *target) const;
 	void SetTarget(ieDword t, bool fake);
 	void SetTarget(const Point &p);
 	bool PointInRadius(const Point &p) const;
@@ -325,23 +360,37 @@ private:
 	void GetPaletteCopy(Animation *anim[], Palette *&pal);
 	void GetSmokeAnim();
 	void SetBlend();
+	//apply spells and effects on the target, only in single travel mode
+	//area effect projectiles call a separate single travel projectile for each affected target
 	void Payload();
+	//if there is an extension, convert to exploding or wait for trigger
 	void EndTravel();
+	//apply default spell
+	void ApplyDefault();
+	//stops the current sound
+	void StopSound();
+	//kickstarts the secondary sound
+	void UpdateSound();
+	//reached end of single travel missile, explode or expire now
 	void ChangePhase();
-	void AddTrail(ieResRef BAM, const ieByte *pal);
+	//drop a BAM or VVC on the trail path, return the length of the animation
+	int AddTrail(ieResRef BAM, const ieByte *pal);
 	void DoStep(unsigned int walk_speed);
 	void LineTarget();      //line projectiles (walls, scorchers)
 	void SecondaryTarget(); //area projectiles (circles, cones)
 	void CheckTrigger(unsigned int radius);
+	//calculate target and destination points for a firewall
 	void SetupWall();
 	void DrawLine(const Region &screen, int face, ieDword flag);
 	void DrawTravel(const Region &screen);
 	bool DrawChildren(const Region &screen);
 	void DrawExplosion(const Region &screen);
+	void SpawnFragment(Point &pos);
 	void DrawExploded(const Region &screen);
-	int GetTravelPos(int face);
-	int GetShadowPos(int face);
+	int GetTravelPos(int face) const;
+	int GetShadowPos(int face) const;
 	void SetPos(int face, int frame1, int frame2);
+	inline int GetZPos() const;
 
 	//logic to resolve target when single projectile hit destination
 	int CalculateTargetFlag();

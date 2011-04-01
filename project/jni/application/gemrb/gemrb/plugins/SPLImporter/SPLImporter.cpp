@@ -166,6 +166,16 @@ Spell* SPLImporter::GetSpell(Spell *s, bool /*silent*/)
 		//the low byte is unused, so we can keep the iwd2 bits there
 		s->Flags|=(s->Flags>>8)&0xc0;
 		s->Flags&=~0xc000;
+	} else {
+		//in case of old format, use some unused fields for gemrb's simplified duration
+		//to simulate IWD2's useful feature (this is needed for some pst projectiles)
+		if (s->Flags&SF_SIMPLIFIED_DURATION) {
+			s->TimePerLevel = s->unknown2;
+			s->TimeConstant = s->unknown3;
+		} else {
+			s->TimePerLevel = 0;
+			s->TimeConstant = 0;
+		}
 	}
 
 	s->ext_headers = core->GetSPLExt(s->ExtHeaderCount);
@@ -195,6 +205,13 @@ void SPLImporter::GetExtHeader(Spell *s, SPLExtHeader* eh)
 	str->Read( &eh->unknown2, 1 );
 	str->ReadResRef( eh->MemorisedIcon );
 	str->Read( &eh->Target, 1 );
+
+	//this hack is to let gemrb target dead actors by some spells
+	if (eh->Target == 1) {
+		if (core->GetSpecialSpell(s->Name)&SPEC_DEAD) {
+			eh->Target = 3;
+		}
+	}
 	str->Read( &tmpByte,1 );
 	if (!tmpByte) {
 		tmpByte = 1;

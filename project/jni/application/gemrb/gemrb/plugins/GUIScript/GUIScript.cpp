@@ -51,6 +51,10 @@
 #include "GUI/MapControl.h"
 #include "GUI/TextEdit.h"
 #include "GUI/WorldMapControl.h"
+#include "Scriptable/Container.h"
+#include "Scriptable/Door.h"
+#include "Scriptable/InfoPoint.h"
+#include "System/VFS.h"
 
 #include <cstdio>
 
@@ -126,7 +130,7 @@ static bool QuitOnError = false;
 static int CHUWidth = 0;
 static int CHUHeight = 0;
 
-static EffectRef fx_learn_spell_ref={"Spell:Learn",NULL,-1};
+static EffectRef fx_learn_spell_ref = { "Spell:Learn", -1 };
 
 // Like PyString_FromString(), but for ResRef
 inline PyObject* PyString_FromResRef(char* ResRef)
@@ -169,6 +173,24 @@ inline PyObject* AttributeError(const char* doc_string)
 	}
 	return NULL;
 }
+
+#define GET_GAME() \
+	Game *game = core->GetGame(); \
+	if (!game) { \
+		return RuntimeError( "No game loaded!\n" ); \
+	}
+
+#define GET_MAP() \
+	Map *map = game->GetCurrentArea(); \
+	if (!map) { \
+		return RuntimeError( "No current area!" ); \
+	}
+
+#define GET_GAMECONTROL() \
+	GameControl *gc = core->GetGameControl(); \
+	if (!gc) { \
+		return RuntimeError("Can't find GameControl!"); \
+	}
 
 inline Control *GetControl( int wi, int ci, int ct)
 {
@@ -349,6 +371,7 @@ PyDoc_STRVAR( GemRB_UnhideGUI__doc,
 
 static PyObject* GemRB_UnhideGUI(PyObject*, PyObject* /*args*/)
 {
+	//this is not the usual gc retrieval
 	GameControl* gc = (GameControl *) GetControl( 0, 0, IE_GUI_GAMECONTROL);
 	if (!gc) {
 		return RuntimeError("No gamecontrol!");
@@ -366,10 +389,10 @@ PyDoc_STRVAR( GemRB_HideGUI__doc,
 
 static PyObject* GemRB_HideGUI(PyObject*, PyObject* /*args*/)
 {
+	//it is no problem if the gamecontrol couldn't be found here?
 	GameControl* gc = (GameControl *) GetControl( 0, 0, IE_GUI_GAMECONTROL);
 	if (!gc) {
 		return PyInt_FromLong( 0 );
-		//return RuntimeError("No gamecontrol!");
 	}
 	int ret = gc->HideGUI();
 
@@ -1853,12 +1876,16 @@ static PyObject* GemRB_Window_Unload(PyObject * /*self*/, PyObject* args)
 	if (arg == 0xffff) {
 		return AttributeError( "Feature unsupported! ");
 	}
-	int ret = core->DelWindow( arg );
-	if (ret == -1) {
-		return RuntimeError( "Can't unload window!" );
-	}
 
-	core->PlaySound(DS_WINDOW_CLOSE);
+	//Don't bug if the window wasn't loaded
+	if (core->GetWindow(arg) ) {
+		int ret = core->DelWindow( arg );
+		if (ret == -1) {
+			return RuntimeError( "Can't unload window!" );
+		}
+
+		core->PlaySound(DS_WINDOW_CLOSE);
+	}
 	Py_INCREF( Py_None );
 	return Py_None;
 }
@@ -2048,7 +2075,7 @@ static PyObject* GemRB_Window_CreateTextEdit(PyObject * /*self*/, PyObject* args
 	if (spr)
 		edit->SetCursor( spr );
 	else
-		return RuntimeError( "BAM not found" );
+		return RuntimeError( "Cursor BAM not found" );
 
 	win->AddControl( edit );
 
@@ -2221,7 +2248,10 @@ static PyObject* GemRB_ScrollBar_SetSprites(PyObject * /*self*/, PyObject* args)
 		gamedata->GetFactoryResource( ResRef,
 				IE_BAM_CLASS_ID, IE_NORMAL );
 	if (!af) {
-		return RuntimeError( "BAM not found" );
+		char tmpstr[24];
+
+		snprintf(tmpstr,sizeof(tmpstr),"%s BAM not found", ResRef);
+		return RuntimeError( tmpstr );
 	}
 	Sprite2D *tspr = af->GetFrame(upunpressed, (unsigned char)cycle);
 	sb->SetImage( IE_GUI_SCROLLBAR_UP_UNPRESSED, tspr );
@@ -2274,7 +2304,10 @@ static PyObject* GemRB_Button_SetSprites(PyObject * /*self*/, PyObject* args)
 		gamedata->GetFactoryResource( ResRef,
 				IE_BAM_CLASS_ID, IE_NORMAL );
 	if (!af) {
-		return RuntimeError( "BAM not found" );
+		char tmpstr[24];
+
+		snprintf(tmpstr,sizeof(tmpstr),"%s BAM not found", ResRef);
+		return RuntimeError( tmpstr );
 	}
 	Sprite2D *tspr = af->GetFrame(unpressed, (unsigned char)cycle);
 	btn->SetImage( IE_GUI_BUTTON_UNPRESSED, tspr );
@@ -2466,7 +2499,7 @@ static PyObject* GemRB_AddNewArea(PyObject * /*self*/, PyObject* args)
 
 	AutoTable newarea(resref);
 	if (!newarea) {
-		return RuntimeError( "2da not found!");
+		return RuntimeError( "2da not found!\n");
 	}
 
 	WorldMap *wmap = core->GetWorldMap();
@@ -2520,7 +2553,7 @@ static PyObject* GemRB_AddNewArea(PyObject * /*self*/, PyObject* args)
 		entry->Y = locy;
 		entry->LocCaptionName = label;
 		entry->LocTooltipName = name;
-		memset(entry->LoadScreenResRef, 0, 8);
+		memset(entry->LoadScreenResRef, 0, sizeof(ieResRef));
 		memcpy(entry->AreaLinksIndex, indices, sizeof(entry->AreaLinksIndex) );
 		memcpy(entry->AreaLinksCount, links, sizeof(entry->AreaLinksCount) );
 
@@ -2551,7 +2584,7 @@ static PyObject* GemRB_AddNewArea(PyObject * /*self*/, PyObject* args)
 			link->EncounterChance = encprob;
 			for(k=0;k<5;k++) {
 				if (enc[k][0]=='*') {
-					memset(link->EncounterAreaResRef[k],0,8);
+					memset(link->EncounterAreaResRef[k],0,sizeof(ieResRef));
 				} else {
 					strnuprcpy(link->EncounterAreaResRef[k], enc[k], 8);
 				}
@@ -2611,11 +2644,11 @@ static PyObject* GemRB_CreateMovement(PyObject * /*self*/, PyObject* args)
 	} else {
 		everyone = CT_GO_CLOSER;
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
-	game->GetCurrentArea()->MoveToNewArea(area, entrance, (unsigned int)direction, everyone, NULL);
+	GET_GAME();
+
+	GET_MAP();
+
+	map->MoveToNewArea(area, entrance, (unsigned int)direction, everyone, NULL);
 	Py_INCREF( Py_None );
 	return Py_None;
 }
@@ -2731,7 +2764,7 @@ static PyObject* GemRB_Window_CreateWorldMapControl(PyObject * /*self*/, PyObjec
 PyDoc_STRVAR( GemRB_WorldMap_SetTextColor__doc,
 "SetWorldMapTextColor(WindowIndex, ControlIndex, which, red, green, blue)\n\n"
 "Sets the label colors of a WorldMap Control. WHICH selects color affected"
-"and is one of IE_GUI_WMAP_COLOR_(NORMAL|SELECTED|NOTVISITED)." );
+"and is one of IE_GUI_WMAP_COLOR_(BACKGROUND|NORMAL|SELECTED|NOTVISITED)." );
 
 static PyObject* GemRB_WorldMap_SetTextColor(PyObject * /*self*/, PyObject* args)
 {
@@ -2927,10 +2960,7 @@ static PyObject* GemRB_GameSetPartySize(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_GameSetPartySize__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	game->SetPartySize( Flags );
 
@@ -2950,10 +2980,7 @@ static PyObject* GemRB_GameSetProtagonistMode(PyObject * /*self*/, PyObject* arg
 		return AttributeError( GemRB_GameSetProtagonistMode__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	game->SetProtagonistMode( Flags );
 
@@ -2966,10 +2993,8 @@ PyDoc_STRVAR( GemRB_GameGetExpansion__doc,
 "Gets the expansion mode." );
 static PyObject* GemRB_GameGetExpansion(PyObject * /*self*/, PyObject* /*args*/)
 {
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	return PyInt_FromLong( game->Expansion );
 }
 
@@ -2985,10 +3010,7 @@ static PyObject* GemRB_GameSetExpansion(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_GameSetExpansion__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	if ((unsigned int) value<=game->Expansion) {
 		Py_INCREF( Py_False );
@@ -3016,10 +3038,7 @@ static PyObject* GemRB_GameSetScreenFlags(PyObject * /*self*/, PyObject* args)
 		return NULL;
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	game->SetControlStatus( Flags, Operation );
 
@@ -3039,16 +3058,10 @@ static PyObject* GemRB_GameControlSetScreenFlags(PyObject * /*self*/, PyObject* 
 		return AttributeError( GemRB_GameControlSetScreenFlags__doc );
 	}
 	if (Operation < BM_SET || Operation > BM_NAND) {
-		printMessage( "GUIScript",
-			"Syntax Error: operation must be 0-4\n", LIGHT_RED );
-		return NULL;
+		return AttributeError("Operation must be 0-4\n");
 	}
 
-	GameControl *gc = core->GetGameControl();
-	if (!gc) {
-		printMessage ("GUIScript", "Flag cannot be set!\n",LIGHT_RED);
-		return NULL;
-	}
+	GET_GAMECONTROL();
 
 	gc->SetScreenFlags( Flags, Operation );
 
@@ -3070,10 +3083,7 @@ static PyObject* GemRB_GameControlSetTargetMode(PyObject * /*self*/, PyObject* a
 		return AttributeError( GemRB_GameControlSetTargetMode__doc );
 	}
 
-	GameControl *gc = core->GetGameControl();
-	if (!gc) {
-		return RuntimeError("Can't find GameControl!");
-	}
+	GET_GAMECONTROL();
 
 	//target mode is only the low bits (which is a number)
 	gc->SetTargetMode(Mode&GA_ACTION);
@@ -3089,10 +3099,7 @@ PyDoc_STRVAR( GemRB_GameControlGetTargetMode__doc,
 
 static PyObject* GemRB_GameControlGetTargetMode(PyObject * /*self*/, PyObject* /*args*/)
 {
-	GameControl *gc = core->GetGameControl();
-	if (!gc) {
-		return RuntimeError("Can't find GameControl!");
-	}
+	GET_GAMECONTROL();
 
 	return PyInt_FromLong(gc->GetTargetMode());
 }
@@ -3577,13 +3584,11 @@ static PyObject* GemRB_VerbalConstant(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_VerbalConstant__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor *actor = game->FindPC(PartyID);
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	if (str<0 || str>=VCONST_COUNT) {
@@ -3734,10 +3739,8 @@ PyDoc_STRVAR( GemRB_GetMessageWindowSize__doc,
 
 static PyObject* GemRB_GetMessageWindowSize(PyObject * /*self*/, PyObject* /*args*/)
 {
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	return PyInt_FromLong( game->ControlStatus );
 }
 
@@ -3797,16 +3800,17 @@ static PyObject* GemRB_CheckVar(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "ss", &Variable, &Context )) {
 		return AttributeError( GemRB_CheckVar__doc );
 	}
-	GameControl *gc = core->GetGameControl();
-	if (!gc) {
-		return RuntimeError("Can't find GameControl!");
-	}
+	GET_GAMECONTROL();
+
 	Scriptable *Sender = (Scriptable *) gc->GetLastActor();
 	if (!Sender) {
-		Sender = (Scriptable *) core->GetGame()->GetCurrentArea();
+		GET_GAME();
+
+		Sender = (Scriptable *) game->GetCurrentArea();
 	}
+
 	if (!Sender) {
-		printMessage("GUIScript","No Game!\n", LIGHT_RED);
+		printMessage("GUIScript","No Sender!\n", LIGHT_RED);
 		return NULL;
 	}
 	long value =(long) CheckVariable(Sender, Variable, Context);
@@ -3831,16 +3835,12 @@ static PyObject* GemRB_SetGlobal(PyObject * /*self*/, PyObject* args)
 	}
 
 	Scriptable *Sender = NULL;
-	Game *game = core->GetGame();
-	if (!game) {
-		printMessage("GUIScript","No Game!\n", LIGHT_RED);
-		return NULL;
-	}
+
+	GET_GAME();
+
 	if (!strnicmp(Context, "MYAREA", 6) || !strnicmp(Context, "LOCALS", 6)) {
-		GameControl *gc = core->GetGameControl();
-		if (!gc) {
-			return RuntimeError("Can't find GameControl!");
-		}
+		GET_GAMECONTROL();
+
 		Sender = (Scriptable *) gc->GetLastActor();
 		if (!Sender) {
 			Sender = (Scriptable *) game->GetCurrentArea();
@@ -3869,10 +3869,8 @@ static PyObject* GemRB_GetGameVar(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_GetGameVar__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	if (!game->locals->Lookup( Variable, value )) {
 		return PyInt_FromLong( ( unsigned long ) 0 );
 	}
@@ -3922,13 +3920,11 @@ static PyObject* GemRB_SaveCharacter(PyObject * /*self*/, PyObject * args)
 		return AttributeError( GemRB_SaveCharacter__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor *actor = game->FindPC(PartyID);
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	return PyInt_FromLong(core->WriteCharacter(name, actor) );
 }
@@ -3949,10 +3945,7 @@ static PyObject* GemRB_SaveGame(PyObject * /*self*/, PyObject * args)
 
 	CObject<SaveGame> save(obj);
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	SaveGameIterator *sgi = core->GetSaveGameIterator();
 	if (!sgi) {
@@ -4099,7 +4092,8 @@ static PyObject* GemRB_GetGamePreview(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_GetGamePreview__doc );
 	}
 
-	return CObject<Sprite2D>(core->GetGameControl()->GetPreview());
+	GET_GAMECONTROL();
+	return CObject<Sprite2D>(gc->GetPreview());
 }
 
 PyDoc_STRVAR( GemRB_GetGamePortraitPreview__doc,
@@ -4114,7 +4108,8 @@ static PyObject* GemRB_GetGamePortraitPreview(PyObject * /*self*/, PyObject* arg
 		return AttributeError( GemRB_GetGamePreview__doc );
 	}
 
-	return CObject<Sprite2D>(core->GetGameControl()->GetPortraitPreview(PCSlotCount));
+	GET_GAMECONTROL();
+	return CObject<Sprite2D>(gc->GetPortraitPreview(PCSlotCount));
 }
 
 PyDoc_STRVAR( GemRB_Roll__doc,
@@ -4192,10 +4187,8 @@ PyDoc_STRVAR( GemRB_GetPartySize__doc,
 
 static PyObject* GemRB_GetPartySize(PyObject * /*self*/, PyObject * /*args*/)
 {
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	return PyInt_FromLong( game->GetPartySize(0) );
 }
 
@@ -4205,10 +4198,8 @@ PyDoc_STRVAR( GemRB_GetGameTime__doc,
 
 static PyObject* GemRB_GetGameTime(PyObject * /*self*/, PyObject* /*args*/)
 {
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	unsigned long GameTime = game->GameTime/AI_UPDATE_TIME;
 	return PyInt_FromLong( GameTime );
 }
@@ -4219,10 +4210,8 @@ PyDoc_STRVAR( GemRB_GameGetReputation__doc,
 
 static PyObject* GemRB_GameGetReputation(PyObject * /*self*/, PyObject* /*args*/)
 {
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	int Reputation = (int) game->Reputation;
 	return PyInt_FromLong( Reputation );
 }
@@ -4238,10 +4227,8 @@ static PyObject* GemRB_GameSetReputation(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i", &Reputation )) {
 		return AttributeError( GemRB_GameSetReputation__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	game->SetReputation( (unsigned int) Reputation );
 
 	Py_INCREF( Py_None );
@@ -4261,10 +4248,7 @@ static PyObject* GemRB_IncreaseReputation(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_IncreaseReputation__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	int Limit = core->GetReputationMod(8);
 	if (Limit<=Donation) {
@@ -4282,10 +4266,8 @@ PyDoc_STRVAR( GemRB_GameGetPartyGold__doc,
 
 static PyObject* GemRB_GameGetPartyGold(PyObject * /*self*/, PyObject* /*args*/)
 {
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	int Gold = game->PartyGold;
 	return PyInt_FromLong( Gold );
 }
@@ -4301,10 +4283,8 @@ static PyObject* GemRB_GameSetPartyGold(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i|i", &Gold, &flag )) {
 		return AttributeError( GemRB_GameSetPartyGold__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	if (flag) {
 		game->AddGold((ieDword) Gold);
 	} else {
@@ -4327,10 +4307,8 @@ static PyObject* GemRB_GameGetFormation(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "|i", &Which )) {
 		return AttributeError( GemRB_GameGetFormation__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	if (Which<0) {
 		Formation = game->WhichFormation;
 	} else {
@@ -4353,10 +4331,8 @@ static PyObject* GemRB_GameSetFormation(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i|i", &Formation, &Which )) {
 		return AttributeError( GemRB_GameSetFormation__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	if (Which<0) {
 		game->WhichFormation = Formation;
 	} else {
@@ -4383,10 +4359,8 @@ static PyObject* GemRB_GetJournalSize(PyObject * /*self*/, PyObject * args)
 		return AttributeError( GemRB_GetJournalSize__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	int count = 0;
 	for (unsigned int i = 0; i < game->GetJournalCount(); i++) {
 		GAMJournalEntry* je = game->GetJournalEntry( i );
@@ -4409,10 +4383,8 @@ static PyObject* GemRB_GetJournalEntry(PyObject * /*self*/, PyObject * args)
 		return AttributeError( GemRB_GetJournalEntry__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	int count = 0;
 	for (unsigned int i = 0; i < game->GetJournalCount(); i++) {
 		GAMJournalEntry* je = game->GetJournalEntry( i );
@@ -4448,10 +4420,7 @@ static PyObject* GemRB_SetJournalEntry(PyObject * /*self*/, PyObject * args)
 		return AttributeError( GemRB_SetJournalEntry__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	if (strref == -1) {
 		//delete the whole journal
@@ -4485,10 +4454,8 @@ static PyObject* GemRB_GameIsBeastKnown(PyObject * /*self*/, PyObject * args)
 		return AttributeError( GemRB_GameIsBeastKnown__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	return PyInt_FromLong( game->IsBeastKnown( index ));
 }
 
@@ -4500,7 +4467,7 @@ static PyObject* GemRB_GetINIPartyCount(PyObject * /*self*/,
 	PyObject * /*args*/)
 {
 	if (!core->GetPartyINI()) {
-		return RuntimeError( "INI resource not found!" );
+		return RuntimeError( "INI resource not found!\n" );
 	}
 	return PyInt_FromLong( core->GetPartyINI()->GetTagsCount() );
 }
@@ -4517,7 +4484,7 @@ static PyObject* GemRB_GetINIQuestsKey(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_GetINIQuestsKey__doc );
 	}
 	if (!core->GetQuestsINI()) {
-		return RuntimeError( "INI resource not found!" );
+		return RuntimeError( "INI resource not found!\n" );
 	}
 	return PyString_FromString(
 			core->GetQuestsINI()->GetKeyAsString( Tag, Key, Default ) );
@@ -4553,7 +4520,7 @@ static PyObject* GemRB_GetINIPartyKey(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_GetINIPartyKey__doc );
 	}
 	if (!core->GetPartyINI()) {
-		return RuntimeError( "INI resource not found!" );
+		return RuntimeError( "INI resource not found!\n" );
 	}
 	return PyString_FromString(
 			core->GetPartyINI()->GetKeyAsString( Tag, Key, Default ) );
@@ -4575,10 +4542,8 @@ static PyObject* GemRB_CreatePlayer(PyObject * /*self*/, PyObject* args)
 	}
 	//PlayerSlot is zero based
 	Slot = ( PlayerSlot & 0x7fff );
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	//FIXME:overwriting original slot
 	//is dangerous if the game is already loaded
 	//maybe the actor should be removed from the area first
@@ -4590,7 +4555,7 @@ static PyObject* GemRB_CreatePlayer(PyObject * /*self*/, PyObject* args)
 	} else {
 		PlayerSlot = game->FindPlayer( PlayerSlot );
 		if (PlayerSlot >= 0) {
-			return RuntimeError("Slot is already filled!");
+			return RuntimeError("Slot is already filled!\n");
 		}
 	}
 	if (CreResRef[0]) {
@@ -4600,7 +4565,7 @@ static PyObject* GemRB_CreatePlayer(PyObject * /*self*/, PyObject* args)
 		PlayerSlot = 0;
 	}
 	if (PlayerSlot < 0) {
-		return RuntimeError("File not found!");
+		return RuntimeError("File not found!\n");
 	}
 	return PyInt_FromLong( PlayerSlot );
 }
@@ -4616,13 +4581,11 @@ static PyObject* GemRB_GetPlayerStates(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i", &PartyID )) {
 		return AttributeError( GemRB_GetPlayerStates__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* MyActor = game->FindPC( PartyID );
 	if (!MyActor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	return PyString_FromString((const char *) MyActor->GetStateString() );
 }
@@ -4639,13 +4602,11 @@ static PyObject* GemRB_GetPlayerName(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i|i", &PartyID, &Which )) {
 		return AttributeError( GemRB_GetPlayerName__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* MyActor = game->FindPC( PartyID );
 	if (!MyActor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	if (Which == 2) {
 		return PyString_FromString( MyActor->GetScriptName() );
@@ -4667,13 +4628,11 @@ static PyObject* GemRB_SetPlayerName(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "is|i", &PlayerSlot, &Name, &Which )) {
 		return AttributeError( GemRB_SetPlayerName__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* MyActor = game->FindPC( PlayerSlot );
 	if (!MyActor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	MyActor->SetName(Name, Which);
 	MyActor->SetMCFlag(MC_EXPORTABLE,BM_OR);
@@ -4693,10 +4652,7 @@ static PyObject* GemRB_CreateString(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "is", &strref, &Text )) {
 		return AttributeError( GemRB_CreateString__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	strref = core->UpdateString(strref, Text);
 	return PyInt_FromLong( strref );
@@ -4713,17 +4669,15 @@ static PyObject* GemRB_SetPlayerString(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iii", &PlayerSlot, &StringSlot, &StrRef )) {
 		return AttributeError( GemRB_SetPlayerString__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* MyActor = game->FindPC( PlayerSlot );
 	if (!MyActor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	if (StringSlot>=VCONST_COUNT) {
-		return AttributeError( "StringSlot is out of range!" );
+		return AttributeError( "StringSlot is out of range!\n" );
 	}
 
 	MyActor->StrRefs[StringSlot]=StrRef;
@@ -4744,13 +4698,11 @@ static PyObject* GemRB_SetPlayerSound(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "is", &PlayerSlot, &Sound )) {
 		return AttributeError( GemRB_SetPlayerSound__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* MyActor = game->FindPC( PlayerSlot );
 	if (!MyActor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	MyActor->SetSoundFolder(Sound);
 	Py_INCREF( Py_None );
@@ -4770,13 +4722,11 @@ static PyObject* GemRB_GetPlayerSound(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i|i", &PlayerSlot, &flag )) {
 		return AttributeError( GemRB_GetPlayerSound__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* MyActor = game->FindPC( PlayerSlot );
 	if (!MyActor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	MyActor->GetSoundFolder(Sound, flag);
 	return PyString_FromString(Sound);
@@ -4797,10 +4747,8 @@ static PyObject* GemRB_GetSlotType(PyObject * /*self*/, PyObject* args)
 	}
 
 	if (PartyID) {
-		Game *game = core->GetGame();
-		if (!game) {
-			return RuntimeError( "No game loaded!" );
-		}
+		GET_GAME();
+
 		actor = game->FindPC( PartyID );
 	}
 
@@ -4849,10 +4797,8 @@ static PyObject* GemRB_GetPCStats(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i", &PartyID )) {
 		return AttributeError( GemRB_GetPCStats__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* MyActor = game->FindPC( PartyID );
 	if (!MyActor || !MyActor->PCStats) {
 		Py_INCREF( Py_None );
@@ -4907,7 +4853,7 @@ static PyObject* GemRB_GetPCStats(PyObject * /*self*/, PyObject* args)
 
 		Item* item = gamedata->GetItem(ps->FavouriteWeapons[largest]);
 		if (item == NULL) {
-			return RuntimeError( "Item not found!" );
+			return RuntimeError( "Item not found!\n" );
 		}
 
 		PyDict_SetItemString(dict, "FavouriteWeapon", PyInt_FromLong ((signed) item->GetItemName(false)));
@@ -4936,10 +4882,7 @@ static PyObject* GemRB_GameSelectPC(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "ii|i", &PartyID, &Select, &Flags )) {
 		return AttributeError( GemRB_GameSelectPC__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	Actor* actor;
 	if (PartyID > 0) {
@@ -4969,10 +4912,8 @@ static PyObject* GemRB_GameIsPCSelected(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i", &PlayerSlot )) {
 		return AttributeError( GemRB_GameIsPCSelected__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* MyActor = game->FindPC( PlayerSlot );
 	if (!MyActor) {
 		return PyInt_FromLong( 0 );
@@ -4994,7 +4935,9 @@ static PyObject* GemRB_GameSelectPCSingle(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_GameSelectPCSingle__doc );
 	}
 
-	core->GetGame()->SelectPCSingle( index );
+	GET_GAME();
+
+	game->SelectPCSingle( index );
 
 	Py_INCREF( Py_None );
 	return Py_None;
@@ -5011,15 +4954,11 @@ static PyObject* GemRB_GameGetSelectedPCSingle(PyObject * /*self*/, PyObject* ar
 	if (!PyArg_ParseTuple( args, "|i", &flag )) {
 		return AttributeError( GemRB_GameGetSelectedPCSingle__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	if (flag) {
-		GameControl *gc = core->GetGameControl();
-		if (!gc) {
-			return RuntimeError("Can't find GameControl!");
-		}
+		GET_GAMECONTROL();
+
 		Actor *ac = gc->dialoghandler->GetSpeaker();
 		int ret = 0;
 		if (ac) {
@@ -5070,15 +5009,10 @@ static PyObject* GemRB_GameControlSetLastActor(PyObject * /*self*/, PyObject* ar
 		return AttributeError( GemRB_GameControlSetLastActor__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
-	GameControl *gc = core->GetGameControl();
-	if (!gc) {
-		return RuntimeError("Can't find GameControl!");
-	}
+	GET_GAMECONTROL();
+
 	Actor* actor = game->FindPC( PartyID );
 	gc->SetLastActor(actor, gc->GetLastActor() );
 
@@ -5097,10 +5031,8 @@ static PyObject* GemRB_ActOnPC(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i", &PartyID )) {
 		return AttributeError( GemRB_ActOnPC__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* MyActor = game->FindPC( PartyID );
 	if (MyActor) {
 		GameControl* gc = core->GetGameControl();
@@ -5124,10 +5056,8 @@ static PyObject* GemRB_GetPlayerPortrait(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i|i", &PlayerSlot, &Which )) {
 		return AttributeError( GemRB_GetPlayerPortrait__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* MyActor = game->FindPC( PlayerSlot );
 	if (!MyActor) {
 		return PyString_FromString( "");
@@ -5146,7 +5076,9 @@ static PyObject* GemRB_GetPlayerString(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "ii", &PlayerSlot, &Index)) {
 		return AttributeError( GemRB_GetPlayerString__doc );
 	}
-	Actor* MyActor = core->GetGame()->FindPC( PlayerSlot );
+	GET_GAME();
+
+	Actor* MyActor = game->FindPC( PlayerSlot );
 	if (!MyActor) {
 		return RuntimeError("Cannot find actor!\n");
 	}
@@ -5169,7 +5101,9 @@ static PyObject* GemRB_GetPlayerStat(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "ii|i", &PlayerSlot, &StatID, &BaseStat )) {
 		return AttributeError( GemRB_GetPlayerStat__doc );
 	}
-	Actor* MyActor = core->GetGame()->FindPC( PlayerSlot );
+	GET_GAME();
+
+	Actor* MyActor = game->FindPC( PlayerSlot );
 	if (!MyActor) {
 		return RuntimeError("Cannot find actor!\n");
 	}
@@ -5190,7 +5124,9 @@ static PyObject* GemRB_SetPlayerStat(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iii|i", &PlayerSlot, &StatID, &StatValue, &pcf )) {
 		return AttributeError( GemRB_SetPlayerStat__doc );
 	}
-	Actor* MyActor = core->GetGame()->FindPC( PlayerSlot );
+	GET_GAME();
+
+	Actor* MyActor = game->FindPC( PlayerSlot );
 	if (!MyActor) {
 		return RuntimeError("Cannot find actor!\n");
 	}
@@ -5213,7 +5149,9 @@ static PyObject* GemRB_GetPlayerScript(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i|i", &PlayerSlot, &Index )) {
 		return AttributeError( GemRB_GetPlayerScript__doc );
 	}
-	Actor *actor = core->GetGame()->FindPC(PlayerSlot);
+	GET_GAME();
+
+	Actor *actor = game->FindPC(PlayerSlot);
 	if (!actor) {
 		return RuntimeError("Cannot find actor!\n");
 	}
@@ -5237,7 +5175,9 @@ static PyObject* GemRB_SetPlayerScript(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "is|i", &PlayerSlot, &ScriptName, &Index )) {
 		return AttributeError( GemRB_SetPlayerScript__doc );
 	}
-	Actor *actor = core->GetGame()->FindPC(PlayerSlot);
+	GET_GAME();
+
+	Actor *actor = game->FindPC(PlayerSlot);
 	if (!actor) {
 		return RuntimeError("Cannot find actor!\n");
 	}
@@ -5261,14 +5201,11 @@ static PyObject* GemRB_FillPlayerInfo(PyObject * /*self*/, PyObject* args)
 	// here comes some code to transfer icon/name to the PC sheet
 	//
 	//
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	Actor* MyActor = game->FindPC( PlayerSlot );
 	if (!MyActor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	if (Portrait1) {
 		MyActor->SetPortrait( Portrait1, 1);
@@ -5346,8 +5283,10 @@ PyObject *SetSpellIcon(int wi, int ci, const ieResRef SpellResRef, int type, int
 		gamedata->GetFactoryResource( IconResRef,
 				IE_BAM_CLASS_ID, IE_NORMAL, 1 );
 	if (!af) {
-		printf("Searched for: %s\n", IconResRef);
-		return RuntimeError( "BAM not found" );
+		char tmpstr[24];
+
+		snprintf(tmpstr,sizeof(tmpstr),"%s BAM not found", IconResRef);
+		return RuntimeError( tmpstr );
 	}
 	//small difference between pst and others
 	if (af->GetCycleSize(0)!=4) { //non-pst
@@ -5581,17 +5520,15 @@ static PyObject* GemRB_GetContainer(PyObject * /*self*/, PyObject* args)
 
 	Actor *actor;
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	if (PartyID) {
 		actor = game->FindPC( PartyID );
 	} else {
 		actor = core->GetFirstSelectedPC(false);
 	}
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	Container *container = NULL;
 	if (autoselect) { //autoselect works only with piles
@@ -5627,13 +5564,11 @@ static PyObject* GemRB_GetContainerItem(PyObject * /*self*/, PyObject* args)
 	Container *container;
 
 	if (PartyID) {
-		Game *game = core->GetGame();
-		if (!game) {
-			return RuntimeError( "No game loaded!" );
-		}
+		GET_GAME();
+
 		Actor *actor = game->FindPC( PartyID );
 		if (!actor) {
-			return RuntimeError( "Actor not found" );
+			return RuntimeError( "Actor not found!\n" );
 		}
 		Map *map = actor->GetCurrentArea();
 		container = map->TMap->GetContainer(actor->Pos, IE_CONTAINER_PILE);
@@ -5682,23 +5617,21 @@ static PyObject* GemRB_ChangeContainerItem(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iii", &PartyID, &Slot, &action)) {
 		return AttributeError( GemRB_ChangeContainerItem__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor;
 	Container *container;
 	if (PartyID) {
 		actor = game->FindPC( PartyID );
 		if (!actor) {
-			return RuntimeError( "Actor not found" );
+			return RuntimeError( "Actor not found!\n" );
 		}
 		Map *map = actor->GetCurrentArea();
 		container = map->TMap->GetContainer(actor->Pos, IE_CONTAINER_PILE);
 	} else {
 		actor = core->GetFirstSelectedPC(false);
 		if (!actor) {
-			return RuntimeError( "Actor not found" );
+			return RuntimeError( "Actor not found!\n" );
 		}
 		container = core->GetCurrentContainer();
 	}
@@ -5895,13 +5828,11 @@ static PyObject* GemRB_IsValidStoreItem(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "ii|i", &PartyID, &Slot, &type)) {
 		return AttributeError( GemRB_IsValidStoreItem__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	Store *store = core->GetCurrentStore();
@@ -6042,13 +5973,11 @@ static PyObject* GemRB_ChangeStoreItem(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iii", &PartyID, &Slot, &action)) {
 		return AttributeError( GemRB_ChangeStoreItem__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	Store *store = core->GetCurrentStore();
@@ -6377,10 +6306,8 @@ static PyObject* GemRB_ExecuteString(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "s|i", &String, &actornum )) {
 		return AttributeError( GemRB_ExecuteString__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	if (actornum) {
 		Actor *pc = game->FindPC(actornum);
 		if (pc) {
@@ -6406,7 +6333,9 @@ static PyObject* GemRB_EvaluateString(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "s", &String )) {
 		return AttributeError( GemRB_EvaluateString__doc );
 	}
-	if (GameScript::EvaluateString( core->GetGame()->GetCurrentArea( ), String )) {
+	GET_GAME();
+
+	if (GameScript::EvaluateString( game->GetCurrentArea( ), String )) {
 		printf( "%s returned True\n", String );
 	} else {
 		printf( "%s returned False\n", String );
@@ -6445,7 +6374,9 @@ PyDoc_STRVAR( GemRB_GetCurrentArea__doc,
 
 static PyObject* GemRB_GetCurrentArea(PyObject * /*self*/, PyObject* /*args*/)
 {
-	return PyString_FromString( core->GetGame()->CurrentArea );
+	GET_GAME();
+
+	return PyString_FromString( game->CurrentArea );
 }
 
 PyDoc_STRVAR( GemRB_MoveToArea__doc,
@@ -6459,10 +6390,8 @@ static PyObject* GemRB_MoveToArea(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "s", &String )) {
 		return AttributeError( GemRB_MoveToArea__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Map* map2 = game->GetMap(String, true);
 	if (!map2) {
 		return RuntimeError( "Map not found!" );
@@ -6495,13 +6424,11 @@ static PyObject* GemRB_GetMemorizableSpellsCount(PyObject* /*self*/, PyObject* a
 	if (!PyArg_ParseTuple( args, "iii|i", &PartyID, &SpellType, &Level, &Bonus )) {
 		return AttributeError( GemRB_GetMemorizableSpellsCount__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	//this isn't in the actor's spellbook, handles Wisdom
@@ -6519,13 +6446,11 @@ static PyObject* GemRB_SetMemorizableSpellsCount(PyObject* /*self*/, PyObject* a
 	if (!PyArg_ParseTuple( args, "iiii", &PartyID, &Value, &SpellType, &Level)) {
 		return AttributeError( GemRB_SetMemorizableSpellsCount__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	//the bonus increased value (with wisdom too) is handled by the core
@@ -6546,13 +6471,11 @@ static PyObject* GemRB_GetKnownSpellsCount(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iii", &PartyID, &SpellType, &Level )) {
 		return AttributeError( GemRB_GetKnownSpellsCount__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	return PyInt_FromLong(actor->spellbook.GetKnownSpellsCount( SpellType, Level ) );
@@ -6569,13 +6492,11 @@ static PyObject* GemRB_GetKnownSpell(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iiii", &PartyID, &SpellType, &Level, &Index )) {
 		return AttributeError( GemRB_GetKnownSpell__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	CREKnownSpell* ks = actor->spellbook.GetKnownSpell( SpellType, Level, Index );
@@ -6605,10 +6526,8 @@ static PyObject* GemRB_GetMemorizedSpellsCount(PyObject * /*self*/, PyObject* ar
 	if (!PyArg_ParseTuple( args, "ii|ii", &PartyID, &SpellType, &Level, &global )) {
 		return AttributeError( GemRB_GetMemorizedSpellsCount__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor;
 	if (global) {
 		actor = game->GetActorByGlobalID( PartyID );
@@ -6616,7 +6535,7 @@ static PyObject* GemRB_GetMemorizedSpellsCount(PyObject * /*self*/, PyObject* ar
 		actor = game->FindPC( PartyID );
 	}
 	if (!actor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	if (Level<0) {
@@ -6637,13 +6556,11 @@ static PyObject* GemRB_GetMemorizedSpell(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iiii", &PartyID, &SpellType, &Level, &Index )) {
 		return AttributeError( GemRB_GetMemorizedSpell__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	CREMemorizedSpell* ms = actor->spellbook.GetMemorizedSpell( SpellType, Level, Index );
@@ -6711,13 +6628,11 @@ static PyObject* GemRB_LearnSpell(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "is|i", &PartyID, &Spell, &Flags )) {
 		return AttributeError( GemRB_LearnSpell__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	int ret = actor->LearnSpell( Spell, Flags ); // returns 0 on success
@@ -6739,13 +6654,11 @@ static PyObject* GemRB_DispelEffect(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "isi", &PartyID, &EffectName, &Parameter2 )) {
 		return AttributeError( GemRB_DispelEffect__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	work_ref.Name=EffectName;
@@ -6769,13 +6682,11 @@ static PyObject* GemRB_RemoveEffects(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "is", &PartyID, &SpellResRef )) {
 		return AttributeError( GemRB_RemoveEffects__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	actor->fxqueue.RemoveAllEffects(SpellResRef);
@@ -6795,13 +6706,11 @@ static PyObject* GemRB_RemoveSpell(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iiii", &PartyID, &SpellType, &Level, &Index )) {
 		return AttributeError( GemRB_RemoveSpell__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	CREKnownSpell* ks = actor->spellbook.GetKnownSpell( SpellType, Level, Index );
@@ -6824,13 +6733,11 @@ static PyObject* GemRB_RemoveItem(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "ii|i", &PartyID, &Slot, &Count )) {
 		return AttributeError( GemRB_RemoveItem__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	int ok;
@@ -6858,13 +6765,11 @@ static PyObject* GemRB_MemorizeSpell(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iiii", &PartyID, &SpellType, &Level, &Index )) {
 		return AttributeError( GemRB_MemorizeSpell__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	CREKnownSpell* ks = actor->spellbook.GetKnownSpell( SpellType, Level, Index );
@@ -6890,18 +6795,16 @@ static PyObject* GemRB_UnmemorizeSpell(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iiii", &PartyID, &SpellType, &Level, &Index )) {
 		return AttributeError( GemRB_UnmemorizeSpell__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found!" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	CREMemorizedSpell* ms = actor->spellbook.GetMemorizedSpell( SpellType, Level, Index );
 	if (! ms) {
-		return RuntimeError( "Spell not found!" );
+		return RuntimeError( "Spell not found!\n" );
 	}
 
 	return PyInt_FromLong( actor->spellbook.UnmemorizeSpell( ms ) );
@@ -6926,10 +6829,8 @@ static PyObject* GemRB_GetSlotItem(PyObject * /*self*/, PyObject* args)
 	if (PartyID==0) {
 		si = core->GetDraggedItem();
 	} else {
-		Game *game = core->GetGame();
-		if (!game) {
-			return RuntimeError( "No game loaded!" );
-		}
+		GET_GAME();
+
 		Actor* actor;
 		if (global) {
 			actor = game->GetActorByGlobalID( PartyID );
@@ -6937,7 +6838,7 @@ static PyObject* GemRB_GetSlotItem(PyObject * /*self*/, PyObject* args)
 			actor = game->FindPC( PartyID );
 		}
 		if (!actor) {
-			return RuntimeError( "Actor not found" );
+			return RuntimeError( "Actor not found!\n" );
 		}
 
 		Slot = core->QuerySlot(Slot);
@@ -6971,13 +6872,11 @@ static PyObject* GemRB_ChangeItemFlag(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iiii", &PartyID, &Slot, &Flags, &Mode)) {
 		return AttributeError( GemRB_ChangeItemFlag__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor *actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	if (actor->inventory.ChangeItemFlag(core->QuerySlot(Slot), Flags, Mode)) {
 		return PyInt_FromLong(1);
@@ -7008,13 +6907,11 @@ static PyObject* GemRB_CanUseItemType(PyObject * /*self*/, PyObject* args)
 	}
 	Actor* actor = 0;
 	if (PartyID) {
-		Game *game = core->GetGame();
-		if (!game) {
-			return RuntimeError( "No game loaded!" );
-		}
+		GET_GAME();
+
 		actor = game->FindPC( PartyID );
 		if (!actor) {
-			return RuntimeError( "Actor not found" );
+			return RuntimeError( "Actor not found!\n" );
 		}
 	}
 
@@ -7041,13 +6938,11 @@ static PyObject* GemRB_GetSlots(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_GetSlots__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	MaxCount = core->SlotTypes;
@@ -7294,14 +7189,12 @@ static PyObject* GemRB_DragItem(PyObject * /*self*/, PyObject* args)
 		return Py_None;
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	//allow -1,-1
 	if (!actor && ( PartyID || ResRef[0]) ) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	//dragging a portrait
@@ -7384,13 +7277,11 @@ static PyObject* GemRB_DropDraggedItem(PyObject * /*self*/, PyObject* args)
 		return Py_None;
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	int res;
@@ -7583,13 +7474,11 @@ static PyObject* GemRB_CreateItem(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "is|iiii", &PartyID, &ItemResRef, &SlotID, &Charge0, &Charge1, &Charge2)) {
 		return AttributeError( GemRB_CreateItem__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	if (SlotID==-1) {
@@ -7621,6 +7510,45 @@ static PyObject* GemRB_CreateItem(PyObject * /*self*/, PyObject* args)
 	return Py_None;
 }
 
+PyDoc_STRVAR( GemRB_SetMapAnimation__doc,
+"SetMapAnimation(X, Y, BAMresref[, flags, cycle, height])\n\n"
+"Creates an area animation.");
+
+static PyObject* GemRB_SetMapAnimation(PyObject * /*self*/, PyObject* args)
+{
+	int x,y;
+	const char *ResRef;
+	int Cycle = 0;
+	int Flags = 0x19;
+	int Height = 0x1e;
+	//the animation is cloned by AddAnimation, so we can keep the original on
+	//the stack
+	AreaAnimation anim;
+	memset(&anim,0,sizeof(anim));
+
+	if (!PyArg_ParseTuple( args, "iis|iii", &x, &y, &ResRef, &Flags, &Cycle, &Height)) {
+		return AttributeError( GemRB_CreateItem__doc );
+	}
+
+	GET_GAME();
+
+	GET_MAP();
+
+	anim.appearance=0xffffffff; //scheduled for every hour
+	anim.Pos.x=(short) x;
+	anim.Pos.y=(short) y;
+	strnlwrcpy(anim.Name, ResRef, 8);
+	strnlwrcpy(anim.BAM, ResRef, 8);
+	anim.Flags=Flags;
+	anim.sequence=Cycle;
+	anim.height=Height;
+	if (Flags&A_ANI_ACTIVE) {
+		map->AddAnimation(&anim);
+	}
+	Py_INCREF( Py_None );
+	return Py_None;
+}
+
 PyDoc_STRVAR( GemRB_SetMapnote__doc,
 "SetMapnote(X, Y, color, Text)\n\n"
 "Adds or removes a mapnote.");
@@ -7634,14 +7562,10 @@ static PyObject* GemRB_SetMapnote(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "ii|is", &x, &y, &color, &txt)) {
 		return AttributeError( GemRB_SetMapnote__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
-	Map *map = game->GetCurrentArea();
-	if (!map) {
-		return RuntimeError( "No current area" );
-	}
+	GET_GAME();
+
+	GET_MAP();
+
 	ieStrRef strref;
 	Point point;
 	point.x=x;
@@ -7660,33 +7584,135 @@ static PyObject* GemRB_SetMapnote(PyObject * /*self*/, PyObject* args)
 	return Py_None;
 }
 
+PyDoc_STRVAR( GemRB_SetMapDoor__doc,
+"SetMapDoor(DoorName, State)\n\n"
+"Modifies a door's open state in the current area.");
+
+static PyObject* GemRB_SetMapDoor(PyObject * /*self*/, PyObject* args)
+{
+	const char *DoorName;
+	int State;
+
+	if (!PyArg_ParseTuple( args, "si", &DoorName, &State) ) {
+		return AttributeError( GemRB_SetMapDoor__doc);
+	}
+
+	GET_GAME();
+
+	GET_MAP();
+	
+	Door *door = map->TMap->GetDoor(DoorName);
+	if (!door) {
+		return RuntimeError( "No such door!" );
+	}
+
+	door->SetDoorOpen(State, 0, 0);
+	Py_INCREF( Py_None );
+	return Py_None;
+}
+
+PyDoc_STRVAR( GemRB_SetMapExit__doc,
+"SetMapExit(ExitName[, NewArea, NewEntrance])\n\n"
+"Modifies the target of an exit in the current area. If no destination is given, "
+"then the exit will be disabled.");
+
+static PyObject* GemRB_SetMapExit(PyObject * /*self*/, PyObject* args)
+{
+	const char *ExitName;
+	const char *NewArea = NULL;
+	const char *NewEntrance = NULL;
+
+	if (!PyArg_ParseTuple( args, "s|ss", &ExitName, &NewArea, &NewEntrance)) {
+		return AttributeError( GemRB_SetMapExit__doc );
+	}
+
+	GET_GAME();
+
+	GET_MAP();
+
+	InfoPoint *ip = map->TMap->GetInfoPoint(ExitName);
+	if (!ip || ip->Type!=ST_TRAVEL) {
+		return RuntimeError( "No such exit!" );
+	}
+
+	if (!NewArea) {
+		//disable entrance
+		ip->Flags|=TRAP_DEACTIVATED;
+	} else {
+		//activate entrance
+		ip->Flags&=~TRAP_DEACTIVATED;
+		//set destination area
+		strnuprcpy(ip->Destination, NewArea, sizeof(ieResRef)-1 );
+		//change entrance only if supplied
+		if (NewEntrance) {
+			strnuprcpy(ip->EntranceName, NewEntrance, sizeof(ieVariable)-1 );
+		}
+	}
+
+	Py_INCREF( Py_None );
+	return Py_None;
+}
+
+PyDoc_STRVAR( GemRB_SetMapRegion__doc,
+"SetMapRegion(TrapName[, trapscript])\n\n"
+"Enables or disables an infopoint in the current area.");
+
+static PyObject* GemRB_SetMapRegion(PyObject * /*self*/, PyObject* args)
+{
+	const char *Name;
+	const char *TrapScript = NULL;
+
+	if (!PyArg_ParseTuple( args, "s|s", &Name, &TrapScript)) {
+		return AttributeError( GemRB_SetMapRegion__doc );
+	}
+
+	GET_GAME();
+
+	GET_MAP();
+
+	InfoPoint *ip = map->TMap->GetInfoPoint(Name);
+	if (ip) {
+		if (TrapScript && TrapScript[0]) {
+			ip->Flags&=~TRAP_DEACTIVATED;
+			ip->SetScript(TrapScript,0);
+		} else {
+			ip->Flags|=TRAP_DEACTIVATED;
+		}
+	}
+
+	Py_INCREF( Py_None );
+	return Py_None;
+}
+
+
 PyDoc_STRVAR( GemRB_CreateCreature__doc,
-"CreateCreature(PartyID, CreResRef)\n\n"
-"Creates Creature in vicinity of a player character.");
+"CreateCreature(PartyID, CreResRef[, posX, posY])\n\n"
+"Creates Creature at a point. If the position parameters are unspecified "
+"then the creature will be put near the player character given by the first parameter.");
 
 static PyObject* GemRB_CreateCreature(PyObject * /*self*/, PyObject* args)
 {
 	int PartyID;
 	const char *CreResRef;
+	int PosX = -1, PosY = -1;
 
-	if (!PyArg_ParseTuple( args, "is", &PartyID, &CreResRef)) {
+	if (!PyArg_ParseTuple( args, "is|ii", &PartyID, &CreResRef, &PosX, &PosY)) {
 		return AttributeError( GemRB_CreateCreature__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
-	Actor* actor = game->FindPC( PartyID );
-	if (!actor) {
-		return RuntimeError( "Actor not found" );
-	}
-	Map *map=game->GetCurrentArea();
-	if (!map) {
-		return RuntimeError( "No current area" );
-	}
+	GET_GAME();
 
-	map->SpawnCreature(actor->Pos, CreResRef, 10);
+	GET_MAP();
+
+	if (PosX!=-1 && PosY!=-1) {
+		map->SpawnCreature(Point(PosX, PosY), CreResRef, 0);
+	} else {
+		Actor* actor = game->FindPC( PartyID );
+		if (!actor) {
+			return RuntimeError( "Actor not found!\n" );
+		}
+		map->SpawnCreature(actor->Pos, CreResRef, 10);
+	}
 	Py_INCREF( Py_None );
 	return Py_None;
 }
@@ -7706,14 +7732,10 @@ static PyObject* GemRB_RevealArea(PyObject * /*self*/, PyObject* args)
 	}
 
 	Point p(x,y);
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
-	Map *map=game->GetCurrentArea();
-	if (!map) {
-		return RuntimeError( "No current area" );
-	}
+	GET_GAME();
+
+	GET_MAP();
+
 	map->ExploreMapChunk( p, radius, Value );
 
 	Py_INCREF( Py_None );
@@ -7731,14 +7753,10 @@ static PyObject* GemRB_ExploreArea(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "|i", &Value)) {
 		return AttributeError( GemRB_ExploreArea__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
-	Map *map=game->GetCurrentArea();
-	if (!map) {
-		return RuntimeError( "No current area" );
-	}
+	GET_GAME();
+
+	GET_MAP();
+
 	map->Explore( Value );
 
 	Py_INCREF( Py_None );
@@ -7856,14 +7874,11 @@ static PyObject* GemRB_CheckFeatCondition(PyObject * /*self*/, PyObject* args)
 		}
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
-	Actor *actor = core->GetGame()->FindPC(v[0]);
+	Actor *actor = game->FindPC(v[0]);
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	/* see if the special function exists */
@@ -7929,13 +7944,11 @@ static PyObject* GemRB_GetAbilityBonus(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_GetAbilityBonus__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor *actor = game->FindPC(game->GetSelectedPCSingle());
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	switch (stat) {
@@ -7980,13 +7993,11 @@ static PyObject* GemRB_LeaveParty(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i|i", &PlayerSlot, &initDialog )) {
 		return AttributeError( GemRB_LeaveParty__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor *actor = game->FindPC(PlayerSlot);
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	if (initDialog) {
@@ -8084,7 +8095,10 @@ static PyObject* SetActionIcon(int WindowIndex, int ControlIndex, PyObject *dict
 		gamedata->GetFactoryResource( GUIResRef[Index],
 				IE_BAM_CLASS_ID, IE_NORMAL );
 	if (!bam) {
-		return RuntimeError( "BAM not found" );
+		char tmpstr[24];
+
+		snprintf(tmpstr,sizeof(tmpstr),"%s BAM not found", GUIResRef[Index]);
+		return RuntimeError( tmpstr );
 	}
 	packtype row;
 
@@ -8168,10 +8182,8 @@ static PyObject* GemRB_Window_SetupEquipmentIcons(PyObject * /*self*/, PyObject*
 		return AttributeError( GemRB_Window_SetupEquipmentIcons__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor;
 	if (global) {
 		actor = game->GetActorByGlobalID( slot );
@@ -8179,7 +8191,7 @@ static PyObject* GemRB_Window_SetupEquipmentIcons(PyObject * /*self*/, PyObject*
 		actor = game->FindPC( slot );
 	}
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	//-2 because of the left/right scroll icons
@@ -8199,7 +8211,7 @@ static PyObject* GemRB_Window_SetupEquipmentIcons(PyObject * /*self*/, PyObject*
 		gamedata->GetFactoryResource( "guibtbut",
 				IE_BAM_CLASS_ID, IE_NORMAL );
 	if (!bam) {
-		return RuntimeError( "BAM not found" );
+		return RuntimeError("guibtbut BAM not found");
 	}
 
 	for (i=0;i<GUIBT_COUNT-(more?1:0);i++) {
@@ -8282,10 +8294,8 @@ static PyObject* GemRB_Window_SetupSpellIcons(PyObject * /*self*/, PyObject* arg
 		return AttributeError( GemRB_Window_SetupSpellIcons__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor;
 	if (global) {
 		actor = game->GetActorByGlobalID( slot );
@@ -8293,7 +8303,7 @@ static PyObject* GemRB_Window_SetupSpellIcons(PyObject * /*self*/, PyObject* arg
 		actor = game->FindPC( slot );
 	}
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	//-2 because of the left/right scroll icons
@@ -8324,7 +8334,7 @@ static PyObject* GemRB_Window_SetupSpellIcons(PyObject * /*self*/, PyObject* arg
 		gamedata->GetFactoryResource( "guibtbut",
 				IE_BAM_CLASS_ID, IE_NORMAL );
 	if (!bam) {
-		return RuntimeError( "BAM not found" );
+		return RuntimeError("guibtbut BAM not found");
 	}
 
 	// disable all spells if fx_disable_spellcasting was run with the same type
@@ -8422,10 +8432,10 @@ static PyObject* GemRB_Window_SetupControls(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_Window_SetupControls__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
+	GET_GAMECONTROL();
+
 	Actor* actor = NULL;
 
 	if (slot) {
@@ -8441,7 +8451,7 @@ static PyObject* GemRB_Window_SetupControls(PyObject * /*self*/, PyObject* args)
 	}
 
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	ActionButtonRow myrow;
@@ -8587,7 +8597,7 @@ static PyObject* GemRB_Window_SetupControls(PyObject * /*self*/, PyObject* args)
 					SetItemText(wi, ci, item->Usages[actor->PCStats->QuickWeaponHeaders[action-ACT_WEAPON1]], true);
 					if (usedslot == slot) {
 						btn->EnableBorder(0, true);
-						if (core->GetGameControl()->GetTargetMode() == TARGET_MODE_ATTACK) {
+						if (gc->GetTargetMode() == TARGET_MODE_ATTACK) {
 							state = IE_GUI_BUTTON_SELECTED;
 						} else {
 							state = IE_GUI_BUTTON_THIRD;
@@ -8677,10 +8687,8 @@ static PyObject* GemRB_ClearActions(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i|i", &slot, &global )) {
 		return AttributeError( GemRB_ClearActions__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!\n" );
-	}
+	GET_GAME();
+
 	Actor* actor;
 	if (global) {
 		actor = game->GetActorByGlobalID( slot );
@@ -8700,7 +8708,6 @@ static PyObject* GemRB_ClearActions(PyObject * /*self*/, PyObject* args)
 		Py_INCREF( Py_None );
 		return Py_None;
 	}
-	core->GetGame()->OutAttack(actor->GetGlobalID()); //stop attacking
 	actor->ClearPath();      //stop walking
 	actor->ClearActions();   //stop pending action involved walking
 	actor->SetModal(MS_NONE);//stop modal actions
@@ -8744,10 +8751,8 @@ static PyObject* GemRB_SetupQuickSlot(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_SetupQuickSlot__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor;
 	if (global) {
 		actor = game->GetActorByGlobalID( PartyID );
@@ -8755,7 +8760,7 @@ static PyObject* GemRB_SetupQuickSlot(PyObject * /*self*/, PyObject* args)
 		actor = game->FindPC( PartyID );
 	}
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	slot = core->QuerySlot(slot);
@@ -8781,10 +8786,8 @@ static PyObject* GemRB_SetEquippedQuickSlot(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_SetEquippedQuickSlot__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor;
 	if (global) {
 		actor = game->GetActorByGlobalID( PartyID );
@@ -8792,7 +8795,7 @@ static PyObject* GemRB_SetEquippedQuickSlot(PyObject * /*self*/, PyObject* args)
 		actor = game->FindPC( PartyID );
 	}
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	int ret = actor->SetEquippedQuickSlot(slot, ability);
@@ -8814,10 +8817,8 @@ static PyObject* GemRB_GetEquippedQuickSlot(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_GetEquippedQuickSlot__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor;
 	if (global) {
 		actor = game->GetActorByGlobalID( PartyID );
@@ -8825,7 +8826,7 @@ static PyObject* GemRB_GetEquippedQuickSlot(PyObject * /*self*/, PyObject* args)
 		actor = game->FindPC( PartyID );
 	}
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	int ret = actor->inventory.GetEquippedSlot();
@@ -8861,13 +8862,11 @@ static PyObject* GemRB_GetEquippedAmmunition(PyObject * /*self*/, PyObject* args
 		return AttributeError( GemRB_GetEquippedQuickSlot__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	int ret = actor->inventory.GetEquippedSlot();
@@ -8895,10 +8894,8 @@ static PyObject* GemRB_SetModalState(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "ii|is", &slot, &state, &global, &spell )) {
 		return AttributeError( GemRB_SetModalState__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor;
 	if (global) {
 		actor = game->GetActorByGlobalID( slot );
@@ -8906,7 +8903,7 @@ static PyObject* GemRB_SetModalState(PyObject * /*self*/, PyObject* args)
 		actor = game->FindPC( slot );
 	}
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	actor->SetModal( (ieDword) state, 0);
 	actor->SetModalSpell(state, spell);
@@ -8932,10 +8929,9 @@ static PyObject* GemRB_SpellCast(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iii|i", &slot, &type, &spell, &global )) {
 		return AttributeError( GemRB_SpellCast__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+
+	GET_GAME();
+
 	Actor* actor;
 	if (global) {
 		actor = game->GetActorByGlobalID( slot );
@@ -8943,7 +8939,7 @@ static PyObject* GemRB_SpellCast(PyObject * /*self*/, PyObject* args)
 		actor = game->FindPC( slot );
 	}
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	//don't cast anything, just reinit the spell list
@@ -8969,7 +8965,8 @@ static PyObject* GemRB_SpellCast(PyObject * /*self*/, PyObject* args)
 		return RuntimeError( "Wrong type of spell!");
 	}
 
-	GameControl *gc = core->GetGameControl();
+	GET_GAMECONTROL();
+
 	switch (spelldata.Target) {
 		case TARGET_SELF:
 			// FIXME: GA_NO_DEAD and such are not actually used by SetupCasting
@@ -9015,15 +9012,16 @@ static PyObject* GemRB_ApplySpell(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_ApplySpell__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
+	Map *map = game->GetCurrentArea();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
-	Actor *caster = game->GetCurrentArea()->GetActorByGlobalID(casterID);
+	Actor *caster = NULL;
+	if (map) caster = map->GetActorByGlobalID(casterID);
 	if (!caster) caster = game->GetActorByGlobalID(casterID);
 	if (!caster) caster = actor;
 
@@ -9053,10 +9051,10 @@ static PyObject* GemRB_UseItem(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_UseItem__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
+	GET_GAMECONTROL();
+
 	Actor* actor;
 	if (global) {
 		actor = game->GetActorByGlobalID( PartyID );
@@ -9064,7 +9062,7 @@ static PyObject* GemRB_UseItem(PyObject * /*self*/, PyObject* args)
 		actor = game->FindPC( PartyID );
 	}
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	ItemExtHeader itemdata;
 	int flags = 0;
@@ -9111,19 +9109,21 @@ static PyObject* GemRB_UseItem(PyObject * /*self*/, PyObject* args)
 	//
 	switch (forcetarget) {
 		case TARGET_SELF:
-			actor->UseItem(itemdata.slot, itemdata.headerindex, actor, flags);
+			gc->SetupItemUse(itemdata.slot, itemdata.headerindex, actor, GA_NO_DEAD, itemdata.TargetNumber);
+			gc->TryToCast(actor, actor);
 			break;
 		case TARGET_NONE:
+			gc->ResetTargetMode();
 			actor->UseItem(itemdata.slot, itemdata.headerindex, NULL, flags);
 			break;
 		case TARGET_AREA:
-			core->GetGameControl()->SetupItemUse(itemdata.slot, itemdata.headerindex, actor, GA_POINT, itemdata.TargetNumber);
+			gc->SetupItemUse(itemdata.slot, itemdata.headerindex, actor, GA_POINT, itemdata.TargetNumber);
 			break;
 		case TARGET_CREA:
-			core->GetGameControl()->SetupItemUse(itemdata.slot, itemdata.headerindex, actor, GA_NO_DEAD, itemdata.TargetNumber);
+			gc->SetupItemUse(itemdata.slot, itemdata.headerindex, actor, GA_NO_DEAD, itemdata.TargetNumber);
 			break;
 		case TARGET_DEAD:
-			core->GetGameControl()->SetupItemUse(itemdata.slot, itemdata.headerindex, actor, 0, itemdata.TargetNumber);
+			gc->SetupItemUse(itemdata.slot, itemdata.headerindex, actor, 0, itemdata.TargetNumber);
 			break;
 		default:
 			printMessage("GUIScript", "Unhandled target type!", LIGHT_RED );
@@ -9219,10 +9219,8 @@ static PyObject* GemRB_RestParty(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "iii", &noareacheck, &dream, &hp)) {
 		return AttributeError( GemRB_RestParty__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	game->RestParty(noareacheck, dream, hp);
 	Py_INCREF( Py_None );
 	return Py_None;
@@ -9244,13 +9242,11 @@ static PyObject* GemRB_HasSpecialItem(PyObject * /*self*/, PyObject* args)
 		ReadSpecialItems();
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	int i = SpecialItemsCount;
 	int slot = -1;
@@ -9290,13 +9286,11 @@ static PyObject* GemRB_HasSpecialSpell(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_HasSpecialSpell__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	int i = core->GetSpecialSpellsCount();
 	if (i == -1) {
@@ -9339,20 +9333,18 @@ static PyObject* GemRB_ApplyEffect(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "isii|ssss", &PartyID, &opcodename, &param1, &param2, &resref1, &resref2, &resref3, &source)) {
 		return AttributeError( GemRB_ApplyEffect__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	work_ref.Name=opcodename;
 	work_ref.opcode=-1;
 	Effect *fx = EffectQueue::CreateEffect(work_ref, param1, param2, FX_DURATION_INSTANT_PERMANENT_AFTER_BONUSES);
 	if (!fx) {
 		//invalid effect name didn't resolve to opcode
-		return RuntimeError( "Invalid effect name!" );
+		return RuntimeError( "Invalid effect name!\n" );
 	}
 	if (resref1) {
 		strnlwrcpy(fx->Resource, resref1, 8);
@@ -9395,13 +9387,11 @@ static PyObject* GemRB_CountEffects(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "isii|s", &PartyID, &opcodename, &param1, &param2, &resref)) {
 		return AttributeError( GemRB_CountEffects__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	work_ref.Name=opcodename;
 	work_ref.opcode=-1;
@@ -9423,13 +9413,11 @@ static PyObject* GemRB_ModifyEffect(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "isii", &PartyID, &opcodename, &px, &py)) {
 		return AttributeError( GemRB_ModifyEffect__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 	work_ref.Name=opcodename;
 	work_ref.opcode=-1;
@@ -9445,18 +9433,14 @@ PyDoc_STRVAR( GemRB_StealFailed__doc,
 
 static PyObject* GemRB_StealFailed(PyObject * /*self*/, PyObject* /*args*/)
 {
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Store *store = core->GetCurrentStore();
 	if (!store) {
 		return RuntimeError( "No store loaded!" );
 	}
-	Map *map = game->GetCurrentArea();
-	if (!map) {
-		return RuntimeError( "No area loaded!" );
-	}
+	GET_MAP();
+
 	Actor* owner = map->GetActorByGlobalID( store->GetOwnerID() );
 	if (!owner) owner = game->GetActorByGlobalID( store->GetOwnerID() );
 	if (!owner) {
@@ -9496,10 +9480,7 @@ static PyObject* GemRB_SwapPCs(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_SwapPCs__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	game->SwapPCs(game->FindPlayer(idx1), game->FindPlayer(idx2));
 	//leader changed
@@ -9541,13 +9522,11 @@ static PyObject* GemRB_DisplayString(PyObject * /*self*/, PyObject* args)
 		return AttributeError( GemRB_DisplayString__doc );
 	}
 	if (PartyID) {
-		Game *game = core->GetGame();
-		if (!game) {
-			return RuntimeError( "No game loaded!" );
-		}
+		GET_GAME();
+
 		Actor *actor = game->FindPC(PartyID);
 		if (!actor) {
-			return RuntimeError( "Actor not found" );
+			return RuntimeError( "Actor not found!\n" );
 		}
 		displaymsg->DisplayStringName(strref, (unsigned int) color, actor, IE_STR_SOUND);
 	} else {
@@ -9569,13 +9548,11 @@ static PyObject* GemRB_GetCombatDetails(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "ii", &PartyID, &leftorright)) {
 		return AttributeError( GemRB_GetCombatDetails__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	leftorright = leftorright&1;
@@ -9611,13 +9588,11 @@ static PyObject* GemRB_IsDualWielding(PyObject * /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i", &PartyID)) {
 		return AttributeError( GemRB_IsDualWielding__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	int dualwield = actor->IsDualWielding();
@@ -9630,10 +9605,8 @@ PyDoc_STRVAR( GemRB_GetSelectedSize__doc,
 
 static PyObject* GemRB_GetSelectedSize(PyObject* /*self*/, PyObject* /*args*/)
 {
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	return PyInt_FromLong(game->selected.size());
 }
 
@@ -9643,10 +9616,8 @@ PyDoc_STRVAR( GemRB_GetSelectedActors__doc,
 
 static PyObject* GemRB_GetSelectedActors(PyObject* /*self*/, PyObject* /*args*/)
 {
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	int count = game->selected.size();
 	PyObject* actor_list = PyTuple_New(count);
 	for (int i = 0; i < count; i++) {
@@ -9667,13 +9638,11 @@ static PyObject* GemRB_GetSpellCastOn(PyObject* /*self*/, PyObject* args)
 	if (!PyArg_ParseTuple( args, "i", &PartyID )) {
 		return AttributeError( GemRB_GetSpellCastOn__doc );
 	}
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
+
 	Actor* actor = game->FindPC( PartyID );
 	if (!actor) {
-		return RuntimeError( "Actor not found" );
+		return RuntimeError( "Actor not found!\n" );
 	}
 
 	ResolveSpellName(splname, actor->LastSpellOnMe);
@@ -9727,10 +9696,7 @@ static PyObject* GemRB_SetupMaze(PyObject* /*self*/, PyObject* args)
 		return AttributeError( GemRB_SetupMaze__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	maze_header *h = (maze_header *) (game->AllocateMazeData()+MAZE_ENTRY_COUNT*MAZE_ENTRY_SIZE);
 	memset(h, 0, MAZE_HEADER_SIZE);
@@ -9751,7 +9717,7 @@ PyDoc_STRVAR( GemRB_SetMazeEntry__doc,
 "SetMazeEntry(entry, type, value)\n\n"
 "Sets a field in a maze entry. "
 "The entry index shouldn't exceed the maximum possible maze size (64). "
-"The type could be: ME_0, ME_WALLS, ME_TRAP or ME_16.");
+"The type could be: ME_ACCESSED, ME_WALLS, ME_TRAP or ME_SPECIAL.");
 
 static PyObject* GemRB_SetMazeEntry(PyObject* /*self*/, PyObject* args)
 {
@@ -9767,22 +9733,17 @@ static PyObject* GemRB_SetMazeEntry(PyObject* /*self*/, PyObject* args)
 		return AttributeError( GemRB_SetMazeEntry__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	if (!game->mazedata) {
 		return RuntimeError( "No maze set up!" );
 	}
 
-	maze_header *h = (maze_header *) (game->mazedata+MAZE_ENTRY_COUNT*MAZE_ENTRY_SIZE);
-	int dims = h->maze_sizex;
 	maze_entry *m = (maze_entry *) (game->mazedata+entry*MAZE_ENTRY_SIZE);
 	maze_entry *m2;
 	switch(index) {
-		case ME_0: //unknown00
-			m->unknown00 = value;
+		case ME_OVERRIDE:
+			m->override = value;
 			break;
 		default:
 		case ME_VALID:
@@ -9800,37 +9761,37 @@ static PyObject* GemRB_SetMazeEntry(PyObject* /*self*/, PyObject* args)
 			break;
 		case ME_WALLS:
 			m->walls |= value;
-			if (value & WALL_EAST) {
-				if (entry%dims!=dims-1) {
+			if (value & WALL_SOUTH) {
+				if (entry%MAZE_MAX_DIM!=MAZE_MAX_DIM-1) {
 					m2 = (maze_entry *) (game->mazedata+(entry+1)*MAZE_ENTRY_SIZE);
+					m2->walls|=WALL_NORTH;
+				}
+			}
+
+			if (value & WALL_NORTH) {
+				if (entry%MAZE_MAX_DIM) {
+					m2 = (maze_entry *) (game->mazedata+(entry-1)*MAZE_ENTRY_SIZE);
+					m2->walls|=WALL_SOUTH;
+				}
+			}
+
+			if (value & WALL_EAST) {
+				if (entry+MAZE_MAX_DIM<MAZE_ENTRY_COUNT) {
+					m2 = (maze_entry *) (game->mazedata+(entry+MAZE_MAX_DIM)*MAZE_ENTRY_SIZE);
 					m2->walls|=WALL_WEST;
 				}
 			}
 
 			if (value & WALL_WEST) {
-				if (entry%dims) {
-					m2 = (maze_entry *) (game->mazedata+(entry-1)*MAZE_ENTRY_SIZE);
+				if (entry>=MAZE_MAX_DIM) {
+					m2 = (maze_entry *) (game->mazedata+(entry-MAZE_MAX_DIM)*MAZE_ENTRY_SIZE);
 					m2->walls|=WALL_EAST;
 				}
 			}
 
-			if (value & WALL_NORTH) {
-				if (entry>=dims) {
-					m2 = (maze_entry *) (game->mazedata+(entry-dims)*MAZE_ENTRY_SIZE);
-					m2->walls|=WALL_SOUTH;
-				}
-			}
-
-			if (value & WALL_SOUTH) {
-				if (entry+dims<MAZE_ENTRY_COUNT) {
-					m2 = (maze_entry *) (game->mazedata+(entry+dims)*MAZE_ENTRY_SIZE);
-					m2->walls|=WALL_SOUTH;
-				}
-			}
-
 			break;
-		case ME_16:
-			m->unknown16 = value;
+		case ME_VISITED:
+			m->visited = value;
 			break;
 	}
 
@@ -9852,15 +9813,11 @@ static PyObject* GemRB_SetMazeData(PyObject* /*self*/, PyObject* args)
 		return AttributeError( GemRB_SetMazeData__doc );
 	}
 
-	Game *game = core->GetGame();
-	if (!game) {
-		return RuntimeError( "No game loaded!" );
-	}
+	GET_GAME();
 
 	if (!game->mazedata) {
 		return RuntimeError( "No maze set up!" );
 	}
-
 
 	maze_header *h = (maze_header *) (game->mazedata+MAZE_ENTRY_COUNT*MAZE_ENTRY_SIZE);
 	switch(entry) {
@@ -9908,8 +9865,106 @@ static PyObject* GemRB_SetMazeData(PyObject* /*self*/, PyObject* args)
 	return Py_None;
 }
 
+PyDoc_STRVAR( GemRB_GetMazeHeader__doc,
+"GetMazeHeader()=>dict\n\n"
+"Returns the Maze header of Planescape Torment savegames." );
+
+static PyObject* GemRB_GetMazeHeader(PyObject* /*self*/, PyObject* /*args*/)
+{
+	GET_GAME();
+
+	if (!game->mazedata) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	PyObject* dict = PyDict_New();
+	maze_header *h = (maze_header *) (game->mazedata+MAZE_ENTRY_COUNT*MAZE_ENTRY_SIZE);
+	PyDict_SetItemString(dict, "MazeX", PyInt_FromLong (h->maze_sizex));
+	PyDict_SetItemString(dict, "MazeY", PyInt_FromLong (h->maze_sizey));
+	PyDict_SetItemString(dict, "Pos1X", PyInt_FromLong (h->pos1x));
+	PyDict_SetItemString(dict, "Pos1Y", PyInt_FromLong (h->pos1y));
+	PyDict_SetItemString(dict, "Pos2X", PyInt_FromLong (h->pos2x));
+	PyDict_SetItemString(dict, "Pos2Y", PyInt_FromLong (h->pos2y));
+	PyDict_SetItemString(dict, "Pos3X", PyInt_FromLong (h->pos3x));
+	PyDict_SetItemString(dict, "Pos3Y", PyInt_FromLong (h->pos3y));
+	PyDict_SetItemString(dict, "Pos4X", PyInt_FromLong (h->pos4x));
+	PyDict_SetItemString(dict, "Pos4Y", PyInt_FromLong (h->pos4y));
+	PyDict_SetItemString(dict, "TrapCount", PyInt_FromLong (h->trapcount));
+	PyDict_SetItemString(dict, "Inited", PyInt_FromLong (h->initialized));
+	return dict;
+}
+
+PyDoc_STRVAR( GemRB_GetMazeEntry__doc,
+"GetMazeEntry(entry)=>dict\n\n"
+"Returns a Maze entry from Planescape Torment savegames. Entry must be 0-63." );
+
+static PyObject* GemRB_GetMazeEntry(PyObject* /*self*/, PyObject* args)
+{
+	int entry;
+
+	if (!PyArg_ParseTuple( args, "i", &entry )) {
+		return AttributeError( GemRB_GetMazeEntry__doc );
+	}
+
+	if (entry<0 || entry>=MAZE_ENTRY_COUNT) {
+		return AttributeError( GemRB_GetMazeEntry__doc );
+	}
+
+	GET_GAME();
+
+	if (!game->mazedata) {
+		return RuntimeError( "No maze set up!" );
+	}
+
+	PyObject* dict = PyDict_New();
+	maze_entry *m = (maze_entry *) (game->mazedata+entry*MAZE_ENTRY_SIZE);
+	PyDict_SetItemString(dict, "Override", PyInt_FromLong (m->override));
+	PyDict_SetItemString(dict, "Accessible", PyInt_FromLong (m->accessible));
+	PyDict_SetItemString(dict, "Valid", PyInt_FromLong (m->valid));
+	if (m->trapped) {
+		PyDict_SetItemString(dict, "Trapped", PyInt_FromLong (m->traptype));
+	} else {
+		PyDict_SetItemString(dict, "Trapped", PyInt_FromLong (-1));
+	}
+	PyDict_SetItemString(dict, "Walls", PyInt_FromLong (m->walls));
+	PyDict_SetItemString(dict, "Visited", PyInt_FromLong (m->visited));
+	return dict;
+}
+
+char gametype_hint[100];
+int gametype_hint_weight;
+
+PyDoc_STRVAR( GemRB_AddGameTypeHint__doc,
+"AddGameTypeHint(type, weight, flags=0)\n\n"
+"Asserts that GameType should be TYPE, with confidence WEIGHT. "
+"Original games should use WEIGHT <= 100, greater values are reserved for new games. "
+"FLAGS are not used at the moment.");
+
+static PyObject* GemRB_AddGameTypeHint(PyObject* /*self*/, PyObject* args)
+{
+	char* type;
+	int weight;
+	int flags = 0;
+
+	if (!PyArg_ParseTuple( args, "si|i", &type, &weight, &flags )) {
+		return AttributeError( GemRB_AddGameTypeHint__doc );
+	}
+
+	if (weight > gametype_hint_weight) {
+		gametype_hint_weight = weight;
+		strncpy(gametype_hint, type, sizeof(gametype_hint)-1);
+		// I assume the '\0' in the end of gametype_hint
+	}
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
 static PyMethodDef GemRBMethods[] = {
 	METHOD(ActOnPC, METH_VARARGS),
+	METHOD(AddGameTypeHint, METH_VARARGS),
 	METHOD(AddNewArea, METH_VARARGS),
 	METHOD(ApplyEffect, METH_VARARGS),
 	METHOD(ApplySpell, METH_VARARGS),
@@ -9986,6 +10041,8 @@ static PyMethodDef GemRBMethods[] = {
 	METHOD(GetJournalSize, METH_VARARGS),
 	METHOD(GetKnownSpell, METH_VARARGS),
 	METHOD(GetKnownSpellsCount, METH_VARARGS),
+	METHOD(GetMazeEntry, METH_VARARGS),
+	METHOD(GetMazeHeader, METH_NOARGS),
 	METHOD(GetMemorizableSpellsCount, METH_VARARGS),
 	METHOD(GetMemorizedSpell, METH_VARARGS),
 	METHOD(GetMemorizedSpellsCount, METH_VARARGS),
@@ -9999,13 +10056,12 @@ static PyMethodDef GemRBMethods[] = {
 	METHOD(GetPlayerScript, METH_VARARGS),
 	METHOD(GetPlayerSound, METH_VARARGS),
 	METHOD(GetPlayerString, METH_VARARGS),
+	METHOD(GetRumour, METH_VARARGS),
 	METHOD(GetSaveGames, METH_VARARGS),
 	METHOD(GetSelectedSize, METH_NOARGS),
 	METHOD(GetSelectedActors, METH_NOARGS),
 	METHOD(GetString, METH_VARARGS),
 	METHOD(GetSpellCastOn, METH_VARARGS),
-	METHOD(GetToken, METH_VARARGS),
-	METHOD(GetVar, METH_VARARGS),
 	METHOD(GetSlotType, METH_VARARGS),
 	METHOD(GetStore, METH_VARARGS),
 	METHOD(GetStoreDrink, METH_VARARGS),
@@ -10015,7 +10071,8 @@ static PyMethodDef GemRBMethods[] = {
 	METHOD(GetSlotItem, METH_VARARGS),
 	METHOD(GetSlots, METH_VARARGS),
 	METHOD(GetSystemVariable, METH_VARARGS),
-	METHOD(GetRumour, METH_VARARGS),
+	METHOD(GetToken, METH_VARARGS),
+	METHOD(GetVar, METH_VARARGS),
 	METHOD(HardEndPL, METH_NOARGS),
 	METHOD(HasResource, METH_VARARGS),
 	METHOD(HasSpecialItem, METH_VARARGS),
@@ -10058,7 +10115,11 @@ static PyMethodDef GemRBMethods[] = {
 	METHOD(SetGlobal, METH_VARARGS),
 	METHOD(SetInfoTextColor, METH_VARARGS),
 	METHOD(SetJournalEntry, METH_VARARGS),
+	METHOD(SetMapAnimation, METH_VARARGS),
+	METHOD(SetMapDoor, METH_VARARGS),
+	METHOD(SetMapExit, METH_VARARGS),
 	METHOD(SetMapnote, METH_VARARGS),
+	METHOD(SetMapRegion, METH_VARARGS),
 	METHOD(SetMasterScript, METH_VARARGS),
 	METHOD(SetMazeEntry, METH_VARARGS),
 	METHOD(SetMazeData, METH_VARARGS),
@@ -10236,6 +10297,26 @@ GUIScript::~GUIScript(void)
 	GUIAction[0]=UNINIT_IEDWORD;
 }
 
+/**
+ * Quote path for use in python strings.
+ * On windows also convert backslashes to forward slashes.
+ */
+char* QuotePath(char* tgt, const char* src)
+{
+	char *p = tgt;
+	char c;
+
+	do {
+		c = *src++;
+#ifdef WIN32
+		if (c == '\\') c = '/';
+#endif
+		if (c == '"' || c == '\\') *p++ = '\\';
+	} while (0 != (*p++ = c));
+	return tgt;
+}
+
+
 PyDoc_STRVAR( GemRB__doc,
 "Module exposing GemRB data and engine internals\n\n"
 "This module exposes to python GUIScripts GemRB engine data and internals."
@@ -10278,8 +10359,34 @@ bool GUIScript::Init(void)
 
 	char path[_MAX_PATH];
 	char path2[_MAX_PATH];
+	char quoted[_MAX_PATH];
 
 	PathJoin(path, core->GUIScriptsPath, "GUIScripts", NULL);
+
+	// Add generic script path early, so GameType detection works
+	sprintf( string, "sys.path.append(\"%s\")", QuotePath( quoted, path ));
+	if (PyRun_SimpleString( string ) == -1) {
+		printMessage( "GUIScript", string, RED );
+		return false;
+	}
+
+	sprintf( string, "import GemRB\n");
+	if (PyRun_SimpleString( "import GemRB" ) == -1) {
+		printMessage( "GUIScript", string, RED );
+		return false;
+	}
+
+	// FIXME: better would be to add GemRB.GetGamePath() or some such
+	sprintf( string, "GemRB.GamePath = \"%s\"", QuotePath( quoted, core->GamePath ));
+	if (PyRun_SimpleString( string ) == -1) {
+		printMessage( "GUIScript", string, RED );
+		return false;
+	}
+
+	// Detect GameType if it was set to auto
+	if (stricmp( core->GameType, "auto" ) == 0) {
+		Autodetect();
+	}
 
 	// use the iwd guiscripts for how, but leave its override
 	if (stricmp( core->GameType, "how" ) == 0) {
@@ -10288,38 +10395,13 @@ bool GUIScript::Init(void)
 		PathJoin(path2, path, core->GameType, NULL);
 	}
 
-#ifdef WIN32
-	char *p;
-
-	for (p = path; *p != 0; p++)
-	{
-		if (*p == '\\')
-			*p = '/';
-	}
-
-	for (p = path2; *p != 0; p++)
-	{
-		if (*p == '\\')
-			*p = '/';
-	}
-#endif
-
-	sprintf( string, "sys.path.append(\"%s\")", path2 );
+	// GameType-specific import path must have a higher priority than
+	//   the generic one, so insert it before it
+	sprintf( string, "sys.path.insert(-1, \"%s\")", QuotePath( quoted, path2 ));
 	if (PyRun_SimpleString( string ) == -1) {
 		printMessage( "GUIScript", string, RED );
 		return false;
 	}
-	sprintf( string, "sys.path.append(\"%s\")", path );
-	if (PyRun_SimpleString( string ) == -1) {
-		printMessage( "GUIScript", string, RED );
-		return false;
-	}
-	sprintf( string, "import GemRB\n");
-	if (PyRun_SimpleString( "import GemRB" ) == -1) {
-		printMessage( "GUIScript", string, RED );
-		return false;
-	}
-
 	sprintf( string, "GemRB.GameType = \"%s\"", core->GameType);
 	if (PyRun_SimpleString( string ) == -1) {
 		printMessage( "GUIScript", string, RED );
@@ -10368,6 +10450,47 @@ bool GUIScript::Init(void)
 	/* pGUIClasses is a borrowed reference */
 
 	return true;
+}
+
+bool GUIScript::Autodetect(void)
+{
+	printMessage( "GUIScript", "Detecting GameType: ", WHITE);
+
+	char path[_MAX_PATH];
+	PathJoin( path, core->GUIScriptsPath, "GUIScripts", NULL );
+	DirectoryIterator iter( path );
+	if (!iter)
+		return false;
+
+	gametype_hint[0] = '\0';
+	gametype_hint_weight = 0;
+
+	do {
+		const char *dirent = iter.GetName();
+		char module[_MAX_PATH];
+
+		//printf("DE: %s\n", dirent);
+		if (iter.IsDirectory() && dirent[0] != '.') {
+			// NOTE: these methods subtly differ in sys.path content, need for __init__.py files ...
+			// Method1:
+			PathJoin(module, core->GUIScriptsPath, "GUIScripts", dirent, "Autodetect.py", NULL);
+			ExecFile(module);
+			// Method2:
+			//strcpy( module, dirent );
+			//strcat( module, ".Autodetect");
+			//LoadScript(module);
+		}
+	} while (++iter);
+
+	if (gametype_hint[0]) {
+		printStatus(gametype_hint, GREEN);
+		strcpy(core->GameType, gametype_hint);
+		return true;
+	}
+	else {
+		printStatus("ERROR", LIGHT_RED);
+		return false;
+	}
 }
 
 bool GUIScript::LoadScript(const char* filename)

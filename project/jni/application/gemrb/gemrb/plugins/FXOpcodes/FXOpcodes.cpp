@@ -30,6 +30,7 @@
 #include "Game.h"
 #include "GameData.h"
 #include "Interface.h"
+#include "PolymorphCache.h" // fx_polymorph
 #include "Projectile.h" //needs for clearair
 #include "Spell.h" //needed for fx_cast_spell feedback
 #include "TileMap.h" //needs for knock!
@@ -38,7 +39,9 @@
 #include "GameScript/Matching.h" //needs for GetAllObjects
 #include "GUI/GameControl.h"
 #include "Scriptable/Actor.h"
-#include "PolymorphCache.h" // fx_polymorph
+#include "Scriptable/Container.h"
+#include "Scriptable/Door.h"
+#include "Scriptable/InfoPoint.h"
 #include "Scriptable/PCStatStruct.h" //fx_polymorph (action definitions)
 
 //FIXME: find a way to handle portrait icons better
@@ -366,7 +369,7 @@ int fx_protection_from_string (Scriptable* Owner, Actor* target, Effect* fx);//1
 int fx_explore_modifier (Scriptable* Owner, Actor* target, Effect* fx);//10c
 int fx_screenshake (Scriptable* Owner, Actor* target, Effect* fx);//10d
 int fx_unpause_caster (Scriptable* Owner, Actor* target, Effect* fx);//10e
-int fx_avatar_removal (Scriptable* Owner, Actor* target, Effect* fx);//10f
+int fx_summon_disable (Scriptable* Owner, Actor* target, Effect* fx);//10f
 int fx_apply_effect_repeat (Scriptable* Owner, Actor* target, Effect* fx);//110
 int fx_remove_projectile (Scriptable* Owner, Actor* target, Effect* fx);//111
 int fx_teleport_to_target (Scriptable* Owner, Actor* target, Effect* fx);//112
@@ -418,345 +421,345 @@ int fx_change_weather (Scriptable* Owner, Actor* target, Effect* fx);//13e   Cha
 int fx_unknown (Scriptable* Owner, Actor* target, Effect* fx);//???
 
 // FIXME: Make this an ordered list, so we could use bsearch!
-static EffectRef effectnames[] = {
-	{ "*Crash*", fx_crash, -1 },
-	{ "AcidResistanceModifier", fx_acid_resistance_modifier, -1 },
-	{ "ACVsCreatureType", fx_generic_effect, -1 }, //0xdb
-	{ "ACVsDamageTypeModifier", fx_ac_vs_damage_type_modifier, -1 },
-	{ "ACVsDamageTypeModifier2", fx_ac_vs_damage_type_modifier, -1 }, // used in IWD
-	{ "AidNonCumulative", fx_set_aid_state, -1 },
-	{ "AIIdentifierModifier", fx_ids_modifier, -1 },
-	{ "AlchemyModifier", fx_alchemy_modifier, -1 },
-	{ "Alignment:Change", fx_alignment_change, -1 },
-	{ "Alignment:Invert", fx_alignment_invert, -1 },
-	{ "AlwaysBackstab", fx_always_backstab_modifier, -1 },
-	{ "AnimationIDModifier", fx_animation_id_modifier, -1 },
-	{ "AnimationStateChange", fx_animation_stance, -1 },
-	{ "ApplyEffect", fx_apply_effect, -1 },
-	{ "ApplyEffectCurse", fx_apply_effect_curse, -1 },
-	{ "ApplyEffectItem", fx_apply_effect_item, -1 },
-	{ "ApplyEffectItemType", fx_apply_effect_item_type, -1 },
-	{ "ApplyEffectRepeat", fx_apply_effect_repeat, -1 },
-	{ "CutScene2", fx_cutscene2, -1 },
-	{ "AttackSpeedModifier", fx_attackspeed_modifier, -1 },
-	{ "AttacksPerRoundModifier", fx_attacks_per_round_modifier, -1 },
-	{ "AuraCleansingModifier", fx_auracleansing_modifier, -1 },
-	{ "AvatarRemoval", fx_avatar_removal, -1 }, //unknown
-	{ "AvatarRemovalModifier", fx_avatar_removal_modifier, -1 },
-	{ "BackstabModifier", fx_backstab_modifier, -1 },
-	{ "BerserkStage1Modifier", fx_berserkstage1_modifier, -1},
-	{ "BerserkStage2Modifier", fx_berserkstage2_modifier, -1},
-	{ "BlessNonCumulative", fx_set_bless_state, -1 },
-	{ "Bounce:School", fx_bounce_school, -1 },
-	{ "Bounce:SchoolDec", fx_bounce_school_dec, -1 },
-	{ "Bounce:SecondaryType", fx_bounce_secondary_type, -1 },
-	{ "Bounce:SecondaryTypeDec", fx_bounce_secondary_type_dec, -1 },
-	{ "Bounce:Spell", fx_bounce_spell, -1 },
-	{ "Bounce:SpellDec", fx_bounce_spell_dec, -1 },
-	{ "Bounce:SpellLevel", fx_bounce_spelllevel, -1},
-	{ "Bounce:SpellLevelDec", fx_bounce_spelllevel_dec, -1},
-	{ "Bounce:Opcode", fx_bounce_opcode, -1 },
-	{ "Bounce:Projectile", fx_bounce_projectile, -1 },
-	{ "CantUseItem", fx_generic_effect, -1 },
-	{ "CantUseItemType", fx_generic_effect, -1 },
-	{ "CanUseAnyItem", fx_can_use_any_item_modifier, -1 },
-	{ "CastFromList", fx_select_spell, -1 },
-	{ "CastingGlow", fx_casting_glow, -1 },
-	{ "CastingGlow2", fx_casting_glow, -1 }, //used in iwd
-	{ "CastingLevelModifier", fx_castinglevel_modifier, -1 },
-	{ "CastingSpeedModifier", fx_castingspeed_modifier, -1 },
-	{ "CastSpellOnCondition", fx_cast_spell_on_condition, -1 },
-	{ "ChangeBardSong", fx_change_bardsong, -1 },
-	{ "ChangeName", fx_change_name, -1 },
-	{ "ChangeWeather", fx_change_weather, -1 },
-	{ "ChantBadNonCumulative", fx_set_chantbad_state, -1 },
-	{ "ChantNonCumulative", fx_set_chant_state, -1 },
-	{ "ChaosShieldModifier", fx_chaos_shield_modifier, -1 },
-	{ "CharismaModifier", fx_charisma_modifier, -1 },
-	{ "CheckForBerserkModifier", fx_checkforberserk_modifier, -1},
-	{ "ColdResistanceModifier", fx_cold_resistance_modifier, -1 },
-	{ "Color:BriefRGB", fx_brief_rgb, -1},
-	{ "Color:GlowRGB", fx_glow_rgb, -1},
-	{ "Color:DarkenRGB", fx_darken_rgb, -1},
-	{ "Color:SetPalette", fx_set_color_gradient, -1 },
-	{ "Color:SetRGB", fx_set_color_rgb, -1 },
-	{ "Color:SetRGBGlobal", fx_set_color_rgb_global, -1 }, //08
-	{ "Color:PulseRGB", fx_set_color_pulse_rgb, -1 }, //9
-	{ "Color:PulseRGBGlobal", fx_set_color_pulse_rgb_global, -1 }, //9
-	{ "ConstitutionModifier", fx_constitution_modifier, -1 },
-	{ "ControlCreature", fx_set_charmed_state, -1 }, //0xf1 same as charm
-	{ "CreateContingency", fx_create_contingency, -1 },
-	{ "CriticalHitModifier", fx_critical_hit_modifier, -1 },
-	{ "CrushingResistanceModifier", fx_crushing_resistance_modifier, -1 },
-	{ "Cure:Berserk", fx_cure_berserk_state, -1 },
-	{ "Cure:Blind", fx_cure_blind_state, -1 },
-	{ "Cure:CasterHold", fx_unpause_caster, -1 },
-	{ "Cure:Confusion", fx_cure_confused_state, -1 },
-	{ "Cure:Deafness", fx_cure_deaf_state, -1 },
-	{ "Cure:Death", fx_cure_dead_state, -1 },
-	{ "Cure:Defrost", fx_cure_frozen_state, -1 },
-	{ "Cure:Disease", fx_cure_diseased_state, -1 },
-	{ "Cure:Feeblemind", fx_cure_feebleminded_state, -1 },
-	{ "Cure:Hold", fx_cure_hold_state, -1 },
-	{ "Cure:Imprisonment", fx_freedom, -1 },
-	{ "Cure:Infravision", fx_cure_infravision_state, -1 },
-	{ "Cure:Intoxication", fx_cure_intoxication, -1 }, //0xa4 (iwd2 has this working)
-	{ "Cure:Invisible", fx_cure_invisible_state, -1 }, //0x2f
-	{ "Cure:Invisible2", fx_cure_invisible_state, -1 }, //0x74
-	//{ "Cure:ImprovedInvisible", fx_cure_improved_invisible_state, -1 },
-	{ "Cure:LevelDrain", fx_cure_leveldrain, -1}, //restoration
-	{ "Cure:Nondetection", fx_cure_nondetection_state, -1 },
-	{ "Cure:Panic", fx_cure_panic_state, -1 },
-	{ "Cure:Petrification", fx_cure_petrified_state, -1 },
-	{ "Cure:Poison", fx_cure_poisoned_state, -1 },
-	{ "Cure:Sanctuary", fx_cure_sanctuary_state, -1 },
-	{ "Cure:Silence", fx_cure_silenced_state, -1 },
-	{ "Cure:Sleep", fx_cure_sleep_state, -1 },
-	{ "Cure:Stun", fx_cure_stun_state, -1 },
-	{ "CurrentHPModifier", fx_current_hp_modifier, -1 },
-	{ "Damage", fx_damage, -1 },
-	{ "DamageAnimation", fx_damage_animation, -1 },
-	{ "DamageBonusModifier", fx_damage_bonus_modifier, -1 },
-	{ "DamageLuckModifier", fx_damageluck_modifier, -1 },
-	{ "DamageVsCreature", fx_generic_effect, -1 },
-	{ "Death", fx_death, -1 },
-	{ "Death2", fx_death, -1 }, //(iwd2 effect)
-	{ "Death3", fx_death, -1 }, //(iwd2 effect too, Banish)
-	{ "DetectAlignment", fx_detect_alignment, -1 },
-	{ "DetectIllusionsModifier", fx_detect_illusion_modifier, -1 },
-	{ "DexterityModifier", fx_dexterity_modifier, -1 },
-	{ "DimensionDoor", fx_dimension_door, -1 },
-	{ "DisableButton", fx_disable_button, -1 }, //sets disable button flag
-	{ "DisableChunk", fx_disable_chunk_modifier, -1 },
-	{ "DisableOverlay", fx_disable_overlay_modifier, -1 },
-	{ "DisableCasting", fx_disable_spellcasting, -1 },
-	{ "Disintegrate", fx_disintegrate, -1 },
-	{ "DispelEffects", fx_dispel_effects, -1 },
-	{ "DispelSchool", fx_dispel_school, -1 },
-	{ "DispelSchoolOne", fx_dispel_school_one, -1 },
-	{ "DispelSecondaryType", fx_dispel_secondary_type, -1 },
-	{ "DispelSecondaryTypeOne", fx_dispel_secondary_type_one, -1 },
-	{ "DisplayString", fx_display_string, -1 },
-	{ "Dither", fx_dither, -1 },
-	{ "DontJumpModifier", fx_dontjump_modifier, -1 },
-	{ "DrainItems", fx_drain_items, -1 },
-	{ "DrainSpells", fx_drain_spells, -1 },
-	{ "DropWeapon", fx_drop_weapon, -1 },
-	{ "ElectricityResistanceModifier", fx_electricity_resistance_modifier, -1 },
-	{ "ExistanceDelayModifier", fx_existance_delay_modifier , -1 }, //unknown
-	{ "ExperienceModifier", fx_experience_modifier, -1 },
-	{ "ExploreModifier", fx_explore_modifier, -1 },
-	{ "FamiliarBond", fx_familiar_constitution_loss, -1 },
-	{ "FamiliarMarker", fx_familiar_marker, -1},
-	{ "Farsee", fx_farsee, -1},
-	{ "FatigueModifier", fx_fatigue_modifier, -1 },
-	{ "FindFamiliar", fx_find_familiar, -1 },
-	{ "FindTraps", fx_find_traps, -1 },
-	{ "FindTrapsModifier", fx_find_traps_modifier, -1 },
-	{ "FireResistanceModifier", fx_fire_resistance_modifier, -1 },
-	{ "FistDamageModifier", fx_fist_damage_modifier, -1 },
-	{ "FistHitModifier", fx_fist_to_hit_modifier, -1 },
-	{ "ForceSurgeModifier", fx_force_surge_modifier, -1 },
-	{ "ForceVisible", fx_force_visible, -1 }, //not invisible but improved invisible
-	{ "FreeAction", fx_cure_slow_state, -1},
-	{ "GenerateWish", fx_generate_wish, -1},
-	{ "GoldModifier", fx_gold_modifier, -1 },
-	{ "HideInShadowsModifier", fx_hide_in_shadows_modifier, -1},
-	{ "HLA", fx_generic_effect, -1},
-	{ "HolyNonCumulative", fx_set_holy_state, -1 },
-	{ "Icon:Disable", fx_disable_portrait_icon, -1 },
-	{ "Icon:Display", fx_display_portrait_icon, -1 },
-	{ "Icon:Remove", fx_remove_portrait_icon, -1 },
-	{ "Identify", fx_identify, -1 },
-	{ "IgnoreDialogPause", fx_ignore_dialogpause_modifier, -1 },
-	{ "IntelligenceModifier", fx_intelligence_modifier, -1 },
-	{ "IntoxicationModifier", fx_intoxication_modifier, -1 },
-	{ "InvisibleDetection", fx_see_invisible_modifier, -1 },
-	{ "Item:CreateDays", fx_create_item_days, -1 },
-	{ "Item:CreateInSlot", fx_create_item_in_slot, -1 },
-	{ "Item:CreateInventory", fx_create_inventory_item, -1 },
-	{ "Item:CreateMagic", fx_create_magic_item, -1 },
-	{ "Item:Equip", fx_equip_item, -1 }, //71
-	{ "Item:Remove", fx_remove_item, -1 }, //70
-	{ "Item:RemoveInventory", fx_remove_inventory_item, -1 },
-	{ "KillCreatureType", fx_kill_creature_type, -1 },
-	{ "LevelModifier", fx_level_modifier, -1 },
-	{ "LevelDrainModifier", fx_leveldrain_modifier, -1 },
-	{ "LoreModifier", fx_lore_modifier, -1 },
-	{ "LuckModifier", fx_luck_modifier, -1 },
-	{ "LuckCumulative", fx_luck_cumulative, -1 },
-	{ "LuckNonCumulative", fx_luck_non_cumulative, -1 },
-	{ "MagicalColdResistanceModifier", fx_magical_cold_resistance_modifier, -1 },
-	{ "MagicalFireResistanceModifier", fx_magical_fire_resistance_modifier, -1 },
-	{ "MagicalRest", fx_magical_rest, -1 },
-	{ "MagicDamageResistanceModifier", fx_magic_damage_resistance_modifier, -1 },
-	{ "MagicResistanceModifier", fx_magic_resistance_modifier, -1 },
-	{ "MassRaiseDead", fx_mass_raise_dead, -1 },
-	{ "MaximumHPModifier", fx_maximum_hp_modifier, -1 },
-	{ "Maze", fx_maze, -1},
-	{ "MeleeDamageModifier", fx_melee_damage_modifier, -1 },
-	{ "MeleeHitModifier", fx_melee_to_hit_modifier, -1 },
-	{ "MinimumHPModifier", fx_minimum_hp_modifier, -1 },
-	{ "MiscastMagicModifier", fx_miscast_magic_modifier, -1 },
-	{ "MissileDamageModifier", fx_missile_damage_modifier, -1 },
-	{ "MissileHitModifier", fx_missile_to_hit_modifier, -1 },
-	{ "MissilesResistanceModifier", fx_missiles_resistance_modifier, -1 },
-	{ "MirrorImage", fx_mirror_image, -1 },
-	{ "MirrorImageModifier", fx_mirror_image_modifier, -1 },
-	{ "ModifyGlobalVariable", fx_modify_global_variable, -1 },
-	{ "ModifyLocalVariable", fx_modify_local_variable, -1 },
-	{ "MonsterSummoning", fx_monster_summoning, -1 },
-	{ "MoraleBreakModifier", fx_morale_break_modifier, -1 },
-	{ "MoraleModifier", fx_morale_modifier, -1 },
-	{ "MovementRateModifier", fx_movement_modifier, -1 }, //fast (7e)
-	{ "MovementRateModifier2", fx_movement_modifier, -1 },//slow (b0)
-	{ "MovementRateModifier3", fx_movement_modifier, -1 },//forced (IWD - 10a)
-	{ "MovementRateModifier4", fx_movement_modifier, -1 },//slow (IWD2 - 1b9)
-	{ "MoveToArea", fx_move_to_area, -1 }, //0xba
-	{ "NoCircleState", fx_no_circle_state, -1 },
-	{ "NPCBump", fx_npc_bump, -1 },
-	{ "OffscreenAIModifier", fx_offscreenai_modifier, -1 },
-	{ "OffhandHitModifier", fx_left_to_hit_modifier, -1 },
-	{ "OpenLocksModifier", fx_open_locks_modifier, -1 },
-	{ "Overlay:Entangle", fx_set_entangle_state, -1 },
-	{ "Overlay:Grease", fx_set_grease_state, -1 },
-	{ "Overlay:MinorGlobe", fx_set_minorglobe_state, -1 },
-	{ "Overlay:Sanctuary", fx_set_sanctuary_state, -1 },
-	{ "Overlay:ShieldGlobe", fx_set_shieldglobe_state, -1 },
-	{ "Overlay:Web", fx_set_web_state, -1 },
-	{ "PauseTarget", fx_pause_target, -1 }, //also known as casterhold
-	{ "PickPocketsModifier", fx_pick_pockets_modifier, -1 },
-	{ "PiercingResistanceModifier", fx_piercing_resistance_modifier, -1 },
-	{ "PlayMovie", fx_play_movie, -1 },
-	{ "PlaySound", fx_playsound, -1 },
-	{ "PlayVisualEffect", fx_play_visual_effect, -1 },
-	{ "PoisonResistanceModifier", fx_poison_resistance_modifier, -1 },
-	{ "Polymorph", fx_polymorph, -1},
-	{ "PortraitChange", fx_portrait_change, -1 },
-	{ "PowerWordKill", fx_power_word_kill, -1 },
-	{ "PowerWordSleep", fx_power_word_sleep, -1 },
-	{ "PowerWordStun", fx_power_word_stun, -1 },
-	{ "PriestSpellSlotsModifier", fx_bonus_priest_spells, -1 },
-	{ "Proficiency", fx_proficiency, -1 },
-//	{ "Protection:Animation", fx_protection_from_animation, -1 },
-	{ "Protection:Animation", fx_generic_effect, -1 },
-	{ "Protection:Backstab", fx_no_backstab_modifier, -1 },
-	{ "Protection:Creature", fx_generic_effect, -1 },
-	{ "Protection:Opcode", fx_protection_opcode, -1 },
-	{ "Protection:Opcode2", fx_protection_opcode, -1 },
-	{ "Protection:Projectile",fx_protection_from_projectile, -1},
-	{ "Protection:School",fx_generic_effect,-1},//overlay?
-	{ "Protection:SchoolDec",fx_protection_school_dec,-1},//overlay?
-	{ "Protection:SecondaryType",fx_protection_secondary_type,-1},//overlay?
-	{ "Protection:SecondaryTypeDec",fx_protection_secondary_type_dec,-1},//overlay?
-	{ "Protection:Spell",fx_resist_spell,-1},//overlay?
-	{ "Protection:SpellDec",fx_resist_spell_dec,-1},//overlay?
-	{ "Protection:SpellLevel",fx_protection_spelllevel,-1},//overlay?
-	{ "Protection:SpellLevelDec",fx_protection_spelllevel_dec,-1},//overlay?
-	{ "Protection:String", fx_generic_effect, -1 },
-	{ "Protection:Tracking", fx_protection_from_tracking, -1 },
-	{ "Protection:Turn", fx_protection_from_turn, -1},
-	{ "Protection:Weapons", fx_immune_to_weapon, -1},
-	{ "PuppetMarker", fx_puppet_marker, -1},
-	{ "ProjectImage", fx_puppet_master, -1},
-	{ "Reveal:Area", fx_reveal_area, -1 },
-	{ "Reveal:Creatures", fx_reveal_creatures, -1 },
-	{ "Reveal:Magic", fx_reveal_magic, -1 },
-	{ "Reveal:Tracks", fx_reveal_tracks, -1 },
-	{ "RemoveCurse", fx_remove_curse, -1 },
-	{ "RemoveImmunity", fx_remove_immunity, -1 },
-	{ "RemoveMapNote", fx_remove_map_note, -1 },
-	{ "RemoveProjectile", fx_remove_projectile, -1 }, //removes effects from actor and area
-	{ "RenableButton", fx_renable_button, -1 }, //removes disable button flag
-	{ "RemoveCreature", fx_remove_creature, -1 },
-	{ "ReplaceCreature", fx_replace_creature, -1 },
-	{ "ReputationModifier", fx_reputation_modifier, -1 },
-	{ "RestoreSpells", fx_restore_spell_level, -1 },
-	{ "RightHitModifier", fx_right_to_hit_modifier, -1 },
-	{ "SaveVsBreathModifier", fx_save_vs_breath_modifier, -1 },
-	{ "SaveVsDeathModifier", fx_save_vs_death_modifier, -1 },
-	{ "SaveVsPolyModifier", fx_save_vs_poly_modifier, -1 },
-	{ "SaveVsSpellsModifier", fx_save_vs_spell_modifier, -1 },
-	{ "SaveVsWandsModifier", fx_save_vs_wands_modifier, -1 },
-	{ "ScreenShake", fx_screenshake, -1 },
-	{ "ScriptingState", fx_scripting_state, -1 },
-	{ "Sequencer:Activate", fx_activate_spell_sequencer, -1 },
-	{ "Sequencer:Create", fx_create_spell_sequencer, -1 },
-	{ "Sequencer:Store", fx_store_spell_sequencer, -1 },
-	{ "SetAIScript", fx_set_ai_script, -1 },
-	{ "SetMapNote", fx_set_map_note, -1 },
-	{ "SetMeleeEffect", fx_generic_effect, -1 },
-	{ "SetRangedEffect", fx_generic_effect, -1 },
-	{ "SetTrap", fx_set_area_effect, -1 },
-	{ "SetTrapsModifier", fx_set_traps_modifier, -1 },
-	{ "SexModifier", fx_sex_modifier, -1 },
-	{ "SlashingResistanceModifier", fx_slashing_resistance_modifier, -1 },
-	{ "Sparkle", fx_sparkle, -1 },
-	{ "SpellDurationModifier", fx_spell_duration_modifier, -1 },
-	{ "Spell:Add", fx_add_innate, -1 },
-	{ "Spell:Cast", fx_cast_spell, -1 },
-	{ "Spell:CastPoint", fx_cast_spell_point, -1 },
-	{ "Spell:Learn", fx_learn_spell, -1 },
-	{ "Spell:Remove", fx_remove_spell, -1 },
-	{ "Spelltrap",fx_spelltrap , -1 }, //overlay: spmagglo
-	{ "State:Berserk", fx_set_berserk_state, -1 },
-	{ "State:Blind", fx_set_blind_state, -1 },
-	{ "State:Blur", fx_set_blur_state, -1 },
-	{ "State:Charmed", fx_set_charmed_state, -1 }, //0x05
-	{ "State:Confused", fx_set_confused_state, -1 },
-	{ "State:Deafness", fx_set_deaf_state, -1 },
-	{ "State:DeafnessIWD2", fx_set_deaf_state_iwd2, -1 }, //this is a modified version
-	{ "State:Diseased", fx_set_diseased_state, -1 },
-	{ "State:Feeblemind", fx_set_feebleminded_state, -1 },
-	{ "State:Hasted", fx_set_hasted_state, -1 },
-	{ "State:Haste2", fx_set_hasted_state, -1 },
-	{ "State:Hold", fx_hold_creature, -1 }, //175 (doesn't work in original iwd2)
-	{ "State:Hold2", fx_hold_creature, -1 },//185 (doesn't work in original iwd2)
-	{ "State:Hold3", fx_hold_creature, -1 },//109 iwd2
-	{ "State:HoldNoIcon", fx_hold_creature_no_icon, -1 }, //109
-	{ "State:HoldNoIcon2", fx_hold_creature_no_icon, -1 }, //0xfb (iwd/iwd2)
-	{ "State:HoldNoIcon3", fx_hold_creature_no_icon, -1 }, //0x1a8 (iwd2)
-	{ "State:Imprisonment", fx_imprisonment, -1 },
-	{ "State:Infravision", fx_set_infravision_state, -1 },
-	{ "State:Invisible", fx_set_invisible_state, -1 }, //both invis or improved invis
-	{ "State:Nondetection", fx_set_nondetection_state, -1 },
-	{ "State:Panic", fx_set_panic_state, -1 },
-	{ "State:Petrification", fx_set_petrified_state, -1 },
-	{ "State:Poisoned", fx_set_poisoned_state, -1 },
-	{ "State:Regenerating", fx_set_regenerating_state, -1 },
-	{ "State:Silenced", fx_set_silenced_state, -1 },
-	{ "State:Helpless", fx_set_unconscious_state, -1 },
-	{ "State:Sleep", fx_set_unconscious_state, -1},
-	{ "State:Slowed", fx_set_slowed_state, -1 },
-	{ "State:Stun", fx_set_stun_state, -1 },
-	{ "StealthModifier", fx_stealth_modifier, -1 },
-	{ "StoneSkinModifier", fx_stoneskin_modifier, -1 },
-	{ "StoneSkin2Modifier", fx_golem_stoneskin_modifier, -1 },
-	{ "StrengthModifier", fx_strength_modifier, -1 },
-	{ "StrengthBonusModifier", fx_strength_bonus_modifier, -1 },
-	{ "SummonCreature", fx_summon_creature, -1 },
-	{ "RandomTeleport", fx_teleport_field, -1 },
-	{ "TeleportToTarget", fx_teleport_to_target, -1 },
-	{ "TimelessState", fx_timeless_modifier, -1 },
-	{ "Timestop", fx_timestop, -1},
-	{ "TitleModifier", fx_title_modifier, -1 },
-	{ "ToHitModifier", fx_to_hit_modifier, -1 },
-	{ "ToHitBonusModifier", fx_to_hit_bonus_modifier, -1 },
-	{ "ToHitVsCreature", fx_generic_effect, -1 },
-	{ "TrackingModifier", fx_tracking_modifier, -1 },
-	{ "TransparencyModifier", fx_transparency_modifier, -1 },
-	{ "Unknown", fx_unknown, -1},
-	{ "Unlock", fx_knock, -1 }, //open doors/containers
-	{ "UnsummonCreature", fx_unsummon_creature, -1 },
-	{ "Variable:StoreLocalVariable", fx_local_variable, -1 },
-	{ "VisualAnimationEffect", fx_visual_animation_effect, -1 }, //unknown
-	{ "VisualRangeModifier", fx_visual_range_modifier, -1 },
-	{ "VisualSpellHit", fx_visual_spell_hit, -1 },
-	{ "WildSurgeModifier", fx_wild_surge_modifier, -1 },
-	{ "WingBuffet", fx_wing_buffet, -1 },
-	{ "WisdomModifier", fx_wisdom_modifier, -1 },
-	{ "WizardSpellSlotsModifier", fx_bonus_wizard_spells, -1 },
-	{ NULL, NULL, 0 },
+static EffectDesc effectnames[] = {
+	{ "*Crash*", fx_crash, EFFECT_NO_ACTOR, -1 },
+	{ "AcidResistanceModifier", fx_acid_resistance_modifier, 0, -1 },
+	{ "ACVsCreatureType", fx_generic_effect, 0, -1 }, //0xdb
+	{ "ACVsDamageTypeModifier", fx_ac_vs_damage_type_modifier, 0, -1 },
+	{ "ACVsDamageTypeModifier2", fx_ac_vs_damage_type_modifier, 0, -1 }, // used in IWD
+	{ "AidNonCumulative", fx_set_aid_state, 0, -1 },
+	{ "AIIdentifierModifier", fx_ids_modifier, 0, -1 },
+	{ "AlchemyModifier", fx_alchemy_modifier, 0, -1 },
+	{ "Alignment:Change", fx_alignment_change, 0, -1 },
+	{ "Alignment:Invert", fx_alignment_invert, 0, -1 },
+	{ "AlwaysBackstab", fx_always_backstab_modifier, 0, -1 },
+	{ "AnimationIDModifier", fx_animation_id_modifier, 0, -1 },
+	{ "AnimationStateChange", fx_animation_stance, 0, -1 },
+	{ "ApplyEffect", fx_apply_effect, 0, -1 },
+	{ "ApplyEffectCurse", fx_apply_effect_curse, 0, -1 },
+	{ "ApplyEffectItem", fx_apply_effect_item, 0, -1 },
+	{ "ApplyEffectItemType", fx_apply_effect_item_type, 0, -1 },
+	{ "ApplyEffectRepeat", fx_apply_effect_repeat, 0, -1 },
+	{ "CutScene2", fx_cutscene2, EFFECT_NO_ACTOR, -1 },
+	{ "AttackSpeedModifier", fx_attackspeed_modifier, 0, -1 },
+	{ "AttacksPerRoundModifier", fx_attacks_per_round_modifier, 0, -1 },
+	{ "AuraCleansingModifier", fx_auracleansing_modifier, 0, -1 },
+	{ "SummonDisable", fx_summon_disable, 0, -1 }, //unknown
+	{ "AvatarRemovalModifier", fx_avatar_removal_modifier, 0, -1 },
+	{ "BackstabModifier", fx_backstab_modifier, 0, -1 },
+	{ "BerserkStage1Modifier", fx_berserkstage1_modifier, 0, -1 },
+	{ "BerserkStage2Modifier", fx_berserkstage2_modifier, 0, -1 },
+	{ "BlessNonCumulative", fx_set_bless_state, 0, -1 },
+	{ "Bounce:School", fx_bounce_school, 0, -1 },
+	{ "Bounce:SchoolDec", fx_bounce_school_dec, 0, -1 },
+	{ "Bounce:SecondaryType", fx_bounce_secondary_type, 0, -1 },
+	{ "Bounce:SecondaryTypeDec", fx_bounce_secondary_type_dec, 0, -1 },
+	{ "Bounce:Spell", fx_bounce_spell, 0, -1 },
+	{ "Bounce:SpellDec", fx_bounce_spell_dec, 0, -1 },
+	{ "Bounce:SpellLevel", fx_bounce_spelllevel, 0, -1 },
+	{ "Bounce:SpellLevelDec", fx_bounce_spelllevel_dec, 0, -1 },
+	{ "Bounce:Opcode", fx_bounce_opcode, 0, -1 },
+	{ "Bounce:Projectile", fx_bounce_projectile, 0, -1 },
+	{ "CantUseItem", fx_generic_effect, EFFECT_NO_ACTOR, -1 },
+	{ "CantUseItemType", fx_generic_effect, 0, -1 },
+	{ "CanUseAnyItem", fx_can_use_any_item_modifier, 0, -1 },
+	{ "CastFromList", fx_select_spell, 0, -1 },
+	{ "CastingGlow", fx_casting_glow, 0, -1 },
+	{ "CastingGlow2", fx_casting_glow, 0, -1 }, //used in iwd
+	{ "CastingLevelModifier", fx_castinglevel_modifier, 0, -1 },
+	{ "CastingSpeedModifier", fx_castingspeed_modifier, 0, -1 },
+	{ "CastSpellOnCondition", fx_cast_spell_on_condition, 0, -1 },
+	{ "ChangeBardSong", fx_change_bardsong, 0, -1 },
+	{ "ChangeName", fx_change_name, 0, -1 },
+	{ "ChangeWeather", fx_change_weather, EFFECT_NO_ACTOR, -1 },
+	{ "ChantBadNonCumulative", fx_set_chantbad_state, 0, -1 },
+	{ "ChantNonCumulative", fx_set_chant_state, 0, -1 },
+	{ "ChaosShieldModifier", fx_chaos_shield_modifier, 0, -1 },
+	{ "CharismaModifier", fx_charisma_modifier, 0, -1 },
+	{ "CheckForBerserkModifier", fx_checkforberserk_modifier, 0, -1 },
+	{ "ColdResistanceModifier", fx_cold_resistance_modifier, 0, -1 },
+	{ "Color:BriefRGB", fx_brief_rgb, 0, -1 },
+	{ "Color:GlowRGB", fx_glow_rgb, 0, -1 },
+	{ "Color:DarkenRGB", fx_darken_rgb, 0, -1 },
+	{ "Color:SetPalette", fx_set_color_gradient, 0, -1 },
+	{ "Color:SetRGB", fx_set_color_rgb, 0, -1 },
+	{ "Color:SetRGBGlobal", fx_set_color_rgb_global, 0, -1 }, //08
+	{ "Color:PulseRGB", fx_set_color_pulse_rgb, 0, -1 }, //9
+	{ "Color:PulseRGBGlobal", fx_set_color_pulse_rgb_global, 0, -1 }, //9
+	{ "ConstitutionModifier", fx_constitution_modifier, 0, -1 },
+	{ "ControlCreature", fx_set_charmed_state, 0, -1 }, //0xf1 same as charm
+	{ "CreateContingency", fx_create_contingency, 0, -1 },
+	{ "CriticalHitModifier", fx_critical_hit_modifier, 0, -1 },
+	{ "CrushingResistanceModifier", fx_crushing_resistance_modifier, 0, -1 },
+	{ "Cure:Berserk", fx_cure_berserk_state, 0, -1 },
+	{ "Cure:Blind", fx_cure_blind_state, 0, -1 },
+	{ "Cure:CasterHold", fx_unpause_caster, 0, -1 },
+	{ "Cure:Confusion", fx_cure_confused_state, 0, -1 },
+	{ "Cure:Deafness", fx_cure_deaf_state, 0, -1 },
+	{ "Cure:Death", fx_cure_dead_state, 0, -1 },
+	{ "Cure:Defrost", fx_cure_frozen_state, 0, -1 },
+	{ "Cure:Disease", fx_cure_diseased_state, 0, -1 },
+	{ "Cure:Feeblemind", fx_cure_feebleminded_state, 0, -1 },
+	{ "Cure:Hold", fx_cure_hold_state, 0, -1 },
+	{ "Cure:Imprisonment", fx_freedom, 0, -1 },
+	{ "Cure:Infravision", fx_cure_infravision_state, 0, -1 },
+	{ "Cure:Intoxication", fx_cure_intoxication, 0, -1 }, //0xa4 (iwd2 has this working)
+	{ "Cure:Invisible", fx_cure_invisible_state, 0, -1 }, //0x2f
+	{ "Cure:Invisible2", fx_cure_invisible_state, 0, -1 }, //0x74
+	//{ "Cure:ImprovedInvisible", fx_cure_improved_invisible_state, 0, -1 },
+	{ "Cure:LevelDrain", fx_cure_leveldrain, 0, -1 }, //restoration
+	{ "Cure:Nondetection", fx_cure_nondetection_state, 0, -1 },
+	{ "Cure:Panic", fx_cure_panic_state, 0, -1 },
+	{ "Cure:Petrification", fx_cure_petrified_state, 0, -1 },
+	{ "Cure:Poison", fx_cure_poisoned_state, 0, -1 },
+	{ "Cure:Sanctuary", fx_cure_sanctuary_state, 0, -1 },
+	{ "Cure:Silence", fx_cure_silenced_state, 0, -1 },
+	{ "Cure:Sleep", fx_cure_sleep_state, 0, -1 },
+	{ "Cure:Stun", fx_cure_stun_state, 0, -1 },
+	{ "CurrentHPModifier", fx_current_hp_modifier, EFFECT_DICED, -1 },
+	{ "Damage", fx_damage, EFFECT_DICED, -1 },
+	{ "DamageAnimation", fx_damage_animation, 0, -1 },
+	{ "DamageBonusModifier", fx_damage_bonus_modifier, 0, -1 },
+	{ "DamageLuckModifier", fx_damageluck_modifier, 0, -1 },
+	{ "DamageVsCreature", fx_generic_effect, 0, -1 },
+	{ "Death", fx_death, 0, -1 },
+	{ "Death2", fx_death, 0, -1 }, //(iwd2 effect)
+	{ "Death3", fx_death, 0, -1 }, //(iwd2 effect too, Banish)
+	{ "DetectAlignment", fx_detect_alignment, 0, -1 },
+	{ "DetectIllusionsModifier", fx_detect_illusion_modifier, 0, -1 },
+	{ "DexterityModifier", fx_dexterity_modifier, 0, -1 },
+	{ "DimensionDoor", fx_dimension_door, 0, -1 },
+	{ "DisableButton", fx_disable_button, 0, -1 }, //sets disable button flag
+	{ "DisableChunk", fx_disable_chunk_modifier, 0, -1 },
+	{ "DisableOverlay", fx_disable_overlay_modifier, 0, -1 },
+	{ "DisableCasting", fx_disable_spellcasting, 0, -1 },
+	{ "Disintegrate", fx_disintegrate, 0, -1 },
+	{ "DispelEffects", fx_dispel_effects, 0, -1 },
+	{ "DispelSchool", fx_dispel_school, 0, -1 },
+	{ "DispelSchoolOne", fx_dispel_school_one, 0, -1 },
+	{ "DispelSecondaryType", fx_dispel_secondary_type, 0, -1 },
+	{ "DispelSecondaryTypeOne", fx_dispel_secondary_type_one, 0, -1 },
+	{ "DisplayString", fx_display_string, 0, -1 },
+	{ "Dither", fx_dither, 0, -1 },
+	{ "DontJumpModifier", fx_dontjump_modifier, 0, -1 },
+	{ "DrainItems", fx_drain_items, 0, -1 },
+	{ "DrainSpells", fx_drain_spells, 0, -1 },
+	{ "DropWeapon", fx_drop_weapon, 0, -1 },
+	{ "ElectricityResistanceModifier", fx_electricity_resistance_modifier, 0, -1 },
+	{ "ExistanceDelayModifier", fx_existance_delay_modifier , 0, -1 }, //unknown
+	{ "ExperienceModifier", fx_experience_modifier, 0, -1 },
+	{ "ExploreModifier", fx_explore_modifier, 0, -1 },
+	{ "FamiliarBond", fx_familiar_constitution_loss, 0, -1 },
+	{ "FamiliarMarker", fx_familiar_marker, 0, -1 },
+	{ "Farsee", fx_farsee, 0, -1 },
+	{ "FatigueModifier", fx_fatigue_modifier, 0, -1 },
+	{ "FindFamiliar", fx_find_familiar, 0, -1 },
+	{ "FindTraps", fx_find_traps, 0, -1 },
+	{ "FindTrapsModifier", fx_find_traps_modifier, 0, -1 },
+	{ "FireResistanceModifier", fx_fire_resistance_modifier, 0, -1 },
+	{ "FistDamageModifier", fx_fist_damage_modifier, 0, -1 },
+	{ "FistHitModifier", fx_fist_to_hit_modifier, 0, -1 },
+	{ "ForceSurgeModifier", fx_force_surge_modifier, 0, -1 },
+	{ "ForceVisible", fx_force_visible, 0, -1 }, //not invisible but improved invisible
+	{ "FreeAction", fx_cure_slow_state, 0, -1 },
+	{ "GenerateWish", fx_generate_wish, 0, -1 },
+	{ "GoldModifier", fx_gold_modifier, 0, -1 },
+	{ "HideInShadowsModifier", fx_hide_in_shadows_modifier, 0, -1 },
+	{ "HLA", fx_generic_effect, 0, -1 },
+	{ "HolyNonCumulative", fx_set_holy_state, 0, -1 },
+	{ "Icon:Disable", fx_disable_portrait_icon, 0, -1 },
+	{ "Icon:Display", fx_display_portrait_icon, 0, -1 },
+	{ "Icon:Remove", fx_remove_portrait_icon, 0, -1 },
+	{ "Identify", fx_identify, 0, -1 },
+	{ "IgnoreDialogPause", fx_ignore_dialogpause_modifier, 0, -1 },
+	{ "IntelligenceModifier", fx_intelligence_modifier, 0, -1 },
+	{ "IntoxicationModifier", fx_intoxication_modifier, 0, -1 },
+	{ "InvisibleDetection", fx_see_invisible_modifier, 0, -1 },
+	{ "Item:CreateDays", fx_create_item_days, 0, -1 },
+	{ "Item:CreateInSlot", fx_create_item_in_slot, 0, -1 },
+	{ "Item:CreateInventory", fx_create_inventory_item, 0, -1 },
+	{ "Item:CreateMagic", fx_create_magic_item, 0, -1 },
+	{ "Item:Equip", fx_equip_item, 0, -1 }, //71
+	{ "Item:Remove", fx_remove_item, 0, -1 }, //70
+	{ "Item:RemoveInventory", fx_remove_inventory_item, 0, -1 },
+	{ "KillCreatureType", fx_kill_creature_type, 0, -1 },
+	{ "LevelModifier", fx_level_modifier, 0, -1 },
+	{ "LevelDrainModifier", fx_leveldrain_modifier, 0, -1 },
+	{ "LoreModifier", fx_lore_modifier, 0, -1 },
+	{ "LuckModifier", fx_luck_modifier, 0, -1 },
+	{ "LuckCumulative", fx_luck_cumulative, 0, -1 },
+	{ "LuckNonCumulative", fx_luck_non_cumulative, 0, -1 },
+	{ "MagicalColdResistanceModifier", fx_magical_cold_resistance_modifier, 0, -1 },
+	{ "MagicalFireResistanceModifier", fx_magical_fire_resistance_modifier, 0, -1 },
+	{ "MagicalRest", fx_magical_rest, 0, -1 },
+	{ "MagicDamageResistanceModifier", fx_magic_damage_resistance_modifier, 0, -1 },
+	{ "MagicResistanceModifier", fx_magic_resistance_modifier, 0, -1 },
+	{ "MassRaiseDead", fx_mass_raise_dead, EFFECT_NO_ACTOR, -1 },
+	{ "MaximumHPModifier", fx_maximum_hp_modifier, EFFECT_DICED, -1 },
+	{ "Maze", fx_maze, 0, -1 },
+	{ "MeleeDamageModifier", fx_melee_damage_modifier, 0, -1 },
+	{ "MeleeHitModifier", fx_melee_to_hit_modifier, 0, -1 },
+	{ "MinimumHPModifier", fx_minimum_hp_modifier, 0, -1 },
+	{ "MiscastMagicModifier", fx_miscast_magic_modifier, 0, -1 },
+	{ "MissileDamageModifier", fx_missile_damage_modifier, 0, -1 },
+	{ "MissileHitModifier", fx_missile_to_hit_modifier, 0, -1 },
+	{ "MissilesResistanceModifier", fx_missiles_resistance_modifier, 0, -1 },
+	{ "MirrorImage", fx_mirror_image, 0, -1 },
+	{ "MirrorImageModifier", fx_mirror_image_modifier, 0, -1 },
+	{ "ModifyGlobalVariable", fx_modify_global_variable, EFFECT_NO_ACTOR, -1 },
+	{ "ModifyLocalVariable", fx_modify_local_variable, 0, -1 },
+	{ "MonsterSummoning", fx_monster_summoning, EFFECT_NO_ACTOR, -1 },
+	{ "MoraleBreakModifier", fx_morale_break_modifier, 0, -1 },
+	{ "MoraleModifier", fx_morale_modifier, 0, -1 },
+	{ "MovementRateModifier", fx_movement_modifier, 0, -1 }, //fast (7e)
+	{ "MovementRateModifier2", fx_movement_modifier, 0, -1 },//slow (b0)
+	{ "MovementRateModifier3", fx_movement_modifier, 0, -1 },//forced (IWD - 10a)
+	{ "MovementRateModifier4", fx_movement_modifier, 0, -1 },//slow (IWD2 - 1b9)
+	{ "MoveToArea", fx_move_to_area, 0, -1 }, //0xba
+	{ "NoCircleState", fx_no_circle_state, 0, -1 },
+	{ "NPCBump", fx_npc_bump, 0, -1 },
+	{ "OffscreenAIModifier", fx_offscreenai_modifier, 0, -1 },
+	{ "OffhandHitModifier", fx_left_to_hit_modifier, 0, -1 },
+	{ "OpenLocksModifier", fx_open_locks_modifier, 0, -1 },
+	{ "Overlay:Entangle", fx_set_entangle_state, 0, -1 },
+	{ "Overlay:Grease", fx_set_grease_state, 0, -1 },
+	{ "Overlay:MinorGlobe", fx_set_minorglobe_state, 0, -1 },
+	{ "Overlay:Sanctuary", fx_set_sanctuary_state, 0, -1 },
+	{ "Overlay:ShieldGlobe", fx_set_shieldglobe_state, 0, -1 },
+	{ "Overlay:Web", fx_set_web_state, 0, -1 },
+	{ "PauseTarget", fx_pause_target, 0, -1 }, //also known as casterhold
+	{ "PickPocketsModifier", fx_pick_pockets_modifier, 0, -1 },
+	{ "PiercingResistanceModifier", fx_piercing_resistance_modifier, 0, -1 },
+	{ "PlayMovie", fx_play_movie, EFFECT_NO_ACTOR, -1 },
+	{ "PlaySound", fx_playsound, EFFECT_NO_ACTOR, -1 },
+	{ "PlayVisualEffect", fx_play_visual_effect, 0, -1 },
+	{ "PoisonResistanceModifier", fx_poison_resistance_modifier, 0, -1 },
+	{ "Polymorph", fx_polymorph, 0, -1 },
+	{ "PortraitChange", fx_portrait_change, 0, -1 },
+	{ "PowerWordKill", fx_power_word_kill, 0, -1 },
+	{ "PowerWordSleep", fx_power_word_sleep, 0, -1 },
+	{ "PowerWordStun", fx_power_word_stun, 0, -1 },
+	{ "PriestSpellSlotsModifier", fx_bonus_priest_spells, 0, -1 },
+	{ "Proficiency", fx_proficiency, 0, -1 },
+//	{ "Protection:Animation", fx_protection_from_animation, 0, -1 },
+	{ "Protection:Animation", fx_generic_effect, 0, -1 },
+	{ "Protection:Backstab", fx_no_backstab_modifier, 0, -1 },
+	{ "Protection:Creature", fx_generic_effect, 0, -1 },
+	{ "Protection:Opcode", fx_protection_opcode, 0, -1 },
+	{ "Protection:Opcode2", fx_protection_opcode, 0, -1 },
+	{ "Protection:Projectile",fx_protection_from_projectile, 0, -1 },
+	{ "Protection:School",fx_generic_effect, 0, -1 },//overlay?
+	{ "Protection:SchoolDec",fx_protection_school_dec, 0, -1 },//overlay?
+	{ "Protection:SecondaryType",fx_protection_secondary_type, 0, -1 },//overlay?
+	{ "Protection:SecondaryTypeDec",fx_protection_secondary_type_dec, 0, -1 },//overlay?
+	{ "Protection:Spell",fx_resist_spell, 0, -1 },//overlay?
+	{ "Protection:SpellDec",fx_resist_spell_dec, 0, -1 },//overlay?
+	{ "Protection:SpellLevel",fx_protection_spelllevel, 0, -1 },//overlay?
+	{ "Protection:SpellLevelDec",fx_protection_spelllevel_dec, 0, -1 },//overlay?
+	{ "Protection:String", fx_generic_effect, 0, -1 },
+	{ "Protection:Tracking", fx_protection_from_tracking, 0, -1 },
+	{ "Protection:Turn", fx_protection_from_turn, 0, -1 },
+	{ "Protection:Weapons", fx_immune_to_weapon, EFFECT_NO_ACTOR, -1 },
+	{ "PuppetMarker", fx_puppet_marker, 0, -1 },
+	{ "ProjectImage", fx_puppet_master, 0, -1 },
+	{ "Reveal:Area", fx_reveal_area, EFFECT_NO_ACTOR, -1 },
+	{ "Reveal:Creatures", fx_reveal_creatures, 0, -1 },
+	{ "Reveal:Magic", fx_reveal_magic, 0, -1 },
+	{ "Reveal:Tracks", fx_reveal_tracks, 0, -1 },
+	{ "RemoveCurse", fx_remove_curse, 0, -1 },
+	{ "RemoveImmunity", fx_remove_immunity, 0, -1 },
+	{ "RemoveMapNote", fx_remove_map_note, EFFECT_NO_ACTOR, -1 },
+	{ "RemoveProjectile", fx_remove_projectile, 0, -1 }, //removes effects from actor and area
+	{ "RenableButton", fx_renable_button, 0, -1 }, //removes disable button flag
+	{ "RemoveCreature", fx_remove_creature, EFFECT_NO_ACTOR, -1 },
+	{ "ReplaceCreature", fx_replace_creature, 0, -1 },
+	{ "ReputationModifier", fx_reputation_modifier, 0, -1 },
+	{ "RestoreSpells", fx_restore_spell_level, 0, -1 },
+	{ "RightHitModifier", fx_right_to_hit_modifier, 0, -1 },
+	{ "SaveVsBreathModifier", fx_save_vs_breath_modifier, 0, -1 },
+	{ "SaveVsDeathModifier", fx_save_vs_death_modifier, 0, -1 },
+	{ "SaveVsPolyModifier", fx_save_vs_poly_modifier, 0, -1 },
+	{ "SaveVsSpellsModifier", fx_save_vs_spell_modifier, 0, -1 },
+	{ "SaveVsWandsModifier", fx_save_vs_wands_modifier, 0, -1 },
+	{ "ScreenShake", fx_screenshake, EFFECT_NO_ACTOR, -1 },
+	{ "ScriptingState", fx_scripting_state, 0, -1 },
+	{ "Sequencer:Activate", fx_activate_spell_sequencer, 0, -1 },
+	{ "Sequencer:Create", fx_create_spell_sequencer, 0, -1 },
+	{ "Sequencer:Store", fx_store_spell_sequencer, 0, -1 },
+	{ "SetAIScript", fx_set_ai_script, 0, -1 },
+	{ "SetMapNote", fx_set_map_note, EFFECT_NO_ACTOR, -1 },
+	{ "SetMeleeEffect", fx_generic_effect, 0, -1 },
+	{ "SetRangedEffect", fx_generic_effect, 0, -1 },
+	{ "SetTrap", fx_set_area_effect, 0, -1 },
+	{ "SetTrapsModifier", fx_set_traps_modifier, 0, -1 },
+	{ "SexModifier", fx_sex_modifier, 0, -1 },
+	{ "SlashingResistanceModifier", fx_slashing_resistance_modifier, 0, -1 },
+	{ "Sparkle", fx_sparkle, 0, -1 },
+	{ "SpellDurationModifier", fx_spell_duration_modifier, 0, -1 },
+	{ "Spell:Add", fx_add_innate, 0, -1 },
+	{ "Spell:Cast", fx_cast_spell, 0, -1 },
+	{ "Spell:CastPoint", fx_cast_spell_point, 0, -1 },
+	{ "Spell:Learn", fx_learn_spell, 0, -1 },
+	{ "Spell:Remove", fx_remove_spell, 0, -1 },
+	{ "Spelltrap",fx_spelltrap , 0, -1 }, //overlay: spmagglo
+	{ "State:Berserk", fx_set_berserk_state, 0, -1 },
+	{ "State:Blind", fx_set_blind_state, 0, -1 },
+	{ "State:Blur", fx_set_blur_state, 0, -1 },
+	{ "State:Charmed", fx_set_charmed_state, EFFECT_NO_LEVEL_CHECK, -1 }, //0x05
+	{ "State:Confused", fx_set_confused_state, 0, -1 },
+	{ "State:Deafness", fx_set_deaf_state, 0, -1 },
+	{ "State:DeafnessIWD2", fx_set_deaf_state_iwd2, 0, -1 }, //this is a modified version
+	{ "State:Diseased", fx_set_diseased_state, 0, -1 },
+	{ "State:Feeblemind", fx_set_feebleminded_state, 0, -1 },
+	{ "State:Hasted", fx_set_hasted_state, 0, -1 },
+	{ "State:Haste2", fx_set_hasted_state, 0, -1 },
+	{ "State:Hold", fx_hold_creature, 0, -1 }, //175 (doesn't work in original iwd2)
+	{ "State:Hold2", fx_hold_creature, 0, -1 },//185 (doesn't work in original iwd2)
+	{ "State:Hold3", fx_hold_creature, 0, -1 },//109 iwd2
+	{ "State:HoldNoIcon", fx_hold_creature_no_icon, 0, -1 }, //109
+	{ "State:HoldNoIcon2", fx_hold_creature_no_icon, 0, -1 }, //0xfb (iwd/iwd2)
+	{ "State:HoldNoIcon3", fx_hold_creature_no_icon, 0, -1 }, //0x1a8 (iwd2)
+	{ "State:Imprisonment", fx_imprisonment, 0, -1 },
+	{ "State:Infravision", fx_set_infravision_state, 0, -1 },
+	{ "State:Invisible", fx_set_invisible_state, 0, -1 }, //both invis or improved invis
+	{ "State:Nondetection", fx_set_nondetection_state, 0, -1 },
+	{ "State:Panic", fx_set_panic_state, 0, -1 },
+	{ "State:Petrification", fx_set_petrified_state, 0, -1 },
+	{ "State:Poisoned", fx_set_poisoned_state, 0, -1 },
+	{ "State:Regenerating", fx_set_regenerating_state, 0, -1 },
+	{ "State:Silenced", fx_set_silenced_state, 0, -1 },
+	{ "State:Helpless", fx_set_unconscious_state, 0, -1 },
+	{ "State:Sleep", fx_set_unconscious_state, 0, -1 },
+	{ "State:Slowed", fx_set_slowed_state, 0, -1 },
+	{ "State:Stun", fx_set_stun_state, 0, -1 },
+	{ "StealthModifier", fx_stealth_modifier, 0, -1 },
+	{ "StoneSkinModifier", fx_stoneskin_modifier, 0, -1 },
+	{ "StoneSkin2Modifier", fx_golem_stoneskin_modifier, 0, -1 },
+	{ "StrengthModifier", fx_strength_modifier, 0, -1 },
+	{ "StrengthBonusModifier", fx_strength_bonus_modifier, 0, -1 },
+	{ "SummonCreature", fx_summon_creature, EFFECT_NO_ACTOR, -1 },
+	{ "RandomTeleport", fx_teleport_field, 0, -1 },
+	{ "TeleportToTarget", fx_teleport_to_target, 0, -1 },
+	{ "TimelessState", fx_timeless_modifier, 0, -1 },
+	{ "Timestop", fx_timestop, 0, -1 },
+	{ "TitleModifier", fx_title_modifier, 0, -1 },
+	{ "ToHitModifier", fx_to_hit_modifier, 0, -1 },
+	{ "ToHitBonusModifier", fx_to_hit_bonus_modifier, 0, -1 },
+	{ "ToHitVsCreature", fx_generic_effect, 0, -1 },
+	{ "TrackingModifier", fx_tracking_modifier, 0, -1 },
+	{ "TransparencyModifier", fx_transparency_modifier, 0, -1 },
+	{ "Unknown", fx_unknown, EFFECT_NO_ACTOR, -1 },
+	{ "Unlock", fx_knock, EFFECT_NO_ACTOR, -1 }, //open doors/containers
+	{ "UnsummonCreature", fx_unsummon_creature, 0, -1 },
+	{ "Variable:StoreLocalVariable", fx_local_variable, 0, -1 },
+	{ "VisualAnimationEffect", fx_visual_animation_effect, 0, -1 }, //unknown
+	{ "VisualRangeModifier", fx_visual_range_modifier, 0, -1 },
+	{ "VisualSpellHit", fx_visual_spell_hit, 0, -1 },
+	{ "WildSurgeModifier", fx_wild_surge_modifier, 0, -1 },
+	{ "WingBuffet", fx_wing_buffet, 0, -1 },
+	{ "WisdomModifier", fx_wisdom_modifier, 0, -1 },
+	{ "WizardSpellSlotsModifier", fx_bonus_wizard_spells, 0, -1 },
+	{ NULL, NULL, 0, 0 },
 };
 
 static void Cleanup()
@@ -771,7 +774,7 @@ static void Cleanup()
 
 void RegisterCoreOpcodes()
 {
-	core->RegisterOpcodes( sizeof( effectnames ) / sizeof( EffectRef ) - 1, effectnames );
+	core->RegisterOpcodes( sizeof( effectnames ) / sizeof( EffectDesc ) - 1, effectnames );
 	enhanced_effects=!!core->HasFeature(GF_ENHANCED_EFFECTS);
 	pstflags=!!core->HasFeature(GF_PST_STATE_FLAGS);
 	default_spell_hit.SequenceFlags|=IE_VVC_BAM;
@@ -852,22 +855,12 @@ inline Actor *GetNearestEnemyOf(Map *map, Actor *origin, int whoseeswho)
 	return ac;
 }
 
-inline Scriptable *GetCaster(Scriptable *Owner, Effect *fx) {
-	if (fx->FirstApply) {
-		fx->CasterID = Owner ? Owner->GetGlobalID() : 0;
-		return Owner;
-	} else {
-		return core->GetGame()->GetActorByGlobalID(fx->CasterID);
-	}
-	return NULL;
-}
-
 //resurrect code used in many places
 void Resurrect(Scriptable *Owner, Actor *target, Effect *fx, Point &p)
 {
-	Scriptable *caster = GetCaster(Owner, fx);
+	Scriptable *caster = GetCasterObject();
 	if (!caster) {
-		caster = Owner; // IE stores the enemyally in the effect instead
+		caster = Owner;
 	}
 	Map *area = caster->GetCurrentArea();
 
@@ -958,9 +951,9 @@ int fx_attacks_per_round_modifier (Scriptable* /*Owner*/, Actor* target, Effect*
 // 0x02 Cure:Sleep (Awaken)
 // this effect clears the STATE_SLEEP (1) bit, but clearing it alone wouldn't remove the
 // unconscious effect, which is combined with STATE_HELPLESS (0x20+1)
-static EffectRef fx_set_sleep_state_ref={"State:Helpless",NULL,-1};
+static EffectRef fx_set_sleep_state_ref = { "State:Helpless", -1 };
 //this reference is used by many other effects
-static EffectRef fx_display_portrait_icon_ref={"Icon:Display",NULL,-1};
+static EffectRef fx_display_portrait_icon_ref = { "Icon:Display", -1 };
 
 int fx_cure_sleep_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -1021,7 +1014,7 @@ int fx_set_berserk_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x04 Cure:Berserk
 // this effect clears the STATE_BERSERK (2) bit, but bg2 actually ignores the bit
 // it also removes effect 04
-static EffectRef fx_set_berserk_state_ref={"State:Berserk",NULL,-1};
+static EffectRef fx_set_berserk_state_ref = { "State:Berserk", -1 };
 
 int fx_cure_berserk_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -1051,12 +1044,25 @@ int fx_set_charmed_state (Scriptable* Owner, Actor* target, Effect* fx)
 		return FX_NOT_APPLIED;
 	}
 
-	Scriptable *caster = GetCaster(Owner, fx);
-	if (!caster) caster = Owner; // IE stores the enemyally in the effect instead
-	bool enemyally = true;
-	if (caster->Type==ST_ACTOR) {
-		enemyally = ((Actor *) caster)->GetStat(IE_EA)>EA_GOODCUTOFF; //or evilcutoff?
+	bool playercharmed;
+	bool casterenemy;
+	if (fx->FirstApply) {
+		Scriptable *caster = GetCasterObject();
+		if (!caster) caster = Owner;
+		if (caster->Type==ST_ACTOR) {
+			casterenemy = ((Actor *) caster)->GetStat(IE_EA)>EA_GOODCUTOFF; //or evilcutoff?
+		} else {
+			casterenemy = target->GetStat(IE_EA)>EA_GOODCUTOFF;
+		}
+		fx->DiceThrown=casterenemy;
+
+		playercharmed = target->InParty;
+		fx->DiceSides = playercharmed;    
+	} else {
+		casterenemy = fx->DiceThrown;
+		playercharmed = fx->DiceSides;
 	}
+
 
 	switch (fx->Parameter2) {
 	case 0: //charmed (target neutral after charm)
@@ -1109,7 +1115,11 @@ int fx_set_charmed_state (Scriptable* Owner, Actor* target, Effect* fx)
 	}
 
 	STATE_SET( STATE_CHARMED );
-	STAT_SET_PCF( IE_EA, enemyally?EA_ENEMY:EA_CHARMED );
+	if (playercharmed) {
+		STAT_SET_PCF( IE_EA, casterenemy?EA_CHARMEDPC:EA_CHARMED );
+	} else {
+		STAT_SET_PCF( IE_EA, casterenemy?EA_ENEMY:EA_CHARMED );
+	}
 	//don't stick if permanent
 	return FX_PERMANENT;
 }
@@ -1200,7 +1210,7 @@ int fx_constitution_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x0B Cure:Poison
-static EffectRef fx_poisoned_state_ref={"State:Poisoned",NULL,-1};
+static EffectRef fx_poisoned_state_ref = { "State:Poisoned", -1 };
 
 int fx_cure_poisoned_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -1214,7 +1224,7 @@ int fx_cure_poisoned_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 // 0x0c Damage
 // this is a very important effect
-int fx_damage (Scriptable* Owner, Actor* target, Effect* fx)
+int fx_damage (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	if (0) printf( "fx_damage (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//save for half damage type
@@ -1223,7 +1233,7 @@ int fx_damage (Scriptable* Owner, Actor* target, Effect* fx)
 	if (modtype==3) {
 		modtype&=~3;
 	}
-	Scriptable *caster = GetCaster(Owner, fx);
+	Scriptable *caster = GetCasterObject();
 
 	target->Damage(fx->Parameter1, damagetype, caster, modtype);
 	//this effect doesn't stick
@@ -1341,7 +1351,7 @@ int fx_dexterity_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	return FX_PERMANENT;
 }
 
-static EffectRef fx_set_slow_state_ref={"State:Slowed",NULL,-1};
+static EffectRef fx_set_slow_state_ref = { "State:Slowed", -1 };
 // 0x10 State:Hasted
 // this function removes slowed state, or sets hasted state
 int fx_set_hasted_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
@@ -1586,7 +1596,7 @@ int fx_set_panic_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x19 State:Poisoned
-int fx_set_poisoned_state (Scriptable* Owner, Actor* target, Effect* fx)
+int fx_set_poisoned_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	if (0) printf( "fx_set_poisoned_state (%2d): Damage: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STATE_SET( STATE_POISONED );
@@ -1625,7 +1635,7 @@ int fx_set_poisoned_state (Scriptable* Owner, Actor* target, Effect* fx)
 		return FX_APPLIED;
 	}
 
-	Scriptable *caster = GetCaster(Owner, fx);
+	Scriptable *caster = GetCasterObject();
 
 	//percent
 	target->Damage(damage, DAMAGE_POISON, caster);
@@ -1633,8 +1643,8 @@ int fx_set_poisoned_state (Scriptable* Owner, Actor* target, Effect* fx)
 }
 
 // 0x1a RemoveCurse
-static EffectRef fx_apply_effect_curse_ref={"ApplyEffectCurse",NULL,-1};
-static EffectRef fx_pst_jumble_curse_ref={"JumbleCurse",NULL,-1};
+static EffectRef fx_apply_effect_curse_ref = { "ApplyEffectCurse", -1 };
+static EffectRef fx_pst_jumble_curse_ref = { "JumbleCurse", -1 };
 
 // gemrb extension: if the resource field is filled, it will remove curse only from the specified item
 int fx_remove_curse (Scriptable* /*Owner*/, Actor* target, Effect* fx)
@@ -1788,7 +1798,7 @@ int fx_set_silenced_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	return FX_APPLIED;
 }
 
-static EffectRef fx_animation_stance_ref = {"AnimationStateChange",NULL,-1};
+static EffectRef fx_animation_stance_ref = { "AnimationStateChange", -1 };
 
 // 0x27 State:Helpless
 // this effect sets both bits, but 'awaken' only removes the sleep bit
@@ -1824,7 +1834,7 @@ int fx_set_unconscious_state (Scriptable* Owner, Actor* target, Effect* fx)
 
 // 0x28 State:Slowed
 // this function removes hasted state, or sets slowed state
-static EffectRef fx_set_haste_state_ref={"State:Hasted",NULL,-1};
+static EffectRef fx_set_haste_state_ref = { "State:Hasted", -1 };
 
 int fx_set_slowed_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -1911,7 +1921,9 @@ int fx_strength_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	if (0) printf( "fx_strength_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	////how strength: value is based on class
+	////pst power of one also depends on this!
 	if (fx->Parameter2==3) {
+		//TODO: strextra for stats>=18
 		fx->Parameter1 = core->Roll(1,SpellAbilityDieRoll(target,1),0);
 		fx->Parameter2 = 0;
 	}
@@ -1970,8 +1982,8 @@ int fx_set_stun_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x2E Cure:Stun
-static EffectRef fx_set_stun_state_ref={"State:Stun",NULL,-1};
-static EffectRef fx_hold_creature_no_icon_ref={"State:HoldNoIcon",NULL,-1};
+static EffectRef fx_set_stun_state_ref = { "State:Stun", -1 };
+static EffectRef fx_hold_creature_no_icon_ref = { "State:HoldNoIcon", -1 };
 
 int fx_cure_stun_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -1986,7 +1998,7 @@ int fx_cure_stun_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 // 0x2F Cure:Invisible
 // 0x74 Cure:Invisible2
-static EffectRef fx_set_invisible_state_ref={"State:Invisible",NULL,-1};
+static EffectRef fx_set_invisible_state_ref = { "State:Invisible", -1 };
 
 int fx_cure_invisible_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -2003,7 +2015,7 @@ int fx_cure_invisible_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x30 Cure:Silence
-static EffectRef fx_set_silenced_state_ref={"State:Silenced",NULL,-1};
+static EffectRef fx_set_silenced_state_ref = { "State:Silenced", -1 };
 
 int fx_cure_silenced_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -2064,7 +2076,7 @@ int fx_glow_rgb (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x35 AnimationIDModifier
-static EffectRef fx_animation_id_modifier_ref={"AnimationIDModifier",NULL,-1};
+static EffectRef fx_animation_id_modifier_ref = { "AnimationIDModifier", -1 };
 
 int fx_animation_id_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -2095,7 +2107,7 @@ int fx_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x37 KillCreatureType
-static EffectRef fx_death_ref={"Death",NULL,-1};
+static EffectRef fx_death_ref = { "Death", -1 };
 
 int fx_kill_creature_type (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -2278,7 +2290,7 @@ int fx_set_infravision_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x40 Cure:Infravision
-static EffectRef fx_set_infravision_state_ref={"State:Infravision",NULL,-1};
+static EffectRef fx_set_infravision_state_ref = { "State:Infravision", -1 };
 
 int fx_cure_infravision_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -2341,13 +2353,6 @@ static int eamods[]={EAM_ALLY,EAM_ALLY,EAM_DEFAULT,EAM_ALLY,EAM_DEFAULT,EAM_ENEM
 int fx_summon_creature (Scriptable* Owner, Actor* target, Effect* fx)
 {
 	if (0) printf( "fx_summon_creature (%2d): ResRef:%s Anim:%s Type: %d\n", fx->Opcode, fx->Resource, fx->Resource2, fx->Parameter2 );
-	if (!target) {
-		return FX_NOT_APPLIED;
-	}
-
-	if (!target->GetCurrentArea()) {
-		return FX_APPLIED;
-	}
 
 	//summon creature (resource), play vvc (resource2)
 	//creature's lastsummoner is Owner
@@ -2397,7 +2402,7 @@ int fx_set_nondetection_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x46 Cure:Nondetection
-static EffectRef fx_set_nondetection_state_ref={"State:Nondetection",NULL,-1};
+static EffectRef fx_set_nondetection_state_ref = { "State:Nondetection", -1 };
 
 int fx_cure_nondetection_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -2477,6 +2482,21 @@ int fx_set_blind_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	if (0) printf( "fx_set_blind_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
+	//pst power word blind projectile support
+	if (fx->Parameter2==1) {
+		fx->Parameter2 = 0;
+		int stat = target->GetSafeStat(IE_HITPOINTS);
+		if (stat<25) {
+			stat = core->Roll(1,240,150);
+		} else if (stat<50) {
+			stat = core->Roll(1,120,70);
+		} else if (stat<100) {
+			stat = core->Roll(1,30,15);
+		} else stat = 0;
+		fx->Duration = core->GetGame()->GameTime+stat;
+
+	}
+
 	//don't do this effect twice (bug exists in BG2, but fixed in IWD2)
 	if (!STATE_GET(STATE_BLIND)) {
 		STATE_SET( STATE_BLIND );
@@ -2489,7 +2509,7 @@ int fx_set_blind_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x4b Cure:Blind
-static EffectRef fx_set_blind_state_ref={"State:Blind",NULL,-1};
+static EffectRef fx_set_blind_state_ref = { "State:Blind", -1 };
 
 int fx_cure_blind_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -2512,7 +2532,7 @@ int fx_set_feebleminded_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x4d Cure:Feeblemind
-static EffectRef fx_set_feebleminded_state_ref={"State:Feeblemind",NULL,-1};
+static EffectRef fx_set_feebleminded_state_ref = { "State:Feeblemind", -1 };
 
 int fx_cure_feebleminded_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -2524,7 +2544,7 @@ int fx_cure_feebleminded_state (Scriptable* /*Owner*/, Actor* target, Effect* fx
 }
 
 // 0x4e State:Diseased
-int fx_set_diseased_state (Scriptable* Owner, Actor* target, Effect* fx)
+int fx_set_diseased_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	if (0) printf( "fx_set_diseased_state (%2d): Damage: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (STATE_GET(STATE_DEAD|STATE_PETRIFIED|STATE_FROZEN) ) {
@@ -2582,7 +2602,7 @@ int fx_set_diseased_state (Scriptable* Owner, Actor* target, Effect* fx)
 		break;
 	}
 	//percent
-	Scriptable *caster = GetCaster(Owner, fx);
+	Scriptable *caster = GetCasterObject();
 
 	if (damage) {
 		target->Damage(damage, DAMAGE_POISON, caster);
@@ -2592,7 +2612,7 @@ int fx_set_diseased_state (Scriptable* Owner, Actor* target, Effect* fx)
 
 
 // 0x4f Cure:Disease
-static EffectRef fx_diseased_state_ref={"State:Diseased",NULL,-1};
+static EffectRef fx_diseased_state_ref = { "State:Diseased", -1 };
 
 int fx_cure_diseased_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -2649,8 +2669,8 @@ int fx_set_deaf_state_iwd2 (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x51 Cure:Deafness
-static EffectRef fx_deaf_state_ref={"State:Deafness",NULL,-1};
-static EffectRef fx_deaf_state_iwd2_ref={"State:DeafnessIWD2",NULL,-1};
+static EffectRef fx_deaf_state_ref = { "State:Deafness", -1 };
+static EffectRef fx_deaf_state_iwd2_ref = { "State:DeafnessIWD2", -1 };
 
 //removes the deafness effect
 int fx_cure_deaf_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
@@ -2981,7 +3001,7 @@ int fx_reputation_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 // 0x6f Item:CreateMagic
 
-static EffectRef fx_remove_item_ref={"Item:Remove",NULL,-1};
+static EffectRef fx_remove_item_ref = { "Item:Remove", -1 };
 
 int fx_create_magic_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -3103,7 +3123,14 @@ int fx_detect_alignment (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 int fx_reveal_area (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	if (0) printf( "fx_reveal_area (%2d): Value: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
-	Map *map = target->GetCurrentArea();
+	Map *map = NULL;
+	
+	if (target) {
+		map = target->GetCurrentArea();
+	}
+	else {
+		map = core->GetGame()->GetCurrentArea();
+	}
 	if (!map) {
 		return FX_APPLIED;
 	}
@@ -3125,7 +3152,7 @@ int fx_reveal_creatures (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 }
 
 // 0x77 MirrorImage
-static EffectRef fx_mirror_image_modifier_ref={"MirrorImageModifier",NULL,-1};
+static EffectRef fx_mirror_image_modifier_ref = { "MirrorImageModifier", -1 };
 
 int fx_mirror_image (Scriptable* Owner, Actor* target, Effect* fx)
 {
@@ -3236,7 +3263,7 @@ int fx_visual_animation_effect (Scriptable* /*Owner*/, Actor* /*target*/, Effect
 }
 
 // 0x7a Item:CreateInventory
-static EffectRef fx_remove_inventory_item_ref={"Item:RemoveInventory",NULL,-1};
+static EffectRef fx_remove_inventory_item_ref = { "Item:RemoveInventory", -1 };
 
 int fx_create_inventory_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -3409,7 +3436,7 @@ int fx_monster_summoning (Scriptable* Owner, Actor* target, Effect* fx)
 
 	//caster may be important here (Source), even if currently the EA modifiers
 	//don't use it
-	Scriptable *caster = GetCaster(Owner, fx);
+	Scriptable *caster = GetCasterObject();
 	core->SummonCreature(monster, hit, caster, target, p, eamod, level, newfx);
 	delete newfx;
 	return FX_NOT_APPLIED;
@@ -3472,7 +3499,7 @@ int fx_set_aid_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 // 0x82 BlessNonCumulative
 
-static EffectRef fx_bane_ref={"Bane",NULL,-1};
+static EffectRef fx_bane_ref = { "Bane", -1 };
 
 int fx_set_bless_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -3562,7 +3589,7 @@ int fx_set_petrified_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x87 Polymorph
-static EffectRef fx_polymorph_ref={"Polymorph",NULL,-1};
+static EffectRef fx_polymorph_ref = { "Polymorph", -1 };
 
 void CopyPolymorphStats(Actor *source, Actor *target)
 {
@@ -3687,11 +3714,31 @@ int fx_animation_stance (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 // 0x8B DisplayString
 // gemrb extension: rgb colour for displaystring
-static EffectRef fx_protection_from_display_string_ref={"Protection:String",NULL,-1};
+// gemrb extension: resource may be an strref list (src or 2da)
+static EffectRef fx_protection_from_display_string_ref = { "Protection:String", -1 };
 
 int fx_display_string (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	if (0) printf( "fx_display_string (%2d): StrRef: %d\n", fx->Opcode, fx->Parameter1 );
+	if(fx->Resource[0]) {
+		//TODO: create a single list reader that handles src and 2da too
+		SrcVector *rndstr=LoadSrc(fx->Resource);
+		if (rndstr) {
+			fx->Parameter1 = rndstr->at(rand()%rndstr->size());
+			FreeSrc(rndstr, fx->Resource);
+			DisplayStringCore(target, fx->Parameter1, DS_HEAD);
+			*(ieDword *) &target->overColor=fx->Parameter2;
+			return FX_NOT_APPLIED;
+		}
+
+		//random text for other games
+		ieDword *rndstr2 = core->GetListFrom2DA(fx->Resource);
+		int cnt = rndstr2[0];
+		if (cnt) {
+			fx->Parameter1 = rndstr2[core->Roll(1,cnt,0)];
+		}    
+	}
+
 	if (!target->fxqueue.HasEffectWithParamPair(fx_protection_from_display_string_ref, fx->Parameter1, 0) ) {
 		displaymsg->DisplayStringName(fx->Parameter1, fx->Parameter2?fx->Parameter2:0xffffff, target, IE_STR_SOUND|IE_STR_SPEECH);
 	}
@@ -3727,6 +3774,7 @@ int fx_casting_glow (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		sca->YPos+=fx->PosY+ypos_by_direction[target->GetOrientation()];
 		sca->ZPos+=heightmod;
 		sca->SetBlend();
+		sca->PlayOnce();
 		if (fx->Duration) {
 			sca->SetDefaultDuration(fx->Duration-core->GetGame()->GameTime);
 		} else {
@@ -3882,7 +3930,7 @@ int fx_cast_spell (Scriptable* Owner, Actor* target, Effect* fx)
 	if (0) printf( "fx_cast_spell (%2d): Resource:%s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
 	if (fx->Parameter2) {
 		//apply spell on target
-		core->ApplySpell(fx->Resource, target, Owner, fx->Power);
+		core->ApplySpell(fx->Resource, target, Owner, fx->Parameter1);
 
 		// give feedback: Caster - spellname : target
 		char tmp[100];
@@ -3892,10 +3940,15 @@ int fx_cast_spell (Scriptable* Owner, Actor* target, Effect* fx)
 			displaymsg->DisplayStringName(tmp, 0xffffff, Owner);
 		}
 	} else {
+		// save the current spell ref, so the rest of its effects can be applied afterwards
+		ieResRef OldSpellResRef;
+		memcpy(OldSpellResRef, Owner->SpellResRef, sizeof(OldSpellResRef));
+		Owner->SetSpellResRef(fx->Resource);
 		//cast spell on target
 		Owner->CastSpell(fx->Resource, target, false);
 		//actually finish casting (if this is not good enough, use an action???)
-		Owner->CastSpellEnd();
+		Owner->CastSpellEnd(fx->Parameter1);
+		Owner->SetSpellResRef(OldSpellResRef);
 	}
 	return FX_NOT_APPLIED;
 }
@@ -3908,16 +3961,22 @@ int fx_learn_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	//probably we should also let this via a game flag if we want
 	//full compatibility with bg1
 	//parameter2 is used in bg1 and pst to specify the spell type; bg2 and iwd2 figure it out from the resource
-	target->LearnSpell(fx->Resource, fx->Parameter1^LS_ADDXP);
+	target->LearnSpell(fx->Resource, fx->Parameter1);
 	return FX_NOT_APPLIED;
 }
 // 0x94 Spell:CastSpellPoint
-int fx_cast_spell_point (Scriptable* Owner, Actor* target, Effect* fx)
+int fx_cast_spell_point (Scriptable* Owner, Actor* /*target*/, Effect* fx)
 {
 	if (0) printf( "fx_cast_spell_point (%2d): Resource:%s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
-	Owner->CastSpellPoint(fx->Resource, target->Pos, false);
+	// save the current spell ref, so the rest of its effects can be applied afterwards
+	ieResRef OldSpellResRef;
+	memcpy(OldSpellResRef, Owner->SpellResRef, sizeof(OldSpellResRef));
+	Owner->SetSpellResRef(fx->Resource);
+	Point p(fx->PosX, fx->PosY);
+	Owner->CastSpellPoint(fx->Resource, p, false);
 	//actually finish casting (if this is not good enough, use an action???)
-	Owner->CastSpellPointEnd();
+	Owner->CastSpellPointEnd(fx->Parameter1);
+	Owner->SetSpellResRef(OldSpellResRef);
 	return FX_NOT_APPLIED;
 }
 
@@ -4172,7 +4231,7 @@ int fx_mirror_image_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0xa0 Cure:Sanctuary
-static EffectRef fx_sanctuary_state_ref={"Overlay:Sanctuary",NULL,-1};
+static EffectRef fx_sanctuary_state_ref = { "Overlay:Sanctuary", -1 };
 
 int fx_cure_sanctuary_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -4183,7 +4242,7 @@ int fx_cure_sanctuary_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0xa1 Cure:Panic
-static EffectRef fx_set_panic_state_ref={"State:Panic",NULL,-1};
+static EffectRef fx_set_panic_state_ref = { "State:Panic", -1 };
 
 int fx_cure_panic_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -4194,7 +4253,7 @@ int fx_cure_panic_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0xa2 Cure:Hold
-static EffectRef fx_hold_creature_ref={"State:Hold",NULL,-1};
+static EffectRef fx_hold_creature_ref = { "State:Hold", -1 };
 
 int fx_cure_hold_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -4207,7 +4266,7 @@ int fx_cure_hold_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0xa3 FreeAction
-static EffectRef fx_movement_modifier_ref={"MovementRateModifier2",NULL,-1};
+static EffectRef fx_movement_modifier_ref = { "MovementRateModifier2", -1 };
 
 int fx_cure_slow_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -4218,7 +4277,7 @@ int fx_cure_slow_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0xa4 Cure:Intoxication
-static EffectRef fx_intoxication_ref={"IntoxicationModifier",NULL,-1};
+static EffectRef fx_intoxication_ref = { "IntoxicationModifier", -1 };
 
 int fx_cure_intoxication (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -4232,7 +4291,6 @@ int fx_cure_intoxication (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 int fx_pause_target (Scriptable* /*Owner*/, Actor * target, Effect* fx)
 {
 	if (0) printf( "fx_pause_target (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
-
 	STAT_MOD( IE_CASTERHOLD );
 	return FX_PERMANENT;
 }
@@ -4261,7 +4319,15 @@ int fx_missile_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx
 int fx_remove_creature (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	if (0) printf( "fx_remove_creature (%2d)\n", fx->Opcode);
-	Map *map = target->GetCurrentArea();
+
+	Map *map = NULL;
+	
+	if (target) {
+		map = target->GetCurrentArea();
+	}
+	else {
+		map = core->GetGame()->GetCurrentArea();
+	}
 	Actor *actor = target;
 
 	if (fx->Resource[0]) {
@@ -4552,9 +4618,9 @@ int fx_castinglevel_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 #define FAMILIAR_ALIGNMENT 1
 #define FAMILIAR_RESOURCE  2
 
-static EffectRef fx_familiar_constitution_loss_ref={"FamiliarBond",NULL,-1};
-static EffectRef fx_familiar_marker_ref={"FamiliarMarker",NULL,-1};
-static EffectRef fx_maximum_hp_modifier_ref={"MaximumHPModifier",NULL,-1};
+static EffectRef fx_familiar_constitution_loss_ref = { "FamiliarBond", -1 };
+static EffectRef fx_familiar_marker_ref = { "FamiliarMarker", -1 };
+static EffectRef fx_maximum_hp_modifier_ref = { "MaximumHPModifier", -1 };
 
 int fx_find_familiar (Scriptable* Owner, Actor* target, Effect* fx)
 {
@@ -4665,8 +4731,8 @@ int fx_ignore_dialogpause_modifier (Scriptable* /*Owner*/, Actor* target, Effect
 
 //0xc3 FamiliarBond
 //when this effect's target dies it should incur damage on protagonist
-static EffectRef fx_damage_opcode_ref={"Damage",NULL,-1};
-static EffectRef fx_constitution_modifier_ref={"ConstitutionModifier",NULL,-1};
+static EffectRef fx_damage_opcode_ref = { "Damage", -1 };
+static EffectRef fx_constitution_modifier_ref = { "ConstitutionModifier", -1 };
 
 int fx_familiar_constitution_loss (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -4895,8 +4961,8 @@ int fx_imprisonment (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 //0xd4 Cure:Imprisonment
-static EffectRef fx_imprisonment_ref={"Imprisonment",NULL,-1};
-static EffectRef fx_maze_ref={"Maze",NULL,-1};
+static EffectRef fx_imprisonment_ref = { "Imprisonment", -1 };
+static EffectRef fx_maze_ref = { "Maze", -1 };
 
 int fx_freedom (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -4950,7 +5016,7 @@ int fx_select_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0xd7 PlayVisualEffect
-static EffectRef fx_protection_from_animation_ref={"Protection:Animation",NULL,-1};
+static EffectRef fx_protection_from_animation_ref = { "Protection:Animation", -1 };
 int fx_play_visual_effect (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	if (0) printf( "fx_play_visual_effect (%2d): Resource: %s Type: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
@@ -4971,6 +5037,7 @@ int fx_play_visual_effect (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 			vvc->active = true;
 			return FX_APPLIED;
 		}
+		if (! fx->FirstApply) return FX_NOT_APPLIED;
 	}
 
 	if (target->fxqueue.HasEffectWithResource(fx_protection_from_animation_ref,fx->Resource)) {
@@ -5012,7 +5079,7 @@ int fx_play_visual_effect (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 //d8 LevelDrainModifier
 
-static EffectRef fx_leveldrain_ref={"LevelDrainModifier",NULL,-1};
+static EffectRef fx_leveldrain_ref = { "LevelDrainModifier", -1 };
 
 // FIXME: BG2 level drain uses parameter3 to decrease the MaxHp, and parameter4 to decrease level. (unset)
 int fx_leveldrain_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
@@ -5042,7 +5109,7 @@ int fx_leveldrain_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 //d9 PowerWordSleep
-static EffectRef fx_sleep_ref={"State:Sleep",NULL,-1};
+static EffectRef fx_sleep_ref = { "State:Sleep", -1 };
 
 int fx_power_word_sleep (Scriptable* Owner, Actor* target, Effect* fx)
 {
@@ -5331,7 +5398,7 @@ int fx_proficiency (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0xea CreateContingency
-static EffectRef fx_contingency_ref={"CastSpellOnCondition",NULL,-1};
+static EffectRef fx_contingency_ref = { "CastSpellOnCondition", -1 };
 
 int fx_create_contingency (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -5392,7 +5459,7 @@ int fx_wing_buffet (Scriptable* Owner, Actor* target, Effect* fx)
 
 // 0xec ProjectImage
 
-static EffectRef fx_puppetmarker_ref={"PuppetMarker",NULL,-1};
+static EffectRef fx_puppetmarker_ref = { "PuppetMarker", -1 };
 
 int fx_puppet_master (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -5541,7 +5608,7 @@ int fx_remove_portrait_icon (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xf1 control creature (same as charm)
 
 // 0xF2 Cure:Confusion
-static EffectRef fx_confused_state_ref={"State:Confused",NULL,-1};
+static EffectRef fx_confused_state_ref = { "State:Confused", -1 };
 
 int fx_cure_confused_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -5691,7 +5758,13 @@ int fx_set_area_effect (Scriptable* Owner, Actor* target, Effect* fx)
 	}
 	//success
 	displaymsg->DisplayConstantStringName(STR_SNARESUCCEED, 0xf0f0f0, target);
+	// save the current spell ref, so the rest of its effects can be applied afterwards
+	ieResRef OldSpellResRef;
+	memcpy(OldSpellResRef, Owner->SpellResRef, sizeof(OldSpellResRef));
+	Owner->SetSpellResRef(fx->Resource);
 	Owner->CastSpellPoint(fx->Resource, target->Pos, false);
+	Owner->CastSpellPointEnd(0);
+	Owner->SetSpellResRef(OldSpellResRef);
 	return FX_NOT_APPLIED;
 }
 
@@ -5754,7 +5827,7 @@ int fx_store_spell_sequencer(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x101 Sequencer:Create
-static EffectRef fx_spell_sequencer_active_ref={"Sequencer:Store",NULL,-1};
+static EffectRef fx_spell_sequencer_active_ref = { "Sequencer:Store", -1 };
 
 int fx_create_spell_sequencer(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -5902,7 +5975,7 @@ int fx_modify_global_variable (Scriptable* /*Owner*/, Actor* /*target*/, Effect*
 	return FX_NOT_APPLIED;
 }
 // 0x10a RemoveImmunity
-EffectRef immunity_effect_ref={"Protection:Spell",NULL,-1};
+static EffectRef immunity_effect_ref = { "Protection:Spell", -1 };
 
 int fx_remove_immunity(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -5928,12 +6001,12 @@ int fx_explore_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 int fx_screenshake (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
 	if (0) printf( "fx_screenshake (%2d): Strength: %d\n", fx->Opcode, fx->Parameter1 );
-	core->timer->SetScreenShake( fx->Parameter1, fx->Parameter1, 1);
+	core->timer->SetScreenShake( fx->Parameter1, fx->Parameter1, fx->Parameter1);
 	return FX_APPLIED;
 }
 
 // 0x10e Cure:CasterHold
-static EffectRef fx_pause_caster_modifier_ref={"PauseTarget",NULL,-1};
+static EffectRef fx_pause_caster_modifier_ref = { "PauseTarget", -1 };
 
 int fx_unpause_caster (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
@@ -5943,9 +6016,9 @@ int fx_unpause_caster (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x10f SummonDisable (bg2)
-int fx_avatar_removal (Scriptable* /*Owner*/, Actor* target, Effect* fx)
+int fx_summon_disable (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_avatar_removal (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) printf( "fx_summon_disable (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET(IE_SUMMONDISABLE, 1);
 	STAT_SET(IE_CASTERHOLD, 1);
 	if (fx->Parameter2==1) {
@@ -5959,7 +6032,7 @@ What happens at a lower level is that the engine recreates the entire stats on s
 Since the repeating effects are stored in a list inside those stats, they are being recreated every ai update, if there has been an effect application.
 The repeating effect itself internally uses a counter to store how often it has been called. And when this counter equals the period it fires of the effect. When the list is being recreated all those counters are lost.
 */
-static EffectRef fx_apply_effect_repeat_ref = {"ApplyEffectRepeat", NULL, -1};
+static EffectRef fx_apply_effect_repeat_ref = { "ApplyEffectRepeat", -1 };
 // 0x110 ApplyEffectRepeat
 int fx_apply_effect_repeat (Scriptable* Owner, Actor* target, Effect* fx)
 {
@@ -6120,7 +6193,7 @@ int fx_to_hit_bonus_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 // 0x117 RenableButton
-static EffectRef fx_disable_button_ref={"DisableButton",NULL,-1};
+static EffectRef fx_disable_button_ref = { "DisableButton", -1 };
 
 int fx_renable_button (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {

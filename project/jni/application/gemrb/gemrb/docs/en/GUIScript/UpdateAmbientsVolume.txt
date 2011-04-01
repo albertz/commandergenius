@@ -1,0 +1,11 @@
+
+Prototype: GemRB.UpdateAmbientsVolume()
+
+Description: Updates ambients volume on-the-fly.
+
+Parameters: N/A
+
+Return value: N/A
+
+See also: UpdateMusicVolume
+

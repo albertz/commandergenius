@@ -34,7 +34,7 @@
 
 #include "ie_types.h"
 
-#define VERSION_GEMRB "0.6.3-git"
+#define VERSION_GEMRB "0.6.4-git"
 
 #define GEMRB_STRING "GemRB v" VERSION_GEMRB
 
@@ -147,8 +147,10 @@
 #define  GF_CASTING_SOUNDS              57 //all except pst and bg1
 #define  GF_CASTING_SOUNDS2             58 //bg2
 #define  GF_FORCE_AREA_SCRIPT           59 //how and iwd2 (maybe iwd1)
+#define  GF_AREA_OVERRIDE               60 //pst maze and other hardcode
+#define  GF_NO_NEW_VARIABLES            61 //pst
 //update this or bad things can happen
-#define GF_COUNT 60
+#define GF_COUNT 62
 
 //the number of item usage fields (used in CREItem and STOItem)
 #define CHARGE_COUNTERS  3
@@ -210,8 +212,6 @@ GEM_EXPORT char* strlwr(char* string);
 	}
 #endif
 
-//struct ActorBlock;
-
 inline int MIN(int a, int b)
 {
 	return (a > b ? b : a);
@@ -224,10 +224,10 @@ inline int MAX(int a, int b)
 
 inline bool valid_number(const char* string, long& val)
 {
-        char* endpr;
+	char* endpr;
 
-        val = (long) strtoul( string, &endpr, 0 );
-        return ( const char * ) endpr != string;
+	val = (long) strtoul( string, &endpr, 0 );
+	return ( const char * ) endpr != string;
 }
 
 //we need 32+6 bytes at least, because we store 'context' in the variable

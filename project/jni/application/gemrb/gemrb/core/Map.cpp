@@ -33,6 +33,7 @@
 #include "Interface.h"
 #include "MapMgr.h"
 #include "MusicMgr.h"
+#include "ImageMgr.h"
 #include "Palette.h"
 #include "Particles.h"
 #include "PathFinder.h"
@@ -44,6 +45,9 @@
 #include "strrefs.h"
 #include "GameScript/GSUtils.h"
 #include "GUI/GameControl.h"
+#include "Scriptable/Container.h"
+#include "Scriptable/Door.h"
+#include "Scriptable/InfoPoint.h"
 
 #include <cmath>
 #include <cassert>
@@ -103,7 +107,8 @@ inline static AnimationObjectType SelectObject(Actor *actor, int q, AreaAnimatio
 
 	int aah;
 	if (a) {
-		aah = a->Pos.y;//+a->height;
+		//aah = a->Pos.y;//+a->height;
+		aah = a->GetHeight();
 	} else {
 		aah = 0x7fffffff;
 	}
@@ -227,8 +232,8 @@ void InitPathFinder()
 void AddLOS(int destx, int desty, int slot)
 {
 	for (int i=0;i<MaxVisibility;i++) {
-		int x=(destx*i+MaxVisibility/2)/MaxVisibility*16;
-		int y=(desty*i+MaxVisibility/2)/MaxVisibility*12;
+		int x = ((destx*i + MaxVisibility/2) / MaxVisibility) * 16;
+		int y = ((desty*i + MaxVisibility/2) / MaxVisibility) * 12;
 		if (LargeFog) {
 			x += 16;
 			y += 12;
@@ -327,6 +332,8 @@ Map::Map(void)
 	VisibleBitmap = NULL;
 	version = 0;
 	MasterArea = core->GetGame()->MasterArea(scriptName);
+	Background = NULL;
+	BgDuration = 0;
 }
 
 Map::~Map(void)
@@ -432,6 +439,9 @@ void Map::AddTileMap(TileMap* tm, Image* lm, Bitmap* sr, Sprite2D* sm, Bitmap* h
 			SrchMap[y*Width+x] = Passable[sr->GetAt(x,y)&PATH_MAP_AREAMASK];
 		}
 	}
+
+	//delete the original searchmap
+	delete sr;
 }
 
 void Map::MoveToNewArea(const char *area, const char *entrance, unsigned int direction, int EveryOne, Actor *actor)
@@ -621,8 +631,9 @@ void Map::UpdateScripts()
 	// possibly wrong (so if you have problems, revert this and find
 	// another way)
 	if (has_pcs) {
-		//Run the Map Script
-		ExecuteScript( 1 );
+		//Run all the Map Scripts (as in the original)
+		//The default area script is in the last slot anyway
+		ExecuteScript( MAX_SCRIPTS );
 	}
 	
 	//Execute Pending Actions
@@ -660,8 +671,9 @@ void Map::UpdateScripts()
 		actor->fxqueue.Cleanup();
 
 		//if the actor is immobile, don't run the scripts
+		//FIXME: this is not universaly true, only some states have this effect
 		if (!game->StateOverrideFlag && !game->StateOverrideTime) {
-			if (actor->Immobile() || actor->GetStat(IE_STATE_ID) & STATE_SLEEP) {
+			if (/*actor->Immobile() ||*/ actor->GetStat(IE_STATE_ID) & STATE_SLEEP) {
 				actor->no_more_steps = true;
 				continue;
 			}
@@ -781,17 +793,15 @@ void Map::UpdateScripts()
 		if (!ip)
 			break;
 		//If this InfoPoint has no script and it is not a Travel Trigger, skip it
-		bool wasActive = (ip->Scripts[0] || ( ip->Type == ST_TRAVEL ));
 		// InfoPoints of all types don't run scripts if TRAP_DEACTIVATED is set
 		// (eg, TriggerActivation changes this, see lightning room from SoA)
- 		if (wasActive)
-			wasActive = !(ip->Flags&TRAP_DEACTIVATED);
+		int wasActive = (!(ip->Flags&TRAP_DEACTIVATED) ) || (ip->Type==ST_TRAVEL);
 
 		//If this InfoPoint is a Switch Trigger
 		if (ip->Type == ST_TRIGGER) {
 			//Check if this InfoPoint was activated
 			if (ip->LastTrigger) {
-				if (wasActive) {
+				if (wasActive && ip->Scripts[0]) {
 					//Run the InfoPoint script
 					ip->ExecuteScript( 1 );
 				}
@@ -814,6 +824,7 @@ void Map::UpdateScripts()
 					if(ip->Entered(actor)) {
 						//if trap triggered, then mark actor
 						actor->SetInTrap(ipCount);
+						wasActive|=TRAP_USEPOINT;
 					}
 				} else {
 					//ST_TRAVEL
@@ -834,6 +845,10 @@ void Map::UpdateScripts()
 
 		if (wasActive) {
 			ip->ExecuteScript( 1 );
+			//Play the PST specific enter sound
+			if (wasActive&TRAP_USEPOINT) {
+				core->GetAudioDrv()->Play(ip->EnterWav, ip->TrapLaunch.x, ip->TrapLaunch.y);
+			}
 		}
 		//Execute Pending Actions
 		ip->ProcessActions(false);
@@ -877,7 +892,7 @@ bool Map::DoStepForActor(Actor *actor, int speed, ieDword time) {
 }
 
 void Map::ClearSearchMapFor( Movable *actor ) {
-	Actor** nearActors = GetAllActorsInRadius(actor->Pos, GA_NO_DEAD, MAX_CIRCLE_SIZE*2*16);
+	Actor** nearActors = GetAllActorsInRadius(actor->Pos, GA_NO_DEAD|GA_NO_LOS, MAX_CIRCLE_SIZE*2*16);
 	BlockSearchMap( actor->Pos, actor->size, PATH_MAP_FREE);
 
 	// Restore the searchmap areas of any nearby actors that could
@@ -1040,20 +1055,33 @@ void Map::DrawMap(Region screen)
 		INISpawn->CheckSpawn();
 	}
 
-	int rain;
-	if (HasWeather()) {
-		//zero when the weather particles are all gone
-		rain = game->weather->GetPhase()-P_EMPTY;
-	} else {
-		rain = 0;
-	}
-	TMap->DrawOverlays( screen, rain );
-
 	//Blit the Background Map Animations (before actors)
 	Video* video = core->GetVideoDriver();
+	int bgoverride = false;
 
-	//Draw Outlines
-	DrawHighlightables( screen );
+	if (Background) {
+		if (BgDuration<gametime) {
+			video->FreeSprite(Background);
+		} else {
+			video->BlitSprite(Background,0,0,true);
+			bgoverride = true;
+		}
+	}
+
+	if (!bgoverride) {
+		int rain;
+		if (HasWeather()) {
+			//zero when the weather particles are all gone
+			rain = game->weather->GetPhase()-P_EMPTY;
+		} else {
+			rain = 0;
+		}
+
+		TMap->DrawOverlays( screen, rain );
+
+		//Draw Outlines
+		DrawHighlightables( screen );
+	}
 
 	Region vp = video->GetViewport();
 	//if it is only here, then the scripting will fail?
@@ -1224,23 +1252,20 @@ void Map::DrawSearchMap(const Region &screen)
 }
 
 //adding animation in order, based on its height parameter
-void Map::AddAnimation(AreaAnimation* anim)
+void Map::AddAnimation(AreaAnimation* panim)
 {
-	//this hack is to make sure animations flagged with background
-	//are always drawn first (-9999 seems sufficiently small)
-	if (anim->Flags&A_ANI_BACKGROUND) {
-		anim->height=-9999;
-	}
+	//copy external memory to core memory for msvc's sake
+	AreaAnimation *anim = new AreaAnimation();
+	memcpy(anim, panim, sizeof(AreaAnimation) );
+
+	anim->InitAnimation();
 
 	aniIterator iter;
-	for(iter=animations.begin(); (iter!=animations.end()) && ((*iter)->height<anim->height); iter++) ;
-	animations.insert(iter, anim);
-	/*
-	Animation *a = anim->animation[0];
-	anim->SetSpriteCover(BuildSpriteCover(anim->Pos.x, anim->Pos.y,-a->animArea.x,
-			-a->animArea.y, a->animArea.w, a->animArea.h,0
-		));
-	*/
+	
+	int Height = anim->GetHeight();
+printf("Adding %s at height %d, Pos: %d.%d\n", anim->Name, Height, anim->Pos.x, anim->Pos.y);
+	for(iter=animations.begin(); (iter!=animations.end()) && ((*iter)->GetHeight()<Height); iter++) ;
+	animations.insert(iter, anim);	
 }
 
 //reapplying all of the effects on the actors of this map
@@ -1482,6 +1507,7 @@ Actor* Map::GetActorInRadius(const Point &p, int flags, unsigned int radius)
 	return NULL;
 }
 
+//maybe consider using a simple list
 Actor **Map::GetAllActorsInRadius(const Point &p, int flags, unsigned int radius)
 {
 	ieDword count = 1;
@@ -1500,6 +1526,11 @@ Actor **Map::GetAllActorsInRadius(const Point &p, int flags, unsigned int radius
 		if (!actor->Schedule(gametime, true) ) {
 			continue;
 		}
+		if (!(flags&GA_NO_LOS)) {
+			if (!IsVisible(actor->Pos, p)) {
+				continue;
+			}
+		}
 		count++;
 	}
 
@@ -1517,6 +1548,12 @@ Actor **Map::GetAllActorsInRadius(const Point &p, int flags, unsigned int radius
 		if (!actor->Schedule(gametime, true) ) {
 			continue;
 		}
+		if (!(flags&GA_NO_LOS)) {
+			if (!IsVisible(actor->Pos, p)) {
+				continue;
+			}
+		}
+
 		ret[j++]=actor;
 	}
 
@@ -1729,7 +1766,7 @@ unsigned int Map::GetBlocked(unsigned int x, unsigned int y)
 		return 0;
 	}
 	unsigned int ret = SrchMap[y*Width+x];
-	if (ret&(PATH_MAP_DOOR_TRANSPARENT|PATH_MAP_ACTOR)) {
+	if (ret&(PATH_MAP_DOOR_IMPASSABLE|PATH_MAP_ACTOR)) {
 		ret&=~PATH_MAP_PASSABLE;
 	}
 	if (ret&PATH_MAP_DOOR_OPAQUE) {
@@ -2083,7 +2120,18 @@ bool Map::CanFree()
 
 void Map::DebugDump(bool show_actors) const
 {
+	size_t i;
+
 	printf( "DebugDump of Area %s:\n", scriptName );
+	printf ("Scripts:");
+
+	for (i = 0; i < MAX_SCRIPTS; i++) {
+		const char* poi = "<none>";
+		if (Scripts[i]) {
+			poi = Scripts[i]->GetName();
+		}
+		printf( " %.8s", poi );
+	}
 	printf( "Area Global ID:  %d\n", GetGlobalID());
 	printf( "OutDoor: %s\n", YESNO(AreaType & AT_OUTDOOR ) );
 	printf( "Day/Night: %s\n", YESNO(AreaType & AT_DAYNIGHT ) );
@@ -2094,7 +2142,7 @@ void Map::DebugDump(bool show_actors) const
 
 	if (show_actors) {
 		printf("\n");
-		size_t i = actors.size();
+		i = actors.size();
 		while (i--) {
 			if (!(actors[i]->GetInternalFlag()&(IF_JUSTDIED|IF_REALLYDIED))) {
 				printf("Actor: %s at %d.%d\n", actors[i]->GetName(1), actors[i]->Pos.x, actors[i]->Pos.y);
@@ -2981,7 +3029,7 @@ void Map::SetMapVisibility(int setreset)
 	memset( VisibleBitmap, setreset, GetExploredMapSize() );
 }
 
-// x, y are in tile coordinates
+// x, y are not in tile coordinates
 void Map::ExploreTile(const Point &pos)
 {
 	int h = TMap->YCellCount * 2 + LargeFog;
@@ -3302,9 +3350,13 @@ void Map::FadeSparkle(const Point &pos, bool forced)
 	}
 }
 
-void Map::Sparkle(ieDword duration, ieDword color, ieDword type, const Point &pos, unsigned int FragAnimID)
+void Map::Sparkle(ieDword duration, ieDword color, ieDword type, const Point &pos, unsigned int FragAnimID, int Zpos)
 {
 	int style, path, grow, size, width, ttl;
+
+	if (!Zpos) {
+		Zpos = 30;
+	}
 
 	//the high word is ignored in the original engine (compatibility hack)
 	switch(type&0xffff) {
@@ -3320,14 +3372,14 @@ void Map::Sparkle(ieDword duration, ieDword color, ieDword type, const Point &po
 		grow = SP_SPAWN_SOME;
 		size = 40;
 		width = 40;
-		ttl = core->GetGame()->GameTime+25;
+		ttl = core->GetGame()->GameTime+Zpos;
 		break;
 	case SPARKLE_EXPLOSION: //this isn't in the original engine, but it is a nice effect to have
 		path = SP_PATH_EXPL;
 		grow = SP_SPAWN_SOME;
-		size = 40;
+		size = 10;
 		width = 40;
-		ttl = core->GetGame()->GameTime+25;
+		ttl = core->GetGame()->GameTime+Zpos;
 		break;
 	default:
 		path = SP_PATH_FLIT;
@@ -3339,7 +3391,7 @@ void Map::Sparkle(ieDword duration, ieDword color, ieDword type, const Point &po
 	}
 	Particles *sparkles = new Particles(size);
 	sparkles->SetOwner(this);
-	sparkles->SetRegion(pos.x-width/2, pos.y-30, width, 30);
+	sparkles->SetRegion(pos.x-width/2, pos.y-Zpos, width, Zpos);
 	sparkles->SetTimeToLive(ttl);
 
 	if (FragAnimID) {
@@ -3528,7 +3580,7 @@ void AreaAnimation::BlendAnimation()
 	palette->CreateShadedAlphaChannel();
 }
 
-bool AreaAnimation::Schedule(ieDword gametime)
+bool AreaAnimation::Schedule(ieDword gametime) const
 {
 	if (!(Flags&A_ANI_ACTIVE) ) {
 		return false;
@@ -3542,9 +3594,17 @@ bool AreaAnimation::Schedule(ieDword gametime)
 	return false;
 }
 
+int AreaAnimation::GetHeight() const
+{
+	if (Flags&A_ANI_BACKGROUND) return -9999;
+	return Pos.y+height;
+	//FIXME: this is obviously a hack that is destined to crash, also useless, so
+	//See ar9101 in HoW and ar0602 in bg2 before committing anything
+	//return Pos.y+height-animation[0][0].GetFrame(0)->Height;
+}
+
 void AreaAnimation::Draw(const Region &screen, Map *area)
 {
-	int ac=animcount;
 	Video* video = core->GetVideoDriver();
 
 	//always draw the animation tinted because tint is also used for
@@ -3559,7 +3619,8 @@ void AreaAnimation::Draw(const Region &screen, Map *area)
 			covers=(SpriteCover **) calloc( animcount, sizeof(SpriteCover *) );
 		}
 	}
-	ac=animcount;
+
+	int ac = animcount;
 	while (ac--) {
 		Animation *anim = animation[ac];
 		Sprite2D *frame = anim->NextFrame();
@@ -3628,4 +3689,16 @@ void Map::SetInternalSearchMap(int x, int y, int value) {
 		return;
 	}
 	SrchMap[x+y*Width] = value;
+}
+
+void Map::SetBackground(const ieResRef &bgResRef, ieDword duration) {
+	Video* video = core->GetVideoDriver();
+
+	ResourceHolder<ImageMgr> bmp(bgResRef);
+
+	if (Background) {
+		video->FreeSprite(Background);
+	}
+	Background = bmp->GetSprite2D();
+	BgDuration = duration;
 }

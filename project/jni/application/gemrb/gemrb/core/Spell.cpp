@@ -73,7 +73,7 @@ int Spell::GetHeaderIndexFromLevel(int level) const
 //-1 will return cfb
 //0 will always return first spell block
 //otherwise set to caster level
-static EffectRef fx_casting_glow_ref={"CastingGlow",NULL,-1};
+static EffectRef fx_casting_glow_ref = { "CastingGlow", -1 };
 
 void Spell::AddCastingGlow(EffectQueue *fxqueue, ieDword duration, int gender)
 {
@@ -118,7 +118,7 @@ void Spell::AddCastingGlow(EffectQueue *fxqueue, ieDword duration, int gender)
 	delete fx;
 }
 
-EffectQueue *Spell::GetEffectBlock(Scriptable *self, const Point &pos, int block_index, ieDword pro) const
+EffectQueue *Spell::GetEffectBlock(Scriptable *self, const Point &pos, int block_index, int level, ieDword pro) const
 {
 	Effect *features;
 	int count;
@@ -140,21 +140,23 @@ EffectQueue *Spell::GetEffectBlock(Scriptable *self, const Point &pos, int block
 	EffectQueue *selfqueue = NULL;
 
 	for (int i=0;i<count;i++) {
-		if (Flags & SF_SIMPLIFIED_DURATION) {
+		Effect *fx = features+i;
+
+		if ((Flags & SF_SIMPLIFIED_DURATION) && (block_index>=0)) {
 			//hack the effect according to Level
 			//fxqueue->AddEffect will copy the effect,
 			//so we don't risk any overwriting
 			if (EffectQueue::HasDuration(features+i)) {
-				features[i].Duration = (TimePerLevel*block_index+TimeConstant)*core->Time.round_sec;
+				fx->Duration = (TimePerLevel*block_index+TimeConstant)*core->Time.round_sec;
 			}
 		}
 		//fill these for completeness, inventoryslot is a good way
 		//to discern a spell from an item effect
-		Effect *fx = features+i;
 
 		fx->InventorySlot = 0xffff;
 		//the hostile flag is used to determine if this was an attack
 		fx->SourceFlags = Flags;
+		fx->CasterLevel = level;
 
 		// apply the stat-based spell duration modifier
 		if (self->Type == ST_ACTOR) {

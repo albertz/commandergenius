@@ -204,6 +204,7 @@ static const TriggerLink triggernames[] = {
 	{"isactive", GameScript::IsActive, 0},
 	{"isanimationid", GameScript::AnimationID, 0},
 	{"iscreatureareaflag", GameScript::IsCreatureAreaFlag, 0},
+	{"iscreaturehiddeninshadows", GameScript::IsCreatureHiddenInShadows, 0},
 	{"isfacingobject", GameScript::IsFacingObject, 0},
 	{"isfacingsavedrotation", GameScript::IsFacingSavedRotation, 0},
 	{"isgabber", GameScript::IsGabber, 0},
@@ -1254,6 +1255,10 @@ void Targets::Clear()
 /** releasing global memory */
 static void CleanupIEScript()
 {
+	triggersTable.release();
+	actionsTable.release();
+	objectsTable.release();
+	overrideActionsTable.release();
 	if (ObjectIDSTableNames)
 		free(ObjectIDSTableNames);
 	ObjectIDSTableNames = NULL;
@@ -1280,6 +1285,9 @@ void InitializeIEScript()
 	std::list<int>::iterator l;
 
 	PluginMgr::Get()->RegisterCleanup(CleanupIEScript);
+
+	NoCreate = core->HasFeature(GF_NO_NEW_VARIABLES);
+	HasKaputz = core->HasFeature(GF_HAS_KAPUTZ);
 
 	InitScriptTables();
 	int tT = core->LoadSymbol( "trigger" );
@@ -1721,8 +1729,9 @@ static Object* DecodeObject(const char* line)
 		printf("%s\n", origline);
 	}
 	//let the object realize it has no future (in case of null objects)
-	if (oB->ReadyToDie()) {
-		oB = NULL;
+	if (oB->isNull()) {
+		oB->Release();
+		return NULL;
 	}
 	return oB;
 }
@@ -1841,13 +1850,10 @@ bool GameScript::Update(bool *continuing, bool *done)
 			}
 			continueExecution = ( rB->responseSet->Execute(MySelf) != 0);
 			if (continuing) *continuing = continueExecution;
-			//clear triggers after response executed
-			//MySelf->ClearTriggers();
 			if (!continueExecution) {
 				if (done) *done = true;
 				break;
 			}
-			//continueExecution = false;
 		}
 	}
 	return true;
@@ -2315,8 +2321,8 @@ Action* GenerateActionDirect(char *String, Scriptable *object)
 	return action;
 }
 
-/** Self-destructing object if it is empty */
-bool Object::ReadyToDie()
+/** Return true if object is null */
+bool Object::isNull()
 {
 	if (objectName[0]!=0) {
 		return false;
@@ -2329,8 +2335,6 @@ bool Object::ReadyToDie()
 			return false;
 		}
 	}
-	//commit suicide
-	Release();
 	return true;
 }
 
