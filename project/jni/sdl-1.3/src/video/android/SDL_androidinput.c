@@ -551,7 +551,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 				leftClickMethod == LEFT_CLICK_WITH_TIMEOUT || leftClickMethod == LEFT_CLICK_WITH_TAP ||
 				leftClickMethod == LEFT_CLICK_WITH_TAP_OR_TIMEOUT || rightClickMethod == RIGHT_CLICK_WITH_TIMEOUT ) )
 			{
-				if( abs(mouseInitialX - x) >= SDL_ANDROID_sFakeWindowHeight / 10 || abs(mouseInitialY - y) >= SDL_ANDROID_sFakeWindowHeight / 10 )
+				if( abs(mouseInitialX - x) >= SDL_ANDROID_sFakeWindowHeight / 15 || abs(mouseInitialY - y) >= SDL_ANDROID_sFakeWindowHeight / 15 )
 				{
 					mouseInitialX = -1;
 					mouseInitialY = -1;
@@ -562,7 +562,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 					{
 						if( SDL_GetTicks() - mouseInitialTime > leftClickTimeout )
 						{
-							SDL_ANDROID_MainThreadPushMouseMotion(mouseInitialX, mouseInitialY);
+							//SDL_ANDROID_MainThreadPushMouseMotion(mouseInitialX, mouseInitialY);
 							SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
 							mouseInitialX = -1;
 							mouseInitialY = -1;
@@ -572,7 +572,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 					{
 						if( SDL_GetTicks() - mouseInitialTime > rightClickTimeout )
 						{
-							SDL_ANDROID_MainThreadPushMouseMotion(mouseInitialX, mouseInitialY);
+							//SDL_ANDROID_MainThreadPushMouseMotion(mouseInitialX, mouseInitialY);
 							SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_RIGHT );
 							mouseInitialX = -1;
 							mouseInitialY = -1;
