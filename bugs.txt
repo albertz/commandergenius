@@ -9,6 +9,8 @@ Known bugs
 
 - SDL_FillRect() does not work in SDL 1.2 HW mode.
 
+- Return key does not work for text input (worked before, regression).
+
 Requested features
 ==================
 

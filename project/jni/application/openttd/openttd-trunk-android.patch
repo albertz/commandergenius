@@ -1,8 +1,8 @@
 Index: src/video/sdl_v.cpp
 ===================================================================
---- src/video/sdl_v.cpp	(revision 21311)
+--- src/video/sdl_v.cpp	(revision 22294)
 +++ src/video/sdl_v.cpp	(working copy)
-@@ -354,6 +354,8 @@
+@@ -353,6 +353,8 @@
  	if (sym->scancode == 49) key = WKC_BACKSPACE;
  #elif defined(__sgi__)
  	if (sym->scancode == 22) key = WKC_BACKQUOTE;
@@ -11,7 +11,7 @@ Index: src/video/sdl_v.cpp
  #else
  	if (sym->scancode == 49) key = WKC_BACKQUOTE;
  #endif
-@@ -485,6 +487,9 @@
+@@ -484,6 +486,9 @@
  	SDL_CALL SDL_EnableUNICODE(1);
  
  	_draw_threaded = GetDriverParam(parm, "no_threads") == NULL && GetDriverParam(parm, "no_thread") == NULL;
@@ -23,7 +23,7 @@ Index: src/video/sdl_v.cpp
  }
 Index: src/sound/sdl_s.cpp
 ===================================================================
---- src/sound/sdl_s.cpp	(revision 21311)
+--- src/sound/sdl_s.cpp	(revision 22294)
 +++ src/sound/sdl_s.cpp	(working copy)
 @@ -20,9 +20,16 @@
  
@@ -44,9 +44,9 @@ Index: src/sound/sdl_s.cpp
  const char *SoundDriver_SDL::Start(const char * const *parm)
 Index: src/music/libtimidity.cpp
 ===================================================================
---- src/music/libtimidity.cpp	(revision 21311)
+--- src/music/libtimidity.cpp	(revision 22294)
 +++ src/music/libtimidity.cpp	(working copy)
-@@ -23,10 +23,13 @@
+@@ -22,10 +22,13 @@
  #include <sys/stat.h>
  #include <errno.h>
  #include <timidity.h>
@@ -60,7 +60,7 @@ Index: src/music/libtimidity.cpp
  enum MidiState {
  	MIDI_STOPPED = 0,
  	MIDI_PLAYING = 1,
-@@ -51,6 +54,24 @@
+@@ -50,6 +53,24 @@
  	}
  }
  #endif /* PSP */
@@ -85,9 +85,29 @@ Index: src/music/libtimidity.cpp
  
  static FMusicDriver_LibTimidity iFMusicDriver_LibTimidity;
  
+Index: src/table/settings.h
+===================================================================
+--- src/table/settings.h	(revision 22294)
++++ src/table/settings.h	(working copy)
+@@ -270,9 +270,15 @@
+ 	  SDTG_STR("savegame_format",  SLE_STRB, S, 0, _savegame_format,       NULL,    STR_NULL, NULL),
+ 	 SDTG_BOOL("rightclick_emulate",         S, 0, _rightclick_emulate,   false,    STR_NULL, NULL),
+ #ifdef WITH_FREETYPE
++#ifdef ANDROID
++	  SDTG_STR("small_font",       SLE_STRB, S, 0, _freetype.small_font,   "fonts/FreeSans.ttf",    STR_NULL, NULL),
++	  SDTG_STR("medium_font",      SLE_STRB, S, 0, _freetype.medium_font,  "fonts/FreeSans.ttf",    STR_NULL, NULL),
++	  SDTG_STR("large_font",       SLE_STRB, S, 0, _freetype.large_font,   "fonts/FreeSerif.ttf",    STR_NULL, NULL),
++#else
+ 	  SDTG_STR("small_font",       SLE_STRB, S, 0, _freetype.small_font,   NULL,    STR_NULL, NULL),
+ 	  SDTG_STR("medium_font",      SLE_STRB, S, 0, _freetype.medium_font,  NULL,    STR_NULL, NULL),
+ 	  SDTG_STR("large_font",       SLE_STRB, S, 0, _freetype.large_font,   NULL,    STR_NULL, NULL),
++#endif
+ 	  SDTG_VAR("small_size",       SLE_UINT, S, 0, _freetype.small_size,   8, 0, 72, 0, STR_NULL, NULL),
+ 	  SDTG_VAR("medium_size",      SLE_UINT, S, 0, _freetype.medium_size, 10, 0, 72, 0, STR_NULL, NULL),
+ 	  SDTG_VAR("large_size",       SLE_UINT, S, 0, _freetype.large_size,  16, 0, 72, 0, STR_NULL, NULL),
 Index: src/os/unix/unix.cpp
 ===================================================================
---- src/os/unix/unix.cpp	(revision 21311)
+--- src/os/unix/unix.cpp	(revision 22294)
 +++ src/os/unix/unix.cpp	(working copy)
 @@ -24,7 +24,7 @@
  
@@ -98,7 +118,7 @@ Index: src/os/unix/unix.cpp
  	#define HAS_STATVFS
  #endif
  
-@@ -239,6 +239,11 @@
+@@ -245,6 +245,11 @@
  void cocoaReleaseAutoreleasePool();
  #endif
  
@@ -112,7 +132,7 @@ Index: src/os/unix/unix.cpp
  	int ret;
 Index: src/os/unix/crashlog_unix.cpp
 ===================================================================
---- src/os/unix/crashlog_unix.cpp	(revision 21311)
+--- src/os/unix/crashlog_unix.cpp	(revision 22294)
 +++ src/os/unix/crashlog_unix.cpp	(working copy)
 @@ -141,7 +141,11 @@
  };
@@ -128,12 +148,12 @@ Index: src/os/unix/crashlog_unix.cpp
   * Entry point for the crash handler.
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 21311)
+--- src/window.cpp	(revision 22294)
 +++ src/window.cpp	(working copy)
-@@ -2053,6 +2053,10 @@
+@@ -2158,6 +2158,10 @@
+ 	 * But there is no company related window open anyway, so _current_company is not used. */
+ 	assert(IsGeneratingWorld() || IsLocalCompany());
  
- static void MouseLoop(MouseClick click, int mousewheel)
- {
 +#ifdef ANDROID
 +	_settings_client.gui.left_mouse_btn_scrolling = true;
 +#endif
@@ -143,9 +163,9 @@ Index: src/window.cpp
  
 Index: src/network/core/os_abstraction.h
 ===================================================================
---- src/network/core/os_abstraction.h	(revision 21311)
+--- src/network/core/os_abstraction.h	(revision 22294)
 +++ src/network/core/os_abstraction.h	(working copy)
-@@ -159,7 +159,7 @@
+@@ -161,7 +161,7 @@
  #		include <net/if.h>
  /* According to glibc/NEWS, <ifaddrs.h> appeared in glibc-2.3. */
  #		if !defined(__sgi__) && !defined(SUNOS) && !defined(__MORPHOS__) && !defined(__BEOS__) && !defined(__HAIKU__) && !defined(__INNOTEK_LIBC__) \
@@ -156,7 +176,7 @@ Index: src/network/core/os_abstraction.h
   *   the list of IPs from the system. */
 Index: src/debug.cpp
 ===================================================================
---- src/debug.cpp	(revision 21311)
+--- src/debug.cpp	(revision 22294)
 +++ src/debug.cpp	(working copy)
 @@ -16,6 +16,9 @@
  #include "string_func.h"
@@ -168,8 +188,8 @@ Index: src/debug.cpp
  
  #include <time.h>
  
-@@ -70,6 +73,9 @@
- 
+@@ -76,6 +79,9 @@
+  */
  static void debug_print(const char *dbg, const char *buf)
  {
 +#ifdef ANDROID
@@ -180,17 +200,17 @@ Index: src/debug.cpp
  		char buf2[1024 + 32];
 Index: src/main_gui.cpp
 ===================================================================
---- src/main_gui.cpp	(revision 21311)
+--- src/main_gui.cpp	(revision 22294)
 +++ src/main_gui.cpp	(working copy)
-@@ -275,7 +275,11 @@
- 			}
- 
- 			case WKC_ESC: ResetObjectToPlace(); break;
+@@ -462,7 +462,11 @@
+ 	Hotkey<MainWindow>('C', "center", GHK_CENTER),
+ 	Hotkey<MainWindow>('Z', "center_zoom", GHK_CENTER_ZOOM),
+ 	Hotkey<MainWindow>(WKC_ESC, "reset_object_to_place", GHK_RESET_OBJECT_TO_PLACE),
 +#ifdef ANDROID
-+			case WKC_DELETE: DeleteAllNonVitalWindows(); break;
++	Hotkey<MainWindow>(WKC_DELETE, "delete_windows", GHK_DELETE_NONVITAL_WINDOWS),
 +#else
- 			case WKC_DELETE: DeleteNonVitalWindows(); break;
+ 	Hotkey<MainWindow>(WKC_DELETE, "delete_windows", GHK_DELETE_WINDOWS),
 +#endif
- 			case WKC_DELETE | WKC_SHIFT: DeleteAllNonVitalWindows(); break;
- 			case 'R' | WKC_CTRL: MarkWholeScreenDirty(); break;
- 
+ 	Hotkey<MainWindow>(WKC_DELETE | WKC_SHIFT, "delete_all_windows", GHK_DELETE_NONVITAL_WINDOWS),
+ 	Hotkey<MainWindow>('R' | WKC_CTRL, "refresh_screen", GHK_REFRESH_SCREEN),
+ #if defined(_DEBUG)
