@@ -1,4 +1,4 @@
-This is libSDL 1.2 and 1.3 ported to Google Android (also bunch of other libs included).
+This is SDL 1.2 and 1.3 ported to Google Android (also bunch of other libs included).
 The libsdl.org now has an official SDL 1.3 Android port, which supports ABGR8888 pixel format and
 creating GLES2 context. This port supports only GLES version 1 and 16-bit pixel format,
 focused mainly on SDL 1.2, and won't keep updating with SDL 1.3 from libsdl.org.
@@ -35,7 +35,7 @@ It's designed for 320x240, so if you have smaller screen it will be resized.
 
 The game enforces horizontal screen orientation, you may slide-open your keyboard if you have it
 and use it for additional keys - the device will just keep current screen orientation.
-Recent Android phone models like HTC Evo have no keyboard at all, on-screen keyboard built into libSDL
+Recent Android phone models like HTC Evo have no keyboard at all, on-screen keyboard built into SDL
 is available for such devices - it has joystick (which can be configured as arrow buttons or analog joystick),
 and 6 configurable keys, full text input is toggled with 7-th key. Both user and application may redefine
 button layout and returned keycodes, and also toggle full text input - see SDL_screenkeyboard.h.
@@ -335,10 +335,29 @@ while heap memory limit on most phones is 24 Mb.
 License information
 ===================
 
-The libSDL port itself is licensed under LGPL, so you may use it for commercial app without releasing sources,
-however you'll have to release the file AndroidAppSettings.cfg to allow linking newer version of libSDL with
-your compiled application, as LGPL requires.
-It contains separate libraries under project/jni, each of which has it's own license,
+The SDL port itself is licensed under LGPL, so you may use it for commercial purposes
+without releasing source code, however to fullfill LGPL requirementsyou'll have to publish
+the file AndroidAppSettings.cfg to allow linking other version of SDL with the libraries
+in the binary package you're distributing - typically libapplication.so and other
+closed-source libraries in your .apk file.
+
+There is a license exception for a file project/java/Settings.java:
+you may modify it as you wish without releasing source code,
+as long as your binary package can be linked and executed without error against the SDL compiled
+from the original source code. This implies that you may not modify Java-to-C
+interface, otherwise you have to publish the source code with your changes.
+
+This exception is here to permit you to replace a rather awkward SDL startup config dialog
+with your own user-friendly version, possibly with lesser options and some help on them.
+Also you may put your own logo in the startup screen instead of the "Powered by SDL" logo.
+
+You may modify other Java files if needed to implement your custom startup config dialog
+without publishing the source code, to a reasonable extent of course - if your modification
+will make SDL work better, faster or more stable beyond the startup config dialog -
+you still have to publish the source code with such change (and I don't care about
+changes which will make SDL work worse, slower or less stable, you may keep them).
+
+The libraries under project/jni, each of which has it's own license,
 I've tried to compile all LGPL-ed libs as shared libs but you should anyway inspect the licenses
 of the libraries you're linking to if you're creating closed-source app.
 libmad and liblzo2 are licensed under GPL, so if you're planning to make commercial app you should avoid
