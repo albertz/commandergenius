@@ -63,7 +63,7 @@ import android.graphics.Bitmap;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.text.Editable;
-
+import android.text.SpannedString;
 
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?

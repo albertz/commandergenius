@@ -46,6 +46,7 @@ import java.io.InputStream;
 import android.content.Context;
 import android.content.res.Resources;
 import java.lang.String;
+import android.text.SpannedString;
 
 
 class CountingInputStream extends BufferedInputStream {
@@ -115,7 +116,7 @@ class DataDownloader extends Thread
 	{
 		private TextView Status;
 		private MainActivity Parent;
-		private String oldText = "";
+		private SpannedString oldText = new SpannedString("");
 
 		public StatusWriter( TextView _Status, MainActivity _Parent )
 		{
@@ -127,7 +128,7 @@ class DataDownloader extends Thread
 			synchronized(DataDownloader.this) {
 				Status = _Status;
 				Parent = _Parent;
-				setText( oldText );
+				setText( oldText.toString() );
 			}
 		}
 		
@@ -136,7 +137,7 @@ class DataDownloader extends Thread
 			class Callback implements Runnable
 			{
 				public TextView Status;
-				public String text;
+				public SpannedString text;
 				public void run()
 				{
 					Status.setText(text);
@@ -144,8 +145,8 @@ class DataDownloader extends Thread
 			}
 			synchronized(DataDownloader.this) {
 				Callback cb = new Callback();
-				oldText = new String(str);
-				cb.text = new String(str);
+				oldText = new SpannedString(str);
+				cb.text = new SpannedString(str);
 				cb.Status = Status;
 				if( Parent != null && Status != null )
 					Parent.runOnUiThread(cb);
