@@ -45,6 +45,9 @@ import java.io.File;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import android.text.SpannedString;
+import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.InputStreamReader;
 
 
 public class MainActivity extends Activity {
@@ -409,7 +412,17 @@ public class MainActivity extends Activity {
 		{
 			for(String l : Globals.AppLibraries)
 			{
-				System.loadLibrary(l);
+				try
+				{
+					String libname = System.mapLibraryName(l);
+					File libpath = new File(getFilesDir().getAbsolutePath() + "/../lib/" + libname);
+					System.out.println("libSDL: loading lib " + libpath.getAbsolutePath());
+					System.load(libpath.getPath());
+				}
+				catch( UnsatisfiedLinkError e )
+				{
+					System.loadLibrary(l);
+				}
 			}
 		}
 		catch ( UnsatisfiedLinkError e )
