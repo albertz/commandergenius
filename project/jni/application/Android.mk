@@ -25,6 +25,9 @@ LOCAL_C_INCLUDES :=
 ifeq ($(CRYSTAX_TOOLCHAIN)$(NDK_R5_TOOLCHAIN),)
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../stlport/stlport
 endif
+ifneq ($(CRYSTAX_R5B3_TOOLCHAIN),)
+LOCAL_C_INCLUDES += $(NDK_PATH)/sources/wchar-support/include
+endif
 
 LOCAL_C_INCLUDES += $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) \
 					$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include \

@@ -18,4 +18,9 @@ LOCAL_SRC_FILES := SDL_fake_stdout.cpp
 LOCAL_SHARED_LIBRARIES := 
 LOCAL_LDLIBS := -llog
 
+ifneq ($(CRYSTAX_R5B3_TOOLCHAIN),)
+LOCAL_C_INCLUDES += $(NDK_PATH)/sources/wchar-support/include
+LOCAL_LDFLAGS += sources/wchar-support/libs/armeabi/libwchar_static.a
+endif
+
 include $(BUILD_STATIC_LIBRARY)

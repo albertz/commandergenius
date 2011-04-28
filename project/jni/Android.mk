@@ -25,5 +25,11 @@ ifneq ($(findstring r5b,$(NDK_VERSION))$(findstring r5-crystax,$(NDK_VERSION)),)
 $(info Building with NDK r5b - internal STLPort disabled)
 NDK_R5_TOOLCHAIN := 1
 endif
+ifneq ($(findstring r5-crystax-1.beta3,$(NDK_VERSION)),)
+$(info Building with CrystaX r5 beta3 toolchain - internal STLPort disabled, wchar support enabled)
+CRYSTAX_R5B3_TOOLCHAIN := 1
+endif
+
+NDK_PATH := $(shell dirname $(shell which ndk-build))
 
 include $(call all-subdir-makefiles)
