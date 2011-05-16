@@ -137,7 +137,7 @@ abstract class DifferentTouchInput
 					touchEvents[id].y = (int)event.getY(i);
 					touchEvents[id].pressure = (int)(event.getPressure(i) * 1000.0);
 					touchEvents[id].size = (int)(event.getSize(i) * 1000.0);
-					DemoGLSurfaceView.nativeMouse( touchEvents[i].x, touchEvents[i].y, action, id, touchEvents[i].pressure, touchEvents[i].size );
+					DemoGLSurfaceView.nativeMouse( touchEvents[id].x, touchEvents[id].y, action, id, touchEvents[id].pressure, touchEvents[id].size );
 				}
 			}
 
@@ -163,19 +163,16 @@ abstract class DifferentTouchInput
 					}
 					else
 					{
-						int id = event.getPointerId(ii);
-						if( id >= touchEventMax )
-							id = touchEventMax-1;
-						if( touchEvents[id].down )
+						if( touchEvents[i].down )
 							action = 2;
 						else
 							action = 0;
-						touchEvents[id].down = true;
-						touchEvents[id].x = (int)event.getX(i);
-						touchEvents[id].y = (int)event.getY(i);
-						touchEvents[id].pressure = (int)(event.getPressure(i) * 1000.0);
-						touchEvents[id].size = (int)(event.getSize(i) * 1000.0);
-						DemoGLSurfaceView.nativeMouse( touchEvents[i].x, touchEvents[i].y, action, id, touchEvents[i].pressure, touchEvents[i].size );
+						touchEvents[i].down = true;
+						touchEvents[i].x = (int)event.getX(ii);
+						touchEvents[i].y = (int)event.getY(ii);
+						touchEvents[i].pressure = (int)(event.getPressure(ii) * 1000.0);
+						touchEvents[i].size = (int)(event.getSize(ii) * 1000.0);
+						DemoGLSurfaceView.nativeMouse( touchEvents[i].x, touchEvents[i].y, action, i, touchEvents[i].pressure, touchEvents[i].size );
 					}
 				}
 			}
