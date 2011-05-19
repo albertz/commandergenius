@@ -120,4 +120,9 @@
 <string name="downloads">Загрузки</string>
 <string name="video_separatethread">Отдельный поток для видео, увеличит FPS на некоторых устройствах</string>
 <string name="text_edit_click_here">Нажмите, чтобы ввести текст, нажмите Назад, когда закончите</string>
+<string name="display_size_mouse">Настройка мыши в зависимости от размера дисплея</string>
+<string name="display_size">Выберите размер дисплея</string>
+<string name="display_size_large">Большой (таблетка)</string>
+<string name="display_size_small">Маленький (телефон)</string>
+<string name="display_size_tiny">Крохотный (Xperia Mini)</string>
 </resources>

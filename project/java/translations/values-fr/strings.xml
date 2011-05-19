@@ -130,4 +130,9 @@
 <string name="downloads">Téléchargements</string>
 <string name="video_separatethread">thread séparé pour la vidéo, va augmenter FPS sur certains appareils</string>
 <string name="text_edit_click_here">Appuyez sur pour commencer à taper, appuyez sur Retour lorsque vous avez terminé</string>
+<string name="display_size_mouse">Configurer la souris en fonction de la taille d\u0026#39;affichage</string>
+<string name="display_size">Sélectionnez votre taille d\u0026#39;affichage</string>
+<string name="display_size_large">Large (tablet)</string>
+<string name="display_size_small">Petit (téléphone)</string>
+<string name="display_size_tiny">Très petit (Xperia Mini)</string>
 </resources>

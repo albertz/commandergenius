@@ -127,4 +127,8 @@
 <string name="downloads">Downloads</string>
 <string name="video_separatethread">Erillisessä säikeessä video, kasvaa FPS joissakin laitteissa</string>
 <string name="text_edit_click_here">Napauta aloittaa kirjoittamisen, paina Takaisin, kun olet valmis</string>
+<string name="display_size_mouse">Määritä hiiren riippuen näytön koosta</string>
+<string name="display_size">Valitse näytön koko</string>
+<string name="display_size_large">Suuri (tabletti)</string>
+<string name="display_size_small">Pieni (puhelin)</string>
 </resources>

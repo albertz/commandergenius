@@ -127,4 +127,9 @@
 <string name="downloads">Downloads</string>
 <string name="video_separatethread">Separaten Thread für Video, FPS bei einigen Geräten zu erhöhen</string>
 <string name="text_edit_click_here">Tippen Sie auf der Eingabe beginnen, drücken Sie Zurück, wenn Sie fertig</string>
+<string name="display_size_mouse">Konfigurieren der Maus je nach Display-Größe</string>
+<string name="display_size">Wählen Sie Ihre Display-Größe</string>
+<string name="display_size_large">Groß (Tablette)</string>
+<string name="display_size_small">Klein (Telefon)</string>
+<string name="display_size_tiny">Uberklein (Xperia Mini)</string>
 </resources>
