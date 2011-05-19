@@ -326,7 +326,36 @@ class Settings
 	}
 
 	// ===============================================================================================
-	
+
+	public static abstract class Menu
+	{
+		abstract void run(final MainActivity p);
+		void goBack(final MainActivity p)
+		{
+			if(menuStack.isEmpty())
+			{
+				Save(p);
+				p.startDownloader();
+			}
+			else
+			{
+				Menu c = menuStack.remove(menuStack.size() - 1);
+				c.run(p);
+			}
+		}
+		abstract String title(final MainActivity p);
+		String innerTitle(final MainActivity p)
+		{
+			return title(p);
+		}
+		boolean enabled()
+		{
+			return true;
+		}
+	}
+
+	static ArrayList<Menu> menuStack = new ArrayList<Menu> ();
+
 	public static void showConfig(final MainActivity p) {
 		settingsChanged = true;
 
@@ -347,12 +376,26 @@ class Settings
 				Globals.OptionalDataDownload[0] = true;
 		}
 
-		showConfigMainMenu(p);
+		new MainMenu().run(p);
+	}
+	
+	static void showConfigMainMenu(final MainActivity p)
+	{
+		menuStack.clear();
+		new MainMenu().run(p);
 	}
 
 	static int MainMenuLastSelected = 0;
-	static void showConfigMainMenu(final MainActivity p)
+	static class MainMenu extends Menu
 	{
+	String title(final MainActivity p)
+	{
+		return p.getResources().getString(R.string.device_config);
+	}
+	void run (final MainActivity p)
+	{
+		menuStack.add(this);
+
 		ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
 
 		items.add(p.getResources().getString(R.string.storage_question));
@@ -384,7 +427,7 @@ class Settings
 		items.add(p.getResources().getString(R.string.ok));
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.device_config));
+		builder.setTitle(title(p));
 		//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
 		builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
 		{
@@ -452,8 +495,9 @@ class Settings
 
 				if( item == selected )
 				{
-					Save(p);
-					p.startDownloader();
+					if(!menuStack.isEmpty())
+						menuStack.remove(menuStack.size() - 1);
+					goBack(p);
 				}
 			}
 		});
@@ -461,13 +505,15 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				Save(p);
-				p.startDownloader();
+				if(!menuStack.isEmpty())
+					menuStack.remove(menuStack.size() - 1);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
 		alert.setOwnerActivity(p);
 		alert.show();
+	}
 	}
 
 	static int MouseConfigMainMenuLastSelected = 0;
@@ -1039,45 +1085,6 @@ class Settings
 
 	static void showDisplaySizeConfig(final MainActivity p)
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_normal),
-										p.getResources().getString(R.string.leftclick_near_cursor),
-										p.getResources().getString(R.string.leftclick_multitouch),
-										p.getResources().getString(R.string.leftclick_pressure),
-										p.getResources().getString(R.string.rightclick_key),
-										p.getResources().getString(R.string.leftclick_timeout),
-										p.getResources().getString(R.string.leftclick_tap),
-										p.getResources().getString(R.string.leftclick_tap_or_timeout) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.leftclick_question);
-		builder.setSingleChoiceItems(items, Globals.LeftClickMethod, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.LeftClickMethod = item;
-				dialog.dismiss();
-				if( item == Mouse.LEFT_CLICK_WITH_KEY )
-					p.keyListener = new KeyRemapToolMouseClick(p, true);
-				else if( item == Mouse.LEFT_CLICK_WITH_TIMEOUT || item == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT )
-					showLeftClickTimeoutConfig(p);
-				else
-					showMouseConfigMainMenu(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				showConfigMainMenu(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showLeftClickConfig(final MainActivity p)
-	{
 		final CharSequence[] items = {	p.getResources().getString(R.string.display_size_large),
 										p.getResources().getString(R.string.display_size_small) };
 
@@ -1087,6 +1094,8 @@ class Settings
 		{
 			public void onClick(DialogInterface dialog, int item) 
 			{
+				Globals.LeftClickMethod = item;
+				dialog.dismiss();
 				if( item == 0 )
 				{
 					Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
@@ -1110,6 +1119,44 @@ class Settings
 					}
 				}
 				showMouseConfigMainMenu(p);
+			}
+		});
+		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+		{
+			public void onCancel(DialogInterface dialog)
+			{
+				showConfigMainMenu(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showLeftClickConfig(final MainActivity p)
+	{
+		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_normal),
+										p.getResources().getString(R.string.leftclick_near_cursor),
+										p.getResources().getString(R.string.leftclick_multitouch),
+										p.getResources().getString(R.string.leftclick_pressure),
+										p.getResources().getString(R.string.rightclick_key),
+										p.getResources().getString(R.string.leftclick_timeout),
+										p.getResources().getString(R.string.leftclick_tap),
+										p.getResources().getString(R.string.leftclick_tap_or_timeout) };
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(R.string.leftclick_question);
+		builder.setSingleChoiceItems(items, Globals.LeftClickMethod, new DialogInterface.OnClickListener()
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				dialog.dismiss();
+				if( item == Mouse.LEFT_CLICK_WITH_KEY )
+					p.keyListener = new KeyRemapToolMouseClick(p, true);
+				else if( item == Mouse.LEFT_CLICK_WITH_TIMEOUT || item == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT )
+					showLeftClickTimeoutConfig(p);
+				else
+					showMouseConfigMainMenu(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
