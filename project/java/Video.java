@@ -38,6 +38,24 @@ import java.lang.reflect.Method;
 import java.util.LinkedList;
 
 
+class Mouse
+{
+	public static final int LEFT_CLICK_NORMAL = 0;
+	public static final int LEFT_CLICK_NEAR_CURSOR = 1;
+	public static final int LEFT_CLICK_WITH_MULTITOUCH = 2;
+	public static final int LEFT_CLICK_WITH_PRESSURE = 3;
+	public static final int LEFT_CLICK_WITH_KEY = 4;
+	public static final int LEFT_CLICK_WITH_TIMEOUT = 5;
+	public static final int LEFT_CLICK_WITH_TAP = 6;
+	public static final int LEFT_CLICK_WITH_TAP_OR_TIMEOUT = 7;
+	
+	public static final int RIGHT_CLICK_NONE = 0;
+	public static final int RIGHT_CLICK_WITH_MULTITOUCH = 1;
+	public static final int RIGHT_CLICK_WITH_PRESSURE = 2;
+	public static final int RIGHT_CLICK_WITH_KEY = 3;
+	public static final int RIGHT_CLICK_WITH_TIMEOUT = 4;
+}
+
 abstract class DifferentTouchInput
 {
 	public static DifferentTouchInput getInstance()
@@ -108,13 +126,19 @@ abstract class DifferentTouchInput
 		{
 			private static final MultiTouchInput sInstance = new MultiTouchInput();
 		}
+
+		static final int SDL_FINGER_DOWN = 0;
+		static final int SDL_FINGER_UP = 1;
+		static final int SDL_FINGER_MOVE = 2;
+
 		public void process(final MotionEvent event)
 		{
 			int action = -1;
 
+			//System.out.println("Got motion event, type " + (int)(event.getAction()) + " X " + (int)event.getX() + " Y " + (int)event.getY());
 			if( event.getAction() == MotionEvent.ACTION_UP )
 			{
-				action = 1;
+				action = SDL_FINGER_UP;
 				for( int i = 0; i < touchEventMax; i++ )
 				{
 					if( touchEvents[i].down )
@@ -126,7 +150,7 @@ abstract class DifferentTouchInput
 			}
 			if( event.getAction() == MotionEvent.ACTION_DOWN )
 			{
-				action = 0;
+				action = SDL_FINGER_DOWN;
 				for( int i = 0; i < event.getPointerCount(); i++ )
 				{
 					int id = event.getPointerId(i);
@@ -140,7 +164,6 @@ abstract class DifferentTouchInput
 					DemoGLSurfaceView.nativeMouse( touchEvents[id].x, touchEvents[id].y, action, id, touchEvents[id].pressure, touchEvents[id].size );
 				}
 			}
-
 			if( event.getAction() == MotionEvent.ACTION_MOVE )
 			{
 				for( int i = 0; i < touchEventMax; i++ )
@@ -156,7 +179,7 @@ abstract class DifferentTouchInput
 						// Up event
 						if( touchEvents[i].down )
 						{
-							action = 1;
+							action = SDL_FINGER_UP;
 							touchEvents[i].down = false;
 							DemoGLSurfaceView.nativeMouse( touchEvents[i].x, touchEvents[i].y, action, i, touchEvents[i].pressure, touchEvents[i].size );
 						}
@@ -164,9 +187,9 @@ abstract class DifferentTouchInput
 					else
 					{
 						if( touchEvents[i].down )
-							action = 2;
+							action = SDL_FINGER_MOVE;
 						else
-							action = 0;
+							action = SDL_FINGER_DOWN;
 						touchEvents[i].down = true;
 						touchEvents[i].x = (int)event.getX(ii);
 						touchEvents[i].y = (int)event.getY(ii);
@@ -176,13 +199,29 @@ abstract class DifferentTouchInput
 					}
 				}
 			}
+			if( event.getAction() == MotionEvent.ACTION_HOVER_MOVE ) // Support bluetooth/USB mouse - available since Android 3.1
+			{
+				// TODO: it is possible that multiple pointers return that event, but we're handling only pointer #0
+				// TODO: need to check this on a device, the emulator does not return such event
+				if( touchEvents[0].down )
+					action = SDL_FINGER_UP;
+				else
+					action = SDL_FINGER_MOVE;
+				action = 2;
+				touchEvents[0].down = false;
+				touchEvents[0].x = (int)event.getX();
+				touchEvents[0].y = (int)event.getY();
+				touchEvents[0].pressure = 0;
+				touchEvents[0].size = 0;
+				DemoGLSurfaceView.nativeMouse( touchEvents[0].x, touchEvents[0].y, action, 0, touchEvents[0].pressure, touchEvents[0].size );
+			}
 		}
 	}
 }
 
 
-class DemoRenderer extends GLSurfaceView_SDL.Renderer {
-
+class DemoRenderer extends GLSurfaceView_SDL.Renderer
+{
 	public DemoRenderer(MainActivity _context)
 	{
 		context = _context;
@@ -330,6 +369,12 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		}
 		return true;
 	};
+
+	@Override
+	public boolean onGenericMotionEvent (final MotionEvent ev)
+	{
+		return onTouchEvent(ev);
+	}
 
 	public void exitApp() {
 		mRenderer.exitApp();

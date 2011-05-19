@@ -145,4 +145,10 @@
 
     <string name="text_edit_click_here">Tap to start typing, press Back when done</string>
 
+    <string name="display_size_mouse">Configure mouse depending on display size</string>
+    <string name="display_size">Select your display size</string>
+    <string name="display_size_large">Large (tablet)</string>
+    <string name="display_size_small">Small (phone)</string>
+    <string name="display_size_tiny">Tiny (Xperia Mini)</string>
+
 </resources>

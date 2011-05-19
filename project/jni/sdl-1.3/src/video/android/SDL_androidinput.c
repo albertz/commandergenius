@@ -208,6 +208,7 @@ void UpdateScreenUnderFingerRect(int x, int y)
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
 {
+	// TODO: this method is damn huge
 	int i;
 #if SDL_VERSION_ATLEAST(1,3,0)
 

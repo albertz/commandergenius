@@ -310,7 +310,8 @@ public class MainActivity extends Activity {
 	};
 
 	@Override
-	public boolean onKeyDown(int keyCode, final KeyEvent event) {
+	public boolean onKeyDown(int keyCode, final KeyEvent event)
+	{
 		// Overrides Back key to use in our app
 		if(_screenKeyboard != null)
 			_screenKeyboard.onKeyDown(keyCode, event);
@@ -334,7 +335,8 @@ public class MainActivity extends Activity {
 	}
 	
 	@Override
-	public boolean onKeyUp(int keyCode, final KeyEvent event) {
+	public boolean onKeyUp(int keyCode, final KeyEvent event)
+	{
 		if(_screenKeyboard != null)
 			_screenKeyboard.onKeyUp(keyCode, event);
 		else
@@ -344,7 +346,8 @@ public class MainActivity extends Activity {
 	}
 	
 	@Override
-	public boolean dispatchTouchEvent(final MotionEvent ev) {
+	public boolean dispatchTouchEvent(final MotionEvent ev)
+	{
 		if(_screenKeyboard != null)
 			_screenKeyboard.dispatchTouchEvent(ev);
 		else
@@ -358,9 +361,16 @@ public class MainActivity extends Activity {
 			touchListener.onTouchEvent(ev);
 		return true;
 	}
+	
+	@Override
+	public boolean dispatchGenericMotionEvent (final MotionEvent ev)
+	{
+		return dispatchTouchEvent(ev);
+	}
 
 	@Override
-	public void onConfigurationChanged(Configuration newConfig) {
+	public void onConfigurationChanged(Configuration newConfig)
+	{
 		super.onConfigurationChanged(newConfig);
 		// Do nothing here
 	}

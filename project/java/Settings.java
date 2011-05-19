@@ -475,6 +475,8 @@ class Settings
 	{
 		ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
 
+		items.add(p.getResources().getString(R.string.display_size_mouse));
+
 		items.add(p.getResources().getString(R.string.leftclick_question));
 
 		if( Globals.AppNeedsTwoButtonMouse )
@@ -485,7 +487,7 @@ class Settings
 		if( Globals.MoveMouseWithJoystick )
 			items.add(p.getResources().getString(R.string.pointandclick_joystickmouse));
 
-		if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Globals.LEFT_CLICK_WITH_PRESSURE )
+		if( Globals.RightClickMethod == Mouse.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_PRESSURE )
 			items.add(p.getResources().getString(R.string.measurepressure));
 		
 		items.add(p.getResources().getString(R.string.calibrate_touchscreen));
@@ -502,6 +504,10 @@ class Settings
 				MouseConfigMainMenuLastSelected = item;
 				dialog.dismiss();
 				int selected = 0;
+
+				if( item == selected )
+					showDisplaySizeConfig(p);
+				selected++;
 
 				if( item == selected )
 					showLeftClickConfig(p);
@@ -525,7 +531,7 @@ class Settings
 					item++;
 				selected++;
 
-				if( Globals.RightClickMethod == Globals.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Globals.LEFT_CLICK_WITH_PRESSURE ) {
+				if( Globals.RightClickMethod == Mouse.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_PRESSURE ) {
 					if( item == selected )
 						showTouchPressureMeasurementTool(p);
 				} else
@@ -1031,14 +1037,8 @@ class Settings
 		alert.show();
 	}
 
-	static void showLeftClickConfig(final MainActivity p)
+	static void showDisplaySizeConfig(final MainActivity p)
 	{
-		if( ! Globals.AppUsesMouse )
-		{
-			Globals.LeftClickMethod = Globals.LEFT_CLICK_NORMAL;
-			showMouseConfigMainMenu(p);
-			return;
-		}
 		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_normal),
 										p.getResources().getString(R.string.leftclick_near_cursor),
 										p.getResources().getString(R.string.leftclick_multitouch),
@@ -1056,12 +1056,60 @@ class Settings
 			{
 				Globals.LeftClickMethod = item;
 				dialog.dismiss();
-				if( item == Globals.LEFT_CLICK_WITH_KEY )
+				if( item == Mouse.LEFT_CLICK_WITH_KEY )
 					p.keyListener = new KeyRemapToolMouseClick(p, true);
-				else if( item == Globals.LEFT_CLICK_WITH_TIMEOUT || item == Globals.LEFT_CLICK_WITH_TAP_OR_TIMEOUT )
+				else if( item == Mouse.LEFT_CLICK_WITH_TIMEOUT || item == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT )
 					showLeftClickTimeoutConfig(p);
 				else
 					showMouseConfigMainMenu(p);
+			}
+		});
+		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+		{
+			public void onCancel(DialogInterface dialog)
+			{
+				showConfigMainMenu(p);
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.setOwnerActivity(p);
+		alert.show();
+	}
+
+	static void showLeftClickConfig(final MainActivity p)
+	{
+		final CharSequence[] items = {	p.getResources().getString(R.string.display_size_large),
+										p.getResources().getString(R.string.display_size_small) };
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(p);
+		builder.setTitle(R.string.display_size);
+		builder.setSingleChoiceItems(items, (Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT && ! Globals.RelativeMouseMovement) ? 0 : 1, new DialogInterface.OnClickListener()
+		{
+			public void onClick(DialogInterface dialog, int item) 
+			{
+				if( item == 0 )
+				{
+					Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
+					Globals.RelativeMouseMovement = false;
+					Globals.ShowScreenUnderFinger = false;
+				}
+				if( item == 1 )
+				{
+					if( Globals.SwVideoMode )
+					{
+						Globals.LeftClickMethod = Mouse.LEFT_CLICK_NEAR_CURSOR;
+						Globals.RelativeMouseMovement = false;
+						Globals.ShowScreenUnderFinger = true;
+					}
+					else
+					{
+						// OpenGL does not support magnifying glass
+						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
+						Globals.RelativeMouseMovement = true;
+						Globals.ShowScreenUnderFinger = false;
+					}
+				}
+				showMouseConfigMainMenu(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
@@ -1108,12 +1156,6 @@ class Settings
 
 	static void showRightClickConfig(final MainActivity p)
 	{
-		if( ! Globals.AppNeedsTwoButtonMouse )
-		{
-			Globals.RightClickMethod = Globals.RIGHT_CLICK_NONE;
-			showMouseConfigMainMenu(p);
-			return;
-		}
 		final CharSequence[] items = {	p.getResources().getString(R.string.rightclick_none),
 										p.getResources().getString(R.string.rightclick_multitouch),
 										p.getResources().getString(R.string.rightclick_pressure),
@@ -1128,9 +1170,9 @@ class Settings
 			{
 				Globals.RightClickMethod = item;
 				dialog.dismiss();
-				if( item == Globals.RIGHT_CLICK_WITH_KEY )
+				if( item == Mouse.RIGHT_CLICK_WITH_KEY )
 					p.keyListener = new KeyRemapToolMouseClick(p, false);
-				else if( item == Globals.RIGHT_CLICK_WITH_TIMEOUT )
+				else if( item == Mouse.RIGHT_CLICK_WITH_TIMEOUT )
 					showRightClickTimeoutConfig(p);
 				else
 					showMouseConfigMainMenu(p);
