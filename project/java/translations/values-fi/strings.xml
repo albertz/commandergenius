@@ -131,4 +131,6 @@
 <string name="display_size">Valitse näytön koko</string>
 <string name="display_size_large">Suuri (tabletti)</string>
 <string name="display_size_small">Pieni (puhelin)</string>
+<string name="display_size_tiny">Tiny (Xperia Mini)</string>
+<string name="show_more_options">Näytä enemmän vaihtoehtoja</string>
 </resources>

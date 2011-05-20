@@ -125,4 +125,5 @@
 <string name="display_size_large">Великий (таблетка)</string>
 <string name="display_size_small">Маленький (телефон)</string>
 <string name="display_size_tiny">Крихiтний (Xperia Mini)</string>
+<string name="show_more_options">Показати більше параметрів</string>
 </resources>

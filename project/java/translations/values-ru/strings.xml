@@ -125,4 +125,5 @@
 <string name="display_size_large">Большой (таблетка)</string>
 <string name="display_size_small">Маленький (телефон)</string>
 <string name="display_size_tiny">Крохотный (Xperia Mini)</string>
+<string name="show_more_options">Показать больше параметров</string>
 </resources>

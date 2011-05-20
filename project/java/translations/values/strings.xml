@@ -150,5 +150,6 @@
     <string name="display_size_large">Large (tablet)</string>
     <string name="display_size_small">Small (phone)</string>
     <string name="display_size_tiny">Tiny (Xperia Mini)</string>
+    <string name="show_more_options">Show more options</string>
 
 </resources>

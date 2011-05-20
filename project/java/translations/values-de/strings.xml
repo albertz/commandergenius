@@ -132,4 +132,5 @@
 <string name="display_size_large">Groß (Tablette)</string>
 <string name="display_size_small">Klein (Telefon)</string>
 <string name="display_size_tiny">Uberklein (Xperia Mini)</string>
+<string name="show_more_options">Weitere Optionen</string>
 </resources>

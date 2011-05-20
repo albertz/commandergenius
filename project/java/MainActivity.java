@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
 				{
 					setUpStatusLabel();
 					System.out.println("libSDL: User clicked change phone config button");
-					Settings.showConfig(p);
+					Settings.showConfig(p, false);
 				}
 		};
 		_btn.setOnClickListener(new onClickListener(this));

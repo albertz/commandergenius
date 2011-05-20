@@ -322,7 +322,7 @@ class Settings
 
 		System.out.println("libSDL: Settings.Load(): loading settings failed, running config dialog");
 		p.setUpStatusLabel();
-		showConfig(p);
+		showConfig(p, true);
 	}
 
 	// ===============================================================================================
@@ -330,24 +330,7 @@ class Settings
 	public static abstract class Menu
 	{
 		abstract void run(final MainActivity p);
-		void goBack(final MainActivity p)
-		{
-			if(menuStack.isEmpty())
-			{
-				Save(p);
-				p.startDownloader();
-			}
-			else
-			{
-				Menu c = menuStack.remove(menuStack.size() - 1);
-				c.run(p);
-			}
-		}
 		abstract String title(final MainActivity p);
-		String innerTitle(final MainActivity p)
-		{
-			return title(p);
-		}
 		boolean enabled()
 		{
 			return true;
@@ -356,7 +339,8 @@ class Settings
 
 	static ArrayList<Menu> menuStack = new ArrayList<Menu> ();
 
-	public static void showConfig(final MainActivity p) {
+	public static void showConfig(final MainActivity p, boolean firstStart)
+	{
 		settingsChanged = true;
 
 		if( Globals.OptionalDataDownload == null )
@@ -376,465 +360,514 @@ class Settings
 				Globals.OptionalDataDownload[0] = true;
 		}
 
-		new MainMenu().run(p);
-	}
-	
-	static void showConfigMainMenu(final MainActivity p)
-	{
-		menuStack.clear();
-		new MainMenu().run(p);
+		if(!firstStart)
+			new MainMenu().run(p);
+		else
+		{
+			menuStack.add(new OptionalDownloadConfig());
+			new DisplaySizeConfig(true).run(p);
+		}
 	}
 
-	static int MainMenuLastSelected = 0;
+	static void goBack(final MainActivity p)
+	{
+		if(menuStack.isEmpty())
+		{
+			Save(p);
+			p.startDownloader();
+		}
+		else
+		{
+			Menu c = menuStack.remove(menuStack.size() - 1);
+			c.run(p);
+		}
+	}
+
+	static void goBackOuterMenu(final MainActivity p)
+	{
+		if(!menuStack.isEmpty())
+			menuStack.remove(menuStack.size() - 1);
+		goBack(p);
+	}
+
 	static class MainMenu extends Menu
 	{
-	String title(final MainActivity p)
-	{
-		return p.getResources().getString(R.string.device_config);
-	}
-	void run (final MainActivity p)
-	{
-		menuStack.add(this);
-
-		ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
-
-		items.add(p.getResources().getString(R.string.storage_question));
-
-		items.add(p.getResources().getString(R.string.downloads));
-
-		items.add(p.getResources().getString(R.string.controls_additional));
-
-		if( Globals.UseTouchscreenKeyboard )
-			items.add(p.getResources().getString(R.string.controls_screenkb));
-
-		if( Globals.AppUsesMouse )
-			items.add(p.getResources().getString(R.string.mouse_emulation));
-
-		if( Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick )
-			items.add(p.getResources().getString(R.string.controls_question));
-
-		if( Globals.UseAccelerometerAsArrowKeys || ! Globals.AppHandlesJoystickSensitivity )
-			items.add(p.getResources().getString(R.string.accel_question));
-
-		items.add(p.getResources().getString(R.string.audiobuf_question));
-
-		items.add(p.getResources().getString(R.string.remap_hwkeys));
-
-		items.add(p.getResources().getString(R.string.remap_screenkb_button_gestures));
-
-		items.add(p.getResources().getString(R.string.video));
-
-		items.add(p.getResources().getString(R.string.ok));
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(title(p));
-		//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
-		builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item)
+			return p.getResources().getString(R.string.device_config);
+		}
+		void run (final MainActivity p)
+		{
+			menuStack.add(this);
+
+			ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
+
+			items.add(p.getResources().getString(R.string.storage_question));
+
+			items.add(p.getResources().getString(R.string.downloads));
+
+			items.add(p.getResources().getString(R.string.controls_additional));
+
+			if( Globals.UseTouchscreenKeyboard )
+				items.add(p.getResources().getString(R.string.controls_screenkb));
+
+			if( Globals.AppUsesMouse )
+				items.add(p.getResources().getString(R.string.mouse_emulation));
+
+			if( Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick )
+				items.add(p.getResources().getString(R.string.controls_question));
+
+			if( Globals.UseAccelerometerAsArrowKeys || ! Globals.AppHandlesJoystickSensitivity )
+				items.add(p.getResources().getString(R.string.accel_question));
+
+			items.add(p.getResources().getString(R.string.audiobuf_question));
+
+			items.add(p.getResources().getString(R.string.remap_hwkeys));
+
+			items.add(p.getResources().getString(R.string.remap_screenkb_button_gestures));
+
+			items.add(p.getResources().getString(R.string.video));
+
+			items.add(p.getResources().getString(R.string.ok));
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(title(p));
+			//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
+			builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
 			{
-				MainMenuLastSelected = item;
-				dialog.dismiss();
-				int selected = 0;
-
-				if( item == selected )
-					showDownloadConfig(p);
-				selected++;
-
-				if( item == selected )
-					showOptionalDownloadConfig(p);
-				selected++;
-
-				if( item == selected )
-					showAdditionalInputConfig(p);
-				selected++;
-
-				if( Globals.UseTouchscreenKeyboard ) {
-					if( item == selected )
-						showScreenKeyboardConfigMainMenu(p);
-				} else
-					item++;
-				selected++;
-
-				if( Globals.AppUsesMouse ) {
-					if( item == selected )
-						showMouseConfigMainMenu(p);
-				} else
-					item++;
-				selected++;
-
-				if( Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick ) {
-					if( item == selected )
-						showArrowKeysConfig(p);
-				} else
-					item++;
-				selected++;
-
-				if( Globals.UseAccelerometerAsArrowKeys || ! Globals.AppHandlesJoystickSensitivity ) {
-					if( item == selected )
-						showAccelerometerConfig(p);
-				} else
-					item++;
-				selected++;
-
-				if( item == selected )
-					showAudioConfig(p);
-				selected++;
-
-				if( item == selected )
-					showRemapHwKeysConfig(p);
-				selected++;
-
-				if( item == selected )
-					showScreenGesturesConfig(p);
-				selected++;
-
-				if( item == selected )
-					showVideoSettingsConfig(p);
-				selected++;
-
-				if( item == selected )
+				public void onClick(DialogInterface dialog, int item)
 				{
-					if(!menuStack.isEmpty())
-						menuStack.remove(menuStack.size() - 1);
+					dialog.dismiss();
+					int selected = 0;
+
+					if( item == selected )
+						new DownloadConfig().run(p);
+					selected++;
+
+					if( item == selected )
+						new OptionalDownloadConfig().run(p);
+					selected++;
+
+					if( item == selected )
+						showAdditionalInputConfig(p);
+					selected++;
+
+					if( Globals.UseTouchscreenKeyboard ) {
+						if( item == selected )
+							new KeyboardConfigMainMenu().run(p);
+					} else
+						item++;
+					selected++;
+
+					if( Globals.AppUsesMouse ) {
+						if( item == selected )
+							new MouseConfigMainMenu().run(p);
+					} else
+						item++;
+					selected++;
+
+					if( Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick ) {
+						if( item == selected )
+							showArrowKeysConfig(p);
+					} else
+						item++;
+					selected++;
+
+					if( Globals.UseAccelerometerAsArrowKeys || ! Globals.AppHandlesJoystickSensitivity ) {
+						if( item == selected )
+							showAccelerometerConfig(p);
+					} else
+						item++;
+					selected++;
+
+					if( item == selected )
+						showAudioConfig(p);
+					selected++;
+
+					if( item == selected )
+						showRemapHwKeysConfig(p);
+					selected++;
+
+					if( item == selected )
+						showScreenGesturesConfig(p);
+					selected++;
+
+					if( item == selected )
+						showVideoSettingsConfig(p);
+					selected++;
+
+					if( item == selected )
+						goBackOuterMenu(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBackOuterMenu(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
+	static class MouseConfigMainMenu extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.mouse_emulation);
+		}
+		boolean enabled()
+		{
+			return Globals.AppUsesMouse;
+		}
+		void run (final MainActivity p)
+		{
+			menuStack.add(this);
+
+			ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
+
+			items.add(p.getResources().getString(R.string.display_size_mouse));
+
+			items.add(p.getResources().getString(R.string.leftclick_question));
+
+			if( Globals.AppNeedsTwoButtonMouse )
+				items.add(p.getResources().getString(R.string.rightclick_question));
+
+			items.add(p.getResources().getString(R.string.pointandclick_question));
+
+			if( Globals.MoveMouseWithJoystick )
+				items.add(p.getResources().getString(R.string.pointandclick_joystickmouse));
+
+			if( Globals.RightClickMethod == Mouse.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_PRESSURE )
+				items.add(p.getResources().getString(R.string.measurepressure));
+			
+			items.add(p.getResources().getString(R.string.calibrate_touchscreen));
+			
+			items.add(p.getResources().getString(R.string.ok));
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(title(p));
+			//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MouseConfigMainMenuLastSelected, new DialogInterface.OnClickListener() 
+			builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					int selected = 0;
+
+					if( item == selected )
+						new DisplaySizeConfig(false).run(p);
+					selected++;
+
+					if( item == selected )
+						showLeftClickConfig(p);
+					selected++;
+
+					if( Globals.AppNeedsTwoButtonMouse ) {
+						if( item == selected )
+							showRightClickConfig(p);
+					} else
+						item++;
+					selected++;
+
+					if( item == selected )
+						showAdditionalMouseConfig(p);
+					selected++;
+
+					if( Globals.MoveMouseWithJoystick ) {
+						if( item == selected )
+							showJoystickMouseConfig(p);
+					} else
+						item++;
+					selected++;
+
+					if( Globals.RightClickMethod == Mouse.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_PRESSURE ) {
+						if( item == selected )
+							showTouchPressureMeasurementTool(p);
+					} else
+						item++;
+					selected++;
+
+					if( item == selected )
+						showCalibrateTouchscreenMenu(p);
+					selected++;
+
+					if( item == selected )
+						goBackOuterMenu(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBackOuterMenu(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
+	static class KeyboardConfigMainMenu extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.controls_screenkb);
+		}
+		boolean enabled()
+		{
+			return Globals.UseTouchscreenKeyboard;
+		}
+		void run (final MainActivity p)
+		{
+			menuStack.add(this);
+
+			ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
+
+			items.add(p.getResources().getString(R.string.controls_screenkb_theme));
+
+			items.add(p.getResources().getString(R.string.controls_screenkb_size));
+
+			items.add(p.getResources().getString(R.string.controls_screenkb_transparency));
+
+			items.add(p.getResources().getString(R.string.remap_screenkb));
+
+			items.add(p.getResources().getString(R.string.screenkb_custom_layout));
+
+			items.add(p.getResources().getString(R.string.ok));
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(title(p));
+			//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), KeyboardConfigMainMenuLastSelected, new DialogInterface.OnClickListener()
+			builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					int selected = 0;
+
+					if( item == selected )
+						showScreenKeyboardThemeConfig(p);
+					selected++;
+
+					if( item == selected )
+						showScreenKeyboardSizeConfig(p);
+					selected++;
+
+					if( item == selected )
+						showScreenKeyboardTransparencyConfig(p);
+					selected++;
+
+					if( item == selected )
+						showRemapScreenKbConfig(p);
+					selected++;
+
+					if( item == selected )
+						showCustomizeScreenKbLayout(p);
+					selected++;
+					
+					if( item == selected )
+						goBackOuterMenu(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBackOuterMenu(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
+	static class DownloadConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.storage_question);
+		}
+		void run (final MainActivity p)
+		{
+			long freeSdcard = 0;
+			long freePhone = 0;
+			try
+			{
+				StatFs sdcard = new StatFs(Environment.getExternalStorageDirectory().getPath());
+				StatFs phone = new StatFs(Environment.getDataDirectory().getPath());
+				freeSdcard = (long)sdcard.getAvailableBlocks() * sdcard.getBlockSize() / 1024 / 1024;
+				freePhone = (long)phone.getAvailableBlocks() * phone.getBlockSize() / 1024 / 1024;
+			}
+			catch(Exception e) {}
+
+			final CharSequence[] items = { p.getResources().getString(R.string.storage_phone, freePhone),
+											p.getResources().getString(R.string.storage_sd, freeSdcard),
+											p.getResources().getString(R.string.storage_custom) };
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.storage_question));
+			builder.setSingleChoiceItems(items, Globals.DownloadToSdcard ? 1 : 0, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+
+					if( item == 2 )
+						showCustomDownloadDirConfig(p);
+					else
+					{
+						Globals.DownloadToSdcard = (item != 0);
+						Globals.DataDir = Globals.DownloadToSdcard ?
+										Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
+										p.getFilesDir().getAbsolutePath();
+						goBack(p);
+					}
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
 					goBack(p);
 				}
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				if(!menuStack.isEmpty())
-					menuStack.remove(menuStack.size() - 1);
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-	}
-
-	static int MouseConfigMainMenuLastSelected = 0;
-	static void showMouseConfigMainMenu(final MainActivity p)
-	{
-		ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
-
-		items.add(p.getResources().getString(R.string.display_size_mouse));
-
-		items.add(p.getResources().getString(R.string.leftclick_question));
-
-		if( Globals.AppNeedsTwoButtonMouse )
-			items.add(p.getResources().getString(R.string.rightclick_question));
-
-		items.add(p.getResources().getString(R.string.pointandclick_question));
-
-		if( Globals.MoveMouseWithJoystick )
-			items.add(p.getResources().getString(R.string.pointandclick_joystickmouse));
-
-		if( Globals.RightClickMethod == Mouse.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_PRESSURE )
-			items.add(p.getResources().getString(R.string.measurepressure));
-		
-		items.add(p.getResources().getString(R.string.calibrate_touchscreen));
-		
-		items.add(p.getResources().getString(R.string.ok));
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.mouse_emulation));
-		//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MouseConfigMainMenuLastSelected, new DialogInterface.OnClickListener() 
-		builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				MouseConfigMainMenuLastSelected = item;
-				dialog.dismiss();
-				int selected = 0;
-
-				if( item == selected )
-					showDisplaySizeConfig(p);
-				selected++;
-
-				if( item == selected )
-					showLeftClickConfig(p);
-				selected++;
-
-				if( Globals.AppNeedsTwoButtonMouse ) {
-					if( item == selected )
-						showRightClickConfig(p);
-				} else
-					item++;
-				selected++;
-
-				if( item == selected )
-					showAdditionalMouseConfig(p);
-				selected++;
-
-				if( Globals.MoveMouseWithJoystick ) {
-					if( item == selected )
-						showJoystickMouseConfig(p);
-				} else
-					item++;
-				selected++;
-
-				if( Globals.RightClickMethod == Mouse.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_PRESSURE ) {
-					if( item == selected )
-						showTouchPressureMeasurementTool(p);
-				} else
-					item++;
-				selected++;
-
-				if( item == selected )
-					showCalibrateTouchscreenMenu(p);
-				selected++;
-
-				if( item == selected )
-					showConfigMainMenu(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				showConfigMainMenu(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static int KeyboardConfigMainMenuLastSelected = 0;
-	static void showScreenKeyboardConfigMainMenu(final MainActivity p)
-	{
-		ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
-
-		items.add(p.getResources().getString(R.string.controls_screenkb_theme));
-
-		items.add(p.getResources().getString(R.string.controls_screenkb_size));
-
-		items.add(p.getResources().getString(R.string.controls_screenkb_transparency));
-
-		items.add(p.getResources().getString(R.string.remap_screenkb));
-
-		items.add(p.getResources().getString(R.string.screenkb_custom_layout));
-
-		items.add(p.getResources().getString(R.string.ok));
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_screenkb));
-		//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), KeyboardConfigMainMenuLastSelected, new DialogInterface.OnClickListener()
-		builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				KeyboardConfigMainMenuLastSelected = item;
-				dialog.dismiss();
-				int selected = 0;
-
-				if( item == selected )
-					showScreenKeyboardThemeConfig(p);
-				selected++;
-
-				if( item == selected )
-					showScreenKeyboardSizeConfig(p);
-				selected++;
-
-				if( item == selected )
-					showScreenKeyboardTransparencyConfig(p);
-				selected++;
-
-				if( item == selected )
-					showRemapScreenKbConfig(p);
-				selected++;
-
-				if( item == selected )
-					showCustomizeScreenKbLayout(p);
-				selected++;
-				
-				if( item == selected )
-					showConfigMainMenu(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				showConfigMainMenu(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showDownloadConfig(final MainActivity p) {
-
-		long freeSdcard = 0;
-		long freePhone = 0;
-		try {
-			StatFs sdcard = new StatFs(Environment.getExternalStorageDirectory().getPath());
-			StatFs phone = new StatFs(Environment.getDataDirectory().getPath());
-			freeSdcard = (long)sdcard.getAvailableBlocks() * sdcard.getBlockSize() / 1024 / 1024;
-			freePhone = (long)phone.getAvailableBlocks() * phone.getBlockSize() / 1024 / 1024;
-		}catch(Exception e) {}
-
-		final CharSequence[] items = { p.getResources().getString(R.string.storage_phone, freePhone),
-										p.getResources().getString(R.string.storage_sd, freeSdcard),
-										p.getResources().getString(R.string.storage_custom) };
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.storage_question));
-		builder.setSingleChoiceItems(items, Globals.DownloadToSdcard ? 1 : 0, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				dialog.dismiss();
-
-				if( item == 2 )
-					showCustomDownloadDirConfig(p);
-				else
-				{
-					Globals.DownloadToSdcard = (item != 0);
-					Globals.DataDir = Globals.DownloadToSdcard ?
-									Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
-									p.getFilesDir().getAbsolutePath();
-					showConfigMainMenu(p);
-				}
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				showConfigMainMenu(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	};
-
-	static void showCustomDownloadDirConfig(final MainActivity p) {
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.storage_custom));
-
-		final EditText edit = new EditText(p);
-		edit.setFocusableInTouchMode(true);
-		edit.setFocusable(true);
-		edit.setText(Globals.DataDir);
-		builder.setView(edit);
-
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.DataDir = edit.getText().toString();
-				dialog.dismiss();
-				showCommandLineConfig(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				showConfigMainMenu(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	};
-
-	static void showCommandLineConfig(final MainActivity p) {
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.storage_commandline));
-
-		final EditText edit = new EditText(p);
-		edit.setFocusableInTouchMode(true);
-		edit.setFocusable(true);
-		edit.setText(Globals.CommandLine);
-		builder.setView(edit);
-
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.CommandLine = edit.getText().toString();
-				dialog.dismiss();
-				showConfigMainMenu(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				showConfigMainMenu(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	};
-
-	static void showOptionalDownloadConfig(final MainActivity p) {
-
-		String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
-		
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.downloads));
-
-		CharSequence[] items = new CharSequence[downloadFiles.length];
-		for(int i = 0; i < downloadFiles.length; i++ )
-		{
-			items[i] = new String(downloadFiles[i].split("[|]")[0]);
-			if( items[i].toString().indexOf("!") == 0 )
-				items[i] = items[i].toString().substring(1);
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
 		}
-
-		if( Globals.OptionalDataDownload == null || Globals.OptionalDataDownload.length != items.length )
+		static void showCustomDownloadDirConfig(final MainActivity p)
 		{
-			Globals.OptionalDataDownload = new boolean[downloadFiles.length];
-			boolean oldFormat = true;
-			for( int i = 0; i < downloadFiles.length; i++ )
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.storage_custom));
+
+			final EditText edit = new EditText(p);
+			edit.setFocusableInTouchMode(true);
+			edit.setFocusable(true);
+			edit.setText(Globals.DataDir);
+			builder.setView(edit);
+
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
 			{
-				if( downloadFiles[i].indexOf("!") == 0 )
+				public void onClick(DialogInterface dialog, int item) 
 				{
-					Globals.OptionalDataDownload[i] = true;
-					oldFormat = false;
+					Globals.DataDir = edit.getText().toString();
+					dialog.dismiss();
+					showCommandLineConfig(p);
 				}
-			}
-			if( oldFormat )
-				Globals.OptionalDataDownload[0] = true;
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
 		}
+		static void showCommandLineConfig(final MainActivity p)
+		{
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.storage_commandline));
 
-		builder.setMultiChoiceItems(items, Globals.OptionalDataDownload, new DialogInterface.OnMultiChoiceClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+			final EditText edit = new EditText(p);
+			edit.setFocusableInTouchMode(true);
+			edit.setFocusable(true);
+			edit.setText(Globals.CommandLine);
+			builder.setView(edit);
+
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
 			{
-				Globals.OptionalDataDownload[item] = isChecked;
-			}
-		});
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.CommandLine = edit.getText().toString();
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
-				dialog.dismiss();
-				showConfigMainMenu(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
+	static class OptionalDownloadConfig extends Menu
+	{
+		String title(final MainActivity p)
 		{
-			public void onCancel(DialogInterface dialog)
+			return p.getResources().getString(R.string.downloads);
+		}
+		void run (final MainActivity p)
+		{
+			String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.downloads));
+
+			CharSequence[] items = new CharSequence[downloadFiles.length];
+			for(int i = 0; i < downloadFiles.length; i++ )
 			{
-				showConfigMainMenu(p);
+				items[i] = new String(downloadFiles[i].split("[|]")[0]);
+				if( items[i].toString().indexOf("!") == 0 )
+					items[i] = items[i].toString().substring(1);
 			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	};
+
+			if( Globals.OptionalDataDownload == null || Globals.OptionalDataDownload.length != items.length )
+			{
+				Globals.OptionalDataDownload = new boolean[downloadFiles.length];
+				boolean oldFormat = true;
+				for( int i = 0; i < downloadFiles.length; i++ )
+				{
+					if( downloadFiles[i].indexOf("!") == 0 )
+					{
+						Globals.OptionalDataDownload[i] = true;
+						oldFormat = false;
+					}
+				}
+				if( oldFormat )
+					Globals.OptionalDataDownload[0] = true;
+			}
+
+			builder.setMultiChoiceItems(items, Globals.OptionalDataDownload, new DialogInterface.OnMultiChoiceClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+				{
+					Globals.OptionalDataDownload[item] = isChecked;
+				}
+			});
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
 	
 	static void showAdditionalInputConfig(final MainActivity p)
 	{
@@ -865,14 +898,14 @@ class Settings
 			public void onClick(DialogInterface dialog, int item) 
 			{
 				dialog.dismiss();
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -909,7 +942,7 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -922,7 +955,7 @@ class Settings
 		if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
 		{
 			Globals.AccelerometerCenterPos = 2; // Fixed horizontal center position
-			showConfigMainMenu(p);
+			goBack(p);
 			return;
 		}
 		
@@ -939,14 +972,14 @@ class Settings
 				Globals.AccelerometerCenterPos = item;
 
 				dialog.dismiss();
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -975,14 +1008,14 @@ class Settings
 				Globals.TouchscreenKeyboardSize = item;
 
 				dialog.dismiss();
-				showScreenKeyboardConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1006,14 +1039,14 @@ class Settings
 				Globals.TouchscreenKeyboardTheme = item;
 
 				dialog.dismiss();
-				showScreenKeyboardConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1038,14 +1071,14 @@ class Settings
 				Globals.TouchscreenKeyboardTransparency = item;
 
 				dialog.dismiss();
-				showScreenKeyboardConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1068,14 +1101,14 @@ class Settings
 			{
 				Globals.AudioBufferConfig = item;
 				dialog.dismiss();
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1083,54 +1116,82 @@ class Settings
 		alert.show();
 	}
 
-	static void showDisplaySizeConfig(final MainActivity p)
+	static class DisplaySizeConfig extends Menu
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.display_size_large),
-										p.getResources().getString(R.string.display_size_small) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.display_size);
-		builder.setSingleChoiceItems(items, (Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT && ! Globals.RelativeMouseMovement) ? 0 : 1, new DialogInterface.OnClickListener()
+		boolean firstStart = false;
+		DisplaySizeConfig(boolean firstStart)
 		{
-			public void onClick(DialogInterface dialog, int item) 
+			this.firstStart = firstStart;
+		}
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.display_size_mouse);
+		}
+		void run (final MainActivity p)
+		{
+			CharSequence[] items = {	p.getResources().getString(R.string.display_size_large),
+										p.getResources().getString(R.string.display_size_small) };
+			if( firstStart )
 			{
-				Globals.LeftClickMethod = item;
-				dialog.dismiss();
-				if( item == 0 )
+				CharSequence[] items2 = {	p.getResources().getString(R.string.display_size_large),
+											p.getResources().getString(R.string.display_size_small),
+											p.getResources().getString(R.string.show_more_options) };
+				items = items2;
+			}
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.display_size);
+			class ClickListener implements DialogInterface.OnClickListener
+			{
+				public void onClick(DialogInterface dialog, int item) 
 				{
-					Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
-					Globals.RelativeMouseMovement = false;
-					Globals.ShowScreenUnderFinger = false;
-				}
-				if( item == 1 )
-				{
-					if( Globals.SwVideoMode )
+					Globals.LeftClickMethod = item;
+					dialog.dismiss();
+					if( item == 0 )
 					{
-						Globals.LeftClickMethod = Mouse.LEFT_CLICK_NEAR_CURSOR;
-						Globals.RelativeMouseMovement = false;
-						Globals.ShowScreenUnderFinger = true;
-					}
-					else
-					{
-						// OpenGL does not support magnifying glass
 						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
-						Globals.RelativeMouseMovement = true;
+						Globals.RelativeMouseMovement = false;
 						Globals.ShowScreenUnderFinger = false;
 					}
+					if( item == 1 )
+					{
+						if( Globals.SwVideoMode )
+						{
+							Globals.LeftClickMethod = Mouse.LEFT_CLICK_NEAR_CURSOR;
+							Globals.RelativeMouseMovement = false;
+							Globals.ShowScreenUnderFinger = true;
+						}
+						else
+						{
+							// OpenGL does not support magnifying glass
+							Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
+							Globals.RelativeMouseMovement = true;
+							Globals.ShowScreenUnderFinger = false;
+						}
+					}
+					if( item == 2 )
+					{
+						menuStack.clear();
+						new MainMenu().run(p);
+					}
+					goBack(p);
 				}
-				showMouseConfigMainMenu(p);
 			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
+			if( firstStart )
+				builder.setItems(items, new ClickListener());
+			else
+				builder.setSingleChoiceItems(items, (Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT && ! Globals.RelativeMouseMovement) ? 0 : 1, new ClickListener());
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
-				showConfigMainMenu(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
 	static void showLeftClickConfig(final MainActivity p)
@@ -1156,14 +1217,14 @@ class Settings
 				else if( item == Mouse.LEFT_CLICK_WITH_TIMEOUT || item == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT )
 					showLeftClickTimeoutConfig(p);
 				else
-					showMouseConfigMainMenu(p);
+					goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1186,14 +1247,14 @@ class Settings
 			{
 				Globals.LeftClickTimeout = item;
 				dialog.dismiss();
-				showMouseConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1222,14 +1283,14 @@ class Settings
 				else if( item == Mouse.RIGHT_CLICK_WITH_TIMEOUT )
 					showRightClickTimeoutConfig(p);
 				else
-					showMouseConfigMainMenu(p);
+					goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1252,14 +1313,14 @@ class Settings
 			{
 				Globals.RightClickTimeout = item;
 				dialog.dismiss();
-				showMouseConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1292,7 +1353,7 @@ class Settings
 			else
 				Globals.RightClickKey = keyIndex;
 
-			showMouseConfigMainMenu(p);
+			goBack(p);
 		}
 	}
 
@@ -1337,14 +1398,14 @@ class Settings
 				if( Globals.RelativeMouseMovement )
 					showRelativeMouseMovementConfig(p);
 				else
-					showMouseConfigMainMenu(p);
+					goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1376,7 +1437,7 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1400,14 +1461,14 @@ class Settings
 				Globals.RelativeMouseMovementAccel = item;
 
 				dialog.dismiss();
-				showMouseConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1447,7 +1508,7 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1460,7 +1521,7 @@ class Settings
 		if( ! Globals.PhoneHasTrackball )
 		{
 			Globals.TrackballDampening = 0;
-			showConfigMainMenu(p);
+			goBack(p);
 			return;
 		}
 		
@@ -1478,14 +1539,14 @@ class Settings
 				Globals.TrackballDampening = item;
 
 				dialog.dismiss();
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1522,7 +1583,7 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1535,7 +1596,7 @@ class Settings
 		if( ! Globals.MoveMouseWithJoystick )
 		{
 			Globals.MoveMouseWithJoystickAccel = 0;
-			showMouseConfigMainMenu(p);
+			goBack(p);
 			return;
 		}
 		
@@ -1553,14 +1614,14 @@ class Settings
 				Globals.MoveMouseWithJoystickAccel = item;
 
 				dialog.dismiss();
-				showMouseConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1611,7 +1672,7 @@ class Settings
 				Globals.ClickScreenPressure = getAverageForce();
 				Globals.ClickScreenTouchspotSize = getAverageRadius();
 				System.out.println("SDL: measured average force " + Globals.ClickScreenPressure + " radius " + Globals.ClickScreenTouchspotSize);
-				showMouseConfigMainMenu(p);
+				goBack(p);
 			}
 		}
 
@@ -1668,14 +1729,14 @@ class Settings
 					Globals.RemapHwKeycode[KeyIndexFinal] = SDL_Keys.namesSortedIdx[item];
 
 					dialog.dismiss();
-					showConfigMainMenu(p);
+					goBack(p);
 				}
 			});
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
 				public void onCancel(DialogInterface dialog)
 				{
-					showConfigMainMenu(p);
+					goBack(p);
 				}
 			});
 			AlertDialog alert = builder.create();
@@ -1731,7 +1792,7 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1752,7 +1813,7 @@ class Settings
 		
 		if( currentButton >= Globals.RemapScreenKbKeycode.length )
 		{
-			showScreenKeyboardConfigMainMenu(p);
+			goBack(p);
 			return;
 		}
 		if( ! Globals.ScreenKbControlsShown[currentButton + 2] )
@@ -1777,7 +1838,7 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1822,7 +1883,7 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1855,7 +1916,7 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1874,7 +1935,7 @@ class Settings
 		
 		if( currentButton >= Globals.RemapMultitouchGestureKeycode.length )
 		{
-			showConfigMainMenu(p);
+			goBack(p);
 			return;
 		}
 		if( ! Globals.MultitouchGesturesUsed[currentButton] )
@@ -1899,7 +1960,7 @@ class Settings
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
@@ -1974,7 +2035,7 @@ class Settings
 			p.touchListener = null;
 			p.keyListener = null;
 			p.getVideoLayout().removeView(img);
-			showMouseConfigMainMenu(p);
+			goBack(p);
 		}
 	}
 
@@ -1984,7 +2045,7 @@ class Settings
 		CustomizeScreenKbLayoutTool tool = new CustomizeScreenKbLayoutTool(p);
 		p.touchListener = tool;
 		p.keyListener = tool;
-	};
+	}
 
 	static class CustomizeScreenKbLayoutTool implements TouchEventsListener, KeyEventsListener
 	{
@@ -2023,7 +2084,7 @@ class Settings
 					layout = null;
 					p.touchListener = null;
 					p.keyListener = null;
-					showScreenKeyboardConfigMainMenu(p);
+					goBack(p);
 					return;
 				}
 				if(currentButton < 0)
@@ -2157,14 +2218,14 @@ class Settings
 			public void onClick(DialogInterface dialog, int item) 
 			{
 				dialog.dismiss();
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 		{
 			public void onCancel(DialogInterface dialog)
 			{
-				showConfigMainMenu(p);
+				goBack(p);
 			}
 		});
 		AlertDialog alert = builder.create();
