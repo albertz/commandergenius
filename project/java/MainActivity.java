@@ -27,6 +27,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.FrameLayout;
+import android.graphics.drawable.Drawable;
 import android.content.res.Configuration;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -93,7 +94,14 @@ public class MainActivity extends Activity {
 		ImageView img = new ImageView(this);
 
 		img.setScaleType(ImageView.ScaleType.FIT_CENTER /* FIT_XY */ );
-		img.setImageResource(R.drawable.publisherlogo);
+		try
+		{
+			img.setImageDrawable(Drawable.createFromStream(getAssets().open("logo.png"), "logo.png"));
+		}
+		catch(Exception e)
+		{
+			img.setImageResource(R.drawable.publisherlogo);
+		}
 		img.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 		_layout.addView(img);
 		
