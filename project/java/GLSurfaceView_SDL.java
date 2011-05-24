@@ -930,7 +930,6 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
              * This is our main activity thread's loop, we go until
              * asked to quit.
              */
-            try {
 
                 /*
                  *  Update the asynchronous state (window size)
@@ -999,10 +998,6 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 if( Globals.NonBlockingSwapBuffers )
                     return false;
               }
-
-            } catch (java.lang.InterruptedException e) {
-               return false;
-            }
         }
 
         private boolean needToWait() {
