@@ -224,6 +224,7 @@ echo
 echo "Redefine common keys to SDL keysyms"
 echo "MENU and BACK hardware keys and TOUCHSCREEN virtual 'key' are available on all devices, other keys may be absent"
 echo "SEARCH and CALL by default return same keycode as DPAD_CENTER - one of those keys is available on most devices"
+echo "Use word NO_REMAP if you want to preserve native functionality for certain key "
 echo "TOUCHSCREEN DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU BACK CAMERA ENTER DEL SEARCH CALL - Java keycodes"
 echo "$RedefinedKeys - current SDL keycodes"
 echo -n ": "
@@ -512,8 +513,47 @@ else
 fi
 
 KEY2=0
+NoRemapMask=""
 for KEY in $RedefinedKeys; do
-	RedefinedKeycodes="$RedefinedKeycodes -DSDL_ANDROID_KEYCODE_$KEY2=$KEY"
+   if [ "$KEY" = "NO_REMAP" ] ; then
+      case $KEY2 in
+      0)
+         #not used at the moment
+         ;;
+      1)
+         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_DPAD_CENTER"
+         ;;
+      2)
+         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_VOLUME_UP"
+         ;;
+      3)
+         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_VOLUME_DOWN"
+         ;;
+      4)
+         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_MENU"         
+         ;;
+      5)
+         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_BACK"   
+         ;;
+      6)
+         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_CAMERA"   
+         ;;
+      7)
+         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_ENTER"   
+         ;;
+      8)
+         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_DEL"   
+         ;;
+      9)
+         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_SEARCH"   
+         ;;
+      10)
+         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_CALL"   
+         ;;
+      esac
+   else
+	   RedefinedKeycodes="$RedefinedKeycodes -DSDL_ANDROID_KEYCODE_$KEY2=$KEY"
+   fi
 	KEY2=`expr $KEY2 '+' 1`
 done
 
@@ -585,7 +625,8 @@ cat project/src/Globals.java | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
 	sed "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" | \
-	sed "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" > \
+	sed "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" | \
+	sed "s/public static int RemapKeymask = .*;/public static int RemapKeymask = 0$NoRemapMask;/" > \
 	project/src/Globals.java.1
 mv -f project/src/Globals.java.1 project/src/Globals.java
 

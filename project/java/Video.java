@@ -401,15 +401,27 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event) {
-		 nativeKey( keyCode, 1 );
-		 return true;
+		if( !callNativeKey( keyCode, 1 ) )
+         		return super.onKeyDown(keyCode, event);
+		return true;
 	 }
 	
 	@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event) {
-		 nativeKey( keyCode, 0 );
-		 return true;
+		if( !callNativeKey( keyCode, 0 ) )
+         		return super.onKeyUp(keyCode, event);
+		return true;
 	 }
+
+	public boolean callNativeKey(int keyCode, int down) {
+		if( (Globals.RemapKeymask & keyCode ) == keyCode )
+		{
+			// no remap made for the key
+			return false;
+		}
+		nativeKey( keyCode, down );
+		return true;
+	}
 
 	DemoRenderer mRenderer;
 	MainActivity mParent;

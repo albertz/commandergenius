@@ -869,251 +869,292 @@ class Settings
 		}
 	}
 	
-	static void showAdditionalInputConfig(final MainActivity p)
+	static class AdditionalInputConfig extends Menu
 	{
-		CharSequence[] items = {
-			p.getResources().getString(R.string.controls_screenkb),
-			p.getResources().getString(R.string.controls_accelnav)
-		};
-
-		boolean defaults[] = { 
-			Globals.UseTouchscreenKeyboard,
-			Globals.UseAccelerometerAsArrowKeys
-		};
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_additional));
-		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
-			{
-				if( item == 0 )
-					Globals.UseTouchscreenKeyboard = isChecked;
-				if( item == 1 )
-					Globals.UseAccelerometerAsArrowKeys = isChecked;
-			}
-		});
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showAccelerometerConfig(final MainActivity p)
-	{
-		if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
-		{
-			Globals.AccelerometerSensitivity = 2; // Slow, full range
-			showAccelerometerCenterConfig(p);
-			return;
+			return p.getResources().getString(R.string.controls_additional);
 		}
-		
-		final CharSequence[] items = { p.getResources().getString(R.string.accel_fast),
-										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_slow) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.accel_question);
-		builder.setSingleChoiceItems(items, Globals.AccelerometerSensitivity, new DialogInterface.OnClickListener() 
+		void run (final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.AccelerometerSensitivity = item;
-
-				dialog.dismiss();
-				showAccelerometerCenterConfig(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showAccelerometerCenterConfig(final MainActivity p)
-	{
-		if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
-		{
-			Globals.AccelerometerCenterPos = 2; // Fixed horizontal center position
-			goBack(p);
-			return;
-		}
-		
-		final CharSequence[] items = { p.getResources().getString(R.string.accel_floating),
-										p.getResources().getString(R.string.accel_fixed_start),
-										p.getResources().getString(R.string.accel_fixed_horiz) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.accel_question_center);
-		builder.setSingleChoiceItems(items, Globals.AccelerometerCenterPos, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.AccelerometerCenterPos = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-
-	static void showScreenKeyboardSizeConfig(final MainActivity p)
-	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_large),
-										p.getResources().getString(R.string.controls_screenkb_medium),
-										p.getResources().getString(R.string.controls_screenkb_small),
-										p.getResources().getString(R.string.controls_screenkb_tiny) };
-
-		for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
-			for( int ii = 0; ii < 4; ii++ )
-				Globals.ScreenKbControlsLayout[i][ii] = 0;
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_size));
-		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardSize, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.TouchscreenKeyboardSize = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showScreenKeyboardThemeConfig(final MainActivity p)
-	{
-		final CharSequence[] items = {
-			p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
-			p.getResources().getString(R.string.controls_screenkb_by, "Simple Theme", "Beholder")
+			CharSequence[] items = {
+				p.getResources().getString(R.string.controls_screenkb),
+				p.getResources().getString(R.string.controls_accelnav)
 			};
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_theme));
-		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTheme, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.TouchscreenKeyboardTheme = item;
+			boolean defaults[] = { 
+				Globals.UseTouchscreenKeyboard,
+				Globals.UseAccelerometerAsArrowKeys
+			};
 
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_additional));
+			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+				{
+					if( item == 0 )
+						Globals.UseTouchscreenKeyboard = isChecked;
+					if( item == 1 )
+						Globals.UseAccelerometerAsArrowKeys = isChecked;
+				}
+			});
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
-	static void showScreenKeyboardTransparencyConfig(final MainActivity p)
+	static class AccelerometerConfig extends Menu
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_trans_0),
-										p.getResources().getString(R.string.controls_screenkb_trans_1),
-										p.getResources().getString(R.string.controls_screenkb_trans_2),
-										p.getResources().getString(R.string.controls_screenkb_trans_3),
-										p.getResources().getString(R.string.controls_screenkb_trans_4) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_transparency));
-		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTransparency, new DialogInterface.OnClickListener()
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.TouchscreenKeyboardTransparency = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			return p.getResources().getString(R.string.accel_question);
+		}
+		void run (final MainActivity p)
 		{
-			public void onCancel(DialogInterface dialog)
+			if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
 			{
-				goBack(p);
+				Globals.AccelerometerSensitivity = 2; // Slow, full range
+				showAccelerometerCenterConfig(p);
+				return;
 			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+			
+			final CharSequence[] items = { p.getResources().getString(R.string.accel_fast),
+											p.getResources().getString(R.string.accel_medium),
+											p.getResources().getString(R.string.accel_slow) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.accel_question);
+			builder.setSingleChoiceItems(items, Globals.AccelerometerSensitivity, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.AccelerometerSensitivity = item;
+
+					dialog.dismiss();
+					showAccelerometerCenterConfig(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+		static void showAccelerometerCenterConfig(final MainActivity p)
+		{
+			if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
+			{
+				Globals.AccelerometerCenterPos = 2; // Fixed horizontal center position
+				goBack(p);
+				return;
+			}
+			
+			final CharSequence[] items = { p.getResources().getString(R.string.accel_floating),
+											p.getResources().getString(R.string.accel_fixed_start),
+											p.getResources().getString(R.string.accel_fixed_horiz) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.accel_question_center);
+			builder.setSingleChoiceItems(items, Globals.AccelerometerCenterPos, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.AccelerometerCenterPos = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
-	static void showAudioConfig(final MainActivity p)
-	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.audiobuf_verysmall),
-										p.getResources().getString(R.string.audiobuf_small),
-										p.getResources().getString(R.string.audiobuf_medium),
-										p.getResources().getString(R.string.audiobuf_large) };
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.audiobuf_question);
-		builder.setSingleChoiceItems(items, Globals.AudioBufferConfig, new DialogInterface.OnClickListener() 
+	static class ScreenKeyboardSizeConfig extends Menu
+	{
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.AudioBufferConfig = item;
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			return p.getResources().getString(R.string.controls_screenkb_size);
+		}
+		void run (final MainActivity p)
 		{
-			public void onCancel(DialogInterface dialog)
+			final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_large),
+											p.getResources().getString(R.string.controls_screenkb_medium),
+											p.getResources().getString(R.string.controls_screenkb_small),
+											p.getResources().getString(R.string.controls_screenkb_tiny) };
+
+			for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+				for( int ii = 0; ii < 4; ii++ )
+					Globals.ScreenKbControlsLayout[i][ii] = 0;
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_screenkb_size));
+			builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardSize, new DialogInterface.OnClickListener() 
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.TouchscreenKeyboardSize = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
+	static class ScreenKeyboardThemeConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.controls_screenkb_theme);
+		}
+		void run (final MainActivity p)
+		{
+			final CharSequence[] items = {
+				p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
+				p.getResources().getString(R.string.controls_screenkb_by, "Simple Theme", "Beholder")
+				};
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_screenkb_theme));
+			builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTheme, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.TouchscreenKeyboardTheme = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
+	static class ScreenKeyboardTransparencyConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.controls_screenkb_transparency);
+		}
+		void run (final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_trans_0),
+											p.getResources().getString(R.string.controls_screenkb_trans_1),
+											p.getResources().getString(R.string.controls_screenkb_trans_2),
+											p.getResources().getString(R.string.controls_screenkb_trans_3),
+											p.getResources().getString(R.string.controls_screenkb_trans_4) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_screenkb_transparency));
+			builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTransparency, new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.TouchscreenKeyboardTransparency = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
+	static class AudioConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.audiobuf_question);
+		}
+		void run (final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.audiobuf_verysmall),
+											p.getResources().getString(R.string.audiobuf_small),
+											p.getResources().getString(R.string.audiobuf_medium),
+											p.getResources().getString(R.string.audiobuf_large) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.audiobuf_question);
+			builder.setSingleChoiceItems(items, Globals.AudioBufferConfig, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.AudioBufferConfig = item;
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
 	static class DisplaySizeConfig extends Menu
@@ -1194,138 +1235,151 @@ class Settings
 		}
 	}
 
-	static void showLeftClickConfig(final MainActivity p)
+	static class LeftClickConfig extends Menu
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_normal),
-										p.getResources().getString(R.string.leftclick_near_cursor),
-										p.getResources().getString(R.string.leftclick_multitouch),
-										p.getResources().getString(R.string.leftclick_pressure),
-										p.getResources().getString(R.string.rightclick_key),
-										p.getResources().getString(R.string.leftclick_timeout),
-										p.getResources().getString(R.string.leftclick_tap),
-										p.getResources().getString(R.string.leftclick_tap_or_timeout) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.leftclick_question);
-		builder.setSingleChoiceItems(items, Globals.LeftClickMethod, new DialogInterface.OnClickListener()
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
+			return p.getResources().getString(R.string.leftclick_question);
+		}
+		void run (final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_normal),
+											p.getResources().getString(R.string.leftclick_near_cursor),
+											p.getResources().getString(R.string.leftclick_multitouch),
+											p.getResources().getString(R.string.leftclick_pressure),
+											p.getResources().getString(R.string.rightclick_key),
+											p.getResources().getString(R.string.leftclick_timeout),
+											p.getResources().getString(R.string.leftclick_tap),
+											p.getResources().getString(R.string.leftclick_tap_or_timeout) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.leftclick_question);
+			builder.setSingleChoiceItems(items, Globals.LeftClickMethod, new DialogInterface.OnClickListener()
 			{
-				dialog.dismiss();
-				if( item == Mouse.LEFT_CLICK_WITH_KEY )
-					p.keyListener = new KeyRemapToolMouseClick(p, true);
-				else if( item == Mouse.LEFT_CLICK_WITH_TIMEOUT || item == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT )
-					showLeftClickTimeoutConfig(p);
-				else
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					if( item == Mouse.LEFT_CLICK_WITH_KEY )
+						p.keyListener = new KeyRemapToolMouseClick(p, true);
+					else if( item == Mouse.LEFT_CLICK_WITH_TIMEOUT || item == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT )
+						showLeftClickTimeoutConfig(p);
+					else
+						goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
 					goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+		static void showLeftClickTimeoutConfig(final MainActivity p) {
+			final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_timeout_time_0),
+											p.getResources().getString(R.string.leftclick_timeout_time_1),
+											p.getResources().getString(R.string.leftclick_timeout_time_2),
+											p.getResources().getString(R.string.leftclick_timeout_time_3),
+											p.getResources().getString(R.string.leftclick_timeout_time_4) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.leftclick_timeout_time);
+			builder.setSingleChoiceItems(items, Globals.LeftClickTimeout, new DialogInterface.OnClickListener() 
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.LeftClickTimeout = item;
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
-	static void showLeftClickTimeoutConfig(final MainActivity p) {
-		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_timeout_time_0),
-										p.getResources().getString(R.string.leftclick_timeout_time_1),
-										p.getResources().getString(R.string.leftclick_timeout_time_2),
-										p.getResources().getString(R.string.leftclick_timeout_time_3),
-										p.getResources().getString(R.string.leftclick_timeout_time_4) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.leftclick_timeout_time);
-		builder.setSingleChoiceItems(items, Globals.LeftClickTimeout, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.LeftClickTimeout = item;
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showRightClickConfig(final MainActivity p)
+	static class RightClickConfig extends Menu
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.rightclick_none),
-										p.getResources().getString(R.string.rightclick_multitouch),
-										p.getResources().getString(R.string.rightclick_pressure),
-										p.getResources().getString(R.string.rightclick_key),
-										p.getResources().getString(R.string.leftclick_timeout) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.rightclick_question);
-		builder.setSingleChoiceItems(items, Globals.RightClickMethod, new DialogInterface.OnClickListener() 
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
+			return p.getResources().getString(R.string.rightclick_question);
+		}
+		void run (final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.rightclick_none),
+											p.getResources().getString(R.string.rightclick_multitouch),
+											p.getResources().getString(R.string.rightclick_pressure),
+											p.getResources().getString(R.string.rightclick_key),
+											p.getResources().getString(R.string.leftclick_timeout) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.rightclick_question);
+			builder.setSingleChoiceItems(items, Globals.RightClickMethod, new DialogInterface.OnClickListener() 
 			{
-				Globals.RightClickMethod = item;
-				dialog.dismiss();
-				if( item == Mouse.RIGHT_CLICK_WITH_KEY )
-					p.keyListener = new KeyRemapToolMouseClick(p, false);
-				else if( item == Mouse.RIGHT_CLICK_WITH_TIMEOUT )
-					showRightClickTimeoutConfig(p);
-				else
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.RightClickMethod = item;
+					dialog.dismiss();
+					if( item == Mouse.RIGHT_CLICK_WITH_KEY )
+						p.keyListener = new KeyRemapToolMouseClick(p, false);
+					else if( item == Mouse.RIGHT_CLICK_WITH_TIMEOUT )
+						showRightClickTimeoutConfig(p);
+					else
+						goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
 					goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 
-	static void showRightClickTimeoutConfig(final MainActivity p) {
-		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_timeout_time_0),
-										p.getResources().getString(R.string.leftclick_timeout_time_1),
-										p.getResources().getString(R.string.leftclick_timeout_time_2),
-										p.getResources().getString(R.string.leftclick_timeout_time_3),
-										p.getResources().getString(R.string.leftclick_timeout_time_4) };
+		static void showRightClickTimeoutConfig(final MainActivity p) {
+			final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_timeout_time_0),
+											p.getResources().getString(R.string.leftclick_timeout_time_1),
+											p.getResources().getString(R.string.leftclick_timeout_time_2),
+											p.getResources().getString(R.string.leftclick_timeout_time_3),
+											p.getResources().getString(R.string.leftclick_timeout_time_4) };
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.leftclick_timeout_time);
-		builder.setSingleChoiceItems(items, Globals.RightClickTimeout, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.leftclick_timeout_time);
+			builder.setSingleChoiceItems(items, Globals.RightClickTimeout, new DialogInterface.OnClickListener() 
 			{
-				Globals.RightClickTimeout = item;
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.RightClickTimeout = item;
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
 	public static class KeyRemapToolMouseClick implements KeyEventsListener
@@ -1357,201 +1411,205 @@ class Settings
 		}
 	}
 
-	static void showAdditionalMouseConfig(final MainActivity p)
+	static class AdditionalMouseConfig extends Menu
 	{
-		CharSequence[] items = {
-			p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
-			p.getResources().getString(R.string.pointandclick_joystickmouse),
-			p.getResources().getString(R.string.click_with_dpadcenter),
-			p.getResources().getString(R.string.pointandclick_relative)
-		};
-
-		boolean defaults[] = { 
-			Globals.ShowScreenUnderFinger,
-			Globals.MoveMouseWithJoystick,
-			Globals.ClickMouseWithDpad,
-			Globals.RelativeMouseMovement
-		};
-
-		
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.pointandclick_question));
-		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener()
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
-			{
-				if( item == 0 )
-					Globals.ShowScreenUnderFinger = isChecked;
-				if( item == 1 )
-					Globals.MoveMouseWithJoystick = isChecked;
-				if( item == 2 )
-					Globals.ClickMouseWithDpad = isChecked;
-				if( item == 3 )
-					Globals.RelativeMouseMovement = isChecked;
-			}
-		});
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
+			return p.getResources().getString(R.string.pointandclick_question);
+		}
+		void run (final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
+			CharSequence[] items = {
+				p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
+				p.getResources().getString(R.string.pointandclick_joystickmouse),
+				p.getResources().getString(R.string.click_with_dpadcenter),
+				p.getResources().getString(R.string.pointandclick_relative)
+			};
+
+			boolean defaults[] = { 
+				Globals.ShowScreenUnderFinger,
+				Globals.MoveMouseWithJoystick,
+				Globals.ClickMouseWithDpad,
+				Globals.RelativeMouseMovement
+			};
+
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.pointandclick_question));
+			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener()
 			{
-				dialog.dismiss();
-				if( Globals.RelativeMouseMovement )
-					showRelativeMouseMovementConfig(p);
-				else
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+				{
+					if( item == 0 )
+						Globals.ShowScreenUnderFinger = isChecked;
+					if( item == 1 )
+						Globals.MoveMouseWithJoystick = isChecked;
+					if( item == 2 )
+						Globals.ClickMouseWithDpad = isChecked;
+					if( item == 3 )
+						Globals.RelativeMouseMovement = isChecked;
+				}
+			});
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					if( Globals.RelativeMouseMovement )
+						showRelativeMouseMovementConfig(p);
+					else
+						goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
 					goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showRelativeMouseMovementConfig(final MainActivity p)
-	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.accel_veryslow),
-										p.getResources().getString(R.string.accel_slow),
-										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_fast),
-										p.getResources().getString(R.string.accel_veryfast) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.pointandclick_relative_speed);
-		builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementSpeed, new DialogInterface.OnClickListener()
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.RelativeMouseMovementSpeed = item;
-
-				dialog.dismiss();
-				showRelativeMouseMovementConfig1(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showRelativeMouseMovementConfig1(final MainActivity p)
-	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.none),
-										p.getResources().getString(R.string.accel_slow),
-										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_fast) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.pointandclick_relative_accel);
-		builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementAccel, new DialogInterface.OnClickListener()
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.RelativeMouseMovementAccel = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-
-	static void showArrowKeysConfig(final MainActivity p)
-	{
-		if( ! Globals.AppNeedsArrowKeys && ! Globals.MoveMouseWithJoystick )
-		{
-			Globals.PhoneHasArrowKeys = false;
-			Globals.PhoneHasTrackball = false;
-			showTrackballConfig(p);
-			return;
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
 		}
-		
-		final CharSequence[] items = { p.getResources().getString(R.string.controls_arrows),
-										p.getResources().getString(R.string.controls_trackball),
-										p.getResources().getString(R.string.controls_touch) };
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_question));
-		builder.setSingleChoiceItems(items, Globals.PhoneHasArrowKeys ? 0 : ( Globals.PhoneHasTrackball ? 1 : 2 ), new DialogInterface.OnClickListener() 
+		static void showRelativeMouseMovementConfig(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.PhoneHasArrowKeys = (item == 0);
-				Globals.PhoneHasTrackball = (item == 1);
+			final CharSequence[] items = {	p.getResources().getString(R.string.accel_veryslow),
+											p.getResources().getString(R.string.accel_slow),
+											p.getResources().getString(R.string.accel_medium),
+											p.getResources().getString(R.string.accel_fast),
+											p.getResources().getString(R.string.accel_veryfast) };
 
-				dialog.dismiss();
-				showTrackballConfig(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.pointandclick_relative_speed);
+			builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementSpeed, new DialogInterface.OnClickListener()
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.RelativeMouseMovementSpeed = item;
+
+					dialog.dismiss();
+					showRelativeMouseMovementConfig1(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		static void showRelativeMouseMovementConfig1(final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.none),
+											p.getResources().getString(R.string.accel_slow),
+											p.getResources().getString(R.string.accel_medium),
+											p.getResources().getString(R.string.accel_fast) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.pointandclick_relative_accel);
+			builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementAccel, new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.RelativeMouseMovementAccel = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
-	static void showTrackballConfig(final MainActivity p)
+
+	static class ArrowKeysConfig extends Menu
 	{
-		if( ! Globals.PhoneHasTrackball )
+		String title(final MainActivity p)
 		{
-			Globals.TrackballDampening = 0;
-			goBack(p);
-			return;
+			return p.getResources().getString(R.string.controls_question);
 		}
-		
-		final CharSequence[] items = { p.getResources().getString(R.string.trackball_no_dampening),
-										p.getResources().getString(R.string.trackball_fast),
-										p.getResources().getString(R.string.trackball_medium),
-										p.getResources().getString(R.string.trackball_slow) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.trackball_question));
-		builder.setSingleChoiceItems(items, Globals.TrackballDampening, new DialogInterface.OnClickListener() 
+		boolean enabled()
 		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.TrackballDampening = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			return Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick;
+		}
+		void run (final MainActivity p)
 		{
-			public void onCancel(DialogInterface dialog)
+			final CharSequence[] items = { p.getResources().getString(R.string.controls_arrows),
+											p.getResources().getString(R.string.controls_trackball),
+											p.getResources().getString(R.string.controls_touch) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_question));
+			builder.setSingleChoiceItems(items, Globals.PhoneHasArrowKeys ? 0 : ( Globals.PhoneHasTrackball ? 1 : 2 ), new DialogInterface.OnClickListener() 
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.PhoneHasArrowKeys = (item == 0);
+					Globals.PhoneHasTrackball = (item == 1);
+
+					dialog.dismiss();
+					if( Globals.PhoneHasTrackball )
+						showTrackballConfig(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		static void showTrackballConfig(final MainActivity p)
+		{
+			final CharSequence[] items = { p.getResources().getString(R.string.trackball_no_dampening),
+											p.getResources().getString(R.string.trackball_fast),
+											p.getResources().getString(R.string.trackball_medium),
+											p.getResources().getString(R.string.trackball_slow) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.trackball_question));
+			builder.setSingleChoiceItems(items, Globals.TrackballDampening, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.TrackballDampening = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
 	static void showJoystickMouseConfig(final MainActivity p)

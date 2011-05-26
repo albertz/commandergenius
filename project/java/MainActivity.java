@@ -325,10 +325,13 @@ public class MainActivity extends Activity {
 			_screenKeyboard.onKeyDown(keyCode, event);
 		else
 		if( mGLView != null )
-			 mGLView.nativeKey( keyCode, 1 );
+		{
+			if( !mGLView.callNativeKey( keyCode, 1 ) )
+				return super.onKeyDown(keyCode, event);
+		}
 		else
 		if( keyCode == KeyEvent.KEYCODE_BACK && downloader != null )
-		{ 
+		{
 			if( downloader.DownloadFailed )
 				System.exit(1);
 			if( !downloader.DownloadComplete )
@@ -349,7 +352,10 @@ public class MainActivity extends Activity {
 			_screenKeyboard.onKeyUp(keyCode, event);
 		else
 		if( mGLView != null )
-			mGLView.nativeKey( keyCode, 0 );
+		{
+			if( !mGLView.callNativeKey( keyCode, 0 ) )
+				return super.onKeyUp(keyCode, event);
+		}
 		return true;
 	}
 	
