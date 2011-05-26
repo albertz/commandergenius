@@ -12,6 +12,7 @@ The application will run on Android OS 1.6 and above, don't mind the 2.2 depende
 If you need support for C++ RTTI and exceptions you may use CrystaX NDK based on r4b:
 http://www.crystax.net/android/ndk-r4.php
 NDK r5b WILL CRASH on Android OS lower than 2.2, however SDL build system supports it.
+You may try to use CrystaX NDK r5b, which has that bug fixed, however currently NDK r4b is the most stable.
 You'll need to install Java Ant too.
 The most supported environment for this port is Linux, MacOs should be okay too.
 If you're developing under Windows you'd better install andLinux or Ubuntu+Wubi, to get proper Linux environment
@@ -73,12 +74,13 @@ then
 
 Also your main() function name should be redefined to SDL_main(), if you'll include SDL.h it will do it automatically.
 
-Then launch script ChangeAppSettings.sh - it will ask few questions and copy some Java files - 
+Then launch script ChangeAppSettings.sh - it will ask few questions and copy some Java files -
 there's no way around it, because Java does not support preprocessor.
 You may take AndroidAppSettings.cfg file from some other application to get some sane defaults,
 you may launch ChangeAppSettings.sh with -a or -v parameter to skip questions altogether or to ask only version code.
 The C++ files shall have .cpp extension to be compiled, rename them if necessary.
-Also you can replace icon image at project/res/drawable/icon.png and image project/res/drawable/publisherlogo.png.
+Also you can replace icon image at project/res/drawable/icon.png and create a file logo.png
+inside the directory project/jni/application/src/AndroidData to be used as a splash screen image.
 Then you can launch build.sh.
 
 Application data may be bundled with app itself, or downloaded from net on first run.
