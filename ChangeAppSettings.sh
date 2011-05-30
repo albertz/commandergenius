@@ -513,47 +513,8 @@ else
 fi
 
 KEY2=0
-NoRemapMask=""
 for KEY in $RedefinedKeys; do
-   if [ "$KEY" = "NO_REMAP" ] ; then
-      case $KEY2 in
-      0)
-         #not used at the moment
-         ;;
-      1)
-         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_DPAD_CENTER"
-         ;;
-      2)
-         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_VOLUME_UP"
-         ;;
-      3)
-         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_VOLUME_DOWN"
-         ;;
-      4)
-         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_MENU"         
-         ;;
-      5)
-         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_BACK"   
-         ;;
-      6)
-         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_CAMERA"   
-         ;;
-      7)
-         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_ENTER"   
-         ;;
-      8)
-         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_DEL"   
-         ;;
-      9)
-         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_SEARCH"   
-         ;;
-      10)
-         NoRemapMask="$NoRemapMask|KeyEvent.KEYCODE_CALL"   
-         ;;
-      esac
-   else
-	   RedefinedKeycodes="$RedefinedKeycodes -DSDL_ANDROID_KEYCODE_$KEY2=$KEY"
-   fi
+	RedefinedKeycodes="$RedefinedKeycodes -DSDL_ANDROID_KEYCODE_$KEY2=$KEY"
 	KEY2=`expr $KEY2 '+' 1`
 done
 
@@ -625,8 +586,7 @@ cat project/src/Globals.java | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
 	sed "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" | \
-	sed "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" | \
-	sed "s/public static int RemapKeymask = .*;/public static int RemapKeymask = 0$NoRemapMask;/" > \
+	sed "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" > \
 	project/src/Globals.java.1
 mv -f project/src/Globals.java.1 project/src/Globals.java
 

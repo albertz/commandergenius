@@ -399,27 +399,18 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 			mRenderer.nativeGlContextRecreated();
 	};
 
+	// This seems like redundant code - it handled in MainActivity.java
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event) {
-		if( !callNativeKey( keyCode, 1 ) )
-         		return super.onKeyDown(keyCode, event);
+		if( nativeKey( keyCode, 1 ) == 0 )
+				return super.onKeyDown(keyCode, event);
 		return true;
-	 }
+	}
 	
 	@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event) {
-		if( !callNativeKey( keyCode, 0 ) )
-         		return super.onKeyUp(keyCode, event);
-		return true;
-	 }
-
-	public boolean callNativeKey(int keyCode, int down) {
-		if( (Globals.RemapKeymask & keyCode ) == keyCode )
-		{
-			// no remap made for the key
-			return false;
-		}
-		nativeKey( keyCode, down );
+		if( nativeKey( keyCode, 0 ) == 0 )
+				return super.onKeyUp(keyCode, event);
 		return true;
 	}
 
@@ -428,7 +419,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	DifferentTouchInput touchInput = null;
 
 	public static native void nativeMouse( int x, int y, int action, int pointerId, int pressure, int radius );
-	public static native void nativeKey( int keyCode, int down );
+	public static native int nativeKey( int keyCode, int down );
 	public static native void initJavaCallbacks();
 
 }

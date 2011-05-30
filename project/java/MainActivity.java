@@ -320,13 +320,12 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event)
 	{
-		// Overrides Back key to use in our app
 		if(_screenKeyboard != null)
 			_screenKeyboard.onKeyDown(keyCode, event);
 		else
 		if( mGLView != null )
 		{
-			if( !mGLView.callNativeKey( keyCode, 1 ) )
+			if( mGLView.nativeKey( keyCode, 1 ) == 0 )
 				return super.onKeyDown(keyCode, event);
 		}
 		else
@@ -353,7 +352,7 @@ public class MainActivity extends Activity {
 		else
 		if( mGLView != null )
 		{
-			if( !mGLView.callNativeKey( keyCode, 0 ) )
+			if( mGLView.nativeKey( keyCode, 0 ) == 0 )
 				return super.onKeyUp(keyCode, event);
 		}
 		return true;

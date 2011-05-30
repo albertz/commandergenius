@@ -1341,7 +1341,7 @@ class Settings
 		
 		public void onKeyEvent(final int keyCode)
 		{
-			p.touchListener = null;
+			p.keyListener = null;
 			int keyIndex = keyCode;
 			if( keyIndex < 0 )
 				keyIndex = 0;
@@ -1712,7 +1712,7 @@ class Settings
 		
 		public void onKeyEvent(final int keyCode)
 		{
-			p.touchListener = null;
+			p.keyListener = null;
 			int keyIndex = keyCode;
 			if( keyIndex < 0 )
 				keyIndex = 0;

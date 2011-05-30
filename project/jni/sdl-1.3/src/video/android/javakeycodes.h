@@ -97,7 +97,7 @@ KEYCODE_MEDIA_REWIND    = 89,
 KEYCODE_MEDIA_FAST_FORWARD = 90,
 KEYCODE_MUTE            = 91,
 
-KEYCODE_LAST            = 110 // Android 2.3 added several new gaming keys, it ends up at keycode 110 currently - plz keep in sync with Keycodes.java
+KEYCODE_LAST            = 255 // Android 2.3 added several new gaming keys, Android 3.1 added even more - plz keep in sync with Keycodes.java
 };
 
 #endif

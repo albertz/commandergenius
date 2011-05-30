@@ -52,6 +52,9 @@
 
 /* JNI-C++ wrapper stuff */
 
+// Special key to signal that key should be handled by Java internally, such as Volume Up/Down keys
+#define SDLK_NO_REMAP 512
+
 #if SDL_VERSION_ATLEAST(1,3,0)
 
 #define SDL_KEY2(X) SDL_SCANCODE_ ## X
