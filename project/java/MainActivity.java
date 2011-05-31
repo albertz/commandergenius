@@ -121,16 +121,19 @@ public class MainActivity extends Activity {
 
 		if( !Settings.settingsChanged )
 		{
-			System.out.println("libSDL: 3-second timeout in startup screen");
+			System.out.println("libSDL: " + String.valueOf(Globals.StartupMenuButtonTimeout) + "-msec timeout in startup screen");
 			class Callback implements Runnable
 			{
 				MainActivity p;
 				Callback( MainActivity _p ) { p = _p; }
 				public void run()
 				{
-					try {
-						Thread.sleep(3000);
-					} catch( InterruptedException e ) {};
+					if( Globals.StartupMenuButtonTimeout > 0 )
+					{
+						try {
+							Thread.sleep(Globals.StartupMenuButtonTimeout);
+						} catch( InterruptedException e ) {};
+					}
 					if( Settings.settingsChanged )
 						return;
 					System.out.println("libSDL: Timeout reached in startup screen, process with downloader");

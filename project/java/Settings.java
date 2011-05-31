@@ -329,11 +329,66 @@ class Settings
 
 	public static abstract class Menu
 	{
+		// Should be overridden by children
 		abstract void run(final MainActivity p);
 		abstract String title(final MainActivity p);
 		boolean enabled()
 		{
 			return true;
+		}
+		// Should not be overridden
+		boolean enabledOrHidden()
+		{
+			for( Menu m: Globals.HiddenMenuOptions )
+			{
+				if( m.getClass().getName().equals( this.getClass().getName() ) )
+					return false;
+			}
+			return enabled();
+		}
+		void showMenuOptionsList(final MainActivity p, final Menu[] list)
+		{
+			menuStack.add(this);
+			ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
+			for( Menu m: list )
+			{
+				if(m.enabledOrHidden())
+					items.add(m.title(p));
+			}
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(title(p));
+			//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
+			builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item)
+				{
+					dialog.dismiss();
+					int selected = 0;
+
+					for( Menu m: list )
+					{
+						if(m.enabledOrHidden())
+						{
+							if( selected == item )
+							{
+								m.run(p);
+								return;
+							}
+							selected ++;
+						}
+					}
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBackOuterMenu(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
 		}
 	}
 
@@ -364,8 +419,12 @@ class Settings
 			new MainMenu().run(p);
 		else
 		{
-			menuStack.add(new OptionalDownloadConfig());
-			new DisplaySizeConfig(true).run(p);
+			if( Globals.StartupMenuButtonTimeout > 0 ) // If we did not disable startup menu altogether
+			{
+				for( Menu m: Globals.FirstStartMenuOptions )
+					menuStack.add(m);
+			}
+			goBack(p);
 		}
 	}
 
@@ -389,6 +448,30 @@ class Settings
 			menuStack.remove(menuStack.size() - 1);
 		goBack(p);
 	}
+	
+	static class OkButton extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.ok);
+		}
+		void run (final MainActivity p)
+		{
+			goBackOuterMenu(p);
+		}
+	}
+
+	static class DummyMenu extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.ok);
+		}
+		void run (final MainActivity p)
+		{
+			goBack(p);
+		}
+	}
 
 	static class MainMenu extends Menu
 	{
@@ -398,118 +481,22 @@ class Settings
 		}
 		void run (final MainActivity p)
 		{
-			menuStack.add(this);
-
-			ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
-
-			items.add(p.getResources().getString(R.string.storage_question));
-
-			items.add(p.getResources().getString(R.string.downloads));
-
-			items.add(p.getResources().getString(R.string.controls_additional));
-
-			if( Globals.UseTouchscreenKeyboard )
-				items.add(p.getResources().getString(R.string.controls_screenkb));
-
-			if( Globals.AppUsesMouse )
-				items.add(p.getResources().getString(R.string.mouse_emulation));
-
-			if( Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick )
-				items.add(p.getResources().getString(R.string.controls_question));
-
-			if( Globals.UseAccelerometerAsArrowKeys || ! Globals.AppHandlesJoystickSensitivity )
-				items.add(p.getResources().getString(R.string.accel_question));
-
-			items.add(p.getResources().getString(R.string.audiobuf_question));
-
-			items.add(p.getResources().getString(R.string.remap_hwkeys));
-
-			items.add(p.getResources().getString(R.string.remap_screenkb_button_gestures));
-
-			items.add(p.getResources().getString(R.string.video));
-
-			items.add(p.getResources().getString(R.string.ok));
-
-			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(title(p));
-			//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
-			builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
+			Menu options[] =
 			{
-				public void onClick(DialogInterface dialog, int item)
-				{
-					dialog.dismiss();
-					int selected = 0;
-
-					if( item == selected )
-						new DownloadConfig().run(p);
-					selected++;
-
-					if( item == selected )
-						new OptionalDownloadConfig().run(p);
-					selected++;
-
-					if( item == selected )
-						showAdditionalInputConfig(p);
-					selected++;
-
-					if( Globals.UseTouchscreenKeyboard ) {
-						if( item == selected )
-							new KeyboardConfigMainMenu().run(p);
-					} else
-						item++;
-					selected++;
-
-					if( Globals.AppUsesMouse ) {
-						if( item == selected )
-							new MouseConfigMainMenu().run(p);
-					} else
-						item++;
-					selected++;
-
-					if( Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick ) {
-						if( item == selected )
-							showArrowKeysConfig(p);
-					} else
-						item++;
-					selected++;
-
-					if( Globals.UseAccelerometerAsArrowKeys || ! Globals.AppHandlesJoystickSensitivity ) {
-						if( item == selected )
-							showAccelerometerConfig(p);
-					} else
-						item++;
-					selected++;
-
-					if( item == selected )
-						showAudioConfig(p);
-					selected++;
-
-					if( item == selected )
-						showRemapHwKeysConfig(p);
-					selected++;
-
-					if( item == selected )
-						showScreenGesturesConfig(p);
-					selected++;
-
-					if( item == selected )
-						showVideoSettingsConfig(p);
-					selected++;
-
-					if( item == selected )
-						goBackOuterMenu(p);
-				}
-			});
-			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-			{
-				public void onCancel(DialogInterface dialog)
-				{
-					goBackOuterMenu(p);
-				}
-			});
-			AlertDialog alert = builder.create();
-			alert.setOwnerActivity(p);
-			alert.show();
+				new DownloadConfig(),
+				new OptionalDownloadConfig(false),
+				new AdditionalInputConfig(),
+				new KeyboardConfigMainMenu(),
+				new MouseConfigMainMenu(),
+				new ArrowKeysConfig(),
+				new AccelerometerConfig(),
+				new AudioConfig(),
+				new RemapHwKeysConfig(),
+				new ScreenGesturesConfig(),
+				new VideoSettingsConfig(),
+				new OkButton(),
+			};
+			showMenuOptionsList(p, options);
 		}
 	}
 
@@ -525,90 +512,18 @@ class Settings
 		}
 		void run (final MainActivity p)
 		{
-			menuStack.add(this);
-
-			ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
-
-			items.add(p.getResources().getString(R.string.display_size_mouse));
-
-			items.add(p.getResources().getString(R.string.leftclick_question));
-
-			if( Globals.AppNeedsTwoButtonMouse )
-				items.add(p.getResources().getString(R.string.rightclick_question));
-
-			items.add(p.getResources().getString(R.string.pointandclick_question));
-
-			if( Globals.MoveMouseWithJoystick )
-				items.add(p.getResources().getString(R.string.pointandclick_joystickmouse));
-
-			if( Globals.RightClickMethod == Mouse.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_PRESSURE )
-				items.add(p.getResources().getString(R.string.measurepressure));
-			
-			items.add(p.getResources().getString(R.string.calibrate_touchscreen));
-			
-			items.add(p.getResources().getString(R.string.ok));
-
-			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(title(p));
-			//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MouseConfigMainMenuLastSelected, new DialogInterface.OnClickListener() 
-			builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
+			Menu options[] =
 			{
-				public void onClick(DialogInterface dialog, int item) 
-				{
-					dialog.dismiss();
-					int selected = 0;
-
-					if( item == selected )
-						new DisplaySizeConfig(false).run(p);
-					selected++;
-
-					if( item == selected )
-						showLeftClickConfig(p);
-					selected++;
-
-					if( Globals.AppNeedsTwoButtonMouse ) {
-						if( item == selected )
-							showRightClickConfig(p);
-					} else
-						item++;
-					selected++;
-
-					if( item == selected )
-						showAdditionalMouseConfig(p);
-					selected++;
-
-					if( Globals.MoveMouseWithJoystick ) {
-						if( item == selected )
-							showJoystickMouseConfig(p);
-					} else
-						item++;
-					selected++;
-
-					if( Globals.RightClickMethod == Mouse.RIGHT_CLICK_WITH_PRESSURE || Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_PRESSURE ) {
-						if( item == selected )
-							showTouchPressureMeasurementTool(p);
-					} else
-						item++;
-					selected++;
-
-					if( item == selected )
-						showCalibrateTouchscreenMenu(p);
-					selected++;
-
-					if( item == selected )
-						goBackOuterMenu(p);
-				}
-			});
-			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-			{
-				public void onCancel(DialogInterface dialog)
-				{
-					goBackOuterMenu(p);
-				}
-			});
-			AlertDialog alert = builder.create();
-			alert.setOwnerActivity(p);
-			alert.show();
+				new DisplaySizeConfig(false),
+				new LeftClickConfig(),
+				new RightClickConfig(),
+				new AdditionalMouseConfig(),
+				new JoystickMouseConfig(),
+				new TouchPressureMeasurementTool(),
+				new CalibrateTouchscreenMenu(),
+				new OkButton(),
+			};
+			showMenuOptionsList(p, options);
 		}
 	}
 
@@ -624,66 +539,16 @@ class Settings
 		}
 		void run (final MainActivity p)
 		{
-			menuStack.add(this);
-
-			ArrayList<CharSequence> items = new ArrayList<CharSequence> ();
-
-			items.add(p.getResources().getString(R.string.controls_screenkb_theme));
-
-			items.add(p.getResources().getString(R.string.controls_screenkb_size));
-
-			items.add(p.getResources().getString(R.string.controls_screenkb_transparency));
-
-			items.add(p.getResources().getString(R.string.remap_screenkb));
-
-			items.add(p.getResources().getString(R.string.screenkb_custom_layout));
-
-			items.add(p.getResources().getString(R.string.ok));
-
-			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(title(p));
-			//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), KeyboardConfigMainMenuLastSelected, new DialogInterface.OnClickListener()
-			builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener() 
+			Menu options[] =
 			{
-				public void onClick(DialogInterface dialog, int item) 
-				{
-					dialog.dismiss();
-					int selected = 0;
-
-					if( item == selected )
-						showScreenKeyboardThemeConfig(p);
-					selected++;
-
-					if( item == selected )
-						showScreenKeyboardSizeConfig(p);
-					selected++;
-
-					if( item == selected )
-						showScreenKeyboardTransparencyConfig(p);
-					selected++;
-
-					if( item == selected )
-						showRemapScreenKbConfig(p);
-					selected++;
-
-					if( item == selected )
-						showCustomizeScreenKbLayout(p);
-					selected++;
-					
-					if( item == selected )
-						goBackOuterMenu(p);
-				}
-			});
-			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-			{
-				public void onCancel(DialogInterface dialog)
-				{
-					goBackOuterMenu(p);
-				}
-			});
-			AlertDialog alert = builder.create();
-			alert.setOwnerActivity(p);
-			alert.show();
+				new ScreenKeyboardThemeConfig(),
+				new ScreenKeyboardSizeConfig(),
+				new ScreenKeyboardTransparencyConfig(),
+				new RemapScreenKbConfig(),
+				new CustomizeScreenKbLayout(),
+				new OkButton(),
+			};
+			showMenuOptionsList(p, options);
 		}
 	}
 
@@ -806,6 +671,11 @@ class Settings
 
 	static class OptionalDownloadConfig extends Menu
 	{
+		boolean firstStart = false;
+		OptionalDownloadConfig(boolean firstStart)
+		{
+			this.firstStart = firstStart;
+		}
 		String title(final MainActivity p)
 		{
 			return p.getResources().getString(R.string.downloads);
@@ -841,11 +711,74 @@ class Settings
 					Globals.OptionalDataDownload[0] = true;
 			}
 
-			builder.setMultiChoiceItems(items, Globals.OptionalDataDownload, new DialogInterface.OnMultiChoiceClickListener() 
+			builder.setMultiChoiceItems(items, Globals.OptionalDataDownload, new DialogInterface.OnMultiChoiceClickListener()
 			{
 				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 				{
 					Globals.OptionalDataDownload[item] = isChecked;
+				}
+			});
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			if( firstStart )
+			{
+				builder.setNegativeButton(p.getResources().getString(R.string.show_more_options), new DialogInterface.OnClickListener()
+				{
+					public void onClick(DialogInterface dialog, int item) 
+					{
+						dialog.dismiss();
+						menuStack.clear();
+						new MainMenu().run(p);
+					}
+				});
+			}
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+	
+	static class AdditionalInputConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.controls_additional);
+		}
+		void run (final MainActivity p)
+		{
+			CharSequence[] items = {
+				p.getResources().getString(R.string.controls_screenkb),
+				p.getResources().getString(R.string.controls_accelnav)
+			};
+
+			boolean defaults[] = { 
+				Globals.UseTouchscreenKeyboard,
+				Globals.UseAccelerometerAsArrowKeys
+			};
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_additional));
+			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+				{
+					if( item == 0 )
+						Globals.UseTouchscreenKeyboard = isChecked;
+					if( item == 1 )
+						Globals.UseAccelerometerAsArrowKeys = isChecked;
 				}
 			});
 			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
@@ -868,252 +801,246 @@ class Settings
 			alert.show();
 		}
 	}
-	
-	static void showAdditionalInputConfig(final MainActivity p)
+
+	static class AccelerometerConfig extends Menu
 	{
-		CharSequence[] items = {
-			p.getResources().getString(R.string.controls_screenkb),
-			p.getResources().getString(R.string.controls_accelnav)
-		};
-
-		boolean defaults[] = { 
-			Globals.UseTouchscreenKeyboard,
-			Globals.UseAccelerometerAsArrowKeys
-		};
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_additional));
-		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
-			{
-				if( item == 0 )
-					Globals.UseTouchscreenKeyboard = isChecked;
-				if( item == 1 )
-					Globals.UseAccelerometerAsArrowKeys = isChecked;
-			}
-		});
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showAccelerometerConfig(final MainActivity p)
-	{
-		if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
-		{
-			Globals.AccelerometerSensitivity = 2; // Slow, full range
-			showAccelerometerCenterConfig(p);
-			return;
+			return p.getResources().getString(R.string.accel_question);
 		}
-		
-		final CharSequence[] items = { p.getResources().getString(R.string.accel_fast),
-										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_slow) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.accel_question);
-		builder.setSingleChoiceItems(items, Globals.AccelerometerSensitivity, new DialogInterface.OnClickListener() 
+		boolean enabled()
 		{
-			public void onClick(DialogInterface dialog, int item) 
+			return Globals.UseAccelerometerAsArrowKeys || ! Globals.AppHandlesJoystickSensitivity;
+		}
+		void run (final MainActivity p)
+		{
+			if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
 			{
-				Globals.AccelerometerSensitivity = item;
-
-				dialog.dismiss();
+				Globals.AccelerometerSensitivity = 2; // Slow, full range
 				showAccelerometerCenterConfig(p);
+				return;
 			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
+			
+			final CharSequence[] items = { p.getResources().getString(R.string.accel_fast),
+											p.getResources().getString(R.string.accel_medium),
+											p.getResources().getString(R.string.accel_slow) };
 
-	static void showAccelerometerCenterConfig(final MainActivity p)
-	{
-		if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
-		{
-			Globals.AccelerometerCenterPos = 2; // Fixed horizontal center position
-			goBack(p);
-			return;
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.accel_question);
+			builder.setSingleChoiceItems(items, Globals.AccelerometerSensitivity, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.AccelerometerSensitivity = item;
+
+					dialog.dismiss();
+					showAccelerometerCenterConfig(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
 		}
-		
-		final CharSequence[] items = { p.getResources().getString(R.string.accel_floating),
-										p.getResources().getString(R.string.accel_fixed_start),
-										p.getResources().getString(R.string.accel_fixed_horiz) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.accel_question_center);
-		builder.setSingleChoiceItems(items, Globals.AccelerometerCenterPos, new DialogInterface.OnClickListener() 
+		static void showAccelerometerCenterConfig(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
+			if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
 			{
-				Globals.AccelerometerCenterPos = item;
+				Globals.AccelerometerCenterPos = 2; // Fixed horizontal center position
+				goBack(p);
+				return;
+			}
+			
+			final CharSequence[] items = { p.getResources().getString(R.string.accel_floating),
+											p.getResources().getString(R.string.accel_fixed_start),
+											p.getResources().getString(R.string.accel_fixed_horiz) };
 
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.accel_question_center);
+			builder.setSingleChoiceItems(items, Globals.AccelerometerCenterPos, new DialogInterface.OnClickListener() 
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.AccelerometerCenterPos = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
 
-	static void showScreenKeyboardSizeConfig(final MainActivity p)
+	static class ScreenKeyboardSizeConfig extends Menu
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_large),
-										p.getResources().getString(R.string.controls_screenkb_medium),
-										p.getResources().getString(R.string.controls_screenkb_small),
-										p.getResources().getString(R.string.controls_screenkb_tiny) };
-
-		for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
-			for( int ii = 0; ii < 4; ii++ )
-				Globals.ScreenKbControlsLayout[i][ii] = 0;
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_size));
-		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardSize, new DialogInterface.OnClickListener() 
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.TouchscreenKeyboardSize = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			return p.getResources().getString(R.string.controls_screenkb_size);
+		}
+		void run (final MainActivity p)
 		{
-			public void onCancel(DialogInterface dialog)
+			final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_large),
+											p.getResources().getString(R.string.controls_screenkb_medium),
+											p.getResources().getString(R.string.controls_screenkb_small),
+											p.getResources().getString(R.string.controls_screenkb_tiny) };
+
+			for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+				for( int ii = 0; ii < 4; ii++ )
+					Globals.ScreenKbControlsLayout[i][ii] = 0;
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_screenkb_size));
+			builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardSize, new DialogInterface.OnClickListener() 
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.TouchscreenKeyboardSize = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
-	static void showScreenKeyboardThemeConfig(final MainActivity p)
+	static class ScreenKeyboardThemeConfig extends Menu
 	{
-		final CharSequence[] items = {
-			p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
-			p.getResources().getString(R.string.controls_screenkb_by, "Simple Theme", "Beholder")
-			};
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_theme));
-		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTheme, new DialogInterface.OnClickListener() 
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.TouchscreenKeyboardTheme = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			return p.getResources().getString(R.string.controls_screenkb_theme);
+		}
+		void run (final MainActivity p)
 		{
-			public void onCancel(DialogInterface dialog)
+			final CharSequence[] items = {
+				p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
+				p.getResources().getString(R.string.controls_screenkb_by, "Simple Theme", "Beholder")
+				};
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_screenkb_theme));
+			builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTheme, new DialogInterface.OnClickListener() 
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.TouchscreenKeyboardTheme = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
-	static void showScreenKeyboardTransparencyConfig(final MainActivity p)
+	static class ScreenKeyboardTransparencyConfig extends Menu
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_trans_0),
-										p.getResources().getString(R.string.controls_screenkb_trans_1),
-										p.getResources().getString(R.string.controls_screenkb_trans_2),
-										p.getResources().getString(R.string.controls_screenkb_trans_3),
-										p.getResources().getString(R.string.controls_screenkb_trans_4) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_screenkb_transparency));
-		builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTransparency, new DialogInterface.OnClickListener()
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.TouchscreenKeyboardTransparency = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			return p.getResources().getString(R.string.controls_screenkb_transparency);
+		}
+		void run (final MainActivity p)
 		{
-			public void onCancel(DialogInterface dialog)
+			final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_trans_0),
+											p.getResources().getString(R.string.controls_screenkb_trans_1),
+											p.getResources().getString(R.string.controls_screenkb_trans_2),
+											p.getResources().getString(R.string.controls_screenkb_trans_3),
+											p.getResources().getString(R.string.controls_screenkb_trans_4) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_screenkb_transparency));
+			builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardTransparency, new DialogInterface.OnClickListener()
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.TouchscreenKeyboardTransparency = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
-	static void showAudioConfig(final MainActivity p)
+	static class AudioConfig extends Menu
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.audiobuf_verysmall),
-										p.getResources().getString(R.string.audiobuf_small),
-										p.getResources().getString(R.string.audiobuf_medium),
-										p.getResources().getString(R.string.audiobuf_large) };
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.audiobuf_question);
+		}
+		void run (final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.audiobuf_verysmall),
+											p.getResources().getString(R.string.audiobuf_small),
+											p.getResources().getString(R.string.audiobuf_medium),
+											p.getResources().getString(R.string.audiobuf_large) };
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.audiobuf_question);
-		builder.setSingleChoiceItems(items, Globals.AudioBufferConfig, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.audiobuf_question);
+			builder.setSingleChoiceItems(items, Globals.AudioBufferConfig, new DialogInterface.OnClickListener() 
 			{
-				Globals.AudioBufferConfig = item;
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.AudioBufferConfig = item;
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
 	static class DisplaySizeConfig extends Menu
@@ -1194,138 +1121,155 @@ class Settings
 		}
 	}
 
-	static void showLeftClickConfig(final MainActivity p)
+	static class LeftClickConfig extends Menu
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_normal),
-										p.getResources().getString(R.string.leftclick_near_cursor),
-										p.getResources().getString(R.string.leftclick_multitouch),
-										p.getResources().getString(R.string.leftclick_pressure),
-										p.getResources().getString(R.string.rightclick_key),
-										p.getResources().getString(R.string.leftclick_timeout),
-										p.getResources().getString(R.string.leftclick_tap),
-										p.getResources().getString(R.string.leftclick_tap_or_timeout) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.leftclick_question);
-		builder.setSingleChoiceItems(items, Globals.LeftClickMethod, new DialogInterface.OnClickListener()
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
+			return p.getResources().getString(R.string.leftclick_question);
+		}
+		void run (final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_normal),
+											p.getResources().getString(R.string.leftclick_near_cursor),
+											p.getResources().getString(R.string.leftclick_multitouch),
+											p.getResources().getString(R.string.leftclick_pressure),
+											p.getResources().getString(R.string.rightclick_key),
+											p.getResources().getString(R.string.leftclick_timeout),
+											p.getResources().getString(R.string.leftclick_tap),
+											p.getResources().getString(R.string.leftclick_tap_or_timeout) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.leftclick_question);
+			builder.setSingleChoiceItems(items, Globals.LeftClickMethod, new DialogInterface.OnClickListener()
 			{
-				dialog.dismiss();
-				if( item == Mouse.LEFT_CLICK_WITH_KEY )
-					p.keyListener = new KeyRemapToolMouseClick(p, true);
-				else if( item == Mouse.LEFT_CLICK_WITH_TIMEOUT || item == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT )
-					showLeftClickTimeoutConfig(p);
-				else
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					if( item == Mouse.LEFT_CLICK_WITH_KEY )
+						p.keyListener = new KeyRemapToolMouseClick(p, true);
+					else if( item == Mouse.LEFT_CLICK_WITH_TIMEOUT || item == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT )
+						showLeftClickTimeoutConfig(p);
+					else
+						goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
 					goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+		static void showLeftClickTimeoutConfig(final MainActivity p) {
+			final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_timeout_time_0),
+											p.getResources().getString(R.string.leftclick_timeout_time_1),
+											p.getResources().getString(R.string.leftclick_timeout_time_2),
+											p.getResources().getString(R.string.leftclick_timeout_time_3),
+											p.getResources().getString(R.string.leftclick_timeout_time_4) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.leftclick_timeout_time);
+			builder.setSingleChoiceItems(items, Globals.LeftClickTimeout, new DialogInterface.OnClickListener() 
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.LeftClickTimeout = item;
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
-	static void showLeftClickTimeoutConfig(final MainActivity p) {
-		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_timeout_time_0),
-										p.getResources().getString(R.string.leftclick_timeout_time_1),
-										p.getResources().getString(R.string.leftclick_timeout_time_2),
-										p.getResources().getString(R.string.leftclick_timeout_time_3),
-										p.getResources().getString(R.string.leftclick_timeout_time_4) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.leftclick_timeout_time);
-		builder.setSingleChoiceItems(items, Globals.LeftClickTimeout, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.LeftClickTimeout = item;
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showRightClickConfig(final MainActivity p)
+	static class RightClickConfig extends Menu
 	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.rightclick_none),
-										p.getResources().getString(R.string.rightclick_multitouch),
-										p.getResources().getString(R.string.rightclick_pressure),
-										p.getResources().getString(R.string.rightclick_key),
-										p.getResources().getString(R.string.leftclick_timeout) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.rightclick_question);
-		builder.setSingleChoiceItems(items, Globals.RightClickMethod, new DialogInterface.OnClickListener() 
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
+			return p.getResources().getString(R.string.rightclick_question);
+		}
+		boolean enabled()
+		{
+			return Globals.AppNeedsTwoButtonMouse;
+		}
+		void run (final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.rightclick_none),
+											p.getResources().getString(R.string.rightclick_multitouch),
+											p.getResources().getString(R.string.rightclick_pressure),
+											p.getResources().getString(R.string.rightclick_key),
+											p.getResources().getString(R.string.leftclick_timeout) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.rightclick_question);
+			builder.setSingleChoiceItems(items, Globals.RightClickMethod, new DialogInterface.OnClickListener() 
 			{
-				Globals.RightClickMethod = item;
-				dialog.dismiss();
-				if( item == Mouse.RIGHT_CLICK_WITH_KEY )
-					p.keyListener = new KeyRemapToolMouseClick(p, false);
-				else if( item == Mouse.RIGHT_CLICK_WITH_TIMEOUT )
-					showRightClickTimeoutConfig(p);
-				else
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.RightClickMethod = item;
+					dialog.dismiss();
+					if( item == Mouse.RIGHT_CLICK_WITH_KEY )
+						p.keyListener = new KeyRemapToolMouseClick(p, false);
+					else if( item == Mouse.RIGHT_CLICK_WITH_TIMEOUT )
+						showRightClickTimeoutConfig(p);
+					else
+						goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
 					goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 
-	static void showRightClickTimeoutConfig(final MainActivity p) {
-		final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_timeout_time_0),
-										p.getResources().getString(R.string.leftclick_timeout_time_1),
-										p.getResources().getString(R.string.leftclick_timeout_time_2),
-										p.getResources().getString(R.string.leftclick_timeout_time_3),
-										p.getResources().getString(R.string.leftclick_timeout_time_4) };
+		static void showRightClickTimeoutConfig(final MainActivity p) {
+			final CharSequence[] items = {	p.getResources().getString(R.string.leftclick_timeout_time_0),
+											p.getResources().getString(R.string.leftclick_timeout_time_1),
+											p.getResources().getString(R.string.leftclick_timeout_time_2),
+											p.getResources().getString(R.string.leftclick_timeout_time_3),
+											p.getResources().getString(R.string.leftclick_timeout_time_4) };
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.leftclick_timeout_time);
-		builder.setSingleChoiceItems(items, Globals.RightClickTimeout, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.leftclick_timeout_time);
+			builder.setSingleChoiceItems(items, Globals.RightClickTimeout, new DialogInterface.OnClickListener() 
 			{
-				Globals.RightClickTimeout = item;
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.RightClickTimeout = item;
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
 	public static class KeyRemapToolMouseClick implements KeyEventsListener
@@ -1357,376 +1301,114 @@ class Settings
 		}
 	}
 
-	static void showAdditionalMouseConfig(final MainActivity p)
+	static class AdditionalMouseConfig extends Menu
 	{
-		CharSequence[] items = {
-			p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
-			p.getResources().getString(R.string.pointandclick_joystickmouse),
-			p.getResources().getString(R.string.click_with_dpadcenter),
-			p.getResources().getString(R.string.pointandclick_relative)
-		};
-
-		boolean defaults[] = { 
-			Globals.ShowScreenUnderFinger,
-			Globals.MoveMouseWithJoystick,
-			Globals.ClickMouseWithDpad,
-			Globals.RelativeMouseMovement
-		};
-
-		
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.pointandclick_question));
-		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener()
+		String title(final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
-			{
-				if( item == 0 )
-					Globals.ShowScreenUnderFinger = isChecked;
-				if( item == 1 )
-					Globals.MoveMouseWithJoystick = isChecked;
-				if( item == 2 )
-					Globals.ClickMouseWithDpad = isChecked;
-				if( item == 3 )
-					Globals.RelativeMouseMovement = isChecked;
-			}
-		});
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				dialog.dismiss();
-				if( Globals.RelativeMouseMovement )
-					showRelativeMouseMovementConfig(p);
-				else
-					goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showRelativeMouseMovementConfig(final MainActivity p)
-	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.accel_veryslow),
-										p.getResources().getString(R.string.accel_slow),
-										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_fast),
-										p.getResources().getString(R.string.accel_veryfast) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.pointandclick_relative_speed);
-		builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementSpeed, new DialogInterface.OnClickListener()
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.RelativeMouseMovementSpeed = item;
-
-				dialog.dismiss();
-				showRelativeMouseMovementConfig1(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showRelativeMouseMovementConfig1(final MainActivity p)
-	{
-		final CharSequence[] items = {	p.getResources().getString(R.string.none),
-										p.getResources().getString(R.string.accel_slow),
-										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_fast) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.pointandclick_relative_accel);
-		builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementAccel, new DialogInterface.OnClickListener()
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.RelativeMouseMovementAccel = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-
-	static void showArrowKeysConfig(final MainActivity p)
-	{
-		if( ! Globals.AppNeedsArrowKeys && ! Globals.MoveMouseWithJoystick )
-		{
-			Globals.PhoneHasArrowKeys = false;
-			Globals.PhoneHasTrackball = false;
-			showTrackballConfig(p);
-			return;
+			return p.getResources().getString(R.string.pointandclick_question);
 		}
-		
-		final CharSequence[] items = { p.getResources().getString(R.string.controls_arrows),
-										p.getResources().getString(R.string.controls_trackball),
-										p.getResources().getString(R.string.controls_touch) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.controls_question));
-		builder.setSingleChoiceItems(items, Globals.PhoneHasArrowKeys ? 0 : ( Globals.PhoneHasTrackball ? 1 : 2 ), new DialogInterface.OnClickListener() 
+		void run (final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.PhoneHasArrowKeys = (item == 0);
-				Globals.PhoneHasTrackball = (item == 1);
+			CharSequence[] items = {
+				p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
+				p.getResources().getString(R.string.pointandclick_joystickmouse),
+				p.getResources().getString(R.string.click_with_dpadcenter),
+				p.getResources().getString(R.string.pointandclick_relative)
+			};
 
-				dialog.dismiss();
-				showTrackballConfig(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
+			boolean defaults[] = { 
+				Globals.ShowScreenUnderFinger,
+				Globals.MoveMouseWithJoystick,
+				Globals.ClickMouseWithDpad,
+				Globals.RelativeMouseMovement
+			};
 
-	static void showTrackballConfig(final MainActivity p)
-	{
-		if( ! Globals.PhoneHasTrackball )
-		{
-			Globals.TrackballDampening = 0;
-			goBack(p);
-			return;
-		}
-		
-		final CharSequence[] items = { p.getResources().getString(R.string.trackball_no_dampening),
-										p.getResources().getString(R.string.trackball_fast),
-										p.getResources().getString(R.string.trackball_medium),
-										p.getResources().getString(R.string.trackball_slow) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.trackball_question));
-		builder.setSingleChoiceItems(items, Globals.TrackballDampening, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.TrackballDampening = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showJoystickMouseConfig(final MainActivity p)
-	{
-		if( ! Globals.MoveMouseWithJoystick )
-		{
-			Globals.MoveMouseWithJoystickSpeed = 0;
-			showJoystickMouseAccelConfig(p);
-			return;
-		}
-		
-		final CharSequence[] items = {	p.getResources().getString(R.string.accel_slow),
-										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_fast) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.pointandclick_joystickmousespeed);
-		builder.setSingleChoiceItems(items, Globals.MoveMouseWithJoystickSpeed, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.MoveMouseWithJoystickSpeed = item;
-
-				dialog.dismiss();
-				showJoystickMouseAccelConfig(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showJoystickMouseAccelConfig(final MainActivity p)
-	{
-		if( ! Globals.MoveMouseWithJoystick )
-		{
-			Globals.MoveMouseWithJoystickAccel = 0;
-			goBack(p);
-			return;
-		}
-		
-		final CharSequence[] items = {	p.getResources().getString(R.string.none),
-										p.getResources().getString(R.string.accel_slow),
-										p.getResources().getString(R.string.accel_medium),
-										p.getResources().getString(R.string.accel_fast) };
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.pointandclick_joystickmouseaccel);
-		builder.setSingleChoiceItems(items, Globals.MoveMouseWithJoystickAccel, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.MoveMouseWithJoystickAccel = item;
-
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	public interface TouchEventsListener
-	{
-		public void onTouchEvent(final MotionEvent ev);
-	}
-
-	public interface KeyEventsListener
-	{
-		public void onKeyEvent(final int keyCode);
-	}
-
-	static void showTouchPressureMeasurementTool(final MainActivity p)
-	{
-		p.setText(p.getResources().getString(R.string.measurepressure_touchplease));
-		p.touchListener = new TouchMeasurementTool(p);
-	}
-
-	public static class TouchMeasurementTool implements TouchEventsListener
-	{
-		MainActivity p;
-		ArrayList<Integer> force = new ArrayList<Integer>();
-		ArrayList<Integer> radius = new ArrayList<Integer>();
-		static final int maxEventAmount = 100;
-		
-		public TouchMeasurementTool(MainActivity _p) 
-		{
-			p = _p;
-		}
-
-		public void onTouchEvent(final MotionEvent ev)
-		{
-			force.add(new Integer((int)(ev.getPressure() * 1000.0)));
-			radius.add(new Integer((int)(ev.getSize() * 1000.0)));
-			p.setText(p.getResources().getString(R.string.measurepressure_response, force.get(force.size()-1), radius.get(radius.size()-1)));
-			try {
-				Thread.sleep(10L);
-			} catch (InterruptedException e) { }
 			
-			if( force.size() >= maxEventAmount )
-			{
-				p.touchListener = null;
-				Globals.ClickScreenPressure = getAverageForce();
-				Globals.ClickScreenTouchspotSize = getAverageRadius();
-				System.out.println("SDL: measured average force " + Globals.ClickScreenPressure + " radius " + Globals.ClickScreenTouchspotSize);
-				goBack(p);
-			}
-		}
-
-		int getAverageForce()
-		{
-			int avg = 0;
-			for(Integer f: force)
-			{
-				avg += f;
-			}
-			return avg / force.size();
-		}
-		int getAverageRadius()
-		{
-			int avg = 0;
-			for(Integer r: radius)
-			{
-				avg += r;
-			}
-			return avg / radius.size();
-		}
-	}
-	
-	static void showRemapHwKeysConfig(final MainActivity p)
-	{
-		p.setText(p.getResources().getString(R.string.remap_hwkeys_press));
-		p.keyListener = new KeyRemapTool(p);
-	}
-
-	public static class KeyRemapTool implements KeyEventsListener
-	{
-		MainActivity p;
-		public KeyRemapTool(MainActivity _p)
-		{
-			p = _p;
-		}
-		
-		public void onKeyEvent(final int keyCode)
-		{
-			p.keyListener = null;
-			int keyIndex = keyCode;
-			if( keyIndex < 0 )
-				keyIndex = 0;
-			if( keyIndex > SDL_Keys.JAVA_KEYCODE_LAST )
-				keyIndex = 0;
-
-			final int KeyIndexFinal = keyIndex;
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(R.string.remap_hwkeys_select);
-			builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapHwKeycode[keyIndex]], new DialogInterface.OnClickListener()
+			builder.setTitle(p.getResources().getString(R.string.pointandclick_question));
+			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener()
 			{
-				public void onClick(DialogInterface dialog, int item)
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 				{
-					Globals.RemapHwKeycode[KeyIndexFinal] = SDL_Keys.namesSortedIdx[item];
+					if( item == 0 )
+						Globals.ShowScreenUnderFinger = isChecked;
+					if( item == 1 )
+						Globals.MoveMouseWithJoystick = isChecked;
+					if( item == 2 )
+						Globals.ClickMouseWithDpad = isChecked;
+					if( item == 3 )
+						Globals.RelativeMouseMovement = isChecked;
+				}
+			});
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					if( Globals.RelativeMouseMovement )
+						showRelativeMouseMovementConfig(p);
+					else
+						goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		static void showRelativeMouseMovementConfig(final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.accel_veryslow),
+											p.getResources().getString(R.string.accel_slow),
+											p.getResources().getString(R.string.accel_medium),
+											p.getResources().getString(R.string.accel_fast),
+											p.getResources().getString(R.string.accel_veryfast) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.pointandclick_relative_speed);
+			builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementSpeed, new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.RelativeMouseMovementSpeed = item;
+
+					dialog.dismiss();
+					showRelativeMouseMovementConfig1(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		static void showRelativeMouseMovementConfig1(final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.none),
+											p.getResources().getString(R.string.accel_slow),
+											p.getResources().getString(R.string.accel_medium),
+											p.getResources().getString(R.string.accel_fast) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.pointandclick_relative_accel);
+			builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementAccel, new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.RelativeMouseMovementAccel = item;
 
 					dialog.dismiss();
 					goBack(p);
@@ -1745,492 +1427,815 @@ class Settings
 		}
 	}
 
-	static void showRemapScreenKbConfig(final MainActivity p)
-	{
-		CharSequence[] items = {
-			p.getResources().getString(R.string.remap_screenkb_joystick),
-			p.getResources().getString(R.string.remap_screenkb_button_text),
-			p.getResources().getString(R.string.remap_screenkb_button) + " 1",
-			p.getResources().getString(R.string.remap_screenkb_button) + " 2",
-			p.getResources().getString(R.string.remap_screenkb_button) + " 3",
-			p.getResources().getString(R.string.remap_screenkb_button) + " 4",
-			p.getResources().getString(R.string.remap_screenkb_button) + " 5",
-			p.getResources().getString(R.string.remap_screenkb_button) + " 6",
-		};
 
-		boolean defaults[] = { 
-			Globals.ScreenKbControlsShown[0],
-			Globals.ScreenKbControlsShown[1],
-			Globals.ScreenKbControlsShown[2],
-			Globals.ScreenKbControlsShown[3],
-			Globals.ScreenKbControlsShown[4],
-			Globals.ScreenKbControlsShown[5],
-			Globals.ScreenKbControlsShown[6],
-			Globals.ScreenKbControlsShown[7],
-		};
-		
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.remap_screenkb));
-		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
-			{
-				if( ! Globals.UseTouchscreenKeyboard )
-					item += 8;
-				Globals.ScreenKbControlsShown[item] = isChecked;
-			}
-		});
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				dialog.dismiss();
-				showRemapScreenKbConfig2(p, 0);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showRemapScreenKbConfig2(final MainActivity p, final int currentButton)
+	static class ArrowKeysConfig extends Menu
 	{
-		CharSequence[] items = {
-			p.getResources().getString(R.string.remap_screenkb_button) + " 1",
-			p.getResources().getString(R.string.remap_screenkb_button) + " 2",
-			p.getResources().getString(R.string.remap_screenkb_button) + " 3",
-			p.getResources().getString(R.string.remap_screenkb_button) + " 4",
-			p.getResources().getString(R.string.remap_screenkb_button) + " 5",
-			p.getResources().getString(R.string.remap_screenkb_button) + " 6",
-		};
-		
-		if( currentButton >= Globals.RemapScreenKbKeycode.length )
+		String title(final MainActivity p)
 		{
-			goBack(p);
-			return;
+			return p.getResources().getString(R.string.controls_question);
 		}
-		if( ! Globals.ScreenKbControlsShown[currentButton + 2] )
+		boolean enabled()
 		{
-			showRemapScreenKbConfig2(p, currentButton + 1);
-			return;
+			return Globals.AppNeedsArrowKeys || Globals.MoveMouseWithJoystick;
 		}
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(items[currentButton]);
-		builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapScreenKbKeycode[currentButton]], new DialogInterface.OnClickListener()
+		void run (final MainActivity p)
 		{
-			public void onClick(DialogInterface dialog, int item)
+			final CharSequence[] items = { p.getResources().getString(R.string.controls_arrows),
+											p.getResources().getString(R.string.controls_trackball),
+											p.getResources().getString(R.string.controls_touch) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_question));
+			builder.setSingleChoiceItems(items, Globals.PhoneHasArrowKeys ? 0 : ( Globals.PhoneHasTrackball ? 1 : 2 ), new DialogInterface.OnClickListener() 
 			{
-				Globals.RemapScreenKbKeycode[currentButton] = SDL_Keys.namesSortedIdx[item];
-
-				dialog.dismiss();
-				showRemapScreenKbConfig2(p, currentButton + 1);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-	
-	static void showScreenGesturesConfig(final MainActivity p)
-	{
-		CharSequence[] items = {
-			p.getResources().getString(R.string.remap_screenkb_button_zoomin),
-			p.getResources().getString(R.string.remap_screenkb_button_zoomout),
-			p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
-			p.getResources().getString(R.string.remap_screenkb_button_rotateright),
-		};
-
-		boolean defaults[] = { 
-			Globals.MultitouchGesturesUsed[0],
-			Globals.MultitouchGesturesUsed[1],
-			Globals.MultitouchGesturesUsed[2],
-			Globals.MultitouchGesturesUsed[3],
-		};
-		
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.remap_screenkb_button_gestures));
-		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
-			{
-				Globals.MultitouchGesturesUsed[item] = isChecked;
-			}
-		});
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				dialog.dismiss();
-				showScreenGesturesConfig2(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showScreenGesturesConfig2(final MainActivity p)
-	{
-		final CharSequence[] items = {
-			p.getResources().getString(R.string.accel_slow),
-			p.getResources().getString(R.string.accel_medium),
-			p.getResources().getString(R.string.accel_fast),
-			p.getResources().getString(R.string.accel_veryfast)
-		};
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(R.string.remap_screenkb_button_gestures_sensitivity);
-		builder.setSingleChoiceItems(items, Globals.MultitouchGestureSensitivity, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
-			{
-				Globals.MultitouchGestureSensitivity = item;
-
-				dialog.dismiss();
-				showScreenGesturesConfig3(p, 0);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-
-	static void showScreenGesturesConfig3(final MainActivity p, final int currentButton)
-	{
-		CharSequence[] items = {
-			p.getResources().getString(R.string.remap_screenkb_button_zoomin),
-			p.getResources().getString(R.string.remap_screenkb_button_zoomout),
-			p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
-			p.getResources().getString(R.string.remap_screenkb_button_rotateright),
-		};
-		
-		if( currentButton >= Globals.RemapMultitouchGestureKeycode.length )
-		{
-			goBack(p);
-			return;
-		}
-		if( ! Globals.MultitouchGesturesUsed[currentButton] )
-		{
-			showScreenGesturesConfig3(p, currentButton + 1);
-			return;
-		}
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(items[currentButton]);
-		builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapMultitouchGestureKeycode[currentButton]], new DialogInterface.OnClickListener()
-		{
-			public void onClick(DialogInterface dialog, int item)
-			{
-				Globals.RemapMultitouchGestureKeycode[currentButton] = SDL_Keys.namesSortedIdx[item];
-
-				dialog.dismiss();
-				showScreenGesturesConfig3(p, currentButton + 1);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
-			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
-	}
-	
-	static void showCalibrateTouchscreenMenu(final MainActivity p)
-	{
-		p.setText(p.getResources().getString(R.string.calibrate_touchscreen_touch));
-		Globals.TouchscreenCalibration[0] = 0;
-		Globals.TouchscreenCalibration[1] = 0;
-		Globals.TouchscreenCalibration[2] = 0;
-		Globals.TouchscreenCalibration[3] = 0;
-		ScreenEdgesCalibrationTool tool = new ScreenEdgesCalibrationTool(p);
-		p.touchListener = tool;
-		p.keyListener = tool;
-	}
-
-	static class ScreenEdgesCalibrationTool implements TouchEventsListener, KeyEventsListener
-	{
-		MainActivity p;
-		ImageView img;
-		Bitmap bmp;
-		
-		public ScreenEdgesCalibrationTool(MainActivity _p) 
-		{
-			p = _p;
-			img = new ImageView(p);
-			img.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-			img.setScaleType(ImageView.ScaleType.MATRIX);
-			bmp = BitmapFactory.decodeResource( p.getResources(), R.drawable.calibrate );
-			img.setImageBitmap(bmp);
-			Matrix m = new Matrix();
-			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
-			RectF dst = new RectF(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1], 
-									Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
-			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
-			img.setImageMatrix(m);
-			p.getVideoLayout().addView(img);
-		}
-
-		public void onTouchEvent(final MotionEvent ev)
-		{
-			if( Globals.TouchscreenCalibration[0] == Globals.TouchscreenCalibration[1] &&
-				Globals.TouchscreenCalibration[1] == Globals.TouchscreenCalibration[2] &&
-				Globals.TouchscreenCalibration[2] == Globals.TouchscreenCalibration[3] )
-			{
-				Globals.TouchscreenCalibration[0] = (int)ev.getX();
-				Globals.TouchscreenCalibration[1] = (int)ev.getY();
-				Globals.TouchscreenCalibration[2] = (int)ev.getX();
-				Globals.TouchscreenCalibration[3] = (int)ev.getY();
-			}
-			if( ev.getX() < Globals.TouchscreenCalibration[0] )
-				Globals.TouchscreenCalibration[0] = (int)ev.getX();
-			if( ev.getY() < Globals.TouchscreenCalibration[1] )
-				Globals.TouchscreenCalibration[1] = (int)ev.getY();
-			if( ev.getX() > Globals.TouchscreenCalibration[2] )
-				Globals.TouchscreenCalibration[2] = (int)ev.getX();
-			if( ev.getY() > Globals.TouchscreenCalibration[3] )
-				Globals.TouchscreenCalibration[3] = (int)ev.getY();
-			Matrix m = new Matrix();
-			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
-			RectF dst = new RectF(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1], 
-									Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
-			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
-			img.setImageMatrix(m);
-		}
-
-		public void onKeyEvent(final int keyCode)
-		{
-			p.touchListener = null;
-			p.keyListener = null;
-			p.getVideoLayout().removeView(img);
-			goBack(p);
-		}
-	}
-
-	static void showCustomizeScreenKbLayout(final MainActivity p)
-	{
-		p.setText(p.getResources().getString(R.string.screenkb_custom_layout_help));
-		CustomizeScreenKbLayoutTool tool = new CustomizeScreenKbLayoutTool(p);
-		p.touchListener = tool;
-		p.keyListener = tool;
-	}
-
-	static class CustomizeScreenKbLayoutTool implements TouchEventsListener, KeyEventsListener
-	{
-		MainActivity p;
-		FrameLayout layout = null;
-		ImageView imgs[] =  new ImageView[Globals.ScreenKbControlsLayout.length];
-		Bitmap bmps[] = new Bitmap[Globals.ScreenKbControlsLayout.length];
-		int currentButton = 0;
-		int buttons[] = {
-			R.drawable.dpad,
-			R.drawable.keyboard,
-			R.drawable.b1,
-			R.drawable.b2,
-			R.drawable.b3,
-			R.drawable.b4,
-			R.drawable.b5,
-			R.drawable.b6
-		};
-		
-		public CustomizeScreenKbLayoutTool(MainActivity _p) 
-		{
-			p = _p;
-			layout = new FrameLayout(p);
-			p.getVideoLayout().addView(layout);
-			currentButton = 0;
-			setupButton(true);
-		}
-		
-		void setupButton(boolean undo)
-		{
-			do {
-				currentButton += undo ? -1 : 1;
-				if(currentButton >= Globals.ScreenKbControlsLayout.length)
+				public void onClick(DialogInterface dialog, int item) 
 				{
-					p.getVideoLayout().removeView(layout);
-					layout = null;
-					p.touchListener = null;
-					p.keyListener = null;
+					Globals.PhoneHasArrowKeys = (item == 0);
+					Globals.PhoneHasTrackball = (item == 1);
+
+					dialog.dismiss();
+					if( Globals.PhoneHasTrackball )
+						showTrackballConfig(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
 					goBack(p);
-					return;
 				}
-				if(currentButton < 0)
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		static void showTrackballConfig(final MainActivity p)
+		{
+			final CharSequence[] items = { p.getResources().getString(R.string.trackball_no_dampening),
+											p.getResources().getString(R.string.trackball_fast),
+											p.getResources().getString(R.string.trackball_medium),
+											p.getResources().getString(R.string.trackball_slow) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.trackball_question));
+			builder.setSingleChoiceItems(items, Globals.TrackballDampening, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
 				{
-					currentButton = 0;
-					undo = false;
+					Globals.TrackballDampening = item;
+
+					dialog.dismiss();
+					goBack(p);
 				}
-			} while( ! Globals.ScreenKbControlsShown[currentButton] );
-			
-			if( imgs[currentButton] == null )
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
-				imgs[currentButton] = new ImageView(p);
-				imgs[currentButton].setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-				imgs[currentButton].setScaleType(ImageView.ScaleType.MATRIX);
-				bmps[currentButton] = BitmapFactory.decodeResource( p.getResources(), buttons[currentButton] );
-				imgs[currentButton].setImageBitmap(bmps[currentButton]);
-				layout.addView(imgs[currentButton]);
-			}
-			Matrix m = new Matrix();
-			RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
-			RectF dst = new RectF(Globals.ScreenKbControlsLayout[currentButton][0], Globals.ScreenKbControlsLayout[currentButton][1],
-									Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
-			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
-			imgs[currentButton].setImageMatrix(m);
-		}
-
-		public void onTouchEvent(final MotionEvent ev)
-		{
-			if( ev.getAction() == MotionEvent.ACTION_DOWN )
-			{
-				Globals.ScreenKbControlsLayout[currentButton][0] = (int)ev.getX();
-				Globals.ScreenKbControlsLayout[currentButton][1] = (int)ev.getY();
-				Globals.ScreenKbControlsLayout[currentButton][2] = (int)ev.getX();
-				Globals.ScreenKbControlsLayout[currentButton][3] = (int)ev.getY();
-			}
-			if( ev.getAction() == MotionEvent.ACTION_MOVE )
-			{
-				if( Globals.ScreenKbControlsLayout[currentButton][0] > (int)ev.getX() )
-					Globals.ScreenKbControlsLayout[currentButton][0] = (int)ev.getX();
-				if( Globals.ScreenKbControlsLayout[currentButton][1] > (int)ev.getY() )
-					Globals.ScreenKbControlsLayout[currentButton][1] = (int)ev.getY();
-				if( Globals.ScreenKbControlsLayout[currentButton][2] < (int)ev.getX() )
-					Globals.ScreenKbControlsLayout[currentButton][2] = (int)ev.getX();
-				if( Globals.ScreenKbControlsLayout[currentButton][3] < (int)ev.getY() )
-					Globals.ScreenKbControlsLayout[currentButton][3] = (int)ev.getY();
-			}
-
-			Matrix m = new Matrix();
-			RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
-			RectF dst = new RectF(Globals.ScreenKbControlsLayout[currentButton][0], Globals.ScreenKbControlsLayout[currentButton][1],
-									Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
-			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
-			imgs[currentButton].setImageMatrix(m);
-
-			if( ev.getAction() == MotionEvent.ACTION_UP )
-				setupButton(false);
-		}
-
-		public void onKeyEvent(final int keyCode)
-		{
-			if( layout != null && imgs[currentButton] != null )
-				layout.removeView(imgs[currentButton]);
-			imgs[currentButton] = null;
-			setupButton(true);
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
 		}
 	}
 
-	static void showVideoSettingsConfig(final MainActivity p)
+	static class JoystickMouseConfig extends Menu
 	{
-		CharSequence[] items = {
-			p.getResources().getString(R.string.pointandclick_keepaspectratio),
-			p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
-			p.getResources().getString(R.string.video_smooth)
-		};
-		boolean defaults[] = { 
-			Globals.KeepAspectRatio,
-			Globals.ShowScreenUnderFinger,
-			Globals.SmoothVideo
-		};
-
-		if(Globals.SwVideoMode)
+		String title(final MainActivity p)
 		{
-			CharSequence[] items2 = {
+			return p.getResources().getString(R.string.pointandclick_joystickmousespeed);
+		}
+		boolean enabled()
+		{
+			return Globals.MoveMouseWithJoystick;
+		};
+		void run (final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.accel_slow),
+											p.getResources().getString(R.string.accel_medium),
+											p.getResources().getString(R.string.accel_fast) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.pointandclick_joystickmousespeed);
+			builder.setSingleChoiceItems(items, Globals.MoveMouseWithJoystickSpeed, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.MoveMouseWithJoystickSpeed = item;
+
+					dialog.dismiss();
+					showJoystickMouseAccelConfig(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		static void showJoystickMouseAccelConfig(final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.none),
+											p.getResources().getString(R.string.accel_slow),
+											p.getResources().getString(R.string.accel_medium),
+											p.getResources().getString(R.string.accel_fast) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.pointandclick_joystickmouseaccel);
+			builder.setSingleChoiceItems(items, Globals.MoveMouseWithJoystickAccel, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.MoveMouseWithJoystickAccel = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
+	public interface TouchEventsListener
+	{
+		public void onTouchEvent(final MotionEvent ev);
+	}
+
+	public interface KeyEventsListener
+	{
+		public void onKeyEvent(final int keyCode);
+	}
+
+	static class TouchPressureMeasurementTool extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.measurepressure);
+		}
+		boolean enabled()
+		{
+			return Globals.RightClickMethod == Mouse.RIGHT_CLICK_WITH_PRESSURE ||
+					Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_PRESSURE;
+		};
+		void run (final MainActivity p)
+		{
+			p.setText(p.getResources().getString(R.string.measurepressure_touchplease));
+			p.touchListener = new TouchMeasurementTool(p);
+		}
+
+		public static class TouchMeasurementTool implements TouchEventsListener
+		{
+			MainActivity p;
+			ArrayList<Integer> force = new ArrayList<Integer>();
+			ArrayList<Integer> radius = new ArrayList<Integer>();
+			static final int maxEventAmount = 100;
+			
+			public TouchMeasurementTool(MainActivity _p) 
+			{
+				p = _p;
+			}
+
+			public void onTouchEvent(final MotionEvent ev)
+			{
+				force.add(new Integer((int)(ev.getPressure() * 1000.0)));
+				radius.add(new Integer((int)(ev.getSize() * 1000.0)));
+				p.setText(p.getResources().getString(R.string.measurepressure_response, force.get(force.size()-1), radius.get(radius.size()-1)));
+				try {
+					Thread.sleep(10L);
+				} catch (InterruptedException e) { }
+				
+				if( force.size() >= maxEventAmount )
+				{
+					p.touchListener = null;
+					Globals.ClickScreenPressure = getAverageForce();
+					Globals.ClickScreenTouchspotSize = getAverageRadius();
+					System.out.println("SDL: measured average force " + Globals.ClickScreenPressure + " radius " + Globals.ClickScreenTouchspotSize);
+					goBack(p);
+				}
+			}
+
+			int getAverageForce()
+			{
+				int avg = 0;
+				for(Integer f: force)
+				{
+					avg += f;
+				}
+				return avg / force.size();
+			}
+			int getAverageRadius()
+			{
+				int avg = 0;
+				for(Integer r: radius)
+				{
+					avg += r;
+				}
+				return avg / radius.size();
+			}
+		}
+	}
+	
+	static class RemapHwKeysConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.remap_hwkeys);
+		}
+		//boolean enabled() { return true; };
+		void run (final MainActivity p)
+		{
+			p.setText(p.getResources().getString(R.string.remap_hwkeys_press));
+			p.keyListener = new KeyRemapTool(p);
+		}
+
+		public static class KeyRemapTool implements KeyEventsListener
+		{
+			MainActivity p;
+			public KeyRemapTool(MainActivity _p)
+			{
+				p = _p;
+			}
+			
+			public void onKeyEvent(final int keyCode)
+			{
+				p.keyListener = null;
+				int keyIndex = keyCode;
+				if( keyIndex < 0 )
+					keyIndex = 0;
+				if( keyIndex > SDL_Keys.JAVA_KEYCODE_LAST )
+					keyIndex = 0;
+
+				final int KeyIndexFinal = keyIndex;
+				AlertDialog.Builder builder = new AlertDialog.Builder(p);
+				builder.setTitle(R.string.remap_hwkeys_select);
+				builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapHwKeycode[keyIndex]], new DialogInterface.OnClickListener()
+				{
+					public void onClick(DialogInterface dialog, int item)
+					{
+						Globals.RemapHwKeycode[KeyIndexFinal] = SDL_Keys.namesSortedIdx[item];
+
+						dialog.dismiss();
+						goBack(p);
+					}
+				});
+				builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+				{
+					public void onCancel(DialogInterface dialog)
+					{
+						goBack(p);
+					}
+				});
+				AlertDialog alert = builder.create();
+				alert.setOwnerActivity(p);
+				alert.show();
+			}
+		}
+	}
+
+	static class RemapScreenKbConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.remap_screenkb);
+		}
+		//boolean enabled() { return true; };
+		void run (final MainActivity p)
+		{
+			CharSequence[] items = {
+				p.getResources().getString(R.string.remap_screenkb_joystick),
+				p.getResources().getString(R.string.remap_screenkb_button_text),
+				p.getResources().getString(R.string.remap_screenkb_button) + " 1",
+				p.getResources().getString(R.string.remap_screenkb_button) + " 2",
+				p.getResources().getString(R.string.remap_screenkb_button) + " 3",
+				p.getResources().getString(R.string.remap_screenkb_button) + " 4",
+				p.getResources().getString(R.string.remap_screenkb_button) + " 5",
+				p.getResources().getString(R.string.remap_screenkb_button) + " 6",
+			};
+
+			boolean defaults[] = { 
+				Globals.ScreenKbControlsShown[0],
+				Globals.ScreenKbControlsShown[1],
+				Globals.ScreenKbControlsShown[2],
+				Globals.ScreenKbControlsShown[3],
+				Globals.ScreenKbControlsShown[4],
+				Globals.ScreenKbControlsShown[5],
+				Globals.ScreenKbControlsShown[6],
+				Globals.ScreenKbControlsShown[7],
+			};
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.remap_screenkb));
+			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+				{
+					if( ! Globals.UseTouchscreenKeyboard )
+						item += 8;
+					Globals.ScreenKbControlsShown[item] = isChecked;
+				}
+			});
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					showRemapScreenKbConfig2(p, 0);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		static void showRemapScreenKbConfig2(final MainActivity p, final int currentButton)
+		{
+			CharSequence[] items = {
+				p.getResources().getString(R.string.remap_screenkb_button) + " 1",
+				p.getResources().getString(R.string.remap_screenkb_button) + " 2",
+				p.getResources().getString(R.string.remap_screenkb_button) + " 3",
+				p.getResources().getString(R.string.remap_screenkb_button) + " 4",
+				p.getResources().getString(R.string.remap_screenkb_button) + " 5",
+				p.getResources().getString(R.string.remap_screenkb_button) + " 6",
+			};
+			
+			if( currentButton >= Globals.RemapScreenKbKeycode.length )
+			{
+				goBack(p);
+				return;
+			}
+			if( ! Globals.ScreenKbControlsShown[currentButton + 2] )
+			{
+				showRemapScreenKbConfig2(p, currentButton + 1);
+				return;
+			}
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(items[currentButton]);
+			builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapScreenKbKeycode[currentButton]], new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item)
+				{
+					Globals.RemapScreenKbKeycode[currentButton] = SDL_Keys.namesSortedIdx[item];
+
+					dialog.dismiss();
+					showRemapScreenKbConfig2(p, currentButton + 1);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+	
+	static class ScreenGesturesConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.remap_screenkb_button_gestures);
+		}
+		//boolean enabled() { return true; };
+		void run (final MainActivity p)
+		{
+			CharSequence[] items = {
+				p.getResources().getString(R.string.remap_screenkb_button_zoomin),
+				p.getResources().getString(R.string.remap_screenkb_button_zoomout),
+				p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
+				p.getResources().getString(R.string.remap_screenkb_button_rotateright),
+			};
+
+			boolean defaults[] = { 
+				Globals.MultitouchGesturesUsed[0],
+				Globals.MultitouchGesturesUsed[1],
+				Globals.MultitouchGesturesUsed[2],
+				Globals.MultitouchGesturesUsed[3],
+			};
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.remap_screenkb_button_gestures));
+			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+				{
+					Globals.MultitouchGesturesUsed[item] = isChecked;
+				}
+			});
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					showScreenGesturesConfig2(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		static void showScreenGesturesConfig2(final MainActivity p)
+		{
+			final CharSequence[] items = {
+				p.getResources().getString(R.string.accel_slow),
+				p.getResources().getString(R.string.accel_medium),
+				p.getResources().getString(R.string.accel_fast),
+				p.getResources().getString(R.string.accel_veryfast)
+			};
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.remap_screenkb_button_gestures_sensitivity);
+			builder.setSingleChoiceItems(items, Globals.MultitouchGestureSensitivity, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.MultitouchGestureSensitivity = item;
+
+					dialog.dismiss();
+					showScreenGesturesConfig3(p, 0);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		static void showScreenGesturesConfig3(final MainActivity p, final int currentButton)
+		{
+			CharSequence[] items = {
+				p.getResources().getString(R.string.remap_screenkb_button_zoomin),
+				p.getResources().getString(R.string.remap_screenkb_button_zoomout),
+				p.getResources().getString(R.string.remap_screenkb_button_rotateleft),
+				p.getResources().getString(R.string.remap_screenkb_button_rotateright),
+			};
+			
+			if( currentButton >= Globals.RemapMultitouchGestureKeycode.length )
+			{
+				goBack(p);
+				return;
+			}
+			if( ! Globals.MultitouchGesturesUsed[currentButton] )
+			{
+				showScreenGesturesConfig3(p, currentButton + 1);
+				return;
+			}
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(items[currentButton]);
+			builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapMultitouchGestureKeycode[currentButton]], new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item)
+				{
+					Globals.RemapMultitouchGestureKeycode[currentButton] = SDL_Keys.namesSortedIdx[item];
+
+					dialog.dismiss();
+					showScreenGesturesConfig3(p, currentButton + 1);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+	
+	static class CalibrateTouchscreenMenu extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.calibrate_touchscreen);
+		}
+		//boolean enabled() { return true; };
+		void run (final MainActivity p)
+		{
+			p.setText(p.getResources().getString(R.string.calibrate_touchscreen_touch));
+			Globals.TouchscreenCalibration[0] = 0;
+			Globals.TouchscreenCalibration[1] = 0;
+			Globals.TouchscreenCalibration[2] = 0;
+			Globals.TouchscreenCalibration[3] = 0;
+			ScreenEdgesCalibrationTool tool = new ScreenEdgesCalibrationTool(p);
+			p.touchListener = tool;
+			p.keyListener = tool;
+		}
+
+		static class ScreenEdgesCalibrationTool implements TouchEventsListener, KeyEventsListener
+		{
+			MainActivity p;
+			ImageView img;
+			Bitmap bmp;
+			
+			public ScreenEdgesCalibrationTool(MainActivity _p) 
+			{
+				p = _p;
+				img = new ImageView(p);
+				img.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+				img.setScaleType(ImageView.ScaleType.MATRIX);
+				bmp = BitmapFactory.decodeResource( p.getResources(), R.drawable.calibrate );
+				img.setImageBitmap(bmp);
+				Matrix m = new Matrix();
+				RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
+				RectF dst = new RectF(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1], 
+										Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
+				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+				img.setImageMatrix(m);
+				p.getVideoLayout().addView(img);
+			}
+
+			public void onTouchEvent(final MotionEvent ev)
+			{
+				if( Globals.TouchscreenCalibration[0] == Globals.TouchscreenCalibration[1] &&
+					Globals.TouchscreenCalibration[1] == Globals.TouchscreenCalibration[2] &&
+					Globals.TouchscreenCalibration[2] == Globals.TouchscreenCalibration[3] )
+				{
+					Globals.TouchscreenCalibration[0] = (int)ev.getX();
+					Globals.TouchscreenCalibration[1] = (int)ev.getY();
+					Globals.TouchscreenCalibration[2] = (int)ev.getX();
+					Globals.TouchscreenCalibration[3] = (int)ev.getY();
+				}
+				if( ev.getX() < Globals.TouchscreenCalibration[0] )
+					Globals.TouchscreenCalibration[0] = (int)ev.getX();
+				if( ev.getY() < Globals.TouchscreenCalibration[1] )
+					Globals.TouchscreenCalibration[1] = (int)ev.getY();
+				if( ev.getX() > Globals.TouchscreenCalibration[2] )
+					Globals.TouchscreenCalibration[2] = (int)ev.getX();
+				if( ev.getY() > Globals.TouchscreenCalibration[3] )
+					Globals.TouchscreenCalibration[3] = (int)ev.getY();
+				Matrix m = new Matrix();
+				RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
+				RectF dst = new RectF(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1], 
+										Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
+				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+				img.setImageMatrix(m);
+			}
+
+			public void onKeyEvent(final int keyCode)
+			{
+				p.touchListener = null;
+				p.keyListener = null;
+				p.getVideoLayout().removeView(img);
+				goBack(p);
+			}
+		}
+	}
+
+	static class CustomizeScreenKbLayout extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.screenkb_custom_layout);
+		}
+		//boolean enabled() { return true; };
+		void run (final MainActivity p)
+		{
+			p.setText(p.getResources().getString(R.string.screenkb_custom_layout_help));
+			CustomizeScreenKbLayoutTool tool = new CustomizeScreenKbLayoutTool(p);
+			p.touchListener = tool;
+			p.keyListener = tool;
+		}
+
+		static class CustomizeScreenKbLayoutTool implements TouchEventsListener, KeyEventsListener
+		{
+			MainActivity p;
+			FrameLayout layout = null;
+			ImageView imgs[] =  new ImageView[Globals.ScreenKbControlsLayout.length];
+			Bitmap bmps[] = new Bitmap[Globals.ScreenKbControlsLayout.length];
+			int currentButton = 0;
+			int buttons[] = {
+				R.drawable.dpad,
+				R.drawable.keyboard,
+				R.drawable.b1,
+				R.drawable.b2,
+				R.drawable.b3,
+				R.drawable.b4,
+				R.drawable.b5,
+				R.drawable.b6
+			};
+			
+			public CustomizeScreenKbLayoutTool(MainActivity _p) 
+			{
+				p = _p;
+				layout = new FrameLayout(p);
+				p.getVideoLayout().addView(layout);
+				currentButton = 0;
+				setupButton(true);
+			}
+			
+			void setupButton(boolean undo)
+			{
+				do {
+					currentButton += undo ? -1 : 1;
+					if(currentButton >= Globals.ScreenKbControlsLayout.length)
+					{
+						p.getVideoLayout().removeView(layout);
+						layout = null;
+						p.touchListener = null;
+						p.keyListener = null;
+						goBack(p);
+						return;
+					}
+					if(currentButton < 0)
+					{
+						currentButton = 0;
+						undo = false;
+					}
+				} while( ! Globals.ScreenKbControlsShown[currentButton] );
+				
+				if( imgs[currentButton] == null )
+				{
+					imgs[currentButton] = new ImageView(p);
+					imgs[currentButton].setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+					imgs[currentButton].setScaleType(ImageView.ScaleType.MATRIX);
+					bmps[currentButton] = BitmapFactory.decodeResource( p.getResources(), buttons[currentButton] );
+					imgs[currentButton].setImageBitmap(bmps[currentButton]);
+					layout.addView(imgs[currentButton]);
+				}
+				Matrix m = new Matrix();
+				RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
+				RectF dst = new RectF(Globals.ScreenKbControlsLayout[currentButton][0], Globals.ScreenKbControlsLayout[currentButton][1],
+										Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
+				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+				imgs[currentButton].setImageMatrix(m);
+			}
+
+			public void onTouchEvent(final MotionEvent ev)
+			{
+				if( ev.getAction() == MotionEvent.ACTION_DOWN )
+				{
+					Globals.ScreenKbControlsLayout[currentButton][0] = (int)ev.getX();
+					Globals.ScreenKbControlsLayout[currentButton][1] = (int)ev.getY();
+					Globals.ScreenKbControlsLayout[currentButton][2] = (int)ev.getX();
+					Globals.ScreenKbControlsLayout[currentButton][3] = (int)ev.getY();
+				}
+				if( ev.getAction() == MotionEvent.ACTION_MOVE )
+				{
+					if( Globals.ScreenKbControlsLayout[currentButton][0] > (int)ev.getX() )
+						Globals.ScreenKbControlsLayout[currentButton][0] = (int)ev.getX();
+					if( Globals.ScreenKbControlsLayout[currentButton][1] > (int)ev.getY() )
+						Globals.ScreenKbControlsLayout[currentButton][1] = (int)ev.getY();
+					if( Globals.ScreenKbControlsLayout[currentButton][2] < (int)ev.getX() )
+						Globals.ScreenKbControlsLayout[currentButton][2] = (int)ev.getX();
+					if( Globals.ScreenKbControlsLayout[currentButton][3] < (int)ev.getY() )
+						Globals.ScreenKbControlsLayout[currentButton][3] = (int)ev.getY();
+				}
+
+				Matrix m = new Matrix();
+				RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
+				RectF dst = new RectF(Globals.ScreenKbControlsLayout[currentButton][0], Globals.ScreenKbControlsLayout[currentButton][1],
+										Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
+				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+				imgs[currentButton].setImageMatrix(m);
+
+				if( ev.getAction() == MotionEvent.ACTION_UP )
+					setupButton(false);
+			}
+
+			public void onKeyEvent(final int keyCode)
+			{
+				if( layout != null && imgs[currentButton] != null )
+					layout.removeView(imgs[currentButton]);
+				imgs[currentButton] = null;
+				setupButton(true);
+			}
+		}
+	}
+
+	static class VideoSettingsConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.video);
+		}
+		//boolean enabled() { return true; };
+		void run (final MainActivity p)
+		{
+			CharSequence[] items = {
 				p.getResources().getString(R.string.pointandclick_keepaspectratio),
 				p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
-				p.getResources().getString(R.string.video_smooth),
-				p.getResources().getString(R.string.video_separatethread),
+				p.getResources().getString(R.string.video_smooth)
 			};
-			boolean defaults2[] = { 
+			boolean defaults[] = { 
 				Globals.KeepAspectRatio,
 				Globals.ShowScreenUnderFinger,
-				Globals.SmoothVideo,
-				Globals.MultiThreadedVideo
+				Globals.SmoothVideo
 			};
-			items = items2;
-			defaults = defaults2;
-		}
 
-		if(Globals.Using_SDL_1_3)
-		{
-			CharSequence[] items2 = {
-				p.getResources().getString(R.string.pointandclick_keepaspectratio),
-				p.getResources().getString(R.string.pointandclick_showcreenunderfinger2)
-			};
-			boolean defaults2[] = { 
-				Globals.KeepAspectRatio,
-				Globals.ShowScreenUnderFinger
-			};
-			items = items2;
-			defaults = defaults2;
-		}
+			if(Globals.SwVideoMode)
+			{
+				CharSequence[] items2 = {
+					p.getResources().getString(R.string.pointandclick_keepaspectratio),
+					p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
+					p.getResources().getString(R.string.video_smooth),
+					p.getResources().getString(R.string.video_separatethread),
+				};
+				boolean defaults2[] = { 
+					Globals.KeepAspectRatio,
+					Globals.ShowScreenUnderFinger,
+					Globals.SmoothVideo,
+					Globals.MultiThreadedVideo
+				};
+				items = items2;
+				defaults = defaults2;
+			}
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(p);
-		builder.setTitle(p.getResources().getString(R.string.video));
-		builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+			if(Globals.Using_SDL_1_3)
 			{
-				if( item == 0 )
-					Globals.KeepAspectRatio = isChecked;
-				if( item == 1 )
-					Globals.ShowScreenUnderFinger = isChecked;
-				if( item == 2 )
-					Globals.SmoothVideo = isChecked;
-				if( item == 3 )
-					Globals.MultiThreadedVideo = isChecked;
+				CharSequence[] items2 = {
+					p.getResources().getString(R.string.pointandclick_keepaspectratio),
+					p.getResources().getString(R.string.pointandclick_showcreenunderfinger2)
+				};
+				boolean defaults2[] = { 
+					Globals.KeepAspectRatio,
+					Globals.ShowScreenUnderFinger
+				};
+				items = items2;
+				defaults = defaults2;
 			}
-		});
-		builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int item) 
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.video));
+			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
 			{
-				dialog.dismiss();
-				goBack(p);
-			}
-		});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-		{
-			public void onCancel(DialogInterface dialog)
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+				{
+					if( item == 0 )
+						Globals.KeepAspectRatio = isChecked;
+					if( item == 1 )
+						Globals.ShowScreenUnderFinger = isChecked;
+					if( item == 2 )
+						Globals.SmoothVideo = isChecked;
+					if( item == 3 )
+						Globals.MultiThreadedVideo = isChecked;
+				}
+			});
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
 			{
-				goBack(p);
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.setOwnerActivity(p);
-		alert.show();
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
 	}
 
 	// ===============================================================================================

@@ -266,6 +266,27 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$StartupMenuButtonTimeout" -o -z "$AUTO" ]; then
+echo
+echo -n "How long to show startup menu button, in msec, 0 to disable startup menu ($StartupMenuButtonTimeout): "
+read var
+if [ -n "$var" ] ; then
+	StartupMenuButtonTimeout="$var"
+fi
+fi
+
+if [ -z "$HiddenMenuOptions" -o -z "$AUTO" ]; then
+echo
+echo "Menu items to hide from startup menu, available menu items:"
+echo `grep 'extends Menu' project/java/Settings.java | sed 's/.* class \(.*\) extends .*/\1/'`
+echo "($HiddenMenuOptions)"
+echo -n ": "
+read var
+if [ -n "$var" ] ; then
+	HiddenMenuOptions="$var"
+fi
+fi
+
 if [ -z "$MultiABI" -o -z "$AUTO" ]; then
 echo
 echo "Enable multi-ABI binary, with hardware FPU support - "
@@ -404,6 +425,8 @@ echo RedefinedKeys=\"$RedefinedKeys\" >> AndroidAppSettings.cfg
 echo AppTouchscreenKeyboardKeysAmount=$AppTouchscreenKeyboardKeysAmount >> AndroidAppSettings.cfg
 echo AppTouchscreenKeyboardKeysAmountAutoFire=$AppTouchscreenKeyboardKeysAmountAutoFire >> AndroidAppSettings.cfg
 echo RedefinedKeysScreenKb=\"$RedefinedKeysScreenKb\" >> AndroidAppSettings.cfg
+echo StartupMenuButtonTimeout=$StartupMenuButtonTimeout >> AndroidAppSettings.cfg
+echo HiddenMenuOptions=\'$HiddenMenuOptions\' >> AndroidAppSettings.cfg
 echo MultiABI=$MultiABI >> AndroidAppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AndroidAppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AndroidAppSettings.cfg
@@ -545,6 +568,11 @@ if [ "$CustomBuildScript" = "n" ] ; then
 	CustomBuildScript=
 fi
 
+HiddenMenuOptions1=""
+for F in $HiddenMenuOptions; do
+	HiddenMenuOptions1="$HiddenMenuOptions1 new Settings.$F(),"
+done
+
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 
 echo Patching project/AndroidManifest.xml
@@ -584,6 +612,8 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean NonBlockingSwapBuffers = .*;/public static boolean NonBlockingSwapBuffers = $NonBlockingSwapBuffers;/" | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" | \
+	sed "s/public static int StartupMenuButtonTimeout = .*;/public static int StartupMenuButtonTimeout = $StartupMenuButtonTimeout;/" | \
+	sed "s/public static Settings.Menu HiddenMenuOptions .*;/public static Settings.Menu HiddenMenuOptions [] = { $HiddenMenuOptions1 };/" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
 	sed "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" | \
 	sed "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" > \

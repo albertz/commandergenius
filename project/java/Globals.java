@@ -17,51 +17,33 @@ import java.util.Vector;
 import android.view.KeyEvent;
 
 class Globals {
+	// These config options are modified by ChangeAppsettings.sh script - see the detailed descriptions there
 	public static String ApplicationName = "CommanderGenius";
-
 	public static String AppLibraries[] = { "sdl-1.2", };
-
 	public static final boolean Using_SDL_1_3 = false;
-
-	// Should be zip file
 	public static String DataDownloadUrl = "Data files are 2 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-data.zip/download^High-quality GFX and music - 40 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-hqp.zip/download";
-
-	// Set this value to true if you're planning to render 3D using OpenGL - it eats some GFX resources, so disabled for 2D
 	public static boolean NeedDepthBuffer = false;
-
 	public static boolean SwVideoMode = false;
-
 	public static boolean HorizontalOrientation = true;
-
-	// prevent device from going to suspend mode
 	public static boolean InhibitSuspend = false;
-
-	// Readme text to be shown on download page
 	public static String ReadmeText = "^You may press \"Home\" now - the data will be downloaded in background".replace("^","\n");
-
 	public static String CommandLine = "";
-
 	public static boolean AppUsesMouse = false;
-	
 	public static boolean AppNeedsTwoButtonMouse = false;
-
 	public static boolean AppNeedsArrowKeys = true;
-
 	public static boolean AppNeedsTextInput = true;
-
 	public static boolean AppUsesJoystick = false;
-
 	public static boolean AppHandlesJoystickSensitivity = false;
-
 	public static boolean AppUsesMultitouch = false;
-
 	public static boolean NonBlockingSwapBuffers = false;
-
 	public static int AppTouchscreenKeyboardKeysAmount = 4;
-
 	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 1;
+	public static int StartupMenuButtonTimeout = 3000;
+	public static Settings.Menu HiddenMenuOptions [] = {};
+	// Not configurable yet through ChangeAppSettings.sh
+	public static Settings.Menu FirstStartMenuOptions [] = { (AppUsesMouse ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true) };
 
-	// Phone-specific config, TODO: move this to settings
+	// Phone-specific config, modified by user in "Change phone config" startup dialog, TODO: move this to settings
 	public static boolean DownloadToSdcard = true;
 	public static boolean PhoneHasTrackball = false;
 	public static boolean PhoneHasArrowKeys = false;
