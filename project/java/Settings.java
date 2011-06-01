@@ -1072,7 +1072,6 @@ class Settings
 			{
 				public void onClick(DialogInterface dialog, int item) 
 				{
-					Globals.LeftClickMethod = item;
 					dialog.dismiss();
 					if( item == 0 )
 					{
@@ -1107,7 +1106,9 @@ class Settings
 			if( firstStart )
 				builder.setItems(items, new ClickListener());
 			else
-				builder.setSingleChoiceItems(items, (Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT && ! Globals.RelativeMouseMovement) ? 0 : 1, new ClickListener());
+				builder.setSingleChoiceItems(items,
+					(Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT && ! Globals.RelativeMouseMovement) ? 0 : 1,
+					new ClickListener());
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
 				public void onCancel(DialogInterface dialog)
@@ -1142,9 +1143,10 @@ class Settings
 			builder.setTitle(R.string.leftclick_question);
 			builder.setSingleChoiceItems(items, Globals.LeftClickMethod, new DialogInterface.OnClickListener()
 			{
-				public void onClick(DialogInterface dialog, int item) 
+				public void onClick(DialogInterface dialog, int item)
 				{
 					dialog.dismiss();
+					Globals.LeftClickMethod = item;
 					if( item == Mouse.LEFT_CLICK_WITH_KEY )
 						p.keyListener = new KeyRemapToolMouseClick(p, true);
 					else if( item == Mouse.LEFT_CLICK_WITH_TIMEOUT || item == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT )

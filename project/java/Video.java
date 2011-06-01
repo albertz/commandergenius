@@ -12,6 +12,8 @@
 package net.sourceforge.clonekeenplus;
 
 import javax.microedition.khronos.opengles.GL10;
+import javax.microedition.khronos.opengles.GL11;
+import javax.microedition.khronos.opengles.GL11Ext;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGL11;
@@ -29,6 +31,10 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.os.Environment;
 import java.io.File;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.content.res.Resources;
+import android.content.res.AssetManager;
 
 import android.widget.TextView;
 import java.lang.Thread;
@@ -36,6 +42,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import android.os.Build;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 
 class Mouse
@@ -236,6 +245,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	}
 
 	public void onSurfaceChanged(GL10 gl, int w, int h) {
+		mWidth = w;
+		mHeight = h;
 		nativeResize(w, h, Globals.KeepAspectRatio ? 1 : 0);
 	}
 	
@@ -319,9 +330,71 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		context.runOnUiThread(cb);
 	}
 
-	public void exitApp() {
+	public void exitApp()
+	{
 		 nativeDone();
 	};
+
+	private int PowerOf2(int i)
+	{
+		int value = 1;
+		while (value < i)
+			value <<= 1;
+		return value;
+	}
+	public void DrawLogo(GL10 gl)
+	{
+		BitmapDrawable bmp = null;
+		try
+		{
+			bmp = new BitmapDrawable(context.getAssets().open("logo.png"));
+		}
+		catch(Exception e)
+		{
+			bmp = new BitmapDrawable(context.getResources().openRawResource(R.drawable.publisherlogo));
+		}
+		int width = bmp.getBitmap().getWidth();
+		int height = bmp.getBitmap().getHeight();
+		ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * width * height);
+		byteBuffer.order(ByteOrder.BIG_ENDIAN);
+		bmp.getBitmap().copyPixelsToBuffer(byteBuffer);
+		byteBuffer.position(0);
+
+		gl.glViewport(0, 0, mWidth, mHeight);
+		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT);
+		gl.glColor4x(0x10000, 0x10000, 0x10000, 0x10000);
+		gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
+		gl.glEnable(GL10.GL_TEXTURE_2D);
+		int textureName = -1;
+		int mTextureNameWorkspace[] = new int[1];
+		int mCropWorkspace[] = new int[4];
+		gl.glGenTextures(1, mTextureNameWorkspace, 0);
+		textureName = mTextureNameWorkspace[0];
+		gl.glBindTexture(GL10.GL_TEXTURE_2D, textureName);
+		gl.glActiveTexture(textureName);
+		gl.glClientActiveTexture(textureName);
+		gl.glTexImage2D(GL10.GL_TEXTURE_2D, 0, GL10.GL_RGBA,
+				PowerOf2(width), PowerOf2(height), 0,
+				GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, null);
+		gl.glTexSubImage2D(GL10.GL_TEXTURE_2D, 0, 0, 0,
+				width, height,
+				GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, byteBuffer);
+		mCropWorkspace[0] = 0; // u
+		mCropWorkspace[1] = height; // v
+		mCropWorkspace[2] = width;
+		mCropWorkspace[3] = -height;
+		((GL11) gl).glTexParameteriv(GL10.GL_TEXTURE_2D,
+				GL11Ext.GL_TEXTURE_CROP_RECT_OES, mCropWorkspace, 0);
+		((GL11Ext) gl).glDrawTexiOES(0, -mHeight, 0, mWidth, mHeight);
+		gl.glActiveTexture(0);
+		gl.glClientActiveTexture(0);
+		gl.glBindTexture(GL10.GL_TEXTURE_2D, 0);
+		gl.glDeleteTextures(1, mTextureNameWorkspace, 0);
+
+		gl.glFlush();
+	}
+
 
 	private native void nativeInitJavaCallbacks();
 	private native void nativeInit(String CurrentPath, String CommandLine, int multiThreadedVideo);
@@ -343,6 +416,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public boolean mGlSurfaceCreated = false;
 	public boolean mPaused = false;
 	private boolean mFirstTimeStart = true;
+	public int mWidth = 0;
+	public int mHeight = 0;
 }
 
 class DemoGLSurfaceView extends GLSurfaceView_SDL {

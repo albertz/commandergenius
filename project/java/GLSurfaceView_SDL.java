@@ -595,6 +595,8 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
         public void setSwapBuffersCallback( SwapBuffersCallback c ) {
             mSwapBuffersCallback = c;
         }
+
+        public abstract void DrawLogo(GL10 gl);
         
         private SwapBuffersCallback mSwapBuffersCallback = null;
     }
@@ -904,7 +906,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 mNeedStart = true;
                 mSizeChanged = true;
                 SwapBuffers();
-                DrawLogo();
+                mRenderer.DrawLogo(mGL);
                 SwapBuffers();
 
                 mRenderer.onDrawFrame(mGL);
@@ -1111,16 +1113,6 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 
             }
             return null;
-        }
-
-        private void DrawLogo() {
-            // TODO: draw some logo instead of making screen non-black
-            /*
-            mGL.glClearColor(0.0f, 0.5f, 0.7f, 1.0f);
-            mGL.glClear(mGL.GL_COLOR_BUFFER_BIT | mGL.GL_DEPTH_BUFFER_BIT);
-            mGL.glFlush();
-            mGL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            */
         }
 
         private boolean mDone;
