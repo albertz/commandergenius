@@ -1,0 +1,57 @@
+From f29136842eb089a545a26064f17824f4b773b45f Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@bambuser.com>
+Date: Fri, 9 Oct 2009 15:24:14 +0300
+Subject: [PATCH 2/3] Add a configure parameter for adding a prefix to the soname
+
+---
+ configure |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/configure b/configure
+index 2165382..98ea5c2 100755
+--- a/configure
++++ b/configure
+@@ -70,6 +70,7 @@ Standard options:
+   --shlibdir=DIR           install shared libs in DIR [PREFIX/lib]
+   --incdir=DIR             install includes in DIR [PREFIX/include]
+   --mandir=DIR             install man page in DIR [PREFIX/share/man]
++  --soname-prefix=PREFIX   add PREFIX before the libraries soname
+ 
+ Configuration options:
+   --disable-static         do not build static libraries [no]
+@@ -1110,6 +1111,7 @@ PATHS_LIST='
+     mandir
+     prefix
+     shlibdir
++    soname_prefix
+ '
+ 
+ CMDLINE_SET="
+@@ -1544,6 +1546,7 @@ incdir_default='${prefix}/include'
+ libdir_default='${prefix}/lib'
+ mandir_default='${prefix}/share/man'
+ shlibdir_default="$libdir_default"
++soname_prefix_default=""
+ 
+ # toolchain
+ ar_default="ar"
+@@ -1593,7 +1596,7 @@ enable swscale
+ enable swscale_alpha
+ 
+ # build settings
+-SHFLAGS='-shared -Wl,-soname,$$(@F)'
++SHFLAGS='-shared -Wl,-soname,$$(SONAME_PREFIX)$$(@F)'
+ FFSERVERLDFLAGS=-Wl,-E
+ LIBPREF="lib"
+ LIBSUF=".a"
+@@ -3145,6 +3148,7 @@ INCDIR=\$(DESTDIR)$incdir
+ BINDIR=\$(DESTDIR)$bindir
+ DATADIR=\$(DESTDIR)$datadir
+ MANDIR=\$(DESTDIR)$mandir
++SONAME_PREFIX=$soname_prefix
+ SRC_PATH="$source_path"
+ SRC_PATH_BARE=$source_path
+ BUILD_ROOT="$PWD"
+-- 
+1.7.3.1
+

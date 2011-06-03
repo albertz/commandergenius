@@ -1,0 +1,44 @@
+From 792f45e9dc338240cfa4b1548bf06533baee2faa Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@bambuser.com>
+Date: Wed, 14 Oct 2009 18:40:10 +0300
+Subject: [PATCH 3/3] Add an option for overriding the optimization settings chosen by configure
+
+---
+ configure |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/configure b/configure
+index 98ea5c2..4416665 100755
+--- a/configure
++++ b/configure
+@@ -212,6 +212,7 @@ Advanced options (experts only):
+   --extra-ldflags=ELDFLAGS add ELDFLAGS to LDFLAGS [$LDFLAGS]
+   --extra-libs=ELIBS       add ELIBS [$ELIBS]
+   --extra-version=STRING   version string suffix []
++  --optimization-flags=FLAGS use FLAGS instead of the optimization flags chosen by other options []
+   --build-suffix=SUFFIX    library name suffix []
+   --arch=ARCH              select architecture [$arch]
+   --cpu=CPU                select the minimum required CPU (affects
+@@ -1134,6 +1135,7 @@ CMDLINE_SET="
+     logfile
+     malloc_prefix
+     nm
++    optimization_flags
+     samples
+     source_path
+     strip
+@@ -2909,6 +2911,11 @@ void ff_foo(void) {}
+ EOF
+ fi
+ 
++if test "$optimization_flags" != ""; then
++    size_cflags="$optimization_flags"
++    speed_cflags="$optimization_flags"
++    noopt_cflags="$optimization_flags"
++fi
+ if enabled small; then
+     add_cflags $size_cflags
+     optimizations="small"
+-- 
+1.7.3.1
+
