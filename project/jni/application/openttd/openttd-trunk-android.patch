@@ -1,6 +1,6 @@
 Index: src/video/sdl_v.cpp
 ===================================================================
---- src/video/sdl_v.cpp	(revision 22294)
+--- src/video/sdl_v.cpp	(revision 22532)
 +++ src/video/sdl_v.cpp	(working copy)
 @@ -353,6 +353,8 @@
  	if (sym->scancode == 49) key = WKC_BACKSPACE;
@@ -23,7 +23,7 @@ Index: src/video/sdl_v.cpp
  }
 Index: src/sound/sdl_s.cpp
 ===================================================================
---- src/sound/sdl_s.cpp	(revision 22294)
+--- src/sound/sdl_s.cpp	(revision 22532)
 +++ src/sound/sdl_s.cpp	(working copy)
 @@ -20,9 +20,16 @@
  
@@ -44,7 +44,7 @@ Index: src/sound/sdl_s.cpp
  const char *SoundDriver_SDL::Start(const char * const *parm)
 Index: src/music/libtimidity.cpp
 ===================================================================
---- src/music/libtimidity.cpp	(revision 22294)
+--- src/music/libtimidity.cpp	(revision 22532)
 +++ src/music/libtimidity.cpp	(working copy)
 @@ -22,10 +22,13 @@
  #include <sys/stat.h>
@@ -87,7 +87,7 @@ Index: src/music/libtimidity.cpp
  
 Index: src/table/settings.h
 ===================================================================
---- src/table/settings.h	(revision 22294)
+--- src/table/settings.h	(revision 22532)
 +++ src/table/settings.h	(working copy)
 @@ -270,9 +270,15 @@
  	  SDTG_STR("savegame_format",  SLE_STRB, S, 0, _savegame_format,       NULL,    STR_NULL, NULL),
@@ -107,7 +107,7 @@ Index: src/table/settings.h
  	  SDTG_VAR("large_size",       SLE_UINT, S, 0, _freetype.large_size,  16, 0, 72, 0, STR_NULL, NULL),
 Index: src/os/unix/unix.cpp
 ===================================================================
---- src/os/unix/unix.cpp	(revision 22294)
+--- src/os/unix/unix.cpp	(revision 22532)
 +++ src/os/unix/unix.cpp	(working copy)
 @@ -24,7 +24,7 @@
  
@@ -132,7 +132,7 @@ Index: src/os/unix/unix.cpp
  	int ret;
 Index: src/os/unix/crashlog_unix.cpp
 ===================================================================
---- src/os/unix/crashlog_unix.cpp	(revision 22294)
+--- src/os/unix/crashlog_unix.cpp	(revision 22532)
 +++ src/os/unix/crashlog_unix.cpp	(working copy)
 @@ -141,7 +141,11 @@
  };
@@ -148,9 +148,9 @@ Index: src/os/unix/crashlog_unix.cpp
   * Entry point for the crash handler.
 Index: src/window.cpp
 ===================================================================
---- src/window.cpp	(revision 22294)
+--- src/window.cpp	(revision 22532)
 +++ src/window.cpp	(working copy)
-@@ -2158,6 +2158,10 @@
+@@ -2159,6 +2159,10 @@
  	 * But there is no company related window open anyway, so _current_company is not used. */
  	assert(IsGeneratingWorld() || IsLocalCompany());
  
@@ -163,7 +163,7 @@ Index: src/window.cpp
  
 Index: src/network/core/os_abstraction.h
 ===================================================================
---- src/network/core/os_abstraction.h	(revision 22294)
+--- src/network/core/os_abstraction.h	(revision 22532)
 +++ src/network/core/os_abstraction.h	(working copy)
 @@ -161,7 +161,7 @@
  #		include <net/if.h>
@@ -176,7 +176,7 @@ Index: src/network/core/os_abstraction.h
   *   the list of IPs from the system. */
 Index: src/debug.cpp
 ===================================================================
---- src/debug.cpp	(revision 22294)
+--- src/debug.cpp	(revision 22532)
 +++ src/debug.cpp	(working copy)
 @@ -16,6 +16,9 @@
  #include "string_func.h"
@@ -200,7 +200,7 @@ Index: src/debug.cpp
  		char buf2[1024 + 32];
 Index: src/main_gui.cpp
 ===================================================================
---- src/main_gui.cpp	(revision 22294)
+--- src/main_gui.cpp	(revision 22532)
 +++ src/main_gui.cpp	(working copy)
 @@ -462,7 +462,11 @@
  	Hotkey<MainWindow>('C', "center", GHK_CENTER),

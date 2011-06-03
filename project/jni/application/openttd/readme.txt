@@ -5,6 +5,6 @@ and "ant" tool, then launch commands
     rm project/jni/application/src
     ln -s scummvm project/jni/application/src
     cd project && android update project -p .
-then download OpenTTD 1.1.0 into the dir project/jni/application/openttd/openttd
+then download OpenTTD 1.1.1 into the dir project/jni/application/openttd/openttd
 (or create a symlink to it if you already have downloaded it), then apply patch openttd-trunk-android.patch
 and launch build.sh. That should be it.
