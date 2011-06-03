@@ -509,12 +509,12 @@ int main(int argc, char* argv[])
 		SDL_Event evt;
 		while( SDL_PollEvent(&evt) )
 		{
-			if(evt.type & (SDL_KEYUP | SDL_KEYDOWN))
+			if(evt.type == SDL_KEYUP || evt.type == SDL_KEYDOWN)
 			{
 				Uint8	*keys = SDL_GetKeyState(&i);
 				if(keys[SDLK_ESCAPE])
 					return 0;
-				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL key event: state %d key %d mod %d unicode %d", evt.key.state, (int)evt.key.keysym.sym, (int)evt.key.keysym.mod, (int)evt.key.keysym.unicode);
+				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL key event: evt %s state %s key %d RETURN %d mod %d unicode %d", evt.type == SDL_KEYUP ? "UP  " : "DOWN" , evt.key.state == SDL_PRESSED ? "PRESSED " : "RELEASED", (int)evt.key.keysym.sym, int(evt.key.keysym.sym == SDLK_RETURN), (int)evt.key.keysym.mod, (int)evt.key.keysym.unicode);
 			}
 			if(evt.type == SDL_VIDEORESIZE)
 				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL resize event: %d x %d", evt.resize.w, evt.resize.h);

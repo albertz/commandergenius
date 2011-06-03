@@ -696,6 +696,8 @@ void SDL_ANDROID_TextInputInit(char * buffer, int len)
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoRenderer_nativeTextInput) ( JNIEnv*  env, jobject thiz, jint ascii, jint unicode )
 {
+	if( ascii == 10 )
+		ascii = SDLK_RETURN;
 	if( !textInputBuffer )
 		SDL_ANDROID_MainThreadPushText(ascii, unicode);
 	else
