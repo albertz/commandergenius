@@ -1,0 +1,13 @@
+diff --git a/patches/001-boost-for-android.patch b/patches/001-boost-for-android.patch
+index 6349e3d..7422ccf 100644
+--- a/patches/001-boost-for-android.patch
++++ b/patches/001-boost-for-android.patch
+@@ -167,7 +167,7 @@ index 271ceb1..0b45250 100644
+  # override this variable.
+ -libraries =  ;
+ +# @Moss - Adding needed libs to be valid for android
+-+libraries = --with-date_time --with-filesystem --with-program_options --with-regex --with-signals --with-system --with-thread ; 
+++libraries = --with-date_time --with-filesystem --with-program_options --with-regex --with-signals --with-system --with-thread --with-iostreams ; 
+  
+  # These settings are equivivalent to corresponding command-line
+  # options.

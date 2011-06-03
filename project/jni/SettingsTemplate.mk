@@ -3,10 +3,9 @@
 APP_MODULES := application sdl-1.2 sdl_main stlport jpeg png ogg flac vorbis freetype tremor ogg
 
 # To filter out static libs from all libs in makefile
-APP_AVAILABLE_STATIC_LIBS := jpeg png tremor freetype xerces ogg tremor vorbis flac sdl_fake_stdout
+APP_AVAILABLE_STATIC_LIBS := jpeg png tremor freetype xerces ogg tremor vorbis flac sdl_fake_stdout boost_date_time boost_filesystem boost_iostreams boost_program_options boost_regex boost_signals boost_system boost_thread
 
 APP_ABI := armeabi
-
 
 # The namespace in Java file, with dots replaced with underscores
 SDL_JAVA_PACKAGE_PATH := net_sourceforge_clonekeenplus

@@ -4,3 +4,6 @@
 [submodule "project/jni/application/NewRAW"]
 	path = project/jni/application/NewRAW
 	url = https://github.com/usineur/android-newraw.git
+[submodule "project/jni/boost/src"]
+	path = project/jni/boost/src
+	url = https://github.com/MysticTreeGames/Boost-for-Android.git
