@@ -1,15 +1,24 @@
 LOCAL_PATH := $(call my-dir)
-FFMPEG_MODULE := avcodec
-include $(LOCAL_PATH)/ffmpeg.mk
-FFMPEG_MODULE := avcore
-include $(LOCAL_PATH)/ffmpeg.mk
-FFMPEG_MODULE := avdevice
-include $(LOCAL_PATH)/ffmpeg.mk
-FFMPEG_MODULE := avfilter
-include $(LOCAL_PATH)/ffmpeg.mk
-FFMPEG_MODULE := avformat
-include $(LOCAL_PATH)/ffmpeg.mk
-FFMPEG_MODULE := avutil
-include $(LOCAL_PATH)/ffmpeg.mk
-FFMPEG_MODULE := swscale
-include $(LOCAL_PATH)/ffmpeg.mk
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := $(notdir $(LOCAL_PATH))
+#ifeq ($(LOCAL_MODULE),ffmpeg)
+#$(error Do not use "ffmpeg" as dependency, use avformat, swscale etc)
+#endif
+
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
+
+ifneq ($(NDK_R5_TOOLCHAIN),)
+LOCAL_SRC_FILES := lib/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
+include $(PREBUILT_SHARED_LIBRARY)
+else
+LOCAL_SRC_FILES := dummy.c
+include $(BUILD_SHARED_LIBRARY)
+$(abspath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LOCAL_MODULE).so): $(LOCAL_PATH)/lib/armeabi/lib$(LOCAL_MODULE).so OVERRIDE_CUSTOM_LIB
+	cp -f $< $@
+$(abspath $(LOCAL_PATH)/../../obj/local/armeabi-v7a/lib$(LOCAL_MODULE).so): $(LOCAL_PATH)/lib/armeabi-v7a/lib$(LOCAL_MODULE).so OVERRIDE_CUSTOM_LIB
+	cp -f $< $@
+.PHONY: OVERRIDE_CUSTOM_LIB
+OVERRIDE_CUSTOM_LIB:
+endif
