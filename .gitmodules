@@ -6,4 +6,4 @@
 	url = https://github.com/usineur/android-newraw.git
 [submodule "project/jni/boost/src"]
 	path = project/jni/boost/src
-	url = https://github.com/MysticTreeGames/Boost-for-Android.git
+	url = git://github.com/pelya/Boost-for-Android.git
