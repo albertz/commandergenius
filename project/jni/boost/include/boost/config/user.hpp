@@ -13,6 +13,15 @@
 //  configuration policy:
 //
 
+// Android defines
+#define BOOST_THREAD_LINUX 1
+#define BOOST_HAS_PTHREADS 1
+#define __arm__ 1
+#define _REENTRANT 1
+#define _GLIBCXX__PTHREADS 1
+#define BOOST_HAS_GETTIMEOFDAY 1
+#define BOOST_HAS_UNISTD_H 1
+
 // define this to locate a compiler config file:
 // #define BOOST_COMPILER_CONFIG <myheader>
 
