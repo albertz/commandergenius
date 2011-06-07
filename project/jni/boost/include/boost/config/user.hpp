@@ -21,6 +21,7 @@
 #define _GLIBCXX__PTHREADS 1
 #define BOOST_HAS_GETTIMEOFDAY 1
 #define BOOST_HAS_UNISTD_H 1
+#define BOOST_INTERPROCESS_POSIX_PROCESS_SHARED 1
 
 // define this to locate a compiler config file:
 // #define BOOST_COMPILER_CONFIG <myheader>

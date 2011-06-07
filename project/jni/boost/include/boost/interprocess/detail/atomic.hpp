@@ -265,7 +265,7 @@ inline void atomic_write32(volatile boost::uint32_t *mem, boost::uint32_t val)
 }  //namespace interprocess{
 }  //namespace boost{
 
-#elif defined(__GNUC__) && ( __GNUC__ * 100 + __GNUC_MINOR__ >= 401 )
+#elif defined(__GNUC__) && ( __GNUC__ * 100 + __GNUC_MINOR__ >= 401 ) && !defined(ANDROID)
 
 namespace boost {
 namespace interprocess {

@@ -18,6 +18,7 @@ namespace interprocess {
 
 inline interprocess_condition::interprocess_condition()
 {
+#if !defined(ANDROID)
    int res;
    pthread_condattr_t cond_attr;
    res = pthread_condattr_init(&cond_attr);
@@ -34,6 +35,12 @@ inline interprocess_condition::interprocess_condition()
    if(res != 0){
       throw interprocess_exception(res);
    }
+#else
+   int res = pthread_cond_init(&m_condition, NULL);
+   if(res != 0){
+      throw interprocess_exception(res);
+   }
+#endif
 }
 
 inline interprocess_condition::~interprocess_condition()

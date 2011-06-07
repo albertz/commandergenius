@@ -50,6 +50,7 @@ namespace detail{
       pthread_mutexattr_t m_attr;
    };
 
+#if !defined(ANDROID)
    //!Makes pthread_condattr_t cleanup easy when using exceptions
    struct condattr_wrapper 
    {
@@ -69,6 +70,7 @@ namespace detail{
 
       pthread_condattr_t m_attr;
    };
+#endif
 
    //!Makes initialized pthread_mutex_t cleanup easy when using exceptions
    class mutex_initializer
