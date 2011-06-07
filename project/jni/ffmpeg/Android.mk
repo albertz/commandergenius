@@ -3,9 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := $(notdir $(LOCAL_PATH))
-#ifeq ($(LOCAL_MODULE),ffmpeg)
-#$(error Do not use "ffmpeg" as dependency, use avformat, swscale etc)
-#endif
+ifneq ($(LOCAL_MODULE),ffmpeg)
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 
@@ -21,4 +19,6 @@ $(abspath $(LOCAL_PATH)/../../obj/local/armeabi-v7a/lib$(LOCAL_MODULE).so): $(LO
 	cp -f $< $@
 .PHONY: OVERRIDE_CUSTOM_LIB
 OVERRIDE_CUSTOM_LIB:
+endif
+
 endif

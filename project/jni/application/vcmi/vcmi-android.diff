@@ -13,28 +13,28 @@ Index: global.h
  //filesystem version 3 causes problems (and it's default as of boost 1.46)
  #define BOOST_FILESYSTEM_VERSION 2
  typedef boost::uint64_t ui64; //unsigned int 64 bits (8 bytes)
-@@ -623,7 +627,25 @@
+@@ -622,8 +626,25 @@
+ public:
  	CLogger& operator<<(std::ostream& (*fun)(std::ostream&))
  	{
++#ifdef ANDROID
++		std::ostringstream os;
++		os << fun;
++		int loglevel = ANDROID_LOG_INFO;
++		switch(lvl) {
++			case 0: loglevel = ANDROID_LOG_INFO; break;
++			case 1: loglevel = ANDROID_LOG_FATAL; break;
++			case 2: loglevel = ANDROID_LOG_ERROR; break;
++			case 3: loglevel = ANDROID_LOG_WARN; break;
++			case 4: loglevel = ANDROID_LOG_INFO; break;
++			case 5: loglevel = ANDROID_LOG_DEBUG; break;
++			case 6: case -2: loglevel = ANDROID_LOG_VERBOSE; break;
++		};
++		__android_log_print(loglevel, "VCMI", "%s", os.str().c_str());
++#endif
  		if(lvl < CONSOLE_LOGGING_LEVEL)
 +		{
-+#ifdef ANDROID
-+			std::ostringstream os;
-+			os << fun;
-+			int loglevel = ANDROID_LOG_INFO;
-+			switch(lvl) {
-+				case 0: loglevel = ANDROID_LOG_INFO; break;
-+				case 1: loglevel = ANDROID_LOG_FATAL; break;
-+				case 2: loglevel = ANDROID_LOG_ERROR; break;
-+				case 3: loglevel = ANDROID_LOG_WARN; break;
-+				case 4: loglevel = ANDROID_LOG_INFO; break;
-+				case 5: loglevel = ANDROID_LOG_DEBUG; break;
-+				case 6: case -2: loglevel = ANDROID_LOG_VERBOSE; break;
-+			};
-+			__android_log_print(loglevel, "VCMI", "%s", os.str().c_str());
-+#else
  			std::cout << fun;
-+#endif
 +		}
  		if((lvl < FILE_LOGGING_LEVEL) && logfile)
  			*logfile << fun;

@@ -3,9 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := $(notdir $(LOCAL_PATH))
-#ifeq ($(LOCAL_MODULE),boost)
-#$(error Do not use "boost" as dependency, use boost_filesystem, boost_iostreams etc)
-#endif
+ifneq ($(LOCAL_MODULE),boost)
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 
@@ -21,4 +19,6 @@ $(abspath $(LOCAL_PATH)/../../obj/local/armeabi-v7a/lib$(LOCAL_MODULE).a): $(LOC
 	cp -f $< $@
 .PHONY: OVERRIDE_CUSTOM_LIB
 OVERRIDE_CUSTOM_LIB:
+endif
+
 endif

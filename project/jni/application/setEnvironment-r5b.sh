@@ -45,6 +45,11 @@ echo $APP_MODULES | xargs -n 1 echo | while read LIB ; do
 done
 )
 
+if [ -n "$CRYSTAX_WCHAR" ]; then
+	CRYSTAX_WCHAR_INCLUDE=-I$NDK/sources/wchar-support/include
+	CRYSTAX_WCHAR_LIB="$NDK/sources/wchar-support/libs/armeabi/libwchar_static.a"
+fi
+
 CFLAGS="\
 -fexceptions -frtti \
 -fpic -ffunction-sections -funwind-tables -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  -Wno-psabi \
@@ -55,7 +60,8 @@ CFLAGS="\
 -I$NDK/sources/cxx-stl/gnu-libstdc++/include \
 -I$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include \
 -I$LOCAL_PATH/../sdl-1.2/include \
-`echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"`"
+`echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"` \
+$CRYSTAX_WCHAR_INCLUDE"
 
 LDFLAGS="\
 -fexceptions -frtti \
@@ -71,7 +77,8 @@ $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libz.so \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.a \
 -L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
 -L$LOCAL_PATH/../../obj/local/armeabi -Wl,--no-undefined -Wl,-z,noexecstack \
--Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++ -lsdl_fake_stdout -Wl,-u,_SDL_ANDROID_initFakeStdout"
+-Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++ -lsdl_fake_stdout -Wl,-u,_SDL_ANDROID_initFakeStdout \
+$CRYSTAX_WCHAR_LIB"
 
 env PATH=$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \
