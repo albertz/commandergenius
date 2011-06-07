@@ -21,9 +21,7 @@ if [ \! -f vcmi/Makefile -o $0 -nt vcmi/Makefile ] ; then
 	--with-boost-program-options=boost_program_options" || { rm -f libapplication.so ; exit 1 ; }
 fi
 ../setEnvironment.sh sh -c "cd vcmi && \
-  env pkgdatadir=. \
-  AM_MAKEFLAGS=pkgdatadir=. \
-  make -j4 VERBOSE=1 pkgdatadir=. AM_MAKEFLAGS=pkgdatadir=." && \
+  make -j4 AM_DEFAULT_VERBOSITY=1 pkgdatadir=." && \
 cp -f vcmi/client/vcmiclient libapplication.so
 
 rm -f $LOCAL_PATH/../../../obj/local/armeabi/libSDL.so
