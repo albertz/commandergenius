@@ -18,11 +18,13 @@ if [ \! -f vcmi/Makefile -o $0 -nt vcmi/Makefile ] ; then
 	--with-boost-filesystem=boost_filesystem \
 	--with-boost-thread=boost_thread \
 	--with-boost-iostreams=boost_iostreams \
-	--with-boost-program-options=boost_program_options" || { rm -f libapplication.so ; exit 1 ; }
+	--with-boost-program-options=boost_program_options \
+	--bindir=/data/data/eu.vcmi/lib" || { rm -f libapplication.so ; exit 1 ; }
 fi
 ../setEnvironment.sh sh -c "cd vcmi && \
-  make -j4 AM_DEFAULT_VERBOSITY=1 pkgdatadir=." && \
-cp -f vcmi/client/vcmiclient libapplication.so
+  make -j4 AM_DEFAULT_VERBOSITY=1 \
+  pkgdatadir=. pkglibdir=/data/data/eu.vcmi/lib bindir=/data/data/eu.vcmi/lib" && \
+cp -f vcmi/client/vcmiclient libapplication.so &&
 
 rm -f $LOCAL_PATH/../../../obj/local/armeabi/libSDL.so
 rm -f $LOCAL_PATH/../../../obj/local/armeabi/libpthread.so

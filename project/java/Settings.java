@@ -422,7 +422,16 @@ class Settings
 			if( Globals.StartupMenuButtonTimeout > 0 ) // If we did not disable startup menu altogether
 			{
 				for( Menu m: Globals.FirstStartMenuOptions )
-					menuStack.add(m);
+				{
+					boolean hidden = false;
+					for( Menu m1: Globals.HiddenMenuOptions )
+					{
+						if( m1.getClass().getName().equals( m.getClass().getName() ) )
+							hidden = true;
+					}
+					if( ! hidden )
+						menuStack.add(m);
+				}
 			}
 			goBack(p);
 		}
@@ -672,6 +681,10 @@ class Settings
 	static class OptionalDownloadConfig extends Menu
 	{
 		boolean firstStart = false;
+		OptionalDownloadConfig()
+		{
+			firstStart = false;
+		}
 		OptionalDownloadConfig(boolean firstStart)
 		{
 			this.firstStart = firstStart;
@@ -1046,6 +1059,10 @@ class Settings
 	static class DisplaySizeConfig extends Menu
 	{
 		boolean firstStart = false;
+		DisplaySizeConfig()
+		{
+			this.firstStart = false;
+		}
 		DisplaySizeConfig(boolean firstStart)
 		{
 			this.firstStart = firstStart;

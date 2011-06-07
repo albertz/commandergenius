@@ -20,7 +20,7 @@ for version in armv5te armv7a; do
 	DEST=../build/ffmpeg
 	FLAGS="--target-os=linux --cross-prefix=arm-linux-androideabi- --arch=arm"
 	FLAGS="$FLAGS --sysroot=$SYSROOT"
-	FLAGS="$FLAGS --soname-prefix=/data/data/com.bambuser.broadcaster/lib/"
+#	FLAGS="$FLAGS --soname-prefix=/data/data/com.bambuser.broadcaster/lib/"
 	FLAGS="$FLAGS --enable-shared --disable-symver"
 	FLAGS="$FLAGS --enable-small --optimization-flags=-O2"
 	FLAGS="$FLAGS --disable-everything"
