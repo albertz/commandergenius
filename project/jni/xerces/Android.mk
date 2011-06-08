@@ -11,7 +11,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_PATH)/src $(LOCAL_PATH)/include \
                     $(LOCAL_PATH)/include/xercesc/dom/ $(LOCAL_PATH)/include/xercesc/dom/impl \
                     $(LOCAL_PATH)/include/xercesc/validators/schema/identity $(LOCAL_PATH)/include/xercesc/util/Transcoders/IconvGNU/ \
                     $(LOCAL_PATH)/include/xercesc/sax
-LOCAL_CFLAGS := -Os -DHAVE_CONFIG_H -D__sF=__SDL_fake_stdout
+LOCAL_CFLAGS := -Os -DHAVE_CONFIG_H
 
 LOCAL_CPP_EXTENSION := .cpp
 

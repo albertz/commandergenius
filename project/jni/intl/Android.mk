@@ -17,14 +17,13 @@ LOCAL_CFLAGS := -Os -DBUILDING_LIBINTL -DBUILDING_DLL \
                 -DLOCALEDIR=\"\" \
                 -DLIBDIR=\"\" \
                 -DLOCALE_ALIAS_PATH=\"\" \
-                -DINSTALLDIR=\"\" \
-                -D__sF=__SDL_fake_stdout
+                -DINSTALLDIR=\"\"
 
 # -DLOCALE_ALIAS_PATH=\"/usr/local/share/locale\" \
 #   -DINSTALLDIR=\"/usr/local/lib\"
 
 LOCAL_SRC_FILES := $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wildcard $(LOCAL_PATH)/$(F)/*.c))))
 
-LOCAL_SHARED_LIBRARIES := sdl-$(SDL_VERSION)
+LOCAL_SHARED_LIBRARIES :=
 
 include $(BUILD_SHARED_LIBRARY)

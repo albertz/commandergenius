@@ -9,11 +9,17 @@ ln -sf libsdl-1.2.so $LOCAL_PATH/../../../obj/local/armeabi/libpthread.so
 ln -sf libsdl_mixer.so $LOCAL_PATH/../../../obj/local/armeabi/libSDL_mixer.so
 ln -sf libsdl_image.so $LOCAL_PATH/../../../obj/local/armeabi/libSDL_image.so
 ln -sf libsdl_ttf.so $LOCAL_PATH/../../../obj/local/armeabi/libSDL_ttf.so
+rm -f libapplication.so
+
+GCC_PREFIX=arm-eabi
+if echo $CXX | grep 'arm-linux-androideabi'; then
+	GCC_PREFIX=arm-linux-androideabi
+fi
 
 if [ \! -f vcmi/Makefile -o $0 -nt vcmi/Makefile ] ; then
 	../setEnvironment.sh sh -c "cd vcmi && \
 	env LIBS='-lavcodec -lavutil -lavcore -lgcc' \
-	./configure --host=arm-eabi --enable-static \
+	./configure --host=$GCC_PREFIX --enable-static \
 	--with-boost-system=boost_system \
 	--with-boost-filesystem=boost_filesystem \
 	--with-boost-thread=boost_thread \
@@ -24,10 +30,11 @@ fi
 ../setEnvironment.sh sh -c "cd vcmi && \
   make -j4 AM_DEFAULT_VERBOSITY=1 \
   pkgdatadir=. pkglibdir=/data/data/eu.vcmi/lib bindir=/data/data/eu.vcmi/lib" && \
-cp -f vcmi/client/vcmiclient libapplication.so &&
+cp -f vcmi/client/vcmiclient libapplication.so || exit 1
 
 rm -f $LOCAL_PATH/../../../obj/local/armeabi/libSDL.so
 rm -f $LOCAL_PATH/../../../obj/local/armeabi/libpthread.so
 rm -f $LOCAL_PATH/../../../obj/local/armeabi/libSDL_mixer.so
 rm -f $LOCAL_PATH/../../../obj/local/armeabi/libSDL_image.so
 rm -f $LOCAL_PATH/../../../obj/local/armeabi/libSDL_ttf.so
+exit 0

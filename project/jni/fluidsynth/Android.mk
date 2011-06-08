@@ -7,7 +7,7 @@ LOCAL_MODULE := fluidsynth
 APP_SUBDIRS := $(patsubst $(LOCAL_PATH)/%, %, $(shell find $(LOCAL_PATH)/src -type d))
 
 LOCAL_C_INCLUDES := $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) $(LOCAL_PATH)/include $(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include
-LOCAL_CFLAGS := -O3 -DHAVE_CONFIG_H -include stdint.h -Werror=implicit -D__sF=__SDL_fake_stdout
+LOCAL_CFLAGS := -O3 -DHAVE_CONFIG_H -include stdint.h -Werror=implicit
 
 LOCAL_CPP_EXTENSION := .cpp
 

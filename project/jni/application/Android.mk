@@ -33,8 +33,6 @@ LOCAL_C_INCLUDES += $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) \
 					$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include \
 					$(foreach L, $(COMPILED_LIBRARIES), $(LOCAL_PATH)/../$(L)/include) \
 
-LOCAL_CFLAGS += -include $(LOCAL_PATH)/../sdl_fake_stdout/include/SDL_android_printf.h
-
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
 
 #Change C++ file extension as appropriate
@@ -48,11 +46,11 @@ LOCAL_SHARED_LIBRARIES := sdl-$(SDL_VERSION) $(filter-out $(APP_AVAILABLE_STATIC
 
 LOCAL_STATIC_LIBRARIES := $(filter $(APP_AVAILABLE_STATIC_LIBS), $(COMPILED_LIBRARIES))
 
-LOCAL_STATIC_LIBRARIES += stlport sdl_fake_stdout
+LOCAL_STATIC_LIBRARIES += stlport
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
 
-LOCAL_LDFLAGS := -Lobj/local/armeabi -Wl,-u,_SDL_ANDROID_initFakeStdout
+LOCAL_LDFLAGS := -Lobj/local/armeabi
 
 LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
 

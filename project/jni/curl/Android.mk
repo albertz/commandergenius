@@ -49,8 +49,8 @@ LOCAL_PATH:= $(call my-dir)
 common_CFLAGS := \
 	-Wpointer-arith -Wwrite-strings -Wunused -Winline -Wnested-externs -Wmissing-declarations -Wmissing-prototypes \
 	-Wno-long-long -Wfloat-equal -Wno-multichar -Wsign-compare -Wno-format-nonliteral -Wendif-labels \
-	-Wstrict-prototypes -Wdeclaration-after-statement -Wno-system-headers -DHAVE_CONFIG_H -std=gnu99 \
-	-D__sF=__SDL_fake_stdout
+	-Wstrict-prototypes -Wdeclaration-after-statement -Wno-system-headers -DHAVE_CONFIG_H -std=gnu99
+
 
 #########################
 # Build the libcurl library
@@ -75,7 +75,7 @@ LOCAL_CFLAGS += $(common_CFLAGS)
 
 LOCAL_MODULE:= libcurl
 
-LOCAL_SHARED_LIBRARIES := sdl-$(SDL_VERSION)
+LOCAL_SHARED_LIBRARIES :=
 
 LOCAL_LDLIBS := -lz
 
