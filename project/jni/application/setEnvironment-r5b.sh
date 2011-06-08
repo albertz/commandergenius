@@ -47,7 +47,7 @@ done
 
 if [ -n "$CRYSTAX_WCHAR" ]; then
 	CRYSTAX_WCHAR_INCLUDE=-I$NDK/sources/wchar-support/include
-	CRYSTAX_WCHAR_LIB="-L$NDK/sources/wchar-support/libs/armeabi -lwchar_static"
+	CRYSTAX_WCHAR_LIB="$NDK/sources/wchar-support/libs/armeabi/libwchar_static.a"
 fi
 
 CFLAGS="\
@@ -63,9 +63,10 @@ CFLAGS="\
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"` \
 $CRYSTAX_WCHAR_INCLUDE"
 
+#-shared flag creates problems with damn libtool, so we're using -Wl,-shared instead
 LDFLAGS="\
--fexceptions -frtti \
--Wl,-soname,libapplication.so -shared --sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
+-fexceptions -frtti -shared \
+-Wl,-soname,libapplication.so --sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
 `echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/armeabi/lib\1.so@g\"` \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \

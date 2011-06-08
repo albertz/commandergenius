@@ -50,9 +50,13 @@ LOCAL_STATIC_LIBRARIES += stlport
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
 
-LOCAL_LDFLAGS := -Lobj/local/armeabi
+LOCAL_LDFLAGS := -Lobj/local/armeabi 
 
 LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
+
+ifneq ($(CRYSTAX_R5B3_TOOLCHAIN),)
+LOCAL_LDLIBS += -L$(NDK_PATH)/sources/wchar-support/libs/armeabi -lwchar_static
+endif
 
 LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
 	for f in $(LOCAL_PATH)/../../obj/local/armeabi/*.so ; do \
