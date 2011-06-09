@@ -1,3 +1,87 @@
+Index: server/CGameHandler.cpp
+===================================================================
+--- server/CGameHandler.cpp	(revision 2170)
++++ server/CGameHandler.cpp	(working copy)
+@@ -24,6 +24,7 @@
+ #include <boost/random/variate_generator.hpp>
+ #include <boost/random/poisson_distribution.hpp>
+ #include "../lib/CCreatureSet.h"
++
+ 
+ /*
+  * CGameHandler.cpp, part of VCMI engine
+@@ -1786,7 +1787,7 @@
+ 		iw.player = h1->tempOwner;
+ 		iw.components.push_back(Component(Component::SEC_SKILL, 18, ScholarLevel, 0));
+ 
+-		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//"%s, who has studied magic extensively,
++		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//%s, who has studied magic extensively,
+ 		iw.text.addReplacement(h1->name);
+ 		
+ 		if (cs2.spells.size())//if found new spell - apply
+Index: lib/VCMIDirs.h
+===================================================================
+--- lib/VCMIDirs.h	(revision 2170)
++++ lib/VCMIDirs.h	(working copy)
+@@ -12,6 +12,7 @@
+ 	#include <boost/filesystem.hpp> 
+ 	using namespace boost::filesystem;
+ #endif
++#include <android/log.h>
+ 
+ 
+ /// Where to find the various VCMI files. This is mostly usefull for linux. 
+@@ -24,14 +25,23 @@
+ #ifdef _WIN32
+ 		UserPath = DATA_DIR;
+ #else
+-		// Find vcmi user directory and create it if necessary
+-		std::string home_dir = getenv("HOME");
+-		UserPath = path(home_dir + "/.vcmi").string();
+-
+-		create_directory(UserPath);
+-		create_directory(UserPath + "/config");
+-		create_directory(UserPath + "/Games");
++		try {
++			// Find vcmi user directory and create it if necessary
++			std::string home_dir = ".";
++			if( getenv("HOME") != NULL )
++				home_dir = getenv("HOME");
++			UserPath = path(home_dir + "/.vcmi").string();
++#ifdef ANDROID
++			UserPath = DATA_DIR;
+ #endif
++			create_directory(UserPath);
++			create_directory(UserPath + "/config");
++			create_directory(UserPath + "/Games");
++		}
++		catch(const std::exception & e)
++		{
++		}
++#endif
+ 	}
+ };
+ extern VCMIDirs GVCMIDirs;
+Index: CConsoleHandler.cpp
+===================================================================
+--- CConsoleHandler.cpp	(revision 2170)
++++ CConsoleHandler.cpp	(working copy)
+@@ -143,6 +143,7 @@
+ 
+ void CConsoleHandler::setColor(int level)
+ {
++#ifndef ANDROID
+ 	TColor color;
+ 	switch(level)
+ 	{
+@@ -179,6 +180,7 @@
+ #else
+ 	std::cout << color;
+ #endif
++#endif
+ }
+ 
+ int CConsoleHandler::run()
 Index: global.h
 ===================================================================
 --- global.h	(revision 2170)
@@ -13,29 +97,276 @@ Index: global.h
  //filesystem version 3 causes problems (and it's default as of boost 1.46)
  #define BOOST_FILESYSTEM_VERSION 2
  typedef boost::uint64_t ui64; //unsigned int 64 bits (8 bytes)
-@@ -622,8 +626,25 @@
+@@ -618,20 +622,45 @@
+ class CLogger //logger, prints log info to console and saves in file
+ {
+ 	const int lvl;
++#ifdef ANDROID
++	std::ostringstream buf;
++	int androidloglevel;
++	void outputAndroid()
++	{
++		int pos = buf.str().find("\n");
++		while( pos >= 0 )
++		{
++			__android_log_print(androidloglevel, "VCMI", "%s", buf.str().substr(0, pos).c_str() );
++			buf.str( buf.str().substr(pos+1) );
++			pos = buf.str().find("\n");
++		}
++	}
++#endif
+ 
  public:
  	CLogger& operator<<(std::ostream& (*fun)(std::ostream&))
  	{
 +#ifdef ANDROID
-+		std::ostringstream os;
-+		os << fun;
-+		int loglevel = ANDROID_LOG_INFO;
-+		switch(lvl) {
-+			case 0: loglevel = ANDROID_LOG_INFO; break;
-+			case 1: loglevel = ANDROID_LOG_FATAL; break;
-+			case 2: loglevel = ANDROID_LOG_ERROR; break;
-+			case 3: loglevel = ANDROID_LOG_WARN; break;
-+			case 4: loglevel = ANDROID_LOG_INFO; break;
-+			case 5: loglevel = ANDROID_LOG_DEBUG; break;
-+			case 6: case -2: loglevel = ANDROID_LOG_VERBOSE; break;
-+		};
-+		__android_log_print(loglevel, "VCMI", "%s", os.str().c_str());
-+#endif
++		buf << fun;
++		outputAndroid();
++#else
  		if(lvl < CONSOLE_LOGGING_LEVEL)
 +		{
  			std::cout << fun;
 +		}
  		if((lvl < FILE_LOGGING_LEVEL) && logfile)
  			*logfile << fun;
++#endif
  		return *this;
+ 	}
+ 
+ 	template<typename T> 
+ 	CLogger & operator<<(const T & data)
+ 	{
++#ifdef ANDROID
++		buf << data;
++		outputAndroid();
++#else
+ 		if(lvl < CONSOLE_LOGGING_LEVEL)
+ 		{
+ 			if(console)
+@@ -641,10 +670,25 @@
+ 		}
+ 		if((lvl < FILE_LOGGING_LEVEL) && logfile)
+ 			*logfile << data << std::flush;
++#endif
+ 		return *this;
+ 	}
+ 
+-	CLogger(const int Lvl) : lvl(Lvl) {}
++	CLogger(const int Lvl) : lvl(Lvl)
++	{
++#ifdef ANDROID
++		androidloglevel = ANDROID_LOG_INFO;
++		switch(lvl) {
++			case 0: androidloglevel = ANDROID_LOG_INFO; break;
++			case 1: androidloglevel = ANDROID_LOG_FATAL; break;
++			case 2: androidloglevel = ANDROID_LOG_ERROR; break;
++			case 3: androidloglevel = ANDROID_LOG_WARN; break;
++			case 4: androidloglevel = ANDROID_LOG_INFO; break;
++			case 5: androidloglevel = ANDROID_LOG_DEBUG; break;
++			case 6: case -2: androidloglevel = ANDROID_LOG_VERBOSE; break;
++		}
++#endif
++	}
+ };
+ 
+ extern DLL_EXPORT CLogger tlog0; //green - standard progress info
+Index: client/CMT.cpp
+===================================================================
+--- client/CMT.cpp	(revision 2170)
++++ client/CMT.cpp	(working copy)
+@@ -55,6 +55,8 @@
+ #if __MINGW32__
+ #undef main
+ #endif
++
++
+ 
+ namespace po = boost::program_options;
+ 
+@@ -92,6 +94,7 @@
+ static void listenForEvents();
+ void requestChangingResolution();
+ void startGame(StartInfo * options, CConnection *serv = NULL);
++
+ 
+ #ifndef _WIN32
+ #ifndef _GNU_SOURCE
+@@ -102,6 +105,7 @@
+ 
+ void init()
+ {
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 	timeHandler tmh, pomtime;
+ #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+ 	int rmask = 0xff000000;int gmask = 0x00ff0000;int bmask = 0x0000ff00;int amask = 0x000000ff;
+@@ -157,8 +161,11 @@
+ 	tlog0<<"\tMain graphics: "<<tmh.getDif()<<std::endl;
+ 	tlog0<<"Initializing game graphics: "<<tmh.getDif()<<std::endl;
+ 
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 	CMessage::init();
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 	tlog0<<"Message handler: "<<tmh.getDif()<<std::endl;
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 	//CPG = new CPreGame(); //main menu and submenus
+ 	//tlog0<<"Initialization CPreGame (together): "<<tmh.getDif()<<std::endl;
+ }
+@@ -184,19 +191,26 @@
+ }
+ 
+ 
++#ifdef ANDROID
++int SDL_main(int argc, char** argv)
++#else
+ #ifdef _WIN32
+ int _tmain(int argc, _TCHAR* argv[])
+ #else
+ int main(int argc, char** argv)
+ #endif
++#endif
+ {
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 	tlog0 << "Starting... " << std::endl;      
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 	po::options_description opts("Allowed options");
+ 	opts.add_options()
+ 		("help,h", "display help and exit")
+ 		("version,v", "display version information and exit")
+ 		("battle,b", po::value<std::string>(), "runs game in duel mode (battle-only")
+ 		("nointro,i", "skips intro movies");
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 
+ 	po::variables_map vm;
+ 	if(argc > 1)
+@@ -210,6 +224,7 @@
+ 			tlog1 << "Failure during parsing command-line options:\n" << e.what() << std::endl;
+ 		}
+ 	}
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 
+ 	po::notify(vm);
+ 	if(vm.count("help"))
+@@ -222,10 +237,12 @@
+ 		prog_version();
+ 		return 0;
+ 	}
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 
+ 	//Set environment vars to make window centered. Sometimes work, sometimes not. :/
+ 	putenv((char*)"SDL_VIDEO_WINDOW_POS");
+ 	putenv((char*)"SDL_VIDEO_CENTERED=1");
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 
+ 	timeHandler total, pomtime;
+ 	std::cout.flags(std::ios::unitbuf);
+@@ -235,8 +252,10 @@
+ 	console->start();
+ 	atexit(dispose);
+ 	tlog0 <<"Creating console and logfile: "<<pomtime.getDif() << std::endl;
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 
+ 	conf.init();
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 	tlog0 <<"Loading settings: "<<pomtime.getDif() << std::endl;
+ 	tlog0 << NAME << std::endl;
+ 
+@@ -244,6 +263,7 @@
+ 	
+ 	CCS = new CClientState;
+ 	CGI = new CGameInfo; //contains all global informations about game (texts, lodHandlers, map handler etc.)
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 
+ 	if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_AUDIO))
+ 	{
+@@ -251,6 +271,7 @@
+ 		exit(-1);
+ 	}
+ 	atexit(SDL_Quit);
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 
+ 	setScreenRes(conf.cc.pregameResx, conf.cc.pregameResy, conf.cc.bpp, conf.cc.fullscreen);
+ 	tlog0 <<"\tInitializing screen: "<<pomtime.getDif() << std::endl;
+@@ -261,6 +282,7 @@
+ 
+ 	//we can properly play intro only in the main thread, so we have to move loading to the separate thread
+ 	boost::thread loading(init);
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 
+ 	if(!vm.count("battle") && !vm.count("nointro"))
+ 		playIntro();
+@@ -269,6 +291,7 @@
+ 	CSDL_Ext::update(screen);
+ 	loading.join();
+ 	tlog0<<"Initialization of VCMI (together): "<<total.getDif()<<std::endl;
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 
+ 	if(!vm.count("battle"))
+ 	{
+@@ -284,8 +307,10 @@
+ 		si->playerInfos[1].color = 1;
+ 		startGame(si);
+ 	}
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 	mainGUIThread = new boost::thread(&CGuiHandler::run, boost::ref(GH));
+ 	listenForEvents();
++	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
+ 
+ 	return 0;
+ }
+@@ -535,10 +560,12 @@
+ 		tlog2 << "Warning: SDL says that "  << bpp << "bpp is wrong and suggests " << suggestedBpp << std::endl;
+ 	}
+ 
++#ifndef ANDROID
+ 	if(screen) //screen has been already initialized
+ 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
+ 
+ 	SDL_InitSubSystem(SDL_INIT_VIDEO);
++#endif
+ 	
+ 	if((screen = SDL_SetVideoMode(w, h, suggestedBpp, SDL_SWSURFACE|(fullscreen?SDL_FULLSCREEN:0))) == NULL)
+ 	{
+@@ -717,3 +744,4 @@
+ 	ev.user.code = 1;
+ 	SDL_PushEvent(&ev);
+ }
++
+Index: client/CVideoHandler.cpp
+===================================================================
+--- client/CVideoHandler.cpp	(revision 2170)
++++ client/CVideoHandler.cpp	(working copy)
+@@ -6,6 +6,7 @@
+ #include "SDL_Extensions.h"
+ #include "CPlayerInterface.h"
+ #include "boost/filesystem.hpp"
++
+ 
+ extern SystemOptions GDefaultOptions; 
+ //reads events and returns true on key down
+@@ -62,6 +63,7 @@
+ void DLLHandler::Instantiate(const char *filename)
+ {
+ 	name = filename;
++	tlog1 << "Loading dynamic library " << filename << std::endl;
+ #ifdef _WIN32
+ 	dll = LoadLibraryA(filename);
+ 	if(!dll)
+@@ -72,6 +74,7 @@
+ #else
+ 	dll = dlopen(filename,RTLD_LOCAL | RTLD_LAZY);
+ #endif
++	tlog1 << "Loading dynamic library " << filename << dll ? " successful" : " failed" <<std::endl;
+ }
+ 
+ void *DLLHandler::FindAddress(const char *symbol)
+@@ -86,6 +89,10 @@
+ 	}
+ #else
+ 	ret = (void *)dlsym(dll, symbol);
++	if(!ret)
++	{
++		tlog1 << "Failed to find " << symbol << " in " << name << std::endl;
++	}
+ #endif
+ 	return ret;
+ }

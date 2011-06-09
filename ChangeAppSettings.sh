@@ -2,6 +2,7 @@
 
 CHANGE_APP_SETTINGS_VERSION=17
 AUTO=
+CHANGED=
 
 if [ "X$1" = "X-a" ]; then
 	AUTO=a
@@ -29,6 +30,7 @@ echo -n "libSDL version to use (1.2 or 1.3) ($LibSdlVersion): "
 read var
 if [ -n "$var" ] ; then
 	LibSdlVersion="$var"
+	CHANGED=1
 fi
 fi
 
@@ -38,6 +40,7 @@ echo -n "Specify application name (e.x. My Application) ($AppName): "
 read var
 if [ -n "$var" ] ; then
 	AppName="$var"
+	CHANGED=1
 fi
 fi
 
@@ -47,6 +50,7 @@ echo -n "Specify reversed site name of application (e.x. com.mysite.myapp) ($App
 read var
 if [ -n "$var" ] ; then
 	AppFullName="$var"
+	CHANGED=1
 fi
 fi
 
@@ -56,6 +60,7 @@ echo -n "Specify screen orientation: (v)ertical or (h)orizontal ($ScreenOrientat
 read var
 if [ -n "$var" ] ; then
 	ScreenOrientation="$var"
+	CHANGED=1
 fi
 fi
 
@@ -86,6 +91,7 @@ while true; do
 done
 if [ -n "$AppDataDownloadUrl1" ] ; then
 	AppDataDownloadUrl="$AppDataDownloadUrl1"
+	CHANGED=1
 fi
 fi
 
@@ -95,6 +101,7 @@ echo "Application window should be resized to fit into native device screen (480
 read var
 if [ -n "$var" ] ; then
 	SdlVideoResize="$var"
+	CHANGED=1
 fi
 fi
 
@@ -104,6 +111,7 @@ echo -n "Application resizing should use 4:3 aspect ratio, creating black bars (
 read var
 if [ -n "$var" ] ; then
 	SdlVideoResizeKeepAspect="$var"
+	CHANGED=1
 fi
 fi
 
@@ -113,6 +121,7 @@ echo -n "Enable OpenGL depth buffer (needed only for 3-d applications, small spe
 read var
 if [ -n "$var" ] ; then
 	NeedDepthBuffer="$var"
+	CHANGED=1
 fi
 fi
 
@@ -124,6 +133,7 @@ if [ "$LibSdlVersion" = "1.2" ]; then
 	read var
 	if [ -n "$var" ] ; then
 		SwVideoMode="$var"
+		CHANGED=1
 	fi
 	fi
 else
@@ -136,6 +146,7 @@ echo -n "Application uses mouse (y) or (n) ($AppUsesMouse): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesMouse="$var"
+	CHANGED=1
 fi
 fi
 
@@ -145,6 +156,7 @@ echo -n "Application needs two-button mouse, will also enable advanced point-and
 read var
 if [ -n "$var" ] ; then
 	AppNeedsTwoButtonMouse="$var"
+	CHANGED=1
 fi
 fi
 
@@ -155,6 +167,7 @@ echo -n "will be used as arrow keys if phone does not have dpad/trackball ($AppN
 read var
 if [ -n "$var" ] ; then
 	AppNeedsArrowKeys="$var"
+	CHANGED=1
 fi
 fi
 
@@ -164,6 +177,7 @@ echo -n "Application needs text input (y) or (n), enables button for text input 
 read var
 if [ -n "$var" ] ; then
 	AppNeedsTextInput="$var"
+	CHANGED=1
 fi
 fi
 
@@ -175,6 +189,7 @@ echo -n "make sure you can navigate all app menus with joystick or mouse ($AppUs
 read var
 if [ -n "$var" ] ; then
 	AppUsesJoystick="$var"
+	CHANGED=1
 fi
 fi
 
@@ -185,6 +200,7 @@ echo -n "SDL will send raw accelerometer data and won't show 'Accelerometer sens
 read var
 if [ -n "$var" ] ; then
 	AppHandlesJoystickSensitivity="$var"
+	CHANGED=1
 fi
 fi
 
@@ -195,6 +211,7 @@ echo -n "or additionally as SDL_FINGERDOWN/UP/MOTION events in SDL 1.3, with SDL
 read var
 if [ -n "$var" ] ; then
 	AppUsesMultitouch="$var"
+	CHANGED=1
 fi
 fi
 
@@ -206,6 +223,7 @@ echo -n "rigth after SDL_Flip(), if (n) then SDL_Flip() will block till app in b
 read var
 if [ -n "$var" ] ; then
 	NonBlockingSwapBuffers="$var"
+	CHANGED=1
 fi
 fi
 
@@ -216,6 +234,7 @@ echo -n "applied automatically if you're using accelerometer, but may be useful 
 read var
 if [ -n "$var" ] ; then
 	InhibitSuspend="$var"
+	CHANGED=1
 fi
 fi
 
@@ -231,6 +250,7 @@ echo -n ": "
 read var
 if [ -n "$var" ] ; then
 	RedefinedKeys="$var"
+	CHANGED=1
 fi
 fi
 
@@ -240,6 +260,7 @@ echo -n "Number of virtual keyboard keys (currently 7 is maximum) ($AppTouchscre
 read var
 if [ -n "$var" ] ; then
 	AppTouchscreenKeyboardKeysAmount="$var"
+	CHANGED=1
 fi
 fi
 
@@ -249,12 +270,14 @@ echo -n "Number of virtual keyboard keys that support autofire (currently 2 is m
 read var
 if [ -n "$var" ] ; then
 	AppTouchscreenKeyboardKeysAmountAutoFire="$var"
+	CHANGED=1
 fi
 fi
 
 if [ -z "$RedefinedKeysScreenKb" -o -z "$AUTO" ]; then
 if [ -z "$RedefinedKeysScreenKb" ]; then
 	RedefinedKeysScreenKb="$RedefinedKeys"
+	CHANGED=1
 fi
 echo
 echo "Redefine on-screen keyboard keys to SDL keysyms - 6 keyboard keys + 4 multitouch gestures (zoom in/out and rotate left/right)"
@@ -263,6 +286,7 @@ echo -n ": "
 read var
 if [ -n "$var" ] ; then
 	RedefinedKeysScreenKb="$var"
+	CHANGED=1
 fi
 fi
 
@@ -272,6 +296,7 @@ echo -n "How long to show startup menu button, in msec, 0 to disable startup men
 read var
 if [ -n "$var" ] ; then
 	StartupMenuButtonTimeout="$var"
+	CHANGED=1
 fi
 fi
 
@@ -284,6 +309,7 @@ echo -n ": "
 read var
 if [ -n "$var" ] ; then
 	HiddenMenuOptions="$var"
+	CHANGED=1
 fi
 fi
 
@@ -294,6 +320,7 @@ echo -n "it will also work on old devices, but .apk size is 2x bigger (y) or (n)
 read var
 if [ -n "$var" ] ; then
 	MultiABI="$var"
+	CHANGED=1
 fi
 fi
 
@@ -303,6 +330,7 @@ echo -n "Application version code (integer) ($AppVersionCode): "
 read var
 if [ -n "$var" ] ; then
 	AppVersionCode="$var"
+	CHANGED=1
 fi
 fi
 
@@ -312,6 +340,7 @@ echo -n "Application user-visible version name (string) ($AppVersionName): "
 read var
 if [ -n "$var" ] ; then
 	AppVersionName="$var"
+	CHANGED=1
 fi
 fi
 
@@ -321,6 +350,7 @@ echo -n "Application uses custom build script AndroidBuild.sh instead of Android
 read var
 if [ -n "$var" ] ; then
 	CustomBuildScript="$var"
+	CHANGED=1
 fi
 fi
 
@@ -330,6 +360,7 @@ echo -n "Aditional CFLAGS for application ($AppCflags): "
 read var
 if [ -n "$var" ] ; then
 	AppCflags="$var"
+	CHANGED=1
 fi
 fi
 
@@ -344,6 +375,7 @@ echo -n ": "
 read var
 if [ -n "$var" ] ; then
 	CompiledLibraries="$var"
+	CHANGED=1
 fi
 fi
 
@@ -353,6 +385,7 @@ echo -n "Additional LDFLAGS for application ($AppLdflags): "
 read var
 if [ -n "$var" ] ; then
 	AppLdflags="$var"
+	CHANGED=1
 fi
 fi
 
@@ -362,6 +395,7 @@ echo -n "Build only following subdirs (empty will build all dirs, ignored with c
 read var
 if [ -n "$var" ] ; then
 	AppSubdirsBuild="$var"
+	CHANGED=1
 fi
 fi
 
@@ -371,6 +405,7 @@ echo -n "Application command line parameters, including app name as 0-th param (
 read var
 if [ -n "$var" ] ; then
 	AppCmdline="$var"
+	CHANGED=1
 fi
 fi
 
@@ -395,11 +430,13 @@ while true; do
 done
 if [ -n "$ReadmeText1" ] ; then
 	ReadmeText="$ReadmeText1"
+	CHANGED=1
 fi
 fi
 
 echo
 
+if [ -n "$CHANGED" ]; then
 cat /dev/null > AndroidAppSettings.cfg
 echo "# The application settings for Android libSDL port" >> AndroidAppSettings.cfg
 echo AppSettingVersion=$CHANGE_APP_SETTINGS_VERSION >> AndroidAppSettings.cfg
@@ -437,6 +474,7 @@ echo AppLdflags=\'$AppLdflags\' >> AndroidAppSettings.cfg
 echo AppSubdirsBuild=\'$AppSubdirsBuild\' >> AndroidAppSettings.cfg
 echo AppCmdline=\'$AppCmdline\' >> AndroidAppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AndroidAppSettings.cfg
+fi
 
 AppShortName=`echo $AppName | sed 's/ //g'`
 DataPath="$AppFullName"
