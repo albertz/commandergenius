@@ -529,9 +529,81 @@ public class MainActivity extends Activity {
 			}
 			catch ( Exception ee )
 			{
-				System.out.println("libSDL: Error: " + e.toString());
+				System.out.println("libSDL: Error: " + ee.toString());
 			}
 		}
+
+			try {
+				System.out.println("libSDL: Extracting VCMI server");
+				
+				InputStream in = null;
+				try
+				{
+					for( int i = 0; ; i++ )
+					{
+						InputStream in2 = getAssets().open("vcmiserver" + String.valueOf(i));
+						if( in == null )
+							in = in2;
+						else
+							in = new SequenceInputStream( in, in2 );
+					}
+				}
+				catch( IOException ee ) { }
+
+				if( in == null )
+					throw new RuntimeException("libSDL: Extracting VCMI server failed, the .apk file packaged incorrectly");
+
+				ZipInputStream zip = new ZipInputStream(in);
+
+				File cacheDir = getFilesDir();
+				try {
+					cacheDir.mkdirs();
+				} catch( SecurityException ee ) { };
+				
+				byte[] buf = new byte[16384];
+				while(true)
+				{
+					ZipEntry entry = null;
+					entry = zip.getNextEntry();
+					/*
+					if( entry != null )
+						System.out.println("Extracting lib " + entry.getName());
+					*/
+					if( entry == null )
+					{
+						System.out.println("Extracting libs finished");
+						break;
+					}
+					if( entry.isDirectory() )
+					{
+						System.out.println("Warning '" + entry.getName() + "' is a directory");
+						continue;
+					}
+
+					OutputStream out = null;
+					String path = cacheDir.getAbsolutePath() + "/" + entry.getName();
+
+					System.out.println("Saving to file '" + path + "'");
+
+					out = new FileOutputStream( path );
+					int len = zip.read(buf);
+					while (len >= 0)
+					{
+						if(len > 0)
+							out.write(buf, 0, len);
+						len = zip.read(buf);
+					}
+
+					out.flush();
+					out.close();
+					(new ProcessBuilder().command("/system/bin/chmod", "0755", path).start()).waitFor();
+				}
+			}
+			catch ( Exception eee )
+			{
+				System.out.println("libSDL: Error: " + eee.toString());
+			}
+
 	};
 
 	public FrameLayout getVideoLayout() { return _videoLayout; }
