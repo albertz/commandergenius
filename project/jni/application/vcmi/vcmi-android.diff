@@ -2,14 +2,6 @@ Index: server/CGameHandler.cpp
 ===================================================================
 --- server/CGameHandler.cpp	(revision 2170)
 +++ server/CGameHandler.cpp	(working copy)
-@@ -24,6 +24,7 @@
- #include <boost/random/variate_generator.hpp>
- #include <boost/random/poisson_distribution.hpp>
- #include "../lib/CCreatureSet.h"
-+
- 
- /*
-  * CGameHandler.cpp, part of VCMI engine
 @@ -1786,7 +1787,7 @@
  		iw.player = h1->tempOwner;
  		iw.components.push_back(Component(Component::SEC_SKILL, 18, ScholarLevel, 0));
@@ -170,48 +162,82 @@ Index: global.h
  };
  
  extern DLL_EXPORT CLogger tlog0; //green - standard progress info
+Index: client/GUIBase.cpp
+===================================================================
+--- client/GUIBase.cpp	(revision 2170)
++++ client/GUIBase.cpp	(working copy)
+@@ -11,6 +11,7 @@
+ #include "../CThreadHelper.h"
+ #include "CConfigHandler.h"
+ #include <boost/lexical_cast.hpp>
++
+ 
+ /*
+  * GUIBase.cpp, part of VCMI engine
+@@ -364,6 +365,26 @@
+ 		}
+ 	} HANDLE_EXCEPTION
+ }
++
++void CGuiHandler::loopInitFromMainThread()
++{
++	setThreadName(-1, "CGuiHandler::run");
++	CCS->curh->centerCursor();
++	mainFPSmng->init(); // resets internal clock, needed for FPS manager
++}
++
++bool CGuiHandler::loopFromMainThread()
++{
++	if(terminate)
++		return false;
++	if(curInt)
++		curInt->update(); // calls a update and drawing process of the loaded game interface object at the moment
++			
++	mainFPSmng->framerateDelay(); // holds a constant FPS
++	return true;
++}
++
++
+ 
+ CGuiHandler::CGuiHandler()
+ :lastClick(-500, -500)
 Index: client/CMT.cpp
 ===================================================================
 --- client/CMT.cpp	(revision 2170)
 +++ client/CMT.cpp	(working copy)
-@@ -55,6 +55,8 @@
- #if __MINGW32__
- #undef main
- #endif
-+
-+
- 
- namespace po = boost::program_options;
- 
-@@ -92,6 +94,7 @@
+@@ -90,8 +92,10 @@
+ void dispose();
+ void playIntro();
  static void listenForEvents();
++static bool loopListenForEvents(bool block);
  void requestChangingResolution();
  void startGame(StartInfo * options, CConnection *serv = NULL);
 +
  
  #ifndef _WIN32
  #ifndef _GNU_SOURCE
-@@ -102,6 +105,7 @@
+@@ -126,6 +130,7 @@
+ 			GDefaultOptions.settingsChanged();
+ 		}
+ 	}
++
+ 	THC tlog0<<"\tLoading default system settings: "<<pomtime.getDif()<<std::endl;
  
- void init()
- {
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 	timeHandler tmh, pomtime;
- #if SDL_BYTEORDER == SDL_BIG_ENDIAN
- 	int rmask = 0xff000000;int gmask = 0x00ff0000;int bmask = 0x0000ff00;int amask = 0x000000ff;
-@@ -157,8 +161,11 @@
- 	tlog0<<"\tMain graphics: "<<tmh.getDif()<<std::endl;
- 	tlog0<<"Initializing game graphics: "<<tmh.getDif()<<std::endl;
+ 	//initializing audio
+@@ -135,10 +140,12 @@
+ 	CCS->soundh->init();
+ 	CCS->soundh->setVolume(GDefaultOptions.soundVolume);
+ 	CCS->musich = new CMusicHandler;
++
+ 	//CGI->musich->init();
+ 	//CGI->musich->setVolume(GDefaultOptions.musicVolume);
+ 	tlog0<<"\tInitializing sound: "<<pomtime.getDif()<<std::endl;
+ 	tlog0<<"Initializing screen and sound handling: "<<tmh.getDif()<<std::endl;
++
  
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 	CMessage::init();
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 	tlog0<<"Message handler: "<<tmh.getDif()<<std::endl;
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 	//CPG = new CPreGame(); //main menu and submenus
- 	//tlog0<<"Initialization CPreGame (together): "<<tmh.getDif()<<std::endl;
- }
-@@ -184,19 +191,26 @@
+ 	initDLL(::console,logfile);
+ 	const_cast<CGameInfo*>(CGI)->setFromLib();
+@@ -184,11 +191,15 @@
  }
  
  
@@ -225,95 +251,55 @@ Index: client/CMT.cpp
  #endif
 +#endif
  {
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
  	tlog0 << "Starting... " << std::endl;      
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
  	po::options_description opts("Allowed options");
- 	opts.add_options()
- 		("help,h", "display help and exit")
- 		("version,v", "display version information and exit")
- 		("battle,b", po::value<std::string>(), "runs game in duel mode (battle-only")
- 		("nointro,i", "skips intro movies");
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 
- 	po::variables_map vm;
- 	if(argc > 1)
-@@ -210,6 +224,7 @@
- 			tlog1 << "Failure during parsing command-line options:\n" << e.what() << std::endl;
- 		}
- 	}
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 
- 	po::notify(vm);
- 	if(vm.count("help"))
-@@ -222,10 +237,12 @@
- 		prog_version();
- 		return 0;
- 	}
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 
- 	//Set environment vars to make window centered. Sometimes work, sometimes not. :/
- 	putenv((char*)"SDL_VIDEO_WINDOW_POS");
- 	putenv((char*)"SDL_VIDEO_CENTERED=1");
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 
- 	timeHandler total, pomtime;
- 	std::cout.flags(std::ios::unitbuf);
-@@ -235,8 +252,10 @@
+@@ -235,7 +246,6 @@
  	console->start();
  	atexit(dispose);
  	tlog0 <<"Creating console and logfile: "<<pomtime.getDif() << std::endl;
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 
+-
  	conf.init();
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
  	tlog0 <<"Loading settings: "<<pomtime.getDif() << std::endl;
  	tlog0 << NAME << std::endl;
- 
-@@ -244,6 +263,7 @@
- 	
- 	CCS = new CClientState;
- 	CGI = new CGameInfo; //contains all global informations about game (texts, lodHandlers, map handler etc.)
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 
- 	if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_AUDIO))
- 	{
-@@ -251,6 +271,7 @@
- 		exit(-1);
- 	}
- 	atexit(SDL_Quit);
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 
- 	setScreenRes(conf.cc.pregameResx, conf.cc.pregameResy, conf.cc.bpp, conf.cc.fullscreen);
- 	tlog0 <<"\tInitializing screen: "<<pomtime.getDif() << std::endl;
-@@ -261,6 +282,7 @@
+@@ -260,14 +270,18 @@
+ 	tlog0<<"\tInitializing video: "<<pomtime.getDif()<<std::endl;
  
  	//we can properly play intro only in the main thread, so we have to move loading to the separate thread
- 	boost::thread loading(init);
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
- 
+-	boost::thread loading(init);
+-
++#ifdef ANDROID
++	init();
  	if(!vm.count("battle") && !vm.count("nointro"))
  		playIntro();
-@@ -269,6 +291,7 @@
++#else
++	boost::thread loading(init);
+ 
++
+ 	SDL_FillRect(screen,NULL,0);
  	CSDL_Ext::update(screen);
  	loading.join();
++#endif
  	tlog0<<"Initialization of VCMI (together): "<<total.getDif()<<std::endl;
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
  
  	if(!vm.count("battle"))
- 	{
-@@ -284,8 +307,10 @@
+@@ -284,8 +298,16 @@
  		si->playerInfos[1].color = 1;
  		startGame(si);
  	}
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
++#ifdef ANDROID
++	GH.loopInitFromMainThread();
++	while( GH.loopFromMainThread() )
++	{
++		while( loopListenForEvents(false) );
++	}
++#else
  	mainGUIThread = new boost::thread(&CGuiHandler::run, boost::ref(GH));
  	listenForEvents();
-+	__android_log_print(ANDROID_LOG_DEBUG, "VCMI", "Check at %s in %s:%i", __FUNCTION__, __FILE__, __LINE__);
++#endif
  
  	return 0;
  }
-@@ -535,10 +560,12 @@
+@@ -535,10 +557,12 @@
  		tlog2 << "Warning: SDL says that "  << bpp << "bpp is wrong and suggests " << suggestedBpp << std::endl;
  	}
  
@@ -326,47 +312,88 @@ Index: client/CMT.cpp
  	
  	if((screen = SDL_SetVideoMode(w, h, suggestedBpp, SDL_SWSURFACE|(fullscreen?SDL_FULLSCREEN:0))) == NULL)
  	{
-@@ -717,3 +744,4 @@
+@@ -583,14 +607,27 @@
+ 	setResolution = true;
+ }
+ 
++
+ static void listenForEvents()
+ {
+-	while(1) //main SDL events loop
+-	{
++	while(loopListenForEvents(true)); //main SDL events loop
++}
++
++static bool loopListenForEvents(bool block)
++{
+ 		SDL_Event *ev = new SDL_Event();
+ 
+ 		//tlog0 << "Waiting... ";
+-		int ret = SDL_WaitEvent(ev);
++		int ret = 1;
++		if( block )
++			ret = SDL_WaitEvent(ev);
++		else
++		{
++			if(!SDL_PollEvent(ev)) {
++				delete ev;
++				return false;
++			}
++		}
+ 		//tlog0 << "got " << (int)ev->type;
+ 		if (ret == 0 || (ev->type==SDL_QUIT) ||
+ 			(ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4 && (ev->key.keysym.mod & KMOD_ALT)))
+@@ -609,7 +646,7 @@
+ 			SDL_Delay(750);
+ 			SDL_Quit();
+ 			tlog0 << "Ending...\n";
+-			break;
++			return false;
+ 		}
+ 		else if(LOCPLINT && ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4)
+ 		{
+@@ -618,7 +655,7 @@
+ 			setScreenRes(conf.cc.screenx, conf.cc.screeny, conf.cc.bpp, full);
+ 			GH.totalRedraw();
+ 			delete ev;
+-			continue;
++			return true;
+ 		}
+ 		else if(ev->type == SDL_USEREVENT)
+ 		{
+@@ -648,7 +685,7 @@
+ 			}
+ 
+ 			delete ev;
+-			continue;
++			return true;
+ 		} 
+ 
+ 		//tlog0 << " pushing ";
+@@ -656,7 +693,7 @@
+ 		events.push(ev);
+ 		eventsM.unlock();
+ 		//tlog0 << " done\n";
+-	}
++		return true;
+ }
+ 
+ void startGame(StartInfo * options, CConnection *serv/* = NULL*/) 
+@@ -717,3 +754,4 @@
  	ev.user.code = 1;
  	SDL_PushEvent(&ev);
  }
 +
-Index: client/CVideoHandler.cpp
+Index: client/GUIBase.h
 ===================================================================
---- client/CVideoHandler.cpp	(revision 2170)
-+++ client/CVideoHandler.cpp	(working copy)
-@@ -6,6 +6,7 @@
- #include "SDL_Extensions.h"
- #include "CPlayerInterface.h"
- #include "boost/filesystem.hpp"
-+
- 
- extern SystemOptions GDefaultOptions; 
- //reads events and returns true on key down
-@@ -62,6 +63,7 @@
- void DLLHandler::Instantiate(const char *filename)
- {
- 	name = filename;
-+	tlog1 << "Loading dynamic library " << filename << std::endl;
- #ifdef _WIN32
- 	dll = LoadLibraryA(filename);
- 	if(!dll)
-@@ -72,6 +74,7 @@
- #else
- 	dll = dlopen(filename,RTLD_LOCAL | RTLD_LAZY);
- #endif
-+	tlog1 << "Loading dynamic library " << filename << dll ? " successful" : " failed" <<std::endl;
- }
- 
- void *DLLHandler::FindAddress(const char *symbol)
-@@ -86,6 +89,10 @@
- 	}
- #else
- 	ret = (void *)dlsym(dll, symbol);
-+	if(!ret)
-+	{
-+		tlog1 << "Failed to find " << symbol << " in " << name << std::endl;
-+	}
- #endif
- 	return ret;
- }
+--- client/GUIBase.h	(revision 2170)
++++ client/GUIBase.h	(working copy)
+@@ -546,6 +546,8 @@
+ 	CGuiHandler();
+ 	~CGuiHandler();
+ 	void run(); // holds the main loop for the whole program after initialization and manages the update/rendering system
++	void loopInitFromMainThread();
++	bool loopFromMainThread();
+ 	
+ 	void totalRedraw(); //forces total redraw (using showAll), sets a flag, method gets called at the end of the rendering
+ 	void simpleRedraw(); //update only top interface and draw background from buffer, sets a flag, method gets called at the end of the rendering
