@@ -1,6 +1,7 @@
 Quick compilation guide:
 Download my GIT repo from https://github.com/pelya/commandergenius,
-then install Android SDK 2.2, NDK r5c from http://developer.android.com,
+then install Android SDK 2.2 from http://developer.android.com,
+NDK r5 beta3 from http://crystax.net (I'll move the sources to the official NDK r5c over time)
 and "ant" tool, then launch commands
     rm project/jni/application/src
     ln -s vcmi project/jni/application/src
