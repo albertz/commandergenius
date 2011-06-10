@@ -63,15 +63,19 @@ CFLAGS="\
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"` \
 $CRYSTAX_WCHAR_INCLUDE"
 
-SHARED=-shared
+SHARED="-shared -Wl,-soname,libapplication.so"
 if [ -n "$BUILD_EXECUTABLE" ]; then
 	SHARED=
 fi
+if [ -n "$NO_SHARED_LIBS" ]; then
+	APP_SHARED_LIBS=
+fi
+
 
 #-shared flag creates problems with damn libtool, so we're using -Wl,-shared instead
 LDFLAGS="\
 -fexceptions -frtti $SHARED \
--Wl,-soname,libapplication.so --sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
+--sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
 `echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/armeabi/lib\1.so@g\"` \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \

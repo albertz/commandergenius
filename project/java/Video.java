@@ -264,6 +264,18 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		// Thread.currentThread().setPriority((Thread.currentThread().getPriority() + Thread.MIN_PRIORITY)/2);
 		
 		mGlContextLost = false;
+
+		// ----- VCMI hack -----
+		try
+		{
+			File libpath = new File(context.getFilesDir(), "libvcmi.so");
+			System.load(libpath.getPath());
+		}
+		catch ( UnsatisfiedLinkError eee )
+		{
+			System.out.println("libSDL: error loading lib: " + eee.toString());
+		}
+		// ----- VCMI hack -----
 		
 		String libs[] = { "application", "sdl_main" };
 		try
@@ -275,13 +287,21 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		}
 		catch ( UnsatisfiedLinkError e )
 		{
-			for(String l : libs)
+			System.out.println("libSDL: error loading lib: " + e.toString());
+			try
 			{
-				String libname = System.mapLibraryName(l);
-				File libpath = new File(context.getCacheDir(), libname);
-				System.out.println("libSDL: loading lib " + libpath.getPath());
-				System.load(libpath.getPath());
-				libpath.delete();
+				for(String l : libs)
+				{
+					String libname = System.mapLibraryName(l);
+					File libpath = new File(context.getCacheDir(), libname);
+					System.out.println("libSDL: loading lib " + libpath.getPath());
+					System.load(libpath.getPath());
+					libpath.delete();
+				}
+			}
+			catch ( UnsatisfiedLinkError ee )
+			{
+				System.out.println("libSDL: error loading lib: " + ee.toString());
 			}
 		}
 
