@@ -21,6 +21,7 @@ OBJS_GENIUSAI=$(patsubst %.cpp, out/%.o, $(SOURCES_GENIUSAI))
 all: AndroidData/vcmiserver0
 
 AndroidData/vcmiserver0: vcmiserver.zip
+	rm -f AndroidData/vcmiserver*
 	split -b 1048576 -d -a 1 $< AndroidData/vcmiserver
 
 vcmiserver.zip: vcmiserver libvcmi.so GeniusAI.so StupidAI.so

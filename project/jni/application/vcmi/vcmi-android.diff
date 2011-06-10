@@ -1,29 +1,95 @@
-Index: server/CGameHandler.cpp
+Index: lib/Interprocess.h
 ===================================================================
---- server/CGameHandler.cpp	(revision 2170)
-+++ server/CGameHandler.cpp	(working copy)
-@@ -1786,7 +1787,7 @@
- 		iw.player = h1->tempOwner;
- 		iw.components.push_back(Component(Component::SEC_SKILL, 18, ScholarLevel, 0));
+--- lib/Interprocess.h	(revision 2170)
++++ lib/Interprocess.h	(working copy)
+@@ -1,3 +1,4 @@
++/*
+ #include <boost/interprocess/sync/interprocess_mutex.hpp>
+ #include <boost/interprocess/sync/interprocess_condition.hpp>
+ #include <boost/interprocess/mapped_region.hpp>
+@@ -2,2 +3,3 @@
+ #include <boost/interprocess/shared_memory_object.hpp>
++*/
  
--		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//"%s, who has studied magic extensively,
-+		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//%s, who has studied magic extensively,
- 		iw.text.addReplacement(h1->name);
- 		
- 		if (cs2.spells.size())//if found new spell - apply
+@@ -13,6 +15,7 @@
+  *
+  */
+ 
++/*
+ struct ServerReady
+ {
+ 	bool ready;
+@@ -51,4 +54,48 @@
+ 		delete mr;
+ 		boost::interprocess::shared_memory_object::remove("vcmi_memory");
+ 	}
+-};
+\ No newline at end of file
++};
++*/
++
++#include <stdio.h>
++#ifdef WIN32
++#include <windows.h>
++#else
++#include <unistd.h>
++#endif
++#include "VCMIDirs.h"
++
++#define SERVER_READY_FILENAME "/VcmiServerReadyFlag.lock"
++
++void clearServerReady()
++{
++	unlink((GVCMIDirs.UserPath + SERVER_READY_FILENAME).c_str());
++}
++
++void waitServerReady()
++{
++	while(true)
++	{
++		FILE * ff = fopen((GVCMIDirs.UserPath + SERVER_READY_FILENAME).c_str(), "r");
++		if(ff)
++		{
++			fclose(ff);
++			clearServerReady();
++			break;
++		}
++#ifdef WIN32
++		Sleep(200);
++#else
++		usleep(200000);
++#endif
++	}
++}
++
++void notifyServerReady()
++{
++	FILE * ff = fopen((GVCMIDirs.UserPath + SERVER_READY_FILENAME).c_str(), "w");
++	if(!ff)
++		return;
++	fwrite("1", 1, 1, ff);
++	fclose(ff);
++}
 Index: lib/VCMIDirs.h
 ===================================================================
 --- lib/VCMIDirs.h	(revision 2170)
 +++ lib/VCMIDirs.h	(working copy)
-@@ -12,6 +12,7 @@
- 	#include <boost/filesystem.hpp> 
+@@ -1,3 +1,6 @@
++#ifndef __VCMI__DIRS_H__
++#define __VCMI__DIRS_H__
++
+ /*
+  * UserHome.h, part of VCMI engine
+  *
+@@ -13,7 +16,6 @@
  	using namespace boost::filesystem;
  #endif
-+#include <android/log.h>
  
- 
+-
  /// Where to find the various VCMI files. This is mostly usefull for linux. 
-@@ -24,14 +25,23 @@
+ class VCMIDirs {
+ public:
+@@ -24,14 +26,25 @@
  #ifdef _WIN32
  		UserPath = DATA_DIR;
  #else
@@ -54,6 +120,75 @@ Index: lib/VCMIDirs.h
  	}
  };
  extern VCMIDirs GVCMIDirs;
++
++#endif
+Index: server/stdafx.h
+===================================================================
+--- server/stdafx.h	(revision 2170)
++++ server/stdafx.h	(working copy)
+@@ -15,8 +15,8 @@
+ #include "../global.h"
+ 
+ #include <boost/crc.hpp>
+-#include <boost/interprocess/mapped_region.hpp>
+-#include <boost/interprocess/shared_memory_object.hpp>
++//#include <boost/interprocess/mapped_region.hpp>
++//#include <boost/interprocess/shared_memory_object.hpp>
+ #include <iostream>
+ #include <string>
+ #include <boost/asio.hpp>
+Index: server/CVCMIServer.cpp
+===================================================================
+--- server/CVCMIServer.cpp	(revision 2170)
++++ server/CVCMIServer.cpp	(working copy)
+@@ -29,7 +29,7 @@
+ using namespace boost;
+ using namespace boost::asio;
+ using namespace boost::asio::ip;
+-namespace intpr = boost::interprocess;
++//namespace intpr = boost::interprocess;
+ bool end2 = false;
+ int port = 3030;
+ VCMIDirs GVCMIDirs;
+@@ -379,6 +379,7 @@
+ 
+ void CVCMIServer::start()
+ {
++	/*
+ 	ServerReady *sr = NULL;
+ 	intpr::mapped_region *mr;
+ 	try
+@@ -395,13 +396,17 @@
+ 		mr = new intpr::mapped_region(smo,intpr::read_write);
+ 		sr = new(mr->get_address())ServerReady();
+ 	}
++	*/
++	notifyServerReady();
+ 
+ 	boost::system::error_code error;
+ 	tlog0<<"Listening for connections at port " << acceptor->local_endpoint().port() << std::endl;
+ 	tcp::socket * s = new tcp::socket(acceptor->io_service());
+ 	boost::thread acc(boost::bind(vaccept,acceptor,s,&error));
++	/*
+ 	sr->setToTrueAndNotify();
+ 	delete mr;
++	*/
+ 
+ 	acc.join();
+ 	if (error)
+Index: server/CGameHandler.cpp
+===================================================================
+--- server/CGameHandler.cpp	(revision 2170)
++++ server/CGameHandler.cpp	(working copy)
+@@ -1786,7 +1786,7 @@
+ 		iw.player = h1->tempOwner;
+ 		iw.components.push_back(Component(Component::SEC_SKILL, 18, ScholarLevel, 0));
+ 
+-		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//"%s, who has studied magic extensively,
++		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//%s, who has studied magic extensively,
+ 		iw.text.addReplacement(h1->name);
+ 		
+ 		if (cs2.spells.size())//if found new spell - apply
 Index: CConsoleHandler.cpp
 ===================================================================
 --- CConsoleHandler.cpp	(revision 2170)
@@ -162,6 +297,77 @@ Index: global.h
  };
  
  extern DLL_EXPORT CLogger tlog0; //green - standard progress info
+Index: client/Client.cpp
+===================================================================
+--- client/Client.cpp	(revision 2170)
++++ client/Client.cpp	(working copy)
+@@ -39,7 +39,7 @@
+ #include "../lib/RegisterTypes.cpp"
+ 
+ extern std::string NAME;
+-namespace intpr = boost::interprocess;
++//namespace intpr = boost::interprocess;
+ 
+ /*
+  * Client.cpp, part of VCMI engine
+@@ -616,18 +616,22 @@
+ 		startServer();
+ 
+ 	th.update();
++	/*
+ 	intpr::scoped_lock<intpr::interprocess_mutex> slock(shared->sr->mutex);
+ 	while(!shared->sr->ready)
+ 	{
+ 		shared->sr->cond.wait(slock);
+ 	}
++	*/
++	tlog0 << "Waiting for server..." << std::endl;
++	waitServerReady();
+ 	if(verbose)
+ 		tlog0 << "Waiting for server: " << th.getDif() << std::endl;
+ }
+ 
+ CConnection * CServerHandler::connectToServer()
+ {
+-	if(!shared->sr->ready)
++	if(!serverThread)
+ 		waitForServer();
+ 
+ 	th.update();
+@@ -642,27 +646,31 @@
+ CServerHandler::CServerHandler(bool runServer /*= false*/)
+ {
+ 	serverThread = NULL;
+-	shared = NULL;
++	//shared = NULL;
+ 	port = boost::lexical_cast<std::string>(conf.cc.port);
+ 	verbose = false;
+ 
++	/*
+ 	boost::interprocess::shared_memory_object::remove("vcmi_memory"); //if the application has previously crashed, the memory may not have been removed. to avoid problems - try to destroy it
+ 	try
+ 	{
+ 		shared = new SharedMem();
+ 	} HANDLE_EXCEPTIONC(tlog1 << "Cannot open interprocess memory: ";)
++	*/
+ }
+ 
+ CServerHandler::~CServerHandler()
+ {
+-	delete shared;
++	//delete shared;
+ 	delete serverThread; //detaches, not kills thread
+ }
+ 
+ void CServerHandler::callServer()
+ {
++	clearServerReady();
+ 	setThreadName(-1, "CServerHandler::callServer");
+ 	std::string comm = std::string(BIN_DIR PATH_SEPARATOR SERVER_NAME " ") + port + " > server_log.txt";
++	tlog0 << "Invoking VCMI server : " << comm << std::endl;
+ 	std::system(comm.c_str());
+ 	tlog0 << "Server finished\n";
+ }
 Index: client/GUIBase.cpp
 ===================================================================
 --- client/GUIBase.cpp	(revision 2170)
@@ -205,7 +411,7 @@ Index: client/CMT.cpp
 ===================================================================
 --- client/CMT.cpp	(revision 2170)
 +++ client/CMT.cpp	(working copy)
-@@ -90,8 +92,10 @@
+@@ -90,8 +90,10 @@
  void dispose();
  void playIntro();
  static void listenForEvents();
@@ -216,7 +422,7 @@ Index: client/CMT.cpp
  
  #ifndef _WIN32
  #ifndef _GNU_SOURCE
-@@ -126,6 +130,7 @@
+@@ -126,6 +128,7 @@
  			GDefaultOptions.settingsChanged();
  		}
  	}
@@ -224,7 +430,7 @@ Index: client/CMT.cpp
  	THC tlog0<<"\tLoading default system settings: "<<pomtime.getDif()<<std::endl;
  
  	//initializing audio
-@@ -135,10 +140,12 @@
+@@ -135,10 +138,12 @@
  	CCS->soundh->init();
  	CCS->soundh->setVolume(GDefaultOptions.soundVolume);
  	CCS->musich = new CMusicHandler;
@@ -237,7 +443,7 @@ Index: client/CMT.cpp
  
  	initDLL(::console,logfile);
  	const_cast<CGameInfo*>(CGI)->setFromLib();
-@@ -184,11 +191,15 @@
+@@ -184,11 +189,15 @@
  }
  
  
@@ -253,7 +459,7 @@ Index: client/CMT.cpp
  {
  	tlog0 << "Starting... " << std::endl;      
  	po::options_description opts("Allowed options");
-@@ -235,7 +246,6 @@
+@@ -235,7 +244,6 @@
  	console->start();
  	atexit(dispose);
  	tlog0 <<"Creating console and logfile: "<<pomtime.getDif() << std::endl;
@@ -261,7 +467,7 @@ Index: client/CMT.cpp
  	conf.init();
  	tlog0 <<"Loading settings: "<<pomtime.getDif() << std::endl;
  	tlog0 << NAME << std::endl;
-@@ -260,14 +270,18 @@
+@@ -260,14 +268,18 @@
  	tlog0<<"\tInitializing video: "<<pomtime.getDif()<<std::endl;
  
  	//we can properly play intro only in the main thread, so we have to move loading to the separate thread
@@ -282,7 +488,7 @@ Index: client/CMT.cpp
  	tlog0<<"Initialization of VCMI (together): "<<total.getDif()<<std::endl;
  
  	if(!vm.count("battle"))
-@@ -284,8 +298,16 @@
+@@ -284,8 +296,16 @@
  		si->playerInfos[1].color = 1;
  		startGame(si);
  	}
@@ -299,7 +505,7 @@ Index: client/CMT.cpp
  
  	return 0;
  }
-@@ -535,10 +557,12 @@
+@@ -535,10 +555,12 @@
  		tlog2 << "Warning: SDL says that "  << bpp << "bpp is wrong and suggests " << suggestedBpp << std::endl;
  	}
  
@@ -312,7 +518,7 @@ Index: client/CMT.cpp
  	
  	if((screen = SDL_SetVideoMode(w, h, suggestedBpp, SDL_SWSURFACE|(fullscreen?SDL_FULLSCREEN:0))) == NULL)
  	{
-@@ -583,14 +607,27 @@
+@@ -583,14 +605,27 @@
  	setResolution = true;
  }
  
@@ -343,7 +549,7 @@ Index: client/CMT.cpp
  		//tlog0 << "got " << (int)ev->type;
  		if (ret == 0 || (ev->type==SDL_QUIT) ||
  			(ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4 && (ev->key.keysym.mod & KMOD_ALT)))
-@@ -609,7 +646,7 @@
+@@ -609,7 +644,7 @@
  			SDL_Delay(750);
  			SDL_Quit();
  			tlog0 << "Ending...\n";
@@ -352,7 +558,7 @@ Index: client/CMT.cpp
  		}
  		else if(LOCPLINT && ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4)
  		{
-@@ -618,7 +655,7 @@
+@@ -618,7 +653,7 @@
  			setScreenRes(conf.cc.screenx, conf.cc.screeny, conf.cc.bpp, full);
  			GH.totalRedraw();
  			delete ev;
@@ -361,7 +567,7 @@ Index: client/CMT.cpp
  		}
  		else if(ev->type == SDL_USEREVENT)
  		{
-@@ -648,7 +685,7 @@
+@@ -648,7 +683,7 @@
  			}
  
  			delete ev;
@@ -370,7 +576,7 @@ Index: client/CMT.cpp
  		} 
  
  		//tlog0 << " pushing ";
-@@ -656,7 +693,7 @@
+@@ -656,7 +691,7 @@
  		events.push(ev);
  		eventsM.unlock();
  		//tlog0 << " done\n";
@@ -379,11 +585,24 @@ Index: client/CMT.cpp
  }
  
  void startGame(StartInfo * options, CConnection *serv/* = NULL*/) 
-@@ -717,3 +754,4 @@
+@@ -717,3 +752,4 @@
  	ev.user.code = 1;
  	SDL_PushEvent(&ev);
  }
 +
+Index: client/Client.h
+===================================================================
+--- client/Client.h	(revision 2170)
++++ client/Client.h	(working copy)
+@@ -42,7 +42,7 @@
+ public:
+ 	timeHandler th;
+ 	boost::thread *serverThread; //thread that called system to run server
+-	SharedMem *shared; //interprocess memory (for waiting for server)
++	//SharedMem *shared; //interprocess memory (for waiting for server)
+ 	bool verbose; //whether to print log msgs
+ 	std::string port; //port number in text form
+ 
 Index: client/GUIBase.h
 ===================================================================
 --- client/GUIBase.h	(revision 2170)
