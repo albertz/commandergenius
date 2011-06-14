@@ -535,7 +535,7 @@ public class MainActivity extends Activity {
 
 		// ----- VCMI hack -----
 			try {
-				System.out.println("libSDL: Extracting VCMI server");
+				//System.out.println("libSDL: Extracting VCMI server");
 				
 				InputStream in = null;
 				try
@@ -602,7 +602,7 @@ public class MainActivity extends Activity {
 			}
 			catch ( Exception eee )
 			{
-				System.out.println("libSDL: Error: " + eee.toString());
+				//System.out.println("libSDL: Error: " + eee.toString());
 			}
 		// ----- VCMI hack -----
 

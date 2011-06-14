@@ -273,7 +273,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		}
 		catch ( UnsatisfiedLinkError eee )
 		{
-			System.out.println("libSDL: error loading lib: " + eee.toString());
+			//System.out.println("libSDL: error loading lib: " + eee.toString());
 		}
 		// ----- VCMI hack -----
 		

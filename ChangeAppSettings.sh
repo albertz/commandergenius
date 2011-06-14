@@ -690,17 +690,17 @@ cd ../../..
 echo Cleaning up dependencies
 rm -rf project/libs/* project/gen
 for OUT in obj; do
-rm -rf project/$OUT/local/*/objs/sdl_main/* project/$OUT/local/*/libsdl_main.so
+rm -rf project/$OUT/local/*/objs*/sdl_main/* project/$OUT/local/*/libsdl_main.so
 rm -rf project/$OUT/local/*/libsdl-*.so
-rm -rf project/$OUT/local/*/objs/sdl-*/src/*/android
-rm -rf project/$OUT/local/*/objs/sdl-*/src/video/SDL_video.o
-rm -rf project/$OUT/local/*/objs/sdl-*/SDL_renderer_gles.o
-rm -rf project/$OUT/local/*/libsdl_fake_stdout.a project/$OUT/local/*/objs/sdl_fake_stdout/*
+rm -rf project/$OUT/local/*/objs*/sdl-*/src/*/android
+rm -rf project/$OUT/local/*/objs*/sdl-*/src/video/SDL_video.o
+rm -rf project/$OUT/local/*/objs*/sdl-*/SDL_renderer_gles.o
+rm -rf project/$OUT/local/*/libsdl_fake_stdout.a project/$OUT/local/*/objs*/sdl_fake_stdout/*
 # Do not rebuild several huge libraries that do not depend on SDL version
 for LIB in freetype intl jpeg png lua mad stlport tremor xerces xml2; do
 	for ARCH in armeabi armeabi-v7a; do
-		if [ -e "project/$OUT/local/$ARCH/objs/$LIB" ] ; then
-			find project/$OUT/local/$ARCH/objs/$LIB -name "*.o" | xargs touch -c
+		if [ -e "project/$OUT/local/$ARCH/objs*/$LIB" ] ; then
+			find project/$OUT/local/$ARCH/objs*/$LIB -name "*.o" | xargs touch -c
 		fi
 	done
 done
