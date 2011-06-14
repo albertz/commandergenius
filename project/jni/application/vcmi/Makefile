@@ -1,5 +1,5 @@
 
-$(shell mkdir -p debug out/vcmi/lib out/vcmi/server out/vcmi/AI/StupidAI out/vcmi/AI/GeniusAI)
+$(shell mkdir -p debug out/vcmi/lib out/vcmi/server out/vcmi/AI/StupidAI out/vcmi/AI/GeniusAI out/vcmi/client)
 
 LOCAL_PATH=$(shell dirname $0)
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
@@ -18,17 +18,21 @@ OBJS_STUPIDAI=$(patsubst %.cpp, out/%.o, $(SOURCES_STUPIDAI))
 SOURCES_GENIUSAI=$(filter-out %/ExpertSystem.cpp, $(wildcard vcmi/AI/GeniusAI/*.cpp))
 OBJS_GENIUSAI=$(patsubst %.cpp, out/%.o, $(SOURCES_GENIUSAI))
 
-all: AndroidData/vcmiserver0
+SOURCES_CLIENT=$(wildcard vcmi/client/*.cpp vcmi/*.cpp)
+OBJS_CLIENT=$(patsubst %.cpp, out/%.o, $(SOURCES_CLIENT))
+
+all: AndroidData/vcmiserver0 # libapplication.so
 
 AndroidData/vcmiserver0: vcmiserver.zip
 	rm -f AndroidData/vcmiserver*
 	split -b 1048576 -d -a 1 $< AndroidData/vcmiserver
+	cp -f AndroidData/vcmiserver* ../../../assets
 
 vcmiserver.zip: vcmiserver libvcmi.so GeniusAI.so StupidAI.so
 	rm -f $@
 	zip $@ $^
 
-$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI): out/%.o: %.cpp
+$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT): out/%.o: %.cpp
 	../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	-c \$$CXXFLAGS -Ivcmi -Ivcmi/lib \
@@ -56,6 +60,9 @@ LINK_LIB= \
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
 
+.PHONY: -lvcmi
+-lvcmi: libvcmi.so
+
 GeniusAI.so: $(OBJS_GENIUSAI) -lvcmi
 	$(LINK_LIB)
 
@@ -65,5 +72,16 @@ StupidAI.so: $(OBJS_STUPIDAI) -lvcmi
 libvcmi.so: $(OBJS_LIB)
 	$(LINK_LIB)
 
-.PHONY: -lvcmi
--lvcmi: libvcmi.so
+libapplication.so: $(OBJS_CLIENT) -lvcmi
+	../setEnvironment.sh sh -c \
+	"$(GCC_PREFIX)-g++ \
+	\$$LDFLAGS -L. \
+	$^ -o $@ \
+	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options" && \
+	cp $@ debug/$@
+
+clean:
+	rm -rf out debug *.so vcmiserver* AndroidData/vcmiserver* libapplication.so
+
+.PHONY: clean
+

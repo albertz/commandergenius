@@ -1,6 +1,109 @@
+Index: server/stdafx.h
+===================================================================
+--- server/stdafx.h	(revision 2178)
++++ server/stdafx.h	(working copy)
+@@ -15,8 +15,8 @@
+ #include "../global.h"
+ 
+ #include <boost/crc.hpp>
+-#include <boost/interprocess/mapped_region.hpp>
+-#include <boost/interprocess/shared_memory_object.hpp>
++//#include <boost/interprocess/mapped_region.hpp>
++//#include <boost/interprocess/shared_memory_object.hpp>
+ #include <iostream>
+ #include <string>
+ #include <boost/asio.hpp>
+Index: server/CVCMIServer.cpp
+===================================================================
+--- server/CVCMIServer.cpp	(revision 2178)
++++ server/CVCMIServer.cpp	(working copy)
+@@ -29,7 +29,7 @@
+ using namespace boost;
+ using namespace boost::asio;
+ using namespace boost::asio::ip;
+-namespace intpr = boost::interprocess;
++//namespace intpr = boost::interprocess;
+ bool end2 = false;
+ int port = 3030;
+ VCMIDirs GVCMIDirs;
+@@ -379,6 +379,7 @@
+ 
+ void CVCMIServer::start()
+ {
++	/*
+ 	ServerReady *sr = NULL;
+ 	intpr::mapped_region *mr;
+ 	try
+@@ -395,13 +396,17 @@
+ 		mr = new intpr::mapped_region(smo,intpr::read_write);
+ 		sr = new(mr->get_address())ServerReady();
+ 	}
++	*/
++	notifyServerReady();
+ 
+ 	boost::system::error_code error;
+ 	tlog0<<"Listening for connections at port " << acceptor->local_endpoint().port() << std::endl;
+ 	tcp::socket * s = new tcp::socket(acceptor->io_service());
+ 	boost::thread acc(boost::bind(vaccept,acceptor,s,&error));
++	/*
+ 	sr->setToTrueAndNotify();
+ 	delete mr;
++	*/
+ 
+ 	acc.join();
+ 	if (error)
+Index: server/CGameHandler.cpp
+===================================================================
+--- server/CGameHandler.cpp	(revision 2178)
++++ server/CGameHandler.cpp	(working copy)
+@@ -739,6 +739,7 @@
+ 	//gs = NULL;
+ 	IObjectInterface::cb = this;
+ 	applier = new CApplier<CBaseForGHApply>;
++	tlog1 << "registerTypes3: " << __FILE__  << ":" << __LINE__ << std::endl;
+ 	registerTypes3(*applier);
+ 	visitObjectAfterVictory = false; 
+ 	battleEndCallback = NULL;
+@@ -1786,7 +1787,7 @@
+ 		iw.player = h1->tempOwner;
+ 		iw.components.push_back(Component(Component::SEC_SKILL, 18, ScholarLevel, 0));
+ 
+-		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//"%s, who has studied magic extensively,
++		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//%s, who has studied magic extensively,
+ 		iw.text.addReplacement(h1->name);
+ 		
+ 		if (cs2.spells.size())//if found new spell - apply
+Index: lib/CGameState.cpp
+===================================================================
+--- lib/CGameState.cpp	(revision 2178)
++++ lib/CGameState.cpp	(working copy)
+@@ -54,6 +54,7 @@
+ void foofoofoo()
+ {
+ 	//never called function to force instantation of templates
++	tlog1 << "registerTypes: " << __FILE__  << ":" << __LINE__ << std::endl;
+ 	int *ccc = NULL;
+ 	registerTypes((CISer<CConnection>&)*ccc);
+ 	registerTypes((COSer<CConnection>&)*ccc);
+@@ -124,6 +125,7 @@
+ 
+ 	CObjectCallersHandler()
+ 	{
++		tlog1 << "registerTypes1: " << __FILE__  << ":" << __LINE__ << std::endl;
+ 		registerTypes1(*this);
+ 	}
+ 
+@@ -797,6 +799,7 @@
+ 	gs = this;
+ 	mx = new boost::shared_mutex();
+ 	applierGs = new CApplier<CBaseForGSApply>;
++	tlog1 << "registerTypes2: " << __FILE__  << ":" << __LINE__ << std::endl;
+ 	registerTypes2(*applierGs);
+ 	objCaller = new CObjectCallersHandler;
+ 	globalEffects.description = "Global effects";
 Index: lib/Interprocess.h
 ===================================================================
---- lib/Interprocess.h	(revision 2170)
+--- lib/Interprocess.h	(revision 2178)
 +++ lib/Interprocess.h	(working copy)
 @@ -1,3 +1,4 @@
 +/*
@@ -70,9 +173,38 @@ Index: lib/Interprocess.h
 +	fwrite("1", 1, 1, ff);
 +	fclose(ff);
 +}
+Index: lib/Connection.h
+===================================================================
+--- lib/Connection.h	(revision 2178)
++++ lib/Connection.h	(working copy)
+@@ -82,7 +82,9 @@
+ {
+ 	bool operator()(const std::type_info *a, const std::type_info *b) const
+ 	{
+-		return a->before(*b);
++		// Comparing pointers is bad bad practice, because type_info pointers to the same types
++		// are different inside shared library and the executable that links to that library
++		return strcmp(a->name(), b->name()) > 0;
+ 	}
+ };
+ 
+Index: lib/ERMInterpreter.cpp
+===================================================================
+--- lib/ERMInterpreter.cpp	(revision 2178)
++++ lib/ERMInterpreter.cpp	(working copy)
+@@ -2546,7 +2546,8 @@
+ 		else if(symToFunc.find(opt.text) != symToFunc.end())
+ 		{
+ 			VFunc f(symToFunc[opt.text]);
+-			return f(erm->evalEach(exp.children.cdr()));
++			VOptionList ls = erm->evalEach(exp.children.cdr());
++			return f(VermTreeIterator(ls));
+ 		}
+ 
+ 
 Index: lib/VCMIDirs.h
 ===================================================================
---- lib/VCMIDirs.h	(revision 2170)
+--- lib/VCMIDirs.h	(revision 2178)
 +++ lib/VCMIDirs.h	(working copy)
 @@ -1,3 +1,6 @@
 +#ifndef __VCMI__DIRS_H__
@@ -122,76 +254,9 @@ Index: lib/VCMIDirs.h
  extern VCMIDirs GVCMIDirs;
 +
 +#endif
-Index: server/stdafx.h
-===================================================================
---- server/stdafx.h	(revision 2170)
-+++ server/stdafx.h	(working copy)
-@@ -15,8 +15,8 @@
- #include "../global.h"
- 
- #include <boost/crc.hpp>
--#include <boost/interprocess/mapped_region.hpp>
--#include <boost/interprocess/shared_memory_object.hpp>
-+//#include <boost/interprocess/mapped_region.hpp>
-+//#include <boost/interprocess/shared_memory_object.hpp>
- #include <iostream>
- #include <string>
- #include <boost/asio.hpp>
-Index: server/CVCMIServer.cpp
-===================================================================
---- server/CVCMIServer.cpp	(revision 2170)
-+++ server/CVCMIServer.cpp	(working copy)
-@@ -29,7 +29,7 @@
- using namespace boost;
- using namespace boost::asio;
- using namespace boost::asio::ip;
--namespace intpr = boost::interprocess;
-+//namespace intpr = boost::interprocess;
- bool end2 = false;
- int port = 3030;
- VCMIDirs GVCMIDirs;
-@@ -379,6 +379,7 @@
- 
- void CVCMIServer::start()
- {
-+	/*
- 	ServerReady *sr = NULL;
- 	intpr::mapped_region *mr;
- 	try
-@@ -395,13 +396,17 @@
- 		mr = new intpr::mapped_region(smo,intpr::read_write);
- 		sr = new(mr->get_address())ServerReady();
- 	}
-+	*/
-+	notifyServerReady();
- 
- 	boost::system::error_code error;
- 	tlog0<<"Listening for connections at port " << acceptor->local_endpoint().port() << std::endl;
- 	tcp::socket * s = new tcp::socket(acceptor->io_service());
- 	boost::thread acc(boost::bind(vaccept,acceptor,s,&error));
-+	/*
- 	sr->setToTrueAndNotify();
- 	delete mr;
-+	*/
- 
- 	acc.join();
- 	if (error)
-Index: server/CGameHandler.cpp
-===================================================================
---- server/CGameHandler.cpp	(revision 2170)
-+++ server/CGameHandler.cpp	(working copy)
-@@ -1786,7 +1786,7 @@
- 		iw.player = h1->tempOwner;
- 		iw.components.push_back(Component(Component::SEC_SKILL, 18, ScholarLevel, 0));
- 
--		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//"%s, who has studied magic extensively,
-+		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//%s, who has studied magic extensively,
- 		iw.text.addReplacement(h1->name);
- 		
- 		if (cs2.spells.size())//if found new spell - apply
 Index: CConsoleHandler.cpp
 ===================================================================
---- CConsoleHandler.cpp	(revision 2170)
+--- CConsoleHandler.cpp	(revision 2178)
 +++ CConsoleHandler.cpp	(working copy)
 @@ -143,6 +143,7 @@
  
@@ -211,7 +276,7 @@ Index: CConsoleHandler.cpp
  int CConsoleHandler::run()
 Index: global.h
 ===================================================================
---- global.h	(revision 2170)
+--- global.h	(revision 2178)
 +++ global.h	(working copy)
 @@ -10,6 +10,10 @@
  using boost::logic::tribool;
@@ -299,7 +364,7 @@ Index: global.h
  extern DLL_EXPORT CLogger tlog0; //green - standard progress info
 Index: client/Client.cpp
 ===================================================================
---- client/Client.cpp	(revision 2170)
+--- client/Client.cpp	(revision 2178)
 +++ client/Client.cpp	(working copy)
 @@ -39,7 +39,7 @@
  #include "../lib/RegisterTypes.cpp"
@@ -310,7 +375,45 @@ Index: client/Client.cpp
  
  /*
   * Client.cpp, part of VCMI engine
-@@ -616,18 +616,22 @@
+@@ -89,7 +89,16 @@
+ 	connectionHandler = NULL;
+ 	pathInfo = NULL;
+ 	applier = new CApplier<CBaseForCLApply>;
++	tlog1 << "registerTypes2: " << __FILE__  << ":" << __LINE__ << std::endl;
+ 	registerTypes2(*applier);
++	tlog1 << "-----Start applier: registerTypes2" << std::endl;
++	for( std::map<ui16,CBaseForCLApply*> :: const_iterator it = applier->apps.begin();
++			it != applier->apps.end(); it++ )
++	{
++		tlog1 << "applier ID " << it->first << " ptr " << typeid(*it->second).name() << std::endl;
++	}
++	tlog1 << "-----End applier: registerTypes2" << std::endl;
++
+ 	IObjectInterface::cb = this;
+ 	serv = NULL;
+ 	gs = NULL;
+@@ -498,9 +507,9 @@
+ 
+ void CClient::handlePack( CPack * pack )
+ {			
+-	CBaseForCLApply *apply = applier->apps[typeList.getTypeID(pack)]; //find the applier
+-	if(apply)
++	if(applier->apps.find(typeList.getTypeID(pack)) != applier->apps.end())
+ 	{
++		CBaseForCLApply *apply = applier->apps[typeList.getTypeID(pack)]; //find the applier
+ 		apply->applyOnClBefore(this,pack);
+ 		tlog5 << "\tMade first apply on cl\n";
+ 		gs->apply(pack);
+@@ -510,7 +519,7 @@
+ 	}
+ 	else
+ 	{
+-		tlog1 << "Message cannot be applied, cannot find applier!\n";
++		tlog1 << "Message cannot be applied, cannot find applier! TypeID " << typeList.getTypeID(pack) << std::endl;
+ 	}
+ 	delete pack;
+ }
+@@ -628,18 +637,22 @@
  		startServer();
  
  	th.update();
@@ -334,7 +437,7 @@ Index: client/Client.cpp
  		waitForServer();
  
  	th.update();
-@@ -642,27 +646,31 @@
+@@ -654,27 +667,31 @@
  CServerHandler::CServerHandler(bool runServer /*= false*/)
  {
  	serverThread = NULL;
@@ -370,7 +473,7 @@ Index: client/Client.cpp
  }
 Index: client/GUIBase.cpp
 ===================================================================
---- client/GUIBase.cpp	(revision 2170)
+--- client/GUIBase.cpp	(revision 2178)
 +++ client/GUIBase.cpp	(working copy)
 @@ -11,6 +11,7 @@
  #include "../CThreadHelper.h"
@@ -407,11 +510,36 @@ Index: client/GUIBase.cpp
  
  CGuiHandler::CGuiHandler()
  :lastClick(-500, -500)
+Index: client/Client.h
+===================================================================
+--- client/Client.h	(revision 2178)
++++ client/Client.h	(working copy)
+@@ -43,7 +43,7 @@
+ public:
+ 	timeHandler th;
+ 	boost::thread *serverThread; //thread that called system to run server
+-	SharedMem *shared; //interprocess memory (for waiting for server)
++	//SharedMem *shared; //interprocess memory (for waiting for server)
+ 	bool verbose; //whether to print log msgs
+ 	std::string port; //port number in text form
+ 
+Index: client/CPreGame.cpp
+===================================================================
+--- client/CPreGame.cpp	(revision 2178)
++++ client/CPreGame.cpp	(working copy)
+@@ -525,6 +525,7 @@
+ 		}
+ 
+ 		applier = new CApplier<CBaseForPGApply>;
++		tlog1 << "registerTypes4: " << __FILE__  << ":" << __LINE__ << std::endl;
+ 		registerTypes4(*applier);
+ 		serverHandlingThread = new boost::thread(&CSelectionScreen::handleConnection, this);
+ 	}
 Index: client/CMT.cpp
 ===================================================================
---- client/CMT.cpp	(revision 2170)
+--- client/CMT.cpp	(revision 2178)
 +++ client/CMT.cpp	(working copy)
-@@ -90,8 +90,10 @@
+@@ -92,8 +92,10 @@
  void dispose();
  void playIntro();
  static void listenForEvents();
@@ -422,7 +550,7 @@ Index: client/CMT.cpp
  
  #ifndef _WIN32
  #ifndef _GNU_SOURCE
-@@ -126,6 +128,7 @@
+@@ -128,6 +130,7 @@
  			GDefaultOptions.settingsChanged();
  		}
  	}
@@ -430,7 +558,7 @@ Index: client/CMT.cpp
  	THC tlog0<<"\tLoading default system settings: "<<pomtime.getDif()<<std::endl;
  
  	//initializing audio
-@@ -135,10 +138,12 @@
+@@ -137,10 +140,12 @@
  	CCS->soundh->init();
  	CCS->soundh->setVolume(GDefaultOptions.soundVolume);
  	CCS->musich = new CMusicHandler;
@@ -443,7 +571,7 @@ Index: client/CMT.cpp
  
  	initDLL(::console,logfile);
  	const_cast<CGameInfo*>(CGI)->setFromLib();
-@@ -184,11 +189,15 @@
+@@ -186,11 +191,15 @@
  }
  
  
@@ -459,7 +587,7 @@ Index: client/CMT.cpp
  {
  	tlog0 << "Starting... " << std::endl;      
  	po::options_description opts("Allowed options");
-@@ -235,7 +244,6 @@
+@@ -237,7 +246,6 @@
  	console->start();
  	atexit(dispose);
  	tlog0 <<"Creating console and logfile: "<<pomtime.getDif() << std::endl;
@@ -467,20 +595,19 @@ Index: client/CMT.cpp
  	conf.init();
  	tlog0 <<"Loading settings: "<<pomtime.getDif() << std::endl;
  	tlog0 << NAME << std::endl;
-@@ -260,14 +268,18 @@
+@@ -262,6 +270,11 @@
  	tlog0<<"\tInitializing video: "<<pomtime.getDif()<<std::endl;
  
  	//we can properly play intro only in the main thread, so we have to move loading to the separate thread
--	boost::thread loading(init);
--
-+#ifdef ANDROID
++#if defined(ANDROID) || defined(LINUX)
 +	init();
- 	if(!vm.count("battle") && !vm.count("nointro"))
- 		playIntro();
++	if(!vm.count("battle") && !vm.count("nointro"))
++		playIntro();
 +#else
-+	boost::thread loading(init);
+ 	boost::thread loading(init);
  
-+
+ 	if(!vm.count("battle") && !vm.count("nointro"))
+@@ -270,6 +283,7 @@
  	SDL_FillRect(screen,NULL,0);
  	CSDL_Ext::update(screen);
  	loading.join();
@@ -488,11 +615,12 @@ Index: client/CMT.cpp
  	tlog0<<"Initialization of VCMI (together): "<<total.getDif()<<std::endl;
  
  	if(!vm.count("battle"))
-@@ -284,8 +296,16 @@
+@@ -286,8 +300,17 @@
  		si->playerInfos[1].color = 1;
  		startGame(si);
  	}
-+#ifdef ANDROID
++	// Drawing and running event loop from non-main thread does not work at all on Andorid and crashes often on Linux
++#if defined(ANDROID) || defined(LINUX)
 +	GH.loopInitFromMainThread();
 +	while( GH.loopFromMainThread() )
 +	{
@@ -505,7 +633,7 @@ Index: client/CMT.cpp
  
  	return 0;
  }
-@@ -535,10 +555,12 @@
+@@ -559,10 +582,12 @@
  		tlog2 << "Warning: SDL says that "  << bpp << "bpp is wrong and suggests " << suggestedBpp << std::endl;
  	}
  
@@ -518,7 +646,7 @@ Index: client/CMT.cpp
  	
  	if((screen = SDL_SetVideoMode(w, h, suggestedBpp, SDL_SWSURFACE|(fullscreen?SDL_FULLSCREEN:0))) == NULL)
  	{
-@@ -583,14 +605,27 @@
+@@ -607,14 +632,27 @@
  	setResolution = true;
  }
  
@@ -549,7 +677,7 @@ Index: client/CMT.cpp
  		//tlog0 << "got " << (int)ev->type;
  		if (ret == 0 || (ev->type==SDL_QUIT) ||
  			(ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4 && (ev->key.keysym.mod & KMOD_ALT)))
-@@ -609,7 +644,7 @@
+@@ -633,7 +671,7 @@
  			SDL_Delay(750);
  			SDL_Quit();
  			tlog0 << "Ending...\n";
@@ -558,7 +686,7 @@ Index: client/CMT.cpp
  		}
  		else if(LOCPLINT && ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4)
  		{
-@@ -618,7 +653,7 @@
+@@ -642,7 +680,7 @@
  			setScreenRes(conf.cc.screenx, conf.cc.screeny, conf.cc.bpp, full);
  			GH.totalRedraw();
  			delete ev;
@@ -567,7 +695,7 @@ Index: client/CMT.cpp
  		}
  		else if(ev->type == SDL_USEREVENT)
  		{
-@@ -648,7 +683,7 @@
+@@ -672,7 +710,7 @@
  			}
  
  			delete ev;
@@ -576,7 +704,7 @@ Index: client/CMT.cpp
  		} 
  
  		//tlog0 << " pushing ";
-@@ -656,7 +691,7 @@
+@@ -680,7 +718,7 @@
  		events.push(ev);
  		eventsM.unlock();
  		//tlog0 << " done\n";
@@ -585,27 +713,14 @@ Index: client/CMT.cpp
  }
  
  void startGame(StartInfo * options, CConnection *serv/* = NULL*/) 
-@@ -717,3 +752,4 @@
+@@ -741,3 +779,4 @@
  	ev.user.code = 1;
  	SDL_PushEvent(&ev);
  }
 +
-Index: client/Client.h
-===================================================================
---- client/Client.h	(revision 2170)
-+++ client/Client.h	(working copy)
-@@ -42,7 +42,7 @@
- public:
- 	timeHandler th;
- 	boost::thread *serverThread; //thread that called system to run server
--	SharedMem *shared; //interprocess memory (for waiting for server)
-+	//SharedMem *shared; //interprocess memory (for waiting for server)
- 	bool verbose; //whether to print log msgs
- 	std::string port; //port number in text form
- 
 Index: client/GUIBase.h
 ===================================================================
---- client/GUIBase.h	(revision 2170)
+--- client/GUIBase.h	(revision 2178)
 +++ client/GUIBase.h	(working copy)
 @@ -546,6 +546,8 @@
  	CGuiHandler();
