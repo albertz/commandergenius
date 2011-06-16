@@ -1,6 +1,6 @@
 Index: server/stdafx.h
 ===================================================================
---- server/stdafx.h	(revision 2178)
+--- server/stdafx.h	(revision 2183)
 +++ server/stdafx.h	(working copy)
 @@ -15,8 +15,8 @@
  #include "../global.h"
@@ -15,7 +15,7 @@ Index: server/stdafx.h
  #include <boost/asio.hpp>
 Index: server/CVCMIServer.cpp
 ===================================================================
---- server/CVCMIServer.cpp	(revision 2178)
+--- server/CVCMIServer.cpp	(revision 2183)
 +++ server/CVCMIServer.cpp	(working copy)
 @@ -29,7 +29,7 @@
  using namespace boost;
@@ -52,58 +52,84 @@ Index: server/CVCMIServer.cpp
  
  	acc.join();
  	if (error)
-Index: server/CGameHandler.cpp
+Index: lib/CLodHandler.cpp
 ===================================================================
---- server/CGameHandler.cpp	(revision 2178)
-+++ server/CGameHandler.cpp	(working copy)
-@@ -739,6 +739,7 @@
- 	//gs = NULL;
- 	IObjectInterface::cb = this;
- 	applier = new CApplier<CBaseForGHApply>;
-+	tlog1 << "registerTypes3: " << __FILE__  << ":" << __LINE__ << std::endl;
- 	registerTypes3(*applier);
- 	visitObjectAfterVictory = false; 
- 	battleEndCallback = NULL;
-@@ -1786,7 +1787,7 @@
- 		iw.player = h1->tempOwner;
- 		iw.components.push_back(Component(Component::SEC_SKILL, 18, ScholarLevel, 0));
+--- lib/CLodHandler.cpp	(revision 2183)
++++ lib/CLodHandler.cpp	(working copy)
+@@ -60,6 +60,9 @@
+ 	return ret;
+ }
  
--		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//"%s, who has studied magic extensively,
-+		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//%s, who has studied magic extensively,
- 		iw.text.addReplacement(h1->name);
- 		
- 		if (cs2.spells.size())//if found new spell - apply
-Index: lib/CGameState.cpp
-===================================================================
---- lib/CGameState.cpp	(revision 2178)
-+++ lib/CGameState.cpp	(working copy)
-@@ -54,6 +54,7 @@
- void foofoofoo()
++int CLodHandler::dbgLastFileSize = 0;
++std::string CLodHandler::dbgLastFileName;
++
+ unsigned char * CLodHandler::giveFile(const std::string defName, LodFileType type, int * length)
  {
- 	//never called function to force instantation of templates
-+	tlog1 << "registerTypes: " << __FILE__  << ":" << __LINE__ << std::endl;
- 	int *ccc = NULL;
- 	registerTypes((CISer<CConnection>&)*ccc);
- 	registerTypes((COSer<CConnection>&)*ccc);
-@@ -124,6 +125,7 @@
+ 	std::string fname = defName;
+@@ -78,13 +81,15 @@
+ 	Entry ourEntry = *en_it;
  
- 	CObjectCallersHandler()
+ 	if(length) *length = ourEntry.realSize;
++	enum { SAFETY_MARGIN = 4096 }; // VCMI functions tend to read past the array end, crashing at random
+ 	mutex->lock();
+ 
+ 	unsigned char * outp;
+ 	if (ourEntry.offset<0) //file is in the sprites/ folder; no compression
  	{
-+		tlog1 << "registerTypes1: " << __FILE__  << ":" << __LINE__ << std::endl;
- 		registerTypes1(*this);
+ 		int result;
+-		outp = new unsigned char[ourEntry.realSize];
++		outp = new unsigned char[ourEntry.realSize+SAFETY_MARGIN];
++		memset(outp+ourEntry.realSize, 0, SAFETY_MARGIN);
+ 		FILE * f = fopen((myDir + "/" + ourEntry.realName).c_str(), "rb");
+ 		if (f)
+ 		{
+@@ -100,16 +105,25 @@
+ 			delete[] outp;
+ 			return NULL;
+ 		}
+-		else
++		else
++		{
++			dbgLastFileSize = ourEntry.realSize;
++			dbgLastFileName = defName;
++			//tlog0 << "Loaded file: " << fname << " size " << ourEntry.realSize << " ptr " << (void *)outp << " safety " << (int)SAFETY_MARGIN << std::endl;
+ 			return outp;
++		}
  	}
+ 	else if (ourEntry.size==0) //file is not compressed
+ 	{
+-		outp = new unsigned char[ourEntry.realSize];
++		outp = new unsigned char[ourEntry.realSize+SAFETY_MARGIN];
++		memset(outp+ourEntry.realSize, 0, SAFETY_MARGIN);
  
-@@ -797,6 +799,7 @@
- 	gs = this;
- 	mx = new boost::shared_mutex();
- 	applierGs = new CApplier<CBaseForGSApply>;
-+	tlog1 << "registerTypes2: " << __FILE__  << ":" << __LINE__ << std::endl;
- 	registerTypes2(*applierGs);
- 	objCaller = new CObjectCallersHandler;
- 	globalEffects.description = "Global effects";
+ 		LOD.seekg(ourEntry.offset, std::ios::beg);
+ 		LOD.read((char*)outp, ourEntry.realSize);
+ 		mutex->unlock();
++		dbgLastFileSize = ourEntry.realSize;
++		dbgLastFileName = defName;
++		//tlog0 << "Loaded file: " << fname << " size " << ourEntry.realSize << " ptr " << (void *)outp << " safety " << (int)SAFETY_MARGIN << std::endl;
+ 		return outp;
+ 	}
+ 	else //we will decompress file
+@@ -122,7 +136,14 @@
+ 		infs2(outp, ourEntry.size, ourEntry.realSize, decomp);
+ 		mutex->unlock();
+ 		delete[] outp;
+-		return decomp;
++		outp = new unsigned char[ourEntry.realSize+SAFETY_MARGIN];
++		memset(outp+ourEntry.realSize, 0, SAFETY_MARGIN);
++		memcpy(outp, decomp, ourEntry.realSize);
++		delete [] decomp;
++		dbgLastFileSize = ourEntry.realSize;
++		dbgLastFileName = defName;
++		//tlog0 << "Loaded file: " << fname << " size " << ourEntry.realSize << " ptr " << (void *)outp << " safety " << (int)SAFETY_MARGIN << std::endl;
++		return outp;
+ 	}
+ 	return NULL;
+ }
 Index: lib/Interprocess.h
 ===================================================================
---- lib/Interprocess.h	(revision 2178)
+--- lib/Interprocess.h	(revision 2183)
 +++ lib/Interprocess.h	(working copy)
 @@ -1,3 +1,4 @@
 +/*
@@ -175,7 +201,7 @@ Index: lib/Interprocess.h
 +}
 Index: lib/Connection.h
 ===================================================================
---- lib/Connection.h	(revision 2178)
+--- lib/Connection.h	(revision 2183)
 +++ lib/Connection.h	(working copy)
 @@ -82,7 +82,9 @@
  {
@@ -188,75 +214,22 @@ Index: lib/Connection.h
  	}
  };
  
-Index: lib/ERMInterpreter.cpp
+Index: lib/CLodHandler.h
 ===================================================================
---- lib/ERMInterpreter.cpp	(revision 2178)
-+++ lib/ERMInterpreter.cpp	(working copy)
-@@ -2546,7 +2546,8 @@
- 		else if(symToFunc.find(opt.text) != symToFunc.end())
- 		{
- 			VFunc f(symToFunc[opt.text]);
--			return f(erm->evalEach(exp.children.cdr()));
-+			VOptionList ls = erm->evalEach(exp.children.cdr());
-+			return f(VermTreeIterator(ls));
- 		}
+--- lib/CLodHandler.h	(revision 2183)
++++ lib/CLodHandler.h	(working copy)
+@@ -116,6 +116,8 @@
+ 	void extractFile(const std::string FName, const std::string name); //extracts a specific file
  
- 
-Index: lib/VCMIDirs.h
-===================================================================
---- lib/VCMIDirs.h	(revision 2178)
-+++ lib/VCMIDirs.h	(working copy)
-@@ -1,3 +1,6 @@
-+#ifndef __VCMI__DIRS_H__
-+#define __VCMI__DIRS_H__
-+
- /*
-  * UserHome.h, part of VCMI engine
-  *
-@@ -13,7 +16,6 @@
- 	using namespace boost::filesystem;
- #endif
- 
--
- /// Where to find the various VCMI files. This is mostly usefull for linux. 
- class VCMIDirs {
- public:
-@@ -24,14 +26,25 @@
- #ifdef _WIN32
- 		UserPath = DATA_DIR;
- #else
--		// Find vcmi user directory and create it if necessary
--		std::string home_dir = getenv("HOME");
--		UserPath = path(home_dir + "/.vcmi").string();
--
--		create_directory(UserPath);
--		create_directory(UserPath + "/config");
--		create_directory(UserPath + "/Games");
-+		try {
-+			// Find vcmi user directory and create it if necessary
-+			std::string home_dir = ".";
-+			if( getenv("HOME") != NULL )
-+				home_dir = getenv("HOME");
-+			UserPath = path(home_dir + "/.vcmi").string();
-+#ifdef ANDROID
-+			UserPath = DATA_DIR;
- #endif
-+			create_directory(UserPath);
-+			create_directory(UserPath + "/config");
-+			create_directory(UserPath + "/Games");
-+		}
-+		catch(const std::exception & e)
-+		{
-+		}
-+#endif
- 	}
+ 	static unsigned char * getUnpackedFile(const std::string & path, int * sizeOut); //loads given file, decompresses and returns
++	static int dbgLastFileSize;
++	static std::string dbgLastFileName;
  };
- extern VCMIDirs GVCMIDirs;
-+
-+#endif
+ 
+ 
 Index: CConsoleHandler.cpp
 ===================================================================
---- CConsoleHandler.cpp	(revision 2178)
+--- CConsoleHandler.cpp	(revision 2183)
 +++ CConsoleHandler.cpp	(working copy)
 @@ -143,6 +143,7 @@
  
@@ -276,95 +249,264 @@ Index: CConsoleHandler.cpp
  int CConsoleHandler::run()
 Index: global.h
 ===================================================================
---- global.h	(revision 2178)
+--- global.h	(revision 2183)
 +++ global.h	(working copy)
-@@ -10,6 +10,10 @@
- using boost::logic::tribool;
- #include <boost/cstdint.hpp>
- #include <assert.h>
-+#ifdef ANDROID
-+#include <android/log.h>
-+#include <sstream>
-+#endif
- //filesystem version 3 causes problems (and it's default as of boost 1.46)
- #define BOOST_FILESYSTEM_VERSION 2
- typedef boost::uint64_t ui64; //unsigned int 64 bits (8 bytes)
-@@ -618,20 +622,45 @@
- class CLogger //logger, prints log info to console and saves in file
+@@ -4,6 +4,7 @@
+ #include <iostream>
+ #include <sstream>
+ #include <algorithm> //std::find
++#include <string.h> //memcpy
+ #include <string> //std::find
+ #include <boost/logic/tribool.hpp>
+ #include <boost/unordered_set.hpp>
+@@ -727,29 +728,21 @@
+ 	}
+ 
+ 
+-#if defined(linux) && defined(sparc) 
+-/* SPARC does not support unaligned memory access. Let gcc know when
+- * to emit the right code. */
+-struct unaligned_Uint16 { ui16 val __attribute__(( packed )); };
+-struct unaligned_Uint32 { ui32 val __attribute__(( packed )); };
+ 
+ static inline ui16 read_unaligned_u16(const void *p)
  {
- 	const int lvl;
-+#ifdef ANDROID
-+	std::ostringstream buf;
-+	int androidloglevel;
-+	void outputAndroid()
-+	{
-+		int pos = buf.str().find("\n");
-+		while( pos >= 0 )
-+		{
-+			__android_log_print(androidloglevel, "VCMI", "%s", buf.str().substr(0, pos).c_str() );
-+			buf.str( buf.str().substr(pos+1) );
-+			pos = buf.str().find("\n");
-+		}
-+	}
-+#endif
+-        const struct unaligned_Uint16 *v = (const struct unaligned_Uint16 *)p;
+-        return v->val;
++        ui16 out;
++        memcpy(&out, p, sizeof(out));
++        return out;
+ }
  
- public:
- 	CLogger& operator<<(std::ostream& (*fun)(std::ostream&))
- 	{
+ static inline ui32 read_unaligned_u32(const void *p)
+ {
+-        const struct unaligned_Uint32 *v = (const struct unaligned_Uint32 *)p;
+-        return v->val;
++        ui32 out;
++        memcpy(&out, p, sizeof(out));
++        return out;
+ }
+ 
+-#else
+-#define read_unaligned_u16(p) (* reinterpret_cast<const Uint16 *>(p))
+-#define read_unaligned_u32(p) (* reinterpret_cast<const Uint32 *>(p))
+-#endif
+-
+ //for explicit overrides
+ #ifdef _MSC_VER
+ 	#define OVERRIDE override
+Index: CThreadHelper.cpp
+===================================================================
+--- CThreadHelper.cpp	(revision 2183)
++++ CThreadHelper.cpp	(working copy)
+@@ -24,10 +24,16 @@
+ }
+ void CThreadHelper::run()
+ {
 +#ifdef ANDROID
-+		buf << fun;
-+		outputAndroid();
++	// For debug make it single-threaded
++	for(int i=0;i<tasks->size();i++)
++		(*tasks)[i]();
 +#else
- 		if(lvl < CONSOLE_LOGGING_LEVEL)
-+		{
- 			std::cout << fun;
-+		}
- 		if((lvl < FILE_LOGGING_LEVEL) && logfile)
- 			*logfile << fun;
+ 	boost::thread_group grupa;
+ 	for(int i=0;i<threads;i++)
+ 		grupa.create_thread(boost::bind(&CThreadHelper::processTasks,this));
+ 	grupa.join_all();
 +#endif
- 		return *this;
+ }
+ void CThreadHelper::processTasks()
+ {
+Index: client/Graphics.cpp
+===================================================================
+--- client/Graphics.cpp	(revision 2183)
++++ client/Graphics.cpp	(working copy)
+@@ -321,6 +321,7 @@
+ 	tasks += GET_DEF_ESS(abils82,"SECSK82.DEF");
+ 	tasks += GET_DEF_ESS(spellscr,"SPELLSCR.DEF");
+ 	tasks += GET_DEF_ESS(heroMoveArrows,"ADAG.DEF");
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 
+ 	std::ifstream ifs(DATA_DIR "/config/cr_bgs.txt"); 
+ 	int id;
+@@ -331,15 +332,21 @@
+ 		tasks += GET_SURFACE(backgrounds[id],name);
+ 		name.replace(0,5,"TPCAS");
+ 		tasks += GET_SURFACE(backgroundsm[id],name);
++		tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
  	}
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
  
- 	template<typename T> 
- 	CLogger & operator<<(const T & data)
+ 	CThreadHelper th(&tasks,std::max((unsigned int)1,boost::thread::hardware_concurrency()));
+ 	th.run();
++
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << " heroMoveArrows " << heroMoveArrows <<std::endl;
+ 
+ 	for(size_t y=0; y < heroMoveArrows->ourImages.size(); ++y)
  	{
-+#ifdef ANDROID
-+		buf << data;
-+		outputAndroid();
-+#else
- 		if(lvl < CONSOLE_LOGGING_LEVEL)
++		tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << " heroMoveArrows " << y << "/" << heroMoveArrows->ourImages.size() <<std::endl;
+ 		CSDL_Ext::alphaTransform(heroMoveArrows->ourImages[y].bitmap);
+ 	}
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 
+ 	//handling 32x32px imgs
+ 	smi->notFreeImgs = true;
+@@ -354,9 +361,11 @@
+ 		bigImgs[i-2] = smi2->ourImages[i].bitmap;
+ 	}
+ 	delete smi2;
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ }
+ void Graphics::loadHeroPortraits()
+ {	
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	std::ifstream of(DATA_DIR "/config/portrety.txt");
+ 	int numberOfPortraits;
+ 	of>>numberOfPortraits;
+@@ -384,6 +393,7 @@
+ 
+ void Graphics::loadWallPositions()
+ {
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	std::ifstream inp;
+ 	inp.open(DATA_DIR "/config/wall_pos.txt", std::ios_base::in|std::ios_base::binary);
+ 	if(!inp.is_open())
+@@ -417,24 +427,32 @@
+ 
+ void Graphics::loadHeroAnims()
+ {
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	std::vector<std::pair<int,int> > rotations; //first - group number to be rotated1, second - group number after rotation1
+ 	rotations += std::make_pair(6,10), std::make_pair(7,11), std::make_pair(8,12), std::make_pair(1,13),
+ 		std::make_pair(2,14), std::make_pair(3,15);
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	for(size_t i=0; i<F_NUMBER * 2; ++i)
+ 	{
+ 		std::ostringstream nm;
+ 		nm << "AH" << std::setw(2) << std::setfill('0') << i << "_.DEF";
++		tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 		loadHeroAnim(nm.str(), rotations, &Graphics::heroAnims);
+ 		std::string name = nm.str();
+ 	}	
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 
+ 	loadHeroAnim("AB01_.DEF", rotations, &Graphics::boatAnims);
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	loadHeroAnim("AB02_.DEF", rotations, &Graphics::boatAnims);
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	loadHeroAnim("AB03_.DEF", rotations, &Graphics::boatAnims);
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ }
+ 
+ void Graphics::loadHeroAnim( const std::string &name, const std::vector<std::pair<int,int> > &rotations, std::vector<CDefEssential *> Graphics::*dst )
+ {
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << " load " << name <<std::endl;
+ 	CDefEssential *anim = CDefHandler::giveDefEss(name);
+ 	(this->*dst).push_back(anim);
+ 	int pom = 0; //how many groups has been rotated
+@@ -472,12 +490,15 @@
+ 
+ void Graphics::loadHeroFlags(std::pair<std::vector<CDefEssential *> Graphics::*, std::vector<const char *> > &pr, bool mode)
+ {
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	for(int i=0;i<8;i++)
+ 		(this->*pr.first).push_back(CDefHandler::giveDefEss(pr.second[i]));
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	std::vector<std::pair<int,int> > rotations; //first - group number to be rotated1, second - group number after rotation1
+ 	rotations += std::make_pair(6,10), std::make_pair(7,11), std::make_pair(8,12);
+ 	for(int q=0; q<8; ++q)
+ 	{
++		tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 		std::vector<Cimage> &curImgs = (this->*pr.first)[q]->ourImages;
+ 		for(size_t o=0; o<curImgs.size(); ++o)
  		{
- 			if(console)
-@@ -641,10 +670,25 @@
+@@ -515,6 +536,7 @@
+ 				}
+ 			}
  		}
- 		if((lvl < FILE_LOGGING_LEVEL) && logfile)
- 			*logfile << data << std::flush;
-+#endif
- 		return *this;
++		tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 		for(size_t ff=0; ff<curImgs.size(); ++ff)
+ 		{
+ 			SDL_SetColorKey(curImgs[ff].bitmap, SDL_SRCCOLORKEY,
+@@ -522,31 +544,44 @@
+ 				);
+ 		}
  	}
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ }
  
--	CLogger(const int Lvl) : lvl(Lvl) {}
-+	CLogger(const int Lvl) : lvl(Lvl)
-+	{
+ void Graphics::loadHeroFlags()
+ {
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	using namespace boost::assign;
+ 	timeHandler th;
+ 	std::pair<std::vector<CDefEssential *> Graphics::*, std::vector<const char *> > pr[4];
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	pr[0].first = &Graphics::flags1;
+ 	pr[0].second+=("ABF01L.DEF"),("ABF01G.DEF"),("ABF01R.DEF"),("ABF01D.DEF"),("ABF01B.DEF"),
+ 		("ABF01P.DEF"),("ABF01W.DEF"),("ABF01K.DEF");
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	pr[1].first = &Graphics::flags2;
+ 	pr[1].second+=("ABF02L.DEF"),("ABF02G.DEF"),("ABF02R.DEF"),("ABF02D.DEF"),("ABF02B.DEF"),
+ 		("ABF02P.DEF"),("ABF02W.DEF"),("ABF02K.DEF");
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	pr[2].first = &Graphics::flags3;
+ 	pr[2].second+=("ABF03L.DEF"),("ABF03G.DEF"),("ABF03R.DEF"),("ABF03D.DEF"),("ABF03B.DEF"),
+ 		("ABF03P.DEF"),("ABF03W.DEF"),("ABF03K.DEF");
+ 	pr[3].first = &Graphics::flags4;
+ 	pr[3].second+=("AF00.DEF"),("AF01.DEF"),("AF02.DEF"),("AF03.DEF"),("AF04.DEF"),
+ 		("AF05.DEF"),("AF06.DEF"),("AF07.DEF");
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
 +#ifdef ANDROID
-+		androidloglevel = ANDROID_LOG_INFO;
-+		switch(lvl) {
-+			case 0: androidloglevel = ANDROID_LOG_INFO; break;
-+			case 1: androidloglevel = ANDROID_LOG_FATAL; break;
-+			case 2: androidloglevel = ANDROID_LOG_ERROR; break;
-+			case 3: androidloglevel = ANDROID_LOG_WARN; break;
-+			case 4: androidloglevel = ANDROID_LOG_INFO; break;
-+			case 5: androidloglevel = ANDROID_LOG_DEBUG; break;
-+			case 6: case -2: androidloglevel = ANDROID_LOG_VERBOSE; break;
-+		}
-+#endif
++	for(int g=0; g<4; g++)
++	{
++		loadHeroFlags(pr[g],true);
 +	}
- };
++#else
+ 	boost::thread_group grupa;
+ 	for(int g=3; g>=0; --g)
+ 	{
+ 		grupa.create_thread(boost::bind(&Graphics::loadHeroFlags,this,boost::ref(pr[g]),true));
+ 	}
+ 	grupa.join_all();
++#endif
+ 	tlog0 << "Loading and transforming heroes' flags: "<<th.getDif()<<std::endl;
+ }
+ SDL_Surface * Graphics::getPic(int ID, bool fort, bool builded)
+@@ -669,6 +704,7 @@
  
- extern DLL_EXPORT CLogger tlog0; //green - standard progress info
+ void Graphics::loadTrueType()
+ {
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	bool ttfPresent = false;//was TTF initialised or not
+ 	for(int i = 0; i < FONTS_NUMBER; i++)
+ 		fontsTrueType[i] = NULL;
+@@ -702,6 +738,7 @@
+ 
+ Font * Graphics::loadFont( const char * name )
+ {
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	int len = 0;
+ 	unsigned char * hlp = bitmaph->giveFile(name, FILE_FONT, &len);
+ 	if(!hlp || !len)
+@@ -725,6 +762,7 @@
+ 
+ void Graphics::loadFonts()
+ {
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	static const char *fontnames [] = {"BIGFONT.FNT", "CALLI10R.FNT", "CREDITS.FNT", "HISCORE.FNT", "MEDFONT.FNT",
+ 								"SMALFONT.FNT", "TIMES08R.FNT", "TINY.FNT", "VERD10B.FNT"} ;
+ 
+@@ -745,6 +783,7 @@
+ 
+ void Graphics::loadErmuToPicture()
+ {
++	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ 	//loading ERMU to picture
+ 	std::ifstream etp(DATA_DIR "/config/ERMU_to_picture.txt");
+ 
 Index: client/Client.cpp
 ===================================================================
---- client/Client.cpp	(revision 2178)
+--- client/Client.cpp	(revision 2183)
 +++ client/Client.cpp	(working copy)
 @@ -39,7 +39,7 @@
  #include "../lib/RegisterTypes.cpp"
@@ -375,24 +517,7 @@ Index: client/Client.cpp
  
  /*
   * Client.cpp, part of VCMI engine
-@@ -89,7 +89,16 @@
- 	connectionHandler = NULL;
- 	pathInfo = NULL;
- 	applier = new CApplier<CBaseForCLApply>;
-+	tlog1 << "registerTypes2: " << __FILE__  << ":" << __LINE__ << std::endl;
- 	registerTypes2(*applier);
-+	tlog1 << "-----Start applier: registerTypes2" << std::endl;
-+	for( std::map<ui16,CBaseForCLApply*> :: const_iterator it = applier->apps.begin();
-+			it != applier->apps.end(); it++ )
-+	{
-+		tlog1 << "applier ID " << it->first << " ptr " << typeid(*it->second).name() << std::endl;
-+	}
-+	tlog1 << "-----End applier: registerTypes2" << std::endl;
-+
- 	IObjectInterface::cb = this;
- 	serv = NULL;
- 	gs = NULL;
-@@ -498,9 +507,9 @@
+@@ -498,9 +498,9 @@
  
  void CClient::handlePack( CPack * pack )
  {			
@@ -404,16 +529,7 @@ Index: client/Client.cpp
  		apply->applyOnClBefore(this,pack);
  		tlog5 << "\tMade first apply on cl\n";
  		gs->apply(pack);
-@@ -510,7 +519,7 @@
- 	}
- 	else
- 	{
--		tlog1 << "Message cannot be applied, cannot find applier!\n";
-+		tlog1 << "Message cannot be applied, cannot find applier! TypeID " << typeList.getTypeID(pack) << std::endl;
- 	}
- 	delete pack;
- }
-@@ -628,18 +637,22 @@
+@@ -628,18 +628,22 @@
  		startServer();
  
  	th.update();
@@ -437,7 +553,7 @@ Index: client/Client.cpp
  		waitForServer();
  
  	th.update();
-@@ -654,27 +667,31 @@
+@@ -654,27 +658,31 @@
  CServerHandler::CServerHandler(bool runServer /*= false*/)
  {
  	serverThread = NULL;
@@ -473,7 +589,7 @@ Index: client/Client.cpp
  }
 Index: client/GUIBase.cpp
 ===================================================================
---- client/GUIBase.cpp	(revision 2178)
+--- client/GUIBase.cpp	(revision 2183)
 +++ client/GUIBase.cpp	(working copy)
 @@ -11,6 +11,7 @@
  #include "../CThreadHelper.h"
@@ -510,9 +626,21 @@ Index: client/GUIBase.cpp
  
  CGuiHandler::CGuiHandler()
  :lastClick(-500, -500)
+Index: client/CDefHandler.h
+===================================================================
+--- client/CDefHandler.h	(revision 2183)
++++ client/CDefHandler.h	(working copy)
+@@ -30,7 +30,6 @@
+ 	ui32 totalInBlock;
+ 	ui32 unknown2;
+ 	ui32 unknown3;
+-	unsigned char data[0];
+ };
+ 
+ // Def entry in file. Integer fields are all little endian and will
 Index: client/Client.h
 ===================================================================
---- client/Client.h	(revision 2178)
+--- client/Client.h	(revision 2183)
 +++ client/Client.h	(working copy)
 @@ -43,7 +43,7 @@
  public:
@@ -523,21 +651,9 @@ Index: client/Client.h
  	bool verbose; //whether to print log msgs
  	std::string port; //port number in text form
  
-Index: client/CPreGame.cpp
-===================================================================
---- client/CPreGame.cpp	(revision 2178)
-+++ client/CPreGame.cpp	(working copy)
-@@ -525,6 +525,7 @@
- 		}
- 
- 		applier = new CApplier<CBaseForPGApply>;
-+		tlog1 << "registerTypes4: " << __FILE__  << ":" << __LINE__ << std::endl;
- 		registerTypes4(*applier);
- 		serverHandlingThread = new boost::thread(&CSelectionScreen::handleConnection, this);
- 	}
 Index: client/CMT.cpp
 ===================================================================
---- client/CMT.cpp	(revision 2178)
+--- client/CMT.cpp	(revision 2183)
 +++ client/CMT.cpp	(working copy)
 @@ -92,8 +92,10 @@
  void dispose();
@@ -571,7 +687,17 @@ Index: client/CMT.cpp
  
  	initDLL(::console,logfile);
  	const_cast<CGameInfo*>(CGI)->setFromLib();
-@@ -186,11 +191,15 @@
+@@ -154,7 +159,9 @@
+ 	CCS->curh->show();
+ 	tlog0<<"Screen handler: "<<pomtime.getDif()<<std::endl;
+ 	pomtime.getDif();
++	tlog0<<"Megadebug 1"<<std::endl;
+ 	graphics = new Graphics();
++	tlog0<<"Megadebug 2"<<std::endl;
+ 	graphics->loadHeroAnims();
+ 	tlog0<<"\tMain graphics: "<<tmh.getDif()<<std::endl;
+ 	tlog0<<"Initializing game graphics: "<<tmh.getDif()<<std::endl;
+@@ -186,11 +193,15 @@
  }
  
  
@@ -587,7 +713,7 @@ Index: client/CMT.cpp
  {
  	tlog0 << "Starting... " << std::endl;      
  	po::options_description opts("Allowed options");
-@@ -237,7 +246,6 @@
+@@ -237,7 +248,6 @@
  	console->start();
  	atexit(dispose);
  	tlog0 <<"Creating console and logfile: "<<pomtime.getDif() << std::endl;
@@ -595,7 +721,7 @@ Index: client/CMT.cpp
  	conf.init();
  	tlog0 <<"Loading settings: "<<pomtime.getDif() << std::endl;
  	tlog0 << NAME << std::endl;
-@@ -262,6 +270,11 @@
+@@ -262,6 +272,11 @@
  	tlog0<<"\tInitializing video: "<<pomtime.getDif()<<std::endl;
  
  	//we can properly play intro only in the main thread, so we have to move loading to the separate thread
@@ -607,7 +733,7 @@ Index: client/CMT.cpp
  	boost::thread loading(init);
  
  	if(!vm.count("battle") && !vm.count("nointro"))
-@@ -270,6 +283,7 @@
+@@ -270,6 +285,7 @@
  	SDL_FillRect(screen,NULL,0);
  	CSDL_Ext::update(screen);
  	loading.join();
@@ -615,7 +741,7 @@ Index: client/CMT.cpp
  	tlog0<<"Initialization of VCMI (together): "<<total.getDif()<<std::endl;
  
  	if(!vm.count("battle"))
-@@ -286,8 +300,17 @@
+@@ -286,8 +302,17 @@
  		si->playerInfos[1].color = 1;
  		startGame(si);
  	}
@@ -633,7 +759,7 @@ Index: client/CMT.cpp
  
  	return 0;
  }
-@@ -559,10 +582,12 @@
+@@ -559,10 +584,12 @@
  		tlog2 << "Warning: SDL says that "  << bpp << "bpp is wrong and suggests " << suggestedBpp << std::endl;
  	}
  
@@ -646,7 +772,7 @@ Index: client/CMT.cpp
  	
  	if((screen = SDL_SetVideoMode(w, h, suggestedBpp, SDL_SWSURFACE|(fullscreen?SDL_FULLSCREEN:0))) == NULL)
  	{
-@@ -607,14 +632,27 @@
+@@ -607,14 +634,27 @@
  	setResolution = true;
  }
  
@@ -677,7 +803,7 @@ Index: client/CMT.cpp
  		//tlog0 << "got " << (int)ev->type;
  		if (ret == 0 || (ev->type==SDL_QUIT) ||
  			(ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4 && (ev->key.keysym.mod & KMOD_ALT)))
-@@ -633,7 +671,7 @@
+@@ -633,7 +673,7 @@
  			SDL_Delay(750);
  			SDL_Quit();
  			tlog0 << "Ending...\n";
@@ -686,7 +812,7 @@ Index: client/CMT.cpp
  		}
  		else if(LOCPLINT && ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4)
  		{
-@@ -642,7 +680,7 @@
+@@ -642,7 +682,7 @@
  			setScreenRes(conf.cc.screenx, conf.cc.screeny, conf.cc.bpp, full);
  			GH.totalRedraw();
  			delete ev;
@@ -695,7 +821,7 @@ Index: client/CMT.cpp
  		}
  		else if(ev->type == SDL_USEREVENT)
  		{
-@@ -672,7 +710,7 @@
+@@ -672,7 +712,7 @@
  			}
  
  			delete ev;
@@ -704,7 +830,7 @@ Index: client/CMT.cpp
  		} 
  
  		//tlog0 << " pushing ";
-@@ -680,7 +718,7 @@
+@@ -680,7 +720,7 @@
  		events.push(ev);
  		eventsM.unlock();
  		//tlog0 << " done\n";
@@ -713,14 +839,317 @@ Index: client/CMT.cpp
  }
  
  void startGame(StartInfo * options, CConnection *serv/* = NULL*/) 
-@@ -741,3 +779,4 @@
+@@ -741,3 +781,4 @@
  	ev.user.code = 1;
  	SDL_PushEvent(&ev);
  }
 +
+Index: client/CDefHandler.cpp
+===================================================================
+--- client/CDefHandler.cpp	(revision 2183)
++++ client/CDefHandler.cpp	(working copy)
+@@ -50,10 +50,19 @@
+ 		SDL_FreeSurface(ourImages[i].bitmap);
+ }
+ 
++#define CHECK_LOD_MEM_BLOCK_SIZE1(S, FF, F, L) { \
++		if( CLodHandler::dbgLastFileSize < (S) ) \
++			tlog1<<"ERROR in " << FF << " " << F << ":" << L << ": reading past the end of LOD mem block at " << \
++			(S) << " memblock " << CLodHandler::dbgLastFileSize << " fname " << CLodHandler::dbgLastFileName << std::endl; }
++#define CHECK_LOD_MEM_BLOCK_SIZE(S) CHECK_LOD_MEM_BLOCK_SIZE1(S, __FUNCTION__, __FILE__, __LINE__)
++
+ void CDefHandler::openFromMemory(unsigned char *table, const std::string & name)
+ {
++	//tlog0<<"openFromMemory ptr " << (void *)table <<std::endl;
++
+ 	BMPPalette palette[256];
+-	SDefEntry &de = * reinterpret_cast<SDefEntry *>(table);
++	SDefEntry de;
++	memcpy(&de, table, sizeof(de));
+ 	unsigned char *p;
+ 
+ 	defName = name;
+@@ -61,6 +70,8 @@
+ 	width = SDL_SwapLE32(de.width);
+ 	height = SDL_SwapLE32(de.height);
+ 	unsigned int totalBlocks = SDL_SwapLE32(de.totalBlocks);
++
++	//tlog0<<"openFromMemory w " << width << " h " << height << " totalBlocks " << totalBlocks <<std::endl;
+ 
+ 	for (unsigned int it=0;it<256;it++)
+ 	{
+@@ -71,13 +82,15 @@
+ 	}
+ 
+ 	// The SDefEntryBlock starts just after the SDefEntry
+-	p = reinterpret_cast<unsigned char *>(&de);
++	p = table;
+ 	p += sizeof(de);
+-
++
+ 	int totalEntries=0;
+ 	for (unsigned int z=0; z<totalBlocks; z++)
+ 	{
+-		SDefEntryBlock &block = * reinterpret_cast<SDefEntryBlock *>(p);
++		//tlog0<<"Megadebug 443 - read size " << p - table <<std::endl;
++		SDefEntryBlock block;
++		memcpy(&block, p, sizeof(block));
+ 		unsigned int totalInBlock;
+ 
+ 		totalInBlock = SDL_SwapLE32(read_unaligned_u32(&block.totalInBlock));
+@@ -85,7 +98,8 @@
+ 		for (unsigned int j=SEntries.size(); j<totalEntries+totalInBlock; j++)
+ 			SEntries.push_back(SEntry());
+ 
+-		p = block.data;
++		p += sizeof(block);
++		//tlog0<<"Megadebug 444 - read size " << p - table << " totalInBlock " << totalInBlock <<std::endl;
+ 		for (unsigned int j=0; j<totalInBlock; j++)
+ 		{
+ 			char Buffer[13];
+@@ -93,11 +107,13 @@
+ 			Buffer[12] = 0;
+ 			SEntries[totalEntries+j].name=Buffer;
+ 			p += 13;
++			//tlog0<<"Megadebug 445 - read size " << p - table <<std::endl;
+ 		}
+ 		for (unsigned int j=0; j<totalInBlock; j++)
+ 		{ 
+ 			SEntries[totalEntries+j].offset = SDL_SwapLE32(read_unaligned_u32(p));
+ 			p += 4;
++			//tlog0<<"Megadebug 446 - read size " << p - table <<std::endl;
+ 		}
+ 		//totalEntries+=totalInBlock;
+ 		for(unsigned int hh=0; hh<totalInBlock; ++hh)
+@@ -105,21 +121,30 @@
+ 			SEntries[totalEntries].group = z;
+ 			++totalEntries;
+ 		}
++		CHECK_LOD_MEM_BLOCK_SIZE(p - table);
+ 	}
+ 
++	//tlog0<<"Megadebug 448" << std::endl;
+ 	for(unsigned int j=0; j<SEntries.size(); ++j)
+ 	{
+-		SEntries[j].name = SEntries[j].name.substr(0, SEntries[j].name.find('.')+4);
++		std::string::size_type pos = SEntries[j].name.find('.');
++		if(pos != std::string::npos)
++			pos += 4;
++		SEntries[j].name = SEntries[j].name.substr(0, pos);
+ 	}
++	//tlog0<<"Megadebug 449" << std::endl;
+ 	//RWEntries = new unsigned int[height];
+ 	for(unsigned int i=0; i < SEntries.size(); ++i)
+ 	{
+ 		Cimage nimg;
++		//tlog0<<"Megadebug 4491" << std::endl;
+ 		nimg.bitmap = getSprite(i, table, palette);
++		//tlog0<<"Megadebug 4492" << std::endl;
+ 		nimg.imName = SEntries[i].name;
+ 		nimg.groupNumber = SEntries[i].group;
+ 		ourImages.push_back(nimg);
+ 	}
++	//tlog0<<"Megadebug 4499" << std::endl;
+ }
+ 
+ void CDefHandler::expand(unsigned char N,unsigned char & BL, unsigned char & BR)
+@@ -128,9 +153,17 @@
+ 	BR = N & 0x1F;
+ }
+ 
++
++#define CHECK_OUTBUF_MEM_BLOCK_SIZE1(S, FF, F, L) { \
++		if( FullHeight*FullWidth < (S) ) \
++			tlog1<<"ERROR in " << FF << " " << F << ":" << L << ": writing past the end of SDL surface at " << \
++			(S) << " memblock " << FullHeight*FullWidth << " fname " << CLodHandler::dbgLastFileName << std::endl; }
++#define CHECK_OUTBUF_MEM_BLOCK_SIZE(S) CHECK_LOD_MEM_BLOCK_SIZE1(S, __FUNCTION__, __FILE__, __LINE__)
++
+ SDL_Surface * CDefHandler::getSprite (int SIndex, const unsigned char * FDef, const BMPPalette * palette) const
+ {
+ 	SDL_Surface * ret=NULL;
++	//tlog0<<"getSprite ptr " << (void *)FDef  << std::endl;
+ 
+ 	unsigned int BaseOffset, 
+ 		SpriteWidth, SpriteHeight, //format of sprite
+@@ -145,7 +178,10 @@
+ 	unsigned char SegmentType;//, BL, BR; //TODO use me
+ 
+ 	BaseOffset = SEntries[SIndex].offset;
+-	SSpriteDef sd = * reinterpret_cast<const SSpriteDef *>(FDef + BaseOffset);
++	SSpriteDef sd;
++	CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset + sizeof(sd));
++
++	memcpy(&sd, FDef + BaseOffset, sizeof(sd));
+ 
+ 	prSize = SDL_SwapLE32(sd.prSize); //TODO use me
+ 	defType2 = SDL_SwapLE32(sd.defType2);
+@@ -170,12 +206,14 @@
+ 	if (add==4)
+ 		add=0;
+ 
++	//tlog0<<"getSprite: 11: SDL_CreateRGBSurface " << FullWidth << ":" << FullHeight << std::endl;
+ 	ret = SDL_CreateRGBSurface(SDL_SWSURFACE, FullWidth, FullHeight, 8, 0, 0, 0, 0);
+ 	//int tempee2 = readNormalNr(0,4,((unsigned char *)tempee.c_str()));
+ 
+ 	BaseOffset += sizeof(SSpriteDef);
+ 	int BaseOffsetor = BaseOffset;
+ 
++	//tlog0<<"getSprite: 12: set palette" << std::endl;
+ 	for(int i=0; i<256; ++i)
+ 	{
+ 		SDL_Color pr;
+@@ -188,6 +226,7 @@
+ 
+ 	int ftcp=0;
+ 
++	//tlog0<<"getSprite: 13" << std::endl;
+ 	// If there's a margin anywhere, just blank out the whole surface.
+ 	if (TopMargin > 0 || BottomMargin > 0 || LeftMargin > 0 || RightMargin > 0) {
+ 		memset( reinterpret_cast<char*>(ret->pixels), 0, FullHeight*FullWidth);
+@@ -197,6 +236,7 @@
+ 	if (TopMargin > 0)
+ 		ftcp += TopMargin*(FullWidth+add);
+ 
++	//tlog0<<"getSprite: 14: defType2 " << defType2 << std::endl;
+ 	switch(defType2)
+ 	{
+ 	case 0:
+@@ -206,6 +246,8 @@
+ 			if (LeftMargin>0)
+ 				ftcp += LeftMargin;
+ 
++			CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset + SpriteWidth);
++			CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + SpriteWidth);
+ 			memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, &FDef[BaseOffset], SpriteWidth);
+ 			ftcp += SpriteWidth;
+ 			BaseOffset += SpriteWidth;
+@@ -218,11 +260,12 @@
+ 
+ 	case 1:
+ 	{
+-		const unsigned int * RWEntriesLoc = reinterpret_cast<const unsigned int *>(FDef+BaseOffset);
++		unsigned int RWEntriesLoc = BaseOffset;
+ 		BaseOffset += sizeof(int) * SpriteHeight;
+ 		for (unsigned int i=0;i<SpriteHeight;i++)
+ 		{
+-			BaseOffset=BaseOffsetor + SDL_SwapLE32(read_unaligned_u32(RWEntriesLoc + i));
++			CHECK_LOD_MEM_BLOCK_SIZE(RWEntriesLoc + i*4 + 4);
++			BaseOffset=BaseOffsetor + SDL_SwapLE32(read_unaligned_u32(FDef+RWEntriesLoc + i*4));
+ 			if (LeftMargin>0)
+ 				ftcp += LeftMargin;
+ 
+@@ -230,17 +273,22 @@
+ 			do
+ 			{
+ 				unsigned int SegmentLength;
++
++				CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset + 4);
+ 
+ 				SegmentType=FDef[BaseOffset++];
+ 				SegmentLength=FDef[BaseOffset++] + 1;
+-
++
+ 				if (SegmentType==0xFF)
+ 				{
++					CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset + SegmentLength);
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + SegmentLength);
+ 					memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, FDef + BaseOffset, SegmentLength);
+ 					BaseOffset+=SegmentLength;
+ 				}
+ 				else
+ 				{
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + SegmentLength);
+ 					memset(reinterpret_cast<char*>(ret->pixels)+ftcp, SegmentType, SegmentLength);
+ 				}
+ 				ftcp += SegmentLength;
+@@ -260,6 +308,7 @@
+ 
+ 	case 2:
+ 	{
++		CHECK_LOD_MEM_BLOCK_SIZE(BaseOffsetor+2);
+ 		BaseOffset = BaseOffsetor + SDL_SwapLE16(read_unaligned_u16(FDef + BaseOffsetor));
+ 
+ 		for (unsigned int i=0;i<SpriteHeight;i++)
+@@ -272,17 +321,21 @@
+ 
+ 			do
+ 			{
++				CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset+1);
+ 				SegmentType=FDef[BaseOffset++];
+ 				unsigned char code = SegmentType / 32;
+ 				unsigned char value = (SegmentType & 31) + 1;
+ 				if(code==7)
+ 				{
++					CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset + value);
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + value);
+ 					memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, &FDef[BaseOffset], value);
+ 					ftcp += value;
+ 					BaseOffset += value;
+ 				}
+ 				else
+ 				{
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + value);
+ 					memset(reinterpret_cast<char*>(ret->pixels)+ftcp, code, value);
+ 					ftcp += value;
+ 				}
+@@ -304,6 +357,7 @@
+ 	{
+ 		for (unsigned int i=0;i<SpriteHeight;i++)
+ 		{
++			CHECK_LOD_MEM_BLOCK_SIZE(BaseOffsetor+i*2*(SpriteWidth/32+2));
+ 			BaseOffset = BaseOffsetor + SDL_SwapLE16(read_unaligned_u16(FDef + BaseOffsetor+i*2*(SpriteWidth/32)));
+ 			if (LeftMargin>0)
+ 				ftcp += LeftMargin;
+@@ -312,6 +366,7 @@
+ 
+ 			do
+ 			{
++				CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset+1);
+ 				SegmentType=FDef[BaseOffset++];
+ 				unsigned char code = SegmentType / 32;
+ 				unsigned char value = (SegmentType & 31) + 1;
+@@ -321,12 +376,15 @@
+ 
+ 				if(code==7)
+ 				{
++					CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset + len);
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + len);
+ 					memcpy((ui8*)ret->pixels + ftcp, FDef + BaseOffset, len);
+ 					ftcp += len;
+ 					BaseOffset += len;
+ 				}
+ 				else
+ 				{
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + len);
+ 					memset((ui8*)ret->pixels + ftcp, code, len);
+ 					ftcp += len;
+ 				}
+@@ -345,6 +403,7 @@
+ 	break;
+ 
+ 	default:
++		tlog1<<"getSprite: Unknown sprite format."<< std::endl;
+ 		throw std::string("Unknown sprite format.");
+ 		break;
+ 	}
+@@ -365,9 +424,12 @@
+ 
+ CDefHandler * CDefHandler::giveDef(const std::string & defName)
+ {
++	tlog0<<"giveDef " << defName <<std::endl;
+ 	unsigned char * data = spriteh->giveFile(defName, FILE_ANIMATION);
+-	if(!data)
+-		throw "bad def name!";
++	if(!data) {
++		tlog0<<"Bad def name: " << defName <<std::endl;
++		throw std::runtime_error("bad def name!");
++	}
+ 	CDefHandler * nh = new CDefHandler();
+ 	nh->openFromMemory(data, defName);
+ 	delete [] data;
 Index: client/GUIBase.h
 ===================================================================
---- client/GUIBase.h	(revision 2178)
+--- client/GUIBase.h	(revision 2183)
 +++ client/GUIBase.h	(working copy)
 @@ -546,6 +546,8 @@
  	CGuiHandler();

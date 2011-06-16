@@ -25,11 +25,6 @@ LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 echo LOCAL_PATH $LOCAL_PATH
 
-if [ -z "`echo $NDK | grep 'android-ndk-r5b'``echo $NDK | grep 'android-ndk-r5-crystax'`" ] ; then
-	echo "The only supported NDK versions are android-ndk-r5b or android-ndk-r5-crystax"
-	exit 1
-fi
-
 APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
 APP_AVAILABLE_STATIC_LIBS=`grep 'APP_AVAILABLE_STATIC_LIBS [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
 APP_SHARED_LIBS=$(
@@ -72,7 +67,6 @@ if [ -n "$NO_SHARED_LIBS" ]; then
 fi
 
 
-#-shared flag creates problems with damn libtool, so we're using -Wl,-shared instead
 LDFLAGS="\
 -fexceptions -frtti $SHARED \
 --sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \

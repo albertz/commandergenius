@@ -25,7 +25,7 @@ fi
 
 cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build -j4 V=1 && \
  { grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
-   [ -`which ndk-build | grep '/android-ndk-r5b/\|/android-ndk-r5-crystax/'` != - ] && \
+   [ -`which ndk-build | grep '/android-ndk-r5'` != - ] && \
    echo Stripping libapplication.so by hand \
    rm obj/local/armeabi/libapplication.so && \
    cp jni/application/src/libapplication.so obj/local/armeabi && \
@@ -34,6 +34,4 @@ cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build -j4 V=1 && \
    || true ; } && \
  ant debug && \
  test -z "$1" && cd bin && adb uninstall `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'` && \
- adb push DemoActivity-debug.apk /data/local && \
- adb shell pm install -f /data/local/DemoActivity-debug.apk && \
- adb shell rm /data/local/DemoActivity-debug.apk
+ adb install -r DemoActivity-debug.apk

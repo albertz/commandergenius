@@ -43,6 +43,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.util.zip.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import android.text.SpannedString;
@@ -584,6 +586,20 @@ public class MainActivity extends Activity {
 					OutputStream out = null;
 					String path = cacheDir.getAbsolutePath() + "/" + entry.getName();
 
+					try {
+						CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
+						while( check.read(buf, 0, buf.length) > 0 ) {};
+						check.close();
+						if( check.getChecksum().getValue() != entry.getCrc() )
+						{
+							File ff = new File(path);
+							ff.delete();
+							throw new Exception();
+						}
+						System.out.println("File '" + path + "' exists and passed CRC check - not overwriting it");
+						continue;
+					} catch( Exception e ) { }
+
 					System.out.println("Saving to file '" + path + "'");
 
 					out = new FileOutputStream( path );
@@ -597,7 +613,12 @@ public class MainActivity extends Activity {
 
 					out.flush();
 					out.close();
-					(new ProcessBuilder().command("/system/bin/chmod", "0755", path).start()).waitFor();
+					try {
+						(new ProcessBuilder().command("/system/bin/chmod", "0755", path).start()).waitFor();
+					} catch ( Exception eeee ) {}
+					try {
+						(new ProcessBuilder().command("/system/xbin/chmod", "0755", path).start()).waitFor();
+					} catch ( Exception eeeee ) {}
 				}
 			}
 			catch ( Exception eee )

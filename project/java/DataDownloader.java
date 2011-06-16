@@ -230,7 +230,9 @@ class DataDownloader extends Thread
 		// Create output directory (not necessary for phone storage)
 		System.out.println("Downloading data to: '" + outFilesDir + "'");
 		try {
-			(new File( outFilesDir )).mkdirs();
+			File outDir = new File( outFilesDir );
+			if( !(outDir.exists() && outDir.isDirectory()) )
+				outDir.mkdirs();
 			OutputStream out = new FileOutputStream( getOutFilePath(".nomedia") );
 			out.flush();
 			out.close();
@@ -340,7 +342,9 @@ class DataDownloader extends Thread
 			OutputStream out = null;
 			try {
 				try {
-					(new File( path.substring(0, path.lastIndexOf("/") ))).mkdirs();
+					File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
+					if( !(outDir.exists() && outDir.isDirectory()) )
+						outDir.mkdirs();
 				} catch( SecurityException e ) { };
 
 				out = new FileOutputStream( path );
@@ -405,7 +409,9 @@ class DataDownloader extends Thread
 				{
 					System.out.println("Creating dir '" + getOutFilePath(entry.getName()) + "'");
 					try {
-						(new File( getOutFilePath(entry.getName()) )).mkdirs();
+						File outDir = new File( getOutFilePath(entry.getName()) );
+						if( !(outDir.exists() && outDir.isDirectory()) )
+							outDir.mkdirs();
 					} catch( SecurityException e ) { };
 					continue;
 				}
@@ -416,7 +422,9 @@ class DataDownloader extends Thread
 				System.out.println("Saving file '" + path + "'");
 
 				try {
-					(new File( path.substring(0, path.lastIndexOf("/") ))).mkdirs();
+					File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
+					if( !(outDir.exists() && outDir.isDirectory()) )
+						outDir.mkdirs();
 				} catch( SecurityException e ) { };
 				
 				try {
@@ -431,9 +439,7 @@ class DataDownloader extends Thread
 					}
 					System.out.println("File '" + path + "' exists and passed CRC check - not overwriting it");
 					continue;
-				} catch( Exception e )
-				{
-				}
+				} catch( Exception e ) { }
 
 				try {
 					out = new FileOutputStream( path );

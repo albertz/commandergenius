@@ -265,18 +265,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		
 		mGlContextLost = false;
 
-		// ----- VCMI hack -----
-		try
-		{
-			File libpath = new File(context.getFilesDir(), "libvcmi.so");
-			System.load(libpath.getPath());
-		}
-		catch ( UnsatisfiedLinkError eee )
-		{
-			//System.out.println("libSDL: error loading lib: " + eee.toString());
-		}
-		// ----- VCMI hack -----
-		
 		String libs[] = { "application", "sdl_main" };
 		try
 		{

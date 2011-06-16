@@ -14,13 +14,13 @@
 //
 
 // Android defines
-#define BOOST_THREAD_LINUX 1
-#define BOOST_HAS_PTHREADS 1
+// #define BOOST_THREAD_LINUX 1 // defined in thread/detail/platform.hpp
+// #define BOOST_HAS_PTHREADS 1 // defined in config/posix_features.hpp
 #define __arm__ 1
 #define _REENTRANT 1
 #define _GLIBCXX__PTHREADS 1
-#define BOOST_HAS_GETTIMEOFDAY 1
-#define BOOST_HAS_UNISTD_H 1
+// #define BOOST_HAS_GETTIMEOFDAY 1 // defined in config/posix_features.hpp
+// #define BOOST_HAS_UNISTD_H 1 // defined in config/platform/linux.hpp
 #define BOOST_INTERPROCESS_POSIX_PROCESS_SHARED 1
 
 // define this to locate a compiler config file:

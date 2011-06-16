@@ -67,7 +67,7 @@ class Globals {
 	public static int MoveMouseWithJoystickSpeed = 0;
 	public static int MoveMouseWithJoystickAccel = 0;
 	public static boolean ClickMouseWithDpad = false;
-	public static boolean RelativeMouseMovement = AppNeedsTwoButtonMouse; // Laptop touchpad mode
+	public static boolean RelativeMouseMovement = false; // Laptop touchpad mode
 	public static int RelativeMouseMovementSpeed = 2;
 	public static int RelativeMouseMovementAccel = 0;
 	public static boolean ShowScreenUnderFinger = false;

@@ -28,7 +28,7 @@ AndroidData/vcmiserver0: vcmiserver.zip
 	split -b 1048576 -d -a 1 $< AndroidData/vcmiserver
 	cp -f AndroidData/vcmiserver* ../../../assets
 
-vcmiserver.zip: vcmiserver libvcmi.so GeniusAI.so StupidAI.so
+vcmiserver.zip: vcmiserver GeniusAI.so StupidAI.so
 	rm -f $@
 	zip $@ $^
 
@@ -41,6 +41,7 @@ $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT): out
 	-DLIB_DIR=\\\"/data/data/eu.vcmi/files\\\" \
 	-DWITH_AVCODEC_DECODE_VIDEO2=1 \
 	$< -o $@"
+#	-Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
 
 vcmiserver: $(OBJS_SERVER) $(OBJS_LIB)
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 ../setEnvironment.sh sh -c \
