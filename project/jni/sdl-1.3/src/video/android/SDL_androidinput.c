@@ -640,7 +640,7 @@ void SDL_ANDROID_WarpMouse(int x, int y)
 {
 	if(!relativeMovement)
 	{
-		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
+		//SDL_ANDROID_MainThreadPushMouseMotion(x, y);
 	}
 	else
 	{
