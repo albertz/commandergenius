@@ -56,17 +56,7 @@ Index: lib/CLodHandler.cpp
 ===================================================================
 --- lib/CLodHandler.cpp	(revision 2183)
 +++ lib/CLodHandler.cpp	(working copy)
-@@ -60,6 +60,9 @@
- 	return ret;
- }
- 
-+int CLodHandler::dbgLastFileSize = 0;
-+std::string CLodHandler::dbgLastFileName;
-+
- unsigned char * CLodHandler::giveFile(const std::string defName, LodFileType type, int * length)
- {
- 	std::string fname = defName;
-@@ -78,13 +81,15 @@
+@@ -78,13 +78,15 @@
  	Entry ourEntry = *en_it;
  
  	if(length) *length = ourEntry.realSize;
@@ -83,15 +73,13 @@ Index: lib/CLodHandler.cpp
  		FILE * f = fopen((myDir + "/" + ourEntry.realName).c_str(), "rb");
  		if (f)
  		{
-@@ -100,16 +105,25 @@
+@@ -100,16 +102,21 @@
  			delete[] outp;
  			return NULL;
  		}
 -		else
 +		else
 +		{
-+			dbgLastFileSize = ourEntry.realSize;
-+			dbgLastFileName = defName;
 +			//tlog0 << "Loaded file: " << fname << " size " << ourEntry.realSize << " ptr " << (void *)outp << " safety " << (int)SAFETY_MARGIN << std::endl;
  			return outp;
 +		}
@@ -105,13 +93,11 @@ Index: lib/CLodHandler.cpp
  		LOD.seekg(ourEntry.offset, std::ios::beg);
  		LOD.read((char*)outp, ourEntry.realSize);
  		mutex->unlock();
-+		dbgLastFileSize = ourEntry.realSize;
-+		dbgLastFileName = defName;
 +		//tlog0 << "Loaded file: " << fname << " size " << ourEntry.realSize << " ptr " << (void *)outp << " safety " << (int)SAFETY_MARGIN << std::endl;
  		return outp;
  	}
  	else //we will decompress file
-@@ -122,7 +136,14 @@
+@@ -122,7 +129,12 @@
  		infs2(outp, ourEntry.size, ourEntry.realSize, decomp);
  		mutex->unlock();
  		delete[] outp;
@@ -120,8 +106,6 @@ Index: lib/CLodHandler.cpp
 +		memset(outp+ourEntry.realSize, 0, SAFETY_MARGIN);
 +		memcpy(outp, decomp, ourEntry.realSize);
 +		delete [] decomp;
-+		dbgLastFileSize = ourEntry.realSize;
-+		dbgLastFileName = defName;
 +		//tlog0 << "Loaded file: " << fname << " size " << ourEntry.realSize << " ptr " << (void *)outp << " safety " << (int)SAFETY_MARGIN << std::endl;
 +		return outp;
  	}
@@ -214,19 +198,6 @@ Index: lib/Connection.h
  	}
  };
  
-Index: lib/CLodHandler.h
-===================================================================
---- lib/CLodHandler.h	(revision 2183)
-+++ lib/CLodHandler.h	(working copy)
-@@ -116,6 +116,8 @@
- 	void extractFile(const std::string FName, const std::string name); //extracts a specific file
- 
- 	static unsigned char * getUnpackedFile(const std::string & path, int * sizeOut); //loads given file, decompresses and returns
-+	static int dbgLastFileSize;
-+	static std::string dbgLastFileName;
- };
- 
- 
 Index: CConsoleHandler.cpp
 ===================================================================
 --- CConsoleHandler.cpp	(revision 2183)
@@ -295,168 +266,32 @@ Index: global.h
  //for explicit overrides
  #ifdef _MSC_VER
  	#define OVERRIDE override
-Index: CThreadHelper.cpp
-===================================================================
---- CThreadHelper.cpp	(revision 2183)
-+++ CThreadHelper.cpp	(working copy)
-@@ -24,10 +24,16 @@
- }
- void CThreadHelper::run()
- {
-+#ifdef ANDROID
-+	// For debug make it single-threaded
-+	for(int i=0;i<tasks->size();i++)
-+		(*tasks)[i]();
-+#else
- 	boost::thread_group grupa;
- 	for(int i=0;i<threads;i++)
- 		grupa.create_thread(boost::bind(&CThreadHelper::processTasks,this));
- 	grupa.join_all();
-+#endif
- }
- void CThreadHelper::processTasks()
- {
 Index: client/Graphics.cpp
 ===================================================================
 --- client/Graphics.cpp	(revision 2183)
 +++ client/Graphics.cpp	(working copy)
-@@ -321,6 +321,7 @@
- 	tasks += GET_DEF_ESS(abils82,"SECSK82.DEF");
- 	tasks += GET_DEF_ESS(spellscr,"SPELLSCR.DEF");
- 	tasks += GET_DEF_ESS(heroMoveArrows,"ADAG.DEF");
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 
- 	std::ifstream ifs(DATA_DIR "/config/cr_bgs.txt"); 
- 	int id;
-@@ -331,15 +332,21 @@
- 		tasks += GET_SURFACE(backgrounds[id],name);
- 		name.replace(0,5,"TPCAS");
+@@ -333,8 +333,15 @@
  		tasks += GET_SURFACE(backgroundsm[id],name);
-+		tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
  	}
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
  
++#ifdef ANDROID
++	// For debug make it single-threaded
++	for(int i=0;i<tasks.size();i++)
++		tasks[i]();
++#else
  	CThreadHelper th(&tasks,std::max((unsigned int)1,boost::thread::hardware_concurrency()));
  	th.run();
++#endif
 +
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << " heroMoveArrows " << heroMoveArrows <<std::endl;
  
  	for(size_t y=0; y < heroMoveArrows->ourImages.size(); ++y)
  	{
-+		tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << " heroMoveArrows " << y << "/" << heroMoveArrows->ourImages.size() <<std::endl;
- 		CSDL_Ext::alphaTransform(heroMoveArrows->ourImages[y].bitmap);
- 	}
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 
- 	//handling 32x32px imgs
- 	smi->notFreeImgs = true;
-@@ -354,9 +361,11 @@
- 		bigImgs[i-2] = smi2->ourImages[i].bitmap;
- 	}
- 	delete smi2;
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- }
- void Graphics::loadHeroPortraits()
- {	
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	std::ifstream of(DATA_DIR "/config/portrety.txt");
- 	int numberOfPortraits;
- 	of>>numberOfPortraits;
-@@ -384,6 +393,7 @@
- 
- void Graphics::loadWallPositions()
- {
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	std::ifstream inp;
- 	inp.open(DATA_DIR "/config/wall_pos.txt", std::ios_base::in|std::ios_base::binary);
- 	if(!inp.is_open())
-@@ -417,24 +427,32 @@
- 
- void Graphics::loadHeroAnims()
- {
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	std::vector<std::pair<int,int> > rotations; //first - group number to be rotated1, second - group number after rotation1
- 	rotations += std::make_pair(6,10), std::make_pair(7,11), std::make_pair(8,12), std::make_pair(1,13),
- 		std::make_pair(2,14), std::make_pair(3,15);
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	for(size_t i=0; i<F_NUMBER * 2; ++i)
- 	{
- 		std::ostringstream nm;
- 		nm << "AH" << std::setw(2) << std::setfill('0') << i << "_.DEF";
-+		tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 		loadHeroAnim(nm.str(), rotations, &Graphics::heroAnims);
- 		std::string name = nm.str();
- 	}	
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 
- 	loadHeroAnim("AB01_.DEF", rotations, &Graphics::boatAnims);
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	loadHeroAnim("AB02_.DEF", rotations, &Graphics::boatAnims);
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	loadHeroAnim("AB03_.DEF", rotations, &Graphics::boatAnims);
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- }
- 
- void Graphics::loadHeroAnim( const std::string &name, const std::vector<std::pair<int,int> > &rotations, std::vector<CDefEssential *> Graphics::*dst )
- {
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << " load " << name <<std::endl;
- 	CDefEssential *anim = CDefHandler::giveDefEss(name);
- 	(this->*dst).push_back(anim);
- 	int pom = 0; //how many groups has been rotated
-@@ -472,12 +490,15 @@
- 
- void Graphics::loadHeroFlags(std::pair<std::vector<CDefEssential *> Graphics::*, std::vector<const char *> > &pr, bool mode)
- {
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	for(int i=0;i<8;i++)
- 		(this->*pr.first).push_back(CDefHandler::giveDefEss(pr.second[i]));
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	std::vector<std::pair<int,int> > rotations; //first - group number to be rotated1, second - group number after rotation1
- 	rotations += std::make_pair(6,10), std::make_pair(7,11), std::make_pair(8,12);
- 	for(int q=0; q<8; ++q)
- 	{
-+		tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 		std::vector<Cimage> &curImgs = (this->*pr.first)[q]->ourImages;
- 		for(size_t o=0; o<curImgs.size(); ++o)
- 		{
-@@ -515,6 +536,7 @@
- 				}
- 			}
- 		}
-+		tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 		for(size_t ff=0; ff<curImgs.size(); ++ff)
- 		{
- 			SDL_SetColorKey(curImgs[ff].bitmap, SDL_SRCCOLORKEY,
-@@ -522,31 +544,44 @@
- 				);
- 		}
- 	}
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- }
- 
- void Graphics::loadHeroFlags()
- {
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	using namespace boost::assign;
- 	timeHandler th;
- 	std::pair<std::vector<CDefEssential *> Graphics::*, std::vector<const char *> > pr[4];
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	pr[0].first = &Graphics::flags1;
- 	pr[0].second+=("ABF01L.DEF"),("ABF01G.DEF"),("ABF01R.DEF"),("ABF01D.DEF"),("ABF01B.DEF"),
- 		("ABF01P.DEF"),("ABF01W.DEF"),("ABF01K.DEF");
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	pr[1].first = &Graphics::flags2;
- 	pr[1].second+=("ABF02L.DEF"),("ABF02G.DEF"),("ABF02R.DEF"),("ABF02D.DEF"),("ABF02B.DEF"),
- 		("ABF02P.DEF"),("ABF02W.DEF"),("ABF02K.DEF");
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	pr[2].first = &Graphics::flags3;
- 	pr[2].second+=("ABF03L.DEF"),("ABF03G.DEF"),("ABF03R.DEF"),("ABF03D.DEF"),("ABF03B.DEF"),
- 		("ABF03P.DEF"),("ABF03W.DEF"),("ABF03K.DEF");
+@@ -541,13 +548,20 @@
  	pr[3].first = &Graphics::flags4;
  	pr[3].second+=("AF00.DEF"),("AF01.DEF"),("AF02.DEF"),("AF03.DEF"),("AF04.DEF"),
  		("AF05.DEF"),("AF06.DEF"),("AF07.DEF");
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
 +#ifdef ANDROID
++	// We ain't no need any filthy multithreading
 +	for(int g=0; g<4; g++)
 +	{
 +		loadHeroFlags(pr[g],true);
@@ -468,42 +303,11 @@ Index: client/Graphics.cpp
  		grupa.create_thread(boost::bind(&Graphics::loadHeroFlags,this,boost::ref(pr[g]),true));
  	}
  	grupa.join_all();
+-	tlog0 << "Loading and transforming heroes' flags: "<<th.getDif()<<std::endl;
 +#endif
- 	tlog0 << "Loading and transforming heroes' flags: "<<th.getDif()<<std::endl;
  }
  SDL_Surface * Graphics::getPic(int ID, bool fort, bool builded)
-@@ -669,6 +704,7 @@
- 
- void Graphics::loadTrueType()
  {
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	bool ttfPresent = false;//was TTF initialised or not
- 	for(int i = 0; i < FONTS_NUMBER; i++)
- 		fontsTrueType[i] = NULL;
-@@ -702,6 +738,7 @@
- 
- Font * Graphics::loadFont( const char * name )
- {
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	int len = 0;
- 	unsigned char * hlp = bitmaph->giveFile(name, FILE_FONT, &len);
- 	if(!hlp || !len)
-@@ -725,6 +762,7 @@
- 
- void Graphics::loadFonts()
- {
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	static const char *fontnames [] = {"BIGFONT.FNT", "CALLI10R.FNT", "CREDITS.FNT", "HISCORE.FNT", "MEDFONT.FNT",
- 								"SMALFONT.FNT", "TIMES08R.FNT", "TINY.FNT", "VERD10B.FNT"} ;
- 
-@@ -745,6 +783,7 @@
- 
- void Graphics::loadErmuToPicture()
- {
-+	tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
- 	//loading ERMU to picture
- 	std::ifstream etp(DATA_DIR "/config/ERMU_to_picture.txt");
- 
 Index: client/Client.cpp
 ===================================================================
 --- client/Client.cpp	(revision 2183)
@@ -626,6 +430,19 @@ Index: client/GUIBase.cpp
  
  CGuiHandler::CGuiHandler()
  :lastClick(-500, -500)
+Index: client/CAnimation.h
+===================================================================
+--- client/CAnimation.h	(revision 2183)
++++ client/CAnimation.h	(working copy)
+@@ -46,6 +46,8 @@
+ 	std::map<size_t, std::vector <size_t> > offset;
+ 
+ 	unsigned char * data;
++	int lodLength;
++	std::string fname;
+ 	SDL_Color * palette;
+ 
+ public:
 Index: client/CDefHandler.h
 ===================================================================
 --- client/CDefHandler.h	(revision 2183)
@@ -638,6 +455,31 @@ Index: client/CDefHandler.h
  };
  
  // Def entry in file. Integer fields are all little endian and will
+@@ -94,9 +93,9 @@
+ 
+ 	CDefHandler(); //c-tor
+ 	~CDefHandler(); //d-tor
+-	SDL_Surface * getSprite (int SIndex, const unsigned char * FDef, const BMPPalette * palette) const; //saves picture with given number to "testtt.bmp"
++	SDL_Surface * getSprite (int SIndex, const unsigned char * FDef, const BMPPalette * palette, const std::string & name, int lodLength) const; //saves picture with given number to "testtt.bmp"
+ 	static void expand(unsigned char N,unsigned char & BL, unsigned char & BR);
+-	void openFromMemory(unsigned char * table, const std::string & name);
++	void openFromMemory(unsigned char * table, const std::string & name, int lodLength);
+ 	CDefEssential * essentialize();
+ 
+ 	static CDefHandler * giveDef(const std::string & defName);
+Index: client/CCreatureAnimation.h
+===================================================================
+--- client/CCreatureAnimation.h	(revision 2183)
++++ client/CCreatureAnimation.h	(working copy)
+@@ -66,6 +66,8 @@
+ 	int curFrame, internalFrame; //number of currently displayed frame
+ 	unsigned int frames; //number of frames
+ 	CCreatureAnim::EAnimType type; //type of animation being displayed (-1 - whole animation, >0 - specified part [default: -1])
++	int lodLength;
++	std::string fname;
+ 	
+ 	template<int bpp>
+ 	int nextFrameT(SDL_Surface * dest, int x, int y, bool attacker, unsigned char animCount, bool incrementFrame = true, bool yellowBorder = false, bool blueBorder = false, SDL_Rect * destRect = NULL); //0 - success, any other - error //print next 
 Index: client/Client.h
 ===================================================================
 --- client/Client.h	(revision 2183)
@@ -852,13 +694,14 @@ Index: client/CDefHandler.cpp
  		SDL_FreeSurface(ourImages[i].bitmap);
  }
  
+-void CDefHandler::openFromMemory(unsigned char *table, const std::string & name)
 +#define CHECK_LOD_MEM_BLOCK_SIZE1(S, FF, F, L) { \
-+		if( CLodHandler::dbgLastFileSize < (S) ) \
-+			tlog1<<"ERROR in " << FF << " " << F << ":" << L << ": reading past the end of LOD mem block at " << \
-+			(S) << " memblock " << CLodHandler::dbgLastFileSize << " fname " << CLodHandler::dbgLastFileName << std::endl; }
++		if( lodLength < (S) ) \
++			tlog1<<"ERROR in " << FF << " " << F << ":" << L << ": reading past the end of LOD mem block by " << \
++			(S) - lodLength << " bytes, fname " << name << " size " << lodLength << std::endl; }
 +#define CHECK_LOD_MEM_BLOCK_SIZE(S) CHECK_LOD_MEM_BLOCK_SIZE1(S, __FUNCTION__, __FILE__, __LINE__)
 +
- void CDefHandler::openFromMemory(unsigned char *table, const std::string & name)
++void CDefHandler::openFromMemory(unsigned char *table, const std::string & name, int lodLength)
  {
 +	//tlog0<<"openFromMemory ptr " << (void *)table <<std::endl;
 +
@@ -942,8 +785,9 @@ Index: client/CDefHandler.cpp
  	for(unsigned int i=0; i < SEntries.size(); ++i)
  	{
  		Cimage nimg;
+-		nimg.bitmap = getSprite(i, table, palette);
 +		//tlog0<<"Megadebug 4491" << std::endl;
- 		nimg.bitmap = getSprite(i, table, palette);
++		nimg.bitmap = getSprite(i, table, palette, name, lodLength);
 +		//tlog0<<"Megadebug 4492" << std::endl;
  		nimg.imName = SEntries[i].name;
  		nimg.groupNumber = SEntries[i].group;
@@ -957,14 +801,15 @@ Index: client/CDefHandler.cpp
  	BR = N & 0x1F;
  }
  
+-SDL_Surface * CDefHandler::getSprite (int SIndex, const unsigned char * FDef, const BMPPalette * palette) const
 +
-+#define CHECK_OUTBUF_MEM_BLOCK_SIZE1(S, FF, F, L) { \
-+		if( FullHeight*FullWidth < (S) ) \
++#define CHECK_OUTBUF_MEM_BLOCK_SIZE1(S, FF, F, L) \
++		if( FullHeight*FullWidth < (S) ) { \
 +			tlog1<<"ERROR in " << FF << " " << F << ":" << L << ": writing past the end of SDL surface at " << \
-+			(S) << " memblock " << FullHeight*FullWidth << " fname " << CLodHandler::dbgLastFileName << std::endl; }
-+#define CHECK_OUTBUF_MEM_BLOCK_SIZE(S) CHECK_LOD_MEM_BLOCK_SIZE1(S, __FUNCTION__, __FILE__, __LINE__)
++			(S) << " memblock " << FullHeight*FullWidth << " fname " << name << std::endl; }
++#define CHECK_OUTBUF_MEM_BLOCK_SIZE(S) CHECK_OUTBUF_MEM_BLOCK_SIZE1(S, __FUNCTION__, __FILE__, __LINE__)
 +
- SDL_Surface * CDefHandler::getSprite (int SIndex, const unsigned char * FDef, const BMPPalette * palette) const
++SDL_Surface * CDefHandler::getSprite (int SIndex, const unsigned char * FDef, const BMPPalette * palette, const std::string & name, int lodLength) const
  {
  	SDL_Surface * ret=NULL;
 +	//tlog0<<"getSprite ptr " << (void *)FDef  << std::endl;
@@ -1014,16 +859,19 @@ Index: client/CDefHandler.cpp
  	switch(defType2)
  	{
  	case 0:
-@@ -206,6 +246,8 @@
+@@ -206,7 +246,10 @@
  			if (LeftMargin>0)
  				ftcp += LeftMargin;
  
+-			memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, &FDef[BaseOffset], SpriteWidth);
 +			CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset + SpriteWidth);
-+			CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + SpriteWidth);
- 			memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, &FDef[BaseOffset], SpriteWidth);
++			CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + SpriteWidth)
++			else
++				memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, &FDef[BaseOffset], SpriteWidth);
  			ftcp += SpriteWidth;
  			BaseOffset += SpriteWidth;
-@@ -218,11 +260,12 @@
+ 			
+@@ -218,11 +261,12 @@
  
  	case 1:
  	{
@@ -1038,7 +886,7 @@ Index: client/CDefHandler.cpp
  			if (LeftMargin>0)
  				ftcp += LeftMargin;
  
-@@ -230,17 +273,22 @@
+@@ -230,18 +274,25 @@
  			do
  			{
  				unsigned int SegmentLength;
@@ -1051,18 +899,23 @@ Index: client/CDefHandler.cpp
 +
  				if (SegmentType==0xFF)
  				{
+-					memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, FDef + BaseOffset, SegmentLength);
 +					CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset + SegmentLength);
-+					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + SegmentLength);
- 					memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, FDef + BaseOffset, SegmentLength);
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + SegmentLength)
++					else
++						memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, FDef + BaseOffset, SegmentLength);
  					BaseOffset+=SegmentLength;
  				}
  				else
  				{
-+					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + SegmentLength);
- 					memset(reinterpret_cast<char*>(ret->pixels)+ftcp, SegmentType, SegmentLength);
+-					memset(reinterpret_cast<char*>(ret->pixels)+ftcp, SegmentType, SegmentLength);
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + SegmentLength)
++					else
++						memset(reinterpret_cast<char*>(ret->pixels)+ftcp, SegmentType, SegmentLength);
  				}
  				ftcp += SegmentLength;
-@@ -260,6 +308,7 @@
+ 				TotalRowLength += SegmentLength;
+@@ -260,6 +311,7 @@
  
  	case 2:
  	{
@@ -1070,7 +923,7 @@ Index: client/CDefHandler.cpp
  		BaseOffset = BaseOffsetor + SDL_SwapLE16(read_unaligned_u16(FDef + BaseOffsetor));
  
  		for (unsigned int i=0;i<SpriteHeight;i++)
-@@ -272,17 +321,21 @@
+@@ -272,18 +324,24 @@
  
  			do
  			{
@@ -1080,19 +933,24 @@ Index: client/CDefHandler.cpp
  				unsigned char value = (SegmentType & 31) + 1;
  				if(code==7)
  				{
+-					memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, &FDef[BaseOffset], value);
 +					CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset + value);
-+					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + value);
- 					memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, &FDef[BaseOffset], value);
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + value)
++					else
++						memcpy(reinterpret_cast<char*>(ret->pixels)+ftcp, &FDef[BaseOffset], value);
  					ftcp += value;
  					BaseOffset += value;
  				}
  				else
  				{
-+					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + value);
- 					memset(reinterpret_cast<char*>(ret->pixels)+ftcp, code, value);
+-					memset(reinterpret_cast<char*>(ret->pixels)+ftcp, code, value);
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + value)
++					else
++						memset(reinterpret_cast<char*>(ret->pixels)+ftcp, code, value);
  					ftcp += value;
  				}
-@@ -304,6 +357,7 @@
+ 				TotalRowLength+=value;
+@@ -304,6 +362,7 @@
  	{
  		for (unsigned int i=0;i<SpriteHeight;i++)
  		{
@@ -1100,7 +958,7 @@ Index: client/CDefHandler.cpp
  			BaseOffset = BaseOffsetor + SDL_SwapLE16(read_unaligned_u16(FDef + BaseOffsetor+i*2*(SpriteWidth/32)));
  			if (LeftMargin>0)
  				ftcp += LeftMargin;
-@@ -312,6 +366,7 @@
+@@ -312,6 +371,7 @@
  
  			do
  			{
@@ -1108,23 +966,28 @@ Index: client/CDefHandler.cpp
  				SegmentType=FDef[BaseOffset++];
  				unsigned char code = SegmentType / 32;
  				unsigned char value = (SegmentType & 31) + 1;
-@@ -321,12 +376,15 @@
+@@ -321,13 +381,18 @@
  
  				if(code==7)
  				{
+-					memcpy((ui8*)ret->pixels + ftcp, FDef + BaseOffset, len);
 +					CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset + len);
-+					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + len);
- 					memcpy((ui8*)ret->pixels + ftcp, FDef + BaseOffset, len);
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + len)
++					else
++						memcpy((ui8*)ret->pixels + ftcp, FDef + BaseOffset, len);
  					ftcp += len;
  					BaseOffset += len;
  				}
  				else
  				{
-+					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + len);
- 					memset((ui8*)ret->pixels + ftcp, code, len);
+-					memset((ui8*)ret->pixels + ftcp, code, len);
++					CHECK_OUTBUF_MEM_BLOCK_SIZE(ftcp + len)
++					else
++						memset((ui8*)ret->pixels + ftcp, code, len);
  					ftcp += len;
  				}
-@@ -345,6 +403,7 @@
+ 				TotalRowLength+=( LeftMargin>=0 ? value : value+LeftMargin );
+@@ -345,6 +410,7 @@
  	break;
  
  	default:
@@ -1132,21 +995,282 @@ Index: client/CDefHandler.cpp
  		throw std::string("Unknown sprite format.");
  		break;
  	}
-@@ -365,9 +424,12 @@
+@@ -365,11 +431,15 @@
  
  CDefHandler * CDefHandler::giveDef(const std::string & defName)
  {
-+	tlog0<<"giveDef " << defName <<std::endl;
- 	unsigned char * data = spriteh->giveFile(defName, FILE_ANIMATION);
+-	unsigned char * data = spriteh->giveFile(defName, FILE_ANIMATION);
 -	if(!data)
 -		throw "bad def name!";
++	//tlog0<<"giveDef " << defName <<std::endl;
++	int lodLength = 0;
++	unsigned char * data = spriteh->giveFile(defName, FILE_ANIMATION, &lodLength);
 +	if(!data) {
 +		tlog0<<"Bad def name: " << defName <<std::endl;
 +		throw std::runtime_error("bad def name!");
 +	}
  	CDefHandler * nh = new CDefHandler();
- 	nh->openFromMemory(data, defName);
+-	nh->openFromMemory(data, defName);
++	nh->openFromMemory(data, defName, lodLength);
  	delete [] data;
+ 	return nh;
+ }
+Index: client/CCreatureAnimation.cpp
+===================================================================
+--- client/CCreatureAnimation.cpp	(revision 2183)
++++ client/CCreatureAnimation.cpp	(working copy)
+@@ -37,15 +37,23 @@
+ 	}
+ }
+ 
++#define CHECK_LOD_MEM_BLOCK_SIZE1(S, FF, F, L) { \
++		if( lodLength < (S) ) \
++			tlog1<<"ERROR in " << FF << " " << F << ":" << L << ": reading past the end of LOD mem block by " << \
++			(S) - lodLength << " bytes, fname " << fname << " size " << lodLength << std::endl; }
++#define CHECK_LOD_MEM_BLOCK_SIZE(S) CHECK_LOD_MEM_BLOCK_SIZE1(S, __FUNCTION__, __FILE__, __LINE__)
++
+ CCreatureAnimation::CCreatureAnimation(std::string name) : internalFrame(0), once(false)
+ {
+-	FDef = spriteh->giveFile(name, FILE_ANIMATION); //load main file
++	FDef = spriteh->giveFile(name, FILE_ANIMATION, &lodLength); //load main file
++	fname = name;
+ 
+ 	//init anim data
+ 	int i,j, totalInBlock;
+ 
+ 	defName=name;
+ 	i = 0;
++	CHECK_LOD_MEM_BLOCK_SIZE(i+0x310);
+ 	DEFType = readNormalNr<4>(i,FDef); i+=4;
+ 	fullWidth = readNormalNr<4>(i,FDef); i+=4;
+ 	fullHeight = readNormalNr<4>(i,FDef); i+=4;
+@@ -64,6 +72,7 @@
+ 	totalEntries=0;
+ 	for (int z=0; z<totalBlocks; z++)
+ 	{
++		CHECK_LOD_MEM_BLOCK_SIZE(i+16);
+ 		std::vector<int> frameIDs;
+ 		int group = readNormalNr<4>(i,FDef); i+=4; //block ID
+ 		totalInBlock = readNormalNr<4>(i,FDef); i+=4;
+@@ -76,6 +85,7 @@
+ 		int unknown2 = readNormalNr<4>(i,FDef); i+=4; //TODO use me
+ 		int unknown3 = readNormalNr<4>(i,FDef); i+=4; //TODO use me
+ 		i+=13*totalInBlock; //ommiting names
++		CHECK_LOD_MEM_BLOCK_SIZE(i+totalInBlock*4);
+ 		for (j=0; j<totalInBlock; j++)
+ 		{ 
+ 			SEntries[totalEntries+j].offset = readNormalNr<4>(i,FDef); i+=4;
+@@ -173,6 +183,7 @@
+ 	unsigned char SegmentType, SegmentLength;
+ 
+ 	i = BaseOffset = SEntries[SIndex].offset;
++	CHECK_LOD_MEM_BLOCK_SIZE(i+32);
+ 	int prSize = readNormalNr<4>(i, FDef); i += 4; //TODO use me
+ 	int defType2 = readNormalNr<4>(i, FDef); i += 4;
+ 	FullWidth = readNormalNr<4>(i, FDef); i += 4;
+@@ -194,11 +205,12 @@
+ 		{
+ 			ftcp += FullWidth * TopMargin;
+ 		}
+-		int *RLEntries = (int*)(FDef + BaseOffset);
++		unsigned char *RLEntries = (FDef + BaseOffset);
+ 		BaseOffset += sizeof(int) * SpriteHeight;
+ 		for (int i = 0; i < SpriteHeight; i++)
+ 		{
+-			BaseOffset = BaseOffsetor + RLEntries[i];
++			CHECK_LOD_MEM_BLOCK_SIZE(RLEntries+i*4-FDef);
++			BaseOffset = BaseOffsetor + read_unaligned_u32(RLEntries+i*4);
+ 			if (LeftMargin > 0)
+ 			{
+ 				ftcp += LeftMargin;
+@@ -213,6 +225,7 @@
+ 
+ 			do
+ 			{
++				CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset+2);
+ 				SegmentType = FDef[BaseOffset++];
+ 				SegmentLength = FDef[BaseOffset++];
+ 
+@@ -227,6 +240,8 @@
+ 					{
+ 						if(!destRect || (destRect->x <= xB && destRect->x + destRect->w > xB))
+ 						{
++							if(SegmentType == 0xff)
++								CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset+k+1);
+ 							const ui8 colorNr = SegmentType == 0xff ? FDef[BaseOffset+k] : SegmentType;
+ 							putPixel<bpp>(dest, xB, yB, palette[colorNr], colorNr, yellowBorder, blueBorder, aCountMod);
+ 						}
+Index: client/CAnimation.cpp
+===================================================================
+--- client/CAnimation.cpp	(revision 2183)
++++ client/CAnimation.cpp	(working copy)
+@@ -95,6 +95,13 @@
+ 	}
+ }
+ 
++
++#define CHECK_LOD_MEM_BLOCK_SIZE1(S, FF, F, L) { \
++		if( lodLength < (S) ) \
++			tlog1<<"ERROR in " << FF << " " << F << ":" << L << ": reading past the end of LOD mem block by " << \
++			(S) - lodLength << " bytes, fname " << fname << " size " << lodLength << std::endl; }
++#define CHECK_LOD_MEM_BLOCK_SIZE(S) CHECK_LOD_MEM_BLOCK_SIZE1(S, __FUNCTION__, __FILE__, __LINE__)
++
+ CDefFile::CDefFile(std::string Name):
+ 	data(NULL),
+ 	palette(NULL)
+@@ -112,15 +119,18 @@
+ 		{   0,   0,   0, 192} // 75% - shadow border below selection
+ 	};
+ 
+-	data = spriteh->giveFile(Name, FILE_ANIMATION);
++	fname = Name;
++	data = spriteh->giveFile(Name, FILE_ANIMATION, &lodLength);
+ 	palette = new SDL_Color[256];
+ 	int it = 0;
+ 
++	CHECK_LOD_MEM_BLOCK_SIZE(it+4);
+ 	unsigned int type = readNormalNr(data, it);
+ 	it+=4;
+ 	//int width  = readNormalNr(data, it); it+=4;//not used
+ 	//int height = readNormalNr(data, it); it+=4;
+ 	it+=8;
++	CHECK_LOD_MEM_BLOCK_SIZE(it+4);
+ 	unsigned int totalBlocks = readNormalNr(data, it);
+ 	it+=4;
+ 
+@@ -135,6 +145,7 @@
+ 
+ 	for (unsigned int i=0; i<totalBlocks; i++)
+ 	{
++		CHECK_LOD_MEM_BLOCK_SIZE(it+8);
+ 		size_t blockID = readNormalNr(data, it);
+ 		it+=4;
+ 		size_t totalEntries = readNormalNr(data, it);
+@@ -146,6 +157,7 @@
+ 
+ 		for (unsigned int j=0; j<totalEntries; j++)
+ 		{
++			CHECK_LOD_MEM_BLOCK_SIZE(it+4);
+ 			size_t currOffset = readNormalNr(data, it);
+ 			offset[blockID].push_back(currOffset);
+ 			it += 4;
+@@ -162,7 +174,9 @@
+ 
+ 	const ui8 * FDef = data+it->second[frame];
+ 
+-	const SSpriteDef sd = * reinterpret_cast<const SSpriteDef *>(FDef);
++	SSpriteDef sd;
++	CHECK_LOD_MEM_BLOCK_SIZE((FDef-data)+sizeof(sd));
++	memcpy(&sd, FDef, sizeof(sd));
+ 	SSpriteDef sprite;
+ 
+ 	//sprite.size = SDL_SwapLE32(sd.size);//unused
+@@ -188,6 +202,7 @@
+ 			//pixel data is not compressed, copy data to surface
+ 			for (unsigned int i=0; i<sprite.height; i++)
+ 			{
++				CHECK_LOD_MEM_BLOCK_SIZE((FDef-data)+currentOffset);
+ 				loader.Load(sprite.width, FDef[currentOffset]);
+ 				currentOffset += sprite.width;
+ 				loader.EndLine();
+@@ -197,22 +212,33 @@
+ 	case 1:
+ 		{
+ 			//for each line we have offset of pixel data
+-			const ui32 * RWEntriesLoc = reinterpret_cast<const ui32 *>(FDef+currentOffset);
++			const unsigned char * RWEntriesLoc = FDef+currentOffset;
+ 			currentOffset += sizeof(ui32) * sprite.height;
+ 
+ 			for (unsigned int i=0; i<sprite.height; i++)
+ 			{
++				//tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << " data " << (void *)data << " RWEntriesLoc " << (void *) RWEntriesLoc << " reading at offset " << ((RWEntriesLoc+i*4)-data)+4 << std::endl;
++
+ 				//get position of the line
+-				currentOffset=BaseOffset + SDL_SwapLE32(read_unaligned_u32(RWEntriesLoc + i));
++				CHECK_LOD_MEM_BLOCK_SIZE(((RWEntriesLoc+i*4)-data)+4);
++				ui32 offset2 = SDL_SwapLE32(read_unaligned_u32(RWEntriesLoc + i*4));
++				currentOffset=BaseOffset + offset2;
+ 				unsigned int TotalRowLength = 0;
++				
++				/*
++				tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << " data " << (void *)data << " RWEntriesLoc " << (void *) RWEntriesLoc <<
++						" currentOffset " << currentOffset << " BaseOffset " << BaseOffset << " offset2 " << offset2 << std::endl;
++				*/
+ 
+ 				while (TotalRowLength<sprite.width)
+ 				{
++					CHECK_LOD_MEM_BLOCK_SIZE((FDef-data)+currentOffset+1);
+ 					unsigned char type=FDef[currentOffset++];
+ 					unsigned int length=FDef[currentOffset++] + 1;
+ 
+ 					if (type==0xFF)//Raw data
+ 					{
++						CHECK_LOD_MEM_BLOCK_SIZE((FDef-data)+currentOffset+length);
+ 						loader.Load(length, FDef + currentOffset);
+ 						currentOffset+=length;
+ 					}
+@@ -237,12 +263,14 @@
+ 
+ 				while (TotalRowLength<sprite.width)
+ 				{
++					CHECK_LOD_MEM_BLOCK_SIZE((FDef-data)+currentOffset+1);
+ 					unsigned char SegmentType=FDef[currentOffset++];
+ 					unsigned char code = SegmentType / 32;
+ 					unsigned char length = (SegmentType & 31) + 1;
+ 
+ 					if (code==7)//Raw data
+ 					{
++						CHECK_LOD_MEM_BLOCK_SIZE((FDef-data)+currentOffset+length);
+ 						loader.Load(length, FDef[currentOffset]);
+ 						currentOffset += length;
+ 					}
+@@ -260,17 +288,20 @@
+ 		{
+ 			for (unsigned int i=0; i<sprite.height; i++)
+ 			{
++				CHECK_LOD_MEM_BLOCK_SIZE((FDef-data)+BaseOffset+i*2*(sprite.width/32)+2);
+ 				currentOffset = BaseOffset + SDL_SwapLE16(read_unaligned_u16(FDef + BaseOffset+i*2*(sprite.width/32)));
+ 				unsigned int TotalRowLength=0;
+ 
+ 				while (TotalRowLength<sprite.width)
+ 				{
++					CHECK_LOD_MEM_BLOCK_SIZE((FDef-data)+currentOffset+1);
+ 					unsigned char segment = FDef[currentOffset++];
+ 					unsigned char code = segment / 32;
+ 					unsigned char length = (segment & 31) + 1;
+ 
+ 					if (code==7)//Raw data
+ 					{
++						CHECK_LOD_MEM_BLOCK_SIZE((FDef-data)+currentOffset+length);
+ 						loader.Load(length, FDef + currentOffset);
+ 						currentOffset += length;
+ 					}
+@@ -288,6 +319,7 @@
+ 		tlog0<<"Error: unsupported format of def file:"<<sprite.format<<"\n";
+ 		break;
+ 	}
++	//tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ <<std::endl;
+ };
+ 
+ CDefFile::~CDefFile()
+@@ -332,7 +364,7 @@
+ 
+ inline void SDLImageLoader::Load(size_t size, const ui8 * data)
+ {
+-	if (size)
++	if (size && (ui8 *)image->surf->pixels + image->surf->h*image->surf->pitch >= position + size )
+ 	{
+ 		memcpy((void *)position, data, size);
+ 		position += size;
+@@ -341,7 +373,7 @@
+ 
+ inline void SDLImageLoader::Load(size_t size, ui8 color)
+ {
+-	if (size)
++	if (size && (ui8 *)image->surf->pixels + image->surf->h*image->surf->pitch >= position + size)
+ 	{
+ 		memset((void *)position, color, size);
+ 		position += size;
 Index: client/GUIBase.h
 ===================================================================
 --- client/GUIBase.h	(revision 2183)
