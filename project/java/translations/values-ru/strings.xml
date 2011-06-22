@@ -126,4 +126,6 @@
 <string name="display_size_small">Маленький (телефон)</string>
 <string name="display_size_tiny">Крохотный (Xperia Mini)</string>
 <string name="show_more_options">Показать больше параметров</string>
+<string name="broken_libc_title">Обнаружена бракованная прошивка</string>
+<string name="broken_libc_text">Ваше устройство содержит дефективные системные библиотеки, данное приложение скорее всего не будет работать. Пожалуйста, установите обновление, либо установите неофициальную прошивку, либо скопируйте /system/lib/libc.so с другого устройства (только для специалистов!)</string>
 </resources>
