@@ -85,4 +85,5 @@ class Globals {
 	public static String DataDir = new String("");
 	public static boolean SmoothVideo = false;
 	public static boolean MultiThreadedVideo = false;
+	public static boolean BrokenLibCMessageShown = false;
 }

@@ -613,12 +613,7 @@ public class MainActivity extends Activity {
 
 					out.flush();
 					out.close();
-					try {
-						(new ProcessBuilder().command("/system/bin/chmod", "0755", path).start()).waitFor();
-					} catch ( Exception eeee ) {}
-					try {
-						(new ProcessBuilder().command("/system/xbin/chmod", "0755", path).start()).waitFor();
-					} catch ( Exception eeeee ) {}
+					Settings.nativeChmod(path, 0755);
 				}
 			}
 			catch ( Exception eee )

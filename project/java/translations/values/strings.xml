@@ -151,5 +151,7 @@
     <string name="display_size_small">Small (phone)</string>
     <string name="display_size_tiny">Tiny (Xperia Mini)</string>
     <string name="show_more_options">Show more options</string>
+    <string name="broken_libc_title">Broken OS detected</string>
+    <string name="broken_libc_text">Your device has broken system libraries, this application will most probably crash. Please install a system update, or flash a custom ROM, or copy file /system/lib/libc.so from another device (experts only!)</string>
 
 </resources>
