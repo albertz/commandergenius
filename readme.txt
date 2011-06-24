@@ -338,26 +338,21 @@ License information
 ===================
 
 The SDL port itself is licensed under LGPL, so you may use it for commercial purposes
-without releasing source code, however to fullfill LGPL requirementsyou'll have to publish
+without releasing source code, however to fullfill LGPL requirements you'll have to publish
 the file AndroidAppSettings.cfg to allow linking other version of SDL with the libraries
 in the binary package you're distributing - typically libapplication.so and other
 closed-source libraries in your .apk file.
 
-There is a license exception for a file project/java/Settings.java:
-you may modify it as you wish without releasing source code,
-as long as your binary package can be linked and executed without error against the SDL compiled
-from the original source code. This implies that you may not modify Java-to-C
-interface, otherwise you have to publish the source code with your changes.
+The Java source files are licensed under zlib license, which means
+you may modify them as you like without releasing source code,
+as long as your binary package can be linked and executed without error
+against the SDL shared library compiled from the original source code.
+This implies that you may not modify Java-to-C interface,
+or you'll have to publish all your changes to both C and Java files.
 
-This exception is here to permit you to replace a rather awkward SDL startup config dialog
-with your own user-friendly version, possibly with lesser options and some help on them.
-Also you may put your own logo in the startup screen instead of the "Powered by SDL" logo.
-
-You may modify other Java files if needed to implement your custom startup config dialog
-without publishing the source code, to a reasonable extent of course - if your modification
-will make SDL work better, faster or more stable beyond the startup config dialog -
-you still have to publish the source code with such change (and I don't care about
-changes which will make SDL work worse, slower or less stable, you may keep them).
+Please note that SDL 1.3 Andorid port from libsdl.org has changed it's license type
+to zlib, however I've used older release of SDL 1.3 to create this port,
+and I cannot switch license type for the C source files I didn't write myself.
 
 The libraries under project/jni, each of which has it's own license,
 I've tried to compile all LGPL-ed libs as shared libs but you should anyway inspect the licenses
