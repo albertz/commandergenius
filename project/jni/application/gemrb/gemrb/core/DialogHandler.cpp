@@ -25,10 +25,14 @@
 #include "DisplayMessage.h"
 #include "Game.h"
 #include "GameData.h"
+#include "GlobalTimer.h"
+#include "PluginMgr.h"
 #include "ScriptEngine.h"
+#include "TableMgr.h"
 #include "Video.h"
 #include "GameScript/GameScript.h"
 #include "GUI/GameControl.h"
+#include "GUI/TextArea.h"
 
 //translate section values (journal, solved, unsolved, user)
 static int sectionMap[4]={4,1,2,0};
@@ -56,7 +60,7 @@ DialogHandler::~DialogHandler(void)
 }
 
 //Try to start dialogue between two actors (one of them could be inanimate)
-int DialogHandler::InitDialog(Scriptable* spk, Scriptable* tgt, const char* dlgref)
+bool DialogHandler::InitDialog(Scriptable* spk, Scriptable* tgt, const char* dlgref)
 {
 	if (dlg) {
 		delete dlg;
@@ -64,13 +68,12 @@ int DialogHandler::InitDialog(Scriptable* spk, Scriptable* tgt, const char* dlgr
 	}
 
 	PluginHolder<DialogMgr> dm(IE_DLG_CLASS_ID);
-	dm->Open( gamedata->GetResource( dlgref, IE_DLG_CLASS_ID ), true );
+	dm->Open(gamedata->GetResource(dlgref, IE_DLG_CLASS_ID));
 	dlg = dm->GetDialog();
 
 	if (!dlg) {
-		printMessage("GameControl", " ", LIGHT_RED);
-		printf( "Cannot start dialog: %s\n", dlgref );
-		return -1;
+		printMessage("GameControl", "Cannot start dialog: %s\n", LIGHT_RED, dlgref);
+		return false;
 	}
 
 	strnlwrcpy(dlg->ResRef, dlgref, 8); //this isn't handled by GetDialog???
@@ -85,8 +88,9 @@ int DialogHandler::InitDialog(Scriptable* spk, Scriptable* tgt, const char* dlgr
 	if (!originalTargetID) originalTargetID = tgt->GetGlobalID();
 	if (tgt->Type==ST_ACTOR) {
 		Actor *tar = (Actor *) tgt;
-		spk->LastTalkedTo=targetID;
-		tar->LastTalkedTo=speakerID;
+		// TODO: verify
+		spk->LastTalker=targetID;
+		tar->LastTalker=speakerID;
 		tar->SetCircleSize();
 	}
 	if (oldTarget) oldTarget->SetCircleSize();
@@ -94,16 +98,16 @@ int DialogHandler::InitDialog(Scriptable* spk, Scriptable* tgt, const char* dlgr
 	GameControl *gc = core->GetGameControl();
 
 	if (!gc)
-		return -1;
+		return false;
 
 	//check if we are already in dialog
 	if (gc->GetDialogueFlags()&DF_IN_DIALOG) {
-		return 0;
+		return true;
 	}
 
 	int si = dlg->FindFirstState( tgt );
 	if (si < 0) {
-		return -1;
+		return false;
 	}
 
 	//we need GUI for dialogs
@@ -134,7 +138,7 @@ int DialogHandler::InitDialog(Scriptable* spk, Scriptable* tgt, const char* dlgr
 	//core->GetGame()->SetControlStatus(CS_HIDEGUI, BM_NAND);
 	//core->GetGame()->SetControlStatus(CS_DIALOG, BM_OR);
 	//core->SetEventFlag(EF_PORTRAIT);
-	return 0;
+	return true;
 }
 
 /*try to break will only try to break it, false means unconditional stop*/
@@ -348,16 +352,15 @@ void DialogHandler::DialogChoose(unsigned int choose)
 			// we have to make a backup, tr->Dialog is freed
 			ieResRef tmpresref;
 			strnlwrcpy(tmpresref,tr->Dialog, 8);
-			if (target->GetInternalFlag()&IF_NOINT) {
+			/*if (target->GetInternalFlag()&IF_NOINT) {
 				// this whole check moved out of InitDialog by fuzzie, see comments
 				// for the IF_NOINT check in BeginDialog
 				displaymsg->DisplayConstantString(STR_TARGETBUSY,0xff0000);
 				ta->SetMinRow( false );
 				EndDialog();
 				return;
-			}
-			int ret = InitDialog( speaker, target, tmpresref);
-			if (ret<0) {
+			}*/
+			if (!InitDialog( speaker, target, tmpresref)) {
 				// error was displayed by InitDialog
 				ta->SetMinRow( false );
 				EndDialog();

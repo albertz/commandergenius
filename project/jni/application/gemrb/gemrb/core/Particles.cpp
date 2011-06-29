@@ -20,9 +20,11 @@
 
 #include "Particles.h"
 
-#include "Interface.h"
-#include "Video.h"
+#include "CharAnimations.h"
 #include "Game.h"
+#include "Interface.h"
+#include "TableMgr.h"
+#include "Video.h"
 
 Color sparkcolors[MAX_SPARK_COLOR][MAX_SPARK_PHASE];
 bool inited = false;
@@ -31,7 +33,7 @@ bool inited = false;
 
 static int spark_color_indices[SPARK_COUNT]={12,5,0,6,1,8,2,7,9,3,4,10,11};
 
-void TranslateColor(const char *value, Color &color)
+static void TranslateColor(const char *value, Color &color)
 {
 	int r = 0;
 	int g = 0;
@@ -50,7 +52,7 @@ void TranslateColor(const char *value, Color &color)
 	color.b=b;
 }
 
-void InitSparks()
+static void InitSparks()
 {
 	int i,j;
 	AutoTable tab("sprklclr");

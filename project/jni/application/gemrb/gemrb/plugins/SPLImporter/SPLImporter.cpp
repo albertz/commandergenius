@@ -24,13 +24,14 @@
 
 #include "EffectMgr.h"
 #include "Interface.h"
+#include "PluginMgr.h"
 #include "TableMgr.h" //needed for autotable
 
 int *cgsounds = NULL;
 int cgcount = -1;
 
 //cannot call this at the time of initialization because the tablemanager isn't alive yet
-void Initializer()
+static void Initializer()
 {
 	if (cgsounds) {
 		free(cgsounds);
@@ -40,7 +41,7 @@ void Initializer()
 	AutoTable tm("cgtable");
 	if (!tm) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "Cannot find cgtable.2da.\n");
+		print( "Cannot find cgtable.2da.\n");
 		return;
 	}
 	cgcount = tm->GetRowCount();
@@ -50,14 +51,14 @@ void Initializer()
 	}
 }
 
-void ReleaseMemorySPL()
+static void ReleaseMemorySPL()
 {
 	free(cgsounds);
 	cgsounds = NULL;
 	cgcount = -1;
 }
 
-int GetCGSound(ieDword CastingGraphics)
+static int GetCGSound(ieDword CastingGraphics)
 {
 	if (cgcount<0) {
 		Initializer();
@@ -79,26 +80,20 @@ int GetCGSound(ieDword CastingGraphics)
 SPLImporter::SPLImporter(void)
 {
 	str = NULL;
-	autoFree = false;
 }
 
 SPLImporter::~SPLImporter(void)
 {
-	if (str && autoFree) {
-		delete( str );
-	}
+	delete str;
 }
 
-bool SPLImporter::Open(DataStream* stream, bool autoFree)
+bool SPLImporter::Open(DataStream* stream)
 {
 	if (stream == NULL) {
 		return false;
 	}
-	if (str && this->autoFree) {
-		delete( str );
-	}
+	delete str;
 	str = stream;
-	this->autoFree = autoFree;
 	char Signature[8];
 	str->Read( Signature, 8 );
 	if (strncmp( Signature, "SPL V1  ", 8 ) == 0) {
@@ -106,7 +101,7 @@ bool SPLImporter::Open(DataStream* stream, bool autoFree)
 	} else if (strncmp( Signature, "SPL V2.0", 8 ) == 0) {
 		version = 20;
 	} else {
-		printf( "[SPLImporter]: This file is not a valid SPL File\n" );
+		print( "[SPLImporter]: This file is not a valid SPL File\n" );
 		return false;
 	}
 

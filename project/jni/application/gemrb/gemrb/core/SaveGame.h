@@ -25,9 +25,10 @@
 
 #include "Holder.h"
 #include "ResourceManager.h"
-#include "System/FileStream.h"
+#include "System/VFS.h"
 
 class ImageMgr;
+class Sprite2D;
 
 class GEM_EXPORT SaveGame : public Held<SaveGame> {
 public:

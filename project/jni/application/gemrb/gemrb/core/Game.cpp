@@ -29,10 +29,13 @@
 #include "DisplayMessage.h"
 #include "GameData.h"
 #include "Interface.h"
+#include "IniSpawn.h"
 #include "MapMgr.h"
 #include "MusicMgr.h"
 #include "Particles.h"
+#include "PluginMgr.h"
 #include "ScriptEngine.h"
+#include "TableMgr.h"
 #include "GameScript/GameScript.h"
 #include "GUI/GameControl.h"
 #include "System/DataStream.h"
@@ -149,7 +152,7 @@ Game::~Game(void)
 	}
 }
 
-bool IsAlive(Actor *pc)
+static bool IsAlive(Actor *pc)
 {
 	if (pc->GetStat(IE_STATE_ID)&STATE_DEAD) {
 		return false;
@@ -312,6 +315,8 @@ void Game::ConsolidateParty()
 	}
 	for ( m = PCs.begin(); m != PCs.end(); ++m) {
 		(*m)->RefreshEffects(NULL);
+		//TODO: how to set up bardsongs
+		(*m)->SetModalSpell((*m)->ModalState, 0);
 	}
 }
 
@@ -369,8 +374,7 @@ void Game::InitActorPos(Actor *actor)
 	AutoTable strta("startpos");
 
 	if (!start || !strta) {
-		printMessage("Game","Game is missing character start data.\n",RED);
-		abort();
+		error("Game", "Game is missing character start data.\n");
 	}
 	// 0 - single player, 1 - tutorial, 2 - expansion
 	ieDword playmode = 0;
@@ -475,7 +479,7 @@ void Game::SetHotKey(unsigned long Key)
 		Actor *actor = *m;
 
 		if (actor->IsSelected()) {
-			actor->HotKey = (ieDword) Key;
+			actor->AddTrigger(TriggerEntry(trigger_hotkey, (ieDword) Key));
 		}
 	}
 }
@@ -769,7 +773,7 @@ int Game::LoadMap(const char* ResRef, bool loadscreen)
 	if (!ds) {
 		goto failedload;
 	}
-	if(!mM->Open( ds, true )) {
+	if(!mM->Open(ds)) {
 		goto failedload;
 	}
 	newMap = mM->GetMap(ResRef, IsDay());
@@ -1021,7 +1025,7 @@ int Game::GetXPFromCR(int cr)
 		if (cr>=MAX_CRLEVEL) {
 			cr=MAX_CRLEVEL-1;
 		}
-		printf("Challenge Rating: %d, party level: %d ", cr, level);
+		print("Challenge Rating: %d, party level: %d ", cr, level);
 		return crtable[level][cr];
 	}
 	printMessage("Game","Cannot find moncrate.2da!\n", LIGHT_RED);
@@ -1097,7 +1101,7 @@ bool Game::EveryoneNearPoint(Map *area, const Point &p, int flags) const
 			return false;
 		}
 		if (Distance(p,PCs[i])>MAX_TRAVELING_DISTANCE) {
-printf("Actor %s is not near!\n", PCs[i]->LongName);
+			print("Actor %s is not near!\n", PCs[i]->LongName);
 			return false;
 		}
 	}
@@ -1122,17 +1126,6 @@ void Game::PartyMemberDied(Actor *actor)
 		}
 		PCs[i]->ReactToDeath(actor->GetScriptName());
 	}
-}
-
-//reports if someone died
-int Game::PartyMemberDied() const
-{
-	for (unsigned int i=0; i<PCs.size(); i++) {
-		if (PCs[i]->GetInternalFlag()&IF_JUSTDIED) {
-			return i;
-		}
-	}
-	return -1;
 }
 
 void Game::IncrementChapter()
@@ -1285,8 +1278,7 @@ bool Game::EveryoneDead() const
 
 void Game::UpdateScripts()
 {
-	ExecuteScript( 1 );
-	ProcessActions(false);
+	Update();
 	size_t idx;
 
 	PartyAttack = false;
@@ -1524,7 +1516,19 @@ void Game::RestParty(int checks, int dream, int hp)
 void Game::TimeStop(Actor* owner, ieDword end)
 {
 	timestop_owner=owner;
-	timestop_end=GameTime+end;
+	timestop_end=end;
+}
+
+// check if the passed actor is a victim of timestop
+bool Game::TimeStoppedFor(const Actor* target)
+{
+	if (!timestop_owner) {
+		return false;
+	}
+	if (target == timestop_owner || target->GetStat(IE_DISABLETIMESTOP)) {
+		return false;
+	}
+	return true;
 }
 
 //recalculate the party's infravision state
@@ -1549,7 +1553,6 @@ void Game::Infravision()
 //returns the colour which should be applied onto the whole game area viewport
 //this is based on timestop, dream area, weather, daytime
 
-static const Color TimeStopTint={0xe0,0xe0,0xe0,0x20}; //greyscale
 static const Color DreamTint={0xf0,0xe0,0xd0,0x10};    //light brown scale
 static const Color NightTint={0x80,0x80,0xe0,0x40};    //dark, bluish
 static const Color DuskTint={0xe0,0x80,0x80,0x40};     //dark, reddish
@@ -1558,9 +1561,6 @@ static const Color DarkTint={0x80,0x80,0xe0,0x10};     //slightly dark bluish
 
 const Color *Game::GetGlobalTint() const
 {
-	if (timestop_end>GameTime) {
-		return &TimeStopTint;
-	}
 	Map *map = GetCurrentArea();
 	if (!map) return NULL;
 	if (map->AreaFlags&AF_DREAM) {
@@ -1617,7 +1617,7 @@ void Game::ChangeSong(bool always, bool force)
 }
 
 /* this method redraws weather. If update is false,
-then the weather particles won't change (game paused)
+   then the weather particles won't change (game paused)
 */
 void Game::DrawWeather(const Region &screen, bool update)
 {
@@ -1717,21 +1717,21 @@ void Game::DebugDump()
 {
 	size_t idx;
 
-	printf("Currently loaded areas:\n");
+	print("Currently loaded areas:\n");
 	for(idx=0;idx<Maps.size();idx++) {
 		Map *map = Maps[idx];
 
-		printf("%s\n",map->GetScriptName());
+		print("%s\n",map->GetScriptName());
 	}
-	printf("Current area: %s   Previous area: %s\n", CurrentArea, PreviousArea);
-	printf("Global script: %s\n", Scripts[0]->GetName());
-	printf("CombatCounter: %d\n", (int) CombatCounter);
+	print("Current area: %s   Previous area: %s\n", CurrentArea, PreviousArea);
+	print("Global script: %s\n", Scripts[0]->GetName());
+	print("CombatCounter: %d\n", (int) CombatCounter);
 
-	printf("Party size: %d\n", (int) PCs.size());
+	print("Party size: %d\n", (int) PCs.size());
 	for(idx=0;idx<PCs.size();idx++) {
 		Actor *actor = PCs[idx];
 
-		printf("Name: %s Order %d %s\n",actor->ShortName, actor->InParty, actor->Selected?"x":"-");
+		print("Name: %s Order %d %s\n",actor->ShortName, actor->InParty, actor->Selected?"x":"-");
 	}
 }
 
@@ -1755,3 +1755,7 @@ ieByte *Game::AllocateMazeData()
 	return mazedata;
 }
 
+bool Game::IsTimestopActive()
+{
+	return timestop_end > GameTime;
+}

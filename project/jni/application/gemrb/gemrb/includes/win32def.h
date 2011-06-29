@@ -30,23 +30,11 @@
 
 #include "exports.h"
 
+#include "System/String.h"
+
 #ifdef WIN32
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
-
-# if _MSC_VER >= 1000
-// 4251 disables the annoying warning about missing dll interface in templates
-#  pragma warning( disable: 4251 521 )
-#  pragma warning( disable: 4275 )
-//disables annoying warning caused by STL:Map in msvc 6.0
-#  if _MSC_VER < 7000
-#    pragma warning(disable:4786)
-#  endif
-# endif
-
-# if defined(__MINGW32__) && ! defined(HAVE_SNPRINTF)
-#  define HAVE_SNPRINTF 1
-# endif
 
 #else //WIN32
 # ifndef ANDROID
@@ -54,19 +42,12 @@
 # endif
 # include <cstdio>
 # include <cstdlib>
-# include <cstring>
 
-# define stricmp strcasecmp
-# define strnicmp strncasecmp
 #endif //WIN32
 
-#ifndef HAVE_SNPRINTF
-# ifdef WIN32
-#  define snprintf _snprintf
-#  define HAVE_SNPRINTF 1
-# else
-#  include "System/snprintf.h"
-# endif
+#if defined(WIN32) && !defined(__MINGW32__)
+# define snprintf _snprintf
+# define vsnprintf _vsnprintf
 #endif
 
 #include "System/VFS.h"
@@ -84,5 +65,5 @@
 #define M_PI_2  1.57079632679489661923 // pi/2
 #endif
 
-#include "logging.h"
+#include "System/Logging.h"
 #endif  //! WIN32DEF_H

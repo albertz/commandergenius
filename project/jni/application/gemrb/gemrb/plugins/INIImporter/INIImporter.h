@@ -26,6 +26,7 @@
 #include "globals.h"
 
 #include <cstring>
+#include <vector>
 
 struct INIPair {
 	char* Name, * Value;
@@ -180,14 +181,12 @@ public:
 
 class INIImporter : public DataFileMgr {
 private:
-	DataStream* str;
-	bool autoFree;
 	std::vector< INITag*> tags;
 
 public:
 	INIImporter(void);
 	~INIImporter(void);
-	bool Open(DataStream* stream, bool autoFree = true);
+	bool Open(DataStream* stream);
 	int GetTagsCount() const
 	{
 		return ( int ) tags.size();

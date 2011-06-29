@@ -29,12 +29,10 @@ class GEM_EXPORT ArchiveImporter : public Plugin {
 public:
 	ArchiveImporter(void);
 	virtual ~ArchiveImporter(void);
-	virtual int OpenArchive(const char* filename) = 0;
 	virtual int CreateArchive(DataStream *stream) = 0;
 	//decompressing a .sav file similar to CBF
 	virtual int DecompressSaveGame(DataStream *compressed) = 0;
 	virtual int AddToSaveGame(DataStream *str, DataStream *uncompressed) = 0;
-	virtual DataStream* GetStream(unsigned long Resource, unsigned long Type) = 0;
 };
 
 #endif

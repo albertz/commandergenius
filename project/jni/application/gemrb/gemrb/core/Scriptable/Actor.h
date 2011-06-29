@@ -28,15 +28,16 @@
 #include "exports.h"
 #include "ie_types.h"
 
-#include "Animation.h"
 #include "Audio.h"
-#include "CharAnimations.h"
 #include "EffectQueue.h"
-#include "ScriptedAnimation.h"
+#include "Palette.h"
 
 #include <cstring>
 #include <vector>
 
+class Animation;
+class CharAnimations;
+class DataFileMgr;
 class Map;
 class ScriptedAnimation;
 struct PolymorphCache;
@@ -275,25 +276,6 @@ public:
 	ieDword ModalState;
 	int PathTries; //the # of previous tries to pick up a new walkpath
 public:
-	#define LastTarget LastDisarmFailed
-	//ieDword LastTarget; use lastdisarmfailed
-	#define LastAttacker LastDisarmed
-	//ieDword LastAttacker; use lastdisarmed
-	#define LastHitter LastEntered
-	//ieDword LastHitter; use lastentered
-	#define LastSummoner LastTrigger
-	//ieDword LastSummoner; use lasttrigger
-	#define LastTalkedTo LastUnlocked
-	//ieDword LastTalkedTo; use lastunlocked
-	ieDword LastProtected;
-	ieDword LastFollowed;
-	ieDword LastCommander;
-	ieDword LastHelp;
-	ieDword LastSeen;
-	ieDword LastMarked;  //no idea if non-actors could mark objects
-	int LastMarkedSpell; //a spell number to cast
-	ieDword LastHeard;
-	ieDword HotKey;
 	ieDword LastExit;    //the global ID of the exit to be used
 	char ShieldRef[2];
 	char HelmetRef[2];
@@ -303,11 +285,7 @@ public:
 	bool GotLUFeedback;
 	int WMLevelMod;
 
-	int LastCommand;   //lastcommander
-	int LastShout;     //lastheard
-	int LastDamage;    //lasthitter
-	int LastDamageType;//lasthitter
-	ieDword LastTurner;
+	int LastDamageType;
 	Point FollowOffset;//follow lastfollowed at this offset
 	Point HomeLocation;//spawnpoint, return here after rest
 

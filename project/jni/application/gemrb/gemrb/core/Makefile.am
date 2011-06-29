@@ -51,15 +51,18 @@ libgemrb_core_la_SOURCES = \
 	GameScript/Objects.cpp \
 	GameScript/Triggers.cpp \
 	GlobalTimer.cpp \
+	FileCache.cpp \
 	Image.cpp \
 	ImageFactory.cpp \
 	ImageMgr.cpp \
 	ImageWriter.cpp \
+	IndexedArchive.cpp \
 	IniSpawn.cpp \
 	Interface.cpp \
 	Inventory.cpp \
 	Item.cpp \
 	ItemMgr.cpp \
+	KeyMap.cpp \
 	LRUCache.cpp \
 	Map.cpp \
 	MapMgr.cpp \
@@ -69,6 +72,7 @@ libgemrb_core_la_SOURCES = \
 	PalettedImageMgr.cpp \
 	Particles.cpp \
 	Plugin.cpp \
+	PluginLoader.cpp \
 	PluginMgr.cpp \
 	Polygon.cpp \
 	Projectile.cpp \
@@ -99,10 +103,12 @@ libgemrb_core_la_SOURCES = \
 	StoreMgr.cpp \
 	StringMgr.cpp \
 	SymbolMgr.cpp \
-	System/CachedFileStream.cpp \
 	System/DataStream.cpp \
 	System/FileStream.cpp \
+	System/Logging.cpp \
 	System/MemoryStream.cpp \
+	System/SlicedStream.cpp \
+	System/String.cpp \
 	System/VFS.cpp \
 	TableMgr.cpp \
 	Tile.cpp \

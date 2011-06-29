@@ -23,6 +23,8 @@
 
 #include "SymbolMgr.h"
 
+#include <vector>
+
 struct Pair {
 	int val;
 	char* str;
@@ -30,16 +32,13 @@ struct Pair {
 
 class IDSImporter : public SymbolMgr {
 private:
-	DataStream* str;
-	bool autoFree;
-
 	std::vector< Pair> pairs;
 	std::vector< char*> ptrs;
 
 public:
 	IDSImporter(void);
 	~IDSImporter(void);
-	bool Open(DataStream* stream, bool autoFree = true);
+	bool Open(DataStream* stream);
 	int GetValue(const char* txt) const;
 	char* GetValue(int val) const;
 	char* GetStringIndex(unsigned int Index) const;

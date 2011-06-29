@@ -25,6 +25,7 @@
 #include "Interface.h"
 #include "Variables.h"
 #include "Video.h"
+#include "GUI/Window.h"
 
 #include <cmath>
 
@@ -271,12 +272,6 @@ void Slider::OnMouseOver(unsigned short x, unsigned short /*y*/)
 			RunEventHandler( SliderOnChange );
 		}
 	}
-}
-
-/** Sets the Text of the current control */
-int Slider::SetText(const char* /*string*/, int /*pos*/)
-{
-	return 0;
 }
 
 /** Sets the slider change event */

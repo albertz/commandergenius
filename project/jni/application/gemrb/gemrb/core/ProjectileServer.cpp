@@ -22,6 +22,7 @@
 
 #include "GameData.h"
 #include "Interface.h"
+#include "PluginMgr.h"
 #include "ProjectileMgr.h"
 #include "SymbolMgr.h"
 
@@ -121,7 +122,7 @@ Projectile *ProjectileServer::GetProjectile(unsigned int idx)
 		delete ( str );
 		return CreateDefaultProjectile(idx);
 	}
-	if (!sm->Open( str, true )) {
+	if (!sm->Open(str)) {
 		return CreateDefaultProjectile(idx);
 	}
 	Projectile *pro = new Projectile();
@@ -238,8 +239,7 @@ void ProjectileServer::AddSymbols(Holder<SymbolMgr> projlist) {
 		}
 		if (value >= (unsigned int)projectilecount) {
 			// this should never happen!
-			printMessage("ProjectileServer","Too high projectilenumber while adding projectiles\n", RED);
-			abort();
+			error("ProjectileServer", "Too high projectilenumber while adding projectiles\n");
 		}
 		strnuprcpy(projectiles[value].resname, projlist->GetStringIndex(rows), 8);
 	}

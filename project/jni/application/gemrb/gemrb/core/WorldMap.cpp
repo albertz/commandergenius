@@ -24,6 +24,7 @@
 
 #include "Game.h"
 #include "Interface.h"
+#include "TableMgr.h"
 #include "Video.h"
 
 #include <list>
@@ -105,7 +106,7 @@ Sprite2D *WMPAreaEntry::GetMapIcon(AnimationFactory *bam)
 		}
 		MapIcon = bam->GetFrame((ieWord) frame, (ieByte) IconSeq);
 		if (!MapIcon) {
-			printf("WMPAreaEntry::GetMapIcon failed for frame %d, seq %d\n", frame, IconSeq);
+			print("WMPAreaEntry::GetMapIcon failed for frame %d, seq %d\n", frame, IconSeq);
 			return NULL;
 		}
 		if (color>=0) {
@@ -302,15 +303,13 @@ int WorldMap::CalculateDistances(const ieResRef AreaName, int direction)
 	}
 
 	if (direction<0 || direction>3) {
-		printMessage("WorldMap","", LIGHT_RED);
-		printf("CalculateDistances for invalid direction: %s\n", AreaName);
+		printMessage("WorldMap", "CalculateDistances for invalid direction: %s\n", LIGHT_RED, AreaName);
 		return -1;
 	}
 
 	unsigned int i;
 	if (!GetArea(AreaName, i)) {
-		printMessage("WorldMap","", LIGHT_RED);
-		printf("CalculateDistances for invalid Area: %s\n", AreaName);
+		printMessage("WorldMap", "CalculateDistances for invalid Area: %s\n", LIGHT_RED, AreaName);
 		return -1;
 	}
 	if (Distances) {
@@ -320,8 +319,7 @@ int WorldMap::CalculateDistances(const ieResRef AreaName, int direction)
 		free(GotHereFrom);
 	}
 
-	printMessage("WorldMap","", GREEN);
-	printf("CalculateDistances for Area: %s\n", AreaName);
+	printMessage("WorldMap", "CalculateDistances for Area: %s\n", GREEN, AreaName);
 
 	size_t memsize =sizeof(int) * area_entries.size();
 	Distances = (int *) malloc( memsize );
@@ -345,8 +343,8 @@ int WorldMap::CalculateDistances(const ieResRef AreaName, int direction)
 			int j=ae->AreaLinksIndex[d];
 			int k=j+ae->AreaLinksCount[d];
 			if ((size_t) k>area_links.size()) {
-				printMessage("WorldMap","The worldmap file is corrupted... and it would crash right now!\n",RED);
-				printf("Entry #: %d Direction: %d\n",i,d);
+				printMessage("WorldMap", "The worldmap file is corrupted... and it would crash right now!\nEntry #: %d Direction: %d\n", RED,
+					i, d);
 				break;
 			}
 			for(;j<k;j++) {
@@ -433,23 +431,21 @@ WMPAreaLink *WorldMap::GetEncounterLink(const ieResRef AreaName, bool &encounter
 	unsigned int i;
 	WMPAreaEntry *ae=GetArea( AreaName, i ); //target area
 	if (!ae) {
-		printMessage("WorldMap","",LIGHT_RED);
-		printf("No such area: %s\n", AreaName);
+		printMessage("WorldMap", "No such area: %s\n", LIGHT_RED, AreaName);
 		return NULL;
 	}
 	std::list<WMPAreaLink*> walkpath;
-	printf("Gathering path information for: %s\n", AreaName);
+	print("Gathering path information for: %s\n", AreaName);
 	while (GotHereFrom[i]!=-1) {
-		printf("Adding path to %d\n", i);
+		print("Adding path to %d\n", i);
 		walkpath.push_back(area_links[GotHereFrom[i]]);
 		i = WhoseLinkAmI(GotHereFrom[i]);
 		if (i==(ieDword) -1) {
-			printf("Something has been screwed up here (incorrect path)!\n");
-			abort();
+			error("WorldMap", "Something has been screwed up here (incorrect path)!\n");
 		}
 	}
 
-	printf("Walkpath size is: %d\n",(int) walkpath.size());
+	print("Walkpath size is: %d\n",(int) walkpath.size());
 	if (!walkpath.size()) {
 		return NULL;
 	}
@@ -488,7 +484,7 @@ void WorldMap::UpdateAreaVisibility(const ieResRef AreaName, int direction)
 	if (!ae)
 		return;
 	//we are here, so we visited and it is visible too (i guess)
-	printf("Updated Area visibility: %s (visited, and visible)\n", AreaName);
+	print("Updated Area visibility: %s (visited, and visible)\n", AreaName);
 
 	ae->SetAreaStatus(WMP_ENTRY_VISITED|WMP_ENTRY_VISIBLE, BM_OR);
 	if (direction<0 || direction>3)
@@ -498,7 +494,7 @@ void WorldMap::UpdateAreaVisibility(const ieResRef AreaName, int direction)
 		WMPAreaLink* al = area_links[ae->AreaLinksIndex[direction]+i];
 		WMPAreaEntry* ae2 = area_entries[al->AreaIndex];
 		if (ae2->GetAreaStatus()&WMP_ENTRY_ADJACENT) {
-			printf("Updated Area visibility: %s (accessible, and visible)\n", ae2->AreaName);
+			print("Updated Area visibility: %s (accessible, and visible)\n", ae2->AreaName);
 			ae2->SetAreaStatus(WMP_ENTRY_VISIBLE|WMP_ENTRY_ACCESSIBLE, BM_OR);
 		}
 	}

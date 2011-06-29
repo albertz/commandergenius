@@ -23,7 +23,7 @@
 #include "win32def.h"
 #include "globals.h"
 
-#include "ArchiveImporter.h"
+#include "IndexedArchive.h"
 #include "Interface.h"
 #include "ResourceDesc.h"
 #include "System/FileStream.h"
@@ -102,7 +102,7 @@ static void FindBIF(BIFEntry *entry)
 
 		if (!entry->cd) {
 			printStatus( "ERROR", LIGHT_RED );
-			printf( "Cannot find %s... Resource unavailable.\n",
+			print( "Cannot find %s... Resource unavailable.\n",
 					entry->name );
 			entry->found = false;
 			return;
@@ -118,8 +118,7 @@ static void FindBIF(BIFEntry *entry)
 		}
 	}
 
-	printMessage( "KEYImporter", " ", WHITE );
-	printf( "Cannot find %s...", entry->name );
+	printMessage("KEYImporter", "Cannot find %s...", WHITE, entry->name);
 	printStatus( "ERROR", LIGHT_RED );
 }
 
@@ -128,24 +127,22 @@ bool KEYImporter::Open(const char *resfile, const char *desc)
 	free(description);
 	description = strdup(desc);
 	if (!core->IsAvailable( IE_BIF_CLASS_ID )) {
-		printf( "[ERROR]\nAn Archive Plug-in is not Available\n" );
+		print( "[ERROR]\nAn Archive Plug-in is not Available\n" );
 		return false;
 	}
 	unsigned int i;
 	// NOTE: Interface::Init has already resolved resfile.
-	printMessage( "KEYImporter", "Opening ", WHITE );
-	printf( "%s...", resfile );
-	FileStream* f = new FileStream();
-	if (!f->Open( resfile )) {
+	printMessage("KEYImporter", "Opening %s...", WHITE, resfile);
+	FileStream* f = FileStream::OpenFile(resfile);
+	if (!f) {
 		// Check for backslashes (false escape characters)
 		// this check probably belongs elsewhere (e.g. ResolveFilePath)
 		if (strstr( resfile, "\\ " )) {
-			printf("%s", "\nEscaped space(s) detected in path!. Do not escape spaces in your GamePath! " );
+			print("%s", "\nEscaped space(s) detected in path!. Do not escape spaces in your GamePath! " );
 		}
 		printStatus( "ERROR", LIGHT_RED );
 		printMessage( "KEYImporter", "Cannot open Chitin.key\n", LIGHT_RED );
 		textcolor( WHITE );
-		delete( f );
 		return false;
 	}
 	printStatus( "OK", LIGHT_GREEN );
@@ -154,8 +151,7 @@ bool KEYImporter::Open(const char *resfile, const char *desc)
 	f->Read( Signature, 8 );
 	if (strncmp( Signature, "KEY V1  ", 8 ) != 0) {
 		printStatus( "ERROR", LIGHT_RED );
-		printMessage( "KEYImporter", "File has an Invalid Signature.\n",
-			LIGHT_RED );
+		printMessage( "KEYImporter", "File has an Invalid Signature.\n", LIGHT_RED );
 		textcolor( WHITE );
 		delete( f );
 		return false;
@@ -168,10 +164,10 @@ bool KEYImporter::Open(const char *resfile, const char *desc)
 	f->ReadDword( &BifOffset );
 	f->ReadDword( &ResOffset );
 	printMessage( "KEYImporter", " ", WHITE );
-	printf( "BIF Files Count: %d (Starting at %d Bytes)\n", BifCount,
+	print( "BIF Files Count: %d (Starting at %d Bytes)\n", BifCount,
 		BifOffset );
-	printMessage( "KEYImporter", " ", WHITE );
-	printf( "RES Count: %d (Starting at %d Bytes)\n", ResCount, ResOffset );
+	printMessage("KEYImporter", "RES Count: %d (Starting at %d Bytes)\n", WHITE,
+		ResCount, ResOffset);
 	f->Seek( BifOffset, GEM_STREAM_START );
 	ieDword BifLen, ASCIIZOffset;
 	ieWord ASCIIZLen;
@@ -189,14 +185,6 @@ bool KEYImporter::Open(const char *resfile, const char *desc)
 			//some MAC versions use : as delimiter
 			if (be.name[p] == '\\' || be.name[p] == ':')
 				be.name[p] = PathDelimiter;
-		}
-		if (be.name[0] == PathDelimiter) {
-			// totl has '\data\zcMHar.bif' in the key file, and the CaseSensitive
-			// code breaks with that extra slash, so simple fix: remove it
-			ASCIIZLen--;
-			for (int p = 0; p < ASCIIZLen; p++)
-				be.name[p] = be.name[p + 1];
-			// (if you change this, try moving to ar9700 for testing)
 		}
 		FindBIF(&be);
 		biffiles.push_back( be );
@@ -246,24 +234,25 @@ DataStream* KEYImporter::GetStream(const char *resname, ieWord type)
 	if (type == 0)
 		return NULL;
 	if (resources.Lookup( resname, type, ResLocator )) {
-		int bifnum = ( ResLocator & 0xFFF00000 ) >> 20;
+		unsigned int bifnum = ( ResLocator & 0xFFF00000 ) >> 20;
 
 		if (core->GameOnCD && (biffiles[bifnum].cd != 0))
 			FindBIFOnCD(&biffiles[bifnum]);
 		if (!biffiles[bifnum].found) {
-			printf( "Cannot find %s... Resource unavailable.\n",
+			print( "Cannot find %s... Resource unavailable.\n",
 					biffiles[bifnum].name );
 			return NULL;
 		}
 
-		PluginHolder<ArchiveImporter> ai(IE_BIF_CLASS_ID);
+		PluginHolder<IndexedArchive> ai(IE_BIF_CLASS_ID);
 		if (ai->OpenArchive( biffiles[bifnum].path ) == GEM_ERROR) {
-			printf("Cannot open archive %s\n", biffiles[bifnum].path );
+			print("Cannot open archive %s\n", biffiles[bifnum].path );
 			return NULL;
 		}
 		DataStream* ret = ai->GetStream( ResLocator, type );
 		if (ret) {
 			strnlwrcpy( ret->filename, resname, 8 );
+			strcat( ret->filename, "." );
 			strcat( ret->filename, core->TypeExt( type ) );
 			return ret;
 		}

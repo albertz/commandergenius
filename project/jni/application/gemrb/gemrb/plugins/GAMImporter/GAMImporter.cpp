@@ -27,7 +27,10 @@
 #include "GameData.h"
 #include "Interface.h"
 #include "MapMgr.h"
-#include "System/MemoryStream.h"
+#include "PluginMgr.h"
+#include "TableMgr.h"
+#include "Scriptable/Actor.h"
+#include "System/SlicedStream.h"
 
 #include <cassert>
 
@@ -38,17 +41,14 @@
 GAMImporter::GAMImporter(void)
 {
 	str = NULL;
-	autoFree = false;
 }
 
 GAMImporter::~GAMImporter(void)
 {
-	if (str && autoFree) {
-		delete( str );
-	}
+	delete str;
 }
 
-bool GAMImporter::Open(DataStream* stream, bool autoFree)
+bool GAMImporter::Open(DataStream* stream)
 {
 	if (stream == NULL) {
 		return false;
@@ -57,7 +57,6 @@ bool GAMImporter::Open(DataStream* stream, bool autoFree)
 		return false;
 	}
 	str = stream;
-	this->autoFree = autoFree;
 	char Signature[8];
 	str->Read( Signature, 8 );
 	if (strncmp( Signature, "GAMEV0.0", 8 ) == 0) {
@@ -319,15 +318,14 @@ Game* GAMImporter::LoadGame(Game *newGame, int ver_override)
 	return newGame;
 }
 
-void SanityCheck(ieWord a,ieWord &b,const char *message)
+static void SanityCheck(ieWord a,ieWord &b,const char *message)
 {
 	if (a==0xffff) {
 		b=0xffff;
 		return;
 	}
 	if (b==0xffff) {
-		printMessage("GAMImporter"," ",LIGHT_RED);
-		printf("Invalid Slot Enabler caught: %s!\n", message);
+		printMessage("GAMImporter", "Invalid Slot Enabler caught: %s!\n", LIGHT_RED, message);
 		b=0;
 	}
 }
@@ -468,17 +466,11 @@ Actor* GAMImporter::GetActor(Holder<ActorMgr> aM, bool is_in_party )
 	tmpWord = is_in_party ? (pcInfo.PartyOrder + 1) : 0;
 
 	if (pcInfo.OffsetToCRE) {
-		str->Seek( pcInfo.OffsetToCRE, GEM_STREAM_START );
-		void* Buffer = malloc( pcInfo.CRESize );
-		str->Read( Buffer, pcInfo.CRESize );
-		//somehow autofree MemoryStream doesn't work on msvc 7.0
-		//separate heap for dll's?
-		MemoryStream* ms = new MemoryStream( Buffer, pcInfo.CRESize, false );
+		DataStream* ms = SliceStream( str, pcInfo.OffsetToCRE, pcInfo.CRESize );
 		if (ms) {
-			aM->Open( ms, true );
+			aM->Open(ms);
 			actor = aM->GetActor(tmpWord);
 		}
-		free (Buffer);
 
 		//torment has them as 0 or -1
 		if (pcInfo.Name[0]!=0 && pcInfo.Name[0]!=UNINITIALIZED_CHAR) {
@@ -491,7 +483,7 @@ Actor* GAMImporter::GetActor(Holder<ActorMgr> aM, bool is_in_party )
 		//another plugin cannot free memory stream from this plugin
 		//so auto free is a no-no
 		if (ds) {
-			aM->Open( ds, true );
+			aM->Open(ds);
 			actor = aM->GetActor(pcInfo.PartyOrder);
 		}
 	}

@@ -25,10 +25,12 @@
 
 #include "win32def.h"
 
+#include "CharAnimations.h"
 #include "Game.h"
 #include "GameData.h"
 #include "Interface.h"
 #include "Map.h"
+#include "PluginMgr.h"
 #include "GameScript/GSUtils.h"
 #include "GameScript/Matching.h"
 #include "Scriptable/Actor.h"
@@ -58,7 +60,7 @@ IniSpawn::~IniSpawn()
 	}
 }
 
-Holder<DataFileMgr> GetIniFile(const ieResRef DefaultArea)
+static Holder<DataFileMgr> GetIniFile(const ieResRef DefaultArea)
 {
 	//the lack of spawn ini files is not a serious problem, happens all the time
 	if (!gamedata->Exists( DefaultArea, IE_INI_CLASS_ID)) {
@@ -76,13 +78,13 @@ Holder<DataFileMgr> GetIniFile(const ieResRef DefaultArea)
 	}
 
 	PluginHolder<DataFileMgr> ini(IE_INI_CLASS_ID);
-	ini->Open(inifile, true ); //autofree
+	ini->Open(inifile);
 	return ini;
 }
 
 /*** initializations ***/
 
-inline int CountElements(const char *s, char separator)
+static inline int CountElements(const char *s, char separator)
 {
 	int ret = 1;
 	while(*s) {
@@ -92,7 +94,7 @@ inline int CountElements(const char *s, char separator)
 	return ret;
 }
 
-inline void GetElements(const char *s, ieResRef *storage, int count)
+static inline void GetElements(const char *s, ieResRef *storage, int count)
 {
 	while(count--) {
 		ieResRef *field = storage+count;
@@ -110,7 +112,7 @@ inline void GetElements(const char *s, ieResRef *storage, int count)
 	}
 }
 
-inline void GetElements(const char *s, ieVariable *storage, int count)
+static inline void GetElements(const char *s, ieVariable *storage, int count)
 {
 	while(count--) {
 		ieVariable *field = storage+count;
@@ -205,8 +207,7 @@ void IniSpawn::ReadCreature(DataFileMgr *inifile, const char *crittername, Critt
 		critter.CreFile=new ieResRef[critter.creaturecount];
 		GetElements(s, critter.CreFile, critter.creaturecount);
 	} else {
-		printMessage( "IniSpawn"," ", LIGHT_RED);
-		printf("Invalid spawn entry: %s\n", crittername); 
+		printMessage("IniSpawn", "Invalid spawn entry: %s\n", LIGHT_RED, crittername);
 	}
 
 	s = inifile->GetKeyAsString(crittername,"point_select",NULL);

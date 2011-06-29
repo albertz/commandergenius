@@ -22,14 +22,15 @@
 #define ACTORMGR_H
 
 #include "Plugin.h"
-#include "Scriptable/Actor.h"
-#include "System/DataStream.h"
+
+class Actor;
+class DataStream;
 
 class GEM_EXPORT ActorMgr : public Plugin {
 public:
 	ActorMgr(void);
 	virtual ~ActorMgr(void);
-	virtual bool Open(DataStream* stream, bool autoFree = true) = 0;
+	virtual bool Open(DataStream* stream) = 0;
 	virtual Actor* GetActor(unsigned char is_in_party) = 0;
 
 	//returns saved size, updates internal offsets before save

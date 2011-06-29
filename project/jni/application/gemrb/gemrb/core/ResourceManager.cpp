@@ -59,7 +59,7 @@ static void PrintPossibleFiles(const char* ResRef, const TypeID *type)
 {
 	const std::vector<ResourceDesc>& types = PluginMgr::Get()->GetResourceDesc(type);
 	for (size_t j = 0; j < types.size(); j++) {
-		printf("%s%s ", ResRef, types[j].GetExt());
+		print("%s.%s ", ResRef, types[j].GetExt());
 	}
 }
 
@@ -74,8 +74,8 @@ bool ResourceManager::Exists(const char *ResRef, SClass_ID type, bool silent) co
 		}
 	}
 	if (!silent) {
-		printMessage( "ResourceManager", "Searching for ", WHITE );
-		printf( "%s%s...", ResRef, core->TypeExt( type ) );
+		printMessage("ResourceManager", "Searching for %s.%s...", WHITE,
+			ResRef, core->TypeExt(type));
 		printStatus( "NOT FOUND", YELLOW );
 	}
 	return false;
@@ -95,9 +95,8 @@ bool ResourceManager::Exists(const char *ResRef, const TypeID *type, bool silent
 		}
 	}
 	if (!silent) {
-		printMessage( "ResourceManager", "Searching for ", WHITE );
-		printf( "%s... ", ResRef );
-		printf("Tried ");
+		printMessage("ResourceManager", "Searching for %s... ", WHITE, ResRef);
+		print("Tried ");
 		PrintPossibleFiles(ResRef,type);
 		printStatus( "NOT FOUND", YELLOW );
 	}
@@ -109,8 +108,8 @@ DataStream* ResourceManager::GetResource(const char* ResRef, SClass_ID type, boo
 	if (ResRef[0] == '\0')
 		return NULL;
 	if (!silent) {
-		printMessage( "ResourceManager", "Searching for ", WHITE );
-		printf( "%s%s...", ResRef, core->TypeExt( type ) );
+		printMessage("ResourceManager", "Searching for %s.%s...", WHITE,
+			ResRef, core->TypeExt(type));
 	}
 	for (size_t i = 0; i < searchPath.size(); i++) {
 		DataStream *ds = searchPath[i]->GetResource(ResRef, type);
@@ -132,8 +131,7 @@ Resource* ResourceManager::GetResource(const char* ResRef, const TypeID *type, b
 	if (ResRef[0] == '\0')
 		return NULL;
 	if (!silent) {
-		printMessage( "ResourceManager", "Searching for ", WHITE );
-		printf( "%s... ", ResRef );
+		printMessage("ResourceManager", "Searching for %s... ", WHITE, ResRef);
 	}
 	const std::vector<ResourceDesc> &types = PluginMgr::Get()->GetResourceDesc(type);
 	for (size_t j = 0; j < types.size(); j++) {
@@ -143,7 +141,7 @@ Resource* ResourceManager::GetResource(const char* ResRef, const TypeID *type, b
 				Resource *res = types[j].Create(str);
 				if (res) {
 					if (!silent) {
-						printf( "%s%s...", ResRef, types[j].GetExt() );
+						print( "%s.%s...", ResRef, types[j].GetExt() );
 						printStatus( searchPath[i]->GetDescription(), GREEN );
 					}
 					return res;
@@ -152,7 +150,7 @@ Resource* ResourceManager::GetResource(const char* ResRef, const TypeID *type, b
 		}
 	}
 	if (!silent) {
-		printf("Tried ");
+		print("Tried ");
 		PrintPossibleFiles(ResRef,type);
 		printStatus( "ERROR", LIGHT_RED );
 	}

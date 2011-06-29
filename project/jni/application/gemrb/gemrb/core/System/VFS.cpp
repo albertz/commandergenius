@@ -33,6 +33,7 @@
 
 #include <cstdarg>
 #include <cstring>
+#include <cerrno>
 
 #ifndef WIN32
 #include <dirent.h>
@@ -62,7 +63,7 @@ struct dirent {
 // buffer which readdir returns
 static dirent de;
 
-DIR* opendir(const char* filename)
+static DIR* opendir(const char* filename)
 {
 	DIR* dirp = ( DIR* ) malloc( sizeof( DIR ) );
 	dirp->is_first = 1;
@@ -73,7 +74,7 @@ DIR* opendir(const char* filename)
 	return dirp;
 }
 
-dirent* readdir(DIR* dirp)
+static dirent* readdir(DIR* dirp)
 {
 	struct _finddata_t c_file;
 
@@ -93,152 +94,10 @@ dirent* readdir(DIR* dirp)
 	return &de;
 }
 
-void closedir(DIR* dirp)
+static void closedir(DIR* dirp)
 {
 	_findclose( dirp->hFile );
 	free( dirp );
-}
-
-
-_FILE* _fopen(const char* filename, const char* mode)
-{
-	DWORD OpenFlags = 0;
-	DWORD AccessFlags = 0;
-	DWORD ShareFlags = 0;
-
-	while (*mode) {
-		if (( *mode == 'w' ) || ( *mode == 'W' )) {
-			OpenFlags |= OPEN_ALWAYS;
-			AccessFlags |= GENERIC_WRITE;
-			ShareFlags |= FILE_SHARE_READ;
-		} else if (( *mode == 'r' ) || ( *mode == 'R' )) {
-			OpenFlags |= OPEN_EXISTING;
-			AccessFlags |= GENERIC_READ;
-			ShareFlags |= FILE_SHARE_READ|FILE_SHARE_WRITE;
-		} else if (( *mode == 'a' ) || ( *mode == 'A' )) {
-			OpenFlags |= OPEN_ALWAYS;
-			AccessFlags |= GENERIC_READ|GENERIC_WRITE;
-			ShareFlags |= FILE_SHARE_READ|FILE_SHARE_WRITE;
-		} else if (*mode == '+') {
-			AccessFlags |= GENERIC_READ|GENERIC_WRITE;
-			ShareFlags |= FILE_SHARE_READ|FILE_SHARE_WRITE;
-		}
-		mode++;
-	}
-	HANDLE hFile = CreateFile( filename, AccessFlags, ShareFlags, NULL,
-					OpenFlags, FILE_ATTRIBUTE_NORMAL, NULL );
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return NULL;
-	}
-	_FILE* ret = ( _FILE* ) malloc( sizeof( _FILE ) );
-	ret->hFile = hFile;
-	return ret;
-}
-
-size_t _fread(void* ptr, size_t size, size_t n, _FILE* stream)
-{
-	if (!stream) {
-		return ( size_t ) 0;
-	}
-	unsigned long read;
-	if (!ReadFile( stream->hFile, ptr, ( unsigned long ) ( size * n ), &read,
-			NULL )) {
-		return ( size_t ) 0;
-	}
-	return ( size_t ) read;
-}
-
-size_t _fwrite(const void* ptr, size_t size, size_t n, _FILE* stream)
-{
-	if (!stream) {
-		return ( size_t ) 0;
-	}
-	unsigned long wrote;
-	if (!WriteFile( stream->hFile, ptr, ( unsigned long ) ( size * n ),
-			&wrote, NULL )) {
-		return ( size_t ) 0;
-	}
-	return ( size_t ) wrote;
-}
-
-size_t _fseek(_FILE* stream, long offset, int whence)
-{
-	if (!stream) {
-		return ( size_t ) 1;
-	}
-	unsigned long method;
-	switch (whence) {
-		case SEEK_SET:
-			method = FILE_BEGIN;
-			break;
-		case SEEK_CUR:
-			method = FILE_CURRENT;
-			break;
-		case SEEK_END:
-			method = FILE_END;
-			break;
-		default:
-			return ( size_t ) 1;
-	}
-	if (SetFilePointer( stream->hFile, offset, NULL, method ) == 0xffffffff) {
-		return ( size_t ) 1;
-	}
-	return ( size_t ) 0;
-}
-
-int _fgetc(_FILE* stream)
-{
-	if (!stream) {
-		return 0;
-	}
-	unsigned char tmp;
-	unsigned long read;
-	BOOL bResult = ReadFile( stream->hFile, &tmp, ( unsigned long ) 1, &read,
-					NULL );
-	if (bResult && read) {
-		return ( int ) tmp;
-	} 
-	return EOF;
-}
-
-long int _ftell(_FILE* stream)
-{
-	if (!stream) {
-		return EOF;
-	}
-	unsigned long pos = SetFilePointer( stream->hFile, 0, NULL, FILE_CURRENT );
-	if (pos == 0xffffffff) {
-		return -1L;
-	}
-	return ( long int ) pos;
-}
-
-int _feof(_FILE* stream)
-{
-	if (!stream) {
-		return 0;
-	}
-	unsigned char tmp;
-	unsigned long read;
-	BOOL bResult = ReadFile( stream->hFile, &tmp, ( unsigned long ) 1, &read,
-					NULL );
-	if (bResult && ( read == 0 )) {
-		return 1;
-	} //EOF
-	bResult = SetFilePointer( stream->hFile, -1, NULL, FILE_CURRENT );
-	return 0;
-}
-
-int _fclose(_FILE* stream)
-{
-	if (!stream) {
-		return EOF;
-	}
-	if (!CloseHandle( stream->hFile )) {
-		return EOF;
-	}
-	free( stream );
-	return 0;
 }
 
 #endif // WIN32
@@ -289,13 +148,19 @@ char* PathAppend (char* target, const char* name)
 		target[len++] = PathDelimiter;
 		target[len] = 0;
 	}
+	// strip possible leading backslash, since it is not ignored on all platforms
+	// totl has '\data\zcMHar.bif' in the key file, and also the CaseSensitive
+	// code breaks with that extra slash, so simple fix: remove it
+	if (name[0] == '\\') {
+		name = name+1;
+	}
 	strncat( target+len, name, _MAX_PATH - len - 1 );
 
 	return target;
 }
 
 
-bool FindInDir(const char* Dir, char *Filename)
+static bool FindInDir(const char* Dir, char *Filename)
 {
 	// First test if there's a Filename with exactly same name
 	// and if yes, return it and do not search in the Dir
@@ -330,15 +195,16 @@ bool FindInDir(const char* Dir, char *Filename)
 
 bool PathJoin (char *target, const char *base, ...)
 {
-	va_list ap;
-	va_start(ap, base);
-
 	if (base == NULL) {
 		target[0] = '\0';
 		return false;
 	}
+	if (base != target) {
+		strcpy(target, base);
+	}
 
-	strcpy(target, base);
+	va_list ap;
+	va_start(ap, base);
 
 	while (char *source = va_arg(ap, char*)) {
 		char *slash;
@@ -361,8 +227,10 @@ bool PathJoin (char *target, const char *base, ...)
 			source = slash + 1;
 		} while (slash);
 	}
+
 	va_end( ap );
 	return true;
+
 finish:
 	while (char *source = va_arg(ap, char*)) {
 		PathAppend(target, source);
@@ -402,7 +270,7 @@ void FixPath (char *path, bool needslash)
 	path[i] = 0;
 }
 
-int strmatch(const char *string, const char *mask)
+static int strmatch(const char *string, const char *mask)
 {
 	while(*mask) {
 		if (*mask!='?') {
@@ -489,6 +357,24 @@ void ExtractFileFromPath(char *file, const char *full_path)
 		strcpy(file, full_path);
 }
 
+bool MakeDirectory(const char* path)
+{
+#ifdef WIN32
+#define mkdir(path, mode) _mkdir(path)
+#endif
+	if (mkdir(path, S_IREAD|S_IWRITE|S_IEXEC) < 0) {
+		if (errno != EEXIST) {
+			return false;
+		}
+	}
+	// Ignore errors from chmod
+	chmod(path, S_IREAD|S_IWRITE|S_IEXEC);
+	return true;
+#ifdef WIN32
+#undef mkdir
+#endif
+}
+
 DirectoryIterator::DirectoryIterator(const char *path)
 	: Directory(NULL), Entry(NULL), Path(path)
 {
@@ -504,10 +390,8 @@ DirectoryIterator::~DirectoryIterator()
 bool DirectoryIterator::IsDirectory()
 {
 	char dtmp[_MAX_PATH];
-	struct stat fst;
 	GetFullPath(dtmp);
-	stat( dtmp, &fst );
-	return S_ISDIR( fst.st_mode );
+	return dir_exists(dtmp);
 }
 
 char* DirectoryIterator::GetName()
@@ -536,3 +420,4 @@ void DirectoryIterator::Rewind()
 	else
 		Entry = readdir(static_cast<DIR*>(Directory));
 }
+

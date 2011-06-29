@@ -30,41 +30,31 @@ WMPImporter::WMPImporter(void)
 {
 	str1 = NULL;
 	str2 = NULL;
-	autoFree = false;
 }
 
 WMPImporter::~WMPImporter(void)
 {
-	if (str1 && autoFree) {
-		delete( str1 );
-	}
-	if (str2 && autoFree) {
-		delete( str2 );
-	}
+	delete str1;
+	delete str2;
 }
 
-bool WMPImporter::Open(DataStream* stream1, DataStream* stream2, bool autoFree)
+bool WMPImporter::Open(DataStream* stream1, DataStream* stream2)
 {
 	if ((stream1 == NULL) && (stream2 == NULL) ) {
 		return false;
 	}
-	if (str1 && this->autoFree) {
-		delete( str1 );
-	}
-	if (str2 && this->autoFree) {
-		delete( str2 );
-	}
+	delete str1;
+	delete str2;
 	str1 = stream1;
 	str2 = stream2;
 
-	this->autoFree = autoFree;
 	char Signature[8];
 
 	if (str1) {
 		str1->Read( Signature, 8 );
 		if (strncmp( Signature, "WMAPV1.0", 8 ) != 0) {
-			printMessage( "WMPImporter","This file is not a valid WMP File\n", LIGHT_RED);
-			printf( "-->%s<--\n", stream1->filename);
+			printMessage("WMPImporter", "This file is not a valid WMP File\n-->%s<--\n", LIGHT_RED,
+				stream1->filename);
 			return false;
 		}
 		str1->ReadDword( &WorldMapsCount1 );
@@ -77,8 +67,8 @@ bool WMPImporter::Open(DataStream* stream1, DataStream* stream2, bool autoFree)
 	if (str2) {
 		str2->Read( Signature, 8 );
 		if (strncmp( Signature, "WMAPV1.0", 8 ) != 0) {
-			printMessage( "WMPImporter","This file is not a valid WMP File\n", LIGHT_RED);
-			printf( "-->%s<--\n", stream2->filename);
+			printMessage("WMPImporter", "This file is not a valid WMP File\n-->%s<--\n", LIGHT_RED,
+				stream2->filename);
 			return false;
 		}
 		str2->ReadDword( &WorldMapsCount2 );
@@ -177,6 +167,7 @@ WMPAreaEntry* WMPImporter::GetAreaEntry(DataStream *str, WMPAreaEntry* ae)
 	str->ReadResRef( ae->AreaName );
 	str->ReadResRef( ae->AreaResRef );
 	str->Read( ae->AreaLongName, 32 );
+	ae->AreaLongName[32]=0;
 	ieDword tmpDword;
 	str->ReadDword( &tmpDword );
 	str->ReadDword( &ae->IconSeq );
@@ -201,6 +192,7 @@ WMPAreaLink* WMPImporter::GetAreaLink(DataStream *str, WMPAreaLink* al)
 {
 	str->ReadDword( &al->AreaIndex );
 	str->Read( al->DestEntryPoint, 32 );
+	al->DestEntryPoint[32]=0;
 	str->ReadDword( &al->DistanceScale );
 	str->ReadDword( &al->DirectionFlags );
 	for (unsigned k = 0; k < 5; k++) {

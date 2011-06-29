@@ -29,27 +29,21 @@
 DLGImporter::DLGImporter(void)
 {
 	str = NULL;
-	autoFree = false;
 	Version = 0;
 }
 
 DLGImporter::~DLGImporter(void)
 {
-	if (str && autoFree) {
-		delete( str );
-	}
+	delete str;
 }
 
-bool DLGImporter::Open(DataStream* stream, bool autoFree)
+bool DLGImporter::Open(DataStream* stream)
 {
 	if (stream == NULL) {
 		return false;
 	}
-	if (str && this->autoFree) {
-		delete( str );
-	}
+	delete str;
 	str = stream;
-	this->autoFree = autoFree;
 	char Signature[8];
 	str->Read( Signature, 8 );
 	if (strnicmp( Signature, "DLG V1.0", 8 ) != 0) {
@@ -166,7 +160,7 @@ DialogTransition* DLGImporter::GetTransition(unsigned int index) const
 
 static char** GetStrings(char* string, unsigned int& count);
 
-Condition* GetCondition(char* string)
+static Condition* GetCondition(char* string)
 {
 	unsigned int count;
 	char **lines = GetStrings( string, count );
@@ -175,13 +169,13 @@ Condition* GetCondition(char* string)
 		Trigger *trigger = GenerateTrigger(lines[i]);
 		if (!trigger) {
 			printMessage( "DLGImporter", "Can't compile trigger: " ,YELLOW);
-			printf("%s\n", lines[i]);
+			print("%s\n", lines[i]);
 		} else {
 			condition->triggers.push_back(trigger);
 		}
-		free(lines[i]);
+		free( lines[i] );
 	}
-	free(lines);
+	free( lines );
 	return condition;
 }
 
@@ -206,7 +200,7 @@ Condition* DLGImporter::GetStateTrigger(unsigned int index) const
 	str->Read( string, Length );
 	string[Length] = 0;
 	Condition *condition = GetCondition(string);
-	free(string);
+	free( string );
 	return condition;
 }
 
@@ -248,17 +242,19 @@ std::vector<Action*> DLGImporter::GetAction(unsigned int index) const
 		Action *action = GenerateAction(lines[i]);
 		if (!action) {
 			printMessage( "DLGImporter", "Can't compile action: " ,YELLOW);
-			printf("%s\n", lines[i]);
+			print("%s\n", lines[i]);
 		} else {
 			action->IncRef();
 			actions.push_back(action);
 		}
-		free(lines[i]);
+		free( lines[i] );
 	}
+	free( lines );
+	free( string );
 	return actions;
 }
 
-int GetActionLength(const char* string)
+static int GetActionLength(const char* string)
 {
 	int i;
 	int level = 0;
@@ -303,7 +299,7 @@ int GetActionLength(const char* string)
      pst's FORGE.DLG (trigger split across two lines),
      bg2's SAHIMP02.DLG (missing quotemark in string),
      bg2's QUAYLE.DLG (missing closing bracket) */
-char** GetStrings(char* string, unsigned int& count)
+static char** GetStrings(char* string, unsigned int& count)
 {
 	int col = 0;
 	int level = 0;

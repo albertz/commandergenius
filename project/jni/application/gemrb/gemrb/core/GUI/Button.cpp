@@ -21,6 +21,9 @@
 #include "GUI/Button.h"
 
 #include "GUI/GameControl.h"
+#include "GUI/EventMgr.h"
+#include "GUI/ScrollBar.h"
+#include "GUI/Window.h"
 
 #include "defsounds.h"
 #include "win32def.h"
@@ -125,7 +128,7 @@ void Button::CloseUpColor()
 	unsigned long newtime;
 
 	Changed = true;
-	GetTime( newtime );
+	newtime = GetTickCount();
 	if (newtime<starttime) {
 		return;
 	}
@@ -572,7 +575,7 @@ void Button::OnMouseLeave(unsigned short /*x*/, unsigned short /*y*/)
 
 
 /** Sets the Text of the current control */
-int Button::SetText(const char* string, int /*pos*/)
+void Button::SetText(const char* string)
 {
 	free(Text);
 	Text = NULL;
@@ -589,7 +592,6 @@ int Button::SetText(const char* string, int /*pos*/)
 		hasText = true;
 	}
 	Changed = true;
-	return 0;
 }
 
 /** Set Event Handler */
@@ -713,7 +715,7 @@ void Button::SetHorizontalOverlay(double clip, const Color &src, const Color &de
 		Flags |= IE_GUI_BUTTON_HORIZONTAL;
 		SourceRGB=src;
 		DestRGB=dest;
-		GetTime( starttime );
+		starttime = GetTickCount();
 		starttime += 40;
 	}
 	Clipping = clip;

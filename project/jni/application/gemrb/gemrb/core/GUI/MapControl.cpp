@@ -22,9 +22,14 @@
 #include "win32def.h"
 
 #include "Game.h"
+#include "GlobalTimer.h"
 #include "Interface.h"
 #include "Map.h"
+#include "Sprite2D.h"
 #include "Video.h"
+#include "GUI/EventMgr.h"
+#include "GUI/Window.h"
+#include "Scriptable/Actor.h"
 
 #define MAP_NO_NOTES   0
 #define MAP_VIEW_NOTES 1
@@ -224,6 +229,11 @@ void MapControl::Draw(unsigned short XWin, unsigned short YWin)
 	vp.w = ViewWidth;
 	vp.h = ViewHeight;
 
+	if ((vp.x + vp.w) >= MAP_TO_SCREENX( Width ))
+		vp.w = MAP_TO_SCREENX( Width ) - vp.x;
+	if ((vp.y + vp.h) >= MAP_TO_SCREENY( Height ))
+		vp.h = MAP_TO_SCREENY( Height ) - vp.y;
+
 	video->DrawRect( vp, colors[green], false, false );
 
 	// Draw PCs' ellipses
@@ -269,18 +279,8 @@ void MapControl::Draw(unsigned short XWin, unsigned short YWin)
 }
 
 /** Key Press Event */
-void MapControl::OnKeyPress(unsigned char Key, unsigned short /*Mod*/)
+void MapControl::OnKeyPress(unsigned char /*Key*/, unsigned short /*Mod*/)
 {
-#ifdef ANDROID
-	switch(Key) {
-		case 'o':
-		case 'p':
-			Control::OnKeyPress(Key, 0);
-			break;
-	}
-#else
-(void)Key; // unused, fool the compiler
-#endif
 }
 
 /** Key Release Event */
@@ -289,7 +289,7 @@ void MapControl::OnKeyRelease(unsigned char Key, unsigned short Mod)
 	switch (Key) {
 		case '\t':
 			//not GEM_TAB
-			printf( "TAB released\n" );
+			print( "TAB released\n" );
 			return;
 		case 'f':
 			if (Mod & GEM_MOD_CTRL)
@@ -471,7 +471,7 @@ void MapControl::OnMouseUp(unsigned short x, unsigned short y, unsigned short Bu
 			return;
 		case MAP_VIEW_NOTES:
 			//left click allows setting only when in MAP_SET_NOTE mode
-			if ((Button == GEM_MB_ACTION) ) {
+			if (Button == GEM_MB_ACTION) {
 				ViewHandle(x,y);
 			}
 			ClickHandle(Button);
@@ -499,10 +499,10 @@ void MapControl::OnSpecialKeyPress(unsigned char Key)
 			ScrollY += 64;
 			break;
 		case GEM_ALT:
-			printf( "ALT pressed\n" );
+			print( "ALT pressed\n" );
 			break;
 		case GEM_TAB:
-			printf( "TAB pressed\n" );
+			print( "TAB pressed\n" );
 			break;
 		default:
 			break;

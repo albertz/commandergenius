@@ -21,11 +21,14 @@
 
 #include "win32def.h"
 
+#include "Font.h"
 #include "Game.h"
 #include "GameData.h"
 #include "Interface.h"
 #include "Video.h"
 #include "WorldMap.h"
+#include "GUI/EventMgr.h"
+#include "GUI/Window.h"
 
 #define MAP_TO_SCREENX(x) XWin + XPos - ScrollX + (x)
 #define MAP_TO_SCREENY(y) YWin + YPos - ScrollY + (y)
@@ -341,10 +344,10 @@ void WorldMapControl::OnSpecialKeyPress(unsigned char Key)
 			ScrollY += 64;
 			break;
 		case GEM_ALT:
-			printf( "ALT pressed\n" );
+			print( "ALT pressed\n" );
 			break;
 		case GEM_TAB:
-			printf( "TAB pressed\n" );
+			print( "TAB pressed\n" );
 			break;
 	}
 

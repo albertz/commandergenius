@@ -28,6 +28,7 @@
 #include "SymbolMgr.h"
 #include "Scriptable/Actor.h"
 #include "Spell.h"  //needs for the source flags bitfield
+#include "TableMgr.h"
 
 #include <cstdio>
 
@@ -97,7 +98,7 @@ bool EffectQueue::match_ids(Actor *target, int table, ieDword value)
 
 static const bool fx_instant[MAX_TIMING_MODE]={true,true,true,false,false,false,false,false,true,true,true};
 
-inline bool IsInstant(ieByte timingmode)
+static inline bool IsInstant(ieByte timingmode)
 {
 	if( timingmode>=MAX_TIMING_MODE) return false;
 	return fx_instant[timingmode];
@@ -105,7 +106,7 @@ inline bool IsInstant(ieByte timingmode)
 
 static const bool fx_equipped[MAX_TIMING_MODE]={false,false,true,false,false,true,false,false,true,false,false};
 
-inline bool IsEquipped(ieByte timingmode)
+static inline bool IsEquipped(ieByte timingmode)
 {
 	if( timingmode>=MAX_TIMING_MODE) return false;
 	return fx_equipped[timingmode];
@@ -114,7 +115,7 @@ inline bool IsEquipped(ieByte timingmode)
 //                                               0    1     2     3    4    5    6     7       8   9     10
 static const bool fx_relative[MAX_TIMING_MODE]={true,false,false,true,true,true,false,false,false,false,false};
 
-inline bool NeedPrepare(ieWord timingmode)
+static inline bool NeedPrepare(ieWord timingmode)
 {
 	if( timingmode>=MAX_TIMING_MODE) return false;
 	return fx_relative[timingmode];
@@ -128,7 +129,7 @@ inline bool NeedPrepare(ieWord timingmode)
 static const int fx_prepared[MAX_TIMING_MODE]={DURATION,PERMANENT,PERMANENT,DELAYED, //0-3
 DELAYED,DELAYED,DELAYED,DELAYED,PERMANENT,PERMANENT,PERMANENT};		//4-7
 
-inline int DelayType(ieByte timingmode)
+static inline int DelayType(ieByte timingmode)
 {
 	if( timingmode>=MAX_TIMING_MODE) return INVALID;
 	return fx_prepared[timingmode];
@@ -137,7 +138,7 @@ inline int DelayType(ieByte timingmode)
 //which effects are removable
 static const bool fx_removable[MAX_TIMING_MODE]={true,true,false,true,true,false,true,true,false,false,true};
 
-inline int IsRemovable(ieByte timingmode)
+static inline int IsRemovable(ieByte timingmode)
 {
 	if( timingmode>=MAX_TIMING_MODE) return INVALID;
 	return fx_removable[timingmode];
@@ -157,18 +158,18 @@ FX_DURATION_AFTER_EXPIRES,FX_DURATION_PERMANENT_UNSAVED, //4,5
 FX_DURATION_JUST_EXPIRED,FX_DURATION_JUST_EXPIRED,FX_DURATION_JUST_EXPIRED,//6,8
 FX_DURATION_JUST_EXPIRED,FX_DURATION_JUST_EXPIRED};//9,10
 
-inline ieByte TriggeredEffect(ieByte timingmode)
+static inline ieByte TriggeredEffect(ieByte timingmode)
 {
 	if( timingmode>=MAX_TIMING_MODE) return false;
 	return fx_triggered[timingmode];
 }
 
-int compare_effects(const void *a, const void *b)
+static int compare_effects(const void *a, const void *b)
 {
 	return stricmp(((EffectRef *) a)->Name,((EffectRef *) b)->Name);
 }
 
-int find_effect(const void *a, const void *b)
+static int find_effect(const void *a, const void *b)
 {
 	return stricmp((const char *) a,((const EffectRef *) b)->Name);
 }
@@ -180,15 +181,14 @@ static EffectDesc* FindEffect(const char* effectname)
 	}
 	void *tmp = bsearch(effectname, effectnames, effectnames_count, sizeof(EffectDesc), find_effect);
 	if( !tmp) {
-		printMessage( "EffectQueue", "", YELLOW);
-		printf("Couldn't assign effect: %s\n", effectname );
+		printMessage("EffectQueue", "Couldn't assign effect: %s\n", YELLOW, effectname);
 	}
 	return (EffectDesc *) tmp;
 }
 
 static EffectRef fx_protection_from_display_string_ref = { "Protection:String", -1 };
 
-inline static void ResolveEffectRef(EffectRef &effect_reference)
+static inline void ResolveEffectRef(EffectRef &effect_reference)
 {
 	if( effect_reference.opcode==-1) {
 		EffectDesc* ref = FindEffect(effect_reference.Name);
@@ -250,12 +250,11 @@ bool Init_EffectQueue()
 			//reverse linking opcode number
 			//using this unused field
 			if( (poi->opcode!=-1) && effectname[0]!='*') {
-				printf("Clashing Opcodes FN: %d vs. %d, %s\n", i, poi->opcode, effectname);
-				abort();
+				error("EffectQueue", "Clashing Opcodes FN: %d vs. %d, %s\n", i, poi->opcode, effectname);
 			}
 			poi->opcode = i;
 		}
-		//printf("-------- FN: %d, %s\n", i, effectname);
+		//print("-------- FN: %d, %s\n", i, effectname);
 	}
 	core->DelSymbol( eT );
 
@@ -485,6 +484,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 	int flg;
 	ieDword spec = 0;
 	Actor *st = (self && (self->Type==ST_ACTOR)) ?(Actor *) self:NULL;
+	Effect* new_fx;
 
 	switch (fx->Target) {
 	case FX_TARGET_ORIGINAL:
@@ -509,6 +509,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 		break;
 
 	case FX_TARGET_ALL_BUT_SELF:
+		new_fx = new Effect;
 		map=self->GetCurrentArea();
 		i= map->GetActorCount(true);
 		while(i--) {
@@ -517,13 +518,15 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 			if( st==actor) {
 				continue;
 			}
-			fx->SetPosition(actor->Pos);
+			memcpy( new_fx, fx, sizeof( Effect ) );
+			new_fx->SetPosition(actor->Pos);
 
-			flg = ApplyEffect( actor, fx, 1 );
-			if( fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( fx, flg==FX_INSERT );
+			flg = ApplyEffect( actor, new_fx, 1 );
+			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
+				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
 			}
 		}
+		delete new_fx;
 		flg = FX_APPLIED;
 		break;
 
@@ -534,6 +537,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 		map = self->GetCurrentArea();
 		spec = st->GetStat(IE_SPECIFIC);
 
+		new_fx = new Effect;
 		//GetActorCount(false) returns all nonparty critters
 		i = map->GetActorCount(false);
 		while(i--) {
@@ -541,13 +545,15 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 			if( actor->GetStat(IE_SPECIFIC)!=spec) {
 				continue;
 			}
-			fx->SetPosition(actor->Pos);
+			memcpy( new_fx, fx, sizeof( Effect ) );
+			new_fx->SetPosition(actor->Pos);
 
-			flg = ApplyEffect( actor, fx, 1 );
-			if( fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( fx, flg==FX_INSERT );
+			flg = ApplyEffect( actor, new_fx, 1 );
+			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
+				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
 			}
 		}
+		delete new_fx;
 		flg = FX_APPLIED;
 		break;
 	case FX_TARGET_OTHER_SIDE:
@@ -557,6 +563,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 		map = self->GetCurrentArea();
 		spec = pretarget->GetStat(IE_SPECIFIC);
 
+		new_fx = new Effect;
 		//GetActorCount(false) returns all nonparty critters
 		i = map->GetActorCount(false);
 		while(i--) {
@@ -564,14 +571,16 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 			if( actor->GetStat(IE_SPECIFIC)!=spec) {
 				continue;
 			}
-			fx->SetPosition(actor->Pos);
+			memcpy( new_fx, fx, sizeof( Effect ) );
+			new_fx->SetPosition(actor->Pos);
 
-			flg = ApplyEffect( actor, fx, 1 );
+			flg = ApplyEffect( actor, new_fx, 1 );
 			//GetActorCount can now return all nonparty critters
-			if( fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( fx, flg==FX_INSERT );
+			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
+				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
 			}
 		}
+		delete new_fx;
 		flg = FX_APPLIED;
 		break;
 	case FX_TARGET_PRESET:
@@ -587,54 +596,63 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 
 	case FX_TARGET_PARTY:
 all_party:
+		new_fx = new Effect;
 		game = core->GetGame();
 		i = game->GetPartySize(false);
 		while(i--) {
 			Actor* actor = game->GetPC( i, false );
-			fx->SetPosition(actor->Pos);
+			memcpy( new_fx, fx, sizeof( Effect ) );
+			new_fx->SetPosition(actor->Pos);
 
-			flg = ApplyEffect( actor, fx, 1 );
-			if( fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( fx, flg==FX_INSERT );
+			flg = ApplyEffect( actor, new_fx, 1 );
+			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
+				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
 			}
 		}
+		delete new_fx;
 		flg = FX_APPLIED;
 		break;
 
 	case FX_TARGET_ALL:
+		new_fx = new Effect;
 		map = self->GetCurrentArea();
 		i = map->GetActorCount(true);
 		while(i--) {
 			Actor* actor = map->GetActor( i, true );
-			fx->SetPosition(actor->Pos);
+			memcpy( new_fx, fx, sizeof( Effect ) );
+			new_fx->SetPosition(actor->Pos);
 
-			flg = ApplyEffect( actor, fx, 1 );
-			if( fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( fx, flg==FX_INSERT );
+			flg = ApplyEffect( actor, new_fx, 1 );
+			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
+				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
 			}
 		}
+		delete new_fx;
 		flg = FX_APPLIED;
 		break;
 
 	case FX_TARGET_ALL_BUT_PARTY:
+		new_fx = new Effect;
 		map = self->GetCurrentArea();
 		i = map->GetActorCount(false);
 		while(i--) {
 			Actor* actor = map->GetActor( i, false );
-			fx->SetPosition(actor->Pos);
+			memcpy( new_fx, fx, sizeof( Effect ) );
+			new_fx->SetPosition(actor->Pos);
 
-			flg = ApplyEffect( actor, fx, 1 );
+			flg = ApplyEffect( actor, new_fx, 1 );
 			//GetActorCount can now return all nonparty critters
-			if( fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( fx, flg==FX_INSERT );
+			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
+				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
 			}
 		}
+		delete new_fx;
 		flg = FX_APPLIED;
 		break;
 
 	case FX_TARGET_UNKNOWN:
 	default:
-		printf( "Unknown FX target type: %d\n", fx->Target);
+		print( "Unknown FX target type: %d\n", fx->Target);
 		flg = FX_ABORT;
 		break;
 	}
@@ -681,7 +699,7 @@ int EffectQueue::AddAllEffects(Actor* target, const Point &destination) const
 }
 
 //resisted effect based on level
-inline bool check_level(Actor *target, Effect *fx)
+static inline bool check_level(Actor *target, Effect *fx)
 {
 	//skip non level based effects
 	//check if an effect has no level based resistance, but instead the dice sizes/count
@@ -729,7 +747,7 @@ inline bool check_level(Actor *target, Effect *fx)
 
 //roll for the effect probability, there is a high and a low treshold, the d100
 //roll should hit in the middle
-inline bool check_probability(Effect* fx)
+static inline bool check_probability(Effect* fx)
 {
 	//watch for this, probability1 is the high number
 	//probability2 is the low number
@@ -773,7 +791,7 @@ static EffectRef fx_secondary_type_bounce_dec_ref = { "Bounce:SecondaryTypeDec",
 static EffectRef fx_spelltrap = { "SpellTrap", -1 };
 
 //this is for whole spell immunity/bounce
-inline static void DecreaseEffect(Effect *efx)
+static inline void DecreaseEffect(Effect *efx)
 {
 	efx->Parameter1--;
 	if( (int) efx->Parameter1<1) {
@@ -950,11 +968,11 @@ static bool check_resistance(Actor* actor, Effect* fx)
 
 	//opcode immunity
 	if( actor->fxqueue.HasEffectWithParam(fx_opcode_immunity_ref, fx->Opcode) ) {
-		printf ("immune to effect: %s\n", (char*) Opcodes[fx->Opcode].Name);
+		print ("immune to effect: %s\n", (char*) Opcodes[fx->Opcode].Name);
 		return true;
 	}
 	if( actor->fxqueue.HasEffectWithParam(fx_opcode_immunity2_ref, fx->Opcode) ) {
-		printf ("immune2 to effect: %s\n", (char*) Opcodes[fx->Opcode].Name);
+		print ("immune2 to effect: %s\n", (char*) Opcodes[fx->Opcode].Name);
 		return true;
 	}
 
@@ -984,10 +1002,10 @@ static bool check_resistance(Actor* actor, Effect* fx)
 
 	//magic immunity
 	ieDword val = actor->GetStat(IE_RESISTMAGIC);
-	if( fx->random_value < val) {
+	if( (signed) fx->random_value < (signed) val) {
 		// when using biased magic resistance non-hostile spells aren't resisted
 		if ((selective_mr && (fx->SourceFlags&SF_HOSTILE)) || !selective_mr) {
-			printf ("effect resisted: %s\n", (char*) Opcodes[fx->Opcode].Name);
+			print ("effect resisted: %s\n", (char*) Opcodes[fx->Opcode].Name);
 			return true;
 		}
 	}
@@ -1006,7 +1024,7 @@ static bool check_resistance(Actor* actor, Effect* fx)
 		if( fx->IsSaveForHalfDamage) {
 			fx->Parameter1/=2;
 		} else {
-			printf ("%s saved against effect: %s\n", actor->GetName(1), (char*) Opcodes[fx->Opcode].Name);
+			print ("%s saved against effect: %s\n", actor->GetName(1), (char*) Opcodes[fx->Opcode].Name);
 			return true;
 		}
 	}
@@ -1025,7 +1043,7 @@ static bool check_resistance(Actor* actor, Effect* fx)
 
 int EffectQueue::ApplyEffect(Actor* target, Effect* fx, ieDword first_apply, ieDword resistance) const
 {
-	//printf( "FX 0x%02x: %s(%d, %d)\n", fx->Opcode, effectnames[fx->Opcode].Name, fx->Parameter1, fx->Parameter2 );
+	//print( "FX 0x%02x: %s(%d, %d)\n", fx->Opcode, effectnames[fx->Opcode].Name, fx->Parameter1, fx->Parameter2 );
 	if( fx->Opcode >= MAX_EFFECTS) {
 		fx->TimingMode = FX_DURATION_JUST_EXPIRED;
 		return FX_NOT_APPLIED;
@@ -1110,15 +1128,14 @@ int EffectQueue::ApplyEffect(Actor* target, Effect* fx, ieDword first_apply, ieD
 		break;
 	//this shouldn't happen
 	default:
-		printf("Unknown delay type: %d (from %d)\n", DelayType(fx->TimingMode&0xff), fx->TimingMode);
-		abort();
+		error("EffectQueue", "Unknown delay type: %d (from %d)\n", DelayType(fx->TimingMode&0xff), fx->TimingMode);
 	}
 
 	EffectFunction fn = 0;
 	if( fx->Opcode<MAX_EFFECTS) {
 		fn = Opcodes[fx->Opcode].Function;
 		if (!(target || (Opcodes[fx->Opcode].Flags & EFFECT_NO_ACTOR))) {
-			printf("targetless opcode without EFFECT_NO_ACTOR: %d, skipping\n", fx->Opcode);
+			print("targetless opcode without EFFECT_NO_ACTOR: %d, skipping\n", fx->Opcode);
 			return FX_NOT_APPLIED;
 		}
 	}
@@ -1152,7 +1169,7 @@ int EffectQueue::ApplyEffect(Actor* target, Effect* fx, ieDword first_apply, ieD
 			case FX_PERMANENT:
 				//don't stick around if it was executed permanently
 				//for example, a permanent strength modifier effect
-				if( (fx->TimingMode == FX_DURATION_INSTANT_PERMANENT) ) {
+				if( fx->TimingMode == FX_DURATION_INSTANT_PERMANENT ) {
 					fx->TimingMode = FX_DURATION_JUST_EXPIRED;
 				}
 				break;
@@ -1179,7 +1196,7 @@ int EffectQueue::ApplyEffect(Actor* target, Effect* fx, ieDword first_apply, ieD
 #define MATCH_PROJECTILE() if((*f)->Projectile!=projectile) { continue; }
 
 static const bool fx_live[MAX_TIMING_MODE]={true,true,true,false,false,false,false,false,true,true,false};
-inline bool IsLive(ieByte timingmode)
+static inline bool IsLive(ieByte timingmode)
 {
 	if( timingmode>=MAX_TIMING_MODE) return false;
 	return fx_live[timingmode];
@@ -1727,7 +1744,7 @@ bool EffectQueue::HasAnyDispellableEffect() const
 
 void EffectQueue::dump() const
 {
-	printf( "EFFECT QUEUE:\n" );
+	print( "EFFECT QUEUE:\n" );
 	int i = 0;
 	std::list< Effect* >::const_iterator f;
 	for ( f = effects.begin(); f != effects.end(); f++ ) {
@@ -1737,7 +1754,7 @@ void EffectQueue::dump() const
 			if( fx->Opcode < MAX_EFFECTS)
 				Name = (char*) Opcodes[fx->Opcode].Name;
 
-			printf( " %2d: 0x%02x: %s (%d, %d) S:%s\n", i++, fx->Opcode, Name, fx->Parameter1, fx->Parameter2, fx->Source );
+			print( " %2d: 0x%02x: %s (%d, %d) S:%s\n", i++, fx->Opcode, Name, fx->Parameter1, fx->Parameter2, fx->Source );
 		}
 	}
 }
@@ -1766,12 +1783,13 @@ bool EffectQueue::HasDuration(Effect *fx)
 static EffectRef fx_variable_ref = { "Variable:StoreLocalVariable", -1 };
 
 //returns true if the effect must be saved
-//variables are saved differently
 bool EffectQueue::Persistent(Effect* fx)
 {
-	//we save this as variable
+	// local variable effects self-destruct if they were processed already
+	// but if they weren't processed, e.g. in a global actor, we must save them
+	// TODO: do we really need to special-case this? leaving it for now - fuzzie
 	if( fx->Opcode==(ieDword) ResolveEffect(fx_variable_ref)) {
-		return false;
+		return true;
 	}
 
 	switch (fx->TimingMode) {

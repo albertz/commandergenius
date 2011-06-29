@@ -28,6 +28,7 @@
 #include "GameData.h"
 #include "Interface.h"
 #include "Item.h"
+#include "Font.h"
 #include "Map.h"
 #include "Projectile.h"
 #include "Spell.h"
@@ -35,7 +36,9 @@
 #include "TileMap.h"
 #include "Video.h"
 #include "GameScript/GSUtils.h"
+#include "GameScript/Matching.h" // MatchActor
 #include "GUI/GameControl.h"
+#include "GUI/Window.h"
 #include "Scriptable/InfoPoint.h"
 
 #include <cassert>
@@ -60,49 +63,59 @@ Scriptable::Scriptable(ScriptableType type)
 	textDisplaying = 0;
 	timeStartDisplaying = 0;
 	scriptName[0] = 0;
-	TriggerID = 0; //used by SendTrigger
-	LastTriggerObject = LastTrigger = 0;
-	LastEntered = 0;
-	LastDisarmed = 0;
-	LastDisarmFailed = 0;
-	LastUnlocked = 0;
-	LastOpenFailed = 0;
-	LastPickLockFailed = 0;
+
+	LastAttacker = 0;
+	LastCommander = 0;
+	LastProtector = 0;
+	LastProtectee = 0;
+	LastTargetedBy = 0;
+	LastHitter = 0;
+	LastHelp = 0;
+	LastTrigger = 0;
+	LastSeen = 0;
+	LastTalker = 0;
+	LastHeard = 0;
+	LastSummoner = 0;
+	LastFollowed = 0;
+	LastMarked = 0;
+	LastMarkedSpell = 0;
+
 	DialogName = 0;
 	CurrentAction = NULL;
 	CurrentActionState = 0;
 	CurrentActionTarget = 0;
 	CurrentActionInterruptable = true;
+	CurrentActionTicks = 0;
 	UnselectableTimer = 0;
-	startTime = 0;   //executing scripts
-	lastRunTime = 0; //evaluating scripts
-	lastDelay = 0;
+	Ticks = 0;
+	AdjustedTicks = 0;
+	ScriptTicks = 0;
+	IdleTicks = 0;
+	TriggerCountdown = 0;
 	Dialog[0] = 0;
 
 	globalID = ++globalActorCounter;
 
-	interval = ( 1000 / AI_UPDATE_TIME );
 	WaitCounter = 0;
 	if (Type == ST_ACTOR) {
-		InternalFlags = IF_VISIBLE | IF_ONCREATION | IF_USEDSAVE;
+		InternalFlags = IF_VISIBLE | IF_USEDSAVE;
 	} else {
-		InternalFlags = IF_ACTIVE | IF_VISIBLE | IF_ONCREATION | IF_NOINT;
+		InternalFlags = IF_ACTIVE | IF_VISIBLE | IF_NOINT;
 	}
 	area = 0;
 	Pos.x = 0;
 	Pos.y = 0;
 
-	LastCasterOnMe = 0;
 	LastSpellOnMe = 0xffffffff;
-	LastCasterSeen = 0;
-	LastSpellSeen = 0xffffffff;
 	SpellHeader = -1;
 	SpellResRef[0] = 0;
+	LastTarget = 0;
 	LastTargetPos.empty();
 	locals = new Variables();
 	locals->SetType( GEM_VARIABLES_INT );
 	locals->ParseKey( 1 );
 	InitTriggers();
+	AddTrigger(TriggerEntry(trigger_oncreation));
 
 	memset( script_timers,0, sizeof(script_timers));
 }
@@ -157,8 +170,7 @@ void Scriptable::SetMap(Map *map)
 {
 	if (map && (map->GetCurrentArea()!=map)) {
 		//a map always points to itself (if it is a real map)
-		printMessage("Scriptable","Invalid map set!\n",LIGHT_RED);
-		abort();
+		error("Scriptable", "Invalid map set!\n");
 	}
 	area = map;
 }
@@ -169,8 +181,7 @@ void Scriptable::SetMap(Map *map)
 void Scriptable::SetScript(const ieResRef aScript, int idx, bool ai)
 {
 	if (idx >= MAX_SCRIPTS) {
-		printMessage("Scriptable","Invalid script index!\n",LIGHT_RED);
-		abort();
+		error("Scriptable", "Invalid script index!\n");
 	}
 	if (Scripts[idx]) {
 		delete Scripts[idx];
@@ -270,12 +281,13 @@ void Scriptable::DrawOverheadText(const Region &screen)
 
 void Scriptable::DelayedEvent()
 {
-	lastRunTime = core->GetGame()->Ticks;
+	// FIXME: do we need this?
+	// lastRunTime = core->GetGame()->Ticks;
 }
 
 void Scriptable::ImmediateEvent()
 {
-	lastRunTime = 0;
+	InternalFlags |= IF_FORCEUPDATE;
 }
 
 bool Scriptable::IsPC() const
@@ -286,6 +298,62 @@ bool Scriptable::IsPC() const
 		}
 	}
 	return false;
+}
+
+void Scriptable::Update()
+{
+	Ticks++;
+	AdjustedTicks++;
+
+	TickScripting();
+
+	ProcessActions();
+}
+
+void Scriptable::TickScripting()
+{
+	// Stagger script updates.
+	if (Ticks % 16 != globalID % 16)
+		return;
+
+	ieDword actorState = 0;
+	if (Type == ST_ACTOR)
+		actorState = ((Actor *)this)->Modified[IE_STATE_ID];
+
+	// Dead actors only get one chance to run a new script.
+	if ((actorState & STATE_DEAD) && !(InternalFlags & IF_JUSTDIED))
+		return;
+
+	ScriptTicks++;
+
+	// If no action is running, we've had triggers set recently or we haven't checked recently, do a script update.
+	bool needsUpdate = (!CurrentAction) || (TriggerCountdown > 0) || (IdleTicks > 15);
+
+	// Also do a script update if one was forced..
+	if (InternalFlags & IF_FORCEUPDATE) {
+		needsUpdate = true;
+		InternalFlags &= ~IF_FORCEUPDATE;
+	}
+	// TODO: force for all on-screen actors
+
+	// Charmed actors don't get frequent updates.
+	if ((actorState & STATE_CHARMED) && (IdleTicks < 5))
+		needsUpdate = false;
+
+	if (!needsUpdate) {
+		IdleTicks++;
+		return;
+	}
+
+	if (triggers.size())
+		TriggerCountdown = 5;
+	IdleTicks = 0;
+	InternalFlags &= ~IF_JUSTDIED;
+	if (TriggerCountdown > 0)
+		TriggerCountdown--;
+	// TODO: set TriggerCountdown once we have real triggers
+
+	ExecuteScript(MAX_SCRIPTS);
 }
 
 void Scriptable::ExecuteScript(int scriptCount)
@@ -309,20 +377,7 @@ void Scriptable::ExecuteScript(int scriptCount)
 		return;
 	}
 
-	// only allow death scripts to run once, hopefully?
-	// this is probably terrible logic which needs moving elsewhere
-	if ((lastRunTime != 0) && (InternalFlags & IF_JUSTDIED)) {
-		return;
-	}
 	bool changed = false;
-
-	ieDword thisTime = core->GetGame()->Ticks;
-	if (( thisTime - lastRunTime ) < 1000) {
-		return;
-	}
-
-	lastDelay = lastRunTime;
-	lastRunTime = thisTime;
 
 	// if party AI is disabled, don't run non-override scripts
 	if (Type == ST_ACTOR && ((Actor *) this)->InParty && (core->GetGame()->ControlStatus & CS_PARTY_AI))
@@ -339,6 +394,8 @@ void Scriptable::ExecuteScript(int scriptCount)
 		/* scripts are not concurrent, see WAITPC override script for example */
 		if (done) break;
 	}
+
+	// FIXME: completely wrong place for this!
 	if (changed && UnselectableTimer) {
 			UnselectableTimer--;
 			if (!UnselectableTimer) {
@@ -355,7 +412,7 @@ void Scriptable::ExecuteScript(int scriptCount)
 void Scriptable::AddAction(Action* aC)
 {
 	if (!aC) {
-		printf( "[GameScript]: NULL action encountered for %s!\n",scriptName );
+		print( "[GameScript]: NULL action encountered for %s!\n",scriptName );
 		return;
 	}
 
@@ -378,7 +435,7 @@ void Scriptable::AddAction(Action* aC)
 void Scriptable::AddActionInFront(Action* aC)
 {
 	if (!aC) {
-		printf( "[GameScript]: NULL action encountered for %s!\n",scriptName );
+		print( "[GameScript]: NULL action encountered for %s!\n",scriptName );
 		return;
 	}
 	InternalFlags|=IF_ACTIVE;
@@ -433,16 +490,11 @@ void Scriptable::ReleaseCurrentAction()
 	CurrentActionState = 0;
 	CurrentActionTarget = 0;
 	CurrentActionInterruptable = true;
+	CurrentActionTicks = 0;
 }
 
-void Scriptable::ProcessActions(bool force)
+void Scriptable::ProcessActions()
 {
-	unsigned long thisTime = core->GetGame()->Ticks;
-
-	if (!force && (( thisTime - startTime ) < interval)) {
-		return;
-	}
-	startTime = thisTime;
 	if (WaitCounter) {
 		WaitCounter--;
 		if (WaitCounter) return;
@@ -452,6 +504,8 @@ void Scriptable::ProcessActions(bool force)
 		CurrentActionInterruptable = true;
 		if (!CurrentAction) {
 			CurrentAction = PopNextAction();
+		} else {
+			CurrentActionTicks++;
 		}
 		if (!CurrentAction) {
 			ClearActions();
@@ -472,9 +526,10 @@ void Scriptable::ProcessActions(bool force)
 			break;
 		}
 	}
-	if (InternalFlags&IF_IDLE) {
+	// FIXME
+	/*if (InternalFlags&IF_IDLE) {
 		Deactivate();
-	}
+	}*/
 }
 
 bool Scriptable::InMove() const
@@ -498,7 +553,7 @@ unsigned long Scriptable::GetWait() const
 
 void Scriptable::LeaveDialog()
 {
-	InternalFlags |=IF_WASINDIALOG;
+	AddTrigger(TriggerEntry(trigger_wasindialog));
 }
 
 void Scriptable::Hide()
@@ -538,7 +593,8 @@ void Scriptable::Activate()
 
 void Scriptable::PartyRested()
 {
-	InternalFlags |=IF_PARTYRESTED;
+	//InternalFlags |=IF_PARTYRESTED;
+	AddTrigger(TriggerEntry(trigger_partyrested));
 }
 
 ieDword Scriptable::GetInternalFlag()
@@ -548,13 +604,14 @@ ieDword Scriptable::GetInternalFlag()
 
 void Scriptable::InitTriggers()
 {
-	tolist.clear();
-	bittriggers = 0;
+	//tolist.clear();
+	//bittriggers = 0;
+	triggers.clear();
 }
 
 void Scriptable::ClearTriggers()
 {
-	for (TriggerObjects::iterator m = tolist.begin(); m != tolist.end (); m++) {
+	/*for (TriggerObjects::iterator m = tolist.begin(); m != tolist.end (); m++) {
 		*(*m) = 0;
 	}
 	if (!bittriggers) {
@@ -577,18 +634,64 @@ void Scriptable::ClearTriggers()
 	}
 	if (bittriggers & BT_PARTYRESTED) {
 		InternalFlags &= ~IF_PARTYRESTED;
-	}
+	}*/
 	InitTriggers();
 }
 
-void Scriptable::SetBitTrigger(ieDword bittrigger)
+/*void Scriptable::SetBitTrigger(ieDword bittrigger)
 {
 	bittriggers |= bittrigger;
+}*/
+
+void Scriptable::AddTrigger(TriggerEntry trigger)
+{
+	triggers.push_back(trigger);
+	ImmediateEvent();
+
+	assert(trigger.triggerID < MAX_TRIGGERS);
+	if (triggerflags[trigger.triggerID] & TF_SAVED)
+		LastTrigger = trigger.param1;
 }
 
-void Scriptable::AddTrigger(ieDword *actorref)
-{
-	tolist.push_back(actorref);
+bool Scriptable::MatchTrigger(unsigned short id, ieDword param) {
+	for (std::list<TriggerEntry>::iterator m = triggers.begin(); m != triggers.end (); m++) {
+		TriggerEntry &trigger = *m;
+		if (trigger.triggerID != id)
+			continue;
+		if (param && trigger.param1 != param)
+			continue;
+		return true;
+	}
+
+	return false;
+}
+
+bool Scriptable::MatchTriggerWithObject(unsigned short id, class Object *obj, ieDword param) {
+	for (std::list<TriggerEntry>::iterator m = triggers.begin(); m != triggers.end (); m++) {
+		TriggerEntry &trigger = *m;
+		if (trigger.triggerID != id)
+			continue;
+		if (param && trigger.param2 != param)
+			continue;
+		if (!MatchActor(this, trigger.param1, obj))
+			continue;
+		return true;
+	}
+
+	return false;
+}
+
+const TriggerEntry *Scriptable::GetMatchingTrigger(unsigned short id, unsigned int notflags) {
+	for (std::list<TriggerEntry>::iterator m = triggers.begin(); m != triggers.end (); m++) {
+		TriggerEntry &trigger = *m;
+		if (trigger.triggerID != id)
+			continue;
+		if (notflags & trigger.flags)
+			continue;
+		return &*m;
+	}
+
+	return NULL;
 }
 
 static EffectRef fx_set_invisible_state_ref = { "State:Invisible", -1 };
@@ -742,7 +845,7 @@ void Scriptable::CreateProjectile(const ieResRef SpellResRef, ieDword tgt, int l
 		}
 
 		if (tgt) {
-			area->AddProjectile(pro, origin, LastTarget, fake);
+			area->AddProjectile(pro, origin, tgt, fake);
 		} else {
 			area->AddProjectile(pro, origin, LastTargetPos);
 		}
@@ -758,10 +861,10 @@ void Scriptable::CreateProjectile(const ieResRef SpellResRef, ieDword tgt, int l
 		char tmp[100];
 		const char* msg = core->GetString(displaymsg->GetStringReference(STR_ACTION_CAST), 0);
 		const char* spell = core->GetString(spl->SpellName);
-		if (LastTarget) {
-			target = area->GetActorByGlobalID(LastTarget);
+		if (tgt) {
+			target = area->GetActorByGlobalID(tgt);
 			if (!target) {
-				target=core->GetGame()->GetActorByGlobalID(LastTarget);
+				target=core->GetGame()->GetActorByGlobalID(tgt);
 			}
 		}
 		if (stricmp(spell, "")) {
@@ -773,22 +876,25 @@ void Scriptable::CreateProjectile(const ieResRef SpellResRef, ieDword tgt, int l
 			displaymsg->DisplayStringName(tmp, 0xffffff, this);
 		}
 
-		if(LastTarget) {
+		if (tgt) {
 			if (target && (Type==ST_ACTOR) ) {
+				target->AddTrigger(TriggerEntry(trigger_spellcastonme, caster->GetGlobalID(), spellnum));
 				target->LastSpellOnMe = spellnum;
-				target->LastCasterOnMe = caster->GetGlobalID();
 				// don't cure invisibility if this is a self targetting invisibility spell
 				// like shadow door
 				//can't check GetEffectBlock, since it doesn't construct the queue for selftargetting spells
 				bool invis = false;
 				unsigned int opcode = EffectQueue::ResolveEffect(fx_set_invisible_state_ref);
-				for (unsigned int i=0; i < spl->ext_headers[SpellHeader].FeatureCount; i++) {
-					if (spl->GetExtHeader(SpellHeader)->features[i].Opcode == opcode) {
-						invis = true;
-						break;
+				SPLExtHeader *seh = spl->GetExtHeader(SpellHeader);
+				if (seh) {
+					for (unsigned int i=0; i < seh->FeatureCount; i++) {
+						if (seh->features[i].Opcode == opcode) {
+							invis = true;
+							break;
+						}
 					}
 				}
-				if (invis && spl->GetExtHeader(SpellHeader)->Target == TARGET_SELF) {
+				if (invis && seh && seh->Target == TARGET_SELF) {
 					//pass
 				} else {
 					caster->CureInvisibility();
@@ -1283,8 +1389,8 @@ bool Scriptable::TimerExpired(ieDword ID)
 void Scriptable::StartTimer(ieDword ID, ieDword expiration)
 {
 	if (ID>=MAX_TIMER) {
-		printMessage("Scriptable", " ", RED);
-		printf("Timer id %d exceeded MAX_TIMER %d\n", ID, MAX_TIMER);
+		printMessage("Scriptable", "Timer id %d exceeded MAX_TIMER %d\n", RED,
+			ID, MAX_TIMER);
 		return;
 	}
 	script_timers[ID]= core->GetGame()->GameTime + expiration*AI_UPDATE_TIME;
@@ -1348,7 +1454,7 @@ void Selectable::DrawCircle(const Region &vp)
 		//doing a time dependent flashing of colors
 		//if it is too fast, increase the 6 to 7
 		unsigned long step;
-		GetTime( step );
+		step = GetTickCount();
 		step = tp_steps [(step >> 6) & 7];
 		mix.a = overColor.a;
 		mix.r = (overColor.r*step+selectedColor.r*(8-step))/8;
@@ -1452,6 +1558,7 @@ Highlightable::Highlightable(ScriptableType type)
 	Highlight = false;
 	Cursor = IE_CURSOR_NORMAL;
 	KeyResRef[0] = 0;
+	EnterWav[0] = 0;
 }
 
 Highlightable::~Highlightable(void)
@@ -1480,6 +1587,23 @@ void Highlightable::DrawOutline() const
 void Highlightable::SetCursor(unsigned char CursorIndex)
 {
 	Cursor = CursorIndex;
+}
+
+//trap that will fire now
+bool Highlightable::TriggerTrap(int /*skill*/, ieDword ID)
+{
+	if (!Trapped) {
+		return false;
+	}
+	//actually this could be script name[0]
+	if (!Scripts[0] && !EnterWav[0]) {
+		return false;
+	}
+	AddTrigger(TriggerEntry(trigger_entered, ID));
+	if (!TrapResets()) {
+		Trapped = false;
+	}
+	return true;
 }
 
 bool Highlightable::TryUnlock(Actor *actor, bool removekey) {
@@ -1521,6 +1645,23 @@ bool Highlightable::TryUnlock(Actor *actor, bool removekey) {
 	return true;
 }
 
+//detect this trap, using a skill, skill could be set to 256 for 'sure'
+//skill is the all around modified trap detection skill
+//a trapdetectiondifficulty of 100 means impossible detection short of a spell
+void Highlightable::DetectTrap(int skill)
+{
+	if (!CanDetectTrap()) return;
+	if (!Scripts[0]) return;
+	if ((skill>=100) && (skill!=256) ) skill = 100;
+	if (skill/2+core->Roll(1,skill/2,0)>TrapDetectionDiff) {
+		SetTrapDetected(1); //probably could be set to the player #?
+	}
+}
+
+bool Highlightable::PossibleToSeeTrap() const
+{
+	return CanDetectTrap();
+}
 
 /*****************
  * Movable Class *
@@ -1625,7 +1766,7 @@ void Movable::SetStance(unsigned int arg)
 
 	} else {
 		StanceID=IE_ANI_AWAKE; //
-		printf("Tried to set invalid stance id (%u)\n", arg);
+		print("Tried to set invalid stance id (%u)\n", arg);
 	}
 }
 
@@ -1684,7 +1825,7 @@ bool Movable::DoStep(unsigned int walk_speed, ieDword time)
 		step = path;
 		timeStartStep = time;
 	} else if (step->Next && (( time - timeStartStep ) >= walk_speed)) {
-		//printf("[New Step] : Orientation = %d\n", step->orient);
+		//print("[New Step] : Orientation = %d\n", step->orient);
 		step = step->Next;
 		timeStartStep = timeStartStep + walk_speed;
 	}
@@ -1902,7 +2043,7 @@ void Movable::DrawTargetPoint(const Region &vp)
 	// generates "step" from sequence 3 2 1 0 1 2 3 4
 	// updated each 1/15 sec
 	unsigned long step;
-	GetTime( step );
+	step = GetTickCount();
 	step = tp_steps [(step >> 6) & 7];
 
 	step = step + 1;

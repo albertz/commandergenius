@@ -20,6 +20,8 @@
 
 #include "TileOverlay.h"
 
+//#include "Game.h" // needed only for TILE_GREY below
+#include "GlobalTimer.h"
 #include "Interface.h"
 #include "Video.h"
 
@@ -72,7 +74,7 @@ void TileOverlay::BumpViewport(const Region &viewport, Region &vp)
 	}
 }
 
-void TileOverlay::Draw(Region viewport, std::vector< TileOverlay*> &overlays)
+void TileOverlay::Draw(Region viewport, std::vector< TileOverlay*> &overlays, int flags)
 {
 	Video* vid = core->GetVideoDriver();
 	Region vp = vid->GetViewport();
@@ -95,7 +97,7 @@ void TileOverlay::Draw(Region viewport, std::vector< TileOverlay*> &overlays)
 				anim = tile->anim[0];
 			}
 			vid->BlitTile( anim->NextFrame(), 0, viewport.x + ( x * 64 ),
-				viewport.y + ( y * 64 ), &viewport, false );
+				viewport.y + ( y * 64 ), &viewport, flags );
 			if (!tile->om || tile->tileIndex) {
 				continue;
 			}
@@ -112,7 +114,7 @@ void TileOverlay::Draw(Region viewport, std::vector< TileOverlay*> &overlays)
 						                   tile->anim[0]->NextFrame(),
 							               viewport.x + ( x * 64 ),
 							               viewport.y + ( y * 64 ),
-							               &viewport, false );
+							               &viewport, flags );
 						} else {
 							Sprite2D* mask = 0;
 							if (tile->anim[1])
@@ -121,7 +123,7 @@ void TileOverlay::Draw(Region viewport, std::vector< TileOverlay*> &overlays)
 						                   mask,
 							               viewport.x + ( x * 64 ),
 							               viewport.y + ( y * 64 ),
-							               &viewport, true );
+							               &viewport, TILE_HALFTRANS | flags );
 						}
 					}
 				}

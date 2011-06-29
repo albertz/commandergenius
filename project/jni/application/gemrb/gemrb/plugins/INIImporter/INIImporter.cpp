@@ -26,29 +26,19 @@
 
 INIImporter::INIImporter(void)
 {
-	str = NULL;
-	autoFree = false;
 }
 
 INIImporter::~INIImporter(void)
 {
-	if (str && autoFree) {
-		delete( str );
-	}
 	for (unsigned int i = 0; i < tags.size(); i++)
 		delete( tags[i] );
 }
 
-bool INIImporter::Open(DataStream* stream, bool autoFree)
+bool INIImporter::Open(DataStream* str)
 {
-	if (stream == NULL) {
+	if (str == NULL) {
 		return false;
 	}
-	if (str && this->autoFree) {
-		delete( str );
-	}
-	str = stream;
-	this->autoFree = autoFree;
 	int cnt = 0;
 	char* strbuf = ( char* ) malloc( 4097 );
 	INITag* lastTag = NULL;
@@ -79,12 +69,13 @@ bool INIImporter::Open(DataStream* stream, bool autoFree)
 		if (lastTag == NULL)
 			continue;
 		if (lastTag->AddLine( strbuf )) {
-			printMessage("INIImporter","", LIGHT_RED);
-			printf("Bad Line in file: %s, Section: [%s], Entry: '%s'\n", stream->filename, lastTag->GetTagName(), strbuf);
+			printMessage("INIImporter", "Bad Line in file: %s, Section: [%s], Entry: '%s'\n", LIGHT_RED,
+				str->filename, lastTag->GetTagName(), strbuf);
 		}
 
 	} while (true);
 	free( strbuf );
+	delete str;
 	return true;
 }
 

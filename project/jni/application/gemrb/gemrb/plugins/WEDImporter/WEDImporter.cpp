@@ -32,6 +32,7 @@
 
 #include "GameData.h"
 #include "Interface.h"
+#include "PluginMgr.h"
 #include "TileSetMgr.h"
 
 struct wed_polygon {
@@ -47,30 +48,24 @@ struct wed_polygon {
 WEDImporter::WEDImporter(void)
 {
 	str = NULL;
-	autoFree = false;
 }
 
 WEDImporter::~WEDImporter(void)
 {
-	if (str && autoFree) {
-		delete( str );
-	}
+	delete str;
 }
 
-bool WEDImporter::Open(DataStream* stream, bool autoFree)
+bool WEDImporter::Open(DataStream* stream)
 {
 	if (stream == NULL) {
 		return false;
 	}
-	if (str && this->autoFree) {
-		delete( str );
-	}
+	delete str;
 	str = stream;
-	this->autoFree = autoFree;
 	char Signature[8];
 	str->Read( Signature, 8 );
 	if (strncmp( Signature, "WED V1.3", 8 ) != 0) {
-		printf( "[WEDImporter]: This file is not a valid WED File\n" );
+		print( "[WEDImporter]: This file is not a valid WED File\n" );
 		return false;
 	}
 	str->ReadDword( &OverlaysCount );
@@ -214,7 +209,7 @@ void WEDImporter::GetDoorPolygonCount(ieWord count, ieDword offset)
 	ieDword basecount = offset-PolygonsOffset;
 	if (basecount%WED_POLYGON_SIZE) {
 		basecount+=WED_POLYGON_SIZE;
-		printf("[WEDImporter]: Found broken door polygon header!\n");
+		print("[WEDImporter]: Found broken door polygon header!\n");
 	}
 	ieDword polycount = basecount/WED_POLYGON_SIZE+count-WallPolygonsCount;
 	if (polycount>DoorPolygonsCount) {
@@ -249,7 +244,7 @@ ieWord* WEDImporter::GetDoorIndices(char* ResRef, int* count, bool& BaseClosed)
 	//The door has no representation in the WED file
 	if (i == DoorsCount) {
 		*count = 0;
-		printf( "[WEDImporter]: Found door without WED entry!\n" );
+		print( "[WEDImporter]: Found door without WED entry!\n" );
 		return NULL;
 	}
 

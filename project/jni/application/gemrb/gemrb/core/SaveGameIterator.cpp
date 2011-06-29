@@ -29,9 +29,14 @@
 #include "ImageMgr.h"
 #include "ImageWriter.h"
 #include "Interface.h"
+#include "PluginMgr.h"
 #include "SaveGameMgr.h"
+#include "Sprite2D.h"
+#include "TableMgr.h"
 #include "Video.h"
 #include "GUI/GameControl.h"
+#include "Scriptable/Actor.h"
+#include "System/FileStream.h"
 
 #if defined(__HAIKU__)
 #include <unistd.h>
@@ -227,8 +232,8 @@ static bool IsSaveGameSlot(const char* Path, const char* slotname)
 	if (cnt != 2) {
 		//The matcher didn't match: either this is not a valid dir
 		//or the SAVEGAME_DIRECTORY_MATCHER needs updating.
-		printMessage( "SaveGameIterator", " ", LIGHT_RED );
-		printf( "Invalid savegame directory '%s' in %s.\n", slotname, Path );
+		printMessage("SaveGameIterator", "Invalid savegame directory '%s' in %s.\n", LIGHT_RED,
+			slotname, Path);
 		return false;
 	}
 
@@ -240,23 +245,20 @@ static bool IsSaveGameSlot(const char* Path, const char* slotname)
 	PathJoinExt(ftmp, dtmp, core->GameNameResRef, "bmp");
 
 	if (access( ftmp, R_OK )) {
-		printMessage("SaveGameIterator"," ",YELLOW);
-		printf("Ignoring slot %s because of no appropriate preview!\n", dtmp);
+		printMessage("SaveGameIterator", "Ignoring slot %s because of no appropriate preview!\n", YELLOW, dtmp);
 		return false;
 	}
 
 	PathJoinExt(ftmp, dtmp, core->WorldMapName[0], "wmp");
 	if (access( ftmp, R_OK )) {
-		printMessage("SaveGameIterator"," ",YELLOW);
-		printf("Ignoring slot %s because of no appropriate worldmap!\n", dtmp);
+		printMessage("SaveGameIterator", "Ignoring slot %s because of no appropriate worldmap!\n", YELLOW, dtmp);
 		return false;
 	}
 
 	/* we might need something here as well
 	PathJoinExt(ftmp, dtmp, core->WorldMapName[1], "wmp");
 	if (access( ftmp, R_OK )) {
-		printMessage("SaveGameIterator"," ",YELLOW);
-		printf("Ignoring slot %s because of no appropriate worldmap!\n", dtmp);
+		printMessage("SaveGameIterator", "Ignoring slot %s because of no appropriate worldmap!\n", YELLOW, dtmp);
 		return false;
 	}
 	*/
@@ -275,8 +277,10 @@ bool SaveGameIterator::RescanSaveGames()
 	DirectoryIterator dir(Path);
 	// create the save game directory at first access
 	if (!dir) {
-		mkdir(Path,S_IWRITE|S_IREAD|S_IEXEC);
-		chmod(Path,S_IWRITE|S_IREAD|S_IEXEC);
+		if (!MakeDirectory(Path)) {
+			printMessage("SaveGameIterator", "Unable to create save game directory '%s'", RED, Path);
+			return false;
+		}
 		dir.Rewind();
 	}
 	if (!dir) { //If we cannot open the Directory
@@ -334,7 +338,7 @@ Holder<SaveGame> SaveGameIterator::BuildSaveGame(const char *slotname)
 	int cnt = sscanf( slotname, SAVEGAME_DIRECTORY_MATCHER, &savegameNumber, savegameName );
 	//maximum pathlength == 240, without 8+3 filenames
 	if ( (cnt != 2) || (strlen(Path)>240) ) {
-		printf( "Invalid savegame directory '%s' in %s.\n", slotname, Path );
+		print( "Invalid savegame directory '%s' in %s.\n", slotname, Path );
 		return NULL;
 	}
 
@@ -405,6 +409,8 @@ static bool DoSaveGame(const char *Path)
 		}
 	}
 
+	gamedata->SaveAllStores();
+
 	//compress files in cache named: .STO and .ARE
 	//no .CRE would be saved in cache
 	if (core->CompressSave(Path)) {
@@ -448,7 +454,7 @@ static bool DoSaveGame(const char *Path)
 	return true;
 }
 
-int CanSave()
+static int CanSave()
 {
 	//some of these restrictions might not be needed
 	Store * store = core->GetCurrentStore();
@@ -502,13 +508,16 @@ int CanSave()
 	return 0;
 }
 
-static void CreateSavePath(char *Path, int index, const char *slotname)
+static bool CreateSavePath(char *Path, int index, const char *slotname) WARN_UNUSED;
+static bool CreateSavePath(char *Path, int index, const char *slotname)
 {
 	PathJoin( Path, core->SavePath, SaveDir(), NULL );
 
 	//if the path exists in different case, don't make it again
-	mkdir(Path,S_IWRITE|S_IREAD|S_IEXEC);
-	chmod(Path,S_IWRITE|S_IREAD|S_IEXEC);
+	if (!MakeDirectory(Path)) {
+		printMessage("SaveGameIterator", "Unable to create save game directory '%s'", RED, Path);
+		return false;
+	}
 	//keep the first part we already determined existing
 
 	char dir[_MAX_PATH];
@@ -516,8 +525,11 @@ static void CreateSavePath(char *Path, int index, const char *slotname)
 	PathJoin(Path, Path, dir, NULL);
 	//this is required in case the old slot wasn't recognised but still there
 	core->DelTree(Path, false);
-	mkdir(Path,S_IWRITE|S_IREAD|S_IEXEC);
-	chmod(Path,S_IWRITE|S_IREAD|S_IEXEC);
+	if (!MakeDirectory(Path)) {
+		printMessage("SaveGameIterator", "Unable to create save game directory '%s'", RED, Path);
+		return false;
+	}
+	return true;
 }
 
 int SaveGameIterator::CreateSaveGame(int index, bool mqs)
@@ -548,8 +560,15 @@ int SaveGameIterator::CreateSaveGame(int index, bool mqs)
 		}
 	}
 	char Path[_MAX_PATH];
-	CreateSavePath(Path, index, slotname);
 	GameControl *gc = core->GetGameControl();
+
+	if (!CreateSavePath(Path, index, slotname)) {
+		displaymsg->DisplayConstantString(STR_CANTSAVE, 0xbcefbc);
+		if (gc) {
+			gc->SetDisplayText(STR_CANTSAVE, 30);
+		}
+		return -1;
+	}
 
 	if (!DoSaveGame(Path)) {
 		displaymsg->DisplayConstantString(STR_CANTSAVE, 0xbcefbc);
@@ -605,7 +624,13 @@ int SaveGameIterator::CreateSaveGame(Holder<SaveGame> save, const char *slotname
 	}
 
 	char Path[_MAX_PATH];
-	CreateSavePath(Path, index, slotname);
+	if (!CreateSavePath(Path, index, slotname)) {
+		displaymsg->DisplayConstantString(STR_CANTSAVE, 0xbcefbc);
+		if (gc) {
+			gc->SetDisplayText(STR_CANTSAVE, 30);
+		}
+		return -1;
+	}
 
 	if (!DoSaveGame(Path)) {
 		displaymsg->DisplayConstantString(STR_CANTSAVE, 0xbcefbc);

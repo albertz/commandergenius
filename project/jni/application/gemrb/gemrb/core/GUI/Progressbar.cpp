@@ -24,6 +24,7 @@
 
 #include "Interface.h"
 #include "Video.h"
+#include "GUI/Window.h"
 
 #include <cstring>
 
@@ -160,12 +161,6 @@ void Progressbar::SetSliderPos(int x, int y, int x2, int y2)
 	KnobYPos=y;
 	CapXPos=x2;
 	CapYPos=y2;
-}
-
-/* dummy virtual function */
-int Progressbar::SetText(const char* /*string*/, int /*pos*/)
-{
-	return 0;
 }
 
 bool Progressbar::SetEvent(int eventType, EventHandler handler)

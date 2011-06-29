@@ -25,6 +25,7 @@
 #include "Audio.h"
 #include "Interface.h"
 #include "Palette.h"
+#include "Sprite2D.h"
 
 #include <cmath>
 
@@ -43,6 +44,11 @@ Video::Video(void)
 
 Video::~Video(void)
 {
+}
+
+bool Video::ToggleFullscreenMode()
+{
+	return SetFullscreenMode(!fullscreen);
 }
 
 /** Set Event Manager */

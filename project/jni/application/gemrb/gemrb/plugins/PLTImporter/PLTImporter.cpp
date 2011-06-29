@@ -49,16 +49,18 @@ PLTImporter::~PLTImporter(void)
 	}
 }
 
-bool PLTImporter::Open(DataStream* stream)
+bool PLTImporter::Open(DataStream* str)
 {
-	str = stream;
+	if (!str) {
+		return false;
+	}
 
 	char Signature[8];
 	unsigned short unknown[4];
 
 	str->Read( Signature, 8 );
 	if (strncmp( Signature, "PLT V1  ", 8 ) != 0) {
-		printf( "[PLTImporter]: Not a valid PLT File.\n" );
+		print( "[PLTImporter]: Not a valid PLT File.\n" );
 		return false;
 	}
 
@@ -68,7 +70,7 @@ bool PLTImporter::Open(DataStream* stream)
 
 	pixels = malloc( Width * Height * 2 );
 	str->Read( pixels, Width * Height * 2 );
-
+	delete str;
 	return true;
 }
 
@@ -106,5 +108,5 @@ Sprite2D* PLTImporter::GetSprite2D(unsigned int type, ieDword paletteIndex[8])
 #include "plugindef.h"
 
 GEMRB_PLUGIN(0x8D0C64F, "PLT File Importer")
-PLUGIN_IE_RESOURCE(PLTImporter, ".plt", (ieWord)IE_PLT_CLASS_ID)
+PLUGIN_IE_RESOURCE(PLTImporter, "plt", (ieWord)IE_PLT_CLASS_ID)
 END_PLUGIN()

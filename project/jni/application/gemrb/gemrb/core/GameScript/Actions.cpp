@@ -27,11 +27,14 @@
 
 #include "AmbientMgr.h"
 #include "Audio.h"
+#include "CharAnimations.h"
 #include "DataFileMgr.h"
 #include "DialogHandler.h"
 #include "DisplayMessage.h"
 #include "Game.h"
 #include "GameData.h"
+#include "GlobalTimer.h"
+#include "IniSpawn.h"
 #include "Item.h"
 #include "Map.h"
 #include "MusicMgr.h"
@@ -41,6 +44,7 @@
 #include "Video.h"
 #include "WorldMap.h"
 #include "GUI/GameControl.h"
+#include "GUI/EventMgr.h"
 #include "Scriptable/Container.h"
 #include "Scriptable/Door.h"
 #include "Scriptable/InfoPoint.h"
@@ -457,7 +461,7 @@ void GameScript::TriggerActivation(Scriptable* Sender, Action* parameters)
 		ip = Sender->GetCurrentArea()->TMap->GetInfoPoint(parameters->objects[1]->objectName);
 	}
 	if (!ip || (ip->Type!=ST_TRIGGER && ip->Type!=ST_TRAVEL && ip->Type!=ST_PROXIMITY)) {
-		printf("Script error: No Trigger Named \"%s\"\n", parameters->objects[1]->objectName);
+		print("Script error: No Trigger Named \"%s\"\n", parameters->objects[1]->objectName);
 		return;
 	}
 	InfoPoint *trigger = (InfoPoint *) ip;
@@ -578,7 +582,7 @@ void GameScript::ExitPocketPlane(Scriptable* /*Sender*/, Action* /*parameters*/)
 		if (act) {
 			if (game->GetPlaneLocationCount() <= (unsigned int)i) {
 				// what are we meant to do here?
-				printf("argh, couldn't restore party member %d!", i + 1);
+				print("argh, couldn't restore party member %d!", i + 1);
 				continue;
 			}
 			GAMLocationEntry *gle = game->GetPlaneLocationEntry(i);
@@ -678,7 +682,7 @@ void GameScript::CreateCreatureObjectDoor(Scriptable* Sender, Action* parameters
 {
 	//we hack this to death
 	strcpy(parameters->string1Parameter, "SPDIMNDR");
-	CreateCreatureCore( Sender, parameters, CC_OFFSET | CC_CHECK_IMPASSABLE|CC_CHECK_OVERLAP | CC_PLAY_ANIM );
+	CreateCreatureCore( Sender, parameters, CC_OBJECT | CC_CHECK_IMPASSABLE|CC_CHECK_OVERLAP | CC_PLAY_ANIM );
 }
 
 //don't use offset from Sender
@@ -1126,13 +1130,10 @@ void GameScript::MoveToPoint(Scriptable* Sender, Action* parameters)
 		return;
 	}
 	Actor* actor = ( Actor* ) Sender;
-	//InMove can clear destination, so we need to save it
-	Point dest = actor->Destination;
 
 	// try the actual move, if we are not already moving there
 	if (!actor->InMove() || actor->Destination != parameters->pointParameter) {
 		actor->WalkTo( parameters->pointParameter, 0 );
-		dest = actor->Destination;
 	}
 
 	// give up if we can't move there (no path was found)
@@ -1308,7 +1309,7 @@ void GameScript::RestorePartyLocation(Scriptable* /*Sender*/, Action* /*paramete
 		if (act) {
 			if (game->GetSavedLocationCount() <= (unsigned int)i) {
 				// what are we meant to do here?
-				printf("argh, couldn't restore party member %d!", i + 1);
+				print("argh, couldn't restore party member %d!", i + 1);
 				continue;
 			}
 			GAMLocationEntry *gle = game->GetSavedLocationEntry(i);
@@ -1523,7 +1524,7 @@ void GameScript::DisplayStringHead(Scriptable* Sender, Action* parameters)
 	Scriptable* target = GetActorFromObject( Sender, parameters->objects[1] );
 	if (!target) {
 		target=Sender;
-		printf("DisplayStringHead/FloatMessage got no target, assuming Sender!\n");
+		print("DisplayStringHead/FloatMessage got no target, assuming Sender!\n");
 	}
 
 	DisplayStringCore(target, parameters->int0Parameter, DS_CONSOLE|DS_HEAD|DS_SPEECH );
@@ -1556,7 +1557,7 @@ void GameScript::FloatMessageFixed(Scriptable* Sender, Action* parameters)
 	Scriptable* target = GetActorFromObject( Sender, parameters->objects[1] );
 	if (!target) {
 		target=Sender;
-		printf("DisplayStringHead/FloatMessage got no target, assuming Sender!\n");
+		print("DisplayStringHead/FloatMessage got no target, assuming Sender!\n");
 	}
 
 	DisplayStringCore(target, parameters->int0Parameter, DS_CONSOLE|DS_HEAD);
@@ -1567,7 +1568,7 @@ void GameScript::FloatMessageFixedRnd(Scriptable* Sender, Action* parameters)
 	Scriptable* target = GetActorFromObject( Sender, parameters->objects[1] );
 	if (!target) {
 		target=Sender;
-		printf("DisplayStringHead/FloatMessage got no target, assuming Sender!\n");
+		print("DisplayStringHead/FloatMessage got no target, assuming Sender!\n");
 	}
 
 	SrcVector *rndstr=LoadSrc(parameters->string0Parameter);
@@ -1584,7 +1585,7 @@ void GameScript::FloatMessageRnd(Scriptable* Sender, Action* parameters)
 	Scriptable* target = GetActorFromObject( Sender, parameters->objects[1] );
 	if (!target) {
 		target=Sender;
-		printf("DisplayStringHead/FloatMessage got no target, assuming Sender!\n");
+		print("DisplayStringHead/FloatMessage got no target, assuming Sender!\n");
 	}
 
 	SrcVector *rndstr=LoadSrc(parameters->string0Parameter);
@@ -1770,20 +1771,20 @@ void GameScript::SetMusic(Scriptable* Sender, Action* parameters)
 //optional integer parameter (isSpeech)
 void GameScript::PlaySound(Scriptable* Sender, Action* parameters)
 {
-	printf( "PlaySound(%s)\n", parameters->string0Parameter );
+	print( "PlaySound(%s)\n", parameters->string0Parameter );
 	core->GetAudioDrv()->Play( parameters->string0Parameter, Sender->Pos.x,
 				Sender->Pos.y, parameters->int0Parameter ? GEM_SND_SPEECH : 0 );
 }
 
 void GameScript::PlaySoundPoint(Scriptable* /*Sender*/, Action* parameters)
 {
-	printf( "PlaySound(%s)\n", parameters->string0Parameter );
+	print( "PlaySound(%s)\n", parameters->string0Parameter );
 	core->GetAudioDrv()->Play( parameters->string0Parameter, parameters->pointParameter.x, parameters->pointParameter.y );
 }
 
 void GameScript::PlaySoundNotRanged(Scriptable* /*Sender*/, Action* parameters)
 {
-	printf( "PlaySound(%s)\n", parameters->string0Parameter );
+	print( "PlaySound(%s)\n", parameters->string0Parameter );
 	core->GetAudioDrv()->Play( parameters->string0Parameter, 0, 0);
 }
 
@@ -1903,7 +1904,7 @@ void GameScript::AmbientActivate(Scriptable* Sender, Action* parameters)
 		anim = Sender->GetCurrentArea( )->GetAnimation( parameters->objects[1]->objectName );
 	}
 	if (!anim) {
-		printf( "Script error: No Animation Named \"%s\" or \"%s\"\n",
+		print( "Script error: No Animation Named \"%s\" or \"%s\"\n",
 			parameters->string0Parameter,parameters->objects[1]->objectName );
 		return;
 	}
@@ -1934,7 +1935,7 @@ void GameScript::StaticStart(Scriptable* Sender, Action* parameters)
 {
 	AreaAnimation *anim = Sender->GetCurrentArea()->GetAnimation(parameters->objects[1]->objectName);
 	if (!anim) {
-		printf( "Script error: No Animation Named \"%s\"\n",
+		print( "Script error: No Animation Named \"%s\"\n",
 			parameters->objects[1]->objectName );
 		return;
 	}
@@ -1945,7 +1946,7 @@ void GameScript::StaticStop(Scriptable* Sender, Action* parameters)
 {
 	AreaAnimation *anim = Sender->GetCurrentArea()->GetAnimation(parameters->objects[1]->objectName);
 	if (!anim) {
-		printf( "Script error: No Animation Named \"%s\"\n",
+		print( "Script error: No Animation Named \"%s\"\n",
 			parameters->objects[1]->objectName );
 		return;
 	}
@@ -1956,7 +1957,7 @@ void GameScript::StaticPalette(Scriptable* Sender, Action* parameters)
 {
 	AreaAnimation *anim = Sender->GetCurrentArea()->GetAnimation(parameters->objects[1]->objectName);
 	if (!anim) {
-		printf( "Script error: No Animation Named \"%s\"\n",
+		print( "Script error: No Animation Named \"%s\"\n",
 			parameters->objects[1]->objectName );
 		return;
 	}
@@ -2146,7 +2147,7 @@ void GameScript::NIDSpecial2(Scriptable* Sender, Action* /*parameters*/)
 	}
 	//travel direction passed to guiscript
 	int direction = Sender->GetCurrentArea()->WhichEdge(actor->Pos);
-	printf("Travel direction returned: %d\n", direction);
+	print("Travel direction returned: %d\n", direction);
 	if (direction==-1) {
 		Sender->ReleaseCurrentAction();
 		return;
@@ -2565,16 +2566,16 @@ void GameScript::Spell(Scriptable* Sender, Action* parameters)
 		return;
 	}
 
-	//if target was set, fire spell
-	if (Sender->LastTarget) {
-		Sender->CastSpellEnd(0);
-		Sender->ReleaseCurrentAction();
-		return;
-	}
-
-	//the target was converted to a point
-	if(!Sender->LastTargetPos.isempty()) {
-		Sender->CastSpellPointEnd(0);
+	if (Sender->CurrentActionState) {
+		if (Sender->LastTarget) {
+			//if target was set, fire spell
+			Sender->CastSpellEnd(0);
+		} else if(!Sender->LastTargetPos.isempty()) {
+			//the target was converted to a point
+			Sender->CastSpellPointEnd(0);
+		} else {
+			printMessage("GameScript", "Spell lost target somewhere!", LIGHT_RED);
+		}
 		Sender->ReleaseCurrentAction();
 		return;
 	}
@@ -2613,6 +2614,7 @@ void GameScript::Spell(Scriptable* Sender, Action* parameters)
 		//stop doing anything else
 		act->SetModal(MS_NONE);
 	}
+	Sender->CurrentActionState = 1;
 	int duration = Sender->CastSpell( spellres, tar, true );
 	if (duration != -1) Sender->SetWait(duration);
 
@@ -2634,9 +2636,13 @@ void GameScript::SpellPoint(Scriptable* Sender, Action* parameters)
 		return;
 	}
 
-	//if target was set, fire spell
-	if (!Sender->LastTargetPos.isempty()) {
-		Sender->CastSpellPointEnd(0);
+	if (Sender->CurrentActionState) {
+		if(!Sender->LastTargetPos.isempty()) {
+			//if target was set, fire spell
+			Sender->CastSpellPointEnd(0);
+		} else {
+			printMessage("GameScript", "SpellPoint lost target somewhere!", LIGHT_RED);
+		}
 		Sender->ReleaseCurrentAction();
 		return;
 	}
@@ -2657,6 +2663,7 @@ void GameScript::SpellPoint(Scriptable* Sender, Action* parameters)
 		act->SetModal(MS_NONE);
 	}
 
+	Sender->CurrentActionState = 1;
 	int duration = Sender->CastSpellPoint( spellres, parameters->pointParameter, true );
 	if (duration != -1) Sender->SetWait(duration);
 
@@ -2683,16 +2690,16 @@ void GameScript::SpellNoDec(Scriptable* Sender, Action* parameters)
 		}
 	}
 
-	//if target was set, fire spell
-	if (Sender->LastTarget) {
-		Sender->CastSpellEnd(0);
-		Sender->ReleaseCurrentAction();
-		return;
-	}
-
-	//the target was converted to a point
-	if(!Sender->LastTargetPos.isempty()) {
-		Sender->CastSpellPointEnd(0);
+	if (Sender->CurrentActionState) {
+		if (Sender->LastTarget) {
+			//if target was set, fire spell
+			Sender->CastSpellEnd(0);
+		} else if(!Sender->LastTargetPos.isempty()) {
+			//the target was converted to a point
+			Sender->CastSpellPointEnd(0);
+		} else {
+			printMessage("GameScript", "SpellNoDec lost target somewhere!", LIGHT_RED);
+		}
 		Sender->ReleaseCurrentAction();
 		return;
 	}
@@ -2714,6 +2721,7 @@ void GameScript::SpellNoDec(Scriptable* Sender, Action* parameters)
 		//stop doing anything else
 		act->SetModal(MS_NONE);
 	}
+	Sender->CurrentActionState = 1;
 	int duration = Sender->CastSpell( spellres, tar, false );
 	if (duration != -1) Sender->SetWait(duration);
 
@@ -2740,9 +2748,13 @@ void GameScript::SpellPointNoDec(Scriptable* Sender, Action* parameters)
 		}
 	}
 
-	//if target was set, fire spell
-	if (!Sender->LastTargetPos.isempty()) {
-		Sender->CastSpellPointEnd(0);
+	if (Sender->CurrentActionState) {
+		if(!Sender->LastTargetPos.isempty()) {
+			//if target was set, fire spell
+			Sender->CastSpellPointEnd(0);
+		} else {
+			printMessage("GameScript", "SpellPointNoDec lost target somewhere!", LIGHT_RED);
+		}
 		Sender->ReleaseCurrentAction();
 		return;
 	}
@@ -2756,6 +2768,7 @@ void GameScript::SpellPointNoDec(Scriptable* Sender, Action* parameters)
 		act->SetModal(MS_NONE);
 	}
 
+	Sender->CurrentActionState = 1;
 	int duration = Sender->CastSpellPoint( spellres, parameters->pointParameter, false );
 	if (duration != -1) Sender->SetWait(duration);
 
@@ -2782,16 +2795,16 @@ void GameScript::ForceSpell(Scriptable* Sender, Action* parameters)
 		}
 	}
 
-	//if target was set, fire spell
-	if (Sender->LastTarget) {
-		Sender->CastSpellEnd(0);
-		Sender->ReleaseCurrentAction();
-		return;
-	}
-
-	//the target was converted to a point
-	if(!Sender->LastTargetPos.isempty()) {
-		Sender->CastSpellPointEnd(0);
+	if (Sender->CurrentActionState) {
+		if (Sender->LastTarget) {
+			//if target was set, fire spell
+			Sender->CastSpellEnd(0);
+		} else if(!Sender->LastTargetPos.isempty()) {
+			//the target was converted to a point
+			Sender->CastSpellPointEnd(0);
+		} else {
+			printMessage("GameScript", "ForceSpell lost target somewhere!", LIGHT_RED);
+		}
 		Sender->ReleaseCurrentAction();
 		return;
 	}
@@ -2813,6 +2826,7 @@ void GameScript::ForceSpell(Scriptable* Sender, Action* parameters)
 		//stop doing anything else
 		act->SetModal(MS_NONE);
 	}
+	Sender->CurrentActionState = 1;
 	int duration = Sender->CastSpell (spellres, tar, false);
 	if (duration != -1) Sender->SetWait(duration);
 
@@ -2838,9 +2852,13 @@ void GameScript::ForceSpellPoint(Scriptable* Sender, Action* parameters)
 		}
 	}
 
-	//if target was set, fire spell
-	if (!Sender->LastTargetPos.isempty()) {
-		Sender->CastSpellPointEnd(0);
+	if (Sender->CurrentActionState) {
+		if(!Sender->LastTargetPos.isempty()) {
+			//if target was set, fire spell
+			Sender->CastSpellPointEnd(0);
+		} else {
+			printMessage("GameScript", "ForceSpellPoint lost target somewhere!", LIGHT_RED);
+		}
 		Sender->ReleaseCurrentAction();
 		return;
 	}
@@ -2854,6 +2872,7 @@ void GameScript::ForceSpellPoint(Scriptable* Sender, Action* parameters)
 		act->SetModal(MS_NONE);
 	}
 
+	Sender->CurrentActionState = 1;
 	int duration = Sender->CastSpellPoint (spellres, parameters->pointParameter, false);
 	if (duration != -1) Sender->SetWait(duration);
 
@@ -2975,9 +2994,9 @@ void GameScript::ReallyForceSpellDead(Scriptable* Sender, Action* parameters)
 		level = parameters->int1Parameter;
 	}
 	if (tar->Type==ST_ACTOR) {
-		Sender->CastSpellEnd(parameters->int1Parameter);
+		Sender->CastSpellEnd(level);
 	} else {
-		Sender->CastSpellPointEnd(parameters->int1Parameter);
+		Sender->CastSpellPointEnd(level);
 	}
 	Sender->ReleaseCurrentAction();
 }
@@ -3387,18 +3406,18 @@ void GameScript::PlayDead(Scriptable* Sender, Action* parameters)
 		return;
 	}
 	Actor* actor = ( Actor* ) Sender;
+
 	actor->CurrentActionInterruptable = false;
-	if (Sender->CurrentActionState == 0) {
-		// TODO: what if parameter is 0? see orphan2
+	if (!Sender->CurrentActionTicks && parameters->int0Parameter) {
+		// set countdown on first run
 		Sender->CurrentActionState = parameters->int0Parameter;
 		actor->SetStance( IE_ANI_DIE );
-	} else {
-		actor->CurrentActionState--;
-		if (Sender->CurrentActionState == 0) {
-			actor->SetStance( IE_ANI_GET_UP );
-			Sender->ReleaseCurrentAction();
-		}
 	}
+	if (Sender->CurrentActionState <= 0) {
+		actor->SetStance( IE_ANI_GET_UP );
+		Sender->ReleaseCurrentAction();
+	}
+	actor->CurrentActionState--;
 }
 
 void GameScript::PlayDeadInterruptable(Scriptable* Sender, Action* parameters)
@@ -3408,17 +3427,17 @@ void GameScript::PlayDeadInterruptable(Scriptable* Sender, Action* parameters)
 		return;
 	}
 	Actor* actor = ( Actor* ) Sender;
-	if (Sender->CurrentActionState == 0) {
-		// TODO: what if parameter is 0? see orphan2
+
+	if (!Sender->CurrentActionTicks && parameters->int0Parameter) {
+		// set countdown on first run
 		Sender->CurrentActionState = parameters->int0Parameter;
 		actor->SetStance( IE_ANI_DIE );
-	} else {
-		actor->CurrentActionState--;
-		if (Sender->CurrentActionState == 0) {
-			actor->SetStance( IE_ANI_GET_UP );
-			Sender->ReleaseCurrentAction();
-		}
 	}
+	if (Sender->CurrentActionState <= 0) {
+		actor->SetStance( IE_ANI_GET_UP );
+		Sender->ReleaseCurrentAction();
+	}
+	actor->CurrentActionState--;
 }
 
 /* this may not be correct, just a placeholder you can fix */
@@ -3863,7 +3882,7 @@ void GameScript::MakeUnselectable(Scriptable* Sender, Action* parameters)
 void GameScript::Debug(Scriptable* /*Sender*/, Action* parameters)
 {
 	InDebug=parameters->int0Parameter;
-	printMessage("GameScript",parameters->string0Parameter,YELLOW);
+	printMessage("GameScript","%s",YELLOW,parameters->string0Parameter);
 }
 
 void GameScript::IncrementProficiency(Scriptable* Sender, Action* parameters)
@@ -4269,7 +4288,10 @@ void GameScript::CreateItem(Scriptable *Sender, Action* parameters)
 	}
 
 	CREItem *item = new CREItem();
-	CreateItemCore(item, parameters->string0Parameter, parameters->int0Parameter, parameters->int1Parameter, parameters->int2Parameter);
+	if (!CreateItemCore(item, parameters->string0Parameter, parameters->int0Parameter, parameters->int1Parameter, parameters->int2Parameter)) {
+		delete item;
+		return;
+	}
 	if (tar->Type==ST_CONTAINER) {
 		myinv->AddItem(item);
 	} else {
@@ -4300,7 +4322,10 @@ void GameScript::CreateItemNumGlobal(Scriptable *Sender, Action* parameters)
 	}
 	int value = CheckVariable( Sender, parameters->string0Parameter );
 	CREItem *item = new CREItem();
-	CreateItemCore(item, parameters->string1Parameter, value, 0, 0);
+	if (!CreateItemCore(item, parameters->string1Parameter, value, 0, 0)) {
+		delete item;
+		return;
+	}
 	if (Sender->Type==ST_CONTAINER) {
 		myinv->AddItem(item);
 	} else {
@@ -4328,7 +4353,10 @@ void GameScript::TakeItemReplace(Scriptable *Sender, Action* parameters)
 	if (!item) {
 		item = new CREItem();
 	}
-	CreateItemCore(item, parameters->string0Parameter, -1, 0, 0);
+	if (!CreateItemCore(item, parameters->string0Parameter, -1, 0, 0)) {
+		delete item;
+		return;
+	}
 	if (ASI_SUCCESS != scr->inventory.AddSlotItem(item,slot)) {
 		Map *map = scr->GetCurrentArea();
 		map->AddItemToLocation(Sender->Pos, item);
@@ -4600,10 +4628,11 @@ void GameScript::PickPockets(Scriptable *Sender, Action* parameters)
 		//noticed attempt
 		displaymsg->DisplayConstantString(STR_PICKPOCKET_FAIL,0xffffff);
 		if (core->HasFeature(GF_STEAL_IS_ATTACK) ) {
-			tar->LastAttacker = snd->GetGlobalID();
+			tar->AddTrigger(TriggerEntry(trigger_attackedby, snd->GetGlobalID()));
+			tar->LastAttacker = snd->GetGlobalID(); // FIXME
 		} else {
 			//pickpocket failed trigger
-			tar->LastOpenFailed = snd->GetGlobalID();
+			tar->AddTrigger(TriggerEntry(trigger_pickpocketfailed, snd->GetGlobalID()));
 		}
 		Sender->ReleaseCurrentAction();
 		return;
@@ -4635,7 +4664,9 @@ void GameScript::PickPockets(Scriptable *Sender, Action* parameters)
 			return;
 		}
 		CREItem *item = new CREItem();
-		CreateItemCore(item, core->GoldResRef, money, 0, 0);
+		if (!CreateItemCore(item, core->GoldResRef, money, 0, 0)) {
+			abort();
+		}
 		if ( ASI_SUCCESS == snd->inventory.AddSlotItem(item, SLOT_ONLYINVENTORY)) {
 			scr->SetBase(IE_GOLD,scr->GetBase(IE_GOLD)-money);
 		} else {
@@ -4763,6 +4794,16 @@ void GameScript::QuitGame(Scriptable* Sender, Action* parameters)
 	core->SetNextScript("QuitGame");
 }
 
+//BG2 demo end, shows some pictures then goes to main screen
+void GameScript::DemoEnd(Scriptable* Sender, Action* parameters)
+{
+	ClearAllActions(Sender, parameters);
+	core->GetDictionary()->SetAt("QuitGame1", (ieDword)0);
+	core->GetDictionary()->SetAt("QuitGame2", (ieDword)0);
+	core->GetDictionary()->SetAt("QuitGame3", (ieDword)-1);
+	core->SetNextScript("QuitGame");
+}
+
 void GameScript::StopMoving(Scriptable* Sender, Action* /*parameters*/)
 {
 	if (Sender->Type!=ST_ACTOR) {
@@ -4886,8 +4927,7 @@ void GameScript::RevealAreaOnMap(Scriptable* /*Sender*/, Action* parameters)
 {
 	WorldMap *worldmap = core->GetWorldMap();
 	if (!worldmap) {
-		printf("Can't find worldmap!\n");
-		abort();
+		error("GameScript", "Can't find worldmap!\n");
 	}
 	// WMP_ENTRY_ADJACENT because otherwise revealed bg2 areas are unreachable from city gates
 	worldmap->SetAreaStatus(parameters->string0Parameter, WMP_ENTRY_VISIBLE|WMP_ENTRY_ADJACENT, BM_OR);
@@ -4898,8 +4938,7 @@ void GameScript::HideAreaOnMap( Scriptable* /*Sender*/, Action* parameters)
 {
 	WorldMap *worldmap = core->GetWorldMap();
 	if (!worldmap) {
-		printf("Can't find worldmap!\n");
-		abort();
+		error("GameScript", "Can't find worldmap!\n");
 	}
 	// WMP_ENTRY_ADJACENT because otherwise revealed bg2 areas are unreachable from city gates
 	worldmap->SetAreaStatus(parameters->string0Parameter, WMP_ENTRY_VISIBLE|WMP_ENTRY_ADJACENT, BM_NAND);
@@ -4911,7 +4950,7 @@ void GameScript::SendTrigger(Scriptable* Sender, Action* parameters)
 	if (!tar) {
 		return;
 	}
-	tar->TriggerID=parameters->int0Parameter;
+	tar->AddTrigger(TriggerEntry(trigger_trigger, parameters->int0Parameter));
 }
 
 void GameScript::Shout( Scriptable* Sender, Action* parameters)
@@ -4957,8 +4996,7 @@ void GameScript::GiveOrder(Scriptable* Sender, Action* parameters)
 {
 	Scriptable* tar = GetActorFromObject( Sender, parameters->objects[1] );
 	if (tar) {
-		tar->LastOrderer = Sender->GetGlobalID();
-		tar->LastOrder = parameters->int0Parameter;
+		tar->AddTrigger(TriggerEntry(trigger_receivedorder, Sender->GetGlobalID(), parameters->int0Parameter));
 	}
 }
 
@@ -5865,7 +5903,7 @@ void GameScript::SaveGame(Scriptable* /*Sender*/, Action* parameters)
 void GameScript::EscapeArea(Scriptable* Sender, Action* parameters)
 {
 	if (InDebug&ID_ACTIONS) {
-		printf("EscapeArea/EscapeAreaMove\n");
+		print("EscapeArea/EscapeAreaMove\n");
 	}
 	if (Sender->Type!=ST_ACTOR) {
 		Sender->ReleaseCurrentAction();
@@ -5893,7 +5931,7 @@ void GameScript::EscapeArea(Scriptable* Sender, Action* parameters)
 void GameScript::EscapeAreaNoSee(Scriptable* Sender, Action* parameters)
 {
 	if (InDebug&ID_ACTIONS) {
-		printf("EscapeAreaNoSee\n");
+		print("EscapeAreaNoSee\n");
 	}
 	if (Sender->Type!=ST_ACTOR) {
 		Sender->ReleaseCurrentAction();
@@ -6224,12 +6262,13 @@ void GameScript::SetNoOneOnTrigger(Scriptable* Sender, Action* parameters)
 		ip = Sender->GetCurrentArea()->TMap->GetInfoPoint(parameters->objects[1]->objectName);
 	}
 	if (!ip || (ip->Type!=ST_TRIGGER && ip->Type!=ST_TRAVEL && ip->Type!=ST_PROXIMITY)) {
-		printf("Script error: No Trigger Named \"%s\"\n", parameters->objects[1]->objectName);
+		print("Script error: No Trigger Named \"%s\"\n", parameters->objects[1]->objectName);
 		return;
 	}
-	ip->LastEntered = 0;
+	// FIXME: what does this do? clear triggers?
+	/*ip->LastEntered = 0;
 	ip->LastTrigger = 0;
-	ip->LastTriggerObject = 0;
+	ip->LastTriggerObject = 0;*/
 }
 
 void GameScript::UseDoor(Scriptable* Sender, Action* parameters)
@@ -6348,7 +6387,8 @@ void GameScript::ChangeDestination(Scriptable* Sender, Action* parameters)
 {
 	InfoPoint *ip = Sender->GetCurrentArea()->TMap->GetInfoPoint(parameters->objects[1]->objectName);
 	if (ip && (ip->Type==ST_TRAVEL) ) {
-		strnlwrcpy(ip->Destination, parameters->string0Parameter, 32);
+		//alter the destination area, don't touch the entrance variable link
+		strnlwrcpy(ip->Destination, parameters->string0Parameter, sizeof(ieResRef)-1 );
 	}
 }
 
@@ -6794,7 +6834,8 @@ void GameScript::ProtectObject(Scriptable* Sender, Action* parameters)
 	Actor *scr = (Actor *)Sender;
 	Actor *actor = (Actor *)tar;
 	scr->LastFollowed = actor->GetGlobalID();
-	scr->LastProtected = actor->GetGlobalID();
+	scr->LastProtectee = actor->GetGlobalID();
+	actor->LastProtector = scr->GetGlobalID();
 	//not exactly range
 	scr->FollowOffset.x = parameters->int0Parameter;
 	scr->FollowOffset.y = parameters->int0Parameter;
@@ -7148,7 +7189,7 @@ void GameScript::SetToken2DA(Scriptable* /*Sender*/, Action* parameters)
 	AutoTable tm(parameters->string0Parameter);
 	if (!tm) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "Cannot find %s.2da.\n", parameters->string0Parameter);
+		print( "Cannot find %s.2da.\n", parameters->string0Parameter);
 		return;
 	}
 

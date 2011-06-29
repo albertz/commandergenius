@@ -30,6 +30,7 @@
 #include "DisplayMessage.h"
 #include "Game.h"
 #include "GameData.h"
+#include "IniSpawn.h"
 #include "Interface.h"
 #include "MapMgr.h"
 #include "MusicMgr.h"
@@ -37,6 +38,7 @@
 #include "Palette.h"
 #include "Particles.h"
 #include "PathFinder.h"
+#include "PluginMgr.h"
 #include "Projectile.h"
 #include "ScriptedAnimation.h"
 #include "TileMap.h"
@@ -45,6 +47,7 @@
 #include "strrefs.h"
 #include "GameScript/GSUtils.h"
 #include "GUI/GameControl.h"
+#include "GUI/Window.h"
 #include "Scriptable/Container.h"
 #include "Scriptable/Door.h"
 #include "Scriptable/InfoPoint.h"
@@ -73,7 +76,7 @@ static int LargeFog;
 static TerrainSounds *terrainsounds=NULL;
 static int tsndcount = -1;
 
-void ReleaseSpawnGroup(void *poi)
+static void ReleaseSpawnGroup(void *poi)
 {
 	delete (SpawnGroup *) poi;
 }
@@ -95,7 +98,7 @@ void Map::ReleaseMemory()
 	}
 }
 
-inline static AnimationObjectType SelectObject(Actor *actor, int q, AreaAnimation *a, ScriptedAnimation *sca, Particles *spark, Projectile *pro)
+static inline AnimationObjectType SelectObject(Actor *actor, int q, AreaAnimation *a, ScriptedAnimation *sca, Particles *spark, Projectile *pro)
 {
 	int actorh;
 	if (actor) {
@@ -148,7 +151,7 @@ inline static AnimationObjectType SelectObject(Actor *actor, int q, AreaAnimatio
 
 //returns true if creature must be embedded in the area
 //npcs in saved game shouldn't be embedded either
-inline static bool MustSave(Actor *actor)
+static inline bool MustSave(Actor *actor)
 {
 	if (actor->Persistent()) {
 		return false;
@@ -159,7 +162,7 @@ inline static bool MustSave(Actor *actor)
 }
 
 //Preload spawn group entries (creature resrefs that reference groups of creatures)
-void InitSpawnGroups()
+static void InitSpawnGroups()
 {
 	ieResRef GroupName;
 	int i;
@@ -193,7 +196,7 @@ void InitSpawnGroups()
 }
 
 //Preload the searchmap configuration
-void InitPathFinder()
+static void InitPathFinder()
 {
 	PathFinderInited = true;
 	tsndcount = 0;
@@ -229,7 +232,7 @@ void InitPathFinder()
 	}
 }
 
-void AddLOS(int destx, int desty, int slot)
+static void AddLOS(int destx, int desty, int slot)
 {
 	for (int i=0;i<MaxVisibility;i++) {
 		int x = ((destx*i + MaxVisibility/2) / MaxVisibility) * 16;
@@ -243,7 +246,7 @@ void AddLOS(int destx, int desty, int slot)
 	}
 }
 
-void InitExplore()
+static void InitExplore()
 {
 	LargeFog = !core->HasFeature(GF_SMALL_FOG);
 
@@ -466,8 +469,7 @@ void Map::MoveToNewArea(const char *area, const char *entrance, unsigned int dir
 	}
 	Map* map = game->GetMap(area, false);
 	if (!map) {
-		printMessage("Map", " ", LIGHT_RED);
-		printf("Invalid map: %s\n",area);
+		printMessage("Map", "Invalid map: %s\n", LIGHT_RED, area);
 		command[0]=0;
 		return;
 	}
@@ -494,8 +496,8 @@ void Map::MoveToNewArea(const char *area, const char *entrance, unsigned int dir
 			Y = map->TMap->YCellCount * 32;
 		} else {
 			// crashes in original engine
-			printMessage("Map", " ", YELLOW);
-			printf( "WARNING!!! EntryPoint '%s' does not exist and direction %d is invalid\n", entrance, direction );
+			printMessage("Map", "WARNING!!! EntryPoint '%s' does not exist and direction %d is invalid\n", YELLOW,
+				entrance, direction);
 			X = map->TMap->XCellCount * 64;
 			Y = map->TMap->YCellCount * 64;
 		}
@@ -516,7 +518,7 @@ void Map::MoveToNewArea(const char *area, const char *entrance, unsigned int dir
 				pc->ClearPath();
 				pc->ClearActions();
 				pc->AddAction( GenerateAction( command ) );
-				pc->ProcessActions(true);
+				pc->ProcessActions();
 			}
 		}
 		return;
@@ -534,7 +536,7 @@ void Map::MoveToNewArea(const char *area, const char *entrance, unsigned int dir
 				pc->ClearPath();
 				pc->ClearActions();
 				pc->AddAction( GenerateAction( command ) );
-				pc->ProcessActions(true);
+				pc->ProcessActions();
 			}
 		}
 		return;
@@ -543,7 +545,7 @@ void Map::MoveToNewArea(const char *area, const char *entrance, unsigned int dir
 	actor->ClearPath();
 	actor->ClearActions();
 	actor->AddAction( GenerateAction( command ) );
-	actor->ProcessActions(true);
+	actor->ProcessActions();
 }
 
 void Map::UseExit(Actor *actor, InfoPoint *ip)
@@ -572,9 +574,10 @@ void Map::UseExit(Actor *actor, InfoPoint *ip)
 		return;
 	}
 	if (ip->Scripts[0]) {
-		ip->LastTriggerObject = ip->LastTrigger = ip->LastEntered = actor->GetGlobalID();
+		ip->AddTrigger(TriggerEntry(trigger_entered, actor->GetGlobalID()));
+		// FIXME
 		ip->ExecuteScript( 1 );
-		ip->ProcessActions(true);
+		ip->ProcessActions();
 	}
 }
 
@@ -626,19 +629,20 @@ void Map::UpdateScripts()
 	}
 
 	// fuzzie added this check because some area scripts (eg, AR1600 when
-	// escaping Brynnlaw) were executing after they were meant to be done, 
+	// escaping Brynnlaw) were executing after they were meant to be done,
 	// and this seems the nicest way of handling that for now - it's quite
 	// possibly wrong (so if you have problems, revert this and find
 	// another way)
 	if (has_pcs) {
 		//Run all the Map Scripts (as in the original)
 		//The default area script is in the last slot anyway
-		ExecuteScript( MAX_SCRIPTS );
+		//ExecuteScript( MAX_SCRIPTS );
+		Update();
 	}
-	
+
 	//Execute Pending Actions
 	//if it is only here, then the drawing will fail
-	ProcessActions(false);
+	ProcessActions();
 
 	// If scripts frozen, return.
 	// This fixes starting a new IWD game. The above ProcessActions pauses the
@@ -650,8 +654,11 @@ void Map::UpdateScripts()
 	int q=Qcount[PR_SCRIPT];
 
 	Game *game = core->GetGame();
+	bool timestop = game->IsTimestopActive();
+	if (!timestop) {
+		game->timestop_owner = NULL;
+	}
 	Actor *timestop_owner = game->timestop_owner;
-	bool timestop = game->timestop_end>game->GameTime;
 
 	while (q--) {
 		Actor* actor = queue[PR_SCRIPT][q];
@@ -660,8 +667,9 @@ void Map::UpdateScripts()
 			actor->no_more_steps = true;
 			continue;
 		}
-		if (timestop && actor!=timestop_owner && actor->Modified[IE_DISABLETIMESTOP] ) {
+		if (timestop && actor!=timestop_owner && actor->Modified[IE_DISABLETIMESTOP] == 0) {
 			actor->no_more_steps = true;
+			actor->ClearPath(); //HACK: prevents jumping when timestop ends
 			continue;
 		}
 
@@ -679,6 +687,9 @@ void Map::UpdateScripts()
 			}
 		}
 		actor->no_more_steps = false;
+		if (actor->Immobile()) {
+			actor->ClearPath(); //HACK: prevents jumping when effect ends
+		}
 
 		/*
 		 * we run scripts all at once because one of the actions in ProcessActions
@@ -691,7 +702,7 @@ void Map::UpdateScripts()
 		 * point, etc), but i did it this way for now because it seems least painful
 		 * and we should probably be staggering the script executions anyway
 		 */
-		actor->ExecuteScript( MAX_SCRIPTS );
+		actor->Update();
 
 	}
 
@@ -706,8 +717,6 @@ void Map::UpdateScripts()
 	while (q--) {
 		Actor* actor = queue[PR_SCRIPT][q];
 		if (actor->no_more_steps) continue;
-
-		actor->ProcessActions(false);
 
 		actor->UpdateActorState(game->GameTime);
 
@@ -731,7 +740,7 @@ void Map::UpdateScripts()
 				} else if (avatar->WalkScale) {
 					speed = avatar->WalkScale;
 				} else {
-					//printf("no walkscale for anim %d!\n", actor->BaseStats[IE_ANIMATION_ID]);
+					//print("no walkscale for anim %d!\n", actor->BaseStats[IE_ANIMATION_ID]);
 				}
 			}
 		}
@@ -767,10 +776,7 @@ void Map::UpdateScripts()
 		Door* door = TMap->GetDoor( doorCount++ );
 		if (!door)
 			break;
-		if (door->Scripts[0])
-			door->ExecuteScript( 1 );
-		//Execute Pending Actions
-		door->ProcessActions(false);
+		door->Update();
 	}
 
 	//Check if we need to start some container scripts
@@ -779,10 +785,7 @@ void Map::UpdateScripts()
 		Container* container = TMap->GetContainer( containerCount++ );
 		if (!container)
 			break;
-		if (container->Scripts[0])
-			container->ExecuteScript( 1 );
-		//Execute Pending Actions
-		container->ProcessActions(false);
+		container->Update();
 	}
 
 	//Check if we need to start some trap scripts
@@ -799,15 +802,7 @@ void Map::UpdateScripts()
 
 		//If this InfoPoint is a Switch Trigger
 		if (ip->Type == ST_TRIGGER) {
-			//Check if this InfoPoint was activated
-			if (ip->LastTrigger) {
-				if (wasActive && ip->Scripts[0]) {
-					//Run the InfoPoint script
-					ip->ExecuteScript( 1 );
-				}
-			}
-			//Execute Pending Actions
-			ip->ProcessActions(false);
+			ip->Update();
 			continue;
 		}
 
@@ -844,14 +839,12 @@ void Map::UpdateScripts()
 		}
 
 		if (wasActive) {
-			ip->ExecuteScript( 1 );
 			//Play the PST specific enter sound
 			if (wasActive&TRAP_USEPOINT) {
 				core->GetAudioDrv()->Play(ip->EnterWav, ip->TrapLaunch.x, ip->TrapLaunch.y);
 			}
+			ip->Update();
 		}
-		//Execute Pending Actions
-		ip->ProcessActions(false);
 	}
 }
 
@@ -862,7 +855,7 @@ void Map::ResolveTerrainSound(ieResRef &sound, Point &Pos) {
 			memcpy(sound, terrainsounds[i].Sounds[type], sizeof(ieResRef) );
 			return;
 		}
-	}  
+	}
 }
 
 bool Map::DoStepForActor(Actor *actor, int speed, ieDword time) {
@@ -1069,7 +1062,15 @@ void Map::DrawMap(Region screen)
 	}
 
 	if (!bgoverride) {
-		int rain;
+		int rain, flags;
+
+		if (game->IsTimestopActive()) {
+                	flags = TILE_GREY;
+	        }
+		else if (AreaFlags&AF_DREAM) {
+			flags = TILE_SEPIA;
+		} else flags = 0;
+
 		if (HasWeather()) {
 			//zero when the weather particles are all gone
 			rain = game->weather->GetPhase()-P_EMPTY;
@@ -1077,13 +1078,12 @@ void Map::DrawMap(Region screen)
 			rain = 0;
 		}
 
-		TMap->DrawOverlays( screen, rain );
+		TMap->DrawOverlays( screen, rain, flags );
 
 		//Draw Outlines
 		DrawHighlightables( screen );
 	}
 
-	Region vp = video->GetViewport();
 	//if it is only here, then the scripting will fail?
 	GenerateQueues();
 	SortQueues();
@@ -1261,11 +1261,10 @@ void Map::AddAnimation(AreaAnimation* panim)
 	anim->InitAnimation();
 
 	aniIterator iter;
-	
+
 	int Height = anim->GetHeight();
-printf("Adding %s at height %d, Pos: %d.%d\n", anim->Name, Height, anim->Pos.x, anim->Pos.y);
 	for(iter=animations.begin(); (iter!=animations.end()) && ((*iter)->GetHeight()<Height); iter++) ;
-	animations.insert(iter, anim);	
+	animations.insert(iter, anim);
 }
 
 //reapplying all of the effects on the actors of this map
@@ -1290,9 +1289,10 @@ void Map::Shout(Actor* actor, int shoutID, unsigned int radius)
 			}
 		}
 		if (shoutID) {
+			listener->AddTrigger(TriggerEntry(trigger_heard, actor->GetGlobalID(), shoutID));
 			listener->LastHeard = actor->GetGlobalID();
-			listener->LastShout = shoutID;
 		} else {
+			listener->AddTrigger(TriggerEntry(trigger_help, actor->GetGlobalID()));
 			listener->LastHelp = actor->GetGlobalID();
 		}
 	}
@@ -2122,30 +2122,30 @@ void Map::DebugDump(bool show_actors) const
 {
 	size_t i;
 
-	printf( "DebugDump of Area %s:\n", scriptName );
-	printf ("Scripts:");
+	print( "DebugDump of Area %s:\n", scriptName );
+	print ("Scripts:");
 
 	for (i = 0; i < MAX_SCRIPTS; i++) {
 		const char* poi = "<none>";
 		if (Scripts[i]) {
 			poi = Scripts[i]->GetName();
 		}
-		printf( " %.8s", poi );
+		print( " %.8s", poi );
 	}
-	printf( "Area Global ID:  %d\n", GetGlobalID());
-	printf( "OutDoor: %s\n", YESNO(AreaType & AT_OUTDOOR ) );
-	printf( "Day/Night: %s\n", YESNO(AreaType & AT_DAYNIGHT ) );
-	printf( "Extended night: %s\n", YESNO(AreaType & AT_EXTENDED_NIGHT ) );
-	printf( "Weather: %s\n", YESNO(AreaType & AT_WEATHER ) );
-	printf( "Area Type: %d\n", AreaType & (AT_CITY|AT_FOREST|AT_DUNGEON) );
-	printf( "Can rest: %s\n", YESNO(AreaType & AT_CAN_REST) );
+	print( "Area Global ID:  %d\n", GetGlobalID());
+	print( "OutDoor: %s\n", YESNO(AreaType & AT_OUTDOOR ) );
+	print( "Day/Night: %s\n", YESNO(AreaType & AT_DAYNIGHT ) );
+	print( "Extended night: %s\n", YESNO(AreaType & AT_EXTENDED_NIGHT ) );
+	print( "Weather: %s\n", YESNO(AreaType & AT_WEATHER ) );
+	print( "Area Type: %d\n", AreaType & (AT_CITY|AT_FOREST|AT_DUNGEON) );
+	print( "Can rest: %s\n", YESNO(AreaType & AT_CAN_REST) );
 
 	if (show_actors) {
-		printf("\n");
+		print("\n");
 		i = actors.size();
 		while (i--) {
 			if (!(actors[i]->GetInternalFlag()&(IF_JUSTDIED|IF_REALLYDIED))) {
-				printf("Actor: %s at %d.%d\n", actors[i]->GetName(1), actors[i]->Pos.x, actors[i]->Pos.y);
+				print("Actor: %s at %d.%d\n", actors[i]->GetName(1), actors[i]->Pos.x, actors[i]->Pos.y);
 			}
 		}
 	}
@@ -2326,7 +2326,7 @@ PathNode* Map::RunAway(const Point &s, const Point &d, unsigned int size, unsign
 
 		unsigned int Cost = MapSet[y * Width + x] + NormalCost;
 		if (Cost > PathLen) {
-			//printf("Path not found!\n");
+			//print("Path not found!\n");
 			break;
 		}
 		SetupNode( x - 1, y - 1, size, Cost );
@@ -2669,12 +2669,12 @@ PathNode* Map::FindPath(const Point &s, const Point &d, unsigned int size, int M
 
 		if (pos == pos2) {
 			//We've found _a_ path
-			//printf("GOAL!!!\n");
+			//print("GOAL!!!\n");
 			break;
 		}
 		unsigned int Cost = MapSet[y * Width + x] + NormalCost;
 		if (Cost > 65500) {
-			//printf("Path not found!\n");
+			//print("Path not found!\n");
 			break;
 		}
 		SetupNode( x - 1, y - 1, size, Cost );
@@ -2828,8 +2828,8 @@ int Map::WhichEdge(const Point &s)
 	unsigned int sX=s.x/16;
 	unsigned int sY=s.y/12;
 	if (!(GetBlocked( sX, sY )&PATH_MAP_TRAVEL)) {
-		printMessage("Map"," ",YELLOW);
-		printf("This isn't a travel region [%d.%d]?\n",sX, sY);
+		printMessage("Map", "This isn't a travel region [%d.%d]?\n", YELLOW,
+			sX, sY);
 		return -1;
 	}
 	sX*=Height;
@@ -3498,7 +3498,7 @@ Animation *AreaAnimation::GetAnimationPiece(AnimationFactory *af, int animCycle)
 	if (!anim)
 		anim = af->GetCycle( 0 );
 	if (!anim) {
-		printf("Cannot load animation: %s\n", BAM);
+		print("Cannot load animation: %s\n", BAM);
 		return NULL;
 	}
 	//this will make the animation stop when the game is stopped
@@ -3520,7 +3520,7 @@ void AreaAnimation::InitAnimation()
 	AnimationFactory* af = ( AnimationFactory* )
 		gamedata->GetFactoryResource( BAM, IE_BAM_CLASS_ID );
 	if (!af) {
-		printf("Cannot load animation: %s\n", BAM);
+		print("Cannot load animation: %s\n", BAM);
 		return;
 	}
 
@@ -3664,15 +3664,20 @@ void Map::SeeSpellCast(Scriptable *caster, ieDword spell)
 		return;
 	}
 
-	LastCasterSeen = caster->GetGlobalID();
-	LastSpellSeen = spell;
+	// FIXME: this seems clearly wrong, but matches old gemrb behaviour
+	unsigned short triggerType = trigger_spellcast;
+	if (spell >= 3000)
+		triggerType = trigger_spellcastinnate;
+	else if (spell < 2000)
+		triggerType = trigger_spellcastpriest;
+
+	caster->AddTrigger(TriggerEntry(triggerType, caster->GetGlobalID(), spell));
 
 	size_t i = actors.size();
 	while (i--) {
 		Actor* witness = actors[i];
 		if (CanSee(witness, caster, true, 0)) {
-			witness->LastSpellSeen=LastSpellSeen;
-			witness->LastCasterSeen=LastCasterSeen;
+			caster->AddTrigger(TriggerEntry(triggerType, caster->GetGlobalID(), spell));
 		}
 	}
 }

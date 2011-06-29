@@ -31,10 +31,14 @@
 #include "win32def.h"
 
 #include "Audio.h" //pst (react to death sounds)
+#include "Bitmap.h"
+#include "DataFileMgr.h"
 #include "DialogHandler.h" // checking for dialog
 #include "Game.h"
+#include "GlobalTimer.h"
 #include "DisplayMessage.h"
 #include "GameData.h"
+#include "Image.h"
 #include "Interface.h"
 #include "Item.h"
 #include "PolymorphCache.h" // stupid polymorph cache hack
@@ -42,6 +46,7 @@
 #include "ProjectileServer.h"
 #include "ScriptEngine.h"
 #include "Spell.h"
+#include "Sprite2D.h"
 #include "TableMgr.h"
 #include "Video.h"
 #include "damages.h"
@@ -333,22 +338,10 @@ Actor::Actor()
 	LongStrRef = (ieStrRef) -1;
 	ShortStrRef = (ieStrRef) -1;
 
-	LastProtected = 0;
-	LastFollowed = 0;
-	LastCommander = 0;
-	LastHelp = 0;
-	LastSeen = 0;
-	LastMarked = 0;
-	LastMarkedSpell = 0;
-	LastHeard = 0;
 	PCStats = NULL;
-	LastCommand = 0; //used by order
-	LastShout = 0; //used by heard
-	LastDamage = 0;
+	//LastDamage = 0;
 	LastDamageType = 0;
-	LastTurner = 0;
 	LastExit = 0;
-	HotKey = 0;
 	attackcount = 0;
 	secondround = 0;
 	attacksperround = 0;
@@ -510,8 +503,7 @@ void Actor::SetAnimationID(unsigned int AnimID)
 	if (core->HasFeature(GF_ONE_BYTE_ANIMID) ) {
 		if ((AnimID&0xf000)==0xe000) {
 			if (BaseStats[IE_COLORCOUNT]) {
-				printMessage("Actor"," ",YELLOW);
-				printf("Animation ID %x is supposed to be real colored (no recoloring), patched creature\n", AnimID);
+				printMessage("Actor", "Animation ID %x is supposed to be real colored (no recoloring), patched creature\n", YELLOW, AnimID);
 			}
 			BaseStats[IE_COLORCOUNT]=0;
 		}
@@ -520,8 +512,7 @@ void Actor::SetAnimationID(unsigned int AnimID)
 	if(anims->ResRef[0] == 0) {
 		delete anims;
 		anims = NULL;
-		printMessage("Actor", " ",LIGHT_RED);
-		printf("Missing animation for %s\n",LongName);
+		printMessage("Actor", "Missing animation for %s\n", LIGHT_RED, LongName);
 		return;
 	}
 	anims->SetOffhandRef(ShieldRef);
@@ -552,8 +543,7 @@ void Actor::SetAnimationID(unsigned int AnimID)
 	if (anim && anim[0]) {
 		SetBase(IE_MOVEMENTRATE, anim[0]->GetFrameCount()) ;
 	} else {
-		printMessage("Actor", "Unable to determine movement rate for animation ", YELLOW);
-		printf("%04x!\n", AnimID);
+		printMessage("Actor", "Unable to determine movement rate for animation %04x!\n", YELLOW, AnimID);
 	}
 
 }
@@ -616,6 +606,7 @@ void Actor::SetCircleSize()
 			case EA_ENEMY:
 			case EA_GOODBUTRED:
 			case EA_EVILCUTOFF:
+			case EA_CHARMEDPC:
 				color = &red;
 				color_index = 1;
 				break;
@@ -1649,7 +1640,7 @@ static void InitActorTables()
 	if (tm && !core->HasFeature(GF_LEVELSLOT_PER_CLASS)) {
 		AutoTable hptm;
 		//iwd2 just uses levelslotsiwd2 instead
-		printf("Examining classes.2da\n");
+		print("Examining classes.2da\n");
 
 		//when searching the levelslots, you must search for
 		//levelslots[BaseStats[IE_CLASS]-1] as there is no class id of 0
@@ -1664,16 +1655,16 @@ static void InitActorTables()
 				continue;
 			tmpindex--;
 
-			printf("\tID: %d ", tmpindex);
+			print("\tID: %d ", tmpindex);
 			//only create the array if it isn't yet made
 			//i.e. barbarians would overwrite fighters in bg2
 			if (levelslots[tmpindex]) {
-				printf ("Already Found!\n");
+				print ("Already Found!\n");
 				continue;
 			}
 
 			const char* classname = tm->GetRowName(i);
-			printf("Name: %s ", classname);
+			print("Name: %s ", classname);
 			int classis = 0;
 			//default all levelslots to 0
 			levelslots[tmpindex] = (int *) calloc(ISCLASSES, sizeof(int));
@@ -1683,7 +1674,7 @@ static void InitActorTables()
 			if (!tmpclass) {
 				classis = IsClassFromName(classname);
 				if (classis>=0) {
-					printf("Classis: %d ", classis);
+					print("Classis: %d ", classis);
 					levelslots[tmpindex][classis] = IE_LEVEL;
 					//get the max hp con bonus
 					hptm.load(tm->QueryField(i, 6));
@@ -1692,7 +1683,7 @@ static void InitActorTables()
 						int rollscolumn = hptm->GetColumnIndex("ROLLS");
 						while (atoi(hptm->QueryField(tmphp, rollscolumn)))
 							tmphp++;
-						printf("TmpHP: %d ", tmphp);
+						print("TmpHP: %d ", tmphp);
 						if (tmphp) maxhpconbon[tmpindex] = tmphp;
 					}
 				}
@@ -1732,7 +1723,7 @@ static void InitActorTables()
 								levelslots[tmpindex][classis] = tmplevel;
 							}
 						}
-						printf("Classis: %d ", classis);
+						print("Classis: %d ", classis);
 
 						//warrior take presedence
 						if (!foundwarrior) {
@@ -1771,8 +1762,8 @@ static void InitActorTables()
 				free(classnames);
 				classnames = NULL;
 			}
-			printf("HPCON: %d ", maxhpconbon[tmpindex]);
-			printf("DS: %d\n", dualswap[tmpindex]);
+			print("HPCON: %d ", maxhpconbon[tmpindex]);
+			print("DS: %d\n", dualswap[tmpindex]);
 		}
 		/*this could be enabled to ensure all levelslots are filled with at least 0's;
 		*however, the access code should ensure this never happens
@@ -1782,7 +1773,7 @@ static void InitActorTables()
 			}
 		}*/
 	}
-	printf("Finished examining classes.2da\n");
+	print("Finished examining classes.2da\n");
 
 	//pre-cache hit/damage/speed bonuses for weapons
 	tm.load("wspecial");
@@ -1921,20 +1912,20 @@ static void InitActorTables()
 		}
 	}
 
-				//initializing the skill->stats conversion table (used in iwd2)
-				tm.load("skillsta");
-				if (tm) {
-					      int rowcount = tm->GetRowCount();
-					      skillcount = rowcount;
-					      if (rowcount) {
-					              skillstats = (int *) malloc(rowcount * sizeof(int) );
-					              skillabils = (int *) malloc(rowcount * sizeof(int) );
-					              while(rowcount--) {
-					                      skillstats[rowcount]=core->TranslateStat(tm->QueryField(rowcount,0));
-					                      skillabils[rowcount]=core->TranslateStat(tm->QueryField(rowcount,1));
-					              }
-					      }
-				}
+	//initializing the skill->stats conversion table (used in iwd2)
+	tm.load("skillsta");
+	if (tm) {
+		int rowcount = tm->GetRowCount();
+		skillcount = rowcount;
+		if (rowcount) {
+			skillstats = (int *) malloc(rowcount * sizeof(int) );
+			skillabils = (int *) malloc(rowcount * sizeof(int) );
+			while(rowcount--) {
+				skillstats[rowcount]=core->TranslateStat(tm->QueryField(rowcount,0));
+				skillabils[rowcount]=core->TranslateStat(tm->QueryField(rowcount,1));
+			}
+		}
+	}
 }
 
 void Actor::SetLockedPalette(const ieDword *gradients)
@@ -1973,7 +1964,7 @@ void Actor::PlayDamageAnimation(int type, bool hit)
 {
 	int i;
 
-	printf("Damage animation type: %d\n", type);
+	print("Damage animation type: %d\n", type);
 
 	switch(type) {
 		case 0: case 1: case 2: case 3: //blood
@@ -2246,8 +2237,12 @@ void Actor::RefreshEffects(EffectQueue *fx)
 	//move this further down if needed
 	PrevStats = NULL;
 
+	for (std::list<TriggerEntry>::iterator m = triggers.begin(); m != triggers.end (); m++) {
+		m->flags |= TEF_PROCESSED_EFFECTS;
+	}
+
 	// IE_CLASS is >classcount for non-PCs/NPCs
-	if (BaseStats[IE_CLASS] <= (ieDword)classcount)
+	if (BaseStats[IE_CLASS] > 0 && BaseStats[IE_CLASS] <= (ieDword)classcount)
 		RefreshPCStats();
 
 	for (i=0;i<MAX_STATS;i++) {
@@ -2582,7 +2577,7 @@ void Actor::SelectActor()
 void Actor::Panic(Scriptable *attacker, int panicmode)
 {
 	if (GetStat(IE_STATE_ID)&STATE_PANIC) {
-		printf("Already paniced\n");
+		print("Already paniced\n");
 		//already in panic
 		return;
 	}
@@ -2656,7 +2651,9 @@ static EffectRef fx_cure_sleep_ref = { "Cure:Sleep", -1 };
 
 void Actor::GetHit()
 {
-	SetStance( IE_ANI_DAMAGE );
+	if (!Immobile()) {
+		SetStance( IE_ANI_DAMAGE );
+	}
 	DisplayStringCore(this, VB_DAMAGE, DS_CONSOLE|DS_CONST );
 	if (Modified[IE_STATE_ID]&STATE_SLEEP) {
 		if (Modified[IE_EXTSTATE_ID]&EXTSTATE_NO_WAKEUP) {
@@ -2690,8 +2687,10 @@ int Actor::Damage(int damage, int damagetype, Scriptable *hitter, int modtype)
 	}
 
 	//add lastdamagetype up ? maybe
+	//FIXME: what does original do?
 	LastDamageType|=damagetype;
 	if(hitter && hitter->Type==ST_ACTOR) {
+		AddTrigger(TriggerEntry(trigger_hitby, hitter->GetGlobalID()));
 		LastHitter=hitter->GetGlobalID();
 	} else {
 		//Maybe it should be something impossible like 0xffff, and use 'Someone'
@@ -2718,6 +2717,12 @@ int Actor::Damage(int damage, int damagetype, Scriptable *hitter, int modtype)
 	ModifyDamage (this, hitter, damage, resisted, damagetype, NULL, false);
 
 	DisplayCombatFeedback(damage, resisted, damagetype, hitter);
+
+	// instant chunky death if the actor is petrified or frozen
+	if (Modified[IE_STATE_ID] & (STATE_FROZEN|STATE_PETRIFIED) && !Modified[IE_DISABLECHUNKING]) {
+		damage = 123456; // arbitrarily high for death; won't be displayed
+		LastDamageType |= DAMAGE_CHUNKING;
+	}
 
 	if (BaseStats[IE_HITPOINTS] <= (ieDword) damage) {
 		// common fists do normal damage, but cause sleeping for a round instead of death
@@ -2749,6 +2754,7 @@ int Actor::Damage(int damage, int damagetype, Scriptable *hitter, int modtype)
 		if (Modified[IE_CLASS] == CLASS_INNOCENT) {
 			Actor *act=NULL;
 			if (!hitter) {
+				// TODO: check this
 				hitter = area->GetActorByGlobalID(LastHitter);
 			}
 
@@ -2764,10 +2770,10 @@ int Actor::Damage(int damage, int damagetype, Scriptable *hitter, int modtype)
 		}
 	}
 
-	LastDamage=damage;
+	//LastDamage=damage;
 	InternalFlags|=IF_ACTIVE;
 	int chp = (signed) BaseStats[IE_HITPOINTS];
-	int damagelevel = 0;
+	int damagelevel = 0; //FIXME: this level is never used
 	if (damage<10) {
 		damagelevel = 1;
 	} else {
@@ -2820,8 +2826,7 @@ void Actor::DisplayCombatFeedback (unsigned int damage, int resisted, int damage
 	}
 
 	if (damage > 0 && resisted != DR_IMMUNE) {
-		printMessage("Actor", " ", GREEN);
-		printf("%d damage taken.\n", damage);
+		printMessage("Actor", "%d damage taken.\n", GREEN, damage);
 
 		if (detailed) {
 			// 3 choices depending on resistance and boni
@@ -2846,7 +2851,7 @@ void Actor::DisplayCombatFeedback (unsigned int damage, int resisted, int damage
 				displaymsg->DisplayConstantStringName(STR_DAMAGE1, 0xffffff, this);
 			}
 		} else if (core->HasFeature(GF_ONSCREEN_TEXT) ) {
-			if(0) printf("TODO: pst floating text\n");
+			if(0) print("TODO: pst floating text\n");
 		} else if (!displaymsg->HasStringReference(STR_DAMAGE2) || !hitter || hitter->Type != ST_ACTOR) {
 			// bg1 and iwd
 			// or any traps or self-infliction (also for bg1)
@@ -2865,8 +2870,7 @@ void Actor::DisplayCombatFeedback (unsigned int damage, int resisted, int damage
 		}
 	} else {
 		if (resisted == DR_IMMUNE) {
-			printMessage("Actor", " ", GREEN);
-			printf("is immune to damage type: %s.\n", type_name);
+			printMessage("Actor", "is immune to damage type: %s.\n", GREEN, type_name);
 			if (hitter && hitter->Type == ST_ACTOR) {
 				if (detailed) {
 					//<DAMAGEE> was immune to my <TYPE> damage
@@ -2897,13 +2901,13 @@ void Actor::PlayWalkSound()
 	ieDword thisTime;
 	ieResRef Sound;
 
-	GetTime(thisTime);
+	thisTime = GetTickCount();
 	if (thisTime<nextWalk) return;
 	int cnt = anims->GetWalkSoundCount();
 	if (!cnt) return;
 
 	cnt=core->Roll(1,cnt,-1);
-	strnuprcpy(Sound, anims->GetWalkSound(), sizeof(ieResRef) );
+	strnuprcpy(Sound, anims->GetWalkSound(), sizeof(ieResRef)-1 );
 	area->ResolveTerrainSound(Sound, Pos);
 	if (cnt) {
 		int len = strlen(Sound);
@@ -2954,7 +2958,7 @@ void Actor::DumpMaxValues()
 	SymbolMgr *sym = core->GetSymbol( symbol );
 
 	for(int i=0;i<MAX_STATS;i++) {
-		printf("%d (%s) %d\n", i, sym->GetValue(i), maximum_values[i]);
+		print("%d (%s) %d\n", i, sym->GetValue(i), maximum_values[i]);
 	}
 }
 #endif
@@ -2963,46 +2967,46 @@ void Actor::DebugDump()
 {
 	unsigned int i;
 
-	printf( "Debugdump of Actor %s (%s, %s):\n", LongName, ShortName, GetName(-1) );
-	printf ("Scripts:");
+	print( "Debugdump of Actor %s (%s, %s):\n", LongName, ShortName, GetName(-1) );
+	print ("Scripts:");
 	for (i = 0; i < MAX_SCRIPTS; i++) {
 		const char* poi = "<none>";
 		if (Scripts[i]) {
 			poi = Scripts[i]->GetName();
 		}
-		printf( " %.8s", poi );
+		print( " %.8s", poi );
 	}
-	printf( "\nArea:       %.8s   ", Area );
-	printf( "Dialog:     %.8s\n", Dialog );
-	printf( "Global ID:  %d   PartySlot: %d\n", GetGlobalID(), InParty);
-	printf( "Script name:%.32s    Current action: %d\n", scriptName, CurrentAction ? CurrentAction->actionID : -1);
-	printf( "TalkCount:  %d   ", TalkCount );
-	printf( "Allegiance: %d   current allegiance:%d\n", BaseStats[IE_EA], Modified[IE_EA] );
-	printf( "Class:      %d   current class:%d\n", BaseStats[IE_CLASS], Modified[IE_CLASS] );
-	printf( "Race:       %d   current race:%d\n", BaseStats[IE_RACE], Modified[IE_RACE] );
-	printf( "Gender:     %d   current gender:%d\n", BaseStats[IE_SEX], Modified[IE_SEX] );
-	printf( "Specifics:  %d   current specifics:%d\n", BaseStats[IE_SPECIFIC], Modified[IE_SPECIFIC] );
-	printf( "Alignment:  %x   current alignment:%x\n", BaseStats[IE_ALIGNMENT], Modified[IE_ALIGNMENT] );
-	printf( "Morale:     %d   current morale:%d\n", BaseStats[IE_MORALE], Modified[IE_MORALE] );
-	printf( "Moralebreak:%d   Morale recovery:%d\n", Modified[IE_MORALEBREAK], Modified[IE_MORALERECOVERYTIME] );
-	printf( "Visualrange:%d (Explorer: %d)\n", Modified[IE_VISUALRANGE], Modified[IE_EXPLORE] );
-	printf( "Levels: %d/%d/%d (average %d)\n", Modified[IE_LEVEL], Modified[IE_LEVEL2], Modified[IE_LEVEL3], GetXPLevel(true) );
-	printf( "current HP:%d\n", BaseStats[IE_HITPOINTS] );
-	printf( "Mod[IE_ANIMATION_ID]: 0x%04X\n", Modified[IE_ANIMATION_ID] );
-	printf( "Colors:    ");
+	print( "\nArea:       %.8s   ", Area );
+	print( "Dialog:     %.8s\n", Dialog );
+	print( "Global ID:  %d   PartySlot: %d\n", GetGlobalID(), InParty);
+	print( "Script name:%.32s    Current action: %d\n", scriptName, CurrentAction ? CurrentAction->actionID : -1);
+	print( "TalkCount:  %d   ", TalkCount );
+	print( "Allegiance: %d   current allegiance:%d\n", BaseStats[IE_EA], Modified[IE_EA] );
+	print( "Class:      %d   current class:%d\n", BaseStats[IE_CLASS], Modified[IE_CLASS] );
+	print( "Race:       %d   current race:%d\n", BaseStats[IE_RACE], Modified[IE_RACE] );
+	print( "Gender:     %d   current gender:%d\n", BaseStats[IE_SEX], Modified[IE_SEX] );
+	print( "Specifics:  %d   current specifics:%d\n", BaseStats[IE_SPECIFIC], Modified[IE_SPECIFIC] );
+	print( "Alignment:  %x   current alignment:%x\n", BaseStats[IE_ALIGNMENT], Modified[IE_ALIGNMENT] );
+	print( "Morale:     %d   current morale:%d\n", BaseStats[IE_MORALE], Modified[IE_MORALE] );
+	print( "Moralebreak:%d   Morale recovery:%d\n", Modified[IE_MORALEBREAK], Modified[IE_MORALERECOVERYTIME] );
+	print( "Visualrange:%d (Explorer: %d)\n", Modified[IE_VISUALRANGE], Modified[IE_EXPLORE] );
+	print( "Levels: %d/%d/%d (average %d)\n", Modified[IE_LEVEL], Modified[IE_LEVEL2], Modified[IE_LEVEL3], GetXPLevel(true) );
+	print( "current HP:%d\n", BaseStats[IE_HITPOINTS] );
+	print( "Mod[IE_ANIMATION_ID]: 0x%04X\n", Modified[IE_ANIMATION_ID] );
+	print( "Colors:    ");
 	if (core->HasFeature(GF_ONE_BYTE_ANIMID) ) {
 		for(i=0;i<Modified[IE_COLORCOUNT];i++) {
-			printf("   %d", Modified[IE_COLORS+i]);
+			print("   %d", Modified[IE_COLORS+i]);
 		}
 	}
 	else {
 		for(i=0;i<7;i++) {
-			printf("   %d", Modified[IE_COLORS+i]);
+			print("   %d", Modified[IE_COLORS+i]);
 		}
 	}
-	printf( "\nWaitCounter: %d\n", (int) GetWait());
-	printf( "LastTarget: %d %s\n", LastTarget, GetActorNameByID(LastTarget));
-	printf( "LastTalked: %d %s\n", LastTalkedTo, GetActorNameByID(LastTalkedTo));
+	print( "\nWaitCounter: %d\n", (int) GetWait());
+	print( "LastTarget: %d %s\n", LastTarget, GetActorNameByID(LastTarget));
+	print( "LastTalked: %d %s\n", LastTalker, GetActorNameByID(LastTalker));
 	inventory.dump();
 	spellbook.dump();
 	fxqueue.dump();
@@ -3231,12 +3235,12 @@ void Actor::Turn(Scriptable *cleric, ieDword turnlevel)
 	if (Modified[IE_GENERAL]!=GEN_UNDEAD) {
 		level = GetPaladinLevel();
 		if (evilcleric && level) {
-			LastTurner = cleric->GetGlobalID();
+			AddTrigger(TriggerEntry(trigger_turnedby, cleric->GetGlobalID()));
 			if (turnlevel >= level+TURN_DEATH_LVL_MOD) {
 				if (gamedata->Exists("panic", IE_SPL_CLASS_ID)) {
 					core->ApplySpell("panic", this, cleric, level);
 				} else {
-					printf("Panic from turning!\n");
+					print("Panic from turning!\n");
 					Panic(cleric, PANIC_RUNAWAY);
 				}
 			}
@@ -3246,7 +3250,7 @@ void Actor::Turn(Scriptable *cleric, ieDword turnlevel)
 
 	//determine alignment (if equals, then no turning)
 
-	LastTurner = cleric->GetGlobalID();
+	AddTrigger(TriggerEntry(trigger_turnedby, cleric->GetGlobalID()));
 
 	//determine panic or destruction/control
 	//we get the modified level
@@ -3267,7 +3271,7 @@ void Actor::Turn(Scriptable *cleric, ieDword turnlevel)
 		}
 		Die(cleric);
 	} else if (turnlevel >= level+TURN_PANIC_LVL_MOD) {
-		printf("Panic from turning!\n");
+		print("Panic from turning!\n");
 		Panic(cleric, PANIC_RUNAWAY);
 	}
 }
@@ -3349,13 +3353,15 @@ void Actor::Die(Scriptable *killer)
 	if (area)
 		area->ClearSearchMapFor(this);
 
-	//JUSTDIED will be removed when the Die() trigger executed
+	//JUSTDIED will be removed after the first script check
 	//otherwise it is the same as REALLYDIED
 	InternalFlags|=IF_REALLYDIED|IF_JUSTDIED;
 	SetStance( IE_ANI_DIE );
+	AddTrigger(TriggerEntry(trigger_die));
 
 	Actor *act=NULL;
 	if (!killer) {
+		// TODO: is this right?
 		killer = area->GetActorByGlobalID(LastHitter);
 	}
 
@@ -3549,10 +3555,9 @@ bool Actor::CheckOnDeath()
 	if (InternalFlags&IF_CLEANUP) {
 		return true;
 	}
-	if (InternalFlags&IF_JUSTDIED) {
-		if (lastRunTime == 0 || CurrentAction || GetNextAction()) {
-			return false; //actor is currently dying, let him die first
-		}
+	// FIXME
+	if (InternalFlags&IF_JUSTDIED || CurrentAction || GetNextAction()) {
+		return false; //actor is currently dying, let him die first
 	}
 	if (!(InternalFlags&IF_REALLYDIED) ) {
 		return false;
@@ -3795,9 +3800,11 @@ void Actor::InitStatsOnLoad()
 	}
 	inventory.CalculateWeight();
 	CreateDerivedStats();
-	Modified[IE_CON]=BaseStats[IE_CON]; // used by GetHpAdjustment
-	ieDword hp = BaseStats[IE_HITPOINTS] + GetHpAdjustment(GetXPLevel(false));
-	BaseStats[IE_HITPOINTS]=hp;
+	if (BaseStats[IE_CLASS] > 0 && BaseStats[IE_CLASS] <= (ieDword)classcount) {
+		Modified[IE_CON]=BaseStats[IE_CON]; // used by GetHpAdjustment
+		ieDword hp = BaseStats[IE_HITPOINTS] + GetHpAdjustment(GetXPLevel(false));
+		BaseStats[IE_HITPOINTS]=hp;
+	}
 	SetupFist();
 	//initial setup of modified stats
 	memcpy(Modified,BaseStats, sizeof(Modified));
@@ -3847,7 +3854,7 @@ bool Actor::ValidTarget(int ga_flags) const
 		break;
 	}
 	if (ga_flags&GA_NO_DEAD) {
-		if (InternalFlags&IF_JUSTDIED) return false;
+		if (InternalFlags&IF_REALLYDIED) return false;
 		if (Modified[IE_STATE_ID] & STATE_DEAD) return false;
 	}
 	if (ga_flags&GA_SELECT) {
@@ -3877,7 +3884,7 @@ void Actor::GetNextAnimation()
 	if (RowNum<0)
 		RowNum = CharAnimations::GetAvatarsCount() - 1;
 	int NewAnimID = CharAnimations::GetAvatarStruct(RowNum)->AnimID;
-	printf ("AnimID: %04X\n", NewAnimID);
+	print ("AnimID: %04X\n", NewAnimID);
 	SetBase( IE_ANIMATION_ID, NewAnimID);
 }
 
@@ -3887,7 +3894,7 @@ void Actor::GetPrevAnimation()
 	if (RowNum>=CharAnimations::GetAvatarsCount() )
 		RowNum = 0;
 	int NewAnimID = CharAnimations::GetAvatarStruct(RowNum)->AnimID;
-	printf ("AnimID: %04X\n", NewAnimID);
+	print ("AnimID: %04X\n", NewAnimID);
 	SetBase( IE_ANIMATION_ID, NewAnimID);
 }
 
@@ -3995,7 +4002,7 @@ void Actor::GetNextStance()
 	static int Stance = IE_ANI_AWAKE;
 
 	if (--Stance < 0) Stance = MAX_ANIMS-1;
-	printf ("StanceID: %d\n", Stance);
+	print ("StanceID: %d\n", Stance);
 	SetStance( Stance );
 }
 
@@ -4165,6 +4172,7 @@ int Actor::GetAttackStyle() const
 
 void Actor::AttackedBy( Actor *attacker)
 {
+	AddTrigger(TriggerEntry(trigger_attackedby, attacker->GetGlobalID()));
 	LastAttacker = attacker->GetGlobalID();
 }
 
@@ -4183,7 +4191,7 @@ void Actor::StopAttack()
 {
 	SetStance(IE_ANI_READY);
 	secondround = 0;
-	InternalFlags|=IF_TARGETGONE; //this is for the trigger!
+	//InternalFlags|=IF_TARGETGONE; //this is for the trigger!
 	if (InParty) {
 		core->Autopause(AP_NOTARGET);
 	}
@@ -4198,6 +4206,10 @@ int Actor::Immobile() const
 		return 1;
 	}
 	if (GetStat(IE_STATE_ID) & STATE_STILL) {
+		return 1;
+	}
+	Game *game = core->GetGame();
+	if (game && game->TimeStoppedFor(this)) {
 		return 1;
 	}
 
@@ -4238,8 +4250,8 @@ void Actor::InitRound(ieDword gameTime)
 	roundTime = gameTime;
 
 	//print a little message :)
-	printMessage("InitRound", " ", WHITE);
-	printf("Name: %s | Attacks: %d | Start: %d\n", ShortName, attacksperround, gameTime);
+	printMessage("InitRound", "Name: %s | Attacks: %d | Start: %d\n", WHITE,
+		ShortName, attacksperround, gameTime);
 
 	// this might not be the right place, but let's give it a go
 	if (attacksperround && InParty) {
@@ -4568,7 +4580,7 @@ void Actor::PerformAttack(ieDword gameTime)
 		return;
 	}
 
-	printf("Performattack for %s, target is: %s\n", ShortName, target->ShortName);
+	print("Performattack for %s, target is: %s\n", ShortName, target->ShortName);
 
 	//which hand is used
 	//we do apr - attacksleft so we always use the main hand first
@@ -4629,15 +4641,15 @@ void Actor::PerformAttack(ieDword gameTime)
 		printMessage("Attack","(Main) ", GREEN);
 	}
 	if (attacksperround) {
-		printf("Left: %d | ", attackcount);
-		printf("Next: %d ", nextattack);
+		print("Left: %d | ", attackcount);
+		print("Next: %d ", nextattack);
 	}
 
 	int roll = LuckyRoll(1, ATTACKROLL, 0);
 	if (roll==1) {
 		//critical failure
 		printBracket("Critical Miss", RED);
-		printf("\n");
+		print("\n");
 		displaymsg->DisplayConstantStringName(STR_CRITICAL_MISS, 0xffffff, this);
 		DisplayStringCore(this, VB_CRITMISS, DS_CONSOLE|DS_CONST );
 		if (Flags&WEAPON_RANGED) {//no need for this with melee weapon!
@@ -4662,16 +4674,16 @@ void Actor::PerformAttack(ieDword gameTime)
 	if (hittingheader->DiceThrown<256) {
 		damage += LuckyRoll(hittingheader->DiceThrown, hittingheader->DiceSides, 0, LR_CRITICAL);
 		damage += DamageBonus;
-		printf("| Damage %dd%d%+d = %d ",hittingheader->DiceThrown, hittingheader->DiceSides, DamageBonus, damage);
+		print("| Damage %dd%d%+d = %d ",hittingheader->DiceThrown, hittingheader->DiceSides, DamageBonus, damage);
 	} else {
-		printf("| No Damage");
+		print("| No Damage");
 		damage = 0;
 	}
 
 	if (roll >= (ATTACKROLL - (int) GetStat(IE_CRITICALHITBONUS) - CriticalBonus)) {
 		//critical success
 		printBracket("Critical Hit", GREEN);
-		printf("\n");
+		print("\n");
 		displaymsg->DisplayConstantStringName(STR_CRITICAL_HIT, 0xffffff, this);
 		DisplayStringCore(this, VB_CRITHIT, DS_CONSOLE|DS_CONST );
 		ModifyDamage (target, this, damage, resisted, weapon_damagetype[damagetype], &wi, true);
@@ -4699,11 +4711,11 @@ void Actor::PerformAttack(ieDword gameTime)
 		}
 		ResetState();
 		printBracket("Missed", LIGHT_RED);
-		printf("\n");
+		print("\n");
 		return;
 	}
 	printBracket("Hit", GREEN);
-	printf("\n");
+	print("\n");
 	ModifyDamage (target, this, damage, resisted, weapon_damagetype[damagetype], &wi, false);
 	UseItem(wi.slot, Flags&WEAPON_RANGED?-2:-1, target, 0, damage);
 	ResetState();
@@ -4789,7 +4801,7 @@ void Actor::ModifyDamage(Actor *target, Scriptable *hitter, int &damage, int &re
 		std::multimap<ieDword, DamageInfoStruct>::iterator it;
 		it = core->DamageInfoMap.find(damagetype);
 		if (it == core->DamageInfoMap.end()) {
-			printf("Unhandled damagetype:%d\n", damagetype);
+			print("Unhandled damagetype:%d\n", damagetype);
 		} else if (it->second.resist_stat == 0) {
 			// damage type without a resistance stat
 		} else {
@@ -4800,11 +4812,11 @@ void Actor::ModifyDamage(Actor *target, Scriptable *hitter, int &damage, int &re
 				int bonus = ((Actor *)hitter)->fxqueue.SpecificDamageBonus(it->second.iwd_mod_type);
 				if (bonus) {
 					resisted -= int (damage * bonus / 100.0);
-					printf("Bonus damage of %d (%+d%%), neto: %d\n", int (damage * bonus / 100.0), bonus, -resisted);
+					print("Bonus damage of %d (%+d%%), neto: %d\n", int (damage * bonus / 100.0), bonus, -resisted);
 				}
 			}
 			damage -= resisted;
-			printf("Resisted %d of %d at %d%% resistance to %d\n", resisted, damage+resisted, target->GetSafeStat(it->second.resist_stat), damagetype);
+			print("Resisted %d of %d at %d%% resistance to %d\n", resisted, damage+resisted, target->GetSafeStat(it->second.resist_stat), damagetype);
 			if (damage <= 0) resisted = DR_IMMUNE;
 		}
 	}
@@ -4867,9 +4879,6 @@ void Actor::UpdateActorState(ieDword gameTime) {
 
 	//apply the modal effect on the beginning of each round
 	if ((((gameTime-roundTime)%core->Time.round_size)==0)) {
-		//we can set this to 0
-		modalTime = gameTime;
-
 		// handle lingering modal spells like bardsong in iwd2
 		if (modalSpellLingering && LingeringModalSpell[0]) {
 			modalSpellLingering--;
@@ -4882,6 +4891,16 @@ void Actor::UpdateActorState(ieDword gameTime) {
 		if (ModalState == MS_NONE) {
 			return;
 		}
+
+		// some states and timestop disable modal actions
+		// interestingly the original doesn't include STATE_DISABLED, STATE_FROZEN/STATE_PETRIFIED
+		ieDword state = Modified[IE_STATE_ID];
+		if (Immobile() || (state & (STATE_CONFUSED | STATE_DEAD | STATE_HELPLESS | STATE_PANIC | STATE_BERSERK | STATE_SLEEP))) {
+			return;
+		}
+
+		//we can set this to 0
+		modalTime = gameTime;
 
 		if (!ModalSpell[0]) {
 			printMessage("Actor","Modal Spell Effect was not set!\n", YELLOW);
@@ -5111,6 +5130,13 @@ void Actor::DrawActorSprite(const Region &screen, int cx, int cy, const Region& 
 	int PartCount = ca->GetTotalPartCount();
 	Video* video = core->GetVideoDriver();
 	Region vp = video->GetViewport();
+	unsigned int flags = TranslucentShadows ? BLIT_TRANSSHADOW : 0;
+	if (!ca->lockPalette) flags |= BLIT_TINTED;
+	Game* game = core->GetGame();
+	// when time stops, almost everything turns dull grey, the caster and immune actors being the most notable exceptions
+	if (game->TimeStoppedFor(this)) {
+		flags |= BLIT_GREY;
+	}
 
 	// display current frames in the right order
 	const int* zOrder = ca->GetZOrder(Face);
@@ -5133,10 +5159,6 @@ void Actor::DrawActorSprite(const Region &screen, int cx, int cy, const Region& 
 			}
 			assert(newsc->Covers(cx, cy, nextFrame->XPos, nextFrame->YPos, nextFrame->Width, nextFrame->Height));
 
-			unsigned int flags = TranslucentShadows ? BLIT_TRANSSHADOW : 0;
-
-			if (!ca->lockPalette) flags|=BLIT_TINTED;
-
 			video->BlitGameSprite( nextFrame, cx + screen.x, cy + screen.y,
 				flags, tint, newsc, ca->GetPartPalette(partnum), &screen);
 		}
@@ -5155,7 +5177,7 @@ bool Actor::ShouldHibernate() {
 		return false;
 	if (LastTarget) //currently attacking someone
 		return false;
-	if (!lastRunTime) // haven't had a chance to run a script
+	if (InternalFlags&IF_JUSTDIED) // didn't have a chance to run a script
 		return false;
 	if (CurrentAction)
 		return false;
@@ -5617,12 +5639,11 @@ void Actor::GetSoundFrom2DA(ieResRef Sound, unsigned int index) const
 			index = 36;
 			break;
 		default:
-			printMessage("Actor","TODO:", YELLOW);
-			printf("Cannot determine 2DA rowcount for index: %d\n", index);
+			printMessage("Actor", "TODO:Cannot determine 2DA rowcount for index: %d\n", YELLOW, index);
 			return;
 	}
-	printMessage("Actor"," ", WHITE);
-	printf("Getting sound 2da %.8s entry: %s\n", anims->ResRef, tab->GetRowName(index) );
+	printMessage("Actor", "Getting sound 2da %.8s entry: %s\n", WHITE,
+		anims->ResRef, tab->GetRowName(index) );
 	int col = core->Roll(1,tab->GetColumnCount(index),-1);
 	strnlwrcpy(Sound, tab->QueryField (index, col), 8);
 }
@@ -5758,7 +5779,7 @@ void Actor::SetSoundFolder(const char *soundset)
 		char filepath[_MAX_PATH];
 
 		strnlwrcpy(PCStats->SoundFolder, soundset, 32);
-		PathJoin(filepath,core->GamePath,"sounds",PCStats->SoundFolder,0);
+		PathJoin(filepath, core->GamePath, "sounds", PCStats->SoundFolder, NULL);
 		char file[_MAX_PATH];
 		if (FileGlob(file, filepath, "?????01")) {
 			file[5] = '\0';
@@ -6320,7 +6341,7 @@ int Actor::CheckUsability(Item *item) const
 		}
 		stat = ResolveTableValue(itemuse[i].table, stat, mcol, itemuse[i].vcol);
 		if (stat&itemvalue) {
-			//printf("failed usability: itemvalue %d, stat %d, stat value %d\n", itemvalue, itemuse[i].stat, stat);
+			//print("failed usability: itemvalue %d, stat %d, stat value %d\n", itemvalue, itemuse[i].stat, stat);
 			return STR_CANNOT_USE_ITEM;
 		}
 	}
@@ -6540,7 +6561,7 @@ void Actor::CreateDerivedStatsBG()
 			} else {
 				backstabdamagemultiplier = (backstabdamagemultiplier+7)/4;
 			}
-			printf("\n");
+			print("\n");
 			if (backstabdamagemultiplier>7) backstabdamagemultiplier=7;
 		}
 	}
@@ -6576,7 +6597,7 @@ void Actor::CreateDerivedStatsIWD2()
 		} else {
 			backstabdamagemultiplier = (BaseStats[IE_LEVELTHIEF]+1)/2;
 		}
-		printf("\n");
+		print("\n");
 		if (backstabdamagemultiplier>7) backstabdamagemultiplier=7;
 	}
 
@@ -6878,7 +6899,7 @@ void Actor::CureInvisibility()
 
 		//not sure, but better than nothing
 		if (! (Modified[IE_STATE_ID]&state_invisible)) {
-			InternalFlags|=IF_BECAMEVISIBLE;
+			AddTrigger(TriggerEntry(trigger_becamevisible));
 		}
 	}
 }

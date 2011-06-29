@@ -426,8 +426,7 @@ void Variables::SetAt(const char* key, ieDword value, bool nocreate)
 	assert( m_type == GEM_VARIABLES_INT );
 	if (( pAssoc = GetAssocAt( key, nHash ) ) == NULL) {
 		if (nocreate) {
-			printMessage("Variables", " ", YELLOW);
-			printf("Cannot create new variable: %s\n", key);
+			printMessage("Variables", "Cannot create new variable: %s\n", YELLOW, key);
 			return;
 		}
 
@@ -480,7 +479,7 @@ void Variables::LoadInitialValues(const char* name)
 	// we only support PST's var.var for now
 	PathJoin( nPath, core->GamePath, "var.var", NULL );
 	FileStream fs;
-	if (!fs.Open( nPath, true )) {
+	if (!fs.Open(nPath)) {
 		return;
 	}
 
@@ -500,7 +499,8 @@ void Variables::LoadInitialValues(const char* name)
 		// is it the type we want? if not, skip
 		if (strnicmp(buffer, name, 6)) continue;
 		// copy variable (types got 2 extra spaces, and the name is padded too)
-		strnspccpy(varname,buffer+8,32);
+		// (true = uppercase, needed for original engine save compat, see 315b8f2e)
+		strnspccpy(varname,buffer+8,32, true);
 		SetAt(varname, value);
 	}  
 }

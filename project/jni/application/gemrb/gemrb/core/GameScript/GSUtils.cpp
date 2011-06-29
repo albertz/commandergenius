@@ -25,15 +25,18 @@
 #include "defsounds.h"
 
 #include "Audio.h"
+#include "CharAnimations.h"
 #include "DialogHandler.h"
 #include "DisplayMessage.h"
 #include "Game.h"
 #include "GameData.h"
+#include "GlobalTimer.h"
 #include "Interface.h"
 #include "Item.h"
 #include "Map.h"
 #include "Spell.h"
 #include "StringMgr.h"
+#include "TableMgr.h"
 #include "TileMap.h"
 #include "Video.h"
 #include "GUI/GameControl.h"
@@ -239,24 +242,9 @@ bool ResolveItemName(ieResRef itemres, Actor *act, ieDword Slot)
 
 bool StoreHasItemCore(const ieResRef storename, const ieResRef itemname)
 {
-	bool had_nostore=false;
-	bool has_current=false;
-	ieResRef current;
-	ieDword owner = 0;
 	CREItem item;
 
-	Store *store = core->GetCurrentStore();
-	if (!store) {
-		had_nostore = true;
-		store = core->SetCurrentStore(storename, 0);
-	} else {
-		if (strnicmp(store->Name, storename, 8) ) {
-			//not the current store, we need some dirty hack
-			has_current = true;
-			strnlwrcpy(current, store->Name, 8);
-			owner = store->GetOwnerID();
-		}
-	}
+	Store* store = gamedata->GetStore(storename);
 	if (!store) {
 		printMessage("GameScript","Store cannot be opened!\n", LIGHT_RED);
 		return false;
@@ -267,12 +255,7 @@ bool StoreHasItemCore(const ieResRef storename, const ieResRef itemname)
 	if (store->FindItem(itemname, false) != (unsigned int)-1) {
 		ret=true;
 	}
-	if (has_current) {
-		//setting back old store (this will save our current store)
-		core->SetCurrentStore(current, owner);
-	} else if (had_nostore) {
-		core->CloseCurrentStore();
-	}
+	// Don't call gamedata->SaveStore, we don't change it, and it remains cached.
 	return ret;
 }
 
@@ -368,7 +351,7 @@ void DisplayStringCore(Scriptable* Sender, int Strref, int flags)
 
 	memset(&sb,0,sizeof(sb));
 	Sound[0]=0;
-	printf( "Displaying string on: %s\n", Sender->GetScriptName() );
+	print( "Displaying string on: %s\n", Sender->GetScriptName() );
 	if (flags & DS_CONST) {
 		if (Sender->Type!=ST_ACTOR) {
 			printMessage("GameScript","Verbal constant not supported for non actors!\n", LIGHT_RED);
@@ -599,8 +582,8 @@ void CreateCreatureCore(Scriptable* Sender, Action* parameters, int flags)
 	}
 
 	if (!ab) {
-		printMessage("GameScript","Failed to create creature! ",LIGHT_RED);
-		printf("(missing creature file %s?)\n", parameters->string0Parameter);
+		printMessage("GameScript", "Failed to create creature! (missing creature file %s?)\n", LIGHT_RED,
+			parameters->string0Parameter);
 		// maybe this should abort()?
 		return;
 	}
@@ -725,7 +708,7 @@ void EscapeAreaCore(Scriptable* Sender, const Point &p, const char* area, const 
 		//MoveNearerTo will return 0, if the actor is in move
 		//it will return 1 (the fourth parameter) if the target is unreachable
 		if (!MoveNearerTo(Sender, p, MAX_OPERATING_DISTANCE,1) ) {
-			if (!Sender->InMove()) printf("At least it said so...\n");
+			if (!Sender->InMove()) print("At least it said so...\n");
 			return;
 		}
 	}
@@ -737,13 +720,12 @@ void EscapeAreaCore(Scriptable* Sender, const Point &p, const char* area, const 
 		// last parameter is 'face', which should be passed from relevant action parameter..
 		sprintf( Tmp, "MoveBetweenAreas(\"%s\",[%hd.%hd],%d)", area, enter.x, enter.y, 0 );
 	}
-	printMessage("GSUtils"," ", WHITE);
-	printf("Executing %s in EscapeAreaCore\n", Tmp);
+	printMessage("GSUtils", "Executing %s in EscapeAreaCore\n", WHITE, Tmp);
 	//drop this action, but add another (destroyself or movebetweenareas)
 	//between the arrival and the final escape, there should be a wait time
 	//that wait time could be handled here
 	if (wait) {
-		printf("But wait a bit... (%d)\n", wait);
+		print("But wait a bit... (%d)\n", wait);
 		Sender->SetWait(wait);
 	}
 	Sender->ReleaseCurrentAction();
@@ -825,7 +807,7 @@ void BeginDialog(Scriptable* Sender, Action* parameters, int Flags)
 	int seeflag = GA_NO_DEAD;
 
 	if (InDebug&ID_VARIABLES) {
-		printf("BeginDialog core\n");
+		print("BeginDialog core\n");
 	}
 	if (Flags & BD_OWN) {
 		tar = GetStoredActorFromObject( Sender, parameters->objects[1], seeflag);
@@ -835,23 +817,23 @@ void BeginDialog(Scriptable* Sender, Action* parameters, int Flags)
 		scr = Sender;
 	}
 	if (!scr) {
-		printMessage("GameScript"," ",LIGHT_RED);
-		printf("Speaker for dialog couldn't be found (Sender: %s, Type: %d) Flags:%d.\n", Sender->GetScriptName(), Sender->Type, Flags);
+		printMessage("GameScript", "Speaker for dialog couldn't be found (Sender: %s, Type: %d) Flags:%d.\n", LIGHT_RED,
+			Sender->GetScriptName(), Sender->Type, Flags);
 		Sender->ReleaseCurrentAction();
 		return;
 	}
 
 	if (!tar || tar->Type!=ST_ACTOR) {
-		printMessage("GameScript"," ",LIGHT_RED);
-		printf("Target for dialog couldn't be found (Sender: %s, Type: %d).\n", Sender->GetScriptName(), Sender->Type);
+		printMessage("GameScript", "Target for dialog couldn't be found (Sender: %s, Type: %d).\n", LIGHT_RED,
+			Sender->GetScriptName(), Sender->Type);
 		if (Sender->Type == ST_ACTOR) {
 			((Actor *) Sender)->DebugDump();
 		}
-		printf ("Target object: ");
+		print ("Target object: ");
 		if (parameters->objects[1]) {
 			parameters->objects[1]->Dump();
 		} else {
-			printf("<NULL>\n");
+			print("<NULL>\n");
 		}
 		Sender->ReleaseCurrentAction();
 		return;
@@ -862,8 +844,8 @@ void BeginDialog(Scriptable* Sender, Action* parameters, int Flags)
 	speaker = NULL;
 	target = (Actor *) tar;
 	if ((Flags & BD_CHECKDIST) && !CanSee(scr, target, false, seeflag) ) {
-		printMessage("GameScript"," ",LIGHT_RED);
-		printf("CanSee returned false! Speaker (%s, type %d) and target are:\n", scr->GetScriptName(), scr->Type);
+		printMessage("GameScript", "CanSee returned false! Speaker (%s, type %d) and target are:\n", LIGHT_RED,
+			scr->GetScriptName(), scr->Type);
 		if (scr->Type == ST_ACTOR) {
 			((Actor *) scr)->DebugDump();
 		}
@@ -876,7 +858,7 @@ void BeginDialog(Scriptable* Sender, Action* parameters, int Flags)
 		speaker = (Actor *) scr;
 		if (speaker->GetStat(IE_STATE_ID)&STATE_DEAD) {
 			printMessage("GameScript"," ",LIGHT_RED);
-			printf("Speaker is dead, cannot start dialogue. Speaker and target are:\n");
+			print("Speaker is dead, cannot start dialogue. Speaker and target are:\n");
 			speaker->DebugDump();
 			target->DebugDump();
 			Sender->ReleaseCurrentAction();
@@ -1032,7 +1014,7 @@ void BeginDialog(Scriptable* Sender, Action* parameters, int Flags)
 		}
 	}
 
-	int ret;
+	bool ret;
 
 	if (Dialog[0]) {
 		//increasing NumTimesTalkedTo or NumTimesInteracted
@@ -1046,28 +1028,24 @@ void BeginDialog(Scriptable* Sender, Action* parameters, int Flags)
 		ret = gc->dialoghandler->InitDialog( scr, tar, Dialog);
 	}
 	else {
-		ret = -1;
+		ret = false;
 	}
 
-	if (ret<0) {
-		Sender->ReleaseCurrentAction();
+	Sender->ReleaseCurrentAction();
+
+	if (!ret) {
 		if (Flags & BD_NOEMPTY) {
 			return;
 		}
 		displaymsg->DisplayConstantStringName(STR_NOTHINGTOSAY,0xff0000,tar);
 		return;
 	}
-
-	//this is a bit fishy
-	Sender->SetWait(1);
-	Sender->ReleaseCurrentAction();
-
 }
 
 void MoveBetweenAreasCore(Actor* actor, const char *area, const Point &position, int face, bool adjust)
 {
-	printMessage("GameScript", " ", WHITE);
-	printf("MoveBetweenAreas: %s to %s [%d.%d] face: %d\n", actor->GetName(0), area,position.x,position.y, face);
+	printMessage("GameScript", "MoveBetweenAreas: %s to %s [%d.%d] face: %d\n", WHITE,
+		actor->GetName(0), area,position.x,position.y, face);
 	Map* map2;
 	Game* game = core->GetGame();
 	if (area[0]) { //do we need to switch area?
@@ -1139,11 +1117,12 @@ void MoveToObjectCore(Scriptable *Sender, Action *parameters, ieDword flags, boo
 	Sender->ReleaseCurrentAction();
 }
 
-void CreateItemCore(CREItem *item, const char *resref, int a, int b, int c)
+bool CreateItemCore(CREItem *item, const char *resref, int a, int b, int c)
 {
 	//copy the whole resref, including the terminating zero
 	strnuprcpy(item->ItemResRef, resref, 8);
-	core->ResolveRandomItem(item);
+	if (!core->ResolveRandomItem(item))
+		return false;
 	if (a==-1) {
 		//use the default charge counts of the item
 		Item *origitem = gamedata->GetItem(item->ItemResRef);
@@ -1160,6 +1139,7 @@ void CreateItemCore(CREItem *item, const char *resref, int a, int b, int c)
 		item->Usages[2]=(ieWord) c;
 	}
 	item->Flags=0;
+	return true;
 }
 
 //It is possible to attack CONTAINERS/DOORS as well!!!
@@ -1264,8 +1244,8 @@ static int GetIdsValue(const char *&symbol, const char *idsname)
 	if (!valHook) {
 		//FIXME:missing ids file!!!
 		if (InDebug&ID_TRIGGERS) {
-			printMessage("GameScript"," ",LIGHT_RED);
-			printf("Missing IDS file %s for symbol %s!\n",idsname, symbol);
+			printMessage("GameScript", "Missing IDS file %s for symbol %s!\n", LIGHT_RED,
+				idsname, symbol);
 		}
 		return -1;
 	}
@@ -1363,11 +1343,11 @@ Action* GenerateActionCore(const char *src, const char *str, unsigned short acti
 	//Here is the Action; Now we need to evaluate the parameters, if any
 	if (*str!=')') while (*str) {
 		if (*(str+1)!=':') {
-			printf("Warning, parser was sidetracked: %s\n",str);
+			print("Warning, parser was sidetracked: %s\n",str);
 		}
 		switch (*str) {
 			default:
-				printf("Invalid type: %s\n",str);
+				print("Invalid type: %s\n",str);
 				//str++;
 				delete newAction;
 				return NULL;
@@ -1460,7 +1440,7 @@ Action* GenerateActionCore(const char *src, const char *str, unsigned short acti
 
 			case 'o': //Object
 				if (objectCount==3) {
-					printf("Invalid object count!\n");
+					print("Invalid object count!\n");
 					//abort();
 					delete newAction;
 					return NULL;
@@ -1514,7 +1494,7 @@ Action* GenerateActionCore(const char *src, const char *str, unsigned short acti
 				if (mergestrings) {
 					str++;
 					if (*str!='s') {
-						printf("Invalid mergestrings:%s\n",str);
+						print("Invalid mergestrings:%s\n",str);
 						//abort();
 						delete newAction;
 						return NULL;
@@ -1644,9 +1624,7 @@ void FreeSrc(SrcVector *poi, const ieResRef key)
 {
 	int res = SrcCache.DecRef((void *) poi, key, true);
 	if (res<0) {
-		printMessage( "GameScript", "Corrupted Src cache encountered (reference count went below zero), ", LIGHT_RED );
-		printf( "Src name is: %.8s\n", key);
-		abort();
+		error("GameScript", "Corrupted Src cache encountered (reference count went below zero), Src name is: %.8s\n", key);
 	}
 	if (!res) {
 		delete poi;
@@ -1733,11 +1711,11 @@ Trigger *GenerateTriggerCore(const char *src, const char *str, int trIndex, int 
 	//Here is the Trigger; Now we need to evaluate the parameters
 	if (*str!=')') while (*str) {
 		if (*(str+1)!=':') {
-			printf("Warning, parser was sidetracked: %s\n",str);
+			print("Warning, parser was sidetracked: %s\n",str);
 		}
 		switch (*str) {
 			default:
-				printf("Invalid type: %s\n",str);
+				print("Invalid type: %s\n",str);
 				//str++;
 				delete newTrigger;
 				return NULL;
@@ -1833,7 +1811,7 @@ Trigger *GenerateTriggerCore(const char *src, const char *str, int trIndex, int 
 				if (mergestrings) {
 					str++;
 					if (*str!='s') {
-						printf("Invalid mergestrings:%s\n",str);
+						print("Invalid mergestrings:%s\n",str);
 						//abort();
 						delete newTrigger;
 						return NULL;
@@ -1880,7 +1858,7 @@ void SetVariable(Scriptable* Sender, const char* VarName, const char* Context, i
 	char newVarName[8+33];
 
 	if (InDebug&ID_VARIABLES) {
-		printf( "Setting variable(\"%s%s\", %d)\n", Context,
+		print( "Setting variable(\"%s%s\", %d)\n", Context,
 			VarName, value );
 	}
 
@@ -1906,8 +1884,8 @@ void SetVariable(Scriptable* Sender, const char* VarName, const char* Context, i
 			map->locals->SetAt( VarName, value, NoCreate);
 		}
 		else if (InDebug&ID_VARIABLES) {
-			printMessage("GameScript"," ",YELLOW);
-			printf("Invalid variable %s %s in setvariable\n",Context, VarName);
+			printMessage("GameScript", "Invalid variable %s %s in setvariable\n", YELLOW,
+				Context, VarName);
 		}
 	}
 	else {
@@ -1927,7 +1905,7 @@ void SetVariable(Scriptable* Sender, const char* VarName, ieDword value)
 	}
 
 	if (InDebug&ID_VARIABLES) {
-		printf( "Setting variable(\"%s\", %d)\n", VarName, value );
+		print( "Setting variable(\"%s\", %d)\n", VarName, value );
 	}
 	strncpy( newVarName, VarName, 6 );
 	newVarName[6]=0;
@@ -1950,8 +1928,8 @@ void SetVariable(Scriptable* Sender, const char* VarName, ieDword value)
 			map->locals->SetAt( poi, value, NoCreate);
 		}
 		else if (InDebug&ID_VARIABLES) {
-			printMessage("GameScript"," ",YELLOW);
-			printf("Invalid variable %s in setvariable\n",VarName);
+			printMessage("GameScript", "Invalid variable %s in setvariable\n", YELLOW,
+				VarName);
 		}
 	}
 	else {
@@ -1976,14 +1954,14 @@ ieDword CheckVariable(Scriptable* Sender, const char* VarName, bool *valid)
 	if (strnicmp( newVarName, "MYAREA", 6 ) == 0) {
 		Sender->GetCurrentArea()->locals->Lookup( poi, value );
 		if (InDebug&ID_VARIABLES) {
-			printf("CheckVariable %s: %d\n",VarName, value);
+			print("CheckVariable %s: %d\n",VarName, value);
 		}
 		return value;
 	}
 	if (strnicmp( newVarName, "LOCALS", 6 ) == 0) {
 		Sender->locals->Lookup( poi, value );
 		if (InDebug&ID_VARIABLES) {
-			printf("CheckVariable %s: %d\n",VarName, value);
+			print("CheckVariable %s: %d\n",VarName, value);
 		}
 		return value;
 	}
@@ -1991,7 +1969,7 @@ ieDword CheckVariable(Scriptable* Sender, const char* VarName, bool *valid)
 	if (HasKaputz && !strnicmp(newVarName,"KAPUTZ",6) ) {
 		game->kaputz->Lookup( poi, value );
 		if (InDebug&ID_VARIABLES) {
-			printf("CheckVariable %s: %d\n",VarName, value);
+			print("CheckVariable %s: %d\n",VarName, value);
 		}
 		return value;
 	}
@@ -2004,15 +1982,15 @@ ieDword CheckVariable(Scriptable* Sender, const char* VarName, bool *valid)
 				*valid=false;
 			}
 			if (InDebug&ID_VARIABLES) {
-				printMessage("GameScript"," ",YELLOW);
-				printf("Invalid variable %s in checkvariable\n",VarName);
+				printMessage("GameScript", "Invalid variable %s in checkvariable\n", YELLOW,
+					VarName);
 			}
 		}
 	} else {
 		game->locals->Lookup( poi, value );
 	}
 	if (InDebug&ID_VARIABLES) {
-		printf("CheckVariable %s: %d\n",VarName, value);
+		print("CheckVariable %s: %d\n",VarName, value);
 	}
 	return value;
 }
@@ -2027,14 +2005,14 @@ ieDword CheckVariable(Scriptable* Sender, const char* VarName, const char* Conte
 	if (strnicmp( newVarName, "MYAREA", 6 ) == 0) {
 		Sender->GetCurrentArea()->locals->Lookup( VarName, value );
 		if (InDebug&ID_VARIABLES) {
-			printf("CheckVariable %s%s: %d\n",Context, VarName, value);
+			print("CheckVariable %s%s: %d\n",Context, VarName, value);
 		}
 		return value;
 	}
 	if (strnicmp( newVarName, "LOCALS", 6 ) == 0) {
 		Sender->locals->Lookup( VarName, value );
 		if (InDebug&ID_VARIABLES) {
-			printf("CheckVariable %s%s: %d\n",Context, VarName, value);
+			print("CheckVariable %s%s: %d\n",Context, VarName, value);
 		}
 		return value;
 	}
@@ -2042,7 +2020,7 @@ ieDword CheckVariable(Scriptable* Sender, const char* VarName, const char* Conte
 	if (HasKaputz && !strnicmp(newVarName,"KAPUTZ",6) ) {
 		game->kaputz->Lookup( VarName, value );
 		if (InDebug&ID_VARIABLES) {
-			printf("CheckVariable %s%s: %d\n",Context, VarName, value);
+			print("CheckVariable %s%s: %d\n",Context, VarName, value);
 		}
 		return value;
 	}
@@ -2055,15 +2033,15 @@ ieDword CheckVariable(Scriptable* Sender, const char* VarName, const char* Conte
 				*valid=false;
 			}
 			if (InDebug&ID_VARIABLES) {
-				printMessage("GameScript"," ",YELLOW);
-				printf("Invalid variable %s %s in checkvariable\n",Context, VarName);
+				printMessage("GameScript", "Invalid variable %s %s in checkvariable\n", YELLOW,
+					Context, VarName);
 			}
 		}
 	} else {
 		game->locals->Lookup( VarName, value );
 	}
 	if (InDebug&ID_VARIABLES) {
-		printf("CheckVariable %s%s: %d\n",Context, VarName, value);
+		print("CheckVariable %s%s: %d\n",Context, VarName, value);
 	}
 	return value;
 }
@@ -2172,8 +2150,7 @@ unsigned int GetSpellDistance(const ieResRef spellres, Scriptable *Sender)
 
 	Spell* spl = gamedata->GetSpell( spellres );
 	if (!spl) {
-		printMessage("GameScript"," ",LIGHT_RED);
-		printf("Spell couldn't be found:%.8s.\n", spellres);
+		printMessage("GameScript", "Spell couldn't be found:%.8s.\n", LIGHT_RED, spellres);
 		return 0;
 	}
 	dist = spl->GetCastingDistance(Sender);
@@ -2195,8 +2172,7 @@ unsigned int GetItemDistance(const ieResRef itemres, int header)
 
 	Item* itm = gamedata->GetItem( itemres );
 	if (!itm) {
-		printMessage("GameScript"," ",LIGHT_RED);
-		printf("Item couldn't be found:%.8s.\n", itemres);
+		printMessage("GameScript", "Item couldn't be found:%.8s.\n", LIGHT_RED, itemres);
 		return 0;
 	}
 	dist=itm->GetCastingDistance(header);
@@ -2224,7 +2200,7 @@ void SetupWishCore(Scriptable *Sender, int column, int picks)
 	AutoTable tm("wish");
 	if (!tm) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "Cannot find wish.2da.\n");
+		print( "Cannot find wish.2da.\n");
 		return;
 	}
 

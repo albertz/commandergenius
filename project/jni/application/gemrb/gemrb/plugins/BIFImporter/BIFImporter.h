@@ -21,11 +21,11 @@
 #ifndef BIFIMPORTER_H
 #define BIFIMPORTER_H
 
-#include "ArchiveImporter.h"
+#include "IndexedArchive.h"
 
 #include "globals.h"
 
-#include "System/CachedFileStream.h"
+#include "System/DataStream.h"
 
 struct FileEntry {
 	ieDword resLocator;
@@ -44,22 +44,20 @@ struct TileEntry {
 	ieWord  u1; //Unknown Field
 };
 
-class BIFImporter : public ArchiveImporter {
+class BIFImporter : public IndexedArchive {
 private:
 	char path[_MAX_PATH];
 	FileEntry* fentries;
 	TileEntry* tentries;
 	ieDword fentcount, tentcount;
-	CachedFileStream* stream;
+	DataStream* stream;
 public:
 	BIFImporter(void);
 	~BIFImporter(void);
-	int DecompressSaveGame(DataStream *compressed);
-	int AddToSaveGame(DataStream *str, DataStream *uncompressed);
 	int OpenArchive(const char* filename);
-	int CreateArchive(DataStream *compressed);
 	DataStream* GetStream(unsigned long Resource, unsigned long Type);
 private:
+	static bool DecompressBIF(DataStream* compressed, const char* path);
 	void ReadBIF(void);
 };
 

@@ -27,7 +27,9 @@
 #include "DialogHandler.h"
 #include "Game.h"
 #include "Interface.h"
+#include "TableMgr.h"
 #include "GUI/GameControl.h"
+#include "Scriptable/Actor.h"
 
 //set this to -1 if charname is gabber (iwd2)
 static int charname=0;
@@ -53,7 +55,6 @@ TLKImporter::TLKImporter(void)
 	}
 	str = NULL;
 	override = NULL;
-	autoFree = false;
 
 	AutoTable tm("gender");
 	if (tm) {
@@ -73,17 +74,14 @@ TLKImporter::TLKImporter(void)
 	}
 }
 
-void ReleaseGtEntry(void *poi)
+static void ReleaseGtEntry(void *poi)
 {
 	delete (gt_type *) poi;
 }
 
 TLKImporter::~TLKImporter(void)
 {
-	if (str && autoFree) {
-		delete( str );
-	}
-
+	delete str;
 	
 	gtmap.RemoveAll(ReleaseGtEntry);
 
@@ -110,16 +108,13 @@ void TLKImporter::OpenAux()
 	}
 }
 
-bool TLKImporter::Open(DataStream* stream, bool autoFree)
+bool TLKImporter::Open(DataStream* stream)
 {
 	if (stream == NULL) {
 		return false;
 	}
-	if (str && this->autoFree) {
-		delete( str );
-	}
+	delete str;
 	str = stream;
-	this->autoFree = autoFree;
 	char Signature[8];
 	str->Read( Signature, 8 );
 	if (strncmp( Signature, "TLK\x20V1\x20\x20", 8 ) != 0) {
@@ -146,7 +141,7 @@ inline char* mystrncpy(char* dest, const char* source, int maxlength,
 		0	 - PROTAGONIST
 		1-9 - PLAYERx
 */
-inline Actor *GetActorFromSlot(int slot)
+static inline Actor *GetActorFromSlot(int slot)
 {
 	if (slot==-1) {
 		GameControl *gc = core->GetGameControl();

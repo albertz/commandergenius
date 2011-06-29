@@ -24,37 +24,32 @@
 #include "win32def.h"
 
 #include "Interface.h"
+#include "Sprite2D.h"
 #include "Video.h"
 
 TISImporter::TISImporter(void)
 {
 	str = NULL;
-	autoFree = false;
 }
 
 TISImporter::~TISImporter(void)
 {
-	if (str && autoFree) {
-		delete( str );
-	}
+	delete str;
 }
 
-bool TISImporter::Open(DataStream* stream, bool autoFree)
+bool TISImporter::Open(DataStream* stream)
 {
 	if (stream == NULL) {
 		return false;
 	}
-	if (str && this->autoFree) {
-		delete( str );
-	}
+	delete str;
 	str = stream;
-	this->autoFree = autoFree;
 	char Signature[8];
 	str->Read( Signature, 8 );
 	headerShift = 0;
 	if (Signature[0] == 'T' && Signature[1] == 'I' && Signature[2] == 'S') {
 		if (strncmp( Signature, "TIS V1  ", 8 ) != 0) {
-			printf( "[TISImporter]: Not a Valid TIS File.\n" );
+			print( "[TISImporter]: Not a Valid TIS File.\n" );
 			return false;
 		}
 		str->ReadDword( &TilesCount );
@@ -98,11 +93,11 @@ Sprite2D* TISImporter::GetTile(int index)
 		// try to only report error once per file
 		static TISImporter *last_corrupt = NULL;
 		if (last_corrupt != this) {
-			/*printf("Invalid tile index: %d\n",index);
-			printf("FileSize: %ld\n", str->Size() );
-			printf("Position: %ld\n", pos);
-			printf("Shift: %d\n", headerShift);*/
-			printf("Corrupt WED file encountered; couldn't find any more tiles at tile %d\n", index);
+			/*print("Invalid tile index: %d\n",index);
+			print("FileSize: %ld\n", str->Size() );
+			print("Position: %ld\n", pos);
+			print("Shift: %d\n", headerShift);*/
+			print("Corrupt WED file encountered; couldn't find any more tiles at tile %d\n", index);
 			last_corrupt = this;
 		}
 	

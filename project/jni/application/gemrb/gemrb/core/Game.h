@@ -34,13 +34,16 @@ class Game;
 #include "ie_types.h"
 
 #include "Callback.h"
-#include "Map.h"
+#include "Scriptable/Scriptable.h"
+#include "Scriptable/PCStatStruct.h"
 #include "Variables.h"
-#include "Scriptable/Actor.h"
 
 #include <vector>
 
+class Actor;
+class Map;
 class Particles;
+class TableMgr;
 
 //the size of the bestiary register
 #define BESTIARY_SIZE 260
@@ -420,8 +423,6 @@ public:
 	/** returns true if no one moves */
 	bool EveryoneStopped() const;
 	bool EveryoneNearPoint(Map *map, const Point &p, int flags) const;
-	/** returns true if a PC just died */
-	int PartyMemberDied() const;
 	/** a party member just died now */
 	void PartyMemberDied(Actor *);
 	/** Increments chapter variable and refreshes kill stats */
@@ -449,6 +450,8 @@ public:
 	void RestParty(int checks, int dream, int hp);
 	/** timestop effect initiated by actor */
 	void TimeStop(Actor *actor, ieDword end);
+	/** check if the passed actor is a victim of timestop */
+	bool TimeStoppedFor(const Actor* target=NULL);
 	/** updates the infravision info */
 	void Infravision();
 	/** gets the colour which should be applied over the game area,
@@ -468,6 +471,8 @@ public:
 	Actor *GetActorByGlobalID(ieDword objectID);
 	/** Allocates maze data */
 	ieByte *AllocateMazeData();
+	/** Checks if any timestop effects are active */
+	bool IsTimestopActive();
 private:
 	bool DetermineStartPosType(const TableMgr *strta);
 	ieResRef *GetDream(Map *area);

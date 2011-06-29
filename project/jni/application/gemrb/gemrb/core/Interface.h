@@ -26,19 +26,16 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-//skip messy warnings in MSVC6
-#include "win32def.h"
-
 #include "SClassID.h"
 #include "exports.h"
 
 #include "Cache.h"
 #include "Callback.h"
-#include "GlobalTimer.h"
 #include "Holder.h"
 
 #include <map>
 #include <string>
+#include <vector>
 
 #ifdef _MSC_VER // No SFINAE
 #include "Audio.h"
@@ -49,6 +46,7 @@
 #include "StringMgr.h"
 #include "SymbolMgr.h"
 #include "Video.h"
+#include "WindowMgr.h"
 #endif
 
 class Actor;
@@ -67,9 +65,11 @@ class Factory;
 class Font;
 class Game;
 class GameControl;
+class GlobalTimer;
 class ITMExtHeader;
 class Image;
 class Item;
+class KeyMap;
 class Label;
 class Map;
 class MusicMgr;
@@ -82,6 +82,7 @@ class SaveGameIterator;
 class ScriptEngine;
 class ScriptedAnimation;
 class Spell;
+class Sprite2D;
 class Store;
 class StringMgr;
 class SymbolMgr;
@@ -349,6 +350,7 @@ private:
 	EventHandler TickHook;
 	int SpecialSpellsCount;
 	SpellDescType *SpecialSpells;
+	KeyMap *keymap;
 public:
 	Holder<StringMgr> strings;
 	GlobalTimer * timer;
@@ -432,8 +434,6 @@ public:
 	int GetControl(unsigned short WindowIndex, unsigned long ControlID) const;
 	/** Adjust the scrolling of the control (if applicable) */
 	int AdjustScrolling(unsigned short WindowIndex, unsigned short ControlIndex, short x, short y);
-	/** Set the Text of a Control */
-	int SetText(unsigned short WindowIndex, unsigned short ControlIndex, const char * string);
 	/** Set the Tooltip text of a Control */
 	int SetTooltip(unsigned short WindowIndex, unsigned short ControlIndex, const char * string);
 	/** sets tooltip to be displayed */
@@ -524,6 +524,12 @@ public:
 		return calendar;
 	}
 
+	/** Gets the KeyMap class */
+	KeyMap * GetKeyMap() const
+	{
+		return keymap;
+	}
+
 	/** Gets the WorldMap class, returns the current worldmap or the first worldmap containing the area*/
 	WorldMap * GetWorldMap(const char *area = NULL);
 	void SetWindowFrame(int i, Sprite2D *Picture);
@@ -587,7 +593,7 @@ public:
 	int CloseCurrentContainer();
 	void SetCurrentContainer(Actor *actor, Container *arg, bool flag=false);
 	Store *GetCurrentStore();
-	int CloseCurrentStore();
+	void CloseCurrentStore();
 	Store *SetCurrentStore(const ieResRef resname, ieDword owner);
 	void SetMouseScrollSpeed(int speed);
 	int GetMouseScrollSpeed();
@@ -601,7 +607,6 @@ public:
 	void FreeITMExt(ITMExtHeader *p, Effect *e);
 	void FreeSPLExt(SPLExtHeader *p, Effect *e);
 	WorldMapArray *NewWorldMapArray(int count);
-	void DoTheStoreHack(Store *s);
 	/** plays stock gui sound referenced by index */
 	void PlaySound(int idx);
 	/** returns the first selected PC, if forced is set, then it returns
@@ -745,7 +750,7 @@ public:
 	unsigned int TooltipDelay;
 	int IgnoreOriginalINI;
 	unsigned int FogOfWar;
-	bool CaseSensitive, GameOnCD, SkipIntroVideos, DrawFPS;
+	bool CaseSensitive, GameOnCD, SkipIntroVideos, DrawFPS, TouchScrollAreas;
 	bool GUIEnhancements;
 	bool KeepCache;
 	Variables *plugin_flags;
@@ -754,7 +759,7 @@ public:
 	/** returns true if the game is paused */
 	bool IsFreezed();
 	/** Draws the Visible windows in the Windows Array */
-	void DrawWindows(void);
+	void DrawWindows(bool allow_delete = false);
 	/** Sends a termination signal to the Video Driver */
 	bool Quit(void);
 	/** CheatKey support */
@@ -794,7 +799,6 @@ public:
 
 #ifdef _DEBUG
 	int FileStreamPtrCount;
-	int CachedFileStreamPtrCount;
 #endif
 };
 

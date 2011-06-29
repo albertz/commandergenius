@@ -104,7 +104,7 @@ int MVEPlay::doPlay()
 	player.video_init(w, h);
 
 	if (!player.start_playback()) {
-		printf("Failed to decode movie!\n");
+		print("Failed to decode movie!\n");
 		return 1;
 	}
 
@@ -183,5 +183,5 @@ void MVEPlay::queueBuffer(int stream, unsigned short bits,
 #include "plugindef.h"
 
 GEMRB_PLUGIN(0x218963DC, "MVE Video Player")
-PLUGIN_IE_RESOURCE(MVEPlay, ".mve", (ieWord)IE_MVE_CLASS_ID)
+PLUGIN_IE_RESOURCE(MVEPlay, "mve", (ieWord)IE_MVE_CLASS_ID)
 END_PLUGIN()

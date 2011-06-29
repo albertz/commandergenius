@@ -29,18 +29,19 @@
 
 #include "globals.h"
 
-#include "Animation.h"
 #include "Plugin.h"
-#include "Polygon.h"
 #include "ScriptedAnimation.h"
-#include "GUI/EventMgr.h"
 
 class AnimationFactory;
+class EventMgr;
+class Font;
+class Gem_Polygon;
 class Palette;
 class SpriteCover;
+class Wall_Polygon;
 
 // Note: not all these flags make sense together. Specifically:
-// NOSHADOW overrides TRANSSHADOW
+// NOSHADOW overrides TRANSSHADOW, and BLIT_GREY overrides BLIT_RED
 enum SpriteBlitFlags {
 	BLIT_HALFTRANS = IE_VVC_TRANSPARENT, // 2
 	BLIT_BLENDED = IE_VVC_BLENDED, // 8; not implemented in SDLVideo yet
@@ -54,6 +55,13 @@ enum SpriteBlitFlags {
 	BLIT_DARK = IE_VVC_DARKEN, // 0x00100000; not implemented in SDLVideo yet
 	BLIT_GLOW = IE_VVC_GLOWING // 0x00200000; not implemented in SDLVideo yet
 	// Note: bits 29,30,31 are used by SDLVideo internally
+};
+
+// TILE_GREY overrides TILE_SEPIA
+enum TileBlitFlags {
+	TILE_HALFTRANS = 1,
+	TILE_GREY = 2,
+	TILE_SEPIA = 4
 };
 
 //disable mouse flags
@@ -79,9 +87,9 @@ public:
 	virtual int CreateDisplay(int width, int height, int bpp, bool fullscreen) = 0;
 	/** Sets window title of GemRB window */
 	virtual void SetDisplayTitle(char* title, char* icon) = 0;
-	/** Toggles GemRB between fullscreen and windowed mode.
-	  * 0 = windowed, 1 = fullscreen, -1 (default) = toggle */
-	virtual bool ToggleFullscreenMode(int set_reset=-1) = 0;
+	/** Toggles GemRB between fullscreen and windowed mode. */
+	bool ToggleFullscreenMode();
+	virtual bool SetFullscreenMode(bool set) = 0;
 	/** Swaps displayed and back buffers */
 	virtual int SwapBuffers(void) = 0;
 	/** Grabs and releases mouse cursor within GemRB window */
@@ -106,7 +114,7 @@ public:
 	virtual bool SupportsBAMSprites() { return false; }
 	virtual void FreeSprite(Sprite2D* &spr) = 0;
 	virtual Sprite2D* DuplicateSprite(const Sprite2D* spr) = 0;
-	virtual void BlitTile(const Sprite2D* spr, const Sprite2D* mask, int x, int y, const Region* clip, bool trans) = 0;
+	virtual void BlitTile(const Sprite2D* spr, const Sprite2D* mask, int x, int y, const Region* clip, unsigned int flags) = 0;
 	virtual void BlitSprite(const Sprite2D* spr, int x, int y, bool anchor = false,
 		const Region* clip = NULL) = 0;
 

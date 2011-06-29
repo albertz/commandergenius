@@ -25,6 +25,7 @@
 #include "Game.h"
 #include "Interface.h"
 #include "Map.h"
+#include "Sprite2D.h"
 #include "Video.h"
 
 Animation::Animation(int count)
@@ -71,8 +72,7 @@ void Animation::SetPos(unsigned int index)
 void Animation::AddFrame(Sprite2D* frame, unsigned int index)
 {
 	if (index>=indicesCount) {
-		printf("You tried to write past a buffer in animation, BAD!\n");
-		abort();
+		error("Animation", "You tried to write past a buffer in animation, BAD!\n");
 	}
 	core->GetVideoDriver()->FreeSprite(frames[index]);
 	frames[index]=frame;
@@ -107,13 +107,13 @@ unsigned int Animation::GetCurrentFrame() const
 Sprite2D* Animation::LastFrame(void)
 {
 	if (!Flags&A_ANI_ACTIVE) {
-		printf("Frame fetched while animation is inactive!\n");
+		print("Frame fetched while animation is inactive!\n");
 		return NULL;
 	}
 	if (gameAnimation) {
 		starttime = core->GetGame()->Ticks;
 	} else {
-		GetTime( starttime );
+		starttime = GetTickCount();
 	}
 	Sprite2D* ret;
 	if (playReversed)
@@ -126,14 +126,14 @@ Sprite2D* Animation::LastFrame(void)
 Sprite2D* Animation::NextFrame(void)
 {
 	if (!Flags&A_ANI_ACTIVE) {
-		printf("Frame fetched while animation is inactive!\n");
+		print("Frame fetched while animation is inactive!\n");
 		return NULL;
 	}
 	if (starttime == 0) {
 		if (gameAnimation) {
 			starttime = core->GetGame()->Ticks;
 		} else {
-			GetTime( starttime );
+			starttime = GetTickCount();
 		}
 	}
 	Sprite2D* ret;
@@ -149,7 +149,7 @@ Sprite2D* Animation::NextFrame(void)
 	if (gameAnimation) {
 		time = core->GetGame()->Ticks;
 	} else {
-		GetTime(time);
+		time = GetTickCount();
 	}
 
 	//it could be that we skip more than one frame in case of slow rendering
@@ -180,7 +180,7 @@ Sprite2D* Animation::NextFrame(void)
 Sprite2D* Animation::GetSyncedNextFrame(Animation* master)
 {
 	if (!Flags&A_ANI_ACTIVE) {
-		printf("Frame fetched while animation is inactive!\n");
+		print("Frame fetched while animation is inactive!\n");
 		return NULL;
 	}
 	Sprite2D* ret;

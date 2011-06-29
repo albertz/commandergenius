@@ -28,8 +28,8 @@
 bool checkALError(const char* msg, const char* status) {
 	int error = alGetError();
 	if (error != AL_NO_ERROR) {
-		printMessage("OpenAL", msg, WHITE );
-		printf (": 0x%x ", error);
+		printMessage("OpenAL", "%s", WHITE, msg);
+		print (": 0x%x ", error);
 		printStatus(status, YELLOW);
 		return true;
 	}
@@ -38,9 +38,9 @@ bool checkALError(const char* msg, const char* status) {
 
 void showALCError(const char* msg, const char* status, ALCdevice *device) {
 	int error = alcGetError(device);
-	printMessage("OpenAL", msg, WHITE );
+	printMessage("OpenAL", "%s", WHITE, msg );
 	if (error != AL_NO_ERROR) {
-		printf (": 0x%x ", error);
+		print (": 0x%x ", error);
 	}
 	printStatus(status, YELLOW);
 }
@@ -171,11 +171,8 @@ bool OpenALAudioDriver::Init(void)
 	int sources = CountAvailableSources(MAX_STREAMS+1);
 	num_streams = sources - 1;
 
-	char buf[255];
-	sprintf(buf, "Allocated %d streams.%s", num_streams,
-		    (num_streams < MAX_STREAMS ? " (Fewer than desired.)" : "" ) );
-
-	printMessage( "OpenAL", buf, WHITE );
+	printMessage( "OpenAL", "Allocated %d streams.%s", WHITE,
+		num_streams, (num_streams < MAX_STREAMS ? " (Fewer than desired.)" : "" ));
 
 	stayAlive = true;
 	musicThread = SDL_CreateThread( MusicManager, this );
@@ -298,7 +295,7 @@ ALuint OpenALAudioDriver::loadSound(const char *ResRef, unsigned int &time_lengt
 	e->Length = ((cnt / riff_chans) * 1000) / samplerate;
 
 	buffercache.SetAt(ResRef, (void*)e);
-	//printf("LoadSound: added %s to cache: %d. Cache size now %d\n", ResRef, e->Buffer, buffercache.GetCount());
+	//print("LoadSound: added %s to cache: %d. Cache size now %d\n", ResRef, e->Buffer, buffercache.GetCount());
 
 	if (buffercache.GetCount() > BUFFER_CACHE_SIZE) {
 		evictBuffer();
@@ -361,7 +358,7 @@ Holder<SoundHandle> OpenALAudioDriver::Play(const char* ResRef, int XPos, int YP
 		alSourcef( speech.Source, AL_REFERENCE_DISTANCE, REFERENCE_DISTANCE );
 		checkALError("Unable to set speech parameters", "WARNING");
 		speech.free = false;
-		printf("speech.free: %d source:%d\n", speech.free,speech.Source);
+		print("speech.free: %d source:%d\n", speech.free,speech.Source);
 
 		core->GetDictionary()->Lookup( "Volume Voices", volume );
 		alSourcef( speech.Source, AL_GAIN, 0.01f * volume );
@@ -508,7 +505,6 @@ bool OpenALAudioDriver::Stop()
 
 bool OpenALAudioDriver::Pause()
 {
-	ambim->deactivate();
 	SDL_mutexP( musicMutex );
 	if (!alIsSource( MusicSource )) {
 		SDL_mutexV( musicMutex );
@@ -518,6 +514,7 @@ bool OpenALAudioDriver::Pause()
 	checkALError("Unable to pause music source", "WARNING");
 	MusicPlaying = false;
 	SDL_mutexV( musicMutex );
+	((AmbientMgrAL*) ambim)->deactivate();
 #ifdef ANDROID
 	al_android_pause_playback(); //call AudioTrack.pause() from JNI
 #endif
@@ -529,7 +526,6 @@ bool OpenALAudioDriver::Resume()
 #ifdef ANDROID
 	al_android_resume_playback(); //call AudioTrack.play() from JNI
 #endif
-	ambim->activate();
 	SDL_mutexP( musicMutex );
 	if (!alIsSource( MusicSource )) {
 		SDL_mutexV( musicMutex );
@@ -539,6 +535,7 @@ bool OpenALAudioDriver::Resume()
 	checkALError("Unable to resume music source", "WARNING");
 	MusicPlaying = true;
 	SDL_mutexV( musicMutex );
+	((AmbientMgrAL*) ambim)->activate();
 	return true;
 }
 
@@ -729,7 +726,7 @@ bool OpenALAudioDriver::evictBuffer()
 			delete e;
 			buffercache.Remove(k);
 
-			//printf("Removed buffer %s from ACMImp cache\n", k);
+			//print("Removed buffer %s from ACMImp cache\n", k);
 			break;
 		}
 		++n;

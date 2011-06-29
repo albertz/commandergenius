@@ -29,9 +29,11 @@
 #include "EffectQueue.h"
 #include "Game.h"
 #include "GameData.h"
+#include "GlobalTimer.h"
 #include "Interface.h"
 #include "PolymorphCache.h" // fx_polymorph
 #include "Projectile.h" //needs for clearair
+#include "ScriptedAnimation.h"
 #include "Spell.h" //needed for fx_cast_spell feedback
 #include "TileMap.h" //needs for knock!
 #include "damages.h"
@@ -65,6 +67,7 @@
 #define PI_BOUNCE   65
 #define PI_BOUNCE2  67
 
+#define PI_CONTINGENCY 75
 #define PI_BLOODRAGE 76 //iwd2
 #define PI_MAZE     78
 #define PI_PRISON   79
@@ -435,7 +438,7 @@ static EffectDesc effectnames[] = {
 	{ "AlwaysBackstab", fx_always_backstab_modifier, 0, -1 },
 	{ "AnimationIDModifier", fx_animation_id_modifier, 0, -1 },
 	{ "AnimationStateChange", fx_animation_stance, 0, -1 },
-	{ "ApplyEffect", fx_apply_effect, 0, -1 },
+	{ "ApplyEffect", fx_apply_effect, EFFECT_NO_ACTOR, -1 },
 	{ "ApplyEffectCurse", fx_apply_effect_curse, 0, -1 },
 	{ "ApplyEffectItem", fx_apply_effect_item, 0, -1 },
 	{ "ApplyEffectItemType", fx_apply_effect_item_type, 0, -1 },
@@ -884,7 +887,7 @@ inline void HandlePercentageDamage(Effect *fx, Actor *target) {
 // 0x00 ACVsDamageTypeModifier
 int fx_ac_vs_damage_type_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_ac_vs_damage_type_modifier (%2d): AC Modif: %d ; Type: %d ; MinLevel: %d ; MaxLevel: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2, (int) fx->DiceSides, (int) fx->DiceThrown );
+	if (0) print( "fx_ac_vs_damage_type_modifier (%2d): AC Modif: %d ; Type: %d ; MinLevel: %d ; MaxLevel: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2, (int) fx->DiceSides, (int) fx->DiceThrown );
 	//check level was pulled outside as a common functionality
 	//CHECK_LEVEL();
 
@@ -930,7 +933,7 @@ int fx_ac_vs_damage_type_modifier (Scriptable* /*Owner*/, Actor* target, Effect*
 // 0x01 AttacksPerRoundModifier
 int fx_attacks_per_round_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_attacks_per_round_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_attacks_per_round_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	int tmp = (signed) fx->Parameter1;
 	if (fx->Parameter2!=2) {
 		if (tmp>10) tmp=10;
@@ -957,7 +960,7 @@ static EffectRef fx_display_portrait_icon_ref = { "Icon:Display", -1 };
 
 int fx_cure_sleep_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_sleep_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_sleep_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_SLEEP );
 	target->fxqueue.RemoveAllEffects(fx_set_sleep_state_ref);
 	target->fxqueue.RemoveAllEffectsWithParam(fx_display_portrait_icon_ref, PI_SLEEP);
@@ -968,7 +971,7 @@ int fx_cure_sleep_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // this effect sets the STATE_BERSERK bit, but bg2 actually ignores the bit
 int fx_set_berserk_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_berserk_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_berserk_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	// atleast how and bg2 allow this to only work on pcs
 	if (!core->HasFeature(GF_3ED_RULES) && !target->InParty) {
 		return FX_NOT_APPLIED;
@@ -1018,7 +1021,7 @@ static EffectRef fx_set_berserk_state_ref = { "State:Berserk", -1 };
 
 int fx_cure_berserk_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_berserk_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_berserk_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_BERSERK );
 	target->fxqueue.RemoveAllEffects(fx_set_berserk_state_ref);
 	return FX_NOT_APPLIED;
@@ -1028,7 +1031,7 @@ int fx_cure_berserk_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xf1 ControlCreature (iwd2)
 int fx_set_charmed_state (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_charmed_state (%2d): General: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_charmed_state (%2d): General: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//blood rage berserking gives immunity to charm (in iwd2)
 	if (target->HasSpellState(SS_BLOODRAGE)) {
@@ -1127,7 +1130,7 @@ int fx_set_charmed_state (Scriptable* Owner, Actor* target, Effect* fx)
 // 0x06 CharismaModifier
 int fx_charisma_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_charisma_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_charisma_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (fx->TimingMode==FX_DURATION_INSTANT_PERMANENT) {
 		BASE_MOD( IE_CHR );
@@ -1141,7 +1144,7 @@ int fx_charisma_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // this effect might not work in pst, they don't have separate weapon slots
 int fx_set_color_gradient (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_color_gradient (%2d): Gradient: %d, Location: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_color_gradient (%2d): Gradient: %d, Location: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	EffectQueue::HackColorEffects(target, fx);
 	target->SetColor( fx->Parameter2, fx->Parameter1 );
 	return FX_APPLIED;
@@ -1150,7 +1153,7 @@ int fx_set_color_gradient (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 08 Color:SetRGB
 int fx_set_color_rgb (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_color_rgb (%2d): RGB: %x, Location: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_color_rgb (%2d): RGB: %x, Location: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	EffectQueue::HackColorEffects(target, fx);
 	ieDword location = fx->Parameter2 & 0xff;
 	target->SetColorMod(location, RGBModifier::ADD, -1, fx->Parameter1 >> 8,
@@ -1161,7 +1164,7 @@ int fx_set_color_rgb (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 08 Color:SetRGBGlobal
 int fx_set_color_rgb_global (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_color_rgb_global (%2d): RGB: %x, Location: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_color_rgb_global (%2d): RGB: %x, Location: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	target->SetColorMod(0xff, RGBModifier::ADD, -1, fx->Parameter1 >> 8,
 			fx->Parameter1 >> 16, fx->Parameter1 >> 24);
@@ -1172,7 +1175,7 @@ int fx_set_color_rgb_global (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 09 Color:PulseRGB
 int fx_set_color_pulse_rgb (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_color_pulse_rgb (%2d): RGB: %x, Location: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_color_pulse_rgb (%2d): RGB: %x, Location: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	EffectQueue::HackColorEffects(target, fx);
 	ieDword location = fx->Parameter2 & 0xff;
 	int speed = (fx->Parameter2 >> 16) & 0xFF;
@@ -1186,7 +1189,7 @@ int fx_set_color_pulse_rgb (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 09 Color:PulseRGBGlobal (pst variant)
 int fx_set_color_pulse_rgb_global (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_color_pulse_rgb_global (%2d): RGB: %x, Location: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_color_pulse_rgb_global (%2d): RGB: %x, Location: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	int speed = (fx->Parameter2 >> 16) & 0xFF;
 	target->SetColorMod(0xff, RGBModifier::ADD, speed,
@@ -1199,7 +1202,7 @@ int fx_set_color_pulse_rgb_global (Scriptable* /*Owner*/, Actor* target, Effect*
 // 0x0A ConstitutionModifier
 int fx_constitution_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_constitution_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_constitution_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (fx->TimingMode==FX_DURATION_INSTANT_PERMANENT) {
 		BASE_MOD( IE_CON );
@@ -1214,7 +1217,7 @@ static EffectRef fx_poisoned_state_ref = { "State:Poisoned", -1 };
 
 int fx_cure_poisoned_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_poisoned_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_poisoned_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//all three steps are present in bg2 and iwd2
 	BASE_STATE_CURE( STATE_POISONED );
 	target->fxqueue.RemoveAllEffects( fx_poisoned_state_ref );
@@ -1226,7 +1229,7 @@ int fx_cure_poisoned_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // this is a very important effect
 int fx_damage (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_damage (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_damage (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//save for half damage type
 	ieDword damagetype = fx->Parameter2>>16;
 	ieDword modtype = fx->Parameter2&3;
@@ -1243,7 +1246,7 @@ int fx_damage (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x0d Death
 int fx_death (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_death (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_death (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	ieDword damagetype = 0;
 	switch (fx->Parameter2) {
 	case 1:
@@ -1296,7 +1299,7 @@ int fx_death (Scriptable* Owner, Actor* target, Effect* fx)
 // 0xE Cure:Defrost
 int fx_cure_frozen_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_frozen_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_frozen_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_FROZEN );
 	return FX_NOT_APPLIED;
 }
@@ -1335,7 +1338,7 @@ int SpellAbilityDieRoll(Actor *target, int which)
 
 int fx_dexterity_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_dexterity_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_dexterity_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	////how cat's grace: value is based on class
 	if (fx->Parameter2==3) {
@@ -1356,7 +1359,7 @@ static EffectRef fx_set_slow_state_ref = { "State:Slowed", -1 };
 // this function removes slowed state, or sets hasted state
 int fx_set_hasted_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_hasted_state (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_set_hasted_state (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	target->fxqueue.RemoveAllEffects(fx_set_slow_state_ref);
 	target->fxqueue.RemoveAllEffectsWithParam( fx_display_portrait_icon_ref, PI_SLOWED );
 	if (fx->TimingMode==FX_DURATION_INSTANT_PERMANENT) {
@@ -1397,7 +1400,7 @@ int fx_set_hasted_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x11 CurrentHPModifier
 int fx_current_hp_modifier (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_current_hp_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_current_hp_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (fx->Parameter2&0x10000) {
 		Point p(fx->PosX, fx->PosY);
@@ -1429,7 +1432,7 @@ int fx_current_hp_modifier (Scriptable* Owner, Actor* target, Effect* fx)
 // 1,4 and 2,5 are analogous to them, but with different modifiers
 int fx_maximum_hp_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_maximum_hp_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_maximum_hp_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//state_exploding is different in PST, probably not needed anyway
 	if (STATE_GET(STATE_DEAD|STATE_PETRIFIED|STATE_FROZEN|STATE_ACID|STATE_FLAME) ) {
@@ -1496,7 +1499,7 @@ int fx_maximum_hp_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x13 IntelligenceModifier
 int fx_intelligence_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_intelligence_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_intelligence_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (fx->TimingMode==FX_DURATION_INSTANT_PERMANENT) {
 		BASE_MOD( IE_INT );
@@ -1549,7 +1552,7 @@ int fx_set_invisible_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x15 LoreModifier
 int fx_lore_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_lore_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_lore_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_LORE );
 	return FX_APPLIED;
@@ -1558,7 +1561,7 @@ int fx_lore_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x16 LuckModifier
 int fx_luck_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_luck_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_luck_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_LUCK );
 	STAT_MOD( IE_DAMAGELUCK );
@@ -1568,7 +1571,7 @@ int fx_luck_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x17 MoraleModifier
 int fx_morale_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_morale_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_morale_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//FIXME: in bg2 this is hacked to set param1=10, param2=1, we might need some flag for this
 	STAT_MOD( IE_MORALE );
@@ -1578,7 +1581,7 @@ int fx_morale_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x18 State:Panic
 int fx_set_panic_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_panic_state (%2d)\n", fx->Opcode );
+	if (0) print( "fx_set_panic_state (%2d)\n", fx->Opcode );
 
 	if (target->HasSpellState(SS_BLOODRAGE)) {
 		return FX_NOT_APPLIED;
@@ -1598,7 +1601,13 @@ int fx_set_panic_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x19 State:Poisoned
 int fx_set_poisoned_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_poisoned_state (%2d): Damage: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_poisoned_state (%2d): Damage: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	
+	int count = target->fxqueue.CountEffects(fx_poisoned_state_ref, fx->Parameter1, fx->Parameter2, fx->Resource);
+	if (count > 1) {
+		return FX_APPLIED;
+	}
+
 	STATE_SET( STATE_POISONED );
 
 	ieDword damage;
@@ -1649,7 +1658,7 @@ static EffectRef fx_pst_jumble_curse_ref = { "JumbleCurse", -1 };
 // gemrb extension: if the resource field is filled, it will remove curse only from the specified item
 int fx_remove_curse (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_remove_curse (%2d): Resource: %s Type: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
+	if (0) print( "fx_remove_curse (%2d): Resource: %s Type: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
 
 	switch(fx->Parameter2)
 	{
@@ -1691,7 +1700,7 @@ int fx_remove_curse (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x1b AcidResistanceModifier
 int fx_acid_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_acid_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_acid_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTACID );
 	return FX_APPLIED;
@@ -1700,7 +1709,7 @@ int fx_acid_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 // 0x1c ColdResistanceModifier
 int fx_cold_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cold_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cold_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTCOLD );
 	return FX_APPLIED;
@@ -1709,7 +1718,7 @@ int fx_cold_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 // 0x1d ElectricityResistanceModifier
 int fx_electricity_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_electricity_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_electricity_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTELECTRICITY );
 	return FX_APPLIED;
@@ -1718,7 +1727,7 @@ int fx_electricity_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Ef
 // 0x1e FireResistanceModifier
 int fx_fire_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_fire_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_fire_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTFIRE );
 	return FX_APPLIED;
@@ -1727,7 +1736,7 @@ int fx_fire_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 // 0x1f MagicDamageResistanceModifier
 int fx_magic_damage_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_magic_damage_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_magic_damage_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_MAGICDAMAGERESISTANCE );
 	return FX_APPLIED;
@@ -1736,7 +1745,7 @@ int fx_magic_damage_resistance_modifier (Scriptable* /*Owner*/, Actor* target, E
 // 0x20 Cure:Death
 int fx_cure_dead_state (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_dead_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_dead_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//call this only if the target is dead, otherwise some variables can get wrong
 	if (STATE_GET(STATE_DEAD) ) {
 		Point p(fx->PosX, fx->PosY);
@@ -1748,7 +1757,7 @@ int fx_cure_dead_state (Scriptable* Owner, Actor* target, Effect* fx)
 // 0x21 SaveVsDeathModifier
 int fx_save_vs_death_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_save_vs_death_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_save_vs_death_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	HandleBonus( target, IE_SAVEVSDEATH, fx->Parameter1, fx->TimingMode );
 	return FX_APPLIED;
@@ -1757,7 +1766,7 @@ int fx_save_vs_death_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x22 SaveVsWandsModifier
 int fx_save_vs_wands_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_save_vs_wands_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_save_vs_wands_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	HandleBonus( target, IE_SAVEVSWANDS, fx->Parameter1, fx->TimingMode );
 	return FX_APPLIED;
@@ -1766,7 +1775,7 @@ int fx_save_vs_wands_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x23 SaveVsPolyModifier
 int fx_save_vs_poly_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_save_vs_poly_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_save_vs_poly_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	HandleBonus( target, IE_SAVEVSPOLY, fx->Parameter1, fx->TimingMode );
 	return FX_APPLIED;
@@ -1775,7 +1784,7 @@ int fx_save_vs_poly_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x24 SaveVsBreathModifier
 int fx_save_vs_breath_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_save_vs_breath_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_save_vs_breath_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	HandleBonus( target, IE_SAVEVSBREATH, fx->Parameter1, fx->TimingMode );
 	return FX_APPLIED;
@@ -1784,7 +1793,7 @@ int fx_save_vs_breath_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx
 // 0x25 SaveVsSpellsModifier
 int fx_save_vs_spell_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_save_vs_spell_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_save_vs_spell_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	HandleBonus( target, IE_SAVEVSSPELL, fx->Parameter1, fx->TimingMode );
 	return FX_APPLIED;
@@ -1793,7 +1802,7 @@ int fx_save_vs_spell_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x26 State:Silenced
 int fx_set_silenced_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_silenced_state (%2d)\n", fx->Opcode );
+	if (0) print( "fx_set_silenced_state (%2d)\n", fx->Opcode );
 	STATE_SET( STATE_SILENCED );
 	return FX_APPLIED;
 }
@@ -1805,7 +1814,7 @@ static EffectRef fx_animation_stance_ref = { "AnimationStateChange", -1 };
 // FIXME: this is probably a persistent effect
 int fx_set_unconscious_state (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_unconscious_state (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_set_unconscious_state (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 
 	if (target->HasSpellState(SS_BLOODRAGE)) {
 		return FX_NOT_APPLIED;
@@ -1838,7 +1847,7 @@ static EffectRef fx_set_haste_state_ref = { "State:Hasted", -1 };
 
 int fx_set_slowed_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_slowed_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_slowed_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//iwd2 free action or aegis disables this effect
 	if (target->HasSpellState(SS_FREEACTION)) return FX_NOT_APPLIED;
@@ -1861,7 +1870,7 @@ int fx_set_slowed_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x29 Sparkle
 int fx_sparkle (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_sparkle (%2d): Sparkle colour: %d ; Sparkle type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_sparkle (%2d): Sparkle colour: %d ; Sparkle type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (!target) {
 		return FX_NOT_APPLIED;
 	}
@@ -1879,7 +1888,7 @@ int fx_sparkle (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x2A WizardSpellSlotsModifier
 int fx_bonus_wizard_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bonus_wizard_spells (%2d): Spell Add: %d ; Spell Level: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_bonus_wizard_spells (%2d): Spell Add: %d ; Spell Level: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	int i=1;
 	//if param2 is 0, then double spells up to param1
@@ -1910,7 +1919,7 @@ int fx_bonus_wizard_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x2B Cure:Petrification
 int fx_cure_petrified_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_petrified_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_petrified_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_PETRIFIED );
 	return FX_NOT_APPLIED;
 }
@@ -1918,7 +1927,7 @@ int fx_cure_petrified_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x2C StrengthModifier
 int fx_strength_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_strength_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_strength_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	////how strength: value is based on class
 	////pst power of one also depends on this!
@@ -1955,7 +1964,7 @@ int power_word_stun_iwd2(Actor *target, Effect *fx)
 
 int fx_set_stun_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_stun_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_stun_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//actually the original engine just skips this effect if the target is dead
 	if ( STATE_GET(STATE_DEAD) ) {
@@ -1987,7 +1996,7 @@ static EffectRef fx_hold_creature_no_icon_ref = { "State:HoldNoIcon", -1 };
 
 int fx_cure_stun_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_stun_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_stun_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_STUNNED );
 	target->fxqueue.RemoveAllEffects(fx_set_stun_state_ref);
 	target->fxqueue.RemoveAllEffects(fx_hold_creature_no_icon_ref);
@@ -2002,7 +2011,7 @@ static EffectRef fx_set_invisible_state_ref = { "State:Invisible", -1 };
 
 int fx_cure_invisible_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_invisible_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_invisible_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (!STATE_GET(STATE_NONDET)) {
 		if (pstflags) {
 			BASE_STATE_CURE( STATE_PST_INVIS );
@@ -2019,7 +2028,7 @@ static EffectRef fx_set_silenced_state_ref = { "State:Silenced", -1 };
 
 int fx_cure_silenced_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_silenced_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_silenced_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_SILENCED );
 	target->fxqueue.RemoveAllEffects(fx_set_silenced_state_ref);
 	return FX_NOT_APPLIED;
@@ -2028,7 +2037,7 @@ int fx_cure_silenced_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x31 WisdomModifier
 int fx_wisdom_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_wisdom_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_wisdom_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (fx->TimingMode==FX_DURATION_INSTANT_PERMANENT) {
 		BASE_MOD( IE_WIS );
@@ -2041,7 +2050,7 @@ int fx_wisdom_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x32 Color:BriefRGB
 int fx_brief_rgb (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_brief_rgb (%2d): RGB: %d, Location and speed: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_brief_rgb (%2d): RGB: %d, Location and speed: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	int speed = (fx->Parameter2 >> 16) & 0xff;
 	target->SetColorMod(0xff, RGBModifier::ADD, speed,
@@ -2054,7 +2063,7 @@ int fx_brief_rgb (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x33 Color:DarkenRGB
 int fx_darken_rgb (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_darken_rgb (%2d): RGB: %d, Location and speed: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_darken_rgb (%2d): RGB: %d, Location and speed: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	EffectQueue::HackColorEffects(target, fx);
 	ieDword location = fx->Parameter2 & 0xff;
 	target->SetColorMod(location, RGBModifier::TINT, -1, fx->Parameter1 >> 8,
@@ -2065,7 +2074,7 @@ int fx_darken_rgb (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x34 Color:GlowRGB
 int fx_glow_rgb (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_glow_rgb (%2d): RGB: %d, Location and speed: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_glow_rgb (%2d): RGB: %d, Location and speed: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	EffectQueue::HackColorEffects(target, fx);
 	ieDword location = fx->Parameter2 & 0xff;
 	target->SetColorMod(location, RGBModifier::BRIGHTEN, -1,
@@ -2080,7 +2089,7 @@ static EffectRef fx_animation_id_modifier_ref = { "AnimationIDModifier", -1 };
 
 int fx_animation_id_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_animation_id_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_animation_id_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	switch (fx->Parameter2) {
 	case 0: //non permanent animation change
@@ -2100,7 +2109,7 @@ int fx_animation_id_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x36 ToHitModifier
 int fx_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	HandleBonus( target, IE_TOHIT, fx->Parameter1, fx->TimingMode );
 	return FX_APPLIED;
@@ -2111,7 +2120,7 @@ static EffectRef fx_death_ref = { "Death", -1 };
 
 int fx_kill_creature_type (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_kill_creature_type (%2d): Value: %d, IDS: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_kill_creature_type (%2d): Value: %d, IDS: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (EffectQueue::match_ids( target, fx->Parameter2, fx->Parameter1) ) {
 		//convert it to a death opcode or apply the new effect?
 		fx->Opcode = EffectQueue::ResolveEffect(fx_death_ref);
@@ -2137,7 +2146,7 @@ static int al_switch_law[16]={0,0x31,0x32,0x33,0,0x21,0x22,0x23,0,0x11,0x12,0x13
 static int al_switch_good[16]={0,0x13,0x12,0x11,0,0x23,0x22,0x21,0,0x33,0x32,0x31};
 int fx_alignment_invert (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_alignment_invert (%2d)\n", fx->Opcode );
+	if (0) print( "fx_alignment_invert (%2d)\n", fx->Opcode );
 	register ieDword newalign = target->GetStat( IE_ALIGNMENT );
 	//compress the values. GNE is the first 2 bits originally
 	//LNC is the 4/5. bits.
@@ -2160,7 +2169,7 @@ int fx_alignment_invert (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x39 Alignment:Change
 int fx_alignment_change (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_alignment_change (%2d): Value: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_alignment_change (%2d): Value: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_SET( IE_ALIGNMENT, fx->Parameter2 );
 	return FX_APPLIED;
 }
@@ -2168,7 +2177,7 @@ int fx_alignment_change (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x3a DispelEffects
 int fx_dispel_effects (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_dispel_effects (%2d): Value: %d, IDS: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_dispel_effects (%2d): Value: %d, IDS: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	ieResRef Removed;
 	ieDword level;
 
@@ -2196,7 +2205,7 @@ int fx_dispel_effects (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x3B StealthModifier
 int fx_stealth_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_stealth_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_stealth_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_STEALTH );
 	return FX_APPLIED;
@@ -2205,7 +2214,7 @@ int fx_stealth_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x3C MiscastMagicModifier
 int fx_miscast_magic_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_miscast_magic_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_miscast_magic_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	switch (fx->Parameter2) {
 	case 3:
@@ -2234,7 +2243,7 @@ int fx_miscast_magic_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // and in iwd it doesn't really follow the stat_mod convention (quite lame)
 int fx_alchemy_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_alchemy_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_alchemy_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	switch(fx->Parameter2) {
 	case 0:
@@ -2253,7 +2262,7 @@ int fx_alchemy_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x3E PriestSpellSlotsModifier
 int fx_bonus_priest_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bonus_priest_spells (%2d): Spell Add: %d ; Spell Level: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_bonus_priest_spells (%2d): Spell Add: %d ; Spell Level: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	int i=1;
 	//if param2 is 0, then double spells up to param1
@@ -2284,7 +2293,7 @@ int fx_bonus_priest_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x3F State:Infravision
 int fx_set_infravision_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_infravision_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_infravision_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STATE_SET( STATE_INFRA );
 	return FX_APPLIED;
 }
@@ -2294,7 +2303,7 @@ static EffectRef fx_set_infravision_state_ref = { "State:Infravision", -1 };
 
 int fx_cure_infravision_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_infravision_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_infravision_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_INFRA );
 	target->fxqueue.RemoveAllEffects(fx_set_infravision_state_ref);
 	return FX_NOT_APPLIED;
@@ -2303,7 +2312,7 @@ int fx_cure_infravision_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x41 State:Blur
 int fx_set_blur_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_blur_state (%2d)\n", fx->Opcode );
+	if (0) print( "fx_set_blur_state (%2d)\n", fx->Opcode );
 	//death stops this effect
 	if (STATE_GET( STATE_DEAD) ) {
 		return FX_NOT_APPLIED;
@@ -2323,7 +2332,7 @@ int fx_set_blur_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x42 TransparencyModifier
 int fx_transparency_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_transparency_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_transparency_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//maybe this needs some timing
 	switch (fx->Parameter2) {
@@ -2352,7 +2361,7 @@ static int eamods[]={EAM_ALLY,EAM_ALLY,EAM_DEFAULT,EAM_ALLY,EAM_DEFAULT,EAM_ENEM
 
 int fx_summon_creature (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_summon_creature (%2d): ResRef:%s Anim:%s Type: %d\n", fx->Opcode, fx->Resource, fx->Resource2, fx->Parameter2 );
+	if (0) print( "fx_summon_creature (%2d): ResRef:%s Anim:%s Type: %d\n", fx->Opcode, fx->Resource, fx->Resource2, fx->Parameter2 );
 
 	//summon creature (resource), play vvc (resource2)
 	//creature's lastsummoner is Owner
@@ -2375,7 +2384,7 @@ int fx_summon_creature (Scriptable* Owner, Actor* target, Effect* fx)
 // 0x44 UnsummonCreature
 int fx_unsummon_creature (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_unsummon_creature (%2d)\n", fx->Opcode );
+	if (0) print( "fx_unsummon_creature (%2d)\n", fx->Opcode );
 
 	//to be compatible with the original engine, unsummon doesn't work with PC's
 	//but it works on anything else
@@ -2396,7 +2405,7 @@ int fx_unsummon_creature (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x45 State:Nondetection
 int fx_set_nondetection_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_nondetection_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_nondetection_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STATE_SET( STATE_NONDET );
 	return FX_APPLIED;
 }
@@ -2406,7 +2415,7 @@ static EffectRef fx_set_nondetection_state_ref = { "State:Nondetection", -1 };
 
 int fx_cure_nondetection_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_nondetection_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_nondetection_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_NONDET );
 	target->fxqueue.RemoveAllEffects(fx_set_nondetection_state_ref);
 	return FX_NOT_APPLIED;
@@ -2415,7 +2424,7 @@ int fx_cure_nondetection_state (Scriptable* /*Owner*/, Actor* target, Effect* fx
 // 0x47 SexModifier
 int fx_sex_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_sex_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_sex_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	ieDword value;
 	if (fx->Parameter2) {
 		value = fx->Parameter1;
@@ -2438,7 +2447,7 @@ int fx_sex_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x48 AIIdentifierModifier
 int fx_ids_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_ids_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_ids_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	switch (fx->Parameter2) {
 	case 0:
 		STAT_SET(IE_EA, fx->Parameter1);
@@ -2471,7 +2480,7 @@ int fx_ids_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x49 DamageBonusModifier
 int fx_damage_bonus_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_damage_bonus_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_damage_bonus_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_DAMAGEBONUS );
 	return FX_APPLIED;
@@ -2480,7 +2489,7 @@ int fx_damage_bonus_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x4a State:Blind
 int fx_set_blind_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_blind_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_blind_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//pst power word blind projectile support
 	if (fx->Parameter2==1) {
@@ -2513,7 +2522,7 @@ static EffectRef fx_set_blind_state_ref = { "State:Blind", -1 };
 
 int fx_cure_blind_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_blind_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_blind_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_BLIND );
 	target->fxqueue.RemoveAllEffects(fx_set_blind_state_ref);
 	return FX_NOT_APPLIED;
@@ -2522,7 +2531,7 @@ int fx_cure_blind_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x4c State:Feeblemind
 int fx_set_feebleminded_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_feebleminded_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_feebleminded_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STATE_SET( STATE_FEEBLE );
 	STAT_SET( IE_INT, 3);
 	if (enhanced_effects) {
@@ -2536,7 +2545,7 @@ static EffectRef fx_set_feebleminded_state_ref = { "State:Feeblemind", -1 };
 
 int fx_cure_feebleminded_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_feebleminded_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_feebleminded_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_FEEBLE );
 	target->fxqueue.RemoveAllEffects(fx_set_feebleminded_state_ref);
 	target->fxqueue.RemoveAllEffectsWithParam(fx_display_portrait_icon_ref, PI_FEEBLEMIND);
@@ -2544,11 +2553,17 @@ int fx_cure_feebleminded_state (Scriptable* /*Owner*/, Actor* target, Effect* fx
 }
 
 // 0x4e State:Diseased
+static EffectRef fx_diseased_state_ref = { "State:Diseased", -1 };
 int fx_set_diseased_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_diseased_state (%2d): Damage: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_diseased_state (%2d): Damage: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (STATE_GET(STATE_DEAD|STATE_PETRIFIED|STATE_FROZEN) ) {
 		return FX_NOT_APPLIED;
+	}
+
+	int count = target->fxqueue.CountEffects(fx_diseased_state_ref, fx->Parameter1, fx->Parameter2, fx->Resource);
+	if (count > 1) {
+		return FX_APPLIED;
 	}
 
 	//setting damage to 0 because not all types do damage
@@ -2612,11 +2627,9 @@ int fx_set_diseased_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 
 // 0x4f Cure:Disease
-static EffectRef fx_diseased_state_ref = { "State:Diseased", -1 };
-
 int fx_cure_diseased_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_diseased_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_diseased_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//STATE_CURE( STATE_DISEASED ); //the bit flagged as disease is actually the active state. so this is even more unlikely to be used as advertised
 	target->fxqueue.RemoveAllEffects( fx_diseased_state_ref ); //this is what actually happens in bg2
 	return FX_NOT_APPLIED;
@@ -2627,7 +2640,7 @@ int fx_cure_diseased_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // none of the engines care about stacking
 int fx_set_deaf_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_deaf_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_deaf_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//gemrb fix
 	if (target->SetSpellState(SS_DEAF)) return FX_APPLIED;
@@ -2649,7 +2662,7 @@ int fx_set_deaf_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 int fx_set_deaf_state_iwd2 (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_deaf_state_iwd2 (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_deaf_state_iwd2 (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//gemrb fix
 	if (target->SetSpellState(SS_DEAF)) return FX_APPLIED;
@@ -2675,7 +2688,7 @@ static EffectRef fx_deaf_state_iwd2_ref = { "State:DeafnessIWD2", -1 };
 //removes the deafness effect
 int fx_cure_deaf_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_deaf_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_deaf_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	target->fxqueue.RemoveAllEffects(fx_deaf_state_ref);
 	target->fxqueue.RemoveAllEffects(fx_deaf_state_iwd2_ref);
@@ -2685,7 +2698,7 @@ int fx_cure_deaf_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x52 SetAIScript
 int fx_set_ai_script (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_ai_state (%2d): Resource: %s, Type: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
+	if (0) print( "fx_set_ai_state (%2d): Resource: %s, Type: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
 	target->SetScript (fx->Resource, fx->Parameter2);
 	return FX_NOT_APPLIED;
 }
@@ -2693,7 +2706,7 @@ int fx_set_ai_script (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x53 Protection:Projectile
 int fx_protection_from_projectile (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_protection_from_projectile (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_protection_from_projectile (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_IMMUNITY, IMM_PROJECTILE);
 	return FX_APPLIED;
 }
@@ -2701,7 +2714,7 @@ int fx_protection_from_projectile (Scriptable* /*Owner*/, Actor* target, Effect*
 // 0x54 MagicalFireResistanceModifier
 int fx_magical_fire_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_magical_fire_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_magical_fire_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTMAGICFIRE );
 	return FX_APPLIED;
@@ -2710,7 +2723,7 @@ int fx_magical_fire_resistance_modifier (Scriptable* /*Owner*/, Actor* target, E
 // 0x55 MagicalColdResistanceModifier
 int fx_magical_cold_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_magical_cold_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_magical_cold_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTMAGICCOLD );
 	return FX_APPLIED;
@@ -2719,7 +2732,7 @@ int fx_magical_cold_resistance_modifier (Scriptable* /*Owner*/, Actor* target, E
 // 0x56 SlashingResistanceModifier
 int fx_slashing_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_slashing_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_slashing_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTSLASHING );
 	return FX_APPLIED;
@@ -2728,7 +2741,7 @@ int fx_slashing_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effec
 // 0x57 CrushingResistanceModifier
 int fx_crushing_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_crushing_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_crushing_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTCRUSHING );
 	return FX_APPLIED;
@@ -2737,7 +2750,7 @@ int fx_crushing_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effec
 // 0x58 PiercingResistanceModifier
 int fx_piercing_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_piercing_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_piercing_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTPIERCING );
 	return FX_APPLIED;
@@ -2746,7 +2759,7 @@ int fx_piercing_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effec
 // 0x59 MissilesResistanceModifier
 int fx_missiles_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_missiles_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_missiles_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTMISSILE );
 	return FX_APPLIED;
@@ -2755,7 +2768,7 @@ int fx_missiles_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effec
 // 0x5A OpenLocksModifier
 int fx_open_locks_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_open_locks_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_open_locks_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_LOCKPICKING );
 	return FX_APPLIED;
@@ -2764,7 +2777,7 @@ int fx_open_locks_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x5B FindTrapsModifier
 int fx_find_traps_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_find_traps_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_find_traps_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_TRAPS );
 	return FX_APPLIED;
@@ -2773,7 +2786,7 @@ int fx_find_traps_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x5C PickPocketsModifier
 int fx_pick_pockets_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_pick_pockets_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_pick_pockets_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_PICKPOCKET );
 	return FX_APPLIED;
@@ -2782,7 +2795,7 @@ int fx_pick_pockets_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x5D FatigueModifier
 int fx_fatigue_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_fatigue_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_fatigue_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_FATIGUE );
 	// TODO: fatigue has a negative effect on luck -> add fatigmod.2da support
@@ -2792,7 +2805,7 @@ int fx_fatigue_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x5E IntoxicationModifier
 int fx_intoxication_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_intoxication_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_intoxication_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_INTOXICATION );
 	return FX_APPLIED;
@@ -2801,7 +2814,7 @@ int fx_intoxication_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x5F TrackingModifier
 int fx_tracking_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_tracking_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_tracking_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_TRACKING );
 	return FX_APPLIED;
@@ -2810,7 +2823,7 @@ int fx_tracking_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x60 LevelModifier
 int fx_level_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_level_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_level_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_LEVEL );
 	return FX_APPLIED;
@@ -2819,7 +2832,7 @@ int fx_level_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x61 StrengthBonusModifier
 int fx_strength_bonus_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_strength_bonus_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_strength_bonus_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_STREXTRA );
 	return FX_APPLIED;
@@ -2828,22 +2841,19 @@ int fx_strength_bonus_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx
 // 0x62 State:Regenerating
 int fx_set_regenerating_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_regenerating_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_regenerating_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	int damage;
 	int tmp = fx->Parameter1;
 	ieDword gameTime = core->GetGame()->GameTime;
-	ieDword nextHeal;
 
-	if (!fx->Parameter3) {
-		//hack to ensure our first call gets through
-		nextHeal = gameTime-1;
+	if (fx->FirstApply) {
+		//ensure our first call gets through
 	} else {
-		nextHeal = fx->Parameter3;
+		//we can have multiple calls at the same gameTime, so we
+		//just go to gameTime+1 to ensure one call
+		ieDword nextHeal = fx->Parameter3;
+		if (nextHeal>=gameTime) return FX_APPLIED;
 	}
-
-	//we can have multiple calls at the same gameTime, so we
-	//just go to gameTime+1 to ensure one call
-	if (nextHeal>=gameTime) return FX_APPLIED;
 
 	HandlePercentageDamage(fx, target);
 
@@ -2855,16 +2865,16 @@ int fx_set_regenerating_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		tmp *= core->Time.round_sec;
 		//fall
 	case RPD_SECONDS:	//restore param3 hp every param1 seconds
-		fx->Parameter3 = nextHeal + tmp*AI_UPDATE_TIME;
+		fx->Parameter3 = gameTime + tmp*AI_UPDATE_TIME;
 		damage = 1;
 		break;
 	case RPD_PERCENT: // handled in HandlePercentageDamage
 	case RPD_POINTS:	//restore param1 hp every second? that's crazy!
 		damage = fx->Parameter1;
-		fx->Parameter3 = nextHeal + AI_UPDATE_TIME;
+		fx->Parameter3 = gameTime + AI_UPDATE_TIME;
 		break;
 	default:
-		fx->Parameter3 = nextHeal + AI_UPDATE_TIME;
+		fx->Parameter3 = gameTime + AI_UPDATE_TIME;
 		damage = 1;
 		break;
 	}
@@ -2878,7 +2888,7 @@ int fx_set_regenerating_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x63 SpellDurationModifier
 int fx_spell_duration_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_spell_duration_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_spell_duration_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	switch (fx->Parameter2) {
 		case 0:
@@ -2895,14 +2905,14 @@ int fx_spell_duration_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx
 // 0x64 Protection:Creature
 int fx_generic_effect (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
-	if (0) printf( "fx_generic_effect (%2d): Param1: %d, Param2: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_generic_effect (%2d): Param1: %d, Param2: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	return FX_APPLIED;
 }
 
 // 0x65 Protection:Opcode
 int fx_protection_opcode (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_protection_opcode (%2d): Opcode: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_protection_opcode (%2d): Opcode: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR(IE_IMMUNITY, IMM_OPCODE);
 	return FX_APPLIED;
 }
@@ -2910,7 +2920,7 @@ int fx_protection_opcode (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x66 Protection:SpellLevel
 int fx_protection_spelllevel (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_protection_spelllevel (%2d) Level: %d\n", fx->Opcode, fx->Parameter1);
+	if (0) print( "fx_protection_spelllevel (%2d) Level: %d\n", fx->Opcode, fx->Parameter1);
 
 	int value = fx->Parameter1;
 	if (value<9) {
@@ -2924,7 +2934,7 @@ int fx_protection_spelllevel (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x67 ChangeName
 int fx_change_name (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_change_name_modifier (%2d): StrRef: %d\n", fx->Opcode, fx->Parameter1 );
+	if (0) print( "fx_change_name_modifier (%2d): StrRef: %d\n", fx->Opcode, fx->Parameter1 );
 	//this also changes the base stat
 	target->SetName(fx->Parameter1, 0);
 	return FX_NOT_APPLIED;
@@ -2933,7 +2943,7 @@ int fx_change_name (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x68 ExperienceModifier
 int fx_experience_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_experience_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_experience_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//FIXME: this has mode too
 	//target->AddExperience (fx->Parameter1);
 	STAT_MOD( IE_XP );
@@ -2945,7 +2955,7 @@ int fx_experience_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //no one uses it, though. To keep the function, the default branch will do the subtraction
 int fx_gold_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_gold_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_gold_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (!target->InParty) {
 		STAT_MOD( IE_GOLD );
 		return FX_NOT_APPLIED;
@@ -2974,7 +2984,7 @@ int fx_gold_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x6a MoraleBreakModifier
 int fx_morale_break_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_morale_break_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_morale_break_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD(IE_MORALEBREAK);
 	return FX_PERMANENT; //permanent morale break doesn't stick
 }
@@ -2982,7 +2992,7 @@ int fx_morale_break_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x6b PortraitChange
 int fx_portrait_change (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_portrait_change (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_portrait_change (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	target->SetPortrait( fx->Resource, fx->Parameter2);
 	return FX_NOT_APPLIED;
 }
@@ -2990,7 +3000,7 @@ int fx_portrait_change (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x6c ReputationModifier
 int fx_reputation_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_reputation_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_reputation_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD(IE_REPUTATION);
 	return FX_NOT_APPLIED; //needs testing
 }
@@ -3049,7 +3059,7 @@ int fx_equip_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x72 Dither
 int fx_dither (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
-	if (0) printf( "fx_dither (%2d): Value: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_dither (%2d): Value: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//this effect doesn't work in any engine versions
 	return FX_NOT_APPLIED;
 }
@@ -3122,7 +3132,7 @@ int fx_detect_alignment (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 1 reveal area in pattern
 int fx_reveal_area (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_reveal_area (%2d): Value: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_reveal_area (%2d): Value: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	Map *map = NULL;
 	
 	if (target) {
@@ -3146,7 +3156,7 @@ int fx_reveal_area (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x76 Reveal:Creatures
 int fx_reveal_creatures (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
-	if (0) printf( "fx_reveal_creatures (%2d): Value: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_reveal_creatures (%2d): Value: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//reveals creatures (not working in original IE)
 	return FX_NOT_APPLIED;
 }
@@ -3156,7 +3166,7 @@ static EffectRef fx_mirror_image_modifier_ref = { "MirrorImageModifier", -1 };
 
 int fx_mirror_image (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_mirror_image (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_mirror_image (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	ieDword images;
 
 	if (fx->Parameter2) {
@@ -3192,7 +3202,7 @@ int fx_mirror_image (Scriptable* Owner, Actor* target, Effect* fx)
 // 0x78 Protection:Weapons
 int fx_immune_to_weapon (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
-	if (0) printf( "fx_immune_to_weapon (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_immune_to_weapon (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (!fx->FirstApply) return FX_APPLIED;
 
 	int level;
@@ -3258,7 +3268,7 @@ int fx_immune_to_weapon (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 int fx_visual_animation_effect (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
 //this is an unknown effect
-	if (0) printf( "fx_visual_animation_effect (%2d)\n", fx->Opcode );
+	if (0) print( "fx_visual_animation_effect (%2d)\n", fx->Opcode );
 	return FX_NOT_APPLIED;
 }
 
@@ -3267,7 +3277,7 @@ static EffectRef fx_remove_inventory_item_ref = { "Item:RemoveInventory", -1 };
 
 int fx_create_inventory_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_create_inventory_item (%2d)\n", fx->Opcode );
+	if (0) print( "fx_create_inventory_item (%2d)\n", fx->Opcode );
 	target->inventory.AddSlotItemRes( fx->Resource, SLOT_ONLYINVENTORY, fx->Parameter1, fx->Parameter3, fx->Parameter4 );
 	if ((fx->TimingMode&0xff) == FX_DURATION_INSTANT_LIMITED) {
 		//if this effect has expiration, then it will remain as a remove_item
@@ -3282,7 +3292,7 @@ int fx_create_inventory_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x7b Item:RemoveInventory
 int fx_remove_inventory_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_remove_inventory_item (%2d)\n", fx->Opcode );
+	if (0) print( "fx_remove_inventory_item (%2d)\n", fx->Opcode );
 	//FIXME: now equipped items are only wielded weapons
 	//why would it not let equipped items to be destructed?
 	target->inventory.DestroyItem(fx->Resource,IE_INV_ITEM_EQUIPPED,1);
@@ -3293,7 +3303,7 @@ int fx_remove_inventory_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // iwd2 has several options
 int fx_dimension_door (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_dimension_door (%2d) Type:%d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_dimension_door (%2d) Type:%d\n", fx->Opcode, fx->Parameter2 );
 	Point p;
 
 	switch(fx->Parameter2)
@@ -3330,17 +3340,17 @@ int fx_dimension_door (Scriptable* Owner, Actor* target, Effect* fx)
 // 0x7d Unlock
 int fx_knock (Scriptable* Owner, Actor* /*target*/, Effect* fx)
 {
-	if (0) printf( "fx_knock (%2d) [%d.%d]\n", fx->Opcode, fx->PosX, fx->PosY );
+	if (0) print( "fx_knock (%2d) [%d.%d]\n", fx->Opcode, fx->PosX, fx->PosY );
 	Map *map = Owner->GetCurrentArea();
 	if (!map) {
 		return FX_NOT_APPLIED;
 	}
 	Point p(fx->PosX, fx->PosY);
 
-printf("KNOCK Pos: %d.%d\n", fx->PosX, fx->PosY);
+print("KNOCK Pos: %d.%d\n", fx->PosX, fx->PosY);
 	Door *door = map->TMap->GetDoorByPosition(p);
 	if (door) {
-printf("Got a door\n");
+print("Got a door\n");
 		if (door->LockDifficulty<100) {
 			door->SetDoorLocked(false, true);
 		}
@@ -3348,7 +3358,7 @@ printf("Got a door\n");
 	}
 	Container *container = map->TMap->GetContainerByPosition(p);
 	if (container) {
-printf("Got a container\n");
+print("Got a container\n");
 		if(container->LockDifficulty<100) {
 			container->SetContainerLocked(false);
 		}
@@ -3361,7 +3371,7 @@ printf("Got a container\n");
 // 0xb0 MovementRateModifier2
 int fx_movement_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_movement_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_movement_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//iwd2 freeaction disables only 0xb0, who cares
 	if (target->HasSpellState(SS_FREEACTION)) return FX_NOT_APPLIED;
@@ -3380,7 +3390,7 @@ static const ieResRef monster_summoning_2da[FX_MS]={"MONSUM01","MONSUM02","MONSU
 // 0x7f MonsterSummoning
 int fx_monster_summoning (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_monster_summoning (%2d): Number: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_monster_summoning (%2d): Number: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//check the summoning limit?
 	if (!Owner) {
 		return FX_NOT_APPLIED;
@@ -3445,7 +3455,7 @@ int fx_monster_summoning (Scriptable* Owner, Actor* target, Effect* fx)
 // 0x80 State:Confused
 int fx_set_confused_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_confused_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_confused_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (target->HasSpellState(SS_BLOODRAGE)) {
 		return FX_NOT_APPLIED;
@@ -3469,7 +3479,7 @@ int fx_set_confused_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x81 AidNonCumulative
 int fx_set_aid_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_aid_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_aid_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (!fx->Parameter2) {
 		fx->Parameter2=core->Roll(fx->Parameter1,8,0);
 	}
@@ -3503,7 +3513,7 @@ static EffectRef fx_bane_ref = { "Bane", -1 };
 
 int fx_set_bless_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_bless_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_bless_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (STATE_GET (STATE_BLESS) ) //bless is non cumulative
 		return FX_NOT_APPLIED;
@@ -3524,7 +3534,7 @@ int fx_set_bless_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x83 ChantNonCumulative
 int fx_set_chant_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_chant_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_chant_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (STATE_GET (STATE_CHANT) ) //chant is non cumulative
 		return FX_NOT_APPLIED;
@@ -3537,7 +3547,7 @@ int fx_set_chant_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x84 HolyNonCumulative
 int fx_set_holy_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_holy_state (%2d): Modifier: %d\n", fx->Opcode, fx->Parameter1 );
+	if (0) print( "fx_set_holy_state (%2d): Modifier: %d\n", fx->Opcode, fx->Parameter1 );
 
 	if (STATE_GET (STATE_HOLY) ) //holy power is non cumulative
 		return FX_NOT_APPLIED;
@@ -3557,7 +3567,7 @@ int fx_set_holy_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x85 LuckNonCumulative
 int fx_luck_non_cumulative (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_luck_non_cumulative (%2d): Modifier: %d\n", fx->Opcode, fx->Parameter1);
+	if (0) print( "fx_luck_non_cumulative (%2d): Modifier: %d\n", fx->Opcode, fx->Parameter1);
 
 	if (STATE_GET (STATE_LUCK) ) //this luck is non cumulative
 		return FX_NOT_APPLIED;
@@ -3571,7 +3581,7 @@ int fx_luck_non_cumulative (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x85 LuckCumulative (iwd2)
 int fx_luck_cumulative (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_luck_cumulative (%2d): Modifier: %d\n", fx->Opcode, fx->Parameter1);
+	if (0) print( "fx_luck_cumulative (%2d): Modifier: %d\n", fx->Opcode, fx->Parameter1);
 
 	target->SetSpellState(SS_LUCK);
 	STAT_ADD( IE_LUCK, fx->Parameter1 );
@@ -3582,7 +3592,7 @@ int fx_luck_cumulative (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x86 State:Petrification
 int fx_set_petrified_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_petrified_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_petrified_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	BASE_STATE_SET( STATE_PETRIFIED );
 	return FX_NOT_APPLIED; //permanent effect
@@ -3622,7 +3632,7 @@ void CopyPolymorphStats(Actor *source, Actor *target)
 
 int fx_polymorph (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_polymorph_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_polymorph_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (!gamedata->Exists(fx->Resource,IE_CRE_CLASS_ID)) {
 		//kill all polymorph effects
@@ -3675,7 +3685,7 @@ int fx_polymorph (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x88 ForceVisible
 int fx_force_visible (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_force_visible (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_force_visible (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (pstflags) {
 		BASE_STATE_CURE(STATE_PST_INVIS);
@@ -3690,7 +3700,7 @@ int fx_force_visible (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x89 ChantBadNonCumulative
 int fx_set_chantbad_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_chantbad_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_chantbad_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (STATE_GET (STATE_CHANTBAD) ) //chant is non cumulative
 		return FX_NOT_APPLIED;
@@ -3703,7 +3713,7 @@ int fx_set_chantbad_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x8A AnimationStateChange
 int fx_animation_stance (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_animation_stance (%2d): Stance: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_animation_stance (%2d): Stance: %d\n", fx->Opcode, fx->Parameter2 );
 
 	//this effect works only on living actors
 	if ( !STATE_GET(STATE_DEAD) ) {
@@ -3719,7 +3729,7 @@ static EffectRef fx_protection_from_display_string_ref = { "Protection:String", 
 
 int fx_display_string (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_display_string (%2d): StrRef: %d\n", fx->Opcode, fx->Parameter1 );
+	if (0) print( "fx_display_string (%2d): StrRef: %d\n", fx->Opcode, fx->Parameter1 );
 	if(fx->Resource[0]) {
 		//TODO: create a single list reader that handles src and 2da too
 		SrcVector *rndstr=LoadSrc(fx->Resource);
@@ -3751,7 +3761,7 @@ static const int xpos_by_direction[16]={0,-10,-12,-14,-16,-14,-12,-10,0,10,12,14
 
 int fx_casting_glow (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_casting_glow (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_casting_glow (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	if (cgcount<0) {
 		cgcount = core->ReadResRefTable("cgtable",casting_glows);
 	}
@@ -3788,7 +3798,7 @@ int fx_casting_glow (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x8d VisualSpellHit
 int fx_visual_spell_hit (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_visual_spell_hit (%2d): Target: %d Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_visual_spell_hit (%2d): Target: %d Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (shcount<0) {
 		shcount = core->ReadResRefTable("shtable",spell_hits);
 	}
@@ -3820,7 +3830,7 @@ int fx_visual_spell_hit (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		sca->PlayOnce();
 		map->AddVVCell(sca);
 	} else {
-		printf("fx_visual_spell_hit: Unhandled Type: %d\n", fx->Parameter2);
+		print("fx_visual_spell_hit: Unhandled Type: %d\n", fx->Parameter2);
 	}
 	return FX_NOT_APPLIED;
 }
@@ -3828,7 +3838,7 @@ int fx_visual_spell_hit (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x8e Icon:Display
 int fx_display_portrait_icon (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_display_string (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_display_string (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	target->AddPortraitIcon(fx->Parameter2);
 	return FX_APPLIED;
 }
@@ -3836,7 +3846,7 @@ int fx_display_portrait_icon (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x8f Item:CreateInSlot
 int fx_create_item_in_slot (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_create_item_in_slot (%2d): Button: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_create_item_in_slot (%2d): Button: %d\n", fx->Opcode, fx->Parameter2 );
 	//create item and set it in target's slot
 	target->inventory.SetSlotItemRes( fx->Resource, core->QuerySlot(fx->Parameter2), fx->Parameter1, fx->Parameter3, fx->Parameter4 );
 	if ((fx->TimingMode&0xff) == FX_DURATION_INSTANT_LIMITED) {
@@ -3852,7 +3862,7 @@ int fx_create_item_in_slot (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // different in iwd2 and the rest (maybe also in how: 0-7?)
 int fx_disable_button (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_disable_button (%2d): Button: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_disable_button (%2d): Button: %d\n", fx->Opcode, fx->Parameter2 );
 
 	// iwd2 has a flexible action bar, so there are more possible parameter values
 	// only values 0-5 match the bg2 constants (which map to ACT_*)
@@ -3885,7 +3895,7 @@ static ieDword dsc_bits_iwd2[7]={1, 14, 6, 2, 4, 8, 16};
 static ieDword dsc_bits_bg2[7]={1, 4, 2, 8, 16, 14, 6};
 int fx_disable_spellcasting (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_disable_spellcasting (%2d): Button: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_disable_spellcasting (%2d): Button: %d\n", fx->Opcode, fx->Parameter2 );
 
 	bool display_warning = false;
 	ieDword tmp = fx->Parameter2+1;
@@ -3913,7 +3923,7 @@ int fx_disable_spellcasting (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		//1 ->  2 (cleric)
 		//2 ->  8 (innate)
 		//3 ->  16 (class)
-		if (tmp<31) {
+		if (tmp<7) {
 			STAT_BIT_OR(IE_CASTING, dsc_bits_bg2[tmp] );
 		}
 	}
@@ -3927,7 +3937,7 @@ int fx_disable_spellcasting (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x92 Spell:Cast
 int fx_cast_spell (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cast_spell (%2d): Resource:%s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
+	if (0) print( "fx_cast_spell (%2d): Resource:%s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
 	if (fx->Parameter2) {
 		//apply spell on target
 		core->ApplySpell(fx->Resource, target, Owner, fx->Parameter1);
@@ -3956,7 +3966,7 @@ int fx_cast_spell (Scriptable* Owner, Actor* target, Effect* fx)
 // 0x93 Spell:Learn
 int fx_learn_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_learn_spell (%2d): Resource:%s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
+	if (0) print( "fx_learn_spell (%2d): Resource:%s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
 	//parameter1 is unused, gemrb lets you to make it not give XP
 	//probably we should also let this via a game flag if we want
 	//full compatibility with bg1
@@ -3967,7 +3977,7 @@ int fx_learn_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x94 Spell:CastSpellPoint
 int fx_cast_spell_point (Scriptable* Owner, Actor* /*target*/, Effect* fx)
 {
-	if (0) printf( "fx_cast_spell_point (%2d): Resource:%s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
+	if (0) print( "fx_cast_spell_point (%2d): Resource:%s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
 	// save the current spell ref, so the rest of its effects can be applied afterwards
 	ieResRef OldSpellResRef;
 	memcpy(OldSpellResRef, Owner->SpellResRef, sizeof(OldSpellResRef));
@@ -3983,7 +3993,7 @@ int fx_cast_spell_point (Scriptable* Owner, Actor* /*target*/, Effect* fx)
 // 0x95 Identify
 int fx_identify (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_identify (%2d): Resource:%s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
+	if (0) print( "fx_identify (%2d): Resource:%s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
 	if (target->InParty) {
 		BASE_SET (IE_IDENTIFYMODE, 1);
 		core->SetEventFlag(EF_IDENTIFY);
@@ -4000,7 +4010,7 @@ int fx_identify (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 3 - detect secret doors by luck
 int fx_find_traps (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_find_traps (%2d)\n", fx->Opcode );
+	if (0) print( "fx_find_traps (%2d)\n", fx->Opcode );
 	//reveal trapped containers, doors, triggers that are in the visible range
 	ieDword range = target->GetStat(IE_VISUALRANGE)*10;
 	ieDword skill;
@@ -4072,7 +4082,7 @@ int fx_find_traps (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x97 ReplaceCreature
 int fx_replace_creature (Scriptable* Owner, Actor* target, Effect *fx)
 {
-	if (0) printf( "fx_replace_creature (%2d): Resource: %s\n", fx->Opcode, fx->Resource );
+	if (0) print( "fx_replace_creature (%2d): Resource: %s\n", fx->Opcode, fx->Resource );
 
 	//this safeguard exists in the original engine too
 	if (!gamedata->Exists(fx->Resource,IE_CRE_CLASS_ID)) {
@@ -4107,7 +4117,7 @@ int fx_replace_creature (Scriptable* Owner, Actor* target, Effect *fx)
 // 0x98 PlayMovie
 int fx_play_movie (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
-	if (0) printf( "fx_play_movie (%2d): Resource: %s\n", fx->Opcode, fx->Resource );
+	if (0) print( "fx_play_movie (%2d): Resource: %s\n", fx->Opcode, fx->Resource );
 	core->PlayMovie (fx->Resource);
 	return FX_NOT_APPLIED;
 }
@@ -4119,7 +4129,7 @@ static const ieDword fullwhite[7]={ICE_GRADIENT,ICE_GRADIENT,ICE_GRADIENT,ICE_GR
 int fx_set_sanctuary_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	//iwd and bg are a bit different, but we solve the whole stuff in a single opcode
-	if (0) printf( "fx_set_sanctuary_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_sanctuary_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (target->HasSpellState(SS_SANCTUARY)) return FX_NOT_APPLIED;
 	if (!fx->Parameter2) {
 		fx->Parameter2=1;
@@ -4138,7 +4148,7 @@ int fx_set_sanctuary_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x9a Overlay:Entangle
 int fx_set_entangle_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_entangle_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_entangle_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//iwd2 effects that disable entangle
 	if (target->HasSpellState(SS_FREEACTION)) return FX_NOT_APPLIED;
@@ -4154,7 +4164,7 @@ int fx_set_entangle_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x9b Overlay:MinorGlobe
 int fx_set_minorglobe_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_minorglobe_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_minorglobe_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//the resisted levels are stored in minor globe (bit 2-)
 	//the globe effect is stored in the first bit
 	STAT_BIT_OR_PCF( IE_MINORGLOBE, 1);
@@ -4164,7 +4174,7 @@ int fx_set_minorglobe_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x9c Overlay:ShieldGlobe
 int fx_set_shieldglobe_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_shieldglobe_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_shieldglobe_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//the shield vanishes on dead
 	if (STATE_GET(STATE_DEAD) ) {
 		return FX_NOT_APPLIED;
@@ -4176,7 +4186,7 @@ int fx_set_shieldglobe_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x9d Overlay:Web
 int fx_set_web_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_web_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_web_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//iwd2 effects that disable web
 	if (target->HasSpellState(SS_FREEACTION)) return FX_NOT_APPLIED;
@@ -4192,7 +4202,7 @@ int fx_set_web_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x9e Overlay:Grease
 int fx_set_grease_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_grease_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_grease_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//iwd2 effects that disable grease
 	if (target->HasSpellState(SS_FREEACTION)) return FX_NOT_APPLIED;
@@ -4207,7 +4217,7 @@ int fx_set_grease_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x9f MirrorImageModifier
 int fx_mirror_image_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_mirror_image_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter1 );
+	if (0) print( "fx_mirror_image_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter1 );
 	if (STATE_GET(STATE_DEAD) ) {
 		return FX_NOT_APPLIED;
 	}
@@ -4235,7 +4245,7 @@ static EffectRef fx_sanctuary_state_ref = { "Overlay:Sanctuary", -1 };
 
 int fx_cure_sanctuary_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_sanctuary_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_sanctuary_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET( IE_SANCTUARY, 0);
 	target->fxqueue.RemoveAllEffects(fx_sanctuary_state_ref);
 	return FX_NOT_APPLIED;
@@ -4246,7 +4256,7 @@ static EffectRef fx_set_panic_state_ref = { "State:Panic", -1 };
 
 int fx_cure_panic_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_panic_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_panic_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_PANIC );
 	target->fxqueue.RemoveAllEffects(fx_set_panic_state_ref);
 	return FX_NOT_APPLIED;
@@ -4257,7 +4267,7 @@ static EffectRef fx_hold_creature_ref = { "State:Hold", -1 };
 
 int fx_cure_hold_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_hold_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_hold_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//note that this effect doesn't remove 185 (another hold effect)
 	target->fxqueue.RemoveAllEffects( fx_hold_creature_ref );
 	target->fxqueue.RemoveAllEffects(fx_hold_creature_no_icon_ref);
@@ -4270,7 +4280,7 @@ static EffectRef fx_movement_modifier_ref = { "MovementRateModifier2", -1 };
 
 int fx_cure_slow_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_slow_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_slow_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	target->fxqueue.RemoveAllEffects( fx_movement_modifier_ref );
 //	STATE_CURE( STATE_SLOWED );
 	return FX_NOT_APPLIED;
@@ -4281,7 +4291,7 @@ static EffectRef fx_intoxication_ref = { "IntoxicationModifier", -1 };
 
 int fx_cure_intoxication (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_intoxication (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_intoxication (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	target->fxqueue.RemoveAllEffects( fx_intoxication_ref );
 	BASE_SET(IE_INTOXICATION,0);
 	return FX_NOT_APPLIED;
@@ -4290,7 +4300,7 @@ int fx_cure_intoxication (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xa5 PauseTarget
 int fx_pause_target (Scriptable* /*Owner*/, Actor * target, Effect* fx)
 {
-	if (0) printf( "fx_pause_target (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_pause_target (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_CASTERHOLD );
 	return FX_PERMANENT;
 }
@@ -4298,7 +4308,7 @@ int fx_pause_target (Scriptable* /*Owner*/, Actor * target, Effect* fx)
 // 0xa6 MagicResistanceModifier
 int fx_magic_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_magic_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_magic_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTMAGIC );
 	return FX_APPLIED;
@@ -4307,7 +4317,7 @@ int fx_magic_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* 
 // 0xa7 MissileHitModifier
 int fx_missile_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_missile_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_missile_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_MISSILEHITBONUS );
 	return FX_APPLIED;
@@ -4318,7 +4328,7 @@ int fx_missile_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx
 // removes creature specified by resource key (gemrb extension)
 int fx_remove_creature (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_remove_creature (%2d)\n", fx->Opcode);
+	if (0) print( "fx_remove_creature (%2d)\n", fx->Opcode);
 
 	Map *map = NULL;
 	
@@ -4345,7 +4355,7 @@ int fx_remove_creature (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xa9 Icon:Disable
 int fx_disable_portrait_icon (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_disable_portrait_icon (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_disable_portrait_icon (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	target->DisablePortraitIcon(fx->Parameter2);
 	return FX_APPLIED;
 }
@@ -4353,7 +4363,7 @@ int fx_disable_portrait_icon (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xaa DamageAnimation
 int fx_damage_animation (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_damage_animation (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_damage_animation (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//Parameter1 is a gemrb extension
 	target->PlayDamageAnimation(fx->Parameter2, !fx->Parameter1);
@@ -4363,7 +4373,7 @@ int fx_damage_animation (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xab Spell:Add
 int fx_add_innate (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_add_innate (%2d): Resource: %s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
+	if (0) print( "fx_add_innate (%2d): Resource: %s Mode: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
 	target->LearnSpell(fx->Resource, fx->Parameter2^LS_MEMO);
 	//this is an instant, so it shouldn't stick
 	return FX_NOT_APPLIED;
@@ -4373,7 +4383,7 @@ int fx_add_innate (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //gemrb extension: deplete spell by resref
 int fx_remove_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_remove_spell (%2d): Resource: %s Type:%d\n", fx->Opcode, fx->Resource, fx->Parameter2);
+	if (0) print( "fx_remove_spell (%2d): Resource: %s Type:%d\n", fx->Opcode, fx->Resource, fx->Parameter2);
 	switch (fx->Parameter2) {
 	default:
 		target->spellbook.RemoveSpell(fx->Resource);
@@ -4394,7 +4404,7 @@ int fx_remove_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xad PoisonResistanceModifier
 int fx_poison_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_poison_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_poison_resistance_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_RESISTPOISON );
 	return FX_APPLIED;
@@ -4403,7 +4413,7 @@ int fx_poison_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect*
 //0xae PlaySound
 int fx_playsound (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_playsound (%s)", fx->Resource );
+	if (0) print( "fx_playsound (%s)", fx->Resource );
 	//this is probably inaccurate
 	if (target) {
 		core->GetAudioDrv()->Play(fx->Resource, target->Pos.x, target->Pos.y);
@@ -4418,7 +4428,7 @@ int fx_playsound (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xfb State:Hold4
 int fx_hold_creature_no_icon (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_hold_creature_no_icon (%2d): Value: %d, IDS: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_hold_creature_no_icon (%2d): Value: %d, IDS: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//actually the original engine just skips this effect if the target is dead
 	if ( STATE_GET(STATE_DEAD) ) {
@@ -4439,7 +4449,7 @@ int fx_hold_creature_no_icon (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //(0x6d/0x1a8 for iwd2)
 int fx_hold_creature (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_hold_creature (%2d): Value: %d, IDS: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_hold_creature (%2d): Value: %d, IDS: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//actually the original engine just skips this effect if the target is dead
 	if ( STATE_GET(STATE_DEAD) ) {
@@ -4463,37 +4473,44 @@ int fx_hold_creature (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xb0 see: fx_movement_modifier
 
 //0xb1 ApplyEffect
-int fx_apply_effect (Scriptable* /*Owner*/, Actor* target, Effect* fx)
+int fx_apply_effect (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_apply_effect (%2d) %s", fx->Opcode, fx->Resource );
+	if (0) print( "fx_apply_effect (%2d) %s", fx->Opcode, fx->Resource );
 
 	//this effect executes a file effect in place of this effect
 	//the file effect inherits the target and the timingmode, but gets
 	//a new chance to roll percents
-	int ret = FX_NOT_APPLIED;
-	if (!target) {
-		return ret;
+	if (target && !EffectQueue::match_ids( target, fx->Parameter2, fx->Parameter1) ) {
+		return FX_NOT_APPLIED;
 	}
-	if (EffectQueue::match_ids( target, fx->Parameter2, fx->Parameter1) ) {
-		Point p(fx->PosX, fx->PosY);
 
-		//apply effect, if the effect is a goner, then kill
-		//this effect too
-		Effect *newfx = core->GetEffect(fx->Resource, fx->Power, p);
-		if (newfx) {
-			Effect *myfx = new Effect;
-			memcpy(myfx, newfx, sizeof(Effect));
-			myfx->random_value = core->Roll(1,100,-1);
-			myfx->Target = FX_TARGET_PRESET;
-			myfx->TimingMode = fx->TimingMode;
-			myfx->Duration = fx->Duration;
-			myfx->CasterID = fx->CasterID;
-			ret = target->fxqueue.ApplyEffect(target, myfx, fx->FirstApply, !fx->Parameter3);
-			fx->Parameter3 = 1;
-			delete myfx;
-		}
-		//newfx is a borrowed reference don't delete it
+	Point p(fx->PosX, fx->PosY);
+
+	//apply effect, if the effect is a goner, then kill
+	//this effect too
+	Effect *newfx = core->GetEffect(fx->Resource, fx->Power, p);
+	if (!newfx)
+		return FX_NOT_APPLIED;
+
+	Effect *myfx = new Effect;
+	memcpy(myfx, newfx, sizeof(Effect));
+	myfx->random_value = core->Roll(1,100,-1);
+	myfx->Target = FX_TARGET_PRESET;
+	myfx->TimingMode = fx->TimingMode;
+	myfx->Duration = fx->Duration;
+	myfx->CasterID = fx->CasterID;
+
+	int ret;
+	if (target) {
+		ret = target->fxqueue.ApplyEffect(target, myfx, fx->FirstApply, !fx->Parameter3);
+	} else {
+		EffectQueue fxqueue;
+		fxqueue.SetOwner(Owner);
+		ret = fxqueue.ApplyEffect(NULL, myfx, fx->FirstApply, !fx->Parameter3);
 	}
+
+	fx->Parameter3 = 1;
+	delete myfx;
 	return ret;
 }
 
@@ -4505,7 +4522,7 @@ int fx_apply_effect (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // b6 generic effect ApplyEffectItem
 int fx_apply_effect_item (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf("fx_apply_effect_item (%2d) (%.8s)\n", fx->Opcode, fx->Resource);
+	if (0) print("fx_apply_effect_item (%2d) (%.8s)\n", fx->Opcode, fx->Resource);
 	if (target->inventory.HasItem(fx->Resource, 0) ) {
 		core->ApplySpell(fx->Resource2, target, Owner, fx->Parameter1);
 		return FX_NOT_APPLIED;
@@ -4516,7 +4533,7 @@ int fx_apply_effect_item (Scriptable* Owner, Actor* target, Effect* fx)
 // b7 generic effect ApplyEffectItemType
 int fx_apply_effect_item_type (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf("fx_apply_effect_item (%2d), Type: %d\n", fx->Opcode, fx->Parameter2);
+	if (0) print("fx_apply_effect_item (%2d), Type: %d\n", fx->Opcode, fx->Parameter2);
 	if (target->inventory.HasItemType(fx->Parameter2) ) {
 		core->ApplySpell(fx->Resource, target, Owner, fx->Parameter1);
 		return FX_NOT_APPLIED;
@@ -4527,7 +4544,7 @@ int fx_apply_effect_item_type (Scriptable* Owner, Actor* target, Effect* fx)
 // b8 DontJumpModifier
 int fx_dontjump_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_dontjump_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_dontjump_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_SET( IE_DONOTJUMP, fx->Parameter2 );
 	return FX_APPLIED;
 }
@@ -4537,7 +4554,7 @@ int fx_dontjump_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xba MoveToArea
 int fx_move_to_area (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_move_to_area (%2d) %s", fx->Opcode, fx->Resource );
+	if (0) print( "fx_move_to_area (%2d) %s", fx->Opcode, fx->Resource );
 	//delay effect until the target has finished the previous move to an area
 	//hopefully this fixes an evil bug
 	Map *map = target->GetCurrentArea();
@@ -4555,7 +4572,7 @@ int fx_move_to_area (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 int fx_local_variable (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	//this is a hack, the variable name spreads across the resources
-	if (0) printf( "fx_local_variable (%2d) %s=%d", fx->Opcode, fx->Resource, fx->Parameter1 );
+	if (0) print( "fx_local_variable (%2d) %s=%d", fx->Opcode, fx->Resource, fx->Parameter1 );
 	target->locals->SetAt(fx->Resource, fx->Parameter1);
 	//local variable effects are not applied, they will be resaved though
 	return FX_NOT_APPLIED;
@@ -4564,7 +4581,7 @@ int fx_local_variable (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xbc AuraCleansingModifier
 int fx_auracleansing_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_auracleansing_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_auracleansing_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_SET( IE_AURACLEANSING, fx->Parameter2 );
 	return FX_APPLIED;
 }
@@ -4572,7 +4589,7 @@ int fx_auracleansing_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xbd CastingSpeedModifier
 int fx_castingspeed_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_castingspeed_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_castingspeed_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_MOD( IE_MENTALSPEED );
 	return FX_APPLIED;
 }
@@ -4580,7 +4597,7 @@ int fx_castingspeed_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xbe PhysicalSpeedModifier
 int fx_attackspeed_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_attackspeed_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_attackspeed_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_MOD( IE_PHYSICALSPEED );
 	return FX_APPLIED;
 }
@@ -4589,7 +4606,7 @@ int fx_attackspeed_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // gemrb extension: if the resource key is set, apply param1 as a percentual modifier
 int fx_castinglevel_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_castinglevel_modifier (%2d) Value:%d Type:%d", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_castinglevel_modifier (%2d) Value:%d Type:%d", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	switch (fx->Parameter2) {
 	case 0:
 		if (fx->Resource[0]) {
@@ -4624,7 +4641,7 @@ static EffectRef fx_maximum_hp_modifier_ref = { "MaximumHPModifier", -1 };
 
 int fx_find_familiar (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_find_familiar (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_find_familiar (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 
 	if (!target) {
 		return FX_NOT_APPLIED;
@@ -4716,7 +4733,7 @@ int fx_find_familiar (Scriptable* Owner, Actor* target, Effect* fx)
 // 0xc1 InvisibleDetection
 int fx_see_invisible_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_see_invisible_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_see_invisible_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_SET( IE_SEEINVISIBLE, fx->Parameter2 );
 	return FX_APPLIED;
 }
@@ -4724,7 +4741,7 @@ int fx_see_invisible_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xc2 IgnoreDialogPause
 int fx_ignore_dialogpause_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_ignore_dialogpause_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_ignore_dialogpause_modifier (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_SET( IE_IGNOREDIALOGPAUSE, fx->Parameter2 );
 	return FX_APPLIED;
 }
@@ -4736,7 +4753,7 @@ static EffectRef fx_constitution_modifier_ref = { "ConstitutionModifier", -1 };
 
 int fx_familiar_constitution_loss (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_familiar_constitution_loss (%2d): Loss: %d\n", fx->Opcode,(signed) fx->Parameter1 );
+	if (0) print( "fx_familiar_constitution_loss (%2d): Loss: %d\n", fx->Opcode,(signed) fx->Parameter1 );
 	if (! (STAT_GET(IE_STATE_ID)&STATE_NOSAVE)) {
 		return FX_APPLIED;
 	}
@@ -4766,7 +4783,7 @@ int fx_familiar_constitution_loss (Scriptable* /*Owner*/, Actor* target, Effect*
 //0xc4 FamiliarMarker
 int fx_familiar_marker (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_familiar_marker (%2d)\n", fx->Opcode );
+	if (0) print( "fx_familiar_marker (%2d)\n", fx->Opcode );
 	if (! (STAT_GET(IE_STATE_ID)&STATE_NOSAVE)) {
 		core->GetGame()->familiarBlock=true;
 		return FX_APPLIED;
@@ -4778,7 +4795,7 @@ int fx_familiar_marker (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xc5 Bounce:Projectile
 int fx_bounce_projectile (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bounce_projectile (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_bounce_projectile (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_BOUNCE, BNC_PROJECTILE );
 	return FX_APPLIED;
 }
@@ -4786,7 +4803,7 @@ int fx_bounce_projectile (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xc6 Bounce:Opcode
 int fx_bounce_opcode (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bounce_opcode (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_bounce_opcode (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_BOUNCE, BNC_OPCODE );
 	target->AddPortraitIcon(PI_BOUNCE2);
 	return FX_APPLIED;
@@ -4795,7 +4812,7 @@ int fx_bounce_opcode (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xc7 Bounce:SpellLevel
 int fx_bounce_spelllevel (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bounce_spellevel (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_bounce_spellevel (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_BOUNCE, BNC_LEVEL );
 	target->AddPortraitIcon(PI_BOUNCE2);
 	return FX_APPLIED;
@@ -4804,7 +4821,7 @@ int fx_bounce_spelllevel (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xc8 Bounce:SpellLevelDec
 int fx_bounce_spelllevel_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bounce_spellevel_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_bounce_spellevel_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_BOUNCE, BNC_LEVEL_DEC );
 	target->AddPortraitIcon(PI_BOUNCE);
 	return FX_APPLIED;
@@ -4813,7 +4830,7 @@ int fx_bounce_spelllevel_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xc9 Protection:SpellLevelDec
 int fx_protection_spelllevel_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_protection_spelllevel_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_protection_spelllevel_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_IMMUNITY, IMM_LEVEL_DEC );
 	target->AddPortraitIcon(PI_BOUNCE2);
 	return FX_APPLIED;
@@ -4822,7 +4839,7 @@ int fx_protection_spelllevel_dec (Scriptable* /*Owner*/, Actor* target, Effect* 
 //0xca Bounce:School
 int fx_bounce_school (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bounce_school (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_bounce_school (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_BOUNCE, BNC_SCHOOL );
 	target->AddPortraitIcon(PI_BOUNCE2);
 	return FX_APPLIED;
@@ -4831,7 +4848,7 @@ int fx_bounce_school (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xcb Bounce:SecondaryType
 int fx_bounce_secondary_type (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bounce_secondary_type (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_bounce_secondary_type (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_BOUNCE, BNC_SECTYPE );
 	target->AddPortraitIcon(PI_BOUNCE2);
 	return FX_APPLIED;
@@ -4840,7 +4857,7 @@ int fx_bounce_secondary_type (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xcc //resist school
 int fx_protection_school (Scriptable* /*Owner*/, Actor* target, Effect *fx)
 {
-	if (0) printf( "fx_protection_school (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_protection_school (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_IMMUNITY, IMM_SCHOOL);
 	return FX_APPLIED;
 }
@@ -4848,7 +4865,7 @@ int fx_protection_school (Scriptable* /*Owner*/, Actor* target, Effect *fx)
 // 0xcd //resist sectype
 int fx_protection_secondary_type (Scriptable* /*Owner*/, Actor* target, Effect *fx)
 {
-	if (0) printf( "fx_protection_secondary_type (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_protection_secondary_type (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_IMMUNITY, IMM_SECTYPE);
 	return FX_APPLIED;
 }
@@ -4856,7 +4873,7 @@ int fx_protection_secondary_type (Scriptable* /*Owner*/, Actor* target, Effect *
 //0xce Protection:Spell
 int fx_resist_spell (Scriptable* /*Owner*/, Actor* target, Effect *fx)
 {
-	if (0) printf( "fx_resist_spell (%2d): Resource: %s\n", fx->Opcode, fx->Resource );
+	if (0) print( "fx_resist_spell (%2d): Resource: %s\n", fx->Opcode, fx->Resource );
 	if (strnicmp(fx->Resource,fx->Source,sizeof(fx->Resource)) ) {
 		STAT_BIT_OR( IE_IMMUNITY, IMM_RESOURCE);
 		return FX_APPLIED;
@@ -4868,7 +4885,7 @@ int fx_resist_spell (Scriptable* /*Owner*/, Actor* target, Effect *fx)
 // ??? Protection:SpellDec
 int fx_resist_spell_dec (Scriptable* /*Owner*/, Actor* target, Effect *fx)
 {
-	if (0) printf( "fx_resist_spell_dec (%2d): Resource: %s\n", fx->Opcode, fx->Resource );
+	if (0) print( "fx_resist_spell_dec (%2d): Resource: %s\n", fx->Opcode, fx->Resource );
 	if (strnicmp(fx->Resource,fx->Source,sizeof(fx->Resource)) ) {
 		STAT_BIT_OR( IE_IMMUNITY, IMM_RESOURCE_DEC);
 		return FX_APPLIED;
@@ -4880,7 +4897,7 @@ int fx_resist_spell_dec (Scriptable* /*Owner*/, Actor* target, Effect *fx)
 // 0xcf Bounce:Spell
 int fx_bounce_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bounce_spell (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_bounce_spell (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_BOUNCE, BNC_RESOURCE );
 	return FX_APPLIED;
 }
@@ -4888,7 +4905,7 @@ int fx_bounce_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // ??? Bounce:SpellDec
 int fx_bounce_spell_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bounce_spell (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_bounce_spell (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_BOUNCE, BNC_RESOURCE_DEC );
 	return FX_APPLIED;
 }
@@ -4898,7 +4915,7 @@ int fx_bounce_spell_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // it allowed only setting it, and only by one instance
 int fx_minimum_hp_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_minimum_hp_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_minimum_hp_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_MINHITPOINTS );
 	return FX_APPLIED;
@@ -4907,7 +4924,7 @@ int fx_minimum_hp_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xd1 PowerWordKill
 int fx_power_word_kill (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_power_word_kill (%2d): HP: %d Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_power_word_kill (%2d): HP: %d Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	ieDword limit = 60;
 
 	if (fx->Parameter1) {
@@ -4926,7 +4943,7 @@ int fx_power_word_kill (Scriptable* Owner, Actor* target, Effect* fx)
 //0xd2 PowerWordStun
 int fx_power_word_stun (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_power_word_stun (%2d): HP: %d Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_power_word_stun (%2d): HP: %d Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	ieDword limit = 90;
 
 	if (fx->Parameter1) {
@@ -4954,7 +4971,7 @@ int fx_power_word_stun (Scriptable* Owner, Actor* target, Effect* fx)
 //0xd3 State:Imprisonment (avatar removal plus portrait icon)
 int fx_imprisonment (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_imprisonment (%2d)\n", fx->Opcode );
+	if (0) print( "fx_imprisonment (%2d)\n", fx->Opcode );
 	target->SetMCFlag(MC_HIDDEN, BM_OR);
 	target->AddPortraitIcon(PI_PRISON);
 	return FX_APPLIED;
@@ -4966,7 +4983,7 @@ static EffectRef fx_maze_ref = { "Maze", -1 };
 
 int fx_freedom (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_freedom (%2d)\n", fx->Opcode );
+	if (0) print( "fx_freedom (%2d)\n", fx->Opcode );
 	target->fxqueue.RemoveAllEffects( fx_imprisonment_ref );
 	target->fxqueue.RemoveAllEffects( fx_maze_ref );
 	return FX_NOT_APPLIED;
@@ -4975,7 +4992,7 @@ int fx_freedom (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xd5 Maze
 int fx_maze (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_maze (%2d)\n", fx->Opcode );
+	if (0) print( "fx_maze (%2d)\n", fx->Opcode );
 	if (!fx->Parameter2 && fx->FirstApply) {
 		//get the maze dice number (column 3)
 		int stat = target->GetSafeStat(IE_INT);
@@ -4992,7 +5009,7 @@ int fx_maze (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //GemRB extension: if fx->Parameter1 is set, it is the bitfield of spell types (could be priest spells)
 int fx_select_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_select_spell (%2d) %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_select_spell (%2d) %d\n", fx->Opcode, fx->Parameter2 );
 	Spellbook *sb = &target->spellbook;
 	if(fx->Parameter2) {
 		//all known spells, no need to memorize
@@ -5019,7 +5036,7 @@ int fx_select_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 static EffectRef fx_protection_from_animation_ref = { "Protection:Animation", -1 };
 int fx_play_visual_effect (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_play_visual_effect (%2d): Resource: %s Type: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
+	if (0) print( "fx_play_visual_effect (%2d): Resource: %s Type: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
 
 	//this is in the original engine (dead actors lose this effect)
 	if (STATE_GET( STATE_DEAD) ) {
@@ -5084,7 +5101,7 @@ static EffectRef fx_leveldrain_ref = { "LevelDrainModifier", -1 };
 // FIXME: BG2 level drain uses parameter3 to decrease the MaxHp, and parameter4 to decrease level. (unset)
 int fx_leveldrain_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_leveldrain_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter1 );
+	if (0) print( "fx_leveldrain_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter1 );
 
 	//never subtract more than the maximum hitpoints
 	ieDword x = STAT_GET(IE_MAXHITPOINTS)-1;
@@ -5113,7 +5130,7 @@ static EffectRef fx_sleep_ref = { "State:Sleep", -1 };
 
 int fx_power_word_sleep (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_power_word_sleep (%2d): HP: %d Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_power_word_sleep (%2d): HP: %d Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	ieDword limit = 20;
 
 	if (fx->Parameter1) {
@@ -5139,7 +5156,7 @@ int fx_power_word_sleep (Scriptable* Owner, Actor* target, Effect* fx)
 // 0xda StoneSkinModifier
 int fx_stoneskin_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_stoneskin_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter1 );
+	if (0) print( "fx_stoneskin_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter1 );
 	if (!fx->Parameter1) {
 		return FX_NOT_APPLIED;
 	}
@@ -5169,7 +5186,7 @@ int fx_dispel_school (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	ieResRef Removed;
 
-	if (0) printf( "fx_dispel_school (%2d): Level: %d Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_dispel_school (%2d): Level: %d Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	target->fxqueue.RemoveLevelEffects(Removed, fx->Parameter1, RL_MATCHSCHOOL, fx->Parameter2);
 	return FX_NOT_APPLIED;
 }
@@ -5178,7 +5195,7 @@ int fx_dispel_secondary_type (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	ieResRef Removed;
 
-	if (0) printf( "fx_dispel_secondary_type (%2d): Level: %d Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_dispel_secondary_type (%2d): Level: %d Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	target->fxqueue.RemoveLevelEffects(Removed, fx->Parameter1, RL_MATCHSECTYPE, fx->Parameter2);
 	return FX_NOT_APPLIED;
 }
@@ -5186,7 +5203,7 @@ int fx_dispel_secondary_type (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xde RandomTeleport
 int fx_teleport_field (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_teleport_field (%2d): Distance: %d\n", fx->Opcode, fx->Parameter1 );
+	if (0) print( "fx_teleport_field (%2d): Distance: %d\n", fx->Opcode, fx->Parameter1 );
 
 	Map *map = target->GetCurrentArea();
 	if (!map) {
@@ -5203,7 +5220,7 @@ int fx_teleport_field (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xdf //Protection:SchoolDec
 int fx_protection_school_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_protection_school_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_protection_school_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	if (fx->Parameter1) {
 		STAT_BIT_OR( IE_IMMUNITY, IMM_SCHOOL_DEC );
 		return FX_APPLIED;
@@ -5215,7 +5232,7 @@ int fx_protection_school_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 int fx_cure_leveldrain (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_leveldrain (%2d)\n", fx->Opcode );
+	if (0) print( "fx_cure_leveldrain (%2d)\n", fx->Opcode );
 	//all level drain removed at once???
 	//if not, then find old effect, remove a number
 	target->fxqueue.RemoveAllEffects( fx_leveldrain_ref );
@@ -5226,7 +5243,7 @@ int fx_cure_leveldrain (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //gemrb special: speed and color are custom
 int fx_reveal_magic (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_reveal_magic (%2d)\n", fx->Opcode );
+	if (0) print( "fx_reveal_magic (%2d)\n", fx->Opcode );
 	if (target->fxqueue.HasAnyDispellableEffect()) {
 		if (!fx->Parameter1) {
 			fx->Parameter1=0xff00; //blue
@@ -5244,7 +5261,7 @@ int fx_reveal_magic (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xe2 Protection:SecondaryTypeDec
 int fx_protection_secondary_type_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_protection_secondary_type_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_protection_secondary_type_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	if (fx->Parameter1) {
 		STAT_BIT_OR( IE_IMMUNITY, IMM_SECTYPE_DEC );
 		return FX_APPLIED;
@@ -5255,7 +5272,7 @@ int fx_protection_secondary_type_dec (Scriptable* /*Owner*/, Actor* target, Effe
 //0xe3 Bounce:SchoolDecrement
 int fx_bounce_school_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bounce_school_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_bounce_school_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_BOUNCE, BNC_SCHOOL_DEC );
 	target->AddPortraitIcon(PI_BOUNCE2);
 	return FX_APPLIED;
@@ -5264,7 +5281,7 @@ int fx_bounce_school_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xe4 Bounce:SecondaryTypeDecrement
 int fx_bounce_secondary_type_dec (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_bounce_secondary_type_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_bounce_secondary_type_dec (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_BIT_OR( IE_BOUNCE, BNC_SECTYPE_DEC );
 	target->AddPortraitIcon(PI_BOUNCE2);
 	return FX_APPLIED;
@@ -5275,7 +5292,7 @@ int fx_dispel_school_one (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	ieResRef Removed;
 
-	if (0) printf( "fx_dispel_school_one (%2d): Level: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_dispel_school_one (%2d): Level: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	target->fxqueue.RemoveLevelEffects(Removed, fx->Parameter1, RL_MATCHSCHOOL|RL_REMOVEFIRST, fx->Parameter2);
 	return FX_NOT_APPLIED;
 }
@@ -5285,7 +5302,7 @@ int fx_dispel_secondary_type_one (Scriptable* /*Owner*/, Actor* target, Effect* 
 {
 	ieResRef Removed;
 
-	if (0) printf( "fx_dispel_secondary_type_one (%2d): Level: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_dispel_secondary_type_one (%2d): Level: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	target->fxqueue.RemoveLevelEffects(Removed, fx->Parameter1, RL_MATCHSECTYPE|RL_REMOVEFIRST, fx->Parameter2);
 	return FX_NOT_APPLIED;
 }
@@ -5293,7 +5310,7 @@ int fx_dispel_secondary_type_one (Scriptable* /*Owner*/, Actor* target, Effect* 
 //0xe7 Timestop
 int fx_timestop (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_timestop (%2d)\n", fx->Opcode);
+	if (0) print( "fx_timestop (%2d)\n", fx->Opcode);
 	core->GetGame()->TimeStop(target, fx->Duration);
 	return FX_NOT_APPLIED;
 }
@@ -5301,92 +5318,159 @@ int fx_timestop (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0xe8 CastSpellOnCondition
 int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cast_spell_on_condition (%2d): Target: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cast_spell_on_condition (%2d): Target: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	/*
+	 * This is used for Fire Shield, etc, to cast spells when certain
+	 * triggers are true. It is also used for contingencies, which set
+	 * Parameter3 and expect some special processing.
+	 * In the original engine, this constructs a 'contingency list' in the
+	 * target's stats, which is checked in two cases: every 100 ticks
+	 * (for 0x4xxx-type triggers) and every time a trigger is added (for
+	 * other triggers).
+	 * Instead, we handle the first type directly here in the effect
+	 * itself, and the normal type by marking triggers with the flag
+	 * TEF_PROCESSED_EFFECTS after every effect run, so we can tell that
+	 * only triggers without the flag should be checked.
+	 * Conveniently, since contingency versions self-destruct and
+	 * non-contingency versions are only allowed to run once per
+	 * frame, we need only check a single trigger per effect run.
+	 */
 
 	if (fx->FirstApply && fx->Parameter3) {
+		// TODO: display strings
+
 		target->spellbook.HaveSpell( fx->Resource, HS_DEPLETE );
 		target->spellbook.HaveSpell( fx->Resource2, HS_DEPLETE );
 		target->spellbook.HaveSpell( fx->Resource3, HS_DEPLETE );
 		target->spellbook.HaveSpell( fx->Resource4, HS_DEPLETE );
 	}
 
-	//get subject of check
+	if (fx->Parameter3) {
+		target->AddPortraitIcon(PI_CONTINGENCY);
+	}
+
+	// TODO: resist source spell, if any
+
+	// get the actor to cast spells at
 	Actor *actor = NULL;
 	Map *map = target->GetCurrentArea();
-	switch(fx->Parameter1) {
-		//self
-	case 0: actor = target; break;
-		//last attacker
-	case 1: actor = map->GetActorByGlobalID(target->LastHitter); break;
-		//nearest enemy
-		//fix this!
-	//case 2: actor = map->GetActorByGlobalID(target->LastSeen); break;
-	case 2: actor = GetNearestEnemyOf(map, target, 0); break;
-		//nearest creature
-	case 3: actor = map->GetActorByGlobalID(target->LastSeen); break;
+	switch (fx->Parameter1) {
+	case 0:
+		// Myself
+		actor = target;
+		break;
+	case 1:
+		// LastHitter
+		actor = map->GetActorByGlobalID(target->LastHitter);
+		break;
+	case 2:
+		// NearestEnemyOf
+		actor = GetNearestEnemyOf(map, target, 0);
+		break;
+	case 3:
+		// Nearest?
+		actor = map->GetActorByGlobalID(target->LastSeen);
+		break;
 	}
+
 	if (!actor) {
 		return FX_APPLIED;
 	}
-	int condition;
-	//check condition
-	switch(fx->Parameter2) {
-	case COND_GOTHIT: //on hit
-		condition = target->LastDamage;
+
+	bool condition;
+	bool per_round = true; // 4xxx trigger?
+	const TriggerEntry *entry = NULL;
+
+	// check the condition
+	switch (fx->Parameter2) {
+	case COND_GOTHIT:
+		// HitBy([ANYONE])
+		// TODO: should we ignore this for self-hits in non-contingency mode?
+		entry = target->GetMatchingTrigger(trigger_hitby, TEF_PROCESSED_EFFECTS);
+		per_round = false;
 		break;
-	case COND_NEAR: //
-		condition = PersonalDistance(actor, target)<30;
+	case COND_NEAR:
+		// See(NearestEnemyOf())
+		// FIXME
+		condition = PersonalDistance(actor, target) < 30;
 		break;
 	case COND_HP_HALF:
-		condition = actor->GetBase(IE_HITPOINTS)<actor->GetStat(IE_MAXHITPOINTS)/2;
+		// HPPercentLT(Myself, 50)
+		condition = target->GetBase(IE_HITPOINTS) < (target->GetStat(IE_MAXHITPOINTS) / 2);
 		break;
 	case COND_HP_QUART:
-		condition = actor->GetBase(IE_HITPOINTS)<actor->GetStat(IE_MAXHITPOINTS)/4;
+		// HPPercentLT(Myself, 25)
+		condition = target->GetBase(IE_HITPOINTS) < (target->GetStat(IE_MAXHITPOINTS) / 4);
 		break;
 	case COND_HP_LOW:
-		condition = actor->GetBase(IE_HITPOINTS)<actor->GetStat(IE_MAXHITPOINTS)/10;
+		// HPPercentLT(Myself, 10)
+		condition = target->GetBase(IE_HITPOINTS) < (target->GetStat(IE_MAXHITPOINTS) / 10);
 		break;
 	case COND_HELPLESS:
-		condition = actor->GetStat(IE_STATE_ID) & STATE_CANTMOVE;
+		// StateCheck(Myself, STATE_HELPLESS)
+		condition = (bool)(target->GetStat(IE_STATE_ID) & STATE_CANTMOVE);
 		break;
 	case COND_POISONED:
-		condition = actor->GetStat(IE_STATE_ID) & STATE_POISONED;
+		// StateCheck(Myself, STATE_POISONED)
+		condition = (bool)(target->GetStat(IE_STATE_ID) & STATE_POISONED);
 		break;
-	case COND_ATTACKED: // once per round
-		condition = actor->LastHitter;
+	case COND_ATTACKED:
+		// AttackedBy([ANYONE])
+		entry = target->GetMatchingTrigger(trigger_attackedby, TEF_PROCESSED_EFFECTS);
+		per_round = false;
 		break;
-	case COND_NEAR4: // closer than 4'
-		condition = PersonalDistance(actor, target)<4;
+	case COND_NEAR4:
+		// PersonalSpaceDistance([ANYONE], 4)
+		// FIXME
+		condition = PersonalDistance(actor, target) < 4;
 		break;
-	case COND_NEAR10: // closer than 10'
-		condition = PersonalDistance(actor, target)<10;
+	case COND_NEAR10:
+		// PersonalSpaceDistance([ANYONE], 10)
+		// FIXME
+		condition = PersonalDistance(target, actor) < 10;
 		break;
 	case COND_EVERYROUND:
-		condition = 1;
+		condition = true;
 		break;
 	case COND_TOOKDAMAGE:
-		condition = actor->LastDamage;
+		// TookDamage()
+		entry = target->GetMatchingTrigger(trigger_tookdamage, TEF_PROCESSED_EFFECTS);
+		per_round = false;
 		break;
 	default:
-		condition = 0;
+		condition = false;
+	}
+
+	if (per_round) {
+		// This is a 4xxx trigger which is only checked every round.
+		if (Owner->AdjustedTicks % core->Time.round_size)
+			condition = false;
+	} else {
+		// This is a normal trigger which gets a single opportunity every frame.
+		condition = (entry != NULL);
 	}
 
 	if (condition) {
+		// The trigger was evaluated as true, cast the spells now.
+		// TODO: fail remaining spells if an earlier one fails?
 		core->ApplySpell(fx->Resource, actor, Owner, fx->Power);
 		core->ApplySpell(fx->Resource2, actor, Owner, fx->Power);
 		core->ApplySpell(fx->Resource3, actor, Owner, fx->Power);
 		core->ApplySpell(fx->Resource4, actor, Owner, fx->Power);
+
 		if (fx->Parameter3) {
+			// Contingencies only run once, remove ourselves.
 			return FX_NOT_APPLIED;
 		}
 	}
+
 	return FX_APPLIED;
 }
 
 // 0xe9 Proficiency
 int fx_proficiency (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_proficiency (%2d): Value: %d, Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_proficiency (%2d): Value: %d, Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (fx->Parameter2>=MAX_STATS) return FX_NOT_APPLIED;
 
@@ -5402,7 +5486,7 @@ static EffectRef fx_contingency_ref = { "CastSpellOnCondition", -1 };
 
 int fx_create_contingency (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_create_contingency (%2d): Level: %d, Count: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_create_contingency (%2d): Level: %d, Count: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (target->fxqueue.HasEffectWithSource(fx_contingency_ref, fx->Source)) {
 		displaymsg->DisplayConstantStringName(STR_CONTDUP, 0xf0f0f0, target);
@@ -5429,7 +5513,7 @@ int fx_create_contingency (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xeb WingBuffet
 int fx_wing_buffet (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_wing_buffet (%2d): Value: %d, Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_wing_buffet (%2d): Value: %d, Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//create movement in actor
 
 	ieDword dir;
@@ -5465,7 +5549,7 @@ int fx_puppet_master (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	const char * resref = NULL;
 
-	if (0) printf( "fx_puppet_master (%2d): Value: %d, Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_puppet_master (%2d): Value: %d, Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET (IE_PUPPETMASTERTYPE, fx->Parameter1);
 
 	//copyself doesn't copy scripts, so the script clearing code is not needed
@@ -5529,7 +5613,7 @@ int fx_puppet_master (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xed PuppetMarker
 int fx_puppet_marker (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_puppet_marker (%2d): Value: %d, Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_puppet_marker (%2d): Value: %d, Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//actually the Type is in parameter2 and the ID is in parameter1
 	//but for some reason the defines are in the opposite order
 	STAT_SET (IE_PUPPETTYPE, fx->Parameter1);  //cb4 - the ID of the controller
@@ -5540,7 +5624,7 @@ int fx_puppet_marker (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xee Disintegrate
 int fx_disintegrate (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_disintegrate (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_disintegrate (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (EffectQueue::match_ids( target, fx->Parameter2, fx->Parameter1) ) {
 		//convert it to a death opcode or apply the new effect?
 		fx->Opcode = EffectQueue::ResolveEffect(fx_death_ref);
@@ -5564,7 +5648,7 @@ int fx_disintegrate (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 int fx_farsee (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_farsee (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_farsee (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	Map *map = target->GetCurrentArea();
 	if (!map) {
 		return FX_APPLIED;
@@ -5601,7 +5685,7 @@ int fx_farsee (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xf0 Icon:Remove
 int fx_remove_portrait_icon (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_remove_portrait_icon (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_remove_portrait_icon (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	target->fxqueue.RemoveAllEffectsWithParam( fx_display_portrait_icon_ref, fx->Parameter2 );
 	return FX_NOT_APPLIED;
 }
@@ -5612,7 +5696,7 @@ static EffectRef fx_confused_state_ref = { "State:Confused", -1 };
 
 int fx_cure_confused_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_cure_confused_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_cure_confused_state (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	BASE_STATE_CURE( STATE_CONFUSED );
 	target->fxqueue.RemoveAllEffects(fx_confused_state_ref);
 	//FIXME:oddly enough, HoW removes the confused icon
@@ -5630,7 +5714,7 @@ int fx_cure_confused_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xf3 DrainItems (this is disabled in ToB)
 int fx_drain_items (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_drain_items (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_drain_items (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	ieDword i=fx->Parameter1;
 	while (i--) {
 		//deplete magic item = 0
@@ -5642,7 +5726,7 @@ int fx_drain_items (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xf4 DrainSpells
 int fx_drain_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_drain_spells (%2d): Count: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_drain_spells (%2d): Count: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	ieDword i=fx->Parameter1;
 	if (fx->Parameter2) {
 		while(i--) {
@@ -5662,21 +5746,21 @@ int fx_drain_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xf5 CheckForBerserk
 int fx_checkforberserk_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_checkforberserk_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_checkforberserk_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET( IE_CHECKFORBERSERK, fx->Parameter2 );
 	return FX_APPLIED;
 }
 // 0xf6 BerserkStage1Modifier
 int fx_berserkstage1_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_berserkstage1_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_berserkstage1_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET( IE_BERSERKSTAGE1, fx->Parameter2 );
 	return FX_APPLIED;
 }
 // 0xf7 BerserkStage2Modifier
 int fx_berserkstage2_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_berserkstage2_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_berserkstage2_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET( IE_BERSERKSTAGE2, fx->Parameter2 );
 	STATE_SET (STATE_BERSERK);
 	return FX_APPLIED;
@@ -5693,7 +5777,7 @@ int fx_berserkstage2_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xfa DamageLuckModifier
 int fx_damageluck_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_damageluck_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_damageluck_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_DAMAGELUCK );
 	return FX_APPLIED;
 }
@@ -5702,7 +5786,7 @@ int fx_damageluck_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 int fx_change_bardsong (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_change_bardsong (%2d): %s\n", fx->Opcode, fx->Resource);
+	if (0) print( "fx_change_bardsong (%2d): %s\n", fx->Opcode, fx->Resource);
 	memcpy(target->BardSong, fx->Resource, 8);
 	return FX_APPLIED;
 }
@@ -5710,7 +5794,7 @@ int fx_change_bardsong (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0xfc SetTrap
 int fx_set_area_effect (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_trap (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_trap (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	ieDword skill, roll;
 	Map *map;
 
@@ -5771,7 +5855,7 @@ int fx_set_area_effect (Scriptable* Owner, Actor* target, Effect* fx)
 // 0xfd SetMapNote
 int fx_set_map_note (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_map_note (%2d): StrRef: %d Color: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_map_note (%2d): StrRef: %d Color: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	Scriptable *marker = target?target:Owner;
 	Map *map = marker->GetCurrentArea();
 	if (!map) return FX_APPLIED; //delay effect
@@ -5784,7 +5868,7 @@ int fx_set_map_note (Scriptable* Owner, Actor* target, Effect* fx)
 // 0xfe RemoveMapNote
 int fx_remove_map_note (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_remove_map_note (%2d)\n", fx->Opcode);
+	if (0) print( "fx_remove_map_note (%2d)\n", fx->Opcode);
 	Scriptable *marker = target?target:Owner;
 	Map *map = marker->GetCurrentArea();
 	if (!map) return FX_APPLIED; //delay effect
@@ -5796,7 +5880,7 @@ int fx_remove_map_note (Scriptable* Owner, Actor* target, Effect* fx)
 // 0xff Item:CreateDays
 int fx_create_item_days (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_create_item_days (%2d)\n", fx->Opcode );
+	if (0) print( "fx_create_item_days (%2d)\n", fx->Opcode );
 	target->inventory.AddSlotItemRes( fx->Resource, SLOT_ONLYINVENTORY, fx->Parameter1, fx->Parameter3, fx->Parameter4 );
 	if ((fx->TimingMode&0xff) == FX_DURATION_INSTANT_LIMITED) {
 		//if this effect has expiration, then it will remain as a remove_item
@@ -5814,7 +5898,7 @@ int fx_create_item_days (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x100 Sequencer:Store
 int fx_store_spell_sequencer(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_store_spell_sequencer (%2d)\n", fx->Opcode );
+	if (0) print( "fx_store_spell_sequencer (%2d)\n", fx->Opcode );
 	//just display the spell sequencer portrait icon
 	target->AddPortraitIcon(PI_SEQUENCER);
 	if (fx->FirstApply && fx->Parameter3) {
@@ -5831,7 +5915,7 @@ static EffectRef fx_spell_sequencer_active_ref = { "Sequencer:Store", -1 };
 
 int fx_create_spell_sequencer(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_create_spell_sequencer (%2d): Level: %d, Count: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_create_spell_sequencer (%2d): Level: %d, Count: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (target->fxqueue.HasEffectWithSource(fx_spell_sequencer_active_ref, fx->Source)) {
 		displaymsg->DisplayConstantStringName(STR_SEQDUP, 0xf0f0f0, target);
 		return FX_NOT_APPLIED;
@@ -5852,7 +5936,7 @@ int fx_create_spell_sequencer(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 int fx_activate_spell_sequencer(Scriptable* Owner, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_activate_spell_sequencer (%2d): Resource: %s\n", fx->Opcode, fx->Resource );
+	if (0) print( "fx_activate_spell_sequencer (%2d): Resource: %s\n", fx->Opcode, fx->Resource );
 	if (Owner->Type!=ST_ACTOR) {
 		return FX_NOT_APPLIED;
 	}
@@ -5873,7 +5957,7 @@ int fx_activate_spell_sequencer(Scriptable* Owner, Actor* target, Effect* fx)
 // 0x103 SpellTrap (Protection:SpellLevelDec + recall spells)
 int fx_spelltrap(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_spelltrap (%2d): Count: %d, Level: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_spelltrap (%2d): Count: %d, Level: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (fx->Parameter3) {
 		target->RestoreSpellLevel(fx->Parameter3, 0);
 		fx->Parameter3=0;
@@ -5891,21 +5975,21 @@ int fx_spelltrap(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x138 Crash138
 int fx_crash (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
-	if (0) printf( "fx_crash (%2d): Param1: %d, Param2: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_crash (%2d): Param1: %d, Param2: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	return FX_NOT_APPLIED;
 }
 
 // 0x105 RestoreSpells
 int fx_restore_spell_level(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_restore_spell_level (%2d): Level: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_restore_spell_level (%2d): Level: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	target->RestoreSpellLevel(fx->Parameter1, fx->Parameter2);
 	return FX_NOT_APPLIED;
 }
 // 0x106 VisualRangeModifier
 int fx_visual_range_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_visual_range_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_visual_range_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_VISUALRANGE );
 	return FX_APPLIED;
 }
@@ -5913,7 +5997,7 @@ int fx_visual_range_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x107 BackstabModifier
 int fx_backstab_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_visual_range_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_visual_range_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//this is how it is done in the original engine, i don't know why they would do this
 	//ctrl-r would probably remove it otherwise
 	//Why they didn't fix it in the spell/item is beyond me
@@ -5963,7 +6047,7 @@ int fx_modify_global_variable (Scriptable* /*Owner*/, Actor* /*target*/, Effect*
 		strnuprcpy(fx->Resource,"RETURN_TO_LONELYWOOD",32);
 	}
 
-	if (0) printf( "fx_modify_global_variable (%2d): Variable: %s Value: %d Type: %d\n", fx->Opcode, fx->Resource, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_modify_global_variable (%2d): Variable: %s Value: %d Type: %d\n", fx->Opcode, fx->Resource, fx->Parameter1, fx->Parameter2 );
 	if (fx->Parameter2) {
 		ieDword var = 0;
 		//use resource memory area as variable name
@@ -5979,7 +6063,7 @@ static EffectRef immunity_effect_ref = { "Protection:Spell", -1 };
 
 int fx_remove_immunity(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_remove_immunity (%2d): %s\n", fx->Opcode, fx->Resource );
+	if (0) print( "fx_remove_immunity (%2d): %s\n", fx->Opcode, fx->Resource );
 	target->fxqueue.RemoveAllEffectsWithResource(immunity_effect_ref, fx->Resource);
 	return FX_NOT_APPLIED;
 }
@@ -5988,7 +6072,7 @@ int fx_remove_immunity(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x10c ExploreModifier
 int fx_explore_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_explore_modifier (%2d)\n", fx->Opcode );
+	if (0) print( "fx_explore_modifier (%2d)\n", fx->Opcode );
 	if (fx->Parameter2) {
 		//gemrb modifier
 		STAT_SET (IE_EXPLORE, fx->Parameter1);
@@ -6000,7 +6084,7 @@ int fx_explore_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x10d ScreenShake
 int fx_screenshake (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
-	if (0) printf( "fx_screenshake (%2d): Strength: %d\n", fx->Opcode, fx->Parameter1 );
+	if (0) print( "fx_screenshake (%2d): Strength: %d\n", fx->Opcode, fx->Parameter1 );
 	core->timer->SetScreenShake( fx->Parameter1, fx->Parameter1, fx->Parameter1);
 	return FX_APPLIED;
 }
@@ -6010,7 +6094,7 @@ static EffectRef fx_pause_caster_modifier_ref = { "PauseTarget", -1 };
 
 int fx_unpause_caster (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_unpause_caster (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_unpause_caster (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	target->fxqueue.RemoveAllEffects(fx_pause_caster_modifier_ref);
 	return FX_NOT_APPLIED;
 }
@@ -6018,7 +6102,7 @@ int fx_unpause_caster (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x10f SummonDisable (bg2)
 int fx_summon_disable (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_summon_disable (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_summon_disable (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET(IE_SUMMONDISABLE, 1);
 	STAT_SET(IE_CASTERHOLD, 1);
 	if (fx->Parameter2==1) {
@@ -6038,7 +6122,7 @@ int fx_apply_effect_repeat (Scriptable* Owner, Actor* target, Effect* fx)
 {
 	ieDword i; //moved here because msvc6 cannot handle it otherwise
 
-	if (0) printf( "fx_apply_effect_repeat (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_apply_effect_repeat (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	Point p(fx->PosX, fx->PosY);
 	Effect *newfx = core->GetEffect(fx->Resource, fx->Power, p);
@@ -6068,12 +6152,12 @@ int fx_apply_effect_repeat (Scriptable* Owner, Actor* target, Effect* fx)
 			}
 			break;
 		case 3: //once every Param1 second
-			if (fx->Parameter1 && (core->GetGame()->GameTime%fx->Parameter1)) {
+			if (fx->Parameter1 && !(core->GetGame()->GameTime%(fx->Parameter1*AI_UPDATE_TIME))) {
 				core->ApplyEffect(newfx, target, Owner);
 			}
 			break;
 		case 4: //param3 times every Param1 second
-			if (fx->Parameter1 && (core->GetGame()->GameTime%fx->Parameter1)) {
+			if (fx->Parameter1 && !(core->GetGame()->GameTime%(fx->Parameter1*AI_UPDATE_TIME))) {
 				for (i=0;i<fx->Parameter3;i++) {
 					core->ApplyEffect(newfx, target, Owner);
 				}
@@ -6090,7 +6174,7 @@ int fx_remove_projectile (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	ieDword *projectilelist;
 
 	//instant effect
-	if (0) printf( "fx_remove_projectile (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_remove_projectile (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	if (!target) return FX_NOT_APPLIED;
 	Map *area = target->GetCurrentArea();
@@ -6140,7 +6224,7 @@ int fx_remove_projectile (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x112 TeleportToTarget
 int fx_teleport_to_target (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_teleport_to_target (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_teleport_to_target (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (STATE_GET(STATE_DEAD)) {
 		return FX_NOT_APPLIED;
 	}
@@ -6164,7 +6248,7 @@ int fx_teleport_to_target (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x113 HideInShadowsModifier
 int fx_hide_in_shadows_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_hide_in_shadows_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_hide_in_shadows_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_HIDEINSHADOWS );
 	return FX_APPLIED;
 }
@@ -6172,7 +6256,7 @@ int fx_hide_in_shadows_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 // 0x114 DetectIllusionsModifier
 int fx_detect_illusion_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_detect_illusion_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_detect_illusion_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_DETECTILLUSIONS );
 	return FX_APPLIED;
 }
@@ -6180,14 +6264,14 @@ int fx_detect_illusion_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 // 0x115 SetTrapsModifier
 int fx_set_traps_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_set_traps_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_set_traps_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_SETTRAPS );
 	return FX_APPLIED;
 }
 // 0x116 ToHitBonusModifier
 int fx_to_hit_bonus_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	HandleBonus( target, IE_HITBONUS, fx->Parameter1, fx->TimingMode );
 	return FX_APPLIED;
 }
@@ -6198,7 +6282,7 @@ static EffectRef fx_disable_button_ref = { "DisableButton", -1 };
 int fx_renable_button (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	//removes the disable button effect
-	if (0) printf( "fx_renable_button (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_renable_button (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	target->fxqueue.RemoveAllEffectsWithParam( fx_disable_button_ref, fx->Parameter2 );
 	return FX_NOT_APPLIED;
 }
@@ -6206,7 +6290,7 @@ int fx_renable_button (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x118 ForceSurgeModifier
 int fx_force_surge_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_force_surge_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_force_surge_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD_VAR( IE_FORCESURGE, MOD_ABSOLUTE );
 	return FX_APPLIED;
 }
@@ -6214,7 +6298,7 @@ int fx_force_surge_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x119 WildSurgeModifier
 int fx_wild_surge_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_wild_surge_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_wild_surge_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_SURGEMOD );
 	return FX_APPLIED;
 }
@@ -6222,7 +6306,7 @@ int fx_wild_surge_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x11a ScriptingState
 int fx_scripting_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_scripting_state (%2d): Value: %d, Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_scripting_state (%2d): Value: %d, Stat: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//original engine didn't check boundaries, causing crashes
 	//we allow only positive indices (some extra stats are still addressable)
@@ -6237,7 +6321,7 @@ int fx_scripting_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x11b ApplyEffectCurse
 int fx_apply_effect_curse (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_apply_effect_curse (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_apply_effect_curse (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	//this effect executes a file effect in place of this effect
 	//the file effect inherits the target and the timingmode, but gets
@@ -6272,7 +6356,7 @@ int fx_apply_effect_curse (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x11c MeleeHitModifier
 int fx_melee_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_melee_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_melee_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_MELEETOHIT );
 	return FX_APPLIED;
 }
@@ -6280,7 +6364,7 @@ int fx_melee_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x11d MeleeDamageModifier
 int fx_melee_damage_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_melee_damage_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_melee_damage_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_MELEEDAMAGE );
 	return FX_APPLIED;
 }
@@ -6288,7 +6372,7 @@ int fx_melee_damage_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x11e MissileDamageModifier
 int fx_missile_damage_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_missile_damage_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_missile_damage_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_MISSILEDAMAGE );
 	return FX_APPLIED;
 }
@@ -6296,7 +6380,7 @@ int fx_missile_damage_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx
 // 0x11f NoCircleState
 int fx_no_circle_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_missile_damage_modifier (%2d)\n", fx->Opcode);
+	if (0) print( "fx_missile_damage_modifier (%2d)\n", fx->Opcode);
 	STAT_SET( IE_NOCIRCLE, 1 );
 	return FX_APPLIED;
 }
@@ -6304,7 +6388,7 @@ int fx_no_circle_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x120 FistHitModifier
 int fx_fist_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_fist_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_fist_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_FISTHIT );
 	return FX_APPLIED;
 }
@@ -6312,14 +6396,14 @@ int fx_fist_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x121 FistDamageModifier
 int fx_fist_damage_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_fist_damage_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_fist_damage_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_FISTDAMAGE );
 	return FX_APPLIED;
 }
 //0x122 TitleModifier
 int fx_title_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_fist_damage_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_fist_damage_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	if (fx->Parameter2) {
 		STAT_SET( IE_TITLE2, fx->Parameter1 );
 	} else {
@@ -6333,7 +6417,7 @@ int fx_title_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //make the bit correspond to it
 int fx_disable_overlay_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_disable_overlay_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_disable_overlay_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET( IE_DISABLEOVERLAY, fx->Parameter1 );
 	return FX_APPLIED;
 }
@@ -6342,7 +6426,7 @@ int fx_disable_overlay_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 //3 different games, 3 different methods of flagging this
 int fx_no_backstab_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_no_backstab_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_no_backstab_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//bg2
 	STAT_SET( IE_DISABLEBACKSTAB, fx->Parameter1 );
 	//how
@@ -6354,7 +6438,7 @@ int fx_no_backstab_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x125 OffscreenAIModifier
 int fx_offscreenai_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_offscreenai_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_offscreenai_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET( IE_ENABLEOFFSCREENAI, fx->Parameter1 );
 	target->Activate();
 	return FX_APPLIED;
@@ -6362,14 +6446,14 @@ int fx_offscreenai_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x126 ExistanceDelayModifier
 int fx_existance_delay_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_existance_delay_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_existance_delay_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET( IE_EXISTANCEDELAY, fx->Parameter1 );
 	return FX_APPLIED;
 }
 //0x127 DisableChunk
 int fx_disable_chunk_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_disable_chunk_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_disable_chunk_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET( IE_DISABLECHUNKING, fx->Parameter1 );
 	return FX_APPLIED;
 }
@@ -6378,7 +6462,7 @@ int fx_disable_chunk_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x128 Protection:Animation
 int fx_protection_from_animation (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_protection_from_animation (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_protection_from_animation (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//remove vvc from actor if active
 	target->RemoveVVCell(fx->Resource, false);
 	return FX_APPLIED;
@@ -6388,7 +6472,7 @@ int fx_protection_from_animation (Scriptable* /*Owner*/, Actor* target, Effect* 
 //0x129 Protection:Turn
 int fx_protection_from_turn (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_non_interruptible_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_non_interruptible_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_SET( IE_NOTURNABLE, fx->Parameter1 );
 	return FX_APPLIED;
 }
@@ -6399,7 +6483,7 @@ int fx_cutscene2 (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 	Game *game;
 	ieResRef resref;
 
-	if (0) printf( "fx_cutscene2 (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_cutscene2 (%2d): Type: %d\n", fx->Opcode, fx->Parameter2 );
 	if (core->InCutSceneMode()) return FX_NOT_APPLIED;
 	game = core->GetGame();
 	if (!game) return FX_NOT_APPLIED;
@@ -6431,7 +6515,7 @@ int fx_cutscene2 (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 //0x12b ChaosShieldModifier
 int fx_chaos_shield_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_chaos_shield_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_chaos_shield_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_ADD( IE_CHAOSSHIELD, fx->Parameter1 );
 	if (fx->Parameter2) {
 		target->AddPortraitIcon(PI_CSHIELD); //162
@@ -6443,7 +6527,7 @@ int fx_chaos_shield_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x12c NPCBump
 int fx_npc_bump (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_npc_bump (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_npc_bump (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	//unknown effect, but known stat position
 	STAT_MOD( IE_NPCBUMP );
 	return FX_APPLIED;
@@ -6451,14 +6535,14 @@ int fx_npc_bump (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x12d CriticalHitModifier
 int fx_critical_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_critical_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_critical_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 	STAT_MOD( IE_CRITICALHITBONUS );
 	return FX_APPLIED;
 }
 // 0x12e CanUseAnyItem
 int fx_can_use_any_item_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_can_use_any_item_modifier (%2d): Value: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_can_use_any_item_modifier (%2d): Value: %d\n", fx->Opcode, fx->Parameter2 );
 
 	STAT_SET( IE_CANUSEANYITEM, fx->Parameter2 );
 	return FX_APPLIED;
@@ -6467,7 +6551,7 @@ int fx_can_use_any_item_modifier (Scriptable* /*Owner*/, Actor* target, Effect* 
 // 0x12f AlwaysBackstab
 int fx_always_backstab_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_always_backstab_modifier (%2d): Value: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_always_backstab_modifier (%2d): Value: %d\n", fx->Opcode, fx->Parameter2 );
 
 	STAT_SET( IE_ALWAYSBACKSTAB, fx->Parameter2 );
 	return FX_APPLIED;
@@ -6476,7 +6560,7 @@ int fx_always_backstab_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 // 0x130 MassRaiseDead
 int fx_mass_raise_dead (Scriptable* Owner, Actor* /*target*/, Effect* fx)
 {
-	if (0) printf( "fx_mass_raise_dead (%2d)\n", fx->Opcode );
+	if (0) print( "fx_mass_raise_dead (%2d)\n", fx->Opcode );
 
 	Game *game=core->GetGame();
 
@@ -6492,7 +6576,7 @@ int fx_mass_raise_dead (Scriptable* Owner, Actor* /*target*/, Effect* fx)
 // 0x131 OffhandHitModifier
 int fx_left_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_left_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_left_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_HITBONUSLEFT );
 	return FX_APPLIED;
@@ -6501,7 +6585,7 @@ int fx_left_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x132 RightHitModifier
 int fx_right_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_right_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_right_to_hit_modifier (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_HITBONUSRIGHT );
 	return FX_APPLIED;
@@ -6510,7 +6594,7 @@ int fx_right_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x133 Reveal:Tracks
 int fx_reveal_tracks (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_reveal_tracks (%2d): Distance: %d\n", fx->Opcode, fx->Parameter1 );
+	if (0) print( "fx_reveal_tracks (%2d): Distance: %d\n", fx->Opcode, fx->Parameter1 );
 	Map *map = target->GetCurrentArea();
 	if (!map) return FX_APPLIED;
 	if (!fx->Parameter2) {
@@ -6531,7 +6615,7 @@ int fx_reveal_tracks (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x134 Protection:Tracking
 int fx_protection_from_tracking (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_protection_from_tracking (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
+	if (0) print( "fx_protection_from_tracking (%2d): Mod: %d, Type: %d\n", fx->Opcode, fx->Parameter1, fx->Parameter2 );
 
 	STAT_MOD( IE_NOTRACKING ); //highlight creature???
 	return FX_APPLIED;
@@ -6549,7 +6633,7 @@ int fx_modify_local_variable (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		memmove(poi, fx->Resource4, 8);
 		fx->IsVariable=1;
 	}
-	if (0) printf( "fx_modify_local_variable (%2d): %s, Mod: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
+	if (0) print( "fx_modify_local_variable (%2d): %s, Mod: %d\n", fx->Opcode, fx->Resource, fx->Parameter2 );
 	if (fx->Parameter2) {
 		ieDword var = 0;
 		//use resource memory area as variable name
@@ -6564,7 +6648,7 @@ int fx_modify_local_variable (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x136 TimelessState
 int fx_timeless_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_timeless_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_timeless_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_SET(IE_DISABLETIMESTOP, fx->Parameter2);
 	return FX_APPLIED;
 }
@@ -6575,7 +6659,7 @@ int fx_generate_wish (Scriptable* Owner, Actor* target, Effect* fx)
 {
 	ieResRef spl;
 
-	if (0) printf( "fx_generate_wish (%2d): Mod: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_generate_wish (%2d): Mod: %d\n", fx->Opcode, fx->Parameter2 );
 	if (!fx->Parameter2) {
 		fx->Parameter2=IE_WIS;
 	}
@@ -6609,7 +6693,7 @@ int fx_generate_wish (Scriptable* Owner, Actor* target, Effect* fx)
 //0x138 //see fx_crash, this effect is not fully enabled in original bg2/tob
 int fx_immunity_sequester (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_immunity_sequester (%2d): Mod: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_immunity_sequester (%2d): Mod: %d\n", fx->Opcode, fx->Parameter2 );
 	//this effect is supposed to provide immunity against sequester (maze/etc?)
 	STAT_SET(IE_NOSEQUESTER, fx->Parameter2);
 	return FX_APPLIED;
@@ -6619,7 +6703,7 @@ int fx_immunity_sequester (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x13a StoneSkin2Modifier
 int fx_golem_stoneskin_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_golem_stoneskin_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter1 );
+	if (0) print( "fx_golem_stoneskin_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter1 );
 	if (!fx->Parameter1) {
 		return FX_NOT_APPLIED;
 	}
@@ -6636,7 +6720,7 @@ int fx_golem_stoneskin_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 // 0x13b AvatarRemovalModifier (also 0x104 iwd)
 int fx_avatar_removal_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_avatar_removal_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter2 );
+	if (0) print( "fx_avatar_removal_modifier (%2d): Mod: %d\n", fx->Opcode, fx->Parameter2 );
 	STAT_SET(IE_AVATARREMOVAL, fx->Parameter2);
 	return FX_APPLIED;
 }
@@ -6644,7 +6728,7 @@ int fx_avatar_removal_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx
 // 0x13c MagicalRest (also 0x124 iwd)
 int fx_magical_rest (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
-	if (0) printf( "fx_magical_rest (%2d)\n", fx->Opcode );
+	if (0) print( "fx_magical_rest (%2d)\n", fx->Opcode );
 	//instant, full rest
 	target->Rest(0);
 	target->fxqueue.RemoveAllEffectsWithParam(fx_display_portrait_icon_ref, PI_FATIGUE);
@@ -6661,7 +6745,7 @@ int fx_magical_rest (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 3 fog
 int fx_change_weather (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
-	printf( "fx_change_weather (%2d): P1: %d\n", fx->Opcode, fx->Parameter1 );
+	print( "fx_change_weather (%2d): P1: %d\n", fx->Opcode, fx->Parameter1 );
 
 	core->GetGame()->StartRainOrSnow(false, fx->Parameter1 & WB_MASK);
 
@@ -6671,7 +6755,7 @@ int fx_change_weather (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 // unknown
 int fx_unknown (Scriptable* /*Owner*/, Actor* /*target*/, Effect* fx)
 {
-	printf( "fx_unknown (%2d): P1: %d P2: %d ResRef: %s\n", fx->Opcode, fx->Parameter1, fx->Parameter2, fx->Resource );
+	print( "fx_unknown (%2d): P1: %d P2: %d ResRef: %s\n", fx->Opcode, fx->Parameter1, fx->Parameter2, fx->Resource );
 	return FX_NOT_APPLIED;
 }
 

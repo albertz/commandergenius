@@ -26,6 +26,8 @@
 #include "EffectMgr.h"
 #include "GameData.h"
 #include "Interface.h"
+#include "PluginMgr.h"
+#include "TableMgr.h"
 #include "GameScript/GameScript.h"
 
 #include <cassert>
@@ -170,7 +172,7 @@ int ResolveSpellName(ieResRef name, int level, ieIWD2SpellType type)
 }
 
 //input: index, level, type, kit
-const ieResRef *ResolveSpellIndex(int index, int level, ieIWD2SpellType type, int kit)
+static const ieResRef *ResolveSpellIndex(int index, int level, ieIWD2SpellType type, int kit)
 {
 	const ieResRef *ret;
 
@@ -231,7 +233,7 @@ const ieResRef *ResolveSpellIndex(int index, int level, ieIWD2SpellType type, in
 	return NULL;
 }
 
-void ReleaseMemoryCRE()
+static void ReleaseMemoryCRE()
 {
 	if (randcolors) {
 		delete [] randcolors;
@@ -338,7 +340,6 @@ static void InitSpellbook()
 CREImporter::CREImporter(void)
 {
 	str = NULL;
-	autoFree = false;
 	TotSCEFF = 0xff;
 	CREVersion = 0xff;
 	InitSpellbook();
@@ -346,21 +347,16 @@ CREImporter::CREImporter(void)
 
 CREImporter::~CREImporter(void)
 {
-	if (str && autoFree) {
-		delete( str );
-	}
+	delete str;
 }
 
-bool CREImporter::Open(DataStream* stream, bool aF)
+bool CREImporter::Open(DataStream* stream)
 {
-	if (str && this->autoFree) {
-		delete( str );
-	}
-	str = stream;
-	autoFree = aF;
 	if (stream == NULL) {
 		return false;
 	}
+	delete str;
+	str = stream;
 	char Signature[8];
 	str->Read( Signature, 8 );
 	IsCharacter = false;
@@ -394,8 +390,7 @@ bool CREImporter::Open(DataStream* stream, bool aF)
 		return true;
 	}
 
-	printMessage( "CREImporter"," ",LIGHT_RED);
-	printf("Not a CRE File or File Version not supported: %8.8s\n", Signature );
+	printMessage("CREImporter", "Not a CRE File or File Version not supported: %8.8s\n", LIGHT_RED, Signature);
 	return false;
 }
 
@@ -794,9 +789,7 @@ Actor* CREImporter::GetActor(unsigned char is_in_party)
 			break;
 		default:
 			Inventory_Size=0;
-			printMessage("CREImporter","Unknown creature signature: ", RED);
-			printf("%d\n", CREVersion);
-			abort();
+			error("CREImporter", "Unknown creature signature: %d\n", CREVersion);
 	}
 
 	// Read saved effects
@@ -1056,8 +1049,7 @@ void CREImporter::ReadInventory(Actor *act, unsigned int Inventory_Size)
 		ieWord index = indices[i++];
 		if (index != 0xffff) {
 			if (index>=ItemsCount) {
-				printMessage("CREImporter"," ",LIGHT_RED);
-				printf("Invalid item index (%d) in creature!\n", index);
+				printMessage("CREImporter", "Invalid item index (%d) in creature!\n", LIGHT_RED, index);
 				continue;
 			}
 			//20 is the size of CREItem on disc (8+2+3x2+4)
@@ -1068,8 +1060,7 @@ void CREImporter::ReadInventory(Actor *act, unsigned int Inventory_Size)
 			if (item) {
 				act->inventory.SetSlotItem(item, Slot);
 			} else {
-				printMessage("CREImporter"," ",LIGHT_RED);
-				printf("Invalid item index (%d) in creature!\n", index);
+				printMessage("CREImporter", "Invalid item index (%d) in creature!\n", LIGHT_RED, index);
 			}
 		}
 	}
@@ -1114,15 +1105,15 @@ void CREImporter::ReadInventory(Actor *act, unsigned int Inventory_Size)
 				memorized_spells[k] = NULL;
 				continue;
 			}
-			printf("[CREImporter]: Duplicate memorized spell (%d) in creature!\n", k);
+			print("[CREImporter]: Duplicate memorized spell (%d) in creature!\n", k);
 		}
 	}
 
 	i=KnownSpellsCount;
 	while(i--) {
 		if (known_spells[i]) {
-			printMessage("CREImporter"," ", YELLOW);
-			printf("Dangling spell in creature: %s!\n", known_spells[i]->SpellResRef);
+			printMessage("CREImporter", "Dangling spell in creature: %s!\n", YELLOW,
+				known_spells[i]->SpellResRef);
 			delete known_spells[i];
 		}
 	}
@@ -1131,8 +1122,8 @@ void CREImporter::ReadInventory(Actor *act, unsigned int Inventory_Size)
 	i=MemorizedSpellsCount;
 	while(i--) {
 		if (memorized_spells[i]) {
-			printMessage("CREImporter"," ", YELLOW);
-			printf("Dangling spell in creature: %s!\n", memorized_spells[i]->SpellResRef);
+			printMessage("CREImporter", "Dangling spell in creature: %s!\n", YELLOW,
+				memorized_spells[i]->SpellResRef);
 			delete memorized_spells[i];
 		}
 	}
@@ -1467,8 +1458,8 @@ void CREImporter::GetIWD2Spellpage(Actor *act, ieIWD2SpellType type, int level, 
 				sm->memorized_spells.push_back(memory);
 			}
 		} else {
-			printMessage("CREImporter","Unresolved spell index: ", LIGHT_RED);
-			printf("%d level:%d, type: %d\n", spellindex, level+1, type);
+			printMessage("CREImporter", "Unresolved spell index: %d level:%d, type: %d\n", LIGHT_RED,
+				spellindex, level+1, type);
 		}
 	}
 	str->ReadDword(&tmpDword);
@@ -2691,7 +2682,7 @@ int CREImporter::PutSpellPages( DataStream *stream, Actor *actor)
 			tmpWord = i;
 			stream->WriteWord( &tmpWord);
 			stream->WriteDword( &SpellIndex);
-			tmpDword = actor->spellbook.GetMemorizedSpellsCount(i,j);
+			tmpDword = actor->spellbook.GetMemorizedSpellsCount(i,j, false);
 			stream->WriteDword( &tmpDword);
 			SpellIndex += tmpDword;
 		}
@@ -2705,7 +2696,7 @@ int CREImporter::PutMemorizedSpells(DataStream *stream, Actor *actor)
 	for (int i=0;i<type;i++) {
 		unsigned int level = actor->spellbook.GetSpellLevelCount(i);
 		for (unsigned int j=0;j<level;j++) {
-			unsigned int count = actor->spellbook.GetMemorizedSpellsCount(i,j);
+			unsigned int count = actor->spellbook.GetMemorizedSpellsCount(i,j, false);
 			for (unsigned int k=0;k<count;k++) {
 				CREMemorizedSpell *cm = actor->spellbook.GetMemorizedSpell(i,j,k);
 

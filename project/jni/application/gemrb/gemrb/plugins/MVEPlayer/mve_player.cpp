@@ -80,7 +80,7 @@ MVEPlayer::~MVEPlayer() {
 	if (audio_stream != -1) host->freeAudioStream(audio_stream);
 
 	if (video_skippedframes)
-		printf("Warning: Had to drop %d video frame(s).\n", video_skippedframes);
+		print("Warning: Had to drop %d video frame(s).\n", video_skippedframes);
 }
 
 /*
@@ -103,7 +103,7 @@ bool MVEPlayer::start_playback() {
 	 * The first two chunks contain audio and video initialisation, hopefully.
 	 */
 	if (!process_chunk() || !process_chunk()) {
-		printf("Error: Failed to read initial movie chunks.\n");
+		print("Error: Failed to read initial movie chunks.\n");
 		return false;
 	}
 
@@ -147,7 +147,7 @@ bool MVEPlayer::request_data(unsigned int len) {
 bool MVEPlayer::verify_header() {
 	if (!request_data(MVE_PREAMBLE_SIZE)) return false;
 	if (memcmp(buffer, MVE_PREAMBLE, MVE_PREAMBLE_SIZE) != 0) {
-		printf("Error: MVE preamble didn't match\n");
+		print("Error: MVE preamble didn't match\n");
 		return false;
 	}
 	return true;
@@ -173,7 +173,7 @@ bool MVEPlayer::process_chunk() {
 	}
 
 	if (chunk_offset != chunk_size) {
-		printf("Error: Decoded past the end of an MVE chunk\n");
+		print("Error: Decoded past the end of an MVE chunk\n");
 		return false;
 	}
 
@@ -228,7 +228,7 @@ bool MVEPlayer::process_segment(unsigned short len, unsigned char type, unsigned
 			/* ignore these */
 			break;
 		default:
-			printf("Warning: Skipping unknown segment type 0x%02x", type);
+			print("Warning: Skipping unknown segment type 0x%02x", type);
 	}
 
 	return true;
@@ -297,8 +297,10 @@ void MVEPlayer::segment_create_timer() {
 void MVEPlayer::segment_video_init(unsigned char version) {
 	unsigned short width = GST_READ_UINT16_LE(buffer) << 3;
 	unsigned short height = GST_READ_UINT16_LE(buffer + 2) << 3;
+/* count is unused
 	unsigned short count = 1;
 	if (version > 0) count = GST_READ_UINT16_LE(buffer + 4);
+*/
 	unsigned short temp = 0;
 	if (version > 1) temp = GST_READ_UINT16_LE(buffer + 6);
 	truecolour = !!temp;
@@ -339,7 +341,9 @@ void MVEPlayer::segment_video_palette() {
 	host->setPalette((unsigned char *)palette - (3 * palette_start), palette_start, palette_count);
 }
 
+//appears to be unused
 void MVEPlayer::segment_video_compressedpalette() {
+#if 0
 	char *data = buffer;
 
 	unsigned int i, j;
@@ -360,6 +364,7 @@ void MVEPlayer::segment_video_compressedpalette() {
 			}
 		}
 	}
+#endif
 }
 
 void MVEPlayer::segment_video_codemap(unsigned short size) {
@@ -419,7 +424,7 @@ void MVEPlayer::segment_audio_init(unsigned char version) {
 
 	audio_stream = host->setAudioStream();
 	if (audio_stream == -1) {
-		printf("Error: MVE player couldn't open audio. Will play silently.\n");
+		print("Error: MVE player couldn't open audio. Will play silently.\n");
 		playsound = false;
 		return;
 	}
@@ -442,7 +447,7 @@ void MVEPlayer::segment_audio_init(unsigned char version) {
 	if (audio_buffer) free(audio_buffer);
 	audio_buffer = (short *)malloc(min_buffer_len);
 
-/*	printf("Movie audio: Sample rate %d, %d channels, %d bit, requested buffer size 0x%02x, %s\n",
+/*	print("Movie audio: Sample rate %d, %d channels, %d bit, requested buffer size 0x%02x, %s\n",
 		audio_sample_rate, audio_num_channels, audio_sample_size, min_buffer_len, audio_compressed ? "compressed" : "uncompressed");*/
 }
 

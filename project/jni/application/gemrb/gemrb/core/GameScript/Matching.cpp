@@ -24,13 +24,14 @@
 
 #include "Interface.h"
 #include "Game.h"
+#include "Map.h"
 #include "TileMap.h"
 #include "Scriptable/Container.h"
 #include "Scriptable/Door.h"
 #include "Scriptable/InfoPoint.h"
 
 /* return a Targets object with a single scriptable inside */
-inline static Targets* ReturnScriptableAsTarget(Scriptable *sc)
+static inline Targets* ReturnScriptableAsTarget(Scriptable *sc)
 {
 	if (!sc) return NULL;
 	Targets *tgts = new Targets();
@@ -39,7 +40,7 @@ inline static Targets* ReturnScriptableAsTarget(Scriptable *sc)
 }
 
 /* do IDS filtering: [PC], [ENEMY], etc */
-inline static bool DoObjectIDSCheck(Object *oC, Actor *ac, bool *filtered) {
+static inline bool DoObjectIDSCheck(Object *oC, Actor *ac, bool *filtered) {
 	for (int j = 0; j < ObjectIDSCount; j++) {
 		if (!oC->objectFields[j]) {
 			continue;
@@ -47,8 +48,7 @@ inline static bool DoObjectIDSCheck(Object *oC, Actor *ac, bool *filtered) {
 		*filtered = true;
 		IDSFunction func = idtargets[j];
 		if (!func) {
-			printMessage("GameScript"," ", YELLOW);
-			printf("Unimplemented IDS targeting opcode: %d\n", j);
+			printMessage("GameScript", "Unimplemented IDS targeting opcode: %d\n", YELLOW, j);
 			continue;
 		}
 		if (!func( ac, oC->objectFields[j] ) ) {
@@ -59,15 +59,15 @@ inline static bool DoObjectIDSCheck(Object *oC, Actor *ac, bool *filtered) {
 }
 
 /* do object filtering: Myself, LastAttackerOf(Player1), etc */
-inline static Targets *DoObjectFiltering(Scriptable *Sender, Targets *tgts, Object *oC, int ga_flags) {
+static inline Targets *DoObjectFiltering(Scriptable *Sender, Targets *tgts, Object *oC, int ga_flags) {
 	for (int i = 0; i < MaxObjectNesting; i++) {
 		int filterid = oC->objectFilters[i];
 		if (!filterid) break;
 
 		ObjectFunction func = objects[filterid];
 		if (!func) {
-			printMessage("GameScript"," ", YELLOW);
-			printf("Unknown object filter: %d %s\n", filterid, objectsTable->GetValue(filterid));
+			printMessage("GameScript", "Unknown object filter: %d %s\n", YELLOW,
+				filterid, objectsTable->GetValue(filterid));
 			continue;
 		}
 
@@ -82,7 +82,7 @@ inline static Targets *DoObjectFiltering(Scriptable *Sender, Targets *tgts, Obje
 
 static EffectRef fx_protection_creature_ref = { "Protection:Creature", -1 };
 
-inline static bool DoObjectChecks(Map *map, Scriptable *Sender, Actor *target, int &dist, bool ignoreinvis=false)
+static inline bool DoObjectChecks(Map *map, Scriptable *Sender, Actor *target, int &dist, bool ignoreinvis=false)
 {
 	dist = SquaredMapDistance(Sender, target);
 

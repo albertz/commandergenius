@@ -34,31 +34,26 @@
 #include "GUI/Slider.h"
 #include "GUI/TextArea.h"
 #include "GUI/TextEdit.h"
+#include "GUI/Window.h"
 
 CHUImporter::CHUImporter()
 {
 	str = NULL;
-	autoFree = false;
 }
 
 CHUImporter::~CHUImporter()
 {
-	if (autoFree) {
-		delete str;
-	}
+	delete str;
 }
 
 /** This function loads all available windows from the 'stream' parameter. */
-bool CHUImporter::Open(DataStream* stream, bool autoFree)
+bool CHUImporter::Open(DataStream* stream)
 {
 	if (stream == NULL) {
 		return false;
 	}
-	if (this->autoFree) {
-		delete str;
-	}
+	delete str;
 	str = stream;
-	this->autoFree = autoFree;
 	char Signature[8];
 	str->Read( Signature, 8 );
 	if (strncmp( Signature, "CHUIV1  ", 8 ) != 0) {
@@ -106,8 +101,7 @@ Window* CHUImporter::GetWindow(unsigned int wid)
 		ResourceHolder<ImageMgr> mos(MosFile);
 		if (mos != NULL) {
 			win->SetBackGround( mos->GetSprite2D(), true );
-		} else
-			printMessage( "CHUImporter","Cannot Load BackGround, skipping\n",YELLOW );
+		}
 	}
 	if (!core->IsAvailable( IE_BAM_CLASS_ID )) {
 		printMessage( "CHUImporter","No BAM Importer Available, skipping controls\n",LIGHT_RED );

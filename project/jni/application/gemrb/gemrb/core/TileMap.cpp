@@ -205,12 +205,12 @@ void TileMap::AddRainOverlay(TileOverlay* overlay)
 	rain_overlays.push_back( overlay );
 }
 
-void TileMap::DrawOverlays(Region screen, int rain)
+void TileMap::DrawOverlays(Region screen, int rain, int flags)
 {
 	if (rain) {
-		overlays[0]->Draw( screen, rain_overlays );
+		overlays[0]->Draw( screen, rain_overlays, flags );
 	} else {
-		overlays[0]->Draw( screen, overlays );
+		overlays[0]->Draw( screen, overlays, flags );
 	}
 }
 
@@ -513,8 +513,8 @@ int TileMap::CleanupContainer(Container *container)
 			return 1;
 		}
 	}
-	printMessage("TileMap", " ", LIGHT_RED);
-	printf("Invalid container cleanup: %s\n", container->GetScriptName());
+	printMessage("TileMap", "Invalid container cleanup: %s\n", LIGHT_RED,
+		container->GetScriptName());
 	return 1;
 }
 

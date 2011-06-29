@@ -25,6 +25,8 @@
 #include "Interface.h"
 #include "Variables.h"
 #include "Video.h"
+#include "GUI/EventMgr.h"
+#include "GUI/Window.h"
 
 ScrollBar::ScrollBar(void)
 {
@@ -261,12 +263,6 @@ void ScrollBar::OnMouseOver(unsigned short /*x*/, unsigned short y)
 				SetPos( aftst );
 		}
 	}
-}
-
-/** Sets the Text of the current control */
-int ScrollBar::SetText(const char* /*string*/, int /*pos*/)
-{
-	return 0;
 }
 
 /** Sets the Maximum Value of the ScrollBar */

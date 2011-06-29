@@ -29,31 +29,20 @@
 
 IDSImporter::IDSImporter(void)
 {
-	str = NULL;
-	autoFree = false;
 }
 
 IDSImporter::~IDSImporter(void)
 {
-	if (str && autoFree) {
-		delete( str );
-	}
-
 	for (unsigned int i = 0; i < ptrs.size(); i++) {
 		free( ptrs[i] );
 	}
 }
 
-bool IDSImporter::Open(DataStream* stream, bool autoFree)
+bool IDSImporter::Open(DataStream* str)
 {
-	if (stream == NULL) {
+	if (str == NULL) {
 		return false;
 	}
-	if (str) {
-		return false;
-	}
-	str = stream;
-	this->autoFree = autoFree;
 
 	str->CheckEncrypted();
 	char tmp[11];
@@ -89,6 +78,7 @@ bool IDSImporter::Open(DataStream* stream, bool autoFree)
 		}
 	}
 
+	delete str;
 	return true;
 }
 

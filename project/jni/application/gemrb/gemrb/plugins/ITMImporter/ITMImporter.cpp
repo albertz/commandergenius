@@ -24,31 +24,26 @@
 
 #include "EffectMgr.h"
 #include "Interface.h"
+#include "PluginMgr.h"
 
 ITMImporter::ITMImporter(void)
 {
 	str = NULL;
-	autoFree = false;
 }
 
 ITMImporter::~ITMImporter(void)
 {
-	if (autoFree) {
-		delete str;
-	}
+	delete str;
 	str = NULL;
 }
 
-bool ITMImporter::Open(DataStream* stream, bool autoFree)
+bool ITMImporter::Open(DataStream* stream)
 {
 	if (stream == NULL) {
 		return false;
 	}
-	if (this->autoFree) {
-		delete str;
-	}
+	delete str;
 	str = stream;
-	this->autoFree = autoFree;
 	char Signature[8];
 	str->Read( Signature, 8 );
 	if (strncmp( Signature, "ITM V1  ", 8 ) == 0) {
@@ -58,7 +53,7 @@ bool ITMImporter::Open(DataStream* stream, bool autoFree)
 	} else if (strncmp( Signature, "ITM V2.0", 8 ) == 0) {
 		version = 20;
 	} else {
-		printf( "[ITMImporter]: This file is not a valid ITM File\n" );
+		print( "[ITMImporter]: This file is not a valid ITM File\n" );
 		return false;
 	}
 
@@ -103,7 +98,7 @@ Item* ITMImporter::GetItem(Item *s)
 	str->Read( &s->MinCharisma, 1 );
 	str->Read( &s->unknown3, 1 );
 	str->ReadDword( &s->Price );
-	str->ReadWord( &s->StackAmount );
+	str->ReadWord( &s->MaxStackAmount );
 	str->ReadResRef( s->ItemIcon );
 	str->ReadWord( &s->LoreToID );
 	str->ReadResRef( s->GroundIcon );
@@ -162,7 +157,7 @@ Item* ITMImporter::GetItem(Item *s)
 
 
 	if (!core->IsAvailable( IE_BAM_CLASS_ID )) {
-		printf( "[ITMImporter]: No BAM Importer Available.\n" );
+		print( "[ITMImporter]: No BAM Importer Available.\n" );
 		return NULL;
 	}
 	return s;

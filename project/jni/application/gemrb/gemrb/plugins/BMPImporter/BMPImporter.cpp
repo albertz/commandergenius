@@ -93,8 +93,7 @@ bool BMPImporter::Open(DataStream* stream)
 	//str->ReadDword(&ColorsUsed );
 	//str->ReadDword(&ColorsImportant );
 	if (Compression != 0) {
-		printMessage( "BMPImporter"," ", LIGHT_RED);
-		printf( "Compressed %d-bits Image, not supported.\n", BitCount );
+		printMessage("BMPImporter", "Compressed %d-bits Image, not supported.\n", LIGHT_RED, BitCount);
 		return false;
 	}
 	//COLORTABLE
@@ -136,8 +135,7 @@ bool BMPImporter::Open(DataStream* stream)
 			PaddedRowLength = ( Width >> 1 );
 			break;
 		default:
-			printMessage( "BMPImporter"," ", LIGHT_RED);
-			printf( "BitCount %d is not supported.\n", BitCount );
+			printMessage("BMPImporter", "BitCount %d is not supported.\n", LIGHT_RED, BitCount);
 			return false;
 	}
 	//if(BitCount!=4)
@@ -274,8 +272,7 @@ Bitmap* BMPImporter::GetBitmap()
 		}
 		break;
 	case 24:
-		printMessage("BMPImporter", "Don't know how to handle 24bit bitmap from ", WHITE);
-		printf( "%s...", str->filename );
+		printMessage("BMPImporter", "Don't know how to handle 24bit bitmap from %s...", WHITE, str->filename);
 		printStatus( "ERROR", LIGHT_RED );
 		for (y = 0; y < Height; y++) {
 			for (unsigned int x = 0; x < Width; x++) {
@@ -288,8 +285,36 @@ Bitmap* BMPImporter::GetBitmap()
 	return data;
 }
 
+Image* BMPImporter::GetImage()
+{
+	Image *data = new Image(Width,Height);
+
+	unsigned char *p = ( unsigned char * ) pixels;
+	switch (BitCount) {
+	case 8:
+		unsigned int y;
+		for (y = 0; y < Height; y++) {
+			for (unsigned int x = 0; x < Width; x++) {
+				data->SetPixel(x,y,Palette[p[y*Width + x]%NumColors]);
+			}
+		}
+		break;
+	case 24:
+		for (y = 0; y < Height; y++) {
+			for (unsigned int x = 0; x < Width; x++) {
+				unsigned idx = 3*(y*Width + x);
+				Color c = {p[idx+2], p[idx+1], p[idx+0], 0xFF};
+				data->SetPixel(x,y,c);
+			}
+		}
+		break;
+	}
+
+	return data;
+}
+
 #include "plugindef.h"
 
 GEMRB_PLUGIN(0xD768B1, "BMP File Reader")
-PLUGIN_IE_RESOURCE(BMPImporter, ".bmp", (ieWord)IE_BMP_CLASS_ID)
+PLUGIN_IE_RESOURCE(BMPImporter, "bmp", (ieWord)IE_BMP_CLASS_ID)
 END_PLUGIN()

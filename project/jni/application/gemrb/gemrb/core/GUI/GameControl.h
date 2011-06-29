@@ -96,8 +96,6 @@ public:
 public:
 	/** Draws the Control on the Output Display */
 	void Draw(unsigned short x, unsigned short y);
-	/** Sets the Text of the current control */
-	int SetText(const char* string, int pos = 0);
 	/** Sets multiple quicksaves flag*/
 	static void MultipleQuickSaves(int arg);
 	void SetTracker(Actor *actor, ieDword dist);
@@ -112,9 +110,12 @@ private:
 	Region SelectionRect;
 	short StartX, StartY;
 	//int action;
-#ifdef TOUCHSCREEN
+
+	// following variables used for touch scroll areas
+	bool touchScrollAreasEnabled; // true, if scroll areas enabled
 	bool touched; // true, if player touched screen (left button down and hold)
-#endif
+	unsigned int scrollAreasWidth; // scroll areas width
+
 public:
 	Door* overDoor;
 	Container* overContainer;

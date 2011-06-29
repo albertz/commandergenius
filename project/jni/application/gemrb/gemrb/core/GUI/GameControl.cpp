@@ -25,17 +25,25 @@
 #include "DialogHandler.h"
 #include "DisplayMessage.h"
 #include "Effect.h"
+#include "Font.h"
 #include "Game.h"
 #include "GameData.h"
+#include "GlobalTimer.h"
 #include "ImageMgr.h"
 #include "Interface.h"
 #include "Item.h"
+#include "KeyMap.h"
+#include "PathFinder.h"
 #include "SaveGameIterator.h"
 #include "ScriptEngine.h"
+#include "TableMgr.h"
+#include "TextArea.h"
 #include "TileMap.h"
 #include "Video.h"
 #include "damages.h"
 #include "GameScript/GSUtils.h"
+#include "GUI/EventMgr.h"
+#include "GUI/Window.h"
 #include "Scriptable/Container.h"
 #include "Scriptable/Door.h"
 #include "Scriptable/InfoPoint.h"
@@ -47,11 +55,7 @@
 #define DEBUG_SHOW_DOORS	DEBUG_SHOW_CONTAINERS
 #define DEBUG_SHOW_LIGHTMAP     0x08
 
-#ifdef TOUCHSCREEN
-#	define SCROLL_BORDER 32
-#else
-#	define SCROLL_BORDER 5
-#endif
+#define SCROLL_BORDER 5
 
 static const Color cyan = {
 	0x00, 0xff, 0xff, 0xff
@@ -132,9 +136,7 @@ GameControl::GameControl(void)
 	lastCursor = IE_CURSOR_NORMAL;
 	moveX = moveY = 0;
 	scrolling = false;
-#ifdef TOUCHSCREEN
-	touched=false;
-#endif
+	touchScrollAreasEnabled = false;
 	numScrollCursor = 0;
 	DebugFlags = 0;
 	AIUpdateCounter = 1;
@@ -148,6 +150,12 @@ GameControl::GameControl(void)
 		ScreenFlags=SF_ALWAYSCENTER|SF_CENTERONACTOR;
 	} else {
 		ScreenFlags = SF_CENTERONACTOR;
+	}
+	core->GetDictionary()->Lookup("TouchScrollAreas",tmp);
+	if (tmp) {
+		touchScrollAreasEnabled = true;
+		touched = false;
+		scrollAreasWidth = 32;
 	}
 	LeftCount = 0;
 	BottomCount = 0;
@@ -271,7 +279,8 @@ void GameControl::CreateMovement(Actor *actor, const Point &p)
 
 	actor->AddAction( action );
 	// force action so that we get target recticles immediately
-	actor->ProcessActions(true);
+	// FIXME
+	actor->ProcessActions();
 }
 
 GameControl::~GameControl(void)
@@ -587,30 +596,24 @@ void GameControl::Draw(unsigned short x, unsigned short y)
 		}
 	}
 
-#ifdef TOUCHSCREEN
-	if (moveY < 0 && scrolling)
-		video->DrawLine(screen.x+4, screen.y+SCROLL_BORDER, screen.w+screen.x-4, screen.y+SCROLL_BORDER, red);
-	else
-		video->DrawLine(screen.x+4, screen.y+SCROLL_BORDER, screen.w+screen.x-4, screen.y+SCROLL_BORDER, gray);
-	if (moveY > 0 && scrolling)
-		video->DrawLine(screen.x+4, screen.h-SCROLL_BORDER, screen.w+screen.x-4, screen.h-SCROLL_BORDER, red);
-	else
-		video->DrawLine(screen.x+4, screen.h-SCROLL_BORDER, screen.w+screen.x-4, screen.h-SCROLL_BORDER, gray);
-	if (moveX < 0 && scrolling)
-		video->DrawLine(screen.x+SCROLL_BORDER, screen.y+4, screen.x+SCROLL_BORDER, screen.h+screen.y-4, red);
-	else
-		video->DrawLine(screen.x+SCROLL_BORDER, screen.y+4, screen.x+SCROLL_BORDER, screen.h+screen.y-4, gray);
-	if (moveX > 0 && scrolling)
-		video->DrawLine(screen.w+screen.x-SCROLL_BORDER, screen.y+4, screen.w+screen.x-SCROLL_BORDER, screen.h-4, red);
-	else
-		video->DrawLine(screen.w+screen.x-SCROLL_BORDER, screen.y+4, screen.w+screen.x-SCROLL_BORDER, screen.h-4, gray);
-#endif
-}
-
-/** inherited from Control, GameControl doesn't need it */
-int GameControl::SetText(const char* /*string*/, int /*pos*/)
-{
-	return 0;
+	if (touchScrollAreasEnabled) {
+		if (moveY < 0 && scrolling)
+			video->DrawLine(screen.x+4, screen.y+scrollAreasWidth, screen.w+screen.x-4, screen.y+scrollAreasWidth, red);
+		else
+			video->DrawLine(screen.x+4, screen.y+scrollAreasWidth, screen.w+screen.x-4, screen.y+scrollAreasWidth, gray);
+		if (moveY > 0 && scrolling)
+			video->DrawLine(screen.x+4, screen.h-scrollAreasWidth, screen.w+screen.x-4, screen.h-scrollAreasWidth, red);
+		else
+			video->DrawLine(screen.x+4, screen.h-scrollAreasWidth, screen.w+screen.x-4, screen.h-scrollAreasWidth, gray);
+		if (moveX < 0 && scrolling)
+			video->DrawLine(screen.x+scrollAreasWidth, screen.y+4, screen.x+scrollAreasWidth, screen.h+screen.y-4, red);
+		else
+			video->DrawLine(screen.x+scrollAreasWidth, screen.y+4, screen.x+scrollAreasWidth, screen.h+screen.y-4, gray);
+		if (moveX > 0 && scrolling)
+			video->DrawLine(screen.w+screen.x-scrollAreasWidth, screen.y+4, screen.w+screen.x-scrollAreasWidth, screen.h-4, red);
+		else
+			video->DrawLine(screen.w+screen.x-scrollAreasWidth, screen.y+4, screen.w+screen.x-scrollAreasWidth, screen.h-4, gray);
+	}
 }
 
 /** Key Press Event */
@@ -663,10 +666,6 @@ void GameControl::OnKeyPress(unsigned char Key, unsigned short /*Mod*/)
 			SelectActor(pc+1, true);
 			break;
 #ifdef ANDROID
-		case 'o':
-		case 'p':
-			Control::OnKeyPress(Key, 0);
-			break;
 		case 'c': // show containers in ANDROID, GEM_ALT is not possible to use
 			DebugFlags |= DEBUG_SHOW_CONTAINERS;
 			return;
@@ -881,7 +880,7 @@ void GameControl::OnKeyRelease(unsigned char Key, unsigned short Mod)
 				area->MoveVisibleGroundPiles(p);
 				break;
 			case 'x': // shows coordinates on the map
-				printf( "%s [%d.%d]\n", area->GetScriptName(), p.x, p.y );
+				print( "%s [%d.%d]\n", area->GetScriptName(), p.x, p.y );
 				break;
 			case 'g'://shows loaded areas and other game information
 				game->DebugDump();
@@ -997,22 +996,22 @@ void GameControl::OnKeyRelease(unsigned char Key, unsigned short Mod)
 				break;
 			case '4': //show all traps and infopoints
 				DebugFlags ^= DEBUG_SHOW_INFOPOINTS;
-				printf("Show traps and infopoints %s\n", DebugFlags & DEBUG_SHOW_INFOPOINTS ? "ON" : "OFF");
+				print("Show traps and infopoints %s\n", DebugFlags & DEBUG_SHOW_INFOPOINTS ? "ON" : "OFF");
 				break;
 			case '6': //show the lightmap
 				DebugFlags ^= DEBUG_SHOW_LIGHTMAP;
-				printf("Show lightmap %s\n", DebugFlags & DEBUG_SHOW_LIGHTMAP ? "ON" : "OFF");
+				print("Show lightmap %s\n", DebugFlags & DEBUG_SHOW_LIGHTMAP ? "ON" : "OFF");
 				break;
 			case '7': //toggles fog of war
 				core->FogOfWar ^= FOG_DRAWFOG;
-				printf("Show Fog-Of-War: %s\n", core->FogOfWar & FOG_DRAWFOG ? "ON" : "OFF");
+				print("Show Fog-Of-War: %s\n", core->FogOfWar & FOG_DRAWFOG ? "ON" : "OFF");
 				break;
 			case '8': //show searchmap over area
 				core->FogOfWar ^= FOG_DRAWSEARCHMAP;
-				printf("Show searchmap %s\n", core->FogOfWar & FOG_DRAWSEARCHMAP ? "ON" : "OFF");
+				print("Show searchmap %s\n", core->FogOfWar & FOG_DRAWSEARCHMAP ? "ON" : "OFF");
 				break;
 			default:
-				printf( "KeyRelease:%d - %d\n", Key, Mod );
+				print( "KeyRelease:%d - %d\n", Key, Mod );
 				break;
 		}
 		return; //return from cheatkeys
@@ -1030,6 +1029,7 @@ void GameControl::OnKeyRelease(unsigned char Key, unsigned short Mod)
 				displaymsg->DisplayConstantString(STR_UNPAUSED,0xff0000);
 			}
 			break;
+/*
 		case 'm':
 			core->GetGUIScriptEngine()->RunFunction("GUIMA","OpenMapWindow");
 			break;
@@ -1042,6 +1042,13 @@ void GameControl::OnKeyRelease(unsigned char Key, unsigned short Mod)
 		case 'r':
 			core->GetGUIScriptEngine()->RunFunction("GUIREC","OpenRecordsWindow");
 			break;
+		case 'p':
+			core->GetGUIScriptEngine()->RunFunction("GUIPR","OpenPriestWindow");
+			break;
+		case 'w':
+			core->GetGUIScriptEngine()->RunFunction("GUIMG","OpenMageWindow");
+			break;
+*/
 		case 'q': //quicksave
 			QuickSave();
 			break;
@@ -1052,6 +1059,7 @@ void GameControl::OnKeyRelease(unsigned char Key, unsigned short Mod)
 			DebugFlags &= ~DEBUG_SHOW_CONTAINERS;
 			break;
 		default:
+			core->GetKeyMap()->ResolveKey(Key,0);
 			break;
 	}
 }
@@ -1062,8 +1070,7 @@ void GameControl::DisplayTooltip() {
 		Map* area = game->GetCurrentArea( );
 		if (area) {
 			Actor *actor = area->GetActorByGlobalID(lastActorID);
-			if (actor && (actor->GetStat(IE_STATE_ID)&STATE_DEAD || actor->GetInternalFlag()&IF_JUSTDIED)) {
-				// checking IF_JUSTDIED is kind of horrid, but seems necessary
+			if (actor && (actor->GetStat(IE_STATE_ID)&STATE_DEAD || actor->GetInternalFlag()&IF_REALLYDIED)) {
 				// no tooltips for dead actors!
 				actor->SetOver( false );
 				lastActorID = 0;
@@ -1230,61 +1237,61 @@ void GameControl::OnMouseOver(unsigned short x, unsigned short y)
 		return;
 	}
 
-#ifdef TOUCHSCREEN
-	int mousescrollspd = core->GetMouseScrollSpeed();
-	Region region;
-	Map* map;
-	Point mapsize;
-	Region viewport = core->GetVideoDriver()->GetViewport();
-	moveX = 0;
-	moveY = 0;
-	// Top scroll area
-	region=Region(XPos, YPos, Width, YPos+SCROLL_BORDER);
-	if (region.PointInside(x, y)) {
-		// Check for end of map area
-		if (viewport.y > 0)
-			moveY = -mousescrollspd;
-	}
-	// Bottom scroll area
-	region=Region(XPos, Height-SCROLL_BORDER, Width, Height);
-	if (region.PointInside(x, y)) {
-		// Check for end of map area
-		map = core->GetGame()->GetCurrentArea();
-		if (map != NULL) {
-			mapsize = map->TMap->GetMapSize();
-			if((viewport.y + viewport.h) < mapsize.y)
-				moveY = mousescrollspd;
-		}
-	}
-	// Left scroll area
-	region=Region(XPos, YPos, XPos+SCROLL_BORDER, Height);
-	if (region.PointInside(x, y)) {
-		// Check for end of map area
-		if(viewport.x > 0)
-			moveX = -mousescrollspd;
-	}
-	// Right scroll area
-	region=Region(Width-SCROLL_BORDER, YPos, Width, Height);
-	if (region.PointInside(x, y)) {
-		// Check for end of map area
-		map = core->GetGame()->GetCurrentArea();
-		if (map != NULL) {
-			mapsize = map->TMap->GetMapSize();
-			if((viewport.x + viewport.w) < mapsize.x)
-				moveX = mousescrollspd;
-		}
-	}
-	if ((moveX != 0 || moveY != 0) && touched) {
-		scrolling = true;
-		return;
-	} else {
+	if (touchScrollAreasEnabled) {
+		int mousescrollspd = core->GetMouseScrollSpeed();
+		Region region;
+		Map* map;
+		Point mapsize;
+		Region viewport = core->GetVideoDriver()->GetViewport();
 		moveX = 0;
 		moveY = 0;
-		scrolling = false;
-		Video* video = core->GetVideoDriver();
-		video->SetDragCursor(NULL);
+		// Top scroll area
+		region=Region(XPos, YPos, Width, YPos+scrollAreasWidth);
+		if (region.PointInside(x, y)) {
+			// Check for end of map area
+			if (viewport.y > 0)
+				moveY = -mousescrollspd;
+		}
+		// Bottom scroll area
+		region=Region(XPos, Height-scrollAreasWidth, Width, Height);
+		if (region.PointInside(x, y)) {
+			// Check for end of map area
+			map = core->GetGame()->GetCurrentArea();
+			if (map != NULL) {
+				mapsize = map->TMap->GetMapSize();
+				if((viewport.y + viewport.h) < mapsize.y)
+					moveY = mousescrollspd;
+			}
+		}
+		// Left scroll area
+		region=Region(XPos, YPos, XPos+scrollAreasWidth, Height);
+		if (region.PointInside(x, y)) {
+			// Check for end of map area
+			if(viewport.x > 0)
+				moveX = -mousescrollspd;
+		}
+		// Right scroll area
+		region=Region(Width-scrollAreasWidth, YPos, Width, Height);
+		if (region.PointInside(x, y)) {
+			// Check for end of map area
+			map = core->GetGame()->GetCurrentArea();
+			if (map != NULL) {
+				mapsize = map->TMap->GetMapSize();
+				if((viewport.x + viewport.w) < mapsize.x)
+					moveX = mousescrollspd;
+			}
+		}
+		if ((moveX != 0 || moveY != 0) && touched) {
+			scrolling = true;
+			return;
+		} else {
+			moveX = 0;
+			moveY = 0;
+			scrolling = false;
+			Video* video = core->GetVideoDriver();
+			video->SetDragCursor(NULL);
+		}
 	}
-#endif
 
 	lastMouseX = x;
 	lastMouseY = y;
@@ -1461,38 +1468,35 @@ void GameControl::OnGlobalMouseMove(unsigned short x, unsigned short y)
 		return;
 	}
 
-#ifndef TOUCHSCREEN
-	int mousescrollspd = core->GetMouseScrollSpeed();
+	if (!touchScrollAreasEnabled) {
+		int mousescrollspd = core->GetMouseScrollSpeed();
 
-	if (x <= SCROLL_BORDER)
-		moveX = -mousescrollspd;
-	else {
-		if (x >= ( core->Width - SCROLL_BORDER ))
-			moveX = mousescrollspd;
-		else
-			moveX = 0;
-	}
-	if (y <= SCROLL_BORDER)
-		moveY = -mousescrollspd;
-	else {
-		if (y >= ( core->Height - SCROLL_BORDER ))
-			moveY = mousescrollspd;
-		else
-			moveY = 0;
-	}
+		if (x <= SCROLL_BORDER)
+			moveX = -mousescrollspd;
+		else {
+			if (x >= ( core->Width - SCROLL_BORDER ))
+				moveX = mousescrollspd;
+			else
+				moveX = 0;
+		}
+		if (y <= SCROLL_BORDER)
+			moveY = -mousescrollspd;
+		else {
+			if (y >= ( core->Height - SCROLL_BORDER ))
+				moveY = mousescrollspd;
+			else
+				moveY = 0;
+		}
 
-	if (moveX != 0 || moveY != 0) {
-		scrolling = true;
-	} else if (scrolling) {
-		scrolling = false;
+		if (moveX != 0 || moveY != 0) {
+			scrolling = true;
+		} else if (scrolling) {
+			scrolling = false;
 
-		Video* video = core->GetVideoDriver();
-		video->SetDragCursor(NULL);
+			Video* video = core->GetVideoDriver();
+			video->SetDragCursor(NULL);
+		}
 	}
-#else
-(void)x;
-(void)y;
-#endif
 }
 
 void GameControl::UpdateScrolling() {
@@ -1738,7 +1742,7 @@ void GameControl::HandleContainer(Container *container, Actor *actor)
 		return;
 	}
 
-	if ((target_mode == TARGET_MODE_PICK)) {
+	if (target_mode == TARGET_MODE_PICK) {
 		TryToPick(actor, container);
 		return;
 	}
@@ -1798,14 +1802,16 @@ bool GameControl::HandleActiveRegion(InfoPoint *trap, Actor * actor, Point &p)
 		//don't bother with this region further
 		return true;
 	}
-	if ((target_mode == TARGET_MODE_PICK)) {
+	if (target_mode == TARGET_MODE_PICK) {
 		TryToDisarm(actor, trap);
 		return true;
 	}
 
 	switch(trap->Type) {
 		case ST_TRAVEL:
-			actor->UseExit(trap->GetGlobalID());
+			trap->AddTrigger(TriggerEntry(trigger_clicked, actor->GetGlobalID()));
+			// exit usage is handled by caller for now
+			// actor->UseExit(trap->GetGlobalID());
 			return false;
 		case ST_TRIGGER:
 			//the importer shouldn't load the script
@@ -1816,16 +1822,12 @@ bool GameControl::HandleActiveRegion(InfoPoint *trap, Actor * actor, Point &p)
 			//reset trap and deactivated flags
 			if (trap->Scripts[0]) {
 				if (!(trap->Flags&TRAP_DEACTIVATED) ) {
-					trap->LastTriggerObject = trap->LastTrigger = actor->GetGlobalID();
-					trap->ImmediateEvent();
+					trap->AddTrigger(TriggerEntry(trigger_clicked, actor->GetGlobalID()));
 					//directly feeding the event, even if there are actions in the queue
-					trap->Scripts[0]->Update();
-					trap->ProcessActions(true);
-					//if reset trap flag not set, deactivate it
-					//hmm, better not, info triggers don't deactivate themselves on click
-					//if (!(trap->Flags&TRAP_RESET)) {
-					//	trap->Flags|=TRAP_DEACTIVATED;
-					//}
+					//trap->Scripts[0]->Update();
+					// FIXME
+					trap->ExecuteScript(1);
+					trap->ProcessActions();
 				}
 			} else {
 				if (trap->overHeadText) {
@@ -1875,9 +1877,7 @@ void GameControl::OnMouseDown(unsigned short x, unsigned short y, unsigned short
 		StartY = py;
 		SelectionRect.w = 0;
 		SelectionRect.h = 0;
-#ifdef TOUCHSCREEN
-		touched=true;
-#endif
+		if (touchScrollAreasEnabled) touched=true;
 	}
 }
 
@@ -1902,33 +1902,33 @@ void GameControl::OnMouseUp(unsigned short x, unsigned short y, unsigned short B
 	Map* area = game->GetCurrentArea( );
 	if (!area) return;
 
-#ifdef TOUCHSCREEN
-	touched=false;
-	if (scrolling) {
-		moveX = 0;
-		moveY = 0;
-		scrolling=false;
-		Video* video = core->GetVideoDriver();
-		video->SetDragCursor(NULL);
-		if (DrawSelectionRect) {
-			Actor** ab;
-			unsigned int count = area->GetActorInRect( ab, SelectionRect,true );
-			if (count != 0) {
-				for (i = 0; i < highlighted.size(); i++)
-					highlighted[i]->SetOver( false );
-				highlighted.clear();
-				game->SelectActor( NULL, false, SELECT_NORMAL );
-				for (i = 0; i < count; i++) {
-					// FIXME: should call handler only once
-					game->SelectActor( ab[i], true, SELECT_NORMAL );
+	if (touchScrollAreasEnabled) {
+		touched=false;
+		if (scrolling) {
+			moveX = 0;
+			moveY = 0;
+			scrolling=false;
+			Video* video = core->GetVideoDriver();
+			video->SetDragCursor(NULL);
+			if (DrawSelectionRect) {
+				Actor** ab;
+				unsigned int count = area->GetActorInRect( ab, SelectionRect,true );
+				if (count != 0) {
+					for (i = 0; i < highlighted.size(); i++)
+						highlighted[i]->SetOver( false );
+					highlighted.clear();
+					game->SelectActor( NULL, false, SELECT_NORMAL );
+					for (i = 0; i < count; i++) {
+						// FIXME: should call handler only once
+						game->SelectActor( ab[i], true, SELECT_NORMAL );
+					}
 				}
+				free( ab );
+				DrawSelectionRect = false;
 			}
-			free( ab );
-			DrawSelectionRect = false;
+			return;
 		}
-		return;
 	}
-#endif
 	if (DrawSelectionRect) {
 		Actor** ab;
 		unsigned int count = area->GetActorInRect( ab, SelectionRect,true );
@@ -1999,11 +1999,10 @@ void GameControl::OnMouseUp(unsigned short x, unsigned short y, unsigned short B
 				while(i--) {
 					game->selected[i]->UseExit(exitID);
 				}
-			} else {
-				if (HandleActiveRegion(overInfoPoint, pc, p)) {
-					core->SetEventFlag(EF_RESETTARGET);
-					return;
-				}
+			}
+			if (HandleActiveRegion(overInfoPoint, pc, p)) {
+				core->SetEventFlag(EF_RESETTARGET);
+				return;
 			}
 		}
 
@@ -2387,8 +2386,8 @@ void GameControl::HandleWindowHide(const char *WindowName, const char *WindowPos
 				}
 				return;
 			}
-			printMessage("GameControl", "Invalid Window Index: ", LIGHT_RED);
-			printf("%s:%u\n",WindowName, index);
+			printMessage("GameControl", "Invalid Window Index: %s:%u\n", LIGHT_RED,
+				WindowName, index);
 		}
 	}
 }
@@ -2440,8 +2439,8 @@ void GameControl::HandleWindowReveal(const char *WindowName, const char *WindowP
 				}
 				return;
 			}
-			printMessage("GameControl", "Invalid Window Index ", LIGHT_RED);
-			printf("%s:%u\n",WindowName, index);
+			printMessage("GameControl", "Invalid Window Index %s:%u\n", LIGHT_RED,
+				WindowName, index);
 		}
 	}
 }
@@ -2695,7 +2694,7 @@ Sprite2D* GameControl::GetScreenshot(bool show_gui)
 //copies a downscaled screenshot into a sprite for save game preview
 Sprite2D* GameControl::GetPreview()
 {
-	// We get preview by first taking a screenshot of size 640x405,
+	// We get preview by first taking a screenshot of quintuple size of the preview control size (a few pixels bigger only in pst),
 	// centered in the display. This is to get a decent picture for
 	// higher screen resolutions.
 	// FIXME: how do orig games solve that?
@@ -2708,27 +2707,20 @@ Sprite2D* GameControl::GetPreview()
 	if (x < 0) {
 		x = 0;
 	} else {
-		w = 640;
+		w = 515;
 	}
 
 	if (y < 0) {
 		y = 0;
 	} else {
-		h = 405;
+		h = 385;
 	}
 
 	if (!x)
 		y = 0;
 
-	int hf = HideGUI ();
-	signed char v = Owner->Visible;
-	Owner->Visible = WINDOW_VISIBLE;
 	Draw (0, 0);
-	Owner->Visible = v;
 	Sprite2D *screenshot = video->GetScreenshot( Region(x, y, w, h) );
-	if (hf) {
-		UnhideGUI ();
-	}
 	core->DrawWindows();
 
 	Sprite2D* preview = video->SpriteScaleDown ( screenshot, 5 );

@@ -31,6 +31,7 @@
 #include "Map.h"
 #include "Projectile.h"
 #include "Spell.h"
+#include "Sprite2D.h"
 #include "SpriteCover.h"
 #include "TileMap.h"
 #include "Video.h"
@@ -196,6 +197,7 @@ void Container::RefreshGroundIcons()
 	while (i--) {
 		CREItem *slot = inventory.GetSlotItem(i); //borrowed reference
 		Item *itm = gamedata->GetItem( slot->ItemResRef ); //cached reference
+		if (!itm) continue;
 		//well, this is required in PST, needs more work if some other
 		//game is broken by not using -1,0
 		groundicons[i] = gamedata->GetBAMSprite( itm->GroundIcon, 0, 0 );
@@ -224,6 +226,7 @@ int Container::IsOpen() const
 
 void Container::TryPickLock(Actor *actor)
 {
+	core->PlaySound(DS_PICKLOCK);
 	if (LockDifficulty == 100) {
 		if (OpenFail != (ieDword)-1) {
 			displaymsg->DisplayStringName(OpenFail, 0xbcefbc, actor, IE_STR_SOUND|IE_STR_SPEECH);
@@ -234,12 +237,12 @@ void Container::TryPickLock(Actor *actor)
 	}
 	if (actor->GetStat(IE_LOCKPICKING)<LockDifficulty) {
 		displaymsg->DisplayConstantStringName(STR_LOCKPICK_FAILED, 0xbcefbc, actor);
-		LastPickLockFailed = actor->GetGlobalID();
+		AddTrigger(TriggerEntry(trigger_picklockfailed, actor->GetGlobalID()));
 		return;
 	}
 	SetContainerLocked(false);
 	displaymsg->DisplayConstantStringName(STR_LOCKPICK_DONE, 0xd7d7be, actor);
-	LastUnlocked = actor->GetGlobalID();
+	AddTrigger(TriggerEntry(trigger_unlocked, actor->GetGlobalID()));
 	ImmediateEvent();
 	int xp = actor->CalculateExperience(XP_LOCKPICK, actor->GetXPLevel(1));
 	Game *game = core->GetGame();
@@ -262,24 +265,24 @@ void Container::TryBashLock(Actor *actor)
 	displaymsg->DisplayConstantStringName(STR_CONTBASH_DONE, 0xd7d7be, actor);
 	SetContainerLocked(false);
 	//Is this really useful ?
-	LastUnlocked = actor->GetGlobalID();
+	AddTrigger(TriggerEntry(trigger_unlocked, actor->GetGlobalID()));
 	ImmediateEvent();
 }
 
 void Container::DebugDump() const
 {
-	printf( "Debugdump of Container %s\n", GetScriptName() );
-	printf( "Container Global ID: %d\n", GetGlobalID());
-	printf( "Position: %d.%d\n", Pos.x, Pos.y);
-	printf( "Type: %d, Locked: %s, LockDifficulty: %d\n", Type, YESNO(Flags&CONT_LOCKED), LockDifficulty );
-	printf( "Flags: %d, Trapped: %s, Detected: %d\n", Flags, YESNO(Trapped), TrapDetected );
-	printf( "Trap detection: %d%%, Trap removal: %d%%\n", TrapDetectionDiff,
+	print( "Debugdump of Container %s\n", GetScriptName() );
+	print( "Container Global ID: %d\n", GetGlobalID());
+	print( "Position: %d.%d\n", Pos.x, Pos.y);
+	print( "Type: %d, Locked: %s, LockDifficulty: %d\n", Type, YESNO(Flags&CONT_LOCKED), LockDifficulty );
+	print( "Flags: %d, Trapped: %s, Detected: %d\n", Flags, YESNO(Trapped), TrapDetected );
+	print( "Trap detection: %d%%, Trap removal: %d%%\n", TrapDetectionDiff,
 		TrapRemovalDiff );
 	const char *name = "NONE";
 	if (Scripts[0]) {
 		name = Scripts[0]->GetName();
 	}
-	printf( "Script: %s, Key: %s\n", name, KeyResRef );
+	print( "Script: %s, Key: %s\n", name, KeyResRef );
 	// FIXME: const_cast
 	const_cast<Inventory&>(inventory).dump();
 }

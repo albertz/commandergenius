@@ -105,23 +105,23 @@ void Door::UpdateDoor()
 	Pos.x = outline->BBox.x + outline->BBox.w/2;
 	Pos.y = outline->BBox.y + outline->BBox.h/2;
 
-	unsigned char oval, cval;
-	oval = PATH_MAP_IMPASSABLE;
+	unsigned char pmdflags;
+
 	if (Flags & DOOR_TRANSPARENT) {
-		cval = PATH_MAP_DOOR_IMPASSABLE;
+		pmdflags = PATH_MAP_DOOR_IMPASSABLE;
 	}
 	else {
 		//both door flags are needed here, one for transparency the other
 		//is for passability
-		cval = PATH_MAP_DOOR_OPAQUE|PATH_MAP_DOOR_IMPASSABLE;
+		pmdflags = PATH_MAP_DOOR_OPAQUE|PATH_MAP_DOOR_IMPASSABLE;
 	}
 	if (Flags &DOOR_OPEN) {
 		ImpedeBlocks(cibcount, closed_ib, 0);
-		ImpedeBlocks(oibcount, open_ib, cval);
+		ImpedeBlocks(oibcount, open_ib, pmdflags);
 	}
 	else {
 		ImpedeBlocks(oibcount, open_ib, 0);
-		ImpedeBlocks(cibcount, closed_ib, cval);
+		ImpedeBlocks(cibcount, closed_ib, pmdflags);
 	}
 
 	InfoPoint *ip = area->TMap->GetInfoPoint(LinkedInfo);
@@ -252,14 +252,14 @@ void Door::SetDoorOpen(int Open, int playsound, ieDword ID)
 		area->JumpActors(true);
 	}
 	if (Open) {
-		LastEntered = ID; //used as lastOpener
+		AddTrigger(TriggerEntry(trigger_opened, ID));
 
 		// in PS:T, opening a door does not unlock it
 		if (!core->HasFeature(GF_REVERSE_DOOR)) {
 			SetDoorLocked(false,playsound);
 		}
 	} else {
-		LastTriggerObject = LastTrigger = ID; //used as lastCloser
+		AddTrigger(TriggerEntry(trigger_closed, ID));
 	}
 	ToggleTiles(Open, playsound);
 	//synchronising other data with the door state
@@ -325,11 +325,10 @@ void Highlightable::TryDisarm(Actor *actor)
 {
 	if (!Trapped || !TrapDetected) return;
 
-	LastTriggerObject = LastTrigger = actor->GetGlobalID();
 	int skill = actor->GetStat(IE_TRAPS);
 
 	if (skill/2+core->Roll(1,skill/2,0)>TrapRemovalDiff) {
-		LastDisarmed = actor->GetGlobalID();
+		AddTrigger(TriggerEntry(trigger_disarmed, actor->GetGlobalID()));
 		//trap removed
 		Trapped = 0;
 		displaymsg->DisplayConstantStringName(STR_DISARM_DONE, 0xd7d7be, actor);
@@ -338,13 +337,14 @@ void Highlightable::TryDisarm(Actor *actor)
 		game->ShareXP(xp, SX_DIVIDE);
 	} else {
 		displaymsg->DisplayConstantStringName(STR_DISARM_FAIL, 0xd7d7be, actor);
-		TriggerTrap(skill, LastTrigger);
+		TriggerTrap(skill, actor->GetGlobalID());
 	}
 	ImmediateEvent();
 }
 
 void Door::TryPickLock(Actor *actor)
 {
+	core->PlaySound(DS_PICKLOCK);
 	if (LockDifficulty == 100) {
 		if (OpenStrRef != (ieDword)-1) {
 			displaymsg->DisplayStringName(OpenStrRef, 0xbcefbc, actor, IE_STR_SOUND|IE_STR_SPEECH);
@@ -355,12 +355,12 @@ void Door::TryPickLock(Actor *actor)
 	}
 	if (actor->GetStat(IE_LOCKPICKING)<LockDifficulty) {
 		displaymsg->DisplayConstantStringName(STR_LOCKPICK_FAILED, 0xbcefbc, actor);
-		LastPickLockFailed = actor->GetGlobalID();
+		AddTrigger(TriggerEntry(trigger_picklockfailed, actor->GetGlobalID()));
 		return;
 	}
 	SetDoorLocked( false, true);
 	displaymsg->DisplayConstantStringName(STR_LOCKPICK_DONE, 0xd7d7be, actor);
-	LastUnlocked = actor->GetGlobalID();
+	AddTrigger(TriggerEntry(trigger_unlocked, actor->GetGlobalID()));
 	ImmediateEvent();
 	int xp = actor->CalculateExperience(XP_LOCKPICK, actor->GetXPLevel(1));
 	Game *game = core->GetGame();
@@ -383,27 +383,27 @@ void Door::TryBashLock(Actor *actor)
 	displaymsg->DisplayConstantStringName(STR_DOORBASH_DONE, 0xd7d7be, actor);
 	SetDoorLocked(false, true);
 	//Is this really useful ?
-	LastUnlocked = actor->GetGlobalID();
+	AddTrigger(TriggerEntry(trigger_unlocked, actor->GetGlobalID()));
 	ImmediateEvent();
 }
 
 void Door::DebugDump() const
 {
-	printf( "Debugdump of Door %s:\n", GetScriptName() );
-	printf( "Door Global ID: %d\n", GetGlobalID());
-	printf( "Position: %d.%d\n", Pos.x, Pos.y);
-	printf( "Door Open: %s\n", YESNO(IsOpen()));
-	printf( "Door Locked: %s\n", YESNO(Flags&DOOR_LOCKED));
-	printf( "Door Trapped: %s\n", YESNO(Trapped));
+	print( "Debugdump of Door %s:\n", GetScriptName() );
+	print( "Door Global ID: %d\n", GetGlobalID());
+	print( "Position: %d.%d\n", Pos.x, Pos.y);
+	print( "Door Open: %s\n", YESNO(IsOpen()));
+	print( "Door Locked: %s\n", YESNO(Flags&DOOR_LOCKED));
+	print( "Door Trapped: %s	Difficulty: %d\n", YESNO(Trapped), TrapRemovalDiff);
 	if (Trapped) {
-		printf( "Trap Permanent: %s Detectable: %s\n", YESNO(Flags&DOOR_RESET), YESNO(Flags&DOOR_DETECTABLE) );
+		print( "Trap Permanent: %s Detectable: %s\n", YESNO(Flags&DOOR_RESET), YESNO(Flags&DOOR_DETECTABLE) );
 	}
-	printf( "Secret door: %s (Found: %s)\n", YESNO(Flags&DOOR_SECRET),YESNO(Flags&DOOR_FOUND));
+	print( "Secret door: %s (Found: %s)\n", YESNO(Flags&DOOR_SECRET),YESNO(Flags&DOOR_FOUND));
 	const char *Key = GetKey();
 	const char *name = "NONE";
 	if (Scripts[0]) {
 		name = Scripts[0]->GetName();
 	}
-	printf( "Script: %s, Key (%s) removed: %s, Dialog: %s\n", name, Key?Key:"NONE", YESNO(Flags&DOOR_KEY), Dialog );
+	print( "Script: %s, Key (%s) removed: %s, Dialog: %s\n", name, Key?Key:"NONE", YESNO(Flags&DOOR_KEY), Dialog );
 }
 

@@ -25,8 +25,10 @@
 #include "GameData.h"
 #include "Interface.h"
 #include "Palette.h"
+#include "Sprite2D.h"
 #include "Variables.h"
 #include "Video.h"
+#include "GUI/Window.h"
 
 Label::Label(Font* font)
 {
@@ -71,7 +73,7 @@ void Label::Draw(unsigned short x, unsigned short y)
 
 }
 /** This function sets the actual Label Text */
-int Label::SetText(const char* string, int /*pos*/)
+void Label::SetText(const char* string)
 {
 	if (Buffer )
 		free( Buffer );
@@ -95,7 +97,6 @@ int Label::SetText(const char* string, int /*pos*/)
 	if (Owner) {
 		Owner->Invalidate();
 	}
-	return 0;
 }
 /** Sets the Foreground Font Color */
 void Label::SetColor(Color col, Color bac)
@@ -119,7 +120,7 @@ void Label::SetAlignment(unsigned char Alignment)
 void Label::OnMouseUp(unsigned short x, unsigned short y,
 	unsigned short /*Button*/, unsigned short /*Mod*/)
 {
-	//printf( "Label::OnMouseUp\n" );
+	//print( "Label::OnMouseUp\n" );
 	if (( x <= Width ) && ( y <= Height )) {
 		if (VarName[0] != 0) {
 			core->GetDictionary()->SetAt( VarName, Value );

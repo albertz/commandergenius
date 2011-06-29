@@ -21,6 +21,15 @@
 #ifndef EXPORTS_H
 #define EXPORTS_H
 
+/**
+ * @file exports.h
+ * This file contains global compiler configuration.
+ *
+ * It should not contain any declarations or includes,
+ * only compiler dependent macros and pragmas.
+ */
+
+/// Symbol visibility macros
 #ifdef WIN32
 #	ifdef GEM_BUILD_DLL
 #		define GEM_EXPORT __declspec(dllexport)
@@ -38,11 +47,37 @@
 #endif
 
 #ifndef GEM_EXPORT
-#define GEM_EXPORT
+#	define GEM_EXPORT
 #endif
 
 #ifndef GEM_EXPORT_DLL
-#define GEM_EXPORT_DLL extern "C"
+#	define GEM_EXPORT_DLL extern "C"
+#endif
+
+/// Semantic Warning Macros
+#ifdef __GNUC__
+#	define WARN_UNUSED __attribute__ ((warn_unused_result))
+#	define SENTINEL __attribute__ ((sentinel))
+#else
+#	define WARN_UNUSED
+#	define SENTINEL
+#endif
+
+/// Disable silly MSVC warnings
+#if _MSC_VER >= 1000
+//	4251 disables the annoying warning about missing dll interface in templates
+#	pragma warning( disable: 4251 521 )
+#	pragma warning( disable: 4275 )
+//	disables annoying warning caused by STL:Map in msvc 6.0
+#	if _MSC_VER < 7000
+#		pragma warning(disable:4786)
+#	endif
+#endif
+
+/// Make sure we don't like to static libraries
+/// This causes hard to debug errors due to multiple heaps.
+#if defined(_MSC_VER) && !defined(_DLL)
+#	error GemRB must be dynamically linked with runtime libraries on win32.
 #endif
 
 #endif

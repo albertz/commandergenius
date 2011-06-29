@@ -123,20 +123,20 @@ bool Gem_Polygon::PointIn(int tx, int ty) const
 
 // returns twice the area of triangle a, b, c.
 // (can also be negative depending on orientation of a,b,c)
-inline int area2(const Point& a, const Point& b, const Point& c)
+static inline int area2(const Point& a, const Point& b, const Point& c)
 {
 	return (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
 }
 
 
 // return (c is to the left of a-b)
-inline bool left(const Point& a, const Point& b, const Point& c)
+static inline bool left(const Point& a, const Point& b, const Point& c)
 {
 	return (area2(a, b, c) > 0);
 }
 
 // { return (c is collinear with a-b)
-inline bool collinear(const Point& a, const Point& b, const Point& c)
+static inline bool collinear(const Point& a, const Point& b, const Point& c)
 {
 	return (area2(a, b, c) == 0);
 }
@@ -219,15 +219,13 @@ struct ScanlineInt {
 
 };
 
-
 void Gem_Polygon::ComputeTrapezoids()
 {
 	if (count < 3) return;
 	//the loader never should load such a large polygon, 
 	//because the polygon count is supposed to be a 16 bit value
 	if (count > 65535) {
-		printMessage("Polygon", "Invalid Polygon!\n", LIGHT_RED);
-		abort();
+		error("Polygon", "Invalid Polygon!\n");
 	}
 
 	trapezoids.clear();

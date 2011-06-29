@@ -24,6 +24,8 @@
 
 #include <ctype.h>
 
+static const char* GEM_ENCRYPTION_KEY = "\x88\xa8\x8f\xba\x8a\xd3\xb9\xf5\xed\xb1\xcf\xea\xaa\xe4\xb5\xfb\xeb\x82\xf9\x90\xca\xc9\xb5\xe7\xdc\x8e\xb7\xac\xee\xf7\xe0\xca\x8e\xea\xca\x80\xce\xc5\xad\xb7\xc4\xd0\x84\x93\xd5\xf0\xeb\xc8\xb4\x9d\xcc\xaf\xa5\x95\xba\x99\x87\xd2\x9d\xe3\x91\xba\x90\xca";
+
 static bool EndianSwitch = false;
 
 DataStream::DataStream(void)
@@ -49,7 +51,7 @@ bool DataStream::IsEndianSwitch()
 /** Returns true if the stream is encrypted */
 bool DataStream::CheckEncrypted()
 {
-	ieWord two;
+	ieWord two = 0x0000; // if size < 2, two won't be initialized
 	Seek( 0, GEM_STREAM_START );
 	Read( &two, 2 );
 	if (two == 0xFFFF) {
@@ -182,4 +184,37 @@ int DataStream::ReadResRef(ieResRef dest)
 int DataStream::WriteResRef(const ieResRef src)
 {
 	return Write( src, 8);
+}
+
+int DataStream::ReadLine(void* buf, unsigned int maxlen)
+{
+	// FIXME: eof?
+	if (!maxlen) {
+		return 0;
+	}
+	unsigned char * p = ( unsigned char * ) buf;
+	if (Pos >= size) {
+		p[0]=0;
+		return -1;
+	}
+	unsigned int i = 0;
+	while (i < ( maxlen - 1 )) {
+		char ch;
+		Read(&ch, 1);
+		if (( ( char ) ch ) == '\n')
+			break;
+		if (( ( char ) ch ) == '\t')
+			ch = ' ';
+		if (( ( char ) ch ) != '\r')
+			p[i++] = ch;
+		if (Pos == size)
+			break;
+	}
+	p[i] = 0;
+	return i;
+}
+
+DataStream* DataStream::Clone()
+{
+	return NULL;
 }

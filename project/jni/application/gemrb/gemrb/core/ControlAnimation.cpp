@@ -22,7 +22,9 @@
 
 #include "win32def.h"
 
+#include "AnimationFactory.h"
 #include "GameData.h"
+#include "GlobalTimer.h"
 #include "Interface.h"
 #include "Palette.h"    /* needed only for paperdoll palettes */
 #include "Video.h"      /* needed only for paperdoll palettes */
@@ -45,6 +47,7 @@ ControlAnimation::ControlAnimation(Control* ctl, const ieResRef ResRef, int Cycl
 	control = ctl;
 	control->animation = this;
 	has_palette = false;
+	is_blended = false;
 }
 
 //freeing the bitmaps only once, but using an intelligent algorithm
@@ -108,6 +111,7 @@ void ControlAnimation::UpdateAnimation(void)
 		//stopping at end frame
 		if (control->Flags & IE_GUI_BUTTON_PLAYONCE) {
 			core->timer->RemoveAnimation( this );
+			control->SetAnimPicture( NULL );
 			return;
 		}
 		anim_phase = 0;
@@ -122,8 +126,18 @@ void ControlAnimation::UpdateAnimation(void)
 	if (has_palette) {
 		Palette* palette = pic->GetPalette();
 		palette->SetupPaperdollColours(colors, 0);
+		if (is_blended) {
+			palette->CreateShadedAlphaChannel();
+		}
 		pic->SetPalette(palette);
 		palette->Release();
+	} else {
+		if (is_blended) {
+			Palette* palette = pic->GetPalette();
+			palette->CreateShadedAlphaChannel();
+			pic->SetPalette(palette);
+			palette->Release();
+		}
 	}
 
 	control->SetAnimPicture( pic );
@@ -136,3 +150,7 @@ void ControlAnimation::SetPaletteGradients(ieDword *col)
 	has_palette = true;
 }
 
+void ControlAnimation::SetBlend(bool b)
+{
+	is_blended = b;
+}

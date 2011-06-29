@@ -26,11 +26,13 @@
 #include "win32def.h"
 #include "strrefs.h"
 
+#include "CharAnimations.h"
 #include "DisplayMessage.h"
 #include "Game.h"
 #include "GameData.h"
 #include "Interface.h"
 #include "Item.h"
+#include "Map.h"
 #include "ScriptEngine.h"
 #include "Scriptable/Actor.h"
 
@@ -55,9 +57,7 @@ static int MagicBit = 0;
 
 static void InvalidSlot(int slot)
 {
-	printMessage("Inventory"," ",LIGHT_RED);
-	printf("Invalid slot: %d!\n",slot);
-	abort();
+	error("Inventory", "Invalid slot: %d!\n", slot);
 }
 
 //This inline function returns both an item pointer and the slot data.
@@ -154,7 +154,7 @@ CREItem *Inventory::GetItem(unsigned int slot)
 
 //This hack sets the charge counters for non-rechargeable items,
 //if their charge is zero
-inline void HackCharges(CREItem *item)
+static inline void HackCharges(CREItem *item)
 {
 	Item *itm = gamedata->GetItem( item->ItemResRef );
 	if (itm) {
@@ -228,24 +228,24 @@ void Inventory::CalculateWeight()
 				}
 
 				//if item is stacked mark it as so
-				if (itm->StackAmount) {
+				if (itm->MaxStackAmount) {
 					slot->Flags |= IE_INV_ITEM_STACKED;
 				}
 
 				slot->Weight = itm->Weight;
-				slot->StackAmount = itm->StackAmount;
+				slot->MaxStackAmount = itm->MaxStackAmount;
 				gamedata->FreeItem( itm, slot->ItemResRef, false );
 			}
 			else {
-				printMessage( "Inventory", " ", LIGHT_RED);
-				printf("Invalid item: %s!\n", slot->ItemResRef);
+				printMessage("Inventory", "Invalid item: %s!\n", LIGHT_RED,
+					slot->ItemResRef);
 				slot->Weight = 0;
 			}
 		} else {
 			slot->Flags &= ~IE_INV_ITEM_ACQUIRED;
 		}
 		if (slot->Weight > 0) {
-			Weight += slot->Weight * ((slot->Usages[0] && slot->StackAmount > 1) ? slot->Usages[0] : 1);
+			Weight += slot->Weight * ((slot->Usages[0] && slot->MaxStackAmount > 1) ? slot->Usages[0] : 1);
 		}
 	}
 	Changed = false;
@@ -303,7 +303,7 @@ void Inventory::SetInventoryType(int arg)
 void Inventory::SetSlotCount(unsigned int size)
 {
 	if (Slots.size()) {
-		printf("Inventory size changed???\n");
+		print("Inventory size changed???\n");
 		//we don't allow reassignment,
 		//if you want this, delete the previous Slots here
 		abort();
@@ -350,7 +350,7 @@ int Inventory::CountItems(const char *resref, bool stacks) const
 			continue;
 		}
 		if (resref && resref[0]) {
-			if (!strnicmp(resref, item->ItemResRef, 8) )
+			if (strnicmp(resref, item->ItemResRef, 8) )
 				continue;
 		}
 		if (stacks && (item->Flags&IE_INV_ITEM_STACKED) ) {
@@ -638,17 +638,16 @@ int Inventory::AddSlotItem(CREItem* item, int slot, int slottype)
 		}
 
 		CREItem *myslot = Slots[slot];
-		if (ItemsAreCompatible( myslot, item )) {
+		if (myslot->MaxStackAmount > 1 && ItemsAreCompatible(myslot, item)) {
 			//calculate with the max movable stock
 			int chunk = item->Usages[0];
-			int newamount = myslot->Usages[0]+chunk;
-			if (newamount>myslot->StackAmount) {
-				newamount=myslot->StackAmount;
-				chunk = item->Usages[0]-newamount;
+			if (myslot->Usages[0] + chunk > myslot->MaxStackAmount) {
+				chunk = myslot->MaxStackAmount - myslot->Usages[0];
 			}
 			if (!chunk) {
-				return -1;
+				return ASI_FAILED;
 			}
+			assert(chunk > 0);
 			myslot->Flags |= IE_INV_ITEM_ACQUIRED;
 			myslot->Usages[0] = (ieWord) (myslot->Usages[0] + chunk);
 			item->Usages[0] = (ieWord) (item->Usages[0] - chunk);
@@ -745,6 +744,7 @@ int Inventory::AddStoreItem(STOItem* item, int action)
 		}
 		item->PurchasedAmount--;
 	}
+	CalculateWeight();
 	return ret;
 }
 
@@ -970,7 +970,7 @@ bool Inventory::EquipItem(unsigned int slot)
 	int effect = core->QuerySlotEffects( slot );
 	Item *itm = gamedata->GetItem(item->ItemResRef);
 	if (!itm) {
-		printf("Invalid item Equipped: %s Slot: %d\n", item->ItemResRef, slot);
+		print("Invalid item Equipped: %s Slot: %d\n", item->ItemResRef, slot);
 		return false;
 	}
 	switch (effect) {
@@ -1381,7 +1381,7 @@ int Inventory::FindCandidateSlot(int slottype, size_t first_slot, const char *re
 		}
 		// check if the item fits in this slot, we use the cached
 		// stackamount value
-		if (item->Usages[0]<item->StackAmount) {
+		if (item->Usages[0]<item->MaxStackAmount) {
 			return (int) i;
 		}
 	}
@@ -1398,7 +1398,7 @@ void Inventory::AddSlotItemRes(const ieResRef ItemResRef, int SlotID, int Charge
 	TmpItem->Usages[1]=(ieWord) Charge1;
 	TmpItem->Usages[2]=(ieWord) Charge2;
 	TmpItem->Flags=0;
-	if (core->ResolveRandomItem(TmpItem) && gamedata->Exists(TmpItem->ItemResRef, IE_ITM_CLASS_ID)) {
+	if (core->ResolveRandomItem(TmpItem)) {
 		AddSlotItem( TmpItem, SlotID );
 	} else {
 		delete TmpItem;
@@ -1416,7 +1416,7 @@ void Inventory::SetSlotItemRes(const ieResRef ItemResRef, int SlotID, int Charge
 		TmpItem->Usages[1]=(ieWord) Charge1;
 		TmpItem->Usages[2]=(ieWord) Charge2;
 		TmpItem->Flags=0;
-		if (core->ResolveRandomItem(TmpItem) && gamedata->Exists(TmpItem->ItemResRef, IE_ITM_CLASS_ID)) {
+		if (core->ResolveRandomItem(TmpItem)) {
 			SetSlotItem( TmpItem, SlotID );
 		} else {
 			delete TmpItem;
@@ -1448,7 +1448,7 @@ void Inventory::BreakItemSlot(ieDword slot)
 
 void Inventory::dump()
 {
-	printf( "INVENTORY:\n" );
+	print( "INVENTORY:\n" );
 	for (unsigned int i = 0; i < Slots.size(); i++) {
 		CREItem* itm = Slots[i];
 
@@ -1456,13 +1456,13 @@ void Inventory::dump()
 			continue;
 		}
 
-		printf ( "%2u: %8.8s - (%d %d %d) Fl:0x%x Wt: %d x %dLb\n", i, itm->ItemResRef, itm->Usages[0], itm->Usages[1], itm->Usages[2], itm->Flags, itm->StackAmount, itm->Weight );
+		print ( "%2u: %8.8s - (%d %d %d) Fl:0x%x Wt: %d x %dLb\n", i, itm->ItemResRef, itm->Usages[0], itm->Usages[1], itm->Usages[2], itm->Flags, itm->MaxStackAmount, itm->Weight );
 	}
 
-	printf( "Equipped: %d\n", Equipped );
+	print( "Equipped: %d\n", Equipped );
 	Changed = true;
 	CalculateWeight();
-	printf( "Total weight: %d\n", Weight );
+	print( "Total weight: %d\n", Weight );
 }
 
 void Inventory::EquipBestWeapon(int flags)
@@ -1795,7 +1795,7 @@ void Inventory::ChargeAllItems(int hours)
 	}
 }
 
-#define ITM_STEALING (IE_INV_ITEM_UNSTEALABLE | IE_INV_ITEM_MOVABLE | IE_INV_ITEM_EQUIPPED)
+#define ITM_STEALING (IE_INV_ITEM_UNSTEALABLE | IE_INV_ITEM_MOVABLE | IE_INV_ITEM_EQUIPPED) //0x442
 unsigned int Inventory::FindStealableItem()
 {
 	unsigned int slot;
@@ -1804,7 +1804,7 @@ unsigned int Inventory::FindStealableItem()
 	slot = core->Roll(1, Slots.size(),-1);
 	inc = slot&1?1:-1;
 
-	printf("Start Slot: %d, increment: %d\n", slot, inc);
+	print("Start Slot: %d, increment: %d\n", slot, inc);
 	//as the unsigned value underflows, it will be greater than Slots.size()
 	for(;slot<Slots.size(); slot+=inc) {
 		CREItem *item = Slots[slot];

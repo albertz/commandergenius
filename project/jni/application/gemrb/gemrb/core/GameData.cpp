@@ -20,9 +20,12 @@
 
 #include "GameData.h"
 
+#include "globals.h"
+
 #include "ActorMgr.h"
 #include "AnimationMgr.h"
 #include "Cache.h"
+#include "CharAnimations.h"
 #include "Effect.h"
 #include "EffectMgr.h"
 #include "Factory.h"
@@ -32,9 +35,12 @@
 #include "Interface.h"
 #include "Item.h"
 #include "ItemMgr.h"
+#include "PluginMgr.h"
 #include "ResourceDesc.h"
+#include "ScriptedAnimation.h"
 #include "Spell.h"
 #include "SpellMgr.h"
+#include "StoreMgr.h"
 #include "Scriptable/Actor.h"
 #include "System/FileStream.h"
 
@@ -90,7 +96,7 @@ Actor *GameData::GetCreature(const char* ResRef, unsigned int PartySlot)
 		return 0;
 
 	PluginHolder<ActorMgr> actormgr(IE_CRE_CLASS_ID);
-	if (!actormgr->Open( ds, true )) {
+	if (!actormgr->Open(ds)) {
 		return 0;
 	}
 	Actor* actor = actormgr->GetActor(PartySlot);
@@ -106,11 +112,9 @@ int GameData::LoadCreature(const char* ResRef, unsigned int PartySlot, bool char
 		char nPath[_MAX_PATH], fName[16];
 		snprintf( fName, sizeof(fName), "%s.chr", ResRef);
 		PathJoin( nPath, core->GamePath, "characters", fName, NULL );
-		FileStream *fs = new FileStream();
-		fs -> Open( nPath, true );
-		stream = (DataStream *) fs;
+		stream = FileStream::OpenFile(nPath);
 		PluginHolder<ActorMgr> actormgr(IE_CRE_CLASS_ID);
-		if (!actormgr->Open( stream, true )) {
+		if (!actormgr->Open(stream)) {
 			return -1;
 		}
 		actor = actormgr->GetActor(PartySlot);
@@ -151,7 +155,7 @@ int GameData::LoadTable(const ieResRef ResRef)
 		tables[ind].refcount++;
 		return ind;
 	}
-	//printf("(%s) Table not found... Loading from file\n", ResRef);
+	//print("(%s) Table not found... Loading from file\n", ResRef);
 	DataStream* str = GetResource( ResRef, IE_2DA_CLASS_ID );
 	if (!str) {
 		return -1;
@@ -161,7 +165,7 @@ int GameData::LoadTable(const ieResRef ResRef)
 		delete str;
 		return -1;
 	}
-	if (!tm->Open( str, true )) {
+	if (!tm->Open(str)) {
 		return -1;
 	}
 	Table t;
@@ -257,8 +261,7 @@ void GameData::FreePalette(Palette *&pal, const ieResRef name)
 	}
 	if (!name || !name[0]) {
 		if(pal->named) {
-			printf("Palette is supposed to be named, but got no name!\n");
-			abort();
+			error("GameData", "Palette is supposed to be named, but got no name!\n");
 		} else {
 			pal->Release();
 			pal=NULL;
@@ -266,14 +269,11 @@ void GameData::FreePalette(Palette *&pal, const ieResRef name)
 		return;
 	}
 	if (!pal->named) {
-		printf("Unnamed palette, it should be %s!\n", name);
-		abort();
+		error("GameData", "Unnamed palette, it should be %s!\n", name);
 	}
 	res=PaletteCache.DecRef((void *) pal, name, true);
 	if (res<0) {
-		printMessage( "Core", "Corrupted Palette cache encountered (reference count went below zero), ", LIGHT_RED );
-		printf( "Palette name is: %.8s\n", name);
-		abort();
+		error("Core", "Corrupted Palette cache encountered (reference count went below zero), Palette name is: %.8s\n", name);
 	}
 	if (!res) {
 		pal->Release();
@@ -293,7 +293,7 @@ Item* GameData::GetItem(const ieResRef resname)
 		delete ( str );
 		return NULL;
 	}
-	if (!sm->Open( str, true )) {
+	if (!sm->Open(str)) {
 		return NULL;
 	}
 
@@ -316,9 +316,7 @@ void GameData::FreeItem(Item const *itm, const ieResRef name, bool free)
 
 	res=ItemCache.DecRef((void *) itm, name, free);
 	if (res<0) {
-		printMessage( "Core", "Corrupted Item cache encountered (reference count went below zero), ", LIGHT_RED );
-		printf( "Item name is: %.8s\n", name);
-		abort();
+		error("Core", "Corrupted Item cache encountered (reference count went below zero), Item name is: %.8s\n", name);
 	}
 	if (res) return;
 	if (free) delete itm;
@@ -336,7 +334,7 @@ Spell* GameData::GetSpell(const ieResRef resname, bool silent)
 		delete ( str );
 		return NULL;
 	}
-	if (!sm->Open( str, true )) {
+	if (!sm->Open(str)) {
 		return NULL;
 	}
 
@@ -358,8 +356,8 @@ void GameData::FreeSpell(Spell *spl, const ieResRef name, bool free)
 
 	res=SpellCache.DecRef((void *) spl, name, free);
 	if (res<0) {
-		printMessage( "Core", "Corrupted Spell cache encountered (reference count went below zero), ", LIGHT_RED );
-		printf( "Spell name is: %.8s or %.8s\n", name, spl->Name);
+		printMessage("Core", "Corrupted Spell cache encountered (reference count went below zero), Spell name is: %.8s or %.8s\n", LIGHT_RED,
+			name, spl->Name);
 		abort();
 	}
 	if (res) return;
@@ -378,7 +376,7 @@ Effect* GameData::GetEffect(const ieResRef resname)
 		delete ( str );
 		return NULL;
 	}
-	if (!em->Open( str, true )) {
+	if (!em->Open(str)) {
 		return NULL;
 	}
 
@@ -397,9 +395,7 @@ void GameData::FreeEffect(Effect *eff, const ieResRef name, bool free)
 
 	res=EffectCache.DecRef((void *) eff, name, free);
 	if (res<0) {
-		printMessage( "Core", "Corrupted Effect cache encountered (reference count went below zero), ", LIGHT_RED );
-		printf( "Effect name is: %.8s\n", name);
-		abort();
+		error("Core", "Corrupted Effect cache encountered (reference count went below zero), Effect name is: %.8s\n", name);
 	}
 	if (res) return;
 	if (free) delete eff;
@@ -413,7 +409,7 @@ ScriptedAnimation* GameData::GetScriptedAnimation( const char *effect, bool doub
 
 	if (Exists( effect, IE_VVC_CLASS_ID, true ) ) {
 		DataStream *ds = GetResource( effect, IE_VVC_CLASS_ID );
-		ret = new ScriptedAnimation(ds, true);
+		ret = new ScriptedAnimation(ds);
 	} else {
 		AnimationFactory *af = (AnimationFactory *)
 			GetFactoryResource( effect, IE_BAM_CLASS_ID, IE_NORMAL );
@@ -463,7 +459,8 @@ void* GameData::GetFactoryResource(const char* resname, SClass_ID type,
 			PluginHolder<AnimationMgr> ani(IE_BAM_CLASS_ID);
 			if (!ani)
 				return NULL;
-			ani->Open( ret, true );
+			if (!ani->Open(ret))
+				return NULL;
 			AnimationFactory* af = ani->GetAnimationFactory( resname, mode );
 			factory->AddFactoryObject( af );
 			return af;
@@ -482,9 +479,71 @@ void* GameData::GetFactoryResource(const char* resname, SClass_ID type,
 		return NULL;
 	}
 	default:
-		printf( "\n" );
-		printMessage( "KEYImporter", " ", WHITE );
-		printf( "%s files are not supported.\n", core->TypeExt( type ) );
+		print( "\n" );
+		printMessage("KEYImporter", "%s files are not supported.\n", WHITE,
+			core->TypeExt(type));
 		return NULL;
+	}
+}
+
+Store* GameData::GetStore(const ieResRef ResRef)
+{
+	StoreMap::iterator it = stores.find(ResRef);
+	if (it != stores.end()) {
+		return it->second;
+	}
+
+	DataStream* str = gamedata->GetResource(ResRef, IE_STO_CLASS_ID);
+	PluginHolder<StoreMgr> sm(IE_STO_CLASS_ID);
+	if (sm == NULL) {
+		delete ( str );
+		return NULL;
+	}
+	if (!sm->Open(str)) {
+		return NULL;
+	}
+
+	Store* store = sm->GetStore(new Store());
+	if (store == NULL) {
+		return NULL;
+	}
+	strnlwrcpy(store->Name, ResRef, 8);
+	// The key needs to last as long as the store,
+	// so use the one we just copied.
+	stores[store->Name] = store;
+	return store;
+}
+
+void GameData::SaveStore(Store* store)
+{
+	if (!store)
+		return;
+	StoreMap::iterator it = stores.find(store->Name);
+	if (it == stores.end()) {
+		error("GameData", "Saving a store that wasn't cached.");
+	}
+
+	PluginHolder<StoreMgr> sm(IE_STO_CLASS_ID);
+	if (sm == NULL) {
+		error("GameData", "Can't save store to cache.");
+	}
+
+	FileStream str;
+
+	if (!str.Create(store->Name, IE_STO_CLASS_ID)) {
+		error("GameData", "Can't create file while saving store.");
+	}
+	if (!sm->PutStore(&str, store)) {
+		error("GameData", "Error saving store.");
+	}
+
+	stores.erase(it);
+	delete store;
+}
+
+void GameData::SaveAllStores()
+{
+	while (!stores.empty()) {
+		SaveStore(stores.begin()->second);
 	}
 }

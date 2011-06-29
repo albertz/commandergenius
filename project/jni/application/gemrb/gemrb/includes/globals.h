@@ -52,10 +52,9 @@
 #include "errors.h"
 #include "win32def.h"
 
-#include "AnimStructures.h"
-#include "System/DataStream.h"
 #include "Region.h"
-#include "Sprite2D.h"
+#include "System/DataStream.h"
+#include "System/String.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -81,10 +80,6 @@
 #define BM_OR   2
 #define BM_XOR  3
 #define BM_NAND 4 //gemrb extension
-
-//IDS Importer Defines
-#define IDS_VALUE_NOT_LOCATED -65535 // GetValue returns this if text is not found in arrays ... this needs to be a unique number that does not exist in the value[] array
-#define GEM_ENCRYPTION_KEY "\x88\xa8\x8f\xba\x8a\xd3\xb9\xf5\xed\xb1\xcf\xea\xaa\xe4\xb5\xfb\xeb\x82\xf9\x90\xca\xc9\xb5\xe7\xdc\x8e\xb7\xac\xee\xf7\xe0\xca\x8e\xea\xca\x80\xce\xc5\xad\xb7\xc4\xd0\x84\x93\xd5\xf0\xeb\xc8\xb4\x9d\xcc\xaf\xa5\x95\xba\x99\x87\xd2\x9d\xe3\x91\xba\x90\xca"
 
 /////feature flags
 #define  GF_HAS_KAPUTZ           	0 //pst
@@ -166,17 +161,6 @@
 class Scriptable;
 class Actor;
 
-/* this function will work with pl/cz special characters */
-
-extern unsigned char pl_uppercase[256];
-extern unsigned char pl_lowercase[256];
-
-GEM_EXPORT void strnlwrcpy(char* d, const char *s, int l);
-GEM_EXPORT void strnuprcpy(char* d, const char *s, int l);
-GEM_EXPORT void strnspccpy(char* d, const char *s, int l);
-#ifndef HAVE_STRNLEN
-GEM_EXPORT int strnlen(const char* string, int maxlen);
-#endif
 GEM_EXPORT unsigned char GetOrient(const Point &s, const Point &d);
 GEM_EXPORT unsigned int Distance(const Point pos, const Point pos2);
 GEM_EXPORT unsigned int Distance(const Point pos, Scriptable *b);
@@ -189,27 +173,15 @@ GEM_EXPORT unsigned int PersonalDistance(Scriptable *a, Scriptable *b);
 GEM_EXPORT unsigned int SquaredPersonalDistance(Scriptable *a, Scriptable *b);
 GEM_EXPORT unsigned int SquaredMapDistance(Scriptable *a, Scriptable *b);
 GEM_EXPORT int EARelation(Scriptable *a, Actor *b);
-GEM_EXPORT bool dir_exists(const char* path);
-GEM_EXPORT int strlench(const char* string, char ch);
-#ifndef HAVE_STRNDUP
-GEM_EXPORT char* strndup(const char* s, size_t l);
-#endif
 
 #ifndef WIN32
-GEM_EXPORT char* strupr(char* string);
-GEM_EXPORT char* strlwr(char* string);
-#endif
-
-#ifdef WIN32
-#define GetTime(store) store = GetTickCount()
-#else
 #include <sys/time.h>
-#define GetTime(store) \
-	{ \
-		struct timeval tv; \
-		gettimeofday(&tv, NULL); \
-		store = (tv.tv_usec/1000) + (tv.tv_sec*1000); \
-	}
+inline unsigned long GetTickCount()
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_usec/1000) + (tv.tv_sec*1000);
+}
 #endif
 
 inline int MIN(int a, int b)

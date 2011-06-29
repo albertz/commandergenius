@@ -21,90 +21,78 @@
 #include "System/MemoryStream.h"
 
 #include "win32def.h"
+#include "errors.h"
 
-#include <cstring>
+#include "Interface.h"
 
-MemoryStream::MemoryStream(void* buffer, int length, bool autoFree)
+MemoryStream::MemoryStream(char *name, void* data, unsigned long size)
+	: data((char*)data)
 {
-	ptr = buffer;
-	size = length;
-	Pos = 0;
-	strcpy( filename, "" );
-	this->autoFree = autoFree;
+	this->size = size;
+	ExtractFileFromPath(filename, name);
+	strncpy(originalfile, name, _MAX_PATH);
 }
 
-MemoryStream::~MemoryStream(void)
+MemoryStream::~MemoryStream()
 {
-	if (autoFree) {
-		free( ptr );
-	}
+	free(data);
+}
+
+DataStream* MemoryStream::Clone()
+{
+	void *copy = malloc(size);
+	memcpy(copy, data, size);
+	return new MemoryStream(originalfile, copy, size);
 }
 
 int MemoryStream::Read(void* dest, unsigned int length)
 {
-	if (length + Pos > size) {
+	//we don't allow partial reads anyway, so it isn't a problem that
+	//i don't adjust length here (partial reads are evil)
+	if (Pos+length>size ) {
 		return GEM_ERROR;
 	}
-	ieByte* p = ( ieByte* ) ptr + Pos;
-	memcpy( dest, p, length );
+
+	memcpy(dest, data + Pos + (Encrypted ? 2 : 0), length);
 	if (Encrypted) {
 		ReadDecrypted( dest, length );
 	}
 	Pos += length;
-	return GEM_OK;
+	return length;
+}
+
+int MemoryStream::Write(const void* src, unsigned int length)
+{
+	if (Pos+length>size ) {
+		//error("MemoryStream", "We don't support appending to memory streams yet.");
+		return GEM_ERROR;
+	}
+	memcpy(data+Pos, src, length);
+	Pos += length;
+	return length;
 }
 
 int MemoryStream::Seek(int newpos, int type)
 {
 	switch (type) {
 		case GEM_CURRENT_POS:
-			if (( Pos + newpos ) > size) {
-				printf("[Streams]: Invalid seek\n");
-				return GEM_ERROR;
-			}
 			Pos += newpos;
 			break;
 
 		case GEM_STREAM_START:
-			if ((unsigned long) newpos > size) {
-				printf("[Streams]: Invalid seek\n");
-				return GEM_ERROR;
-			}
 			Pos = newpos;
 			break;
+
+		case GEM_STREAM_END:
+			Pos = size - newpos;
 
 		default:
 			return GEM_ERROR;
 	}
+	//we went past the buffer
+	if (Pos>size) {
+		print("[Streams]: Invalid seek position: %ld (limit: %ld)\n", Pos, size);
+		return GEM_ERROR;
+	}
 	return GEM_OK;
-}
-
-/** No descriptions */
-int MemoryStream::ReadLine(void* buf, unsigned int maxlen)
-{
-	if(!maxlen) {
-		return 0;
-	}
-	unsigned char * p = ( unsigned char * ) buf;
-	if (Pos >= size) {
-		p[0]=0;
-		return -1;
-	}
-	unsigned int i = 0;
-	while (i < ( maxlen - 1 )) {
-		ieByte ch = *( ( ieByte* ) ptr + Pos );
-		if (Pos == size)
-			break;
-		if (Encrypted)
-			p[i] ^= GEM_ENCRYPTION_KEY[Pos & 63];
-		Pos++;
-		if (( ( char ) ch ) == '\n')
-			break;
-		if (( ( char ) ch ) == '\t')
-			ch = ' ';
-		if (( ( char ) ch ) != '\r')
-			p[i++] = ch;
-	}
-	p[i] = 0;
-	return i;
 }

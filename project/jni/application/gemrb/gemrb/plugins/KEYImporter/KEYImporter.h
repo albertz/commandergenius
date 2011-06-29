@@ -23,6 +23,9 @@
 
 #include "ResourceSource.h"
 
+#include "IndexedArchive.h"
+#include "PluginMgr.h"
+
 #include "Dictionary.h"
 
 #include <vector>
@@ -44,7 +47,6 @@ struct BIFEntry {
 	int cd;
 	bool found;
 };
-
 
 class KEYImporter : public ResourceSource {
 private:

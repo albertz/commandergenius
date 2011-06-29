@@ -1503,7 +1503,7 @@ int BIKPlayer::DecodeVideoFrame(void *data, int data_size)
 						}
 						break;
 					default:
-						printf("Incorrect 16x16 block type!\n");
+						print("Incorrect 16x16 block type!\n");
 						return -1;
 					}
 					bx++;
@@ -1586,7 +1586,7 @@ int BIKPlayer::DecodeVideoFrame(void *data, int data_size)
 					c_bundle[BINK_SRC_COLORS].cur_ptr += 64;
 					break;
 				default:
-					printf("Unknown block type!\n");
+					print("Unknown block type!\n");
 					return -1;
 				}
 			}
@@ -1613,5 +1613,5 @@ int BIKPlayer::DecodeVideoFrame(void *data, int data_size)
 #include "plugindef.h"
 
 GEMRB_PLUGIN(0x316E2EDE, "BIK Video Player")
-PLUGIN_RESOURCE(BIKPlayer, ".mve")
+PLUGIN_RESOURCE(BIKPlayer, "mve")
 END_PLUGIN()

@@ -44,13 +44,15 @@
 #include "Factory.h"
 #include "Game.h"
 #include "GameData.h"
+#include "GlobalTimer.h"
 #include "ImageMgr.h"
 #include "ItemMgr.h"
+#include "KeyMap.h"
 #include "MapMgr.h"
 #include "MoviePlayer.h"
 #include "MusicMgr.h"
 #include "Palette.h"
-#include "PluginMgr.h"
+#include "PluginLoader.h"
 #include "PluginMgr.h"
 #include "ProjectileServer.h"
 #include "SaveGameIterator.h"
@@ -64,13 +66,16 @@
 #include "SymbolMgr.h"
 #include "TileMap.h"
 #include "Video.h"
+#include "WindowMgr.h"
 #include "WorldMapMgr.h"
 #include "GameScript/GameScript.h"
 #include "GUI/Button.h"
 #include "GUI/Console.h"
+#include "GUI/EventMgr.h"
 #include "GUI/GameControl.h"
 #include "GUI/Label.h"
 #include "GUI/MapControl.h"
+#include "GUI/Window.h"
 #include "GUI/WorldMapControl.h"
 #include "Scriptable/Container.h"
 #include "System/FileStream.h"
@@ -114,7 +119,7 @@ Interface::Interface(int iargc, char* iargv[])
 	hConsole = GetStdHandle( STD_OUTPUT_HANDLE );
 #endif
 	textcolor( LIGHT_WHITE );
-	printf( "GemRB Core Version v%s Loading...\n", VERSION_GEMRB );
+	print( "GemRB Core Version v%s Loading...\n", VERSION_GEMRB );
 
 	// default to the correct endianswitch
 	ieWord endiantest = 1;
@@ -139,6 +144,7 @@ Interface::Interface(int iargc, char* iargv[])
 	sgiterator = NULL;
 	game = NULL;
 	calendar = NULL;
+	keymap = NULL;
 	worldmap = NULL;
 	CurrentStore = NULL;
 	CurrentContainer = NULL;
@@ -184,6 +190,7 @@ Interface::Interface(int iargc, char* iargv[])
 	SkipIntroVideos = false;
 	DrawFPS = false;
 	KeepCache = false;
+	TouchScrollAreas = false;
 	TooltipDelay = 100;
 	IgnoreOriginalINI = 0;
 	FullScreen = 0;
@@ -269,7 +276,7 @@ static void ReleaseItemList(void *poi)
 	delete ((ItemList *) poi);
 }
 
-void FreeAbilityTables()
+static void FreeAbilityTables()
 {
 	if (strmod) {
 		free(strmod);
@@ -335,6 +342,7 @@ Interface::~Interface(void)
 	delete game;
 	delete calendar;
 	delete worldmap;
+	delete keymap;
 
 	FreeAbilityTables();
 
@@ -358,7 +366,6 @@ Interface::~Interface(void)
 	ReleaseMemoryActor();
 	EffectQueue_ReleaseMemory();
 	CharAnimations::ReleaseMemory();
-	delete CurrentStore;
 
 	FreeResRefTable(DefSound, DSCount);
 
@@ -659,7 +666,7 @@ void Interface::HandleFlags()
 	}
 }
 
-bool GenerateAbilityTables()
+static bool GenerateAbilityTables()
 {
 	FreeAbilityTables();
 
@@ -1106,7 +1113,7 @@ void Interface::Main()
 	Font* fps = GetFont( ( unsigned int ) 0 );
 	char fpsstring[40]={"???.??? fps"};
 	unsigned long frame = 0, time, timebase;
-	GetTime(timebase);
+	timebase = GetTickCount();
 	double frames = 0.0;
 	Palette* palette = CreatePalette( white, black );
 	do {
@@ -1122,10 +1129,10 @@ void Interface::Main()
 		HandleGUIBehaviour();
 
 		GameLoop();
-		DrawWindows();
+		DrawWindows(true);
 		if (DrawFPS) {
 			frame++;
-			GetTime( time );
+			time = GetTickCount();
 			if (time - timebase > 1000) {
 				frames = ( frame * 1000.0 / ( time - timebase ) );
 				timebase = time;
@@ -1154,7 +1161,7 @@ int Interface::ReadResRefTable(const ieResRef tablename, ieResRef *&data)
 	AutoTable tm(tablename);
 	if (!tm) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "Cannot find %s.2da.\n",tablename );
+		print( "Cannot find %s.2da.\n",tablename );
 		return 0;
 	}
 	count = tm->GetRowCount();
@@ -1174,7 +1181,7 @@ int Interface::LoadSprites()
 	ieDword i;
 	int size;
 	if (!IsAvailable( IE_2DA_CLASS_ID )) {
-		printf( "No 2DA Importer Available.\nTermination in Progress...\n" );
+		print( "No 2DA Importer Available.\nTermination in Progress...\n" );
 		return GEM_ERROR;
 	}
 
@@ -1305,13 +1312,13 @@ int Interface::LoadSprites()
 	AutoTable tab("fonts");
 	if (!tab) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "Cannot find fonts.2da.\nTermination in Progress...\n" );
+		print( "Cannot find fonts.2da.\nTermination in Progress...\n" );
 		return GEM_ERROR;
 	} else {
 		PluginHolder<AnimationMgr> bamint(IE_BAM_CLASS_ID);
 		if (!bamint) {
 			printStatus( "ERROR", LIGHT_RED );
-			printf( "No BAM Importer Available.\nTermination in Progress...\n" );
+			print( "No BAM Importer Available.\nTermination in Progress...\n" );
 			return GEM_ERROR;
 		}
 		DataStream* str = NULL;
@@ -1322,7 +1329,7 @@ int Interface::LoadSprites()
 			int needpalette = atoi( tab->QueryField( i, 1 ) );
 			int first_char = atoi( tab->QueryField( i, 2 ) );
 			str = gamedata->GetResource( ResRef, IE_BAM_CLASS_ID );
-			if (!bamint->Open( str, true )) {
+			if (!bamint->Open(str)) {
 				continue;
 			}
 			Font* fnt = bamint->GetFont();
@@ -1357,18 +1364,18 @@ int Interface::LoadSprites()
 			return GEM_ERROR;
 		}
 		if (GetFont( ButtonFont ) == NULL) {
-			printMessage( "Core", "ButtonFont not loaded: ", WHITE );
-			printf("%s ", ButtonFont);
+			printMessage("Core", "ButtonFont not loaded: %s ", WHITE,
+				ButtonFont);
 			printStatus( "WARNING", YELLOW );
 		}
 		if (GetFont( MovieFont ) == NULL) {
-			printMessage( "Core", "MovieFont not loaded: ", WHITE );
-			printf("%s ", MovieFont);
+			printMessage("Core", "MovieFont not loaded: %s ", WHITE,
+				MovieFont);
 			printStatus( "WARNING", YELLOW );
 		}
 		if (GetFont( TooltipFont ) == NULL) {
-			printMessage( "Core", "TooltipFont not loaded: ", WHITE );
-			printf("%s ", TooltipFont);
+			printMessage("Core", "TooltipFont not loaded: %s ", WHITE,
+				TooltipFont);
 			printStatus( "WARNING", YELLOW );
 		}
 	}
@@ -1433,7 +1440,7 @@ int Interface::Init()
 	}
 	printMessage( "Core", "Starting Plugin Manager...\n", WHITE );
 	PluginMgr *plugin = PluginMgr::Get();
-	plugin->LoadPlugins(PluginsPath);
+	LoadPlugins(PluginsPath);
 	if (plugin && plugin->GetPluginCount()) {
 		printMessage( "Core", "Plugin Loading Complete...", WHITE );
 		printStatus( "OK", LIGHT_GREEN );
@@ -1449,7 +1456,6 @@ int Interface::Init()
 	srand( ( unsigned int ) t );
 #ifdef _DEBUG
 	FileStreamPtrCount = 0;
-	CachedFileStreamPtrCount = 0;
 #endif
 	printMessage( "Core", "GemRB Core Initialization...\n", WHITE );
 	printStatus( "OK", LIGHT_GREEN );
@@ -1457,12 +1463,12 @@ int Interface::Init()
 	video = ( Video * ) PluginMgr::Get()->GetDriver(&Video::ID, VideoDriverName.c_str());
 	if (!video) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "No Video Driver Available.\nTermination in Progress...\n" );
+		print( "No Video Driver Available.\nTermination in Progress...\n" );
 		return GEM_ERROR;
 	}
 	if (video->Init() == GEM_ERROR) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "Cannot Initialize Video Driver.\nTermination in Progress...\n" );
+		print( "Cannot Initialize Video Driver.\nTermination in Progress...\n" );
 		return GEM_ERROR;
 	}
 	Color defcolor={255,255,255,200};
@@ -1472,7 +1478,7 @@ int Interface::Init()
 	{
 		printMessage( "Core", "Initializing Search Path...", WHITE );
 		if (!IsAvailable( PLUGIN_RESOURCE_DIRECTORY )) {
-			printf( "no DirectoryImporter! " );
+			print( "no DirectoryImporter! " );
 			printStatus( "ERROR", LIGHT_RED );
 			return GEM_ERROR;
 		}
@@ -1483,29 +1489,29 @@ int Interface::Init()
 		gamedata->AddSource(path, "Cache", PLUGIN_RESOURCE_DIRECTORY);
 
 		PathJoin( path, GemRBOverridePath, "override", GameType, NULL);
-		gamedata->AddSource(path, "GemRB Override", PLUGIN_RESOURCE_DIRECTORY);
+		gamedata->AddSource(path, "GemRB Override", PLUGIN_RESOURCE_CACHEDDIRECTORY);
 
 		size_t i;
 		for (i = 0; i < ModPath.size(); ++i)
-			gamedata->AddSource(ModPath[i].c_str(), "Mod paths", PLUGIN_RESOURCE_DIRECTORY);
+			gamedata->AddSource(ModPath[i].c_str(), "Mod paths", PLUGIN_RESOURCE_CACHEDDIRECTORY);
 
 		PathJoin( path, GemRBOverridePath, "override", "shared", NULL);
-		gamedata->AddSource(path, "shared GemRB Override", PLUGIN_RESOURCE_DIRECTORY);
+		gamedata->AddSource(path, "shared GemRB Override", PLUGIN_RESOURCE_CACHEDDIRECTORY);
 
 		PathJoin( path, GamePath, GameOverridePath, NULL);
-		gamedata->AddSource(path, "Override", PLUGIN_RESOURCE_DIRECTORY);
+		gamedata->AddSource(path, "Override", PLUGIN_RESOURCE_CACHEDDIRECTORY);
 
 		PathJoin( path, GamePath, GameSoundsPath, NULL);
-		gamedata->AddSource(path, "Sounds", PLUGIN_RESOURCE_DIRECTORY);
+		gamedata->AddSource(path, "Sounds", PLUGIN_RESOURCE_CACHEDDIRECTORY);
 
 		PathJoin( path, GamePath, GameScriptsPath, NULL);
-		gamedata->AddSource(path, "Scripts", PLUGIN_RESOURCE_DIRECTORY);
+		gamedata->AddSource(path, "Scripts", PLUGIN_RESOURCE_CACHEDDIRECTORY);
 
 		PathJoin( path, GamePath, GamePortraitsPath, NULL);
-		gamedata->AddSource(path, "Portraits", PLUGIN_RESOURCE_DIRECTORY);
+		gamedata->AddSource(path, "Portraits", PLUGIN_RESOURCE_CACHEDDIRECTORY);
 
 		PathJoin( path, GamePath, GameDataPath, NULL);
-		gamedata->AddSource(path, "Data", PLUGIN_RESOURCE_DIRECTORY);
+		gamedata->AddSource(path, "Data", PLUGIN_RESOURCE_CACHEDDIRECTORY);
 
 		//IWD2 movies are on the CD but not in the BIF
 		char *description = strdup("CD1/data");
@@ -1513,7 +1519,7 @@ int Interface::Init()
 			for (size_t j=0;j<CD[i].size();j++) {
 				description[2]='1'+i;				
 				PathJoin( path, CD[i][j].c_str(), GameDataPath, NULL);
-				gamedata->AddSource(path, description, PLUGIN_RESOURCE_DIRECTORY);
+				gamedata->AddSource(path, description, PLUGIN_RESOURCE_CACHEDDIRECTORY);
 			}
 		}
 		free(description);
@@ -1549,12 +1555,12 @@ int Interface::Init()
 		// re-set the gemrb override path, since we now have the correct GameType if 'auto' was used
 		char path[_MAX_PATH];
 		PathJoin( path, GemRBOverridePath, "override", GameType, NULL);
-		gamedata->AddSource(path, "GemRB Override", PLUGIN_RESOURCE_DIRECTORY, RM_REPLACE_SAME_SOURCE);
+		gamedata->AddSource(path, "GemRB Override", PLUGIN_RESOURCE_CACHEDDIRECTORY, RM_REPLACE_SAME_SOURCE);
 	}
 
 	printMessage( "Core", "Reading Game Options...\n", WHITE );
 	if (!LoadGemRBINI()) {
-		printf( "Cannot Load INI\nTermination in Progress...\n" );
+		print( "Cannot Load INI\nTermination in Progress...\n" );
 		return GEM_ERROR;
 	}
 
@@ -1577,13 +1583,13 @@ int Interface::Init()
 	projserv = new ProjectileServer();
 	if (!projserv->GetHighestProjectileNumber()) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "No projectiles are available...\n" );
+		print( "No projectiles are available...\n" );
 	}
 
 	printMessage( "Core", "Checking for Dialogue Manager...", WHITE );
 	if (!IsAvailable( IE_TLK_CLASS_ID )) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "No TLK Importer Available.\nTermination in Progress...\n" );
+		print( "No TLK Importer Available.\nTermination in Progress...\n" );
 		return GEM_ERROR;
 	}
 	printStatus( "OK", LIGHT_GREEN );
@@ -1591,15 +1597,14 @@ int Interface::Init()
 	printMessage( "Core", "Loading Dialog.tlk file...", WHITE );
 	char strpath[_MAX_PATH];
 	PathJoin( strpath, GamePath, dialogtlk, NULL );
-	FileStream* fs = new FileStream();
-	if (!fs->Open( strpath, true )) {
+	FileStream* fs = FileStream::OpenFile(strpath);
+	if (!fs) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "Cannot find Dialog.tlk.\nTermination in Progress...\n" );
-		delete fs;
+		print( "Cannot find Dialog.tlk.\nTermination in Progress...\n" );
 		return GEM_ERROR;
 	}
 	printStatus( "OK", LIGHT_GREEN );
-	strings->Open( fs, true );
+	strings->Open(fs);
 
 	{
 		printMessage( "Core", "Loading Palettes...\n", WHITE );
@@ -1621,7 +1626,7 @@ int Interface::Init()
 
 	if (!IsAvailable( IE_BAM_CLASS_ID )) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "No BAM Importer Available.\nTermination in Progress...\n" );
+		print( "No BAM Importer Available.\nTermination in Progress...\n" );
 		return GEM_ERROR;
 	}
 
@@ -1629,7 +1634,7 @@ int Interface::Init()
 	DSCount = ReadResRefTable ("defsound", DefSound);
 	if (DSCount == 0) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "Cannot find defsound.2da.\nTermination in Progress...\n" );
+		print( "Cannot find defsound.2da.\nTermination in Progress...\n" );
 		return GEM_ERROR;
 	}
 
@@ -1690,6 +1695,7 @@ int Interface::Init()
 	//no need of strdup, variables do copy the key!
 	vars->SetAt( "SkipIntroVideos", (unsigned long)SkipIntroVideos );
 	vars->SetAt( "GUIEnhancements", (unsigned long)GUIEnhancements );
+	vars->SetAt( "TouchScrollAreas", (unsigned long)TouchScrollAreas );
 
 	printMessage( "Core", "Initializing Token Dictionary...", WHITE );
 	tokens = new Variables();
@@ -1727,7 +1733,7 @@ int Interface::Init()
 		printMessage( "Core", "Loading resource data File...", WHITE );
 		INIresdata = PluginHolder<DataFileMgr>(IE_INI_CLASS_ID);
 		DataStream* ds = gamedata->GetResource("resdata", IE_INI_CLASS_ID);
-		if (!INIresdata->Open( ds, true )) {
+		if (!INIresdata->Open(ds)) {
 			printStatus( "ERROR", LIGHT_RED );
 		} else {
 			printStatus( "OK", LIGHT_GREEN );
@@ -1735,14 +1741,12 @@ int Interface::Init()
 	}
 
 	if (HasFeature( GF_HAS_PARTY_INI )) {
-		printMessage( "Core", "Loading precreated teams setup...\n",
-			WHITE );
+		printMessage( "Core", "Loading precreated teams setup...\n", WHITE );
 		INIparty = PluginHolder<DataFileMgr>(IE_INI_CLASS_ID);
-		FileStream* fs = new FileStream();
 		char tINIparty[_MAX_PATH];
 		PathJoin( tINIparty, GamePath, "Party.ini", NULL );
-		fs->Open( tINIparty, true );
-		if (!INIparty->Open( fs, true )) {
+		FileStream* fs = FileStream::OpenFile( tINIparty );
+		if (!INIparty->Open(fs)) {
 			printStatus( "ERROR", LIGHT_RED );
 		} else {
 			printStatus( "OK", LIGHT_GREEN );
@@ -1754,29 +1758,25 @@ int Interface::Init()
 	}
 
 	if (HasFeature( GF_HAS_BEASTS_INI )) {
-		printMessage( "Core", "Loading beasts definition File...\n",
-			WHITE );
+		printMessage( "Core", "Loading beasts definition File...\n", WHITE );
 		INIbeasts = PluginHolder<DataFileMgr>(IE_INI_CLASS_ID);
-		FileStream* fs = new FileStream();
 		char tINIbeasts[_MAX_PATH];
 		PathJoin( tINIbeasts, GamePath, "beast.ini", NULL );
 		// FIXME: crashes if file does not open
-		fs->Open( tINIbeasts, true );
-		if (!INIbeasts->Open( fs, true )) {
+		FileStream* fs = FileStream::OpenFile( tINIbeasts );
+		if (!INIbeasts->Open(fs)) {
 			printStatus( "ERROR", LIGHT_RED );
 		} else {
 			printStatus( "OK", LIGHT_GREEN );
 		}
 
-		printMessage( "Core", "Loading quests definition File...\n",
-			WHITE );
+		printMessage( "Core", "Loading quests definition File...\n", WHITE );
 		INIquests = PluginHolder<DataFileMgr>(IE_INI_CLASS_ID);
-		FileStream* fs2 = new FileStream();
 		char tINIquests[_MAX_PATH];
 		PathJoin( tINIquests, GamePath, "quests.ini", NULL );
 		// FIXME: crashes if file does not open
-		fs2->Open( tINIquests, true );
-		if (!INIquests->Open( fs2, true )) {
+		FileStream* fs2 = FileStream::OpenFile( tINIquests );
+		if (!INIquests->Open(fs2)) {
 			printStatus( "ERROR", LIGHT_RED );
 		} else {
 			printStatus( "OK", LIGHT_GREEN );
@@ -1784,6 +1784,7 @@ int Interface::Init()
 	}
 	game = NULL;
 	calendar = NULL;
+        keymap = NULL;
 
 	timer = new GlobalTimer();
 	printMessage( "Core", "Bringing up the Global Timer...", WHITE );
@@ -1898,6 +1899,14 @@ int Interface::Init()
 	InitializeIEScript();
 	printStatus( "OK", LIGHT_GREEN );
 
+	printMessage( "Core", "Initializing keymap tables...", WHITE);
+	keymap = new KeyMap();
+	ret = keymap->InitializeKeyMap("keymap.ini", "keymap");
+	if (!ret) {
+		printStatus( "ERROR", LIGHT_RED );
+	} else {
+		printStatus( "OK", LIGHT_GREEN );
+	}
 	printMessage( "Core", "Core Initialization Complete!\n", WHITE );
 
 	return GEM_OK;
@@ -1932,124 +1941,124 @@ const char* Interface::TypeExt(SClass_ID type) const
 {
 	switch (type) {
 		case IE_2DA_CLASS_ID:
-			return ".2da";
+			return "2da";
 
 		case IE_ACM_CLASS_ID:
-			return ".acm";
+			return "acm";
 
 		case IE_ARE_CLASS_ID:
-			return ".are";
+			return "are";
 
 		case IE_BAM_CLASS_ID:
-			return ".bam";
+			return "bam";
 
 		case IE_BCS_CLASS_ID:
-			return ".bcs";
+			return "bcs";
 
 		case IE_BS_CLASS_ID:
-			return ".bs";
+			return "bs";
 
 		case IE_BIF_CLASS_ID:
-			return ".bif";
+			return "bif";
 
 		case IE_BIO_CLASS_ID:
 			if (HasFeature(GF_BIOGRAPHY_RES)) {
-				return ".res";
+				return "res";
 			}
-			return ".bio";
+			return "bio";
 
 		case IE_BMP_CLASS_ID:
-			return ".bmp";
+			return "bmp";
 
 		case IE_PNG_CLASS_ID:
-			return ".png";
+			return "png";
 
 		case IE_CHR_CLASS_ID:
-			return ".chr";
+			return "chr";
 
 		case IE_CHU_CLASS_ID:
-			return ".chu";
+			return "chu";
 
 		case IE_CRE_CLASS_ID:
-			return ".cre";
+			return "cre";
 
 		case IE_DLG_CLASS_ID:
-			return ".dlg";
+			return "dlg";
 
 		case IE_EFF_CLASS_ID:
-			return ".eff";
+			return "eff";
 
 		case IE_GAM_CLASS_ID:
-			return ".gam";
+			return "gam";
 
 		case IE_IDS_CLASS_ID:
-			return ".ids";
+			return "ids";
 
 		case IE_INI_CLASS_ID:
-			return ".ini";
+			return "ini";
 
 		case IE_ITM_CLASS_ID:
-			return ".itm";
+			return "itm";
 
 		case IE_MOS_CLASS_ID:
-			return ".mos";
+			return "mos";
 
 		case IE_MUS_CLASS_ID:
-			return ".mus";
+			return "mus";
 
 		case IE_MVE_CLASS_ID:
-			return ".mve";
+			return "mve";
 
 		case IE_OGG_CLASS_ID:
-			return ".ogg";
+			return "ogg";
 
 		case IE_PLT_CLASS_ID:
-			return ".plt";
+			return "plt";
 
 		case IE_PRO_CLASS_ID:
-			return ".pro";
+			return "pro";
 
 		case IE_SAV_CLASS_ID:
-			return ".sav";
+			return "sav";
 
 		case IE_SPL_CLASS_ID:
-			return ".spl";
+			return "spl";
 
 		case IE_SRC_CLASS_ID:
-			return ".src";
+			return "src";
 
 		case IE_STO_CLASS_ID:
-			return ".sto";
+			return "sto";
 
 		case IE_TIS_CLASS_ID:
-			return ".tis";
+			return "tis";
 
 		case IE_TLK_CLASS_ID:
-			return ".tlk";
+			return "tlk";
 
 		case IE_TOH_CLASS_ID:
-			return ".toh";
+			return "toh";
 
 		case IE_TOT_CLASS_ID:
-			return ".tot";
+			return "tot";
 
 		case IE_VAR_CLASS_ID:
-			return ".var";
+			return "var";
 
 		case IE_VVC_CLASS_ID:
-			return ".vvc";
+			return "vvc";
 
 		case IE_WAV_CLASS_ID:
-			return ".wav";
+			return "wav";
 
 		case IE_WED_CLASS_ID:
-			return ".wed";
+			return "wed";
 
 		case IE_WFX_CLASS_ID:
-			return ".wfx";
+			return "wfx";
 
 		case IE_WMP_CLASS_ID:
-			return ".wmp";
+			return "wmp";
 	}
 	return NULL;
 }
@@ -2138,16 +2147,14 @@ bool Interface::LoadConfig(void)
 		return true;
 	}
 
-	PathJoin( path, UserDir, name, NULL );
-	strcat( path, ".cfg" );
+	PathJoinExt( path, UserDir, name, "cfg" );
 
 	if (LoadConfig( path )) {
 		return true;
 	}
 
 #ifdef SYSCONFDIR
-	PathJoin( path, SYSCONFDIR, name, NULL );
-	strcat( path, ".cfg" );
+	PathJoinExt( path, SYSCONFDIR, name, "cfg" );
 
 	if (LoadConfig( path )) {
 		return true;
@@ -2159,16 +2166,14 @@ bool Interface::LoadConfig(void)
 		return false;
 	}
 
-	PathJoin( path, UserDir, PACKAGE, NULL );
-	strcat( path, ".cfg" );
+	PathJoinExt( path, UserDir, PACKAGE, "cfg" );
 
 	if (LoadConfig( path )) {
 		return true;
 	}
 
 #ifdef SYSCONFDIR
-	PathJoin( path, SYSCONFDIR, PACKAGE, NULL );
-	strcat( path, ".cfg" );
+	PathJoinExt( path, SYSCONFDIR, PACKAGE, "cfg" );
 
 	if (LoadConfig( path )) {
 		return true;
@@ -2189,26 +2194,26 @@ bool Interface::LoadConfig(void)
 
 bool Interface::LoadConfig(const char* filename)
 {
-	FILE* config;
 	size_t i;
 
 	printMessage("Config","Trying to open ", WHITE);
 	textcolor(LIGHT_WHITE);
-	printf("%s ", filename);
-	config = fopen( filename, "rb" );
+	print("%s ", filename);
+	FileStream* config = FileStream::OpenFile(filename);
 	if (config == NULL) {
 		printStatus("NOT FOUND", YELLOW);
 		return false;
 	}
 
-	char line[1024];
-	char *name, *nameend, *value, *valueend;
 	//once GemRB own format is working well, this might be set to 0
 	SaveAsOriginal = 1;
 
 	int lineno = 0;
-	while (!feof( config )) {
-		if (! fgets( line, sizeof(line), config )) { // also if len == size(line)
+	while (config->Remains()) {
+		char line[1024];
+		char *name, *nameend, *value, *valueend;
+
+		if (config->ReadLine(line, _MAX_PATH) == -1) {
 			break;
 		}
 		lineno++;
@@ -2224,7 +2229,7 @@ bool Interface::LoadConfig(const char* filename)
 
 		value = strchr( name, '=' );
 		if (!value || value == name) {
-			printf( "Invalid line %d\n", lineno );
+			print( "Invalid line %d\n", lineno );
 			continue;
 		}
 
@@ -2268,6 +2273,7 @@ bool Interface::LoadConfig(const char* filename)
 		CONFIG_INT("TooltipDelay", TooltipDelay = );
 		CONFIG_INT("Width", Width = );
 		CONFIG_INT("IgnoreOriginalINI", IgnoreOriginalINI = );
+		CONFIG_INT("TouchScrollAreas", TouchScrollAreas = );
 #undef CONFIG_INT
 #define CONFIG_STRING(str, var) \
 		} else if (stricmp(name, str) == 0) { \
@@ -2321,7 +2327,7 @@ bool Interface::LoadConfig(const char* filename)
 			}
 		}
 	}
-	fclose( config );
+	delete config;
 
 	// WARNING: Don't move ResolveFilePath into the loop
 	// Otherwise, it won't obey CaseSensitive set at the end
@@ -2408,13 +2414,13 @@ bool Interface::LoadConfig(const char* filename)
 	}
 
 	//FixPath( SavePath, false );
-	//mkdir( SavePath, S_IREAD|S_IWRITE|S_IEXEC );
-	//chmod( SavePath, S_IREAD|S_IWRITE|S_IEXEC );
+	//MakeDirectory(SavePath);
 	FixPath( SavePath, true );
 
 	FixPath( CachePath, false );
-	mkdir( CachePath, S_IREAD|S_IWRITE|S_IEXEC );
-	chmod( CachePath, S_IREAD|S_IWRITE|S_IEXEC );
+	if (!MakeDirectory(CachePath)) {
+		error("Core", "Unable to create cache directory '%s'", CachePath);
+	}
 
 	printStatus( "OK", LIGHT_GREEN );
 
@@ -2425,20 +2431,13 @@ bool Interface::LoadConfig(const char* filename)
 	}
 
 	if ( StupidityDetector( CachePath )) {
-		printMessage("Core"," ",LIGHT_RED);
-		printf( "Cache path %s doesn't exist, not a folder or contains alien files!\n", CachePath );
+		printMessage("Core", "Cache path %s doesn't exist, not a folder or contains alien files!\n", LIGHT_RED, CachePath );
 		return false;
 	}
 	if (!KeepCache) DelTree((const char *) CachePath, false);
 	FixPath( CachePath, true );
 
 	return true;
-}
-
-static void upperlower(int upper, int lower)
-{
-	pl_uppercase[lower]=(ieByte) upper;
-	pl_lowercase[upper]=(ieByte) lower;
 }
 
 static const char *game_flags[GF_COUNT+1]={
@@ -2516,16 +2515,16 @@ bool Interface::LoadGemRBINI()
 		return false;
 	}
 
-	printMessage( "Core", "Loading game type-specific GemRB setup...\n", WHITE );
-	printf( "%s",inifile->originalfile);
+	printMessage("Core", "Loading game type-specific GemRB setup...\n%s", WHITE,
+		inifile->originalfile);
 
 	if (!IsAvailable( IE_INI_CLASS_ID )) {
 		printStatus( "ERROR", LIGHT_RED );
-		printf( "[Core]: No INI Importer Available.\n" );
+		print( "[Core]: No INI Importer Available.\n" );
 		return false;
 	}
 	PluginHolder<DataFileMgr> ini(IE_INI_CLASS_ID);
-	ini->Open( inifile, true ); //autofree
+	ini->Open(inifile);
 
 	printStatus( "OK", LIGHT_GREEN );
 
@@ -2620,7 +2619,10 @@ bool Interface::LoadGemRBINI()
 		if (s) {
 			const char *s2 = strchr(s,',');
 			if (s2) {
-				upperlower(atoi(s), atoi(s2+1) );
+				unsigned char upper = atoi(s);
+				unsigned char lower = atoi(s2+1);
+				pl_uppercase[lower] = upper;
+				pl_lowercase[upper] = lower;
 			}
 		}
 	}
@@ -2631,12 +2633,11 @@ bool Interface::LoadGemRBINI()
 
 	for (i=0;i<GF_COUNT;i++) {
 		if (!game_flags[i]) {
-			printf("Fix the game flags!\n");
-			abort();
+			error("Core", "Fix the game flags!\n");
 		}
 		SetFeature( ini->GetKeyAsInt( "resources", game_flags[i], 0 ), i );
 		//printMessage("Option", "", GREEN);
-		//printf("%s = %s\n", game_flags[i], HasFeature(i)?"yes":"no");
+		//print("%s = %s\n", game_flags[i], HasFeature(i)?"yes":"no");
 	}
 
 	ForceStereo = ini->GetKeyAsInt( "resources", "ForceStereo", 0 );
@@ -2871,13 +2872,11 @@ bool Interface::LoadWindowPack(const char* name)
 {
 	DataStream* stream = gamedata->GetResource( name, IE_CHU_CLASS_ID );
 	if (stream == NULL) {
-		printMessage( "Interface", "Error: Cannot find ", LIGHT_RED );
-		printf( "%s.chu\n", name );
+		printMessage("Interface", "Error: Cannot find %s.chu\n", LIGHT_RED, name );
 		return false;
 	}
-	if (!GetWindowMgr()->Open( stream, true )) {
-		printMessage( "Interface", "Error: Cannot Load ", LIGHT_RED );
-		printf( "%s.chu\n", name );
+	if (!GetWindowMgr()->Open(stream)) {
+		printMessage("Interface", "Error: Cannot Load %s.chu\n", LIGHT_RED, name );
 		return false;
 	}
 
@@ -2950,8 +2949,6 @@ int Interface::CreateWindow(unsigned short WindowID, int XPos, int YPos, unsigne
 		ResourceHolder<ImageMgr> mos(Background);
 		if (mos != NULL) {
 			win->SetBackGround( mos->GetSprite2D(), true );
-		} else {
-			printf( "[Core]: Cannot Load BackGround, skipping\n" );
 		}
 	}
 
@@ -3055,23 +3052,6 @@ int Interface::AdjustScrolling(unsigned short WindowIndex,
 	return 0;
 }
 
-/** Set the Text of a Control */
-int Interface::SetText(unsigned short WindowIndex,
-		unsigned short ControlIndex, const char* string)
-{
-	if (WindowIndex >= windows.size()) {
-		return -1;
-	}
-	Window* win = windows[WindowIndex];
-	if (win == NULL) {
-		return -1;
-	}
-	Control* ctrl = win->GetControl( ControlIndex );
-	if (ctrl == NULL) {
-		return -1;
-	}
-	return ctrl->SetText( string );
-}
 /** Set the Tooltip text of a Control */
 int Interface::SetTooltip(unsigned short WindowIndex,
 		unsigned short ControlIndex, const char* string)
@@ -3242,12 +3222,12 @@ void Interface::GameLoop(void)
 		update_scripts = !(gc->GetDialogueFlags() & DF_FREEZE_SCRIPTS);
 	}
 
-	update_scripts = GSUpdate(update_scripts);
+	bool do_update = GSUpdate(update_scripts);
 
 	//i'm not sure if this should be here
 
 	//in multi player (if we ever get to it), only the server must call this
-	if (update_scripts) {
+	if (do_update) {
 		if ( game->selected.size() > 0 ) {
 			gc->ChangeMap(GetFirstSelectedPC(true), false);
 		}
@@ -3316,7 +3296,7 @@ void Interface::HandleGUIBehaviour(void)
 	}
 }
 
-void Interface::DrawWindows(void)
+void Interface::DrawWindows(bool allow_delete)
 {
 	//here comes the REAL drawing of windows
 	if (ModalWindow) {
@@ -3334,10 +3314,12 @@ void Interface::DrawWindows(void)
 		Window* win = windows[t];
 		if (win != NULL) {
 			if (win->Visible == WINDOW_INVALID) {
-				topwin.erase(topwin.begin()+i);
-				evntmgr->DelWindow( win );
-				delete win;
-				windows[t]=NULL;
+				if (allow_delete) {
+					topwin.erase(topwin.begin()+i);
+					evntmgr->DelWindow( win );
+					delete win;
+					windows[t]=NULL;
+				}
 			} else if (win->Visible) {
 				win->DrawWindow();
 			}
@@ -3548,7 +3530,7 @@ int Interface::LoadSymbol(const char* ResRef)
 		delete str;
 		return -1;
 	}
-	if (!sm->Open( str, true )) {
+	if (!sm->Open(str)) {
 		return -1;
 	}
 	Symbol s;
@@ -3719,7 +3701,7 @@ int Interface::GetPortraits(TextArea* ta, bool smallorlarge)
 	if (!dir) {
 		return -1;
 	}
-	printf( "Looking in %s\n", Path );
+	print( "Looking in %s\n", Path );
 	do {
 		char *name = dir.GetName();
 		if (name[0] == '.')
@@ -3751,7 +3733,7 @@ int Interface::GetCharSounds(TextArea* ta)
 	if (!dir) {
 		return -1;
 	}
-	printf( "Looking in %s\n", Path );
+	print( "Looking in %s\n", Path );
 	do {
 		char *name = dir.GetName();
 		if (name[0] == '.')
@@ -3780,7 +3762,7 @@ int Interface::GetCharacters(TextArea* ta)
 	if (!dir) {
 		return -1;
 	}
-	printf( "Looking in %s\n", Path );
+	print( "Looking in %s\n", Path );
 	do {
 		char *name = dir.GetName();
 		if (name[0] == '.')
@@ -3799,45 +3781,36 @@ int Interface::GetCharacters(TextArea* ta)
 
 bool Interface::LoadINI(const char* filename)
 {
-	FILE* config;
-	config = fopen( filename, "rb" );
+	FileStream* config = FileStream::OpenFile(filename);
 	if (config == NULL) {
 		return false;
 	}
 	char name[65], value[_MAX_PATH + 3];
-	while (!feof( config )) {
-		name[0] = 0;
-		value[0] = 0;
-		char rem;
+	while (config->Remains()) {
+		char line[_MAX_PATH];
 
-		if (fread( &rem, 1, 1, config ) != 1)
+		if (config->ReadLine(line, _MAX_PATH) == -1)
 			break;
 
-		if (( rem == '#' ) ||
-			( rem == '[' ) ||
-			( rem == '\r' ) ||
-			( rem == '\n' ) ||
-			( rem == ';' )) {
-			if (rem == '\r') {
-				fgetc( config );
-				continue;
-			} else if (rem == '\n')
-				continue;
-
-			//it should always return zero
-			if (fscanf( config, "%*[^\r\n]%*[\r\n]" )!=0)
-				break;
+		if ((line[0] == '#') ||
+			( line[0] == '[' ) ||
+			( line[0] == '\r' ) ||
+			( line[0] == '\n' ) ||
+			( line[0] == ';' )) {
 			continue;
 		}
-		fseek( config, -1, SEEK_CUR );
+
+		name[0] = 0;
+		value[0] = 0;
+
 		//the * element is not counted
-		if (fscanf( config, "%[^=]=%[^\r\n]%*[\r\n]", name, value )!=2)
+		if (sscanf( line, "%[^=]=%[^\r\n]", name, value )!=2)
 			continue;
 		if (( value[0] >= '0' ) && ( value[0] <= '9' )) {
 			vars->SetAt( name, atoi( value ) );
 		}
 	}
-	fclose( config );
+	delete config;
 	return true;
 }
 
@@ -3848,7 +3821,7 @@ void Interface::SetCutSceneMode(bool active)
 
 	if (gc) {
 		// don't mess with controls/etc if we're already in a cutscene
-		if (active == (gc->GetScreenFlags()&SF_CUTSCENE))
+		if (active == (bool)(gc->GetScreenFlags()&SF_CUTSCENE))
 			return;
 
 		gc->SetCutSceneMode( active );
@@ -3939,6 +3912,7 @@ void Interface::LoadGame(SaveGame *sg, int ver_override)
 
 	// Yes, it uses goto. Other ways seemed too awkward for me.
 
+	gamedata->SaveAllStores();
 	strings->CloseAux();
 	tokens->RemoveAll(NULL); //clearing the token dictionary
 
@@ -3989,7 +3963,7 @@ void Interface::LoadGame(SaveGame *sg, int ver_override)
 	if (!gam_mgr)
 		goto cleanup;
 
-	if (!gam_mgr->Open( gam_str, true ))
+	if (!gam_mgr->Open(gam_str))
 		goto cleanup;
 
 	new_game = gam_mgr->LoadGame(new Game(), ver_override);
@@ -4002,7 +3976,7 @@ void Interface::LoadGame(SaveGame *sg, int ver_override)
 	if (!wmp_mgr)
 		goto cleanup;
 
-	if (!wmp_mgr->Open( wmp_str1, wmp_str2, true ))
+	if (!wmp_mgr->Open(wmp_str1, wmp_str2))
 		goto cleanup;
 
 	new_worldmap = wmp_mgr->GetWorldMapArray( );
@@ -4013,7 +3987,7 @@ void Interface::LoadGame(SaveGame *sg, int ver_override)
 	LoadProgress(20);
 	// Unpack SAV (archive) file to Cache dir
 	if (sav_str) {
-		PluginHolder<ArchiveImporter> ai(IE_BIF_CLASS_ID);
+		PluginHolder<ArchiveImporter> ai(IE_SAV_CLASS_ID);
 		if (ai) {
 			if (ai->DecompressSaveGame(sav_str) != GEM_OK) {
 				goto cleanup;
@@ -4061,7 +4035,7 @@ void Interface::UpdateMasterScript()
 		DataStream *wmp_str1 = gamedata->GetResource( WorldMapName[0], IE_WMP_CLASS_ID );
 		DataStream *wmp_str2 = gamedata->GetResource( WorldMapName[1], IE_WMP_CLASS_ID );
 
-		if (!wmp_mgr->Open( wmp_str1, wmp_str2, true )) {
+		if (!wmp_mgr->Open(wmp_str1, wmp_str2)) {
 			delete wmp_str1;
 			delete wmp_str2;
 		}
@@ -4442,7 +4416,7 @@ void Interface::RemoveFromCache(const ieResRef resref, SClass_ID ClassID)
 {
 	char filename[_MAX_PATH];
 
-	snprintf(filename, _MAX_PATH, "%s%.8s%s", CachePath, resref, TypeExt( ClassID ) );
+	PathJoinExt(filename, CachePath, resref, TypeExt(ClassID));
 	unlink ( filename);
 }
 
@@ -4455,7 +4429,7 @@ bool Interface::StupidityDetector(const char* Pt)
 	strcpy( Path, Pt );
 	DirectoryIterator dir(Path);
 	if (!dir) {
-		printf("\n**cannot open**\n");
+		print("\n**cannot open**\n");
 		return true;
 	}
 	do {
@@ -4467,11 +4441,11 @@ bool Interface::StupidityDetector(const char* Pt)
 				if (name[1] == '.' && name[2] == '\0')
 					continue;
 			}
-			printf("\n**contains another dir**\n");
+			print("\n**contains another dir**\n");
 			return true; //a directory in there???
 		}
 		if (ProtectedExtension(name) ) {
-			printf("\n**contains alien files**\n");
+			print("\n**contains alien files**\n");
 			return true; //an executable file in there???
 		}
 	} while (++dir);
@@ -4662,6 +4636,10 @@ bool Interface::ResolveRandomItem(CREItem *itm)
 
 		void* lookup;
 		if ( !RtRows->Lookup( itm->ItemResRef, lookup ) ) {
+			if (!gamedata->Exists(itm->ItemResRef, IE_ITM_CLASS_ID)) {
+				printMessage("Interface", "Nonexistent random item (bad table entry) detected: %s\n", LIGHT_RED, itm->ItemResRef);
+				return false;
+			}
 			return true;
 		}
 		ItemList *itemlist = (ItemList*)lookup;
@@ -4696,8 +4674,8 @@ bool Interface::ResolveRandomItem(CREItem *itm)
 		}
 		itm->Usages[0]=(ieWord) Roll(j,k,0);
 	}
-	printMessage("Interface"," ",LIGHT_RED);
-	printf("Loop detected while generating random item:%s\n",itm->ItemResRef);
+	printMessage("Interface", "Loop detected while generating random item:%s\n", LIGHT_RED,
+		itm->ItemResRef);
 	return false;
 }
 
@@ -4785,43 +4763,16 @@ Store *Interface::GetCurrentStore()
 	return CurrentStore;
 }
 
-int Interface::CloseCurrentStore()
+void Interface::CloseCurrentStore()
 {
-	if ( !CurrentStore ) {
-		return -1;
-	}
-	PluginHolder<StoreMgr> sm(IE_STO_CLASS_ID);
-	if (sm == NULL) {
-		return -1;
-	}
-	int size = sm->GetStoredFileSize (CurrentStore);
-	if (size > 0) {
-		//created streams are always autofree (close file on destruct)
-		//this one will be destructed when we return from here
-		FileStream str;
-
-		str.Create( CurrentStore->Name, IE_STO_CLASS_ID );
-		int ret = sm->PutStore (&str, CurrentStore);
-		if (ret <0) {
-			printMessage("Core"," ", YELLOW);
-			printf("Store removed: %s\n", CurrentStore->Name);
-			RemoveFromCache(CurrentStore->Name, IE_STO_CLASS_ID);
-		}
-	} else {
-		printMessage("Core"," ", YELLOW);
-		printf("Store removed: %s\n", CurrentStore->Name);
-		RemoveFromCache(CurrentStore->Name, IE_STO_CLASS_ID);
-	}
-	//make sure the stream isn't connected to sm, or it will be double freed
-	delete CurrentStore;
+	gamedata->SaveStore(CurrentStore);
 	CurrentStore = NULL;
-	return 0;
 }
 
 Store *Interface::SetCurrentStore(const ieResRef resname, ieDword owner)
 {
-	if ( CurrentStore ) {
-		if ( !strnicmp(CurrentStore->Name, resname, 8) ) {
+	if (CurrentStore) {
+		if (!strnicmp(CurrentStore->Name, resname, 8)) {
 			return CurrentStore;
 		}
 
@@ -4829,25 +4780,10 @@ Store *Interface::SetCurrentStore(const ieResRef resname, ieDword owner)
 		CloseCurrentStore();
 	}
 
-	DataStream* str = gamedata->GetResource( resname, IE_STO_CLASS_ID );
-	PluginHolder<StoreMgr> sm(IE_STO_CLASS_ID);
-	if (sm == NULL) {
-		delete ( str );
-		return NULL;
-	}
-	if (!sm->Open( str, true )) {
-		return NULL;
-	}
-
-	// FIXME - should use some already allocated in core
-	// not really, only one store is open at a time, then it is
-	// unloaded, we don't really have to cache it, it will be saved in
-	// Cache anyway!
-	CurrentStore = sm->GetStore( new Store() );
+	CurrentStore = gamedata->GetStore(resname);
 	if (CurrentStore == NULL) {
 		return NULL;
 	}
-	strnlwrcpy(CurrentStore->Name, resname, 8);
 	if (owner) {
 		CurrentStore->SetOwnerID(owner);
 	}
@@ -4865,12 +4801,11 @@ int Interface::GetMouseScrollSpeed() {
 ieStrRef Interface::GetRumour(const ieResRef dlgref)
 {
 	PluginHolder<DialogMgr> dm(IE_DLG_CLASS_ID);
-	dm->Open( gamedata->GetResource( dlgref, IE_DLG_CLASS_ID ), true );
+	dm->Open(gamedata->GetResource(dlgref, IE_DLG_CLASS_ID));
 	Dialog *dlg = dm->GetDialog();
 
 	if (!dlg) {
-		printMessage("Interface"," ", LIGHT_RED);
-		printf( "Cannot load dialog: %s\n", dlgref );
+		printMessage("Interface", "Cannot load dialog: %s\n", LIGHT_RED, dlgref);
 		return (ieStrRef) -1;
 	}
 	Scriptable *pc=game->GetPC( game->GetSelectedPCSingle(), false );
@@ -4882,24 +4817,6 @@ ieStrRef Interface::GetRumour(const ieResRef dlgref)
 	}
 	delete dlg;
 	return ret;
-}
-
-void Interface::DoTheStoreHack(Store *s)
-{
-	size_t size = s->PurchasedCategoriesCount * sizeof( ieDword );
-	s->purchased_categories=(ieDword *) malloc(size);
-
-	size = s->CuresCount * sizeof( STOCure );
-	s->cures=(STOCure *) malloc(size);
-
-	size = s->DrinksCount * sizeof( STODrink );
-	s->drinks=(STODrink *) malloc(size);
-
-	for(size=0;size<s->ItemsCount;size++) {
-		STOItem *si = new STOItem();
-		memset(si, 0, sizeof(STOItem) );
-		s->items.push_back( si );
-	}
 }
 
 //plays stock sound listed in defsound.2da
@@ -5080,13 +4997,13 @@ int Interface::SwapoutArea(Map *map)
 		str.Create( map->GetScriptName(), IE_ARE_CLASS_ID );
 		int ret = mm->PutArea (&str, map);
 		if (ret <0) {
-			printMessage("Core"," ", YELLOW);
-			printf("Area removed: %s\n", map->GetScriptName());
+			printMessage("Core", "Area removed: %s\n", YELLOW,
+				map->GetScriptName());
 			RemoveFromCache(map->GetScriptName(), IE_ARE_CLASS_ID);
 		}
 	} else {
-		printMessage("Core"," ", YELLOW);
-		printf("Area removed: %s\n", map->GetScriptName());
+		printMessage("Core", "Area removed: %s\n", YELLOW,
+			map->GetScriptName());
 		RemoveFromCache(map->GetScriptName(), IE_ARE_CLASS_ID);
 	}
 	//make sure the stream isn't connected to sm, or it will be double freed
@@ -5115,8 +5032,7 @@ int Interface::WriteCharacter(const char *name, Actor *actor)
 
 		int ret = gm->PutActor(&str, actor, true);
 		if (ret <0) {
-			printMessage("Core"," ", YELLOW);
-			printf("Character cannot be saved: %s\n", name);
+			printMessage("Core", "Character cannot be saved: %s\n", YELLOW, name);
 			return -1;
 		}
 	}
@@ -5150,13 +5066,11 @@ int Interface::WriteGame(const char *folder)
 		str.Create( folder, GameNameResRef, IE_GAM_CLASS_ID );
 		int ret = gm->PutGame (&str, game);
 		if (ret <0) {
-			printMessage("Core"," ", YELLOW);
-			printf("Game cannot be saved: %s\n", folder);
+			printMessage("Core", "Game cannot be saved: %s\n", YELLOW, folder);
 			return -1;
 		}
 	} else {
-		printMessage("Core"," ", YELLOW);
-		printf("Internal error, game cannot be saved: %s\n", folder);
+		printMessage("Core", "Internal error, game cannot be saved: %s\n", YELLOW, folder);
 		return -1;
 	}
 	return 0;
@@ -5197,8 +5111,7 @@ int Interface::WriteWorldMap(const char *folder)
 		ret = wmm->PutWorldMap (&str1, &str2, worldmap);
 	}
 	if (ret <0) {
-		printMessage("Core"," ", YELLOW);
-		printf("Internal error, worldmap cannot be saved: %s\n", folder);
+		printMessage("Core", "Internal error, worldmap cannot be saved: %s\n", YELLOW, folder);
 		return -1;
 	}
 	return 0;
@@ -5213,8 +5126,7 @@ int Interface::CompressSave(const char *folder)
 	if (!dir) {
 		return -1;
 	}
-	//BIF and SAV are the same
-	PluginHolder<ArchiveImporter> ai(IE_BIF_CLASS_ID);
+	PluginHolder<ArchiveImporter> ai(IE_SAV_CLASS_ID);
 	ai->CreateArchive( &str);
 
 	//.tot and .toh should be saved last, because they are updated when an .are is saved
@@ -5230,7 +5142,7 @@ int Interface::CompressSave(const char *folder)
 				char dtmp[_MAX_PATH];
 				dir.GetFullPath(dtmp);
 				FileStream fs;
-				fs.Open(dtmp, true);
+				fs.Open(dtmp);
 				ai->AddToSaveGame(&str, &fs);
 			}
 		} while (++dir);
@@ -5464,8 +5376,7 @@ ieDword Interface::TranslateStat(const char *stat_name)
 	Holder<SymbolMgr> sym = GetSymbol( symbol );
 	ieDword stat = (ieDword) sym->GetValue( stat_name );
 	if (stat==(ieDword) ~0) {
-		printMessage("Core"," ",YELLOW);
-		printf("Cannot translate symbol: %s\n", stat_name);
+		printMessage("Core", "Cannot translate symbol: %s\n", YELLOW, stat_name);
 	}
 	return stat;
 }
@@ -5513,7 +5424,6 @@ void Interface::SetNextScript(const char *script)
 
 void Interface::SanityCheck(const char *ver) {
 	if (strcmp(ver, VERSION_GEMRB)) {
-		printf("version check failed: core version %s doesn't match caller's version %s\n", VERSION_GEMRB, ver);
-		abort();
+		error("Core", "version check failed: core version %s doesn't match caller's version %s\n", VERSION_GEMRB, ver);
 	}
 }
