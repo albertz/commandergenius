@@ -508,12 +508,19 @@ public class MainActivity extends Activity {
 					}
 					if( entry.isDirectory() )
 					{
-						System.out.println("Warning '" + entry.getName() + "' is a directory");
+						File outDir = new File( cacheDir.getAbsolutePath() + "/" + entry.getName() );
+						if( !(outDir.exists() && outDir.isDirectory()) )
+							outDir.mkdirs();
 						continue;
 					}
 
 					OutputStream out = null;
 					String path = cacheDir.getAbsolutePath() + "/" + entry.getName();
+					try {
+						File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
+						if( !(outDir.exists() && outDir.isDirectory()) )
+							outDir.mkdirs();
+					} catch( SecurityException eeeee ) { };
 
 					System.out.println("Saving to file '" + path + "'");
 
@@ -589,12 +596,19 @@ public class MainActivity extends Activity {
 					}
 					if( entry.isDirectory() )
 					{
-						System.out.println("Warning '" + entry.getName() + "' is a directory");
+						File outDir = new File( cacheDir.getAbsolutePath() + "/" + entry.getName() );
+						if( !(outDir.exists() && outDir.isDirectory()) )
+							outDir.mkdirs();
 						continue;
 					}
 
 					OutputStream out = null;
 					String path = cacheDir.getAbsolutePath() + "/" + entry.getName();
+					try {
+						File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
+						if( !(outDir.exists() && outDir.isDirectory()) )
+							outDir.mkdirs();
+					} catch( SecurityException eeeeeee ) { };
 
 					try {
 						CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
@@ -608,7 +622,7 @@ public class MainActivity extends Activity {
 						}
 						System.out.println("File '" + path + "' exists and passed CRC check - not overwriting it");
 						continue;
-					} catch( Exception e ) { }
+					} catch( Exception eeeeee ) { }
 
 					System.out.println("Saving to file '" + path + "'");
 

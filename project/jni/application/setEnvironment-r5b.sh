@@ -17,13 +17,13 @@ fi
 NDK=`which ndk-build`
 NDK=`dirname $NDK`
 
-echo NDK $NDK
+#echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
 GCCVER=4.4.3
 PLATFORMVER=android-8
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
-echo LOCAL_PATH $LOCAL_PATH
+#echo LOCAL_PATH $LOCAL_PATH
 
 APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
 APP_AVAILABLE_STATIC_LIBS=`grep 'APP_AVAILABLE_STATIC_LIBS [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
