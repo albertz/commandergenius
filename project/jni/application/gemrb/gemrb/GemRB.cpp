@@ -39,7 +39,7 @@
 
 #ifdef ANDROID
 #include <SDL/SDL.h>
-#include "audio.h"
+#include "Audio.h"
 
 // pause audio playing if app goes in background
 static void appPutToBackground()
