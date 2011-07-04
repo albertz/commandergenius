@@ -1,60 +1,21 @@
-Index: server/stdafx.h
+Index: lib/Connection.h
 ===================================================================
---- server/stdafx.h	(revision 2183)
-+++ server/stdafx.h	(working copy)
-@@ -15,8 +15,8 @@
- #include "../global.h"
- 
- #include <boost/crc.hpp>
--#include <boost/interprocess/mapped_region.hpp>
--#include <boost/interprocess/shared_memory_object.hpp>
-+//#include <boost/interprocess/mapped_region.hpp>
-+//#include <boost/interprocess/shared_memory_object.hpp>
- #include <iostream>
- #include <string>
- #include <boost/asio.hpp>
-Index: server/CVCMIServer.cpp
-===================================================================
---- server/CVCMIServer.cpp	(revision 2183)
-+++ server/CVCMIServer.cpp	(working copy)
-@@ -29,7 +29,7 @@
- using namespace boost;
- using namespace boost::asio;
- using namespace boost::asio::ip;
--namespace intpr = boost::interprocess;
-+//namespace intpr = boost::interprocess;
- bool end2 = false;
- int port = 3030;
- VCMIDirs GVCMIDirs;
-@@ -379,6 +379,7 @@
- 
- void CVCMIServer::start()
+--- lib/Connection.h	(revision 2220)
++++ lib/Connection.h	(working copy)
+@@ -82,7 +82,9 @@
  {
-+	/*
- 	ServerReady *sr = NULL;
- 	intpr::mapped_region *mr;
- 	try
-@@ -395,13 +396,17 @@
- 		mr = new intpr::mapped_region(smo,intpr::read_write);
- 		sr = new(mr->get_address())ServerReady();
+ 	bool operator()(const std::type_info *a, const std::type_info *b) const
+ 	{
+-		return a->before(*b);
++		// Comparing pointers is bad bad practice, because type_info pointers to the same types
++		// are different inside shared library and the executable that links to that library
++		return strcmp(a->name(), b->name()) > 0;
  	}
-+	*/
-+	notifyServerReady();
+ };
  
- 	boost::system::error_code error;
- 	tlog0<<"Listening for connections at port " << acceptor->local_endpoint().port() << std::endl;
- 	tcp::socket * s = new tcp::socket(acceptor->io_service());
- 	boost::thread acc(boost::bind(vaccept,acceptor,s,&error));
-+	/*
- 	sr->setToTrueAndNotify();
- 	delete mr;
-+	*/
- 
- 	acc.join();
- 	if (error)
 Index: lib/CLodHandler.cpp
 ===================================================================
---- lib/CLodHandler.cpp	(revision 2183)
+--- lib/CLodHandler.cpp	(revision 2220)
 +++ lib/CLodHandler.cpp	(working copy)
 @@ -78,13 +78,15 @@
  	Entry ourEntry = *en_it;
@@ -113,7 +74,7 @@ Index: lib/CLodHandler.cpp
  }
 Index: lib/Interprocess.h
 ===================================================================
---- lib/Interprocess.h	(revision 2183)
+--- lib/Interprocess.h	(revision 2220)
 +++ lib/Interprocess.h	(working copy)
 @@ -1,3 +1,4 @@
 +/*
@@ -183,24 +144,86 @@ Index: lib/Interprocess.h
 +	fwrite("1", 1, 1, ff);
 +	fclose(ff);
 +}
-Index: lib/Connection.h
+Index: server/stdafx.h
 ===================================================================
---- lib/Connection.h	(revision 2183)
-+++ lib/Connection.h	(working copy)
-@@ -82,7 +82,9 @@
- {
- 	bool operator()(const std::type_info *a, const std::type_info *b) const
- 	{
--		return a->before(*b);
-+		// Comparing pointers is bad bad practice, because type_info pointers to the same types
-+		// are different inside shared library and the executable that links to that library
-+		return strcmp(a->name(), b->name()) > 0;
- 	}
- };
+--- server/stdafx.h	(revision 2220)
++++ server/stdafx.h	(working copy)
+@@ -15,8 +15,8 @@
+ #include "../global.h"
  
+ #include <boost/crc.hpp>
+-#include <boost/interprocess/mapped_region.hpp>
+-#include <boost/interprocess/shared_memory_object.hpp>
++//#include <boost/interprocess/mapped_region.hpp>
++//#include <boost/interprocess/shared_memory_object.hpp>
+ #include <iostream>
+ #include <string>
+ #include <boost/asio.hpp>
+Index: server/CVCMIServer.cpp
+===================================================================
+--- server/CVCMIServer.cpp	(revision 2220)
++++ server/CVCMIServer.cpp	(working copy)
+@@ -29,7 +29,7 @@
+ using namespace boost;
+ using namespace boost::asio;
+ using namespace boost::asio::ip;
+-namespace intpr = boost::interprocess;
++//namespace intpr = boost::interprocess;
+ bool end2 = false;
+ int port = 3030;
+ VCMIDirs GVCMIDirs;
+@@ -379,6 +379,7 @@
+ 
+ void CVCMIServer::start()
+ {
++	/*
+ 	ServerReady *sr = NULL;
+ 	intpr::mapped_region *mr;
+ 	try
+@@ -395,13 +396,17 @@
+ 		mr = new intpr::mapped_region(smo,intpr::read_write);
+ 		sr = new(mr->get_address())ServerReady();
+ 	}
++	*/
++	notifyServerReady();
+ 
+ 	boost::system::error_code error;
+ 	tlog0<<"Listening for connections at port " << acceptor->local_endpoint().port() << std::endl;
+ 	tcp::socket * s = new tcp::socket(acceptor->io_service());
+ 	boost::thread acc(boost::bind(vaccept,acceptor,s,&error));
++	/*
+ 	sr->setToTrueAndNotify();
+ 	delete mr;
++	*/
+ 
+ 	acc.join();
+ 	if (error)
+Index: server/CGameHandler.cpp
+===================================================================
+--- server/CGameHandler.cpp	(revision 2220)
++++ server/CGameHandler.cpp	(working copy)
+@@ -602,7 +602,9 @@
+ 
+ 			if(apply)
+ 			{
++				tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << std::endl;
+ 				bool result = apply->applyOnGH(this,&c,pack);
++				tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << std::endl;
+ 				tlog5 << "Message successfully applied (result=" << result << ")!\n";
+ 
+ 				//send confirmation that we've applied the package
+@@ -1795,7 +1797,7 @@
+ 		iw.player = h1->tempOwner;
+ 		iw.components.push_back(Component(Component::SEC_SKILL, 18, ScholarLevel, 0));
+ 
+-		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//"%s, who has studied magic extensively,
++		iw.text.addTxt(MetaString::GENERAL_TXT, 139);//%s, who has studied magic extensively,
+ 		iw.text.addReplacement(h1->name);
+ 		
+ 		if (cs2.spells.size())//if found new spell - apply
 Index: CConsoleHandler.cpp
 ===================================================================
---- CConsoleHandler.cpp	(revision 2183)
+--- CConsoleHandler.cpp	(revision 2220)
 +++ CConsoleHandler.cpp	(working copy)
 @@ -143,6 +143,7 @@
  
@@ -220,7 +243,7 @@ Index: CConsoleHandler.cpp
  int CConsoleHandler::run()
 Index: global.h
 ===================================================================
---- global.h	(revision 2183)
+--- global.h	(revision 2220)
 +++ global.h	(working copy)
 @@ -4,6 +4,7 @@
  #include <iostream>
@@ -230,7 +253,7 @@ Index: global.h
  #include <string> //std::find
  #include <boost/logic/tribool.hpp>
  #include <boost/unordered_set.hpp>
-@@ -727,29 +728,21 @@
+@@ -729,29 +730,21 @@
  	}
  
  
@@ -266,9 +289,22 @@ Index: global.h
  //for explicit overrides
  #ifdef _MSC_VER
  	#define OVERRIDE override
+Index: Scripting/ERM/ERMParser.cpp
+===================================================================
+--- Scripting/ERM/ERMParser.cpp	(revision 2220)
++++ Scripting/ERM/ERMParser.cpp	(working copy)
+@@ -2,7 +2,7 @@
+ #include <boost/version.hpp>
+ //To make compilation with older boost versions possible
+ //Don't know exact version - 1.46 works while 1.42 not
+-#if BOOST_VERSION >= 104600
++#if BOOST_VERSION >= 104500
+ 
+ #include <boost/spirit/include/qi.hpp>
+ #include <boost/bind.hpp>
 Index: client/Graphics.cpp
 ===================================================================
---- client/Graphics.cpp	(revision 2183)
+--- client/Graphics.cpp	(revision 2220)
 +++ client/Graphics.cpp	(working copy)
 @@ -333,8 +333,15 @@
  		tasks += GET_SURFACE(backgroundsm[id],name);
@@ -310,9 +346,9 @@ Index: client/Graphics.cpp
  {
 Index: client/Client.cpp
 ===================================================================
---- client/Client.cpp	(revision 2183)
+--- client/Client.cpp	(revision 2220)
 +++ client/Client.cpp	(working copy)
-@@ -39,7 +39,7 @@
+@@ -40,7 +40,7 @@
  #include "../lib/RegisterTypes.cpp"
  
  extern std::string NAME;
@@ -321,7 +357,22 @@ Index: client/Client.cpp
  
  /*
   * Client.cpp, part of VCMI engine
-@@ -498,9 +498,9 @@
+@@ -432,7 +432,13 @@
+ 	hotSeat = (humanPlayers > 1);
+ 
+ 	std::vector<FileInfo> scriptModules;
+-	CFileUtility::getFilesWithExt(scriptModules, "./Scripting", ".dll");
++	CFileUtility::getFilesWithExt(scriptModules,
++#ifdef ANDROID
++	LIB_DIR "/"
++#else
++	"./"
++#endif
++	"Scripting", ".dll");
+ 	BOOST_FOREACH(FileInfo &m, scriptModules)
+ 	{
+ 		CScriptingModule * nm = CDynLibHandler::getNewScriptingModule(m.name);
+@@ -505,9 +511,9 @@
  
  void CClient::handlePack( CPack * pack )
  {			
@@ -333,7 +384,7 @@ Index: client/Client.cpp
  		apply->applyOnClBefore(this,pack);
  		tlog5 << "\tMade first apply on cl\n";
  		gs->apply(pack);
-@@ -628,18 +628,22 @@
+@@ -642,18 +648,22 @@
  		startServer();
  
  	th.update();
@@ -357,7 +408,7 @@ Index: client/Client.cpp
  		waitForServer();
  
  	th.update();
-@@ -654,27 +658,31 @@
+@@ -668,27 +678,31 @@
  CServerHandler::CServerHandler(bool runServer /*= false*/)
  {
  	serverThread = NULL;
@@ -393,7 +444,7 @@ Index: client/Client.cpp
  }
 Index: client/GUIBase.cpp
 ===================================================================
---- client/GUIBase.cpp	(revision 2183)
+--- client/GUIBase.cpp	(revision 2220)
 +++ client/GUIBase.cpp	(working copy)
 @@ -11,6 +11,7 @@
  #include "../CThreadHelper.h"
@@ -403,7 +454,7 @@ Index: client/GUIBase.cpp
  
  /*
   * GUIBase.cpp, part of VCMI engine
-@@ -364,6 +365,26 @@
+@@ -365,6 +366,26 @@
  		}
  	} HANDLE_EXCEPTION
  }
@@ -432,7 +483,7 @@ Index: client/GUIBase.cpp
  :lastClick(-500, -500)
 Index: client/CAnimation.h
 ===================================================================
---- client/CAnimation.h	(revision 2183)
+--- client/CAnimation.h	(revision 2220)
 +++ client/CAnimation.h	(working copy)
 @@ -46,6 +46,8 @@
  	std::map<size_t, std::vector <size_t> > offset;
@@ -443,9 +494,28 @@ Index: client/CAnimation.h
  	SDL_Color * palette;
  
  public:
+@@ -124,6 +126,8 @@
+  *  2nd byte = size of segment
+  *  raw data (if any)
+  */
++// Buggy, disabled for Android
++/*
+ class CompImage : public IImage
+ {
+ 	//x,y - margins, w,h - sprite size
+@@ -157,8 +161,8 @@
+ 
+ 	friend class CompImageLoader;
+ };
++*/
+ 
+-
+ /// Class for handling animation
+ class CAnimation
+ {
 Index: client/CDefHandler.h
 ===================================================================
---- client/CDefHandler.h	(revision 2183)
+--- client/CDefHandler.h	(revision 2220)
 +++ client/CDefHandler.h	(working copy)
 @@ -30,7 +30,6 @@
  	ui32 totalInBlock;
@@ -469,7 +539,7 @@ Index: client/CDefHandler.h
  	static CDefHandler * giveDef(const std::string & defName);
 Index: client/CCreatureAnimation.h
 ===================================================================
---- client/CCreatureAnimation.h	(revision 2183)
+--- client/CCreatureAnimation.h	(revision 2220)
 +++ client/CCreatureAnimation.h	(working copy)
 @@ -66,6 +66,8 @@
  	int curFrame, internalFrame; //number of currently displayed frame
@@ -480,22 +550,9 @@ Index: client/CCreatureAnimation.h
  	
  	template<int bpp>
  	int nextFrameT(SDL_Surface * dest, int x, int y, bool attacker, unsigned char animCount, bool incrementFrame = true, bool yellowBorder = false, bool blueBorder = false, SDL_Rect * destRect = NULL); //0 - success, any other - error //print next 
-Index: client/Client.h
-===================================================================
---- client/Client.h	(revision 2183)
-+++ client/Client.h	(working copy)
-@@ -43,7 +43,7 @@
- public:
- 	timeHandler th;
- 	boost::thread *serverThread; //thread that called system to run server
--	SharedMem *shared; //interprocess memory (for waiting for server)
-+	//SharedMem *shared; //interprocess memory (for waiting for server)
- 	bool verbose; //whether to print log msgs
- 	std::string port; //port number in text form
- 
 Index: client/CMT.cpp
 ===================================================================
---- client/CMT.cpp	(revision 2183)
+--- client/CMT.cpp	(revision 2220)
 +++ client/CMT.cpp	(working copy)
 @@ -92,8 +92,10 @@
  void dispose();
@@ -601,7 +658,7 @@ Index: client/CMT.cpp
  
  	return 0;
  }
-@@ -559,10 +584,12 @@
+@@ -558,10 +583,12 @@
  		tlog2 << "Warning: SDL says that "  << bpp << "bpp is wrong and suggests " << suggestedBpp << std::endl;
  	}
  
@@ -614,7 +671,7 @@ Index: client/CMT.cpp
  	
  	if((screen = SDL_SetVideoMode(w, h, suggestedBpp, SDL_SWSURFACE|(fullscreen?SDL_FULLSCREEN:0))) == NULL)
  	{
-@@ -607,14 +634,27 @@
+@@ -606,14 +633,27 @@
  	setResolution = true;
  }
  
@@ -645,7 +702,7 @@ Index: client/CMT.cpp
  		//tlog0 << "got " << (int)ev->type;
  		if (ret == 0 || (ev->type==SDL_QUIT) ||
  			(ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4 && (ev->key.keysym.mod & KMOD_ALT)))
-@@ -633,7 +673,7 @@
+@@ -632,7 +672,7 @@
  			SDL_Delay(750);
  			SDL_Quit();
  			tlog0 << "Ending...\n";
@@ -654,7 +711,7 @@ Index: client/CMT.cpp
  		}
  		else if(LOCPLINT && ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4)
  		{
-@@ -642,7 +682,7 @@
+@@ -641,7 +681,7 @@
  			setScreenRes(conf.cc.screenx, conf.cc.screeny, conf.cc.bpp, full);
  			GH.totalRedraw();
  			delete ev;
@@ -663,7 +720,7 @@ Index: client/CMT.cpp
  		}
  		else if(ev->type == SDL_USEREVENT)
  		{
-@@ -672,7 +712,7 @@
+@@ -671,7 +711,7 @@
  			}
  
  			delete ev;
@@ -672,7 +729,7 @@ Index: client/CMT.cpp
  		} 
  
  		//tlog0 << " pushing ";
-@@ -680,7 +720,7 @@
+@@ -679,7 +719,7 @@
  		events.push(ev);
  		eventsM.unlock();
  		//tlog0 << " done\n";
@@ -681,14 +738,27 @@ Index: client/CMT.cpp
  }
  
  void startGame(StartInfo * options, CConnection *serv/* = NULL*/) 
-@@ -741,3 +781,4 @@
+@@ -740,3 +780,4 @@
  	ev.user.code = 1;
  	SDL_PushEvent(&ev);
  }
 +
+Index: client/Client.h
+===================================================================
+--- client/Client.h	(revision 2220)
++++ client/Client.h	(working copy)
+@@ -43,7 +43,7 @@
+ public:
+ 	timeHandler th;
+ 	boost::thread *serverThread; //thread that called system to run server
+-	SharedMem *shared; //interprocess memory (for waiting for server)
++	//SharedMem *shared; //interprocess memory (for waiting for server)
+ 	bool verbose; //whether to print log msgs
+ 	std::string port; //port number in text form
+ 
 Index: client/CDefHandler.cpp
 ===================================================================
---- client/CDefHandler.cpp	(revision 2183)
+--- client/CDefHandler.cpp	(revision 2220)
 +++ client/CDefHandler.cpp	(working copy)
 @@ -50,10 +50,19 @@
  		SDL_FreeSurface(ourImages[i].bitmap);
@@ -1017,7 +1087,7 @@ Index: client/CDefHandler.cpp
  }
 Index: client/CCreatureAnimation.cpp
 ===================================================================
---- client/CCreatureAnimation.cpp	(revision 2183)
+--- client/CCreatureAnimation.cpp	(revision 2220)
 +++ client/CCreatureAnimation.cpp	(working copy)
 @@ -37,15 +37,23 @@
  	}
@@ -1053,8 +1123,8 @@ Index: client/CCreatureAnimation.cpp
  		int group = readNormalNr<4>(i,FDef); i+=4; //block ID
  		totalInBlock = readNormalNr<4>(i,FDef); i+=4;
 @@ -76,6 +85,7 @@
- 		int unknown2 = readNormalNr<4>(i,FDef); i+=4; //TODO use me
- 		int unknown3 = readNormalNr<4>(i,FDef); i+=4; //TODO use me
+ 		/*int unknown2 = readNormalNr<4>(i,FDef);*/ i+=4; //TODO use me
+ 		/*int unknown3 = readNormalNr<4>(i,FDef);*/ i+=4; //TODO use me
  		i+=13*totalInBlock; //ommiting names
 +		CHECK_LOD_MEM_BLOCK_SIZE(i+totalInBlock*4);
  		for (j=0; j<totalInBlock; j++)
@@ -1065,7 +1135,7 @@ Index: client/CCreatureAnimation.cpp
  
  	i = BaseOffset = SEntries[SIndex].offset;
 +	CHECK_LOD_MEM_BLOCK_SIZE(i+32);
- 	int prSize = readNormalNr<4>(i, FDef); i += 4; //TODO use me
+ 	/*int prSize = readNormalNr<4>(i, FDef);*/ i += 4; //TODO use me
  	int defType2 = readNormalNr<4>(i, FDef); i += 4;
  	FullWidth = readNormalNr<4>(i, FDef); i += 4;
 @@ -194,11 +205,12 @@
@@ -1093,7 +1163,7 @@ Index: client/CCreatureAnimation.cpp
  
 @@ -227,6 +240,8 @@
  					{
- 						if(!destRect || (destRect->x <= xB && destRect->x + destRect->w > xB))
+ 						if(!destRect || (destRect->x <= xB && destRect->x + destRect->w > xB && destRect->y <= yB && destRect->y + destRect->h > yB))
  						{
 +							if(SegmentType == 0xff)
 +								CHECK_LOD_MEM_BLOCK_SIZE(BaseOffset+k+1);
@@ -1102,9 +1172,27 @@ Index: client/CCreatureAnimation.cpp
  						}
 Index: client/CAnimation.cpp
 ===================================================================
---- client/CAnimation.cpp	(revision 2183)
+--- client/CAnimation.cpp	(revision 2220)
 +++ client/CAnimation.cpp	(working copy)
-@@ -95,6 +95,13 @@
+@@ -44,6 +44,8 @@
+ 	~SDLImageLoader();
+ };
+ 
++// It's buggy, disabled for Android build
++/*
+ class CompImageLoader
+ {
+ 	CompImage * image;
+@@ -67,7 +69,7 @@
+ 	CompImageLoader(CompImage * Img);
+ 	~CompImageLoader();
+ };
+-
++*/
+ //Small internal class for parsing texts
+ class TextParser
+ {
+@@ -95,6 +97,13 @@
  	}
  }
  
@@ -1118,7 +1206,7 @@ Index: client/CAnimation.cpp
  CDefFile::CDefFile(std::string Name):
  	data(NULL),
  	palette(NULL)
-@@ -112,15 +119,18 @@
+@@ -112,15 +121,18 @@
  		{   0,   0,   0, 192} // 75% - shadow border below selection
  	};
  
@@ -1138,7 +1226,7 @@ Index: client/CAnimation.cpp
  	unsigned int totalBlocks = readNormalNr(data, it);
  	it+=4;
  
-@@ -135,6 +145,7 @@
+@@ -135,6 +147,7 @@
  
  	for (unsigned int i=0; i<totalBlocks; i++)
  	{
@@ -1146,7 +1234,7 @@ Index: client/CAnimation.cpp
  		size_t blockID = readNormalNr(data, it);
  		it+=4;
  		size_t totalEntries = readNormalNr(data, it);
-@@ -146,6 +157,7 @@
+@@ -146,6 +159,7 @@
  
  		for (unsigned int j=0; j<totalEntries; j++)
  		{
@@ -1154,7 +1242,7 @@ Index: client/CAnimation.cpp
  			size_t currOffset = readNormalNr(data, it);
  			offset[blockID].push_back(currOffset);
  			it += 4;
-@@ -162,7 +174,9 @@
+@@ -162,7 +176,9 @@
  
  	const ui8 * FDef = data+it->second[frame];
  
@@ -1165,7 +1253,7 @@ Index: client/CAnimation.cpp
  	SSpriteDef sprite;
  
  	//sprite.size = SDL_SwapLE32(sd.size);//unused
-@@ -188,6 +202,7 @@
+@@ -188,6 +204,7 @@
  			//pixel data is not compressed, copy data to surface
  			for (unsigned int i=0; i<sprite.height; i++)
  			{
@@ -1173,7 +1261,7 @@ Index: client/CAnimation.cpp
  				loader.Load(sprite.width, FDef[currentOffset]);
  				currentOffset += sprite.width;
  				loader.EndLine();
-@@ -197,22 +212,33 @@
+@@ -197,22 +214,33 @@
  	case 1:
  		{
  			//for each line we have offset of pixel data
@@ -1209,7 +1297,7 @@ Index: client/CAnimation.cpp
  						loader.Load(length, FDef + currentOffset);
  						currentOffset+=length;
  					}
-@@ -237,12 +263,14 @@
+@@ -237,12 +265,14 @@
  
  				while (TotalRowLength<sprite.width)
  				{
@@ -1224,7 +1312,7 @@ Index: client/CAnimation.cpp
  						loader.Load(length, FDef[currentOffset]);
  						currentOffset += length;
  					}
-@@ -260,17 +288,20 @@
+@@ -260,17 +290,20 @@
  		{
  			for (unsigned int i=0; i<sprite.height; i++)
  			{
@@ -1245,7 +1333,7 @@ Index: client/CAnimation.cpp
  						loader.Load(length, FDef + currentOffset);
  						currentOffset += length;
  					}
-@@ -288,6 +319,7 @@
+@@ -288,6 +321,7 @@
  		tlog0<<"Error: unsupported format of def file:"<<sprite.format<<"\n";
  		break;
  	}
@@ -1253,7 +1341,7 @@ Index: client/CAnimation.cpp
  };
  
  CDefFile::~CDefFile()
-@@ -332,7 +364,7 @@
+@@ -332,7 +366,7 @@
  
  inline void SDLImageLoader::Load(size_t size, const ui8 * data)
  {
@@ -1262,7 +1350,7 @@ Index: client/CAnimation.cpp
  	{
  		memcpy((void *)position, data, size);
  		position += size;
-@@ -341,7 +373,7 @@
+@@ -341,7 +375,7 @@
  
  inline void SDLImageLoader::Load(size_t size, ui8 color)
  {
@@ -1271,9 +1359,54 @@ Index: client/CAnimation.cpp
  	{
  		memset((void *)position, color, size);
  		position += size;
+@@ -363,6 +397,7 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+  
++/*
+ CompImageLoader::CompImageLoader(CompImage * Img):
+ 	image(Img),
+ 	position(NULL),
+@@ -536,6 +571,7 @@
+ 		image->surf = newPtr;
+ }
+ 
++*/
+ /*************************************************************************
+  *  Classes for images, support loading from file and drawing on surface *
+  *************************************************************************/
+@@ -641,6 +677,8 @@
+ 	SDL_FreeSurface(surf);
+ }
+ 
++// Buggy, disabled for Android
++/*
+ CompImage::CompImage(const CDefFile *data, size_t frame, size_t group):
+ 	surf(NULL),
+ 	line(NULL),
+@@ -861,6 +899,7 @@
+ 	delete [] line;
+ 	delete [] palette;
+ }
++*/
+ 
+ /*************************************************************************
+  *  CAnimation for animations handling, can load part of file if needed  *
+@@ -953,9 +992,11 @@
+ 	//try to get image from def
+ 	if (source[group][frame].empty())
+ 	{
++		/*
+ 		if (compressed)
+ 			images[group][frame] = new CompImage(file, frame, group);
+ 		else
++		*/
+ 			images[group][frame] = new SDLImage(file, frame, group);
+ 	}
+ 	else //load from separate file
 Index: client/GUIBase.h
 ===================================================================
---- client/GUIBase.h	(revision 2183)
+--- client/GUIBase.h	(revision 2220)
 +++ client/GUIBase.h	(working copy)
 @@ -546,6 +546,8 @@
  	CGuiHandler();
