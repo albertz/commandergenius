@@ -20,13 +20,10 @@ OBJS_STUPIDAI=$(patsubst %.cpp, out/%.o, $(SOURCES_STUPIDAI))
 SOURCES_GENIUSAI=$(filter-out %/ExpertSystem.cpp, $(wildcard vcmi/AI/GeniusAI/*.cpp))
 OBJS_GENIUSAI=$(patsubst %.cpp, out/%.o, $(SOURCES_GENIUSAI))
 
-SOURCES_CLIENT=$(wildcard vcmi/client/*.cpp vcmi/*.cpp)
-OBJS_CLIENT=$(patsubst %.cpp, out/%.o, $(SOURCES_CLIENT))
-
 SOURCES_ERM=$(wildcard vcmi/Scripting/ERM/*.cpp)
 OBJS_ERM=$(patsubst %.cpp, out/%.o, $(SOURCES_ERM))
 
-all: AndroidData/vcmiserver0 # libapplication.so
+all: AndroidData/vcmiserver0
 
 AndroidData/vcmiserver0: vcmiserver.zip
 	rm -f AndroidData/vcmiserver*
@@ -45,6 +42,7 @@ $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT) $(OB
 	-DBIN_DIR=\\\"/data/data/eu.vcmi/files\\\" \
 	-DLIB_DIR=\\\"/data/data/eu.vcmi/files\\\" \
 	-DWITH_AVCODEC_DECODE_VIDEO2=1 \
+	-Wstrict-aliasing -Wcast-align -Wpointer-arith -Waddress \
 	$< -o $@"
 #	-Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
 
@@ -78,20 +76,11 @@ AI/libStupidAI.so: $(OBJS_STUPIDAI) -lvcmi
 Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi
 	$(LINK_LIB)
 
-
 libvcmi.so: $(OBJS_LIB)
 	$(LINK_LIB)
 
-libapplication.so: $(OBJS_CLIENT) -lvcmi
-	../setEnvironment.sh sh -c \
-	"$(GCC_PREFIX)-g++ \
-	\$$LDFLAGS -L. \
-	$^ -o $@ \
-	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options" && \
-	cp $@ debug/$@
-
 clean:
-	rm -rf out debug *.so vcmiserver* AndroidData/vcmiserver* libapplication.so
+	rm -rf out debug *.so vcmiserver* AndroidData/vcmiserver* libapplication.so AI Scripting
 
 .PHONY: clean
 
