@@ -76,6 +76,7 @@ static SDL_Surface *ANDROID_SetVideoModeMT(_THIS, SDL_Surface *current, int widt
 static void ANDROID_VideoQuitMT(_THIS);
 static void ANDROID_UpdateRectsMT(_THIS, int numrects, SDL_Rect *rects);
 static int ANDROID_FlipHWSurfaceMT(_THIS, SDL_Surface *surface);
+static int ANDROID_ToggleFullScreen(_THIS, int fullscreen);
 
 
 // Stubs to get rid of crashing in OpenGL mode
@@ -106,6 +107,10 @@ void ANDROID_WarpWMCursor(_THIS, Uint16 x, Uint16 y)
 }
 //void ANDROID_MoveWMCursor(_THIS, int x, int y) { }
 
+int ANDROID_ToggleFullScreen(_THIS, int fullscreen)
+{
+	return 1;
+}
 
 #define SDL_NUMMODES 12
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
@@ -191,6 +196,7 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->FreeWMCursor = ANDROID_FreeWMCursor;
 	device->CreateWMCursor = ANDROID_CreateWMCursor;
 	device->ShowWMCursor = ANDROID_ShowWMCursor;
+	device->ToggleFullScreen = ANDROID_ToggleFullScreen;
 
 	glLibraryHandle = dlopen("libGLESv1_CM.so", RTLD_NOW);
 	

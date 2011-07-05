@@ -27,6 +27,7 @@ common_C_INCLUDES += $(LOCAL_PATH)/include $(LOCAL_PATH)
 LOCAL_SRC_FILES := $(common_SRC_FILES)
 LOCAL_CFLAGS += $(common_CFLAGS)
 LOCAL_C_INCLUDES += $(common_C_INCLUDES)
+LOCAL_LDLIBS := -lz
 
 LOCAL_MODULE:= png
 

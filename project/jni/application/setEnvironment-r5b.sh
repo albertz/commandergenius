@@ -29,11 +29,8 @@ APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]
 APP_AVAILABLE_STATIC_LIBS=`grep 'APP_AVAILABLE_STATIC_LIBS [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
 APP_SHARED_LIBS=$(
 echo $APP_MODULES | xargs -n 1 echo | while read LIB ; do
-	STATIC=`echo $APP_AVAILABLE_STATIC_LIBS | grep "\\\\b$LIB\\\\b"`
-	if [ "$LIB" = "application" ] ; then true
-	elif [ "$LIB" = "sdl_main" ] ; then true
-	elif [ "$LIB" = "stlport" ] ; then true
-	elif [ -n "$STATIC" ] ; then true
+	STATIC=`echo $APP_AVAILABLE_STATIC_LIBS application sdl_main stlport stdout-test | grep "\\\\b$LIB\\\\b"`
+	if [ -n "$STATIC" ] ; then true
 	else
 		echo $LIB
 	fi
