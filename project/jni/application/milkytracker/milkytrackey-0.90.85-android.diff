@@ -102,7 +102,7 @@ diff -ru orig/milkytracker-0.90.85/configure milkytracker-0.90.85/configure
    rm -f conf.sdltest
  
 -CPPFLAGS="$CPPFLAGS -D__FORCE_SDL_AUDIO__"
-+CPPFLAGS="$CPPFLAGS -D__FORCE_SDL_AUDIO__ -D__LOWRES__"
++CPPFLAGS="$CPPFLAGS -D__FORCE_SDL_AUDIO__ -D__LOWRES__ -D__LOWRES__"
  
  # Check that SDL supports the X11 wm
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether SDL supports X11" >&5

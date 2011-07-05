@@ -11,7 +11,7 @@ if [ \! -f milkytracker-0.90.85/configure ] ; then
 fi
 
 if [ \! -f milkytracker-0.90.85/Makefile ] ; then
-	../setEnvironment.sh sh -c "cd milkytracker-0.90.85 && ZZIP_CFLAGS='-I$LOCAL_PATH/../../zzip/include' ZZIP_LIBS='-L$LOCAL_PATH/../../../obj/local/armeabi -lzzip' ./configure --host=arm-eabi "
+	../setEnvironment.sh sh -c "cd milkytracker-0.90.85 && ZZIP_CFLAGS='-I$LOCAL_PATH/../../zzip/include' ZZIP_LIBS='-L$LOCAL_PATH/../../../obj/local/armeabi -lzzip' ./configure --host=arm-linux-androideabi "
 fi
 
 make -C milkytracker-0.90.85 && mv -f milkytracker-0.90.85/src/tracker/milkytracker libapplication.so
