@@ -2240,7 +2240,7 @@ class Settings
 				Globals.SmoothVideo
 			};
 
-			if(Globals.SwVideoMode)
+			if(Globals.SwVideoMode && !Globals.CompatibilityHacks)
 			{
 				CharSequence[] items2 = {
 					p.getResources().getString(R.string.pointandclick_keepaspectratio),
@@ -2315,6 +2315,12 @@ class Settings
 	{
 		if(Globals.SmoothVideo)
 			nativeSetSmoothVideo();
+		if( Globals.CompatibilityHacks )
+		{
+			Globals.MultiThreadedVideo = true;
+			Globals.SwVideoMode = true;
+			nativeSetCompatibilityHacks();
+		}
 		if( Globals.SwVideoMode && Globals.MultiThreadedVideo )
 			nativeSetVideoMultithreaded();
 		if( Globals.PhoneHasTrackball )
@@ -2438,6 +2444,7 @@ class Settings
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
 	private static native void nativeSetSmoothVideo();
+	private static native void nativeSetCompatibilityHacks();
 	private static native void nativeSetVideoMultithreaded();
 	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttonsAutoFire, int transparency);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);

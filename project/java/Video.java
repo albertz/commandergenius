@@ -308,9 +308,10 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		// Tweak video thread priority, if user selected big audio buffer
 		if(Globals.AudioBufferConfig >= 2)
 			Thread.currentThread().setPriority( (Thread.NORM_PRIORITY + Thread.MIN_PRIORITY) / 2 ); // Lower than normal
+		 // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
 		nativeInit( Globals.DataDir,
 					Globals.CommandLine,
-					( Globals.SwVideoMode && Globals.MultiThreadedVideo ) ? 1 : 0 ); // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
+					( (Globals.SwVideoMode && Globals.MultiThreadedVideo) || Globals.CompatibilityHacks ) ? 1 : 0 );
 		System.exit(0); // The main() returns here - I don't bother with deinit stuff, just terminate process
 	}
 

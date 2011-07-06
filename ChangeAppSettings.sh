@@ -126,15 +126,29 @@ fi
 fi
 
 if [ "$LibSdlVersion" = "1.2" ]; then
-	if [ -z "$SwVideoMode" -o -z "$AUTO" ]; then
-	echo
-	echo "Application uses software video buffer - you're calling SDL_SetVideoMode() without SDL_HWSURFACE and without SDL_OPENGL,"
-	echo -n "this will allow small speed optimization (y) or (n) ($SwVideoMode): "
-	read var
-	if [ -n "$var" ] ; then
-		SwVideoMode="$var"
-		CHANGED=1
+	if [ -z "$CompatibilityHacks" -o -z "$AUTO" ]; then
+		echo
+		echo "Application does not call SDL_Flip() or SDL_UpdateRects() appropriately, or draws from non-main thread -"
+		echo -n "enabling the compatibility mode will force screen update every halfsecond (y) or (n) ($CompatibilityHacks): "
+		read var
+		if [ -n "$var" ] ; then
+			CompatibilityHacks="$var"
+			CHANGED=1
+		fi
 	fi
+	if [ "$CompatibilityHacks" = y ]; then
+		SwVideoMode=y
+	else
+		if [ -z "$SwVideoMode" -o -z "$AUTO" ]; then
+			echo
+			echo "Application uses software video buffer - you're calling SDL_SetVideoMode() without SDL_HWSURFACE and without SDL_OPENGL,"
+			echo -n "this will allow small speed optimization (y) or (n) ($SwVideoMode): "
+			read var
+			if [ -n "$var" ] ; then
+				SwVideoMode="$var"
+				CHANGED=1
+			fi
+		fi
 	fi
 else
 	SwVideoMode=n
@@ -300,7 +314,7 @@ if [ -n "$var" ] ; then
 fi
 fi
 
-if [ -z "$HiddenMenuOptions" -o -z "$AUTO" ]; then
+if [ -z "$AUTO" ]; then
 echo
 echo "Menu items to hide from startup menu, available menu items:"
 echo `grep 'extends Menu' project/java/Settings.java | sed 's/.* class \(.*\) extends .*/\1/'`
@@ -309,6 +323,22 @@ echo -n ": "
 read var
 if [ -n "$var" ] ; then
 	HiddenMenuOptions="$var"
+	CHANGED=1
+fi
+fi
+
+FirstStartMenuOptionsDefault='(AppUsesMouse ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true)'
+if [ -z "$AUTO" ]; then
+echo
+echo "Menu items to show at startup - this is Java code snippet, leave empty for default"
+echo $FirstStartMenuOptionsDefault
+echo "Available menu items:"
+echo `grep 'extends Menu' project/java/Settings.java | sed 's/.* class \(.*\) extends .*/new Settings.\1(), /'`
+echo "Current value: " "$FirstStartMenuOptions"
+echo -n ": "
+read var
+if [ -n "$var" ] ; then
+	FirstStartMenuOptions="$var"
 	CHANGED=1
 fi
 fi
@@ -450,6 +480,7 @@ echo SdlVideoResize=$SdlVideoResize >> AndroidAppSettings.cfg
 echo SdlVideoResizeKeepAspect=$SdlVideoResizeKeepAspect >> AndroidAppSettings.cfg
 echo NeedDepthBuffer=$NeedDepthBuffer >> AndroidAppSettings.cfg
 echo SwVideoMode=$SwVideoMode >> AndroidAppSettings.cfg
+echo CompatibilityHacks=$CompatibilityHacks >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
@@ -464,6 +495,7 @@ echo AppTouchscreenKeyboardKeysAmountAutoFire=$AppTouchscreenKeyboardKeysAmountA
 echo RedefinedKeysScreenKb=\"$RedefinedKeysScreenKb\" >> AndroidAppSettings.cfg
 echo StartupMenuButtonTimeout=$StartupMenuButtonTimeout >> AndroidAppSettings.cfg
 echo HiddenMenuOptions=\'$HiddenMenuOptions\' >> AndroidAppSettings.cfg
+echo FirstStartMenuOptions=\'$FirstStartMenuOptions\' >> AndroidAppSettings.cfg
 echo MultiABI=$MultiABI >> AndroidAppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AndroidAppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AndroidAppSettings.cfg
@@ -523,6 +555,12 @@ if [ "$SwVideoMode" = "y" ] ; then
 	SwVideoMode=true
 else
 	SwVideoMode=false
+fi
+
+if [ "$CompatibilityHacks" = "y" ] ; then
+	CompatibilityHacks=true
+else
+	CompatibilityHacks=false
 fi
 
 if [ "$AppUsesMouse" = "y" ] ; then
@@ -611,6 +649,10 @@ for F in $HiddenMenuOptions; do
 	HiddenMenuOptions1="$HiddenMenuOptions1 new Settings.$F(),"
 done
 
+if [ -z "$FirstStartMenuOptions" ]; then
+	FirstStartMenuOptions="$FirstStartMenuOptionsDefault"
+fi
+
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 
 echo Patching project/AndroidManifest.xml
@@ -638,6 +680,7 @@ cat project/src/Globals.java | \
 	sed "s@public static String DataDownloadUrl = .*@public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";@" | \
 	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
 	sed "s/public static boolean SwVideoMode = .*;/public static boolean SwVideoMode = $SwVideoMode;/" | \
+	sed "s/public static boolean CompatibilityHacks = .*;/public static boolean CompatibilityHacks = $CompatibilityHacks;/" | \
 	sed "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" | \
 	sed "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" | \
 	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \
@@ -652,6 +695,7 @@ cat project/src/Globals.java | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" | \
 	sed "s/public static int StartupMenuButtonTimeout = .*;/public static int StartupMenuButtonTimeout = $StartupMenuButtonTimeout;/" | \
 	sed "s/public static Settings.Menu HiddenMenuOptions .*;/public static Settings.Menu HiddenMenuOptions [] = { $HiddenMenuOptions1 };/" | \
+	sed "s@public static Settings.Menu FirstStartMenuOptions .*;@public static Settings.Menu FirstStartMenuOptions [] = { $FirstStartMenuOptions };@" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
 	sed "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" | \
 	sed "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" > \

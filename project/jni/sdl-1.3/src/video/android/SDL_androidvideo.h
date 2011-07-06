@@ -40,6 +40,7 @@ extern int SDL_ANDROID_TouchscreenCalibrationX;
 extern int SDL_ANDROID_TouchscreenCalibrationY;
 extern int SDL_ANDROID_SmoothVideo;
 extern int SDL_ANDROID_VideoMultithreaded;
+extern int SDL_ANDROID_CompatibilityHacks;
 extern void SDL_ANDROID_TextInputInit(char * buffer, int len);
 extern void SDL_ANDROID_TextInputFinished();
 extern SDL_Surface *SDL_CurrentVideoSurface;

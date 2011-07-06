@@ -34,6 +34,7 @@ class Globals {
 	public static String DataDownloadUrl = "Data files are 2 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-data.zip/download^High-quality GFX and music - 40 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-hqp.zip/download";
 	public static boolean NeedDepthBuffer = false;
 	public static boolean SwVideoMode = false;
+	public static boolean CompatibilityHacks = false;
 	public static boolean HorizontalOrientation = true;
 	public static boolean InhibitSuspend = false;
 	public static String ReadmeText = "^You may press \"Home\" now - the data will be downloaded in background".replace("^","\n");
@@ -50,7 +51,6 @@ class Globals {
 	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 1;
 	public static int StartupMenuButtonTimeout = 3000;
 	public static Settings.Menu HiddenMenuOptions [] = {};
-	// Not configurable yet through ChangeAppSettings.sh
 	public static Settings.Menu FirstStartMenuOptions [] = { (AppUsesMouse ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true) };
 
 	// Phone-specific config, modified by user in "Change phone config" startup dialog, TODO: move this to settings

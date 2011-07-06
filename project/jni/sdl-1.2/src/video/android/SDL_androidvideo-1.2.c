@@ -1028,10 +1028,11 @@ void SDL_ANDROID_MultiThreadedVideoLoop()
 	{
 		int signalNeeded = 0;
 		int swapBuffersNeeded = 0;
+		int ret;
 		SDL_mutexP(videoThread.mutex);
 		videoThread.threadReady = 1;
 		SDL_CondSignal(videoThread.cond2);
-		SDL_CondWaitTimeout(videoThread.cond, videoThread.mutex, 1000);
+		ret = SDL_CondWaitTimeout(videoThread.cond, videoThread.mutex, SDL_ANDROID_CompatibilityHacks ? 400 : 1000);
 		if( videoThread.execute )
 		{
 			videoThread.threadReady = 0;
@@ -1058,6 +1059,11 @@ void SDL_ANDROID_MultiThreadedVideoLoop()
 			}
 			videoThread.execute = 0;
 			signalNeeded = 1;
+		}
+		else if( SDL_ANDROID_CompatibilityHacks && ret == SDL_MUTEX_TIMEDOUT && SDL_CurrentVideoSurface )
+		{
+			ANDROID_FlipHWSurfaceInternal();
+			swapBuffersNeeded = 1;
 		}
 		SDL_mutexV(videoThread.mutex);
 		if( signalNeeded )
