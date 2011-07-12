@@ -50,7 +50,7 @@ namespace enigma { namespace gui {
         LevelMenuConfig (const ecl::Rect &screen)
         : buttonw (140), ibuttonw (90), buttonh (35),
           lbuttonw (140), lbuttonh (100),
-          previewarea (10, 60, screen.w-50, screen.h-130),
+          previewarea (10, 60, screen.w-10, screen.h-130),
           thumbsy (60),
           leftborder (10)
         {}
@@ -105,6 +105,7 @@ namespace enigma { namespace gui {
         hl->add_back (hlr);
         this->add (hl, Rect(c.leftborder, Y3, vminfo.width-20, c.buttonh));
             
+#ifndef ANDROID
         // Add navigation buttons
         pgup     = new ImageButton("ic-up", "ic-up1", this);
         pgdown   = new ImageButton("ic-down", "ic-down1", this);
@@ -120,7 +121,7 @@ namespace enigma { namespace gui {
         add (start, r);
         r.y += 60;
         add (end, r);
-    
+#endif    
         // Information area
         hl = new HList;
         hl->add_back (lbl_levelname, List::EXPAND);
@@ -246,6 +247,7 @@ namespace enigma { namespace gui {
         } else if (w == but_back) {
             main_quit = true;
             Menu::quit();
+#ifndef ANDROID
         } else if (w == pgup) {
             levelwidget->page_up();
         } else if (w == pgdown) {
@@ -254,6 +256,7 @@ namespace enigma { namespace gui {
             levelwidget->start();
         } else if (w == end) {
             levelwidget->end();
+#endif
         } else if (w == but_next) {
             next_unsolved();
         } else if (w == but_levelpack) {

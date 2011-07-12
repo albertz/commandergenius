@@ -42,10 +42,7 @@ namespace enigma { namespace gui {
         void tick(double dtime);
 
         // Variables.
-        gui::Widget *back, *fullscreen, *language;
-        gui::TextField *userNameTF;
-        gui::TextField *userPathTF;
-        gui::TextField *userImagePathTF;
+        gui::Widget *back;
         gui::Label  *m_restartinfo;
         ecl::Surface *background;
         std::string  previous_caption;

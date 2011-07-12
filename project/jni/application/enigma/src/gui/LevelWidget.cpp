@@ -37,13 +37,14 @@ using namespace ecl;
 using namespace std;
 
 
+
 namespace enigma { namespace gui {    
     /* -------------------- LevelWidget -------------------- */
     
     LevelWidget::LevelWidget(bool withScoreIcons, bool withEditBorder) : 
             displayScoreIcons (withScoreIcons), displayEditBorder (withEditBorder),
             width (0), height (0), m_areas(),
-            listener(0), isInvalidateUptodate (true), lastUpdate (0)
+            listener(0), isInvalidateUptodate (true), lastUpdate (0), m_mousedown_x(-1), m_mousedown_y(-1)
     {
         const video::VMInfo &vminfo = *video::GetInfo();
     
@@ -192,8 +193,6 @@ namespace enigma { namespace gui {
     
             if (!m_areas.empty()) {
                 sound::EmitSoundEvent ("menumove");
-                if (oldsel != newsel) 
-                    sound::EmitSoundEvent ("menuswitch");
                 invalidate();
             }
         }
@@ -201,7 +200,6 @@ namespace enigma { namespace gui {
             iselected = newsel;
     
             if (!m_areas.empty()) {
-                sound::EmitSoundEvent ("menuswitch");
                 invalidate_area(m_areas[oldsel-ifirst]); // old selection
                 invalidate_area(m_areas[iselected-ifirst]); // new selection
             }
@@ -212,11 +210,15 @@ namespace enigma { namespace gui {
             lev::Proxy *proxy, bool selected, bool isCross, bool locked,
             bool allowGeneration, bool &didGenerate) { 
         // Draw button with level preview
-    
+   
         Surface *img = preview_cache->getPreview(proxy, allowGeneration, didGenerate);
         if (img == NULL)
             return false;
    
+#ifdef ANDROID
+            blit (gc, x-4, y-4, displayEditBorder ? img_editborder : img_border);
+            blit (gc, x, y, img);
+#else
         if (selected) {
             blit (gc, x-4, y-4, displayEditBorder ? img_editborder : img_border);
             blit (gc, x, y, img);
@@ -226,7 +228,7 @@ namespace enigma { namespace gui {
             blit (gc, x, y, img);
             img->set_alpha(255);
         }
-
+#endif
         // Shade unavailable levels
         if (locked)
             blit (gc, x, y, img_unavailable);
@@ -384,20 +386,31 @@ namespace enigma { namespace gui {
         switch (e.type) {
         case SDL_MOUSEMOTION:
             if (get_area().contains(e.motion.x, e.motion.y)) {
-                int newsel=iselected;
-                for (unsigned i=0; i<m_areas.size(); ++i)
-                    if (m_areas[i].contains(e.motion.x, e.motion.y))
-                    {
-                        newsel = ifirst+i;
-                        break;
-                    }
-                set_current(newsel);
+                int delta = e.motion.y - m_mousedown_y;
+                if(abs(delta) > 75 && m_mousedown_y != -1) {
+                    m_mouse_drag = true;
+                    if(delta > 75)
+                       scroll_down(delta/75);
+                    else
+                       scroll_up(-delta/75);
+                    m_mousedown_y = e.motion.y;
+                } else if(m_mousedown_y == -1) {
+                    m_mouse_drag = true;
+                    m_mousedown_x = e.motion.x;
+                    m_mousedown_y = e.motion.y;
+                }
                 handled = true;
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
             if (get_area().contains(e.button.x, e.button.y))
                 handled = handle_mousedown (&e);
+            break;
+        case SDL_MOUSEBUTTONUP:
+            if (get_area().contains(e.button.x, e.button.y))
+                handled = handle_mouseup (&e);
+            m_mousedown_x = m_mousedown_y = -1;
+            m_mouse_drag = false;
             break;
         case SDL_KEYDOWN:
             handled = handle_keydown (&e);
@@ -409,8 +422,18 @@ namespace enigma { namespace gui {
     
     bool LevelWidget::handle_mousedown (const SDL_Event *e) 
     {
-        switch (e->button.button) {
-        case SDL_BUTTON_LEFT:
+        if(e->button.button == SDL_BUTTON_LEFT) {
+            m_mousedown_x = e->button.x;
+            m_mousedown_y = e->button.y;
+            m_mouse_drag = false;
+            return true;
+        }
+        return false;
+    }
+
+    bool LevelWidget::handle_mouseup (const SDL_Event *e)
+    {
+        if(e->button.button == SDL_BUTTON_LEFT && !m_mouse_drag && abs(m_mousedown_x-e->button.x) < 15 && abs(m_mousedown_y-e->button.y) < 15) {
             for (unsigned i=0; i<m_areas.size(); ++i)
                 if (m_areas[i].contains(e->button.x, e->button.y))
                 {
@@ -428,26 +451,11 @@ namespace enigma { namespace gui {
                     }
                     return true;
                 }
-            break;
-        case SDL_BUTTON_RIGHT: 
-            for (unsigned i=0; i<m_areas.size(); ++i)
-                if (m_areas[i].contains(e->button.x, e->button.y))
-                {
-                    sound::EmitSoundEvent ("menuok");
-                    iselected = ifirst+i;
-                    syncToIndexMgr();
-                    LevelInspector m(curIndex->getProxy(iselected));
-                    m.manage();
-                    get_parent()->draw_all();
-                    return true;
-                }
-            break;
-        case 4: scroll_down(1); return true;
-        case 5: scroll_up(1); return true;
         }
         return false;
     }
     
+
     bool LevelWidget::handle_keydown (const SDL_Event *e)
     {
         switch (e->key.keysym.sym) {

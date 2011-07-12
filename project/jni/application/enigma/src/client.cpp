@@ -215,9 +215,14 @@ void Client::handle_events()
             on_mousebutton(e);
             break;
         case SDL_ACTIVEEVENT: {
+#ifdef ANDROID
+            if (e.active.gain == 0)
+                show_menu();
+#else
             update_mouse_button_state();
             if (e.active.gain == 0 && !video::IsFullScreen())
                 show_menu();
+#endif
             break;
         }
 
@@ -538,6 +543,17 @@ void Client::show_menu()
         enigma::gui::GameMenu(x, y).manage();
     }
     video::HideMouse();
+
+        #ifdef ANDROID
+        SDL_Joystick *joy = SDL_JoystickOpen(0);
+        SDL_JoystickUpdate();
+        if(joy != NULL) {
+            m_joy_x0 = SDL_JoystickGetAxis(joy,0);
+            m_joy_y0 = SDL_JoystickGetAxis(joy,1);
+        }
+        #endif
+
+
     update_mouse_button_state();
     if (m_state == cls_game)
         display::RedrawAll(screen);
@@ -629,10 +645,9 @@ void Client::tick (double dtime)
 
     case cls_preparing_game: {
         #ifdef ANDROID
-        // calibrate the orientation sensor, using the current position as zero
-        // TODO: average the values over some period of time?
         joy = SDL_JoystickOpen(0);
         SDL_JoystickUpdate();
+        sdl::FlushEvents();
         if(joy != NULL) {
             m_joy_x0 = SDL_JoystickGetAxis(joy,0);
             m_joy_y0 = SDL_JoystickGetAxis(joy,1);
@@ -664,7 +679,7 @@ void Client::tick (double dtime)
             joy_x = SDL_JoystickGetAxis(joy,0) - m_joy_x0;
             joy_y = SDL_JoystickGetAxis(joy,1) - m_joy_y0;
             server::Msg_MouseForce(options::GetDouble("MouseSpeed") * -dtime/3000.0 *
-                 V2 (joy_x*sqrt(abs(joy_x)), joy_y*sqrt(abs(joy_y))));   // use joy**1.5 to allow more flexible (non-linear) control 
+                 V2 (-joy_x*sqrt(abs(joy_x)), -joy_y*sqrt(abs(joy_y))));   // use joy**1.5 to allow more flexible (non-linear) control 
         }
         #endif
 	if (app.state->getInt("NextLevelMode") == lev::NEXT_LEVEL_NOT_BEST) {

@@ -154,6 +154,8 @@ namespace enigma { namespace gui {
         "  Clifford J. Tasner  (Music second generation, Proof reading)",
         0,
         N_("Contributors:"),
+        "  Michi (Android Port, Smartphone UI)",
+        "  pelya (libsdl-android)",
         "  Roberto Bardin  (Level design)",
         "  Alain Busser  (Level design, French translation, manual)",
         "  Guy Busser  (Level design)",
@@ -213,18 +215,16 @@ namespace enigma { namespace gui {
     
     void MainMenu::build_menu() 
     {
-        const video::VMInfo *vminfo = video::GetInfo();
-    
-        BuildVList b(this, Rect((vminfo->width - 150)/2,150,150,40), 5);
+        BuildVList b(this, Rect(100,150,180,80), 20);
         m_startgame = b.add(new StaticTextButton(N_("Start Game"), this));
         m_levelpack = b.add(new StaticTextButton(N_("Level Pack"), this));
-    #ifdef ENABLE_EXPERIMENTAL
-        m_netgame   = b.add (new StaticTextButton (N_("Network Game"), this));
-        leveled     = b.add(new StaticTextButton(N_("Editor"), this));
-    #endif
-        options     = b.add(new StaticTextButton(N_("Options"), this));
-        credits     = b.add(new StaticTextButton(N_("Credits"), this));
-        quit        = b.add(new StaticTextButton(N_("Quit"), this));
+
+        BuildVList c(this, Rect(340,150,180,80), 20);
+        options     = c.add(new StaticTextButton(N_("Options"), this));
+        credits     = c.add(new StaticTextButton(N_("Credits"), this));
+
+        BuildVList d(this, Rect(230,360,180,80), 20);
+        quit        = d.add(new StaticTextButton(N_("Quit"), this));
     }
     
     void MainMenu::draw_background(ecl::GC &gc) 

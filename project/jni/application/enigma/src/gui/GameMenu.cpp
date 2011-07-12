@@ -49,11 +49,11 @@ namespace enigma { namespace gui {
         info    = new gui::StaticTextButton(N_("Level Info"), this);
         abort   = new gui::StaticTextButton(N_("Abort Level"), this);
     
-        add(resume,     Rect(0,0,180,40));
-        add(restart,    Rect(0,45,180,40));
-        add(options,    Rect(0,90,180,40));
-        add(info,       Rect(0,135,180,40));
-        add(abort,      Rect(0,180,180,40));
+        add(resume,     Rect(0,0,200,60));
+        add(restart,    Rect(0,70,200,60));
+        add(options,    Rect(0,140,200,60));
+        add(info,       Rect(0,210,200,60));
+        add(abort,      Rect(0,280,200,60));
         center();
     }
     

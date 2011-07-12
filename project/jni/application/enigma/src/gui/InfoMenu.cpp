@@ -33,9 +33,9 @@ namespace enigma { namespace gui {
         pgup     = new ImageButton("ic-up", "ic-up1", this);
         pgdown   = new ImageButton("ic-down", "ic-down1", this);
 
-        add(but_ok, Rect(vminfo.width-120, vminfo.height-60, 100, 40));        
-        add(pgup, Rect(vminfo.width-30, vminfo.height/2, 20, 50));        
-        add(pgdown, Rect(vminfo.width-30, vminfo.height/2 +70, 20, 50));        
+        add(but_ok, Rect(vminfo.width-130, vminfo.height-70, 120, 60));        
+        add(pgup, Rect(vminfo.width-45, vminfo.height/2 - 80, 40, 80));        
+        add(pgdown, Rect(vminfo.width-45, vminfo.height/2 + 30, 40, 80));        
     }
     
     void InfoMenu::draw_background(ecl::GC &gc) {

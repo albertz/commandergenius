@@ -57,20 +57,16 @@ namespace enigma { namespace gui {
         vm = vminfo.videomode;
        
         // Create buttons - positioning identical to Levelmenu
-        but_new = new StaticTextButton(N_("New Group"), this);
-        but_search = new StaticTextButton(N_("Search"), this);
         but_level = new StaticTextButton(N_("Start Game"), this);
         but_main = new StaticTextButton(N_("Main Menu"), this);
         
         commandHList = new HList;
-        commandHList->set_spacing(10);
+        commandHList->set_spacing(60);
         commandHList->set_alignment(HALIGN_CENTER, VALIGN_TOP);
-        commandHList->set_default_size(140, 35);
-        commandHList->add_back(but_new);
-        commandHList->add_back(but_search);
+        commandHList->set_default_size(160, 50);
         commandHList->add_back(but_level);
         commandHList->add_back(but_main);
-        this->add(commandHList, Rect(10, vminfo.height-50, vminfo.width-20, 35));
+        this->add(commandHList, Rect(130, vminfo.height-70, vminfo.width-260, 50));
         
     }
     
@@ -81,9 +77,9 @@ namespace enigma { namespace gui {
             int hmargin, hgroup_pack, hscrollbutton, hscroll_pack, hpack_pack;
         } param[video::VM_COUNT] = {
             {  // VM_640x480
-                2, 9,
+                2, 8,
                 15, 10,
-                20, 36, 22, 10, 20
+                8, 36, 35, 10, 20
             },
             {  // VM_640x512
                 2, 9,
@@ -284,8 +280,8 @@ namespace enigma { namespace gui {
         if (needLeftScroll) {
             scrollLeft = new ImageButton("ic-left", "ic-left1", this);
             this->add(scrollLeft, Rect(param[vm].hmargin + 160 + param[vm].hgroup_pack,
-                    param[vm].vmargin + param[vm].rows / 2 * (35 + param[vm].vrow_row),
-                    param[vm].hscrollbutton, 35));
+                    param[vm].vmargin + param[vm].rows / 2 * (25 + param[vm].vrow_row),
+                    param[vm].hscrollbutton, 45));
         }
                 
         if (needRightScroll) {
@@ -294,8 +290,8 @@ namespace enigma { namespace gui {
                     param[vm].hscrollbutton + 2 * param[vm].hscroll_pack +
                     param[vm].packcolumns * 160 + (param[vm].packcolumns - 1) * 
                     param[vm].hpack_pack,
-                    param[vm].vmargin + param[vm].rows / 2 * (35 + param[vm].vrow_row),
-                    param[vm].hscrollbutton, 35));
+                    param[vm].vmargin + param[vm].rows / 2 * (25 + param[vm].vrow_row),
+                    param[vm].hscrollbutton, 45));
         }
     }
     
@@ -349,12 +345,6 @@ namespace enigma { namespace gui {
     void LevelPackMenu::on_action(Widget *w) {
         if (w == but_main) {
             Menu::quit();
-        } else if (w == but_new) {
-            LPGroupConfig m("");
-            m.manage();
-            setupMenu();
-            updateHighlight();
-            invalidate_all();
         } else if (w == but_level) {
             LevelMenu m;
             if (!m.manage() && isLevelMenuSubmenu || m.isMainQuit()) {
@@ -364,22 +354,7 @@ namespace enigma { namespace gui {
             }
             setupMenu();
             updateHighlight();
-            invalidate_all();            
-        } else if (w == but_search) {
-            SearchMenu ml;
-            ml.manage();
-            if (ml.isSearchQuit()) {
-                // show search result levelpack
-                LevelMenu ml;
-                if (!ml.manage() && isLevelMenuSubmenu || ml.isMainQuit()) {
-                    // ESC in LevelMenu in cade we are a submenu of LevelMenu or
-                    // Main button has been pressed in LevelMenu
-                    Menu::quit();
-                }
-            }
-            setupMenu();
-            updateHighlight();
-            invalidate_all();            
+            invalidate_all();
         } else if (w == scrollUp) {
             firstDisplayedGroup--;
             reset_active_widget();  // we will delete it with setup

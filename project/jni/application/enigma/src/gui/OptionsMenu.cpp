@@ -315,74 +315,39 @@ namespace enigma { namespace gui {
     
     OptionsMenu::OptionsMenu(ecl::Surface *background_)
     : back(new StaticTextButton(N_("Back"), this)),
-      fullscreen(new FullscreenButton),
       m_restartinfo (new Label("")),
       background(background_),
       previous_caption(video::GetCaption())
     {
-        const int spacing     = 5;
-        const int big_spacing = 60;
+        const int spacing     = 10;
         const int label_width = 180;
         const int but_width   = 100;
-        const int but_height  = 30;
+        const int but_height  = 70;
         const video::VMInfo *vminfo = video::GetInfo();
         int hmargin = vminfo->width < 660 ? 10 : (vminfo->width < 900 ? 20 : 80);
         int midspacing = vminfo->width - 2*hmargin - 2*but_width - 2*label_width;
     
         BuildVList leftlabels (this, Rect(-label_width, 0, label_width, but_height), spacing);
-        BuildVList left (this, Rect(0, 0, but_width, but_height), spacing);
+//        BuildVList left (this, Rect(0, 0, but_width, but_height), spacing);
         BuildVList rightlabels (this, Rect(but_width+midspacing, 0, label_width, but_height), spacing);
-        BuildVList right(this, Rect(but_width+midspacing+label_width, 0, but_width, but_height), spacing);
-        leftlabels.add (new Label(N_("Language: "), HALIGN_RIGHT));
-        leftlabels.add (new Label(N_("Fullscreen: "), HALIGN_RIGHT));
-        leftlabels.add (new Label(N_("Video mode: "), HALIGN_RIGHT));
-        leftlabels.add (new Label(N_("Gamma correction: "), HALIGN_RIGHT));
-        leftlabels.add (new Label(N_("Mouse speed: "), HALIGN_RIGHT));
-    
-        language = new LanguageButton(this);
-        left.add (language);
-        left.add (fullscreen);
-        left.add (new VideoModeButton);
-        left.add (new GammaButton);
-        left.add (new MouseSpeedButton);
-    
-        rightlabels.add (new Label(N_("Sound volume: "), HALIGN_RIGHT));
-        rightlabels.add (new Label(N_("Sound set: "), HALIGN_RIGHT));
-        rightlabels.add (new Label(N_("Music volume: "), HALIGN_RIGHT));
-        rightlabels.add (new Label(N_("Stereo: "), HALIGN_RIGHT));
-        rightlabels.add (new Label(N_("Ratings update: "), HALIGN_RIGHT));
-    
-        right.add (new SoundVolumeButton);
-        right.add (new SoundSetButton);
-        right.add (new MusicVolumeButton);
-//        right.add (new InGameMusicButton);Über
-        right.add (new StereoButton);
-        right.add (new RatingsUpdateButton);
+//        BuildVList right(this, Rect(but_width+midspacing+label_width, 0, but_width, but_height), spacing);
+        leftlabels.add (new Label(N_("Tilt sensitivity: "),HALIGN_CENTER,VALIGN_BOTTOM));
+        leftlabels.add (new MouseSpeedButton);
+
+        leftlabels.add (new Label(N_("Ratings update: "),HALIGN_CENTER,VALIGN_BOTTOM));
+        leftlabels.add (new RatingsUpdateButton);
+
+        rightlabels.add (new Label(N_("Sound volume: "),HALIGN_CENTER,VALIGN_BOTTOM));
+        rightlabels.add (new SoundVolumeButton);
+
+        rightlabels.add (new Label(N_("Music volume: "),HALIGN_CENTER,VALIGN_BOTTOM));
+        rightlabels.add (new MusicVolumeButton);
         
-        Rect l = left.pos();
-        Rect r = right.pos();
+        Rect l = leftlabels.pos();
+        Rect r = rightlabels.pos();
 
-        BuildVList bottomlabels (this, Rect(-label_width, Max(l.y, r.y), label_width, but_height), spacing);
-        BuildVList bottom (this, Rect(0, Max(l.y, r.y), vminfo->width - 2*hmargin - label_width, but_height), spacing);
-        bottomlabels.add (new Label(N_("User name: "), HALIGN_RIGHT));
-        bottomlabels.add (new Label(N_("User path: "), HALIGN_RIGHT));
-        bottomlabels.add (new Label(N_("User image path: "), HALIGN_RIGHT));
-        userNameTF = new TextField(app.state->getString("UserName"));
-        userNameTF->setMaxChars(20);
-        userNameTF->setInvalidChars("+");
-        bottom.add (userNameTF);
-        userPathTF = new TextField(XMLtoUtf8(LocalToXML(app.userPath.c_str()).x_str()).c_str());
-        bottom.add (userPathTF);
-        userImagePathTF = new TextField(XMLtoUtf8(LocalToXML(app.userImagePath.c_str()).x_str()).c_str());
-        bottom.add (userImagePathTF);
-
-//            add (m_restartinfo, Rect (l.x, l.y + 15, 400, 20));
-//            m_restartinfo->set_alignment (HALIGN_LEFT);
-//            update_info();
-    
-        Rect b = bottom.pos();
         l.x = (l.x+r.x)/2;
-        l.y = b.y+big_spacing;
+        l.y = 380;
     
         add(back, l);
     }
@@ -391,33 +356,7 @@ namespace enigma { namespace gui {
         video::SetCaption(previous_caption.c_str());
     }
     
-//    void OptionsMenu::update_info() 
-//    {
-//        if (options::MustRestart)
-//            m_restartinfo->set_text (
-//                N_("Please restart Enigma to activate your changes!"));
-//        else
-//            m_restartinfo->set_text ("");
-//    }
-    
     void OptionsMenu::quit() {
-        std::string tfUserPathLocal = XMLtoLocal(Utf8ToXML(userPathTF->getText().c_str()).x_str()).c_str();
-        std::string tfUserImageLocal = XMLtoLocal(Utf8ToXML(userImagePathTF->getText().c_str()).x_str()).c_str();
-        if ((app.state->getString("UserName") != userNameTF->getText())
-                || (app.userPath != tfUserPathLocal ) || (app.userImagePath != tfUserImageLocal)) {
-            // ensure that enigma.score is saved with new Username or to new location
-            lev::ScoreManager::instance()->markModified();
-        }
-        // strip off leading and trailing whitespace from user name
-        std::string userName = userNameTF->getText();
-        std::string::size_type firstChar = userName.find_first_not_of(" ");
-        std::string::size_type lastChar = userName.find_last_not_of(" ");
-        if (firstChar != std::string::npos)
-            app.state->setProperty("UserName", userName.substr(firstChar, lastChar - firstChar + 1));
-        else
-            app.state->setProperty("UserName", std::string(""));
-        app.setUserPath(tfUserPathLocal.c_str());
-        app.setUserImagePath(tfUserImageLocal.c_str());
         Menu::quit();
     }
 
@@ -430,15 +369,6 @@ namespace enigma { namespace gui {
             quit();
             handled = true;
         }
-        else if (e.type == SDL_KEYUP) {
-            if ((e.key.keysym.sym==SDLK_RETURN) &&
-                (e.key.keysym.mod & KMOD_ALT))
-            {
-                // update state of FullscreenButton :
-                fullscreen->invalidate();
-                handled = true;
-            }
-        }
         return handled;
     }
     
@@ -446,20 +376,15 @@ namespace enigma { namespace gui {
     {
         if (w == back)
             quit();
-        else if (w == language)
-            // language changed - retranslate and redraw everything
-            invalidate_all();
     }
     
     void OptionsMenu::tick (double)
     {
-//        update_info();
     }
     
     void OptionsMenu::draw_background(ecl::GC &gc)
     {
         video::SetCaption(("Enigma - Options Menu"));
-    //     blit(gc, 0,0, enigma::GetImage("menu_bg"));
         blit(gc, 0,0, background);
     }
     

@@ -57,7 +57,10 @@ namespace enigma { namespace gui {
         // Variables.
 
 
+#ifndef ANDROID
         Widget *pgup, *pgdown, *start, *end;
+#endif
+
         Widget      *but_advancemode;      // Next unsolved level button
         Widget      *but_next;
         Widget      *but_back;          // "Back" button

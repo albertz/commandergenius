@@ -603,9 +603,11 @@ Button::Button() : m_activep (false), highlight (false) {
 
 void Button::activate() 
 {
+#ifndef ANDROID
     sound::EmitSoundEvent ("menuswitch");
     m_activep = true;
     invalidate();
+#endif
 }
 
 void Button::deactivate() {
@@ -765,8 +767,8 @@ ecl::Font *TextButton::menufont_pressed = 0;
 
 TextButton::TextButton(ActionListener *al) {
     if (menufont == 0) {
-        menufont = enigma::GetFont("menufont");
-        menufont_pressed = enigma::GetFont("menufontsel");
+        menufont = enigma::GetFont("buttonfont");
+        menufont_pressed = enigma::GetFont("buttonfont");
     }
     set_listener(al);
 }
