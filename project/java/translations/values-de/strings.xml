@@ -133,4 +133,5 @@
 <string name="display_size_small">Klein (Telefon)</string>
 <string name="display_size_tiny">Uberklein (Xperia Mini)</string>
 <string name="show_more_options">Weitere Optionen</string>
+<string name="controls_screenkb_drawsize">Größe der Schaltfläche Bilder</string>
 </resources>

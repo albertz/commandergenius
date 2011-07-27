@@ -1807,7 +1807,6 @@ JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyLayout) (JNIEnv* env, jobject thiz
 {
 	SDL_Rect rect = {x1, y1, x2-x1, y2-y1};
 	int key = -1;
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeSetScreenKbKeyLayout: %d %d %d %d", (int)rect.x, (int)rect.y, (int)rect.w, (int)rect.h);
 	if( keynum == 0 )
 		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD;
 	if( keynum == 1 )

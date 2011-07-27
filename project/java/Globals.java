@@ -60,6 +60,7 @@ class Globals {
 	public static boolean UseAccelerometerAsArrowKeys = false;
 	public static boolean UseTouchscreenKeyboard = true;
 	public static int TouchscreenKeyboardSize = 0;
+	public static int TouchscreenKeyboardDrawSize = 1;
 	public static int TouchscreenKeyboardTheme = 2;
 	public static int TouchscreenKeyboardTransparency = 2;
 	public static int AccelerometerSensitivity = 2;

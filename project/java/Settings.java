@@ -142,6 +142,7 @@ class Settings
 			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
 				out.writeBoolean(Globals.OptionalDataDownload[i]);
 			out.writeBoolean(Globals.BrokenLibCMessageShown);
+			out.writeInt(Globals.TouchscreenKeyboardDrawSize);
 
 			out.close();
 			settingsLoaded = true;
@@ -277,6 +278,7 @@ class Settings
 			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
 				Globals.OptionalDataDownload[i] = settingsFile.readBoolean();
 			Globals.BrokenLibCMessageShown = settingsFile.readBoolean();
+			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			
 			settingsLoaded = true;
 
@@ -604,6 +606,7 @@ class Settings
 			{
 				new ScreenKeyboardThemeConfig(),
 				new ScreenKeyboardSizeConfig(),
+				new ScreenKeyboardDrawSizeConfig(),
 				new ScreenKeyboardTransparencyConfig(),
 				new RemapScreenKbConfig(),
 				new CustomizeScreenKbLayout(),
@@ -976,6 +979,44 @@ class Settings
 				public void onClick(DialogInterface dialog, int item) 
 				{
 					Globals.TouchscreenKeyboardSize = item;
+
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
+	static class ScreenKeyboardDrawSizeConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.controls_screenkb_drawsize);
+		}
+		void run (final MainActivity p)
+		{
+			final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_large),
+											p.getResources().getString(R.string.controls_screenkb_medium),
+											p.getResources().getString(R.string.controls_screenkb_small),
+											p.getResources().getString(R.string.controls_screenkb_tiny) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.controls_screenkb_drawsize));
+			builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardDrawSize, new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.TouchscreenKeyboardDrawSize = item;
 
 					dialog.dismiss();
 					goBack(p);
@@ -2358,6 +2399,7 @@ class Settings
 			{
 				nativeSetTouchscreenKeyboardUsed();
 				nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize,
+											Globals.TouchscreenKeyboardDrawSize,
 											Globals.TouchscreenKeyboardTheme,
 											Globals.AppTouchscreenKeyboardKeysAmountAutoFire,
 											Globals.TouchscreenKeyboardTransparency );
@@ -2446,7 +2488,7 @@ class Settings
 	private static native void nativeSetSmoothVideo();
 	private static native void nativeSetCompatibilityHacks();
 	private static native void nativeSetVideoMultithreaded();
-	private static native void nativeSetupScreenKeyboard(int size, int theme, int nbuttonsAutoFire, int transparency);
+	private static native void nativeSetupScreenKeyboard(int size, int drawsize, int theme, int nbuttonsAutoFire, int transparency);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	private static native void nativeInitKeymap();
 	private static native int  nativeGetKeymapKey(int key);

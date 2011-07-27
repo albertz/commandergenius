@@ -39,6 +39,7 @@
     <string name="controls_accelnav">Accelerometer</string>
 
     <string name="controls_screenkb_size">On-screen keyboard size</string>
+    <string name="controls_screenkb_drawsize">Size of button images</string>
     <string name="controls_screenkb_large">Large</string>
     <string name="controls_screenkb_medium">Medium</string>
     <string name="controls_screenkb_small">Small</string>
