@@ -49,8 +49,8 @@ $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT) $(OB
 vcmiserver: $(OBJS_SERVER) $(OBJS_LIB)
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 ../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
-	\$$LDFLAGS -L. \
 	$^ -o $@ \
+	\$$LDFLAGS -L. \
 	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread" && \
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
@@ -58,8 +58,8 @@ vcmiserver: $(OBJS_SERVER) $(OBJS_LIB)
 LINK_LIB= \
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 ../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
-	-shared \$$LDFLAGS -L. \
 	$^ -o $@ \
+	-shared \$$LDFLAGS -L. \
 	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread" && \
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
