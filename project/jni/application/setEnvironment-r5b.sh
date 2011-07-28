@@ -38,8 +38,8 @@ done
 )
 
 if [ -n "$CRYSTAX_WCHAR" ]; then
-	CRYSTAX_WCHAR_INCLUDE=-I$NDK/sources/wchar-support/include
-	CRYSTAX_WCHAR_LIB="$NDK/sources/wchar-support/libs/armeabi/libwchar_static.a"
+	CRYSTAX_WCHAR_INCLUDE=-I$NDK/sources/crystax/include
+	CRYSTAX_WCHAR_LIB="$NDK/sources/crystax/libs/armeabi/libcrystax_static.a"
 fi
 
 CFLAGS="\
