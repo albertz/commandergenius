@@ -41,11 +41,26 @@ class AccelerometerReader implements SensorEventListener {
 
 	private SensorManager _manager = null;
 
-	public AccelerometerReader(Activity context) {
+	public AccelerometerReader(Activity context)
+	{
 		System.out.println("libSDL: accelerometer start required: " + String.valueOf(Globals.UseAccelerometerAsArrowKeys));
+		_manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+		start();
+	}
+	
+	public synchronized void stop()
+	{
+		if( _manager != null )
+		{
+			System.out.println("libSDL: stopping accelerometer");
+			_manager.unregisterListener(this);
+		}
+	}
+
+	public synchronized void start()
+	{
 		if( Globals.UseAccelerometerAsArrowKeys )
 		{
-			_manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 			if( _manager != null )
 			{
 				System.out.println("libSDL: starting accelerometer");
@@ -53,13 +68,6 @@ class AccelerometerReader implements SensorEventListener {
 				// if( ! _manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_GAME) )
 				_manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
 			}
-		}
-	}
-	
-	public synchronized void stop() {
-		if( _manager != null )
-		{
-			_manager.unregisterListener(this);
 		}
 	}
 
@@ -84,7 +92,6 @@ class AccelerometerReader implements SensorEventListener {
 
 	public synchronized void onAccuracyChanged(Sensor s, int a) {
 	}
-	
 
 	private native void nativeAccelerometer(float accX, float accY, float accZ);
 	private native void nativeOrientation(float accX, float accY, float accZ);

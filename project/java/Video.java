@@ -425,7 +425,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public static native void nativeTextInputFinished();
 
 	private MainActivity context = null;
-	private AccelerometerReader accelerometer = null;
+	public AccelerometerReader accelerometer = null;
 	
 	private EGL10 mEgl = null;
 	private EGLDisplay mEglDisplay = null;
@@ -476,6 +476,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	@Override
 	public void onPause() {
+		mRenderer.accelerometer.stop();
 		super.onPause();
 		mRenderer.mPaused = true;
 	};
@@ -491,6 +492,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		System.out.println("libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused);
 		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused || Globals.NonBlockingSwapBuffers )
 			mRenderer.nativeGlContextRecreated();
+		mRenderer.accelerometer.start();
 	};
 
 	// This seems like redundant code - it handled in MainActivity.java
