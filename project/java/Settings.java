@@ -353,7 +353,6 @@ class Settings
 			}
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(title(p));
-			//builder.setSingleChoiceItems(items.toArray(new CharSequence[0]), MainMenuLastSelected, new DialogInterface.OnClickListener() 
 			builder.setItems(items.toArray(new CharSequence[0]), new DialogInterface.OnClickListener()
 			{
 				public void onClick(DialogInterface dialog, int item)
@@ -1209,6 +1208,7 @@ class Settings
 					{
 						menuStack.clear();
 						new MainMenu().run(p);
+						return;
 					}
 					goBack(p);
 				}
@@ -1568,6 +1568,8 @@ class Settings
 					dialog.dismiss();
 					if( Globals.PhoneHasTrackball )
 						showTrackballConfig(p);
+					else
+						goBack(p);
 				}
 			});
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
