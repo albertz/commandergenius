@@ -25,8 +25,8 @@ LOCAL_C_INCLUDES :=
 ifeq ($(CRYSTAX_TOOLCHAIN)$(NDK_R5_TOOLCHAIN),)
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../stlport/stlport
 endif
-ifneq ($(CRYSTAX_R5B3_TOOLCHAIN),)
-LOCAL_C_INCLUDES += $(NDK_PATH)/sources/wchar-support/include
+ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
+LOCAL_C_INCLUDES += $(NDK_PATH)/sources/crystax/include
 endif
 
 LOCAL_C_INCLUDES += $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) \
@@ -54,8 +54,8 @@ LOCAL_LDFLAGS := -Lobj/local/armeabi
 
 LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
 
-ifneq ($(CRYSTAX_R5B3_TOOLCHAIN),)
-LOCAL_LDLIBS += -L$(NDK_PATH)/sources/wchar-support/libs/armeabi -lwchar_static
+ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
+LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/armeabi -lcrystax_static
 endif
 
 LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \

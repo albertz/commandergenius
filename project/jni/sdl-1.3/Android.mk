@@ -58,4 +58,8 @@ LOCAL_SRC_FILES := $(foreach F, $(SDL_SRCS), $(addprefix $(dir $(F)),$(notdir $(
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog
 
+ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
+LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/armeabi -lcrystax_static
+endif
+
 include $(BUILD_SHARED_LIBRARY)

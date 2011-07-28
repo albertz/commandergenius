@@ -27,7 +27,7 @@ NDK_R5_TOOLCHAIN := 1
 endif
 ifneq ($(findstring r5-crystax-1,$(NDK_VERSION)),)
 $(info Building with CrystaX r5 toolchain - wchar support enabled)
-CRYSTAX_R5B3_TOOLCHAIN := 1
+CRYSTAX_R5_TOOLCHAIN := 1
 endif
 
 NDK_PATH := $(shell dirname $(shell which ndk-build))
