@@ -6,14 +6,13 @@ focused mainly on SDL 1.2, and won't keep updating with SDL 1.3 from libsdl.org.
 Installation
 ============
 
-This should be compiled with Android 2.2 SDK (API level 8) and NDK r4b,
+This project should be compiled with Android 3.1 SDK (API level 12) and NDK r6 or r5c,
 google for them and install them as described in their docs.
-The application will run on Android OS 1.6 and above, don't mind the 2.2 dependency.
-If you need support for C++ RTTI and exceptions you may use CrystaX NDK based on r4b:
-http://www.crystax.net/android/ndk-r4.php
-NDK r5b WILL CRASH on Android OS lower than 2.2, however SDL build system supports it.
-You may try to use CrystaX NDK r5b, which has that bug fixed, however currently NDK r4b is the most stable.
 You'll need to install Java Ant too.
+The application will run on Android OS 1.6 and above, don't mind the 3.1 dependency.
+Also it's compatible with NDK r4b and all versions of CrystaX NDK starting from r4b.
+CrystaX NDK adds support for wide chars, and required if you want to use Boost libraries.
+http://www.crystax.net/android/ndk.php
 The most supported environment for this port is Linux, MacOs should be okay too.
 If you're developing under Windows you'd better install andLinux or Ubuntu+Wubi, to get proper Linux environment
 running inside Windows, then install Linux toolchain on it. I was told andLinux compiles faster than Cygwin.
@@ -24,10 +23,10 @@ How to compile demo application
 ===============================
 
 Launch commands
+	android update project -p project
 	rm project/jni/application/src
 	ln -s ballfield project/jni/application/src
 	ChangeAppSettings.sh -a
-	android update project -p project
 Then edit file build.sh if needed to add NDK dir to your PATH, then launch it.
 It will compile a bunch of libs under project/libs/armeabi,
 create file project/bin/DemoActivity-debug.apk and install it on your device or emulator.
@@ -42,9 +41,9 @@ and 6 configurable keys, full text input is toggled with 7-th key. Both user and
 button layout and returned keycodes, and also toggle full text input - see SDL_screenkeyboard.h.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
-remove project/jni/application/src symlink and make new one pointing to glxgears, then run build.sh
+to compile it remove project/jni/application/src symlink and make new one pointing to glxgears, and run build.sh
 Note that GL ES is NOT pure OpenGL - there are no glBegin() and glEnd() call and other widely used functions,
-and generally it will take a lot of effort to port pure OpenGL application to GL ES.
+and generally it will take a lot of effort to port OpenGL application to GL ES.
 
 How to compile your own application
 ===================================
@@ -55,11 +54,11 @@ If you're porting existing app which uses SDL 1.2 please always use SW mode:
 neither SDL_SetVideoMode() call nor SDL_CreateRGBSurface() etc functions shall contain SDL_HWSURFACE flags.
 The BPP in SDL_SetVideoMode() shall be set to 16, and audio format - to AUDIO_S8 or AUDIO_S16.
 
-The native Android pixel format is RGB_565, even for OpenGL, not BGR_565 as all other OpenGL implementation have.
+The native Android pixel format is RGB_565, even for OpenGL, not BGR_565 as all other OpenGL implementations have.
 
 Colorkey images are supported using RGBA_5551 pixelformat with 1-bit alpha -
 SDL does conversion internally, for you they are just RGB_565 surfaces.
-Alpha surfaces have RGBA_4444 format.
+Alpha surfaces have RGBA_4444 format. SDL_RLEACCEL is not supported.
 
 To compile your own app, put your app sources into project/jni/application dir (or create symlink to them),
 and change symlink "src" to point to your app:
@@ -72,33 +71,32 @@ then
 	ln -s myapp project/jni/application/src
 (the second one should be relative link without slashes)
 
-Also your main() function name should be redefined to SDL_main(), if you'll include SDL.h it will do it automatically.
+Also your main() function name should be redefined to SDL_main(), include SDL.h so it will be done automatically.
 
-Then launch script ChangeAppSettings.sh - it will ask few questions and copy some Java files -
-there's no way around it, because Java does not support preprocessor.
-You may take AndroidAppSettings.cfg file from some other application to get some sane defaults,
+Then launch script ChangeAppSettings.sh - it will ask few questions and modify several file in the project -
+there's no way around such external configure script, because Java does not support preprocessor,
+and the Java code is a part of SDL lib, the application generally should not care about it.
+You may take AndroidAppSettings.cfg file from some other application to get sane defaults,
 you may launch ChangeAppSettings.sh with -a or -v parameter to skip questions altogether or to ask only version code.
 The C++ files shall have .cpp extension to be compiled, rename them if necessary.
-Also you can replace icon image at project/res/drawable/icon.png and create a file logo.png
-inside the directory project/jni/application/src/AndroidData to be used as a splash screen image.
-Then you can launch build.sh.
+Also you have to create an icon image file at project/res/drawable/icon.png, and you may create a file
+project/jni/application/src/AndroidData/logo.png to be used as a splash screen image.
+Then you may launch build.sh.
 
-Application data may be bundled with app itself, or downloaded from net on first run.
-Create .ZIP file with your application data, and put it on HTTP server, or to "project/jni/application/src/AndroidData" dir -
-ChangeAppSettings.sh will ask you for the URL, if URL won't contain "http://" it will try to unzip file from AndroidData dir.
-Note that there is limit on maximum .APK file size on Market, like 50 Mb or so, so big files should be downloaded by HTTP.
-Also many older devices cannot extract files bigger than 1 Mb from .apk container, so it's strongly advised to split
-all your data to several small zipfiles if you're putting it inside .apk.
-Also you may specify additional downloads through ChangeAppSettings.sh, such as hi-res texture pack etc.
+Application data may be bundled with app itself, or downloaded from the internet on the first run -
+if you want to put app data inside .apk file - create a .zip archive and put it into the directory
+project/jni/application/src/AndroidData (create it if it doesn't exist), then run ChangeAppSettings.sh
+and specify the file name there. If the data files are more than 10 Mb it's a good idea to put them
+on public HTTP server - you may specify URL in ChangeAppSettings.sh, also you may specify several files.
 If you'll release new version of data files you should change download URL or data file name and update your app as well -
 the app will re-download the data if URL does not match the saved URL from previous download.
 
 All devices have different screen resolutions, you may toggle automatic
 screen resizing in ChangeAppSettings.sh and draw to virtual 640x480 screen -
-it will be HW accelerated and will not impact performance much.
+it will be HW accelerated and will not impact performance.
 SDL_ListModes()[0] will always return native screen resolution.
 Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
-texture on HTC G1, and many other low-end devices. Software surfaces may be of any size of course.
+texture on HTC G1, and other low-end devices. Software surfaces may be of any size of course.
 
 If you want HW acceleration there are some limitations:
 You cannot blit SW surface to screen, it should be only HW surface.
@@ -186,16 +184,16 @@ However your application will start up slower.
 How to compile your own application using automake/configure scripts
 ====================================================================
 
-There is limited support for "configure" scripts, I'm compiling scummvm this way,
-though ./configure scripts tend to have stupid bugs in various places, avoid using that method if you can.
+There is limited support for "configure" scripts, I'm compiling scummvm and openttd this way,
+though ./configure scripts tend to have stupid bugs in various places, and ranlib command never works.
 You should enable custom build script in ChangeAppSettings.sh, and you should create script
-AndroidBuild.sh and put it under project/jni/application/src dir. The AndroidBuild.sh script should 
+AndroidBuild.sh and put it under project/jni/application/src dir. The AndroidBuild.sh script should
 generate file project/jni/application/src/libapplication.so, which will be copied into .apk file by build system.
 There is helper script project/jni/application/setEnvironment.sh which will set CFLAGS and LDFLAGS
 for configure script and makefile, see AndroidBuild.sh in project/jni/application/scummvm dir for reference.
 
-Android Application lifecycle support
-=====================================
+Android application sleep/resume support
+========================================
 
 Application may be put to background at any time, for example if user gets phone call onto the device.
 The application will lose OpenGL context then, and has to re-create it when put to foreground.
@@ -273,19 +271,15 @@ Note that I did not test that code yet, so test reports are appreciated.
 Quick guide to debug native code
 ================================
 
-The debugging of multi-threaded apps is not supported with NDK r4 or r4b, you'll need NDK r5b and Android 2.3 emulator or device.
-To debug your application add tag 'android:debuggable="true"' to 'application' element in AndroidManifest.xml,
-recmpile and reinstall your app, go to "project" dir and launch command
+The debugging of multi-threaded apps is not supported with NDK r4 or r4b, you'll need NDK r5c
+and Android 2.3 emulator or device.
+To debug your application go to "project" dir and launch command
 	ndk-gdb --verbose --start --force
 then if it fails enter command
 	target remote:5039
 You can also debug by adding extensive logs to your app:
 	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
 and then watching "adb logcat" output.
-You may wish to uncomment line
-#define printf __SDL_android_printf
-inside file project/jni/SDL-1.3/include/SDL_android_printf.h - this will make printf() to output to logcat,
-however it will trigger lot of warnings in system headers, so it's disabled by default.
 
 If your application crashed, you should use following steps:
 
@@ -315,24 +309,15 @@ It will output the exact line in your source where the application crashed.
 
 If your application does not work for unknown reasons, there may be the case when it exports some symbol
 that clash with exports from system libraries - run checkExports.sh to check this.
+Also there are some symbols that are present in the NDK but are not on the device - run checkMissing.sh to check.
 
 If your application fails to load past startup SDL logo with error
 
 I/dalvikvm( 3401): Unable to dlopen(/data/data/com.svc/lib/libapplication.so): Cannot load library: alloc_mem_region[847]: OOPS:  1268 cannot map library 'libapplication.so'. no vspace available.
 
-that means you're allocating huge data buffer in heap (that may be C static or global buffer variable).
-Use command "objdump -x libapplication.so", it might output something like this:
-
-Sections:
-Idx Name          Size      VMA       LMA       File off  Algn
- 13 .bss          0b64544c  00051670  00051670  0005066c  2**3
-
-and below
-
-0848c8c8 g     O .bss   0320a000 decoder_svc_PictureBuffer_RefY
-
-which means your BSS segment eats up 191 Mb of RAM, and symbol 'decoder_svc_PictureBuffer_RefY' eats up 52 Mb,
-while heap memory limit on most phones is 24 Mb.
+that means you're allocating huge data buffer in heap (that may be C static or global buffer variable) -
+run checkStaticDataSize.sh to see the size of all static symbols inside your application,
+heap memory limit on most phones is 24 Mb.
 
 License information
 ===================
@@ -354,10 +339,10 @@ Please note that SDL 1.3 Andorid port from libsdl.org has changed it's license t
 to zlib, however I've used older release of SDL 1.3 to create this port,
 and I cannot switch license type for the C source files I didn't write myself.
 
-The libraries under project/jni, each of which has it's own license,
-I've tried to compile all LGPL-ed libs as shared libs but you should anyway inspect the licenses
-of the libraries you're linking to if you're creating closed-source app.
+The libraries under project/jni have their own license, I've tried to compile all LGPL-ed libs
+as shared libs but you should anyway inspect the licenses of the libraries you're linking to.
 libmad and liblzo2 are licensed under GPL, so if you're planning to make commercial app you should avoid
 using them, otherwise you'll have to release your application sources under GPL too.
 
-The "Ultimate Droid" button theme by Sean Stieber is licensed under Creative Commons - Attribution license.
+The "Ultimate Droid" on-screen keyboard theme by Sean Stieber is licensed under Creative Commons - Attribution license.
+The "Simple Theme" on-screen keyboard theme by Dmitry Matveev is licensed under zlib license.
