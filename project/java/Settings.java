@@ -2356,6 +2356,7 @@ class Settings
 
 	static void Apply(Activity p)
 	{
+		nativeSetVideoDepth(Globals.VideoDepthBpp);
 		if(Globals.SmoothVideo)
 			nativeSetSmoothVideo();
 		if( Globals.CompatibilityHacks )
@@ -2488,6 +2489,7 @@ class Settings
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
 	private static native void nativeSetSmoothVideo();
+	private static native void nativeSetVideoDepth(int bpp);
 	private static native void nativeSetCompatibilityHacks();
 	private static native void nativeSetVideoMultithreaded();
 	private static native void nativeSetupScreenKeyboard(int size, int drawsize, int theme, int nbuttonsAutoFire, int transparency);

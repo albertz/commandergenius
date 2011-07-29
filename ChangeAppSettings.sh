@@ -95,36 +95,6 @@ if [ -n "$AppDataDownloadUrl1" ] ; then
 fi
 fi
 
-if [ -z "$SdlVideoResize" -o -z "$AUTO" ]; then
-echo
-echo "Application window should be resized to fit into native device screen (480x320 or 800x480) (y) or (n) ($SdlVideoResize): "
-read var
-if [ -n "$var" ] ; then
-	SdlVideoResize="$var"
-	CHANGED=1
-fi
-fi
-
-if [ -z "$SdlVideoResizeKeepAspect" -o -z "$AUTO" ]; then
-echo
-echo -n "Application resizing should use 4:3 aspect ratio, creating black bars (y) or (n) ($SdlVideoResizeKeepAspect): "
-read var
-if [ -n "$var" ] ; then
-	SdlVideoResizeKeepAspect="$var"
-	CHANGED=1
-fi
-fi
-
-if [ -z "$NeedDepthBuffer" -o -z "$AUTO" ]; then
-echo
-echo -n "Enable OpenGL depth buffer (needed only for 3-d applications, small speed decrease) (y) or (n) ($NeedDepthBuffer): "
-read var
-if [ -n "$var" ] ; then
-	NeedDepthBuffer="$var"
-	CHANGED=1
-fi
-fi
-
 if [ "$LibSdlVersion" = "1.2" ]; then
 	if [ -z "$CompatibilityHacks" -o -z "$AUTO" ]; then
 		echo
@@ -152,6 +122,76 @@ if [ "$LibSdlVersion" = "1.2" ]; then
 	fi
 else
 	SwVideoMode=n
+fi
+
+if [ -z "$VideoDepthBpp" -o -z "$AUTO" ]; then
+echo
+echo "Video color depth - 16 BPP is the fastest, other modes are not supported"
+echo -n "if you're using SDL_HWSURFACE (16)/(24)/(32) ($VideoDepthBpp): "
+read var
+if [ -n "$var" ] ; then
+	VideoDepthBpp="$var"
+	CHANGED=1
+fi
+fi
+
+if [ "$SwVideoMode" = "y" ]; then
+NeedDepthBuffer=n
+NeedStencilBuffer=n
+NeedGles2=n
+else
+
+if [ -z "$NeedDepthBuffer" -o -z "$AUTO" ]; then
+echo
+echo -n "Enable OpenGL depth buffer (needed only for 3-d applications, small speed decrease) (y) or (n) ($NeedDepthBuffer): "
+read var
+if [ -n "$var" ] ; then
+	NeedDepthBuffer="$var"
+	CHANGED=1
+fi
+fi
+
+if [ -z "$NeedStencilBuffer" -o -z "$AUTO" ]; then
+echo
+echo -n "Enable OpenGL stencil buffer (needed only for 3-d applications, small speed decrease) (y) or (n) ($NeedDepthBuffer): "
+read var
+if [ -n "$var" ] ; then
+	NeedStencilBuffer="$var"
+	CHANGED=1
+fi
+fi
+
+if [ -z "$NeedGles2" -o -z "$AUTO" ]; then
+echo
+echo "Try to use GLES 2.x context - will revert to GLES 1.X if unsupported by device"
+ecno -n "you need this option only if you're developing 3-d app (y) or (n) ($NeedGles2): "
+read var
+if [ -n "$var" ] ; then
+	NeedGles2="$var"
+	CHANGED=1
+fi
+fi
+
+fi
+
+if [ -z "$SdlVideoResize" -o -z "$AUTO" ]; then
+echo
+echo "Application window should be resized to fit into native device screen (480x320 or 800x480) (y) or (n) ($SdlVideoResize): "
+read var
+if [ -n "$var" ] ; then
+	SdlVideoResize="$var"
+	CHANGED=1
+fi
+fi
+
+if [ -z "$SdlVideoResizeKeepAspect" -o -z "$AUTO" ]; then
+echo
+echo -n "Application resizing should use 4:3 aspect ratio, creating black bars (y) or (n) ($SdlVideoResizeKeepAspect): "
+read var
+if [ -n "$var" ] ; then
+	SdlVideoResizeKeepAspect="$var"
+	CHANGED=1
+fi
 fi
 
 if [ -z "$AppUsesMouse" -o -z "$AUTO" ]; then
@@ -476,10 +516,13 @@ echo AppFullName=$AppFullName >> AndroidAppSettings.cfg
 echo ScreenOrientation=$ScreenOrientation >> AndroidAppSettings.cfg
 echo InhibitSuspend=$InhibitSuspend >> AndroidAppSettings.cfg
 echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AndroidAppSettings.cfg
+echo VideoDepthBpp=$VideoDepthBpp >> AndroidAppSettings.cfg
+echo NeedDepthBuffer=$NeedDepthBuffer >> AndroidAppSettings.cfg
+echo NeedStencilBuffer=$NeedStencilBuffer >> AndroidAppSettings.cfg
+echo NeedGles2=$NeedGles2 >> AndroidAppSettings.cfg
+echo SwVideoMode=$SwVideoMode >> AndroidAppSettings.cfg
 echo SdlVideoResize=$SdlVideoResize >> AndroidAppSettings.cfg
 echo SdlVideoResizeKeepAspect=$SdlVideoResizeKeepAspect >> AndroidAppSettings.cfg
-echo NeedDepthBuffer=$NeedDepthBuffer >> AndroidAppSettings.cfg
-echo SwVideoMode=$SwVideoMode >> AndroidAppSettings.cfg
 echo CompatibilityHacks=$CompatibilityHacks >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
@@ -549,6 +592,18 @@ if [ "$NeedDepthBuffer" = "y" ] ; then
 	NeedDepthBuffer=true
 else
 	NeedDepthBuffer=false
+fi
+
+if [ "$NeedStencilBuffer" = "y" ] ; then
+	NeedStencilBuffer=true
+else
+	NeedStencilBuffer=false
+fi
+
+if [ "$NeedGles2" = "y" ] ; then
+	NeedGles2=true
+else
+	NeedGles2=false
 fi
 
 if [ "$SwVideoMode" = "y" ] ; then
@@ -678,8 +733,11 @@ cat project/src/Globals.java | \
 	sed "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" | \
 	sed "s/public static final boolean Using_SDL_1_3 = .*;/public static final boolean Using_SDL_1_3 = $UsingSdl13;/" | \
 	sed "s@public static String DataDownloadUrl = .*@public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";@" | \
-	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
 	sed "s/public static boolean SwVideoMode = .*;/public static boolean SwVideoMode = $SwVideoMode;/" | \
+	sed "s/public static int VideoDepthBpp = .*;/public static int VideoDepthBpp = $VideoDepthBpp;/" | \
+	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
+	sed "s/public static boolean NeedStencilBuffer = .*;/public static boolean NeedStencilBuffer = $NeedStencilBuffer;/" | \
+	sed "s/public static boolean NeedGles2 = .*;/public static boolean NeedGles2 = $NeedGles2;/" | \
 	sed "s/public static boolean CompatibilityHacks = .*;/public static boolean CompatibilityHacks = $CompatibilityHacks;/" | \
 	sed "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" | \
 	sed "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" | \

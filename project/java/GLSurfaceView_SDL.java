@@ -280,7 +280,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                     "setRenderer has already been called for this instance.");
         }
         if (mEGLConfigChooser == null) {
-            mEGLConfigChooser = new SimpleEGLConfigChooser(true);
+            mEGLConfigChooser = getEglConfigChooser(16, false, false, false);
         }
         mGLThread = new GLThread(renderer);
         mGLThread.start();
@@ -319,8 +319,8 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
      *
      * @param needDepth
      */
-    public void setEGLConfigChooser(boolean needDepth) {
-        setEGLConfigChooser(new SimpleEGLConfigChooser(needDepth));
+    public void setEGLConfigChooser(int bpp, boolean needDepth, boolean stencil, boolean gles2) {
+        setEGLConfigChooser(getEglConfigChooser(bpp, needDepth, stencil, gles2));
     }
 
     /**
@@ -337,9 +337,9 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
      *
      */
     public void setEGLConfigChooser(int redSize, int greenSize, int blueSize,
-            int alphaSize, int depthSize, int stencilSize) {
+            int alphaSize, int depthSize, int stencilSize, boolean gles2) {
         setEGLConfigChooser(new ComponentSizeChooser(redSize, greenSize,
-                blueSize, alphaSize, depthSize, stencilSize));
+                blueSize, alphaSize, depthSize, stencilSize, gles2));
     }
     /**
      * Set the rendering mode. When renderMode is
@@ -619,6 +619,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
          * @return the chosen configuration.
          */
         EGLConfig chooseConfig(EGL10 egl, EGLDisplay display);
+        public boolean isGles2Required();
     }
 
     private static abstract class BaseConfigChooser
@@ -655,7 +656,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 
     private static class ComponentSizeChooser extends BaseConfigChooser {
         public ComponentSizeChooser(int redSize, int greenSize, int blueSize,
-                int alphaSize, int depthSize, int stencilSize) {
+                int alphaSize, int depthSize, int stencilSize, boolean isGles2) {
             super(new int[] {
                     EGL10.EGL_RED_SIZE, redSize,
                     EGL10.EGL_GREEN_SIZE, greenSize,
@@ -663,6 +664,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                     EGL10.EGL_ALPHA_SIZE, alphaSize,
                     EGL10.EGL_DEPTH_SIZE, depthSize,
                     EGL10.EGL_STENCIL_SIZE, stencilSize,
+                    EGL10.EGL_RENDERABLE_TYPE, isGles2 ? EGL_OPENGL_ES2_BIT : 0,
                     EGL10.EGL_NONE});
             mValue = new int[1];
             mRedSize = redSize;
@@ -671,6 +673,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             mAlphaSize = alphaSize;
             mDepthSize = depthSize;
             mStencilSize = stencilSize;
+            this.isGles2 = isGles2;
        }
 
         @Override
@@ -691,10 +694,13 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                         EGL10.EGL_DEPTH_SIZE, 0);
                 int s = findConfigAttrib(egl, display, config,
                         EGL10.EGL_STENCIL_SIZE, 0);
+                boolean gles2 = (findConfigAttrib(egl, display, config,
+                        EGL10.EGL_RENDERABLE_TYPE, 0) & EGL_OPENGL_ES2_BIT) != 0;
                 int distance = Math.abs(r - mRedSize)
                     + Math.abs(g - mGreenSize)
                     + Math.abs(b - mBlueSize) + Math.abs(a - mAlphaSize)
-                    + Math.abs(d - mDepthSize) + Math.abs(s - mStencilSize);
+                    + Math.abs(d - mDepthSize) + Math.abs(s - mStencilSize)
+                    + (gles2 == isGles2 ? 0 : 17);
                 if (distance < closestDistance) {
                     closestDistance = distance;
                     closestConfig = config;
@@ -712,6 +718,11 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             return defaultValue;
         }
 
+        public boolean isGles2Required()
+        {
+            return isGles2;
+        }
+
         private int[] mValue;
         // Subclasses can adjust these values:
         protected int mRedSize;
@@ -720,6 +731,9 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
         protected int mAlphaSize;
         protected int mDepthSize;
         protected int mStencilSize;
+        public boolean isGles2 = false;
+
+        public static final int EGL_OPENGL_ES2_BIT = 4;
         }
 
     /**
@@ -727,9 +741,9 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
      * RGB565 as possible, with or without a depth buffer.
      *
      */
-    private static class SimpleEGLConfigChooser extends ComponentSizeChooser {
-        public SimpleEGLConfigChooser(boolean withDepthBuffer) {
-            super(4, 4, 4, 0, withDepthBuffer ? 16 : 0, 0);
+    private static class SimpleEGLConfigChooser16 extends ComponentSizeChooser {
+        public SimpleEGLConfigChooser16(boolean withDepthBuffer, boolean stencil, boolean gles2) {
+            super(4, 4, 4, 0, withDepthBuffer ? 16 : 0, stencil ? 8 : 0, gles2);
             // Adjust target values. This way we'll accept a 4444 or
             // 555 buffer if there's no 565 buffer available.
             mRedSize = 5;
@@ -737,6 +751,34 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             mBlueSize = 5;
         }
     }
+
+    private static class SimpleEGLConfigChooser24 extends ComponentSizeChooser {
+        public SimpleEGLConfigChooser24(boolean withDepthBuffer, boolean stencil, boolean gles2) {
+            super(8, 8, 8, 0, withDepthBuffer ? 16 : 0, stencil ? 8 : 0, gles2);
+            mRedSize = 8;
+            mGreenSize = 8;
+            mBlueSize = 8;
+        }
+    }
+
+    private static class SimpleEGLConfigChooser32 extends ComponentSizeChooser {
+        public SimpleEGLConfigChooser32(boolean withDepthBuffer, boolean stencil, boolean gles2) {
+            super(8, 8, 8, 8, withDepthBuffer ? 16 : 0, stencil ? 8 : 0, gles2);
+            mRedSize = 8;
+            mGreenSize = 8;
+            mBlueSize = 8;
+            mAlphaSize = 8;
+        }
+    }
+    private static ComponentSizeChooser getEglConfigChooser(int videoDepthBpp, boolean withDepthBuffer, boolean stencil, boolean gles2) {
+        if(videoDepthBpp == 16)
+            return new SimpleEGLConfigChooser16(withDepthBuffer, stencil, gles2);
+        if(videoDepthBpp == 24)
+            return new SimpleEGLConfigChooser24(withDepthBuffer, stencil, gles2);
+        if(videoDepthBpp == 32)
+            return new SimpleEGLConfigChooser32(withDepthBuffer, stencil, gles2);
+        return null;
+    };
 
     /**
      * An EGL helper class.
@@ -775,8 +817,11 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             * Create an OpenGL ES context. This must be done only once, an
             * OpenGL context is a somewhat heavy object.
             */
+            final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+            final int[] gles2_attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE };
+
             mEglContext = mEgl.eglCreateContext(mEglDisplay, mEglConfig,
-                    EGL10.EGL_NO_CONTEXT, null);
+                    EGL10.EGL_NO_CONTEXT, mEGLConfigChooser.isGles2Required() ? gles2_attrib_list : null );
 
             mEglSurface = null;
         }

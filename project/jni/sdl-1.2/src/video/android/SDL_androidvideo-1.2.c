@@ -77,6 +77,9 @@ static void ANDROID_VideoQuitMT(_THIS);
 static void ANDROID_UpdateRectsMT(_THIS, int numrects, SDL_Rect *rects);
 static int ANDROID_FlipHWSurfaceMT(_THIS, SDL_Surface *surface);
 static int ANDROID_ToggleFullScreen(_THIS, int fullscreen);
+static Uint32 PixelFormatEnum = SDL_PIXELFORMAT_RGB565;
+static Uint32 PixelFormatEnumAlpha = SDL_PIXELFORMAT_RGBA4444;
+static Uint32 PixelFormatEnumColorkey = SDL_PIXELFORMAT_RGBA5551;
 
 
 // Stubs to get rid of crashing in OpenGL mode
@@ -117,7 +120,6 @@ static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
 
-enum { ANDROID_BYTESPERPIXEL = 2, ANDROID_BITSPERPIXEL = 16 };
 typedef struct SDL_Texture private_hwdata;
 
 // Pointer to in-memory video surface
@@ -212,21 +214,32 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 {
 	int i;
 	static SDL_PixelFormat alphaFormat;
+	int bpp;
 
 	/* Determine the screen depth (use default 16-bit depth) */
 	/* we change this during the SDL_SetVideoMode implementation... */
 	if( vformat ) {
-		vformat->BitsPerPixel = ANDROID_BITSPERPIXEL;
-		vformat->BytesPerPixel = ANDROID_BYTESPERPIXEL;
+		vformat->BitsPerPixel = SDL_ANDROID_BITSPERPIXEL;
+		vformat->BytesPerPixel = SDL_ANDROID_BYTESPERPIXEL;
+	}
+	
+	if( SDL_ANDROID_BITSPERPIXEL == 24 )
+		PixelFormatEnum = SDL_PIXELFORMAT_RGB24;
+	if( SDL_ANDROID_BITSPERPIXEL == 32 )
+		PixelFormatEnum = SDL_PIXELFORMAT_RGBA8888;
+
+	if( SDL_ANDROID_BITSPERPIXEL >= 24 )
+	{
+		PixelFormatEnumAlpha = SDL_PIXELFORMAT_RGBA8888;
+		PixelFormatEnumColorkey = SDL_PIXELFORMAT_RGBA8888;
 	}
 
-	int bpp;
 	SDL_memset(&alphaFormat, 0, sizeof(alphaFormat));
-	SDL_PixelFormatEnumToMasks( SDL_PIXELFORMAT_RGBA4444, &bpp,
+	SDL_PixelFormatEnumToMasks( PixelFormatEnumAlpha, &bpp,
 								&alphaFormat.Rmask, &alphaFormat.Gmask, 
 								&alphaFormat.Bmask, &alphaFormat.Amask );
-	alphaFormat.BitsPerPixel = ANDROID_BITSPERPIXEL;
-	alphaFormat.BytesPerPixel = ANDROID_BYTESPERPIXEL;
+	alphaFormat.BitsPerPixel = SDL_ANDROID_BITSPERPIXEL;
+	alphaFormat.BytesPerPixel = SDL_ANDROID_BYTESPERPIXEL;
 	this->displayformatalphapixel = &alphaFormat;
 
 	this->info.hw_available = 1;
@@ -269,7 +282,7 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 
 SDL_Rect **ANDROID_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags)
 {
-	if(format->BitsPerPixel != ANDROID_BITSPERPIXEL)
+	if(format->BitsPerPixel != SDL_ANDROID_BITSPERPIXEL)
 		return NULL;
 	return SDL_modelist;
 }
@@ -280,7 +293,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	SDL_PixelFormat format;
 	int bpp1;
 	
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): application requested mode %dx%d OpenGL %d HW %d", width, height, flags & SDL_OPENGL, flags & SDL_HWSURFACE);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): application requested mode %dx%d OpenGL %d HW %d BPP %d", width, height, flags & SDL_OPENGL, flags & SDL_HWSURFACE, SDL_ANDROID_BITSPERPIXEL);
 	if( ! SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
@@ -295,7 +308,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_OPENGL) | SDL_DOUBLEBUF | ( flags & SDL_HWSURFACE );
 	current->w = width;
 	current->h = height;
-	current->pitch = SDL_ANDROID_sFakeWindowWidth * ANDROID_BYTESPERPIXEL;
+	current->pitch = SDL_ANDROID_sFakeWindowWidth * SDL_ANDROID_BYTESPERPIXEL;
 	current->pixels = NULL;
 	current->hwdata = NULL;
 
@@ -312,7 +325,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		SDL_VideoWindow = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
 
 		SDL_memset(&mode, 0, sizeof(mode));
-		mode.format = SDL_PIXELFORMAT_RGB565;
+		mode.format = PixelFormatEnum;
 		SDL_SetWindowDisplayMode(SDL_VideoWindow, &mode);
 		
 		if (SDL_CreateRenderer(SDL_VideoWindow, -1, 0) < 0) {
@@ -324,14 +337,14 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		current->hwdata = NULL;
 		if( ! (flags & SDL_HWSURFACE) )
 		{
-			current->pixels = SDL_malloc(width * height * ANDROID_BYTESPERPIXEL);
+			current->pixels = SDL_malloc(width * height * SDL_ANDROID_BYTESPERPIXEL);
 			if ( ! current->pixels ) {
 				__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for requested mode");
 				SDL_SetError("Couldn't allocate buffer for requested mode");
 				return(NULL);
 			}
-			SDL_memset(current->pixels, 0, width * height * ANDROID_BYTESPERPIXEL);
-			current->hwdata = (struct private_hwdata *)SDL_CreateTexture(SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STATIC, width, height);
+			SDL_memset(current->pixels, 0, width * height * SDL_ANDROID_BYTESPERPIXEL);
+			current->hwdata = (struct private_hwdata *)SDL_CreateTexture(PixelFormatEnum, SDL_TEXTUREACCESS_STATIC, width, height);
 			if( !current->hwdata ) {
 				__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate texture for SDL_CurrentVideoSurface");
 				SDL_free(current->pixels);
@@ -354,13 +367,13 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 
 	/* Allocate the new pixel format for the screen */
     SDL_memset(&format, 0, sizeof(format));
-	SDL_PixelFormatEnumToMasks( SDL_PIXELFORMAT_RGB565, &bpp1,
+	SDL_PixelFormatEnumToMasks( PixelFormatEnum, &bpp1,
 								&format.Rmask, &format.Gmask,
 								&format.Bmask, &format.Amask );
 	format.BitsPerPixel = bpp1;
-	format.BytesPerPixel = ANDROID_BYTESPERPIXEL;
+	format.BytesPerPixel = SDL_ANDROID_BYTESPERPIXEL;
 
-	if ( ! SDL_ReallocFormat(current, ANDROID_BITSPERPIXEL, format.Rmask, format.Gmask, format.Bmask, format.Amask) ) {
+	if ( ! SDL_ReallocFormat(current, SDL_ANDROID_BITSPERPIXEL, format.Rmask, format.Gmask, format.Bmask, format.Amask) ) {
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate new pixel format for requested mode");
 		SDL_SetError("Couldn't allocate new pixel format for requested mode");
 		return(NULL);
@@ -437,14 +450,13 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 		return(-1);
 
 	DEBUGOUT("ANDROID_AllocHWSurface() surface %p w %d h %d", surface, surface->w, surface->h);
-	Uint32 format = SDL_PIXELFORMAT_RGBA5551; // 1-bit alpha for color key, every surface will have colorkey so it's easier for us
+	Uint32 format = PixelFormatEnumColorkey; // 1-bit alpha for color key, every surface will have colorkey so it's easier for us
 	if( surface->format->Amask )
 	{
 		SDL_PixelFormat format1;
 		int bpp;
-		format = SDL_PIXELFORMAT_RGBA4444;
-		DEBUGOUT("ANDROID_AllocHWSurface() SDL_PIXELFORMAT_RGBA4444");
-	    SDL_memset(&format1, 0, sizeof(format1));
+		format = PixelFormatEnumAlpha;
+		SDL_memset(&format1, 0, sizeof(format1));
 		SDL_PixelFormatEnumToMasks( format, &bpp,
 									&format1.Rmask, &format1.Gmask,
 									&format1.Bmask, &format1.Amask );
@@ -457,7 +469,6 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 	}
 	else
 	{
-		DEBUGOUT("ANDROID_AllocHWSurface() SDL_PIXELFORMAT_RGBA5551");
 		// HW-accel surface should be RGB565
 		if( !( SDL_CurrentVideoSurface->format->BitsPerPixel == surface->format->BitsPerPixel &&
 			SDL_CurrentVideoSurface->format->Rmask == surface->format->Rmask &&
@@ -557,7 +568,7 @@ static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)
 		if( ! SDL_CurrentVideoSurface->pixels )
 		{
 			glPixelStorei(GL_PACK_ALIGNMENT, 1);
-			SDL_CurrentVideoSurface->pixels = SDL_malloc(SDL_ANDROID_sFakeWindowWidth * SDL_ANDROID_sFakeWindowHeight * ANDROID_BYTESPERPIXEL);
+			SDL_CurrentVideoSurface->pixels = SDL_malloc(SDL_ANDROID_sFakeWindowWidth * SDL_ANDROID_sFakeWindowHeight * SDL_ANDROID_BYTESPERPIXEL);
 			if ( ! SDL_CurrentVideoSurface->pixels ) {
 				__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate buffer for SDL_CurrentVideoSurface");
 				SDL_SetError("Couldn't allocate buffer for SDL_CurrentVideoSurface");
@@ -566,7 +577,7 @@ static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)
 		}
 		if( ! SDL_CurrentVideoSurface->hwdata )
 		{
-			SDL_CurrentVideoSurface->hwdata = (struct private_hwdata *)SDL_CreateTexture(SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STATIC, SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight);
+			SDL_CurrentVideoSurface->hwdata = (struct private_hwdata *)SDL_CreateTexture(PixelFormatEnum, SDL_TEXTUREACCESS_STATIC, SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight);
 			if( !SDL_CurrentVideoSurface->hwdata ) {
 				__android_log_print(ANDROID_LOG_INFO, "libSDL", "Couldn't allocate texture for SDL_CurrentVideoSurface");
 				SDL_OutOfMemory();
@@ -585,6 +596,7 @@ static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)
 
 		for(y=0; y<fakeH; y++)
 		{
+			// TODO: support 24bpp and 32bpp
 			glReadPixels(0, realH - 1 - (realH * y / fakeH),
 							realW, 1, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, row);
 			for(x=0; x<fakeW; x++)
@@ -621,7 +633,7 @@ static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)
 static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 {
 	SDL_PixelFormat format;
-	Uint32 hwformat = SDL_PIXELFORMAT_RGBA5551;
+	Uint32 hwformat = PixelFormatEnumColorkey;
 	int bpp;
 	SDL_Surface * converted = NULL;
 
@@ -635,26 +647,26 @@ static void ANDROID_UnlockHWSurface(_THIS, SDL_Surface *surface)
 		return;
 	
 	if( surface->format->Amask )
-		hwformat = SDL_PIXELFORMAT_RGBA4444;
+		hwformat = PixelFormatEnumAlpha;
 		
 	if( surface == SDL_CurrentVideoSurface ) // Special case
-		hwformat = SDL_PIXELFORMAT_RGB565;
+		hwformat = PixelFormatEnum;
 	
 		/* Allocate the new pixel format for the screen */
     SDL_memset(&format, 0, sizeof(format));
 	SDL_PixelFormatEnumToMasks( hwformat, &bpp,
 								&format.Rmask, &format.Gmask,
 								&format.Bmask, &format.Amask );
-	format.BytesPerPixel = ANDROID_BYTESPERPIXEL;
+	format.BytesPerPixel = SDL_ANDROID_BYTESPERPIXEL;
 	format.BitsPerPixel = bpp;
 	
+	// TODO: support 24bpp and 32bpp
 	if( format.BitsPerPixel == surface->format->BitsPerPixel &&
 		format.Rmask == surface->format->Rmask &&
 		format.Gmask == surface->format->Gmask &&
 		format.Bmask == surface->format->Bmask &&
 		format.Amask == surface->format->Amask )
 	{
-		DEBUGOUT("ANDROID_UnlockHWSurface() no conversion");
 		converted = surface; // No need for conversion
 	}
 	else
@@ -963,11 +975,11 @@ void SDL_ANDROID_VideoContextRecreated()
 		for( i = 0; i < HwSurfaceCount; i++ )
 		{
 			// Allocate HW texture
-			Uint32 format = SDL_PIXELFORMAT_RGBA5551; // 1-bit alpha for color key, every surface will have colorkey so it's easier for us
+			Uint32 format = PixelFormatEnumColorkey; // 1-bit alpha for color key, every surface will have colorkey so it's easier for us
 			if( HwSurfaceList[i]->format->Amask )
-				format = SDL_PIXELFORMAT_RGBA4444;
+				format = PixelFormatEnumAlpha;
 			if( HwSurfaceList[i] == SDL_CurrentVideoSurface )
-				format = SDL_PIXELFORMAT_RGB565;
+				format = PixelFormatEnum;
 			HwSurfaceList[i]->hwdata = (struct private_hwdata *)SDL_CreateTexture(format, SDL_TEXTUREACCESS_STATIC, HwSurfaceList[i]->w, HwSurfaceList[i]->h);
 			if( !HwSurfaceList[i]->hwdata )
 			{

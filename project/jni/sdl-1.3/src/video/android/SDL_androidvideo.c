@@ -68,6 +68,9 @@ static int showScreenKeyboardSendBackspace = 0;
 int SDL_ANDROID_SmoothVideo = 0;
 int SDL_ANDROID_VideoMultithreaded = 0;
 int SDL_ANDROID_CompatibilityHacks = 0;
+int SDL_ANDROID_BYTESPERPIXEL = 2;
+int SDL_ANDROID_BITSPERPIXEL = 16;
+
 
 static void appPutToBackgroundCallbackDefault(void)
 {
@@ -305,4 +308,11 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetCompatibilityHacks) (JNIEnv* env, jobject thiz)
 {
 	SDL_ANDROID_CompatibilityHacks = 1;
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetVideoDepth) (JNIEnv* env, jobject thiz, jint bpp)
+{
+	SDL_ANDROID_BITSPERPIXEL = bpp;
+	SDL_ANDROID_BYTESPERPIXEL = SDL_ANDROID_BITSPERPIXEL / 8;
 }

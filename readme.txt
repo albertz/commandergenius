@@ -52,13 +52,12 @@ You may find quick Android game porting manual at http://anddev.at.ua/src/portin
 
 If you're porting existing app which uses SDL 1.2 please always use SW mode:
 neither SDL_SetVideoMode() call nor SDL_CreateRGBSurface() etc functions shall contain SDL_HWSURFACE flags.
-The BPP in SDL_SetVideoMode() shall be set to 16, and audio format - to AUDIO_S8 or AUDIO_S16.
+The BPP in SDL_SetVideoMode() shall be set to the same value you've specified in ChangeAppSettings.sh,
+and audio format - to AUDIO_S8 or AUDIO_S16.
 
-The native Android pixel format is RGB_565, even for OpenGL, not BGR_565 as all other OpenGL implementations have.
+The native Android 16-bit pixel format is RGB_565, even for OpenGL, not BGR_565 as all other OpenGL implementations have.
 
-Colorkey images are supported using RGBA_5551 pixelformat with 1-bit alpha -
-SDL does conversion internally, for you they are just RGB_565 surfaces.
-Alpha surfaces have RGBA_4444 format. SDL_RLEACCEL is not supported.
+Colorkey surfaces and alpha surfaces are supported, SDL_RLEACCEL is not supported.
 
 To compile your own app, put your app sources into project/jni/application dir (or create symlink to them),
 and change symlink "src" to point to your app:
@@ -98,7 +97,8 @@ SDL_ListModes()[0] will always return native screen resolution.
 Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
 texture on HTC G1, and other low-end devices. Software surfaces may be of any size of course.
 
-If you want HW acceleration there are some limitations:
+If you want HW acceleration - just use OpenGL, the HW acceleration by SDL has some limitations:
+You should use 16-bit color depth.
 You cannot blit SW surface to screen, it should be only HW surface.
 You can use colorkey, per-surface alpha and per-pixel alpha with HW surfaces.
 If you're using SDL 1.3 always use SDL_Texture, if you'll be using SDL_Surface with SDL 1.3 it will switch to SW mode.
