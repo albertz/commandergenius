@@ -346,8 +346,8 @@ int main(int argc, char* argv[])
 	SDL_Surface	*temp_image;
 	SDL_Surface	*back, *logo, *font;
 	SDL_Event	event;
-	int		bpp = 16,
-			flags = SDL_DOUBLEBUF | SDL_HWSURFACE,
+	int		bpp = 24,
+			flags = SDL_DOUBLEBUF | SDL_SWSURFACE,
 			alpha = 1;
 	int		x_offs = 0, y_offs = 0;
 	long		tick,
@@ -461,6 +461,9 @@ int main(int argc, char* argv[])
 		tick = SDL_GetTicks();
 		dt = (tick - last_tick) * 0.001f;
 		last_tick = tick;
+		
+		if( bpp == 32 )
+			SDL_FillRect(screen, NULL, 0); // Clear alpha channel
 
 		/* Background image */
 		tiled_back(back, screen, x_offs>>11, y_offs>>11);

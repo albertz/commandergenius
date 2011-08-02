@@ -201,9 +201,12 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->ShowWMCursor = ANDROID_ShowWMCursor;
 	device->ToggleFullScreen = ANDROID_ToggleFullScreen;
 
-	glLibraryHandle = dlopen("libGLESv1_CM.so", RTLD_NOW);
+	glLibraryHandle = dlopen("libGLESv1_CM.so", RTLD_NOW | RTLD_GLOBAL);
 	if(SDL_ANDROID_UseGles2)
-		gl2LibraryHandle = dlopen("libGLESv2.so", RTLD_NOW);
+	{
+		gl2LibraryHandle = dlopen("libGLESv2.so", RTLD_NOW | RTLD_GLOBAL);
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Loading libGLESv2.so: %p", gl2LibraryHandle);
+	}
 	
 	return device;
 }
@@ -1001,7 +1004,7 @@ static void* ANDROID_GL_GetProcAddress(_THIS, const char *proc)
 	void * func = dlsym(glLibraryHandle, proc);
 	if(!func && gl2LibraryHandle)
 		func = dlsym(gl2LibraryHandle, proc);
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_GL_GetProcAddress(\"%s\"): %p", proc, func);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_GL_GetProcAddress(\"%s\"): %p", proc, func);
 	return func;
 };
 

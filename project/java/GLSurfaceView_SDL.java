@@ -681,6 +681,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 EGLConfig[] configs) {
             EGLConfig closestConfig = null;
             int closestDistance = 1000;
+            String cfglog = "";
             for(EGLConfig config : configs) {
                 int r = findConfigAttrib(egl, display, config,
                         EGL10.EGL_RED_SIZE, 0);
@@ -699,13 +700,17 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 int distance = Math.abs(r - mRedSize)
                     + Math.abs(g - mGreenSize)
                     + Math.abs(b - mBlueSize) + Math.abs(a - mAlphaSize)
-                    + Math.abs(d - mDepthSize) + Math.abs(s - mStencilSize)
-                    + (gles2 == isGles2 ? 0 : 17);
+                    + Math.abs( ((d > 0) == (mDepthSize > 0)) ? 0 : 16 )
+                    + Math.abs( ((s > 0) == (mStencilSize > 0)) ? 0 : 16 )
+                    + (gles2 == isGles2 ? 0 : 16);
                 if (distance < closestDistance) {
                     closestDistance = distance;
                     closestConfig = config;
+                    cfglog = "R" + r + "G" + g + "B" + b + "A" + a + " depth " + d + " stencil " + s + " GLES2 " + gles2 +
+                    " renderable type " + findConfigAttrib(egl, display, config, EGL10.EGL_RENDERABLE_TYPE, 0);
                 }
             }
+            Log.v("SDL", "GLSurfaceView_SDL::EGLConfigChooser::chooseConfig(): selected " + cfglog );
             return closestConfig;
         }
 
@@ -819,6 +824,8 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             */
             final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
             final int[] gles2_attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE };
+
+            Log.v("SDL", "GLSurfaceView_SDL::EglHelper::start(): Gles2 " + mEGLConfigChooser.isGles2Required());
 
             mEglContext = mEgl.eglCreateContext(mEglDisplay, mEglConfig,
                     EGL10.EGL_NO_CONTEXT, mEGLConfigChooser.isGles2Required() ? gles2_attrib_list : null );

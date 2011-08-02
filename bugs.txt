@@ -9,6 +9,8 @@ Known bugs
 
 - SDL_FillRect() does not work in SDL 1.2 HW mode.
 
+- 32-bpp color mode does not work with SW video surface, 24-bpp and 32-bpp mode does not work with SDL_HWSURFACE.
+
 Requested features
 ==================
 

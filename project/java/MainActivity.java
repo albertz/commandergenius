@@ -450,6 +450,7 @@ public class MainActivity extends Activity {
 		{
 			if(Globals.NeedGles2)
 				System.loadLibrary("GLESv2");
+			System.out.println("libSDL: loaded GLESv2 lib");
 		}
 		catch ( UnsatisfiedLinkError e )
 		{

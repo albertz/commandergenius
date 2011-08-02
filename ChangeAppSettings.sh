@@ -126,8 +126,8 @@ fi
 
 if [ -z "$VideoDepthBpp" -o -z "$AUTO" ]; then
 echo
-echo "Video color depth - 16 BPP is the fastest, other modes are not supported"
-echo -n "if you're using SDL_HWSURFACE (16)/(24)/(32) ($VideoDepthBpp): "
+echo "Video color depth - 16 BPP is the fastest and supported for all modes, 24 bpp is supported only for"
+echo -n "software video mode, SDL_OPENGL mode supports everything (16)/(24)/(32) ($VideoDepthBpp): "
 read var
 if [ -n "$var" ] ; then
 	VideoDepthBpp="$var"
