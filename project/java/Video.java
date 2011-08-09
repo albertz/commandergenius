@@ -73,6 +73,11 @@ class Mouse
 	public static final int RIGHT_CLICK_WITH_PRESSURE = 2;
 	public static final int RIGHT_CLICK_WITH_KEY = 3;
 	public static final int RIGHT_CLICK_WITH_TIMEOUT = 4;
+
+	public static final int SDL_FINGER_DOWN = 0;
+	public static final int SDL_FINGER_UP = 1;
+	public static final int SDL_FINGER_MOVE = 2;
+
 }
 
 abstract class DifferentTouchInput
@@ -99,7 +104,7 @@ abstract class DifferentTouchInput
 	public abstract void process(final MotionEvent event);
 	private static class SingleTouchInput extends DifferentTouchInput
 	{
-		private static class Holder 
+		private static class Holder
 		{
 			private static final SingleTouchInput sInstance = new SingleTouchInput();
 		}
@@ -107,11 +112,11 @@ abstract class DifferentTouchInput
 		{
 			int action = -1;
 			if( event.getAction() == MotionEvent.ACTION_DOWN )
-				action = 0;
+				action = Mouse.SDL_FINGER_DOWN;
 			if( event.getAction() == MotionEvent.ACTION_UP )
-				action = 1;
+				action = Mouse.SDL_FINGER_UP;
 			if( event.getAction() == MotionEvent.ACTION_MOVE )
-				action = 2;
+				action = Mouse.SDL_FINGER_MOVE;
 			if ( action >= 0 )
 				DemoGLSurfaceView.nativeMouse( (int)event.getX(), (int)event.getY(), action, 0, 
 												(int)(event.getPressure() * 1000.0),
@@ -141,14 +146,10 @@ abstract class DifferentTouchInput
 				touchEvents[i] = new touchEvent();
 		}
 		
-		private static class Holder 
+		private static class Holder
 		{
 			private static final MultiTouchInput sInstance = new MultiTouchInput();
 		}
-
-		static final int SDL_FINGER_DOWN = 0;
-		static final int SDL_FINGER_UP = 1;
-		static final int SDL_FINGER_MOVE = 2;
 
 		public void process(final MotionEvent event)
 		{
@@ -157,7 +158,7 @@ abstract class DifferentTouchInput
 			//System.out.println("Got motion event, type " + (int)(event.getAction()) + " X " + (int)event.getX() + " Y " + (int)event.getY());
 			if( event.getAction() == MotionEvent.ACTION_UP )
 			{
-				action = SDL_FINGER_UP;
+				action = Mouse.SDL_FINGER_UP;
 				for( int i = 0; i < touchEventMax; i++ )
 				{
 					if( touchEvents[i].down )
@@ -169,7 +170,7 @@ abstract class DifferentTouchInput
 			}
 			if( event.getAction() == MotionEvent.ACTION_DOWN )
 			{
-				action = SDL_FINGER_DOWN;
+				action = Mouse.SDL_FINGER_DOWN;
 				for( int i = 0; i < event.getPointerCount(); i++ )
 				{
 					int id = event.getPointerId(i);
@@ -185,36 +186,45 @@ abstract class DifferentTouchInput
 			}
 			if( event.getAction() == MotionEvent.ACTION_MOVE )
 			{
-				for( int i = 0; i < touchEventMax; i++ )
+				/*
+				String s = "MOVE: ptrs " + event.getPointerCount();
+				for( int i = 0 ; i < event.getPointerCount(); i++ )
+				{
+					s += " p" + event.getPointerId(i) + "=" + (int)event.getX(i) + ":" + (int)event.getY(i);
+				}
+				System.out.println(s);
+				*/
+
+				for( int id = 0; id < touchEventMax; id++ )
 				{
 					int ii;
 					for( ii = 0; ii < event.getPointerCount(); ii++ )
 					{
-						if( i == event.getPointerId(ii) )
+						if( id == event.getPointerId(ii) )
 							break;
 					}
 					if( ii >= event.getPointerCount() )
 					{
 						// Up event
-						if( touchEvents[i].down )
+						if( touchEvents[id].down )
 						{
-							action = SDL_FINGER_UP;
-							touchEvents[i].down = false;
-							DemoGLSurfaceView.nativeMouse( touchEvents[i].x, touchEvents[i].y, action, i, touchEvents[i].pressure, touchEvents[i].size );
+							action = Mouse.SDL_FINGER_UP;
+							touchEvents[id].down = false;
+							DemoGLSurfaceView.nativeMouse( touchEvents[id].x, touchEvents[id].y, action, id, touchEvents[id].pressure, touchEvents[id].size );
 						}
 					}
 					else
 					{
-						if( touchEvents[i].down )
-							action = SDL_FINGER_MOVE;
+						if( touchEvents[id].down )
+							action = Mouse.SDL_FINGER_MOVE;
 						else
-							action = SDL_FINGER_DOWN;
-						touchEvents[i].down = true;
-						touchEvents[i].x = (int)event.getX(ii);
-						touchEvents[i].y = (int)event.getY(ii);
-						touchEvents[i].pressure = (int)(event.getPressure(ii) * 1000.0);
-						touchEvents[i].size = (int)(event.getSize(ii) * 1000.0);
-						DemoGLSurfaceView.nativeMouse( touchEvents[i].x, touchEvents[i].y, action, i, touchEvents[i].pressure, touchEvents[i].size );
+							action = Mouse.SDL_FINGER_DOWN;
+						touchEvents[id].down = true;
+						touchEvents[id].x = (int)event.getX(ii);
+						touchEvents[id].y = (int)event.getY(ii);
+						touchEvents[id].pressure = (int)(event.getPressure(ii) * 1000.0);
+						touchEvents[id].size = (int)(event.getSize(ii) * 1000.0);
+						DemoGLSurfaceView.nativeMouse( touchEvents[id].x, touchEvents[id].y, action, id, touchEvents[id].pressure, touchEvents[id].size );
 					}
 				}
 			}
@@ -223,9 +233,9 @@ abstract class DifferentTouchInput
 				// TODO: it is possible that multiple pointers return that event, but we're handling only pointer #0
 				// TODO: need to check this on a device, the emulator does not return such event
 				if( touchEvents[0].down )
-					action = SDL_FINGER_UP;
+					action = Mouse.SDL_FINGER_UP;
 				else
-					action = SDL_FINGER_MOVE;
+					action = Mouse.SDL_FINGER_MOVE;
 				action = 2;
 				touchEvents[0].down = false;
 				touchEvents[0].x = (int)event.getX();
@@ -244,6 +254,11 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public DemoRenderer(MainActivity _context)
 	{
 		context = _context;
+		// Froyo does not flood touch events, and syncs to the screen update,
+		// so we should not use event rate limiter, or we'll get some multitouch events largely outdated
+		if( android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.FROYO )
+			mRatelimitTouchEvents = true;
+		System.out.println("libSDL: DemoRenderer: RatelimitTouchEvents " + mRatelimitTouchEvents );
 	}
 	
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -317,8 +332,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 	public int swapBuffers() // Called from native code
 	{
-		synchronized(this) {
-			this.notify();
+		if( mRatelimitTouchEvents )
+		{
+			synchronized(this)
+			{
+				this.notify();
+			}
 		}
 		if( ! super.SwapBuffers() && Globals.NonBlockingSwapBuffers )
 			return 0;
@@ -437,6 +456,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	private boolean mFirstTimeStart = true;
 	public int mWidth = 0;
 	public int mHeight = 0;
+	public boolean mRatelimitTouchEvents = false;
 }
 
 class DemoGLSurfaceView extends GLSurfaceView_SDL {
@@ -454,9 +474,12 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	{
 		touchInput.process(event);
 		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
-		if( event.getAction() == MotionEvent.ACTION_MOVE ) {
-			synchronized(mRenderer) {
-				try {
+		if( event.getAction() == MotionEvent.ACTION_MOVE && mRenderer.mRatelimitTouchEvents )
+		{
+			synchronized(mRenderer)
+			{
+				try
+				{
 					mRenderer.wait(300L);
 				} catch (InterruptedException e) { }
 			}

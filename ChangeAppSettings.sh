@@ -260,7 +260,7 @@ fi
 
 if [ -z "$AppUsesMultitouch" -o -z "$AUTO" ]; then
 echo
-echo "Application uses multitouch (y) or (n), multitouch events are passed as 4-axis joysticks 1-5, with pressure and size,"
+echo "Application uses multitouch (y) or (n), multitouch events are passed as 4-axis joysticks 1-16, with pressure and size,"
 echo -n "or additionally as SDL_FINGERDOWN/UP/MOTION events in SDL 1.3, with SDL pressure = Android pressure * Andorid touchspot size ($AppUsesMultitouch): "
 read var
 if [ -n "$var" ] ; then

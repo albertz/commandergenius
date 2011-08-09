@@ -361,7 +361,7 @@ int main(int argc, char* argv[])
 	int		fps_start = 0;
 	float		x_speed, y_speed, z_speed;
 
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
 
 	atexit(SDL_Quit);
 
@@ -453,6 +453,15 @@ int main(int argc, char* argv[])
 	SDL_FreeSurface(temp_image);
 
 	last_avg_tick = last_tick = SDL_GetTicks();
+	
+	enum { MAX_POINTERS = 16, PTR_PRESSED = 4 };
+	int touchPointers[MAX_POINTERS][5];
+	
+	memset(touchPointers, 0, sizeof(touchPointers));
+	SDL_Joystick * joysticks[MAX_POINTERS+1];
+	for(i=0; i<MAX_POINTERS; i++)
+		joysticks[i] = SDL_JoystickOpen(i);
+	
 	while(1)
 	{
 		SDL_Rect r;
@@ -486,26 +495,21 @@ int main(int argc, char* argv[])
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
 		++fps_count;
 
-		int mouseX, mouseY;
-		int mouseB = SDL_GetMouseState(&mouseX, &mouseY);
-		r.x = mouseX;
-		r.y = mouseY;
-		r.w = 10;
-		r.h = 1;
-		SDL_FillRect(screen, &r, 0xeeeeeeee);
-
-		if( mouseB & SDL_BUTTON_LMASK )
+		for(i=0; i<MAX_POINTERS; i++)
 		{
-			r.w = 20;
-			r.h = 5;
-			SDL_FillRect(screen, &r, 0xabcdaabb);
-		}
-
-		if( mouseB & SDL_BUTTON_RMASK )
-		{
-			r.w = 5;
-			r.h = 20;
-			SDL_FillRect(screen, &r, 0x67895566);
+			if( !touchPointers[i][PTR_PRESSED] )
+				continue;
+			r.x = touchPointers[i][0];
+			r.y = touchPointers[i][1];
+			r.w = 50 + touchPointers[i][3] / 10;
+			r.h = 50 + touchPointers[i][3] / 10;
+			r.x -= r.w/2;
+			r.y -= r.h/2;
+			Uint32 color = touchPointers[i][3] / 5 + 0x7f;
+			if( color > 0xff )
+				color = 0xff;
+			color = color + color * 0x100 + color * 0x10000;
+			SDL_FillRect(screen, &r, color);
 		}
 
 		SDL_Flip(SDL_GetVideoSurface());
@@ -542,6 +546,20 @@ int main(int argc, char* argv[])
 					SDL_Delay(300);
 					__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Waiting");
 				}
+			}
+			if( evt.type == SDL_JOYAXISMOTION )
+			{
+				if( evt.jaxis.which == 0 )
+					continue;
+				int joyid = evt.jaxis.which - 1;
+				touchPointers[joyid][evt.jaxis.axis] = evt.jaxis.value;
+			}
+			if( evt.type == SDL_JOYBUTTONDOWN || evt.type == SDL_JOYBUTTONUP )
+			{
+				if( evt.jbutton.which == 0 )
+					continue;
+				int joyid = evt.jbutton.which - 1;
+				touchPointers[joyid][PTR_PRESSED] = (evt.jbutton.state == SDL_PRESSED);
 			}
 		}
 
