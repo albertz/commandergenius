@@ -4,7 +4,7 @@
 
 for f in ../UltimateDroid/*.png; do
 	newname=`echo $f | sed 's@.*/@@' | tr '[A-Z]' '[a-z]'`.raw
-	./converter $f ../../res/raw/$newname
+	./converter $f ../../res/raw/$newname 1
 done
 
 rm -f ../../res/raw/ultimatedroid.raw
@@ -58,7 +58,7 @@ echo "};" >> ../touchscreentheme.h
 
 for f in ../SimpleTheme/*.png; do
 	newname=simpletheme`echo $f | sed 's@.*/@@' | tr '[A-Z]' '[a-z]'`.raw
-	./converter $f ../../res/raw/$newname
+	./converter $f ../../res/raw/$newname 1
 done
 
 rm -f ../../res/raw/simpletheme.raw
