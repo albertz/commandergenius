@@ -1,4 +1,4 @@
-/*
+/*ACTION_HOVER_MOVE
 Simple DirectMedia Layer
 Java source code (C) 2009-2011 Sergii Pylypenko
   
@@ -77,6 +77,7 @@ class Mouse
 	public static final int SDL_FINGER_DOWN = 0;
 	public static final int SDL_FINGER_UP = 1;
 	public static final int SDL_FINGER_MOVE = 2;
+	public static final int SDL_FINGER_HOVER = 3;
 
 }
 
@@ -231,12 +232,10 @@ abstract class DifferentTouchInput
 			if( event.getAction() == MotionEvent.ACTION_HOVER_MOVE ) // Support bluetooth/USB mouse - available since Android 3.1
 			{
 				// TODO: it is possible that multiple pointers return that event, but we're handling only pointer #0
-				// TODO: need to check this on a device, the emulator does not return such event
 				if( touchEvents[0].down )
 					action = Mouse.SDL_FINGER_UP;
 				else
-					action = Mouse.SDL_FINGER_MOVE;
-				action = 2;
+					action = Mouse.SDL_FINGER_HOVER;
 				touchEvents[0].down = false;
 				touchEvents[0].x = (int)event.getX();
 				touchEvents[0].y = (int)event.getY();
@@ -256,6 +255,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		context = _context;
 		// Froyo does not flood touch events, and syncs to the screen update,
 		// so we should not use event rate limiter, or we'll get some multitouch events largely outdated
+		// Another test on Tegra development board shows that with USB mouse FPS drops in half
+		// when mouse is moved, with and without ratelimiter
 		if( android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.FROYO )
 			mRatelimitTouchEvents = true;
 		System.out.println("libSDL: DemoRenderer: RatelimitTouchEvents " + mRatelimitTouchEvents );
@@ -474,7 +475,9 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	{
 		touchInput.process(event);
 		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
-		if( event.getAction() == MotionEvent.ACTION_MOVE && mRenderer.mRatelimitTouchEvents )
+		if(( event.getAction() == MotionEvent.ACTION_MOVE ||
+			event.getAction() == MotionEvent.ACTION_HOVER_MOVE) &&
+			mRenderer.mRatelimitTouchEvents )
 		{
 			synchronized(mRenderer)
 			{

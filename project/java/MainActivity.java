@@ -1,4 +1,4 @@
-/*
+/*                                            OF
 Simple DirectMedia Layer
 Java source code (C) 2009-2011 Sergii Pylypenko
   
@@ -391,9 +391,14 @@ public class MainActivity extends Activity {
 	}
 	
 	@Override
-	public boolean dispatchGenericMotionEvent (final MotionEvent ev)
+	public boolean dispatchGenericMotionEvent (MotionEvent ev)
 	{
-		return dispatchTouchEvent(ev);
+		if(_screenKeyboard != null)
+			_screenKeyboard.dispatchGenericMotionEvent(ev);
+		else
+		if(mGLView != null)
+			mGLView.onGenericMotionEvent(ev);
+		return true;
 	}
 
 	@Override

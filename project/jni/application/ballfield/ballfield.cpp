@@ -510,7 +510,26 @@ int main(int argc, char* argv[])
 				color = 0xff;
 			color = color + color * 0x100 + color * 0x10000;
 			SDL_FillRect(screen, &r, color);
+			print_num(screen, font, r.x, r.y, i+1);
 		}
+		int mx, my;
+		int b = SDL_GetMouseState(&mx, &my);
+		Uint32 color = 0xff;
+		if( b )
+		{
+			color = 0;
+			if( b & SDL_BUTTON_LEFT )
+				color |= 0xff00;
+			if( b & SDL_BUTTON_RIGHT )
+				color |= 0xff0000;
+		}
+		r.x = mx;
+		r.y = my;
+		r.w = 30;
+		r.h = 30;
+		r.x -= r.w/2;
+		r.y -= r.h/2;
+		SDL_FillRect(screen, &r, color);
 
 		SDL_Flip(SDL_GetVideoSurface());
 		SDL_Event evt;

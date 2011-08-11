@@ -57,7 +57,8 @@ static inline SDL_scancode TranslateKey(int scancode)
 static int isTrackballUsed = 0;
 static int isMouseUsed = 0;
 
-enum { RIGHT_CLICK_NONE = 0, RIGHT_CLICK_WITH_MULTITOUCH = 1, RIGHT_CLICK_WITH_PRESSURE = 2, RIGHT_CLICK_WITH_KEY = 3, RIGHT_CLICK_WITH_TIMEOUT = 4 };
+enum { RIGHT_CLICK_NONE = 0, RIGHT_CLICK_WITH_MULTITOUCH = 1, RIGHT_CLICK_WITH_PRESSURE = 2, 
+		RIGHT_CLICK_WITH_KEY = 3, RIGHT_CLICK_WITH_TIMEOUT = 4 };
 enum { LEFT_CLICK_NORMAL = 0, LEFT_CLICK_NEAR_CURSOR = 1, LEFT_CLICK_WITH_MULTITOUCH = 2, LEFT_CLICK_WITH_PRESSURE = 3,
 		LEFT_CLICK_WITH_KEY = 4, LEFT_CLICK_WITH_TIMEOUT = 5, LEFT_CLICK_WITH_TAP = 6, LEFT_CLICK_WITH_TAP_OR_TIMEOUT = 7 };
 static int leftClickMethod = LEFT_CLICK_NORMAL;
@@ -491,8 +492,10 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 			{
 				SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
 				moveMouseWithKbX = oldMouseX;
-				moveMouseWithKbY = oldMouseX;
-				action == MOUSE_MOVE;
+				moveMouseWithKbY = oldMouseY;
+				moveMouseWithKbSpeedX = 0;
+				moveMouseWithKbSpeedY = 0;
+				action = MOUSE_MOVE;
 			}
 			else
 			if( leftClickMethod == LEFT_CLICK_NORMAL )
@@ -539,7 +542,9 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 					SDL_ANDROID_MainThreadPushMouseMotion(moveMouseWithKbX, moveMouseWithKbY);
 			}
 			else
+			{
 				SDL_ANDROID_MainThreadPushMouseMotion(x, y);
+			}
 
 			if( rightClickMethod == RIGHT_CLICK_WITH_PRESSURE || leftClickMethod == LEFT_CLICK_WITH_PRESSURE )
 			{
@@ -610,6 +615,11 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 				break;
 			}
 		}
+	}
+	
+	if( action == MOUSE_HOVER && !relativeMovement )
+	{
+		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
 	}
 }
 

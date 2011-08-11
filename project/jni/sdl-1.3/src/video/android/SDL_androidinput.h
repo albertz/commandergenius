@@ -115,7 +115,7 @@ typedef SDLKey SDL_scancode;
 
 #define SDL_KEY_VAL(X) X
 
-enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
+enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP = 1, MOUSE_MOVE = 2, MOUSE_HOVER = 3 };
 
 extern int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointerId);
 extern int SDL_ANDROID_isTouchscreenKeyboardUsed;
