@@ -106,7 +106,7 @@ Also the screen is always double-buffered, and after each SDL_Flip() there is ga
 so forget about dirty rects and partial screen updates - you have to re-render whole picture each frame.
 Single-buffer rendering might be possible with techniques like glFramebufferTexture2D(),
 however it is not present on all devices, so I won't do that.
-Basically your code should be like this for SDL 1.2:
+Basically your code should be like this for SDL 1.2 (also set SwVideoMode=n in AndroidAppSetings.cfg):
 
 // ----- HW-accelerated video output for Android example
 // Init HW-accelerated video

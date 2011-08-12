@@ -164,7 +164,7 @@ fi
 if [ -z "$NeedGles2" -o -z "$AUTO" ]; then
 echo
 echo "Try to use GLES 2.x context - will revert to GLES 1.X if unsupported by device"
-ecno -n "you need this option only if you're developing 3-d app (y) or (n) ($NeedGles2): "
+echo -n "you need this option only if you're developing 3-d app (y) or (n) ($NeedGles2): "
 read var
 if [ -n "$var" ] ; then
 	NeedGles2="$var"
