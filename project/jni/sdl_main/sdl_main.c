@@ -28,6 +28,11 @@
 static int argc = 0;
 static char ** argv = NULL;
 
+#ifdef RELEASE_BUILD
+static JNIEnv*  static_env;
+static jobject static_thiz;
+#endif
+
 #if SDL_VERSION_ATLEAST(1,3,0)
 #else
 extern void SDL_ANDROID_MultiThreadedVideoLoopInit();
@@ -35,7 +40,11 @@ extern void SDL_ANDROID_MultiThreadedVideoLoop();
 
 static int threadedMain(void * unused)
 {
+	#ifdef RELEASE_BUILD
+	SDL_main( argc, argv, static_env, static_thiz );
+	#else
 	SDL_main( argc, argv );
+	#endif
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Application closed, calling exit(0)");
 	exit(0);
 }
@@ -48,6 +57,11 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	char curdir[PATH_MAX] = "";
 	const jbyte *jstr;
 	const char * str = "sdl";
+
+	#ifdef RELEASE_BUILD
+    static_env = env;
+	static_thiz = thiz;
+	#endif
 
 	strcpy(curdir, "/sdcard/app-data/");
 	strcat(curdir, SDL_CURDIR_PATH);
@@ -102,10 +116,18 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "param %d = \"%s\"", i, argv[i]);
 
 #if SDL_VERSION_ATLEAST(1,3,0)
+	#ifdef RELEASE_BUILD
+	SDL_main( argc, argv, env, thiz );
+	#else
 	SDL_main( argc, argv );
+	#endif
 #else
 	if( ! multiThreadedVideo )
+		#ifdef RELEASE_BUILD
+		SDL_main( argc, argv, env, thiz );
+		#else
 		SDL_main( argc, argv );
+		#endif
 	else
 	{
 		SDL_ANDROID_MultiThreadedVideoLoopInit();
