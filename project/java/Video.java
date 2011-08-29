@@ -502,7 +502,8 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	@Override
 	public void onPause() {
-		mRenderer.accelerometer.stop();
+		if( mRenderer.accelerometer != null ) // For some reason it crashes here often - are we getting this event before initialization?
+			mRenderer.accelerometer.stop();
 		super.onPause();
 		mRenderer.mPaused = true;
 	};
@@ -518,7 +519,8 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		System.out.println("libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused);
 		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused || Globals.NonBlockingSwapBuffers )
 			mRenderer.nativeGlContextRecreated();
-		mRenderer.accelerometer.start();
+		if( mRenderer.accelerometer != null ) // For some reason it crashes here often - are we getting this event before initialization?
+			mRenderer.accelerometer.start();
 	};
 
 	// This seems like redundant code - it handled in MainActivity.java
