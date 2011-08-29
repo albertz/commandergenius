@@ -1,0 +1,1160 @@
+diff --git a/config.sub b/config.sub
+index 824ef27..cda5219 100755
+--- a/config.sub
++++ b/config.sub
+@@ -1142,7 +1142,7 @@ case $os in
+ 	      | -hiux* | -386bsd* | -knetbsd* | -netbsd* | -openbsd* | -kfreebsd* | -freebsd* | -riscix* \
+ 	      | -lynxos* | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
+ 	      | -ptx* | -coff* | -ecoff* | -winnt* | -domain* | -vsta* \
+-	      | -udi* | -eabi* | -lites* | -ieee* | -go32* | -aux* \
++	      | -udi* | -eabi* | -androideabi* | -lites* | -ieee* | -go32* | -aux* \
+ 	      | -chorusos* | -chorusrdb* \
+ 	      | -cygwin* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
+ 	      | -mingw32* | -linux-gnu* | -uxpv* | -beos* | -mpeix* | -udk* \
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 3740b04..3756e00 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -133,7 +133,7 @@ noinst_HEADERS = \
+ 	include/hrtimer.h	include/identify.h	\
+ 	include/inputdevice.h	include/joystick.h	\
+ 	include/keyboard.h	include/keybuf.h	\
+-	include/memory.h	\
++	include/uae_memory.h	\
+ 	include/native2amiga.h	include/newcpu.h	\
+ 	include/noflags.h	include/options.h	\
+ 	include/osemu.h		include/picasso96.h	\
+diff --git a/src/a2065.c b/src/a2065.c
+index d06500f..3384d93 100755
+--- a/src/a2065.c
++++ b/src/a2065.c
+@@ -12,7 +12,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "a2065.h"
+diff --git a/src/a2091.c b/src/a2091.c
+index 61d0d0e..19105ee 100755
+--- a/src/a2091.c
++++ b/src/a2091.c
+@@ -17,7 +17,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "rommgr.h"
+ #include "custom.h"
+ #include "newcpu.h"
+diff --git a/src/akiko.c b/src/akiko.c
+index 5331621..9e74808 100644
+--- a/src/akiko.c
++++ b/src/akiko.c
+@@ -15,7 +15,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "events.h"
+ #include "savestate.h"
+ #include "blkdev.h"
+diff --git a/src/amax.c b/src/amax.c
+index dfb0d3f..3095163 100755
+--- a/src/amax.c
++++ b/src/amax.c
+@@ -7,7 +7,7 @@
+ #include "zfile.h"
+ #include "amax.h"
+ #include "custom.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "newcpu.h"
+ 
+ static int data_scramble[8] = { 3, 2, 4, 5, 7, 6, 0, 1 };
+diff --git a/src/ar.c b/src/ar.c
+index 44b51bd..fddeecd 100644
+--- a/src/ar.c
++++ b/src/ar.c
+@@ -201,7 +201,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "rommgr.h"
+ #include "custom.h"
+ #include "newcpu.h"
+diff --git a/src/arcadia.c b/src/arcadia.c
+index 45771f4..de5364c 100755
+--- a/src/arcadia.c
++++ b/src/arcadia.c
+@@ -14,7 +14,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "rommgr.h"
+ #include "custom.h"
+ #include "newcpu.h"
+diff --git a/src/archivers/xfd/xfd.c b/src/archivers/xfd/xfd.c
+index f56d5f2..a1d3af4 100755
+--- a/src/archivers/xfd/xfd.c
++++ b/src/archivers/xfd/xfd.c
+@@ -20,7 +20,7 @@
+ #include "fsdb.h"
+ #include "uae.h"
+ #include "custom.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "newcpu.h"
+ 
+ #include "cpu_small.h"
+diff --git a/src/audio.c b/src/audio.c
+index cacac91..8f535e9 100644
+--- a/src/audio.c
++++ b/src/audio.c
+@@ -16,7 +16,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "autoconf.h"
+diff --git a/src/autoconf.c b/src/autoconf.c
+index 3110f8f..9729890 100644
+--- a/src/autoconf.c
++++ b/src/autoconf.c
+@@ -12,7 +12,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "events.h"
+ #include "newcpu.h"
+diff --git a/src/blitter.c b/src/blitter.c
+index 7b57e47..a11c0d2 100644
+--- a/src/blitter.c
++++ b/src/blitter.c
+@@ -19,7 +19,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "events.h"
+ #include "newcpu.h"
+diff --git a/src/blkdev-libscg.c b/src/blkdev-libscg.c
+index dd22160..a6237bf 100644
+--- a/src/blkdev-libscg.c
++++ b/src/blkdev-libscg.c
+@@ -15,7 +15,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "threaddep/thread.h"
+ #include "blkdev.h"
+ #include "scsidev.h"
+diff --git a/src/blkdev.c b/src/blkdev.c
+index 4b7d222..6e117cf 100644
+--- a/src/blkdev.c
++++ b/src/blkdev.c
+@@ -10,7 +10,7 @@
+ #include "sysconfig.h"
+ #include "sysdeps.h"
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ 
+ #include "blkdev.h"
+ #include "scsidev.h"
+diff --git a/src/bsdsocket-posix-new.c b/src/bsdsocket-posix-new.c
+index d5a2782..087828d 100644
+--- a/src/bsdsocket-posix-new.c
++++ b/src/bsdsocket-posix-new.c
+@@ -27,7 +27,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "autoconf.h"
+@@ -60,6 +60,9 @@
+ #endif
+ 
+ #define WAITSIGNAL	waitsig (context, sb)
++#ifdef ANDROID
++#define IPPROTO_ENCAP 98
++#endif
+ 
+ /* Sigqueue is unsafe on SMP machines.
+  * Temporary work-around.
+diff --git a/src/bsdsocket.c b/src/bsdsocket.c
+index 7b07927..741425b 100644
+--- a/src/bsdsocket.c
++++ b/src/bsdsocket.c
+@@ -15,7 +15,7 @@
+ #include <stddef.h>
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "autoconf.h"
+diff --git a/src/catweasel.c b/src/catweasel.c
+index e4fa65c..e38429e 100644
+--- a/src/catweasel.c
++++ b/src/catweasel.c
+@@ -17,7 +17,7 @@
+ #ifdef CATWEASEL
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "ioport.h"
+ #include "catweasel.h"
+ #include "uae.h"
+diff --git a/src/cd32_fmv.c b/src/cd32_fmv.c
+index 5b70d43..31d86ff 100755
+--- a/src/cd32_fmv.c
++++ b/src/cd32_fmv.c
+@@ -11,7 +11,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "rommgr.h"
+ #include "custom.h"
+ #include "newcpu.h"
+diff --git a/src/cdtv.c b/src/cdtv.c
+index 452b8b0..fdf5e0b 100755
+--- a/src/cdtv.c
++++ b/src/cdtv.c
+@@ -21,7 +21,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "debug.h"
+diff --git a/src/cfgfile.c b/src/cfgfile.c
+index 174408a..3ca6f16 100644
+--- a/src/cfgfile.c
++++ b/src/cfgfile.c
+@@ -25,7 +25,7 @@
+ #include "gfxdep/gfx.h"
+ #include "sounddep/sound.h"
+ #include "savestate.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "rommgr.h"
+ #include "gui.h"
+ #include "newcpu.h"
+diff --git a/src/cia.c b/src/cia.c
+index c3a2f44..2a04770 100644
+--- a/src/cia.c
++++ b/src/cia.c
+@@ -14,7 +14,7 @@
+ 
+ #include "options.h"
+ #include "events.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "cia.h"
+diff --git a/src/clipboard.c b/src/clipboard.c
+index 780508d..f09d30f 100644
+--- a/src/clipboard.c
++++ b/src/clipboard.c
+@@ -8,7 +8,7 @@
+ #include "clipboard.h"
+ 
+ #include "threaddep/thread.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "native2amiga_api.h"
+ 
+ int clipboard_debug;
+diff --git a/src/compemu_fpp.c b/src/compemu_fpp.c
+index 88c6977..e9399cb 100644
+--- a/src/compemu_fpp.c
++++ b/src/compemu_fpp.c
+@@ -14,7 +14,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "ersatz.h"
+diff --git a/src/compemu_support.c b/src/compemu_support.c
+index d0cf233..4b8e8ff 100644
+--- a/src/compemu_support.c
++++ b/src/compemu_support.c
+@@ -10,7 +10,7 @@
+ 
+ #include "options.h"
+ #include "events.h"
+-#include "include/memory.h"
++#include "include/uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "comptbl.h"
+diff --git a/src/compemu_support_codegen.c b/src/compemu_support_codegen.c
+index 64e83b1..d8259f9 100755
+--- a/src/compemu_support_codegen.c
++++ b/src/compemu_support_codegen.c
+@@ -71,7 +71,7 @@
+ 
+ //#include "machdep/m68k.h"
+ #include "custom.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ //#include "readcpu.h"
+ #include "newcpu.h"
+ #include "comptbl.h"
+diff --git a/src/consolehook.c b/src/consolehook.c
+index eebc1d0..7b425c2 100755
+--- a/src/consolehook.c
++++ b/src/consolehook.c
+@@ -4,7 +4,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "execlib.h"
+ #include "disk.h"
+ #include "rommgr.h"
+diff --git a/src/cpummu.c b/src/cpummu.c
+index 87a37bb..d2b1199 100755
+--- a/src/cpummu.c
++++ b/src/cpummu.c
+@@ -30,7 +30,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "newcpu.h"
+ #include "debug.h"
+ #include "cpummu.h"
+diff --git a/src/custom.c b/src/custom.c
+index 63a863e..af2947f 100644
+--- a/src/custom.c
++++ b/src/custom.c
+@@ -20,7 +20,7 @@
+ #include "audio.h"
+ #include "sounddep/sound.h"
+ #include "events.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "cia.h"
+diff --git a/src/debug.c b/src/debug.c
+index cb9da70..26b2438 100644
+--- a/src/debug.c
++++ b/src/debug.c
+@@ -16,7 +16,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "cpu_prefetch.h"
+diff --git a/src/disk.c b/src/disk.c
+index a4c2f70..a3f8d39 100644
+--- a/src/disk.c
++++ b/src/disk.c
+@@ -20,7 +20,7 @@ int disk_debug_track = -1;
+ 
+ #include "uae.h"
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "events.h"
+ #include "custom.h"
+ #include "ersatz.h"
+diff --git a/src/drawing.c b/src/drawing.c
+index 4ee69b7..80bd5d3 100644
+--- a/src/drawing.c
++++ b/src/drawing.c
+@@ -37,7 +37,7 @@
+ #include "options.h"
+ #include "threaddep/thread.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "xwin.h"
+diff --git a/src/enforcer.c b/src/enforcer.c
+index 15eadce..6d223b8 100644
+--- a/src/enforcer.c
++++ b/src/enforcer.c
+@@ -14,7 +14,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "uae.h"
+diff --git a/src/ersatz.c b/src/ersatz.c
+index a1c57a5..ac0d175 100644
+--- a/src/ersatz.c
++++ b/src/ersatz.c
+@@ -12,7 +12,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "cpu_prefetch.h"
+diff --git a/src/expansion.c b/src/expansion.c
+index 864c9e8..935e6e0 100644
+--- a/src/expansion.c
++++ b/src/expansion.c
+@@ -14,7 +14,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "rommgr.h"
+ #include "autoconf.h"
+ #include "custom.h"
+diff --git a/src/filesys.c b/src/filesys.c
+index ffd51f8..00be4b5 100644
+--- a/src/filesys.c
++++ b/src/filesys.c
+@@ -28,7 +28,7 @@
+ #include "threaddep/thread.h"
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "events.h"
+ #include "newcpu.h"
+diff --git a/src/fpp.c b/src/fpp.c
+index 45be55f..32e7d1b 100644
+--- a/src/fpp.c
++++ b/src/fpp.c
+@@ -16,7 +16,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "events.h"
+ #include "newcpu.h"
+diff --git a/src/fsdb.c b/src/fsdb.c
+index f009672..7a0e43e 100644
+--- a/src/fsdb.c
++++ b/src/fsdb.c
+@@ -12,7 +12,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "filesys.h"
+diff --git a/src/fsusage.c b/src/fsusage.c
+index 09302c3..dbd88cc 100644
+--- a/src/fsusage.c
++++ b/src/fsusage.c
+@@ -367,7 +367,7 @@ int
+ 
+ #endif /* STAT_STATVFS */
+ 
+-#if !defined(STAT_STATFS2_FS_DATA) && !defined(STAT_READ_FILSYS)
++#if !defined(STAT_STATFS2_FS_DATA) && !defined(STAT_READ_FILSYS) && !defined(ANDROID)
+ 	/* !Ultrix && !SVR2 */
+ 
+ 	fsp->fsu_blocks = CONVERT_BLOCKS (fsd.f_blocks);
+diff --git a/src/gayle.c b/src/gayle.c
+index 7c0549d..a48fdad 100755
+--- a/src/gayle.c
++++ b/src/gayle.c
+@@ -17,7 +17,7 @@
+ 
+ #include "options.h"
+ 
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "filesys.h"
+diff --git a/src/genblitter.c b/src/genblitter.c
+index 1cde4e3..65032e0 100644
+--- a/src/genblitter.c
++++ b/src/genblitter.c
+@@ -40,7 +40,7 @@ static void generate_func(void)
+     printf("#include \"sysdeps.h\"\n");
+     printf("#include \"options.h\"\n");
+     printf("#include \"custom.h\"\n");
+-    printf("#include \"memory.h\"\n");
++    printf("#include \"uae_memory.h\"\n");
+     printf("#include \"blitter.h\"\n");
+     printf("#include \"blitfunc.h\"\n\n");
+ 
+@@ -219,7 +219,7 @@ static void generate_table(void)
+     printf("#include \"sysdeps.h\"\n");
+     printf("#include \"options.h\"\n");
+     printf("#include \"custom.h\"\n");
+-    printf("#include \"memory.h\"\n");
++    printf("#include \"uae_memory.h\"\n");
+     printf("#include \"blitter.h\"\n");
+     printf("#include \"blitfunc.h\"\n\n");
+     printf("blitter_func * const blitfunc_dofast[256] = {\n");
+diff --git a/src/gencomp.c b/src/gencomp.c
+index 6e5ae6e..1aa4261 100644
+--- a/src/gencomp.c
++++ b/src/gencomp.c
+@@ -2881,7 +2881,7 @@ generate_includes (FILE * f, int bigger)
+     fprintf (f, "#include \"sysdeps.h\"\n");
+ 	if (bigger)
+ 		fprintf (f, "#include \"options.h\"\n");
+-    fprintf (f, "#include \"memory.h\"\n");
++    fprintf (f, "#include \"uae_memory.h\"\n");
+     fprintf (f, "#include \"custom.h\"\n");
+     fprintf (f, "#include \"events.h\"\n");
+     fprintf (f, "#include \"newcpu.h\"\n");
+diff --git a/src/gencpu.c b/src/gencpu.c
+index 0b6b4a9..f4dd534 100644
+--- a/src/gencpu.c
++++ b/src/gencpu.c
+@@ -3540,7 +3540,7 @@ static void generate_includes (FILE * f)
+ 	fprintf (f, "#include \"sysconfig.h\"\n");
+ 	fprintf (f, "#include \"sysdeps.h\"\n");
+ 	fprintf (f, "#include \"options.h\"\n");
+-	fprintf (f, "#include \"memory.h\"\n");
++	fprintf (f, "#include \"uae_memory.h\"\n");
+ 	fprintf (f, "#include \"custom.h\"\n");
+ 	fprintf (f, "#include \"events.h\"\n");
+ 	fprintf (f, "#include \"newcpu.h\"\n");
+diff --git a/src/gfx-svga/svga.c b/src/gfx-svga/svga.c
+index f9246c0..88a5e11 100644
+--- a/src/gfx-svga/svga.c
++++ b/src/gfx-svga/svga.c
+@@ -19,7 +19,7 @@
+ #include "options.h"
+ #include "threaddep/thread.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "keyboard.h"
+ #include "xwin.h"
+ #include "custom.h"
+diff --git a/src/gfx-x11/xwin.c b/src/gfx-x11/xwin.c
+index f5537a6..6cbcd2c 100644
+--- a/src/gfx-x11/xwin.c
++++ b/src/gfx-x11/xwin.c
+@@ -23,7 +23,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "xwin.h"
+ #include "custom.h"
+ #include "drawing.h"
+diff --git a/src/gfxlib.c b/src/gfxlib.c
+index 73e13a0..5bfa8c3 100755
+--- a/src/gfxlib.c
++++ b/src/gfxlib.c
+@@ -31,7 +31,7 @@
+ 
+ #include "options.h"
+ #include "threaddep/thread.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "xwin.h"
+diff --git a/src/gui-gtk/gtkui.c b/src/gui-gtk/gtkui.c
+index f9c445e..acb486b 100644
+--- a/src/gui-gtk/gtkui.c
++++ b/src/gui-gtk/gtkui.c
+@@ -21,7 +21,7 @@
+ #include "autoconf.h"
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "gui.h"
+ #include "newcpu.h"
+diff --git a/src/gui-muirexx/ami-rexx.c b/src/gui-muirexx/ami-rexx.c
+index d8c3df5..fff7de6 100644
+--- a/src/gui-muirexx/ami-rexx.c
++++ b/src/gui-muirexx/ami-rexx.c
+@@ -47,7 +47,7 @@
+ #include "sysdeps.h"
+ #include "uae.h"
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "disk.h"
+diff --git a/src/hardfile.c b/src/hardfile.c
+index 68d4641..d720e23 100644
+--- a/src/hardfile.c
++++ b/src/hardfile.c
+@@ -12,7 +12,7 @@
+ 
+ #include "threaddep/thread.h"
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "disk.h"
+diff --git a/src/identify.c b/src/identify.c
+index 831d376..8a8a877 100644
+--- a/src/identify.c
++++ b/src/identify.c
+@@ -10,7 +10,7 @@
+ 
+ #ifdef DEBUGGER
+ 
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "identify.h"
+ 
+ const struct mem_labels int_labels[] =
+diff --git a/src/inputdevice.c b/src/inputdevice.c
+index 8704829..84a6e24 100644
+--- a/src/inputdevice.c
++++ b/src/inputdevice.c
+@@ -29,7 +29,7 @@
+ #include "custom.h"
+ #include "xwin.h"
+ #include "drawing.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "events.h"
+ #include "newcpu.h"
+ #include "uae.h"
+diff --git a/src/inputrecord.c b/src/inputrecord.c
+index 27d2927..8401c91 100755
+--- a/src/inputrecord.c
++++ b/src/inputrecord.c
+@@ -28,7 +28,7 @@
+ #include "disk.h"
+ 
+ #if INPUTRECORD_DEBUG > 0
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "newcpu.h"
+ #endif
+ 
+diff --git a/src/jd-beos/joystick.cpp b/src/jd-beos/joystick.cpp
+index 50b51de..bc8bb6d 100644
+--- a/src/jd-beos/joystick.cpp
++++ b/src/jd-beos/joystick.cpp
+@@ -11,7 +11,7 @@ extern "C" {
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "inputdevice.h"
+ }
+diff --git a/src/jd-linuxold/joystick.c b/src/jd-linuxold/joystick.c
+index c302241..82e8c66 100644
+--- a/src/jd-linuxold/joystick.c
++++ b/src/jd-linuxold/joystick.c
+@@ -16,7 +16,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "inputdevice.h"
+ 
+diff --git a/src/jd-none/joystick.c b/src/jd-none/joystick.c
+index 08a71ce..c93068f 100644
+--- a/src/jd-none/joystick.c
++++ b/src/jd-none/joystick.c
+@@ -11,7 +11,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "inputdevice.h"
+ 
+diff --git a/src/main.c b/src/main.c
+index d8eb698..2f10c06 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -18,7 +18,7 @@
+ #include "uae.h"
+ #include "audio.h"
+ #include "events.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "serial.h"
+ #include "newcpu.h"
+diff --git a/src/memory.c b/src/memory.c
+index cf6c6d2..d10c4d5 100644
+--- a/src/memory.c
++++ b/src/memory.c
+@@ -13,7 +13,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "rommgr.h"
+ #include "ersatz.h"
+ #include "zfile.h"
+diff --git a/src/misc.c b/src/misc.c
+index 0f34ae8..10cfc98 100644
+--- a/src/misc.c
++++ b/src/misc.c
+@@ -13,7 +13,7 @@
+ 
+ #include "misc.h"
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "events.h"
+diff --git a/src/native2amiga.c b/src/native2amiga.c
+index 53dc2de..3755749 100644
+--- a/src/native2amiga.c
++++ b/src/native2amiga.c
+@@ -14,7 +14,7 @@
+ 
+ #include "threaddep/thread.h"
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "autoconf.h"
+diff --git a/src/ncr_scsi.c b/src/ncr_scsi.c
+index 3ec83be..f338bbe 100755
+--- a/src/ncr_scsi.c
++++ b/src/ncr_scsi.c
+@@ -15,7 +15,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "rommgr.h"
+ #include "custom.h"
+ #include "newcpu.h"
+diff --git a/src/newcpu.c b/src/newcpu.c
+index 6f12fc1..64808b2 100644
+--- a/src/newcpu.c
++++ b/src/newcpu.c
+@@ -17,7 +17,7 @@
+ #include "options.h"
+ #include "events.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "cpummu.h"
+diff --git a/src/od-amiga/blkdev-amiga.c b/src/od-amiga/blkdev-amiga.c
+index a28389f..f662619 100644
+--- a/src/od-amiga/blkdev-amiga.c
++++ b/src/od-amiga/blkdev-amiga.c
+@@ -11,7 +11,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "include/memory.h"
++#include "include/uae_memory.h"
+ #include "threaddep/thread.h"
+ #include "blkdev.h"
+ #include "scsidev.h"
+diff --git a/src/od-beos/parser.c b/src/od-beos/parser.c
+index 42aed69..3876ed1 100644
+--- a/src/od-beos/parser.c
++++ b/src/od-beos/parser.c
+@@ -15,7 +15,7 @@
+ #include "gensound.h"
+ #include "events.h"
+ #include "uae.h"
+-#include "include/memory.h"
++#include "include/uae_memory.h"
+ #include "custom.h"
+ #include "autoconf.h"
+ #include "newcpu.h"
+diff --git a/src/od-generic/memory.c b/src/od-generic/memory.c
+index ec9e370..28df694 100644
+--- a/src/od-generic/memory.c
++++ b/src/od-generic/memory.c
+@@ -11,8 +11,10 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
++#ifndef ANDROID
+ #include <sys/sysctl.h>
+-#include "include/memory.h"
++#endif
++#include "include/uae_memory.h"
+ 
+ #ifdef JIT
+ 
+diff --git a/src/od-generic/parser.c b/src/od-generic/parser.c
+index 42aed69..3876ed1 100644
+--- a/src/od-generic/parser.c
++++ b/src/od-generic/parser.c
+@@ -15,7 +15,7 @@
+ #include "gensound.h"
+ #include "events.h"
+ #include "uae.h"
+-#include "include/memory.h"
++#include "include/uae_memory.h"
+ #include "custom.h"
+ #include "autoconf.h"
+ #include "newcpu.h"
+diff --git a/src/od-linux/Makefile.am b/src/od-linux/Makefile.am
+index 594dc6d..f7e64ba 100644
+--- a/src/od-linux/Makefile.am
++++ b/src/od-linux/Makefile.am
+@@ -6,4 +6,4 @@ noinst_LIBRARIES = libosdep.a
+ 
+ libosdep_a_SOURCES = main.c memory.c blkdev-linux.c parser.c
+ 
+-noinst_HEADERS = memory.h hrtimer.h
++noinst_HEADERS = uae_memory.h hrtimer.h
+diff --git a/src/od-linux/blkdev-linux.c b/src/od-linux/blkdev-linux.c
+index a5282c3..9a6ce48 100644
+--- a/src/od-linux/blkdev-linux.c
++++ b/src/od-linux/blkdev-linux.c
+@@ -14,7 +14,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "../include/memory.h"
++#include "../include/uae_memory.h"
+ #include "blkdev.h"
+ #include "scsidev.h"
+ #include "gui.h"
+diff --git a/src/od-linux/parser.c b/src/od-linux/parser.c
+index 42aed69..3876ed1 100644
+--- a/src/od-linux/parser.c
++++ b/src/od-linux/parser.c
+@@ -15,7 +15,7 @@
+ #include "gensound.h"
+ #include "events.h"
+ #include "uae.h"
+-#include "include/memory.h"
++#include "include/uae_memory.h"
+ #include "custom.h"
+ #include "autoconf.h"
+ #include "newcpu.h"
+diff --git a/src/od-macosx/Makefile.am b/src/od-macosx/Makefile.am
+index 21ba1ef..8ce194f 100644
+--- a/src/od-macosx/Makefile.am
++++ b/src/od-macosx/Makefile.am
+@@ -6,7 +6,7 @@ noinst_LIBRARIES = libosdep.a
+ 
+ libosdep_a_SOURCES = main.m memory.c parser.c
+ 
+-noinst_HEADERS = main.h memory.h hrtimer.h
++noinst_HEADERS = main.h uae_memory.h hrtimer.h
+ noinst_DATA = Info.plist.in puae.icns Credits.rtf.in
+ 
+ EXTRA_DIST = puae.icns
+diff --git a/src/od-macosx/parser.c b/src/od-macosx/parser.c
+index 42aed69..3876ed1 100644
+--- a/src/od-macosx/parser.c
++++ b/src/od-macosx/parser.c
+@@ -15,7 +15,7 @@
+ #include "gensound.h"
+ #include "events.h"
+ #include "uae.h"
+-#include "include/memory.h"
++#include "include/uae_memory.h"
+ #include "custom.h"
+ #include "autoconf.h"
+ #include "newcpu.h"
+diff --git a/src/od-win32/Makefile.am b/src/od-win32/Makefile.am
+index 382ff71..a2d7c30 100644
+--- a/src/od-win32/Makefile.am
++++ b/src/od-win32/Makefile.am
+@@ -7,4 +7,4 @@ noinst_LIBRARIES = libosdep.a
+ libosdep_a_SOURCES = main.c memory.c posixemu.c writelog.c fsdb_win32.c \
+ 		     hardfile_win32.c bsdsock.c
+ 
+-noinst_HEADERS = memory.h hrtimer.h posixemu.h
++noinst_HEADERS = uae_memory.h hrtimer.h posixemu.h
+diff --git a/src/od-win32/bsdsock.c b/src/od-win32/bsdsock.c
+index 8bc8680..9f0659e 100755
+--- a/src/od-win32/bsdsock.c
++++ b/src/od-win32/bsdsock.c
+@@ -19,7 +19,7 @@
+ #include <process.h>
+ 
+ #include "options.h"
+-#include "include/memory.h"
++#include "include/uae_memory.h"
+ #include "custom.h"
+ #include "events.h"
+ #include "newcpu.h"
+diff --git a/src/od-win32/memory.c b/src/od-win32/memory.c
+index 0141a40..78bd46c 100644
+--- a/src/od-win32/memory.c
++++ b/src/od-win32/memory.c
+@@ -9,7 +9,7 @@
+ #include "sysconfig.h"
+ #include "sysdeps.h"
+ 
+-#include "memory.h"
++#include "uae_memory.h"
+ 
+ #ifdef JIT
+ 
+diff --git a/src/picasso96.c b/src/picasso96.c
+index 85bae89..47fb9a4 100644
+--- a/src/picasso96.c
++++ b/src/picasso96.c
+@@ -46,7 +46,7 @@ int p96hack_vpos, p96hack_vpos2, p96refresh_active;
+ #include "gfxdep/gfx.h"
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "savestate.h"
+ #include "autoconf.h"
+diff --git a/src/rommgr.c b/src/rommgr.c
+index 2de33d6..f9cffea 100755
+--- a/src/rommgr.c
++++ b/src/rommgr.c
+@@ -12,7 +12,7 @@
+ #include "uae.h"
+ #include "gui.h"
+ #include "rommgr.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "zfile.h"
+ #include "crc32.h"
+ 
+diff --git a/src/sana2.c b/src/sana2.c
+index c434f1a..1559e6c 100755
+--- a/src/sana2.c
++++ b/src/sana2.c
+@@ -14,7 +14,7 @@
+ 
+ #include "threaddep/thread.h"
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "events.h"
+ #include "newcpu.h"
+diff --git a/src/savestate.c b/src/savestate.c
+index 0345966..52d49ad 100644
+--- a/src/savestate.c
++++ b/src/savestate.c
+@@ -50,7 +50,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "zfile.h"
+ #include "ar.h"
+ #include "autoconf.h"
+diff --git a/src/scsidev.c b/src/scsidev.c
+index 366253d..f544e56 100755
+--- a/src/scsidev.c
++++ b/src/scsidev.c
+@@ -12,7 +12,7 @@
+ 
+ #include "threaddep/thread.h"
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "disk.h"
+diff --git a/src/scsiemul.c b/src/scsiemul.c
+index 8f6bacf..2a900b8 100644
+--- a/src/scsiemul.c
++++ b/src/scsiemul.c
+@@ -16,7 +16,7 @@
+ #include "uae.h"
+ #include "threaddep/thread.h"
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "events.h"
+ #include "newcpu.h"
+diff --git a/src/sd-sdl/sound.c b/src/sd-sdl/sound.c
+index 067df4e..3de228d 100644
+--- a/src/sd-sdl/sound.c
++++ b/src/sd-sdl/sound.c
+@@ -13,7 +13,7 @@
+ 
+ #include "options.h"
+ #include "audio.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "events.h"
+ #include "custom.h"
+ #include "gui.h"
+diff --git a/src/sd-solaris/sound.c b/src/sd-solaris/sound.c
+index 5994996..93192e6 100644
+--- a/src/sd-solaris/sound.c
++++ b/src/sd-solaris/sound.c
+@@ -11,7 +11,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "events.h"
+ #include "custom.h"
+ #include "audio.h"
+diff --git a/src/serial.c b/src/serial.c
+index 2791573..50cd219 100644
+--- a/src/serial.c
++++ b/src/serial.c
+@@ -13,7 +13,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "cia.h"
+diff --git a/src/test/test_optflag.c b/src/test/test_optflag.c
+index 4222ac8..d1e4cd4 100644
+--- a/src/test/test_optflag.c
++++ b/src/test/test_optflag.c
+@@ -15,7 +15,7 @@
+ #include "options.h"
+ #include "events.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ 
+diff --git a/src/traps.c b/src/traps.c
+index 9ecf37e..a82b0ed 100644
+--- a/src/traps.c
++++ b/src/traps.c
+@@ -14,7 +14,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "threaddep/thread.h"
+diff --git a/src/tui.c b/src/tui.c
+index e2ffbf9..f615339 100644
+--- a/src/tui.c
++++ b/src/tui.c
+@@ -22,7 +22,7 @@
+ #include "xwin.h"
+ #include "tui.h"
+ #include "gui.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "audio.h"
+ #include "version.h"
+ 
+diff --git a/src/uaeexe.c b/src/uaeexe.c
+index dc94516..209efca 100644
+--- a/src/uaeexe.c
++++ b/src/uaeexe.c
+@@ -9,7 +9,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "autoconf.h"
+diff --git a/src/uaelib.c b/src/uaelib.c
+index d6815d6..4f0d156 100644
+--- a/src/uaelib.c
++++ b/src/uaelib.c
+@@ -16,7 +16,7 @@
+ 
+ #include "options.h"
+ #include "uae.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "xwin.h"
+diff --git a/src/uaeresource.c b/src/uaeresource.c
+index 9c132ba..15e3eb3 100755
+--- a/src/uaeresource.c
++++ b/src/uaeresource.c
+@@ -9,7 +9,7 @@
+ #include "sysdeps.h"
+ 
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "traps.h"
+diff --git a/src/uaeserial.c b/src/uaeserial.c
+index 9c1afec..c86fe5a 100755
+--- a/src/uaeserial.c
++++ b/src/uaeserial.c
+@@ -12,7 +12,7 @@
+ 
+ #include "threaddep/thread.h"
+ #include "options.h"
+-#include "memory.h"
++#include "uae_memory.h"
+ #include "custom.h"
+ #include "newcpu.h"
+ #include "traps.h"
