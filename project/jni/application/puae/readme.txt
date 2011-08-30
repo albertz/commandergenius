@@ -1,4 +1,5 @@
 Grab PUAE sources:
 git clone git://github.com/GnoStiC/PUAE.git
 Apply patch puae.diff, then you may run build.sh
-Warning: it won't build yet, you'll need to edit makefiles by hand
+Also you should deinstall libgtk2.0-dev from your Linux,
+otherwise it will be detected by configure script and will break compilation.
