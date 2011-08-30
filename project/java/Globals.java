@@ -44,6 +44,7 @@ class Globals {
 	public static String CommandLine = "";
 	public static boolean AppUsesMouse = false;
 	public static boolean AppNeedsTwoButtonMouse = false;
+	public static boolean ForceRelativeMouseMode = false; // If both on-screen keyboard and mouse are needed, this will only set the default setting, user may override it later
 	public static boolean AppNeedsArrowKeys = true;
 	public static boolean AppNeedsTextInput = true;
 	public static boolean AppUsesJoystick = false;
@@ -54,7 +55,7 @@ class Globals {
 	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 1;
 	public static int StartupMenuButtonTimeout = 3000;
 	public static Settings.Menu HiddenMenuOptions [] = {};
-	public static Settings.Menu FirstStartMenuOptions [] = { (AppUsesMouse ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true) };
+	public static Settings.Menu FirstStartMenuOptions [] = { (AppUsesMouse && ! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true) };
 
 	// Phone-specific config, modified by user in "Change phone config" startup dialog, TODO: move this to settings
 	public static boolean DownloadToSdcard = true;
@@ -81,7 +82,7 @@ class Globals {
 	public static int MoveMouseWithJoystickSpeed = 0;
 	public static int MoveMouseWithJoystickAccel = 0;
 	public static boolean ClickMouseWithDpad = false;
-	public static boolean RelativeMouseMovement = false; // Laptop touchpad mode
+	public static boolean RelativeMouseMovement = ForceRelativeMouseMode; // Laptop touchpad mode
 	public static int RelativeMouseMovementSpeed = 2;
 	public static int RelativeMouseMovementAccel = 0;
 	public static boolean ShowScreenUnderFinger = false;

@@ -214,6 +214,16 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$ForceRelativeMouseMode" -o -z "$AUTO" ]; then
+echo
+echo -n "Force relative (laptop) mouse movement mode, if both on-screen keyboard and mouse are needed (y) or (n) ($ForceRelativeMouseMode): "
+read var
+if [ -n "$var" ] ; then
+	ForceRelativeMouseMode="$var"
+	CHANGED=1
+fi
+fi
+
 if [ -z "$AppNeedsArrowKeys" -o -z "$AUTO" ]; then
 echo
 echo "Application needs arrow keys (y) or (n), if (y) the accelerometer or touchscreen keyboard"
@@ -367,7 +377,7 @@ if [ -n "$var" ] ; then
 fi
 fi
 
-FirstStartMenuOptionsDefault='(AppUsesMouse ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true)'
+FirstStartMenuOptionsDefault='(AppUsesMouse \&\& \! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true)'
 if [ -z "$AUTO" ]; then
 echo
 echo "Menu items to show at startup - this is Java code snippet, leave empty for default"
@@ -526,6 +536,7 @@ echo SdlVideoResizeKeepAspect=$SdlVideoResizeKeepAspect >> AndroidAppSettings.cf
 echo CompatibilityHacks=$CompatibilityHacks >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
+echo ForceRelativeMouseMode=$ForceRelativeMouseMode >> AndroidAppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
 echo AppNeedsTextInput=$AppNeedsTextInput >> AndroidAppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AndroidAppSettings.cfg
@@ -630,6 +641,12 @@ else
 	AppNeedsTwoButtonMouse=false
 fi
 
+if [ "$ForceRelativeMouseMode" = "y" ] ; then
+	ForceRelativeMouseMode=true
+else
+	ForceRelativeMouseMode=false
+fi
+
 if [ "$AppNeedsArrowKeys" = "y" ] ; then
 	AppNeedsArrowKeys=true
 else
@@ -707,6 +724,7 @@ done
 if [ -z "$FirstStartMenuOptions" ]; then
 	FirstStartMenuOptions="$FirstStartMenuOptionsDefault"
 fi
+echo FirstStartMenuOptions "$FirstStartMenuOptions"
 
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 
@@ -743,6 +761,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" | \
 	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \
 	sed "s/public static boolean AppNeedsTwoButtonMouse = .*;/public static boolean AppNeedsTwoButtonMouse = $AppNeedsTwoButtonMouse;/" | \
+	sed "s/public static boolean ForceRelativeMouseMode = .*;/public static boolean ForceRelativeMouseMode = $ForceRelativeMouseMode;/" | \
 	sed "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" | \
 	sed "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" | \
 	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \
