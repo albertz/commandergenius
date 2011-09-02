@@ -1,0 +1,330 @@
+Index: src/fheroes2/system/settings.cpp
+===================================================================
+--- src/fheroes2/system/settings.cpp	(revision 2505)
++++ src/fheroes2/system/settings.cpp	(working copy)
+@@ -577,48 +577,48 @@
+ {
+     std::ostringstream os;
+ 
+-    os << "# fheroes2 config, version " << static_cast<int>(major_version) << "." << static_cast<int>(minor_version) << "." << svn_version << std::endl;
+-    os << "data = " << path_data_directory << std::endl;
++    os << "# fheroes2 config, version " << static_cast<int>(major_version) << "." << static_cast<int>(minor_version) << "." << svn_version << "\n";
++    os << "data = " << path_data_directory << "\n";
+ 
+     for(ListMapsDirectory::const_iterator
+ 	it = list_maps_directory.begin(); it != list_maps_directory.end(); ++it)
+-    os << "maps = " << *it << std::endl;
++    os << "maps = " << *it << "\n";
+ 
+     os << "videomode = ";
+     if(video_mode.w && video_mode.h)
+-	os << video_mode.w << "x" << video_mode.h << std::endl;
++	os << video_mode.w << "x" << video_mode.h << "\n";
+     else
+-	os << "auto" << std::endl;
++	os << "auto" << "\n";
+ 
+     os <<
+-	"sound = " << (opt_global.Modes(GLOBAL_SOUND) ? "on"  : "off") << std::endl <<
+-	"music = " << (opt_global.Modes(GLOBAL_MUSIC_CD) ? "cd" : (opt_global.Modes(GLOBAL_MUSIC_MIDI) ? "midi" : (opt_global.Modes(GLOBAL_MUSIC_EXT) ? "ext" : "off"))) << std::endl <<
+-	"sound volume = " << static_cast<int>(sound_volume) << std::endl <<
+-	"music volume = " << static_cast<int>(music_volume) << std::endl <<
+-	"fullscreen = " << (opt_global.Modes(GLOBAL_FULLSCREEN) ? "on"  : "off") << std::endl <<
+-	"alt resource = " << (opt_global.Modes(GLOBAL_ALTRESOURCE) ? "on"  : "off") << std::endl <<
+-	"debug = " << (debug ? "on"  : "off") << std::endl;
++	"sound = " << (opt_global.Modes(GLOBAL_SOUND) ? "on"  : "off") << "\n" <<
++	"music = " << (opt_global.Modes(GLOBAL_MUSIC_CD) ? "cd" : (opt_global.Modes(GLOBAL_MUSIC_MIDI) ? "midi" : (opt_global.Modes(GLOBAL_MUSIC_EXT) ? "ext" : "off"))) << "\n" <<
++	"sound volume = " << static_cast<int>(sound_volume) << "\n" <<
++	"music volume = " << static_cast<int>(music_volume) << "\n" <<
++	"fullscreen = " << (opt_global.Modes(GLOBAL_FULLSCREEN) ? "on"  : "off") << "\n" <<
++	"alt resource = " << (opt_global.Modes(GLOBAL_ALTRESOURCE) ? "on"  : "off") << "\n" <<
++	"debug = " << (debug ? "on"  : "off") << "\n";
+ 
+ #ifdef WITH_TTF
+     os <<
+-	"fonts normal = " << font_normal << std::endl <<
+-	"fonts small = " << font_small << std::endl <<
+-	"fonts normal size = " << static_cast<int>(size_normal) << std::endl <<
+-	"fonts small size = " << static_cast<int>(size_small) << std::endl <<
+-	"unicode = " << (opt_global.Modes(GLOBAL_USEUNICODE) ? "on" : "off") << std::endl;
++	"fonts normal = " << font_normal << "\n" <<
++	"fonts small = " << font_small << "\n" <<
++	"fonts normal size = " << static_cast<int>(size_normal) << "\n" <<
++	"fonts small size = " << static_cast<int>(size_small) << "\n" <<
++	"unicode = " << (opt_global.Modes(GLOBAL_USEUNICODE) ? "on" : "off") << "\n";
+     if(force_lang.size())
+-    os << "lang = " << force_lang << std::endl;
++    os << "lang = " << force_lang << "\n";
+ #endif
+ 
+ #ifndef WITH_MIXER
+-    os << "playmus command = " << playmus_command << std::endl;
++    os << "playmus command = " << playmus_command << "\n";
+ #endif
+ 
+     if(video_driver.size())
+-    os << "videodriver = " << video_driver << std::endl;
++    os << "videodriver = " << video_driver << "\n";
+ 
+     if(opt_global.Modes(GLOBAL_POCKETPC))
+-    os << "pocket pc = on" << std::endl;
++    os << "pocket pc = on" << "\n";
+ 
+     return os.str();
+ }
+Index: src/fheroes2/heroes/heroes.cpp
+===================================================================
+--- src/fheroes2/heroes/heroes.cpp	(revision 2505)
++++ src/fheroes2/heroes/heroes.cpp	(working copy)
+@@ -1613,30 +1613,30 @@
+     std::ostringstream os;
+ 
+     os <<
+-	"name            : " << name << std::endl <<
+-	"race            : " << Race::String(race) << std::endl <<
+-	"color           : " << Color::String(color) << std::endl <<
+-	"experience      : " << experience << std::endl <<
+-	"level           : " << static_cast<int>(GetLevel()) << std::endl <<
+-	"magic point     : " << GetSpellPoints() << std::endl <<
+-	"position x      : " << GetCenter().x << std::endl <<
+-	"position y      : " << GetCenter().y << std::endl <<
+-	"move point      : " << move_point << std::endl <<
+-	"max magic point : " << GetMaxSpellPoints() << std::endl <<
+-	"max move point  : " << GetMaxMovePoints() << std::endl <<
+-	"direction       : " << Direction::String(direction) << std::endl <<
+-	"index sprite    : " << static_cast<u16>(sprite_index) << std::endl <<
+-	"in castle       : " << (inCastle() ? "true" : "false") << std::endl <<
+-	"save object     : " << MP2::StringObject(save_maps_object) << std::endl <<
++	"name            : " << name << "\n" <<
++	"race            : " << Race::String(race) << "\n" <<
++	"color           : " << Color::String(color) << "\n" <<
++	"experience      : " << experience << "\n" <<
++	"level           : " << static_cast<int>(GetLevel()) << "\n" <<
++	"magic point     : " << GetSpellPoints() << "\n" <<
++	"position x      : " << GetCenter().x << "\n" <<
++	"position y      : " << GetCenter().y << "\n" <<
++	"move point      : " << move_point << "\n" <<
++	"max magic point : " << GetMaxSpellPoints() << "\n" <<
++	"max move point  : " << GetMaxMovePoints() << "\n" <<
++	"direction       : " << Direction::String(direction) << "\n" <<
++	"index sprite    : " << static_cast<u16>(sprite_index) << "\n" <<
++	"in castle       : " << (inCastle() ? "true" : "false") << "\n" <<
++	"save object     : " << MP2::StringObject(save_maps_object) << "\n" <<
+ 	"flags           : " << (Modes(SHIPMASTER) ? "SHIPMASTER," : "") <<
+                                          (Modes(SCOUTER) ? "SCOUTER," : "") <<
+                                          (Modes(HUNTER) ? "HUNTER," : "") <<
+                                          (Modes(PATROL) ? "PATROL," : "") <<
+                                          (Modes(AIWAITING) ? "WAITING," : "") <<
+-                                         (Modes(STUPID) ? "STUPID," : "") << std::endl;
++                                         (Modes(STUPID) ? "STUPID," : "") << "\n";
+     if(Modes(PATROL))
+     {
+-	os << "patrol square   : " << static_cast<u16>(patrol_square) << std::endl;
++	os << "patrol square   : " << static_cast<u16>(patrol_square) << "\n";
+     }
+ 
+     if(! visit_object.empty())
+@@ -1645,16 +1645,16 @@
+ 	for(std::list<IndexObject>::const_iterator
+ 	    it = visit_object.begin(); it != visit_object.end(); ++it)
+ 		os << MP2::StringObject((*it).second) << "(" << (*it).first << "), ";
+-	os << std::endl;
++	os << "\n";
+     }
+ 
+     if(GetControl() & CONTROL_AI)
+     {
+ 	os <<
+-	    "skills          : " << secondary_skills.String() << std::endl <<
+-	    "artifacts       : " << bag_artifacts.String() << std::endl <<
+-	    "spell book      : " << (HaveSpellBook() ? spell_book.String() : "disabled") << std::endl <<
+-	    "army dump       : " << army.String() << std::endl;
++	    "skills          : " << secondary_skills.String() << "\n" <<
++	    "artifacts       : " << bag_artifacts.String() << "\n" <<
++	    "spell book      : " << (HaveSpellBook() ? spell_book.String() : "disabled") << "\n" <<
++	    "army dump       : " << army.String() << "\n";
+ 
+ 	os << AI::HeroesString(*this);
+     }
+Index: src/fheroes2/network/remoteclient.cpp
+===================================================================
+--- src/fheroes2/network/remoteclient.cpp	(revision 2505)
++++ src/fheroes2/network/remoteclient.cpp	(working copy)
+@@ -371,7 +371,7 @@
+     // send banner
+     std::ostringstream banner;
+     banner << "Free Heroes II Server, version: " << static_cast<int>(conf.MajorVersion()) <<
+-					"." << static_cast<int>(conf.MinorVersion()) << std::endl;
++					"." << static_cast<int>(conf.MinorVersion()) << "\n";
+     packet.Reset();
+     packet.SetID(MSG_READY);
+     packet.Push(banner.str());
+@@ -529,7 +529,7 @@
+     	os << "false";
+     }
+ 
+-    os << "), " << "Thread(0x" << thread.GetID() << ")" << std::dec << std::endl;
++    os << "), " << "Thread(0x" << thread.GetID() << ")" << std::dec << "\n";
+     return os.str();
+ }
+ 
+Index: src/fheroes2/ai/simple/ai_heroes.cpp
+===================================================================
+--- src/fheroes2/ai/simple/ai_heroes.cpp	(revision 2505)
++++ src/fheroes2/ai/simple/ai_heroes.cpp	(working copy)
+@@ -1666,12 +1666,12 @@
+     AIHero & ai_hero = AIHeroes::Get(hero);
+     Queue & task = ai_hero.sheduled_visit;
+ 
+-    os << "ai primary target: " << ai_hero.primary_target << std::endl <<
++    os << "ai primary target: " << ai_hero.primary_target << "\n" <<
+           "ai sheduled visit: ";
+     for(Queue::const_iterator
+ 	it = task.begin(); it != task.end(); ++it)
+ 	os << *it << "(" << MP2::StringObject(world.GetTiles(*it).GetObject()) << "), ";
+-    os << std::endl;
++    os << "\n";
+ 
+     return os.str();
+ }
+Index: src/fheroes2/battle2/battle_arena.cpp
+===================================================================
+--- src/fheroes2/battle2/battle_arena.cpp	(revision 2505)
++++ src/fheroes2/battle2/battle_arena.cpp	(working copy)
+@@ -1432,7 +1432,7 @@
+ 	it = board.begin(); it != board.end(); ++it)
+     {
+ 	const Battle2::Stats* b = GetTroopBoard((*it).index);
+-	if(b) os << "\t" << b->String(true) << std::endl;
++	if(b) os << "\t" << b->String(true) << "\n";
+     }
+ 
+     return os.str();
+Index: src/fheroes2/maps/maps_tiles.cpp
+===================================================================
+--- src/fheroes2/maps/maps_tiles.cpp	(revision 2505)
++++ src/fheroes2/maps/maps_tiles.cpp	(working copy)
+@@ -66,12 +66,12 @@
+ std::string Maps::TilesAddon::String(int level) const
+ {
+     std::ostringstream os;
+-    os << "----------------" << level << "--------" << std::endl <<
++    os << "----------------" << level << "--------" << "\n" <<
+ 	  "object          : " << "0x" << std::setw(2) << std::setfill('0') << static_cast<int>(object) <<
+-				", (" << ICN::GetString(MP2::GetICNObject(object)) << ")" << std::endl <<
+-	  "index           : " << static_cast<int>(index) << std::endl <<
+-	  "uniq            : " << uniq << std::endl <<
+-	  "level           : " << static_cast<int>(level) << std::endl;
++				", (" << ICN::GetString(MP2::GetICNObject(object)) << ")" << "\n" <<
++	  "index           : " << static_cast<int>(index) << "\n" <<
++	  "uniq            : " << uniq << "\n" <<
++	  "level           : " << static_cast<int>(level) << "\n";
+     return os.str();
+ }
+ 
+@@ -931,17 +931,17 @@
+     std::ostringstream os;
+ 
+     os <<
+-	"----------------:--------" << std::endl <<
+-	"maps index      : " << maps_index << std::endl <<
+-	"tile            : " << tile_sprite_index << std::endl <<
+-	"ground          : " << Ground::String(GetGround()) << (isRoad() ? ", (road)" : "") << std::endl <<
+-	"passable        : " << (isPassable(NULL, Direction::UNKNOWN, false) ? "true" : "false") << std::endl <<
++	"----------------:--------" << "\n" <<
++	"maps index      : " << maps_index << "\n" <<
++	"tile            : " << tile_sprite_index << "\n" <<
++	"ground          : " << Ground::String(GetGround()) << (isRoad() ? ", (road)" : "") << "\n" <<
++	"passable        : " << (isPassable(NULL, Direction::UNKNOWN, false) ? "true" : "false") << "\n" <<
+ 	"mp2 object      : " << "0x" << std::setw(2) << std::setfill('0') << static_cast<int>(mp2_object) <<
+-				    ", (" << MP2::StringObject(mp2_object) << ")" << std::endl <<
+-	"quantity 1      : " << static_cast<int>(quantity1) << std::endl <<
+-	"quantity 2      : " << static_cast<int>(quantity2) << std::endl <<
+-	"quantity 3      : " << static_cast<int>(quantity3) << std::endl <<
+-	"quantity 4      : " << static_cast<int>(quantity4) << std::endl;
++				    ", (" << MP2::StringObject(mp2_object) << ")" << "\n" <<
++	"quantity 1      : " << static_cast<int>(quantity1) << "\n" <<
++	"quantity 2      : " << static_cast<int>(quantity2) << "\n" <<
++	"quantity 3      : " << static_cast<int>(quantity3) << "\n" <<
++	"quantity 4      : " << static_cast<int>(quantity4) << "\n";
+ 
+     for(Addons::const_iterator
+ 	it = addons_level1.begin(); it != addons_level1.end(); ++it)
+@@ -952,7 +952,7 @@
+ 	os << (*it).String(2);
+ 
+     os <<
+-	"----------------I--------" << std::endl;
++	"----------------I--------" << "\n";
+ 
+     // extra obj info
+     switch(mp2_object)
+@@ -978,7 +978,7 @@
+         case MP2::OBJ_THATCHEDHUT:
+ 	//
+ 	case MP2::OBJ_MONSTER:
+-	    os << "count           : " << GetCountMonster() << std::endl;
++	    os << "count           : " << GetCountMonster() << "\n";
+ 	    break;
+ 
+ 	case MP2::OBJ_HEROES:
+@@ -1005,13 +1005,13 @@
+ 		for(Direction::vector_t dir = Direction::TOP_LEFT; dir < Direction::CENTER; ++dir)
+ 		    if(dst_around & dir)
+ 			os << Maps::GetDirectionIndex(maps_index, dir) << ", ";
+-		os << std::endl;
++		os << "\n";
+ 	    }
+ 	    break;
+ 	}
+     }
+ 
+-    os << "----------------:--------" << std::endl;
++    os << "----------------:--------" << "\n";
+     return os.str();
+ }
+ 
+Index: src/fheroes2/game/game_io.cpp
+===================================================================
+--- src/fheroes2/game/game_io.cpp	(revision 2505)
++++ src/fheroes2/game/game_io.cpp	(working copy)
+@@ -716,8 +716,8 @@
+     if(format > CURRENT_FORMAT_VERSION || format < LAST_FORMAT_VERSION)
+     {
+ 	std::ostringstream os;
+-	os << "usupported save format: " << format << std::endl <<
+-	    "game version: " << CURRENT_FORMAT_VERSION << std::endl <<
++	os << "usupported save format: " << format << "\n" <<
++	    "game version: " << CURRENT_FORMAT_VERSION << "\n" <<
+ 	    "last version: " << LAST_FORMAT_VERSION;
+ 	Dialog::Message("Error", os.str(), Font::BIG, Dialog::OK);
+     	return false;
+Index: src/fheroes2/castle/castle.cpp
+===================================================================
+--- src/fheroes2/castle/castle.cpp	(revision 2505)
++++ src/fheroes2/castle/castle.cpp	(working copy)
+@@ -1692,15 +1692,15 @@
+     std::ostringstream os;
+     const CastleHeroes heroes = GetHeroes();
+ 
+-    os << "name            : " << name << std::endl <<
+-          "race            : " << Race::String(race) << std::endl <<
+-          "color           : " << Color::String(color) << std::endl <<
+-          "build           : " << "0x" << std::hex << building << std::dec << std::endl <<
+-          "present guest   : " << (heroes.Guest() ? "yes" : "no") << std::endl <<
+-          "present guard   : " << (heroes.Guard() ? "yes" : "no") << std::endl <<
+-          "present boat    : " << (PresentBoat() ? "yes" : "no") << std::endl <<
+-          "nearly sea      : " << (HaveNearlySea() ? "yes" : "no") << std::endl <<
+-          "is castle       : " << (isCastle() ? "yes" : "no") << std::endl;
++    os << "name            : " << name << "\n" <<
++          "race            : " << Race::String(race) << "\n" <<
++          "color           : " << Color::String(color) << "\n" <<
++          "build           : " << "0x" << std::hex << building << std::dec << "\n" <<
++          "present guest   : " << (heroes.Guest() ? "yes" : "no") << "\n" <<
++          "present guard   : " << (heroes.Guard() ? "yes" : "no") << "\n" <<
++          "present boat    : " << (PresentBoat() ? "yes" : "no") << "\n" <<
++          "nearly sea      : " << (HaveNearlySea() ? "yes" : "no") << "\n" <<
++          "is castle       : " << (isCastle() ? "yes" : "no") << "\n";
+ 
+     return os.str();
+ }
