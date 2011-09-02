@@ -34,6 +34,10 @@
 /* Define if we have stdint.h */
 #define HAVE_STDINT_H
 
+#define HAVE_NANOSLEEP
+
+#define HAVE_TIME_H
+
 /* Define if we have the __int64 type */
 #define HAVE___INT64
 

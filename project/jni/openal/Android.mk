@@ -9,8 +9,6 @@ APP_SUBDIRS := $(patsubst $(LOCAL_PATH)/%, %, $(shell find $(LOCAL_PATH)/src -ty
 LOCAL_C_INCLUDES := $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) $(LOCAL_PATH)/include
 LOCAL_CFLAGS := -O3 -DHAVE_CONFIG_H -DAL_ALEXT_PROTOTYPES
 
-
-
 LOCAL_CPP_EXTENSION := .cpp
 
 LOCAL_SRC_FILES := $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wildcard $(LOCAL_PATH)/$(F)/*.cpp))))
@@ -21,5 +19,9 @@ LOCAL_SHARED_LIBRARIES :=
 LOCAL_STATIC_LIBRARIES :=
 
 LOCAL_LDLIBS := -llog
+
+ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
+LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/armeabi -lcrystax_static # I have no idea how could OpenAL link to C++ wide-char support lib
+endif
 
 include $(BUILD_SHARED_LIBRARY)
