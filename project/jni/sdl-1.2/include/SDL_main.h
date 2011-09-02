@@ -24,9 +24,6 @@
 #define _SDL_main_h
 
 #include "SDL_stdinc.h"
-#ifdef RELEASE_BUILD
-#include <jni.h>
-#endif
 
 /** @file SDL_main.h
  *  Redefine main() on Win32 and MacOS so that it is called by winmain.c
@@ -57,11 +54,7 @@
 #define main	SDL_main
 
 /** The prototype for the application's main() function */
-#ifdef RELEASE_BUILD
-extern C_LINKAGE int SDL_main(int argc, char *argv[], JNIEnv*  env, jobject thiz);
-#else
 extern C_LINKAGE int SDL_main(int argc, char *argv[]);
-#endif
 
 /** @name From the SDL library code -- needed for registering the app on Win32 */
 /*@{*/
