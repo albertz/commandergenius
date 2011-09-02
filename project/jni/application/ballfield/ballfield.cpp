@@ -9,6 +9,8 @@
  * software, or work derived from it, under other terms.
  */
 
+#include <sstream>
+#include <iostream>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -346,7 +348,7 @@ int main(int argc, char* argv[])
 	SDL_Surface	*temp_image;
 	SDL_Surface	*back, *logo, *font;
 	SDL_Event	event;
-	int		bpp = 24,
+	int		bpp = 16,
 			flags = SDL_DOUBLEBUF | SDL_SWSURFACE,
 			alpha = 1;
 	int		x_offs = 0, y_offs = 0;
@@ -598,5 +600,8 @@ int main(int argc, char* argv[])
 	SDL_FreeSurface(back);
 	SDL_FreeSurface(logo);
 	SDL_FreeSurface(font);
+	std::ostringstream os;
+	os << "lalala" << std::endl << "more text" << std::endl;
+	std::cout << os.str() << std::endl << "text text" << std::endl;
 	exit(0);
 }

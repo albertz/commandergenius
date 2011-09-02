@@ -724,7 +724,6 @@ done
 if [ -z "$FirstStartMenuOptions" ]; then
 	FirstStartMenuOptions="$FirstStartMenuOptionsDefault"
 fi
-echo FirstStartMenuOptions "$FirstStartMenuOptions"
 
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 
