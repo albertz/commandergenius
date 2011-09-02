@@ -26,6 +26,7 @@
 #include "SDL_stdinc.h"
 #include "SDL_video.h"
 #include "SDL_keysym.h"
+#include <jni.h>
 
 /* On-screen keyboard exposed to the application, it's yet available on Android platform only */
 
@@ -81,6 +82,10 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardTextInput(char * textBu
 
 /* Whether user redefined on-screen keyboard layout via SDL menu, app should not enforce it's own layout in that case */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardRedefinedByUser();
+
+/** Exports for Java environment and Video object instance */
+extern DECLSPEC JNIEnv* SDL_ANDROID_JniEnv();
+extern DECLSPEC jobject SDL_ANDROID_JniVideoObject();
 
 #ifdef __cplusplus
 }

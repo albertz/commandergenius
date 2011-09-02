@@ -8,6 +8,7 @@
 #include "SDL_version.h"
 #include "SDL_thread.h"
 #include "SDL_main.h"
+#include "SDL_screenkeyboard.h"
 
 /* JNI-C wrapper stuff */
 
@@ -28,12 +29,26 @@
 static int argc = 0;
 static char ** argv = NULL;
 
+static JNIEnv*  static_env = NULL;
+static jobject static_thiz = NULL;
+
+JNIEnv* SDL_ANDROID_JniEnv()
+{
+	return static_env;
+}
+jobject SDL_ANDROID_JniVideoObject()
+{
+	return static_thiz;
+}
+
 #if SDL_VERSION_ATLEAST(1,3,0)
 #else
 extern void SDL_ANDROID_MultiThreadedVideoLoopInit();
 extern void SDL_ANDROID_MultiThreadedVideoLoop();
 
-static int threadedMain(void * unused)
+static int threadedMain(void * unused);
+
+int threadedMain(void * unused)
 {
 	SDL_main( argc, argv );
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Application closed, calling exit(0)");
@@ -48,6 +63,9 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	char curdir[PATH_MAX] = "";
 	const jbyte *jstr;
 	const char * str = "sdl";
+
+	static_env = env;
+	static_thiz = thiz;
 
 	strcpy(curdir, "/sdcard/app-data/");
 	strcat(curdir, SDL_CURDIR_PATH);
