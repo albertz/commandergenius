@@ -657,14 +657,14 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
     private static class ComponentSizeChooser extends BaseConfigChooser {
         public ComponentSizeChooser(int redSize, int greenSize, int blueSize,
                 int alphaSize, int depthSize, int stencilSize, boolean isGles2) {
-            super(new int[] {
+            super(new int[] { /*
                     EGL10.EGL_RED_SIZE, redSize,
                     EGL10.EGL_GREEN_SIZE, greenSize,
                     EGL10.EGL_BLUE_SIZE, blueSize,
                     EGL10.EGL_ALPHA_SIZE, alphaSize,
                     EGL10.EGL_DEPTH_SIZE, depthSize,
                     EGL10.EGL_STENCIL_SIZE, stencilSize,
-                    EGL10.EGL_RENDERABLE_TYPE, isGles2 ? EGL_OPENGL_ES2_BIT : 0,
+                    EGL10.EGL_RENDERABLE_TYPE, isGles2 ? EGL_OPENGL_ES2_BIT : 0, */
                     EGL10.EGL_NONE});
             mValue = new int[1];
             mRedSize = redSize;
@@ -673,7 +673,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             mAlphaSize = alphaSize;
             mDepthSize = depthSize;
             mStencilSize = stencilSize;
-            this.isGles2 = isGles2;
+            mIsGles2 = isGles2;
        }
 
         @Override
@@ -682,7 +682,11 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             EGLConfig closestConfig = null;
             int closestDistance = 1000;
             String cfglog = "";
+            int idx = 0;
+            int selectidx = -1;
             for(EGLConfig config : configs) {
+                if ( config == null )
+                    continue;
                 int r = findConfigAttrib(egl, display, config,
                         EGL10.EGL_RED_SIZE, 0);
                 int g = findConfigAttrib(egl, display, config,
@@ -695,37 +699,53 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                         EGL10.EGL_DEPTH_SIZE, 0);
                 int s = findConfigAttrib(egl, display, config,
                         EGL10.EGL_STENCIL_SIZE, 0);
-                boolean gles2 = (findConfigAttrib(egl, display, config,
-                        EGL10.EGL_RENDERABLE_TYPE, 0) & EGL_OPENGL_ES2_BIT) != 0;
+                int rendertype = findConfigAttrib(egl, display, config,
+                        EGL10.EGL_RENDERABLE_TYPE, 0);
+                int desiredtype = mIsGles2 ? EGL_OPENGL_ES2_BIT : EGL_OPENGL_ES_BIT;
                 int distance = Math.abs(r - mRedSize)
                     + Math.abs(g - mGreenSize)
                     + Math.abs(b - mBlueSize) + Math.abs(a - mAlphaSize)
-                    + Math.abs( ((d > 0) == (mDepthSize > 0)) ? 0 : 16 )
-                    + Math.abs( ((s > 0) == (mStencilSize > 0)) ? 0 : 16 )
-                    + (gles2 == isGles2 ? 0 : 16);
+                    + Math.abs( ((d > 0) == (mDepthSize > 0)) ? 0 : 10 )
+                    + Math.abs( ((s > 0) == (mStencilSize > 0)) ? 0 : 10 )
+                    + ( ((rendertype & desiredtype) != 0 ) ? 0 : 16 )
+                    + ( (rendertype == desiredtype) ? 0 : 1 ); // Small penalty for mixed GLES + GLES2 + OPENVG etc modes
+                String cfgcur = "R" + r + "G" + g + "B" + b + "A" + a + " depth " + d + " stencil " + s +
+                    " renderable type " + findConfigAttrib(egl, display, config, EGL10.EGL_RENDERABLE_TYPE, 0) + "(";
+                if((rendertype & EGL_OPENGL_ES_BIT) != 0)
+                    cfgcur += " GLES";
+                if((rendertype & EGL_OPENGL_ES2_BIT) != 0)
+                    cfgcur += " GLES2";
+                if((rendertype & EGL_OPENGL_BIT) != 0)
+                    cfgcur += " OPENGL";
+                if((rendertype & EGL_OPENVG_BIT) != 0)
+                    cfgcur += " OPENVG";
+                cfgcur += " )";
+                Log.v("SDL", "GL config " + idx + ": " + cfgcur);
                 if (distance < closestDistance) {
                     closestDistance = distance;
                     closestConfig = config;
-                    cfglog = "R" + r + "G" + g + "B" + b + "A" + a + " depth " + d + " stencil " + s + " GLES2 " + gles2 +
-                    " renderable type " + findConfigAttrib(egl, display, config, EGL10.EGL_RENDERABLE_TYPE, 0);
+                    cfglog = new String(cfgcur);
+                    selectidx = idx;
                 }
+                idx += 1;
             }
-            Log.v("SDL", "GLSurfaceView_SDL::EGLConfigChooser::chooseConfig(): selected " + cfglog );
+            Log.v("SDL", "GLSurfaceView_SDL::EGLConfigChooser::chooseConfig(): selected " + selectidx + ": " + cfglog );
             return closestConfig;
         }
 
         private int findConfigAttrib(EGL10 egl, EGLDisplay display,
                 EGLConfig config, int attribute, int defaultValue) {
-
+            mValue[0] = -1;
             if (egl.eglGetConfigAttrib(display, config, attribute, mValue)) {
                 return mValue[0];
             }
+            Log.w("SDL", "GLSurfaceView_SDL::EGLConfigChooser::findConfigAttrib(): attribute doesn't exist: " + attribute);
             return defaultValue;
         }
 
         public boolean isGles2Required()
         {
-            return isGles2;
+            return mIsGles2;
         }
 
         private int[] mValue;
@@ -736,9 +756,12 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
         protected int mAlphaSize;
         protected int mDepthSize;
         protected int mStencilSize;
-        public boolean isGles2 = false;
+        protected boolean mIsGles2 = false;
 
+        public static final int EGL_OPENGL_ES_BIT = 1;
+        public static final int EGL_OPENVG_BIT = 2;
         public static final int EGL_OPENGL_ES2_BIT = 4;
+        public static final int EGL_OPENGL_BIT = 8;
         }
 
     /**
@@ -817,6 +840,8 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             int[] version = new int[2];
             mEgl.eglInitialize(mEglDisplay, version);
             mEglConfig = mEGLConfigChooser.chooseConfig(mEgl, mEglDisplay);
+            if( mEglConfig == null )
+                Log.e("SDL", "GLSurfaceView_SDL::EglHelper::start(): mEglConfig is NULL");
 
             /*
             * Create an OpenGL ES context. This must be done only once, an
@@ -825,10 +850,11 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
             final int[] gles2_attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE };
 
-            Log.v("SDL", "GLSurfaceView_SDL::EglHelper::start(): Gles2 " + mEGLConfigChooser.isGles2Required());
-
             mEglContext = mEgl.eglCreateContext(mEglDisplay, mEglConfig,
                     EGL10.EGL_NO_CONTEXT, mEGLConfigChooser.isGles2Required() ? gles2_attrib_list : null );
+
+            if( mEglContext == null || mEglContext == EGL10.EGL_NO_CONTEXT )
+                Log.e("SDL", "GLSurfaceView_SDL::EglHelper::start(): mEglContext is EGL_NO_CONTEXT, error: " + mEgl.eglGetError());
 
             mEglSurface = null;
         }
