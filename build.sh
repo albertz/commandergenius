@@ -6,7 +6,8 @@ NDKBUILDPATH=$PATH
 export `grep "AppFullName=" AndroidAppSettings.cfg`
 if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && \
 		[ "`readlink AndroidAppSettings.cfg`" -ot "project/src/Globals.java" ] && \
-		[ -z "`find project/java/* -cnewer project/src/Globals.java`" ] ) ; then true ; else
+		[ -z "`find project/java/* -cnewer project/src/Globals.java`" ] && \
+		[ -z "`find project/jni/application/src/AndroidData/* -cnewer project/src/Globals.java`" ] ) ; then true ; else
 	./ChangeAppSettings.sh -a
 	sleep 1
 	touch project/src/Globals.java
@@ -32,6 +33,6 @@ cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build -j4 V=1 && \
    cp jni/application/src/libapplication.so libs/armeabi && \
    `which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-4.4.3/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi/libapplication.so \
    || true ; } && \
- ant debug && \
- test -z "$1" && cd bin && adb uninstall `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'` && \
- adb install -r DemoActivity-debug.apk
+ ant debug # && \
+# test -z "$1" && cd bin && adb uninstall `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'` && \
+# adb install -r DemoActivity-debug.apk

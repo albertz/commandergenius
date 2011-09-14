@@ -1,5 +1,0 @@
-#define VUX_PMAP_ANIM "comm.vux.graphics"
-#define VUX_FONT "comm.vux.font"
-#define VUX_COLOR_MAP "comm.vux.colortable"
-#define VUX_CONVERSATION_PHRASES "comm.vux.dialogue"
-#define VUX_MUSIC "comm.vux.music"

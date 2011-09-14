@@ -1,2 +1,0 @@
-uqm_SUBDIRS="sdl"
-uqm_CFILES="timecommon.c"

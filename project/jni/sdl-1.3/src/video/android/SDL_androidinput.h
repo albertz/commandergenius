@@ -142,16 +142,7 @@ extern int SDL_ANDROID_isTouchscreenKeyboardUsed;
 #define SDL_ANDROID_KEYCODE_6 RSHIFT
 #endif
 #ifndef SDL_ANDROID_KEYCODE_7
-#define SDL_ANDROID_KEYCODE_7 LSHIFT
-#endif
-#ifndef SDL_ANDROID_KEYCODE_8
-#define SDL_ANDROID_KEYCODE_8 DELETE
-#endif
-#ifndef SDL_ANDROID_KEYCODE_9
-#define SDL_ANDROID_KEYCODE_9 SDL_ANDROID_KEYCODE_1
-#endif
-#ifndef SDL_ANDROID_KEYCODE_10
-#define SDL_ANDROID_KEYCODE_10 SDL_ANDROID_KEYCODE_1
+#define SDL_ANDROID_KEYCODE_7 SDL_ANDROID_KEYCODE_1
 #endif
 
 // Touchscreen keyboard keys + zoom and rotate keycodes

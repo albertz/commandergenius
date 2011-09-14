@@ -1,5 +1,0 @@
-#define DRUUGE_PMAP_ANIM "comm.druuge.graphics"
-#define DRUUGE_FONT "comm.druuge.font"
-#define DRUUGE_COLOR_MAP "comm.druuge.colortable"
-#define DRUUGE_CONVERSATION_PHRASES "comm.druuge.dialogue"
-#define DRUUGE_MUSIC "comm.druuge.music"

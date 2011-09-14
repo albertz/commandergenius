@@ -19,7 +19,51 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
-#include "ballfield.h"
+
+/*----------------------------------------------------------
+	Definitions...
+----------------------------------------------------------*/
+
+#define	BALLS	3000
+
+#define	COLORS	2
+
+typedef struct
+{
+	Sint32	x, y, z;	/* Position */
+	Uint32	c;		/* Color */
+} point_t;
+
+
+/*
+ * Ballfield
+ */
+typedef struct
+{
+	point_t		points[BALLS];
+	SDL_Rect	*frames;
+	SDL_Surface	*gfx[COLORS];
+	int		use_alpha;
+} ballfield_t;
+
+
+/*
+ * Size of the screen in pixels
+ */
+#define	SCREEN_W	800
+#define	SCREEN_H	480
+
+/*
+ * Size of the biggest ball image in pixels
+ *
+ * Balls are scaled down and *packed*, one pixel
+ * smaller for each frame down to 1x1. The actual
+ * image width is (obviously...) the same as the
+ * width of the first frame.
+ */
+#define	BALL_W	32
+#define	BALL_H	32
+
 
 
 
@@ -318,6 +362,7 @@ void ballfield_render(ballfield_t *bf, SDL_Surface *screen)
  */
 void tiled_back(SDL_Surface *back, SDL_Surface *screen, int xo, int yo)
 {
+	/*
 	int x, y;
 	SDL_Rect r;
 	if(xo < 0)
@@ -333,6 +378,15 @@ void tiled_back(SDL_Surface *back, SDL_Surface *screen, int xo, int yo)
 			r.y = y;
 			SDL_BlitSurface(back, NULL, screen, &r);
 		}
+	*/
+	SDL_Rect r;
+	xo %= back->w/8;
+	yo %= back->h/8;
+	r.x = xo - back->w/2 + screen->w/2;
+	r.y = yo - back->h/2 + screen->h/2;
+	r.w = back->w;
+	r.h = back->h;
+	SDL_BlitSurface(back, NULL, screen, &r);
 }
 
 
@@ -349,7 +403,7 @@ int main(int argc, char* argv[])
 	SDL_Surface	*back, *logo, *font;
 	SDL_Event	event;
 	int		bpp = 16,
-			flags = SDL_DOUBLEBUF | SDL_SWSURFACE,
+			flags = SDL_DOUBLEBUF | SDL_HWSURFACE,
 			alpha = 1;
 	int		x_offs = 0, y_offs = 0;
 	long		tick,
@@ -384,7 +438,7 @@ int main(int argc, char* argv[])
 			bpp = atoi(&argv[i][1]);
 	}
 
-	screen = SDL_SetVideoMode(SCREEN_W, SCREEN_H, bpp, 0 /*flags*/);
+	screen = SDL_SetVideoMode(SCREEN_W, SCREEN_H, bpp, flags);
 	if(!screen)
 	{
 		fprintf(stderr, "Failed to open screen!\n");
@@ -417,7 +471,7 @@ int main(int argc, char* argv[])
 	/*
 	 * Load background image
 	 */
-	temp_image = IMG_Load("redbluestars.png");
+	temp_image = IMG_Load("sun.gif");
 	if(!temp_image)
 	{
 		fprintf(stderr, "Could not load background!\n");
@@ -435,7 +489,7 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "Could not load logo!\n");
 		exit(-1);
 	}
-	SDL_SetColorKey(temp_image, SDL_SRCCOLORKEY|SDL_RLEACCEL,
+	SDL_SetColorKey(temp_image, SDL_SRCCOLORKEY,
 			SDL_MapRGB(temp_image->format, 255, 0, 255));
 	logo = SDL_DisplayFormat(temp_image);
 	SDL_FreeSurface(temp_image);
@@ -449,7 +503,7 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "Could not load font!\n");
 		exit(-1);
 	}
-	SDL_SetColorKey(temp_image, SDL_SRCCOLORKEY|SDL_RLEACCEL,
+	SDL_SetColorKey(temp_image, SDL_SRCCOLORKEY,
 			SDL_MapRGB(temp_image->format, 255, 0, 255));
 	font = SDL_DisplayFormat(temp_image);
 	SDL_FreeSurface(temp_image);

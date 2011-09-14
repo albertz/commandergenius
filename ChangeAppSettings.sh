@@ -216,7 +216,7 @@ fi
 
 if [ -z "$ForceRelativeMouseMode" -o -z "$AUTO" ]; then
 echo
-echo -n "Force relative (laptop) mouse movement mode, if both on-screen keyboard and mouse are needed (y) or (n) ($ForceRelativeMouseMode): "
+echo -n "Force relative (laptop) mouse movement mode, useful when both on-screen keyboard and mouse are needed (y) or (n) ($ForceRelativeMouseMode): "
 read var
 if [ -n "$var" ] ; then
 	ForceRelativeMouseMode="$var"
@@ -308,7 +308,7 @@ echo "Redefine common keys to SDL keysyms"
 echo "MENU and BACK hardware keys and TOUCHSCREEN virtual 'key' are available on all devices, other keys may be absent"
 echo "SEARCH and CALL by default return same keycode as DPAD_CENTER - one of those keys is available on most devices"
 echo "Use word NO_REMAP if you want to preserve native functionality for certain key "
-echo "TOUCHSCREEN DPAD_CENTER VOLUMEUP VOLUMEDOWN MENU BACK CAMERA ENTER DEL SEARCH CALL - Java keycodes"
+echo "TOUCHSCREEN DPAD_CENTER/SEARCH VOLUMEUP VOLUMEDOWN MENU BACK CAMERA - Java keycodes"
 echo "$RedefinedKeys - current SDL keycodes"
 echo -n ": "
 read var

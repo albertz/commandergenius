@@ -1,5 +1,0 @@
-#define ZOQFOTPIK_PMAP_ANIM "comm.zoqfotpik.graphics"
-#define ZOQFOTPIK_FONT "comm.zoqfotpik.font"
-#define ZOQFOTPIK_COLOR_MAP "comm.zoqfotpik.colortable"
-#define ZOQFOTPIK_CONVERSATION_PHRASES "comm.zoqfotpik.dialogue"
-#define ZOQFOTPIK_MUSIC "comm.zoqfotpik.music"

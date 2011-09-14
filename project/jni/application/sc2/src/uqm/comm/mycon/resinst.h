@@ -1,5 +1,0 @@
-#define MYCON_PMAP_ANIM "comm.mycon.graphics"
-#define MYCON_FONT "comm.mycon.font"
-#define MYCON_COLOR_MAP "comm.mycon.colortable"
-#define MYCON_CONVERSATION_PHRASES "comm.mycon.dialogue"
-#define MYCON_MUSIC "comm.mycon.music"

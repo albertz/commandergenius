@@ -16,18 +16,9 @@ Requested features
 
 - Split Settings.java into several files
 
-- Option to skip startup config screen entirely, or to skip it on first run,
-  separate option to hide each SDL config menu entry
-
-- Possibility to redefine initial SDL config in Settings.java
-
 - Show/hide screen controls with longpress on Text Edit button.
 
-- There's no double-buffered SW mode, only single-buffered
-
 - Support of libjnigraphics (it will disable on-screen keyboard, only SW SDL screen surface supported)
-
-- Update screen keyboard text input API
 
 - Floating on-screen joystick - initially invisible, it appears when you touch the screen,
   centered on your finger, then it slides with your finger if you bump the joystick edge.
@@ -35,8 +26,6 @@ Requested features
 - Export phone vibrator to SDL - interface is available in SDL 1.3
 
 - Control screen brightness with SDL_SetGamma()
-
-- Adjust Android media volume with some SDL keycode, so it can be mapped to Volume keys
 
 - Zoom in-out whole screen in SW mode with some SDL key -
   much like the "On-screen magnifying glass" feature (lazy porter's golden hammer)
@@ -55,7 +44,4 @@ Requested features
   (maybe not that bad, I have to actually try that), because you'll have to do huge memcpy(),
   plus VideoView will contain some buffer to ensure the playback is smooth,
   so the data on your TV will lag halfsecond behind the data on the device screen.
-
-- Somehow make this port into main libSDL repository - that's rather impossible,
-  because the original sources are modified badly, plus Java code does not fit anywhere.
 

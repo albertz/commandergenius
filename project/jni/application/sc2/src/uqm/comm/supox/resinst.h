@@ -1,5 +1,0 @@
-#define SUPOX_PMAP_ANIM "comm.supox.graphics"
-#define SUPOX_FONT "comm.supox.font"
-#define SUPOX_COLOR_MAP "comm.supox.colortable"
-#define SUPOX_CONVERSATION_PHRASES "comm.supox.dialogue"
-#define SUPOX_MUSIC "comm.supox.music"

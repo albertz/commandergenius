@@ -1,2 +1,0 @@
-uqm_SUBDIRS="sdl nosound"
-uqm_CFILES="mixer.c"

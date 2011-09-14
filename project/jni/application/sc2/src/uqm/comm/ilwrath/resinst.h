@@ -1,5 +1,0 @@
-#define ILWRATH_PMAP_ANIM "comm.ilwrath.graphics"
-#define ILWRATH_FONT "comm.ilwrath.font"
-#define ILWRATH_COLOR_MAP "comm.ilwrath.colortable"
-#define ILWRATH_CONVERSATION_PHRASES "comm.ilwrath.dialogue"
-#define ILWRATH_MUSIC "comm.ilwrath.music"
