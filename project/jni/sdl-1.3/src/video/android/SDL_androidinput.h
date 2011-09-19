@@ -54,6 +54,7 @@
 
 // Special key to signal that key should be handled by Java internally, such as Volume Up/Down keys
 #define SDLK_NO_REMAP 512
+#define SDL_SCANCODE_NO_REMAP SDLK_NO_REMAP
 
 #if SDL_VERSION_ATLEAST(1,3,0)
 
@@ -80,6 +81,8 @@
 #define GRAVE DOLLAR
 #define APOSTROPHE QUOTE
 #define LGUI LMETA
+#define RGUI RMETA
+#define SCROLLLOCK SCROLLOCK
 // Overkill haha
 #define A a
 #define B b
@@ -143,6 +146,12 @@ extern int SDL_ANDROID_isTouchscreenKeyboardUsed;
 #endif
 #ifndef SDL_ANDROID_KEYCODE_7
 #define SDL_ANDROID_KEYCODE_7 SDL_ANDROID_KEYCODE_1
+#endif
+#ifndef SDL_ANDROID_KEYCODE_8
+#define SDL_ANDROID_KEYCODE_8 LALT
+#endif
+#ifndef SDL_ANDROID_KEYCODE_9
+#define SDL_ANDROID_KEYCODE_9 RALT
 #endif
 
 // Touchscreen keyboard keys + zoom and rotate keycodes

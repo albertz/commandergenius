@@ -22,9 +22,9 @@ LOCAL_SRC_FILES += $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wil
 LOCAL_CFLAGS :=
 LOCAL_C_INCLUDES :=
 
-ifeq ($(CRYSTAX_TOOLCHAIN)$(NDK_R5_TOOLCHAIN),)
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../stlport/stlport
-endif
+#ifeq ($(CRYSTAX_TOOLCHAIN)$(NDK_R5_TOOLCHAIN),)
+#LOCAL_C_INCLUDES += $(LOCAL_PATH)/../stlport/stlport
+#endif
 ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
 LOCAL_C_INCLUDES += $(NDK_PATH)/sources/crystax/include
 endif
