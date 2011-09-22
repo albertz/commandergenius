@@ -38,7 +38,7 @@ done
 )
 
 if [ -n "$CRYSTAX_WCHAR" ]; then
-	CRYSTAX_WCHAR_INCLUDE=-I$NDK/sources/crystax/include
+	CRYSTAX_WCHAR_INCLUDE=-isystem$NDK/sources/crystax/include
 	CRYSTAX_WCHAR_LIB="$NDK/sources/crystax/libs/armeabi/libcrystax_static.a"
 fi
 
@@ -46,13 +46,13 @@ CFLAGS="\
 -fexceptions -frtti \
 -fpic -ffunction-sections -funwind-tables -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  -Wno-psabi \
 -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
--I$NDK/platforms/$PLATFORMVER/arch-arm/usr/include -Wa,--noexecstack \
+-isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include -Wa,--noexecstack \
 -DANDROID \
 -DNDEBUG -O2 -g \
--I$NDK/sources/cxx-stl/gnu-libstdc++/include \
--I$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include \
--I$LOCAL_PATH/../sdl-1.2/include \
-`echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-I$LOCAL_PATH/../\1/include@g\"` \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include \
+-isystem$LOCAL_PATH/../sdl-1.2/include \
+`echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-isystem$LOCAL_PATH/../\1/include@g\"` \
 $CRYSTAX_WCHAR_INCLUDE"
 
 SHARED="-shared -Wl,-soname,libapplication.so"
@@ -80,6 +80,8 @@ $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.a \
 -L$LOCAL_PATH/../../obj/local/armeabi -Wl,--no-undefined -Wl,-z,noexecstack \
 -Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++ \
 $CRYSTAX_WCHAR_LIB"
+
+#echo env CFLAGS=\""$CFLAGS"\" LDFLAGS=\""$LDFLAGS"\" "$@"
 
 env PATH=$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \

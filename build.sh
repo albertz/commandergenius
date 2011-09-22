@@ -24,7 +24,7 @@ if uname -s | grep -i "windows" > /dev/null ; then
 	MYARCH=windows-x86
 fi
 
-cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build -j4 V=1 && \
+cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build V=1 -j4 && \
  { grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
    [ -`which ndk-build | grep '/android-ndk-r[56789]'` != - ] && \
    echo Stripping libapplication.so by hand \

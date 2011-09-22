@@ -2,9 +2,9 @@ Quick compilation guide:
 Download my GIT repo from https://github.com/pelya/commandergenius,
 then install Android SDK 3.1 from http://developer.android.com,
 NDK r5 from http://crystax.net/ and "ant" tool, then launch commands
+    android update project -p project
     rm project/jni/application/src
     ln -s vcmi project/jni/application/src
-    android update project -p project
     echo > project/jni/application/vcmi/libvcmi.so
 then download VCMI into the dir project/jni/application/vcmi/vcmi
 (or create a symlink to it if you already have downloaded it), then apply patch vcmi-android.diff,

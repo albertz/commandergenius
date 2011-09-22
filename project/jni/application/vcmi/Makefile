@@ -2,6 +2,7 @@
 $(shell mkdir -p AI debug/AI Scripting debug/Scripting \
 	out/vcmi/lib out/vcmi/server out/vcmi/AI/StupidAI \
 	out/vcmi/AI/GeniusAI out/vcmi/client out/vcmi/Scripting/ERM)
+$(shell rm -f ../../../obj/local/armeabi/libvcmi.so)
 
 LOCAL_PATH=$(shell dirname $0)
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`

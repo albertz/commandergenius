@@ -1,23 +1,8 @@
-Index: lib/Connection.h
-===================================================================
---- lib/Connection.h	(revision 2220)
-+++ lib/Connection.h	(working copy)
-@@ -82,7 +82,9 @@
- {
- 	bool operator()(const std::type_info *a, const std::type_info *b) const
- 	{
--		return a->before(*b);
-+		// Comparing pointers is bad bad practice, because type_info pointers to the same types
-+		// are different inside shared library and the executable that links to that library
-+		return strcmp(a->name(), b->name()) > 0;
- 	}
- };
- 
 Index: lib/CLodHandler.cpp
 ===================================================================
---- lib/CLodHandler.cpp	(revision 2220)
+--- lib/CLodHandler.cpp	(revision 2387)
 +++ lib/CLodHandler.cpp	(working copy)
-@@ -78,13 +78,15 @@
+@@ -87,13 +87,15 @@
  	Entry ourEntry = *en_it;
  
  	if(length) *length = ourEntry.realSize;
@@ -34,7 +19,7 @@ Index: lib/CLodHandler.cpp
  		FILE * f = fopen((myDir + "/" + ourEntry.realName).c_str(), "rb");
  		if (f)
  		{
-@@ -100,16 +102,21 @@
+@@ -109,16 +111,21 @@
  			delete[] outp;
  			return NULL;
  		}
@@ -58,7 +43,7 @@ Index: lib/CLodHandler.cpp
  		return outp;
  	}
  	else //we will decompress file
-@@ -122,7 +129,12 @@
+@@ -131,7 +138,12 @@
  		infs2(outp, ourEntry.size, ourEntry.realSize, decomp);
  		mutex->unlock();
  		delete[] outp;
@@ -74,7 +59,7 @@ Index: lib/CLodHandler.cpp
  }
 Index: lib/Interprocess.h
 ===================================================================
---- lib/Interprocess.h	(revision 2220)
+--- lib/Interprocess.h	(revision 2387)
 +++ lib/Interprocess.h	(working copy)
 @@ -1,3 +1,4 @@
 +/*
@@ -144,9 +129,24 @@ Index: lib/Interprocess.h
 +	fwrite("1", 1, 1, ff);
 +	fclose(ff);
 +}
+Index: lib/Connection.h
+===================================================================
+--- lib/Connection.h	(revision 2387)
++++ lib/Connection.h	(working copy)
+@@ -82,7 +82,9 @@
+ {
+ 	bool operator()(const std::type_info *a, const std::type_info *b) const
+ 	{
+-		return a->before(*b);
++		// Comparing pointers is bad bad practice, because type_info pointers to the same types
++		// are different inside shared library and the executable that links to that library
++		return strcmp(a->name(), b->name()) > 0;
+ 	}
+ };
+ 
 Index: server/stdafx.h
 ===================================================================
---- server/stdafx.h	(revision 2220)
+--- server/stdafx.h	(revision 2387)
 +++ server/stdafx.h	(working copy)
 @@ -15,8 +15,8 @@
  #include "../global.h"
@@ -161,7 +161,7 @@ Index: server/stdafx.h
  #include <boost/asio.hpp>
 Index: server/CVCMIServer.cpp
 ===================================================================
---- server/CVCMIServer.cpp	(revision 2220)
+--- server/CVCMIServer.cpp	(revision 2387)
 +++ server/CVCMIServer.cpp	(working copy)
 @@ -29,7 +29,7 @@
  using namespace boost;
@@ -189,7 +189,7 @@ Index: server/CVCMIServer.cpp
  
  	boost::system::error_code error;
  	tlog0<<"Listening for connections at port " << acceptor->local_endpoint().port() << std::endl;
- 	tcp::socket * s = new tcp::socket(acceptor->io_service());
+ 	tcp::socket * s = new tcp::socket(acceptor->get_io_service());
  	boost::thread acc(boost::bind(vaccept,acceptor,s,&error));
 +	/*
  	sr->setToTrueAndNotify();
@@ -200,19 +200,25 @@ Index: server/CVCMIServer.cpp
  	if (error)
 Index: server/CGameHandler.cpp
 ===================================================================
---- server/CGameHandler.cpp	(revision 2220)
+--- server/CGameHandler.cpp	(revision 2387)
 +++ server/CGameHandler.cpp	(working copy)
-@@ -602,7 +602,9 @@
- 
- 			if(apply)
+@@ -638,6 +638,7 @@
+ 			   (packType != typeList.getTypeID<ArrangeStacks>() || !isAllowedArrangePack((ArrangeStacks*)pack)) && // for dialogs like garrison
+ 			   states[getCurrentPlayer()].queries.size())
  			{
 +				tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << std::endl;
+ 				complain("Answer the query before attempting any further actions!");
+ 				PackageApplied applied;
+ 				applied.result = false;
+@@ -650,6 +651,7 @@
+ 			else if(apply)
+ 			{
  				bool result = apply->applyOnGH(this,&c,pack);
 +				tlog0<<__FUNCTION__ << " at " << __FILE__ << ":" << __LINE__ << std::endl;
  				tlog5 << "Message successfully applied (result=" << result << ")!\n";
  
  				//send confirmation that we've applied the package
-@@ -1795,7 +1797,7 @@
+@@ -1833,7 +1835,7 @@
  		iw.player = h1->tempOwner;
  		iw.components.push_back(Component(Component::SEC_SKILL, 18, ScholarLevel, 0));
  
@@ -223,7 +229,7 @@ Index: server/CGameHandler.cpp
  		if (cs2.spells.size())//if found new spell - apply
 Index: CConsoleHandler.cpp
 ===================================================================
---- CConsoleHandler.cpp	(revision 2220)
+--- CConsoleHandler.cpp	(revision 2387)
 +++ CConsoleHandler.cpp	(working copy)
 @@ -143,6 +143,7 @@
  
@@ -243,7 +249,7 @@ Index: CConsoleHandler.cpp
  int CConsoleHandler::run()
 Index: global.h
 ===================================================================
---- global.h	(revision 2220)
+--- global.h	(revision 2387)
 +++ global.h	(working copy)
 @@ -4,6 +4,7 @@
  #include <iostream>
@@ -253,7 +259,7 @@ Index: global.h
  #include <string> //std::find
  #include <boost/logic/tribool.hpp>
  #include <boost/unordered_set.hpp>
-@@ -729,29 +730,21 @@
+@@ -725,29 +726,21 @@
  	}
  
  
@@ -289,9 +295,25 @@ Index: global.h
  //for explicit overrides
  #ifdef _MSC_VER
  	#define OVERRIDE override
+Index: AI/GeniusAI/neuralNetwork.cpp
+===================================================================
+--- AI/GeniusAI/neuralNetwork.cpp	(revision 2387)
++++ AI/GeniusAI/neuralNetwork.cpp	(working copy)
+@@ -14,9 +14,9 @@
+ 	static bool in = 0;
+ 	if(!in)
+ 	{
+-		float x = (rand()+1)/float(RAND_MAX+1); 
++		float x = (rand())/float(RAND_MAX); 
+ 		float f = sqrtf( - 2.0f * log(x) );
+-			  x = (rand()+1)/float(RAND_MAX+1);
++			  x = (rand())/float(RAND_MAX);
+ 		kept = f * cosf( 2.0f * M_PI * x );
+ 		in = true;
+ 		return f * sinf( 2.0f * M_PI * x );
 Index: Scripting/ERM/ERMParser.cpp
 ===================================================================
---- Scripting/ERM/ERMParser.cpp	(revision 2220)
+--- Scripting/ERM/ERMParser.cpp	(revision 2387)
 +++ Scripting/ERM/ERMParser.cpp	(working copy)
 @@ -2,7 +2,7 @@
  #include <boost/version.hpp>
@@ -304,10 +326,10 @@ Index: Scripting/ERM/ERMParser.cpp
  #include <boost/bind.hpp>
 Index: client/Graphics.cpp
 ===================================================================
---- client/Graphics.cpp	(revision 2220)
+--- client/Graphics.cpp	(revision 2387)
 +++ client/Graphics.cpp	(working copy)
-@@ -333,8 +333,15 @@
- 		tasks += GET_SURFACE(backgroundsm[id],name);
+@@ -315,8 +315,15 @@
+ 		tasks += GET_SURFACE(backgroundsm[id], b["bg120"].String());
  	}
  
 +#ifdef ANDROID
@@ -322,7 +344,7 @@ Index: client/Graphics.cpp
  
  	for(size_t y=0; y < heroMoveArrows->ourImages.size(); ++y)
  	{
-@@ -541,13 +548,20 @@
+@@ -508,13 +515,20 @@
  	pr[3].first = &Graphics::flags4;
  	pr[3].second+=("AF00.DEF"),("AF01.DEF"),("AF02.DEF"),("AF03.DEF"),("AF04.DEF"),
  		("AF05.DEF"),("AF06.DEF"),("AF07.DEF");
@@ -344,11 +366,66 @@ Index: client/Graphics.cpp
  }
  SDL_Surface * Graphics::getPic(int ID, bool fort, bool builded)
  {
+@@ -677,7 +691,7 @@
+ 		return NULL;
+ 	}
+ 
+-	int magic =  *(const int*)hlp;
++	int magic =  read_unaligned_u32(hlp);
+ 	if(len < 10000  || (magic != 589598 && magic != 589599))
+ 	{
+ 		tlog1 << "Suspicious font file (length " << len <<", fname " << name << "), logging to suspicious_" << name << ".fnt\n";
+Index: client/SDL_Extensions.cpp
+===================================================================
+--- client/SDL_Extensions.cpp	(revision 2387)
++++ client/SDL_Extensions.cpp	(working copy)
+@@ -119,8 +119,8 @@
+ 	if(incrementPtr == -1)
+ 		ptr -= 2;
+ 
+-	Uint16 * const px = (Uint16*)ptr;
+-	*px = (B>>3) + ((G>>2) << 5) + ((R>>3) << 11); //drop least significant bits of 24 bpp encoded color
++	Uint16 px = (B>>3) + ((G>>2) << 5) + ((R>>3) << 11); //drop least significant bits of 24 bpp encoded color
++	memcpy(ptr, &px, sizeof(px));
+ 
+ 	if(incrementPtr == 1)
+ 		ptr += 2; //bpp
+@@ -150,9 +150,9 @@
+ 	const int rmask = 0xF800, gmask = 0x7E0, bmask = 0x1F;
+ 	const int rshift = 11, gshift = 5, bshift = 0;
+ 
+-	const Uint8 r5 = (*((Uint16 *)ptr) & rmask) >> rshift,
+-		b5 = (*((Uint16 *)ptr) & bmask) >> bshift,
+-		g5 = (*((Uint16 *)ptr) & gmask) >> gshift;
++	const Uint8 r5 = (read_unaligned_u16(ptr) & rmask) >> rshift,
++		b5 = (read_unaligned_u16(ptr) & bmask) >> bshift,
++		g5 = (read_unaligned_u16(ptr) & gmask) >> gshift;
+ 
+ 	const Uint32 r8 = (r5 << (8 - rbit)) | (r5 >> (2*rbit - 8)),
+ 		g8 = (g5 << (8 - gbit)) | (g5 >> (2*gbit - 8)),
+@@ -649,7 +649,7 @@
+ 			return *p;
+ 
+     case 2:
+-        return *(Uint16 *)p;
++        return read_unaligned_u16(p);
+ 
+     case 3:
+ /*
+@@ -661,7 +661,7 @@
+ //#endif
+ 
+     case 4:
+-        return *(Uint32 *)p;
++        return read_unaligned_u32(p);
+ 
+     default:
+         return 0;       // shouldn't happen, but avoids warnings
 Index: client/Client.cpp
 ===================================================================
---- client/Client.cpp	(revision 2220)
+--- client/Client.cpp	(revision 2387)
 +++ client/Client.cpp	(working copy)
-@@ -40,7 +40,7 @@
+@@ -41,7 +41,7 @@
  #include "../lib/RegisterTypes.cpp"
  
  extern std::string NAME;
@@ -357,22 +434,7 @@ Index: client/Client.cpp
  
  /*
   * Client.cpp, part of VCMI engine
-@@ -432,7 +432,13 @@
- 	hotSeat = (humanPlayers > 1);
- 
- 	std::vector<FileInfo> scriptModules;
--	CFileUtility::getFilesWithExt(scriptModules, "./Scripting", ".dll");
-+	CFileUtility::getFilesWithExt(scriptModules,
-+#ifdef ANDROID
-+	LIB_DIR "/"
-+#else
-+	"./"
-+#endif
-+	"Scripting", ".dll");
- 	BOOST_FOREACH(FileInfo &m, scriptModules)
- 	{
- 		CScriptingModule * nm = CDynLibHandler::getNewScriptingModule(m.name);
-@@ -505,9 +511,9 @@
+@@ -476,9 +476,9 @@
  
  void CClient::handlePack( CPack * pack )
  {			
@@ -384,7 +446,7 @@ Index: client/Client.cpp
  		apply->applyOnClBefore(this,pack);
  		tlog5 << "\tMade first apply on cl\n";
  		gs->apply(pack);
-@@ -642,18 +648,22 @@
+@@ -639,18 +639,22 @@
  		startServer();
  
  	th.update();
@@ -408,7 +470,7 @@ Index: client/Client.cpp
  		waitForServer();
  
  	th.update();
-@@ -668,27 +678,31 @@
+@@ -665,27 +669,31 @@
  CServerHandler::CServerHandler(bool runServer /*= false*/)
  {
  	serverThread = NULL;
@@ -444,7 +506,7 @@ Index: client/Client.cpp
  }
 Index: client/GUIBase.cpp
 ===================================================================
---- client/GUIBase.cpp	(revision 2220)
+--- client/GUIBase.cpp	(revision 2387)
 +++ client/GUIBase.cpp	(working copy)
 @@ -11,6 +11,7 @@
  #include "../CThreadHelper.h"
@@ -483,9 +545,9 @@ Index: client/GUIBase.cpp
  :lastClick(-500, -500)
 Index: client/CAnimation.h
 ===================================================================
---- client/CAnimation.h	(revision 2220)
+--- client/CAnimation.h	(revision 2387)
 +++ client/CAnimation.h	(working copy)
-@@ -46,6 +46,8 @@
+@@ -47,6 +47,8 @@
  	std::map<size_t, std::vector <size_t> > offset;
  
  	unsigned char * data;
@@ -494,7 +556,7 @@ Index: client/CAnimation.h
  	SDL_Color * palette;
  
  public:
-@@ -124,6 +126,8 @@
+@@ -125,6 +127,8 @@
   *  2nd byte = size of segment
   *  raw data (if any)
   */
@@ -503,7 +565,7 @@ Index: client/CAnimation.h
  class CompImage : public IImage
  {
  	//x,y - margins, w,h - sprite size
-@@ -157,8 +161,8 @@
+@@ -158,8 +162,8 @@
  
  	friend class CompImageLoader;
  };
@@ -515,7 +577,7 @@ Index: client/CAnimation.h
  {
 Index: client/CDefHandler.h
 ===================================================================
---- client/CDefHandler.h	(revision 2220)
+--- client/CDefHandler.h	(revision 2387)
 +++ client/CDefHandler.h	(working copy)
 @@ -30,7 +30,6 @@
  	ui32 totalInBlock;
@@ -539,7 +601,7 @@ Index: client/CDefHandler.h
  	static CDefHandler * giveDef(const std::string & defName);
 Index: client/CCreatureAnimation.h
 ===================================================================
---- client/CCreatureAnimation.h	(revision 2220)
+--- client/CCreatureAnimation.h	(revision 2387)
 +++ client/CCreatureAnimation.h	(working copy)
 @@ -66,6 +66,8 @@
  	int curFrame, internalFrame; //number of currently displayed frame
@@ -552,7 +614,7 @@ Index: client/CCreatureAnimation.h
  	int nextFrameT(SDL_Surface * dest, int x, int y, bool attacker, unsigned char animCount, bool incrementFrame = true, bool yellowBorder = false, bool blueBorder = false, SDL_Rect * destRect = NULL); //0 - success, any other - error //print next 
 Index: client/CMT.cpp
 ===================================================================
---- client/CMT.cpp	(revision 2220)
+--- client/CMT.cpp	(revision 2387)
 +++ client/CMT.cpp	(working copy)
 @@ -92,8 +92,10 @@
  void dispose();
@@ -573,20 +635,15 @@ Index: client/CMT.cpp
  	THC tlog0<<"\tLoading default system settings: "<<pomtime.getDif()<<std::endl;
  
  	//initializing audio
-@@ -137,10 +140,12 @@
- 	CCS->soundh->init();
- 	CCS->soundh->setVolume(GDefaultOptions.soundVolume);
- 	CCS->musich = new CMusicHandler;
-+
- 	//CGI->musich->init();
- 	//CGI->musich->setVolume(GDefaultOptions.musicVolume);
+@@ -141,6 +144,7 @@
+ 	CCS->musich->setVolume(GDefaultOptions.musicVolume);
  	tlog0<<"\tInitializing sound: "<<pomtime.getDif()<<std::endl;
  	tlog0<<"Initializing screen and sound handling: "<<tmh.getDif()<<std::endl;
 +
  
  	initDLL(::console,logfile);
  	const_cast<CGameInfo*>(CGI)->setFromLib();
-@@ -154,7 +159,9 @@
+@@ -154,7 +158,9 @@
  	CCS->curh->show();
  	tlog0<<"Screen handler: "<<pomtime.getDif()<<std::endl;
  	pomtime.getDif();
@@ -596,7 +653,7 @@ Index: client/CMT.cpp
  	graphics->loadHeroAnims();
  	tlog0<<"\tMain graphics: "<<tmh.getDif()<<std::endl;
  	tlog0<<"Initializing game graphics: "<<tmh.getDif()<<std::endl;
-@@ -186,11 +193,15 @@
+@@ -186,11 +192,15 @@
  }
  
  
@@ -612,7 +669,7 @@ Index: client/CMT.cpp
  {
  	tlog0 << "Starting... " << std::endl;      
  	po::options_description opts("Allowed options");
-@@ -237,7 +248,6 @@
+@@ -237,7 +247,6 @@
  	console->start();
  	atexit(dispose);
  	tlog0 <<"Creating console and logfile: "<<pomtime.getDif() << std::endl;
@@ -620,7 +677,7 @@ Index: client/CMT.cpp
  	conf.init();
  	tlog0 <<"Loading settings: "<<pomtime.getDif() << std::endl;
  	tlog0 << NAME << std::endl;
-@@ -262,6 +272,11 @@
+@@ -266,6 +275,11 @@
  	tlog0<<"\tInitializing video: "<<pomtime.getDif()<<std::endl;
  
  	//we can properly play intro only in the main thread, so we have to move loading to the separate thread
@@ -632,7 +689,7 @@ Index: client/CMT.cpp
  	boost::thread loading(init);
  
  	if(!vm.count("battle") && !vm.count("nointro"))
-@@ -270,6 +285,7 @@
+@@ -274,6 +288,7 @@
  	SDL_FillRect(screen,NULL,0);
  	CSDL_Ext::update(screen);
  	loading.join();
@@ -640,7 +697,7 @@ Index: client/CMT.cpp
  	tlog0<<"Initialization of VCMI (together): "<<total.getDif()<<std::endl;
  
  	if(!vm.count("battle"))
-@@ -286,8 +302,17 @@
+@@ -290,8 +305,17 @@
  		si->playerInfos[1].color = 1;
  		startGame(si);
  	}
@@ -658,7 +715,7 @@ Index: client/CMT.cpp
  
  	return 0;
  }
-@@ -558,10 +583,12 @@
+@@ -561,10 +585,12 @@
  		tlog2 << "Warning: SDL says that "  << bpp << "bpp is wrong and suggests " << suggestedBpp << std::endl;
  	}
  
@@ -671,7 +728,7 @@ Index: client/CMT.cpp
  	
  	if((screen = SDL_SetVideoMode(w, h, suggestedBpp, SDL_SWSURFACE|(fullscreen?SDL_FULLSCREEN:0))) == NULL)
  	{
-@@ -606,14 +633,27 @@
+@@ -609,14 +635,27 @@
  	setResolution = true;
  }
  
@@ -702,7 +759,7 @@ Index: client/CMT.cpp
  		//tlog0 << "got " << (int)ev->type;
  		if (ret == 0 || (ev->type==SDL_QUIT) ||
  			(ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4 && (ev->key.keysym.mod & KMOD_ALT)))
-@@ -632,7 +672,7 @@
+@@ -635,7 +674,7 @@
  			SDL_Delay(750);
  			SDL_Quit();
  			tlog0 << "Ending...\n";
@@ -711,7 +768,7 @@ Index: client/CMT.cpp
  		}
  		else if(LOCPLINT && ev->type == SDL_KEYDOWN && ev->key.keysym.sym==SDLK_F4)
  		{
-@@ -641,7 +681,7 @@
+@@ -644,7 +683,7 @@
  			setScreenRes(conf.cc.screenx, conf.cc.screeny, conf.cc.bpp, full);
  			GH.totalRedraw();
  			delete ev;
@@ -720,7 +777,7 @@ Index: client/CMT.cpp
  		}
  		else if(ev->type == SDL_USEREVENT)
  		{
-@@ -671,7 +711,7 @@
+@@ -674,7 +713,7 @@
  			}
  
  			delete ev;
@@ -729,7 +786,7 @@ Index: client/CMT.cpp
  		} 
  
  		//tlog0 << " pushing ";
-@@ -679,7 +719,7 @@
+@@ -682,7 +721,7 @@
  		events.push(ev);
  		eventsM.unlock();
  		//tlog0 << " done\n";
@@ -738,14 +795,14 @@ Index: client/CMT.cpp
  }
  
  void startGame(StartInfo * options, CConnection *serv/* = NULL*/) 
-@@ -740,3 +780,4 @@
+@@ -742,3 +781,4 @@
  	ev.user.code = 1;
  	SDL_PushEvent(&ev);
  }
 +
 Index: client/Client.h
 ===================================================================
---- client/Client.h	(revision 2220)
+--- client/Client.h	(revision 2387)
 +++ client/Client.h	(working copy)
 @@ -43,7 +43,7 @@
  public:
@@ -758,7 +815,7 @@ Index: client/Client.h
  
 Index: client/CDefHandler.cpp
 ===================================================================
---- client/CDefHandler.cpp	(revision 2220)
+--- client/CDefHandler.cpp	(revision 2387)
 +++ client/CDefHandler.cpp	(working copy)
 @@ -50,10 +50,19 @@
  		SDL_FreeSurface(ourImages[i].bitmap);
@@ -1087,7 +1144,7 @@ Index: client/CDefHandler.cpp
  }
 Index: client/CCreatureAnimation.cpp
 ===================================================================
---- client/CCreatureAnimation.cpp	(revision 2220)
+--- client/CCreatureAnimation.cpp	(revision 2387)
 +++ client/CCreatureAnimation.cpp	(working copy)
 @@ -37,15 +37,23 @@
  	}
@@ -1172,9 +1229,9 @@ Index: client/CCreatureAnimation.cpp
  						}
 Index: client/CAnimation.cpp
 ===================================================================
---- client/CAnimation.cpp	(revision 2220)
+--- client/CAnimation.cpp	(revision 2387)
 +++ client/CAnimation.cpp	(working copy)
-@@ -44,6 +44,8 @@
+@@ -46,6 +46,8 @@
  	~SDLImageLoader();
  };
  
@@ -1183,18 +1240,15 @@ Index: client/CAnimation.cpp
  class CompImageLoader
  {
  	CompImage * image;
-@@ -67,7 +69,7 @@
+@@ -69,11 +71,18 @@
  	CompImageLoader(CompImage * Img);
  	~CompImageLoader();
  };
 -
 +*/
- //Small internal class for parsing texts
- class TextParser
- {
-@@ -95,6 +97,13 @@
- 	}
- }
+ /*************************************************************************
+  *  DefFile, class used for def loading                                  *
+  *************************************************************************/
  
 +
 +#define CHECK_LOD_MEM_BLOCK_SIZE1(S, FF, F, L) { \
@@ -1206,7 +1260,7 @@ Index: client/CAnimation.cpp
  CDefFile::CDefFile(std::string Name):
  	data(NULL),
  	palette(NULL)
-@@ -112,15 +121,18 @@
+@@ -91,15 +100,18 @@
  		{   0,   0,   0, 192} // 75% - shadow border below selection
  	};
  
@@ -1226,7 +1280,7 @@ Index: client/CAnimation.cpp
  	unsigned int totalBlocks = readNormalNr(data, it);
  	it+=4;
  
-@@ -135,6 +147,7 @@
+@@ -117,6 +129,7 @@
  
  	for (unsigned int i=0; i<totalBlocks; i++)
  	{
@@ -1234,7 +1288,7 @@ Index: client/CAnimation.cpp
  		size_t blockID = readNormalNr(data, it);
  		it+=4;
  		size_t totalEntries = readNormalNr(data, it);
-@@ -146,6 +159,7 @@
+@@ -128,6 +141,7 @@
  
  		for (unsigned int j=0; j<totalEntries; j++)
  		{
@@ -1242,7 +1296,7 @@ Index: client/CAnimation.cpp
  			size_t currOffset = readNormalNr(data, it);
  			offset[blockID].push_back(currOffset);
  			it += 4;
-@@ -162,7 +176,9 @@
+@@ -144,7 +158,9 @@
  
  	const ui8 * FDef = data+it->second[frame];
  
@@ -1253,7 +1307,7 @@ Index: client/CAnimation.cpp
  	SSpriteDef sprite;
  
  	//sprite.size = SDL_SwapLE32(sd.size);//unused
-@@ -188,6 +204,7 @@
+@@ -170,6 +186,7 @@
  			//pixel data is not compressed, copy data to surface
  			for (unsigned int i=0; i<sprite.height; i++)
  			{
@@ -1261,7 +1315,7 @@ Index: client/CAnimation.cpp
  				loader.Load(sprite.width, FDef[currentOffset]);
  				currentOffset += sprite.width;
  				loader.EndLine();
-@@ -197,22 +214,33 @@
+@@ -179,22 +196,33 @@
  	case 1:
  		{
  			//for each line we have offset of pixel data
@@ -1297,7 +1351,7 @@ Index: client/CAnimation.cpp
  						loader.Load(length, FDef + currentOffset);
  						currentOffset+=length;
  					}
-@@ -237,12 +265,14 @@
+@@ -219,12 +247,14 @@
  
  				while (TotalRowLength<sprite.width)
  				{
@@ -1312,7 +1366,7 @@ Index: client/CAnimation.cpp
  						loader.Load(length, FDef[currentOffset]);
  						currentOffset += length;
  					}
-@@ -260,17 +290,20 @@
+@@ -242,17 +272,20 @@
  		{
  			for (unsigned int i=0; i<sprite.height; i++)
  			{
@@ -1333,7 +1387,7 @@ Index: client/CAnimation.cpp
  						loader.Load(length, FDef + currentOffset);
  						currentOffset += length;
  					}
-@@ -288,6 +321,7 @@
+@@ -270,6 +303,7 @@
  		tlog0<<"Error: unsupported format of def file:"<<sprite.format<<"\n";
  		break;
  	}
@@ -1341,7 +1395,7 @@ Index: client/CAnimation.cpp
  };
  
  CDefFile::~CDefFile()
-@@ -332,7 +366,7 @@
+@@ -314,7 +348,7 @@
  
  inline void SDLImageLoader::Load(size_t size, const ui8 * data)
  {
@@ -1350,7 +1404,7 @@ Index: client/CAnimation.cpp
  	{
  		memcpy((void *)position, data, size);
  		position += size;
-@@ -341,7 +375,7 @@
+@@ -323,7 +357,7 @@
  
  inline void SDLImageLoader::Load(size_t size, ui8 color)
  {
@@ -1359,7 +1413,7 @@ Index: client/CAnimation.cpp
  	{
  		memset((void *)position, color, size);
  		position += size;
-@@ -363,6 +397,7 @@
+@@ -345,6 +379,7 @@
  
  ////////////////////////////////////////////////////////////////////////////////
   
@@ -1367,7 +1421,7 @@ Index: client/CAnimation.cpp
  CompImageLoader::CompImageLoader(CompImage * Img):
  	image(Img),
  	position(NULL),
-@@ -536,6 +571,7 @@
+@@ -518,6 +553,7 @@
  		image->surf = newPtr;
  }
  
@@ -1375,7 +1429,7 @@ Index: client/CAnimation.cpp
  /*************************************************************************
   *  Classes for images, support loading from file and drawing on surface *
   *************************************************************************/
-@@ -641,6 +677,8 @@
+@@ -625,6 +661,8 @@
  	SDL_FreeSurface(surf);
  }
  
@@ -1384,7 +1438,7 @@ Index: client/CAnimation.cpp
  CompImage::CompImage(const CDefFile *data, size_t frame, size_t group):
  	surf(NULL),
  	line(NULL),
-@@ -861,6 +899,7 @@
+@@ -845,6 +883,7 @@
  	delete [] line;
  	delete [] palette;
  }
@@ -1392,9 +1446,9 @@ Index: client/CAnimation.cpp
  
  /*************************************************************************
   *  CAnimation for animations handling, can load part of file if needed  *
-@@ -953,9 +992,11 @@
+@@ -889,9 +928,11 @@
  	//try to get image from def
- 	if (source[group][frame].empty())
+ 	if (source[group][frame].getType() == JsonNode::DATA_NULL)
  	{
 +		/*
  		if (compressed)
@@ -1406,9 +1460,9 @@ Index: client/CAnimation.cpp
  	else //load from separate file
 Index: client/GUIBase.h
 ===================================================================
---- client/GUIBase.h	(revision 2220)
+--- client/GUIBase.h	(revision 2387)
 +++ client/GUIBase.h	(working copy)
-@@ -546,6 +546,8 @@
+@@ -558,6 +558,8 @@
  	CGuiHandler();
  	~CGuiHandler();
  	void run(); // holds the main loop for the whole program after initialization and manages the update/rendering system
@@ -1417,3 +1471,65 @@ Index: client/GUIBase.h
  	
  	void totalRedraw(); //forces total redraw (using showAll), sets a flag, method gets called at the end of the rendering
  	void simpleRedraw(); //update only top interface and draw background from buffer, sets a flag, method gets called at the end of the rendering
+Index: client/CSndHandler.cpp
+===================================================================
+--- client/CSndHandler.cpp	(revision 2387)
++++ client/CSndHandler.cpp	(working copy)
+@@ -151,16 +151,17 @@
+ 	}
+ 
+ 	const char *data = mfile->data();
+-	unsigned int numFiles = SDL_SwapLE32(*(Uint32 *)&data[0]);
+-	struct soundEntry *se = (struct soundEntry *)&data[4];
++	unsigned int numFiles = SDL_SwapLE32(read_unaligned_u32(&data[0]));
++	struct soundEntry se;
+ 
+-	for (unsigned int i=0; i<numFiles; i++, se++)
++	for (unsigned int i=0; i<numFiles; i++)
+ 	{
+ 		Entry entry;
++		memcpy(&se, &data[4+i*sizeof(se)], sizeof(se));
+ 
+-		entry.name = se->filename;
+-		entry.offset = SDL_SwapLE32(se->offset);
+-		entry.size = SDL_SwapLE32(se->size);
++		entry.name = se.filename;
++		entry.offset = SDL_SwapLE32(se.offset);
++		entry.size = SDL_SwapLE32(se.size);
+ 		entry.data = mfile->data() + entry.offset;
+ 
+ 		entries.push_back(entry);
+@@ -186,24 +187,26 @@
+ 		return;
+ 	}
+ 	const unsigned char *data = (const unsigned char *)mfile->data();
+-	unsigned int numFiles = SDL_SwapLE32(*(Uint32 *)&data[0]);
+-	struct videoEntry *ve = (struct videoEntry *)&data[4];
++	unsigned int numFiles = SDL_SwapLE32(read_unaligned_u32(&data[0]));
++	struct videoEntry ve;
+ 
+-	for (unsigned int i=0; i<numFiles; i++, ve++)
++	for (unsigned int i=0; i<numFiles; i++)
+ 	{
+ 		Entry entry;
++		memcpy(&ve, &data[4+i*sizeof(ve)], sizeof(ve));
+ 
+-		entry.name = ve->filename;
+-		entry.offset = SDL_SwapLE32(ve->offset);
++		entry.name = ve.filename;
++		entry.offset = SDL_SwapLE32(ve.offset);
+ 		entry.name.erase(entry.name.find_last_of('.'));
+ 
+ 		// There is no size, so check where the next file is
+ 		if (i == numFiles - 1) {
+ 			entry.size = mfile->size() - entry.offset;
+ 		} else {
+-			struct videoEntry *ve_next = ve+1;
++			struct videoEntry ve_next;
++			memcpy(&ve_next, &data[4+(i+1)*sizeof(ve)], sizeof(ve));
+ 
+-			entry.size = SDL_SwapLE32(ve_next->offset) - entry.offset;
++			entry.size = SDL_SwapLE32(ve_next.offset) - entry.offset;
+ 		}
+ 		entry.data = mfile->data() + entry.offset;
+ 
