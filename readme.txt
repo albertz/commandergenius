@@ -14,10 +14,10 @@ Also it's compatible with NDK r4b and all versions of CrystaX NDK starting from 
 CrystaX NDK adds support for wide chars, and required if you want to use Boost libraries.
 http://www.crystax.net/android/ndk.php
 The most supported environment for this port is Linux, MacOs should be okay too.
-If you're developing under Windows you'd better install andLinux or Ubuntu+Wubi, to get proper Linux environment
-running inside Windows, then install Linux toolchain on it. I was told andLinux compiles faster than Cygwin.
-Also you'll need full set of Linux utils and symlinks support to launch ChangeAppSettings.sh (sh, grep, sed, tr).
-http://www.pocketmagic.net/?p=1332 - guide how to set up environment in Cygwin.
+If you're developing under Windows you'd better install Portable Ubuntu, to get proper Linux environment
+running inside Windows, then install Linux toolchain on it.
+https://sourceforge.net/projects/portableubuntu/
+Cygwin is not supported by the NDK, starting from the NDK r6.
 
 How to compile demo application
 ===============================

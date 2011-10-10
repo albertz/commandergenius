@@ -22,13 +22,6 @@ LOCAL_SRC_FILES += $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wil
 LOCAL_CFLAGS :=
 LOCAL_C_INCLUDES :=
 
-#ifeq ($(CRYSTAX_TOOLCHAIN)$(NDK_R5_TOOLCHAIN),)
-#LOCAL_C_INCLUDES += $(LOCAL_PATH)/../stlport/stlport
-#endif
-ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
-LOCAL_C_INCLUDES += $(NDK_PATH)/sources/crystax/include
-endif
-
 LOCAL_C_INCLUDES += $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) \
 					$(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include \
 					$(foreach L, $(COMPILED_LIBRARIES), $(LOCAL_PATH)/../$(L)/include) \
@@ -50,12 +43,17 @@ LOCAL_STATIC_LIBRARIES += stlport
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
 
-LOCAL_LDFLAGS := -Lobj/local/armeabi 
+LOCAL_LDFLAGS := -Lobj/local/armeabi
 
 LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
 
 ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
-LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/armeabi -lcrystax_static
+LOCAL_C_INCLUDES += $(NDK_PATH)/sources/crystax/include
+LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/$(TARGET_ARCH_ABI) -lcrystax_static
+endif
+ifneq ($(NDK_R6_TOOLCHAIN),) # NDK r6 broke it
+LOCAL_C_INCLUDES += $(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/include
+LOCAL_LDLIBS += -L$(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/libs/$(TARGET_ARCH_ABI) -lstdc++
 endif
 
 LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \

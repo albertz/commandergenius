@@ -1,4 +1,4 @@
-/*                                            OF
+/*
 Simple DirectMedia Layer
 Java source code (C) 2009-2011 Sergii Pylypenko
   

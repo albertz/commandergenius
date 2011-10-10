@@ -1,4 +1,4 @@
-/*ACTION_HOVER_MOVE
+/*
 Simple DirectMedia Layer
 Java source code (C) 2009-2011 Sergii Pylypenko
   
