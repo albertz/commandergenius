@@ -517,11 +517,11 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 		{
 			if( moveMouseWithKbX >= 0 )
 			{
-				if( abs(moveMouseWithKbX - x) > SDL_ANDROID_sFakeWindowWidth / 5 )
+				if( abs(moveMouseWithKbX - x) > SDL_ANDROID_sFakeWindowWidth / 12 )
 					moveMouseWithKbSpeedX += moveMouseWithKbX > x ? -1 : 1;
 				else
 					moveMouseWithKbSpeedX = moveMouseWithKbSpeedX * 2 / 3;
-				if( abs(moveMouseWithKbY - y) > SDL_ANDROID_sFakeWindowHeight / 5 )
+				if( abs(moveMouseWithKbY - y) > SDL_ANDROID_sFakeWindowHeight / 12 )
 					moveMouseWithKbSpeedY += moveMouseWithKbY > y ? -1 : 1;
 				else
 					moveMouseWithKbSpeedY = moveMouseWithKbSpeedY * 2 / 3;
@@ -529,8 +529,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 				moveMouseWithKbX += moveMouseWithKbSpeedX;
 				moveMouseWithKbY += moveMouseWithKbSpeedY;
 
-				if( abs(moveMouseWithKbX - x) > SDL_ANDROID_sFakeWindowWidth / 4 ||
-					abs(moveMouseWithKbY - y) > SDL_ANDROID_sFakeWindowHeight / 4 )
+				if( abs(moveMouseWithKbX - x) > SDL_ANDROID_sFakeWindowWidth / 8 ||
+					abs(moveMouseWithKbY - y) > SDL_ANDROID_sFakeWindowHeight / 8 )
 				{
 					moveMouseWithKbX = -1;
 					moveMouseWithKbY = -1;
