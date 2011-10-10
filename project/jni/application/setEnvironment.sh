@@ -14,10 +14,13 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 SCRIPT=setEnvironment-r4b.sh
 CRYSTAX_WCHAR=
-if [ -n "`echo $NDK | grep 'android-ndk-r[56]'`" ]; then
+if [ -n "`echo $NDK | grep 'android-ndk-r[56789]'`" ]; then
 	SCRIPT=setEnvironment-r5b.sh
-	if [ -n "`echo $NDK | grep 'android-ndk-r5-crystax-1'`" ]; then
+	if [ -n "`echo $NDK | grep 'android-ndk-r[56789]-crystax'`" ]; then
 		CRYSTAX_WCHAR=1
+	fi
+	if [ -n "`echo $NDK | grep 'android-ndk-r[6789]'`" ]; then
+		MISSING_LIBCXX_PATH=1
 	fi
 fi
 

@@ -37,9 +37,16 @@ echo $APP_MODULES | xargs -n 1 echo | while read LIB ; do
 done
 )
 
+MISSING_INCLUDE=
+MISSING_LIB=
+
 if [ -n "$CRYSTAX_WCHAR" ]; then
-	CRYSTAX_WCHAR_INCLUDE=-isystem$NDK/sources/crystax/include
-	CRYSTAX_WCHAR_LIB="$NDK/sources/crystax/libs/armeabi/libcrystax_static.a"
+	MISSING_INCLUDE="$MISSING_INCLUDE -isystem$NDK/sources/crystax/include"
+	MISSING_LIB="$MISSING_LIB $NDK/sources/crystax/libs/armeabi/libcrystax_static.a"
+fi
+if [ -n "$MISSING_LIBCXX_PATH" ]; then
+	MISSING_INCLUDE="$MISSING_INCLUDE -isystem$NDK/sources/cxx-stl/gnu-libstdc++/include"
+	MISSING_LIB="$MISSING_LIB $NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/libstdc++.a"
 fi
 
 CFLAGS="\
@@ -53,7 +60,7 @@ CFLAGS="\
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include \
 -isystem$LOCAL_PATH/../sdl-1.2/include \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-isystem$LOCAL_PATH/../\1/include@g\"` \
-$CRYSTAX_WCHAR_INCLUDE"
+$MISSING_INCLUDE"
 
 SHARED="-shared -Wl,-soname,libapplication.so"
 if [ -n "$BUILD_EXECUTABLE" ]; then
@@ -79,7 +86,7 @@ $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libstdc++.a \
 -L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
 -L$LOCAL_PATH/../../obj/local/armeabi -Wl,--no-undefined -Wl,-z,noexecstack \
 -Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++ \
-$CRYSTAX_WCHAR_LIB"
+$MISSING_LIB"
 
 #echo env CFLAGS=\""$CFLAGS"\" LDFLAGS=\""$LDFLAGS"\" "$@"
 

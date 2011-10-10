@@ -5,11 +5,11 @@ SDL_MIXER_USE_LIBMAD := 1
 endif
 
 NDK_VERSION := $(strip $(patsubst android-ndk-%,%,$(filter android-ndk-%, $(subst /, ,$(dir $(TARGET_CC))))))
-$(info NDK version $(NDK_VERSION))
-ifneq ($(filter r1 r2 r3 r4, $(NDK_VERSION)),)
+#$(info NDK version $(NDK_VERSION)) # This warning puzzles ndk-gdb
+ifneq ($(filter r1 r2 r3 r4,$(NDK_VERSION)),)
 $(error Your NDK $(NDK_VERSION) is too old, please download NDK r4b, r5c or r6 from http://developer.android.com )
 endif
-ifneq ($(filter r5 r5b, $(NDK_VERSION)),)
+ifneq ($(filter r5 r5b,$(NDK_VERSION)),)
 $(error Your NDK $(NDK_VERSION) generates invalid code, please use NDK r5c from http://developer.android.com)
 endif
 ifeq ($(NDK_VERSION)-,-)
@@ -21,7 +21,11 @@ ifneq ($(findstring r4-crystax,$(NDK_VERSION)),)
 $(info Building with CrystaX r4 toolchain - internal STLPort disabled)
 CRYSTAX_TOOLCHAIN := 1
 endif
-ifneq ($(findstring r5c r6,$(NDK_VERSION))$(findstring r5-crystax,$(NDK_VERSION)),)
+ifneq ($(findstring r6b,$(NDK_VERSION))$(findstring r6-crystax,$(NDK_VERSION)),)
+$(info Building with NDK r6)
+NDK_R6_TOOLCHAIN := 1
+endif
+ifneq ($(findstring r5c,$(NDK_VERSION))$(findstring r5-crystax,$(NDK_VERSION))$(NDK_R6_TOOLCHAIN),)
 $(info Building with NDK r5c or r6 - internal STLPort disabled)
 NDK_R5_TOOLCHAIN := 1
 endif
