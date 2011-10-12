@@ -657,15 +657,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
     private static class ComponentSizeChooser extends BaseConfigChooser {
         public ComponentSizeChooser(int redSize, int greenSize, int blueSize,
                 int alphaSize, int depthSize, int stencilSize, boolean isGles2) {
-            super(new int[] { /*
-                    EGL10.EGL_RED_SIZE, redSize,
-                    EGL10.EGL_GREEN_SIZE, greenSize,
-                    EGL10.EGL_BLUE_SIZE, blueSize,
-                    EGL10.EGL_ALPHA_SIZE, alphaSize,
-                    EGL10.EGL_DEPTH_SIZE, depthSize,
-                    EGL10.EGL_STENCIL_SIZE, stencilSize,
-                    EGL10.EGL_RENDERABLE_TYPE, isGles2 ? EGL_OPENGL_ES2_BIT : 0, */
-                    EGL10.EGL_NONE});
+            super(new int[] {EGL10.EGL_NONE}); // Get all possible configs
             mValue = new int[1];
             mRedSize = redSize;
             mGreenSize = greenSize;
@@ -702,24 +694,41 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 int rendertype = findConfigAttrib(egl, display, config,
                         EGL10.EGL_RENDERABLE_TYPE, 0);
                 int desiredtype = mIsGles2 ? EGL_OPENGL_ES2_BIT : EGL_OPENGL_ES_BIT;
+                int nativeRender = findConfigAttrib(egl, display, config,
+                        EGL10.EGL_NATIVE_RENDERABLE, 0);
+                int caveat = findConfigAttrib(egl, display, config,
+                        EGL10.EGL_CONFIG_CAVEAT, EGL10.EGL_NONE);
                 int distance = Math.abs(r - mRedSize)
                     + Math.abs(g - mGreenSize)
-                    + Math.abs(b - mBlueSize) + Math.abs(a - mAlphaSize)
-                    + Math.abs( ((d > 0) == (mDepthSize > 0)) ? 0 : 10 )
-                    + Math.abs( ((s > 0) == (mStencilSize > 0)) ? 0 : 10 )
-                    + ( ((rendertype & desiredtype) != 0 ) ? 0 : 16 )
-                    + ( (rendertype == desiredtype) ? 0 : 1 ); // Small penalty for mixed GLES + GLES2 + OPENVG etc modes
+                    + Math.abs(b - mBlueSize) + Math.abs(a - mAlphaSize);
+                if( (d > 0) != (mDepthSize > 0) )
+                    distance += (d > 0) ? 5 : 1; // Small penalty if we don't need zbuffer but it is present
+                if( (s > 0) == (mStencilSize > 0) )
+                    distance += (s > 0) ? 5 : 1;
+                if( (rendertype & desiredtype) == 0 )
+                    distance += 5;
+                if( caveat == EGL10.EGL_SLOW_CONFIG )
+                    distance += 4;
+                if( caveat == EGL10.EGL_NON_CONFORMANT_CONFIG ) // dunno what that means, probably R and B channels swapped
+                    distance += 1;
+
                 String cfgcur = "R" + r + "G" + g + "B" + b + "A" + a + " depth " + d + " stencil " + s +
-                    " renderable type " + findConfigAttrib(egl, display, config, EGL10.EGL_RENDERABLE_TYPE, 0) + "(";
+                    " type " + rendertype + " (";
                 if((rendertype & EGL_OPENGL_ES_BIT) != 0)
-                    cfgcur += " GLES";
+                    cfgcur += "GLES";
                 if((rendertype & EGL_OPENGL_ES2_BIT) != 0)
                     cfgcur += " GLES2";
                 if((rendertype & EGL_OPENGL_BIT) != 0)
                     cfgcur += " OPENGL";
                 if((rendertype & EGL_OPENVG_BIT) != 0)
                     cfgcur += " OPENVG";
-                cfgcur += " )";
+                cfgcur += ")";
+                cfgcur += " caveat " + (caveat == EGL10.EGL_NONE ? "none" :
+                						(caveat == EGL10.EGL_SLOW_CONFIG ? "SLOW" :
+                						caveat == EGL10.EGL_NON_CONFORMANT_CONFIG ? "non-conformant" :
+                						String.valueOf(caveat)));
+                cfgcur += " nr " + nativeRender;
+                cfgcur += " pos " + distance;
                 Log.v("SDL", "GL config " + idx + ": " + cfgcur);
                 if (distance < closestDistance) {
                     closestDistance = distance;
