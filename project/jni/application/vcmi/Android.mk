@@ -4,6 +4,10 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := vcmi
 
+# VCMI compilation process is atrocious
+$(shell touch $(LOCAL_PATH)/libvcmi.so)
+$(warning Please ignore the error about libvcmi.so, just recompile)
+
 ifneq ($(NDK_R5_TOOLCHAIN),)
 LOCAL_SRC_FILES := libvcmi.so
 include $(PREBUILT_SHARED_LIBRARY)
