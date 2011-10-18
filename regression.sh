@@ -31,6 +31,15 @@ if [ -z "$STEP" ] ; then
 	STEP=10
 fi
 
+REVLIMIT="2011-05-31 16:30:08"
+if [ `date -d "$REVLIMIT" "+%s"` -gt `date -d "$FROM" "+%s"` ] ; then
+	echo "----- WARNING ----- ----- WARNING ----- ----- WARNING ----- ----- WARNING -----"
+	echo "The revisions below date $REVLIMIT do not support skipping the config dialog,"
+	echo "so they will stuck at the config screen after launching, so no data will be collected."
+	echo "You will have to launch the tests with those .apk files manually"
+	echo "----- WARNING ----- ----- WARNING ----- ----- WARNING ----- ----- WARNING -----"
+fi
+
 #export OLDBRANCH=`git branch | grep '*' | sed 's/[* ]*//'`
 #export CURDIR="`pwd`"
 #function restoreGit() {
@@ -72,8 +81,11 @@ adb install -r regression/$CURFMT.apk
 sleep 5
 adb shell am start -n net.olofson.ballfield.regression/.MainActivity
 sleep 40
+echo >> regression/regression.txt
 echo BUILDDATE $CURFMT: "`git log -n 1 --format="%s"`" >> regression/regression.txt
+echo >> regression/regression.txt
 adb shell logcat -d -t 20 | grep "SDL REGRESSION BUILDDATE $CURFMT" >> regression/regression.txt
+adb shell pm uninstall net.olofson.ballfield.regression
 
 git checkout -f "HEAD~$STEP"
 CURRENT="`git log -n 1 --format='%cD' --`"
