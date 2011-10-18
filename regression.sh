@@ -43,9 +43,9 @@ rm -rf project/jni/application/regression
 cp -rf regression/regression project/jni/application/regression
 ln -s regression project/jni/application/src
 ./ChangeAppSettings.sh -a
-cd project
-rm -rf obj
 echo "#define BUILDDATE \"$CURFMT\"" > project/jni/application/regression/regression.h
+rm -rf project/obj
+cd project
 nice -n19 ndk-build V=1 -j4 && ant debug && cp -f bin/DemoActivity-debug.apk ../regression/$CURFMT.apk
 cd ..
 adb install -r $CURFMT.apk
