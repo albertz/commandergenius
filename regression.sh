@@ -4,7 +4,8 @@ if [ -z "$1" ] ; then
 	echo "Usage: $0 startdate [enddate=now] [revisions-step=10]"
 	echo "Runs regression tests for all Git revisions up to specified date,"
 	echo "and produces the FPS measurements for each of the revisions."
-	echo "Naturally, you'll need to have an Android device connected to USB port."
+	echo "Naturally, you'll need to have an Android device connected to USB port,"
+	echo "and you should disable screen timeout in the Android device settings."
 	echo "Also, it messes up your current Git branch, so backup all your current changes."
 fi
 
@@ -29,15 +30,24 @@ if [ -z "$STEP" ] ; then
 	STEP=10
 fi
 
+export OLDBRANCH=`git branch | grep '*' | sed 's/[* ]*//'`
+function restoreGit() {
+	echo Restoring Git branch "$OLDBRANCH"
+	rm -rf project/jni/application/regression
+	git checkout -f "$OLDBRANCH"
+}
+
+trap restoreGit SIGHUP
+
 echo Revisions from "$FROM" to "$TO" , step "$STEP"
 rm -rf regression/regression
 cp -r project/jni/application/regression regression/regression
-OLDBRANCH=`git branch | grep '*' | sed 's/[* ]*//'`
 git checkout -f "@{$TO}"
 CURRENT="`git log -n 1 --format='%cD' --`"
 while [ `date -d "$CURRENT" "+%s"` -gt `date -d "$FROM" "+%s"` ] ; do
 CURFMT="`git log -n 1 --format='%ci' -- | sed 's/[+].*//' | sed 's/ /::/'`"
-CURFMT=$CURFMT
+CURFMT=`echo $CURFMT | sed 's/ 	//'`
+echo \"$CURFMT\"
 rm -f project/jni/application/src
 rm -rf project/jni/application/regression
 cp -rf regression/regression project/jni/application/regression
@@ -57,5 +67,4 @@ adb shell logcat -d -t 20 | grep "SDL REGRESSION BUILDDATE $CURFMT" >> regressio
 git checkout -f "HEAD~$STEP"
 CURRENT="`git log -n 1 --format='%cD' --`"
 done
-rm -rf project/jni/application/regression
-git checkout -f "$OLDBRANCH"
+restoreGit
