@@ -1,0 +1,96 @@
+diff -u -r scummvm-1.3.1-old/configure scummvm-1.3.1/configure
+--- scummvm-1.3.1-old/configure	2011-07-03 23:44:51.000000000 +0300
++++ scummvm-1.3.1/configure	2011-10-17 16:32:52.498962514 +0300
+@@ -653,7 +653,7 @@
+   -h, --help              display this help and exit
+   --backend=BACKEND       backend to build (android, dc, dingux, ds, gp2x, gph,
+                           iphone, linuxmoto, maemo, n64, null, openpandora, ps2,
+-                          psp, samsungtv, sdl, symbian, webos, wii, wince) [sdl]
++                          psp, samsungtv, sdl, symbian, webos, wii, wince, androidsdl) [sdl]
+ 
+ Installation directories:
+   --prefix=PREFIX         install architecture-independent files in PREFIX
+@@ -680,6 +680,7 @@
+ Special configuration feature:
+   --host=HOST             cross-compile to target HOST (arm-linux, ...)
+                           special targets: android for Android
++                                           androidsdl for Android with SDL backend
+                                            caanoo for Caanoo
+                                            dingux for Dingux
+                                            dreamcast for Sega Dreamcast
+@@ -984,6 +985,11 @@
+ 	_host_cpu=arm
+ 	_host_alias=arm-linux-androideabi
+ 	;;
++androidsdl)
++	_host_os=androidsdl
++	_host_cpu=arm
++	_host_alias=arm-linux-androideabi
++	;;
+ arm-riscos)
+ 	_host_os=riscos
+ 	_host_cpu=arm
+@@ -1288,9 +1294,9 @@
+ 
+ 	if test -n "$_host"; then
+ 		# In cross-compiling mode, we cannot run the result
+-		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO.o -c tmp_cxx_compiler.cpp" 2> /dev/null && cc_check_clean tmp_cxx_compiler.cpp
++		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO.o -c tmp_cxx_compiler.cpp" && cc_check_clean tmp_cxx_compiler.cpp
+ 	else
+-		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO$HOSTEXEEXT tmp_cxx_compiler.cpp" 2> /dev/null && eval "$TMPO$HOSTEXEEXT 2> /dev/null" && cc_check_clean tmp_cxx_compiler.cpp
++		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO$HOSTEXEEXT tmp_cxx_compiler.cpp" && eval "$TMPO$HOSTEXEEXT 2> /dev/null" && cc_check_clean tmp_cxx_compiler.cpp
+ 	fi
+ }
+ 
+@@ -1559,6 +1565,11 @@
+ 		_unix=yes
+ 		_seq_midi=no
+ 		;;
++	androidsdl)
++		CXXFLAGS="$CXXFLAGS -Os"
++		_unix=yes
++		_seq_midi=no
++		;;
+ 	beos*)
+ 		DEFINES="$DEFINES -DSYSTEM_NOT_SUPPORTING_D_TYPE"
+ 		# Needs -lbind -lsocket for the timidity MIDI driver
+@@ -1729,6 +1740,12 @@
+ 			_mt32emu=no
+ 			_timidity=no
+ 			;;
++		androidsdl)
++			DEFINES="$DEFINES -DANDROID"
++			_unix=yes
++			_need_memalign=yes
++			_seq_midi=no
++			;;
+ 		arm-linux|arm*-linux-gnueabi|arm-*-linux)
+ 			_unix=yes
+ 			_need_memalign=yes
+@@ -2123,7 +2140,7 @@
+ # Enable 16bit support only for backends which support it
+ #
+ case $_backend in
+-	android | dingux | dreamcast | gph | openpandora | psp | samsungtv | sdl | webos | wii)
++	android | androidsdl | dingux | dreamcast | gph | openpandora | psp | samsungtv | sdl | webos | wii)
+ 		if test "$_16bit" = auto ; then
+ 			_16bit=yes
+ 		else
+@@ -3180,7 +3197,7 @@
+ 		case $_host_os in
+ 		# newlib-based system include files suppress non-C89 function
+ 		# declarations under __STRICT_ANSI__
+-		amigaos* | android | dreamcast | ds | gamecube | mingw* | n64 | psp | ps2 | wii | wince )
++		amigaos* | android | androidsdl | dreamcast | ds | gamecube | mingw* | n64 | psp | ps2 | wii | wince )
+ 			CXXFLAGS="$CXXFLAGS -W -Wno-unused-parameter"
+ 			;;
+ 		*)
+@@ -3203,7 +3220,7 @@
+ 
+ # Some platforms use certain GNU extensions in header files
+ case $_host_os in
+-android | gamecube | psp | wii)
++android | androidsdl | gamecube | psp | wii )
+ 	;;
+ *)
+ 	# ICC does not support pedantic

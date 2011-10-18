@@ -19,6 +19,8 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
+#include "regression.h"
+
 
 /*----------------------------------------------------------
 	Definitions...
@@ -538,11 +540,12 @@ int main(int argc, char* argv[])
 		SDL_BlitSurface(logo, NULL, screen, &r);
 
 		/* FPS counter */
-		if(tick > fps_start + 500)
+		if(tick > fps_start + 1500)
 		{
 			fps = (float)fps_count * 1000.0 / (tick - fps_start);
 			fps_count = 0;
 			fps_start = tick;
+			__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL REGRESSION BUILDDATE %s FPS: %f", BUILDDATE, fps);
 		}
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
 		++fps_count;
@@ -649,8 +652,10 @@ int main(int argc, char* argv[])
 	SDL_FreeSurface(back);
 	SDL_FreeSurface(logo);
 	SDL_FreeSurface(font);
+	/*
 	std::ostringstream os;
 	os << "lalala" << std::endl << "more text" << std::endl;
 	std::cout << os.str() << std::endl << "text text" << std::endl;
+	*/
 	exit(0);
 }
