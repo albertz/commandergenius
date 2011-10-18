@@ -6,7 +6,8 @@ if [ -z "$1" ] ; then
 	echo "and produces the FPS measurements for each of the revisions."
 	echo "Naturally, you'll need to have an Android device connected to USB port,"
 	echo "and you should disable screen timeout in the Android device settings."
-	echo "Also, it messes up your current Git branch, so backup all your current changes."
+	echo "Also, it messes up your current Git branch, so backup all your current changes,"
+	echo "and you'll have to run command 'git checkout -f sdl_android' after you're done."
 fi
 
 if echo "$0" | grep "regression/run-regression.sh" ; then
@@ -30,16 +31,16 @@ if [ -z "$STEP" ] ; then
 	STEP=10
 fi
 
-export OLDBRANCH=`git branch | grep '*' | sed 's/[* ]*//'`
-export CURDIR="`pwd`"
-function restoreGit() {
-	echo Restoring Git branch "$OLDBRANCH"
-	rm -rf "$CURDIR/project/jni/application/regression"
-	git checkout -f "$OLDBRANCH"
-	exit 0
-}
+#export OLDBRANCH=`git branch | grep '*' | sed 's/[* ]*//'`
+#export CURDIR="`pwd`"
+#function restoreGit() {
+#	echo Restoring Git branch "$OLDBRANCH"
+#	rm -rf "$CURDIR/project/jni/application/regression"
+#	git checkout -f "$OLDBRANCH"
+#	exit 0
+#}
 
-trap restoreGit SIGHUP
+#trap restoreGit SIGHUP
 
 echo Revisions from "$FROM" to "$TO" , step "$STEP"
 rm -rf regression/regression
@@ -65,8 +66,10 @@ rm -rf project/obj
 cd project
 nice -n19 ndk-build V=1 -j4 && ant debug && cp -f bin/DemoActivity-debug.apk ../regression/$CURFMT.apk
 cd ..
-adb install -r regression/$CURFMT.apk
 adb shell pm uninstall net.olofson.ballfield.regression
+sleep 2
+adb install -r regression/$CURFMT.apk
+sleep 5
 adb shell am start -n net.olofson.ballfield.regression/.MainActivity
 sleep 40
 echo BUILDDATE $CURFMT: "`git log -n 1 --format="%s"`" >> regression/regression.txt
@@ -76,4 +79,4 @@ git checkout -f "HEAD~$STEP"
 CURRENT="`git log -n 1 --format='%cD' --`"
 done
 
-restoreGit
+#restoreGit
