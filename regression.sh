@@ -66,8 +66,9 @@ cd project
 nice -n19 ndk-build V=1 -j4 && ant debug && cp -f bin/DemoActivity-debug.apk ../regression/$CURFMT.apk
 cd ..
 adb install -r regression/$CURFMT.apk
+adb shell pm uninstall net.olofson.ballfield.regression
 adb shell am start -n net.olofson.ballfield.regression/.MainActivity
-sleep 15
+sleep 40
 echo BUILDDATE $CURFMT: "`git log -n 1 --format="%s"`" >> regression/regression.txt
 adb shell logcat -d -t 20 | grep "SDL REGRESSION BUILDDATE $CURFMT" >> regression/regression.txt
 

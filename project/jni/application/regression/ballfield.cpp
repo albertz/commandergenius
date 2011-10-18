@@ -545,7 +545,8 @@ int main(int argc, char* argv[])
 			fps = (float)fps_count * 1000.0 / (tick - fps_start);
 			fps_count = 0;
 			fps_start = tick;
-			__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL REGRESSION BUILDDATE %s FPS: %f", BUILDDATE, fps);
+			__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL REGRESSION BUILDDATE %s FPS: %f SCREEN %dx%d balls %d",
+									BUILDDATE, fps, SCREEN_W, SCREEN_H, BALLS);
 		}
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
 		++fps_count;
