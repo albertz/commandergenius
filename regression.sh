@@ -55,8 +55,13 @@ rm -rf project/jni/application/regression
 cp -rf regression/regression project/jni/application/regression
 ln -s regression project/jni/application/src
 ./ChangeAppSettings.sh -a
+echo Patching project/src/Globals.java
+cat project/src/Globals.java | \
+	sed "s/public static boolean DownloadToSdcard = .*;/public static boolean DownloadToSdcard = false;/" > \
+	project/src/Globals.java.1
+mv -f project/src/Globals.java.1 project/src/Globals.java
 echo "#define BUILDDATE \"$CURFMT\"" > project/jni/application/regression/regression.h
-#rm -rf project/obj
+rm -rf project/obj
 cd project
 nice -n19 ndk-build V=1 -j4 && ant debug && cp -f bin/DemoActivity-debug.apk ../regression/$CURFMT.apk
 cd ..
