@@ -42,17 +42,18 @@ rm -f project/jni/application/src
 rm -rf project/jni/application/regression
 cp -rf regression/regression project/jni/application/regression
 ln -s regression project/jni/application/src
-./ChangeAppSettings.sh -a
+#./ChangeAppSettings.sh -a
 echo "#define BUILDDATE \"$CURFMT\"" > project/jni/application/regression/regression.h
 rm -rf project/obj
 cd project
-nice -n19 ndk-build V=1 -j4 && ant debug && cp -f bin/DemoActivity-debug.apk ../regression/$CURFMT.apk
+#nice -n19 ndk-build V=1 -j4 && ant debug && cp -f bin/DemoActivity-debug.apk ../regression/$CURFMT.apk
 cd ..
-adb install -r $CURFMT.apk
-adb shell am start -n net.olofson.ballfield.regression/.MainActivity
+#adb install -r $CURFMT.apk
+#adb shell am start -n net.olofson.ballfield.regression/.MainActivity
 sleep 5
-adb shell logcat -d -t 20 | grep "SDL REGRESSION BUILDDATE $CURFMT" >> regression/regression.txt
+echo BUILDDATE $CURFMT: "`git log -n 1 --format="%s"`" >> regression/regression.txt
+#adb shell logcat -d -t 20 | grep "SDL REGRESSION BUILDDATE $CURFMT" >> regression/regression.txt
 
-git checkout -f "@{$STEP}"
+git checkout -f "HEAD~$STEP"
 CURRENT="`git log -n 1 --format='%cD' --`"
 done
