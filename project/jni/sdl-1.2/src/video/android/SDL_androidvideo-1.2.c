@@ -115,7 +115,7 @@ int ANDROID_ToggleFullScreen(_THIS, int fullscreen)
 	return 1;
 }
 
-#define SDL_NUMMODES 12
+#define SDL_NUMMODES 13
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -278,7 +278,8 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[9]->w = 480; SDL_modelist[9]->h = 320; // Virtual wide-screen mode
 	SDL_modelist[10]->w = 800; SDL_modelist[10]->h = 480; // Virtual wide-screen mode
 	SDL_modelist[11]->w = 544; SDL_modelist[11]->h = 332; // I have no idea where this videomode is used
-	SDL_modelist[12] = NULL;
+	SDL_modelist[12]->w = 640; SDL_modelist[12]->h = 350; // For PrefClub app
+	SDL_modelist[13] = NULL;
 	
 	SDL_VideoInit_1_3(NULL, 0);
 	

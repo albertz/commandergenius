@@ -393,9 +393,12 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean dispatchGenericMotionEvent (MotionEvent ev)
 	{
+		// This code fails to run for Android 1.6, so there will be no generic motion event for Andorid screen keyboard
+		/*
 		if(_screenKeyboard != null)
 			_screenKeyboard.dispatchGenericMotionEvent(ev);
 		else
+		*/
 		if(mGLView != null)
 			mGLView.onGenericMotionEvent(ev);
 		return true;

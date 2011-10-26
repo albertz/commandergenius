@@ -826,6 +826,7 @@ for LIB in freetype intl jpeg png lua mad stlport tremor xerces xml2; do
 done
 done
 rm -rf project/bin/classes
+rm -rf project/bin/res
 
 mkdir -p project/assets
 rm -f project/assets/*
