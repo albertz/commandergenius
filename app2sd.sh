@@ -2,7 +2,7 @@
 
 APK=$1
 if [ -z "$APK" ] ; then
-	APK=project/bin/DemoActivity-debug.apk
+	APK=project/bin/MainActivity-debug.apk
 fi
 
 echo Moving shared libraries on $APK to SD card
