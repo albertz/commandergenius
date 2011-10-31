@@ -35,6 +35,7 @@ button6 \
 button6pressed \
 button7 \
 button7 \
+mouse_pointer \
 ; do
 	if [ \! -e ../../res/raw/ultimatedroid$F.png.raw ]; then
 		echo Cannot find ../../res/raw/ultimatedroid$F.png.raw - check if all files are in place
@@ -89,6 +90,7 @@ dpad_down \
 6pressed \
 keyboard \
 keyboard \
+mouse_pointer \
 ; do
 	if [ \! -e ../../res/raw/simpletheme$F.png.raw ]; then
 		echo Cannot find ../../res/raw/simpletheme$F.png.raw - check if all files are in place

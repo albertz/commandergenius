@@ -71,7 +71,7 @@ int SDL_ANDROID_CompatibilityHacks = 0;
 int SDL_ANDROID_BYTESPERPIXEL = 2;
 int SDL_ANDROID_BITSPERPIXEL = 16;
 int SDL_ANDROID_UseGles2 = 0;
-
+int SDL_ANDROID_ShowMouseCursor = 0;
 
 static void appPutToBackgroundCallbackDefault(void)
 {

@@ -789,7 +789,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz,
 		jint MoveMouseWithJoystickSpeed, jint MoveMouseWithJoystickAccel,
 		jint LeftClickKeycode, jint RightClickKeycode,
 		jint LeftClickTimeout, jint RightClickTimeout,
-		jint RelativeMovement, jint RelativeMovementSpeed, jint RelativeMovementAccel)
+		jint RelativeMovement, jint RelativeMovementSpeed, jint RelativeMovementAccel,
+		jint ShowMouseCursor)
 {
 	isMouseUsed = 1;
 	rightClickMethod = RightClickMethod;
@@ -808,6 +809,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz,
 	relativeMovement = RelativeMovement;
 	relativeMovementSpeed = RelativeMovementSpeed;
 	relativeMovementAccel = RelativeMovementAccel;
+	SDL_ANDROID_ShowMouseCursor = ShowMouseCursor;
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "relativeMovementSpeed %d relativeMovementAccel %d", relativeMovementSpeed, relativeMovementAccel);
 }
 

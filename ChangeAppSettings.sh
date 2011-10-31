@@ -224,6 +224,16 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$ShowMouseCursor" -o -z "$AUTO" ]; then
+echo
+echo -n "Show SDL mouse cursor, for applicaitons that do not draw it (y) or (n) ($ShowMouseCursor): "
+read var
+if [ -n "$var" ] ; then
+	ShowMouseCursor="$var"
+	CHANGED=1
+fi
+fi
+
 if [ -z "$AppNeedsArrowKeys" -o -z "$AUTO" ]; then
 echo
 echo "Application needs arrow keys (y) or (n), if (y) the accelerometer or touchscreen keyboard"
@@ -536,6 +546,7 @@ echo SdlVideoResizeKeepAspect=$SdlVideoResizeKeepAspect >> AndroidAppSettings.cf
 echo CompatibilityHacks=$CompatibilityHacks >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
+echo ShowMouseCursor=$ShowMouseCursor >> AndroidAppSettings.cfg
 echo ForceRelativeMouseMode=$ForceRelativeMouseMode >> AndroidAppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
 echo AppNeedsTextInput=$AppNeedsTextInput >> AndroidAppSettings.cfg
@@ -645,6 +656,12 @@ if [ "$ForceRelativeMouseMode" = "y" ] ; then
 	ForceRelativeMouseMode=true
 else
 	ForceRelativeMouseMode=false
+fi
+
+if [ "$ShowMouseCursor" = "y" ] ; then
+	ShowMouseCursor=true
+else
+	ShowMouseCursor=false
 fi
 
 if [ "$AppNeedsArrowKeys" = "y" ] ; then
@@ -761,6 +778,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \
 	sed "s/public static boolean AppNeedsTwoButtonMouse = .*;/public static boolean AppNeedsTwoButtonMouse = $AppNeedsTwoButtonMouse;/" | \
 	sed "s/public static boolean ForceRelativeMouseMode = .*;/public static boolean ForceRelativeMouseMode = $ForceRelativeMouseMode;/" | \
+	sed "s/public static boolean ShowMouseCursor = .*;/public static boolean ShowMouseCursor = $ShowMouseCursor;/" | \
 	sed "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" | \
 	sed "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" | \
 	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \

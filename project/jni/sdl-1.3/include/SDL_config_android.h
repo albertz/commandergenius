@@ -37,7 +37,7 @@
 #define SDL_VIDEO_RENDER_OGL_ES 1
 #define SDL_VIDEO_RENDER_OGL_ES_GL_CONTEXT_LOSING_IMMUNE 1
 /* SDL uses some OpenGL textures for drawing in-screen keyboard, so application should allocate OpenGL texture ID-s starting from this value */
-#define SDL_GL_FIRST_SAFE_TEXTURE_ID 25
+#define SDL_GL_FIRST_SAFE_TEXTURE_ID 26
 
 #define SDL_AUDIO_DRIVER_ANDROID 1
 

@@ -45,6 +45,7 @@ class Globals {
 	public static boolean AppUsesMouse = false;
 	public static boolean AppNeedsTwoButtonMouse = false;
 	public static boolean ForceRelativeMouseMode = false; // If both on-screen keyboard and mouse are needed, this will only set the default setting, user may override it later
+	public static boolean ShowMouseCursor = false;
 	public static boolean AppNeedsArrowKeys = true;
 	public static boolean AppNeedsTextInput = true;
 	public static boolean AppUsesJoystick = false;

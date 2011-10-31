@@ -855,6 +855,17 @@ static void ANDROID_FlipHWSurfaceInternal()
 		rect.h = SDL_CurrentVideoSurface->h;
 		SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, SDL_CurrentVideoSurface->pixels, SDL_CurrentVideoSurface->pitch);
 		SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &rect);
+		static int MousePointerAlpha = 255;
+		if(SDL_ANDROID_ShowMouseCursor)
+		{
+			int x, y;
+			SDL_GetMouseState(&x, &y);
+			x = x * SDL_ANDROID_sRealWindowWidth / SDL_ANDROID_sFakeWindowWidth;
+			y = y * SDL_ANDROID_sRealWindowHeight / SDL_ANDROID_sFakeWindowHeight;
+			SDL_ANDROID_DrawMouseCursor( x, y, 0, MousePointerAlpha );
+			if( MousePointerAlpha > 64 )
+				MousePointerAlpha -= 10 ;
+		}
 		if( SDL_ANDROID_ShowScreenUnderFinger && SDL_ANDROID_ShowScreenUnderFingerRect.w > 0 )
 		{
 			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &SDL_ANDROID_ShowScreenUnderFingerRectSrc, &SDL_ANDROID_ShowScreenUnderFingerRect);
@@ -883,7 +894,22 @@ static void ANDROID_FlipHWSurfaceInternal()
 			glDrawArrays(GL_LINE_LOOP, 0, 4);
 			glDisableClientState(GL_VERTEX_ARRAY);
 			glPopMatrix();
-			glFlush();
+			if(SDL_ANDROID_ShowMouseCursor)
+			{
+				MousePointerAlpha = 255;
+				int x, y;
+				SDL_GetMouseState(&x, &y);
+				x = SDL_ANDROID_ShowScreenUnderFingerRect.x +
+					( x - SDL_ANDROID_ShowScreenUnderFingerRectSrc.x ) *
+					SDL_ANDROID_ShowScreenUnderFingerRect.w / SDL_ANDROID_ShowScreenUnderFingerRectSrc.w;
+				y = SDL_ANDROID_ShowScreenUnderFingerRect.y +
+					( y - SDL_ANDROID_ShowScreenUnderFingerRectSrc.y ) *
+					SDL_ANDROID_ShowScreenUnderFingerRect.h / SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
+				x = x * SDL_ANDROID_sRealWindowWidth / SDL_ANDROID_sFakeWindowWidth;
+				y = y * SDL_ANDROID_sRealWindowHeight / SDL_ANDROID_sFakeWindowHeight;
+				SDL_ANDROID_DrawMouseCursor( x, y, 16, 255 );
+			}
+			//glFlush();
 		}
 	}
 };
@@ -1053,7 +1079,7 @@ void SDL_ANDROID_MultiThreadedVideoLoop()
 		SDL_mutexP(videoThread.mutex);
 		videoThread.threadReady = 1;
 		SDL_CondSignal(videoThread.cond2);
-		ret = SDL_CondWaitTimeout(videoThread.cond, videoThread.mutex, SDL_ANDROID_CompatibilityHacks ? 400 : 1000);
+		ret = SDL_CondWaitTimeout(videoThread.cond, videoThread.mutex, SDL_ANDROID_CompatibilityHacks ? 100 : 1000);
 		if( videoThread.execute )
 		{
 			videoThread.threadReady = 0;

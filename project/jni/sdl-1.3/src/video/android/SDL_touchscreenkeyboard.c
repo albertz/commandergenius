@@ -87,7 +87,8 @@ typedef struct
 static GLTexture_t arrowImages[5] = { {0, 0, 0}, };
 static GLTexture_t buttonAutoFireImages[MAX_BUTTONS_AUTOFIRE*2] = { {0, 0, 0}, };
 static GLTexture_t buttonImages[MAX_BUTTONS*2] = { {0, 0, 0}, };
-
+static GLTexture_t mousePointer;
+enum { MOUSE_POINTER_W = 32, MOUSE_POINTER_H = 32, MOUSE_POINTER_X = 5, MOUSE_POINTER_Y = 7 }; // X and Y are offsets of the pointer tip
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
@@ -643,11 +644,23 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	}
 };
 
-
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenKeyboardUsed) ( JNIEnv*  env, jobject thiz)
 {
 	SDL_ANDROID_isTouchscreenKeyboardUsed = 1;
+}
+
+void SDL_ANDROID_DrawMouseCursor(int x, int y, int size, int alpha)
+{
+	SDL_Rect r;
+	// I've failed with size calcualtions, so leaving it as-is
+	r.x = x - MOUSE_POINTER_X;
+	r.y = y - MOUSE_POINTER_Y;
+	r.w = MOUSE_POINTER_W;
+	r.h = MOUSE_POINTER_H;
+	beginDrawingTex();
+	drawCharTex( &mousePointer, NULL, &r, 255, 255, 255, alpha );
+	endDrawingTex();
 }
 
 static int
@@ -676,7 +689,9 @@ static int setupScreenKeyboardButton( int buttonID, Uint8 * charBuf )
 	else
 		data = &(buttonImages[buttonID-9]);
 
-	if( buttonID > 22 ) // Error, array too big
+	if( buttonID == 23 )
+		data = &mousePointer;
+	else if( buttonID > 22 ) // Error, array too big
 		return 12; // Return value bigger than zero to iterate it
 
 	memcpy(&w, charBuf, sizeof(int));

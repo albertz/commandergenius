@@ -23,7 +23,7 @@ How to compile demo application
 ===============================
 
 Launch commands
-	android update project -p project
+	android update project -p project -t android-12
 	rm project/jni/application/src
 	ln -s ballfield project/jni/application/src
 	ChangeAppSettings.sh -a
