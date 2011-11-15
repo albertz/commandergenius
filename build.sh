@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Set here your own NDK path if needed
-# export PATH=$PATH:~/src/endless_space/android-ndk-r5b
+# export PATH=$PATH:~/src/endless_space/android-ndk-r7
 NDKBUILDPATH=$PATH
 export `grep "AppFullName=" AndroidAppSettings.cfg`
 if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && \

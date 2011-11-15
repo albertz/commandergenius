@@ -21,8 +21,8 @@ ifneq ($(findstring r4-crystax,$(NDK_VERSION)),)
 $(info Building with CrystaX r4 toolchain - internal STLPort disabled)
 CRYSTAX_TOOLCHAIN := 1
 endif
-ifneq ($(findstring r6b,$(NDK_VERSION))$(findstring r6-crystax,$(NDK_VERSION)),)
-$(info Building with NDK r6)
+ifneq ($(findstring r6b,$(NDK_VERSION))$(findstring r6-crystax,$(NDK_VERSION))$(findstring r7,$(NDK_VERSION))$(findstring r8,$(NDK_VERSION))$(findstring r9,$(NDK_VERSION)),)
+$(info Building with NDK r6b or r7)
 NDK_R6_TOOLCHAIN := 1
 endif
 ifneq ($(findstring r5c,$(NDK_VERSION))$(findstring r5-crystax,$(NDK_VERSION))$(NDK_R6_TOOLCHAIN),)
