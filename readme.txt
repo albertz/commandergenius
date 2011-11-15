@@ -1,7 +1,9 @@
 This is SDL 1.2 and 1.3 ported to Google Android (also bunch of other libs included).
-The libsdl.org now has an official SDL 1.3 Android port, which supports ABGR8888 pixel format and
-creating GLES2 context. This port supports only GLES version 1 and 16-bit pixel format,
-focused mainly on SDL 1.2, and won't keep updating with SDL 1.3 from libsdl.org.
+The libsdl.org now has an official SDL 1.3 Android port, which is more recent and
+better suited for creating new applications from scratch, this port is focused mainly
+on SDL 1.2 and compiling existing applications, it's up to you to decide which port is better.
+Also this port is developed very slowly, although the same is true for an official port.
+
 
 Installation
 ============

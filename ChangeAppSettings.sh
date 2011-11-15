@@ -226,7 +226,7 @@ fi
 
 if [ -z "$ShowMouseCursor" -o -z "$AUTO" ]; then
 echo
-echo -n "Show SDL mouse cursor, for applicaitons that do not draw it (y) or (n) ($ShowMouseCursor): "
+echo -n "Show SDL mouse cursor, for applicaitons that do not draw cursor at all (y) or (n) ($ShowMouseCursor): "
 read var
 if [ -n "$var" ] ; then
 	ShowMouseCursor="$var"
