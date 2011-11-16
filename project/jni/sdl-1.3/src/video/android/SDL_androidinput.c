@@ -120,7 +120,7 @@ int oldMouseButtons = 0;
 
 static int UnicodeToUtf8(int src, char * dest)
 {
-	int len = 0;
+    int len = 0;
     if ( src <= 0x007f) {
         *dest++ = (char)src;
         len = 1;
@@ -713,7 +713,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeTextInput) ( JNIEnv*  env, jobject thiz, jin
 		SDL_ANDROID_MainThreadPushText(ascii, unicode);
 	else
 	{
-		if( textInputBufferPos < textInputBufferLen + 4 )
+		if( textInputBufferPos < textInputBufferLen + 4 && ascii != SDLK_RETURN && ascii != '\r' && ascii != '\n' )
 		{
 			textInputBufferPos += UnicodeToUtf8(unicode, textInputBuffer + textInputBufferPos);
 		}

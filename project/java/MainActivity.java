@@ -61,6 +61,8 @@ import android.text.SpannedString;
 import java.io.BufferedReader;
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
+import android.view.inputmethod.InputMethodManager;
+
 
 
 public class MainActivity extends Activity {
@@ -208,6 +210,7 @@ public class MainActivity extends Activity {
 		_layout2 = null;
 		_btn = null;
 		_tv = null;
+		_inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 		_videoLayout = new FrameLayout(this);
 		setContentView(_videoLayout);
 		mGLView = new DemoGLSurfaceView(this);
@@ -266,32 +269,11 @@ public class MainActivity extends Activity {
 		System.exit(0);
 	}
 
-	public void hideScreenKeyboard()
-	{
-		if(_screenKeyboard == null)
-			return;
-
-		synchronized(textInput)
-		{
-			String text = _screenKeyboard.getText().toString();
-			for(int i = 0; i < text.length(); i++)
-			{
-				DemoRenderer.nativeTextInput( (int)text.charAt(i), (int)text.codePointAt(i) );
-			}
-		}
-		DemoRenderer.nativeTextInputFinished();
-		_videoLayout.removeView(_screenKeyboard);
-		_screenKeyboard = null;
-		mGLView.setFocusableInTouchMode(true);
-		mGLView.setFocusable(true);
-		mGLView.requestFocus();
-	};
-	
 	public void showScreenKeyboard(final String oldText, boolean sendBackspace)
 	{
 		if(_screenKeyboard != null)
 			return;
-		class myKeyListener implements OnKeyListener 
+		class myKeyListener implements OnKeyListener
 		{
 			MainActivity _parent;
 			boolean sendBackspace;
@@ -318,18 +300,33 @@ public class MainActivity extends Activity {
 		_screenKeyboard.setOnKeyListener(new myKeyListener(this, sendBackspace));
 		_screenKeyboard.setHint(R.string.text_edit_click_here);
 		_screenKeyboard.setText(oldText);
-		final Window window = getWindow();
-		_screenKeyboard.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-			public void onFocusChange(View v, boolean hasFocus)
-			{
-				if (hasFocus)
-					window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-			}
-		});
 		_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
 		_screenKeyboard.setFocusableInTouchMode(true);
 		_screenKeyboard.setFocusable(true);
 		_screenKeyboard.requestFocus();
+		_inputManager.showSoftInput(_screenKeyboard, InputMethodManager.SHOW_FORCED);
+	};
+
+	public void hideScreenKeyboard()
+	{
+		if(_screenKeyboard == null)
+			return;
+
+		synchronized(textInput)
+		{
+			String text = _screenKeyboard.getText().toString();
+			for(int i = 0; i < text.length(); i++)
+			{
+				DemoRenderer.nativeTextInput( (int)text.charAt(i), (int)text.codePointAt(i) );
+			}
+		}
+		DemoRenderer.nativeTextInputFinished();
+		_inputManager.hideSoftInputFromWindow(_screenKeyboard.getWindowToken(), 0);
+		_videoLayout.removeView(_screenKeyboard);
+		_screenKeyboard = null;
+		mGLView.setFocusableInTouchMode(true);
+		mGLView.setFocusable(true);
+		mGLView.requestFocus();
 	};
 
 	@Override
@@ -686,6 +683,7 @@ public class MainActivity extends Activity {
 	public Settings.TouchEventsListener touchListener = null;
 	public Settings.KeyEventsListener keyListener = null;
 	boolean _isPaused = false;
+	private InputMethodManager _inputManager = null;
 
 	public LinkedList<Integer> textInput = new LinkedList<Integer> ();
 
