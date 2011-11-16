@@ -56,6 +56,9 @@ import android.widget.TextView;
 import android.widget.EditText;
 import android.text.Editable;
 import android.text.SpannedString;
+import android.content.Intent;
+import android.app.PendingIntent;
+import android.app.AlarmManager;
 
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
@@ -143,6 +146,7 @@ class Settings
 				out.writeBoolean(Globals.OptionalDataDownload[i]);
 			out.writeBoolean(Globals.BrokenLibCMessageShown);
 			out.writeInt(Globals.TouchscreenKeyboardDrawSize);
+			out.writeInt(p.getApplicationVersion());
 
 			out.close();
 			settingsLoaded = true;
@@ -279,11 +283,27 @@ class Settings
 				Globals.OptionalDataDownload[i] = settingsFile.readBoolean();
 			Globals.BrokenLibCMessageShown = settingsFile.readBoolean();
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
+			int cfgVersion = settingsFile.readInt();
+			System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion());
+			if( Globals.ResetSdlConfigForThisVersion && cfgVersion < p.getApplicationVersion() )
+			{
+				System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion() + " and we need to clean up config file");
+				// Delete settings file, and restart the application
+				settingsFile.close();
+				ObjectOutputStream out = new ObjectOutputStream(p.openFileOutput( SettingsFileName, p.MODE_WORLD_READABLE ));
+				out.writeInt(-1);
+				out.close();
+				new File( p.getFilesDir() + "/" + SettingsFileName ).delete();
+				PendingIntent intent = PendingIntent.getActivity(p, 0, new Intent(p.getIntent()), p.getIntent().getFlags());
+				AlarmManager mgr = (AlarmManager) p.getSystemService(Context.ALARM_SERVICE);
+				mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, intent);
+				System.exit(0);
+			}
 			
 			settingsLoaded = true;
 
 			System.out.println("libSDL: Settings.Load(): loaded settings successfully");
-			
+			settingsFile.close();
 			return;
 			
 		} catch( FileNotFoundException e ) {

@@ -62,8 +62,8 @@ import java.io.BufferedReader;
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import android.view.inputmethod.InputMethodManager;
-
-
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 
 public class MainActivity extends Activity {
 	@Override
@@ -663,6 +663,17 @@ public class MainActivity extends Activity {
 		// ----- VCMI hack -----
 
 	};
+
+	public int getApplicationVersion()
+	{
+		try {
+			PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+			return packageInfo.versionCode;
+		} catch (PackageManager.NameNotFoundException e) {
+			System.out.println("libSDL: Cannot get the version of our own package: " + e);
+		}
+		return 0;
+	}
 
 	public FrameLayout getVideoLayout() { return _videoLayout; }
 
