@@ -253,13 +253,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public DemoRenderer(MainActivity _context)
 	{
 		context = _context;
-		// Froyo does not flood touch events, and syncs to the screen update,
-		// so we should not use event rate limiter, or we'll get some multitouch events largely outdated
-		// Another test on Tegra development board shows that with USB mouse FPS drops in half
-		// when mouse is moved, with and without ratelimiter
-		if( android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.FROYO )
-			mRatelimitTouchEvents = true;
-		System.out.println("libSDL: DemoRenderer: RatelimitTouchEvents " + mRatelimitTouchEvents );
 	}
 	
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -333,12 +326,9 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 	public int swapBuffers() // Called from native code
 	{
-		if( mRatelimitTouchEvents )
+		synchronized(this)
 		{
-			synchronized(this)
-			{
-				this.notify();
-			}
+			this.notify();
 		}
 		if( ! super.SwapBuffers() && Globals.NonBlockingSwapBuffers )
 			return 0;
@@ -457,7 +447,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	private boolean mFirstTimeStart = true;
 	public int mWidth = 0;
 	public int mHeight = 0;
-	public boolean mRatelimitTouchEvents = false;
 }
 
 class DemoGLSurfaceView extends GLSurfaceView_SDL {
@@ -476,8 +465,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		touchInput.process(event);
 		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
 		if(( event.getAction() == MotionEvent.ACTION_MOVE ||
-			event.getAction() == MotionEvent.ACTION_HOVER_MOVE) &&
-			mRenderer.mRatelimitTouchEvents )
+			event.getAction() == MotionEvent.ACTION_HOVER_MOVE))
 		{
 			synchronized(mRenderer)
 			{

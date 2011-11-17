@@ -1285,7 +1285,7 @@ extern void SDL_ANDROID_PumpEvents()
 	SDL_mutexV(BufferedEventsMutex);
 };
 // Queue events to main thread
-static int getNextEvent()
+static int getNextEventAndLock()
 {
 	int nextEvent;
 	if( !BufferedEventsMutex )
@@ -1311,17 +1311,38 @@ static int getNextEvent()
 	return nextEvent;
 }
 
+static int getPrevEventNoLock()
+{
+	int prevEvent;
+	if(BufferedEventsStart == BufferedEventsEnd)
+		return -1;
+	prevEvent = BufferedEventsEnd;
+	prevEvent--;
+	if( prevEvent < 0 )
+		prevEvent = MAX_BUFFERED_EVENTS - 1;
+	return prevEvent;
+}
+
 extern void SDL_ANDROID_MainThreadPushMouseMotion(int x, int y)
 {
-	int nextEvent = getNextEvent();
+	int nextEvent = getNextEventAndLock();
 	if( nextEvent == -1 )
 		return;
 	
-	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
-	
-	ev->type = SDL_MOUSEMOTION;
-	ev->motion.x = x;
-	ev->motion.y = y;
+	int prevEvent = getPrevEventNoLock();
+	if( prevEvent > 0 && BufferedEvents[prevEvent].type == SDL_MOUSEMOTION )
+	{
+		// Reuse previous mouse motion event, to prevent mouse movement lag
+		BufferedEvents[prevEvent].motion.x = x;
+		BufferedEvents[prevEvent].motion.y = y;
+	}
+	else
+	{
+		SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+		ev->type = SDL_MOUSEMOTION;
+		ev->motion.x = x;
+		ev->motion.y = y;
+	}
 	oldMouseX = x;
 	oldMouseY = y;
 	
@@ -1330,7 +1351,7 @@ extern void SDL_ANDROID_MainThreadPushMouseMotion(int x, int y)
 };
 extern void SDL_ANDROID_MainThreadPushMouseButton(int pressed, int button)
 {
-	int nextEvent = getNextEvent();
+	int nextEvent = getNextEventAndLock();
 	if( nextEvent == -1 )
 		return;
 	
@@ -1346,7 +1367,7 @@ extern void SDL_ANDROID_MainThreadPushMouseButton(int pressed, int button)
 
 extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key)
 {
-	int nextEvent = getNextEvent();
+	int nextEvent = getNextEventAndLock();
 	if( nextEvent == -1 )
 		return;
 	
@@ -1444,7 +1465,7 @@ extern void SDL_ANDROID_MainThreadPushJoystickAxis(int joy, int axis, int value)
 	if( ! ( joy < MAX_MULTITOUCH_POINTERS+1 && SDL_ANDROID_CurrentJoysticks[joy] ) )
 		return;
 
-	int nextEvent = getNextEvent();
+	int nextEvent = getNextEventAndLock();
 	if( nextEvent == -1 )
 		return;
 	
@@ -1463,7 +1484,7 @@ extern void SDL_ANDROID_MainThreadPushJoystickButton(int joy, int button, int pr
 	if( ! ( joy < MAX_MULTITOUCH_POINTERS+1 && SDL_ANDROID_CurrentJoysticks[joy] ) )
 		return;
 
-	int nextEvent = getNextEvent();
+	int nextEvent = getNextEventAndLock();
 	if( nextEvent == -1 )
 		return;
 	
@@ -1480,7 +1501,7 @@ extern void SDL_ANDROID_MainThreadPushJoystickButton(int joy, int button, int pr
 extern void SDL_ANDROID_MainThreadPushMultitouchButton(int id, int pressed, int x, int y, int force)
 {
 #if SDL_VERSION_ATLEAST(1,3,0)
-	int nextEvent = getNextEvent();
+	int nextEvent = getNextEventAndLock();
 	if( nextEvent == -1 )
 		return;
 	
@@ -1500,7 +1521,7 @@ extern void SDL_ANDROID_MainThreadPushMultitouchButton(int id, int pressed, int 
 extern void SDL_ANDROID_MainThreadPushMultitouchMotion(int id, int x, int y, int force)
 {
 #if SDL_VERSION_ATLEAST(1,3,0)
-	int nextEvent = getNextEvent();
+	int nextEvent = getNextEventAndLock();
 	if( nextEvent == -1 )
 		return;
 	
@@ -1580,7 +1601,7 @@ void SDL_ANDROID_DeferredTextInput()
 	
 	if( deferredTextIdx1 != deferredTextIdx2 )
 	{
-		int nextEvent = getNextEvent();
+		int nextEvent = getNextEventAndLock();
 		if( nextEvent == -1 )
 		{
 			SDL_mutexV(deferredTextMutex);
@@ -1610,7 +1631,7 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 	int shiftRequired;
 
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_MainThreadPushText(): %i %i", scancode, unicode);
-	int nextEvent = getNextEvent();
+	int nextEvent = getNextEventAndLock();
 	if( nextEvent == -1 )
 		return;
 	
