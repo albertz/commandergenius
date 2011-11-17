@@ -843,7 +843,7 @@ static int ANDROID_SetHWAlpha(_THIS, SDL_Surface *surface, Uint8 value)
 	return SDL_SetTextureAlphaMod((struct SDL_Texture *)surface->hwdata, value);
 };
 
-static void ANDROID_FlipHWSurfaceInternal()
+static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 {
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_FlipHWSurface()");
 	if( SDL_CurrentVideoSurface->hwdata && SDL_CurrentVideoSurface->pixels && ! ( SDL_CurrentVideoSurface->flags & SDL_HWSURFACE ) )
@@ -853,7 +853,14 @@ static void ANDROID_FlipHWSurfaceInternal()
 		rect.y = 0;
 		rect.w = SDL_CurrentVideoSurface->w;
 		rect.h = SDL_CurrentVideoSurface->h;
-		SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, SDL_CurrentVideoSurface->pixels, SDL_CurrentVideoSurface->pitch);
+		if(numrects == 0)
+			SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, SDL_CurrentVideoSurface->pixels, SDL_CurrentVideoSurface->pitch);
+		else
+		{
+			int i = 0;
+			for(i = 0; i < numrects; i++)
+				SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rects[i], SDL_CurrentVideoSurface->pixels, SDL_CurrentVideoSurface->pitch);
+		}
 		SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &rect);
 		static int MousePointerAlpha = 255;
 		if(SDL_ANDROID_ShowMouseCursor)
@@ -928,7 +935,7 @@ static int ANDROID_FlipHWSurface(_THIS, SDL_Surface *surface)
 		return -1;
 	}
 
-	ANDROID_FlipHWSurfaceInternal();
+	ANDROID_FlipHWSurfaceInternal(0, NULL);
 
 	SDL_ANDROID_CallJavaSwapBuffers();
 
@@ -949,7 +956,7 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 		return;
 	}
 
-	ANDROID_FlipHWSurfaceInternal();
+	ANDROID_FlipHWSurfaceInternal(numrects, rects);
 
 	SDL_ANDROID_CallJavaSwapBuffers();
 }
@@ -1052,6 +1059,8 @@ typedef struct
 	int height;
 	int bpp;
 	Uint32 flags;
+	int numrects;
+	SDL_Rect *rects;
 	
 	int retcode;
 	SDL_Surface * retcode2;
@@ -1096,11 +1105,11 @@ void SDL_ANDROID_MultiThreadedVideoLoop()
 					ANDROID_VideoQuit(videoThread._this);
 					break;
 				case CMD_UPDATERECTS:
-					ANDROID_FlipHWSurfaceInternal();
+					ANDROID_FlipHWSurfaceInternal(videoThread.numrects, videoThread.rects);
 					swapBuffersNeeded = 1;
 					break;
 				case CMD_FLIP:
-					ANDROID_FlipHWSurfaceInternal();
+					ANDROID_FlipHWSurfaceInternal(0, NULL);
 					swapBuffersNeeded = 1;
 					break;
 			}
@@ -1109,7 +1118,7 @@ void SDL_ANDROID_MultiThreadedVideoLoop()
 		}
 		else if( SDL_ANDROID_CompatibilityHacks && ret == SDL_MUTEX_TIMEDOUT && SDL_CurrentVideoSurface )
 		{
-			ANDROID_FlipHWSurfaceInternal();
+			ANDROID_FlipHWSurfaceInternal(0, NULL);
 			swapBuffersNeeded = 1;
 		}
 		SDL_mutexV(videoThread.mutex);
@@ -1185,6 +1194,8 @@ void ANDROID_UpdateRectsMT(_THIS, int numrects, SDL_Rect *rects)
 		SDL_CondWaitTimeout(videoThread.cond2, videoThread.mutex, 1000);
 	videoThread.cmd = CMD_UPDATERECTS;
 	videoThread._this = this;
+	videoThread.numrects = numrects;
+	videoThread.rects = rects;
 	videoThread.execute = 1;
 	SDL_CondSignal(videoThread.cond);
 	while( videoThread.execute )
