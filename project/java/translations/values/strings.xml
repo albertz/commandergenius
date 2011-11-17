@@ -23,8 +23,8 @@
     <string name="storage_sd">SD card storage - %d MB free</string>
     <string name="storage_custom">Specify directory</string>
     <string name="storage_commandline">Specify command line parameters</string>
-    <string name="storage_question">Where to download application data</string>
-    <string name="optional_downloads">Optional downloads</string>
+    <string name="storage_question">Data installation location</string>
+    <string name="optional_downloads">Downloads</string>
     <string name="downloads">Downloads</string>
     <string name="ok">OK</string>
 
@@ -34,7 +34,7 @@
     <string name="controls_touch">Touchscreen only</string>
     <string name="controls_question">What kind of navigation keys does your device have?</string>
 
-    <string name="controls_additional">Additional controls to use</string>
+    <string name="controls_additional">Additional controls</string>
     <string name="controls_screenkb">On-screen keyboard</string>
     <string name="controls_accelnav">Accelerometer</string>
 
@@ -146,12 +146,16 @@
 
     <string name="text_edit_click_here">Tap to start typing, press Back when done</string>
 
-    <string name="display_size_mouse">Configure mouse depending on display size</string>
-    <string name="display_size">Select your display size</string>
-    <string name="display_size_large">Large (tablet)</string>
-    <string name="display_size_small">Small (phone)</string>
-    <string name="display_size_tiny">Tiny (Xperia Mini)</string>
+    <string name="display_size_mouse">Mouse emulation mode</string>
+    <string name="display_size">Display size for mouse emulation</string>
+    <string name="display_size_large">Large (tablets)</string>
+    <string name="display_size_small">Small, magnifying glass</string>
+    <string name="display_size_small_touchpad">Small, touchpad mode</string>
+    <string name="display_size_tiny">Tiny</string>
+    <string name="display_size_tiny_touchpad">Tiny, touchpad mode</string>
+
     <string name="show_more_options">Show more options</string>
+
     <string name="broken_libc_title">Broken OS detected</string>
     <string name="broken_libc_text">Your device has broken system libraries, this application will most probably crash. Please install a system update, or flash a custom ROM, or copy file /system/lib/libc.so from another device (experts only!)</string>
 
