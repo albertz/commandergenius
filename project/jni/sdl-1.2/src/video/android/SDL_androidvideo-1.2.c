@@ -1019,7 +1019,8 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 		return;
 	}
 
-	ANDROID_FlipHWSurfaceInternal(numrects, rects);
+	// ANDROID_FlipHWSurfaceInternal(numrects, rects); // Fails for fheroes2, I'll add a compatibility option later.
+	ANDROID_FlipHWSurfaceInternal(0, NULL);
 
 	SDL_ANDROID_CallJavaSwapBuffers();
 }
