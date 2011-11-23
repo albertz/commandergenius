@@ -399,7 +399,7 @@ int main(int argc, char* argv[])
 	SDL_Surface	*back, *logo, *font;
 	SDL_Event	event;
 	int		bpp = 16,
-			flags = SDL_DOUBLEBUF | SDL_HWSURFACE,
+			flags = 0,
 			alpha = 1;
 	int		x_offs = 0, y_offs = 0;
 	long		tick,
@@ -416,23 +416,6 @@ int main(int argc, char* argv[])
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
 
 	atexit(SDL_Quit);
-
-	for(i = 1; i < argc; ++i)
-	{
-		if(strncmp(argv[i], "-na", 3) == 0)
-			alpha = 0;
-		else if(strncmp(argv[i], "-nd", 3) == 0)
-			flags &= ~SDL_DOUBLEBUF;
-		else if(strncmp(argv[i], "-h", 2) == 0)
-		{
-			flags |= SDL_HWSURFACE;
-			flags &= ~SDL_SWSURFACE;
-		}
-		else if(strncmp(argv[i], "-f", 2) == 0)
-			flags |= SDL_FULLSCREEN;
-		else
-			bpp = atoi(&argv[i][1]);
-	}
 
 	screen = SDL_SetVideoMode(SCREEN_W, SCREEN_H, bpp, flags);
 	if(!screen)
@@ -582,6 +565,7 @@ int main(int argc, char* argv[])
 		r.x -= r.w/2;
 		r.y -= r.h/2;
 		SDL_FillRect(screen, &r, color);
+		__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Mouse %d:%d buttons %d", mx, my, b);
 
 		SDL_Flip(SDL_GetVideoSurface());
 		SDL_Event evt;
