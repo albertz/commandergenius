@@ -87,7 +87,7 @@ class Globals {
 	public static boolean RelativeMouseMovement = ForceRelativeMouseMode; // Laptop touchpad mode
 	public static int RelativeMouseMovementSpeed = 2;
 	public static int RelativeMouseMovementAccel = 0;
-	public static boolean ShowScreenUnderFinger = false;
+	public static int ShowScreenUnderFinger = Mouse.ZOOM_NONE;
 	public static boolean KeepAspectRatio = false;
 	public static int ClickScreenPressure = 0;
 	public static int ClickScreenTouchspotSize = 0;

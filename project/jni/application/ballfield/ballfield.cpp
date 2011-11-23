@@ -565,7 +565,6 @@ int main(int argc, char* argv[])
 		r.x -= r.w/2;
 		r.y -= r.h/2;
 		SDL_FillRect(screen, &r, color);
-		__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Mouse %d:%d buttons %d", mx, my, b);
 
 		SDL_Flip(SDL_GetVideoSurface());
 		SDL_Event evt;

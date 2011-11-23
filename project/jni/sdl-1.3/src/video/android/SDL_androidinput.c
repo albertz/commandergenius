@@ -65,7 +65,7 @@ static int leftClickMethod = LEFT_CLICK_NORMAL;
 static int rightClickMethod = RIGHT_CLICK_NONE;
 static int leftClickKey = KEYCODE_DPAD_CENTER;
 static int rightClickKey = KEYCODE_MENU;
-int SDL_ANDROID_ShowScreenUnderFinger = 0;
+int SDL_ANDROID_ShowScreenUnderFinger = ZOOM_NONE;
 SDL_Rect SDL_ANDROID_ShowScreenUnderFingerRect = {0, 0, 0, 0}, SDL_ANDROID_ShowScreenUnderFingerRectSrc = {0, 0, 0, 0};
 static int moveMouseWithArrowKeys = 0;
 static int clickMouseWithDpadCenter = 0;
@@ -159,49 +159,100 @@ void UpdateScreenUnderFingerRect(int x, int y)
 {
 #if SDL_VERSION_ATLEAST(1,3,0)
 	return;
-	/*
-	int screenX = 320, screenY = 240;
-	if( !SDL_ANDROID_ShowScreenUnderFinger )
-		return;
-
-	SDL_Window * window = SDL_GetFocusWindow();
-	if( window && window->renderer->window ) {
-		screenX = window->w;
-		screenY = window->h;
-	}
-	*/
 #else
 	int screenX = SDL_ANDROID_sFakeWindowWidth, screenY = SDL_ANDROID_sFakeWindowHeight;
-	if( !SDL_ANDROID_ShowScreenUnderFinger )
+	if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_NONE )
 		return;
 
-	SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = screenX / 4;
-	SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = screenY / 4;
-	SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = x - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w/2;
-	SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = y - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h/2;
-	if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x < 0 )
-		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = 0;
-	if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y < 0 )
-		SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = 0;
-	if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x > screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w )
-		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w;
-	if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y > screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h )
-		SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
-	
-	SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRectSrc.w * 3 / 2;
-	SDL_ANDROID_ShowScreenUnderFingerRect.h = SDL_ANDROID_ShowScreenUnderFingerRectSrc.h * 3 / 2;
-	SDL_ANDROID_ShowScreenUnderFingerRect.x = x + SDL_ANDROID_ShowScreenUnderFingerRect.w/10;
-	SDL_ANDROID_ShowScreenUnderFingerRect.y = y - SDL_ANDROID_ShowScreenUnderFingerRect.h*11/10;
-	if( SDL_ANDROID_ShowScreenUnderFingerRect.x < 0 )
+	if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
+	{
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = screenX / 4;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = screenY / 4;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = x - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w/2;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = y - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h/2;
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x < 0 )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = 0;
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y < 0 )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = 0;
+
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x > screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w;
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y > screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
+
+		SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRectSrc.w * 3 / 2;
+		SDL_ANDROID_ShowScreenUnderFingerRect.h = SDL_ANDROID_ShowScreenUnderFingerRectSrc.h * 3 / 2;
+		SDL_ANDROID_ShowScreenUnderFingerRect.x = x + SDL_ANDROID_ShowScreenUnderFingerRect.w/10;
+		SDL_ANDROID_ShowScreenUnderFingerRect.y = y - SDL_ANDROID_ShowScreenUnderFingerRect.h*11/10;
+		if( SDL_ANDROID_ShowScreenUnderFingerRect.x < 0 )
+			SDL_ANDROID_ShowScreenUnderFingerRect.x = 0;
+		if( SDL_ANDROID_ShowScreenUnderFingerRect.y < 0 )
+			SDL_ANDROID_ShowScreenUnderFingerRect.y = 0;
+		if( SDL_ANDROID_ShowScreenUnderFingerRect.x + SDL_ANDROID_ShowScreenUnderFingerRect.w >= screenX )
+			SDL_ANDROID_ShowScreenUnderFingerRect.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRect.w - 1;
+		if( SDL_ANDROID_ShowScreenUnderFingerRect.y + SDL_ANDROID_ShowScreenUnderFingerRect.h >= screenY )
+			SDL_ANDROID_ShowScreenUnderFingerRect.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRect.h - 1;
+		if( InsideRect(&SDL_ANDROID_ShowScreenUnderFingerRect, x, y) )
+			SDL_ANDROID_ShowScreenUnderFingerRect.x = x - SDL_ANDROID_ShowScreenUnderFingerRect.w*11/10 - 1;
+	}
+	if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_WHOLE_SCREEN )
+	{
+		SDL_ANDROID_ShowScreenUnderFingerRect.w = screenX * 2 / 3;
+		SDL_ANDROID_ShowScreenUnderFingerRect.h = screenY * 2 / 3;
+		SDL_ANDROID_ShowScreenUnderFingerRect.x = x * (screenX - SDL_ANDROID_ShowScreenUnderFingerRect.w) / screenX;
+		SDL_ANDROID_ShowScreenUnderFingerRect.y = y * (screenY - SDL_ANDROID_ShowScreenUnderFingerRect.h) / screenY;
+
+		if( SDL_ANDROID_ShowScreenUnderFingerRect.x < 0 )
+			SDL_ANDROID_ShowScreenUnderFingerRect.x = 0;
+		if( SDL_ANDROID_ShowScreenUnderFingerRect.y < 0 )
+			SDL_ANDROID_ShowScreenUnderFingerRect.y = 0;
+		if( SDL_ANDROID_ShowScreenUnderFingerRect.x > screenX - SDL_ANDROID_ShowScreenUnderFingerRect.w )
+			SDL_ANDROID_ShowScreenUnderFingerRect.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRect.w;
+		if( SDL_ANDROID_ShowScreenUnderFingerRect.y > screenY - SDL_ANDROID_ShowScreenUnderFingerRect.h )
+			SDL_ANDROID_ShowScreenUnderFingerRect.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRect.h;
+
+		/*
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = SDL_ANDROID_ShowScreenUnderFingerRect.w / 2;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = SDL_ANDROID_ShowScreenUnderFingerRect.h / 2;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = SDL_ANDROID_ShowScreenUnderFingerRect.x + (SDL_ANDROID_ShowScreenUnderFingerRect.w - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w) / 2;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = SDL_ANDROID_ShowScreenUnderFingerRect.y + (SDL_ANDROID_ShowScreenUnderFingerRect.h - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h) / 2;
+		*/
+
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = screenX / 3;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = screenY / 3;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = x - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w/2;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = y - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h/2;
+
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x < 0 )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = 0;
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y < 0 )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = 0;
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x > screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w;
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y > screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
+	}
+	if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_FULLSCREEN_MAGNIFIER )
+	{
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = screenX / 2;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = screenY / 2;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = x - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w/2;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = y - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h/2;
+
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x < 0 )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = 0;
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y < 0 )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = 0;
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x > screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w;
+		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y > screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h )
+			SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
+
 		SDL_ANDROID_ShowScreenUnderFingerRect.x = 0;
-	if( SDL_ANDROID_ShowScreenUnderFingerRect.y < 0 )
 		SDL_ANDROID_ShowScreenUnderFingerRect.y = 0;
-	if( SDL_ANDROID_ShowScreenUnderFingerRect.x + SDL_ANDROID_ShowScreenUnderFingerRect.w >= screenX )
-		SDL_ANDROID_ShowScreenUnderFingerRect.x = screenX - SDL_ANDROID_ShowScreenUnderFingerRect.w - 1;
-	if( SDL_ANDROID_ShowScreenUnderFingerRect.y + SDL_ANDROID_ShowScreenUnderFingerRect.h >= screenY )
-		SDL_ANDROID_ShowScreenUnderFingerRect.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRect.h - 1;
-	if( InsideRect(&SDL_ANDROID_ShowScreenUnderFingerRect, x, y) )
-		SDL_ANDROID_ShowScreenUnderFingerRect.x = x - SDL_ANDROID_ShowScreenUnderFingerRect.w*11/10 - 1;
+		SDL_ANDROID_ShowScreenUnderFingerRect.w = screenX;
+		SDL_ANDROID_ShowScreenUnderFingerRect.h = screenY;
+	}
 #endif
 }
 
@@ -472,7 +523,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 
 			SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRect.h = 0;
 			SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = 0;
-			if( SDL_ANDROID_ShowScreenUnderFinger )
+			if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
 			{
 				// Move mouse by 1 pixel so it will force screen update and mouse-under-finger window will be removed
 				if( moveMouseWithKbX >= 0 )
@@ -587,8 +638,12 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 					}
 				}
 			}
-			UpdateScreenUnderFingerRect(x, y);
+			if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
+				UpdateScreenUnderFingerRect(x, y);
 		}
+		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_WHOLE_SCREEN ||
+			SDL_ANDROID_ShowScreenUnderFinger == ZOOM_FULLSCREEN_MAGNIFIER )
+			UpdateScreenUnderFingerRect(x, y);
 	}
 	if( pointerId != firstMousePointerId && (action == MOUSE_DOWN || action == MOUSE_UP) )
 	{

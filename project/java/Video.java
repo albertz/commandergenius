@@ -79,6 +79,10 @@ class Mouse
 	public static final int SDL_FINGER_MOVE = 2;
 	public static final int SDL_FINGER_HOVER = 3;
 
+	public static final int ZOOM_NONE = 0;
+	public static final int ZOOM_MAGNIFIER = 1;
+	public static final int ZOOM_WHOLE_SCREEN = 2;
+	public static final int ZOOM_FULLSCREEN_MAGNIFIER = 3;
 }
 
 abstract class DifferentTouchInput

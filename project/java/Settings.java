@@ -87,7 +87,7 @@ class Settings
 			out.writeInt(Globals.AudioBufferConfig);
 			out.writeInt(Globals.TouchscreenKeyboardTheme);
 			out.writeInt(Globals.RightClickMethod);
-			out.writeBoolean(Globals.ShowScreenUnderFinger);
+			out.writeInt(Globals.ShowScreenUnderFinger);
 			out.writeInt(Globals.LeftClickMethod);
 			out.writeBoolean(Globals.MoveMouseWithJoystick);
 			out.writeBoolean(Globals.ClickMouseWithDpad);
@@ -214,7 +214,7 @@ class Settings
 			Globals.AudioBufferConfig = settingsFile.readInt();
 			Globals.TouchscreenKeyboardTheme = settingsFile.readInt();
 			Globals.RightClickMethod = settingsFile.readInt();
-			Globals.ShowScreenUnderFinger = settingsFile.readBoolean();
+			Globals.ShowScreenUnderFinger = settingsFile.readInt();
 			Globals.LeftClickMethod = settingsFile.readInt();
 			Globals.MoveMouseWithJoystick = settingsFile.readBoolean();
 			Globals.ClickMouseWithDpad = settingsFile.readBoolean();
@@ -1186,13 +1186,32 @@ class Settings
 		void run (final MainActivity p)
 		{
 			CharSequence[] items = {	p.getResources().getString(R.string.display_size_large),
-										p.getResources().getString(R.string.display_size_small) };
+										p.getResources().getString(R.string.display_size_small),
+										p.getResources().getString(R.string.display_size_small_touchpad),
+										p.getResources().getString(R.string.display_size_tiny),
+										p.getResources().getString(R.string.display_size_tiny_touchpad), };
+			if( ! Globals.SwVideoMode )
+			{
+				CharSequence[] items2 = {	p.getResources().getString(R.string.display_size_large),
+											p.getResources().getString(R.string.display_size_small_touchpad), };
+				items = items2;
+			}
 			if( firstStart )
 			{
 				CharSequence[] items2 = {	p.getResources().getString(R.string.display_size_large),
 											p.getResources().getString(R.string.display_size_small),
-											p.getResources().getString(R.string.show_more_options) };
+											p.getResources().getString(R.string.display_size_small_touchpad),
+											p.getResources().getString(R.string.display_size_tiny),
+											p.getResources().getString(R.string.display_size_tiny_touchpad),
+											p.getResources().getString(R.string.show_more_options), };
 				items = items2;
+				if( ! Globals.SwVideoMode )
+				{
+					CharSequence[] items3 = {	p.getResources().getString(R.string.display_size_large),
+												p.getResources().getString(R.string.display_size_small_touchpad),
+												p.getResources().getString(R.string.show_more_options), };
+					items = items3;
+				}
 			}
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -1206,7 +1225,7 @@ class Settings
 					{
 						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
 						Globals.RelativeMouseMovement = false;
-						Globals.ShowScreenUnderFinger = false;
+						Globals.ShowScreenUnderFinger = Mouse.ZOOM_NONE;
 					}
 					if( item == 1 )
 					{
@@ -1214,17 +1233,35 @@ class Settings
 						{
 							Globals.LeftClickMethod = Mouse.LEFT_CLICK_NEAR_CURSOR;
 							Globals.RelativeMouseMovement = false;
-							Globals.ShowScreenUnderFinger = true;
+							Globals.ShowScreenUnderFinger = Mouse.ZOOM_MAGNIFIER;
 						}
 						else
 						{
 							// OpenGL does not support magnifying glass
 							Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
 							Globals.RelativeMouseMovement = true;
-							Globals.ShowScreenUnderFinger = false;
+							Globals.ShowScreenUnderFinger = Mouse.ZOOM_NONE;
 						}
 					}
-					if( item == 2 )
+					if( item == 2 && Globals.SwVideoMode )
+					{
+						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
+						Globals.RelativeMouseMovement = true;
+						Globals.ShowScreenUnderFinger = Mouse.ZOOM_NONE;
+					}
+					if( item == 3 )
+					{
+						Globals.LeftClickMethod = Mouse.LEFT_CLICK_NEAR_CURSOR;
+						Globals.RelativeMouseMovement = false;
+						Globals.ShowScreenUnderFinger = Mouse.ZOOM_WHOLE_SCREEN;
+					}
+					if( item == 4 )
+					{
+						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
+						Globals.RelativeMouseMovement = true;
+						Globals.ShowScreenUnderFinger = Mouse.ZOOM_FULLSCREEN_MAGNIFIER;
+					}
+					if( firstStart && ( item == 5 || ( ! Globals.SwVideoMode && item == 2 ) ) )
 					{
 						menuStack.clear();
 						new MainMenu().run(p);
@@ -1237,7 +1274,10 @@ class Settings
 				builder.setItems(items, new ClickListener());
 			else
 				builder.setSingleChoiceItems(items,
-					(Globals.LeftClickMethod == Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT && ! Globals.RelativeMouseMovement) ? 0 : 1,
+					Globals.ShowScreenUnderFinger == Mouse.ZOOM_NONE ?
+					( Globals.RelativeMouseMovement ? Globals.SwVideoMode ? 2 : 1 : 0 ) :
+					( Globals.ShowScreenUnderFinger == Mouse.ZOOM_MAGNIFIER && Globals.SwVideoMode ) ? 1 :
+					Globals.ShowScreenUnderFinger + 1,
 					new ClickListener());
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
@@ -1442,14 +1482,12 @@ class Settings
 		void run (final MainActivity p)
 		{
 			CharSequence[] items = {
-				p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
 				p.getResources().getString(R.string.pointandclick_joystickmouse),
 				p.getResources().getString(R.string.click_with_dpadcenter),
 				p.getResources().getString(R.string.pointandclick_relative)
 			};
 
 			boolean defaults[] = { 
-				Globals.ShowScreenUnderFinger,
 				Globals.MoveMouseWithJoystick,
 				Globals.ClickMouseWithDpad,
 				Globals.RelativeMouseMovement
@@ -1463,12 +1501,10 @@ class Settings
 				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 				{
 					if( item == 0 )
-						Globals.ShowScreenUnderFinger = isChecked;
-					if( item == 1 )
 						Globals.MoveMouseWithJoystick = isChecked;
-					if( item == 2 )
+					if( item == 1 )
 						Globals.ClickMouseWithDpad = isChecked;
-					if( item == 3 )
+					if( item == 2 )
 						Globals.RelativeMouseMovement = isChecked;
 				}
 			});
@@ -2294,12 +2330,10 @@ class Settings
 		{
 			CharSequence[] items = {
 				p.getResources().getString(R.string.pointandclick_keepaspectratio),
-				p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
 				p.getResources().getString(R.string.video_smooth)
 			};
 			boolean defaults[] = { 
 				Globals.KeepAspectRatio,
-				Globals.ShowScreenUnderFinger,
 				Globals.SmoothVideo
 			};
 
@@ -2307,13 +2341,11 @@ class Settings
 			{
 				CharSequence[] items2 = {
 					p.getResources().getString(R.string.pointandclick_keepaspectratio),
-					p.getResources().getString(R.string.pointandclick_showcreenunderfinger2),
 					p.getResources().getString(R.string.video_smooth),
 					p.getResources().getString(R.string.video_separatethread),
 				};
 				boolean defaults2[] = { 
 					Globals.KeepAspectRatio,
-					Globals.ShowScreenUnderFinger,
 					Globals.SmoothVideo,
 					Globals.MultiThreadedVideo
 				};
@@ -2325,11 +2357,9 @@ class Settings
 			{
 				CharSequence[] items2 = {
 					p.getResources().getString(R.string.pointandclick_keepaspectratio),
-					p.getResources().getString(R.string.pointandclick_showcreenunderfinger2)
 				};
 				boolean defaults2[] = { 
 					Globals.KeepAspectRatio,
-					Globals.ShowScreenUnderFinger
 				};
 				items = items2;
 				defaults = defaults2;
@@ -2344,10 +2374,8 @@ class Settings
 					if( item == 0 )
 						Globals.KeepAspectRatio = isChecked;
 					if( item == 1 )
-						Globals.ShowScreenUnderFinger = isChecked;
-					if( item == 2 )
 						Globals.SmoothVideo = isChecked;
-					if( item == 3 )
+					if( item == 2 )
 						Globals.MultiThreadedVideo = isChecked;
 				}
 			});
@@ -2391,7 +2419,7 @@ class Settings
 			nativeSetTrackballUsed();
 		if( Globals.AppUsesMouse )
 			nativeSetMouseUsed( Globals.RightClickMethod,
-								Globals.ShowScreenUnderFinger ? 1 : 0,
+								Globals.ShowScreenUnderFinger,
 								Globals.LeftClickMethod,
 								Globals.MoveMouseWithJoystick ? 1 : 0,
 								Globals.ClickMouseWithDpad ? 1 : 0,
