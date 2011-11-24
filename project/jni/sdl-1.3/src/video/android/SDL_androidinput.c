@@ -195,7 +195,7 @@ void UpdateScreenUnderFingerRect(int x, int y)
 		if( InsideRect(&SDL_ANDROID_ShowScreenUnderFingerRect, x, y) )
 			SDL_ANDROID_ShowScreenUnderFingerRect.x = x - SDL_ANDROID_ShowScreenUnderFingerRect.w*11/10 - 1;
 	}
-	if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_WHOLE_SCREEN )
+	if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_SCREEN_TRANSFORM )
 	{
 		SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = screenX / 3;
 		SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = screenY / 3;
@@ -648,7 +648,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 			if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
 				UpdateScreenUnderFingerRect(x, y);
 		}
-		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_WHOLE_SCREEN ||
+		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_SCREEN_TRANSFORM ||
 			SDL_ANDROID_ShowScreenUnderFinger == ZOOM_FULLSCREEN_MAGNIFIER )
 			UpdateScreenUnderFingerRect(x, y);
 	}

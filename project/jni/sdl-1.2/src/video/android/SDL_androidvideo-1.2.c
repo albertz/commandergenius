@@ -897,7 +897,7 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			glPopMatrix();
 			//glFlush();
 		}
-		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_WHOLE_SCREEN )
+		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_SCREEN_TRANSFORM )
 		{
 			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &SDL_ANDROID_ShowScreenUnderFingerRectSrc, &SDL_ANDROID_ShowScreenUnderFingerRect);
 			SDL_Rect edge, edgeSrc;

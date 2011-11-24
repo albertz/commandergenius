@@ -81,7 +81,7 @@ class Mouse
 
 	public static final int ZOOM_NONE = 0;
 	public static final int ZOOM_MAGNIFIER = 1;
-	public static final int ZOOM_WHOLE_SCREEN = 2;
+	public static final int ZOOM_SCREEN_TRANSFORM = 2;
 	public static final int ZOOM_FULLSCREEN_MAGNIFIER = 3;
 }
 
@@ -468,6 +468,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	{
 		touchInput.process(event);
 		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
+		// With Froyo the rate of touch events is limited, but they are arriving faster then we're redrawing anyway
 		if(( event.getAction() == MotionEvent.ACTION_MOVE ||
 			event.getAction() == MotionEvent.ACTION_HOVER_MOVE))
 		{
@@ -475,7 +476,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 			{
 				try
 				{
-					mRenderer.wait(300L);
+					mRenderer.wait(300L); // And sometimes the app decides not to render at all, so this timeout should not be big.
 				} catch (InterruptedException e) { }
 			}
 		}

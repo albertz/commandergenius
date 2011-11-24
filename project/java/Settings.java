@@ -1185,34 +1185,61 @@ class Settings
 		}
 		void run (final MainActivity p)
 		{
-			CharSequence[] items = {	p.getResources().getString(R.string.display_size_large),
+			CharSequence[] items = {
+										p.getResources().getString(R.string.display_size_tiny_touchpad),
+										p.getResources().getString(R.string.display_size_tiny),
 										p.getResources().getString(R.string.display_size_small),
 										p.getResources().getString(R.string.display_size_small_touchpad),
-										p.getResources().getString(R.string.display_size_tiny),
-										p.getResources().getString(R.string.display_size_tiny_touchpad), };
+										p.getResources().getString(R.string.display_size_large),
+									};
+			int _size_tiny_touchpad = 0;
+			int _size_tiny = 1;
+			int _size_small = 2;
+			int _size_small_touchpad = 3;
+			int _size_large = 4;
+			int _more_options = 5;
+
 			if( ! Globals.SwVideoMode )
 			{
-				CharSequence[] items2 = {	p.getResources().getString(R.string.display_size_large),
-											p.getResources().getString(R.string.display_size_small_touchpad), };
+				CharSequence[] items2 = {
+											p.getResources().getString(R.string.display_size_small_touchpad),
+											p.getResources().getString(R.string.display_size_large),
+										};
 				items = items2;
+				_size_small_touchpad = 0;
+				_size_large = 1;
+				_size_tiny_touchpad = _size_tiny = _size_small = 1000;
+
 			}
 			if( firstStart )
 			{
-				CharSequence[] items2 = {	p.getResources().getString(R.string.display_size_large),
+				CharSequence[] items2 = {
+											p.getResources().getString(R.string.display_size_tiny_touchpad),
+											p.getResources().getString(R.string.display_size_tiny),
 											p.getResources().getString(R.string.display_size_small),
 											p.getResources().getString(R.string.display_size_small_touchpad),
-											p.getResources().getString(R.string.display_size_tiny),
-											p.getResources().getString(R.string.display_size_tiny_touchpad),
-											p.getResources().getString(R.string.show_more_options), };
+											p.getResources().getString(R.string.display_size_large),
+											p.getResources().getString(R.string.show_more_options),
+										};
 				items = items2;
 				if( ! Globals.SwVideoMode )
 				{
-					CharSequence[] items3 = {	p.getResources().getString(R.string.display_size_large),
+					CharSequence[] items3 = {
 												p.getResources().getString(R.string.display_size_small_touchpad),
-												p.getResources().getString(R.string.show_more_options), };
+												p.getResources().getString(R.string.display_size_large),
+												p.getResources().getString(R.string.show_more_options),
+											};
 					items = items3;
+					_more_options = 3;
 				}
 			}
+			// Java is so damn worse than C++11
+			final int size_tiny_touchpad = _size_tiny_touchpad;
+			final int size_tiny = _size_tiny;
+			final int size_small = _size_small;
+			final int size_small_touchpad = _size_small_touchpad;
+			final int size_large = _size_large;
+			final int more_options = _more_options;
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(R.string.display_size);
@@ -1221,47 +1248,37 @@ class Settings
 				public void onClick(DialogInterface dialog, int item) 
 				{
 					dialog.dismiss();
-					if( item == 0 )
+					if( item == size_large )
 					{
 						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
 						Globals.RelativeMouseMovement = false;
 						Globals.ShowScreenUnderFinger = Mouse.ZOOM_NONE;
 					}
-					if( item == 1 )
+					if( item == size_small )
 					{
-						if( Globals.SwVideoMode )
-						{
-							Globals.LeftClickMethod = Mouse.LEFT_CLICK_NEAR_CURSOR;
-							Globals.RelativeMouseMovement = false;
-							Globals.ShowScreenUnderFinger = Mouse.ZOOM_MAGNIFIER;
-						}
-						else
-						{
-							// OpenGL does not support magnifying glass
-							Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
-							Globals.RelativeMouseMovement = true;
-							Globals.ShowScreenUnderFinger = Mouse.ZOOM_NONE;
-						}
+						Globals.LeftClickMethod = Mouse.LEFT_CLICK_NEAR_CURSOR;
+						Globals.RelativeMouseMovement = false;
+						Globals.ShowScreenUnderFinger = Mouse.ZOOM_MAGNIFIER;
 					}
-					if( item == 2 && Globals.SwVideoMode )
+					if( item == size_small_touchpad )
 					{
 						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
 						Globals.RelativeMouseMovement = true;
 						Globals.ShowScreenUnderFinger = Mouse.ZOOM_NONE;
 					}
-					if( item == 3 )
+					if( item == size_tiny )
 					{
 						Globals.LeftClickMethod = Mouse.LEFT_CLICK_NEAR_CURSOR;
 						Globals.RelativeMouseMovement = false;
-						Globals.ShowScreenUnderFinger = Mouse.ZOOM_WHOLE_SCREEN;
+						Globals.ShowScreenUnderFinger = Mouse.ZOOM_SCREEN_TRANSFORM;
 					}
-					if( item == 4 )
+					if( item == size_tiny_touchpad )
 					{
 						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
 						Globals.RelativeMouseMovement = true;
 						Globals.ShowScreenUnderFinger = Mouse.ZOOM_FULLSCREEN_MAGNIFIER;
 					}
-					if( firstStart && ( item == 5 || ( ! Globals.SwVideoMode && item == 2 ) ) )
+					if( item == more_options )
 					{
 						menuStack.clear();
 						new MainMenu().run(p);
@@ -1270,8 +1287,8 @@ class Settings
 					goBack(p);
 				}
 			}
-			if( firstStart )
-				builder.setItems(items, new ClickListener());
+			builder.setItems(items, new ClickListener());
+			/*
 			else
 				builder.setSingleChoiceItems(items,
 					Globals.ShowScreenUnderFinger == Mouse.ZOOM_NONE ?
@@ -1279,6 +1296,7 @@ class Settings
 					( Globals.ShowScreenUnderFinger == Mouse.ZOOM_MAGNIFIER && Globals.SwVideoMode ) ? 1 :
 					Globals.ShowScreenUnderFinger + 1,
 					new ClickListener());
+			*/
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
 				public void onCancel(DialogInterface dialog)
