@@ -199,8 +199,10 @@ void UpdateScreenUnderFingerRect(int x, int y)
 	{
 		SDL_ANDROID_ShowScreenUnderFingerRectSrc.w = screenX / 3;
 		SDL_ANDROID_ShowScreenUnderFingerRectSrc.h = screenY / 3;
-		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = x - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w/2;
-		SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = y - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h/2;
+		//SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = x - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w/2;
+		//SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = y - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h/2;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = x * (screenX - SDL_ANDROID_ShowScreenUnderFingerRectSrc.w) / screenX;
+		SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = y * (screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h) / screenY;
 
 		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.x < 0 )
 			SDL_ANDROID_ShowScreenUnderFingerRectSrc.x = 0;
@@ -211,29 +213,13 @@ void UpdateScreenUnderFingerRect(int x, int y)
 		if( SDL_ANDROID_ShowScreenUnderFingerRectSrc.y > screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h )
 			SDL_ANDROID_ShowScreenUnderFingerRectSrc.y = screenY - SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
 
-		/*
-		// TODO: make the mouse pointer to be directly under user's finger, currently it's shifted near the edges.
-		// That's simple algebra (not even trigonometry!), and I'm failing severely in this field.
 		SDL_ANDROID_ShowScreenUnderFingerRect.w = screenX * 2 / 3;
 		SDL_ANDROID_ShowScreenUnderFingerRect.h = screenY * 2 / 3;
+		//SDL_ANDROID_ShowScreenUnderFingerRect.x = x - SDL_ANDROID_ShowScreenUnderFingerRect.w/2;
+		//SDL_ANDROID_ShowScreenUnderFingerRect.y = y - SDL_ANDROID_ShowScreenUnderFingerRect.h/2;
 		SDL_ANDROID_ShowScreenUnderFingerRect.x = x * (screenX - SDL_ANDROID_ShowScreenUnderFingerRect.w) / screenX;
 		SDL_ANDROID_ShowScreenUnderFingerRect.y = y * (screenY - SDL_ANDROID_ShowScreenUnderFingerRect.h) / screenY;
-
-		if( SDL_ANDROID_ShowScreenUnderFingerRect.x > SDL_ANDROID_ShowScreenUnderFingerRectSrc.x )
-			SDL_ANDROID_ShowScreenUnderFingerRect.x = SDL_ANDROID_ShowScreenUnderFingerRectSrc.x;
-		if( SDL_ANDROID_ShowScreenUnderFingerRect.y > SDL_ANDROID_ShowScreenUnderFingerRectSrc.y )
-			SDL_ANDROID_ShowScreenUnderFingerRect.y = SDL_ANDROID_ShowScreenUnderFingerRectSrc.y;
-		if( SDL_ANDROID_ShowScreenUnderFingerRect.x + SDL_ANDROID_ShowScreenUnderFingerRect.w < SDL_ANDROID_ShowScreenUnderFingerRectSrc.x + SDL_ANDROID_ShowScreenUnderFingerRectSrc.w )
-			SDL_ANDROID_ShowScreenUnderFingerRect.x = SDL_ANDROID_ShowScreenUnderFingerRectSrc.x + SDL_ANDROID_ShowScreenUnderFingerRectSrc.w - SDL_ANDROID_ShowScreenUnderFingerRect.w;
-		if( SDL_ANDROID_ShowScreenUnderFingerRect.y + SDL_ANDROID_ShowScreenUnderFingerRect.h < SDL_ANDROID_ShowScreenUnderFingerRectSrc.y + SDL_ANDROID_ShowScreenUnderFingerRectSrc.h )
-			SDL_ANDROID_ShowScreenUnderFingerRect.y = SDL_ANDROID_ShowScreenUnderFingerRectSrc.y + SDL_ANDROID_ShowScreenUnderFingerRectSrc.h - SDL_ANDROID_ShowScreenUnderFingerRect.h;
-		*/
-
-		// TODO: there are graphical glithes at the edges - the big screen is sometimes hiding the small screen parts
-		SDL_ANDROID_ShowScreenUnderFingerRect.w = screenX * 2 / 3;
-		SDL_ANDROID_ShowScreenUnderFingerRect.h = screenY * 2 / 3;
-		SDL_ANDROID_ShowScreenUnderFingerRect.x = x - SDL_ANDROID_ShowScreenUnderFingerRect.w/2;
-		SDL_ANDROID_ShowScreenUnderFingerRect.y = y - SDL_ANDROID_ShowScreenUnderFingerRect.h/2;
+		
 
 		if( SDL_ANDROID_ShowScreenUnderFingerRect.x > SDL_ANDROID_ShowScreenUnderFingerRectSrc.x )
 			SDL_ANDROID_ShowScreenUnderFingerRect.x = SDL_ANDROID_ShowScreenUnderFingerRectSrc.x;
