@@ -120,11 +120,13 @@
 <string name="downloads">Завантаження</string>
 <string name="video_separatethread">Окремий потік для відео, збільшить FPS на деяких пристроях</string>
 <string name="text_edit_click_here">Натисніть, щоб ввести текст, натисніть Назад, коли закiнчете</string>
-<string name="display_size_mouse">Налаштування миші в залежності від розміру дисплея</string>
+<string name="display_size_mouse">Налаштування розміру дисплея</string>
 <string name="display_size">Виберіть розмір дисплея</string>
 <string name="display_size_large">Великий (таблетка)</string>
-<string name="display_size_small">Маленький (телефон)</string>
-<string name="display_size_tiny">Крихiтний (Xperia Mini)</string>
+<string name="display_size_small">Маленький</string>
+<string name="display_size_tiny">Крихiтний</string>
 <string name="show_more_options">Показати більше параметрів</string>
 <string name="controls_screenkb_drawsize">Розмір зображення кнопок</string>
+<string name="display_size_small_touchpad">Маленький, режим тачпаду</string>
+<string name="display_size_tiny_touchpad">Крихiтний, режим тачпаду</string>
 </resources>

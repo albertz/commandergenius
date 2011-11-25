@@ -120,13 +120,15 @@
 <string name="downloads">Загрузки</string>
 <string name="video_separatethread">Отдельный поток для видео, увеличит FPS на некоторых устройствах</string>
 <string name="text_edit_click_here">Нажмите, чтобы ввести текст, нажмите Назад, когда закончите</string>
-<string name="display_size_mouse">Настройка мыши в зависимости от размера дисплея</string>
-<string name="display_size">Выберите размер дисплея</string>
+<string name="display_size_mouse">Настройка размера дисплея</string>
+<string name="display_size">Размер дисплея</string>
 <string name="display_size_large">Большой (таблетка)</string>
 <string name="display_size_small">Маленький (телефон)</string>
-<string name="display_size_tiny">Крохотный (Xperia Mini)</string>
+<string name="display_size_tiny">Крохотный</string>
 <string name="show_more_options">Показать больше параметров</string>
 <string name="broken_libc_title">Обнаружена бракованная прошивка</string>
 <string name="broken_libc_text">Ваше устройство содержит дефективные системные библиотеки, данное приложение скорее всего не будет работать. Пожалуйста, установите обновление, либо установите неофициальную прошивку, либо скопируйте /system/lib/libc.so с другого устройства (только для специалистов!)</string>
 <string name="controls_screenkb_drawsize">Размер изображения кнопок</string>
+<string name="display_size_small_touchpad">Маленький, режим тачпада</string>
+<string name="display_size_tiny_touchpad">Крохотный, режим тачпада</string>
 </resources>
