@@ -185,22 +185,32 @@ class DataDownloader extends Thread
 	public void run()
 	{
 		String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
+		int total = 0;
+		int count = 0;
 		for( int i = 0; i < downloadFiles.length; i++ )
 		{
 			if( downloadFiles[i].length() > 0 &&
 				( Globals.OptionalDataDownload.length > i && Globals.OptionalDataDownload[i] ) ||
 				( Globals.OptionalDataDownload.length <= i && downloadFiles[i].indexOf("!") == 0 ) )
-				if( ! DownloadDataFile(downloadFiles[i], "libsdl-DownloadFinished-" + String.valueOf(i) + ".flag") )
+				total += 1;
+		}
+		for( int i = 0; i < downloadFiles.length; i++ )
+		{
+			if( downloadFiles[i].length() > 0 &&
+				( Globals.OptionalDataDownload.length > i && Globals.OptionalDataDownload[i] ) ||
+				( Globals.OptionalDataDownload.length <= i && downloadFiles[i].indexOf("!") == 0 ) )
+				if( ! DownloadDataFile(downloadFiles[i], "libsdl-DownloadFinished-" + String.valueOf(i) + ".flag", count, total) )
 				{
 					DownloadFailed = true;
 					return;
 				}
+				count += 1;
 		}
 		DownloadComplete = true;
 		initParent();
 	}
 
-	public boolean DownloadDataFile(final String DataDownloadUrl, final String DownloadFlagFileName)
+	public boolean DownloadDataFile(final String DataDownloadUrl, final String DownloadFlagFileName, int downloadCount, int downloadTotal)
 	{
 		String [] downloadUrls = DataDownloadUrl.split("[|]");
 		if( downloadUrls.length < 2 )
@@ -261,7 +271,7 @@ class DataDownloader extends Thread
 		String url = "";
 
 		int downloadUrlIndex = 1;
-		while( downloadUrlIndex < downloadUrls.length ) 
+		while( downloadUrlIndex < downloadUrls.length )
 		{
 			System.out.println("Processing download " + downloadUrls[downloadUrlIndex]);
 			url = new String(downloadUrls[downloadUrlIndex]);
@@ -271,7 +281,7 @@ class DataDownloader extends Thread
 				url = url.substring( url.indexOf(":", 1) + 1 );
 				DoNotUnzip = true;
 			}
-			Status.setText( res.getString(R.string.connecting_to, url) );
+			Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.connecting_to, url) );
 			if( url.indexOf("http://") == -1 && url.indexOf("https://") == -1 ) // File inside assets
 			{
 				System.out.println("Fetching file from assets: " + url);
@@ -306,16 +316,43 @@ class DataDownloader extends Thread
 		}
 		if( FileInAssets )
 		{
-			try {
-				stream = new CountingInputStream(Parent.getAssets().open(url), 8192);
-				while( stream.skip(65536) > 0 ) { };
-				totalLen = stream.getBytesRead();
-				stream.close();
-				stream = new CountingInputStream(Parent.getAssets().open(url), 8192);
-			} catch( IOException e ) {
-				System.out.println("Unpacking from assets '" + url + "' - error: " + e.toString());
-				Status.setText( res.getString(R.string.error_dl_from, url) );
-				return false;
+			int multipartCounter = 0;
+			InputStream multipart = null;
+			while( true )
+			{
+				try {
+					// Make string ".zip00", ".zip01" etc for multipart archives
+					String url1 = url + String.format("%02d", multipartCounter);
+					CountingInputStream stream1 = new CountingInputStream(Parent.getAssets().open(url1), 8192);
+					while( stream1.skip(65536) > 0 ) { };
+					totalLen += stream1.getBytesRead();
+					stream1.close();
+					InputStream s = Parent.getAssets().open(url1);
+					if( multipart == null )
+						multipart = s;
+					else
+						multipart = new SequenceInputStream(multipart, s);
+					System.out.println("Multipart archive found: " + url1);
+				} catch( IOException e ) {
+					break;
+				}
+				multipartCounter += 1;
+			}
+			if( multipart != null )
+				stream = new CountingInputStream(multipart, 8192);
+			else
+			{
+				try {
+					stream = new CountingInputStream(Parent.getAssets().open(url), 8192);
+					while( stream.skip(65536) > 0 ) { };
+					totalLen += stream.getBytesRead();
+					stream.close();
+					stream = new CountingInputStream(Parent.getAssets().open(url), 8192);
+				} catch( IOException e ) {
+					System.out.println("Unpacking from assets '" + url + "' - error: " + e.toString());
+					Status.setText( res.getString(R.string.error_dl_from, url) );
+					return false;
+				}
 			}
 		}
 		else
@@ -327,7 +364,7 @@ class DataDownloader extends Thread
 				return false;
 			}
 
-			Status.setText( res.getString(R.string.dl_from, url) );
+			Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_from, url) );
 			totalLen = response.getEntity().getContentLength();
 			try {
 				stream = new CountingInputStream(response.getEntity().getContent(), 8192);
@@ -374,7 +411,7 @@ class DataDownloader extends Thread
 					float percent = 0.0f;
 					if( totalLen > 0 )
 						percent = stream.getBytesRead() * 100.0f / totalLen;
-					Status.setText( res.getString(R.string.dl_progress, percent, path) );
+					Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
 				}
 				out.flush();
 				out.close();
@@ -461,7 +498,7 @@ class DataDownloader extends Thread
 				float percent = 0.0f;
 				if( totalLen > 0 )
 					percent = stream.getBytesRead() * 100.0f / totalLen;
-				Status.setText( res.getString(R.string.dl_progress, percent, path) );
+				Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
 				
 				try {
 					int len = zip.read(buf);
@@ -474,7 +511,7 @@ class DataDownloader extends Thread
 						percent = 0.0f;
 						if( totalLen > 0 )
 							percent = stream.getBytesRead() * 100.0f / totalLen;
-						Status.setText( res.getString(R.string.dl_progress, percent, path) );
+						Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
 					}
 					out.flush();
 					out.close();
@@ -518,7 +555,7 @@ class DataDownloader extends Thread
 			Status.setText( res.getString(R.string.error_write, path) );
 			return false;
 		};
-		Status.setText( res.getString(R.string.dl_finished) );
+		Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_finished) );
 
 		try {
 			stream.close();
