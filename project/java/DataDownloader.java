@@ -199,12 +199,14 @@ class DataDownloader extends Thread
 			if( downloadFiles[i].length() > 0 &&
 				( Globals.OptionalDataDownload.length > i && Globals.OptionalDataDownload[i] ) ||
 				( Globals.OptionalDataDownload.length <= i && downloadFiles[i].indexOf("!") == 0 ) )
+			{
 				if( ! DownloadDataFile(downloadFiles[i], "libsdl-DownloadFinished-" + String.valueOf(i) + ".flag", count+1, total) )
 				{
 					DownloadFailed = true;
 					return;
 				}
 				count += 1;
+			}
 		}
 		DownloadComplete = true;
 		initParent();
