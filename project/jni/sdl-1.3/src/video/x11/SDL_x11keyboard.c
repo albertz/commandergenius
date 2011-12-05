@@ -1,25 +1,26 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
+
+#if SDL_VIDEO_DRIVER_X11
 
 #include "SDL_x11video.h"
 
@@ -34,7 +35,7 @@
 /* *INDENT-OFF* */
 static const struct {
     KeySym keysym;
-    SDLKey sdlkey;
+    SDL_Keycode sdlkey;
 } KeySymToSDLKey[] = {
     { XK_Return, SDLK_RETURN },
     { XK_Escape, SDLK_ESCAPE },
@@ -134,7 +135,7 @@ static const struct {
 
 static const struct
 {
-    const SDL_scancode const *table;
+    const SDL_Scancode const *table;
     int table_size;
 } scancode_set[] = {
     { darwin_scancode_table, SDL_arraysize(darwin_scancode_table) },
@@ -143,7 +144,7 @@ static const struct
 };
 /* *INDENT-OFF* */
 
-static SDLKey
+static SDL_Keycode
 X11_KeyCodeToSDLKey(Display *display, KeyCode keycode)
 {
     KeySym keysym;
@@ -157,7 +158,7 @@ X11_KeyCodeToSDLKey(Display *display, KeyCode keycode)
 
     ucs4 = X11_KeySymToUcs4(keysym);
     if (ucs4) {
-        return (SDLKey) ucs4;
+        return (SDL_Keycode) ucs4;
     }
 
     for (i = 0; i < SDL_arraysize(KeySymToSDLKey); ++i) {
@@ -175,7 +176,7 @@ X11_InitKeyboard(_THIS)
     int i, j;
     int min_keycode, max_keycode;
     struct {
-        SDL_scancode scancode;
+        SDL_Scancode scancode;
         KeySym keysym;
         int value;
     } fingerprint[] = {
@@ -215,14 +216,14 @@ X11_InitKeyboard(_THIS)
             printf("Using scancode set %d, min_keycode = %d, max_keycode = %d, table_size = %d\n", i, min_keycode, max_keycode, scancode_set[i].table_size);
 #endif
             SDL_memcpy(&data->key_layout[min_keycode], scancode_set[i].table,
-                       sizeof(SDL_scancode) * scancode_set[i].table_size);
+                       sizeof(SDL_Scancode) * scancode_set[i].table_size);
             fingerprint_detected = SDL_TRUE;
             break;
         }
     }
 
     if (!fingerprint_detected) {
-        SDLKey keymap[SDL_NUM_SCANCODES];
+        SDL_Keycode keymap[SDL_NUM_SCANCODES];
 
         printf
             ("Keyboard layout unknown, please send the following to the SDL mailing list (sdl@libsdl.org):\n");
@@ -233,13 +234,13 @@ X11_InitKeyboard(_THIS)
             KeySym sym;
             sym = XKeycodeToKeysym(data->display, i, 0);
             if (sym != NoSymbol) {
-                SDLKey key;
+                SDL_Keycode key;
                 printf("code = %d, sym = 0x%X (%s) ", i - min_keycode,
                        (unsigned int) sym, XKeysymToString(sym));
                 key = X11_KeyCodeToSDLKey(data->display, i);
                 for (j = 0; j < SDL_arraysize(keymap); ++j) {
                     if (keymap[j] == key) {
-                        data->key_layout[i] = (SDL_scancode) j;
+                        data->key_layout[i] = (SDL_Scancode) j;
                         break;
                     }
                 }
@@ -264,8 +265,8 @@ X11_UpdateKeymap(_THIS)
 {
     SDL_VideoData *data = (SDL_VideoData *) _this->driverdata;
     int i;
-    SDL_scancode scancode;
-    SDLKey keymap[SDL_NUM_SCANCODES];
+    SDL_Scancode scancode;
+    SDL_Keycode keymap[SDL_NUM_SCANCODES];
 
     SDL_zero(keymap);
 
@@ -286,5 +287,7 @@ void
 X11_QuitKeyboard(_THIS)
 {
 }
+
+#endif /* SDL_VIDEO_DRIVER_X11 */
 
 /* vi: set ts=4 sw=4 expandtab: */

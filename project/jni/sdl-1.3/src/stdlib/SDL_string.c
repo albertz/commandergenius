@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -32,9 +31,9 @@
 #define UTF8_IsLeadByte(c) ((c) >= 0xC0 && (c) <= 0xF4)
 #define UTF8_IsTrailingByte(c) ((c) >= 0x80 && (c) <= 0xBF)
 
-int UTF8_TrailingBytes(unsigned char c)
+static int UTF8_TrailingBytes(unsigned char c)
 {
-    if (c >= 0xC0 && c<= 0xDF)
+    if (c >= 0xC0 && c <= 0xDF)
         return 1;
     else if (c >= 0xE0 && c <= 0xEF)
         return 2;
@@ -149,7 +148,6 @@ SDL_ScanUintPtrT(const char *text, int radix, uintptr_t * valuep)
 }
 #endif
 
-#ifdef SDL_HAS_64BIT_TYPE
 #if !defined(HAVE_SSCANF) || !defined(HAVE_STRTOLL)
 static size_t
 SDL_ScanLongLong(const char *text, int radix, Sint64 * valuep)
@@ -222,7 +220,6 @@ SDL_ScanUnsignedLongLong(const char *text, int radix, Uint64 * valuep)
     return (text - textstart);
 }
 #endif
-#endif /* SDL_HAS_64BIT_TYPE */
 
 #if !defined(HAVE_SSCANF) || !defined(HAVE_STRTOD)
 static size_t
@@ -265,31 +262,27 @@ void *
 SDL_memset(void *dst, int c, size_t len)
 {
     size_t left = (len % 4);
-    if (len >= 4) {
-        Uint32 value = 0;
-        Uint32 *dstp = (Uint32 *) dst;
-        int i;
-        for (i = 0; i < 4; ++i) {
-            value <<= 8;
-            value |= c;
-        }
-        len /= 4;
-        while (len--) {
-            *dstp++ = value;
-        }
+    Uint32 *dstp4;
+    Uint8 *dstp1;
+    Uint32 value4 = (c | (c << 8) | (c << 16) | (c << 24));
+    Uint8 value1 = (Uint8) c;
+
+    dstp4 = (Uint32 *) dst;
+    len /= 4;
+    while (len--) {
+        *dstp4++ = value4;
     }
-    if (left > 0) {
-        Uint8 value = (Uint8) c;
-        Uint8 *dstp = (Uint8 *) dst;
-        switch (left) {
-        case 3:
-            *dstp++ = value;
-        case 2:
-            *dstp++ = value;
-        case 1:
-            *dstp++ = value;
-        }
+
+    dstp1 = (Uint8 *) dstp4;
+    switch (left) {
+    case 3:
+        *dstp1++ = value1;
+    case 2:
+        *dstp1++ = value1;
+    case 1:
+        *dstp1++ = value1;
     }
+
     return dst;
 }
 #endif
@@ -298,25 +291,49 @@ SDL_memset(void *dst, int c, size_t len)
 void *
 SDL_memcpy(void *dst, const void *src, size_t len)
 {
-    char *srcp = (char *) src;
-    char *dstp = (char *) dst;
+    size_t left = (len % 4);
+    Uint32 *srcp4, *dstp4;
+    Uint8 *srcp1, *dstp1;
+
+    srcp4 = (Uint32 *) src;
+    dstp4 = (Uint32 *) dst;
+    len /= 4;
     while (len--) {
-        *dstp++ = *srcp++;
+        *dstp4++ = *srcp4++;
     }
+
+    srcp1 = (Uint8 *) srcp4;
+    dstp1 = (Uint8 *) dstp4;
+    switch (left) {
+    case 3:
+        *dstp1++ = *srcp1++;
+    case 2:
+        *dstp1++ = *srcp1++;
+    case 1:
+        *dstp1++ = *srcp1++;
+    }
+
     return dst;
 }
 #endif
 
-#ifndef SDL_revcpy
+#ifndef SDL_memmove
 void *
-SDL_revcpy(void *dst, const void *src, size_t len)
+SDL_memmove(void *dst, const void *src, size_t len)
 {
     char *srcp = (char *) src;
     char *dstp = (char *) dst;
-    srcp += len - 1;
-    dstp += len - 1;
-    while (len--) {
-        *dstp-- = *srcp--;
+
+    if (src < dst) {
+        srcp += len - 1;
+        dstp += len - 1;
+        while (len--) {
+            *dstp-- = *srcp--;
+        }
+    } else {
+        while (len--) {
+            *dstp++ = *srcp++;
+        }
     }
     return dst;
 }
@@ -408,7 +425,7 @@ size_t SDL_utf8strlcpy(char *dst, const char *src, size_t dst_bytes)
 {
     size_t src_bytes = SDL_strlen(src);
     size_t bytes = SDL_min(src_bytes, dst_bytes - 1);
-    int i = 0;
+    size_t i = 0;
     char trailing_bytes = 0;
     if (bytes)
     {
@@ -659,8 +676,6 @@ SDL_strtoul(const char *string, char **endp, int base)
 }
 #endif
 
-#ifdef SDL_HAS_64BIT_TYPE
-
 #ifndef HAVE__I64TOA
 char *
 SDL_lltoa(Sint64 value, char *string, int radix)
@@ -761,8 +776,6 @@ SDL_strtoull(const char *string, char **endp, int base)
 }
 #endif
 
-#endif /* SDL_HAS_64BIT_TYPE */
-
 #ifndef HAVE_STRTOD
 double
 SDL_strtod(const char *string, char **endp)
@@ -845,8 +858,8 @@ SDL_strncasecmp(const char *str1, const char *str2, size_t maxlen)
         ++str2;
         --maxlen;
     }
-    a = SDL_tolower(*str1);
-    b = SDL_tolower(*str2);
+    a = SDL_tolower((unsigned char) *str1);
+    b = SDL_tolower((unsigned char) *str2);
     return (int) ((unsigned char) a - (unsigned char) b);
 }
 #endif
@@ -956,7 +969,6 @@ SDL_sscanf(const char *text, const char *fmt, ...)
                     }
                     /* Fall through to %d handling */
                 case 'd':
-#ifdef SDL_HAS_64BIT_TYPE
                     if (inttype == DO_LONGLONG) {
                         Sint64 value;
                         text += SDL_ScanLongLong(text, radix, &value);
@@ -965,9 +977,7 @@ SDL_sscanf(const char *text, const char *fmt, ...)
                             *valuep = value;
                             ++retval;
                         }
-                    } else
-#endif /* SDL_HAS_64BIT_TYPE */
-                    {
+                    } else {
                         long value;
                         text += SDL_ScanLong(text, radix, &value);
                         if (!suppress) {
@@ -1011,7 +1021,6 @@ SDL_sscanf(const char *text, const char *fmt, ...)
                     }
                     /* Fall through to unsigned handling */
                 case 'u':
-#ifdef SDL_HAS_64BIT_TYPE
                     if (inttype == DO_LONGLONG) {
                         Uint64 value;
                         text += SDL_ScanUnsignedLongLong(text, radix, &value);
@@ -1020,9 +1029,7 @@ SDL_sscanf(const char *text, const char *fmt, ...)
                             *valuep = value;
                             ++retval;
                         }
-                    } else
-#endif /* SDL_HAS_64BIT_TYPE */
-                    {
+                    } else {
                         unsigned long value;
                         text += SDL_ScanUnsignedLong(text, radix, &value);
                         if (!suppress) {
@@ -1174,7 +1181,6 @@ SDL_PrintUnsignedLong(char *text, unsigned long value, int radix,
     return size;
 }
 
-#ifdef SDL_HAS_64BIT_TYPE
 static size_t
 SDL_PrintLongLong(char *text, Sint64 value, int radix, size_t maxlen)
 {
@@ -1206,7 +1212,7 @@ SDL_PrintUnsignedLongLong(char *text, Uint64 value, int radix, size_t maxlen)
 
     return size;
 }
-#endif /* SDL_HAS_64BIT_TYPE */
+
 static size_t
 SDL_PrintFloat(char *text, double arg, size_t maxlen)
 {
@@ -1323,16 +1329,10 @@ SDL_vsnprintf(char *text, size_t maxlen, const char *fmt, va_list ap)
                                           radix, maxlen);
                         break;
                     case DO_LONGLONG:
-#ifdef SDL_HAS_64BIT_TYPE
                         len =
                             SDL_PrintLongLong(text,
                                               va_arg(ap, Sint64),
                                               radix, maxlen);
-#else
-                        len =
-                            SDL_PrintLong(text, va_arg(ap, long),
-                                          radix, maxlen);
-#endif
                         break;
                     }
                     done = SDL_TRUE;
@@ -1372,20 +1372,11 @@ SDL_vsnprintf(char *text, size_t maxlen, const char *fmt, va_list ap)
                                                   radix, maxlen);
                         break;
                     case DO_LONGLONG:
-#ifdef SDL_HAS_64BIT_TYPE
                         len =
                             SDL_PrintUnsignedLongLong(text,
                                                       va_arg(ap,
                                                              Uint64),
                                                       radix, maxlen);
-#else
-                        len =
-                            SDL_PrintUnsignedLong(text,
-                                                  va_arg(ap,
-                                                         unsigned
-                                                         long),
-                                                  radix, maxlen);
-#endif
                         break;
                     }
                     if (do_lowercase) {

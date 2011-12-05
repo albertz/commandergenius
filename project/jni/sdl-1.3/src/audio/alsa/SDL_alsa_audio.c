@@ -1,25 +1,26 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
+
+#if SDL_AUDIO_DRIVER_ALSA
 
 /* Allow access to a raw mixing buffer */
 
@@ -37,9 +38,6 @@
 #ifdef SDL_AUDIO_DRIVER_ALSA_DYNAMIC
 #include "SDL_loadso.h"
 #endif
-
-/* The tag name used by ALSA audio */
-#define DRIVER_NAME         "alsa"
 
 static int (*ALSA_snd_pcm_open)
   (snd_pcm_t **, const char *, snd_pcm_stream_t, int);
@@ -85,11 +83,12 @@ static int (*ALSA_snd_pcm_sw_params_set_start_threshold)
 static int (*ALSA_snd_pcm_sw_params) (snd_pcm_t *, snd_pcm_sw_params_t *);
 static int (*ALSA_snd_pcm_nonblock) (snd_pcm_t *, int);
 static int (*ALSA_snd_pcm_wait)(snd_pcm_t *, int);
-#define snd_pcm_hw_params_sizeof ALSA_snd_pcm_hw_params_sizeof
-#define snd_pcm_sw_params_sizeof ALSA_snd_pcm_sw_params_sizeof
-
+static int (*ALSA_snd_pcm_sw_params_set_avail_min)
+  (snd_pcm_t *, snd_pcm_sw_params_t *, snd_pcm_uframes_t);
 
 #ifdef SDL_AUDIO_DRIVER_ALSA_DYNAMIC
+#define snd_pcm_hw_params_sizeof ALSA_snd_pcm_hw_params_sizeof
+#define snd_pcm_sw_params_sizeof ALSA_snd_pcm_sw_params_sizeof
 
 static const char *alsa_library = SDL_AUDIO_DRIVER_ALSA_DYNAMIC;
 static void *alsa_handle = NULL;
@@ -144,6 +143,7 @@ load_alsa_syms(void)
     SDL_ALSA_SYM(snd_pcm_sw_params);
     SDL_ALSA_SYM(snd_pcm_nonblock);
     SDL_ALSA_SYM(snd_pcm_wait);
+    SDL_ALSA_SYM(snd_pcm_sw_params_set_avail_min);
     return 0;
 }
 
@@ -622,6 +622,13 @@ ALSA_OpenDevice(_THIS, const char *devname, int iscapture)
                      ALSA_snd_strerror(status));
         return 0;
     }
+    status = ALSA_snd_pcm_sw_params_set_avail_min(pcm_handle, swparams, this->spec.samples);
+    if (status < 0) {
+        ALSA_CloseDevice(this);
+        SDL_SetError("Couldn't set minimum available samples: %s",
+                     ALSA_snd_strerror(status));
+        return 0;
+    }
     status =
         ALSA_snd_pcm_sw_params_set_start_threshold(pcm_handle, swparams, 1);
     if (status < 0) {
@@ -685,7 +692,9 @@ ALSA_Init(SDL_AudioDriverImpl * impl)
 
 
 AudioBootStrap ALSA_bootstrap = {
-    DRIVER_NAME, "ALSA PCM audio", ALSA_Init, 0
+    "alsa", "ALSA PCM audio", ALSA_Init, 0
 };
+
+#endif /* SDL_AUDIO_DRIVER_ALSA */
 
 /* vi: set ts=4 sw=4 expandtab: */

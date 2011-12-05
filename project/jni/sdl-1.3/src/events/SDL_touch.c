@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -60,7 +59,7 @@ SDL_GetTouchIndex(int index)
     return SDL_touchPads[index];
 }
 
-int
+static int
 SDL_GetFingerIndexId(SDL_Touch* touch,SDL_FingerID fingerid)
 {
     int i;
@@ -100,7 +99,8 @@ int
 SDL_AddTouch(const SDL_Touch * touch, char *name)
 {
     SDL_Touch **touchPads;
-    int index,length;
+    int index;
+    size_t length;
 
     if (SDL_GetTouchIndexId(touch->id) != -1) {
         SDL_SetError("Touch ID already in use");
@@ -122,7 +122,7 @@ SDL_AddTouch(const SDL_Touch * touch, char *name)
         SDL_OutOfMemory();
         return -1;
     }
-    *SDL_touchPads[index] = *touch;
+    SDL_memcpy(SDL_touchPads[index], touch, sizeof(*touch));
 
     /* we're setting the touch properties */
     length = 0;
@@ -190,6 +190,7 @@ SDL_GetNumTouch(void)
 {
     return SDL_num_touch;
 }
+
 SDL_Window *
 SDL_GetTouchFocusWindow(SDL_TouchID id)
 {
@@ -395,16 +396,15 @@ int
 SDL_SendTouchMotion(SDL_TouchID id, SDL_FingerID fingerid, int relative, 
                     float xin, float yin, float pressurein)
 {
-    int index = SDL_GetTouchIndexId(id);
-    SDL_Touch *touch = SDL_GetTouch(id);
-    SDL_Finger *finger = SDL_GetFinger(touch,fingerid);
+    SDL_Touch *touch;
+    SDL_Finger *finger;
     int posted;
     Sint16 xrel, yrel;
-    float x_max = 0, y_max = 0;
-        Uint16 x;
-        Uint16 y;
-        Uint16 pressure;
+    Uint16 x;
+    Uint16 y;
+    Uint16 pressure;
     
+    touch = SDL_GetTouch(id);
     if (!touch) {
       return SDL_TouchNotFoundError(id);
     }
@@ -417,6 +417,7 @@ SDL_SendTouchMotion(SDL_TouchID id, SDL_FingerID fingerid, int relative,
         return 0;
     }
     
+    finger = SDL_GetFinger(touch,fingerid);
     if(finger == NULL || !finger->down) {
         return SDL_SendFingerDown(id,fingerid,SDL_TRUE,xin,yin,pressurein);        
     } else {
@@ -495,14 +496,16 @@ SDL_SendTouchMotion(SDL_TouchID id, SDL_FingerID fingerid, int relative,
         return posted;
     }
 }
+
 int
 SDL_SendTouchButton(SDL_TouchID id, Uint8 state, Uint8 button)
 {
-    SDL_Touch *touch = SDL_GetTouch(id);
+    SDL_Touch *touch;
     int posted;
     Uint32 type;
 
     
+    touch = SDL_GetTouch(id);
     if (!touch) {
       return SDL_TouchNotFoundError(id);
     }

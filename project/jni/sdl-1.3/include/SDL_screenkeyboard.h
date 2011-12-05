@@ -25,7 +25,12 @@
 
 #include "SDL_stdinc.h"
 #include "SDL_video.h"
+#if SDL_VERSION_ATLEAST(1,3,0)
+#include "SDL_keycode.h"
+#include "SDL_compat.h"
+#else
 #include "SDL_keysym.h"
+#endif
 
 /* On-screen keyboard exposed to the application, it's yet available on Android platform only */
 

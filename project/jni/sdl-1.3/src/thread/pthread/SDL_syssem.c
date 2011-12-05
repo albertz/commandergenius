@@ -1,28 +1,29 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
+#include <errno.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <sys/time.h>
 
 #include "SDL_thread.h"
 #include "SDL_timer.h"
@@ -102,6 +103,8 @@ int
 SDL_SemWaitTimeout(SDL_sem * sem, Uint32 timeout)
 {
     int retval;
+    struct timeval now;
+    struct timespec ts_timeout;
 
     if (!sem) {
         SDL_SetError("Passed a NULL semaphore");
@@ -116,16 +119,34 @@ SDL_SemWaitTimeout(SDL_sem * sem, Uint32 timeout)
         return SDL_SemWait(sem);
     }
 
-    /* Ack!  We have to busy wait... */
-    /* FIXME: Use sem_timedwait()? */
-    timeout += SDL_GetTicks();
+    /* Setup the timeout. sem_timedwait doesn't wait for
+    * a lapse of time, but until we reach a certain time.
+    * This time is now plus the timeout.
+    */
+    gettimeofday(&now, NULL);
+
+    /* Add our timeout to current time */
+    now.tv_usec += (timeout % 1000) * 1000;
+    now.tv_sec += timeout / 1000;
+
+    /* Wrap the second if needed */
+    if ( now.tv_usec >= 1000000 ) {
+        now.tv_usec -= 1000000;
+        now.tv_sec ++;
+    }
+
+    /* Convert to timespec */
+    ts_timeout.tv_sec = now.tv_sec;
+    ts_timeout.tv_nsec = now.tv_usec * 1000;
+
+    /* Wait. */
     do {
-        retval = SDL_SemTryWait(sem);
-        if (retval == 0) {
-            break;
-        }
-        SDL_Delay(1);
-    } while (SDL_GetTicks() < timeout);
+        retval = sem_timedwait(&sem->sem, &ts_timeout);
+    } while (retval < 0 && errno == EINTR);
+
+    if (retval < 0) {
+        SDL_SetError("sem_timedwait() failed");
+    }
 
     return retval;
 }

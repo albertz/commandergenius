@@ -1,28 +1,28 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
+#include "SDL_config.h"
+
+#if SDL_VIDEO_DRIVER_UIKIT
 
 #import <UIKit/UIKit.h>
-
-#include "SDL_config.h"
 
 #include "SDL_video.h"
 #include "SDL_mouse.h"
@@ -34,9 +34,6 @@
 #include "SDL_uikitevents.h"
 #include "SDL_uikitwindow.h"
 #include "SDL_uikitopengles.h"
-
-#include "SDL_renderer_sw.h"
-#include "SDL_renderer_gles.h"
 
 #include "SDL_assert.h"
 
@@ -56,7 +53,7 @@ BOOL SDL_UIKit_supports_multiple_displays = NO;
 static int
 UIKit_Available(void)
 {
-	return (1);
+    return 1;
 }
 
 static void UIKit_DeleteDevice(SDL_VideoDevice * device)
@@ -85,21 +82,23 @@ UIKit_CreateDevice(int devindex)
     device->GetDisplayModes = UIKit_GetDisplayModes;
     device->SetDisplayMode = UIKit_SetDisplayMode;
     device->PumpEvents = UIKit_PumpEvents;
-	device->CreateWindow = UIKit_CreateWindow;
-	device->DestroyWindow = UIKit_DestroyWindow;
-	
-	
-	/* OpenGL (ES) functions */
-	device->GL_MakeCurrent		= UIKit_GL_MakeCurrent;
-	device->GL_SwapWindow		= UIKit_GL_SwapWindow;
-	device->GL_CreateContext	= UIKit_GL_CreateContext;
-	device->GL_DeleteContext    = UIKit_GL_DeleteContext;
-	device->GL_GetProcAddress   = UIKit_GL_GetProcAddress;
-	device->GL_LoadLibrary	    = UIKit_GL_LoadLibrary;
-	device->free = UIKit_DeleteDevice;
+    device->CreateWindow = UIKit_CreateWindow;
+    device->SetWindowFullscreen = UIKit_SetWindowFullscreen;
+    device->DestroyWindow = UIKit_DestroyWindow;
+    device->GetWindowWMInfo = UIKit_GetWindowWMInfo;
 
-	device->gl_config.accelerated = 1;
-	
+
+    /* OpenGL (ES) functions */
+    device->GL_MakeCurrent        = UIKit_GL_MakeCurrent;
+    device->GL_SwapWindow        = UIKit_GL_SwapWindow;
+    device->GL_CreateContext    = UIKit_GL_CreateContext;
+    device->GL_DeleteContext    = UIKit_GL_DeleteContext;
+    device->GL_GetProcAddress   = UIKit_GL_GetProcAddress;
+    device->GL_LoadLibrary        = UIKit_GL_LoadLibrary;
+    device->free = UIKit_DeleteDevice;
+
+    device->gl_config.accelerated = 1;
+
     return device;
 }
 
@@ -133,27 +132,36 @@ UIKit_GetDisplayModes(_THIS, SDL_VideoDisplay * display)
     if (!SDL_UIKit_supports_multiple_displays) {
         const CGRect rect = [uiscreen bounds];
         mode.format = SDL_PIXELFORMAT_ABGR8888;
-        mode.w = (int) rect.size.width;
-        mode.h = (int) rect.size.height;
         mode.refresh_rate = 0;
         mode.driverdata = NULL;
+
+        mode.w = (int) rect.size.width;
+        mode.h = (int) rect.size.height;
+        SDL_AddDisplayMode(display, &mode);
+
+        mode.w = (int) rect.size.height;  // swap the orientation, add again.
+        mode.h = (int) rect.size.width;
         SDL_AddDisplayMode(display, &mode);
         return;
     }
 
-    const NSArray *modes = [uiscreen availableModes];
-    const NSUInteger mode_count = [modes count];
-    NSUInteger i;
-    for (i = 0; i < mode_count; i++) {
-        UIScreenMode *uimode = (UIScreenMode *) [modes objectAtIndex:i];
-        const CGSize size = [uimode size];
+    for (UIScreenMode *uimode in [uiscreen availableModes]) {
+        CGSize size = [uimode size];
         mode.format = SDL_PIXELFORMAT_ABGR8888;
-        mode.w = (int) size.width;
-        mode.h = (int) size.height;
         mode.refresh_rate = 0;
         mode.driverdata = uimode;
-        [uimode retain];
-        SDL_AddDisplayMode(display, &mode);
+        mode.w = (int) size.width;
+        mode.h = (int) size.height;
+        if (SDL_AddDisplayMode(display, &mode))
+            [uimode retain];        // retain is needed because of mode.driverdata
+
+        if (uiscreen == [UIScreen mainScreen]) {
+            // Add the mode with swapped width/height
+            mode.w = (int) size.height;
+            mode.h = (int) size.width;
+            if (SDL_AddDisplayMode(display, &mode))
+                [uimode retain];
+        }
     }
 }
 
@@ -168,6 +176,15 @@ UIKit_AddDisplay(UIScreen *uiscreen, int w, int h)
     mode.w = w;
     mode.h = h;
     mode.refresh_rate = 0;
+
+    // UIScreenMode showed up in 3.2 (the iPad and later). We're
+    //  misusing this supports_multiple_displays flag here for that.
+    if (SDL_UIKit_supports_multiple_displays) {
+        UIScreenMode *uimode = [uiscreen currentMode];
+        [uimode retain];  // once for the desktop_mode
+        [uimode retain];  // once for the current_mode
+        mode.driverdata = uimode;
+    }
 
     SDL_zero(display);
     display.desktop_mode = mode;
@@ -184,28 +201,24 @@ UIKit_VideoInit(_THIS)
 {
     _this->gl_config.driver_loaded = 1;
 
-    NSString *reqSysVer = @"3.2";
-    NSString *currSysVer = [[UIDevice currentDevice] systemVersion];
-    if ([currSysVer compare:reqSysVer options:NSNumericSearch] != NSOrderedAscending)
-        SDL_UIKit_supports_multiple_displays = YES;
+    // this tells us whether we are running on ios >= 3.2
+    SDL_UIKit_supports_multiple_displays = [UIScreen instancesRespondToSelector:@selector(currentMode)];
+
+    // Add the main screen.
+    UIScreen *uiscreen = [UIScreen mainScreen];
+    const CGSize size = [uiscreen bounds].size;
+    UIKit_AddDisplay(uiscreen, (int)size.width, (int)size.height);
 
     // If this is iPhoneOS < 3.2, all devices are one screen, 320x480 pixels.
     //  The iPad added both a larger main screen and the ability to use
-    //  external displays.
-    if (!SDL_UIKit_supports_multiple_displays) {
-        // Just give 'em the whole main screen.
-        UIScreen *uiscreen = [UIScreen mainScreen];
-        const CGRect rect = [uiscreen bounds];
-        UIKit_AddDisplay(uiscreen, (int)rect.size.width, (int)rect.size.height);
-    } else {
-        const NSArray *screens = [UIScreen screens];
-        const NSUInteger screen_count = [screens count];
-        NSUInteger i;
-        for (i = 0; i < screen_count; i++) {
-            // the main screen is the first element in the array.
-            UIScreen *uiscreen = (UIScreen *) [screens objectAtIndex:i];
-            const CGSize size = [[uiscreen currentMode] size];
-            UIKit_AddDisplay(uiscreen, (int) size.width, (int) size.height);
+    //  external displays. So, add the other displays (screens in UI speak).
+    if (SDL_UIKit_supports_multiple_displays) {
+        for (UIScreen *uiscreen in [UIScreen screens]) {
+            // Only add the other screens
+            if (uiscreen != [UIScreen mainScreen]) {
+                const CGSize size = [uiscreen bounds].size;
+                UIKit_AddDisplay(uiscreen, (int)size.width, (int)size.height);
+            }
         }
     }
 
@@ -223,9 +236,29 @@ UIKit_SetDisplayMode(_THIS, SDL_VideoDisplay * display, SDL_DisplayMode * mode)
     } else {
         UIScreenMode *uimode = (UIScreenMode *) mode->driverdata;
         [uiscreen setCurrentMode:uimode];
+
+        CGSize size = [uimode size];
+        if (size.width >= size.height) {
+            [[UIApplication sharedApplication] setStatusBarOrientation:UIInterfaceOrientationLandscapeRight animated:NO];
+        } else {
+            [[UIApplication sharedApplication] setStatusBarOrientation:UIInterfaceOrientationPortrait animated:NO];
+        }
     }
 
     return 0;
+}
+
+static void
+UIKit_ReleaseUIScreenMode(SDL_DisplayMode * mode)
+{
+    if (!SDL_UIKit_supports_multiple_displays) {
+        // Not on at least iPhoneOS 3.2 (versions prior to iPad).
+        SDL_assert(mode->driverdata == NULL);
+    } else {
+        UIScreenMode *uimode = (UIScreenMode *) mode->driverdata;
+        [uimode release];
+        mode->driverdata = NULL;
+    }
 }
 
 void
@@ -238,15 +271,15 @@ UIKit_VideoQuit(_THIS)
         UIScreen *uiscreen = (UIScreen *) display->driverdata;
         [uiscreen release];
         display->driverdata = NULL;
+        UIKit_ReleaseUIScreenMode(&display->desktop_mode);
+        UIKit_ReleaseUIScreenMode(&display->current_mode);
         for (j = 0; j < display->num_display_modes; j++) {
             SDL_DisplayMode *mode = &display->display_modes[j];
-            UIScreenMode *uimode = (UIScreenMode *) mode->driverdata;
-            if (uimode) {
-                [uimode release];
-                mode->driverdata = NULL;
-            }
+            UIKit_ReleaseUIScreenMode(mode);
         }
     }
 }
+
+#endif /* SDL_VIDEO_DRIVER_UIKIT */
 
 /* vi: set ts=4 sw=4 expandtab: */

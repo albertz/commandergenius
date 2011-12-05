@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 #ifndef _SDL_config_macosx_h
@@ -35,8 +34,6 @@
 #else
 	#define SIZEOF_VOIDP 4
 #endif
-
-#define SDL_HAS_64BIT_TYPE	1
 
 /* Useful headers */
 /* If we specified an SDK or have a post-PowerPC chip, then alloca.h exists. */
@@ -136,25 +133,32 @@
 #define SDL_VIDEO_DRIVER_X11 1
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC "/usr/X11R6/lib/libX11.6.dylib"
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XEXT "/usr/X11R6/lib/libXext.6.dylib"
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR "/usr/X11R6/lib/libXrandr.2.dylib"
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XRENDER "/usr/X11R6/lib/libXrender.1.dylib"
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XINERAMA "/usr/X11R6/lib/libXinerama.1.dylib"
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XINPUT "/usr/X11R6/lib/libXi.6.dylib"
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS "/usr/X11R6/lib/libXss.6.dylib"
-#define SDL_VIDEO_DRIVER_X11_VIDMODE 1
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR "/usr/X11R6/lib/libXrandr.2.dylib"
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS "/usr/X11R6/lib/libXss.1.dylib"
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XVIDMODE "/usr/X11R6/lib/libXxf86vm.1.dylib"
 #define SDL_VIDEO_DRIVER_X11_XINERAMA 1
-#define SDL_VIDEO_DRIVER_X11_XRANDR 1
 #define SDL_VIDEO_DRIVER_X11_XINPUT 1
-#define SDL_VIDEO_DRIVER_X11_SCRNSAVER 1
-#define SDL_VIDEO_DRIVER_X11_XV 1
+#define SDL_VIDEO_DRIVER_X11_XRANDR 1
+#define SDL_VIDEO_DRIVER_X11_XSCRNSAVER 1
 #define SDL_VIDEO_DRIVER_X11_XSHAPE 1
+#define SDL_VIDEO_DRIVER_X11_XVIDMODE 1
 
+#ifndef SDL_VIDEO_RENDER_OGL
 #define SDL_VIDEO_RENDER_OGL	1
-#define SDL_VIDEO_RENDER_X11	1
+#endif
 
 /* Enable OpenGL support */
+#ifndef SDL_VIDEO_OPENGL
 #define SDL_VIDEO_OPENGL	1
+#endif
+#ifndef SDL_VIDEO_OPENGL_CGL
 #define SDL_VIDEO_OPENGL_CGL	1
+#endif
+#ifndef SDL_VIDEO_OPENGL_GLX
 #define SDL_VIDEO_OPENGL_GLX	1
+#endif
 
 /* Enable system power support */
 #define SDL_POWER_MACOSX 1

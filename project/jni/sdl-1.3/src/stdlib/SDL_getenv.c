@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -27,8 +26,7 @@
 
 #if defined(__WIN32__) && !defined(_WIN32_WCE)
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include "../core/windows/SDL_windows.h"
 
 /* Note this isn't thread-safe! */
 
@@ -41,12 +39,12 @@ SDL_setenv(const char *name, const char *value, int overwrite)
 {
     if (!overwrite) {
         char ch = 0;
-        const size_t len = GetEnvironmentVariable(name, &ch, sizeof (ch));
+        const size_t len = GetEnvironmentVariableA(name, &ch, sizeof (ch));
         if (len > 0) {
             return 0;  /* asked not to overwrite existing value. */
         }
     }
-    if (!SetEnvironmentVariable(name, *value ? value : NULL)) {
+    if (!SetEnvironmentVariableA(name, *value ? value : NULL)) {
         return -1;
     }
     return 0;
@@ -59,7 +57,7 @@ SDL_getenv(const char *name)
     size_t bufferlen;
 
     bufferlen =
-        GetEnvironmentVariable(name, SDL_envmem, (DWORD) SDL_envmemlen);
+        GetEnvironmentVariableA(name, SDL_envmem, (DWORD) SDL_envmemlen);
     if (bufferlen == 0) {
         return NULL;
     }
@@ -70,7 +68,7 @@ SDL_getenv(const char *name)
         }
         SDL_envmem = newmem;
         SDL_envmemlen = bufferlen;
-        GetEnvironmentVariable(name, SDL_envmem, (DWORD) SDL_envmemlen);
+        GetEnvironmentVariableA(name, SDL_envmem, (DWORD) SDL_envmemlen);
     }
     return SDL_envmem;
 }

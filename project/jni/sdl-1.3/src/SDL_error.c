@@ -1,36 +1,31 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
 /* Simple error handling in SDL */
 
+#include "SDL_log.h"
 #include "SDL_error.h"
 #include "SDL_error_c.h"
 
-#ifdef ANDROID
-#include <android/log.h>
-#endif
-
-/*#define DEBUG_ERROR*/
 
 /* Routine to get the thread-specific error variable */
 #if SDL_THREADS_DISABLED
@@ -60,6 +55,9 @@ SDL_SetError(const char *fmt, ...)
     va_list ap;
     SDL_error *error;
 
+    /* Ignore call if invalid format pointer was passed */
+    if (fmt == NULL) return;
+    
     /* Copy in the key, mark error as valid */
     error = SDL_GetErrBuf();
     error->error = 1;
@@ -113,12 +111,7 @@ SDL_SetError(const char *fmt, ...)
     va_end(ap);
 
     /* If we are in debug mode, print out an error message */
-#ifdef DEBUG_ERROR
-    fprintf(stderr, "SDL_SetError: %s\n", SDL_GetError());
-#endif
-#ifdef ANDROID
-    __android_log_print(ANDROID_LOG_ERROR, "libSDL", "ERROR: %s", SDL_GetError());
-#endif
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());
 }
 
 /* This function has a bit more overhead than most error functions
@@ -264,4 +257,5 @@ main(int argc, char *argv[])
     exit(0);
 }
 #endif
+
 /* vi: set ts=4 sw=4 expandtab: */

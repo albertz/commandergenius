@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -35,9 +34,44 @@
 __declspec(selectany) int _fltused = 1;
 #endif
 
-#ifdef _WIN64
+/* The optimizer on Visual Studio 2010 generates memcpy() calls */
+#if _MSC_VER == 1600 && defined(_WIN64) && !defined(_DEBUG)
+#include <intrin.h>
 
-#else
+#pragma function(memcpy)
+void * memcpy ( void * destination, const void * source, size_t num )
+{
+    const Uint8 *src = (const Uint8 *)source;
+    Uint8 *dst = (Uint8 *)destination;
+    size_t i;
+    
+    /* All WIN64 architectures have SSE, right? */
+    if (!((uintptr_t) src & 15) && !((uintptr_t) dst & 15)) {
+        __m128 values[4];
+        for (i = num / 64; i--;) {
+            _mm_prefetch(src, _MM_HINT_NTA);
+            values[0] = *(__m128 *) (src + 0);
+            values[1] = *(__m128 *) (src + 16);
+            values[2] = *(__m128 *) (src + 32);
+            values[3] = *(__m128 *) (src + 48);
+            _mm_stream_ps((float *) (dst + 0), values[0]);
+            _mm_stream_ps((float *) (dst + 16), values[1]);
+            _mm_stream_ps((float *) (dst + 32), values[2]);
+            _mm_stream_ps((float *) (dst + 48), values[3]);
+            src += 64;
+            dst += 64;
+        }
+        num &= 63;
+    }
+
+    while (num--) {
+        *dst++ = *src++;
+    }
+    return destination;
+}
+#endif /* _MSC_VER == 1600 && defined(_WIN64) && !defined(_DEBUG) */
+
+#ifdef _M_IX86
 
 void
 __declspec(naked)
@@ -699,7 +733,7 @@ RETZERO:
     /* *INDENT-ON* */
 }
 
-#endif /* _WIN64 */
+#endif /* _M_IX86 */
 
 #endif /* MSC_VER */
 

@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -413,21 +412,31 @@ SDL_SYS_JoystickInit(void)
 
     numjoysticks = 0;
 
-    /* First see if the user specified a joystick to use */
+    /* First see if the user specified one or more joysticks to use */
     if (SDL_getenv("SDL_JOYSTICK_DEVICE") != NULL) {
-        SDL_strlcpy(path, SDL_getenv("SDL_JOYSTICK_DEVICE"), sizeof(path));
-        if (stat(path, &sb) == 0) {
-            fd = open(path, O_RDONLY, 0);
-            if (fd >= 0) {
-                /* Assume the user knows what they're doing. */
-                SDL_joylist[numjoysticks].fname = SDL_strdup(path);
-                if (SDL_joylist[numjoysticks].fname) {
-                    dev_nums[numjoysticks] = sb.st_rdev;
-                    ++numjoysticks;
-                }
-                close(fd);
+        char *envcopy, *envpath, *delim;
+        envcopy = SDL_strdup(SDL_getenv("SDL_JOYSTICK_DEVICE"));
+        envpath = envcopy;
+        while (envpath != NULL) {
+            delim = SDL_strchr(envpath, ':');
+            if (delim != NULL) {
+                *delim++ = '\0';
             }
+            if (stat(envpath, &sb) == 0) {
+                fd = open(envpath, O_RDONLY, 0);
+                if (fd >= 0) {
+                    /* Assume the user knows what they're doing. */
+                    SDL_joylist[numjoysticks].fname = SDL_strdup(envpath);
+                    if (SDL_joylist[numjoysticks].fname) {
+                        dev_nums[numjoysticks] = sb.st_rdev;
+                        ++numjoysticks;
+                    }
+                    close(fd);
+                }
+            }
+            envpath = delim;
         }
+        SDL_free(envcopy);
     }
 
     for (i = 0; i < SDL_arraysize(joydev_pattern); ++i) {
@@ -694,32 +703,33 @@ EV_ConfigJoystick(SDL_Joystick * joystick, int fd)
                 ++joystick->nbuttons;
             }
         }
-        for (i = 0; i < ABS_MAX; ++i) {
+        for (i = 0; i < ABS_MISC; ++i) {
             /* Skip hats */
             if (i == ABS_HAT0X) {
                 i = ABS_HAT3Y;
                 continue;
             }
             if (test_bit(i, absbit)) {
-                int values[6];
+                struct input_absinfo absinfo;
 
-                if (ioctl(fd, EVIOCGABS(i), values) < 0)
+                if (ioctl(fd, EVIOCGABS(i), &absinfo) < 0)
                     continue;
 #ifdef DEBUG_INPUT_EVENTS
                 printf("Joystick has absolute axis: %x\n", i);
                 printf("Values = { %d, %d, %d, %d, %d }\n",
-                       values[0], values[1], values[2], values[3], values[4]);
+                       absinfo.value, absinfo.minimum, absinfo.maximum,
+                       absinfo.fuzz, absinfo.flat);
 #endif /* DEBUG_INPUT_EVENTS */
                 joystick->hwdata->abs_map[i] = joystick->naxes;
-                if (values[1] == values[2]) {
+                if (absinfo.minimum == absinfo.maximum) {
                     joystick->hwdata->abs_correct[i].used = 0;
                 } else {
                     joystick->hwdata->abs_correct[i].used = 1;
                     joystick->hwdata->abs_correct[i].coef[0] =
-                        (values[2] + values[1]) / 2 - values[4];
+                        (absinfo.maximum + absinfo.minimum) / 2 - absinfo.flat;
                     joystick->hwdata->abs_correct[i].coef[1] =
-                        (values[2] + values[1]) / 2 + values[4];
-                    t = ((values[2] - values[1]) / 2 - 2 * values[4]);
+                        (absinfo.maximum + absinfo.minimum) / 2 + absinfo.flat;
+                    t = ((absinfo.maximum - absinfo.minimum) / 2 - 2 * absinfo.flat);
                     if (t != 0) {
                         joystick->hwdata->abs_correct[i].coef[2] =
                             (1 << 29) / t;

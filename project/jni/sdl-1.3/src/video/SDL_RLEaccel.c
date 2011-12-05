@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -610,17 +609,19 @@ SDL_RLEBlit(SDL_Surface * src, SDL_Rect * srcrect,
 typedef struct
 {
     Uint8 BytesPerPixel;
-    Uint8 Rloss;
-    Uint8 Gloss;
-    Uint8 Bloss;
-    Uint8 Rshift;
-    Uint8 Gshift;
-    Uint8 Bshift;
-    Uint8 Ashift;
+    Uint8 padding[3];
     Uint32 Rmask;
     Uint32 Gmask;
     Uint32 Bmask;
     Uint32 Amask;
+    Uint8 Rloss;
+    Uint8 Gloss;
+    Uint8 Bloss;
+    Uint8 Aloss;
+    Uint8 Rshift;
+    Uint8 Gshift;
+    Uint8 Bshift;
+    Uint8 Ashift;
 } RLEDestFormat;
 
 /* blit a pixel-alpha RLE surface clipped at the right and/or left edges */
@@ -983,10 +984,9 @@ copy_32(void *dst, Uint32 * src, int n,
     Uint32 *d = dst;
     for (i = 0; i < n; i++) {
         unsigned r, g, b, a;
-        Uint32 pixel;
         RGBA_FROM_8888(*src, sfmt, r, g, b, a);
-        PIXEL_FROM_RGB(pixel, dfmt, r, g, b);
-        *d++ = pixel | a << 24;
+        PIXEL_FROM_RGBA(*d, dfmt, r, g, b, a);
+        d++;
         src++;
     }
     return n * 4;
@@ -1094,17 +1094,18 @@ RLEAlphaSurface(SDL_Surface * surface)
         /* save the destination format so we can undo the encoding later */
         RLEDestFormat *r = (RLEDestFormat *) rlebuf;
         r->BytesPerPixel = df->BytesPerPixel;
-        r->Rloss = df->Rloss;
-        r->Gloss = df->Gloss;
-        r->Bloss = df->Bloss;
-        r->Rshift = df->Rshift;
-        r->Gshift = df->Gshift;
-        r->Bshift = df->Bshift;
-        r->Ashift = df->Ashift;
         r->Rmask = df->Rmask;
         r->Gmask = df->Gmask;
         r->Bmask = df->Bmask;
         r->Amask = df->Amask;
+        r->Rloss = df->Rloss;
+        r->Gloss = df->Gloss;
+        r->Bloss = df->Bloss;
+        r->Aloss = df->Aloss;
+        r->Rshift = df->Rshift;
+        r->Gshift = df->Gshift;
+        r->Bshift = df->Bshift;
+        r->Ashift = df->Ashift;
     }
     dst = rlebuf + sizeof(RLEDestFormat);
 

@@ -1,31 +1,28 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
-
-    Open Pandora SDL driver
-    Copyright (C) 2009 David Carré
-    (cpasjuste@gmail.com)
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
+#include "SDL_config.h"
+
+#if SDL_VIDEO_DRIVER_PANDORA
 
 /* SDL internals */
-#include "SDL_config.h"
 #include "../SDL_sysvideo.h"
 #include "SDL_version.h"
 #include "SDL_syswm.h"
@@ -417,7 +414,7 @@ PND_gl_createcontext(_THIS, SDL_Window * window)
     SDL_VideoData *phdata = (SDL_VideoData *) _this->driverdata;
     SDL_WindowData *wdata = (SDL_WindowData *) window->driverdata;
     SDL_DisplayData *didata =
-        (SDL_DisplayData *) window->display->driverdata;
+        (SDL_DisplayData *) SDL_GetDisplayForWindow(window)->driverdata;
     EGLBoolean status;
     int32_t gfstatus;
     EGLint configs;
@@ -816,7 +813,7 @@ PND_gl_swapwindow(_THIS, SDL_Window * window)
     SDL_VideoData *phdata = (SDL_VideoData *) _this->driverdata;
     SDL_WindowData *wdata = (SDL_WindowData *) window->driverdata;
     SDL_DisplayData *didata =
-        (SDL_DisplayData *) window->display->driverdata;
+        (SDL_DisplayData *) SDL_GetDisplayForWindow(window)->driverdata;
 
 
     if (phdata->egl_initialized != SDL_TRUE) {
@@ -867,5 +864,7 @@ PND_gl_deletecontext(_THIS, SDL_GLContext context)
 
     return;
 }
+
+#endif /* SDL_VIDEO_DRIVER_PANDORA */
 
 /* vi: set ts=4 sw=4 expandtab: */

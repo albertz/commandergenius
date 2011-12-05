@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 /**
@@ -31,7 +30,7 @@
 
 #include "SDL_stdinc.h"
 #include "SDL_error.h"
-#include "SDL_keysym.h"
+#include "SDL_keycode.h"
 #include "SDL_video.h"
 
 #include "begin_code.h"
@@ -45,13 +44,13 @@ extern "C" {
 /**
  *  \brief The SDL keysym structure, used in key events.
  */
-typedef struct SDL_keysym
+typedef struct SDL_Keysym
 {
-    SDL_scancode scancode;      /**< SDL physical key code - see ::SDL_scancode for details */
-    SDLKey sym;                 /**< SDL virtual key code - see ::SDLKey for details */
+    SDL_Scancode scancode;      /**< SDL physical key code - see ::SDL_Scancode for details */
+    SDL_Keycode sym;            /**< SDL virtual key code - see ::SDL_Keycode for details */
     Uint16 mod;                 /**< current key modifiers */
     Uint32 unicode;             /**< \deprecated use SDL_TextInputEvent instead */
-} SDL_keysym;
+} SDL_Keysym;
 
 /* Function prototypes */
 
@@ -65,7 +64,7 @@ extern DECLSPEC SDL_Window * SDLCALL SDL_GetKeyboardFocus(void);
  *  
  *  \param numkeys if non-NULL, receives the length of the returned array.
  *  
- *  \return An array of key states. Indexes into this array are obtained by using ::SDL_scancode values.
+ *  \return An array of key states. Indexes into this array are obtained by using ::SDL_Scancode values.
  *  
  *  \b Example:
  *  \code
@@ -80,47 +79,54 @@ extern DECLSPEC Uint8 *SDLCALL SDL_GetKeyboardState(int *numkeys);
 /**
  *  \brief Get the current key modifier state for the keyboard.
  */
-extern DECLSPEC SDLMod SDLCALL SDL_GetModState(void);
+extern DECLSPEC SDL_Keymod SDLCALL SDL_GetModState(void);
 
 /**
  *  \brief Set the current key modifier state for the keyboard.
  *  
  *  \note This does not change the keyboard state, only the key modifier flags.
  */
-extern DECLSPEC void SDLCALL SDL_SetModState(SDLMod modstate);
+extern DECLSPEC void SDLCALL SDL_SetModState(SDL_Keymod modstate);
 
 /**
  *  \brief Get the key code corresponding to the given scancode according
  *         to the current keyboard layout.
  *  
- *  See ::SDLKey for details.
+ *  See ::SDL_Keycode for details.
  *  
  *  \sa SDL_GetKeyName()
  */
-extern DECLSPEC SDLKey SDLCALL SDL_GetKeyFromScancode(SDL_scancode scancode);
+extern DECLSPEC SDL_Keycode SDLCALL SDL_GetKeyFromScancode(SDL_Scancode scancode);
 
 /**
  *  \brief Get the scancode corresponding to the given key code according to the
  *         current keyboard layout.
  *  
- *  See ::SDL_scancode for details.
+ *  See ::SDL_Scancode for details.
  *  
  *  \sa SDL_GetScancodeName()
  */
-extern DECLSPEC SDL_scancode SDLCALL SDL_GetScancodeFromKey(SDLKey key);
+extern DECLSPEC SDL_Scancode SDLCALL SDL_GetScancodeFromKey(SDL_Keycode key);
 
 /**
  *  \brief Get a human-readable name for a scancode.
  *  
- *  \return A pointer to a UTF-8 string that stays valid at least until the next
- *          call to this function. If you need it around any longer, you must 
- *          copy it.  If the scancode doesn't have a name, this function returns
+ *  \return A pointer to the name for the scancode.
+ *          If the scancode doesn't have a name, this function returns
  *          an empty string ("").
  *
- *  \sa SDL_scancode
+ *  \sa SDL_Scancode
  */
-extern DECLSPEC const char *SDLCALL SDL_GetScancodeName(SDL_scancode
-                                                        scancode);
+extern DECLSPEC const char *SDLCALL SDL_GetScancodeName(SDL_Scancode scancode);
+
+/**
+ *  \brief Get a scancode from a human-readable name
+ *  
+ *  \return scancode, or SDL_SCANCODE_UNKNOWN if the name wasn't recognized
+ *
+ *  \sa SDL_Scancode
+ */
+extern DECLSPEC SDL_Scancode SDLCALL SDL_GetScancodeFromName(const char *name);
 
 /**
  *  \brief Get a human-readable name for a key.
@@ -130,9 +136,18 @@ extern DECLSPEC const char *SDLCALL SDL_GetScancodeName(SDL_scancode
  *          copy it.  If the key doesn't have a name, this function returns an 
  *          empty string ("").
  *  
- *  \sa SDLKey
+ *  \sa SDL_Key
  */
-extern DECLSPEC const char *SDLCALL SDL_GetKeyName(SDLKey key);
+extern DECLSPEC const char *SDLCALL SDL_GetKeyName(SDL_Keycode key);
+
+/**
+ *  \brief Get a key code from a human-readable name
+ *  
+ *  \return key code, or SDLK_UNKNOWN if the name wasn't recognized
+ *
+ *  \sa SDL_Keycode
+ */
+extern DECLSPEC SDL_Keycode SDLCALL SDL_GetKeyFromName(const char *name);
 
 /**
  *  \brief Start accepting Unicode text input events.

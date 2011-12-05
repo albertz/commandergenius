@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -63,6 +62,9 @@
 #ifndef __DragonFly__
 #include <osreldate.h>
 #endif
+#if __FreeBSD_kernel_version > 800063
+#include <dev/usb/usb_ioctl.h>
+#endif
 #include <sys/joystick.h>
 #endif
 
@@ -78,16 +80,14 @@
 #define MAX_JOY_JOYS	2
 #define MAX_JOYS	(MAX_UHID_JOYS + MAX_JOY_JOYS)
 
-#if defined(__FREEBSD__) && (__FreeBSD_kernel_version > 800063) && false
-struct usb_ctl_report {
-    int     ucr_report;
-    u_char  ucr_data[1024]; /* filled data size will vary */
-};
-#endif
 
 struct report
 {
+#if defined(__FREEBSD__) && (__FreeBSD_kernel_version > 800063)
+    struct usb_gen_descriptor *buf; /* Buffer */
+#else
     struct usb_ctl_report *buf; /* Buffer */
+#endif
     size_t size;                /* Buffer size */
     int rid;                    /* Report ID */
     enum
@@ -149,8 +149,10 @@ static char *joydevnames[MAX_JOYS];
 static int report_alloc(struct report *, struct report_desc *, int);
 static void report_free(struct report *);
 
-#if defined(USBHID_UCR_DATA) || (defined(__FREEBSD__) && (__FreeBSD_kernel_version > 800063)) || defined(__FreeBSD_kernel__)
+#if defined(USBHID_UCR_DATA) || defined(__FreeBSD_kernel__)
 #define REP_BUF_DATA(rep) ((rep)->buf->ucr_data)
+#elif (defined(__FREEBSD__) && (__FreeBSD_kernel_version > 800063))
+#define REP_BUF_DATA(rep) ((rep)->buf->ugd_data)
 #else
 #define REP_BUF_DATA(rep) ((rep)->buf->data)
 #endif

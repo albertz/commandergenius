@@ -36,6 +36,7 @@
 #include "../../events/SDL_events_c.h"
 #include "../../events/SDL_keyboard_c.h"
 #include "../../events/SDL_mouse_c.h"
+#include "SDL_keycode.h"
 #include "SDL_scancode.h"
 #include "SDL_compat.h"
 #else

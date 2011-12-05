@@ -1,25 +1,26 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
+
+#if SDL_VIDEO_DRIVER_X11
 
 #define DEBUG_DYNAMIC_X11 0
 
@@ -46,26 +47,34 @@ typedef struct
 #ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XEXT
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XEXT NULL
 #endif
-#ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XRENDER
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XRENDER NULL
+#ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XCURSOR
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XCURSOR NULL
 #endif
-#ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR
-#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR NULL
+#ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XINERAMA
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XINERAMA NULL
 #endif
 #ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XINPUT
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XINPUT NULL
 #endif
+#ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR NULL
+#endif
 #ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS
 #define SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS NULL
+#endif
+#ifndef SDL_VIDEO_DRIVER_X11_DYNAMIC_XVIDMODE
+#define SDL_VIDEO_DRIVER_X11_DYNAMIC_XVIDMODE NULL
 #endif
 
 static x11dynlib x11libs[] = {
     {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC},
     {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XEXT},
-    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XRENDER},
-    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR},
+    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XCURSOR},
+    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XINERAMA},
     {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XINPUT},
+    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XRANDR},
     {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XSS},
+    {NULL, SDL_VIDEO_DRIVER_X11_DYNAMIC_XVIDMODE}
 };
 
 static void
@@ -110,7 +119,7 @@ char *(*pXGetICValues) (XIC, ...) = NULL;
 #endif
 
 /* These SDL_X11_HAVE_* flags are here whether you have dynamic X11 or not. */
-#define SDL_X11_MODULE(modname) int SDL_X11_HAVE_##modname = 1;
+#define SDL_X11_MODULE(modname) int SDL_X11_HAVE_##modname = 0;
 #define SDL_X11_SYM(rc,fn,params,args,ret)
 #include "SDL_x11sym.h"
 #undef SDL_X11_MODULE
@@ -129,7 +138,7 @@ SDL_X11_UnloadSymbols(void)
             int i;
 
             /* set all the function pointers to NULL. */
-#define SDL_X11_MODULE(modname) SDL_X11_HAVE_##modname = 1;
+#define SDL_X11_MODULE(modname) SDL_X11_HAVE_##modname = 0;
 #define SDL_X11_SYM(rc,fn,params,args,ret) p##fn = NULL;
 #include "SDL_x11sym.h"
 #undef SDL_X11_MODULE
@@ -167,6 +176,13 @@ SDL_X11_LoadSymbols(void)
                 x11libs[i].lib = SDL_LoadObject(x11libs[i].libname);
             }
         }
+
+#define SDL_X11_MODULE(modname) SDL_X11_HAVE_##modname = 1; /* default yes */
+#define SDL_X11_SYM(a,fn,x,y,z)
+#include "SDL_x11sym.h"
+#undef SDL_X11_MODULE
+#undef SDL_X11_SYM
+
 #define SDL_X11_MODULE(modname) thismod = &SDL_X11_HAVE_##modname;
 #define SDL_X11_SYM(a,fn,x,y,z) X11_GetSym(#fn,thismod,(void**)&p##fn);
 #include "SDL_x11sym.h"
@@ -197,5 +213,7 @@ SDL_X11_LoadSymbols(void)
 
     return rc;
 }
+
+#endif /* SDL_VIDEO_DRIVER_X11 */
 
 /* vi: set ts=4 sw=4 expandtab: */

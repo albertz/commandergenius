@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 /*
@@ -26,8 +25,9 @@
    was the cleanest way to move it to 1.3. The 1.2 target was written by
    Stéphan Kochen: stephan .a.t. kochen.nl
 */
-
 #include "SDL_config.h"
+
+#if SDL_AUDIO_DRIVER_PULSEAUDIO
 
 /* Allow access to a raw mixing buffer */
 
@@ -46,9 +46,6 @@
 #include "../SDL_audio_c.h"
 #include "SDL_pulseaudio.h"
 #include "SDL_loadso.h"
-
-/* The tag name used by pulse audio */
-#define PULSEAUDIO_DRIVER_NAME         "pulseaudio"
 
 #if (PA_API_VERSION < 12)
 /** Return non-zero if the passed state is one of the connected states */
@@ -304,38 +301,6 @@ PULSEAUDIO_CloseDevice(_THIS)
 }
 
 
-/* !!! FIXME: this could probably be expanded. */
-/* Try to get the name of the program */
-static char *
-get_progname(void)
-{
-#ifdef __LINUX__
-    char *progname = NULL;
-    FILE *fp;
-    static char temp[BUFSIZ];
-
-    SDL_snprintf(temp, SDL_arraysize(temp), "/proc/%d/cmdline", getpid());
-    fp = fopen(temp, "r");
-    if (fp != NULL) {
-        if (fgets(temp, sizeof(temp) - 1, fp)) {
-            progname = SDL_strrchr(temp, '/');
-            if (progname == NULL) {
-                progname = temp;
-            } else {
-                progname = progname + 1;
-            }
-        }
-        fclose(fp);
-    }
-    return(progname);
-#elif defined(__NetBSD__)
-    return getprogname();
-#else
-    return("unknown");
-#endif
-}
-
-
 static int
 PULSEAUDIO_OpenDevice(_THIS, const char *devname, int iscapture)
 {
@@ -438,7 +403,7 @@ PULSEAUDIO_OpenDevice(_THIS, const char *devname, int iscapture)
     }
 
     h->mainloop_api = PULSEAUDIO_pa_mainloop_get_api(h->mainloop);
-    h->context = PULSEAUDIO_pa_context_new(h->mainloop_api, get_progname());
+    h->context = PULSEAUDIO_pa_context_new(h->mainloop_api, NULL);
     if (!h->context) {
         PULSEAUDIO_CloseDevice(this);
         SDL_SetError("pa_context_new() failed");
@@ -534,7 +499,9 @@ PULSEAUDIO_Init(SDL_AudioDriverImpl * impl)
 
 
 AudioBootStrap PULSEAUDIO_bootstrap = {
-    PULSEAUDIO_DRIVER_NAME, "PulseAudio", PULSEAUDIO_Init, 0
+    "pulseaudio", "PulseAudio", PULSEAUDIO_Init, 0
 };
+
+#endif /* SDL_AUDIO_DRIVER_PULSEAUDIO */
 
 /* vi: set ts=4 sw=4 expandtab: */

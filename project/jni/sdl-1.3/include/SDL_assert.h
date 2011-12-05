@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 #ifndef _SDL_assert_h
@@ -50,9 +49,11 @@ on the assertion line and not in some random guts of SDL, and so each
 assert can have unique static variables associated with it.
 */
 
-#if (defined(_MSC_VER) && ((_M_IX86) || (_M_X64)))
-    #define SDL_TriggerBreakpoint() __asm { int 3 }
-#elif (defined(__GNUC__) && ((__i386__) || (__x86_64__)))
+#if defined(_MSC_VER) && !defined(_WIN32_WCE)
+/* Don't include intrin.h here because it contains C++ code */
+extern void __cdecl __debugbreak(void);
+    #define SDL_TriggerBreakpoint() __debugbreak()
+#elif (defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)))
     #define SDL_TriggerBreakpoint() __asm__ __volatile__ ( "int $3\n\t" )
 #elif defined(HAVE_SIGNAL_H)
     #include <signal.h>
@@ -62,7 +63,7 @@ assert can have unique static variables associated with it.
     #define SDL_TriggerBreakpoint()
 #endif
 
-#if (__STDC_VERSION__ >= 199901L) /* C99 supports __func__ as a standard. */
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) /* C99 supports __func__ as a standard. */
 #   define SDL_FUNCTION __func__
 #elif ((__GNUC__ >= 2) || defined(_MSC_VER))
 #   define SDL_FUNCTION __FUNCTION__
@@ -98,7 +99,7 @@ typedef enum
     SDL_ASSERTION_BREAK,  /**< Make the debugger trigger a breakpoint. */
     SDL_ASSERTION_ABORT,  /**< Terminate the program. */
     SDL_ASSERTION_IGNORE,  /**< Ignore the assert. */
-    SDL_ASSERTION_ALWAYS_IGNORE,  /**< Ignore the assert from now on. */
+    SDL_ASSERTION_ALWAYS_IGNORE  /**< Ignore the assert from now on. */
 } SDL_assert_state;
 
 typedef struct SDL_assert_data
@@ -168,7 +169,7 @@ extern DECLSPEC SDL_assert_state SDLCALL SDL_ReportAssertion(SDL_assert_data *,
 
 
 typedef SDL_assert_state (SDLCALL *SDL_AssertionHandler)(
-                                    const SDL_assert_data *, void *userdata);
+                                 const SDL_assert_data* data, void* userdata);
 
 /**
  *  \brief Set an application-defined assertion handler.
@@ -204,7 +205,7 @@ extern DECLSPEC void SDLCALL SDL_SetAssertionHandler(
  *
  *  <code>
  *  const SDL_assert_data *item = SDL_GetAssertionReport();
- *  while (item->condition) {
+ *  while (item) {
  *      printf("'%s', %s (%s:%d), triggered %u times, always ignore: %s.\n",
  *             item->condition, item->function, item->filename,
  *             item->linenum, item->trigger_count,
@@ -213,8 +214,7 @@ extern DECLSPEC void SDLCALL SDL_SetAssertionHandler(
  *  }
  *  </code>
  *
- *  \return List of all assertions. This never returns NULL,
- *          even if there are no items.
+ *  \return List of all assertions.
  *  \sa SDL_ResetAssertionReport
  */
 extern DECLSPEC const SDL_assert_data * SDLCALL SDL_GetAssertionReport(void);

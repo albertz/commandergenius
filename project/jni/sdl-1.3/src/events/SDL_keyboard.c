@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -26,7 +25,7 @@
 #include "SDL_timer.h"
 #include "SDL_events.h"
 #include "SDL_events_c.h"
-#include "SDL_sysevents.h"
+#include "../video/SDL_sysvideo.h"
 
 
 /* Global keyboard information */
@@ -39,12 +38,12 @@ struct SDL_Keyboard
     SDL_Window *focus;
     Uint16 modstate;
     Uint8 keystate[SDL_NUM_SCANCODES];
-    SDLKey keymap[SDL_NUM_SCANCODES];
+    SDL_Keycode keymap[SDL_NUM_SCANCODES];
 };
 
 static SDL_Keyboard SDL_keyboard;
 
-static const SDLKey SDL_default_keymap[SDL_NUM_SCANCODES] = {
+static const SDL_Keycode SDL_default_keymap[SDL_NUM_SCANCODES] = {
     0, 0, 0, 0,
     'a',
     'b',
@@ -562,7 +561,7 @@ void
 SDL_ResetKeyboard(void)
 {
     SDL_Keyboard *keyboard = &SDL_keyboard;
-    SDL_scancode scancode;
+    SDL_Scancode scancode;
 
     for (scancode = 0; scancode < SDL_NUM_SCANCODES; ++scancode) {
         if (keyboard->keystate[scancode] == SDL_PRESSED) {
@@ -572,13 +571,13 @@ SDL_ResetKeyboard(void)
 }
 
 void
-SDL_GetDefaultKeymap(SDLKey * keymap)
+SDL_GetDefaultKeymap(SDL_Keycode * keymap)
 {
     SDL_memcpy(keymap, SDL_default_keymap, sizeof(SDL_default_keymap));
 }
 
 void
-SDL_SetKeymap(int start, SDLKey * keys, int length)
+SDL_SetKeymap(int start, SDL_Keycode * keys, int length)
 {
     SDL_Keyboard *keyboard = &SDL_keyboard;
 
@@ -590,7 +589,7 @@ SDL_SetKeymap(int start, SDLKey * keys, int length)
 }
 
 void
-SDL_SetScancodeName(SDL_scancode scancode, const char *name)
+SDL_SetScancodeName(SDL_Scancode scancode, const char *name)
 {
     SDL_scancode_names[scancode] = name;
 }
@@ -638,7 +637,7 @@ SDL_SetKeyboardFocus(SDL_Window * window)
 }
 
 int
-SDL_SendKeyboardKey(Uint8 state, SDL_scancode scancode)
+SDL_SendKeyboardKey(Uint8 state, SDL_Scancode scancode)
 {
     SDL_Keyboard *keyboard = &SDL_keyboard;
     int posted;
@@ -790,7 +789,6 @@ SDL_SendKeyboardText(const char *text)
         event.text.type = SDL_TEXTINPUT;
         event.text.windowID = keyboard->focus ? keyboard->focus->id : 0;
         SDL_utf8strlcpy(event.text.text, text, SDL_arraysize(event.text.text));
-        event.text.windowID = keyboard->focus ? keyboard->focus->id : 0;
         posted = (SDL_PushEvent(&event) > 0);
     }
     return (posted);
@@ -832,7 +830,7 @@ SDL_GetKeyboardState(int *numkeys)
     return keyboard->keystate;
 }
 
-SDLMod
+SDL_Keymod
 SDL_GetModState(void)
 {
     SDL_Keyboard *keyboard = &SDL_keyboard;
@@ -841,26 +839,26 @@ SDL_GetModState(void)
 }
 
 void
-SDL_SetModState(SDLMod modstate)
+SDL_SetModState(SDL_Keymod modstate)
 {
     SDL_Keyboard *keyboard = &SDL_keyboard;
 
     keyboard->modstate = modstate;
 }
 
-SDLKey
-SDL_GetKeyFromScancode(SDL_scancode scancode)
+SDL_Keycode
+SDL_GetKeyFromScancode(SDL_Scancode scancode)
 {
     SDL_Keyboard *keyboard = &SDL_keyboard;
 
     return keyboard->keymap[scancode];
 }
 
-SDL_scancode
-SDL_GetScancodeFromKey(SDLKey key)
+SDL_Scancode
+SDL_GetScancodeFromKey(SDL_Keycode key)
 {
     SDL_Keyboard *keyboard = &SDL_keyboard;
-    SDL_scancode scancode;
+    SDL_Scancode scancode;
 
     for (scancode = SDL_SCANCODE_UNKNOWN; scancode < SDL_NUM_SCANCODES;
          ++scancode) {
@@ -872,7 +870,7 @@ SDL_GetScancodeFromKey(SDLKey key)
 }
 
 const char *
-SDL_GetScancodeName(SDL_scancode scancode)
+SDL_GetScancodeName(SDL_Scancode scancode)
 {
     const char *name = SDL_scancode_names[scancode];
 
@@ -882,15 +880,34 @@ SDL_GetScancodeName(SDL_scancode scancode)
         return "";
 }
 
+SDL_Scancode SDL_GetScancodeFromName(const char *name)
+{
+	int i;
+
+	if (!name || !*name) {
+		return SDL_SCANCODE_UNKNOWN;
+	}
+
+	for (i = 0; i < SDL_arraysize(SDL_scancode_names); ++i) {
+		if (!SDL_scancode_names[i]) {
+			continue;
+		}
+		if (SDL_strcasecmp(name, SDL_scancode_names[i]) == 0) {
+			return (SDL_Scancode)i;
+		}
+	}
+	return SDL_SCANCODE_UNKNOWN;
+}
+
 const char *
-SDL_GetKeyName(SDLKey key)
+SDL_GetKeyName(SDL_Keycode key)
 {
     static char name[8];
     char *end;
 
     if (key & SDLK_SCANCODE_MASK) {
         return
-            SDL_GetScancodeName((SDL_scancode) (key & ~SDLK_SCANCODE_MASK));
+            SDL_GetScancodeName((SDL_Scancode) (key & ~SDLK_SCANCODE_MASK));
     }
 
     switch (key) {
@@ -919,6 +936,53 @@ SDL_GetKeyName(SDLKey key)
         *end = '\0';
         return name;
     }
+}
+
+SDL_Keycode
+SDL_GetKeyFromName(const char *name)
+{
+	SDL_Keycode key;
+
+	/* If it's a single UTF-8 character, then that's the keycode itself */
+	key = *(const unsigned char *)name;
+	if (key >= 0xF0) {
+		if (SDL_strlen(name) == 4) {
+			int i = 0;
+			key  = (Uint16)(name[i]&0x07) << 18;
+			key |= (Uint16)(name[++i]&0x3F) << 12;
+			key |= (Uint16)(name[++i]&0x3F) << 6;
+			key |= (Uint16)(name[++i]&0x3F);
+			return key;
+		}
+		return SDLK_UNKNOWN;
+	} else if (key >= 0xE0) {
+		if (SDL_strlen(name) == 3) {
+			int i = 0;
+			key  = (Uint16)(name[i]&0x0F) << 12;
+			key |= (Uint16)(name[++i]&0x3F) << 6;
+			key |= (Uint16)(name[++i]&0x3F);
+			return key;
+		}
+		return SDLK_UNKNOWN;
+	} else if (key >= 0xC0) {
+		if (SDL_strlen(name) == 2) {
+			int i = 0;
+			key  = (Uint16)(name[i]&0x1F) << 6;
+			key |= (Uint16)(name[++i]&0x3F);
+			return key;
+		}
+		return SDLK_UNKNOWN;
+	} else {
+		if (SDL_strlen(name) == 1) {
+			if (key >= 'A' && key <= 'Z') {
+				key += 32;
+			}
+			return key;
+		}
+
+		/* Get the scancode for this name, and the associated keycode */
+		return SDL_default_keymap[SDL_GetScancodeFromName(name)];
+	}
 }
 
 /* vi: set ts=4 sw=4 expandtab: */

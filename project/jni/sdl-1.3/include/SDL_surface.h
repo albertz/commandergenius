@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 /**
@@ -33,7 +32,6 @@
 #include "SDL_pixels.h"
 #include "SDL_rect.h"
 #include "SDL_blendmode.h"
-#include "SDL_scalemode.h"
 #include "SDL_rwops.h"
 
 #include "begin_code.h"
@@ -55,6 +53,7 @@ extern "C" {
 /*@{*/
 #define SDL_PREALLOC        0x00000001  /**< Surface uses preallocated memory */
 #define SDL_RLEACCEL        0x00000002  /**< Surface is RLE encoded */
+#define SDL_DONTFREE        0x00000004  /**< Surface is referenced internally */
 /*@}*//*Surface flags*/
 
 /**
@@ -88,9 +87,6 @@ typedef struct SDL_Surface
 
     /** info for fast blit mapping to other surfaces */
     struct SDL_BlitMap *map;    /**< Private */
-
-    /** format version, bumped at every change to invalidate blit maps */
-    int format_version;         /**< Private */
 
     /** Reference count -- used when freeing surface */
     int refcount;               /**< Read-mostly */
@@ -318,37 +314,6 @@ extern DECLSPEC int SDLCALL SDL_GetSurfaceBlendMode(SDL_Surface * surface,
                                                     SDL_BlendMode *blendMode);
 
 /**
- *  \brief Set the scale mode used for blit operations.
- *  
- *  \param surface   The surface to update.
- *  \param scaleMode ::SDL_ScaleMode to use for blit scaling.
- *  
- *  \return 0 on success, or -1 if the surface is not valid or the scale mode is
- *          not supported.
- *  
- *  \note If the scale mode is not supported, the closest supported mode is 
- *        chosen.  Currently only ::SDL_TEXTURESCALEMODE_FAST is supported on 
- *        surfaces.
- *  
- *  \sa SDL_GetSurfaceScaleMode()
- */
-extern DECLSPEC int SDLCALL SDL_SetSurfaceScaleMode(SDL_Surface * surface,
-                                                    SDL_ScaleMode scaleMode);
-
-/**
- *  \brief Get the scale mode used for blit operations.
- *  
- *  \param surface   The surface to query.
- *  \param scaleMode A pointer filled in with the current scale mode.
- *  
- *  \return 0 on success, or -1 if the surface is not valid.
- *  
- *  \sa SDL_SetSurfaceScaleMode()
- */
-extern DECLSPEC int SDLCALL SDL_GetSurfaceScaleMode(SDL_Surface * surface,
-                                                    SDL_ScaleMode *scaleMode);
-
-/**
  *  Sets the clipping rectangle for the destination surface in a blit.
  *  
  *  If the clip rectangle is NULL, clipping will be disabled.
@@ -385,94 +350,19 @@ extern DECLSPEC void SDLCALL SDL_GetClipRect(SDL_Surface * surface,
  */
 extern DECLSPEC SDL_Surface *SDLCALL SDL_ConvertSurface
     (SDL_Surface * src, SDL_PixelFormat * fmt, Uint32 flags);
+extern DECLSPEC SDL_Surface *SDLCALL SDL_ConvertSurfaceFormat
+    (SDL_Surface * src, Uint32 pixel_format, Uint32 flags);
 
 /**
  * \brief Copy a block of pixels of one format to another format
+ *  
+ *  \return 0 on success, or -1 if there was an error
  */
 extern DECLSPEC int SDLCALL SDL_ConvertPixels(int width, int height,
                                               Uint32 src_format,
                                               const void * src, int src_pitch,
                                               Uint32 dst_format,
                                               void * dst, int dst_pitch);
-
-/**
- *  Draws a point with \c color.
- *
- *  The color should be a pixel of the format used by the surface, and 
- *  can be generated by the SDL_MapRGB() function.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_DrawPoint
-    (SDL_Surface * dst, int x, int y, Uint32 color);
-extern DECLSPEC int SDLCALL SDL_DrawPoints
-    (SDL_Surface * dst, const SDL_Point * points, int count, Uint32 color);
-
-/**
- *  Blends a point with an RGBA value.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_BlendPoint
-    (SDL_Surface * dst, int x, int y,
-     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-extern DECLSPEC int SDLCALL SDL_BlendPoints
-    (SDL_Surface * dst, const SDL_Point * points, int count,
-     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-
-/**
- *  Draws a line with \c color.
- *  
- *  The color should be a pixel of the format used by the surface, and 
- *  can be generated by the SDL_MapRGB() function.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_DrawLine
-    (SDL_Surface * dst, int x1, int y1, int x2, int y2, Uint32 color);
-extern DECLSPEC int SDLCALL SDL_DrawLines
-    (SDL_Surface * dst, const SDL_Point * points, int count, Uint32 color);
-
-/**
- *  Blends an RGBA value along a line.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_BlendLine
-    (SDL_Surface * dst, int x1, int y1, int x2, int y2,
-     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-extern DECLSPEC int SDLCALL SDL_BlendLines
-    (SDL_Surface * dst, const SDL_Point * points, int count,
-     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-
-/**
- *  Draws the given rectangle with \c color.
- *  
- *  If \c rect is NULL, the whole surface will be outlined with \c color.
- *  
- *  The color should be a pixel of the format used by the surface, and 
- *  can be generated by the SDL_MapRGB() function.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_DrawRect
-    (SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
-extern DECLSPEC int SDLCALL SDL_DrawRects
-    (SDL_Surface * dst, const SDL_Rect ** rects, int count, Uint32 color);
-
-/**
- *  Blends an RGBA value into the outline of the given rectangle.
- *  
- *  If \c rect is NULL, the whole surface will have a blended outline.
- *  
- *  \return 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_BlendRect
-    (SDL_Surface * dst, const SDL_Rect * rect,
-     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-extern DECLSPEC int SDLCALL SDL_BlendRects
-    (SDL_Surface * dst, const SDL_Rect ** rects, int count,
-     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
 /**
  *  Performs a fast fill of the given rectangle with \c color.
@@ -487,21 +377,7 @@ extern DECLSPEC int SDLCALL SDL_BlendRects
 extern DECLSPEC int SDLCALL SDL_FillRect
     (SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
 extern DECLSPEC int SDLCALL SDL_FillRects
-    (SDL_Surface * dst, const SDL_Rect ** rects, int count, Uint32 color);
-
-/**
- *  Blends an RGBA value into the given rectangle.
- *  
- *  If \c rect is NULL, the whole surface will be blended with the color.
- *  
- *  \return This function returns 0 on success, or -1 on error.
- */
-extern DECLSPEC int SDLCALL SDL_BlendFillRect
-    (SDL_Surface * dst, const SDL_Rect * rect,
-     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-extern DECLSPEC int SDLCALL SDL_BlendFillRects
-    (SDL_Surface * dst, const SDL_Rect ** rects, int count,
-     SDL_BlendMode blendMode, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+    (SDL_Surface * dst, const SDL_Rect * rects, int count, Uint32 color);
 
 /**
  *  Performs a fast blit from the source surface to the destination surface.
@@ -559,22 +435,6 @@ extern DECLSPEC int SDLCALL SDL_BlendFillRects
         source colour key.
     \endverbatim
  *  
- *  If either of the surfaces were in video memory, and the blit returns -2,
- *  the video memory was lost, so it should be reloaded with artwork and 
- *  re-blitted:
- *  @code
- *  while ( SDL_BlitSurface(image, imgrect, screen, dstrect) == -2 ) {
- *      while ( SDL_LockSurface(image) < 0 )
- *          Sleep(10);
- *      -- Write image pixels to image->pixels --
- *      SDL_UnlockSurface(image);
- *  }
- *  @endcode
- *  
- *  This happens under DirectX 5.0 when the system switches away from your
- *  fullscreen application.  The lock will also fail until you have access
- *  to the video memory again.
- *  
  *  You should call SDL_BlitSurface() unless you know exactly how SDL
  *  blitting works internally and how to use the other blit functions.
  */
@@ -606,6 +466,25 @@ extern DECLSPEC int SDLCALL SDL_SoftStretch(SDL_Surface * src,
                                             const SDL_Rect * srcrect,
                                             SDL_Surface * dst,
                                             const SDL_Rect * dstrect);
+
+#define SDL_BlitScaled SDL_UpperBlitScaled
+
+/**
+ *  This is the public scaled blit function, SDL_BlitScaled(), and it performs
+ *  rectangle validation and clipping before passing it to SDL_LowerBlitScaled()
+ */
+extern DECLSPEC int SDLCALL SDL_UpperBlitScaled
+    (SDL_Surface * src, const SDL_Rect * srcrect,
+    SDL_Surface * dst, SDL_Rect * dstrect);
+
+/**
+ *  This is a semi-private blit function and it performs low-level surface
+ *  scaled blitting only.
+ */
+extern DECLSPEC int SDLCALL SDL_LowerBlitScaled
+    (SDL_Surface * src, SDL_Rect * srcrect,
+    SDL_Surface * dst, SDL_Rect * dstrect);
+
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

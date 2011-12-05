@@ -35,7 +35,7 @@ static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(
 
 	format = SDL_PIXELFORMAT_RGB565;
 	if( surface->flags & SDL_SRCCOLORKEY )
-		format = SDL_PIXELFORMAT_RGBA5551;
+		format = SDL_PIXELFORMAT_RGBA4444;
 
 	ret->t = SDL_CreateTextureFromSurface(format, surface);
 	

@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 #ifndef _SDL_mutex_h
@@ -164,6 +163,31 @@ typedef struct SDL_cond SDL_cond;
 
 /**
  *  Create a condition variable.
+ *
+ *  Typical use of condition variables:
+ *
+ *  Thread A:
+ *    SDL_LockMutex(lock);
+ *    while ( ! condition ) {
+ *        SDL_CondWait(cond, lock);
+ *    }
+ *    SDL_UnlockMutex(lock);
+ *
+ *  Thread B:
+ *    SDL_LockMutex(lock);
+ *    ...
+ *    condition = true;
+ *    ...
+ *    SDL_CondSignal(cond);
+ *    SDL_UnlockMutex(lock);
+ *
+ *  There is some discussion whether to signal the condition variable
+ *  with the mutex locked or not.  There is some potential performance
+ *  benefit to unlocking first on some platforms, but there are some
+ *  potential race conditions depending on how your code is structured.
+ *
+ *  In general it's safer to signal the condition variable while the
+ *  mutex is locked.
  */
 extern DECLSPEC SDL_cond *SDLCALL SDL_CreateCond(void);
 
@@ -181,6 +205,7 @@ extern DECLSPEC int SDLCALL SDL_CondSignal(SDL_cond * cond);
 
 /**
  *  Restart all threads that are waiting on the condition variable.
+ *
  *  \return 0 or -1 on error.
  */
 extern DECLSPEC int SDLCALL SDL_CondBroadcast(SDL_cond * cond);

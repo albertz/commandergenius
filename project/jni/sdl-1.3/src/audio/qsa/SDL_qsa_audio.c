@@ -1,26 +1,27 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 #include "SDL_config.h"
+
+#if SDL_AUDIO_DRIVER_QSA
 
 #include <errno.h>
 #include <unistd.h>
@@ -38,9 +39,6 @@
 #include "../SDL_audiomem.h"
 #include "../SDL_audio_c.h"
 #include "SDL_qsa_audio.h"
-
-/* The tag name used by QSA audio framework */
-#define DRIVER_NAME "qsa"
 
 /* default channel communication parameters */
 #define DEFAULT_CPARAMS_RATE   44100
@@ -114,6 +112,7 @@ QSA_CheckBuggyCards(_THIS, unsigned long checkfor)
     return 0;
 }
 
+/* !!! FIXME: does this need to be here? Does the SDL version not work? */
 static void
 QSA_ThreadInit(_THIS)
 {
@@ -651,8 +650,8 @@ QSA_OpenDevice(_THIS, const char *devname, int iscapture)
     return 1;
 }
 
-int
-QSA_DetectDevices(int iscapture)
+static void
+QSA_DetectDevices(int iscapture, SDL_AddAudioDevice addfn)
 {
     uint32_t it;
     uint32_t cards;
@@ -667,7 +666,7 @@ QSA_DetectDevices(int iscapture)
     /* of available audio devices                                 */
     if (cards == 0) {
         /* We have no any available audio devices */
-        return 0;
+        return;
     }
 
     /* Find requested devices by type */
@@ -702,6 +701,7 @@ QSA_DetectDevices(int iscapture)
                             devices;
                         status = snd_pcm_close(handle);
                         if (status == EOK) {
+                            addfn(qsa_playback_device[qsa_playback_devices].name);
                             qsa_playback_devices++;
                         }
                     } else {
@@ -757,6 +757,7 @@ QSA_DetectDevices(int iscapture)
                             devices;
                         status = snd_pcm_close(handle);
                         if (status == EOK) {
+                            addfn(qsa_capture_device[qsa_capture_devices].name);
                             qsa_capture_devices++;
                         }
                     } else {
@@ -782,34 +783,9 @@ QSA_DetectDevices(int iscapture)
             }
         }
     }
-
-    /* Return amount of available playback or capture devices */
-    if (!iscapture) {
-        return qsa_playback_devices;
-    } else {
-        return qsa_capture_devices;
-    }
 }
 
-const char *
-QSA_GetDeviceName(int index, int iscapture)
-{
-    if (!iscapture) {
-        if (index >= qsa_playback_devices) {
-            return "No such playback device";
-        }
-
-        return qsa_playback_device[index].name;
-    } else {
-        if (index >= qsa_capture_devices) {
-            return "No such capture device";
-        }
-
-        return qsa_capture_device[index].name;
-    }
-}
-
-void
+static void
 QSA_WaitDone(_THIS)
 {
     if (!this->hidden->iscapture) {
@@ -827,7 +803,7 @@ QSA_WaitDone(_THIS)
     }
 }
 
-void
+static void
 QSA_Deinitialize(void)
 {
     /* Clear devices array on shutdown */
@@ -857,7 +833,6 @@ QSA_Init(SDL_AudioDriverImpl * impl)
     /* DeviceLock and DeviceUnlock functions are used default,   */
     /* provided by SDL, which uses pthread_mutex for lock/unlock */
     impl->DetectDevices = QSA_DetectDevices;
-    impl->GetDeviceName = QSA_GetDeviceName;
     impl->OpenDevice = QSA_OpenDevice;
     impl->ThreadInit = QSA_ThreadInit;
     impl->WaitDevice = QSA_WaitDevice;
@@ -887,7 +862,9 @@ QSA_Init(SDL_AudioDriverImpl * impl)
 }
 
 AudioBootStrap QSAAUDIO_bootstrap = {
-    DRIVER_NAME, "QNX QSA Audio", QSA_Init, 0
+    "qsa", "QNX QSA Audio", QSA_Init, 0
 };
+
+#endif /* SDL_AUDIO_DRIVER_QSA */
 
 /* vi: set ts=4 sw=4 expandtab: */

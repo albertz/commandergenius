@@ -34,5 +34,6 @@ cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build V=1 -j4 && \
    `which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-4.4.3/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi/libapplication.so \
    || true ; } && \
  ant debug && \
- test -z "$1" && cd bin && adb uninstall `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'` && \
- adb install -r MainActivity-debug.apk
+ test -z "$1" && cd bin && \
+ { adb install -r MainActivity-debug.apk || { \
+   adb uninstall `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'` && adb install -r MainActivity-debug.apk ; } ; }

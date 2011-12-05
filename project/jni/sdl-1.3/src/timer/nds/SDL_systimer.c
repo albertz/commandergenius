@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -27,22 +26,23 @@
 #include <nds/timers.h>
 
 #include "SDL_timer.h"
-#include "../SDL_timer_c.h"
-#include "../SDL_systimer.h"
 
-/* Data to handle a single periodic alarm */
-static int timer_alive = 0;
-static Uint32 timer_ticks;
+/* Will wrap after 49 days. Shouldn't be an issue. */
+static volatile Uint32 timer_ticks;
+
+static void
+NDS_TimerInterrupt(void)
+{
+    timer_ticks++;
+}
 
 void
 SDL_StartTicks(void)
 {
-    if (!timer_alive) {
-        SDL_SYS_TimerInit();
-        SDL_SYS_StartTimer();
-    }
-
     timer_ticks = 0;
+
+	/* Set timer 2 to fire every ms. */
+	timerStart(2, ClockDivider_1024, TIMER_FREQ_1024(1000), NDS_TimerInterrupt);
 }
 
 Uint32
@@ -51,70 +51,28 @@ SDL_GetTicks(void)
     return timer_ticks;
 }
 
+Uint64
+SDL_GetPerformanceCounter(void)
+{
+    return SDL_GetTicks();
+}
+
+Uint64
+SDL_GetPerformanceFrequency(void)
+{
+    return 1000;
+}
+
 void
 SDL_Delay(Uint32 ms)
 {
     Uint32 start = SDL_GetTicks();
-    while (timer_alive) {
+    while (1) {
         if ((SDL_GetTicks() - start) >= ms)
             break;
     }
 }
 
-static int
-RunTimer(void *unused)
-{
-    while (timer_alive) {
-        if (SDL_timer_running) {
-        }
-        SDL_Delay(1);
-    }
-    return (0);
-}
-
-void
-NDS_TimerInterrupt(void)
-{
-    timer_ticks++;
-}
-
-/* This is only called if the event thread is not running */
-int
-SDL_SYS_TimerInit(void)
-{
-    timer_alive = 1;
-    timer_ticks = 0;
-    TIMER_CR(3) = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-    TIMER_DATA(3) = TIMER_FREQ_1024(1000);
-    irqSet(IRQ_TIMER3, NDS_TimerInterrupt);
-    irqEnable(IRQ_TIMER3);
-    return 0;
-}
-
-void
-SDL_SYS_TimerQuit(void)
-{
-    if (timer_alive) {
-        TIMER_CR(3) = 0;
-    }
-    timer_alive = 0;
-    irqDisable(IRQ_TIMER3);
-}
-
-int
-SDL_SYS_StartTimer(void)
-{
-    TIMER_CR(3) |= TIMER_ENABLE;
-    return 0;
-}
-
-void
-SDL_SYS_StopTimer(void)
-{
-    TIMER_CR(3) &= ~TIMER_ENABLE;
-    return;
-}
-
-
 #endif /* SDL_TIMER_NDS */
+
 /* vi: set ts=4 sw=4 expandtab: */

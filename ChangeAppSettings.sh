@@ -436,7 +436,7 @@ fi
 
 if [ -z "$ResetSdlConfigForThisVersion" -o -z "$AUTO" ]; then
 echo
-echo "Reset SDL config when updating application to the new version (y) / (n) ($ResetSdlConfigForThisVersion): "
+echo -n "Reset SDL config when updating application to the new version (y) / (n) ($ResetSdlConfigForThisVersion): "
 read var
 if [ -n "$var" ] ; then
 	ResetSdlConfigForThisVersion="$var"

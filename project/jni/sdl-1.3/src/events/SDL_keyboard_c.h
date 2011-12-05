@@ -1,30 +1,29 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
 #ifndef _SDL_keyboard_c_h
 #define _SDL_keyboard_c_h
 
-#include "SDL_keysym.h"
+#include "SDL_keycode.h"
 #include "SDL_events.h"
 
 /* Initialize the keyboard subsystem */
@@ -34,22 +33,22 @@ extern int SDL_KeyboardInit(void);
 extern void SDL_ResetKeyboard(void);
 
 /* Get the default keymap */
-extern void SDL_GetDefaultKeymap(SDLKey * keymap);
+extern void SDL_GetDefaultKeymap(SDL_Keycode * keymap);
 
 /* Set the mapping of scancode to key codes */
-extern void SDL_SetKeymap(int start, SDLKey * keys, int length);
+extern void SDL_SetKeymap(int start, SDL_Keycode * keys, int length);
 
 /* Set a platform-dependent key name, overriding the default platform-agnostic
    name. Encoded as UTF-8. The string is not copied, thus the pointer given to
    this function must stay valid forever (or at least until the call to
    VideoQuit()). */
-extern void SDL_SetScancodeName(SDL_scancode scancode, const char *name);
+extern void SDL_SetScancodeName(SDL_Scancode scancode, const char *name);
 
 /* Set the keyboard focus window */
 extern void SDL_SetKeyboardFocus(SDL_Window * window);
 
 /* Send a keyboard key event */
-extern int SDL_SendKeyboardKey(Uint8 state, SDL_scancode scancode);
+extern int SDL_SendKeyboardKey(Uint8 state, SDL_Scancode scancode);
 
 /* Send keyboard text input */
 extern int SDL_SendKeyboardText(const char *text);

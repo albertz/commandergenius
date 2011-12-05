@@ -1,112 +1,194 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
+
+#if SDL_VIDEO_DRIVER_COCOA
 
 #include "SDL_events.h"
 #include "SDL_cocoavideo.h"
 
 #include "../../events/SDL_mouse_c.h"
 
-void
-Cocoa_InitMouse(_THIS)
+
+static SDL_Cursor *
+Cocoa_CreateDefaultCursor()
 {
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSCursor *nscursor;
+    SDL_Cursor *cursor = NULL;
+
+    nscursor = [NSCursor arrowCursor];
+
+    if (nscursor) {
+        cursor = SDL_calloc(1, sizeof(*cursor));
+        if (cursor) {
+            cursor->driverdata = nscursor;
+            [nscursor retain];
+        }
+    }
+
+    [pool release];
+
+    return cursor;
+}
+
+static SDL_Cursor *
+Cocoa_CreateCursor(SDL_Surface * surface, int hot_x, int hot_y)
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSImage *nsimage;
+    NSCursor *nscursor = NULL;
+    SDL_Cursor *cursor = NULL;
+
+    nsimage = Cocoa_CreateImage(surface);
+    if (nsimage) {
+        nscursor = [[NSCursor alloc] initWithImage: nsimage hotSpot: NSMakePoint(hot_x, hot_y)];
+    }
+
+    if (nscursor) {
+        cursor = SDL_calloc(1, sizeof(*cursor));
+        if (cursor) {
+            cursor->driverdata = nscursor;
+        }
+    }
+
+    [pool release];
+
+    return cursor;
+}
+
+static void
+Cocoa_FreeCursor(SDL_Cursor * cursor)
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSCursor *nscursor = (NSCursor *)cursor->driverdata;
+
+    [nscursor release];
+    SDL_free(cursor);
+
+    [pool release];
 }
 
 static int
-ConvertMouseButtonToSDL(int button)
+Cocoa_ShowCursor(SDL_Cursor * cursor)
 {
-    switch (button)
-    {
-        case 0:
-            return(SDL_BUTTON_LEFT);   /* 1 */
-        case 1:
-            return(SDL_BUTTON_RIGHT);  /* 3 */
-        case 2:
-            return(SDL_BUTTON_MIDDLE); /* 2 */
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+    if (SDL_GetMouseFocus()) {
+        if (cursor) {
+            NSCursor *nscursor = (NSCursor *)cursor->driverdata;
+
+            [nscursor set];
+            [NSCursor unhide];
+        } else {
+            [NSCursor hide];
+        }
     }
-    return button;
+
+    [pool release];
+
+    return 0;
+}
+
+static void
+Cocoa_WarpMouse(SDL_Window * window, int x, int y)
+{
+    CGPoint point;
+
+    point.x = (float)window->x + x;
+    point.y = (float)window->y + y;
+    CGWarpMouseCursorPosition(point);
+}
+
+static int
+Cocoa_SetRelativeMouseMode(SDL_bool enabled)
+{
+    CGError result;
+
+    if (enabled) {
+        result = CGAssociateMouseAndMouseCursorPosition(NO);
+    } else {
+        result = CGAssociateMouseAndMouseCursorPosition(YES);
+    }
+    if (result != kCGErrorSuccess) {
+        SDL_SetError("CGAssociateMouseAndMouseCursorPosition() failed");
+        return -1;
+    }
+    return 0;
+}
+
+void
+Cocoa_InitMouse(_THIS)
+{
+    SDL_Mouse *mouse = SDL_GetMouse();
+
+    mouse->CreateCursor = Cocoa_CreateCursor;
+    mouse->ShowCursor = Cocoa_ShowCursor;
+    mouse->FreeCursor = Cocoa_FreeCursor;
+    mouse->WarpMouse = Cocoa_WarpMouse;
+    mouse->SetRelativeMouseMode = Cocoa_SetRelativeMouseMode;
+
+    SDL_SetDefaultCursor(Cocoa_CreateDefaultCursor());
 }
 
 void
 Cocoa_HandleMouseEvent(_THIS, NSEvent *event)
 {
-    int i;
-    NSPoint point = { 0, 0 };
-    SDL_Window *window;
-    SDL_Window *focus = SDL_GetMouseFocus();
+    SDL_Mouse *mouse = SDL_GetMouse();
 
-    /* See if there are any fullscreen windows that might handle this event */
-    window = NULL;
-    for (i = 0; i < _this->num_displays; ++i) {
-        SDL_VideoDisplay *display = &_this->displays[i];
-        SDL_Window *candidate = display->fullscreen_window;
-
-        if (candidate) {
-            SDL_Rect bounds;
-
-            Cocoa_GetDisplayBounds(_this, display, &bounds);
-            point = [NSEvent mouseLocation];
-            point.x = point.x - bounds.x;
-            point.y = CGDisplayPixelsHigh(kCGDirectMainDisplay) - point.y - bounds.y;
-            if ((point.x >= 0 && point.x < candidate->w) &&
-                (point.y >= 0 && point.y < candidate->h)) {
-                /* This is it! */
-                window = candidate;
-                break;
-            } else if (candidate == focus) {
-                SDL_SetMouseFocus(NULL);
-            }
-        }
+    if (mouse->relative_mode &&
+        ([event type] == NSMouseMoved ||
+         [event type] == NSLeftMouseDragged ||
+         [event type] == NSRightMouseDragged ||
+         [event type] == NSOtherMouseDragged)) {
+        float x = [event deltaX];
+        float y = [event deltaY];
+        SDL_SendMouseMotion(mouse->focus, 1, (int)x, (int)y);
     }
+}
 
-    if (!window) {
-        return;
-    }
+void
+Cocoa_HandleMouseWheel(SDL_Window *window, NSEvent *event)
+{
+    float x = [event deltaX];
+    float y = [event deltaY];
 
-    switch ([event type]) {
-    case NSLeftMouseDown:
-    case NSOtherMouseDown:
-    case NSRightMouseDown:
-        SDL_SendMouseButton(window, SDL_PRESSED, ConvertMouseButtonToSDL([event buttonNumber]));
-        break;
-    case NSLeftMouseUp:
-    case NSOtherMouseUp:
-    case NSRightMouseUp:
-        SDL_SendMouseButton(window, SDL_RELEASED, ConvertMouseButtonToSDL([event buttonNumber]));
-        break;
-    case NSLeftMouseDragged:
-    case NSRightMouseDragged:
-    case NSOtherMouseDragged: /* usually middle mouse dragged */
-    case NSMouseMoved:
-        SDL_SendMouseMotion(window, 0, (int)point.x, (int)point.y);
-        break;
-    default: /* just to avoid compiler warnings */
-        break;
+    if (x > 0) {
+        x += 0.9f;
+    } else if (x < 0) {
+        x -= 0.9f;
     }
+    if (y > 0) {
+        y += 0.9f;
+    } else if (y < 0) {
+        y -= 0.9f;
+    }
+    SDL_SendMouseWheel(window, (int)x, (int)y);
 }
 
 void
 Cocoa_QuitMouse(_THIS)
 {
 }
+
+#endif /* SDL_VIDEO_DRIVER_COCOA */
 
 /* vi: set ts=4 sw=4 expandtab: */

@@ -1,25 +1,26 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
+
+#if SDL_VIDEO_DRIVER_X11
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -63,6 +64,37 @@ static SDL_bool X11_KeyRepeat(Display *display, XEvent *event)
     return SDL_FALSE;
 }
 
+static SDL_bool X11_IsWheelEvent(Display * display,XEvent * event,int * ticks)
+{
+    XEvent peekevent;
+    if (XPending(display)) {
+        /* according to the xlib docs, no specific mouse wheel events exist.
+           however, mouse wheel events trigger a button press and a button release
+           immediately. thus, checking if the same button was released at the same
+           time as it was pressed, should be an adequate hack to derive a mouse 
+           wheel event. */
+        XPeekEvent(display,&peekevent);
+        if ((peekevent.type           == ButtonRelease) &&
+            (peekevent.xbutton.button == event->xbutton.button) &&
+            (peekevent.xbutton.time   == event->xbutton.time)) {
+
+            /* by default, X11 only knows 5 buttons. on most 3 button + wheel mouse,
+               Button4 maps to wheel up, Button5 maps to wheel down. */
+            if (event->xbutton.button == Button4) {
+                *ticks = 1;
+            }
+            else {
+                *ticks = -1;
+            }
+
+            /* remove the following release event, as this is now a wheel event */
+            XNextEvent(display,&peekevent);
+            return SDL_TRUE;
+        }
+    }
+    return SDL_FALSE;
+}
+
 static void
 X11_DispatchEvent(_THIS)
 {
@@ -91,7 +123,7 @@ X11_DispatchEvent(_THIS)
 
         SDL_VERSION(&wmmsg.version);
         wmmsg.subsystem = SDL_SYSWM_X11;
-        wmmsg.x11.event = xevent;
+        wmmsg.msg.x11.event = xevent;
         SDL_SendSysWMEvent(&wmmsg);
     }
 
@@ -202,7 +234,6 @@ X11_DispatchEvent(_THIS)
     case KeyPress:{
             KeyCode keycode = xevent.xkey.keycode;
             KeySym keysym = NoSymbol;
-            SDL_scancode scancode;
             char text[SDL_TEXTINPUTEVENT_TEXT_SIZE];
             Status status = 0;
 
@@ -211,7 +242,7 @@ X11_DispatchEvent(_THIS)
 #endif
             SDL_SendKeyboardKey(SDL_PRESSED, videodata->key_layout[keycode]);
 #if 1
-            if (videodata->key_layout[keycode] == SDLK_UNKNOWN) {
+            if (videodata->key_layout[keycode] == SDL_SCANCODE_UNKNOWN) {
                 int min_keycode, max_keycode;
                 XDisplayKeycodes(display, &min_keycode, &max_keycode);
                 keysym = XKeycodeToKeysym(display, keycode, 0);
@@ -314,7 +345,13 @@ X11_DispatchEvent(_THIS)
         break;
 
     case ButtonPress:{
-            SDL_SendMouseButton(data->window, SDL_PRESSED, xevent.xbutton.button);
+            int ticks = 0;
+            if (X11_IsWheelEvent(display,&xevent,&ticks) == SDL_TRUE) {
+                SDL_SendMouseWheel(data->window, 0, ticks);
+            }
+            else {
+                SDL_SendMouseButton(data->window, SDL_PRESSED, xevent.xbutton.button);
+            }
         }
         break;
 
@@ -484,6 +521,11 @@ X11_Pending(Display * display)
     return (0);
 }
 
+
+/* !!! FIXME: this should be exposed in a header, or something. */
+int SDL_GetNumTouch(void);
+
+
 void
 X11_PumpEvents(_THIS)
 {
@@ -507,10 +549,10 @@ X11_PumpEvents(_THIS)
 #ifdef SDL_INPUT_LINUXEV
     /* Process Touch events - TODO When X gets touch support, use that instead*/
     int i = 0,rd;
-    char name[256];
     struct input_event ev[64];
     int size = sizeof (struct input_event);
 
+/* !!! FIXME: clean the tabstops out of here. */
     for(i = 0;i < SDL_GetNumTouch();++i) {
 	SDL_Touch* touch = SDL_GetTouchIndex(i);
 	if(!touch) printf("Touch %i/%i DNE\n",i,SDL_GetNumTouch());
@@ -523,12 +565,10 @@ X11_PumpEvents(_THIS)
 	if(data->eventStream <= 0) 
 	    printf("Error: Couldn't open stream\n");
 	rd = read(data->eventStream, ev, size * 64);
-	//printf("Got %i/%i bytes\n",rd,size);
 	if(rd >= size) {
 	    for (i = 0; i < rd / sizeof(struct input_event); i++) {
 		switch (ev[i].type) {
 		case EV_ABS:
-		    //printf("Got position x: %i!\n",data->x);
 		    switch (ev[i].code) {
 			case ABS_X:
 			    data->x = ev[i].value;
@@ -547,29 +587,37 @@ X11_PumpEvents(_THIS)
 			}
 		    break;
 		case EV_MSC:
-		    if(ev[i].code == MSC_SERIAL)
-			data->finger = ev[i].value;
-		    break;
+			if(ev[i].code == MSC_SERIAL)
+				data->finger = ev[i].value;
+			break;
+		case EV_KEY:
+			if(ev[i].code == BTN_TOUCH)
+			    if(ev[i].value == 0)
+			        data->up = SDL_TRUE;
+			break;
 		case EV_SYN:
-		  //printf("Id: %i\n",touch->id); 
-		  if(data->up) {
+		  if(!data->down) {
+		      data->down = SDL_TRUE;
 		      SDL_SendFingerDown(touch->id,data->finger,
-			  	       SDL_FALSE,data->x,data->y,
-				       data->pressure);		    
+		    		  data->down, data->x, data->y,
+		    		  data->pressure);
 		  }
-		  else if(data->x >= 0 || data->y >= 0)
+		  else if(!data->up)
 		    SDL_SendTouchMotion(touch->id,data->finger, 
-					SDL_FALSE,data->x,data->y,
+					SDL_FALSE, data->x,data->y,
 					data->pressure);
-		  
-		    //printf("Synched: %i tx: %i, ty: %i\n",
-		    //	   data->finger,data->x,data->y);
-		  data->x = -1;
-		  data->y = -1;
-		  data->pressure = -1;
-		  data->finger = 0;
-		  data->up = SDL_FALSE;
-		    
+		  else
+		  {
+		      data->down = SDL_FALSE;
+			  SDL_SendFingerDown(touch->id,data->finger,
+					  data->down, data->x,data->y,
+					  data->pressure);
+			  data->x = -1;
+			  data->y = -1;
+			  data->pressure = -1;
+			  data->finger = 0;
+			  data->up = SDL_FALSE;
+		  }
 		  break;		
 		}
 	    }
@@ -609,7 +657,7 @@ gnome_screensaver_enable()
 void
 X11_SuspendScreenSaver(_THIS)
 {
-#if SDL_VIDEO_DRIVER_X11_SCRNSAVER
+#if SDL_VIDEO_DRIVER_X11_XSCRNSAVER
     SDL_VideoData *data = (SDL_VideoData *) _this->driverdata;
     int dummy;
     int major_version, minor_version;
@@ -636,5 +684,7 @@ X11_SuspendScreenSaver(_THIS)
     }
 #endif
 }
+
+#endif /* SDL_VIDEO_DRIVER_X11 */
 
 /* vi: set ts=4 sw=4 expandtab: */

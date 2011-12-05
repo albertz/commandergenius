@@ -1,28 +1,26 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
-
-    Modified in Oct 2004 by Hannu Savolainen 
-    hannu@opensound.com
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
+
+#if SDL_AUDIO_DRIVER_OSS
 
 /* Allow access to a raw mixing buffer */
 
@@ -51,80 +49,11 @@
 #include "../SDL_audiodev_c.h"
 #include "SDL_dspaudio.h"
 
-/* The tag name used by DSP audio */
-#define DSP_DRIVER_NAME         "dsp"
-
-/* Open the audio device for playback, and don't block if busy */
-#define OPEN_FLAGS_OUTPUT    (O_WRONLY|O_NONBLOCK)
-#define OPEN_FLAGS_INPUT    (O_RDONLY|O_NONBLOCK)
-
-static char **outputDevices = NULL;
-static int outputDeviceCount = 0;
-static char **inputDevices = NULL;
-static int inputDeviceCount = 0;
-
-static inline void
-free_device_list(char ***devs, int *count)
-{
-    SDL_FreeUnixAudioDevices(devs, count);
-}
-
-static inline void
-build_device_list(int iscapture, char ***devs, int *count)
-{
-    const int flags = ((iscapture) ? OPEN_FLAGS_INPUT : OPEN_FLAGS_OUTPUT);
-    free_device_list(devs, count);
-    SDL_EnumUnixAudioDevices(flags, 0, NULL, devs, count);
-}
-
-static inline void
-build_device_lists(void)
-{
-    build_device_list(0, &outputDevices, &outputDeviceCount);
-    build_device_list(1, &inputDevices, &inputDeviceCount);
-}
-
-
-static inline void
-free_device_lists(void)
-{
-    free_device_list(&outputDevices, &outputDeviceCount);
-    free_device_list(&inputDevices, &inputDeviceCount);
-}
-
 
 static void
-DSP_Deinitialize(void)
+DSP_DetectDevices(int iscapture, SDL_AddAudioDevice addfn)
 {
-    free_device_lists();
-}
-
-
-static int
-DSP_DetectDevices(int iscapture)
-{
-    if (iscapture) {
-        build_device_list(1, &inputDevices, &inputDeviceCount);
-        return inputDeviceCount;
-    } else {
-        build_device_list(0, &outputDevices, &outputDeviceCount);
-        return outputDeviceCount;
-    }
-
-    return 0;                   /* shouldn't ever hit this. */
-}
-
-static const char *
-DSP_GetDeviceName(int index, int iscapture)
-{
-    if ((iscapture) && (index < inputDeviceCount)) {
-        return inputDevices[index];
-    } else if ((!iscapture) && (index < outputDeviceCount)) {
-        return outputDevices[index];
-    }
-
-    SDL_SetError("No such device");
-    return NULL;
+    SDL_EnumUnixAudioDevices(iscapture, 0, NULL, addfn);
 }
 
 
@@ -158,12 +87,11 @@ DSP_OpenDevice(_THIS, const char *devname, int iscapture)
     /* We don't care what the devname is...we'll try to open anything. */
     /*  ...but default to first name in the list... */
     if (devname == NULL) {
-        if (((iscapture) && (inputDeviceCount == 0)) ||
-            ((!iscapture) && (outputDeviceCount == 0))) {
+        devname = SDL_GetAudioDeviceName(0, iscapture);
+        if (devname == NULL) {
             SDL_SetError("No such audio device");
             return 0;
         }
-        devname = ((iscapture) ? inputDevices[0] : outputDevices[0]);
     }
 
     /* Make sure fragment size stays a power of 2, or OSS fails. */
@@ -373,21 +301,19 @@ DSP_Init(SDL_AudioDriverImpl * impl)
 {
     /* Set the function pointers */
     impl->DetectDevices = DSP_DetectDevices;
-    impl->GetDeviceName = DSP_GetDeviceName;
     impl->OpenDevice = DSP_OpenDevice;
     impl->PlayDevice = DSP_PlayDevice;
     impl->GetDeviceBuf = DSP_GetDeviceBuf;
     impl->CloseDevice = DSP_CloseDevice;
-    impl->Deinitialize = DSP_Deinitialize;
-
-    build_device_lists();
 
     return 1;   /* this audio target is available. */
 }
 
 
 AudioBootStrap DSP_bootstrap = {
-    DSP_DRIVER_NAME, "OSS /dev/dsp standard audio", DSP_Init, 0
+    "dsp", "OSS /dev/dsp standard audio", DSP_Init, 0
 };
+
+#endif /* SDL_AUDIO_DRIVER_OSS */
 
 /* vi: set ts=4 sw=4 expandtab: */

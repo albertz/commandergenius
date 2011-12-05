@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -29,12 +28,6 @@
 /* Functions to blit from N-bit surfaces to other surfaces */
 
 #if SDL_ALTIVEC_BLITTERS
-#if __MWERKS__
-#pragma altivec_model on
-#endif
-#ifdef HAVE_ALTIVEC_H
-#include <altivec.h>
-#endif
 #define assert(X)
 #ifdef __MACOSX__
 #include <sys/sysctl.h>
@@ -114,10 +107,11 @@ calc_swizzle32(const SDL_PixelFormat * srcfmt, const SDL_PixelFormat * dstfmt)
      */
     /* ARGB */
     const static const struct SDL_PixelFormat default_pixel_format = {
-        NULL, 32, 4,
+        0, NULL, 0, 0,
         0, 0, 0, 0,
         16, 8, 0, 24,
-        0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000
+        0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000,
+        0, NULL
     };
     if (!srcfmt) {
         srcfmt = &default_pixel_format;
@@ -2128,7 +2122,6 @@ BlitNtoNCopyAlpha(SDL_BlitInfo * info)
     int dstbpp = dstfmt->BytesPerPixel;
     int c;
 
-    /* FIXME: should map alpha to [0..255] correctly! */
     while (height--) {
         for (c = width; c; --c) {
             Uint32 Pixel;
@@ -2310,7 +2303,6 @@ BlitNtoNKeyCopyAlpha(SDL_BlitInfo * info)
     dstbpp = dstfmt->BytesPerPixel;
     ckey &= rgbmask;
 
-    /* FIXME: should map alpha to [0..255] correctly! */
     while (height--) {
 		/* *INDENT-OFF* */
 		DUFFS_LOOP(

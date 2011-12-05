@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -29,11 +28,11 @@
 typedef struct SDL_WindowData SDL_WindowData;
 
 /* *INDENT-OFF* */
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_6
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 @interface Cocoa_WindowListener : NSResponder <NSWindowDelegate> {
 #else
 @interface Cocoa_WindowListener : NSResponder {
-#endif		
+#endif
     SDL_WindowData *_data;
 }
 
@@ -49,8 +48,6 @@ typedef struct SDL_WindowData SDL_WindowData;
 -(void) windowDidDeminiaturize:(NSNotification *) aNotification;
 -(void) windowDidBecomeKey:(NSNotification *) aNotification;
 -(void) windowDidResignKey:(NSNotification *) aNotification;
--(void) windowDidHide:(NSNotification *) aNotification;
--(void) windowDidUnhide:(NSNotification *) aNotification;
 
 /* Window event handling */
 -(void) mouseDown:(NSEvent *) theEvent;
@@ -59,6 +56,8 @@ typedef struct SDL_WindowData SDL_WindowData;
 -(void) mouseUp:(NSEvent *) theEvent;
 -(void) rightMouseUp:(NSEvent *) theEvent;
 -(void) otherMouseUp:(NSEvent *) theEvent;
+-(void) mouseEntered:(NSEvent *)theEvent;
+-(void) mouseExited:(NSEvent *)theEvent;
 -(void) mouseMoved:(NSEvent *) theEvent;
 -(void) mouseDragged:(NSEvent *) theEvent;
 -(void) rightMouseDragged:(NSEvent *) theEvent;
@@ -86,7 +85,6 @@ struct SDL_WindowData
     SDL_Window *window;
     NSWindow *nswindow;
     SDL_bool created;
-    CGDirectDisplayID display;
     Cocoa_WindowListener *listener;
     struct SDL_VideoData *videodata;
 };
@@ -95,6 +93,7 @@ extern int Cocoa_CreateWindow(_THIS, SDL_Window * window);
 extern int Cocoa_CreateWindowFrom(_THIS, SDL_Window * window,
                                   const void *data);
 extern void Cocoa_SetWindowTitle(_THIS, SDL_Window * window);
+extern void Cocoa_SetWindowIcon(_THIS, SDL_Window * window, SDL_Surface * icon);
 extern void Cocoa_SetWindowPosition(_THIS, SDL_Window * window);
 extern void Cocoa_SetWindowSize(_THIS, SDL_Window * window);
 extern void Cocoa_ShowWindow(_THIS, SDL_Window * window);
@@ -103,6 +102,9 @@ extern void Cocoa_RaiseWindow(_THIS, SDL_Window * window);
 extern void Cocoa_MaximizeWindow(_THIS, SDL_Window * window);
 extern void Cocoa_MinimizeWindow(_THIS, SDL_Window * window);
 extern void Cocoa_RestoreWindow(_THIS, SDL_Window * window);
+extern void Cocoa_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display, SDL_bool fullscreen);
+extern int Cocoa_SetWindowGammaRamp(_THIS, SDL_Window * window, const Uint16 * ramp);
+extern int Cocoa_GetWindowGammaRamp(_THIS, SDL_Window * window, Uint16 * ramp);
 extern void Cocoa_SetWindowGrab(_THIS, SDL_Window * window);
 extern void Cocoa_DestroyWindow(_THIS, SDL_Window * window);
 extern SDL_bool Cocoa_GetWindowWMInfo(_THIS, SDL_Window * window,

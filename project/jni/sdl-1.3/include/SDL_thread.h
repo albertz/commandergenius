@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 #ifndef _SDL_thread_h
@@ -50,6 +49,16 @@ typedef struct SDL_Thread SDL_Thread;
 /* The SDL thread ID */
 typedef unsigned long SDL_threadID;
 
+/* The SDL thread priority
+ *
+ * Note: On many systems you require special privileges to set high priority.
+ */
+typedef enum {
+    SDL_THREAD_PRIORITY_LOW,
+    SDL_THREAD_PRIORITY_NORMAL,
+    SDL_THREAD_PRIORITY_HIGH
+} SDL_ThreadPriority;
+
 /* The function passed to SDL_CreateThread()
    It is passed a void* user context parameter and returns an int.
  */
@@ -81,17 +90,6 @@ typedef int (SDLCALL * SDL_ThreadFunction) (void *data);
 #include <process.h>            /* This has _beginthread() and _endthread() defined! */
 #endif
 
-#ifdef __GNUC__
-typedef unsigned long (__cdecl * pfnSDL_CurrentBeginThread) (void *, unsigned,
-                                                             unsigned
-                                                             (__stdcall *
-                                                              func) (void *),
-                                                             void *arg,
-                                                             unsigned,
-                                                             unsigned
-                                                             *threadID);
-typedef void (__cdecl * pfnSDL_CurrentEndThread) (unsigned code);
-#else
 typedef uintptr_t(__cdecl * pfnSDL_CurrentBeginThread) (void *, unsigned,
                                                         unsigned (__stdcall *
                                                                   func) (void
@@ -99,13 +97,12 @@ typedef uintptr_t(__cdecl * pfnSDL_CurrentBeginThread) (void *, unsigned,
                                                         void *arg, unsigned,
                                                         unsigned *threadID);
 typedef void (__cdecl * pfnSDL_CurrentEndThread) (unsigned code);
-#endif
 
 /**
  *  Create a thread.
  */
 extern DECLSPEC SDL_Thread *SDLCALL
-SDL_CreateThread(SDL_ThreadFunction fn, void *data,
+SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data,
                  pfnSDL_CurrentBeginThread pfnBeginThread,
                  pfnSDL_CurrentEndThread pfnEndThread);
 
@@ -114,25 +111,49 @@ SDL_CreateThread(SDL_ThreadFunction fn, void *data,
 /**
  *  Create a thread.
  */
-#define SDL_CreateThread(fn, data) SDL_CreateThread(fn, data, NULL, NULL)
+#define SDL_CreateThread(fn, name, data) SDL_CreateThread(fn, name, data, NULL, NULL)
 
 #else
 
 /**
  *  Create a thread.
  */
-#define SDL_CreateThread(fn, data) SDL_CreateThread(fn, data, _beginthreadex, _endthreadex)
+#define SDL_CreateThread(fn, name, data) SDL_CreateThread(fn, name, data, _beginthreadex, _endthreadex)
 
 #endif
 #else
 
 /**
  *  Create a thread.
+ *
+ *   Thread naming is a little complicated: Most systems have very small
+ *    limits for the string length (BeOS has 32 bytes, Linux currently has 16,
+ *    Visual C++ 6.0 has nine!), and possibly other arbitrary rules. You'll
+ *    have to see what happens with your system's debugger. The name should be
+ *    UTF-8 (but using the naming limits of C identifiers is a better bet).
+ *   There are no requirements for thread naming conventions, so long as the
+ *    string is null-terminated UTF-8, but these guidelines are helpful in
+ *    choosing a name:
+ *
+ *    http://stackoverflow.com/questions/149932/naming-conventions-for-threads
+ *
+ *   If a system imposes requirements, SDL will try to munge the string for
+ *    it (truncate, etc), but the original string contents will be available
+ *    from SDL_GetThreadName().
  */
 extern DECLSPEC SDL_Thread *SDLCALL
-SDL_CreateThread(SDL_ThreadFunction fn, void *data);
+SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
 
 #endif
+
+/**
+ * Get the thread name, as it was specified in SDL_CreateThread().
+ *  This function returns a pointer to a UTF-8 string that names the
+ *  specified thread, or NULL if it doesn't have a name. This is internal
+ *  memory, not to be free()'d by the caller, and remains valid until the
+ *  specified thread is cleaned up by SDL_WaitThread().
+ */
+extern DECLSPEC const char *SDLCALL SDL_GetThreadName(SDL_Thread *thread);
 
 /**
  *  Get the thread identifier for the current thread.
@@ -145,6 +166,11 @@ extern DECLSPEC SDL_threadID SDLCALL SDL_ThreadID(void);
  *  Equivalent to SDL_ThreadID() if the specified thread is NULL.
  */
 extern DECLSPEC SDL_threadID SDLCALL SDL_GetThreadID(SDL_Thread * thread);
+
+/**
+ *  Set the priority for the current thread
+ */
+extern DECLSPEC int SDLCALL SDL_SetThreadPriority(SDL_ThreadPriority priority);
 
 /**
  *  Wait for a thread to finish.

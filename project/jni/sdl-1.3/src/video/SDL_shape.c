@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 2010 Eli Gottlieb
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Eli Gottlieb
-    eligottlieb@gmail.com
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
 
@@ -35,7 +34,7 @@ SDL_CreateShapedWindow(const char *title,unsigned int x,unsigned int y,unsigned 
     SDL_Window *result = NULL;
     result = SDL_CreateWindow(title,-1000,-1000,w,h,(flags | SDL_WINDOW_BORDERLESS) & (~SDL_WINDOW_FULLSCREEN) & (~SDL_WINDOW_RESIZABLE) /*& (~SDL_WINDOW_SHOWN)*/);
     if(result != NULL) {
-        result->shaper = result->display->device->shape_driver.CreateShaper(result);
+        result->shaper = SDL_GetVideoDevice()->shape_driver.CreateShaper(result);
         if(result->shaper != NULL) {
             result->shaper->userx = x;
             result->shaper->usery = y;
@@ -116,7 +115,7 @@ SDL_CalculateShapeBitmap(SDL_WindowShapeMode mode,SDL_Surface *shape,Uint8* bitm
         SDL_UnlockSurface(shape);
 }
 
-SDL_ShapeTree*
+static SDL_ShapeTree*
 RecursivelyCalculateShapeTree(SDL_WindowShapeMode mode,SDL_Surface* mask,SDL_Rect dimensions) {
     int x = 0,y = 0;
     Uint8* pixel = NULL;
@@ -240,7 +239,7 @@ SDL_SetWindowShape(SDL_Window *window,SDL_Surface *shape,SDL_WindowShapeMode *sh
     
     if(shape_mode != NULL)
         window->shaper->mode = *shape_mode;
-    result = window->display->device->shape_driver.SetWindowShape(window->shaper,shape,shape_mode);
+    result = SDL_GetVideoDevice()->shape_driver.SetWindowShape(window->shaper,shape,shape_mode);
     window->shaper->hasshape = SDL_TRUE;
     if(window->shaper->userx != 0 && window->shaper->usery != 0) {
         SDL_SetWindowPosition(window,window->shaper->userx,window->shaper->usery);
@@ -250,7 +249,7 @@ SDL_SetWindowShape(SDL_Window *window,SDL_Surface *shape,SDL_WindowShapeMode *sh
     return result;
 }
 
-SDL_bool
+static SDL_bool
 SDL_WindowHasAShape(SDL_Window *window) {
     if (window == NULL || !SDL_IsShapedWindow(window))
         return SDL_FALSE;

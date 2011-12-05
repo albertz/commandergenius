@@ -25,8 +25,12 @@
 #define _SDL_sysvideo_1_3_h
 
 #include "SDL_mouse.h"
-#include "SDL_keysym.h"
 #include "SDL_rect.h"
+#if SDL_VERSION_ATLEAST(1,3,0)
+#include "SDL_keycode.h"
+#else
+#include "SDL_keysym.h"
+#endif
 
 /* The SDL video driver */
 

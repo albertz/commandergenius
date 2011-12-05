@@ -163,6 +163,7 @@
 #undef HAVE_SYSCTLBYNAME
 #undef SDL_ALTIVEC_BLITTERS
 #define SDL_ASSEMBLY_ROUTINES 1 // There is no assembly code for Arm CPU yet
+#define HAVE_GCC_ATOMICS 1
 
 /* Prototypes for Android-specific functions */
 

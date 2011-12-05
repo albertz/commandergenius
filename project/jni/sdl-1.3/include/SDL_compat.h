@@ -1,23 +1,22 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
  /**
@@ -63,6 +62,12 @@ extern "C" {
  *  \addtogroup Compatibility
  */
 /*@{*/
+
+/* Platform */
+#ifdef __WIN32__
+#undef __WIN32__
+#define __WIN32__   1
+#endif
 
 /**
  *  \name Surface flags
@@ -202,20 +207,19 @@ typedef enum
     SDL_GRAB_ON = 1
 } SDL_GrabMode;
 
-typedef enum
-{
-    SDL_TEXTURESCALEMODE_NONE = SDL_SCALEMODE_NONE,
-    SDL_TEXTURESCALEMODE_FAST = SDL_SCALEMODE_FAST,
-    SDL_TEXTURESCALEMODE_SLOW = SDL_SCALEMODE_SLOW,
-    SDL_TEXTURESCALEMODE_BEST = SDL_SCALEMODE_BEST
-} SDL_TextureScaleMode;
-
 struct SDL_SysWMinfo;
 
 /**
  *  \name Obsolete or renamed key codes
  */
 /*@{*/
+
+#define SDL_keysym		SDL_Keysym
+#define SDL_KeySym		SDL_Keysym
+#define SDL_scancode	SDL_Scancode
+#define SDL_ScanCode	SDL_Scancode
+#define SDLKey          SDL_Keycode
+#define SDLMod          SDL_Keymod
 
 /** 
  *  \name Renamed keys
@@ -272,8 +276,8 @@ struct SDL_SysWMinfo;
 #define SDL_AllocSurface    SDL_CreateRGBSurface
 
 extern DECLSPEC const SDL_version *SDLCALL SDL_Linked_Version(void);
-extern DECLSPEC char *SDLCALL SDL_AudioDriverName(char *namebuf, int maxlen);
-extern DECLSPEC char *SDLCALL SDL_VideoDriverName(char *namebuf, int maxlen);
+extern DECLSPEC const char *SDLCALL SDL_AudioDriverName(char *namebuf, int maxlen);
+extern DECLSPEC const char *SDLCALL SDL_VideoDriverName(char *namebuf, int maxlen);
 extern DECLSPEC const SDL_VideoInfo *SDLCALL SDL_GetVideoInfo(void);
 extern DECLSPEC int SDLCALL SDL_VideoModeOK(int width,
                                             int height,
@@ -323,17 +327,26 @@ extern DECLSPEC int SDLCALL SDL_DisplayYUVOverlay(SDL_Overlay * overlay,
                                                   SDL_Rect * dstrect);
 extern DECLSPEC void SDLCALL SDL_FreeYUVOverlay(SDL_Overlay * overlay);
 extern DECLSPEC void SDLCALL SDL_GL_SwapBuffers(void);
+extern DECLSPEC int SDLCALL SDL_SetGamma(float red, float green, float blue);
+extern DECLSPEC int SDLCALL SDL_SetGammaRamp(const Uint16 * red,
+                                             const Uint16 * green,
+                                             const Uint16 * blue);
+extern DECLSPEC int SDLCALL SDL_GetGammaRamp(Uint16 * red, Uint16 * green,
+                                             Uint16 * blue);
 extern DECLSPEC int SDLCALL SDL_EnableKeyRepeat(int delay, int interval);
 extern DECLSPEC void SDLCALL SDL_GetKeyRepeat(int *delay, int *interval);
 extern DECLSPEC int SDLCALL SDL_EnableUNICODE(int enable);
 
-typedef SDL_Texture* SDL_TextureID;
 typedef SDL_Window* SDL_WindowID;
 
-#define SDL_RenderPoint SDL_RenderDrawPoint
-#define SDL_RenderLine SDL_RenderDrawLine
-#define SDL_RenderFill(X)  (X) ? SDL_RenderFillRect(X) : SDL_RenderClear()
 #define SDL_KillThread(X)
+
+/* The timeslice and timer resolution are no longer relevant */
+#define SDL_TIMESLICE		10
+#define TIMER_RESOLUTION	10
+
+typedef Uint32 (SDLCALL * SDL_OldTimerCallback) (Uint32 interval);
+extern DECLSPEC int SDLCALL SDL_SetTimer(Uint32 interval, SDL_OldTimerCallback callback);
 
 extern DECLSPEC int SDLCALL SDL_putenv(const char *variable);
 

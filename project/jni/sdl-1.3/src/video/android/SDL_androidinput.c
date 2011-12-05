@@ -1277,6 +1277,7 @@ static SDL_mutex * BufferedEventsMutex = NULL;
 #if SDL_VERSION_ATLEAST(1,3,0)
 
 #define SDL_SendKeyboardKey(state, keysym) SDL_SendKeyboardKey(state, (keysym)->sym)
+extern SDL_Window * ANDROID_CurrentWindow;
 
 #else
 
@@ -1308,13 +1309,13 @@ extern void SDL_ANDROID_PumpEvents()
 		switch( ev.type )
 		{
 			case SDL_MOUSEMOTION:
-				SDL_SendMouseMotion(NULL, 0, ev.motion.x, ev.motion.y);
+				SDL_SendMouseMotion(ANDROID_CurrentWindow, 0, ev.motion.x, ev.motion.y);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				if( ((oldMouseButtons & SDL_BUTTON(ev.button.button)) != 0) != ev.button.state )
 				{
 					oldMouseButtons = (oldMouseButtons & ~SDL_BUTTON(ev.button.button)) | (ev.button.state ? SDL_BUTTON(ev.button.button) : 0);
-					SDL_SendMouseButton( NULL, ev.button.state, ev.button.button );
+					SDL_SendMouseButton( ANDROID_CurrentWindow, ev.button.state, ev.button.button );
 				}
 				break;
 			case SDL_KEYDOWN:

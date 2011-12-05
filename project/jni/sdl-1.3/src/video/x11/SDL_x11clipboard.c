@@ -1,25 +1,26 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 #include "SDL_config.h"
+
+#if SDL_VIDEO_DRIVER_X11
 
 #include <limits.h> /* For INT_MAX */
 
@@ -38,15 +39,11 @@
 static Window
 GetWindow(_THIS)
 {
-    SDL_VideoDisplay *display;
     SDL_Window *window;
 
-    display = _this->displays;
-    if (display) {
-        window = display->windows;
-        if (window) {
-            return ((SDL_WindowData *) window->driverdata)->xwindow;
-        }
+    window = _this->windows;
+    if (window) {
+        return ((SDL_WindowData *) window->driverdata)->xwindow;
     }
     return None;
 }
@@ -132,25 +129,22 @@ X11_GetClipboardText(_THIS)
     if (!text) {
         text = SDL_strdup("");
     }
+    
     return text;
 }
 
 SDL_bool
 X11_HasClipboardText(_THIS)
 {
-    /* Not an easy way to tell with X11, as far as I know... */
-    char *text;
-    SDL_bool retval;
-
-    text = X11_GetClipboardText(_this);
-    if (*text) {
-        retval = SDL_TRUE;
-    } else {
-        retval = SDL_FALSE;
-    }
-    SDL_free(text);
-
-    return retval;
+    SDL_bool result = SDL_FALSE;
+    char *text = X11_GetClipboardText(_this);
+    if (text) {
+        result = (SDL_strlen(text)>0) ? SDL_TRUE : SDL_FALSE;
+        SDL_free(text);
+    }    
+    return result;
 }
+
+#endif /* SDL_VIDEO_DRIVER_X11 */
 
 /* vi: set ts=4 sw=4 expandtab: */
