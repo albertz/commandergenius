@@ -599,7 +599,7 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
     SDL_VideoViewport.w = width;
     SDL_VideoViewport.h = height;
 
-    SDL_VideoSurface = SDL_CreateRGBSurfaceFrom(NULL, 0, 0, 32, 0, 0, 0, 0, 0);
+    SDL_VideoSurface = SDL_CreateRGBSurfaceFrom(NULL, 0, 0, bpp, 0, 0, 0, 0, 0);
     SDL_VideoSurface->flags |= surface_flags;
     SDL_VideoSurface->flags |= SDL_DONTFREE;
     SDL_FreeFormat(SDL_VideoSurface->format);
@@ -610,7 +610,7 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
     SDL_VideoSurface->pitch = SDL_WindowSurface->pitch;
     SDL_VideoSurface->pixels = (void *)((Uint8 *)SDL_WindowSurface->pixels +
         SDL_VideoViewport.y * SDL_VideoSurface->pitch +
-        SDL_VideoViewport.x  * SDL_VideoSurface->format->BytesPerPixel);
+        SDL_VideoViewport.x * SDL_VideoSurface->format->BytesPerPixel);
     SDL_SetClipRect(SDL_VideoSurface, NULL);
 
     /* Create a shadow surface if necessary */
@@ -798,9 +798,6 @@ SDL_UpdateRects(SDL_Surface * screen, int numrects, SDL_Rect * rects)
             SDL_UpdateWindowSurfaceRects(SDL_VideoWindow, rects, numrects);
         }
     }
-#ifdef ANDROID
-    
-#endif
 }
 
 void

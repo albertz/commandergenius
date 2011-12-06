@@ -210,6 +210,8 @@ SDL_CreateWindowTexture(_THIS, SDL_Window * window, Uint32 * format, void ** pix
     SDL_RendererInfo info;
     Uint32 i;
 
+    __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_CreateWindowTexture %dx%d", window->w, window->h);
+
     data = SDL_GetWindowData(window, SDL_WINDOWTEXTUREDATA);
     if (!data) {
         SDL_Renderer *renderer = NULL;
@@ -290,6 +292,10 @@ SDL_CreateWindowTexture(_THIS, SDL_Window * window, Uint32 * format, void ** pix
     /* Create framebuffer data */
     data->bytes_per_pixel = SDL_BYTESPERPIXEL(*format);
     data->pitch = (((window->w * data->bytes_per_pixel) + 3) & ~3);
+#ifdef __ANDROID__
+    if( data->bytes_per_pixel == 2 ) /* Avoid extra memcpy() when calling SDL_UpdateTexture() */
+        data->pitch = window->w * data->bytes_per_pixel;
+#endif
     data->pixels = SDL_malloc(window->h * data->pitch);
     if (!data->pixels) {
         SDL_OutOfMemory();

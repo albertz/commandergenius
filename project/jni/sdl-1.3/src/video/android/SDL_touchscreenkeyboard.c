@@ -142,6 +142,8 @@ static inline void endDrawingTex()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, oldGlState.texFilter1);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, oldGlState.texFilter2);
 	*/
+	glDisable(GL_BLEND);
+	glDisable(GL_TEXTURE_2D);
 }
 
 static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, Uint8 r, Uint8 g, Uint8 b, Uint8 a)

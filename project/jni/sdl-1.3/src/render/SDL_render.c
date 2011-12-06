@@ -106,12 +106,12 @@ SDL_RendererEventWatch(void *userdata, SDL_Event *event)
                 int w, h;
                 SDL_Rect viewport;
 
-                __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_RendererEventWatch(): window %p", window);
                 SDL_GetWindowSize(window, &w, &h);
                 viewport.x = (w - renderer->viewport.w) / 2;
                 viewport.y = (h - renderer->viewport.h) / 2;
                 viewport.w = renderer->viewport.w;
                 viewport.h = renderer->viewport.h;
+                __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_RendererEventWatch(): window %p size %dx%d", window, w, h);
                 SDL_RenderSetViewport(renderer, &viewport);
             } else if (event->window.event == SDL_WINDOWEVENT_MINIMIZED) {
                 renderer->minimized = SDL_TRUE;
@@ -808,7 +808,6 @@ SDL_RenderSetViewport(SDL_Renderer * renderer, const SDL_Rect * rect)
     } else {
         renderer->viewport.x = 0;
         renderer->viewport.y = 0;
-        __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_RenderSetViewport(): window %p", renderer->window);
         if (renderer->window) {
             SDL_GetWindowSize(renderer->window,
                               &renderer->viewport.w, &renderer->viewport.h);

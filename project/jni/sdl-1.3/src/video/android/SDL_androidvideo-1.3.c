@@ -175,9 +175,9 @@ void ANDROID_GetDisplayModes(_THIS, SDL_VideoDisplay * display)
 	mode.format = SDL_ANDROID_BITSPERPIXEL == 16 ? SDL_PIXELFORMAT_RGB565 : SDL_ANDROID_BITSPERPIXEL == 32 ? SDL_PIXELFORMAT_ABGR8888 : SDL_PIXELFORMAT_RGB24;
 	mode.driverdata = NULL;
 	SDL_AddDisplayMode(display, &mode);
-	mode.w = 640;
-	mode.h = 480;
-	SDL_AddDisplayMode(display, &mode);
+	//mode.w = 640;
+	//mode.h = 480;
+	//SDL_AddDisplayMode(display, &mode);
 }
 
 int ANDROID_GetDisplayBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect)

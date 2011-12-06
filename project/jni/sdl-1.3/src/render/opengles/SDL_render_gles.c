@@ -705,7 +705,7 @@ static int
 GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
                 const SDL_Rect * srcrect, const SDL_Rect * dstrect)
 {
-
+    //__android_log_print(ANDROID_LOG_INFO, "SDL", "GLES_RenderCopy %dx%d+%d+%d -> %dx%d+%d+%d", srcrect->x, srcrect->y, srcrect->w, srcrect->h, dstrect->x, dstrect->y, dstrect->w, dstrect->h);
     GLES_RenderData *data = (GLES_RenderData *) renderer->driverdata;
     GLES_TextureData *texturedata = (GLES_TextureData *) texture->driverdata;
     int minx, miny, maxx, maxy;
