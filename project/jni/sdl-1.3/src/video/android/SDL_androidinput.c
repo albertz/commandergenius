@@ -1516,9 +1516,9 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key)
 #if SDL_VERSION_ATLEAST(1,3,0)
 #else
 	if ( SDL_TranslateUNICODE )
-		ev->key.keysym.unicode = key;
 #endif
-	
+		ev->key.keysym.unicode = key;
+
 	BufferedEventsEnd = nextEvent;
 	SDL_mutexV(BufferedEventsMutex);
 };
@@ -1601,12 +1601,6 @@ extern void SDL_ANDROID_MainThreadPushMultitouchMotion(int id, int x, int y, int
 #endif
 };
 
-#if SDL_VERSION_ATLEAST(1,3,0)
-extern void SDL_ANDROID_DeferredTextInput()
-{
-};
-#else
-
 enum { DEFERRED_TEXT_COUNT = 256 };
 static struct { int scancode; int unicode; int down; } deferredText[DEFERRED_TEXT_COUNT];
 static int deferredTextIdx1 = 0;
@@ -1620,7 +1614,11 @@ static SDL_keysym asciiToKeysym(int ascii, int unicode)
 	keysym.sym = ascii;
 	keysym.mod = KMOD_NONE;
 	keysym.unicode = 0;
+#if SDL_VERSION_ATLEAST(1,3,0)
+	keysym.sym = SDL_GetScancodeFromKey(ascii);
+#else
 	if ( SDL_TranslateUNICODE )
+#endif
 		keysym.unicode = unicode;
 	return keysym;
 }
@@ -1687,7 +1685,6 @@ void SDL_ANDROID_DeferredTextInput()
 	
 	SDL_mutexV(deferredTextMutex);
 };
-#endif
 
 extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 {
@@ -1705,7 +1702,7 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 	ev->type = SDL_TEXTINPUT;
 	UnicodeToUtf8(unicode, ev->text.text);
 
-#else
+#endif
 
 	if( !deferredTextMutex )
 		deferredTextMutex = SDL_CreateMutex();
@@ -1750,8 +1747,6 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 
 	SDL_mutexV(deferredTextMutex);
 
-#endif
-	
 	BufferedEventsEnd = nextEvent;
 	SDL_mutexV(BufferedEventsMutex);
 };

@@ -67,10 +67,6 @@ static void ANDROID_PumpEvents(_THIS);
 static int ANDROID_CreateWindow(_THIS, SDL_Window * window);
 static void ANDROID_DestroyWindow(_THIS, SDL_Window * window);
 
-static void ANDROID_StartTextInput(_THIS);
-static void ANDROID_StopTextInput(_THIS);
-static void ANDROID_SetTextInputRect(_THIS, SDL_Rect *rect);
-
 void * glLibraryHandle = NULL;
 void * gl2LibraryHandle = NULL;
 
@@ -123,10 +119,6 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->CreateWindow = ANDROID_CreateWindow;
 	device->DestroyWindow = ANDROID_DestroyWindow;
 	
-	device->StartTextInput = ANDROID_StartTextInput;
-	device->StopTextInput = ANDROID_StopTextInput;
-	device->SetTextInputRect = ANDROID_SetTextInputRect;
-
 	device->free = ANDROID_DeleteDevice;
 
 	glLibraryHandle = dlopen("libGLESv1_CM.so", RTLD_NOW | RTLD_GLOBAL);
@@ -257,17 +249,6 @@ int ANDROID_CreateWindow(_THIS, SDL_Window * window)
 void ANDROID_DestroyWindow(_THIS, SDL_Window * window)
 {
 	ANDROID_CurrentWindow = NULL;
-};
-
-static void ANDROID_StartTextInput(_THIS)
-{
-	SDL_ANDROID_ToggleScreenKeyboardTextInput(NULL);
-};
-static void ANDROID_StopTextInput(_THIS)
-{
-};
-static void ANDROID_SetTextInputRect(_THIS, SDL_Rect *rect)
-{
 };
 
 static void* ANDROID_GL_GetProcAddress(_THIS, const char *proc)
