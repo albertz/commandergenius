@@ -25,10 +25,10 @@ How to compile demo application
 ===============================
 
 Launch commands
-	android update project -p project -t android-12
 	rm project/jni/application/src
 	ln -s ballfield project/jni/application/src
-	ChangeAppSettings.sh -a
+	./ChangeAppSettings.sh -a
+	android update project -p project -t android-12
 Then edit file build.sh if needed to add NDK dir to your PATH, then launch it.
 It will compile a bunch of libs under project/libs/armeabi,
 create file project/bin/DemoActivity-debug.apk and install it on your device or emulator.
