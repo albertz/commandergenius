@@ -1292,6 +1292,11 @@ extern void SDL_ANDROID_PumpEvents()
 	SDL_Event ev;
 	SDL_ANDROID_processAndroidTrackballDampening();
 	SDL_ANDROID_processMoveMouseWithKeyboard();
+#if SDL_VERSION_ATLEAST(1,3,0)
+	SDL_Window * window = SDL_GetFocusWindow();
+	if( !window )
+		return;
+#endif
 
 	if( !BufferedEventsMutex )
 		BufferedEventsMutex = SDL_CreateMutex();
@@ -1332,10 +1337,10 @@ extern void SDL_ANDROID_PumpEvents()
 				break;
 #if SDL_VERSION_ATLEAST(1,3,0)
 			case SDL_FINGERMOTION:
-				SDL_SendTouchMotion(0, ev.tfinger.fingerId, 0, ev.tfinger.x, ev.tfinger.y, ev.tfinger.pressure);
+				SDL_SendTouchMotion(0, ev.tfinger.fingerId, 0, (float)ev.tfinger.x / (float)window->w, (float)ev.tfinger.y / (float)window->h, ev.tfinger.pressure);
 				break;
 			case SDL_FINGERDOWN:
-				SDL_SendFingerDown(0, ev.tfinger.fingerId, ev.tfinger.state ? 1 : 0, ev.tfinger.x, ev.tfinger.y, ev.tfinger.pressure);
+				SDL_SendFingerDown(0, ev.tfinger.fingerId, ev.tfinger.state ? 1 : 0, (float)ev.tfinger.x / (float)window->w, (float)ev.tfinger.y / (float)window->h, ev.tfinger.pressure);
 				break;
 			case SDL_TEXTINPUT:
 				SDL_SendKeyboardText(ev.text.text);

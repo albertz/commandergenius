@@ -210,8 +210,8 @@ void ANDROID_GL_SwapBuffers(_THIS, SDL_Window * window)
 	if( SDL_ANDROID_InsideVideoThread() )
 		SDL_ANDROID_CallJavaSwapBuffers();
 	// SDL: 1.3 does not clear framebuffer before drawing
-	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
+	//glClearColor(0, 0, 0, 1);
+	//glClear(GL_COLOR_BUFFER_BIT);
 };
 
 SDL_GLContext ANDROID_GL_CreateContext(_THIS, SDL_Window * window)

@@ -329,7 +329,7 @@ SDL_SendFingerDown(SDL_TouchID id, SDL_FingerID fingerid, SDL_bool down,
     //scale to Integer coordinates
     x = (Uint16)((xin+touch->x_min)*(touch->xres)/(touch->native_xres));
     y = (Uint16)((yin+touch->y_min)*(touch->yres)/(touch->native_yres));
-    pressure = (Uint16)((yin+touch->pressure_min)*(touch->pressureres)/(touch->native_pressureres));
+    pressure = (Uint16)((pressurein+touch->pressure_min)*(touch->pressureres)/(touch->native_pressureres));
     
     finger = SDL_GetFinger(touch,fingerid);
     if(down) {
@@ -412,7 +412,7 @@ SDL_SendTouchMotion(SDL_TouchID id, SDL_FingerID fingerid, int relative,
     //scale to Integer coordinates
     x = (Uint16)((xin+touch->x_min)*(touch->xres)/(touch->native_xres));
     y = (Uint16)((yin+touch->y_min)*(touch->yres)/(touch->native_yres));
-    pressure = (Uint16)((yin+touch->pressure_min)*(touch->pressureres)/(touch->native_pressureres));
+    pressure = (Uint16)((pressurein+touch->pressure_min)*(touch->pressureres)/(touch->native_pressureres));
     if(touch->flush_motion) {
         return 0;
     }
