@@ -106,6 +106,9 @@ $(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_P
 $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so): $(LOCAL_PATH)/src/libapplication.so OVERRIDE_CUSTOM_LIB
 	cp -f $< $@
 
+obj/local/armeabi/libapplication.so: $(LOCAL_PATH)/src/libapplication.so OVERRIDE_CUSTOM_LIB
+	cp -f $< $@
+
 .PHONY: OVERRIDE_CUSTOM_LIB
 
 OVERRIDE_CUSTOM_LIB:

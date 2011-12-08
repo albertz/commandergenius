@@ -262,24 +262,32 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 		System.out.println("libSDL: DemoRenderer.onSurfaceCreated(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
 		mGlSurfaceCreated = true;
+		mGl = gl;
 		if( ! mPaused && ! mFirstTimeStart )
 			nativeGlContextRecreated();
 		mFirstTimeStart = false;
 	}
 
 	public void onSurfaceChanged(GL10 gl, int w, int h) {
+		System.out.println("libSDL: DemoRenderer.onSurfaceChanged(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
 		mWidth = w;
 		mHeight = h;
+		mGl = gl;
 		nativeResize(w, h, Globals.KeepAspectRatio ? 1 : 0);
 	}
 	
 	public void onSurfaceDestroyed() {
+		System.out.println("libSDL: DemoRenderer.onSurfaceDestroyed(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
 		mGlSurfaceCreated = false;
 		mGlContextLost = true;
 		nativeGlContextLost();
 	};
 
 	public void onDrawFrame(GL10 gl) {
+
+		mGl = gl;
+		DrawLogo(mGl);
+		SwapBuffers();
 
 		nativeInitJavaCallbacks();
 		
@@ -339,6 +347,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		if(mGlContextLost) {
 			mGlContextLost = false;
 			Settings.SetupTouchscreenKeyboardGraphics(context); // Reload on-screen buttons graphics
+			DrawLogo(mGl);
+			super.SwapBuffers();
 		}
 		
 		return 1;
@@ -377,6 +387,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	}
 	public void DrawLogo(GL10 gl)
 	{
+		System.out.println("libSDL: DrawLogo");
 		BitmapDrawable bmp = null;
 		try
 		{
@@ -441,6 +452,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	private MainActivity context = null;
 	public AccelerometerReader accelerometer = null;
 	
+	private GL10 mGl = null;
 	private EGL10 mEgl = null;
 	private EGLDisplay mEglDisplay = null;
 	private EGLSurface mEglSurface = null;

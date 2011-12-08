@@ -580,6 +580,7 @@ int main(int argc, char* argv[])
 				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL resize event: %d x %d", evt.resize.w, evt.resize.h);
 			if(evt.type == SDL_ACTIVEEVENT)
 				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "======= SDL active event: gain %d state %d", evt.active.gain, evt.active.state);
+			/*
 			if( evt.type == SDL_ACTIVEEVENT && evt.active.gain == 0 && evt.active.state & SDL_APPACTIVE )
 			{
 				// We've lost GL context, we are not allowed to do any GFX output here, or app will crash!
@@ -600,6 +601,7 @@ int main(int argc, char* argv[])
 					__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Waiting");
 				}
 			}
+			*/
 			if( evt.type == SDL_JOYAXISMOTION )
 			{
 				if( evt.jaxis.which == 0 )

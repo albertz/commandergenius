@@ -596,8 +596,6 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             mSwapBuffersCallback = c;
         }
 
-        public abstract void DrawLogo(GL10 gl);
-        
         private SwapBuffersCallback mSwapBuffersCallback = null;
     }
 
@@ -992,8 +990,6 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 // mEglHelper.start();
                 mNeedStart = true;
                 mSizeChanged = true;
-                SwapBuffers();
-                mRenderer.DrawLogo(mGL);
                 SwapBuffers();
 
                 mRenderer.onDrawFrame(mGL);
