@@ -1,0 +1,34 @@
+diff -ru orig/KoboDeluxe-0.5.1/config.sub KoboDeluxe-0.5.1/config.sub
+--- orig/KoboDeluxe-0.5.1/config.sub	2003-05-20 21:42:02.000000000 -0400
++++ KoboDeluxe-0.5.1/config.sub	2011-11-26 13:20:37.000000000 -0500
+@@ -1122,7 +1122,7 @@
+ 	      | -hiux* | -386bsd* | -netbsd* | -openbsd* | -freebsd* | -riscix* \
+ 	      | -lynxos* | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
+ 	      | -ptx* | -coff* | -ecoff* | -winnt* | -domain* | -vsta* \
+-	      | -udi* | -eabi* | -lites* | -ieee* | -go32* | -aux* \
++	      | -udi* | -eabi* | -androideabi* | -lites* | -ieee* | -go32* | -aux* \
+ 	      | -chorusos* | -chorusrdb* \
+ 	      | -cygwin* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
+ 	      | -mingw32* | -linux-gnu* | -uxpv* | -beos* | -mpeix* | -udk* \
+
+diff -ru orig/KoboDeluxe-0.5.1/sound/a_midicon.c KoboDeluxe-0.5.1/sound/a_midicon.c
+--- orig/KoboDeluxe-0.5.1/sound/a_midicon.c	2003-06-08 14:30:58.000000000 -0400
++++ KoboDeluxe-0.5.1/sound/a_midicon.c	2011-11-27 07:10:17.000000000 -0500
+@@ -129,7 +129,7 @@
+  * Returns the new last key (-1 if none),
+  * or -2 if there's no change.
+  */
+-static inline int __release(unsigned ch, unsigned key)
++static inline int __release2(unsigned ch, unsigned key)
+ {
+ 	if(m[ch].prev[key] != -1)
+ 		m[ch].next[m[ch].prev[key]] = m[ch].next[key];
+@@ -157,7 +157,7 @@
+ 	
+ static void midicon_note_off(unsigned ch, unsigned pitch, unsigned vel)
+ {
+-	__release(ch, pitch);
++	__release2(ch, pitch);
+ 	(void)ce_stop(channeltab + MIDI_MAP_CH(ch), 0,
+ 			(int)pitch, (int)explut[vel]);
+ }

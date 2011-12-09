@@ -321,6 +321,17 @@ that means you're allocating huge data buffer in heap (that may be C static or g
 run checkStaticDataSize.sh to see the size of all static symbols inside your application,
 heap memory limit on most phones is 24 Mb.
 
+If the error string is like this:
+
+I/dalvikvm(18105): Unable to dlopen(/data/data/net.olofson.kobodl/lib/libapplication.so): Cannot load library: link_image[1995]: failed to link libapplication.so
+
+that means your application contains undefined symbols, absent in the system libraries, 
+you may check for all missing symbols by running script checkMissing.sh .
+That typically happens because of linking to the dynamic libstdc++ which is not included into the .apk file -
+specify "-lgnustl_static" in the linker flags to fix that.
+
+
+
 License information
 ===================
 
