@@ -39,7 +39,7 @@ LOCAL_SHARED_LIBRARIES := sdl-$(SDL_VERSION) $(filter-out $(APP_AVAILABLE_STATIC
 
 LOCAL_STATIC_LIBRARIES := $(filter $(APP_AVAILABLE_STATIC_LIBS), $(COMPILED_LIBRARIES))
 
-LOCAL_STATIC_LIBRARIES += gnustl_static
+#LOCAL_STATIC_LIBRARIES += gnustl_static
 
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
 
@@ -47,13 +47,18 @@ LOCAL_LDFLAGS := -Lobj/local/armeabi
 
 LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
 
-ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
-LOCAL_C_INCLUDES += $(NDK_PATH)/sources/crystax/include
-LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/$(TARGET_ARCH_ABI) -lcrystax_static
-endif
+ifneq ($(NDK_R7_TOOLCHAIN)$(CRYSTAX_R7_TOOLCHAIN),) # NDK r7 broke it even more
+LOCAL_C_INCLUDES += $(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/include
+LOCAL_LDLIBS += -L$(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/libs/$(TARGET_ARCH_ABI) -lgnustl_static
+else
 ifneq ($(NDK_R6_TOOLCHAIN),) # NDK r6 broke it
 LOCAL_C_INCLUDES += $(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/include
 LOCAL_LDLIBS += -L$(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/libs/$(TARGET_ARCH_ABI) -lstdc++
+endif
+endif
+ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
+LOCAL_C_INCLUDES += $(NDK_PATH)/sources/crystax/include
+LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/$(TARGET_ARCH_ABI) -lcrystax_static
 endif
 
 LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
