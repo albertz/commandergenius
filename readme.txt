@@ -277,8 +277,13 @@ The debugging of multi-threaded apps is not supported with NDK r4 or r4b, you'll
 and Android 2.3 emulator or device.
 To debug your application go to "project" dir and launch command
 	ndk-gdb --verbose --start --force
-then if it fails enter command
-	target remote:5039
+then you can run usual GDB commands, like:
+	cont - continue execution.
+	info threads - list all threads, there will usually be like 11 of them with thread 10 being your main thread.
+	bt - list stack trace / call hierarchy
+	up / down - go up / down in the call hierarchy
+	print var - print the value of variable "var"
+
 You can also debug by adding extensive logs to your app:
 	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
 and then watching "adb logcat" output.
@@ -305,9 +310,9 @@ I/DEBUG   (   51):          #05  pc 0002d080  /data/data/de.schwardtnet.alienbla
 2. Go to project/bin/ndk/local/armeabi dir, find there the library mentioned in stacktrace
 (libsdl.so in our example), copy the address of the first line of stacktrace (0002ca00), and execute command
 
-<your NDK path>/build/prebuilt/linux-x86/arm-eabi-4.4.0/bin/arm-eabi-gdb libsdl.so -ex "list *0x0002ca00"
+<your NDK path>/build/prebuilt/linux-x86/arm-eabi-4.4.0/bin/arm-eabi-gdb libsdl.so -ex "list *0x0002ca00" -ex "list *0x00028b6e" -ex "list *0x0002d080"
 
-It will output the exact line in your source where the application crashed.
+It will output the exact line in your source where the application crashed, and some stack trace if available.
 
 If your application does not work for unknown reasons, there may be the case when it exports some symbol
 that clash with exports from system libraries - run checkExports.sh to check this.
@@ -329,7 +334,6 @@ that means your application contains undefined symbols, absent in the system lib
 you may check for all missing symbols by running script checkMissing.sh .
 That typically happens because of linking to the dynamic libstdc++ which is not included into the .apk file -
 specify "-lgnustl_static" in the linker flags to fix that.
-
 
 
 License information
