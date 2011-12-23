@@ -55,7 +55,9 @@ You may find quick Android game porting manual at http://anddev.at.ua/src/portin
 If you're porting existing app which uses SDL 1.2 please always use SW mode:
 neither SDL_SetVideoMode() call nor SDL_CreateRGBSurface() etc functions shall contain SDL_HWSURFACE flags.
 The BPP in SDL_SetVideoMode() shall be set to the same value you've specified in ChangeAppSettings.sh,
-and audio format - to AUDIO_S8 or AUDIO_S16.
+and audio format - to AUDIO_S8 or AUDIO_S16. Also bear in mind that 16-bit BPP is always faster than 24 or 32-bit,
+even on good devices, because most GFX chips on Android do not have separate RAM, and use system RAM instead,
+so with 16 bit color mode you'll get lesser memory copying operations.
 
 The native Android 16-bit pixel format is RGB_565, even for OpenGL, not BGR_565 as all other OpenGL implementations have.
 
@@ -99,13 +101,34 @@ SDL_ListModes()[0] will always return native screen resolution.
 Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
 texture on HTC G1, and other low-end devices. Software surfaces may be of any size of course.
 
-If you want HW acceleration - just use OpenGL, the HW acceleration by SDL has some limitations:
+If you want HW acceleration - just use OpenGL, that's the easiest and most cross-platform way,
+however if you'll use on-screen keyboard (even the text input button) the OpenGL state will get
+screwed after each frame - after each SDL_Flip() you'll need to call:
+
+glEnable(GL_TEXTURE_2D);
+glBindTexture(GL_TEXTURE_2D, your_texture_id);
+glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+glEnable(GL_BLEND);
+glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+Previously I've got the code to save/restore OpenGL state, but it doens't work on every device -
+you may wish to uncomment it inside file SDL_touchscreenkeyboard.c in functions beginDrawingTex() and endDrawingTex().
+
+If you don't use on-screen keyboard you don't need to reinit OpenGL state - set following in AndroidAppSettings.cfg:
+AppNeedsArrowKeys=n
+AppNeedsTextInput=n
+AppTouchscreenKeyboardKeysAmount=0
+
+SDL supports HW acceleration, however it has many limitations:
 You should use 16-bit color depth.
 You cannot blit SW surface to screen, it should be only HW surface.
 You can use colorkey, per-surface alpha and per-pixel alpha with HW surfaces.
-If you're using SDL 1.3 always use SDL_Texture, if you'll be using SDL_Surface with SDL 1.3 it will switch to SW mode.
+If you're using SDL 1.3 always use SDL_Texture, if you'll be using SDL_Surface or call SDL_SetVideoMode()
+with SDL 1.3 it will automatically switch to SW mode.
 Also the screen is always double-buffered, and after each SDL_Flip() there is garbage in pixel buffer,
 so forget about dirty rects and partial screen updates - you have to re-render whole picture each frame.
+Calling SDL_UpdateRects() just calls SDL_Flip() internally, updating the whole screen at once.
 Single-buffer rendering might be possible with techniques like glFramebufferTexture2D(),
 however it is not present on all devices, so I won't do that.
 Basically your code should be like this for SDL 1.2 (also set SwVideoMode=n in AndroidAppSetings.cfg):
@@ -310,7 +333,7 @@ I/DEBUG   (   51):          #05  pc 0002d080  /data/data/de.schwardtnet.alienbla
 2. Go to project/bin/ndk/local/armeabi dir, find there the library mentioned in stacktrace
 (libsdl.so in our example), copy the address of the first line of stacktrace (0002ca00), and execute command
 
-<your NDK path>/build/prebuilt/linux-x86/arm-eabi-4.4.0/bin/arm-eabi-gdb libsdl.so -ex "list *0x0002ca00" -ex "list *0x00028b6e" -ex "list *0x0002d080"
+<your NDK path>/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gdb libsdl.so -ex "list *0x0002ca00" -ex "list *0x00028b6e" -ex "list *0x0002d080"
 
 It will output the exact line in your source where the application crashed, and some stack trace if available.
 
