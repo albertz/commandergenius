@@ -10,3 +10,6 @@
 [submodule "project/jni/application/gemrb-sdl-1.3/gemrb"]
 	path = project/jni/application/gemrb-sdl-1.3/gemrb
 	url = git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb
+[submodule "project/jni/application/frogatto"]
+	path = project/jni/application/frogatto
+	url = https://github.com/frogatto/frogatto.git
