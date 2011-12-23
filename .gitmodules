@@ -13,3 +13,6 @@
 [submodule "project/jni/application/frogatto"]
 	path = project/jni/application/frogatto
 	url = https://github.com/frogatto/frogatto.git
+[submodule "project/jni/application/ufoai/ufoai"]
+	path = project/jni/application/ufoai/ufoai
+	url = git://ufoai.git.sourceforge.net/gitroot/ufoai/ufoai

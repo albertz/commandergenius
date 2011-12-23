@@ -18,27 +18,27 @@ NDK_VERSION := r5c
 endif
 
 ifneq ($(findstring r4-crystax,$(NDK_VERSION)),)
-$(info Building with CrystaX r4 toolchain - internal STLPort disabled)
+#$(info Building with CrystaX r4 toolchain - internal STLPort disabled)
 CRYSTAX_TOOLCHAIN := 1
 endif
 ifneq ($(findstring r7,$(NDK_VERSION))$(findstring r8,$(NDK_VERSION))$(findstring r9,$(NDK_VERSION)),)
-$(info Building with NDK r7 or newer)
+#$(info Building with NDK r7 or newer)
 NDK_R7_TOOLCHAIN := 1
 endif
 ifneq ($(findstring r6b,$(NDK_VERSION))$(findstring r6-crystax,$(NDK_VERSION))$(NDK_R7_TOOLCHAIN),)
-$(info Building with NDK r6b)
+#$(info Building with NDK r6b)
 NDK_R6_TOOLCHAIN := 1
 endif
 ifneq ($(findstring r5c,$(NDK_VERSION))$(findstring r5-crystax,$(NDK_VERSION))$(NDK_R6_TOOLCHAIN),)
-$(info Building with NDK r5c or newer - internal STLPort disabled)
+#$(info Building with NDK r5c or newer - internal STLPort disabled)
 NDK_R5_TOOLCHAIN := 1
 endif
 ifneq ($(findstring r7-crystax,$(NDK_VERSION)),)
-$(info Building with CrystaX r7 or newer toolchain)
+#$(info Building with CrystaX r7 or newer toolchain)
 CRYSTAX_R7_TOOLCHAIN := 1
 endif
 ifneq ($(findstring r5-crystax,$(NDK_VERSION))$(findstring r6-crystax,$(NDK_VERSION))$(CRYSTAX_R7_TOOLCHAIN),)
-$(info Building with CrystaX r5 or newer toolchain - wchar support enabled)
+#$(info Building with CrystaX r5 or newer toolchain - wchar support enabled)
 CRYSTAX_R5_TOOLCHAIN := 1
 endif
 
