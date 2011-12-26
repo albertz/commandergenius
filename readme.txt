@@ -193,7 +193,8 @@ int i = (int *) p; // We have garbage inside i now
 memcpy( &i, p, sizeof(int) ); // The correct way to dereference a non-aligned pointer
 
 This compiler flags will catch most obvious errors, you may add them to AppCflags var in settings:
--Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
+-Wstrict-aliasing -Wcast-align -Wpointer-arith -Waddress
+Also beware of the NDK - some system headers contain the code that triggers that warnings.
 
 The application will automatically get moved to SD-card on Android 2.2 or newer,
 (or you can install app2sd for older, but rooted phones),
