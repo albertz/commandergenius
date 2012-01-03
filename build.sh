@@ -24,6 +24,8 @@ if uname -s | grep -i "windows" > /dev/null ; then
 	MYARCH=windows-x86
 fi
 
+rm -f project/bin/*.apk project/bin/*.apk.d project/bin/*.ap_ project/bin/*.ap_.d # New Android SDK introduced some lame-ass optimizations to the build system which we should take care about
+
 cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build V=1 -j4 && \
  { grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
    [ -`which ndk-build | grep '/android-ndk-r[56789]'` != - ] && \

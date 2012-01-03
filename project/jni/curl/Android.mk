@@ -79,9 +79,5 @@ LOCAL_SHARED_LIBRARIES :=
 
 LOCAL_LDLIBS := -lz
 
-ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
-LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/armeabi -lcrystax_static
-endif
-
 include $(BUILD_SHARED_LIBRARY)
 

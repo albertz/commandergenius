@@ -20,8 +20,4 @@ LOCAL_STATIC_LIBRARIES :=
 
 LOCAL_LDLIBS := -llog
 
-ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
-LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/armeabi -lcrystax_static # I have no idea how could OpenAL link to C++ wide-char support lib
-endif
-
 include $(BUILD_SHARED_LIBRARY)

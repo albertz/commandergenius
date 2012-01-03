@@ -56,10 +56,6 @@ LOCAL_C_INCLUDES += $(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/include
 LOCAL_LDLIBS += -L$(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/libs/$(TARGET_ARCH_ABI) -lstdc++
 endif
 endif
-ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
-LOCAL_C_INCLUDES += $(NDK_PATH)/sources/crystax/include
-LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/$(TARGET_ARCH_ABI) -lcrystax_static
-endif
 
 LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
 	for f in $(LOCAL_PATH)/../../obj/local/armeabi/*.so ; do \

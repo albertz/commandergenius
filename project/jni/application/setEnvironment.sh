@@ -16,9 +16,9 @@ SCRIPT=setEnvironment-r4b.sh
 CRYSTAX_WCHAR=
 if [ -n "`echo $NDK | grep 'android-ndk-r[56789]'`" ]; then
 	SCRIPT=setEnvironment-r5b.sh
-	if [ -n "`echo $NDK | grep 'android-ndk-r[56789]-crystax'`" ]; then
-		CRYSTAX_WCHAR=1
-	fi
+#	if [ -n "`echo $NDK | grep 'android-ndk-r[56789]-crystax'`" ]; then
+#		CRYSTAX_WCHAR=1
+#	fi
 fi
 
 env CRYSTAX_WCHAR=$CRYSTAX_WCHAR $LOCAL_PATH/$SCRIPT "$@"

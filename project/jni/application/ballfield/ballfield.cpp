@@ -212,7 +212,27 @@ void print_num(SDL_Surface *dst, SDL_Surface *font, int x, int y, float value)
 	}
 }
 
+void print_num_hex(SDL_Surface *dst, SDL_Surface *font, int x, int y, unsigned val)
+{
+	char buf[8];
+	int pos, p = 0;
+	SDL_Rect from;
+	
+	//val = htonl(val); // Big-endian
 
+	/* Render! */
+	from.y = 0;
+	from.w = 7;
+	from.h = 10;
+	for(pos = 0; pos < 8; ++pos)
+	{
+		SDL_Rect to;
+		to.x = 8 * 7 - (x + pos * 7); // Little-endian number wrapped backwards
+		to.y = y;
+		from.x = ( ( val >> (pos * 4) ) & 0xf ) * 7;
+		SDL_BlitSurface(font, &from, dst, &to);
+	}
+}
 
 /*----------------------------------------------------------
 	ballfield_t functions
@@ -391,12 +411,18 @@ void tiled_back(SDL_Surface *back, SDL_Surface *screen, int xo, int yo)
 	main()
 ----------------------------------------------------------*/
 
+extern "C" void unaligned_test(unsigned * data, unsigned * target);
+extern "C" unsigned val0, val1, val2, val3, val4;
+
+unsigned char data[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+//unsigned val0 = 0x12345678, val1 = 0x23456789, val2 = 0x34567890, val3 = 0x45678901, val4 = 0x56789012;
+
 int main(int argc, char* argv[])
 {
 	ballfield_t	*balls;
 	SDL_Surface	*screen;
 	SDL_Surface	*temp_image;
-	SDL_Surface	*back, *logo, *font;
+	SDL_Surface	*back, *logo, *font, *font_hex;
 	SDL_Event	event;
 	int		bpp = 16,
 			flags = 0,
@@ -487,6 +513,17 @@ int main(int argc, char* argv[])
 	font = SDL_DisplayFormat(temp_image);
 	SDL_FreeSurface(temp_image);
 
+	temp_image = SDL_LoadBMP("font7x10-hex.bmp");
+	if(!temp_image)
+	{
+		fprintf(stderr, "Could not load hex font!\n");
+		exit(-1);
+	}
+	SDL_SetColorKey(temp_image, SDL_SRCCOLORKEY,
+			SDL_MapRGB(temp_image->format, 255, 0, 255));
+	font_hex = SDL_DisplayFormat(temp_image);
+	SDL_FreeSurface(temp_image);
+
 	last_avg_tick = last_tick = SDL_GetTicks();
 	
 	enum { MAX_POINTERS = 16, PTR_PRESSED = 4 };
@@ -496,7 +533,7 @@ int main(int argc, char* argv[])
 	SDL_Joystick * joysticks[MAX_POINTERS+1];
 	for(i=0; i<MAX_POINTERS; i++)
 		joysticks[i] = SDL_JoystickOpen(i);
-	
+
 	while(1)
 	{
 		SDL_Rect r;
@@ -526,8 +563,31 @@ int main(int argc, char* argv[])
 			fps = (float)fps_count * 1000.0 / (tick - fps_start);
 			fps_count = 0;
 			fps_start = tick;
+
+			// This wonderful unaligned memory access scenario still fails on my HTC Evo and ADP1 devices, and even on the Beagleboard.
+			// I mean - the test fails, unaligned access works
+
+			// UNALIGNED MEMORY ACCESS HERE! However all the devices that I have won't report it and won't send a signal or write to the /proc/kmsg,
+			// despite the /proc/cpu/alignment flag set.
+			unsigned * ptr = (unsigned *)(data);
+			unaligned_test(ptr, &val0);
+			* ((unsigned *)&ptr) += 1;
+			unaligned_test(ptr, &val1);
+			* ((unsigned *)&ptr) += 1;
+			unaligned_test(ptr, &val2);
+			* ((unsigned *)&ptr) += 1;
+			unaligned_test(ptr, &val3);
+			* ((unsigned *)&ptr) += 1;
+			unaligned_test(ptr, &val4);
 		}
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
+		print_num_hex(screen, font_hex, 0, 40, val0);
+		print_num_hex(screen, font_hex, 0, 60, val1);
+		print_num_hex(screen, font_hex, 0, 80, val2);
+		print_num_hex(screen, font_hex, 0, 100, val3);
+		print_num_hex(screen, font_hex, 0, 120, val4);
+		print_num_hex(screen, font_hex, 0, 180, 0x12345678);
+		
 		++fps_count;
 
 		for(i=0; i<MAX_POINTERS; i++)

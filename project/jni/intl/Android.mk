@@ -23,10 +23,6 @@ LOCAL_CFLAGS := -Os -DBUILDING_LIBINTL -DBUILDING_DLL \
 #   -DINSTALLDIR=\"/usr/local/lib\"
 
 LOCAL_SRC_FILES := $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wildcard $(LOCAL_PATH)/$(F)/*.c))))
-ifneq ($(CRYSTAX_R5_TOOLCHAIN),)
-LOCAL_C_INCLUDES += $(NDK_PATH)/sources/crystax/include
-LOCAL_LDLIBS += -L$(NDK_PATH)/sources/crystax/libs/armeabi -lcrystax_static
-endif
 
 LOCAL_SHARED_LIBRARIES :=
 
