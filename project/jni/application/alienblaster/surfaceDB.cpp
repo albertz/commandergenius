@@ -100,13 +100,18 @@ SDL_Surface *SurfaceDB::loadSurfaceInternal( string fn, bool alpha ) {
   SDL_SetColorKey( newSurface, SDL_SRCCOLORKEY, 
 		   SDL_MapRGB(newSurface->format, transR, transG, transB) );
 
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+  // Do not even think of calling SDL_DisplayFormat(), it will return NULL and crash your code! (and kill your cat also)
+#else
   SDL_Surface * hwSurface = SDL_DisplayFormat(newSurface);
 
   if( hwSurface ) {
     SDL_FreeSurface(newSurface);
     newSurface = hwSurface;
   }
-  
+#endif
+
   return newSurface;
 }
 
