@@ -70,6 +70,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		instance = this;
 		// fullscreen mode
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -697,5 +698,5 @@ public class MainActivity extends Activity {
 	private InputMethodManager _inputManager = null;
 
 	public LinkedList<Integer> textInput = new LinkedList<Integer> ();
-
+	public static MainActivity instance = null;
 }

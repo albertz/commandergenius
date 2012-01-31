@@ -471,7 +471,7 @@ class DataDownloader extends Thread
 				
 				try {
 					CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
-					while( check.read(buf, 0, buf.length) > 0 ) {};
+					while( check.read(buf, 0, buf.length) >= 0 ) {};
 					check.close();
 					if( check.getChecksum().getValue() != entry.getCrc() )
 					{
@@ -525,19 +525,26 @@ class DataDownloader extends Thread
 				}
 				
 				try {
+					long count = 0, ret = 0;
 					CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
-					while( check.read(buf, 0, buf.length) > 0 ) {};
+					while( ret >= 0 )
+					{
+						count += ret;
+						ret = check.read(buf, 0, buf.length);
+					}
 					check.close();
-					if( check.getChecksum().getValue() != entry.getCrc() )
+					if( check.getChecksum().getValue() != entry.getCrc() || count != entry.getSize() )
 					{
 						File ff = new File(path);
 						ff.delete();
+						System.out.println("Saving file '" + path + "' - CRC check failed, ZIP: " +
+											String.format("%x", entry.getCrc()) + " actual file: " + String.format("%x", check.getChecksum().getValue()) +
+											" file size in ZIP: " + entry.getSize() + " actual size " + count );
 						throw new Exception();
 					}
 				} catch( Exception e )
 				{
 					Status.setText( res.getString(R.string.error_write, path) );
-					System.out.println("Saving file '" + path + "' - CRC check failed");
 					return false;
 				}
 				System.out.println("Saving file '" + path + "' done");

@@ -45,6 +45,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.content.res.Resources;
 import android.content.res.AssetManager;
+import android.widget.Toast;
 
 import android.widget.TextView;
 import java.lang.Thread;
@@ -87,6 +88,8 @@ class Mouse
 
 abstract class DifferentTouchInput
 {
+	public static boolean ExternalMouseDetected = true;
+
 	public static DifferentTouchInput getInstance()
 	{
 		boolean multiTouchAvailable1 = false;
@@ -223,8 +226,8 @@ abstract class DifferentTouchInput
 						if( touchEvents[id].down )
 							action = Mouse.SDL_FINGER_MOVE;
 						else
-							action = Mouse.SDL_FINGER_DOWN;
-						touchEvents[id].down = true;
+							action = Mouse.SDL_FINGER_HOVER; //action = Mouse.SDL_FINGER_DOWN;
+						//touchEvents[id].down = true;
 						touchEvents[id].x = (int)event.getX(ii);
 						touchEvents[id].y = (int)event.getY(ii);
 						touchEvents[id].pressure = (int)(event.getPressure(ii) * 1000.0);
@@ -246,6 +249,12 @@ abstract class DifferentTouchInput
 				touchEvents[0].pressure = 0;
 				touchEvents[0].size = 0;
 				DemoGLSurfaceView.nativeMouse( touchEvents[0].x, touchEvents[0].y, action, 0, touchEvents[0].pressure, touchEvents[0].size );
+			}
+			if( action == Mouse.SDL_FINGER_HOVER && !ExternalMouseDetected )
+			{
+				ExternalMouseDetected = true;
+				Settings.nativeSetExternalMouseDetected();
+				Toast.makeText(MainActivity.instance, R.string.hardware_mouse_detected, Toast.LENGTH_SHORT).show();
 			}
 		}
 	}
@@ -325,6 +334,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		}
 
 		Settings.Apply(context);
+		DifferentTouchInput.ExternalMouseDetected = false;
 		accelerometer = new AccelerometerReader(context);
 		// Tweak video thread priority, if user selected big audio buffer
 		if(Globals.AudioBufferConfig >= 2)
@@ -400,7 +410,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		int width = bmp.getBitmap().getWidth();
 		int height = bmp.getBitmap().getHeight();
 		ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * width * height);
-		byteBuffer.order(ByteOrder.BIG_ENDIAN);
+		//byteBuffer.order(ByteOrder.BIG_ENDIAN);
 		bmp.getBitmap().copyPixelsToBuffer(byteBuffer);
 		byteBuffer.position(0);
 

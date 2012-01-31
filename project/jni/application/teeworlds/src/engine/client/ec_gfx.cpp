@@ -14,6 +14,7 @@
 	#include <OpenGL/glu.h>
 #else
 #ifdef ANDROID
+	#define GL_GLEXT_PROTOTYPES
 	#include <GLES/gl.h>
 	#include <GLES/glext.h>
 #else

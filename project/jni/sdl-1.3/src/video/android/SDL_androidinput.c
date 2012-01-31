@@ -844,7 +844,7 @@ static int getClickTimeout(int v)
 
 // Mwahaha overkill!
 JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz,
+JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 		jint RightClickMethod, jint ShowScreenUnderFinger, jint LeftClickMethod,
 		jint MoveMouseWithJoystick, jint ClickMouseWithDpad,
 		jint MaxForce, jint MaxRadius,
@@ -876,7 +876,20 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) ( JNIEnv*  env, jobject thiz,
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetJoystickUsed) ( JNIEnv*  env, jobject thiz)
+JAVA_EXPORT_NAME(Settings_nativeSetExternalMouseDetected) (JNIEnv* env, jobject thiz)
+{
+	if( !isMouseUsed )
+		return;
+
+	leftClickMethod = LEFT_CLICK_NORMAL;
+	SDL_ANDROID_ShowScreenUnderFinger = 0;
+	leftClickTimeout = 0;
+	relativeMovement = 0;
+	SDL_ANDROID_ShowMouseCursor = 0;
+}
+
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(Settings_nativeSetJoystickUsed) (JNIEnv* env, jobject thiz)
 {
 	SDL_ANDROID_isJoystickUsed = 1;
 }

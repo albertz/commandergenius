@@ -2553,6 +2553,7 @@ class Settings
 													int leftClickTimeout, int rightClickTimeout,
 													int relativeMovement, int relativeMovementSpeed,
 													int relativeMovementAccel, int showMouseCursor);
+	public static native void nativeSetExternalMouseDetected();
 	private static native void nativeSetJoystickUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();

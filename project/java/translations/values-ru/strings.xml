@@ -131,4 +131,6 @@
 <string name="controls_screenkb_drawsize">Размер изображения кнопок</string>
 <string name="display_size_small_touchpad">Маленький, режим тачпада</string>
 <string name="display_size_tiny_touchpad">Крохотный, режим тачпада</string>
+<string name="hardware_mouse_detected">Обнаружена внешняя мышь, эмуляция мыши выключена</string>
+
 </resources>
