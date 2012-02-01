@@ -16,3 +16,6 @@
 [submodule "project/jni/application/ufoai/ufoai"]
 	path = project/jni/application/ufoai/ufoai
 	url = git://ufoai.git.sourceforge.net/gitroot/ufoai/ufoai
+[submodule "project/jni/application/gemrb/gemrb"]
+	path = project/jni/application/gemrb/gemrb
+	url = git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb
