@@ -569,6 +569,7 @@ int main(int argc, char* argv[])
 
 			// UNALIGNED MEMORY ACCESS HERE! However all the devices that I have won't report it and won't send a signal or write to the /proc/kmsg,
 			// despite the /proc/cpu/alignment flag set.
+/*
 			unsigned * ptr = (unsigned *)(data);
 			unaligned_test(ptr, &val0);
 			* ((unsigned *)&ptr) += 1;
@@ -579,7 +580,9 @@ int main(int argc, char* argv[])
 			unaligned_test(ptr, &val3);
 			* ((unsigned *)&ptr) += 1;
 			unaligned_test(ptr, &val4);
+*/
 		}
+/*
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
 		print_num_hex(screen, font_hex, 0, 40, val0);
 		print_num_hex(screen, font_hex, 0, 60, val1);
@@ -587,7 +590,7 @@ int main(int argc, char* argv[])
 		print_num_hex(screen, font_hex, 0, 100, val3);
 		print_num_hex(screen, font_hex, 0, 120, val4);
 		print_num_hex(screen, font_hex, 0, 180, 0x12345678);
-		
+*/
 		++fps_count;
 
 		for(i=0; i<MAX_POINTERS; i++)
@@ -596,15 +599,11 @@ int main(int argc, char* argv[])
 				continue;
 			r.x = touchPointers[i][0];
 			r.y = touchPointers[i][1];
-			r.w = 50 + touchPointers[i][3] / 10;
-			r.h = 50 + touchPointers[i][3] / 10;
+			r.w = 80 + touchPointers[i][2] / 10; // Pressure
+			r.h = 80 + touchPointers[i][3] / 10; // Touch point size
 			r.x -= r.w/2;
 			r.y -= r.h/2;
-			Uint32 color = touchPointers[i][3] / 5 + 0x7f;
-			if( color > 0xff )
-				color = 0xff;
-			color = color + color * 0x100 + color * 0x10000;
-			SDL_FillRect(screen, &r, color);
+			SDL_FillRect(screen, &r, 0xaaaaaa);
 			print_num(screen, font, r.x, r.y, i+1);
 		}
 		int mx, my;
@@ -664,14 +663,14 @@ int main(int argc, char* argv[])
 			*/
 			if( evt.type == SDL_JOYAXISMOTION )
 			{
-				if( evt.jaxis.which == 0 )
+				if( evt.jaxis.which == 0 ) // 0 = The accelerometer
 					continue;
 				int joyid = evt.jaxis.which - 1;
-				touchPointers[joyid][evt.jaxis.axis] = evt.jaxis.value;
+				touchPointers[joyid][evt.jaxis.axis] = evt.jaxis.value; // Axis 0 and 1 are coordinates, 2 and 3 are pressure and touch point radius
 			}
 			if( evt.type == SDL_JOYBUTTONDOWN || evt.type == SDL_JOYBUTTONUP )
 			{
-				if( evt.jbutton.which == 0 )
+				if( evt.jbutton.which == 0 ) // 0 = The accelerometer
 					continue;
 				int joyid = evt.jbutton.which - 1;
 				touchPointers[joyid][PTR_PRESSED] = (evt.jbutton.state == SDL_PRESSED);

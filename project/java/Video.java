@@ -226,8 +226,27 @@ abstract class DifferentTouchInput
 						if( touchEvents[id].down )
 							action = Mouse.SDL_FINGER_MOVE;
 						else
-							action = Mouse.SDL_FINGER_HOVER; //action = Mouse.SDL_FINGER_DOWN;
-						//touchEvents[id].down = true;
+							action = Mouse.SDL_FINGER_HOVER;
+						if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB_MR1 )
+						{
+							// Noneycomb has no excuse for sending such hackish mouse events, it has a dedicated ACTION_HOVER_MOVE event
+							action = Mouse.SDL_FINGER_DOWN;
+							touchEvents[id].down = true;
+						}
+						else
+						{
+							// Beagleboard with Android 2.3.3 sends ACTION_MOVE for USB mouse movements, without sending ACTION_DOWN first
+							// So we're guessing if we have Android 2.X and USB mouse, if there are no other fingers touching the screen
+							for( int iii = 0; iii < touchEventMax; iii++ )
+							{
+								if( touchEvents[iii].down )
+								{
+									action = Mouse.SDL_FINGER_DOWN;
+									touchEvents[id].down = true;
+									break;
+								}
+							}
+						}
 						touchEvents[id].x = (int)event.getX(ii);
 						touchEvents[id].y = (int)event.getY(ii);
 						touchEvents[id].pressure = (int)(event.getPressure(ii) * 1000.0);
