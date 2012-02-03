@@ -833,11 +833,11 @@ static int getClickTimeout(int v)
 {
 	switch(v)
 	{
-		case 0: return 300;
-		case 1: return 500;
-		case 2: return 700;
-		case 3: return 1000;
-		case 4: return 1500;
+		case 0: return 200;
+		case 1: return 300;
+		case 2: return 400;
+		case 3: return 700;
+		case 4: return 1000;
 	}
 	return 1000;
 }
