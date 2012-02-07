@@ -89,6 +89,8 @@ class Mouse
 abstract class DifferentTouchInput
 {
 	public static boolean ExternalMouseDetected = true;
+	public static boolean ExternalMouseDetectionDisabled = false;
+	public static long ExternalMouseDetectionDisabledTimer = 0;
 
 	public static DifferentTouchInput getInstance()
 	{
@@ -226,7 +228,7 @@ abstract class DifferentTouchInput
 						if( touchEvents[id].down )
 							action = Mouse.SDL_FINGER_MOVE;
 						else
-						if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB_MR1 )
+						if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB_MR1 || ExternalMouseDetectionDisabled )
 						{
 							// Noneycomb has no excuse for sending such hackish mouse events, it has a dedicated ACTION_HOVER_MOVE event
 							action = Mouse.SDL_FINGER_DOWN;
@@ -274,6 +276,16 @@ abstract class DifferentTouchInput
 				ExternalMouseDetected = true;
 				Settings.nativeSetExternalMouseDetected();
 				Toast.makeText(MainActivity.instance, R.string.hardware_mouse_detected, Toast.LENGTH_SHORT).show();
+			}
+			if( !ExternalMouseDetected && !ExternalMouseDetectionDisabled )
+			{
+				if( ExternalMouseDetectionDisabledTimer == 0 )
+					ExternalMouseDetectionDisabledTimer = System.currentTimeMillis();
+				if( ExternalMouseDetectionDisabledTimer + 10000 < System.currentTimeMillis() )
+				{
+					ExternalMouseDetectionDisabled = true;
+					System.out.println("libSDL: ExternalMouseDetectionDisabled " + ExternalMouseDetectionDisabled );
+				}
 			}
 		}
 	}
