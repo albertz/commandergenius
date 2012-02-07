@@ -232,12 +232,12 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	if( SDL_ANDROID_BITSPERPIXEL == 24 )
 		PixelFormatEnum = SDL_PIXELFORMAT_RGB24;
 	if( SDL_ANDROID_BITSPERPIXEL == 32 )
-		PixelFormatEnum = SDL_PIXELFORMAT_RGBA8888;
+		PixelFormatEnum = SDL_PIXELFORMAT_ABGR8888;
 
 	if( SDL_ANDROID_BITSPERPIXEL >= 24 )
 	{
-		PixelFormatEnumAlpha = SDL_PIXELFORMAT_RGBA8888;
-		PixelFormatEnumColorkey = SDL_PIXELFORMAT_RGBA8888;
+		PixelFormatEnumAlpha = SDL_PIXELFORMAT_ABGR8888;
+		PixelFormatEnumColorkey = SDL_PIXELFORMAT_ABGR8888;
 	}
 
 	SDL_memset(&alphaFormat, 0, sizeof(alphaFormat));
