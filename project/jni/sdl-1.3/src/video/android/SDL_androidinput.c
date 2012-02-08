@@ -432,9 +432,9 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 #if SDL_VERSION_ATLEAST(1,3,0)
 		// Use nifty SDL 1.3 multitouch API
 		if( action == MOUSE_MOVE )
-			SDL_ANDROID_MainThreadPushMultitouchMotion(pointerId, x, y, force*radius / 16);
+			SDL_ANDROID_MainThreadPushMultitouchMotion(pointerId, x, y, force + radius);
 		else
-			SDL_ANDROID_MainThreadPushMultitouchButton(pointerId, action == MOUSE_DOWN ? 1 : 0, x, y, force*radius / 16);
+			SDL_ANDROID_MainThreadPushMultitouchButton(pointerId, action == MOUSE_DOWN ? 1 : 0, x, y, force + radius);
 #endif
 
 		// The old, bad, deprecated, but still used multitouch API
