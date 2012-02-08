@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 
     memset(touchPointers, 0, sizeof(touchPointers));
     memset(accel, 0, sizeof(accel));
-    SDL_Joystick * joystick = SDL_JoystickOpen(i);
+    SDL_Joystick * joystick = SDL_JoystickOpen(0);
 
     while(1)
     {
