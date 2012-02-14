@@ -444,6 +444,16 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$DeleteFilesOnUpgrade" -o -z "$AUTO" ]; then
+echo
+echo -n "Delete application data files when upgrading (specify file/dir paths separated by spaces): ($DeleteFilesOnUpgrade): "
+read var
+if [ -n "$var" ] ; then
+	DeleteFilesOnUpgrade="$var"
+	CHANGED=1
+fi
+fi
+
 if [ -z "$CustomBuildScript" -o -z "$AUTO" ]; then
 echo
 echo -n "Application uses custom build script AndroidBuild.sh instead of Android.mk (y) or (n) ($CustomBuildScript): "
@@ -575,6 +585,7 @@ echo MultiABI=$MultiABI >> AndroidAppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AndroidAppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AndroidAppSettings.cfg
 echo ResetSdlConfigForThisVersion=$ResetSdlConfigForThisVersion >> AndroidAppSettings.cfg
+echo DeleteFilesOnUpgrade=\"$DeleteFilesOnUpgrade\" >> AndroidAppSettings.cfg
 echo CompiledLibraries=\"$CompiledLibraries\" >> AndroidAppSettings.cfg
 echo CustomBuildScript=$CustomBuildScript >> AndroidAppSettings.cfg
 echo AppCflags=\'$AppCflags\' >> AndroidAppSettings.cfg
@@ -808,6 +819,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" | \
 	sed "s/public static boolean NonBlockingSwapBuffers = .*;/public static boolean NonBlockingSwapBuffers = $NonBlockingSwapBuffers;/" | \
 	sed "s/public static boolean ResetSdlConfigForThisVersion = .*;/public static boolean ResetSdlConfigForThisVersion = $ResetSdlConfigForThisVersion;/" | \
+	sed "s|public static String DeleteFilesOnUpgrade = .*;|public static String DeleteFilesOnUpgrade = \"$DeleteFilesOnUpgrade\";|" | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" | \
 	sed "s/public static int StartupMenuButtonTimeout = .*;/public static int StartupMenuButtonTimeout = $StartupMenuButtonTimeout;/" | \

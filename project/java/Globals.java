@@ -53,6 +53,7 @@ class Globals {
 	public static boolean AppUsesMultitouch = false;
 	public static boolean NonBlockingSwapBuffers = false;
 	public static boolean ResetSdlConfigForThisVersion = false;
+	public static String DeleteFilesOnUpgrade = "";
 	public static int AppTouchscreenKeyboardKeysAmount = 4;
 	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 1;
 	public static int StartupMenuButtonTimeout = 3000;

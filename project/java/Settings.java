@@ -304,6 +304,7 @@ class Settings
 
 			System.out.println("libSDL: Settings.Load(): loaded settings successfully");
 			settingsFile.close();
+			DeleteFilesOnUpgrade();
 			return;
 			
 		} catch( FileNotFoundException e ) {
@@ -314,7 +315,7 @@ class Settings
 			Globals.DataDir = Globals.DownloadToSdcard ?
 								Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
 								p.getFilesDir().getAbsolutePath();
-		
+		DeleteFilesOnUpgrade();
 		// This code fails for both of my phones!
 		/*
 		Configuration c = new Configuration();
@@ -2415,6 +2416,29 @@ class Settings
 			AlertDialog alert = builder.create();
 			alert.setOwnerActivity(p);
 			alert.show();
+		}
+	}
+
+	public static boolean deleteRecursively(File dir)
+	{
+		if (dir.isDirectory()) {
+			String[] children = dir.list();
+			for (int i=0; i<children.length; i++) {
+				boolean success = deleteRecursively(new File(dir, children[i]));
+				if (!success)
+					return false;
+			}
+		}
+		return dir.delete();
+	}
+	public static void DeleteFilesOnUpgrade()
+	{
+		String [] files = Globals.DeleteFilesOnUpgrade.split(" ");
+		for(String path: files) {
+			File f = new File( Globals.DataDir + "/" + path );
+			if( !f.exists() )
+				continue;
+			deleteRecursively(f);
 		}
 	}
 
