@@ -285,26 +285,29 @@ class Settings
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			int cfgVersion = settingsFile.readInt();
 			System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion());
-			if( Globals.ResetSdlConfigForThisVersion && cfgVersion < p.getApplicationVersion() )
+			if( cfgVersion < p.getApplicationVersion() )
 			{
-				System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion() + " and we need to clean up config file");
-				// Delete settings file, and restart the application
-				settingsFile.close();
-				ObjectOutputStream out = new ObjectOutputStream(p.openFileOutput( SettingsFileName, p.MODE_WORLD_READABLE ));
-				out.writeInt(-1);
-				out.close();
-				new File( p.getFilesDir() + "/" + SettingsFileName ).delete();
-				PendingIntent intent = PendingIntent.getActivity(p, 0, new Intent(p.getIntent()), p.getIntent().getFlags());
-				AlarmManager mgr = (AlarmManager) p.getSystemService(Context.ALARM_SERVICE);
-				mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, intent);
-				System.exit(0);
+				DeleteFilesOnUpgrade();
+				if( Globals.ResetSdlConfigForThisVersion )
+				{
+					System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion() + " and we need to clean up config file");
+					// Delete settings file, and restart the application
+					settingsFile.close();
+					ObjectOutputStream out = new ObjectOutputStream(p.openFileOutput( SettingsFileName, p.MODE_WORLD_READABLE ));
+					out.writeInt(-1);
+					out.close();
+					new File( p.getFilesDir() + "/" + SettingsFileName ).delete();
+					PendingIntent intent = PendingIntent.getActivity(p, 0, new Intent(p.getIntent()), p.getIntent().getFlags());
+					AlarmManager mgr = (AlarmManager) p.getSystemService(Context.ALARM_SERVICE);
+					mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, intent);
+					System.exit(0);
+				}
 			}
 			
 			settingsLoaded = true;
 
 			System.out.println("libSDL: Settings.Load(): loaded settings successfully");
 			settingsFile.close();
-			DeleteFilesOnUpgrade();
 			return;
 			
 		} catch( FileNotFoundException e ) {
@@ -315,7 +318,7 @@ class Settings
 			Globals.DataDir = Globals.DownloadToSdcard ?
 								Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
 								p.getFilesDir().getAbsolutePath();
-		DeleteFilesOnUpgrade();
+
 		// This code fails for both of my phones!
 		/*
 		Configuration c = new Configuration();
