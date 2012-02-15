@@ -716,6 +716,42 @@ void ProcessDeferredMouseTap()
 	}
 }
 
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeTouchpad) ( JNIEnv*  env, jobject thiz, jint x, jint y, jint down, jint multitouch)
+{
+	if( !isMouseUsed )
+		return;
+	if( ! down )
+	{
+		SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_RIGHT );
+		SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
+		moveMouseWithKbX = -1;
+		moveMouseWithKbY = -1;
+		moveMouseWithKbAccelUpdateNeeded = 0;
+	}
+	else
+	{
+		// x and y from 0 to 65535
+		if( moveMouseWithKbX < 0 )
+		{
+			moveMouseWithKbX = oldMouseX;
+			moveMouseWithKbY = oldMouseY;
+		}
+		moveMouseWithKbSpeedX = (x - 32767) / 8192;
+		moveMouseWithKbSpeedY = (y - 32767) / 8192;
+		//moveMouseWithKbX += moveMouseWithKbSpeedX;
+		//moveMouseWithKbY += moveMouseWithKbSpeedY;
+		SDL_ANDROID_MainThreadPushMouseMotion(moveMouseWithKbX, moveMouseWithKbY);
+		moveMouseWithKbAccelUpdateNeeded = 1;
+
+		if( multitouch )
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_RIGHT );
+		else
+		if( abs(x - 32767) < 8192 && abs(y - 32767) < 8192 )
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
+	}
+}
+
 void SDL_ANDROID_WarpMouse(int x, int y)
 {
 	if(!relativeMovement)

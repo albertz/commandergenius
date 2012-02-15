@@ -2438,6 +2438,8 @@ class Settings
 	{
 		String [] files = Globals.DeleteFilesOnUpgrade.split(" ");
 		for(String path: files) {
+			if( path.equals("") )
+				continue;
 			File f = new File( Globals.DataDir + "/" + path );
 			if( !f.exists() )
 				continue;

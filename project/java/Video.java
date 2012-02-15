@@ -37,6 +37,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.KeyEvent;
+import android.view.InputDevice;
 import android.view.Window;
 import android.view.WindowManager;
 import android.os.Environment;
@@ -106,17 +107,24 @@ abstract class DifferentTouchInput
 				multiTouchAvailable2 = true;
 		}
 
+		if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
+			return XperiaMiniTouchpadTouchInput.Holder.sInstance;
 		if (multiTouchAvailable1 && multiTouchAvailable2)
 			return MultiTouchInput.Holder.sInstance;
 		else
 			return SingleTouchInput.Holder.sInstance;
 	}
 	public abstract void process(final MotionEvent event);
+	public abstract void processGenericEvent(final MotionEvent event);
 	private static class SingleTouchInput extends DifferentTouchInput
 	{
 		private static class Holder
 		{
 			private static final SingleTouchInput sInstance = new SingleTouchInput();
+		}
+		public void processGenericEvent(final MotionEvent event)
+		{
+			process(event);
 		}
 		public void process(final MotionEvent event)
 		{
@@ -135,8 +143,8 @@ abstract class DifferentTouchInput
 	}
 	private static class MultiTouchInput extends DifferentTouchInput
 	{
-		
-		private static final int touchEventMax = 16; // Max multitouch pointers
+
+		public static final int TOUCH_EVENTS_MAX = 16; // Max multitouch pointers
 
 		private class touchEvent
 		{
@@ -151,8 +159,8 @@ abstract class DifferentTouchInput
 		
 		MultiTouchInput()
 		{
-			touchEvents = new touchEvent[touchEventMax];
-			for( int i = 0; i < touchEventMax; i++ )
+			touchEvents = new touchEvent[TOUCH_EVENTS_MAX];
+			for( int i = 0; i < TOUCH_EVENTS_MAX; i++ )
 				touchEvents[i] = new touchEvent();
 		}
 		
@@ -161,15 +169,20 @@ abstract class DifferentTouchInput
 			private static final MultiTouchInput sInstance = new MultiTouchInput();
 		}
 
+		public void processGenericEvent(final MotionEvent event)
+		{
+			process(event);
+		}
 		public void process(final MotionEvent event)
 		{
 			int action = -1;
 
 			//System.out.println("Got motion event, type " + (int)(event.getAction()) + " X " + (int)event.getX() + " Y " + (int)event.getY());
-			if( event.getAction() == MotionEvent.ACTION_UP )
+			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP ||
+				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_CANCEL )
 			{
 				action = Mouse.SDL_FINGER_UP;
-				for( int i = 0; i < touchEventMax; i++ )
+				for( int i = 0; i < TOUCH_EVENTS_MAX; i++ )
 				{
 					if( touchEvents[i].down )
 					{
@@ -178,14 +191,14 @@ abstract class DifferentTouchInput
 					}
 				}
 			}
-			if( event.getAction() == MotionEvent.ACTION_DOWN )
+			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN )
 			{
 				action = Mouse.SDL_FINGER_DOWN;
 				for( int i = 0; i < event.getPointerCount(); i++ )
 				{
 					int id = event.getPointerId(i);
-					if( id >= touchEventMax )
-						id = touchEventMax-1;
+					if( id >= TOUCH_EVENTS_MAX )
+						id = TOUCH_EVENTS_MAX - 1;
 					touchEvents[id].down = true;
 					touchEvents[id].x = (int)event.getX(i);
 					touchEvents[id].y = (int)event.getY(i);
@@ -194,7 +207,9 @@ abstract class DifferentTouchInput
 					DemoGLSurfaceView.nativeMouse( touchEvents[id].x, touchEvents[id].y, action, id, touchEvents[id].pressure, touchEvents[id].size );
 				}
 			}
-			if( event.getAction() == MotionEvent.ACTION_MOVE )
+			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_MOVE ||
+				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_DOWN ||
+				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_UP )
 			{
 				/*
 				String s = "MOVE: ptrs " + event.getPointerCount();
@@ -205,7 +220,7 @@ abstract class DifferentTouchInput
 				System.out.println(s);
 				*/
 
-				for( int id = 0; id < touchEventMax; id++ )
+				for( int id = 0; id < TOUCH_EVENTS_MAX; id++ )
 				{
 					int ii;
 					for( ii = 0; ii < event.getPointerCount(); ii++ )
@@ -239,7 +254,7 @@ abstract class DifferentTouchInput
 							// Beagleboard with Android 2.3.3 sends ACTION_MOVE for USB mouse movements, without sending ACTION_DOWN first
 							// So we're guessing if we have Android 2.X and USB mouse, if there are no other fingers touching the screen
 							action = Mouse.SDL_FINGER_HOVER;
-							for( int iii = 0; iii < touchEventMax; iii++ )
+							for( int iii = 0; iii < TOUCH_EVENTS_MAX; iii++ )
 							{
 								if( touchEvents[iii].down )
 								{
@@ -257,7 +272,7 @@ abstract class DifferentTouchInput
 					}
 				}
 			}
-			if( event.getAction() == MotionEvent.ACTION_HOVER_MOVE ) // Support bluetooth/USB mouse - available since Android 3.1
+			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_MOVE ) // Support bluetooth/USB mouse - available since Android 3.1
 			{
 				// TODO: it is possible that multiple pointers return that event, but we're handling only pointer #0
 				if( touchEvents[0].down )
@@ -287,6 +302,66 @@ abstract class DifferentTouchInput
 					System.out.println("libSDL: ExternalMouseDetectionDisabled " + ExternalMouseDetectionDisabled );
 				}
 			}
+		}
+	}
+	private static class XperiaMiniTouchpadTouchInput extends MultiTouchInput
+	{
+		private static class Holder
+		{
+			private static final XperiaMiniTouchpadTouchInput sInstance = new XperiaMiniTouchpadTouchInput();
+		}
+
+		float xmin = 0.0f;
+		float xmax = 1.0f;
+		float ymin = 0.0f;
+		float ymax = 1.0f;
+
+		XperiaMiniTouchpadTouchInput()
+		{
+			super();
+			int[] devIds = InputDevice.getDeviceIds();
+			for( int id : devIds )
+			{
+				InputDevice device = InputDevice.getDevice(id);
+				if( device == null )
+					continue;
+				System.out.println("libSDL: input device ID " + id + " type " + device.getSources()  + " name " + device.getName() );
+				if( (device.getSources() & InputDevice.SOURCE_TOUCHPAD) != InputDevice.SOURCE_TOUCHPAD )
+					continue;
+				System.out.println("libSDL: input device ID " + id + " type " + device.getSources()  + " name " + device.getName() + " is a touchpad" );
+				InputDevice.MotionRange range = device.getMotionRange(MotionEvent.AXIS_X, InputDevice.SOURCE_TOUCHPAD);
+				if(range != null)
+				{
+					xmin = range.getMin();
+					xmax = range.getMax() - range.getMin();
+					System.out.println("libSDL: touch pad X range " + xmin + ":" + xmax );
+				}
+				range = device.getMotionRange(MotionEvent.AXIS_Y, InputDevice.SOURCE_TOUCHPAD);
+				if(range != null)
+				{
+					ymin = range.getMin();
+					ymax = range.getMax() - range.getMin();
+					System.out.println("libSDL: touch pad Y range " + ymin + ":" + ymax );
+				}
+			}
+		}
+		public void processGenericEvent(final MotionEvent event)
+		{
+			if( event.getSource() != InputDevice.SOURCE_TOUCHPAD )
+			{
+				process(event);
+				return;
+			}
+			int x = (int)((event.getX() - xmin) / xmax * 65535.0f);
+			int y = (int)((event.getY() - ymin) / ymax * 65535.0f);
+			int down = 1;
+			int multitouch = event.getPointerCount() - 1;
+			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP ||
+				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_CANCEL )
+				down = 0;
+			// TODO: we're processing only oen touch pointer, touchpad will most probably support multitouch
+			System.out.println("libSDL: touch pad event: " + x + ":" + y + " action " + event.getAction() + " down " + down + " multitouch " + multitouch );
+			DemoGLSurfaceView.nativeTouchpad( x, y, down, multitouch );
 		}
 	}
 }
@@ -590,6 +665,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	public static native void nativeMouse( int x, int y, int action, int pointerId, int pressure, int radius );
 	public static native int nativeKey( int keyCode, int down );
+	public static native void nativeTouchpad( int x, int y, int down, int multitouch );
 	public static native void initJavaCallbacks();
 
 }
