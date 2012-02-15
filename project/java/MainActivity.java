@@ -44,6 +44,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.view.View.OnKeyListener;
+import android.view.MenuItem;
 import android.text.method.TextKeyListener;
 import java.util.LinkedList;
 import java.io.SequenceInputStream;
@@ -370,7 +371,23 @@ public class MainActivity extends Activity {
 		}
 		return true;
 	}
-	
+
+	// Action bar support for Android 3.X, there are reports that on-screen overlay buttons do not send button events on Galaxy Nexus S, however in emulator everything works.
+	/*
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		System.out.println("libSDL: onOptionsItemSelected: ID " + item.getItemId());
+		switch (item.getItemId())
+		{
+			case android.R.id.home:
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+	*/
+
 	@Override
 	public boolean dispatchTouchEvent(final MotionEvent ev)
 	{
