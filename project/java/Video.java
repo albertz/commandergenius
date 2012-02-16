@@ -90,8 +90,6 @@ class Mouse
 abstract class DifferentTouchInput
 {
 	public static boolean ExternalMouseDetected = true;
-	public static boolean ExternalMouseDetectionDisabled = false;
-	public static long ExternalMouseDetectionDisabledTimer = 0;
 
 	public static DifferentTouchInput getInstance()
 	{
@@ -122,6 +120,7 @@ abstract class DifferentTouchInput
 		{
 			private static final SingleTouchInput sInstance = new SingleTouchInput();
 		}
+		@Override
 		public void processGenericEvent(final MotionEvent event)
 		{
 			process(event);
@@ -155,7 +154,7 @@ abstract class DifferentTouchInput
 			public int size = 0;
 		}
 		
-		private touchEvent touchEvents[];
+		protected touchEvent touchEvents[];
 		
 		MultiTouchInput()
 		{
@@ -243,26 +242,9 @@ abstract class DifferentTouchInput
 						if( touchEvents[id].down )
 							action = Mouse.SDL_FINGER_MOVE;
 						else
-						if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB_MR1 || ExternalMouseDetectionDisabled )
 						{
-							// Noneycomb has no excuse for sending such hackish mouse events, it has a dedicated ACTION_HOVER_MOVE event
 							action = Mouse.SDL_FINGER_DOWN;
 							touchEvents[id].down = true;
-						}
-						else
-						{
-							// Beagleboard with Android 2.3.3 sends ACTION_MOVE for USB mouse movements, without sending ACTION_DOWN first
-							// So we're guessing if we have Android 2.X and USB mouse, if there are no other fingers touching the screen
-							action = Mouse.SDL_FINGER_HOVER;
-							for( int iii = 0; iii < TOUCH_EVENTS_MAX; iii++ )
-							{
-								if( touchEvents[iii].down )
-								{
-									action = Mouse.SDL_FINGER_DOWN;
-									touchEvents[id].down = true;
-									break;
-								}
-							}
 						}
 						touchEvents[id].x = (int)event.getX(ii);
 						touchEvents[id].y = (int)event.getY(ii);
@@ -274,6 +256,12 @@ abstract class DifferentTouchInput
 			}
 			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_MOVE ) // Support bluetooth/USB mouse - available since Android 3.1
 			{
+				if( !ExternalMouseDetected )
+				{
+					ExternalMouseDetected = true;
+					Settings.nativeSetExternalMouseDetected();
+					Toast.makeText(MainActivity.instance, R.string.hardware_mouse_detected, Toast.LENGTH_SHORT).show();
+				}
 				// TODO: it is possible that multiple pointers return that event, but we're handling only pointer #0
 				if( touchEvents[0].down )
 					action = Mouse.SDL_FINGER_UP;
@@ -285,22 +273,6 @@ abstract class DifferentTouchInput
 				touchEvents[0].pressure = 0;
 				touchEvents[0].size = 0;
 				DemoGLSurfaceView.nativeMouse( touchEvents[0].x, touchEvents[0].y, action, 0, touchEvents[0].pressure, touchEvents[0].size );
-			}
-			if( action == Mouse.SDL_FINGER_HOVER && !ExternalMouseDetected )
-			{
-				ExternalMouseDetected = true;
-				Settings.nativeSetExternalMouseDetected();
-				Toast.makeText(MainActivity.instance, R.string.hardware_mouse_detected, Toast.LENGTH_SHORT).show();
-			}
-			if( !ExternalMouseDetected && !ExternalMouseDetectionDisabled )
-			{
-				if( ExternalMouseDetectionDisabledTimer == 0 )
-					ExternalMouseDetectionDisabledTimer = System.currentTimeMillis();
-				if( ExternalMouseDetectionDisabledTimer + 10000 < System.currentTimeMillis() )
-				{
-					ExternalMouseDetectionDisabled = true;
-					System.out.println("libSDL: ExternalMouseDetectionDisabled " + ExternalMouseDetectionDisabled );
-				}
 			}
 		}
 	}
@@ -349,6 +321,12 @@ abstract class DifferentTouchInput
 		{
 			if( event.getSource() != InputDevice.SOURCE_TOUCHPAD )
 			{
+				if( !ExternalMouseDetected && event.getSource() == InputDevice.SOURCE_MOUSE )
+				{
+					ExternalMouseDetected = true;
+					Settings.nativeSetExternalMouseDetected();
+					Toast.makeText(MainActivity.instance, R.string.hardware_mouse_detected, Toast.LENGTH_SHORT).show();
+				}
 				process(event);
 				return;
 			}
@@ -595,9 +573,23 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public boolean onTouchEvent(final MotionEvent event) 
 	{
 		touchInput.process(event);
+		limitEventRate(event);
+		return true;
+	};
+
+	@Override
+	public boolean onGenericMotionEvent (final MotionEvent event)
+	{
+		touchInput.processGenericEvent(event);
+		limitEventRate(event);
+		return true;
+	}
+	
+	public void limitEventRate(final MotionEvent event)
+	{
 		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
 		// With Froyo the rate of touch events is limited, but they are arriving faster then we're redrawing anyway
-		if(( event.getAction() == MotionEvent.ACTION_MOVE ||
+		if((event.getAction() == MotionEvent.ACTION_MOVE ||
 			event.getAction() == MotionEvent.ACTION_HOVER_MOVE))
 		{
 			synchronized(mRenderer)
@@ -608,13 +600,6 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 				} catch (InterruptedException e) { }
 			}
 		}
-		return true;
-	};
-
-	@Override
-	public boolean onGenericMotionEvent (final MotionEvent ev)
-	{
-		return onTouchEvent(ev);
 	}
 
 	public void exitApp() {

@@ -373,20 +373,18 @@ public class MainActivity extends Activity {
 	}
 
 	// Action bar support for Android 3.X, there are reports that on-screen overlay buttons do not send button events on Galaxy Nexus S, however in emulator everything works.
-	/*
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		System.out.println("libSDL: onOptionsItemSelected: ID " + item.getItemId());
+		System.out.println("libSDL: onOptionsItemSelected: MenuItem ID " + item.getItemId() + " TODO: translate this ID into keypress event. It is reported that Samsung Droid X with ICS does NOT send a proper keyevent when you press Back on the action bar, it should send this event instead.");
 		switch (item.getItemId())
 		{
 			case android.R.id.home:
 			return true;
-		default:
+			default:
 			return super.onOptionsItemSelected(item);
 		}
 	}
-	*/
 
 	@Override
 	public boolean dispatchTouchEvent(final MotionEvent ev)
