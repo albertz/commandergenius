@@ -70,15 +70,15 @@ LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
 	done \
 ) )
 
-ifneq "$(LIBS_WITH_LONG_SYMBOLS)" ""
-$(foreach F, $(LIBS_WITH_LONG_SYMBOLS), \
-$(info Library $(F): abusing symbol names are: \
-$(shell nm -g $(LOCAL_PATH)/../../obj/local/armeabi/$(F) | cut -c 12- | egrep '.{128}' ) ) \
-$(info Library $(F) contains symbol names longer than 128 bytes, \
-YOUR CODE WILL DEADLOCK WITHOUT ANY WARNING when you'll access such function - \
-please make this library static to avoid problems. ) )
-$(error Detected libraries with too long symbol names. Remove all files under project/obj/local/armeabi, make these libs static, and recompile)
-endif
+#ifneq "$(LIBS_WITH_LONG_SYMBOLS)" ""
+#$(foreach F, $(LIBS_WITH_LONG_SYMBOLS), \
+#$(info Library $(F): abusing symbol names are: \
+#$(shell nm -g $(LOCAL_PATH)/../../obj/local/armeabi/$(F) | cut -c 12- | egrep '.{128}' ) ) \
+#$(info Library $(F) contains symbol names longer than 128 bytes, \
+#YOUR CODE WILL DEADLOCK WITHOUT ANY WARNING when you'll access such function - \
+#please make this library static to avoid problems. ) )
+#$(error Detected libraries with too long symbol names. Remove all files under project/obj/local/armeabi, make these libs static, and recompile)
+#endif
 
 APP_LIB_DEPENDS := $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).so)) 
 APP_LIB_DEPENDS += $(foreach LIB, $(LOCAL_STATIC_LIBRARIES), $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).a))

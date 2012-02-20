@@ -21,6 +21,10 @@ ln -sf libtremor.a $LOCAL_PATH/../../../obj/local/armeabi/libvorbisidec.a
 ln -sf libflac.a $LOCAL_PATH/../../../obj/local/armeabi/libFLAC.a
 
 if [ \! -f scummvm/config.mk ] ; then
-	../setEnvironment.sh sh -c "cd scummvm && env LIBS='-lflac -ltremor -logg -lmad -lz -lgcc -lfluidsynth -lstdc++' ./configure --host=androidsdl --enable-zlib --enable-tremor --enable-mad --enable-flac --enable-vkeybd --enable-verbose-build --disable-hq-scalers --disable-readline --disable-nasm --disable-mt32emu --datadir=. --with-fluidsynth-prefix=$LOCAL_PATH/../../fluidsynth"
+	../setEnvironment.sh sh -c "cd scummvm && env LIBS='-lflac -ltremor -logg -lmad -lz -lgcc -lfluidsynth -lgnustl_static' ./configure --host=androidsdl --enable-zlib --enable-tremor --enable-mad --enable-flac --enable-vkeybd --enable-verbose-build --disable-hq-scalers --disable-readline --disable-nasm --disable-mt32emu --disable-taskbar --datadir=. --with-fluidsynth-prefix=$LOCAL_PATH/../../fluidsynth"
 fi
-../setEnvironment.sh make -C scummvm -j2 && cp -f scummvm/scummvm libapplication.so
+rm -f scummvm/scummvm libapplication.so
+../setEnvironment.sh nice make -C scummvm -j4
+if [ -e scummvm/scummvm ]; then
+	cp -f scummvm/scummvm libapplication.so
+fi
