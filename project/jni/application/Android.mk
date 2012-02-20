@@ -57,19 +57,19 @@ LOCAL_LDLIBS += -L$(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/libs/$(TARGET_ARCH_A
 endif
 endif
 
-LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
-	for f in $(LOCAL_PATH)/../../obj/local/armeabi/*.so ; do \
-		if echo $$f | grep "libapplication[.]so" > /dev/null ; then \
-			continue ; \
-		fi ; \
-		if [ -e "$$f" ] ; then \
-			if nm -g $$f | cut -c 12- | egrep '.{128}' > /dev/null ; then \
-				echo $$f | grep -o 'lib[^/]*[.]so' ; \
-			fi ; \
-		fi ; \
-	done \
-) )
-
+#LIBS_WITH_LONG_SYMBOLS := $(strip $(shell \
+#	for f in $(LOCAL_PATH)/../../obj/local/armeabi/*.so ; do \
+#		if echo $$f | grep "libapplication[.]so" > /dev/null ; then \
+#			continue ; \
+#		fi ; \
+#		if [ -e "$$f" ] ; then \
+#			if nm -g $$f | cut -c 12- | egrep '.{128}' > /dev/null ; then \
+#				echo $$f | grep -o 'lib[^/]*[.]so' ; \
+#			fi ; \
+#		fi ; \
+#	done \
+#) )
+#
 #ifneq "$(LIBS_WITH_LONG_SYMBOLS)" ""
 #$(foreach F, $(LIBS_WITH_LONG_SYMBOLS), \
 #$(info Library $(F): abusing symbol names are: \
