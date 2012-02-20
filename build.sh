@@ -39,4 +39,4 @@ cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build V=1 -j4 && \
  test -z "$1" && cd bin && \
  adb install -r MainActivity-debug.apk | grep 'Failure' && \
  adb uninstall `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'` && adb install -r MainActivity-debug.apk && \
- adb shell am -n `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'`/.MainActivity
+ adb shell am start -n `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'`/.MainActivity
