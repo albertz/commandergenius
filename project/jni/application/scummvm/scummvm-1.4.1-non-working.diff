@@ -1,0 +1,124 @@
+Common subdirectories: scummvm-1.4.1-old/audio and scummvm-1.4.1/audio
+Common subdirectories: scummvm-1.4.1-old/backends and scummvm-1.4.1/backends
+Common subdirectories: scummvm-1.4.1-old/base and scummvm-1.4.1/base
+Common subdirectories: scummvm-1.4.1-old/common and scummvm-1.4.1/common
+Only in scummvm-1.4.1: config.h
+Only in scummvm-1.4.1: config.log
+Only in scummvm-1.4.1: config.mk
+diff -u scummvm-1.4.1-old/configure scummvm-1.4.1/configure
+--- scummvm-1.4.1-old/configure	2012-01-15 11:08:27.000000000 +0200
++++ scummvm-1.4.1/configure	2012-02-16 16:39:00.184084722 +0200
+@@ -718,7 +718,7 @@
+   -h, --help              display this help and exit
+   --backend=BACKEND       backend to build (android, bada, dc, dingux, ds, gp2x, gph,
+                           iphone, linuxmoto, maemo, n64, null, openpandora, ps2,
+-                          psp, samsungtv, sdl, webos, wii, wince) [sdl]
++                          psp, samsungtv, sdl, webos, wii, wince, androidsdl) [sdl]
+ 
+ Installation directories:
+   --prefix=PREFIX         install architecture-independent files in PREFIX
+@@ -745,6 +745,7 @@
+ Special configuration feature:
+   --host=HOST             cross-compile to target HOST (arm-linux, ...)
+                           special targets: android for Android
++                                           androidsdl for Android with SDL backend
+                                            bada for Samsung BADA
+                                            caanoo for Caanoo
+                                            dingux for Dingux
+@@ -1117,6 +1118,11 @@
+ 	_host_cpu=arm
+ 	_host_alias=arm-linux-androideabi
+ 	;;
++androidsdl)
++	_host_os=androidsdl
++	_host_cpu=arm
++	_host_alias=arm-linux-androideabi
++	;;
+ arm-riscos)
+ 	_host_os=riscos
+ 	_host_cpu=arm
+@@ -1445,9 +1451,9 @@
+ 
+ 	if test -n "$_host"; then
+ 		# In cross-compiling mode, we cannot run the result
+-		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO.o -c tmp_cxx_compiler.cpp" 2> /dev/null && cc_check_clean tmp_cxx_compiler.cpp
++		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO.o -c tmp_cxx_compiler.cpp" && cc_check_clean tmp_cxx_compiler.cpp
+ 	else
+-		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO$HOSTEXEEXT tmp_cxx_compiler.cpp" 2> /dev/null && eval "$TMPO$HOSTEXEEXT 2> /dev/null" && cc_check_clean tmp_cxx_compiler.cpp
++		eval "$1 $CXXFLAGS $LDFLAGS -o $TMPO$HOSTEXEEXT tmp_cxx_compiler.cpp" && eval "$TMPO$HOSTEXEEXT 2> /dev/null" && cc_check_clean tmp_cxx_compiler.cpp
+ 	fi
+ }
+ 
+@@ -1592,7 +1598,7 @@
+ 		case $_host_os in
+ 		# newlib-based system include files suppress non-C89 function
+ 		# declarations under __STRICT_ANSI__
+-		amigaos* | android | bada | dreamcast | ds | gamecube | mingw* | n64 | psp | ps2 | ps3 | wii | wince )
++		amigaos* | android | androidsdl | bada | dreamcast | ds | gamecube | mingw* | n64 | psp | ps2 | ps3 | wii | wince )
+ 			;;
+ 		*)
+ 			CXXFLAGS="$CXXFLAGS -ansi"
+@@ -1870,6 +1876,11 @@
+ 		LDFLAGS="$LDFLAGS -L${CYGWIN_USR_LOCAL}/lib"
+ 		CXXFLAGS="$CXXFLAGS -I${CYGWIN_USR_LOCAL}/include"
+ 		;;
++	androidsdl)
++		CXXFLAGS="$CXXFLAGS -Os"
++		_unix=yes
++		_seq_midi=no
++		;;
+ 	beos*)
+ 		DEFINES="$DEFINES -DSYSTEM_NOT_SUPPORTING_D_TYPE"
+ 		# Needs -lbind -lsocket for the timidity MIDI driver
+@@ -2118,6 +2129,12 @@
+ 			_mt32emu=no
+ 			_timidity=no
+ 			;;
++		androidsdl)
++			DEFINES="$DEFINES -DANDROID"
++			_unix=yes
++			_need_memalign=yes
++			_seq_midi=no
++			;;
+ 		arm-linux|arm*-linux-gnueabi|arm-*-linux)
+ 			;;
+ 		arm-riscos|linupy)
+@@ -2496,6 +2513,9 @@
+ 		CXXFLAGS="$CXXFLAGS -Wa,--noexecstack"
+ 		LDFLAGS="$LDFLAGS -Wl,-z,noexecstack"
+ 		;;
++	androidsdl)
++		DEFINES="$DEFINES -DREDUCE_MEMORY_USAGE"
++		;;
+   bada)
+ 		# dirent.h not available. NONSTANDARD_PORT==ensure portdefs.h is included
+ 		DEFINES="$DEFINES -DBADA -DDISABLE_STDIO_FILESTREAM -DNONSTANDARD_PORT"
+@@ -2667,7 +2687,7 @@
+ # Enable 16bit support only for backends which support it
+ #
+ case $_backend in
+-	android | bada | dingux | dreamcast | gph | maemo | openpandora | psp | samsungtv | sdl | webos | wii)
++	android | androidsdl | bada | dingux | dreamcast | gph | maemo | openpandora | psp | samsungtv | sdl | webos | wii)
+ 		if test "$_16bit" = auto ; then
+ 			_16bit=yes
+ 		else
+@@ -2713,7 +2733,7 @@
+ 	amigaos* | cygwin* | dreamcast | ds | gamecube | mingw* | n64 | ps2 | ps3 | psp | wii | wince)
+ 		_posix=no
+ 		;;
+-	android | beos* | bsd* | darwin* | freebsd* | gph-linux | haiku* | hpux* | iphone | irix* | linux* | maemo | mint* | netbsd* | openbsd* | solaris* | sunos* | uclinux* | webos)
++	android | androidsdl | beos* | bsd* | darwin* | freebsd* | gph-linux | haiku* | hpux* | iphone | irix* | linux* | maemo | mint* | netbsd* | openbsd* | solaris* | sunos* | uclinux* | webos)
+ 		_posix=yes
+ 		;;
+ 	os2-emx*)
+Common subdirectories: scummvm-1.4.1-old/devtools and scummvm-1.4.1/devtools
+Common subdirectories: scummvm-1.4.1-old/dists and scummvm-1.4.1/dists
+Common subdirectories: scummvm-1.4.1-old/doc and scummvm-1.4.1/doc
+Common subdirectories: scummvm-1.4.1-old/engines and scummvm-1.4.1/engines
+Common subdirectories: scummvm-1.4.1-old/graphics and scummvm-1.4.1/graphics
+Common subdirectories: scummvm-1.4.1-old/gui and scummvm-1.4.1/gui
+Common subdirectories: scummvm-1.4.1-old/icons and scummvm-1.4.1/icons
+Common subdirectories: scummvm-1.4.1-old/po and scummvm-1.4.1/po
+Only in scummvm-1.4.1: scummvm
+Common subdirectories: scummvm-1.4.1-old/test and scummvm-1.4.1/test
+Common subdirectories: scummvm-1.4.1-old/video and scummvm-1.4.1/video
