@@ -135,6 +135,8 @@ public class MainActivity extends Activity {
 			mAudioThread = new AudioThread(this);
 			System.out.println("libSDL: Loading settings");
 			Settings.Load(this);
+			if(!Globals.CompatibilityHacksStaticInit)
+				LoadApplicationLibrary(this);
 		}
 
 		if( !Settings.settingsChanged )
@@ -224,6 +226,7 @@ public class MainActivity extends Activity {
 		mGLView.setFocusable(true);
 		mGLView.requestFocus();
 		DimSystemStatusBar.get().dim(_videoLayout);
+		DimSystemStatusBar.get().dim(mGLView);
 	}
 
 	@Override
@@ -682,6 +685,37 @@ public class MainActivity extends Activity {
 		// ----- VCMI hack -----
 
 	};
+
+	public static void LoadApplicationLibrary(final Context context)
+	{
+		String libs[] = { "application", "sdl_main" };
+		try
+		{
+			for(String l : libs)
+			{
+				System.loadLibrary(l);
+			}
+		}
+		catch ( UnsatisfiedLinkError e )
+		{
+			System.out.println("libSDL: error loading lib: " + e.toString());
+			try
+			{
+				for(String l : libs)
+				{
+					String libname = System.mapLibraryName(l);
+					File libpath = new File(context.getCacheDir(), libname);
+					System.out.println("libSDL: loading lib " + libpath.getPath());
+					System.load(libpath.getPath());
+					libpath.delete();
+				}
+			}
+			catch ( UnsatisfiedLinkError ee )
+			{
+				System.out.println("libSDL: error loading lib: " + ee.toString());
+			}
+		}
+	}
 
 	public int getApplicationVersion()
 	{

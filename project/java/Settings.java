@@ -2359,7 +2359,7 @@ class Settings
 				Globals.SmoothVideo
 			};
 
-			if(Globals.SwVideoMode && !Globals.CompatibilityHacks)
+			if(Globals.SwVideoMode && !Globals.CompatibilityHacksVideo)
 			{
 				CharSequence[] items2 = {
 					p.getResources().getString(R.string.pointandclick_keepaspectratio),
@@ -2454,7 +2454,7 @@ class Settings
 		nativeSetVideoDepth(Globals.VideoDepthBpp, Globals.NeedGles2 ? 1 : 0);
 		if(Globals.SmoothVideo)
 			nativeSetSmoothVideo();
-		if( Globals.CompatibilityHacks )
+		if( Globals.CompatibilityHacksVideo )
 		{
 			Globals.MultiThreadedVideo = true;
 			Globals.SwVideoMode = true;

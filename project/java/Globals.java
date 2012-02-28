@@ -37,7 +37,8 @@ class Globals {
 	public static boolean NeedDepthBuffer = false;
 	public static boolean NeedStencilBuffer = false;
 	public static boolean NeedGles2 = false;
-	public static boolean CompatibilityHacks = false;
+	public static boolean CompatibilityHacksVideo = false;
+	public static boolean CompatibilityHacksStaticInit = false;
 	public static boolean HorizontalOrientation = true;
 	public static boolean InhibitSuspend = false;
 	public static String ReadmeText = "^You may press \"Home\" now - the data will be downloaded in background".replace("^","\n");

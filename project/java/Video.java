@@ -389,33 +389,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		
 		mGlContextLost = false;
 
-		String libs[] = { "application", "sdl_main" };
-		try
-		{
-			for(String l : libs)
-			{
-				System.loadLibrary(l);
-			}
-		}
-		catch ( UnsatisfiedLinkError e )
-		{
-			System.out.println("libSDL: error loading lib: " + e.toString());
-			try
-			{
-				for(String l : libs)
-				{
-					String libname = System.mapLibraryName(l);
-					File libpath = new File(context.getCacheDir(), libname);
-					System.out.println("libSDL: loading lib " + libpath.getPath());
-					System.load(libpath.getPath());
-					libpath.delete();
-				}
-			}
-			catch ( UnsatisfiedLinkError ee )
-			{
-				System.out.println("libSDL: error loading lib: " + ee.toString());
-			}
-		}
+		if(Globals.CompatibilityHacksStaticInit)
+			MainActivity.LoadApplicationLibrary(context);
 
 		Settings.Apply(context);
 		DifferentTouchInput.ExternalMouseDetected = false;
@@ -426,7 +401,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		 // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
 		nativeInit( Globals.DataDir,
 					Globals.CommandLine,
-					( (Globals.SwVideoMode && Globals.MultiThreadedVideo) || Globals.CompatibilityHacks ) ? 1 : 0 );
+					( (Globals.SwVideoMode && Globals.MultiThreadedVideo) || Globals.CompatibilityHacksVideo ) ? 1 : 0 );
 		System.exit(0); // The main() returns here - I don't bother with deinit stuff, just terminate process
 	}
 

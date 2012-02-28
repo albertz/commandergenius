@@ -124,6 +124,16 @@ else
 	SwVideoMode=n
 fi
 
+if [ -z "$CompatibilityHacksStaticInit" -o -z "$AUTO" ]; then
+echo
+echo -n "Application initializes SDL audio/video inside static constructors (which is bad, you won't be able to run ndk-gdb) (y)/(n) ($CompatibilityHacksStaticInit): "
+read var
+if [ -n "$var" ] ; then
+	CompatibilityHacksStaticInit="$var"
+	CHANGED=1
+fi
+fi
+
 if [ -z "$VideoDepthBpp" -o -z "$AUTO" ]; then
 echo
 echo "Video color depth - 16 BPP is the fastest and supported for all modes, 24 bpp is supported only for"
@@ -564,6 +574,7 @@ echo SwVideoMode=$SwVideoMode >> AndroidAppSettings.cfg
 echo SdlVideoResize=$SdlVideoResize >> AndroidAppSettings.cfg
 echo SdlVideoResizeKeepAspect=$SdlVideoResizeKeepAspect >> AndroidAppSettings.cfg
 echo CompatibilityHacks=$CompatibilityHacks >> AndroidAppSettings.cfg
+echo CompatibilityHacksStaticInit=$CompatibilityHacksStaticInit >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
 echo ShowMouseCursor=$ShowMouseCursor >> AndroidAppSettings.cfg
@@ -660,6 +671,12 @@ if [ "$CompatibilityHacks" = "y" ] ; then
 	CompatibilityHacks=true
 else
 	CompatibilityHacks=false
+fi
+
+if [ "$CompatibilityHacksStaticInit" = "y" ] ; then
+	CompatibilityHacksStaticInit=true
+else
+	CompatibilityHacksStaticInit=false
 fi
 
 if [ "$AppUsesMouse" = "y" ] ; then
@@ -805,7 +822,8 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" | \
 	sed "s/public static boolean NeedStencilBuffer = .*;/public static boolean NeedStencilBuffer = $NeedStencilBuffer;/" | \
 	sed "s/public static boolean NeedGles2 = .*;/public static boolean NeedGles2 = $NeedGles2;/" | \
-	sed "s/public static boolean CompatibilityHacks = .*;/public static boolean CompatibilityHacks = $CompatibilityHacks;/" | \
+	sed "s/public static boolean CompatibilityHacksVideo = .*;/public static boolean CompatibilityHacksVideo = $CompatibilityHacks;/" | \
+	sed "s/public static boolean CompatibilityHacksStaticInit = .*;/public static boolean CompatibilityHacksStaticInit = $CompatibilityHacksStaticInit;/" | \
 	sed "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" | \
 	sed "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" | \
 	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \
