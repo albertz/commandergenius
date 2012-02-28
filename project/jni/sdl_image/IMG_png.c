@@ -1,23 +1,22 @@
 /*
-    SDL_image:  An example image loading library for use with SDL
-    Copyright (C) 1997-2009 Sam Lantinga
+  SDL_image:  An example image loading library for use with SDL
+  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 #if !defined(__APPLE__) || defined(SDL_IMAGE_USE_COMMON_BACKEND)
@@ -454,9 +453,6 @@ SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src)
 	/* Allocate the SDL surface to hold the image */
 	Rmask = Gmask = Bmask = Amask = 0 ;
 	num_channels = lib.png_get_channels(png_ptr, info_ptr);
-	/* Some .png files are monochrome, with as much as 1 channel and 1 bit per pixel */
-	if( num_channels != 3 && num_channels != 4 )
-		num_channels = 3;
 	if ( color_type != PNG_COLOR_TYPE_PALETTE ) {
 		if ( SDL_BYTEORDER == SDL_LIL_ENDIAN ) {
 			Rmask = 0x000000FF;
@@ -471,7 +467,7 @@ SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src)
 			Amask = 0x000000FF >> s;
 		}
 	}
-	surface = SDL_AllocSurface(SDL_SWSURFACE, width, height,
+	surface = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height,
 			bit_depth*num_channels, Rmask,Gmask,Bmask,Amask);
 	if ( surface == NULL ) {
 		error = "Out of memory";
@@ -485,7 +481,7 @@ SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src)
 			                 (Uint8)transv->red,
 			                 (Uint8)transv->green,
 			                 (Uint8)transv->blue);
-	        SDL_SetColorKey(surface, SDL_SRCCOLORKEY, ckey);
+	        SDL_SetColorKey(surface, SDL_TRUE, ckey);
 	}
 
 	/* Create the array of pointers to image data */

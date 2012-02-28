@@ -1,99 +1,46 @@
+Index: src/engine/tools.cpp
+===================================================================
+--- src/engine/tools.cpp	(revision 2750)
++++ src/engine/tools.cpp	(working copy)
+@@ -761,7 +761,7 @@
+     if(stat(name.c_str(), &fs) || !S_ISREG(fs.st_mode))
+ 	return false;
+ 
+-    return writable ? 0 == access(name.c_str(), W_OK) : S_IRUSR & fs.st_mode;
++    return writable ? 0 == access(name.c_str(), W_OK) : true;
+ }
+ 
+ bool IsDirectory(const std::string & name, bool writable)
 Index: src/fheroes2/system/settings.h
 ===================================================================
---- src/fheroes2/system/settings.h	(revision 2699)
+--- src/fheroes2/system/settings.h	(revision 2750)
 +++ src/fheroes2/system/settings.h	(working copy)
-@@ -115,10 +115,13 @@
-  #undef DEBUG
-  #define DEBUG(x, y, z)
+@@ -117,9 +117,10 @@
  #elif defined(ANDROID)
-+// It won't work that way, preprocessor ignores namespaces
-+/*
  namespace std
  {
-  #define endl "\n"
+- #define endl "\n"
++ static const char * android_endl = "\n";
  }
-+*/
-  #define VERBOSE(x) { std::ostringstream osss; osss << x; __android_log_print(ANDROID_LOG_INFO, "FHeroes", "%s", osss.str().c_str()); }
+- #define VERBOSE(x) { std::ostringstream osss; osss << x; __android_log_print(ANDROID_LOG_INFO, "FHeroes", "%s", osss.str().c_str()); }
++ #define endl android_endl
++ #define VERBOSE(x) if(true) { std::ostringstream osss; osss << x; __android_log_print(ANDROID_LOG_INFO, "FHeroes", "%s", osss.str().c_str()); } else String::GetTime()
  #else
   #define VERBOSE(x) std::cout << x << std::endl
-Index: src/fheroes2/heroes/heroes.cpp
-===================================================================
---- src/fheroes2/heroes/heroes.cpp	(revision 2699)
-+++ src/fheroes2/heroes/heroes.cpp	(working copy)
-@@ -1612,30 +1612,30 @@
-     std::ostringstream os;
- 
-     os <<
--	"name            : " << name << std::endl <<
--	"race            : " << Race::String(race) << std::endl <<
--	"color           : " << Color::String(color) << std::endl <<
--	"experience      : " << experience << std::endl <<
--	"level           : " << static_cast<int>(GetLevel()) << std::endl <<
--	"magic point     : " << GetSpellPoints() << std::endl <<
--	"position x      : " << GetCenter().x << std::endl <<
--	"position y      : " << GetCenter().y << std::endl <<
--	"move point      : " << move_point << std::endl <<
--	"max magic point : " << GetMaxSpellPoints() << std::endl <<
--	"max move point  : " << GetMaxMovePoints() << std::endl <<
--	"direction       : " << Direction::String(direction) << std::endl <<
--	"index sprite    : " << static_cast<u16>(sprite_index) << std::endl <<
--	"in castle       : " << (inCastle() ? "true" : "false") << std::endl <<
--	"save object     : " << MP2::StringObject(world.GetTiles(GetIndex()).GetObject(false)) << std::endl <<
-+	"name            : " << name << "\n" <<
-+	"race            : " << Race::String(race) << "\n" <<
-+	"color           : " << Color::String(color) << "\n" <<
-+	"experience      : " << experience << "\n" <<
-+	"level           : " << static_cast<int>(GetLevel()) << "\n" <<
-+	"magic point     : " << GetSpellPoints() << "\n" <<
-+	"position x      : " << GetCenter().x << "\n" <<
-+	"position y      : " << GetCenter().y << "\n" <<
-+	"move point      : " << move_point << "\n" <<
-+	"max magic point : " << GetMaxSpellPoints() << "\n" <<
-+	"max move point  : " << GetMaxMovePoints() << "\n" <<
-+	"direction       : " << Direction::String(direction) << "\n" <<
-+	"index sprite    : " << static_cast<u16>(sprite_index) << "\n" <<
-+	"in castle       : " << (inCastle() ? "true" : "false") << "\n" <<
-+	"save object     : " << MP2::StringObject(world.GetTiles(GetIndex()).GetObject(false)) << "\n" <<
- 	"flags           : " << (Modes(SHIPMASTER) ? "SHIPMASTER," : "") <<
-                                          (Modes(SCOUTER) ? "SCOUTER," : "") <<
-                                          (Modes(HUNTER) ? "HUNTER," : "") <<
-                                          (Modes(PATROL) ? "PATROL," : "") <<
-                                          (Modes(AIWAITING) ? "WAITING," : "") <<
--                                         (Modes(STUPID) ? "STUPID," : "") << std::endl;
-+                                         (Modes(STUPID) ? "STUPID," : "") << "\n";
-     if(Modes(PATROL))
-     {
--	os << "patrol square   : " << static_cast<u16>(patrol_square) << std::endl;
-+	os << "patrol square   : " << static_cast<u16>(patrol_square) << "\n";
-     }
- 
-     if(! visit_object.empty())
-@@ -1644,16 +1644,16 @@
- 	for(std::list<IndexObject>::const_iterator
- 	    it = visit_object.begin(); it != visit_object.end(); ++it)
- 		os << MP2::StringObject((*it).second) << "(" << (*it).first << "), ";
--	os << std::endl;
-+	os << "\n";
-     }
- 
-     if(GetControl() & CONTROL_AI)
-     {
- 	os <<
--	    "skills          : " << secondary_skills.String() << std::endl <<
--	    "artifacts       : " << bag_artifacts.String() << std::endl <<
--	    "spell book      : " << (HaveSpellBook() ? spell_book.String() : "disabled") << std::endl <<
--	    "army dump       : " << army.String() << std::endl;
-+	    "skills          : " << secondary_skills.String() << "\n" <<
-+	    "artifacts       : " << bag_artifacts.String() << "\n" <<
-+	    "spell book      : " << (HaveSpellBook() ? spell_book.String() : "disabled") << "\n" <<
-+	    "army dump       : " << army.String() << "\n";
- 
- 	os << AI::HeroesString(*this);
-     }
+ #endif
 Index: src/fheroes2/network/server.cpp
 ===================================================================
---- src/fheroes2/network/server.cpp	(revision 2699)
+--- src/fheroes2/network/server.cpp	(revision 2750)
 +++ src/fheroes2/network/server.cpp	(working copy)
+@@ -876,7 +876,7 @@
+ 
+ int FH2Server::RunServerProcess(void*)
+ {
+-    const std::string command = Settings::GetProgramPath();
++    const std::string command = Settings::Get().GetProgramPath();
+     std::ostringstream os;
+     os << command << " -s" << ">" << GetDirname(command) << SEPARATOR << "fh2server.log";
+     return system(os.str().c_str());
 @@ -899,7 +899,7 @@
  
  	// clear background
@@ -105,7 +52,7 @@ Index: src/fheroes2/network/server.cpp
      }
 Index: src/fheroes2/network/localclient.cpp
 ===================================================================
---- src/fheroes2/network/localclient.cpp	(revision 2699)
+--- src/fheroes2/network/localclient.cpp	(revision 2750)
 +++ src/fheroes2/network/localclient.cpp	(working copy)
 @@ -490,7 +490,7 @@
  	    {
@@ -125,188 +72,3 @@ Index: src/fheroes2/network/localclient.cpp
      cursor.Show();
      display.Flip();
  
-Index: src/fheroes2/ai/simple/ai_heroes.cpp
-===================================================================
---- src/fheroes2/ai/simple/ai_heroes.cpp	(revision 2699)
-+++ src/fheroes2/ai/simple/ai_heroes.cpp	(working copy)
-@@ -1485,12 +1485,12 @@
-     AIHero & ai_hero = AIHeroes::Get(hero);
-     Queue & task = ai_hero.sheduled_visit;
- 
--    os << "ai primary target: " << ai_hero.primary_target << std::endl <<
-+    os << "ai primary target: " << ai_hero.primary_target << "\n" <<
-           "ai sheduled visit: ";
-     for(Queue::const_iterator
- 	it = task.begin(); it != task.end(); ++it)
- 	os << *it << "(" << MP2::StringObject(world.GetTiles(*it).GetObject()) << "), ";
--    os << std::endl;
-+    os << "\n";
- 
-     return os.str();
- }
-Index: src/fheroes2/battle2/battle_arena.cpp
-===================================================================
---- src/fheroes2/battle2/battle_arena.cpp	(revision 2699)
-+++ src/fheroes2/battle2/battle_arena.cpp	(working copy)
-@@ -1433,7 +1433,7 @@
- 	it = board.begin(); it != board.end(); ++it)
-     {
- 	const Battle2::Stats* b = GetTroopBoard((*it).index);
--	if(b) os << "\t" << b->String(true) << std::endl;
-+	if(b) os << "\t" << b->String(true) << "\n";
-     }
- 
-     return os.str();
-Index: src/fheroes2/maps/maps_tiles.cpp
-===================================================================
---- src/fheroes2/maps/maps_tiles.cpp	(revision 2699)
-+++ src/fheroes2/maps/maps_tiles.cpp	(working copy)
-@@ -65,13 +65,13 @@
- std::string Maps::TilesAddon::String(int level) const
- {
-     std::ostringstream os;
--    os << "----------------" << level << "--------" << std::endl <<
-+    os << "----------------" << level << "--------" << "\n" <<
- 	  "object          : " << "0x" << std::setw(2) << std::setfill('0') << static_cast<int>(object) <<
--				", (" << ICN::GetString(MP2::GetICNObject(object)) << ")" << std::endl <<
--	  "index           : " << static_cast<int>(index) << std::endl <<
--	  "uniq            : " << uniq << std::endl <<
--	  "level           : " << static_cast<int>(level) << std::endl <<
--	  "tmp             : " << static_cast<int>(tmp) << std::endl;
-+				", (" << ICN::GetString(MP2::GetICNObject(object)) << ")" << "\n" <<
-+	  "index           : " << static_cast<int>(index) << "\n" <<
-+	  "uniq            : " << uniq << "\n" <<
-+	  "level           : " << static_cast<int>(level) << "\n" <<
-+	  "tmp             : " << static_cast<int>(tmp) << "\n";
-     return os.str();
- }
- 
-@@ -1541,16 +1541,16 @@
-     std::ostringstream os;
- 
-     os <<
--	"----------------:--------" << std::endl <<
--	"maps index      : " << GetIndex() << std::endl <<
--	"tile index      : " << TileSpriteIndex() << std::endl <<
--	"ground          : " << Ground::String(GetGround()) << (isRoad() ? ", (road)" : "") << std::endl <<
--	"passable        : " << (tile_passable ? Direction::String(tile_passable) : "false") << std::endl <<
-+	"----------------:--------" << "\n" <<
-+	"maps index      : " << GetIndex() << "\n" <<
-+	"tile index      : " << TileSpriteIndex() << "\n" <<
-+	"ground          : " << Ground::String(GetGround()) << (isRoad() ? ", (road)" : "") << "\n" <<
-+	"passable        : " << (tile_passable ? Direction::String(tile_passable) : "false") << "\n" <<
- 	"mp2 object      : " << "0x" << std::setw(2) << std::setfill('0') << static_cast<int>(GetObject()) <<
--				    ", (" << MP2::StringObject(GetObject()) << ")" << std::endl <<
--	"quantity 1      : " << static_cast<int>(quantity1) << std::endl <<
--	"quantity 2      : " << static_cast<int>(quantity2) << std::endl <<
--	"quantity 3      : " << static_cast<int>(GetQuantity3()) << std::endl;
-+				    ", (" << MP2::StringObject(GetObject()) << ")" << "\n" <<
-+	"quantity 1      : " << static_cast<int>(quantity1) << "\n" <<
-+	"quantity 2      : " << static_cast<int>(quantity2) << "\n" <<
-+	"quantity 3      : " << static_cast<int>(GetQuantity3()) << "\n";
- 
-     for(Addons::const_iterator
- 	it = addons_level1.begin(); it != addons_level1.end(); ++it)
-@@ -1561,7 +1561,7 @@
- 	os << (*it).String(2);
- 
-     os <<
--	"----------------I--------" << std::endl;
-+	"----------------I--------" << "\n";
- 
-     // extra obj info
-     switch(GetObject())
-@@ -1587,7 +1587,7 @@
-         case MP2::OBJ_THATCHEDHUT:
- 	//
- 	case MP2::OBJ_MONSTER:
--	    os << "count           : " << MonsterCount() << std::endl;
-+	    os << "count           : " << MonsterCount() << "\n";
- 	    break;
- 
- 	case MP2::OBJ_HEROES:
-@@ -1614,7 +1614,7 @@
- 		for(MapsIndexes::const_iterator
- 		    it = v.begin(); it != v.end(); ++it)
- 		    os << *it << ", ";
--		os << std::endl;
-+		os << "\n";
- 	    }
- 	    break;
- 	}
-@@ -1625,16 +1625,16 @@
- 	const CapturedObject & co = world.GetCapturedObject(GetIndex());
- 
- 	os <<
--	"capture color   : " << Color::String(co.objcol.second) << std::endl;
-+	"capture color   : " << Color::String(co.objcol.second) << "\n";
- 	if(co.guardians.isValid())
- 	{
- 	    os <<
--	    "capture guard   : " << co.guardians.GetName() << std::endl <<
--	    "capture caunt   : " << co.guardians.GetCount() << std::endl;
-+	    "capture guard   : " << co.guardians.GetName() << "\n" <<
-+	    "capture caunt   : " << co.guardians.GetCount() << "\n";
- 	}
-     }
- 
--    os << "----------------:--------" << std::endl;
-+    os << "----------------:--------" << "\n";
-     return os.str();
- }
- 
-Index: src/fheroes2/game/game_io.cpp
-===================================================================
---- src/fheroes2/game/game_io.cpp	(revision 2699)
-+++ src/fheroes2/game/game_io.cpp	(working copy)
-@@ -703,8 +703,8 @@
-     if(format > CURRENT_FORMAT_VERSION || format < LAST_FORMAT_VERSION)
-     {
- 	std::ostringstream os;
--	os << "usupported save format: " << format << std::endl <<
--	    "game version: " << CURRENT_FORMAT_VERSION << std::endl <<
-+	os << "usupported save format: " << format << "\n" <<
-+	    "game version: " << CURRENT_FORMAT_VERSION << "\n" <<
- 	    "last version: " << LAST_FORMAT_VERSION;
- 	Dialog::Message("Error", os.str(), Font::BIG, Dialog::OK);
-     	return false;
-Index: src/fheroes2/castle/castle.cpp
-===================================================================
---- src/fheroes2/castle/castle.cpp	(revision 2699)
-+++ src/fheroes2/castle/castle.cpp	(working copy)
-@@ -1691,25 +1691,25 @@
-     const CastleHeroes heroes = GetHeroes();
-     const Heroes* hero = NULL;
- 
--    os << "name            : " << name << std::endl <<
--          "race            : " << Race::String(race) << std::endl <<
--          "color           : " << Color::String(color) << std::endl <<
--          "build           : " << "0x" << std::hex << building << std::dec << std::endl <<
--          "present boat    : " << (PresentBoat() ? "yes" : "no") << std::endl <<
--          "nearly sea      : " << (HaveNearlySea() ? "yes" : "no") << std::endl <<
--          "is castle       : " << (isCastle() ? "yes" : "no") << std::endl <<
--          "army            : " << army.String() << std::endl;
-+    os << "name            : " << name << "\n" <<
-+          "race            : " << Race::String(race) << "\n" <<
-+          "color           : " << Color::String(color) << "\n" <<
-+          "build           : " << "0x" << std::hex << building << std::dec << "\n" <<
-+          "present boat    : " << (PresentBoat() ? "yes" : "no") << "\n" <<
-+          "nearly sea      : " << (HaveNearlySea() ? "yes" : "no") << "\n" <<
-+          "is castle       : " << (isCastle() ? "yes" : "no") << "\n" <<
-+          "army            : " << army.String() << "\n";
-     
-     if(NULL != (hero = heroes.Guard()))
-     {
- 	os <<
--          "army guard      : " << hero->GetArmy().String() << std::endl;
-+          "army guard      : " << hero->GetArmy().String() << "\n";
-     }
- 
-     if(NULL != (hero = heroes.Guest()))
-     {
- 	os <<
--          "army guest      : " << hero->GetArmy().String() << std::endl;
-+          "army guest      : " << hero->GetArmy().String() << "\n";
-     }
- 
-     return os.str();

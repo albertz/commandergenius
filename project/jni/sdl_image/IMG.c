@@ -1,23 +1,22 @@
 /*
-    SDL_image:  An example image loading library for use with SDL
-    Copyright (C) 1997-2009 Sam Lantinga
+  SDL_image:  An example image loading library for use with SDL
+  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 /* A simple library to load images of various formats as SDL surfaces */
@@ -50,7 +49,8 @@ static struct {
 	{ "TIF", IMG_isTIF, IMG_LoadTIF_RW },
 	{ "XCF", IMG_isXCF, IMG_LoadXCF_RW },
 	{ "XPM", IMG_isXPM, IMG_LoadXPM_RW },
-	{ "XV",  IMG_isXV,  IMG_LoadXV_RW  }
+	{ "XV",  IMG_isXV,  IMG_LoadXV_RW  },
+	{ "WEBP", IMG_isWEBP, IMG_LoadWEBP_RW },
 };
 
 const SDL_version *IMG_Linked_Version(void)
@@ -66,6 +66,9 @@ extern int IMG_InitPNG();
 extern void IMG_QuitPNG();
 extern int IMG_InitTIF();
 extern void IMG_QuitTIF();
+
+extern int IMG_InitWEBP();
+extern void IMG_QuitWEBP();
 
 static int initialized = 0;
 
@@ -88,6 +91,11 @@ int IMG_Init(int flags)
 			result |= IMG_INIT_TIF;
 		}
 	}
+	if (flags & IMG_INIT_WEBP) {
+		if ((initialized & IMG_INIT_WEBP) || IMG_InitWEBP() == 0) {
+			result |= IMG_INIT_WEBP;
+		}
+	}
 	initialized |= result;
 
 	return (initialized);
@@ -103,6 +111,9 @@ void IMG_Quit()
 	}
 	if (initialized & IMG_INIT_TIF) {
 		IMG_QuitTIF();
+	}
+	if (initialized & IMG_INIT_WEBP) {
+		IMG_QuitWEBP();
 	}
 	initialized = 0;
 }
@@ -144,7 +155,7 @@ static int IMG_string_equals(const char *str1, const char *str2)
 }
 
 /* Load an image from an SDL datasource, optionally specifying the type */
-SDL_Surface *IMG_LoadTyped_RW(SDL_RWops *src, int freesrc, char *type)
+SDL_Surface *IMG_LoadTyped_RW(SDL_RWops *src, int freesrc, const char *type)
 {
 	int i;
 	SDL_Surface *image;
@@ -191,6 +202,41 @@ SDL_Surface *IMG_LoadTyped_RW(SDL_RWops *src, int freesrc, char *type)
 	IMG_SetError("Unsupported image format");
 	return NULL;
 }
+
+#if (SDL_VERSION_ATLEAST(1,3,0))
+SDL_Texture *IMG_LoadTexture(SDL_Renderer *renderer, const char *file)
+{
+    SDL_Texture *texture = NULL;
+    SDL_Surface *surface = IMG_Load(file);
+    if (surface) {
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+    }
+    return texture;
+}
+
+SDL_Texture *IMG_LoadTexture_RW(SDL_Renderer *renderer, SDL_RWops *src, int freesrc)
+{
+    SDL_Texture *texture = NULL;
+    SDL_Surface *surface = IMG_Load_RW(src, freesrc);
+    if (surface) {
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+    }
+    return texture;
+}
+
+SDL_Texture *IMG_LoadTextureTyped_RW(SDL_Renderer *renderer, SDL_RWops *src, int freesrc, const char *type)
+{
+    SDL_Texture *texture = NULL;
+    SDL_Surface *surface = IMG_LoadTyped_RW(src, freesrc, type);
+    if (surface) {
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+    }
+    return texture;
+}
+#endif
 
 /* Invert the alpha of a surface for use with OpenGL
    This function is a no-op and only kept for backwards compatibility.

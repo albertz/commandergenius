@@ -1,23 +1,22 @@
 /*
-    SDL_image:  An example image loading library for use with SDL
-    Copyright (C) 1997-2009 Sam Lantinga
+  SDL_image:  An example image loading library for use with SDL
+  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
 
 #if !defined(__APPLE__) || defined(SDL_IMAGE_USE_COMMON_BACKEND)
@@ -34,7 +33,7 @@
 
 #include <jpeglib.h>
 
-#if JPEG_LIB_VERSION >= 80
+#ifdef JPEG_TRUE  /* MinGW version of jpeg-8.x renamed TRUE to JPEG_TRUE etc. */
 	typedef JPEG_boolean boolean;
 	#define TRUE JPEG_TRUE
 	#define FALSE JPEG_FALSE
@@ -261,7 +260,7 @@ static void init_source (j_decompress_ptr cinfo)
 /*
  * Fill the input buffer --- called whenever buffer is emptied.
  */
-static int fill_input_buffer (j_decompress_ptr cinfo)
+static boolean fill_input_buffer (j_decompress_ptr cinfo)
 {
 	my_source_mgr * src = (my_source_mgr *) cinfo->src;
 	int nbytes;
@@ -417,7 +416,7 @@ SDL_Surface *IMG_LoadJPG_RW(SDL_RWops *src)
 		lib.jpeg_calc_output_dimensions(&cinfo);
 
 		/* Allocate an output surface to hold the image */
-		surface = SDL_AllocSurface(SDL_SWSURFACE,
+		surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
 		        cinfo.output_width, cinfo.output_height, 32,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 		                   0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
@@ -437,7 +436,7 @@ SDL_Surface *IMG_LoadJPG_RW(SDL_RWops *src)
 		lib.jpeg_calc_output_dimensions(&cinfo);
 
 		/* Allocate an output surface to hold the image */
-		surface = SDL_AllocSurface(SDL_SWSURFACE,
+		surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
 		        cinfo.output_width, cinfo.output_height, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 		                   0x0000FF, 0x00FF00, 0xFF0000,
