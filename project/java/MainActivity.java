@@ -65,6 +65,8 @@ import java.io.InputStreamReader;
 import android.view.inputmethod.InputMethodManager;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Handler;
+import android.os.Message;
 
 public class MainActivity extends Activity {
 	@Override
@@ -221,6 +223,7 @@ public class MainActivity extends Activity {
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
 		mGLView.requestFocus();
+		DimSystemStatusBar.get().dim(_videoLayout);
 	}
 
 	@Override
@@ -714,4 +717,75 @@ public class MainActivity extends Activity {
 
 	public LinkedList<Integer> textInput = new LinkedList<Integer> ();
 	public static MainActivity instance = null;
+}
+
+// *** HONEYCOMB / ICS FIX FOR FULLSCREEN MODE, by lmak ***
+abstract class DimSystemStatusBar
+{
+	public static DimSystemStatusBar get()
+	{
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB)
+			return DimSystemStatusBarHoneycomb.Holder.sInstance;
+		else
+			return DimSystemStatusBarDummy.Holder.sInstance;
+	}
+	public abstract void dim(final View view);
+
+	private static class DimSystemStatusBarHoneycomb extends DimSystemStatusBar
+	{
+		private static class Holder
+		{
+			private static final DimSystemStatusBarHoneycomb sInstance = new DimSystemStatusBarHoneycomb();
+		}
+	    public void dim(final View view)
+	    {
+	      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+	         System.out.println("Dimming system status bar for Honeycomb");
+	         setLowProfileMode(view);
+	         // This part of code generates lot of debug messages on emulator: "V/PhoneStatusBar(  133): setLightsOn(true)"
+	         /*
+	         view.setOnSystemUiVisibilityChangeListener(
+	               new View.OnSystemUiVisibilityChangeListener() {
+	                  public void onSystemUiVisibilityChange(int visibility) {
+	                        android.os.Handler handler = new Handler() {
+	                           @Override
+	                           public void handleMessage(Message msg) {
+	                              if(msg.what == 10) {
+	                                 setLowProfileMode(view);
+	                              }
+	                           }
+	                        };
+	                        Message msg = handler.obtainMessage(10);
+	                        handler.sendMessageDelayed(msg,1000);
+	                   }
+	               }
+	         );
+	         */
+	      }
+	   }
+	   // *** HONEYCOMB / ICS FIX FOR FULLSCREEN MODE ***
+	   private void setLowProfileMode(final View view)
+	   {
+	       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+	         int hiddenStatusCode = android.view.View.STATUS_BAR_HIDDEN;
+	         /*
+	         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+	            // ICS has the same constant redefined with a different name.
+	            hiddenStatusCode = android.view.View.SYSTEM_UI_FLAG_LOW_PROFILE;
+	         }
+	         */
+	         view.setSystemUiVisibility(hiddenStatusCode);
+	      }
+	   }
+	}
+	private static class DimSystemStatusBarDummy extends DimSystemStatusBar
+	{
+		private static class Holder
+		{
+			private static final DimSystemStatusBarDummy sInstance = new DimSystemStatusBarDummy();
+		}
+		public void dim(final View view)
+		{
+		}
+	}
 }
