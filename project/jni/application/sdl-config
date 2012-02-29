@@ -4,7 +4,7 @@ LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 prefix=$LOCAL_PATH/../sdl-1.2
-exec_prefix=$LOCAL_PATH/../../bin/ndk/local/armeabi
+exec_prefix=$LOCAL_PATH/../../obj/local/armeabi
 exec_prefix_set=no
 
 #usage="\
