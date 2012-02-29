@@ -104,13 +104,23 @@ abstract class DifferentTouchInput
 			if( m.getName().equals("getPointerId") )
 				multiTouchAvailable2 = true;
 		}
-
-		if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
-			return XperiaMiniTouchpadTouchInput.Holder.sInstance;
-		if (multiTouchAvailable1 && multiTouchAvailable2)
-			return MultiTouchInput.Holder.sInstance;
-		else
-			return SingleTouchInput.Holder.sInstance;
+		try {
+			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
+				return XperiaMiniTouchpadTouchInput.Holder.sInstance;
+			if (multiTouchAvailable1 && multiTouchAvailable2)
+				return MultiTouchInput.Holder.sInstance;
+			else
+				return SingleTouchInput.Holder.sInstance;
+		} catch( java.lang.NoSuchMethodError e ) {
+			try {
+				if (multiTouchAvailable1 && multiTouchAvailable2)
+					return MultiTouchInput.Holder.sInstance;
+				else
+					return SingleTouchInput.Holder.sInstance;
+			} catch( java.lang.NoSuchMethodError e ) {
+				return SingleTouchInput.Holder.sInstance;
+			}
+		}
 	}
 	public abstract void process(final MotionEvent event);
 	public abstract void processGenericEvent(final MotionEvent event);
@@ -301,14 +311,14 @@ abstract class DifferentTouchInput
 				if( (device.getSources() & InputDevice.SOURCE_TOUCHPAD) != InputDevice.SOURCE_TOUCHPAD )
 					continue;
 				System.out.println("libSDL: input device ID " + id + " type " + device.getSources()  + " name " + device.getName() + " is a touchpad" );
-				InputDevice.MotionRange range = device.getMotionRange(MotionEvent.AXIS_X, InputDevice.SOURCE_TOUCHPAD);
+				InputDevice.MotionRange range = device.getMotionRange(MotionEvent.AXIS_X);
 				if(range != null)
 				{
 					xmin = range.getMin();
 					xmax = range.getMax() - range.getMin();
 					System.out.println("libSDL: touch pad X range " + xmin + ":" + xmax );
 				}
-				range = device.getMotionRange(MotionEvent.AXIS_Y, InputDevice.SOURCE_TOUCHPAD);
+				range = device.getMotionRange(MotionEvent.AXIS_Y);
 				if(range != null)
 				{
 					ymin = range.getMin();
