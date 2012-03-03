@@ -231,7 +231,9 @@ class DataDownloader extends Thread
 			try {
 				byte b[] = new byte[ Globals.DataDownloadUrl.getBytes("UTF-8").length + 1 ];
 				int readed = checkFile.read(b);
-				String compare = new String( b, 0, readed, "UTF-8" );
+				String compare = "";
+				if( readed > 0 )
+					compare = new String( b, 0, readed, "UTF-8" );
 				boolean matched = false;
 				//System.out.println("Read URL: '" + compare + "'");
 				for( int i = 1; i < downloadUrls.length; i++ )
