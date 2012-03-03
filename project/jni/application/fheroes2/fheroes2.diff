@@ -1,6 +1,6 @@
 Index: src/engine/tools.cpp
 ===================================================================
---- src/engine/tools.cpp	(revision 2761)
+--- src/engine/tools.cpp	(revision 2769)
 +++ src/engine/tools.cpp	(working copy)
 @@ -761,7 +761,7 @@
      if(stat(name.c_str(), &fs) || !S_ISREG(fs.st_mode))
@@ -11,105 +11,11 @@ Index: src/engine/tools.cpp
  }
  
  bool IsDirectory(const std::string & name, bool writable)
-Index: src/engine/sdlnet.cpp
-===================================================================
---- src/engine/sdlnet.cpp	(revision 2761)
-+++ src/engine/sdlnet.cpp	(working copy)
-@@ -137,7 +137,7 @@
- {
-     if(data + dtsz < itd2 + 1) Resize(1);
- 
--    *itd2 = byte8;
-+    *(u8 *)itd2 = byte8;
-     ++itd2;
- }
- 
-@@ -150,10 +150,10 @@
- {
-     if(data + dtsz < itd2 + 2) Resize(2);
- 
--    *itd2 = 0x00FF & (byte16 >> 8);
-+    *(u8 *)itd2 = 0x00FF & (byte16 >> 8);
-     ++itd2;
- 
--    *itd2 = 0x00FF & byte16;
-+    *(u8 *)itd2 = 0x00FF & byte16;
-     ++itd2;
- }
- 
-@@ -166,16 +166,16 @@
- {
-     if(data + dtsz < itd2 + 4) Resize(4);
- 
--    *itd2 = 0x000000FF & (byte32 >> 24);
-+    *(u8 *)itd2 = 0x000000FF & (byte32 >> 24);
-     ++itd2;
- 
--    *itd2 = 0x000000FF & (byte32 >> 16);
-+    *(u8 *)itd2 = 0x000000FF & (byte32 >> 16);
-     ++itd2;
- 
--    *itd2 = 0x000000FF & (byte32 >> 8);
-+    *(u8 *)itd2 = 0x000000FF & (byte32 >> 8);
-     ++itd2;
- 
--    *itd2 = 0x000000FF & byte32;
-+    *(u8 *)itd2 = 0x000000FF & byte32;
-     ++itd2;
- }
- 
-@@ -270,7 +270,7 @@
- {
-     if(itd1 + 1 > itd2) return false;
- 
--    byte8 = *itd1;
-+    byte8 = *(u8 *)itd1;
-     ++itd1;
- 
-     return true;
-@@ -291,11 +291,11 @@
- {
-     if(itd1 + 2 > itd2) return false;
- 
--    byte16 = *itd1;
-+    byte16 = *(u8 *)itd1;
-     byte16 <<= 8;
-     ++itd1;
- 
--    byte16 |= (0x00FF & *itd1);
-+    byte16 |= (0x00FF & *(u8 *)itd1);
-     ++itd1;
- 
-     return true;
-@@ -316,19 +316,19 @@
- {
-     if(itd1 + 4 > itd2) return false;
- 
--    byte32 = *itd1;
-+    byte32 = *(u8 *)itd1;
-     byte32 <<= 8;
-     ++itd1;
- 
--    byte32 |= (0x000000FF & *itd1);
-+    byte32 |= (0x000000FF & *(u8 *)itd1);
-     byte32 <<= 8;
-     ++itd1;
- 
--    byte32 |= (0x000000FF & *itd1);
-+    byte32 |= (0x000000FF & *(u8 *)itd1);
-     byte32 <<= 8;
-     ++itd1;
- 
--    byte32 |= (0x000000FF & *itd1);
-+    byte32 |= (0x000000FF & *(u8 *)itd1);
-     ++itd1;
- 
-     return true;
 Index: src/fheroes2/system/settings.h
 ===================================================================
---- src/fheroes2/system/settings.h	(revision 2761)
+--- src/fheroes2/system/settings.h	(revision 2769)
 +++ src/fheroes2/system/settings.h	(working copy)
-@@ -117,9 +117,10 @@
+@@ -104,9 +104,10 @@
  #elif defined(ANDROID)
  namespace std
  {
@@ -122,38 +28,9 @@ Index: src/fheroes2/system/settings.h
  #else
   #define VERBOSE(x) std::cout << x << std::endl
  #endif
-Index: src/fheroes2/kingdom/world.cpp
-===================================================================
---- src/fheroes2/kingdom/world.cpp	(revision 2761)
-+++ src/fheroes2/kingdom/world.cpp	(working copy)
-@@ -1028,12 +1028,22 @@
- 
- Heroes* World::GetHeroes(Heroes::heroes_t id)
- {
--    return vec_heroes.Get(id);
-+    //VERBOSE("World::GetHeroes: id " << id << " vec_heroes.size() " << vec_heroes.size());
-+    if(id >= vec_heroes.size())
-+        return NULL;
-+    Heroes* h = vec_heroes.Get(id);
-+    //VERBOSE("World::GetHeroes: id " << id << " hero " << h->GetID() << " name " << h->GetName());
-+    return h;
- }
- 
- const Heroes* World::GetHeroes(Heroes::heroes_t id) const
- {
--    return vec_heroes.Get(id);
-+    //VERBOSE("World::GetHeroes: id " << id << " vec_heroes.size() " << vec_heroes.size());
-+    if(id >= vec_heroes.size())
-+        return NULL;
-+    const Heroes* h = vec_heroes.Get(id);
-+    //VERBOSE("World::GetHeroes: id " << id << " hero " << h->GetID() << " name " << h->GetName());
-+    return h;
- }
- 
- /* get heroes from index maps */
 Index: src/fheroes2/network/server.cpp
 ===================================================================
---- src/fheroes2/network/server.cpp	(revision 2761)
+--- src/fheroes2/network/server.cpp	(revision 2769)
 +++ src/fheroes2/network/server.cpp	(working copy)
 @@ -876,7 +876,7 @@
  
@@ -175,7 +52,7 @@ Index: src/fheroes2/network/server.cpp
      }
 Index: src/fheroes2/network/localclient.cpp
 ===================================================================
---- src/fheroes2/network/localclient.cpp	(revision 2761)
+--- src/fheroes2/network/localclient.cpp	(revision 2769)
 +++ src/fheroes2/network/localclient.cpp	(working copy)
 @@ -490,7 +490,7 @@
  	    {
@@ -197,7 +74,7 @@ Index: src/fheroes2/network/localclient.cpp
  
 Index: src/fheroes2/network/network.cpp
 ===================================================================
---- src/fheroes2/network/network.cpp	(revision 2761)
+--- src/fheroes2/network/network.cpp	(revision 2769)
 +++ src/fheroes2/network/network.cpp	(working copy)
 @@ -159,7 +159,9 @@
      Network::SetProtocolVersion(static_cast<u16>(MAJOR_VERSION << 8) | MINOR_VERSION);
