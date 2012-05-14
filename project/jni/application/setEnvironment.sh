@@ -9,6 +9,8 @@ IFS='
 
 NDK=`which ndk-build`
 NDK=`dirname $NDK`
+NDK=`readlink -f $NDK`
+
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 

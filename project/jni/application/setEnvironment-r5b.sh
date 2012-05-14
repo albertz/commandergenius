@@ -16,6 +16,7 @@ fi
 
 NDK=`which ndk-build`
 NDK=`dirname $NDK`
+NDK=`readlink -f $NDK`
 
 #echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi

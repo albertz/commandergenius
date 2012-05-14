@@ -28,7 +28,7 @@ rm -r -f project/bin/* # New Android SDK introduced some lame-ass optimizations 
 
 cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build V=1 -j4 && \
  { grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
-   [ -`which ndk-build | grep '/android-ndk-r[56789]'` != - ] && \
+   [ -`which ndk-build | xargs readlink -f | grep '/android-ndk-r[56789]'` != - ] && \
    echo Stripping libapplication.so by hand \
    rm obj/local/armeabi/libapplication.so && \
    cp jni/application/src/libapplication.so obj/local/armeabi && \

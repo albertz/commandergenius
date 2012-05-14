@@ -582,8 +582,8 @@ int main(int argc, char* argv[])
 			unaligned_test(ptr, &val4);
 */
 		}
-/*
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
+/*
 		print_num_hex(screen, font_hex, 0, 40, val0);
 		print_num_hex(screen, font_hex, 0, 60, val1);
 		print_num_hex(screen, font_hex, 0, 80, val2);

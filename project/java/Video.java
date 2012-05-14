@@ -617,6 +617,8 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	// This seems like redundant code - it handled in MainActivity.java
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event) {
+		//System.out.println("Got key down event, id " + keyCode);
+
 		if( nativeKey( keyCode, 1 ) == 0 )
 				return super.onKeyDown(keyCode, event);
 		return true;
@@ -624,6 +626,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	
 	@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event) {
+		//System.out.println("Got key up event, id " + keyCode);
 		if( nativeKey( keyCode, 0 ) == 0 )
 				return super.onKeyUp(keyCode, event);
 		return true;
