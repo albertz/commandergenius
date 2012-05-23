@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -31,11 +31,9 @@
 #include "cocoa/SDL_rwopsbundlesupport.h"
 #endif /* __APPLE__ */
 
-/*
 #ifdef ANDROID
 #include "../core/android/SDL_android.h"
 #endif
-*/
 
 #ifdef __NDS__
 /* include libfat headers for fatInitDefault(). */
@@ -447,7 +445,7 @@ SDL_RWFromFile(const char *file, const char *mode)
         SDL_SetError("SDL_RWFromFile(): No file or no mode specified");
         return NULL;
     }
-#if 0 && defined(__ANDROID__)
+#if defined(ANDROID)
     rwops = SDL_AllocRW();
     if (!rwops)
         return NULL;            /* SDL_SetError already setup by SDL_AllocRW() */

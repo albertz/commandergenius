@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -141,6 +141,7 @@ SDL_AddTouch(const SDL_Touch * touch, char *name)
     
     SDL_touchPads[index]->xres = (1<<(16-1));
     SDL_touchPads[index]->yres = (1<<(16-1));
+    SDL_touchPads[index]->pressureres = (1<<(16-1));
     //Do I want this here? Probably
     SDL_GestureAddTouch(SDL_touchPads[index]);
 
@@ -357,6 +358,8 @@ SDL_SendFingerDown(SDL_TouchID id, SDL_FingerID fingerid, SDL_bool down,
             event.tfinger.touchId = id;
             event.tfinger.x = x;
             event.tfinger.y = y;
+            event.tfinger.dx = 0;
+            event.tfinger.dy = 0;
             event.tfinger.pressure = pressure;
             event.tfinger.state = touch->buttonstate;
             event.tfinger.windowID = touch->focus ? touch->focus->id : 0;
@@ -384,6 +387,7 @@ SDL_SendFingerDown(SDL_TouchID id, SDL_FingerID fingerid, SDL_bool down,
             event.tfinger.y = finger->y;
             event.tfinger.dx = 0;
             event.tfinger.dy = 0;
+            event.tfinger.pressure = pressure;
 
             if(SDL_DelFinger(touch,fingerid) < 0) return 0;
             posted = (SDL_PushEvent(&event) > 0);

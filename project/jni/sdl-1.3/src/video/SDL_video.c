@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -29,7 +29,6 @@
 #include "SDL_pixels_c.h"
 #include "SDL_rect_c.h"
 #include "../events/SDL_events_c.h"
-#include <android/log.h>
 
 #if SDL_VIDEO_OPENGL
 #include "SDL_opengl.h"
@@ -87,16 +86,15 @@ static VideoBootStrap *bootstrap[] = {
 
 static SDL_VideoDevice *_this = NULL;
 
-#define CHECK_WINDOW_MAGIC1(window, retval, F, L) \
+#define CHECK_WINDOW_MAGIC(window, retval) \
     if (!_this) { \
         SDL_UninitializedVideo(); \
         return retval; \
     } \
     if (!window || window->magic != &_this->window_magic) { \
-        SDL_SetError("CHECK_WINDOW_MAGIC: Invalid window %p at %s:%d", window, F, L); \
+        SDL_SetError("Invalid window"); \
         return retval; \
     }
-#define CHECK_WINDOW_MAGIC(window, retval) CHECK_WINDOW_MAGIC1(window, retval, __FILE__, __LINE__)
 
 #define CHECK_DISPLAY_INDEX(displayIndex, retval) \
     if (!_this) { \
@@ -108,6 +106,11 @@ static SDL_VideoDevice *_this = NULL;
                      _this->num_displays - 1); \
         return retval; \
     }
+
+#define INVALIDATE_GLCONTEXT() \
+    _this->current_glwin = NULL; \
+    _this->current_glctx = NULL;
+
 
 /* Support for framebuffer emulation using an accelerated renderer */
 
@@ -191,6 +194,9 @@ ShouldUseTextureFramebuffer()
         }
         return hasAcceleratedOpenGL;
     }
+#elif SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
+    /* Let's be optimistic about this! */
+    return SDL_TRUE;
 #else
     return SDL_FALSE;
 #endif
@@ -209,8 +215,6 @@ SDL_CreateWindowTexture(_THIS, SDL_Window * window, Uint32 * format, void ** pix
     SDL_WindowTextureData *data;
     SDL_RendererInfo info;
     Uint32 i;
-
-    __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_CreateWindowTexture %dx%d", window->w, window->h);
 
     data = SDL_GetWindowData(window, SDL_WINDOWTEXTUREDATA);
     if (!data) {
@@ -243,6 +247,7 @@ SDL_CreateWindowTexture(_THIS, SDL_Window * window, Uint32 * format, void ** pix
             }
         }
         if (!renderer) {
+            SDL_SetError("No hardware accelerated renderers available");
             return -1;
         }
 
@@ -499,6 +504,8 @@ SDL_VideoInit(const char *driver_name)
     _this->gl_config.major_version = 2;
     _this->gl_config.minor_version = 0;
 #endif
+    _this->gl_config.flags = 0;
+    _this->gl_config.profile_mask = 0;
 
     /* Initialize the video subsystem */
     if (_this->VideoInit(_this) < 0) {
@@ -1144,8 +1151,16 @@ SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
         }
     }
 
+    /* Some platforms can't create zero-sized windows */
+    if (w < 1) {
+        w = 1;
+    }
+    if (h < 1) {
+        h = 1;
+    }
+
     /* Some platforms have OpenGL enabled by default */
-#if (SDL_VIDEO_OPENGL && __MACOSX__) || SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
+#if (SDL_VIDEO_OPENGL && __MACOSX__) || __IPHONEOS__ || __ANDROID__
     flags |= SDL_WINDOW_OPENGL;
 #endif
     if (flags & SDL_WINDOW_OPENGL) {
@@ -1649,19 +1664,15 @@ SDL_CreateWindowFramebuffer(SDL_Window * window)
     int bpp;
     Uint32 Rmask, Gmask, Bmask, Amask;
 
-    __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_CreateWindowFramebuffer(): _this->CreateWindowFramebuffer %p _this->UpdateWindowFramebuffer %p", 
-        _this->CreateWindowFramebuffer, _this->UpdateWindowFramebuffer);
     if (!_this->CreateWindowFramebuffer || !_this->UpdateWindowFramebuffer) {
         return NULL;
     }
 
     if (_this->CreateWindowFramebuffer(_this, window, &format, &pixels, &pitch) < 0) {
-        __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_CreateWindowFramebuffer(): _this->CreateWindowFramebuffer() failed");
         return NULL;
     }
 
     if (!SDL_PixelFormatEnumToMasks(format, &bpp, &Rmask, &Gmask, &Bmask, &Amask)) {
-        __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_CreateWindowFramebuffer(): SDL_PixelFormatEnumToMasks() failed");
         return NULL;
     }
 
@@ -1673,20 +1684,17 @@ SDL_GetWindowSurface(SDL_Window * window)
 {
     CHECK_WINDOW_MAGIC(window, NULL);
 
-    __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_GetWindowSurface(): window->surface_valid %d", window->surface_valid);
     if (!window->surface_valid) {
         if (window->surface) {
             window->surface->flags &= ~SDL_DONTFREE;
             SDL_FreeSurface(window->surface);
         }
-        __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_GetWindowSurface(): SDL_CreateWindowFramebuffer()");
         window->surface = SDL_CreateWindowFramebuffer(window);
         if (window->surface) {
             window->surface_valid = SDL_TRUE;
             window->surface->flags |= SDL_DONTFREE;
         }
     }
-    __android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_GetWindowSurface(): window->surface %p", window->surface);
     return window->surface;
 }
 
@@ -1857,12 +1865,14 @@ SDL_GetWindowGrab(SDL_Window * window)
 void
 SDL_OnWindowShown(SDL_Window * window)
 {
+    INVALIDATE_GLCONTEXT();
     SDL_OnWindowRestored(window);
 }
 
 void
 SDL_OnWindowHidden(SDL_Window * window)
 {
+    INVALIDATE_GLCONTEXT();
     SDL_UpdateFullscreenMode(window, SDL_FALSE);
 }
 
@@ -1943,15 +1953,23 @@ SDL_DestroyWindow(SDL_Window * window)
 
     CHECK_WINDOW_MAGIC(window, );
 
+    /* Restore video mode, etc. */
+    SDL_HideWindow(window);
+
+    /* Make sure this window no longer has focus */
+    if (SDL_GetKeyboardFocus() == window) {
+        SDL_SetKeyboardFocus(NULL);
+    }
+    if (SDL_GetMouseFocus() == window) {
+        SDL_SetMouseFocus(NULL);
+    }
+
     /* make no context current if this is the current context window. */
     if (window->flags & SDL_WINDOW_OPENGL) {
         if (_this->current_glwin == window) {
             SDL_GL_MakeCurrent(NULL, NULL);
         }
     }
-
-    /* Restore video mode, etc. */
-    SDL_HideWindow(window);
 
     if (window->surface) {
         window->surface->flags &= ~SDL_DONTFREE;
@@ -2288,6 +2306,12 @@ SDL_GL_SetAttribute(SDL_GLattr attr, int value)
     case SDL_GL_CONTEXT_MINOR_VERSION:
         _this->gl_config.minor_version = value;
         break;
+    case SDL_GL_CONTEXT_FLAGS:
+        _this->gl_config.flags = value;
+        break;
+    case SDL_GL_CONTEXT_PROFILE_MASK:
+        _this->gl_config.profile_mask = value;
+        break;
     default:
         SDL_SetError("Unknown OpenGL attribute");
         retval = -1;
@@ -2432,6 +2456,16 @@ SDL_GL_GetAttribute(SDL_GLattr attr, int *value)
     case SDL_GL_CONTEXT_MINOR_VERSION:
         {
             *value = _this->gl_config.minor_version;
+            return 0;
+        }
+    case SDL_GL_CONTEXT_FLAGS:
+        {
+            *value = _this->gl_config.flags;
+            return 0;
+        }
+    case SDL_GL_CONTEXT_PROFILE_MASK:
+        {
+            *value = _this->gl_config.profile_mask;
             return 0;
         }
     default:

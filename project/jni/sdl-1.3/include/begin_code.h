@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -87,7 +87,12 @@
 #ifdef __BORLANDC__
 #pragma nopackwarning
 #endif
+#ifdef _M_X64
+/* Use 8-byte alignment on 64-bit architectures, so pointers are aligned */
+#pragma pack(push,8)
+#else
 #pragma pack(push,4)
+#endif
 #endif /* Compiler needs structure packing set */
 
 /* Set up compiler-specific options for inlining functions */

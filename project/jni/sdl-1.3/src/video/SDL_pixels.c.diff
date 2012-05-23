@@ -1,0 +1,12 @@
+--- SDL_pixels.c	2012-05-23 16:29:23.211504618 +0300
++++ /home/pelya/src/endless_space/SDL-android/project/jni/sdl-1.3/src/video/SDL_pixels.c	2012-02-03 16:56:28.000000000 +0200
+@@ -754,6 +754,9 @@
+     default:
+         break;
+     }
++#ifdef __ANDROID__
++    if( surface->format->BytesPerPixel != 2 ) /* Avoid extra memcpy() when calling SDL_UpdateTexture() */
++#endif
+     pitch = (pitch + 3) & ~3;   /* 4-byte aligning */
+     return (pitch);
+ }

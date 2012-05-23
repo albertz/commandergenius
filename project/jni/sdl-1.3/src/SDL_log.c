@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -34,7 +34,7 @@
 #include <android/log.h>
 #endif
 
-#define DEFAULT_PRIORITY                SDL_LOG_PRIORITY_ERROR
+#define DEFAULT_PRIORITY                SDL_LOG_PRIORITY_CRITICAL
 #define DEFAULT_APPLICATION_PRIORITY    SDL_LOG_PRIORITY_INFO
 
 typedef struct SDL_LogLevel

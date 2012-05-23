@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2011 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -37,8 +37,7 @@ SDL_SendDropFile(const char *file)
     if (SDL_GetEventState(SDL_DROPFILE) == SDL_ENABLE) {
         SDL_Event event;
         event.type = SDL_DROPFILE;
-	event.drop.file = SDL_strdup(file);
-
+        event.drop.file = SDL_strdup(file);
         posted = (SDL_PushEvent(&event) > 0);
     }
     return (posted);
