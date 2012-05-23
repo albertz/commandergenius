@@ -130,6 +130,7 @@ int Mixer::loadSample(string fileName, int volume) {
 			if ( 0 <= volume && volume < 128 ) {
 				Mix_VolumeChunk( mixChunks[ mixChunks.size() - 1 ], volume );
 			} 
+            __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", (string( "Loading sound " ) + fn1 + " done").c_str() );
 			return mixChunks.size() - 1;
 		}
 		return fn2snd[ fileName ];
@@ -180,7 +181,7 @@ int Mixer::loadMusic( string fn ) {
 	if (enabled) {
 		if (fn2mus.find(fn) == fn2mus.end()) {
 
-            __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", (string( "Loading sound " ) + fn).c_str() );
+            __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", (string( "Loading music " ) + fn).c_str() );
 
             string fn1 = fn;
             // Check if file exist
@@ -213,6 +214,7 @@ int Mixer::loadMusic( string fn ) {
 			
 			musics.push_back(newSound);
 			fn2mus[ fn ] = musics.size() - 1;
+            __android_log_print(ANDROID_LOG_INFO, "Alien Blaster", (string( "Loading music " ) + fn1 + " done").c_str() );
 			return musics.size() - 1;
 		}
 		return fn2mus[ fn ];

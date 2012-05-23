@@ -1,0 +1,1 @@
+../../sdl-1.2/include/SDL_screenkeyboard.h

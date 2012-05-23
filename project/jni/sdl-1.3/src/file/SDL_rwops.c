@@ -32,7 +32,7 @@
 #endif /* __APPLE__ */
 
 #ifdef ANDROID
-#include "../core/android/SDL_android.h"
+/* #include "../core/android/SDL_android.h" */
 #endif
 
 #ifdef __NDS__
@@ -445,7 +445,8 @@ SDL_RWFromFile(const char *file, const char *mode)
         SDL_SetError("SDL_RWFromFile(): No file or no mode specified");
         return NULL;
     }
-#if defined(ANDROID)
+#if defined(ANDROID) && 0
+
     rwops = SDL_AllocRW();
     if (!rwops)
         return NULL;            /* SDL_SetError already setup by SDL_AllocRW() */

@@ -21,6 +21,7 @@
 #define INPUT_H
 
 #include "SDL.h"
+#include "SdlForwardCompat.h"
 
 class Input;
 

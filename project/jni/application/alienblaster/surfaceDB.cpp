@@ -80,19 +80,19 @@ SDL_Surface *SurfaceDB::loadSurfaceInternal( string fn, bool alpha ) {
     if (!inputFile) {
       cout << "ERROR: file " << fn1 << " does not exist!" << endl;
 #ifdef ANDROID
-      __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn1).c_str() );
+      __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn1 + " - file does not exist").c_str() );
 #endif
       exit(1);
     }
   }
   fclose(inputFile);
 
-  SDL_Surface *newSurface = isPNG ? IMG_Load( fn1.c_str() ) : SDL_LoadBMP( fn1.c_str() );
+  SDL_Surface *newSurface = IMG_Load( fn1.c_str() );
   if( newSurface == NULL )
   {
     cout << "ERROR: Cannot load image " << fn1 << endl;
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn1).c_str() );
+    __android_log_print(ANDROID_LOG_ERROR, "Alien Blaster", (string( "Cannot load image " ) + fn1 + " - file is in invalid format").c_str() );
 #endif
     exit(1);
   }

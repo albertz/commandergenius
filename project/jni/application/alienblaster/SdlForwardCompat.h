@@ -22,6 +22,10 @@ struct SdlCompat_AcceleratedSurface
 	SDL_PixelFormat * format;
 };
 
+enum { SDL_SRCALPHA = 8, SDL_SRCCOLORKEY = 16 }; // Some dummy non-zero values
+
+typedef SDL_Keycode SDLKey;
+
 extern SDL_Renderer * SDL_global_renderer;
 
 static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(SDL_Surface * surface)
@@ -29,6 +33,8 @@ static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(
 	SdlCompat_AcceleratedSurface * ret = new SdlCompat_AcceleratedSurface();
 	// Allocate accelerated surface even if that means loss of color quality
 	Uint32 format;
+	Uint32 colorkey;
+	Uint8 alpha;
 
 	ret->w = surface->w;
 	ret->h = surface->h;
@@ -36,7 +42,7 @@ static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(
 	memcpy(ret->format, surface->format, sizeof(SDL_PixelFormat));
 
 	format = SDL_PIXELFORMAT_RGB565;
-	if( surface->flags & SDL_SRCCOLORKEY )
+	if( SDL_GetColorKey(surface, &colorkey) == 0 )
 	{
 		format = SDL_PIXELFORMAT_RGBA4444;
 	}
@@ -52,13 +58,8 @@ static inline SdlCompat_AcceleratedSurface * SdlCompat_CreateAcceleratedSurface(
 	SDL_SetTextureBlendMode( ret->t, SDL_BLENDMODE_BLEND );
 	//SDL_SetTextureAlphaMod( ret->t, SDL_ALPHA_OPAQUE );
 	SDL_SetTextureAlphaMod( ret->t, 128 );
-	if( surface->flags & SDL_SRCALPHA )
-	{
-		Uint8 alpha = 128;
-		if( SDL_GetSurfaceAlphaMod( surface, &alpha ) < 0 )
-			alpha = 128;
+	if( SDL_GetSurfaceAlphaMod(surface, &alpha) == 0 )
 		SDL_SetTextureAlphaMod( ret->t, alpha );
-	}
 
 	return ret;
 };
@@ -90,7 +91,7 @@ static inline int SDL_Flip(SdlCompat_AcceleratedSurface * unused)
 
 static inline int SDL_SetAlpha(SdlCompat_AcceleratedSurface * surface, Uint32 flag, Uint8 alpha)
 {
-	if( ! (flag & SDL_SRCALPHA) )
+	if( ! flag )
 		alpha = SDL_ALPHA_OPAQUE;
 	return SDL_SetTextureAlphaMod(surface->t, alpha);
 };

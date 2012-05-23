@@ -29,6 +29,7 @@
 #include <OpenGLES/ES1/gl.h>
 #include <OpenGLES/ES1/glext.h>
 #else
+#define GL_GLEXT_PROTOTYPES 1
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 #endif

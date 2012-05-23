@@ -38,7 +38,7 @@
 #include "../../events/SDL_mouse_c.h"
 #include "SDL_keycode.h"
 #include "SDL_scancode.h"
-#include "SDL_compat.h"
+//#include "SDL_compat.h"
 #else
 #include "SDL_keysym.h"
 #include "../../events/SDL_events_c.h"
@@ -61,6 +61,9 @@
 
 #define SDL_KEY2(X) SDL_SCANCODE_ ## X
 #define SDL_KEY(X) SDL_KEY2(X)
+typedef SDL_Scancode SDL_scancode;
+typedef SDL_Keycode SDLKey;
+typedef SDL_Keysym SDL_keysym;
 
 #else
 
