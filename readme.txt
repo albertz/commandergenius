@@ -8,7 +8,7 @@ Also this port is developed very slowly, although the same is true for an offici
 Installation
 ============
 
-This project should be compiled with Android 3.1 SDK (API level 12) and NDK r6 or r5c,
+This project should be compiled with Android 3.1 SDK (API level 12) and NDK r7c, r6 or r5c,
 google for them and install them as described in their docs.
 You'll need to install Java Ant too.
 The application will run on Android OS 1.6 and above, don't mind the 3.1 dependency.
@@ -94,16 +94,16 @@ on public HTTP server - you may specify URL in ChangeAppSettings.sh, also you ma
 If you'll release new version of data files you should change download URL or data file name and update your app as well -
 the app will re-download the data if URL does not match the saved URL from previous download.
 
-All devices have different screen resolutions, you may toggle automatic
-screen resizing in ChangeAppSettings.sh and draw to virtual 640x480 screen -
-it will be HW accelerated and will not impact performance.
+All devices have different screen resolutions, you may toggle automatic screen resizing
+in ChangeAppSettings.sh and draw to virtual 640x480 screen - it will be HW accelerated
+and will not impact performance. Automatic screen resizing does not work in SDL 1.3/2.0.
 SDL_ListModes()[0] will always return native screen resolution.
 Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
 texture on HTC G1, and other low-end devices. Software surfaces may be of any size of course.
 
 If you want HW acceleration - just use OpenGL, that's the easiest and most cross-platform way,
 however if you'll use on-screen keyboard (even the text input button) the OpenGL state will get
-screwed after each frame - after each SDL_Flip() you'll need to call:
+messed up after each frame - after each SDL_GL_SwapBuffers() you'll need to call:
 
 glEnable(GL_TEXTURE_2D);
 glBindTexture(GL_TEXTURE_2D, your_texture_id);
@@ -120,7 +120,7 @@ AppNeedsArrowKeys=n
 AppNeedsTextInput=n
 AppTouchscreenKeyboardKeysAmount=0
 
-SDL supports HW acceleration, however it has many limitations:
+SDL 1.2 supports HW acceleration, however it has many limitations:
 You should use 16-bit color depth.
 You cannot blit SW surface to screen, it should be only HW surface.
 You can use colorkey, per-surface alpha and per-pixel alpha with HW surfaces.
@@ -169,6 +169,8 @@ SDL_BlitSurface(sprite, sourceRect, SDL_GetVideoSurface(), &targetRect);
 SDL_BlitSurface(SDL_GetVideoSurface(), sourceRect, sprite, &targetRect);
 
 // ----- End of example
+
+To get HW acceleration in SDL 1.3/2.0 just follow the instructions on libsdl.org
 
 If you'll add new libs - add them to project/jni/, copy Android.mk from existing lib, and
 add libname to project/jni/<yourapp>/Android.mk
