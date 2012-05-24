@@ -136,6 +136,9 @@ main(int argc, char *argv[])
     if (SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer) < 0) {
         quit(2);
     }
+    SDL_RendererInfo info;
+    SDL_GetRendererInfo(renderer, &info);
+    fprintf(stderr, "Renderer: %s flags %d max texture %dx%d\n", info.name, info.flags, info.max_texture_width, info.max_texture_height);
 
     if (LoadSprite("icon.bmp", renderer) < 0) {
         quit(2);
@@ -166,7 +169,7 @@ main(int argc, char *argv[])
             }
         }
         MoveSprites(window, renderer, sprite);
-        fprintf(stderr, "Frame rendered, you see nothing on screen, that's bug in SDL, lalala\n");
+        //fprintf(stderr, "Frame rendered, you see nothing on screen, that's bug in SDL, lalala\n");
     }
 
     quit(0);

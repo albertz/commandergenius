@@ -67,6 +67,8 @@ static void ANDROID_PumpEvents(_THIS);
 static int ANDROID_CreateWindow(_THIS, SDL_Window * window);
 static void ANDROID_DestroyWindow(_THIS, SDL_Window * window);
 
+static void ANDROID_StartTextInput(_THIS);
+
 void * glLibraryHandle = NULL;
 void * gl2LibraryHandle = NULL;
 
@@ -118,6 +120,8 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	
 	device->CreateWindow = ANDROID_CreateWindow;
 	device->DestroyWindow = ANDROID_DestroyWindow;
+	
+	device->StartTextInput = ANDROID_StartTextInput;
 	
 	device->free = ANDROID_DeleteDevice;
 
@@ -245,8 +249,9 @@ int ANDROID_CreateWindow(_THIS, SDL_Window * window)
 
     window->flags &= ~SDL_WINDOW_RESIZABLE;     /* window is NEVER resizeable */
     window->flags |= SDL_WINDOW_FULLSCREEN;     /* window is always fullscreen */
+    window->flags &= ~SDL_WINDOW_HIDDEN;
     window->flags |= SDL_WINDOW_SHOWN;          /* only one window on Android */
-    window->flags |= SDL_WINDOW_INPUT_FOCUS;    /* always has input focus */
+    window->flags |= SDL_WINDOW_INPUT_FOCUS;    /* always has input focus */    
 
 	__android_log_print(ANDROID_LOG_INFO, "libSDL",  "ANDROID_CreateWindow(): ANDROID_CurrentWindow %p", ANDROID_CurrentWindow);
 
@@ -256,6 +261,12 @@ void ANDROID_DestroyWindow(_THIS, SDL_Window * window)
 {
 	ANDROID_CurrentWindow = NULL;
 };
+
+void ANDROID_StartTextInput(_THIS)
+{
+	SDL_ANDROID_ToggleScreenKeyboardTextInput("");
+}
+
 
 static void* ANDROID_GL_GetProcAddress(_THIS, const char *proc)
 {
