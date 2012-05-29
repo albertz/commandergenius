@@ -297,6 +297,7 @@ abstract class DifferentTouchInput
 		float xmax = 1.0f;
 		float ymin = 0.0f;
 		float ymax = 1.0f;
+		float minRange = 1.0f;
 
 		XperiaMiniTouchpadTouchInput()
 		{
@@ -325,6 +326,9 @@ abstract class DifferentTouchInput
 					ymax = range.getMax() - range.getMin();
 					System.out.println("libSDL: touch pad Y range " + ymin + ":" + ymax );
 				}
+				// Xperia Play has long wide touchpad with joystick-like embossing on the sides, so we'll leave only a left joystick to function
+				// I don't know how to use the second joystick, so I'll just ignore it for now
+				minRange = Math.min( Math.abs(ymax - ymin), Math.abs(xmax - xmin) );
 			}
 		}
 		public void processGenericEvent(final MotionEvent event)
@@ -340,16 +344,20 @@ abstract class DifferentTouchInput
 				process(event);
 				return;
 			}
-			int x = (int)((event.getX() - xmin) / xmax * 65535.0f);
-			int y = (int)((event.getY() - ymin) / ymax * 65535.0f);
+			int x = (int)((event.getX() - xmin) / minRange * 65535.0f);
+			int y = (int)((event.getY() - ymin) / minRange * 65535.0f);
+			if( x > 65535 )
+				x = 65535;
+			if( y > 65535 )
+				y = 65535;
 			int down = 1;
 			int multitouch = event.getPointerCount() - 1;
 			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP ||
 				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_CANCEL )
 				down = 0;
 			// TODO: we're processing only oen touch pointer, touchpad will most probably support multitouch
-			System.out.println("libSDL: touch pad event: " + x + ":" + y + " action " + event.getAction() + " down " + down + " multitouch " + multitouch );
-			DemoGLSurfaceView.nativeTouchpad( x, y, down, multitouch );
+			//System.out.println("libSDL: touch pad event: " + x + ":" + y + " action " + event.getAction() + " down " + down + " multitouch " + multitouch );
+			DemoGLSurfaceView.nativeTouchpad( x, -y, down, multitouch ); // Y axis is inverted, as you may have guessed
 		}
 	}
 }
