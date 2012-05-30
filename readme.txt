@@ -381,3 +381,4 @@ using them, otherwise you'll have to release your whole application sources unde
 
 The "Ultimate Droid" on-screen keyboard theme by Sean Stieber is licensed under Creative Commons - Attribution license.
 The "Simple Theme" on-screen keyboard theme by Dmitry Matveev is licensed under zlib license.
+The "Sun" on-screen keyboard theme by Sirea (Martina Smejkalova) is licensed under Creative Commons - Attribution license.

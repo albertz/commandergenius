@@ -14,13 +14,18 @@ int
 main(int argc, char *argv[])
 {
 	if(argc < 3)
+	{
+		printf("Usage: converter source.png target.raw [target bpp = 16 or 32]\n");
 		return 1;
+	}
 	SDL_Surface * src = IMG_Load(argv[1]);
 	if(!src)
 		return 1;
-	bool perPixeAlpha = false;
-	if( argc >= 4 )
-		perPixeAlpha = true;
+	bool perPixeAlpha = true;
+	bool target32bpp = false;
+	if( argc >= 3 && strcmp(argv[3], "32") == 0 )
+		target32bpp = true;
+	/*
 	if( src->format->BitsPerPixel == 32 )
 	{
 		for( int i = 0; i < src->h; i++ )
@@ -38,10 +43,13 @@ main(int argc, char *argv[])
 			}
 		}
 	}
-	printf("Converter: %s BPP %d %dx%d perPixeAlpha %d\n", argv[1], src->format->BitsPerPixel, src->w, src->h, (int)perPixeAlpha);
+	*/
+	printf("Converter: %s BPP %d %dx%d perPixeAlpha %d target %d bpp\n", argv[1], src->format->BitsPerPixel, src->w, src->h, (int)perPixeAlpha, target32bpp ? 32 : 16);
 	SDL_Surface * format1 = SDL_CreateRGBSurface( SDL_SWSURFACE|SDL_SRCALPHA, 1, 1, 16, 0xF800, 0x7C0, 0x3E, 0x1 );
 	if( perPixeAlpha )
 		format1 = SDL_CreateRGBSurface( SDL_SWSURFACE|SDL_SRCALPHA, 1, 1, 16, 0xF000, 0xF00, 0xF0, 0xF );
+	if( target32bpp )
+		format1 = SDL_CreateRGBSurface( SDL_SWSURFACE|SDL_SRCALPHA, 1, 1, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF );
 	if(!format1)
 		return 1;
 	SDL_Surface * dst = SDL_ConvertSurface(src, format1->format, SDL_SWSURFACE|SDL_SRCALPHA);
@@ -54,15 +62,16 @@ main(int argc, char *argv[])
 	fwrite( &w, 1, 4, ff );
 	int h = htonl(dst->h);
 	fwrite( &h, 1, 4, ff );
-	int format = htonl(perPixeAlpha ? 1 : 0);
+	int format = htonl(target32bpp ? 2 : (perPixeAlpha ? 1 : 0));
 	fwrite( &format, 1, 4, ff );
 	for( int i = 0; i < dst->h; i++ )
 	{
 		for( int ii = 0; ii < dst->w; ii++ )
 		{
-			if(* (Uint16 *) ((Uint8 *)dst->pixels + i*dst->pitch + ii*2) & 0x1 == 0 && ! perPixeAlpha)
+			if( (!target32bpp) && (
+				* (Uint16 *) ((Uint8 *)dst->pixels + i*dst->pitch + ii*2) & 0x1 == 0 && ! perPixeAlpha) )
 				* (Uint16 *) ((Uint8 *)dst->pixels + i*dst->pitch + ii*2) = 0;
-			fwrite( (Uint8 *)dst->pixels + i*dst->pitch + ii*2, 1, 2, ff );
+			fwrite( (Uint8 *)dst->pixels + i*dst->pitch + ii*(target32bpp?4:2), 1, (target32bpp?4:2), ff );
 		}
 	}
 	fclose(ff);

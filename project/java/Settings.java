@@ -1068,7 +1068,8 @@ class Settings
 		{
 			final CharSequence[] items = {
 				p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
-				p.getResources().getString(R.string.controls_screenkb_by, "Simple Theme", "Beholder")
+				p.getResources().getString(R.string.controls_screenkb_by, "Simple Theme", "Beholder"),
+				p.getResources().getString(R.string.controls_screenkb_by, "Sun", "Sirea")
 				};
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
@@ -2558,8 +2559,8 @@ class Settings
 		{
 			if(Globals.TouchscreenKeyboardTheme < 0)
 				Globals.TouchscreenKeyboardTheme = 0;
-			if(Globals.TouchscreenKeyboardTheme > 1)
-				Globals.TouchscreenKeyboardTheme = 1;
+			if(Globals.TouchscreenKeyboardTheme > 2)
+				Globals.TouchscreenKeyboardTheme = 2;
 
 			if( Globals.TouchscreenKeyboardTheme == 0 )
 			{
@@ -2568,6 +2569,10 @@ class Settings
 			if( Globals.TouchscreenKeyboardTheme == 1 )
 			{
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.simpletheme));
+			}
+			if( Globals.TouchscreenKeyboardTheme == 2 )
+			{
+				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.sun));
 			}
 		}
 	}
