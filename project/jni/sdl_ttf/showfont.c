@@ -1,26 +1,23 @@
 /*
-    showfont:  An example of using the SDL_ttf library with 2D graphics.
-    Copyright (C) 1997-2004 Sam Lantinga
+  showfont:  An example of using the SDL_ttf library with 2D graphics.
+  Copyright (C) 2001-2012 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
-    License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
-
-/* $Id: showfont.c 2429 2006-05-14 21:03:44Z slouken $ */
 
 /* A simple program to test the text rendering feature of the TTF library */
 
@@ -38,9 +35,29 @@
 #define DEFAULT_PTSIZE	18
 #define DEFAULT_TEXT	"The quick brown fox jumped over the lazy dog"
 #define NUM_COLORS      256
+#define WIDTH   640
+#define HEIGHT  480
 
 static char *Usage =
-"Usage: %s [-solid] [-utf8|-unicode] [-b] [-i] [-u] [-fgcol r,g,b] [-bgcol r,g,b] <font>.ttf [ptsize] [text]\n";
+"Usage: %s [-solid] [-utf8|-unicode] [-b] [-i] [-u] [-s] [-outline size] [-hintlight|-hintmono|-hintnone] [-nokerning] [-fgcol r,g,b] [-bgcol r,g,b] <font>.ttf [ptsize] [text]\n";
+
+typedef struct {
+    SDL_Texture *caption;
+    SDL_Rect captionRect;
+    SDL_Texture *message;
+    SDL_Rect messageRect;
+} Scene;
+
+static void draw_scene(SDL_Renderer *renderer, Scene *scene)
+{
+	/* Clear the background to background color */
+    SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+    SDL_RenderClear(renderer);
+
+    SDL_RenderCopy(renderer, scene->caption, NULL, &scene->captionRect);
+    SDL_RenderCopy(renderer, scene->message, NULL, &scene->messageRect);
+    SDL_RenderPresent(renderer);
+}
 
 static void cleanup(int exitcode)
 {
@@ -52,21 +69,23 @@ static void cleanup(int exitcode)
 int main(int argc, char *argv[])
 {
 	char *argv0 = argv[0];
-	SDL_Surface *screen;
+    SDL_Window *window;
+    SDL_Renderer *renderer;
 	TTF_Font *font;
-	SDL_Surface *text, *temp;
+	SDL_Surface *text;
+    Scene scene;
 	int ptsize;
 	int i, done;
-	int rdiff, gdiff, bdiff;
-	SDL_Color colors[NUM_COLORS];
 	SDL_Color white = { 0xFF, 0xFF, 0xFF, 0 };
 	SDL_Color black = { 0x00, 0x00, 0x00, 0 };
 	SDL_Color *forecol;
 	SDL_Color *backcol;
-	SDL_Rect dstrect;
 	SDL_Event event;
 	int rendersolid;
 	int renderstyle;
+	int outline;
+	int hinting;
+	int kerning;
 	int dump;
 	enum {
 		RENDER_LATIN1,
@@ -81,6 +100,9 @@ int main(int argc, char *argv[])
 	rendersolid = 0;
 	renderstyle = TTF_STYLE_NORMAL;
 	rendertype = RENDER_LATIN1;
+	outline = 0;
+	hinting = TTF_HINTING_NORMAL;
+	kerning = 1;
 	/* Default is black and white */
 	forecol = &black;
 	backcol = &white;
@@ -102,6 +124,27 @@ int main(int argc, char *argv[])
 		} else
 		if ( strcmp(argv[i], "-u") == 0 ) {
 			renderstyle |= TTF_STYLE_UNDERLINE;
+		} else
+		if ( strcmp(argv[i], "-s") == 0 ) {
+			renderstyle |= TTF_STYLE_STRIKETHROUGH;
+		} else
+		if ( strcmp(argv[i], "-outline") == 0 ) {
+			if ( sscanf (argv[++i], "%d", &outline) != 1 ) {
+				fprintf(stderr, Usage, argv0);
+				return(1);
+			}
+		} else
+		if ( strcmp(argv[i], "-hintlight") == 0 ) {
+			hinting = TTF_HINTING_LIGHT;
+		} else
+		if ( strcmp(argv[i], "-hintmono") == 0 ) {
+			hinting = TTF_HINTING_MONO;
+		} else
+		if ( strcmp(argv[i], "-hintnone") == 0 ) {
+			hinting = TTF_HINTING_NONE;
+		} else
+		if ( strcmp(argv[i], "-nokerning") == 0 ) {
+			kerning = 0;
 		} else
 		if ( strcmp(argv[i], "-dump") == 0 ) {
 			dump = 1;
@@ -139,12 +182,6 @@ int main(int argc, char *argv[])
 		return(1);
 	}
 
-	/* Initialize SDL */
-	if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
-		fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
-		return(2);
-	}
-
 	/* Initialize the TTF library */
 	if ( TTF_Init() < 0 ) {
 		fprintf(stderr, "Couldn't initialize TTF: %s\n",SDL_GetError());
@@ -170,6 +207,9 @@ int main(int argc, char *argv[])
 		cleanup(2);
 	}
 	TTF_SetFontStyle(font, renderstyle);
+	TTF_SetFontOutline(font, outline);
+	TTF_SetFontKerning(font, kerning);
+	TTF_SetFontHinting(font, hinting);
 
 	if( dump ) {
 		for( i = 48; i < 123; i++ ) {
@@ -187,29 +227,11 @@ int main(int argc, char *argv[])
 		cleanup(0);
 	}
 
-	/* Set a 640x480x8 video mode */
-	screen = SDL_SetVideoMode(640, 480, 8, SDL_SWSURFACE);
-	if ( screen == NULL ) {
-		fprintf(stderr, "Couldn't set 640x480x8 video mode: %s\n",
-							SDL_GetError());
+	/* Create a window */
+    if (SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &window, &renderer) < 0) {
+        fprintf(stderr, "SDL_CreateWindowAndRenderer() failed: %s\n", SDL_GetError());
 		cleanup(2);
 	}
-
-	/* Set a palette that is good for the foreground colored text */
-	rdiff = backcol->r - forecol->r;
-	gdiff = backcol->g - forecol->g;
-	bdiff = backcol->b - forecol->b;
-	for ( i=0; i<NUM_COLORS; ++i ) {
-		colors[i].r = forecol->r + (i*rdiff)/4;
-		colors[i].g = forecol->g + (i*gdiff)/4;
-		colors[i].b = forecol->b + (i*bdiff)/4;
-	}
-	SDL_SetColors(screen, colors, 0, NUM_COLORS);
-
-	/* Clear the background to background color */
-	SDL_FillRect(screen, NULL,
-			SDL_MapRGB(screen->format, backcol->r, backcol->g, backcol->b));
-	SDL_UpdateRect(screen, 0, 0, 0, 0);
 
 	/* Show which font file we're looking at */
 	sprintf(string, "Font file: %s", argv[0]);  /* possible overflow */
@@ -219,11 +241,11 @@ int main(int argc, char *argv[])
 		text = TTF_RenderText_Shaded(font, string, *forecol, *backcol);
 	}
 	if ( text != NULL ) {
-		dstrect.x = 4;
-		dstrect.y = 4;
-		dstrect.w = text->w;
-		dstrect.h = text->h;
-		SDL_BlitSurface(text, NULL, screen, &dstrect);
+		scene.captionRect.x = 4;
+		scene.captionRect.y = 4;
+		scene.captionRect.w = text->w;
+		scene.captionRect.h = text->h;
+        scene.caption = SDL_CreateTextureFromSurface(renderer, text);
 		SDL_FreeSurface(text);
 	}
 	
@@ -306,32 +328,15 @@ int main(int argc, char *argv[])
 		TTF_CloseFont(font);
 		cleanup(2);
 	}
-	dstrect.x = (screen->w - text->w)/2;
-	dstrect.y = (screen->h - text->h)/2;
-	dstrect.w = text->w;
-	dstrect.h = text->h;
+	scene.messageRect.x = (WIDTH - text->w)/2;
+	scene.messageRect.y = (HEIGHT - text->h)/2;
+	scene.messageRect.w = text->w;
+	scene.messageRect.h = text->h;
+    scene.message = SDL_CreateTextureFromSurface(renderer, text);
 	printf("Font is generally %d big, and string is %hd big\n",
 						TTF_FontHeight(font), text->h);
 
-	/* Blit the text surface */
-	if ( SDL_BlitSurface(text, NULL, screen, &dstrect) < 0 ) {
-		fprintf(stderr, "Couldn't blit text to display: %s\n", 
-								SDL_GetError());
-		TTF_CloseFont(font);
-		cleanup(2);
-	}
-	SDL_UpdateRect(screen, 0, 0, 0, 0);
-
-	/* Set the text colorkey and convert to display format */
-	if ( SDL_SetColorKey(text, SDL_SRCCOLORKEY|SDL_RLEACCEL, 0) < 0 ) {
-		fprintf(stderr, "Warning: Couldn't set text colorkey: %s\n",
-								SDL_GetError());
-	}
-	temp = SDL_DisplayFormat(text);
-	if ( temp != NULL ) {
-		SDL_FreeSurface(text);
-		text = temp;
-	}
+    draw_scene(renderer, &scene);
 
 	/* Wait for a keystroke, and blit text on mouse press */
 	done = 0;
@@ -344,18 +349,11 @@ int main(int argc, char *argv[])
 		}
 		switch (event.type) {
 			case SDL_MOUSEBUTTONDOWN:
-				dstrect.x = event.button.x - text->w/2;
-				dstrect.y = event.button.y - text->h/2;
-				dstrect.w = text->w;
-				dstrect.h = text->h;
-				if ( SDL_BlitSurface(text, NULL, screen,
-							&dstrect) == 0 ) {
-					SDL_UpdateRects(screen, 1, &dstrect);
-				} else {
-					fprintf(stderr,
-					"Couldn't blit text to display: %s\n", 
-								SDL_GetError());
-				}
+				scene.messageRect.x = event.button.x - text->w/2;
+				scene.messageRect.y = event.button.y - text->h/2;
+				scene.messageRect.w = text->w;
+				scene.messageRect.h = text->h;
+                draw_scene(renderer, &scene);
 				break;
 				
 			case SDL_KEYDOWN:
@@ -368,6 +366,8 @@ int main(int argc, char *argv[])
 	}
 	SDL_FreeSurface(text);
 	TTF_CloseFont(font);
+    SDL_DestroyTexture(scene.caption);
+    SDL_DestroyTexture(scene.message);
 	cleanup(0);
 
 	/* Not reached, but fixes compiler warnings */

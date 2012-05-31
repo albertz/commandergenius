@@ -1,28 +1,23 @@
 /*
-    glfont:  An example of using the SDL_ttf library with OpenGL.
-    Copyright (C) 1997-2004 Sam Lantinga
+  glfont:  An example of using the SDL_ttf library with OpenGL.
+  Copyright (C) 2001-2012 Sam Lantinga <slouken@libsdl.org>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
-    License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-    The SDL_GL_* functions in this file are available in the public domain.
-
-    Sam Lantinga
-    slouken@libsdl.org
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 */
-
-/* $Id: glfont.c 2429 2006-05-14 21:03:44Z slouken $ */
 
 /* A simple program to test the text rendering feature of the TTF library */
 
@@ -39,16 +34,15 @@
 
 #define DEFAULT_PTSIZE	18
 #define DEFAULT_TEXT	"The quick brown fox jumped over the lazy dog"
-#define NUM_COLORS      256
+#define WIDTH   640
+#define HEIGHT  480
 
 static char *Usage =
 "Usage: %s [-utf8|-unicode] [-b] [-i] [-u] [-fgcol r,g,b] [-bgcol r,g,b] \
 <font>.ttf [ptsize] [text]\n";
 
-void SDL_GL_Enter2DMode()
+void SDL_GL_Enter2DMode(int width, int height)
 {
-	SDL_Surface *screen = SDL_GetVideoSurface();
-
 	/* Note, there may be other things you need to change,
 	   depending on how you have your OpenGL state set up.
 	*/
@@ -61,13 +55,13 @@ void SDL_GL_Enter2DMode()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glViewport(0, 0, screen->w, screen->h);
+	glViewport(0, 0, width, height);
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
 
-	glOrtho(0.0, (GLdouble)screen->w, (GLdouble)screen->h, 0.0, 0.0, 1.0);
+	glOrtho(0.0, (GLdouble)width, (GLdouble)height, 0.0, 0.0, 1.0);
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -104,8 +98,8 @@ GLuint SDL_GL_LoadTexture(SDL_Surface *surface, GLfloat *texcoord)
 	int w, h;
 	SDL_Surface *image;
 	SDL_Rect area;
-	Uint32 saved_flags;
 	Uint8  saved_alpha;
+    SDL_BlendMode saved_mode;
 
 	/* Use the surface width and height expanded to powers of 2 */
 	w = power_of_two(surface->w);
@@ -136,11 +130,10 @@ GLuint SDL_GL_LoadTexture(SDL_Surface *surface, GLfloat *texcoord)
 	}
 
 	/* Save the alpha blending attributes */
-	saved_flags = surface->flags&(SDL_SRCALPHA|SDL_RLEACCELOK);
-	saved_alpha = surface->format->alpha;
-	if ( (saved_flags & SDL_SRCALPHA) == SDL_SRCALPHA ) {
-		SDL_SetAlpha(surface, 0, 0);
-	}
+	SDL_GetSurfaceAlphaMod(surface, &saved_alpha);
+	SDL_SetSurfaceAlphaMod(surface, 0xFF);
+    SDL_GetSurfaceBlendMode(surface, &saved_mode);
+    SDL_SetSurfaceBlendMode(surface, SDL_BLENDMODE_NONE);
 
 	/* Copy the surface into the GL texture image */
 	area.x = 0;
@@ -150,9 +143,8 @@ GLuint SDL_GL_LoadTexture(SDL_Surface *surface, GLfloat *texcoord)
 	SDL_BlitSurface(surface, &area, image, &area);
 
 	/* Restore the alpha blending attributes */
-	if ( (saved_flags & SDL_SRCALPHA) == SDL_SRCALPHA ) {
-		SDL_SetAlpha(surface, saved_flags, saved_alpha);
-	}
+	SDL_SetSurfaceAlphaMod(surface, saved_alpha);
+    SDL_SetSurfaceBlendMode(surface, saved_mode);
 
 	/* Create an OpenGL texture for the image */
 	glGenTextures(1, &texture);
@@ -182,7 +174,8 @@ static void cleanup(int exitcode)
 int main(int argc, char *argv[])
 {
 	char *argv0 = argv[0];
-	SDL_Surface *screen;
+	SDL_Window *window;
+    SDL_GLContext context;
 	TTF_Font *font;
 	SDL_Surface *text;
 	int ptsize;
@@ -283,12 +276,6 @@ int main(int argc, char *argv[])
 		return(1);
 	}
 
-	/* Initialize SDL */
-	if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
-		fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
-		return(2);
-	}
-
 	/* Initialize the TTF library */
 	if ( TTF_Init() < 0 ) {
 		fprintf(stderr, "Couldn't initialize TTF: %s\n",SDL_GetError());
@@ -332,10 +319,18 @@ int main(int argc, char *argv[])
 	}
 
 	/* Set a 640x480 video mode */
-	screen = SDL_SetVideoMode(640, 480, 0, SDL_OPENGL);
-	if ( screen == NULL ) {
-		fprintf(stderr, "Couldn't set 640x480 OpenGL mode: %s\n",
-							SDL_GetError());
+	window = SDL_CreateWindow("glfont",
+                                SDL_WINDOWPOS_UNDEFINED,
+                                SDL_WINDOWPOS_UNDEFINED,
+                                WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
+	if ( window == NULL ) {
+		fprintf(stderr, "Couldn't create window: %s\n", SDL_GetError());
+		cleanup(2);
+	}
+
+    context = SDL_GL_CreateContext(window);
+    if ( context == NULL ) {
+		fprintf(stderr, "Couldn't create OpenGL context: %s\n", SDL_GetError());
 		cleanup(2);
 	}
 
@@ -380,8 +375,8 @@ int main(int argc, char *argv[])
 		TTF_CloseFont(font);
 		cleanup(2);
 	}
-	x = (screen->w - text->w)/2;
-	y = (screen->h - text->h)/2;
+	x = (WIDTH - text->w)/2;
+	y = (HEIGHT - text->h)/2;
 	w = text->w;
 	h = text->h;
 	printf("Font is generally %d big, and string is %hd big\n",
@@ -405,7 +400,7 @@ int main(int argc, char *argv[])
 	SDL_FreeSurface(text);
 
 	/* Initialize the GL state */
-	glViewport( 0, 0, screen->w, screen->h );
+	glViewport( 0, 0, WIDTH, HEIGHT );
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity( );
 
@@ -506,7 +501,7 @@ int main(int argc, char *argv[])
 		glRotatef(5.0, 1.0, 1.0, 1.0);
 
 		/* Show the text on the screen */
-		SDL_GL_Enter2DMode();
+		SDL_GL_Enter2DMode(WIDTH, HEIGHT);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glBegin(GL_TRIANGLE_STRIP);
 		glTexCoord2f(texMinX, texMinY); glVertex2i(x,   y  );
@@ -517,8 +512,9 @@ int main(int argc, char *argv[])
 		SDL_GL_Leave2DMode();
 
 		/* Swap the buffers so everything is visible */
-		SDL_GL_SwapBuffers( );
+		SDL_GL_SwapWindow(window);
 	}
+    SDL_GL_DeleteContext(context);
 	TTF_CloseFont(font);
 	cleanup(0);
 
