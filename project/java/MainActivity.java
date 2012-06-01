@@ -45,6 +45,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.view.View.OnKeyListener;
 import android.view.MenuItem;
+import android.view.Menu;
 import android.text.method.TextKeyListener;
 import java.util.LinkedList;
 import java.io.SequenceInputStream;
@@ -378,19 +379,44 @@ public class MainActivity extends Activity {
 		return true;
 	}
 
-	// Action bar support for Android 3.X, there are reports that on-screen overlay buttons do not send button events on Galaxy Nexus S, however in emulator everything works.
+	// Action bar support for Android 3+, which replaces the Menu button, however in emulator everything works, because it's broken
+	// Also this does not work, because that action bar thingie is NOT shown for fullscreen apps, so we're targetting the legacy compatibility mode here
+	/*
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		System.out.println("libSDL: onOptionsItemSelected: MenuItem ID " + item.getItemId() + " TODO: translate this ID into keypress event. It is reported that Samsung Droid X with ICS does NOT send a proper keyevent when you press Back on the action bar, it should send this event instead.");
-		switch (item.getItemId())
+		if( mGLView != null )
 		{
-			case android.R.id.home:
-			return true;
-			default:
-			return super.onOptionsItemSelected(item);
+			if(item.getItemId() == 2)
+			{
+				mGLView.nativeKey( KeyEvent.KEYCODE_SEARCH, 1 );
+				mGLView.nativeKey( KeyEvent.KEYCODE_SEARCH, 0 );
+			}
+			else
+			{
+				mGLView.nativeKey( KeyEvent.KEYCODE_MENU, 1 );
+				mGLView.nativeKey( KeyEvent.KEYCODE_MENU, 0 );
+			}
 		}
+		else
+		if( keyListener != null )
+		{
+			if(item.getItemId() == 2)
+				keyListener.onKeyEvent(KeyEvent.KEYCODE_SEARCH);
+			else
+				keyListener.onKeyEvent(KeyEvent.KEYCODE_MENU);
+		}
+		return true;
 	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		menu.add(0, 1, 0, "Menu");
+		menu.add(0, 2, 0, "Search");
+		return true;
+	}
+	*/
 
 	@Override
 	public boolean dispatchTouchEvent(final MotionEvent ev)
