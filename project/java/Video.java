@@ -344,20 +344,29 @@ abstract class DifferentTouchInput
 				process(event);
 				return;
 			}
+			int x = (int)((event.getX() - xmin) / xmax * 65535.0f);
+			int y = (int)((event.getY() - ymin) / ymax * 65535.0f);
+			// Use only left square part of a touch surface - I've heard reports that it breaks functionality, feel free to uncomment and test it.
+			/*
 			int x = (int)((event.getX() - xmin) / minRange * 65535.0f);
 			int y = (int)((event.getY() - ymin) / minRange * 65535.0f);
+			*/
 			if( x > 65535 )
 				x = 65535;
+			if( x < 0 )
+				x = 0;
 			if( y > 65535 )
 				y = 65535;
+			if( y < 0 )
+				y = 0;
 			int down = 1;
 			int multitouch = event.getPointerCount() - 1;
 			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP ||
 				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_CANCEL )
 				down = 0;
-			// TODO: we're processing only oen touch pointer, touchpad will most probably support multitouch
+			// TODO: we're processing only one touch pointer, touchpad will most probably support multitouch
 			//System.out.println("libSDL: touch pad event: " + x + ":" + y + " action " + event.getAction() + " down " + down + " multitouch " + multitouch );
-			DemoGLSurfaceView.nativeTouchpad( x, -y, down, multitouch ); // Y axis is inverted, as you may have guessed
+			DemoGLSurfaceView.nativeTouchpad( x, 65535-y, down, multitouch ); // Y axis is inverted, as you may have guessed
 		}
 	}
 }
