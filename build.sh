@@ -6,7 +6,7 @@ NDKBUILDPATH=$PATH
 export `grep "AppFullName=" AndroidAppSettings.cfg`
 if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && \
 		[ "`readlink AndroidAppSettings.cfg`" -ot "project/src/Globals.java" ] && \
-		[ -z "`find project/java/* -cnewer project/src/Globals.java`" ] && \
+		[ -z "`find project/java/* project/AndroidManifestTemplate.xml -cnewer project/src/Globals.java`" ] && \
 		[ -z "`find project/jni/application/src/AndroidData/* -cnewer project/src/Globals.java`" ] ) ; then true ; else
 	./ChangeAppSettings.sh -a
 	sleep 1

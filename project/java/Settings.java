@@ -2559,8 +2559,8 @@ class Settings
 		{
 			if(Globals.TouchscreenKeyboardTheme < 0)
 				Globals.TouchscreenKeyboardTheme = 0;
-			if(Globals.TouchscreenKeyboardTheme > 2)
-				Globals.TouchscreenKeyboardTheme = 2;
+			if(Globals.TouchscreenKeyboardTheme > 1) // TODO: disabled Sun theme because it's not finished yet
+				Globals.TouchscreenKeyboardTheme = 1;
 
 			if( Globals.TouchscreenKeyboardTheme == 0 )
 			{
