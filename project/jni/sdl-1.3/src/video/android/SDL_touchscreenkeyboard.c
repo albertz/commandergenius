@@ -90,6 +90,8 @@ static GLTexture_t buttonImages[MAX_BUTTONS*2];
 static GLTexture_t mousePointer;
 enum { MOUSE_POINTER_W = 32, MOUSE_POINTER_H = 32, MOUSE_POINTER_X = 5, MOUSE_POINTER_Y = 7 }; // X and Y are offsets of the pointer tip
 
+static int SunTheme = 0;
+
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
 	return ( x >= r->x && x <= r->x + r->w ) && ( y >= r->y && y <= r->y + r->h );
@@ -172,16 +174,19 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * des
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
 
-	cropRect[0] = 0;
-	cropRect[1] = tex->h;
-	cropRect[2] = tex->w;
-	cropRect[3] = -tex->h;
 	if(src)
 	{
 		cropRect[0] = src->x;
 		cropRect[1] = src->h;
 		cropRect[2] = src->w;
 		cropRect[3] = -src->h;
+	}
+	else
+	{
+		cropRect[0] = 0;
+		cropRect[1] = tex->h;
+		cropRect[2] = tex->w;
+		cropRect[3] = -tex->h;
 	}
 	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
 	glDrawTexiOES(dest->x, SDL_ANDROID_sWindowHeight - dest->y - dest->h, 0, dest->w, dest->h);
@@ -700,7 +705,7 @@ static int setupScreenKeyboardButtonTexture( GLTexture_t * data, Uint8 * charBuf
 
 	glGenTextures(1, &data->id);
 	glBindTexture(GL_TEXTURE_2D, data->id);
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "On-screen keyboard generated OpenGL texture ID %d", data->id);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "On-screen keyboard generated OpenGL texture ID %d", data->id);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_w, texture_h, 0, GL_RGBA,
 					bpp == 4 ? GL_UNSIGNED_BYTE : (format ? GL_UNSIGNED_SHORT_4_4_4_4 : GL_UNSIGNED_SHORT_5_5_5_1), NULL);
@@ -718,46 +723,78 @@ static int setupScreenKeyboardButtonTexture( GLTexture_t * data, Uint8 * charBuf
 	return 3*sizeof(int) + w * h * bpp;
 }
 
-static int setupScreenKeyboardButton( int buttonID, Uint8 * charBuf, int count )
+static int setupScreenKeyboardButtonLegacy( int buttonID, Uint8 * charBuf )
 {
 	GLTexture_t * data = NULL;
+
+	if( buttonID < 5 )
+		data = &(arrowImages[buttonID]);
+	else
+	if( buttonID < 9 )
+		data = &(buttonAutoFireImages[buttonID-5]);
+	else
+		data = &(buttonImages[buttonID-9]);
+
+	if( buttonID == 23 )
+		data = &mousePointer;
+	else if( buttonID > 22 ) // Error, array too big
+		return 12; // Return value bigger than zero to iterate it
+
+	return setupScreenKeyboardButtonTexture(data, charBuf);
+}
+
+static int setupScreenKeyboardButtonSun( int buttonID, Uint8 * charBuf )
+{
+	GLTexture_t * data = NULL;
+	int i, ret;
+
+	if( buttonID == 0 )
+		data = &(arrowImages[0]);
+	if( buttonID >= 1 && buttonID <= 4 )
+		data = &(buttonImages[buttonID-1]);
+	if( buttonID >= 5 && buttonID <= 8 )
+		data = &(buttonImages[4+(buttonID-5)*2]);
+	if( buttonID == 9 )
+		data = &mousePointer;
+	else if( buttonID > 9 ) // Error, array too big
+		return 12; // Return value bigger than zero to iterate it
+
+	ret = setupScreenKeyboardButtonTexture(data, charBuf);
+
+	for( i = 1; i <=4; i++ )
+		arrowImages[i] = arrowImages[0];
 	
+	for( i = 2; i < MAX_BUTTONS; i++ )
+		buttonImages[i * 2 + 1] = buttonImages[i * 2];
+
+	for( i = 0; i < MAX_BUTTONS_AUTOFIRE*2; i++ )
+		buttonAutoFireImages[i] = arrowImages[0];
+
+	buttonImages[BUTTON_TEXT_INPUT*2] = buttonImages[10];
+	buttonImages[BUTTON_TEXT_INPUT*2+1] = buttonImages[10];
+
+	return ret;
+}
+
+static int setupScreenKeyboardButton( int buttonID, Uint8 * charBuf, int count )
+{
 	if(count == 24)
 	{
-		if( buttonID < 5 )
-			data = &(arrowImages[buttonID]);
-		else
-		if( buttonID < 9 )
-			data = &(buttonAutoFireImages[buttonID-5]);
-		else
-			data = &(buttonImages[buttonID-9]);
-
-		if( buttonID == 23 )
-			data = &mousePointer;
-		else if( buttonID > 22 ) // Error, array too big
-			return 12; // Return value bigger than zero to iterate it
+		SunTheme = 0;
+		return setupScreenKeyboardButtonLegacy(buttonID, charBuf);
 	}
 	else if(count == 10)
 	{
-		if( buttonID == 0 )
-			data = &(arrowImages[0]);
-		if( buttonID >= 1 && buttonID <= 4 )
-			data = &(buttonImages[buttonID-1]);
-		if( buttonID >= 5 && buttonID <= 8 )
-			data = &(buttonImages[4+(buttonID-5)*2]);
-		if( buttonID == 9 )
-			data = &mousePointer;
-		else if( buttonID > 9 ) // Error, array too big
-			return 12; // Return value bigger than zero to iterate it
+		SunTheme = 1;
+		return setupScreenKeyboardButtonSun(buttonID, charBuf);
 	}
 	else
 	{
 		__android_log_print(ANDROID_LOG_FATAL, "libSDL", "On-screen keyboard buton img count = %d, should be 10 or 24", count);
 		return 12; // Return value bigger than zero to iterate it
 	}
-
-	return setupScreenKeyboardButtonTexture(data, charBuf);
 }
+
 
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButtons) ( JNIEnv*  env, jobject thiz, jbyteArray charBufJava )
@@ -768,11 +805,16 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButtons) ( JNIEnv*  env, jobj
 	int but, pos, count;
 	memcpy(&count, charBuf, sizeof(int));
 	count = ntohl(count);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboardButtons: enter, count %d", count);
 	
 	for( but = 0, pos = sizeof(int); pos < len; but ++ )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboardButtons: button %d pos %d", but, pos);
 		pos += setupScreenKeyboardButton( but, charBuf + pos, count );
+	}
 	
 	(*env)->ReleaseByteArrayElements(env, charBufJava, (jbyte *)charBuf, 0);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboardButtons: exit");
 }
 
 

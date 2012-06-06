@@ -2535,22 +2535,29 @@ class Settings
 		// TODO: get current user name and set envvar USER, the API is not availalbe on Android 1.6 so I don't bother with this
 	}
 
-	static byte [] loadRaw(Activity p,int res)
+	static byte [] loadRaw(Activity p, int res)
 	{
 		byte [] buf = new byte[65536 * 2];
-		byte [] a = new byte[0];
+		byte [] a = new byte[65536 * 4 * 10]; // We need 2363516 bytes for the Sun theme
+		int written = 0;
 		try{
 			InputStream is = new GZIPInputStream(p.getResources().openRawResource(res));
 			int readed = 0;
 			while( (readed = is.read(buf)) >= 0 )
 			{
-				byte [] b = new byte [a.length + readed];
-				System.arraycopy(a, 0, b, 0, a.length);
-				System.arraycopy(buf, 0, b, a.length, readed);
-				a = b;
+				if( written + readed > a.length )
+				{
+					byte [] b = new byte [written + readed];
+					System.arraycopy(a, 0, b, 0, written);
+					a = b;
+				}
+				System.arraycopy(buf, 0, a, written, readed);
+				written += readed;
 			}
 		} catch(Exception e) {};
-		return a;
+		byte [] b = new byte [written];
+		System.arraycopy(a, 0, b, 0, written);
+		return b;
 	}
 	
 	static void SetupTouchscreenKeyboardGraphics(Activity p)
@@ -2559,8 +2566,8 @@ class Settings
 		{
 			if(Globals.TouchscreenKeyboardTheme < 0)
 				Globals.TouchscreenKeyboardTheme = 0;
-			if(Globals.TouchscreenKeyboardTheme > 1) // TODO: disabled Sun theme because it's not finished yet
-				Globals.TouchscreenKeyboardTheme = 1;
+			if(Globals.TouchscreenKeyboardTheme > 2)
+				Globals.TouchscreenKeyboardTheme = 2;
 
 			if( Globals.TouchscreenKeyboardTheme == 0 )
 			{

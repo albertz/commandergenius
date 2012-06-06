@@ -130,8 +130,8 @@ sun-5.ico-10 \
 \
 sun-3.ico-10 \
 sun-9.ico-10 \
-sun-1.ico-10 \
 sun-8.ico-10 \
+sun-1.ico-10 \
 \
 sun-mouse_pointer \
 ; do

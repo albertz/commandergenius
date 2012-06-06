@@ -325,9 +325,9 @@ fi
 if [ -z "$RedefinedKeys" -o -z "$AUTO" ]; then
 echo
 echo "Redefine common keys to SDL keysyms"
-echo "MENU and BACK hardware keys and TOUCHSCREEN virtual 'key' are available on all devices, other keys may be absent"
+echo "BACK hardware key is available on all devices, MENU is available on pre-ICS devices, other keys may be absent"
 echo "SEARCH and CALL by default return same keycode as DPAD_CENTER - one of those keys is available on most devices"
-echo "Use word NO_REMAP if you want to preserve native functionality for certain key "
+echo "Use word NO_REMAP if you want to preserve native functionality for certain key (volume keys typically)"
 echo "TOUCHSCREEN DPAD_CENTER/SEARCH VOLUMEUP VOLUMEDOWN MENU BACK CAMERA - Java keycodes"
 echo "$RedefinedKeys - current SDL keycodes"
 echo -n ": "
