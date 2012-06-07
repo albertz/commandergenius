@@ -123,10 +123,10 @@ printf '\000\000\000\012' > ../../res/raw/sun.raw # size, 012 = 10
 for F in \
 sun-2.ico-10 \
 \
-sun-6.ico-10 \
-sun-7.ico-10 \
 sun-4.ico-10 \
 sun-5.ico-10 \
+sun-6.ico-10 \
+sun-7.ico-10 \
 \
 sun-3.ico-10 \
 sun-9.ico-10 \

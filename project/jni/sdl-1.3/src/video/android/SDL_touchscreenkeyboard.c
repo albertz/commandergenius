@@ -43,6 +43,8 @@
 
 // #include "touchscreentheme.h" // Not used yet
 
+// TODO: this code is a HUGE MESS
+
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 
@@ -90,7 +92,8 @@ static GLTexture_t buttonImages[MAX_BUTTONS*2];
 static GLTexture_t mousePointer;
 enum { MOUSE_POINTER_W = 32, MOUSE_POINTER_H = 32, MOUSE_POINTER_X = 5, MOUSE_POINTER_Y = 7 }; // X and Y are offsets of the pointer tip
 
-static int SunTheme = 0;
+static int sunTheme = 0;
+static int joystickTouchPoints[2];
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
@@ -148,7 +151,7 @@ static inline void endDrawingTex()
 	glDisable(GL_TEXTURE_2D);
 }
 
-static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, int flipX, int flipY, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	GLint cropRect[4];
 
@@ -177,7 +180,7 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * des
 	if(src)
 	{
 		cropRect[0] = src->x;
-		cropRect[1] = src->h;
+		cropRect[1] = tex->h - src->y;
 		cropRect[2] = src->w;
 		cropRect[3] = -src->h;
 	}
@@ -188,24 +191,34 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * des
 		cropRect[2] = tex->w;
 		cropRect[3] = -tex->h;
 	}
+	if(flipX)
+	{
+		cropRect[0] += cropRect[2];
+		cropRect[2] = -cropRect[2];
+	}
+	if(flipY)
+	{
+		cropRect[1] += cropRect[3];
+		cropRect[3] = -cropRect[3];
+	}
 	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
 	glDrawTexiOES(dest->x, SDL_ANDROID_sWindowHeight - dest->y - dest->h, 0, dest->w, dest->h);
 }
 
-int SDL_ANDROID_drawTouchscreenKeyboard()
+static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	drawCharTexFlip(tex, src, dest, 0, 0, r, g, b, a);
+}
+
+static void drawTouchscreenKeyboardLegacy()
 {
 	int i;
 	int blendFactor;
-
-	if( !SDL_ANDROID_isTouchscreenKeyboardUsed || !touchscreenKeyboardShown )
-		return 0;
 
 	blendFactor =		( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
-
-	beginDrawingTex();
 	if( blendFactor == 0 )
 		drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 255, 255, 255, transparency );
 	else
@@ -278,6 +291,83 @@ int SDL_ANDROID_drawTouchscreenKeyboard()
 						NULL, &buttonsDraw[i], 255, 255, 255, transparency );
 		}
 	}
+}
+
+static void drawTouchscreenKeyboardSun()
+{
+	int i;
+
+	drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 255, 255, 255, transparency );
+	if(pointerInButtonRect[MAX_BUTTONS] != -1)
+	{
+		SDL_Rect touch = arrowsDraw;
+		touch.w /= 2;
+		touch.h /= 2;
+		touch.x = joystickTouchPoints[0] - touch.w / 2;
+		touch.y = joystickTouchPoints[1] - touch.h / 2;
+		drawCharTex( &arrowImages[0], NULL, &touch, 255, 255, 255, transparency );
+	}
+
+	for( i = 0; i < MAX_BUTTONS; i++ )
+	{
+		int pressed = SDL_GetKeyboardState(NULL)[buttonKeysyms[i]];
+		if( ! buttons[i].h || ! buttons[i].w )
+			continue;
+		if( i < AutoFireButtonsNum )
+		{
+			if( ButtonAutoFire[i] == 1 && SDL_GetTicks() - ButtonAutoFireDecay[i] > 1000 )
+			{
+				ButtonAutoFire[i] = 0;
+			}
+			if( ! ButtonAutoFire[i] && SDL_GetTicks() - ButtonAutoFireDecay[i] > 300 )
+			{
+				if( ButtonAutoFireX[i*2] > 0 )
+					ButtonAutoFireX[i*2] --;
+				if( ButtonAutoFireX[i*2+1] > 0 )
+					ButtonAutoFireX[i*2+1] --;
+				ButtonAutoFireDecay[i] = SDL_GetTicks();
+			}
+		}
+
+		if( i < AutoFireButtonsNum && ButtonAutoFire[i] )
+			drawCharTex( &buttonAutoFireImages[i*2+1],
+						NULL, &buttonsDraw[i], 255, 255, 255, transparency );
+
+		drawCharTexFlip( &buttonImages[ pressed ? (i * 2 + 1) : (i * 2) ],
+						NULL, &buttonsDraw[i], (i >= 2 && pressed), (i >= 2 && pressed), 255, 255, 255, transparency );
+
+		if( i < AutoFireButtonsNum && ! ButtonAutoFire[i] &&
+			( ButtonAutoFireX[i*2] > 0 || ButtonAutoFireX[i*2+1] > 0 ) )
+		{
+			int pos1src = buttonImages[i*2+1].w / 2 - ButtonAutoFireX[i*2];
+			int pos1dst = buttonsDraw[i].w * pos1src / buttonImages[i*2+1].w;
+			int pos2src = buttonImages[i*2+1].w - ( buttonImages[i*2+1].w / 2 - ButtonAutoFireX[i*2+1] );
+			int pos2dst = buttonsDraw[i].w * pos2src / buttonImages[i*2+1].w;
+			SDL_Rect autoFireDest;
+
+			autoFireDest.w = pos2dst - pos1dst;
+			autoFireDest.h = pos2dst - pos1dst;
+			autoFireDest.x = buttonsDraw[i].x + buttonsDraw[i].w/2 - autoFireDest.w/2;
+			autoFireDest.y = buttonsDraw[i].y + buttonsDraw[i].h/2 - autoFireDest.h/2;
+
+			drawCharTex( &buttonAutoFireImages[i*2],
+						NULL, &autoFireDest, 255, 255, 255, transparency );
+		}
+	}
+}
+
+int SDL_ANDROID_drawTouchscreenKeyboard()
+{
+	if( !SDL_ANDROID_isTouchscreenKeyboardUsed || !touchscreenKeyboardShown )
+		return 0;
+
+	beginDrawingTex();
+
+	if(sunTheme)
+		drawTouchscreenKeyboardSun();
+	else
+		drawTouchscreenKeyboardLegacy();
+
 	endDrawingTex();
 
 	return 1;
@@ -338,6 +428,8 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 			if( pointerInButtonRect[MAX_BUTTONS] == -1 )
 			{
 				pointerInButtonRect[MAX_BUTTONS] = pointerId;
+				joystickTouchPoints[0] = x;
+				joystickTouchPoints[1] = y;
 				if( SDL_ANDROID_isJoystickUsed )
 				{
 					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, (x - arrows.x - arrows.w / 2) * 65534 / arrows.w );
@@ -462,6 +554,8 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 			}
 			else
 			{
+				joystickTouchPoints[0] = x;
+				joystickTouchPoints[1] = y;
 				if( SDL_ANDROID_isJoystickUsed )
 				{
 					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, (x - arrows.x - arrows.w / 2) * 65534 / arrows.w );
@@ -594,39 +688,49 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	buttonDrawSize = drawsize;
 	switch(_transparency)
 	{
-		case 0: transparency = 16; break;
-		case 1: transparency = 32; break;
-		case 2: transparency = 64; break;
-		case 3: transparency = 128; break;
-		case 4: transparency = 192; break;
-		default: transparency = 128; break;
+		case 0: transparency = 32; break;
+		case 1: transparency = 64; break;
+		case 2: transparency = 128; break;
+		case 3: transparency = 192; break;
+		case 4: transparency = 255; break;
+		default: transparency = 192; break;
 	}
 	
 	// Arrows to the lower-left part of screen
+	arrows.w = SDL_ANDROID_sWindowWidth / (size + 2) * 2 / 3;
+	arrows.h = arrows.w;
+	// Move to the screen edge
+	arrows.x = 0;
+	arrows.y = SDL_ANDROID_sWindowHeight - arrows.h;
+	/*
+	// This will leave some unused space near the edge
 	arrows.x = SDL_ANDROID_sWindowWidth / 4;
 	arrows.y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowWidth / 4;
-	arrows.w = SDL_ANDROID_sWindowWidth / (size + 2);
-	arrows.h = arrows.w;
 	arrows.x -= arrows.w/2;
 	arrows.y -= arrows.h/2;
 	// Move arrows from the center of the screen
 	arrows.x -= size * SDL_ANDROID_sWindowWidth / 32;
 	arrows.y += size * SDL_ANDROID_sWindowWidth / 32;
+	*/
 
 	// Buttons to the lower-right in 2 rows
-	for(i = 0; i < 2; i++)
-	for(ii = 0; ii < 3; ii++)
+	for(i = 0; i < 3; i++)
+	for(ii = 0; ii < 2; ii++)
 	{
 		// Custom button ordering
 		int iii = ii + i*2;
-		if( ii == 2 )
-			iii = 4 + i;
-		buttons[iii].x = SDL_ANDROID_sWindowWidth - SDL_ANDROID_sWindowWidth / 12 - (SDL_ANDROID_sWindowWidth * ii / 6);
-		buttons[iii].y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowHeight / 8 - (SDL_ANDROID_sWindowHeight * i / 4);
 		buttons[iii].w = SDL_ANDROID_sWindowWidth / (size + 2) / 3;
 		buttons[iii].h = buttons[iii].w;
+		// Move to the screen edge
+		buttons[iii].x = SDL_ANDROID_sWindowWidth - buttons[iii].w * (ii + 1);
+		buttons[iii].y = SDL_ANDROID_sWindowHeight - buttons[iii].h * (i + 1);
+		/*
+		// This will leave some unused space near the edge and between buttons
+		buttons[iii].x = SDL_ANDROID_sWindowWidth - SDL_ANDROID_sWindowWidth / 12 - (SDL_ANDROID_sWindowWidth * ii / 6);
+		buttons[iii].y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowHeight / 8 - (SDL_ANDROID_sWindowHeight * i / 4);
 		buttons[iii].x -= buttons[iii].w/2;
 		buttons[iii].y -= buttons[iii].h/2;
+		*/
 	}
 	buttons[6].x = 0;
 	buttons[6].y = 0;
@@ -651,7 +755,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	}
 };
 
-JNIEXPORT void JNICALL 
+JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenKeyboardUsed) ( JNIEnv*  env, jobject thiz)
 {
 	SDL_ANDROID_isTouchscreenKeyboardUsed = 1;
@@ -780,12 +884,12 @@ static int setupScreenKeyboardButton( int buttonID, Uint8 * charBuf, int count )
 {
 	if(count == 24)
 	{
-		SunTheme = 0;
+		sunTheme = 0;
 		return setupScreenKeyboardButtonLegacy(buttonID, charBuf);
 	}
 	else if(count == 10)
 	{
-		SunTheme = 1;
+		sunTheme = 1;
 		return setupScreenKeyboardButtonSun(buttonID, charBuf);
 	}
 	else
