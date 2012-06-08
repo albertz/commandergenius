@@ -334,7 +334,7 @@ static void drawTouchscreenKeyboardSun()
 						NULL, &buttonsDraw[i], 255, 255, 255, transparency );
 
 		drawCharTexFlip( &buttonImages[ pressed ? (i * 2 + 1) : (i * 2) ],
-						NULL, &buttonsDraw[i], (i >= 2 && pressed), (i >= 2 && pressed), 255, 255, 255, transparency );
+						NULL, &buttonsDraw[i], (i >= 2 && pressed), 0, 255, 255, 255, transparency );
 
 		if( i < AutoFireButtonsNum && ! ButtonAutoFire[i] &&
 			( ButtonAutoFireX[i*2] > 0 || ButtonAutoFireX[i*2+1] > 0 ) )
@@ -939,10 +939,10 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 		shrinkButtonRect(buttons[i], &buttonsDraw[i]);
 		if( i < AutoFireButtonsNum )
 		{
-			buttonsAutoFireRect[i].w = buttons[i].w * 2;
-			buttonsAutoFireRect[i].h = buttons[i].h * 2;
-			buttonsAutoFireRect[i].x = buttons[i].x - buttons[i].w / 2;
-			buttonsAutoFireRect[i].y = buttons[i].y - buttons[i].h / 2;
+			buttonsAutoFireRect[i].w = buttons[i].w * 3 / 2;
+			buttonsAutoFireRect[i].h = buttons[i].h * 3 / 2;
+			buttonsAutoFireRect[i].x = buttons[i].x + buttons[i].w / 2 - buttonsAutoFireRect[i].w / 2;
+			buttonsAutoFireRect[i].y = buttons[i].y + buttons[i].h / 2 - buttonsAutoFireRect[i].h / 2;
 		}
 	}
 	return 1;
