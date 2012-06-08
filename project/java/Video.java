@@ -635,7 +635,6 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event) {
 		//System.out.println("Got key down event, id " + keyCode);
-
 		if( nativeKey( keyCode, 1 ) == 0 )
 				return super.onKeyDown(keyCode, event);
 		return true;

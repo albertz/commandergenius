@@ -68,6 +68,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
+import java.util.concurrent.Semaphore;
 
 public class MainActivity extends Activity {
 	@Override
@@ -145,7 +146,20 @@ public class MainActivity extends Activity {
 					p.LoadLibraries();
 					p.mAudioThread = new AudioThread(p);
 					System.out.println("libSDL: Loading settings");
-					Settings.Load(p);
+					final Semaphore loaded = new Semaphore(0);
+					class Callback2 implements Runnable
+					{
+						public MainActivity Parent;
+						public void run()
+						{
+							Settings.Load(Parent);
+							loaded.release();
+						}
+					}
+					Callback2 cb = new Callback2();
+					cb.Parent = p;
+					p.runOnUiThread(cb);
+					loaded.acquireUninterruptibly();
 					if(!Globals.CompatibilityHacksStaticInit)
 						p.LoadApplicationLibrary(p);
 				}
