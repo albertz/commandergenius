@@ -809,7 +809,7 @@ static int setupScreenKeyboardButtonTexture( GLTexture_t * data, Uint8 * charBuf
 
 	glGenTextures(1, &data->id);
 	glBindTexture(GL_TEXTURE_2D, data->id);
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "On-screen keyboard generated OpenGL texture ID %d", data->id);
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "On-screen keyboard generated OpenGL texture ID %d", data->id);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_w, texture_h, 0, GL_RGBA,
 					bpp == 4 ? GL_UNSIGNED_BYTE : (format ? GL_UNSIGNED_SHORT_4_4_4_4 : GL_UNSIGNED_SHORT_5_5_5_1), NULL);
@@ -909,16 +909,11 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButtons) ( JNIEnv*  env, jobj
 	int but, pos, count;
 	memcpy(&count, charBuf, sizeof(int));
 	count = ntohl(count);
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboardButtons: enter, count %d", count);
 	
 	for( but = 0, pos = sizeof(int); pos < len; but ++ )
-	{
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboardButtons: button %d pos %d", but, pos);
 		pos += setupScreenKeyboardButton( but, charBuf + pos, count );
-	}
 	
 	(*env)->ReleaseByteArrayElements(env, charBufJava, (jbyte *)charBuf, 0);
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboardButtons: exit");
 }
 
 
