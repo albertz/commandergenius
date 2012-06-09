@@ -334,7 +334,7 @@ static void drawTouchscreenKeyboardSun()
 						NULL, &buttonsDraw[i], 255, 255, 255, transparency );
 
 		drawCharTexFlip( &buttonImages[ pressed ? (i * 2 + 1) : (i * 2) ],
-						NULL, &buttonsDraw[i], (i >= 2 && pressed), (i >= 2 && pressed), 255, 255, 255, transparency );
+						NULL, &buttonsDraw[i], (i >= 2 && pressed), 0, 255, 255, 255, transparency );
 
 		if( i < AutoFireButtonsNum && ! ButtonAutoFire[i] &&
 			( ButtonAutoFireX[i*2] > 0 || ButtonAutoFireX[i*2+1] > 0 ) )
@@ -809,7 +809,7 @@ static int setupScreenKeyboardButtonTexture( GLTexture_t * data, Uint8 * charBuf
 
 	glGenTextures(1, &data->id);
 	glBindTexture(GL_TEXTURE_2D, data->id);
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "On-screen keyboard generated OpenGL texture ID %d", data->id);
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "On-screen keyboard generated OpenGL texture ID %d", data->id);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_w, texture_h, 0, GL_RGBA,
 					bpp == 4 ? GL_UNSIGNED_BYTE : (format ? GL_UNSIGNED_SHORT_4_4_4_4 : GL_UNSIGNED_SHORT_5_5_5_1), NULL);
@@ -909,16 +909,11 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButtons) ( JNIEnv*  env, jobj
 	int but, pos, count;
 	memcpy(&count, charBuf, sizeof(int));
 	count = ntohl(count);
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboardButtons: enter, count %d", count);
 	
 	for( but = 0, pos = sizeof(int); pos < len; but ++ )
-	{
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboardButtons: button %d pos %d", but, pos);
 		pos += setupScreenKeyboardButton( but, charBuf + pos, count );
-	}
 	
 	(*env)->ReleaseByteArrayElements(env, charBufJava, (jbyte *)charBuf, 0);
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Settings_nativeSetupScreenKeyboardButtons: exit");
 }
 
 
@@ -939,10 +934,10 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 		shrinkButtonRect(buttons[i], &buttonsDraw[i]);
 		if( i < AutoFireButtonsNum )
 		{
-			buttonsAutoFireRect[i].w = buttons[i].w * 2;
-			buttonsAutoFireRect[i].h = buttons[i].h * 2;
-			buttonsAutoFireRect[i].x = buttons[i].x - buttons[i].w / 2;
-			buttonsAutoFireRect[i].y = buttons[i].y - buttons[i].h / 2;
+			buttonsAutoFireRect[i].w = buttons[i].w * 3 / 2;
+			buttonsAutoFireRect[i].h = buttons[i].h * 3 / 2;
+			buttonsAutoFireRect[i].x = buttons[i].x + buttons[i].w / 2 - buttonsAutoFireRect[i].w / 2;
+			buttonsAutoFireRect[i].y = buttons[i].y + buttons[i].h / 2 - buttonsAutoFireRect[i].h / 2;
 		}
 	}
 	return 1;

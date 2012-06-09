@@ -68,6 +68,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
+import java.util.concurrent.Semaphore;
 
 public class MainActivity extends Activity {
 	@Override
@@ -129,28 +130,45 @@ public class MainActivity extends Activity {
 		
 		setContentView(_videoLayout);
 
-		if(mAudioThread == null) // Starting from background (should not happen)
+		class Callback implements Runnable
 		{
-			System.out.println("libSDL: Loading libraries");
-			LoadLibraries();
-			mAudioThread = new AudioThread(this);
-			System.out.println("libSDL: Loading settings");
-			Settings.Load(this);
-			if(!Globals.CompatibilityHacksStaticInit)
-				LoadApplicationLibrary(this);
-		}
-
-		if( !Settings.settingsChanged )
-		{
-			System.out.println("libSDL: " + String.valueOf(Globals.StartupMenuButtonTimeout) + "-msec timeout in startup screen");
-			class Callback implements Runnable
+			MainActivity p;
+			Callback( MainActivity _p ) { p = _p; }
+			public void run()
 			{
-				MainActivity p;
-				Callback( MainActivity _p ) { p = _p; }
-				public void run()
+				try {
+					Thread.sleep(200);
+				} catch( InterruptedException e ) {};
+
+				if(p.mAudioThread == null)
+				{
+					System.out.println("libSDL: Loading libraries");
+					p.LoadLibraries();
+					p.mAudioThread = new AudioThread(p);
+					System.out.println("libSDL: Loading settings");
+					final Semaphore loaded = new Semaphore(0);
+					class Callback2 implements Runnable
+					{
+						public MainActivity Parent;
+						public void run()
+						{
+							Settings.Load(Parent);
+							loaded.release();
+						}
+					}
+					Callback2 cb = new Callback2();
+					cb.Parent = p;
+					p.runOnUiThread(cb);
+					loaded.acquireUninterruptibly();
+					if(!Globals.CompatibilityHacksStaticInit)
+						p.LoadApplicationLibrary(p);
+				}
+
+				if( !Settings.settingsChanged )
 				{
 					if( Globals.StartupMenuButtonTimeout > 0 )
 					{
+						System.out.println("libSDL: " + String.valueOf(Globals.StartupMenuButtonTimeout) + "-msec timeout in startup screen");
 						try {
 							Thread.sleep(Globals.StartupMenuButtonTimeout);
 						} catch( InterruptedException e ) {};
@@ -160,11 +178,9 @@ public class MainActivity extends Activity {
 					System.out.println("libSDL: Timeout reached in startup screen, process with downloader");
 					p.startDownloader();
 				}
-			};
-			Thread changeConfigAlertThread = null;
-			changeConfigAlertThread = new Thread(new Callback(this));
-			changeConfigAlertThread.start();
-		}
+			}
+		};
+		(new Thread(new Callback(this))).start();
 	}
 	
 	public void setUpStatusLabel()

@@ -49,7 +49,7 @@ main(int argc, char *argv[])
 	if( perPixeAlpha )
 		format1 = SDL_CreateRGBSurface( SDL_SWSURFACE|SDL_SRCALPHA, 1, 1, 16, 0xF000, 0xF00, 0xF0, 0xF );
 	if( target32bpp )
-		format1 = SDL_CreateRGBSurface( SDL_SWSURFACE|SDL_SRCALPHA, 1, 1, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF );
+		format1 = SDL_CreateRGBSurface( SDL_SWSURFACE|SDL_SRCALPHA, 1, 1, 32, 0xFF, 0xFF00, 0xFF0000, 0xFF000000 );
 	if(!format1)
 		return 1;
 	SDL_Surface * dst = SDL_ConvertSurface(src, format1->format, SDL_SWSURFACE|SDL_SRCALPHA);
