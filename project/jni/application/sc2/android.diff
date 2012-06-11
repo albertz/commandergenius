@@ -1,77 +1,7 @@
---- /home/pelya/src/endless_space/sc2/sc2/src/config_unix.h	1970-01-01 03:00:00.000000000 +0300
-+++ src/config_unix.h	2010-11-12 14:21:01.000000000 +0200
-@@ -0,0 +1,67 @@
-+/* This file contains some compile-time configuration options for *nix
-+ * systems.
-+ * config_unix.h is generated from config_unix.h.in by build.sh
-+ * When building on MS Windows using build.sh (MinGW, Cygwin),
-+ * config_win.h is generated from src/config_win.h.in.
-+ * When using MSVC on MS Windows, you'll have to edit src/msvc++/config.h
-+ * manually if you want anything else than the defaults.
-+ */
-+
-+#ifndef _CONFIG_UNIX_H
-+#define _CONFIG_UNIX_H
-+
-+/* Directory where the UQM game data is located */
-+#define CONTENTDIR ""
-+
-+/* Directory where game data will be stored */
-+#define USERDIR "config/"
-+
-+/* Directory where config files will be stored */
-+#define CONFIGDIR USERDIR
-+
-+/* Directory where supermelee teams will be stored */
-+#define MELEEDIR "teams/"
-+
-+/* Directory where save games will be stored */
-+#define SAVEDIR "save/"
-+
-+/* Defined if words are stored with the most significant byte first */
-+#ifdef __ARMEL__
-+#undef WORDS_BIGENDIAN
-+#endif
-+
-+/* Defined if your system has readdir_r of its own */
-+#define HAVE_READDIR_R 1
-+
-+/* Defined if your system has setenv of its own */
-+#ifndef HAVE_SETENV
-+#define HAVE_SETENV 1
-+#endif
-+
-+/* Defined if your system has strupr of its own */
-+#undef HAVE_STRUPR
-+
-+/* Defined if your system has strcasecmp of its own */
-+#define HAVE_STRCASECMP_UQM 1
-+		// Not using "HAVE_STRCASECMP" as that conflicts with SDL.
-+
-+/* Defined if your system has stricmp of its own */
-+#undef HAVE_STRICMP
-+
-+/* Defined if your system has getopt_long */
-+#define HAVE_GETOPT_LONG 1
-+
-+/* Defined if your system has iswgraph of its own*/
-+#define HAVE_ISWGRAPH 1
-+
-+/* Defined if your system has wchar_t of its own */
-+#define HAVE_WCHAR_T 1
-+
-+/* Defined if your system has wint_t of its own */
-+#define HAVE_WINT_T 1
-+
-+/* Defined if your system has _Bool of its own */
-+#define HAVE__BOOL 1
-+
-+#endif  /* _CONFIG_UNIX_H */
-+
-Index: src/options.h
+Index: options.h
 ===================================================================
---- src/options.h	(revision 3690)
-+++ src/options.h	(working copy)
+--- options.h	(revision 3778)
++++ options.h	(working copy)
 @@ -41,6 +41,7 @@
  extern int optWhichShield;
  extern int optSmoothScroll;
@@ -80,11 +10,23 @@ Index: src/options.h
  
  extern BOOLEAN opt3doMusic;
  extern BOOLEAN optRemixMusic;
-Index: src/uqm.c
+Index: uqm.c
 ===================================================================
---- src/uqm.c	(revision 3690)
-+++ src/uqm.c	(working copy)
-@@ -129,6 +129,7 @@
+--- uqm.c	(revision 3778)
++++ uqm.c	(working copy)
+@@ -55,8 +55,10 @@
+ #endif
+ #include "uqm/setup.h"
+ #include "uqm/starcon.h"
++#ifdef ANDROID
++#include <SDL_main.h>
++#endif
+ 
+-
+ #if defined (GFXMODULE_SDL)
+ #	include SDL_INCLUDE(SDL.h)
+ 			// Including this is actually necessary on OSX.
+@@ -129,6 +131,7 @@
  	DECL_CONFIG_OPTION(float, sfxVolumeScale);
  	DECL_CONFIG_OPTION(float, speechVolumeScale);
  	DECL_CONFIG_OPTION(bool, safeMode);
@@ -92,7 +34,7 @@ Index: src/uqm.c
  
  #define INIT_CONFIG_OPTION(name, val) \
  	{ val, false }
-@@ -263,6 +264,7 @@
+@@ -263,6 +266,7 @@
  		INIT_CONFIG_OPTION(  sfxVolumeScale,    1.0f ),
  		INIT_CONFIG_OPTION(  speechVolumeScale, 1.0f ),
  		INIT_CONFIG_OPTION(  safeMode,          false ),
@@ -100,7 +42,7 @@ Index: src/uqm.c
  	};
  	struct options_struct defaults = options;
  	int optionsResult;
-@@ -270,6 +272,20 @@
+@@ -270,6 +274,20 @@
  	int gfxFlags;
  	int i;
  
@@ -121,7 +63,7 @@ Index: src/uqm.c
  	// NOTE: we cannot use the logging facility yet because we may have to
  	//   log to a file, and we'll only get the log file name after parsing
  	//   the options.
-@@ -390,6 +406,7 @@
+@@ -390,6 +408,7 @@
  	sfxVolumeScale = options.sfxVolumeScale.value;
  	speechVolumeScale = options.speechVolumeScale.value;
  	optAddons = options.addons;
@@ -129,7 +71,7 @@ Index: src/uqm.c
  
  	prepareContentDir (options.contentDir, options.addonDir, argv[0]);
  	prepareMeleeDir ();
-@@ -631,6 +648,7 @@
+@@ -637,6 +656,7 @@
  	getBoolConfigValue (&options->fullscreen, "config.fullscreen");
  	getBoolConfigValue (&options->scanlines, "config.scanlines");
  	getBoolConfigValue (&options->showFps, "config.showfps");
@@ -137,33 +79,343 @@ Index: src/uqm.c
  	getBoolConfigValue (&options->keepAspectRatio, "config.keepaspectratio");
  	getGammaConfigValue (&options->gamma, "config.gamma");
  
-Index: src/libs/resource/filecntl.c
+Index: libs/uio/zip/zip.c
 ===================================================================
---- src/libs/resource/filecntl.c	(revision 3690)
-+++ src/libs/resource/filecntl.c	(working copy)
-@@ -26,6 +26,7 @@
+--- libs/uio/zip/zip.c	(revision 3778)
++++ libs/uio/zip/zip.c	(working copy)
+@@ -1366,6 +1366,10 @@
+ 				gPFileData->gid = (uid_t) makeUInt16(buf[12], buf[13]);
+ 				break;
+ 			}
++			case 0x7875:  // 'Unix string UID/GID'
++				// Just skip it
++				break;
++
+ 			default:
+ #ifdef DEBUG
+ 				fprintf(stderr, "Debug: Extra field 0x%04x unsupported, "
+Index: libs/uio/hashtable.c
+===================================================================
+--- libs/uio/hashtable.c	(revision 3778)
++++ libs/uio/hashtable.c	(working copy)
+@@ -371,4 +371,3 @@
+ HASHTABLE_(freeHashEntry)(HASHTABLE_(HashEntry) *entry) {
+ 	uio_free(entry);
+ }
+-
+Index: libs/uio/hashtable.h
+===================================================================
+--- libs/uio/hashtable.h	(revision 3778)
++++ libs/uio/hashtable.h	(working copy)
+@@ -54,7 +54,7 @@
+ #	define HashTable_FREEKEY(hashTable, hashKey) \
+ 		(hashTable)->freeKeyFunction(hashKey)
+ #	define HashTable_FREEVALUE(hashTable, hashValue) \
+-		(hashTable)->freeValueFunction(hashKey)
++		(hashTable)->freeValueFunction(hashValue)
+ #endif
+ 
+ 
+Index: libs/uio/stdio/stdio.c
+===================================================================
+--- libs/uio/stdio/stdio.c	(revision 3778)
++++ libs/uio/stdio/stdio.c	(working copy)
+@@ -25,7 +25,7 @@
+ 			// For the POSIX variant of readdir_r()
+ #endif
+ 
+-#include "./stdio.h"
++#include "uio_stdio.h"
+ 
+ #ifdef WIN32
+ #	include <io.h>
+Index: libs/uio/stdio/stdio.h
+===================================================================
+--- libs/uio/stdio/stdio.h	(revision 3778)
++++ libs/uio/stdio/stdio.h	(working copy)
+@@ -1,111 +0,0 @@
+-/*
+- * Copyright (C) 2003  Serge van den Boom
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- * Nota bene: later versions of the GNU General Public License do not apply
+- * to this program.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+- *
+- */
+-
+-typedef struct stdio_Handle *uio_NativeHandle;
+-typedef void *uio_GPRootExtra;
+-typedef struct stdio_GPDirData *uio_GPDirExtra;
+-typedef void *uio_GPFileExtra;
+-typedef struct stdio_EntriesIterator stdio_EntriesIterator;
+-typedef stdio_EntriesIterator *uio_NativeEntriesContext;
+-
+-
+-#define uio_INTERNAL_PHYSICAL
+-
+-#include "../gphys.h"
+-#include "../iointrn.h"
+-#include "../uioport.h"
+-#include "../fstypes.h"
+-#include "../physical.h"
+-
+-#include <sys/stat.h>
+-#ifndef WIN32
+-#	include <dirent.h>
+-#endif
+-
+-
+-typedef struct stdio_GPDirData {
+-	// The reason that names are stored is that in the system filesystem
+-	// you need names to refer to files and directories.
+-	// (you could keep a file descriptor to each one, but that would
+-	// mean a lot of open file descriptors, and for some it won't even
+-	// be enough).
+-	// This is not needed for all filesystems; therefor this info is not
+-	// in uio_GPDir itself.
+-	// The reasons for including upDir here are similar.
+-	char *name;
+-	char *cachedPath;
+-	uio_GPDir *upDir;
+-} stdio_GPDirData;
+-
+-typedef struct stdio_Handle {
+-	int fd;
+-} stdio_Handle;
+-
+-#ifdef WIN32
+-struct stdio_EntriesIterator {
+-	long dirHandle;
+-	struct _finddata_t findData;
+-	int status;
+-};
+-#endif	
+-
+-#ifndef WIN32
+-struct stdio_EntriesIterator {
+-	DIR *dirHandle;
+-	struct dirent *entry;
+-	struct dirent *direntBuffer;
+-	int status;
+-};
+-#endif	
+-
+-
+-uio_PRoot *stdio_mount(uio_Handle *handle, int flags);
+-int stdio_umount(uio_PRoot *);
+-uio_PDirHandle *stdio_mkdir(uio_PDirHandle *pDirHandle, const char *name,
+-		mode_t mode);
+-uio_Handle *stdio_open(uio_PDirHandle *pDirHandle, const char *file, int flags,
+-		mode_t mode);
+-void stdio_close(uio_Handle *handle);
+-int zip_access(uio_PDirHandle *pDirHandle, const char *name, int mode);
+-int stdio_access(uio_PDirHandle *pDirHandle, const char *name, int mode);
+-int stdio_fstat(uio_Handle *handle, struct stat *statBuf);
+-int stdio_stat(uio_PDirHandle *pDirHandle, const char *name,
+-		struct stat *statBuf);
+-ssize_t stdio_read(uio_Handle *handle, void *buf, size_t count);
+-int stdio_rename(uio_PDirHandle *oldPDirHandle, const char *oldName,
+-		uio_PDirHandle *newPDirHandle, const char *newName);
+-int stdio_rmdir(uio_PDirHandle *pDirHandle, const char *name);
+-off_t stdio_seek(uio_Handle *handle, off_t offset, int whence);
+-ssize_t stdio_write(uio_Handle *handle, const void *buf, size_t count);
+-int stdio_unlink(uio_PDirHandle *pDirHandle, const char *name);
+-
+-stdio_EntriesIterator *stdio_openEntries(uio_PDirHandle *pDirHandle);
+-int stdio_readEntries(stdio_EntriesIterator **iterator,
+-		char *buf, size_t len);
+-void stdio_closeEntries(stdio_EntriesIterator *iterator);
+-#ifdef WIN32
+-stdio_EntriesIterator *stdio_EntriesIterator_new(long dirHandle);
+-#else
+-stdio_EntriesIterator *stdio_EntriesIterator_new(DIR *dirHandle);
+-#endif
+-void stdio_EntriesIterator_delete(stdio_EntriesIterator *iterator);
+-uio_PDirEntryHandle *stdio_getPDirEntryHandle(
+-		const uio_PDirHandle *pDirHandle, const char *name);
+-
+Index: libs/uio/io.c
+===================================================================
+--- libs/uio/io.c	(revision 3778)
++++ libs/uio/io.c	(working copy)
+@@ -35,6 +35,7 @@
+ #include "mem.h"
+ #include "uioutils.h"
+ #include "uioport.h"
++#include "../log.h"
+ #ifdef uio_MEM_DEBUG
+ #	include "memdebug.h"
+ #endif
+@@ -193,6 +194,7 @@
+ 			errno = EINVAL;
+ 			return NULL;
+ 		}
++		log_add (log_Info, "uio_open %s", sourcePath);
+ 		handle = uio_open(sourceDir, sourcePath,
+ 				((flags & uio_MOUNT_RDONLY) == uio_MOUNT_RDONLY ?
+ 				O_RDONLY : O_RDWR)
+@@ -201,12 +203,14 @@
+ #endif
+ 				, 0);
+ 		if (handle == NULL) {
++			log_add (log_Info, "uio_open failed for %s", sourcePath);
+ 			// errno is set
+ 			return NULL;
+ 		}
+ 	}
+ 
+ 	handler = uio_getFileSystemHandler(fsType);
++	log_add (log_Info, "uio_getFileSystemHandler %p", handler);
+ 	if (handler == NULL) {
+ 		if (handle)
+ 			uio_close(handle);
+@@ -800,6 +804,7 @@
+ 			&readMountInfo, &readPDirHandle, NULL,
+ 			&writeMountInfo, &writePDirHandle, NULL, &name) == -1) {
+ 		// errno is set
++		log_add (log_Info, "uio_open: uio_getPhysicalAccess  failed for '%s'", path);
+ 		return NULL;
+ 	}
+ 	
+@@ -826,6 +831,7 @@
+ 				uio_PDirHandle_unref(readPDirHandle);
+ 				uio_PDirHandle_unref(writePDirHandle);
+ 				errno = EEXIST;
++				log_add (log_Info, "uio_open: O_CREAT | O_EXCL: file already exists '%s'", name);
+ 				return NULL;
+ 			}
+ 			if ((flags & O_TRUNC) == O_TRUNC) {
+@@ -842,6 +848,7 @@
+ 					uio_PDirHandle_unref(readPDirHandle);
+ 					uio_PDirHandle_unref(writePDirHandle);
+ 					errno = savedErrno;
++					log_add (log_Info, "uio_open: uio_copyFilePhysical failed '%s'", name);
+ 					return NULL;
+ 				}
+ 			}
+@@ -863,6 +870,7 @@
+ 	handle = (pDirHandle->pRoot->handler->open)(pDirHandle, name, flags, mode);
+ 			// Also adds a new entry to the physical dir if appropriate.
+ 	if (handle == NULL) {
++		log_add (log_Info, "uio_open: open file failed '%s'", name);
+ 		int savedErrno = errno;
+ 		uio_free(name);
+ 		uio_PDirHandle_unref(pDirHandle);
+Index: libs/uio/memdebug.c
+===================================================================
+--- libs/uio/memdebug.c	(revision 3778)
++++ libs/uio/memdebug.c	(working copy)
+@@ -94,6 +94,7 @@
+ 				uio_MemDebug_pointerCompare,
+ 				uio_MemDebug_pointerCopy,
+ 				uio_MemDebug_pointerFree,
++				uio_MemDebug_pointerFree,
+ 				4, 0.85, 0.90);
+ 	}
+ }
+Index: libs/uio/match.c
+===================================================================
+--- libs/uio/match.c	(revision 3778)
++++ libs/uio/match.c	(working copy)
+@@ -506,7 +506,7 @@
+ 		return match_ENOTINIT;
+ 	}
+ 	if (context->errorString) {
+-		uio_free(context->errorString);
++		uio_free(context->errorString); //TODO: why does it crash here on Android?
+ 		context->errorString = NULL;
+ 	}
+ 	retval = regexec(&context->native, string, 0, NULL, 0);
+Index: libs/uio/match.h
+===================================================================
+--- libs/uio/match.h	(revision 3778)
++++ libs/uio/match.h	(working copy)
+@@ -79,8 +79,12 @@
+ 
+ #include <sys/types.h>
+ #ifdef HAVE_REGEX
+-#	include <regex.h>
++#ifdef ANDROID
++#include "uqm_regex.h"
++#else
++#include <regex.h>
+ #endif
++#endif
+ 
+ #include "uioport.h"
+ 
+Index: libs/cdp/windl.c
+===================================================================
+--- libs/cdp/windl.c	(revision 3778)
++++ libs/cdp/windl.c	(working copy)
+@@ -19,6 +19,8 @@
+  * CDP dlopen() & Co. WIN32 implementation
+  */
+ 
++#ifdef WIN32
++
+ #include "windl.h"
  #include "port.h"
- #include "resintrn.h"
- #include "libs/uio.h"
-+#include "libs/log.h"
- 
- uio_Stream *
- res_OpenResFile (uio_DirHandle *dir, const char *filename, const char *mode)
-@@ -34,7 +35,10 @@
- 	struct stat sb;
- 
- 	if (uio_stat (dir, filename, &sb) == 0 && S_ISDIR(sb.st_mode))
-+	{
-+		log_add (log_Debug, "res_OpenResFile('%s', '%s') - cannot open dir as file", filename, mode);
- 		return ((uio_Stream *) ~0);
-+	}
- 
- 	fp = uio_fopen (dir, filename, mode);
- 
-Index: src/libs/sound/decoders/oggaud.c
+ #define WIN32_LEAN_AND_MEAN
+@@ -74,3 +76,5 @@
+ 	else
+ 		return NULL;
+ }
++
++#endif
+Index: libs/cdp/cdpapi.c
 ===================================================================
---- src/libs/sound/decoders/oggaud.c	(revision 3690)
-+++ src/libs/sound/decoders/oggaud.c	(working copy)
+--- libs/cdp/cdpapi.c	(revision 3778)
++++ libs/cdp/cdpapi.c	(working copy)
+@@ -20,6 +20,8 @@
+  * the API is used by both the engine and modules
+  */
+ 
++#ifndef ANDROID
++
+ #include "cdp.h"
+ #include "port.h"
+ #include "cdpint.h"
+@@ -862,3 +864,5 @@
+ 	}
+ 	return ret;
+ }
++
++#endif
+Index: libs/cdp/cdp.c
+===================================================================
+--- libs/cdp/cdp.c	(revision 3778)
++++ libs/cdp/cdp.c	(working copy)
+@@ -19,6 +19,8 @@
+  * CDP library definitions
+  */
+ 
++#ifndef ANDROID
++
+ #include <string.h>
+ #include <stdio.h>
+ #include "cdp.h"
+@@ -435,3 +437,5 @@
+ 			cdp_FreeModule (cdp);
+ 	}
+ }
++
++#endif
+Index: libs/sound/decoders/oggaud.c
+===================================================================
+--- libs/sound/decoders/oggaud.c	(revision 3778)
++++ libs/sound/decoders/oggaud.c	(working copy)
 @@ -270,7 +270,7 @@
  	// this is the closest to a frame there is in ogg vorbis stream
  	// doesn't seem to be a func to retrive it
@@ -173,29 +425,10 @@ Index: src/libs/sound/decoders/oggaud.c
  #else
  	return ova->vf.os.pageno;
  #endif  /* OVCODEC_TREMOR */
-Index: src/libs/network/netmanager/netmanager_win.c
+Index: libs/network/network_win.c
 ===================================================================
---- src/libs/network/netmanager/netmanager_win.c	(revision 3690)
-+++ src/libs/network/netmanager/netmanager_win.c	(working copy)
-@@ -16,6 +16,8 @@
-  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-  */
- 
-+#ifdef WIN32
-+
- #define PORT_WANT_ERRNO
- #include "port.h"
- #include "../netport.h"
-@@ -461,4 +463,4 @@
- 	return 0;
- }
- 
--
-+#endif
-Index: src/libs/network/network_win.c
-===================================================================
---- src/libs/network/network_win.c	(revision 3690)
-+++ src/libs/network/network_win.c	(working copy)
+--- libs/network/network_win.c	(revision 3778)
++++ libs/network/network_win.c	(working copy)
 @@ -16,6 +16,8 @@
   *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   */
@@ -211,10 +444,10 @@ Index: src/libs/network/network_win.c
  
 -
 +#endif
-Index: src/libs/network/socket/socket_win.c
+Index: libs/network/socket/socket_win.c
 ===================================================================
---- src/libs/network/socket/socket_win.c	(revision 3690)
-+++ src/libs/network/socket/socket_win.c	(working copy)
+--- libs/network/socket/socket_win.c	(revision 3778)
++++ libs/network/socket/socket_win.c	(working copy)
 @@ -18,6 +18,8 @@
  
  // Socket functions for Winsock sockets.
@@ -230,10 +463,29 @@ Index: src/libs/network/socket/socket_win.c
  
 -
 +#endif
-Index: src/libs/input/sdl/input.c
+Index: libs/network/netmanager/netmanager_win.c
 ===================================================================
---- src/libs/input/sdl/input.c	(revision 3690)
-+++ src/libs/input/sdl/input.c	(working copy)
+--- libs/network/netmanager/netmanager_win.c	(revision 3778)
++++ libs/network/netmanager/netmanager_win.c	(working copy)
+@@ -16,6 +16,8 @@
+  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  */
+ 
++#ifdef WIN32
++
+ #define PORT_WANT_ERRNO
+ #include "port.h"
+ #include "../netport.h"
+@@ -461,4 +463,4 @@
+ 	return 0;
+ }
+ 
+-
++#endif
+Index: libs/input/sdl/input.c
+===================================================================
+--- libs/input/sdl/input.c	(revision 3778)
++++ libs/input/sdl/input.c	(working copy)
 @@ -186,6 +186,13 @@
  		   directory. */
  		LoadResourceIndex (contentDir, "uqm.key", "keys.");
@@ -248,10 +500,10 @@ Index: src/libs/input/sdl/input.c
  
  	register_flight_controls ();
  
-Index: src/libs/input/sdl/vcontrol.c
+Index: libs/input/sdl/vcontrol.c
 ===================================================================
---- src/libs/input/sdl/vcontrol.c	(revision 3690)
-+++ src/libs/input/sdl/vcontrol.c	(working copy)
+--- libs/input/sdl/vcontrol.c	(revision 3778)
++++ libs/input/sdl/vcontrol.c	(working copy)
 @@ -46,6 +46,7 @@
  typedef struct vcontrol_joystick_axis {
  	keybinding *neg, *pos;
@@ -303,10 +555,10 @@ Index: src/libs/input/sdl/vcontrol.c
  void
  VControl_ResetInput (void)
  {
-Index: src/libs/input/sdl/vcontrol.h
+Index: libs/input/sdl/vcontrol.h
 ===================================================================
---- src/libs/input/sdl/vcontrol.h	(revision 3690)
-+++ src/libs/input/sdl/vcontrol.h	(working copy)
+--- libs/input/sdl/vcontrol.h	(revision 3778)
++++ libs/input/sdl/vcontrol.h	(working copy)
 @@ -76,6 +76,9 @@
  void VControl_ProcessJoyAxis (int port, int axis, int value);
  void VControl_ProcessJoyHat (int port, int which, Uint8 value);
@@ -317,44 +569,71 @@ Index: src/libs/input/sdl/vcontrol.h
  /* Force the input into the blank state.  For preventing "sticky" keys. */
  void VControl_ResetInput (void);
  
-Index: src/libs/log/uqmlog.c
+Index: libs/graphics/sdl/pure.c
 ===================================================================
---- src/libs/log/uqmlog.c	(revision 3690)
-+++ src/libs/log/uqmlog.c	(working copy)
-@@ -23,6 +23,9 @@
- #include <stdlib.h>
- #include <signal.h>
- #include <errno.h>
-+#ifdef ANDROID
-+#include <android/log.h>
-+#endif
- #include "libs/threadlib.h"
+--- libs/graphics/sdl/pure.c	(revision 3778)
++++ libs/graphics/sdl/pure.c	(working copy)
+@@ -20,6 +20,10 @@
+ #include "scalers.h"
+ #include "libs/log.h"
  
- #ifndef MAX_LOG_ENTRY_SIZE
-@@ -190,6 +193,9 @@
- 	if ((int)level <= maxStreamLevel)
- 	{
- 		fprintf (streamOut, "%s\n", full_msg);
 +#ifdef ANDROID
-+	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
++#include <SDL/SDL_screenkeyboard.h>
 +#endif
++
+ static SDL_Surface *fade_color_surface = NULL;
+ static SDL_Surface *fade_temp = NULL;
+ static SDL_Surface *scaled_display = NULL;
+@@ -104,6 +108,7 @@
+ {
+ 	int i, videomode_flags;
+ 	SDL_PixelFormat conv_fmt;
++	int BPP = 32;
+ 	
+ 	GraphicsDriver = driver;
+ 
+@@ -128,6 +133,28 @@
+ 					"under pure SDL, using 640x480", width, height);
  	}
  
- 	if ((int)level <= maxLevel)
-@@ -226,6 +232,9 @@
- 	if ((int)level <= maxStreamLevel)
- 	{
- 		fprintf (streamOut, "%s\n", full_msg);
 +#ifdef ANDROID
-+	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
++	videomode_flags = SDL_SWSURFACE;
++	ScreenWidthActual = 320;
++	ScreenHeightActual = 240;
++	graphics_backend = &pure_unscaled_backend;
++	BPP = 16;
++	/* Make the on-screen buttons slightly overlap, so we can hit them with one finger */
++	SDL_Rect b0;
++	SDL_ANDROID_GetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &b0);
++	b0.x -= b0.w * 0.2;
++	b0.y -= b0.w * 0.2;
++	b0.h += b0.w * 0.2;
++	b0.w += b0.w * 0.2;
++	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &b0);
++	SDL_ANDROID_GetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &b0);
++	b0.x -= b0.w * 0.2;
++	b0.y -= b0.w * 0.2;
++	b0.h += b0.w * 0.2;
++	b0.w += b0.w * 0.2;
++	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &b0);
 +#endif
- 	}
++
+ 	videomode_flags |= SDL_ANYFORMAT;
+ 	if (flags & TFB_GFXFLAGS_FULLSCREEN)
+ 		videomode_flags |= SDL_FULLSCREEN;
+@@ -135,7 +162,7 @@
+ 	/* We'll ask for a 32bpp frame, but it doesn't really matter, because we've set
+ 	   SDL_ANYFORMAT */
+ 	SDL_Video = SDL_SetVideoMode (ScreenWidthActual, ScreenHeightActual, 
+-		32, videomode_flags);
++		BPP, videomode_flags);
  
- 	if ((int)level <= maxLevel)
-Index: src/libs/log/msgbox_stub.c
+ 	if (SDL_Video == NULL)
+ 	{
+Index: libs/log/msgbox_stub.c
 ===================================================================
---- src/libs/log/msgbox_stub.c	(revision 3690)
-+++ src/libs/log/msgbox_stub.c	(working copy)
+--- libs/log/msgbox_stub.c	(revision 3778)
++++ libs/log/msgbox_stub.c	(working copy)
 @@ -16,6 +16,9 @@
  
  #include "msgbox.h"
@@ -375,10 +654,10 @@ Index: src/libs/log/msgbox_stub.c
  	
  	// Suppress the compiler warnings in any case.
  	(void)title;
-Index: src/libs/log/msgbox_win.c
+Index: libs/log/msgbox_win.c
 ===================================================================
---- src/libs/log/msgbox_win.c	(revision 3690)
-+++ src/libs/log/msgbox_win.c	(working copy)
+--- libs/log/msgbox_win.c	(revision 3778)
++++ libs/log/msgbox_win.c	(working copy)
 @@ -14,6 +14,7 @@
   *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   */
@@ -393,273 +672,67 @@ Index: src/libs/log/msgbox_win.c
  }
 -
 +#endif
-Index: src/libs/uio/io.c
+Index: libs/log/uqmlog.c
 ===================================================================
---- src/libs/uio/io.c	(revision 3690)
-+++ src/libs/uio/io.c	(working copy)
-@@ -35,6 +35,7 @@
- #include "mem.h"
- #include "uioutils.h"
- #include "uioport.h"
-+#include "../log.h"
- #ifdef uio_MEM_DEBUG
- #	include "memdebug.h"
- #endif
-@@ -193,6 +194,7 @@
- 			errno = EINVAL;
- 			return NULL;
- 		}
-+		log_add (log_Info, "uio_open %s", sourcePath);
- 		handle = uio_open(sourceDir, sourcePath,
- 				((flags & uio_MOUNT_RDONLY) == uio_MOUNT_RDONLY ?
- 				O_RDONLY : O_RDWR)
-@@ -201,12 +203,14 @@
- #endif
- 				, 0);
- 		if (handle == NULL) {
-+			log_add (log_Info, "uio_open failed for %s", sourcePath);
- 			// errno is set
- 			return NULL;
- 		}
- 	}
- 
- 	handler = uio_getFileSystemHandler(fsType);
-+	log_add (log_Info, "uio_getFileSystemHandler %p", handler);
- 	if (handler == NULL) {
- 		if (handle)
- 			uio_close(handle);
-@@ -703,6 +707,7 @@
- 			&readMountInfo, &readPDirHandle, NULL,
- 			&writeMountInfo, &writePDirHandle, NULL, &name) == -1) {
- 		// errno is set
-+		log_add (log_Info, "uio_open: uio_getPhysicalAccess  failed for '%s'", path);
- 		return NULL;
- 	}
- 	
-@@ -729,6 +734,7 @@
- 				uio_PDirHandle_unref(readPDirHandle);
- 				uio_PDirHandle_unref(writePDirHandle);
- 				errno = EEXIST;
-+				log_add (log_Info, "uio_open: O_CREAT | O_EXCL: file already exists '%s'", name);
- 				return NULL;
- 			}
- 			if ((flags & O_TRUNC) == O_TRUNC) {
-@@ -745,6 +751,7 @@
- 					uio_PDirHandle_unref(readPDirHandle);
- 					uio_PDirHandle_unref(writePDirHandle);
- 					errno = savedErrno;
-+					log_add (log_Info, "uio_open: uio_copyFilePhysical failed '%s'", name);
- 					return NULL;
- 				}
- 			}
-@@ -766,6 +773,7 @@
- 	handle = (pDirHandle->pRoot->handler->open)(pDirHandle, name, flags, mode);
- 			// Also adds a new entry to the physical dir if appropriate.
- 	if (handle == NULL) {
-+		log_add (log_Info, "uio_open: open file failed '%s'", name);
- 		int savedErrno = errno;
- 		uio_free(name);
- 		uio_PDirHandle_unref(pDirHandle);
-Index: src/libs/uio/match.c
-===================================================================
---- src/libs/uio/match.c	(revision 3690)
-+++ src/libs/uio/match.c	(working copy)
-@@ -506,7 +506,7 @@
- 		return match_ENOTINIT;
- 	}
- 	if (context->errorString) {
--		uio_free(context->errorString);
-+		uio_free(context->errorString); //TODO: why does it crash here on Android?
- 		context->errorString = NULL;
- 	}
- 	retval = regexec(&context->native, string, 0, NULL, 0);
-Index: src/libs/uio/match.h
-===================================================================
---- src/libs/uio/match.h	(revision 3690)
-+++ src/libs/uio/match.h	(working copy)
-@@ -79,8 +79,12 @@
- 
- #include <sys/types.h>
- #ifdef HAVE_REGEX
--#	include <regex.h>
+--- libs/log/uqmlog.c	(revision 3778)
++++ libs/log/uqmlog.c	(working copy)
+@@ -23,6 +23,9 @@
+ #include <stdlib.h>
+ #include <signal.h>
+ #include <errno.h>
 +#ifdef ANDROID
-+#include "uqm_regex.h"
-+#else
-+#include <regex.h>
- #endif
++#include <android/log.h>
 +#endif
+ #include "libs/threadlib.h"
  
- #include "uioport.h"
- 
-Index: src/libs/uio/zip/zip.c
-===================================================================
---- src/libs/uio/zip/zip.c	(revision 3690)
-+++ src/libs/uio/zip/zip.c	(working copy)
-@@ -1366,6 +1366,10 @@
- 				gPFileData->gid = (uid_t) makeUInt16(buf[12], buf[13]);
- 				break;
- 			}
-+			case 0x7875:  // 'Unix string UID/GID'
-+				// Just skip it
-+				break;
-+
- 			default:
- #ifdef DEBUG
- 				fprintf(stderr, "Debug: Extra field 0x%04x unsupported, "
-Index: src/libs/graphics/sdl/pure.c
-===================================================================
---- src/libs/graphics/sdl/pure.c	(revision 3690)
-+++ src/libs/graphics/sdl/pure.c	(working copy)
-@@ -20,6 +20,10 @@
- #include "scalers.h"
- #include "libs/log.h"
- 
-+#ifdef ANDROID
-+#include <SDL/SDL_screenkeyboard.h>
-+#endif
-+
- static SDL_Surface *fade_color_surface = NULL;
- static SDL_Surface *fade_temp = NULL;
- static SDL_Surface *scaled_display = NULL;
-@@ -128,6 +132,7 @@
- {
- 	int i, videomode_flags;
- 	SDL_PixelFormat conv_fmt;
-+	int BPP = 32;
- 	
- 	GraphicsDriver = driver;
- 
-@@ -152,6 +157,20 @@
- 					"under pure SDL, using 640x480", width, height);
- 	}
- 
-+#ifdef ANDROID
-+	videomode_flags = SDL_SWSURFACE;
-+	ScreenWidthActual = 320;
-+	ScreenHeightActual = 240;
-+	graphics_backend = &pure_unscaled_backend;
-+	BPP = 16;
-+	/* Make the on-screen buttons slightly overlap, so we can hit them with one finger */
-+	SDL_Rect b0;
-+	SDL_ANDROID_GetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &b0);
-+	b0.x -= b0.w * 0.2;
-+	b0.w += b0.w * 0.2;
-+	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &b0);
-+#endif
-+
- 	videomode_flags |= SDL_ANYFORMAT;
- 	if (flags & TFB_GFXFLAGS_FULLSCREEN)
- 		videomode_flags |= SDL_FULLSCREEN;
-@@ -159,7 +178,7 @@
- 	/* We'll ask for a 32bpp frame, but it doesn't really matter, because we've set
- 	   SDL_ANYFORMAT */
- 	SDL_Video = SDL_SetVideoMode (ScreenWidthActual, ScreenHeightActual, 
--		32, videomode_flags);
-+		BPP, videomode_flags);
- 
- 	if (SDL_Video == NULL)
+ #ifndef MAX_LOG_ENTRY_SIZE
+@@ -191,6 +194,9 @@
+ 	if ((int)level <= maxStreamLevel)
  	{
-Index: src/libs/graphics/sdl/sdl_common.c
-===================================================================
---- src/libs/graphics/sdl/sdl_common.c	(revision 3690)
-+++ src/libs/graphics/sdl/sdl_common.c	(working copy)
-@@ -52,6 +52,25 @@
- volatile int QuitPosted = 0;
- volatile int GameActive = 1; // Track the SDL_ACTIVEEVENT state SDL_APPACTIVE
- 
+ 		fprintf (streamOut, "%s\n", full_msg);
 +#ifdef ANDROID
-+extern void ResumeMusic (void);
-+extern void PauseMusic (void);
-+
-+void AndroidGamePaused()
-+{
-+	GameActive = 0;
-+	SDL_ANDROID_PauseAudioPlayback();
-+	PauseMusic();
-+}
-+
-+void AndroidGameResumed()
-+{
-+	GameActive = 1;
-+	SDL_ANDROID_ResumeAudioPlayback();
-+	ResumeMusic();
-+}
++	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
 +#endif
-+
- void
- TFB_PreInit (void)
- {
-@@ -76,6 +95,9 @@
- 		log_add (log_Fatal, "Could not initialize SDL: %s.", SDL_GetError ());
- 		exit (EXIT_FAILURE);
  	}
+ 
+ 	if ((int)level <= maxLevel)
+@@ -227,6 +233,9 @@
+ 	if ((int)level <= maxStreamLevel)
+ 	{
+ 		fprintf (streamOut, "%s\n", full_msg);
 +#ifdef ANDROID
-+	SDL_ANDROID_SetApplicationPutToBackgroundCallback(&AndroidGamePaused, &AndroidGameResumed);
++	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
 +#endif
- }
- 
- int
-Index: src/libs/cdp/cdpapi.c
-===================================================================
---- src/libs/cdp/cdpapi.c	(revision 3690)
-+++ src/libs/cdp/cdpapi.c	(working copy)
-@@ -20,6 +20,8 @@
-  * the API is used by both the engine and modules
-  */
- 
-+#ifndef ANDROID
-+
- #include "cdp.h"
- #include "port.h"
- #include "cdpint.h"
-@@ -862,3 +864,5 @@
  	}
- 	return ret;
- }
-+
-+#endif
-Index: src/libs/cdp/cdp.c
-===================================================================
---- src/libs/cdp/cdp.c	(revision 3690)
-+++ src/libs/cdp/cdp.c	(working copy)
-@@ -19,6 +19,8 @@
-  * CDP library definitions
-  */
  
-+#ifndef ANDROID
-+
- #include <string.h>
- #include <stdio.h>
- #include "cdp.h"
-@@ -435,3 +437,5 @@
- 			cdp_FreeModule (cdp);
- 	}
- }
-+
-+#endif
-Index: src/libs/cdp/windl.c
+ 	if ((int)level <= maxLevel)
+Index: libs/resource/filecntl.c
 ===================================================================
---- src/libs/cdp/windl.c	(revision 3690)
-+++ src/libs/cdp/windl.c	(working copy)
-@@ -19,6 +19,8 @@
-  * CDP dlopen() & Co. WIN32 implementation
-  */
- 
-+#ifdef WIN32
-+
- #include "windl.h"
+--- libs/resource/filecntl.c	(revision 3778)
++++ libs/resource/filecntl.c	(working copy)
+@@ -26,6 +26,7 @@
  #include "port.h"
- #define WIN32_LEAN_AND_MEAN
-@@ -74,3 +76,5 @@
- 	else
- 		return NULL;
- }
-+
-+#endif
-Index: src/config_unix.h
+ #include "resintrn.h"
+ #include "libs/uio.h"
++#include "libs/log.h"
+ 
+ uio_Stream *
+ res_OpenResFile (uio_DirHandle *dir, const char *filename, const char *mode)
+@@ -34,7 +35,10 @@
+ 	struct stat sb;
+ 
+ 	if (uio_stat (dir, filename, &sb) == 0 && S_ISDIR(sb.st_mode))
++	{
++		log_add (log_Debug, "res_OpenResFile('%s', '%s') - cannot open dir as file", filename, mode);
+ 		return ((uio_Stream *) ~0);
++	}
+ 
+ 	fp = uio_fopen (dir, filename, mode);
+ 
+Index: config_unix.h
 ===================================================================
---- src/config_unix.h	(revision 0)
-+++ src/config_unix.h	(revision 0)
+--- config_unix.h	(revision 0)
++++ config_unix.h	(revision 0)
 @@ -0,0 +1,67 @@
 +/* This file contains some compile-time configuration options for *nix
 + * systems.
@@ -728,92 +801,365 @@ Index: src/config_unix.h
 +
 +#endif  /* _CONFIG_UNIX_H */
 +
-Index: src/uqm/setupmenu.c
+Index: uqm/comm/spathi/spathic.c
 ===================================================================
---- src/uqm/setupmenu.c	(revision 3690)
-+++ src/uqm/setupmenu.c	(working copy)
-@@ -75,7 +75,7 @@
- #endif
+--- uqm/comm/spathi/spathic.c	(revision 3778)
++++ uqm/comm/spathi/spathic.c	(working copy)
+@@ -18,7 +18,7 @@
  
- #define MENU_COUNT          8
--#define CHOICE_COUNT       24
-+#define CHOICE_COUNT       25
- #define SLIDER_COUNT        4
- #define BUTTON_COUNT       10
- #define LABEL_COUNT         4
-@@ -98,7 +98,7 @@
- static int choice_widths[CHOICE_COUNT] = {
- 	3, 2, 3, 3, 2, 2, 2, 2, 2, 2, 
- 	2, 2, 3, 2, 2, 3, 3, 2,	3, 3, 
--	3, 2, 2, 2 };
-+	3, 2, 2, 2, 2 };
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../spathi/strings.h"
  
- static HANDLER button_handlers[BUTTON_COUNT] = {
- 	quit_main_menu, quit_sub_menu, do_graphics, do_engine,
-@@ -157,6 +157,7 @@
- 	(WIDGET *)(&choices[12]),
- 	(WIDGET *)(&choices[15]),
- 	(WIDGET *)(&choices[16]),
-+	(WIDGET *)(&choices[24]),
- 	(WIDGET *)(&buttons[1]),
- 	NULL };
- 	
-@@ -416,6 +417,7 @@
- 	choices[21].selected = opts.musicremix;
- 	choices[22].selected = opts.speech;
- 	choices[23].selected = opts.keepaspect;
-+	choices[24].selected = opts.directionaljoystick;
+ #include "uqm/build.h"
  
- 	sliders[0].value = opts.musicvol;
- 	sliders[1].value = opts.sfxvol;
-@@ -450,6 +452,7 @@
- 	opts.musicremix = choices[21].selected;
- 	opts.speech = choices[22].selected;
- 	opts.keepaspect = choices[23].selected;
-+	opts.directionaljoystick = choices[24].selected;
- 
- 	opts.musicvol = sliders[0].value;
- 	opts.sfxvol = sliders[1].value;
-@@ -1277,6 +1280,7 @@
- 	opts->musicremix = optRemixMusic ? OPTVAL_ENABLED : OPTVAL_DISABLED;
- 	opts->speech = optSpeech ? OPTVAL_ENABLED : OPTVAL_DISABLED;
- 	opts->keepaspect = optKeepAspectRatio ? OPTVAL_ENABLED : OPTVAL_DISABLED;
-+	opts->directionaljoystick = optDirectionalJoystick ? OPTVAL_ENABLED : OPTVAL_DISABLED;
- 	switch (snddriver) {
- 	case audio_DRIVER_OPENAL:
- 		opts->adriver = OPTVAL_OPENAL;
-@@ -1518,6 +1522,7 @@
- 	optWhichIntro = (opts->intro == OPTVAL_3DO) ? OPT_3DO : OPT_PC;
- 	optStereoSFX = (opts->stereo == OPTVAL_ENABLED);
- 	optKeepAspectRatio = (opts->keepaspect == OPTVAL_ENABLED);
-+	optDirectionalJoystick = (opts->directionaljoystick == OPTVAL_ENABLED) ? TRUE : FALSE;
- 	PlayerControls[0] = opts->player1;
- 	PlayerControls[1] = opts->player2;
- 
-@@ -1532,6 +1537,7 @@
- 	res_PutBoolean ("config.speech", opts->speech == OPTVAL_ENABLED);
- 	res_PutBoolean ("config.3domovies", opts->intro == OPTVAL_3DO);
- 	res_PutBoolean ("config.showfps", opts->fps == OPTVAL_ENABLED);
-+	res_PutBoolean ("config.directionaljoystick", opts->directionaljoystick == OPTVAL_ENABLED);
- 	res_PutBoolean ("config.smoothmelee", opts->meleezoom == OPTVAL_3DO);
- 	res_PutBoolean ("config.positionalsfx", opts->stereo == OPTVAL_ENABLED); 
- 	res_PutBoolean ("config.pulseshield", opts->shield == OPTVAL_3DO);
-Index: src/uqm/setupmenu.h
+Index: uqm/comm/pkunk/pkunkc.c
 ===================================================================
---- src/uqm/setupmenu.h	(revision 3690)
-+++ src/uqm/setupmenu.h	(working copy)
-@@ -81,6 +81,7 @@
- 	OPT_ENABLABLE fullscreen, subtitles, scanlines, fps, stereo;
- 	OPT_ENABLABLE music3do, musicremix, speech;
- 	OPT_ENABLABLE keepaspect;
-+	OPT_ENABLABLE directionaljoystick;
- 	OPT_CONSOLETYPE menu, text, cscan, scroll, intro, meleezoom, shield;
- 	CONTROL_TEMPLATE player1, player2;
- 	int speechvol, musicvol, sfxvol;
-Index: src/uqm/confirm.c
+--- uqm/comm/pkunk/pkunkc.c	(revision 3778)
++++ uqm/comm/pkunk/pkunkc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../pkunk/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/rebel/rebel.c
 ===================================================================
---- src/uqm/confirm.c	(revision 3690)
-+++ src/uqm/confirm.c	(working copy)
+--- uqm/comm/rebel/rebel.c	(revision 3778)
++++ uqm/comm/rebel/rebel.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "../yehat/resinst.h"
+-#include "strings.h"
++#include "../rebel/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/comm/arilou/arilouc.c
+===================================================================
+--- uqm/comm/arilou/arilouc.c	(revision 3778)
++++ uqm/comm/arilou/arilouc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../arilou/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: uqm/comm/druuge/druugec.c
+===================================================================
+--- uqm/comm/druuge/druugec.c	(revision 3778)
++++ uqm/comm/druuge/druugec.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../druuge/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/setup.h"
+Index: uqm/comm/spahome/spahome.c
+===================================================================
+--- uqm/comm/spahome/spahome.c	(revision 3778)
++++ uqm/comm/spahome/spahome.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "../spathi/resinst.h"
+-#include "strings.h"
++#include "../spahome/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/starbas/starbas.c
+===================================================================
+--- uqm/comm/starbas/starbas.c	(revision 3778)
++++ uqm/comm/starbas/starbas.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "../comandr/resinst.h"
+-#include "strings.h"
++#include "../starbas/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/setup.h"
+Index: uqm/comm/utwig/utwigc.c
+===================================================================
+--- uqm/comm/utwig/utwigc.c	(revision 3778)
++++ uqm/comm/utwig/utwigc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../utwig/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/umgah/umgahc.c
+===================================================================
+--- uqm/comm/umgah/umgahc.c	(revision 3778)
++++ uqm/comm/umgah/umgahc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../umgah/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/comm/talkpet/talkpet.c
+===================================================================
+--- uqm/comm/talkpet/talkpet.c	(revision 3778)
++++ uqm/comm/talkpet/talkpet.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../talkpet/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/comm/syreen/syreenc.c
+===================================================================
+--- uqm/comm/syreen/syreenc.c	(revision 3778)
++++ uqm/comm/syreen/syreenc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../syreen/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/setup.h"
+Index: uqm/comm/slyland/slyland.c
+===================================================================
+--- uqm/comm/slyland/slyland.c	(revision 3778)
++++ uqm/comm/slyland/slyland.c	(working copy)
+@@ -16,10 +16,10 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
++#include "../slyland/strings.h"
++#include <stdlib.h>
+ #include "../commall.h"
+-#include <stdlib.h>
+ #include "resinst.h"
+-#include "strings.h"
+ 
+ #include "options.h"
+ #include "uqm/battle.h"
+Index: uqm/comm/chmmr/chmmrc.c
+===================================================================
+--- uqm/comm/chmmr/chmmrc.c	(revision 3778)
++++ uqm/comm/chmmr/chmmrc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../chmmr/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/hyper.h"
+Index: uqm/comm/thradd/thraddc.c
+===================================================================
+--- uqm/comm/thradd/thraddc.c	(revision 3778)
++++ uqm/comm/thradd/thraddc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../thradd/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/melnorm/melnorm.c
+===================================================================
+--- uqm/comm/melnorm/melnorm.c	(revision 3778)
++++ uqm/comm/melnorm/melnorm.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../melnorm/strings.h"
+ 
+ #include "uqm/gameev.h"
+ #include "uqm/shipcont.h"
+Index: uqm/comm/orz/orzc.c
+===================================================================
+--- uqm/comm/orz/orzc.c	(revision 3778)
++++ uqm/comm/orz/orzc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../orz/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/comm/ilwrath/ilwrathc.c
+===================================================================
+--- uqm/comm/ilwrath/ilwrathc.c	(revision 3778)
++++ uqm/comm/ilwrath/ilwrathc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../ilwrath/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: uqm/comm/yehat/yehatc.c
+===================================================================
+--- uqm/comm/yehat/yehatc.c	(revision 3778)
++++ uqm/comm/yehat/yehatc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../yehat/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/urquan/urquanc.c
+===================================================================
+--- uqm/comm/urquan/urquanc.c	(revision 3778)
++++ uqm/comm/urquan/urquanc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../urquan/strings.h"
+ 
+ static LOCDATA urquan_desc =
+ {
+Index: uqm/comm/supox/supoxc.c
+===================================================================
+--- uqm/comm/supox/supoxc.c	(revision 3778)
++++ uqm/comm/supox/supoxc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../supox/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/comm/slyhome/slyhome.c
+===================================================================
+--- uqm/comm/slyhome/slyhome.c	(revision 3778)
++++ uqm/comm/slyhome/slyhome.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../slyhome/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: uqm/comm/zoqfot/zoqfotc.c
+===================================================================
+--- uqm/comm/zoqfot/zoqfotc.c	(revision 3778)
++++ uqm/comm/zoqfot/zoqfotc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../zoqfot/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/vux/vuxc.c
+===================================================================
+--- uqm/comm/vux/vuxc.c	(revision 3778)
++++ uqm/comm/vux/vuxc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../vux/strings.h"
+ 
+ static LOCDATA vux_desc =
+ {
+Index: uqm/comm/blackur/blackurc.c
+===================================================================
+--- uqm/comm/blackur/blackurc.c	(revision 3778)
++++ uqm/comm/blackur/blackurc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../blackur/strings.h"
+ 
+ static LOCDATA blackurq_desc =
+ {
+Index: uqm/comm/comandr/comandr.c
+===================================================================
+--- uqm/comm/comandr/comandr.c	(revision 3778)
++++ uqm/comm/comandr/comandr.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../comandr/strings.h"
+ 
+ #include "uqm/setup.h"
+ #include "uqm/sis.h"
+Index: uqm/comm/shofixt/shofixt.c
+===================================================================
+--- uqm/comm/shofixt/shofixt.c	(revision 3778)
++++ uqm/comm/shofixt/shofixt.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../shofixt/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: uqm/comm/mycon/myconc.c
+===================================================================
+--- uqm/comm/mycon/myconc.c	(revision 3778)
++++ uqm/comm/mycon/myconc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../mycon/strings.h"
+ 
+ #include "uqm/gameev.h"
+ #include "libs/mathlib.h"
+Index: uqm/confirm.c
+===================================================================
+--- uqm/confirm.c	(revision 3778)
++++ uqm/confirm.c	(working copy)
 @@ -36,22 +36,29 @@
  #define CONFIRM_WIN_HEIGHT 22
  
@@ -881,7 +1227,7 @@ Index: src/uqm/confirm.c
  BOOLEAN
  DoConfirmExit (void)
  {
-@@ -90,7 +106,11 @@
+@@ -91,7 +107,11 @@
  		RECT ctxRect;
  		CONTEXT oldContext;
  		RECT oldRect;
@@ -894,7 +1240,7 @@ Index: src/uqm/confirm.c
  
  		oldContext = SetContext (ScreenContext);
  		GetContextClipRect (&oldRect);
-@@ -118,7 +138,7 @@
+@@ -119,7 +139,7 @@
  			if (GLOBAL (CurrentActivity) & CHECK_ABORT)
  			{	// something else triggered an exit
  				done = TRUE;
@@ -903,7 +1249,7 @@ Index: src/uqm/confirm.c
  			}
  			else if (PulsedInputState.menu[KEY_MENU_SELECT])
  			{
-@@ -128,11 +148,16 @@
+@@ -129,11 +149,16 @@
  			else if (PulsedInputState.menu[KEY_MENU_CANCEL])
  			{
  				done = TRUE;
@@ -922,7 +1268,7 @@ Index: src/uqm/confirm.c
  				DrawConfirmationWindow (response);
  				PlayMenuSound (MENU_SOUND_MOVE);
  			}
-@@ -143,15 +168,19 @@
+@@ -144,15 +169,19 @@
  		DrawStamp (&s);
  		DestroyDrawable (ReleaseDrawable (s.frame));
  		ClearSystemRect ();
@@ -944,365 +1290,275 @@ Index: src/uqm/confirm.c
  		ExitRequested = FALSE;
  		GamePaused = FALSE;
  		FlushInput ();
-Index: src/uqm/comm/slyhome/slyhome.c
+Index: uqm/intel.c
 ===================================================================
---- src/uqm/comm/slyhome/slyhome.c	(revision 3690)
-+++ src/uqm/comm/slyhome/slyhome.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../slyhome/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: src/uqm/comm/vux/vuxc.c
+--- uqm/intel.c	(revision 3778)
++++ uqm/intel.c	(working copy)
+@@ -45,10 +45,10 @@
+ 			// Allow a player to warp-escape in cyborg mode
+ 			if (StarShipPtr->playerNr == RPG_PLAYER_NUM)
+ 				InputState |= CurrentInputToBattleInput (
+-						context->playerNr) & BATTLE_ESCAPE;
++						context->playerNr, -1) & BATTLE_ESCAPE;
+ 		}
+ 		else
+-			InputState = CurrentInputToBattleInput (context->playerNr);
++			InputState = CurrentInputToBattleInput (context->playerNr, -1);
+ 	}
+ 	else if (!(PlayerControl[context->playerNr] & PSYTRON_CONTROL))
+ 		InputState = 0;
+Index: uqm/battle.c
 ===================================================================
---- src/uqm/comm/vux/vuxc.c	(revision 3690)
-+++ src/uqm/comm/vux/vuxc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../vux/strings.h"
- 
- static LOCDATA vux_desc =
- {
-Index: src/uqm/comm/zoqfot/zoqfotc.c
-===================================================================
---- src/uqm/comm/zoqfot/zoqfotc.c	(revision 3690)
-+++ src/uqm/comm/zoqfot/zoqfotc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../zoqfot/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/comandr/comandr.c
-===================================================================
---- src/uqm/comm/comandr/comandr.c	(revision 3690)
-+++ src/uqm/comm/comandr/comandr.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../comandr/strings.h"
- 
- #include "uqm/setup.h"
- #include "uqm/sis.h"
-Index: src/uqm/comm/blackur/blackurc.c
-===================================================================
---- src/uqm/comm/blackur/blackurc.c	(revision 3690)
-+++ src/uqm/comm/blackur/blackurc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../blackur/strings.h"
- 
- static LOCDATA blackurq_desc =
- {
-Index: src/uqm/comm/shofixt/shofixt.c
-===================================================================
---- src/uqm/comm/shofixt/shofixt.c	(revision 3690)
-+++ src/uqm/comm/shofixt/shofixt.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../shofixt/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: src/uqm/comm/mycon/myconc.c
-===================================================================
---- src/uqm/comm/mycon/myconc.c	(revision 3690)
-+++ src/uqm/comm/mycon/myconc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../mycon/strings.h"
- 
- #include "uqm/gameev.h"
- #include "libs/mathlib.h"
-Index: src/uqm/comm/pkunk/pkunkc.c
-===================================================================
---- src/uqm/comm/pkunk/pkunkc.c	(revision 3690)
-+++ src/uqm/comm/pkunk/pkunkc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../pkunk/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/spathi/spathic.c
-===================================================================
---- src/uqm/comm/spathi/spathic.c	(revision 3690)
-+++ src/uqm/comm/spathi/spathic.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../spathi/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/rebel/rebel.c
-===================================================================
---- src/uqm/comm/rebel/rebel.c	(revision 3690)
-+++ src/uqm/comm/rebel/rebel.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "../yehat/resinst.h"
--#include "strings.h"
-+#include "../rebel/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/druuge/druugec.c
-===================================================================
---- src/uqm/comm/druuge/druugec.c	(revision 3690)
-+++ src/uqm/comm/druuge/druugec.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../druuge/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/setup.h"
-Index: src/uqm/comm/arilou/arilouc.c
-===================================================================
---- src/uqm/comm/arilou/arilouc.c	(revision 3690)
-+++ src/uqm/comm/arilou/arilouc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../arilou/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: src/uqm/comm/spahome/spahome.c
-===================================================================
---- src/uqm/comm/spahome/spahome.c	(revision 3690)
-+++ src/uqm/comm/spahome/spahome.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "../spathi/resinst.h"
--#include "strings.h"
-+#include "../spahome/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/starbas/starbas.c
-===================================================================
---- src/uqm/comm/starbas/starbas.c	(revision 3690)
-+++ src/uqm/comm/starbas/starbas.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "../comandr/resinst.h"
--#include "strings.h"
-+#include "../starbas/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/setup.h"
-Index: src/uqm/comm/utwig/utwigc.c
-===================================================================
---- src/uqm/comm/utwig/utwigc.c	(revision 3690)
-+++ src/uqm/comm/utwig/utwigc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../utwig/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/umgah/umgahc.c
-===================================================================
---- src/uqm/comm/umgah/umgahc.c	(revision 3690)
-+++ src/uqm/comm/umgah/umgahc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../umgah/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/talkpet/talkpet.c
-===================================================================
---- src/uqm/comm/talkpet/talkpet.c	(revision 3690)
-+++ src/uqm/comm/talkpet/talkpet.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../talkpet/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/syreen/syreenc.c
-===================================================================
---- src/uqm/comm/syreen/syreenc.c	(revision 3690)
-+++ src/uqm/comm/syreen/syreenc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../syreen/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/setup.h"
-Index: src/uqm/comm/slyland/slyland.c
-===================================================================
---- src/uqm/comm/slyland/slyland.c	(revision 3690)
-+++ src/uqm/comm/slyland/slyland.c	(working copy)
-@@ -16,10 +16,10 @@
+--- uqm/battle.c	(revision 3778)
++++ uqm/battle.c	(working copy)
+@@ -16,6 +16,10 @@
   *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   */
  
-+#include "../slyland/strings.h"
-+#include <stdlib.h>
- #include "../commall.h"
--#include <stdlib.h>
- #include "resinst.h"
--#include "strings.h"
++#ifdef ANDROID
++#include <android/log.h>
++#endif
++
+ #include "battle.h"
  
- #include "options.h"
- #include "uqm/battle.h"
-Index: src/uqm/comm/chmmr/chmmrc.c
-===================================================================
---- src/uqm/comm/chmmr/chmmrc.c	(revision 3690)
-+++ src/uqm/comm/chmmr/chmmrc.c	(working copy)
-@@ -18,7 +18,7 @@
+ #include "battlecontrols.h"
+@@ -44,6 +48,8 @@
+ #include "libs/graphics/gfx_common.h"
+ #include "libs/log.h"
+ #include "libs/mathlib.h"
++#include "globdata.h"
++#include "libs/input/sdl/vcontrol.h"
  
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../chmmr/strings.h"
  
- #include "uqm/build.h"
- #include "uqm/hyper.h"
-Index: src/uqm/comm/thradd/thraddc.c
-===================================================================
---- src/uqm/comm/thradd/thraddc.c	(revision 3690)
-+++ src/uqm/comm/thradd/thraddc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../thradd/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/melnorm/melnorm.c
-===================================================================
---- src/uqm/comm/melnorm/melnorm.c	(revision 3690)
-+++ src/uqm/comm/melnorm/melnorm.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../melnorm/strings.h"
- 
- #include "uqm/gameev.h"
- #include "uqm/setup.h"
-Index: src/uqm/comm/orz/orzc.c
-===================================================================
---- src/uqm/comm/orz/orzc.c	(revision 3690)
-+++ src/uqm/comm/orz/orzc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../orz/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/ilwrath/ilwrathc.c
-===================================================================
---- src/uqm/comm/ilwrath/ilwrathc.c	(revision 3690)
-+++ src/uqm/comm/ilwrath/ilwrathc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../ilwrath/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: src/uqm/comm/yehat/yehatc.c
-===================================================================
---- src/uqm/comm/yehat/yehatc.c	(revision 3690)
-+++ src/uqm/comm/yehat/yehatc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../yehat/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/urquan/urquanc.c
-===================================================================
---- src/uqm/comm/urquan/urquanc.c	(revision 3690)
-+++ src/uqm/comm/urquan/urquanc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../urquan/strings.h"
- 
- static LOCDATA urquan_desc =
+ BYTE battle_counter[NUM_SIDES];
+@@ -138,7 +144,8 @@
+ frameInputHuman (HumanInputContext *context, STARSHIP *StarShipPtr)
  {
-Index: src/uqm/comm/supox/supoxc.c
+ 	(void) StarShipPtr;
+-	return CurrentInputToBattleInput (context->playerNr);
++
++	return CurrentInputToBattleInput (context->playerNr, StarShipPtr ? StarShipPtr->ShipFacing : -1);
+ }
+ 
+ static void
+@@ -208,8 +215,11 @@
+ 						StarShipPtr->ship_input_state |= SPECIAL;
+ 
+ 					if (CanRunAway && cur_player == 0 &&
+-							(InputState & BATTLE_ESCAPE))
++							((InputState & BATTLE_ESCAPE) || EmergencyEscapeWarpUnitActivatedFromMenu))
++					{
++						EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
+ 						DoRunAway (StarShipPtr);
++					}
+ 				}
+ 			}
+ 
+Index: uqm/planets/solarsys.c
 ===================================================================
---- src/uqm/comm/supox/supoxc.c	(revision 3690)
-+++ src/uqm/comm/supox/supoxc.c	(working copy)
-@@ -18,7 +18,7 @@
+--- uqm/planets/solarsys.c	(revision 3778)
++++ uqm/planets/solarsys.c	(working copy)
+@@ -837,18 +837,19 @@
+ static void
+ ProcessShipControls (void)
+ {
+-	COUNT index;
++	COUNT index = GetFrameIndex (GLOBAL (ShipStamp.frame));;
+ 	SIZE delta_x, delta_y;
++	BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index);
  
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../supox/strings.h"
+-	if (CurrentInputState.key[PlayerControls[0]][KEY_UP])
++	if (InputState & BATTLE_THRUST)
+ 		delta_y = -1;
+ 	else
+ 		delta_y = 0;
  
- #include "uqm/build.h"
+ 	delta_x = 0;
+-	if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
++	if (InputState & BATTLE_LEFT)
+ 		delta_x -= 1;
+-	if (CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
++	if (InputState & BATTLE_RIGHT)
+ 		delta_x += 1;
+ 		
+ 	if (delta_x || delta_y < 0)
+@@ -861,7 +862,6 @@
+ 	else
+ 		delta_y = 0;
  
-Index: src/uqm/controls.h
+-	index = GetFrameIndex (GLOBAL (ShipStamp.frame));
+ 	if (pSolarSysState->turn_counter)
+ 		--pSolarSysState->turn_counter;
+ 	else if (delta_x)
+Index: uqm/planets/pstarmap.c
 ===================================================================
---- src/uqm/controls.h	(revision 3690)
-+++ src/uqm/controls.h	(working copy)
+--- uqm/planets/pstarmap.c	(revision 3778)
++++ uqm/planets/pstarmap.c	(working copy)
+@@ -44,7 +44,12 @@
+ 
+ #include <stdlib.h>
+ 
++#ifdef ANDROID
++#include <SDL_screenkeyboard.h>
++#include <android/log.h>
++#endif
+ 
++
+ static POINT cursorLoc;
+ static POINT mapOrigin;
+ static int zoomLevel;
+@@ -1572,6 +1577,18 @@
+ 	RECT clip_r;
+ 	CONTEXT OldContext;
+ 
++#ifdef ANDROID
++	/* Show zoom in/out buttons */
++	SDL_Rect btn;
++	// SDL_ListModes()[0]->w SDL_ListModes()[0]->h
++	SDL_ANDROID_GetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &btn);
++	btn.y -= btn.h;
++	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &btn);
++	SDL_ANDROID_GetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &btn);
++	btn.y -= btn.h;
++	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &btn);
++#endif
++
+ 	memset (&MenuState, 0, sizeof (MenuState));
+ 
+ 	zoomLevel = 0;
+@@ -1625,6 +1642,14 @@
+ 			&& GLOBAL (autopilot.y) == universe.y)
+ 		GLOBAL (autopilot.x) = GLOBAL (autopilot.y) = ~0;
+ 
++#ifdef ANDROID
++	/* Hide zoom in/out buttons */
++	btn.w = 0;
++	btn.h = 0;
++	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &btn);
++	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &btn);
++#endif
++
+ 	return (GLOBAL (autopilot.x) != ~0
+ 			&& GLOBAL (autopilot.y) != ~0);
+ }
+Index: uqm/planets/lander.c
+===================================================================
+--- uqm/planets/lander.c	(revision 3778)
++++ uqm/planets/lander.c	(working copy)
+@@ -1591,15 +1591,15 @@
+ 		if (crew_left)
+ 		{
+ 			SIZE index = GetFrameIndex (LanderFrame[0]);
++			BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index);
+ 			if (turn_wait)
+ 				--turn_wait;
+-			else if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT] ||
+-					CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
++			else if ((InputState & BATTLE_LEFT) || (InputState & BATTLE_RIGHT))
+ 			{
+ 				COUNT landerSpeedNumer;
+ 				COUNT angle;
+ 
+-				if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
++				if (InputState & BATTLE_LEFT)
+ 					--index;
+ 				else
+ 					++index;
+@@ -1623,7 +1623,7 @@
+ 				turn_wait = SHUTTLE_TURN_WAIT;
+ 			}
+ 
+-			if (!CurrentInputState.key[PlayerControls[0]][KEY_UP])
++			if (!(InputState & BATTLE_THRUST))
+ 			{
+ 				dx = 0;
+ 				dy = 0;
+Index: uqm/setupmenu.c
+===================================================================
+--- uqm/setupmenu.c	(revision 3778)
++++ uqm/setupmenu.c	(working copy)
+@@ -75,7 +75,7 @@
+ #endif
+ 
+ #define MENU_COUNT          8
+-#define CHOICE_COUNT       24
++#define CHOICE_COUNT       25
+ #define SLIDER_COUNT        4
+ #define BUTTON_COUNT       10
+ #define LABEL_COUNT         4
+@@ -98,7 +98,7 @@
+ static int choice_widths[CHOICE_COUNT] = {
+ 	3, 2, 3, 3, 2, 2, 2, 2, 2, 2, 
+ 	2, 2, 3, 2, 2, 3, 3, 2,	3, 3, 
+-	3, 2, 2, 2 };
++	3, 2, 2, 2, 2 };
+ 
+ static HANDLER button_handlers[BUTTON_COUNT] = {
+ 	quit_main_menu, quit_sub_menu, do_graphics, do_engine,
+@@ -157,6 +157,7 @@
+ 	(WIDGET *)(&choices[12]),
+ 	(WIDGET *)(&choices[15]),
+ 	(WIDGET *)(&choices[16]),
++	(WIDGET *)(&choices[24]),
+ 	(WIDGET *)(&buttons[1]),
+ 	NULL };
+ 	
+@@ -416,6 +417,7 @@
+ 	choices[21].selected = opts.musicremix;
+ 	choices[22].selected = opts.speech;
+ 	choices[23].selected = opts.keepaspect;
++	choices[24].selected = opts.directionaljoystick;
+ 
+ 	sliders[0].value = opts.musicvol;
+ 	sliders[1].value = opts.sfxvol;
+@@ -450,6 +452,7 @@
+ 	opts.musicremix = choices[21].selected;
+ 	opts.speech = choices[22].selected;
+ 	opts.keepaspect = choices[23].selected;
++	opts.directionaljoystick = choices[24].selected;
+ 
+ 	opts.musicvol = sliders[0].value;
+ 	opts.sfxvol = sliders[1].value;
+@@ -1277,6 +1280,7 @@
+ 	opts->musicremix = optRemixMusic ? OPTVAL_ENABLED : OPTVAL_DISABLED;
+ 	opts->speech = optSpeech ? OPTVAL_ENABLED : OPTVAL_DISABLED;
+ 	opts->keepaspect = optKeepAspectRatio ? OPTVAL_ENABLED : OPTVAL_DISABLED;
++	opts->directionaljoystick = optDirectionalJoystick ? OPTVAL_ENABLED : OPTVAL_DISABLED;
+ 	switch (snddriver) {
+ 	case audio_DRIVER_OPENAL:
+ 		opts->adriver = OPTVAL_OPENAL;
+@@ -1518,6 +1522,7 @@
+ 	optWhichIntro = (opts->intro == OPTVAL_3DO) ? OPT_3DO : OPT_PC;
+ 	optStereoSFX = (opts->stereo == OPTVAL_ENABLED);
+ 	optKeepAspectRatio = (opts->keepaspect == OPTVAL_ENABLED);
++	optDirectionalJoystick = (opts->directionaljoystick == OPTVAL_ENABLED) ? TRUE : FALSE;
+ 	PlayerControls[0] = opts->player1;
+ 	PlayerControls[1] = opts->player2;
+ 
+@@ -1532,6 +1537,7 @@
+ 	res_PutBoolean ("config.speech", opts->speech == OPTVAL_ENABLED);
+ 	res_PutBoolean ("config.3domovies", opts->intro == OPTVAL_3DO);
+ 	res_PutBoolean ("config.showfps", opts->fps == OPTVAL_ENABLED);
++	res_PutBoolean ("config.directionaljoystick", opts->directionaljoystick == OPTVAL_ENABLED);
+ 	res_PutBoolean ("config.smoothmelee", opts->meleezoom == OPTVAL_3DO);
+ 	res_PutBoolean ("config.positionalsfx", opts->stereo == OPTVAL_ENABLED); 
+ 	res_PutBoolean ("config.pulseshield", opts->shield == OPTVAL_3DO);
+Index: uqm/setupmenu.h
+===================================================================
+--- uqm/setupmenu.h	(revision 3778)
++++ uqm/setupmenu.h	(working copy)
+@@ -81,6 +81,7 @@
+ 	OPT_ENABLABLE fullscreen, subtitles, scanlines, fps, stereo;
+ 	OPT_ENABLABLE music3do, musicremix, speech;
+ 	OPT_ENABLABLE keepaspect;
++	OPT_ENABLABLE directionaljoystick;
+ 	OPT_CONSOLETYPE menu, text, cscan, scroll, intro, meleezoom, shield;
+ 	CONTROL_TEMPLATE player1, player2;
+ 	int speechvol, musicvol, sfxvol;
+Index: uqm/controls.h
+===================================================================
+--- uqm/controls.h	(revision 3778)
++++ uqm/controls.h	(working copy)
 @@ -90,13 +90,14 @@
  #define BATTLE_ESCAPE     ((BATTLE_INPUT_STATE)(1 << 5))
  #define BATTLE_DOWN       ((BATTLE_INPUT_STATE)(1 << 6))
@@ -1329,57 +1585,10 @@ Index: src/uqm/controls.h
  void DoPopupWindow(const char *msg);
  
  typedef void (InputFrameCallback) (void);
-Index: src/uqm/battle.c
+Index: uqm/gameinp.c
 ===================================================================
---- src/uqm/battle.c	(revision 3690)
-+++ src/uqm/battle.c	(working copy)
-@@ -16,6 +16,10 @@
-  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
-+#ifdef ANDROID
-+#include <android/log.h>
-+#endif
-+
- #include "battle.h"
- 
- #include "battlecontrols.h"
-@@ -43,6 +47,8 @@
- #include "libs/graphics/gfx_common.h"
- #include "libs/log.h"
- #include "libs/mathlib.h"
-+#include "globdata.h"
-+#include "libs/input/sdl/vcontrol.h"
- 
- 
- BYTE battle_counter[NUM_SIDES];
-@@ -137,7 +143,8 @@
- frameInputHuman (HumanInputContext *context, STARSHIP *StarShipPtr)
- {
- 	(void) StarShipPtr;
--	return CurrentInputToBattleInput (context->playerNr);
-+
-+	return CurrentInputToBattleInput (context->playerNr, StarShipPtr ? StarShipPtr->ShipFacing : -1);
- }
- 
- static void
-@@ -207,8 +214,11 @@
- 						StarShipPtr->ship_input_state |= SPECIAL;
- 
- 					if (CanRunAway && cur_player == 0 &&
--							(InputState & BATTLE_ESCAPE))
-+							((InputState & BATTLE_ESCAPE) || EmergencyEscapeWarpUnitActivatedFromMenu))
-+					{
-+						EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
- 						DoRunAway (StarShipPtr);
-+					}
- 				}
- 			}
- 
-Index: src/uqm/gameinp.c
-===================================================================
---- src/uqm/gameinp.c	(revision 3690)
-+++ src/uqm/gameinp.c	(working copy)
+--- uqm/gameinp.c	(revision 3778)
++++ uqm/gameinp.c	(working copy)
 @@ -16,6 +16,7 @@
   *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   */
@@ -1388,7 +1597,7 @@ Index: src/uqm/gameinp.c
  #include "controls.h"
  #include "battlecontrols.h"
  #include "init.h"
-@@ -32,11 +33,14 @@
+@@ -33,11 +34,14 @@
  #include "libs/timelib.h"
  #include "libs/threadlib.h"
  
@@ -1405,7 +1614,7 @@ Index: src/uqm/gameinp.c
  typedef struct
  {
  	BOOLEAN (*InputFunc) (void *pInputState);
-@@ -422,16 +426,10 @@
+@@ -416,16 +420,10 @@
  }
  
  static BATTLE_INPUT_STATE
@@ -1423,7 +1632,7 @@ Index: src/uqm/gameinp.c
  	if (keyState[KEY_WEAPON])
  		InputState |= BATTLE_WEAPON;
  	if (keyState[KEY_SPECIAL])
-@@ -441,21 +439,35 @@
+@@ -435,21 +433,35 @@
  	if (keyState[KEY_DOWN])
  		InputState |= BATTLE_DOWN;
  
@@ -1462,7 +1671,7 @@ Index: src/uqm/gameinp.c
  }
  
  BOOLEAN
-@@ -500,3 +512,76 @@
+@@ -494,3 +506,76 @@
  	return result;
  }
  
@@ -1539,96 +1748,23 @@ Index: src/uqm/gameinp.c
 +	}
 +	return InputState;
 +}
-Index: src/uqm/intel.c
+Index: regex/regex.c
 ===================================================================
---- src/uqm/intel.c	(revision 3690)
-+++ src/uqm/intel.c	(working copy)
-@@ -45,10 +45,10 @@
- 			// Allow a player to warp-escape in cyborg mode
- 			if (StarShipPtr->playerNr == RPG_PLAYER_NUM)
- 				InputState |= CurrentInputToBattleInput (
--						context->playerNr) & BATTLE_ESCAPE;
-+						context->playerNr, -1) & BATTLE_ESCAPE;
- 		}
- 		else
--			InputState = CurrentInputToBattleInput (context->playerNr);
-+			InputState = CurrentInputToBattleInput (context->playerNr, -1);
- 	}
- 	else if (!(PlayerControl[context->playerNr] & PSYTRON_CONTROL))
- 		InputState = 0;
-Index: src/uqm/planets/lander.c
-===================================================================
---- src/uqm/planets/lander.c	(revision 3690)
-+++ src/uqm/planets/lander.c	(working copy)
-@@ -1617,15 +1617,15 @@
- 		if (crew_left)
- 		{
- 			SIZE index = GetFrameIndex (LanderFrame[0]);
-+			BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index);
- 			if (turn_wait)
- 				--turn_wait;
--			else if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT] ||
--					CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
-+			else if ((InputState & BATTLE_LEFT) || (InputState & BATTLE_RIGHT))
- 			{
- 				COUNT landerSpeedNumer;
- 				COUNT angle;
+--- regex/regex.c	(revision 3778)
++++ regex/regex.c	(working copy)
+@@ -24,6 +24,7 @@
  
--				if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
-+				if (InputState & BATTLE_LEFT)
- 					--index;
- 				else
- 					++index;
-@@ -1649,7 +1649,7 @@
- 				turn_wait = SHUTTLE_TURN_WAIT;
- 			}
+ #include "port.h"
  
--			if (!CurrentInputState.key[PlayerControls[0]][KEY_UP])
-+			if (!(InputState & BATTLE_THRUST))
- 			{
- 				dx = 0;
- 				dy = 0;
-Index: src/uqm/planets/solarsys.c
-===================================================================
---- src/uqm/planets/solarsys.c	(revision 3690)
-+++ src/uqm/planets/solarsys.c	(working copy)
-@@ -835,18 +835,19 @@
- static void
- ProcessShipControls (void)
- {
--	COUNT index;
-+	COUNT index = GetFrameIndex (GLOBAL (ShipStamp.frame));;
- 	SIZE delta_x, delta_y;
-+	BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index);
- 
--	if (CurrentInputState.key[PlayerControls[0]][KEY_UP])
-+	if (InputState & BATTLE_THRUST)
- 		delta_y = -1;
- 	else
- 		delta_y = 0;
- 
- 	delta_x = 0;
--	if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
-+	if (InputState & BATTLE_LEFT)
- 		delta_x -= 1;
--	if (CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
-+	if (InputState & BATTLE_RIGHT)
- 		delta_x += 1;
- 		
- 	if (delta_x || delta_y < 0)
-@@ -859,7 +860,6 @@
- 	else
- 		delta_y = 0;
- 
--	index = GetFrameIndex (GLOBAL (ShipStamp.frame));
- 	if (pSolarSysState->turn_counter)
- 		--pSolarSysState->turn_counter;
- 	else if (delta_x)
-Index: src/regex/regex.c
-===================================================================
---- src/regex/regex.c	(revision 3690)
-+++ src/regex/regex.c	(working copy)
-@@ -50,6 +50,7 @@
++#ifndef ANDROID
+ #ifdef _AIX
+ #pragma alloca
+ #else
+@@ -47,9 +48,11 @@
+ #  endif
+ # endif
+ #endif
++#endif
  
  #ifdef _LIBC
  /* We have to keep the namespace clean.  */
@@ -1636,7 +1772,7 @@ Index: src/regex/regex.c
  # define regfree(preg) __regfree (preg)
  # define regexec(pr, st, nm, pm, ef) __regexec (pr, st, nm, pm, ef)
  # define regcomp(preg, pattern, cflags) __regcomp (preg, pattern, cflags)
-@@ -69,6 +70,7 @@
+@@ -69,6 +72,7 @@
  # define re_search_2(bufp, st1, s1, st2, s2, startpos, range, regs, stop) \
  	__re_search_2 (bufp, st1, s1, st2, s2, startpos, range, regs, stop)
  # define re_compile_fastmap(bufp) __re_compile_fastmap (bufp)
@@ -1644,7 +1780,7 @@ Index: src/regex/regex.c
  
  # include "../locale/localeinfo.h"
  #endif
-@@ -82,7 +84,7 @@
+@@ -82,7 +86,7 @@
     #undefs RE_DUP_MAX and sets it to the right value.  */
  #include <limits.h>
  
@@ -1653,10 +1789,10 @@ Index: src/regex/regex.c
  #include "regex_internal.h"
  
  #include "regex_internal.ci"
-Index: src/options.c
+Index: options.c
 ===================================================================
---- src/options.c	(revision 3690)
-+++ src/options.c	(working copy)
+--- options.c	(revision 3778)
++++ options.c	(working copy)
 @@ -50,6 +50,7 @@
  int optWhichShield;
  int optSmoothScroll;
@@ -1673,33 +1809,3 @@ Index: src/options.c
  			if (uio_mountDir (repository, mountPoint, uio_FSTYPE_ZIP,
  					dirHandle, dirList->names[i], "/", autoMount,
  					relativeFlags | uio_MOUNT_RDONLY,
-Index: content/base/ui/setupmenu.txt
-===================================================================
---- content/base/ui/setupmenu.txt	(revision 3690)
-+++ content/base/ui/setupmenu.txt	(working copy)
-@@ -36,6 +36,7 @@
- UQM Remixes
- Speech
- Aspect Ratio
-+Joystick
- 
- #(CAT_0_OPTS)
- 320x240
-@@ -451,6 +452,17 @@
- the window is not.
- Currently only meaningful in OpenGL mode.
- 
-+#(CAT_24_OPTS)
-+Normal
-+Directional
-+
-+#(CAT_24_OPT_0_DESC)
-+Joystick acts as arrow keys.
-+
-+#(CAT_24_OPT_1_DESC)
-+Joystick steers ship in absolute direction,
-+thrust is toggled by joystick tilt.
-+
- #(SLIDERS)
- Music Volume
- SFX Volume

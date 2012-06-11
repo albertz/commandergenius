@@ -25,6 +25,7 @@
 
 #include "SDL_stdinc.h"
 #include "SDL_video.h"
+#include "SDL_version.h"
 #if SDL_VERSION_ATLEAST(1,3,0)
 #include "SDL_keyboard.h"
 #include "SDL_keycode.h"
@@ -58,8 +59,12 @@ enum {
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM
 };
 
-/* All functions return 0 on failure and 1 on success, contrary to other SDL API */
+/* All functions return 0 on failure and 1 on success, contrary to other SDL API.
+   On the other hand, those functions actually never fail, so you may skip error checking. */
 
+/* Set on-screen button position, specify zero width to hide the button.
+   All coordinates are in the actual screen dimensions, NOT what you are supplying to SDL_SetVideoMode(),
+   use SDL_ListModes()[0] to determine the actual screen boundaries. */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos);
 
