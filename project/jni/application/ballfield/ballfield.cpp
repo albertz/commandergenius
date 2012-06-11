@@ -657,6 +657,7 @@ int main(int argc, char* argv[])
 		SDL_FillRect(screen, &r, color);
 
 		SDL_Flip(SDL_GetVideoSurface());
+		__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL_Flip");
 		SDL_Event evt;
 		while( SDL_PollEvent(&evt) )
 		{

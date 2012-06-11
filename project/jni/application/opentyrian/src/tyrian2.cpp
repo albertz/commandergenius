@@ -52,6 +52,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <android/log.h>
 
 inline static void blit_enemy( SDL_Surface *surface, unsigned int i, signed int x_offset, signed int y_offset, signed int sprite_offset );
 
@@ -3571,8 +3572,9 @@ bool JE_titleScreen( JE_boolean animate )
 			{
 				if (toupper(lastkey_char) == specialName[i][arcade_code_i[i]])
 					arcade_code_i[i]++;
-				else
+				else if(lastkey_char != '\0')
 					arcade_code_i[i] = 0;
+				//__android_log_print(ANDROID_LOG_INFO, "Tyrian", "Got key: %d = '%c' = '%c', code[%d] = '%s', matched %d", (int)lastkey_char, lastkey_char, toupper(lastkey_char), i, specialName[i], arcade_code_i[i]);
 
 				if (arcade_code_i[i] > 0 && arcade_code_i[i] == strlen(specialName[i]))
 				{
