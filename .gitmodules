@@ -6,7 +6,7 @@
 	url = git://github.com/pelya/Boost-for-Android.git
 [submodule "project/jni/application/commandergenius/commandergenius"]
 	path = project/jni/application/commandergenius/commandergenius
-	url = git://clonekeenplus.git.sourceforge.net/gitroot/clonekeenplus/clonekeenplus
+	url = git://github.com/gerstrong/Commander-Genius.git
 [submodule "project/jni/application/gemrb-sdl-1.3/gemrb"]
 	path = project/jni/application/gemrb-sdl-1.3/gemrb
 	url = git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb
