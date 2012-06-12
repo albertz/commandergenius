@@ -1169,12 +1169,18 @@ void SDL_ANDROID_MultiThreadedVideoLoop()
 					ANDROID_VideoQuit(videoThread._this);
 					break;
 				case CMD_UPDATERECTS:
-					ANDROID_FlipHWSurfaceInternal(videoThread.numrects, videoThread.rects);
-					swapBuffersNeeded = 1;
+					if( ! SDL_ANDROID_CompatibilityHacks ) // DIRTY HACK for MilkyTracker
+					{
+						ANDROID_FlipHWSurfaceInternal(videoThread.numrects, videoThread.rects);
+						swapBuffersNeeded = 1;
+					}
 					break;
 				case CMD_FLIP:
-					ANDROID_FlipHWSurfaceInternal(0, NULL);
-					swapBuffersNeeded = 1;
+					if( ! SDL_ANDROID_CompatibilityHacks ) // DIRTY HACK for MilkyTracker
+					{
+						ANDROID_FlipHWSurfaceInternal(0, NULL);
+						swapBuffersNeeded = 1;
+					}
 					break;
 			}
 			videoThread.execute = 0;

@@ -97,7 +97,7 @@ the app will re-download the data if URL does not match the saved URL from previ
 All devices have different screen resolutions, you may toggle automatic screen resizing
 in ChangeAppSettings.sh and draw to virtual 640x480 screen - it will be HW accelerated
 and will not impact performance. Automatic screen resizing does not work in SDL 1.3/2.0.
-SDL_ListModes()[0] will always return native screen resolution.
+SDL_GetVideoInfo() will always return native screen resolution.
 Also make sure that your HW textures are not wider than 1024 pixels, or it will fail to allocate such
 texture on HTC G1, and other low-end devices. Software surfaces may be of any size of course.
 

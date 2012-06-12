@@ -1,6 +1,3 @@
-Only in milkytracker-0.90.85: config.h
-Only in milkytracker-0.90.85: config.log
-Only in milkytracker-0.90.85: config.status
 diff -u -r milkytracker-0.90.85-old/configure milkytracker-0.90.85/configure
 --- milkytracker-0.90.85-old/configure	2010-01-02 02:03:37.000000000 +0200
 +++ milkytracker-0.90.85/configure	2011-07-04 16:43:35.374937729 +0300
@@ -100,220 +97,6 @@ diff -u -r milkytracker-0.90.85-old/configure milkytracker-0.90.85/configure
  SDL_VERSION=1.2.0
  
  # Check whether --with-sdl-prefix was given.
-@@ -5774,7 +5688,7 @@
- 
-   rm -f conf.sdltest
- 
--CPPFLAGS="$CPPFLAGS -D__FORCE_SDL_AUDIO__"
-+CPPFLAGS="$CPPFLAGS -D__FORCE_SDL_AUDIO__ -D__LOWRES__"
- 
- # Check that SDL supports the X11 wm
- { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether SDL supports X11" >&5
-Only in milkytracker-0.90.85: Makefile
-Only in milkytracker-0.90.85/src/compression: DecompressorGZIP.o
-Only in milkytracker-0.90.85/src/compression: DecompressorLHA.o
-Only in milkytracker-0.90.85/src/compression: DecompressorLZX.o
-Only in milkytracker-0.90.85/src/compression: Decompressor.o
-Only in milkytracker-0.90.85/src/compression: DecompressorPP20.o
-Only in milkytracker-0.90.85/src/compression: DecompressorUMX.o
-Only in milkytracker-0.90.85/src/compression: DecompressorZIP.o
-Only in milkytracker-0.90.85/src/compression: .deps
-Only in milkytracker-0.90.85/src/compression: libcompression.a
-Only in milkytracker-0.90.85/src/compression: Makefile
-Only in milkytracker-0.90.85/src/compression: MyIO.o
-Only in milkytracker-0.90.85/src/compression: PP20.o
-Only in milkytracker-0.90.85/src/compression: unlha.o
-Only in milkytracker-0.90.85/src/compression: unlzx.o
-Only in milkytracker-0.90.85/src/compression: ZipExtractor.o
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: .deps
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: dir.o
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: err.o
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: fetch.o
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: file.o
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: fseeko.o
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: info.o
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: libzzip.a
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: Makefile
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: plugin.o
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: stat.o
-Only in milkytracker-0.90.85/src/compression/zziplib/generic: zip.o
-Only in milkytracker-0.90.85/src/fx: Camera.o
-Only in milkytracker-0.90.85/src/fx: .deps
-Only in milkytracker-0.90.85/src/fx: Filter.o
-Only in milkytracker-0.90.85/src/fx: Fire.o
-Only in milkytracker-0.90.85/src/fx: fpmath.o
-Only in milkytracker-0.90.85/src/fx: libfx.a
-Only in milkytracker-0.90.85/src/fx: Makefile
-Only in milkytracker-0.90.85/src/fx: Math3d.o
-Only in milkytracker-0.90.85/src/fx: ParticleBlobs.o
-Only in milkytracker-0.90.85/src/fx: ParticleEmitter.o
-Only in milkytracker-0.90.85/src/fx: ParticleFun.o
-Only in milkytracker-0.90.85/src/fx: ParticleFX.o
-Only in milkytracker-0.90.85/src/fx: ParticleScene.o
-Only in milkytracker-0.90.85/src/fx: Starfield.o
-Only in milkytracker-0.90.85/src/fx: TCBSpline.o
-Only in milkytracker-0.90.85/src/fx: TCBSplineTest.o
-Only in milkytracker-0.90.85/src/fx: TexturedGrid.o
-Only in milkytracker-0.90.85/src/fx: TexturedPlane.o
-Only in milkytracker-0.90.85/src/fx: Texture.o
-Only in milkytracker-0.90.85/src/fx: TwisterFX.o
-Only in milkytracker-0.90.85/src/fx: Twister.o
-Only in milkytracker-0.90.85/src: Makefile
-Only in milkytracker-0.90.85/src/midi: .deps
-Only in milkytracker-0.90.85/src/midi: Makefile
-Only in milkytracker-0.90.85/src/milkyplay: AudioDriver_ALSA.o
-Only in milkytracker-0.90.85/src/milkyplay: AudioDriverBase.o
-Only in milkytracker-0.90.85/src/milkyplay: AudioDriver_JACK.o
-Only in milkytracker-0.90.85/src/milkyplay: AudioDriverManager.o
-Only in milkytracker-0.90.85/src/milkyplay: AudioDriver_NULL.o
-Only in milkytracker-0.90.85/src/milkyplay: AudioDriver_SDL.o
-Only in milkytracker-0.90.85/src/milkyplay: AudioDriver_WAVWriter.o
-Only in milkytracker-0.90.85/src/milkyplay: ChannelMixer.o
-Only in milkytracker-0.90.85/src/milkyplay: .deps
-Only in milkytracker-0.90.85/src/milkyplay: ExporterXM.o
-Only in milkytracker-0.90.85/src/milkyplay: libmilkyplay.a
-Only in milkytracker-0.90.85/src/milkyplay: LittleEndian.o
-Only in milkytracker-0.90.85/src/milkyplay: Loader669.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderAMF.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderAMS.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderCBA.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderDBM.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderDIGI.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderDSM.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderDTM.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderFAR.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderGDM.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderIMF.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderIT.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderMDL.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderMOD.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderMTM.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderMXM.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderOKT.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderPLM.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderPSM.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderPTM.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderS3M.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderSTM.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderULT.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderUNI.o
-Only in milkytracker-0.90.85/src/milkyplay: LoaderXM.o
-Only in milkytracker-0.90.85/src/milkyplay: Makefile
-Only in milkytracker-0.90.85/src/milkyplay: MasterMixer.o
-Only in milkytracker-0.90.85/src/milkyplay: PlayerBase.o
-Only in milkytracker-0.90.85/src/milkyplay: PlayerGeneric.o
-Only in milkytracker-0.90.85/src/milkyplay: PlayerSTD.o
-Only in milkytracker-0.90.85/src/milkyplay: ResamplerFactory.o
-Only in milkytracker-0.90.85/src/milkyplay: SampleLoaderAbstract.o
-Only in milkytracker-0.90.85/src/milkyplay: SampleLoaderAIFF.o
-Only in milkytracker-0.90.85/src/milkyplay: SampleLoaderALL.o
-Only in milkytracker-0.90.85/src/milkyplay: SampleLoaderGeneric.o
-Only in milkytracker-0.90.85/src/milkyplay: SampleLoaderIFF.o
-Only in milkytracker-0.90.85/src/milkyplay: SampleLoaderWAV.o
-Only in milkytracker-0.90.85/src/milkyplay: XIInstrument.o
-Only in milkytracker-0.90.85/src/milkyplay: XMFile.o
-Only in milkytracker-0.90.85/src/milkyplay: XModule.o
-Only in milkytracker-0.90.85/src/ppui: Button.o
-Only in milkytracker-0.90.85/src/ppui: CheckBox.o
-Only in milkytracker-0.90.85/src/ppui: Container.o
-Only in milkytracker-0.90.85/src/ppui: ContextMenu.o
-Only in milkytracker-0.90.85/src/ppui: Control.o
-Only in milkytracker-0.90.85/src/ppui: .deps
-Only in milkytracker-0.90.85/src/ppui: DialogBase.o
-Only in milkytracker-0.90.85/src/ppui: DialogFileSelector.o
-Only in milkytracker-0.90.85/src/ppui: DictionaryKey.o
-Only in milkytracker-0.90.85/src/ppui: Dictionary.o
-Only in milkytracker-0.90.85/src/ppui: DisplayDeviceFB_SDL.o
-Only in milkytracker-0.90.85/src/ppui: DisplayDevice_SDL.o
-Only in milkytracker-0.90.85/src/ppui: Event.o
-Only in milkytracker-0.90.85/src/ppui: Font.o
-Only in milkytracker-0.90.85/src/ppui: Graphics_15BIT.o
-Only in milkytracker-0.90.85/src/ppui: Graphics_16BIT.o
-Only in milkytracker-0.90.85/src/ppui: Graphics_24bpp_generic.o
-Only in milkytracker-0.90.85/src/ppui: Graphics_32bpp_generic.o
-Only in milkytracker-0.90.85/src/ppui: Graphics_ARGB32.o
-Only in milkytracker-0.90.85/src/ppui: Graphics_BGR24.o
-Only in milkytracker-0.90.85/src/ppui: Graphics_BGR24_SLOW.o
-Only in milkytracker-0.90.85/src/ppui: KeyboardBindingHandler.o
-Only in milkytracker-0.90.85/src/ppui: libppui.a
-Only in milkytracker-0.90.85/src/ppui: ListBoxFileBrowser.o
-Only in milkytracker-0.90.85/src/ppui: ListBox.o
-Only in milkytracker-0.90.85/src/ppui: Makefile
-Only in milkytracker-0.90.85/src/ppui: Menu.o
-Only in milkytracker-0.90.85/src/ppui: MessageBoxContainer.o
-Only in milkytracker-0.90.85/src/ppui/osinterface: .deps
-Only in milkytracker-0.90.85/src/ppui/osinterface: libosinterface.a
-Only in milkytracker-0.90.85/src/ppui/osinterface: Makefile
-Only in milkytracker-0.90.85/src/ppui/osinterface: PPMessageBox_SDL.o
-Only in milkytracker-0.90.85/src/ppui/osinterface: PPMutex.o
-Only in milkytracker-0.90.85/src/ppui/osinterface: PPOpenPanel_SDL.o
-Only in milkytracker-0.90.85/src/ppui/osinterface: PPPathFactory.o
-Only in milkytracker-0.90.85/src/ppui/osinterface: PPPath_POSIX.o
-Only in milkytracker-0.90.85/src/ppui/osinterface: PPQuitSaveAlert_SDL.o
-Only in milkytracker-0.90.85/src/ppui/osinterface: PPSavePanel_SDL.o
-Only in milkytracker-0.90.85/src/ppui/osinterface: PPSystem_POSIX.o
-Only in milkytracker-0.90.85/src/ppui/osinterface: SDL_ModalLoop.o
-Only in milkytracker-0.90.85/src/ppui: PPUIConfig.o
-Only in milkytracker-0.90.85/src/ppui: RadioGroup.o
-Only in milkytracker-0.90.85/src/ppui: Screen.o
-Only in milkytracker-0.90.85/src/ppui: Scrollbar.o
-Only in milkytracker-0.90.85/src/ppui: Seperator.o
-Only in milkytracker-0.90.85/src/ppui: Slider.o
-Only in milkytracker-0.90.85/src/ppui: StaticText.o
-Only in milkytracker-0.90.85/src/ppui: Tools.o
-Only in milkytracker-0.90.85/src/ppui: TransparentContainer.o
-Only in milkytracker-0.90.85/src/tracker: AnimatedFXControl.o
-Only in milkytracker-0.90.85/src/tracker: ColorExportImport.o
-Only in milkytracker-0.90.85/src/tracker: ColorPaletteContainer.o
-Only in milkytracker-0.90.85/src/tracker: .deps
-Only in milkytracker-0.90.85/src/tracker: DialogChannelSelector.o
-Only in milkytracker-0.90.85/src/tracker: DialogEQ.o
-Only in milkytracker-0.90.85/src/tracker: DialogGroupSelection.o
-Only in milkytracker-0.90.85/src/tracker: DialogHandlers.o
-Only in milkytracker-0.90.85/src/tracker: DialogListBox.o
-Only in milkytracker-0.90.85/src/tracker: DialogPanning.o
-Only in milkytracker-0.90.85/src/tracker: DialogQuickChooseInstrument.o
-Only in milkytracker-0.90.85/src/tracker: DialogResample.o
-Only in milkytracker-0.90.85/src/tracker: DialogWithValues.o
-Only in milkytracker-0.90.85/src/tracker: DialogZap.o
-Only in milkytracker-0.90.85/src/tracker: EditorBase.o
-Only in milkytracker-0.90.85/src/tracker: EnvelopeContainer.o
-Only in milkytracker-0.90.85/src/tracker: EnvelopeEditorControl.o
-Only in milkytracker-0.90.85/src/tracker: EnvelopeEditor.o
-Only in milkytracker-0.90.85/src/tracker: EQConstants.o
-Only in milkytracker-0.90.85/src/tracker: Equalizer.o
-Only in milkytracker-0.90.85/src/tracker: FileExtProvider.o
-Only in milkytracker-0.90.85/src/tracker: FileIdentificator.o
-Only in milkytracker-0.90.85/src/tracker: GlobalColorConfig.o
-Only in milkytracker-0.90.85/src/tracker: InputControlListener.o
-Only in milkytracker-0.90.85/src/tracker: LogoBig.o
-Only in milkytracker-0.90.85/src/tracker: LogoSmall.o
-Only in milkytracker-0.90.85/src/tracker: Makefile
-Only in milkytracker-0.90.85/src/tracker: ModuleEditor.o
-Only in milkytracker-0.90.85/src/tracker: ModuleServices.o
-Only in milkytracker-0.90.85/src/tracker: PatternEditorClipBoard.o
-Only in milkytracker-0.90.85/src/tracker: PatternEditorControlEventListener.o
-Only in milkytracker-0.90.85/src/tracker: PatternEditorControlKeyboard.o
-Only in milkytracker-0.90.85/src/tracker: PatternEditorControl.o
-Only in milkytracker-0.90.85/src/tracker: PatternEditorControlTransposeHandler.o
-Only in milkytracker-0.90.85/src/tracker: PatternEditor.o
-Only in milkytracker-0.90.85/src/tracker: PatternEditorTools.o
-Only in milkytracker-0.90.85/src/tracker: PatternTools.o
-Only in milkytracker-0.90.85/src/tracker: PeakLevelControl.o
-Only in milkytracker-0.90.85/src/tracker: PianoControl.o
-Only in milkytracker-0.90.85/src/tracker: Piano.o
-Only in milkytracker-0.90.85/src/tracker: PlayerController.o
-Only in milkytracker-0.90.85/src/tracker: PlayerLogic.o
-Only in milkytracker-0.90.85/src/tracker: PlayerMaster.o
-Only in milkytracker-0.90.85/src/tracker: RecorderLogic.o
-Only in milkytracker-0.90.85/src/tracker: RecPosProvider.o
-Only in milkytracker-0.90.85/src/tracker: ResamplerHelper.o
-Only in milkytracker-0.90.85/src/tracker: SampleEditorControl.o
-Only in milkytracker-0.90.85/src/tracker: SampleEditorControlToolHandler.o
-Only in milkytracker-0.90.85/src/tracker: SampleEditor.o
-Only in milkytracker-0.90.85/src/tracker: SampleEditorResampler.o
-Only in milkytracker-0.90.85/src/tracker: SamplePlayer.o
-Only in milkytracker-0.90.85/src/tracker: ScopesControl.o
 diff -u -r milkytracker-0.90.85-old/src/tracker/sdl/SDL_Main.cpp milkytracker-0.90.85/src/tracker/sdl/SDL_Main.cpp
 --- milkytracker-0.90.85-old/src/tracker/sdl/SDL_Main.cpp	2009-02-22 12:20:39.000000000 +0200
 +++ milkytracker-0.90.85/src/tracker/sdl/SDL_Main.cpp	2011-07-05 18:48:50.025434998 +0300
@@ -340,7 +123,7 @@ diff -u -r milkytracker-0.90.85-old/src/tracker/sdl/SDL_Main.cpp milkytracker-0.
  			pp_uint32 deltat = PPGetTickCount() - lmyTime;
  			
 -			if (deltat > 500)
-+			if (deltat > 1500)
++			if (deltat > 2000)
  			{
  				lClickCount = 0;
  				lmyTime = PPGetTickCount();
@@ -349,7 +132,7 @@ diff -u -r milkytracker-0.90.85-old/src/tracker/sdl/SDL_Main.cpp milkytracker-0.
  			pp_uint32 deltat = PPGetTickCount() - rmyTime;
  			
 -			if (deltat > 500)
-+			if (deltat > 1500)
++			if (deltat > 2000)
  			{
  				rClickCount = 0;
  				rmyTime = PPGetTickCount();
@@ -358,13 +141,13 @@ diff -u -r milkytracker-0.90.85-old/src/tracker/sdl/SDL_Main.cpp milkytracker-0.
  			pp_uint32 deltat = PPGetTickCount() - lmyTime;
  			
 -			if (deltat < 500)
-+			if (deltat < 1500)
++			if (deltat < 2000)
  			{
  				p.x = localMouseX; p.y = localMouseY;				
 -				if (abs(p.x - llastClickPosition.x) < 4 &&
 -					abs(p.y - llastClickPosition.y) < 4)
-+				if (abs(p.x - llastClickPosition.x) < 50 &&
-+					abs(p.y - llastClickPosition.y) < 50)
++				if (abs(p.x - llastClickPosition.x) < 30 &&
++					abs(p.y - llastClickPosition.y) < 30)
  				{					
  					PPEvent myEvent(eLMouseDoubleClick, &p, sizeof(PPPoint));					
  					RaiseEventSerialized(&myEvent);
@@ -373,13 +156,13 @@ diff -u -r milkytracker-0.90.85-old/src/tracker/sdl/SDL_Main.cpp milkytracker-0.
  			pp_uint32 deltat = PPGetTickCount() - rmyTime;
  			
 -			if (deltat < 500)
-+			if (deltat < 1500)
++			if (deltat < 2000)
  			{
  				p.x = localMouseX; p.y = localMouseY;				
 -				if (abs(p.x - rlastClickPosition.x) < 4 &&
 -					abs(p.y - rlastClickPosition.y) < 4)
-+				if (abs(p.x - rlastClickPosition.x) < 50 &&
-+					abs(p.y - rlastClickPosition.y) < 50)
++				if (abs(p.x - rlastClickPosition.x) < 30 &&
++					abs(p.y - rlastClickPosition.y) < 30)
  				{					
  					PPEvent myEvent(eRMouseDoubleClick, &p, sizeof(PPPoint));					
  					RaiseEventSerialized(&myEvent);
@@ -389,15 +172,15 @@ diff -u -r milkytracker-0.90.85-old/src/tracker/sdl/SDL_Main.cpp milkytracker-0.
  		{
 -			PPEvent myEvent(eLMouseDrag, &p, sizeof(PPPoint));			
 -			RaiseEventSerialized(&myEvent);
-+			if (abs(p.x - llastClickPosition.x) < 50 &&
-+				abs(p.y - llastClickPosition.y) < 50)
++			if (abs(p.x - llastClickPosition.x) < 30 &&
++				abs(p.y - llastClickPosition.y) < 30)
 +			{
 +				PPEvent myEvent(eMouseMoved, &p, sizeof(PPPoint));
 +				RaiseEventSerialized(&myEvent);
 +			}
 +			else
 +			{
-+				llastClickPosition.x = -51;
++				llastClickPosition.x = -31;
 +				PPEvent myEvent(eLMouseDrag, &p, sizeof(PPPoint));
 +				RaiseEventSerialized(&myEvent);
 +			}
@@ -406,54 +189,18 @@ diff -u -r milkytracker-0.90.85-old/src/tracker/sdl/SDL_Main.cpp milkytracker-0.
  		{
 -			PPEvent myEvent(eRMouseDrag, &p, sizeof(PPPoint));			
 -			RaiseEventSerialized(&myEvent);
-+			if (abs(p.x - rlastClickPosition.x) < 50 &&
-+				abs(p.y - rlastClickPosition.y) < 50)
++			if (abs(p.x - rlastClickPosition.x) < 30 &&
++				abs(p.y - rlastClickPosition.y) < 30)
 +			{
 +				PPEvent myEvent(eMouseMoved, &p, sizeof(PPPoint));
 +				RaiseEventSerialized(&myEvent);
 +			}
 +			else
 +			{
-+				rlastClickPosition.x = -51;
++				rlastClickPosition.x = -31;
 +				PPEvent myEvent(eRMouseDrag, &p, sizeof(PPPoint));
 +				RaiseEventSerialized(&myEvent);
 +			}
  		}
  	}
  }
-Only in milkytracker-0.90.85/src/tracker: SDL_KeyTranslation.o
-Only in milkytracker-0.90.85/src/tracker: SDL_Main.o
-Only in milkytracker-0.90.85/src/tracker: SectionAbout.o
-Only in milkytracker-0.90.85/src/tracker: SectionAbstract.o
-Only in milkytracker-0.90.85/src/tracker: SectionAdvancedEdit.o
-Only in milkytracker-0.90.85/src/tracker: SectionDiskMenu.o
-Only in milkytracker-0.90.85/src/tracker: SectionHDRecorder.o
-Only in milkytracker-0.90.85/src/tracker: SectionInstruments.o
-Only in milkytracker-0.90.85/src/tracker: SectionOptimize.o
-Only in milkytracker-0.90.85/src/tracker: SectionQuickOptions.o
-Only in milkytracker-0.90.85/src/tracker: SectionSamples.o
-Only in milkytracker-0.90.85/src/tracker: SectionSettings.o
-Only in milkytracker-0.90.85/src/tracker: SectionSwitcher.o
-Only in milkytracker-0.90.85/src/tracker: SectionTranspose.o
-Only in milkytracker-0.90.85/src/tracker: SectionUpperLeft.o
-Only in milkytracker-0.90.85/src/tracker: SongLengthEstimator.o
-Only in milkytracker-0.90.85/src/tracker: SystemMessage.o
-Only in milkytracker-0.90.85/src/tracker: TabHeaderControl.o
-Only in milkytracker-0.90.85/src/tracker: TabManager.o
-Only in milkytracker-0.90.85/src/tracker: TabTitleProvider.o
-Only in milkytracker-0.90.85/src/tracker: TitlePageManager.o
-Only in milkytracker-0.90.85/src/tracker: ToolInvokeHelper.o
-Only in milkytracker-0.90.85/src/tracker: TrackerConfig.o
-Only in milkytracker-0.90.85/src/tracker: TrackerInit.o
-Only in milkytracker-0.90.85/src/tracker: TrackerKeyboard.o
-Only in milkytracker-0.90.85/src/tracker: Tracker.o
-Only in milkytracker-0.90.85/src/tracker: TrackerSettingsDatabase.o
-Only in milkytracker-0.90.85/src/tracker: TrackerSettings.o
-Only in milkytracker-0.90.85/src/tracker: TrackerShortCuts.o
-Only in milkytracker-0.90.85/src/tracker: TrackerShutDown.o
-Only in milkytracker-0.90.85/src/tracker: TrackerStartUp.o
-Only in milkytracker-0.90.85/src/tracker: TrackerUpdate.o
-Only in milkytracker-0.90.85/src/tracker: Undo.o
-Only in milkytracker-0.90.85/src/tracker: VRand.o
-Only in milkytracker-0.90.85/src/tracker: Zapper.o
-Only in milkytracker-0.90.85: stamp-h1

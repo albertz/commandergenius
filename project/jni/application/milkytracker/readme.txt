@@ -1,8 +1,8 @@
 You should download the SDL for Andorid repository from https://github.com/pelya/commandergenius
 and also the MilkyTracker sources - extract them to the directory  project/jni/application/milkytracker in the SDL repo.
-To compile you will need to install need a recent Android SDK and NDK r7b, and put the dirs
-android-ndk-r7b
-android-ndk-r7b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin
+To compile you will need to install need a recent Android SDK and NDK r8, and put the dirs
+android-ndk-r8
+android-ndk-r8/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin
 android-sdk-linux
 android-sdk-linux/tools
 android-sdk-linux/platform-tools

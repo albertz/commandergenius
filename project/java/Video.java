@@ -444,19 +444,27 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 	public int swapBuffers() // Called from native code
 	{
-		synchronized(this)
-		{
-			this.notify();
-		}
 		if( ! super.SwapBuffers() && Globals.NonBlockingSwapBuffers )
+		{
+			synchronized(this)
+			{
+				this.notify();
+			}
 			return 0;
+		}
+
 		if(mGlContextLost) {
 			mGlContextLost = false;
 			Settings.SetupTouchscreenKeyboardGraphics(context); // Reload on-screen buttons graphics
 			DrawLogo(mGl);
 			super.SwapBuffers();
 		}
-		
+
+		// Unblock event processing thread only after we've finished rendering
+		synchronized(this)
+		{
+			this.notify();
+		}
 		return 1;
 	}
 
@@ -600,7 +608,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public void limitEventRate(final MotionEvent event)
 	{
 		// Wait a bit, and try to synchronize to app framerate, or event thread will eat all CPU and we'll lose FPS
-		// With Froyo the rate of touch events is limited, but they are arriving faster then we're redrawing anyway
+		// With Froyo the rate of touch events seems to be limited by OS, but they are arriving faster then we're redrawing anyway
 		if((event.getAction() == MotionEvent.ACTION_MOVE ||
 			event.getAction() == MotionEvent.ACTION_HOVER_MOVE))
 		{

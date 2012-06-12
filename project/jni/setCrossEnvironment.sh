@@ -35,7 +35,7 @@ CFLAGS="\
 -DNDEBUG -O2 -g \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include \
-$MISSING_INCLUDE"
+$MISSING_INCLUDE $CFLAGS"
 
 SHARED="-shared -Wl,-soname,libapplication.so"
 if [ -n "$BUILD_EXECUTABLE" ]; then
@@ -60,7 +60,7 @@ LDFLAGS="\
 -Wl,--no-undefined -Wl,-z,noexecstack \
 -Wl,-rpath=/system/lib \
 -Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
-$MISSING_LIB"
+$MISSING_LIB $LDFLAGS"
 
 #echo env CFLAGS=\""$CFLAGS"\" LDFLAGS=\""$LDFLAGS"\" "$@"
 
