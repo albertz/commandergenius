@@ -106,7 +106,7 @@ abstract class DifferentTouchInput
 		}
 		try {
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
-				return XperiaMiniTouchpadTouchInput.Holder.sInstance;
+				return XperiaPlayTouchpadTouchInput.Holder.sInstance;
 			if (multiTouchAvailable1 && multiTouchAvailable2)
 				return MultiTouchInput.Holder.sInstance;
 			else
@@ -228,6 +228,9 @@ abstract class DifferentTouchInput
 				}
 				System.out.println(s);
 				*/
+				int pointerReleased = -1;
+				if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_UP )
+					pointerReleased = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
 
 				for( int id = 0; id < TOUCH_EVENTS_MAX; id++ )
 				{
@@ -249,8 +252,15 @@ abstract class DifferentTouchInput
 					}
 					else
 					{
-						if( touchEvents[id].down )
+						if( pointerReleased == id && touchEvents[pointerReleased].down )
+						{
+							action = Mouse.SDL_FINGER_UP;
+							touchEvents[id].down = false;
+						}
+						else if( touchEvents[id].down )
+						{
 							action = Mouse.SDL_FINGER_MOVE;
+						}
 						else
 						{
 							action = Mouse.SDL_FINGER_DOWN;
@@ -286,11 +296,11 @@ abstract class DifferentTouchInput
 			}
 		}
 	}
-	private static class XperiaMiniTouchpadTouchInput extends MultiTouchInput
+	private static class XperiaPlayTouchpadTouchInput extends MultiTouchInput
 	{
 		private static class Holder
 		{
-			private static final XperiaMiniTouchpadTouchInput sInstance = new XperiaMiniTouchpadTouchInput();
+			private static final XperiaPlayTouchpadTouchInput sInstance = new XperiaPlayTouchpadTouchInput();
 		}
 
 		float xmin = 0.0f;
@@ -299,7 +309,7 @@ abstract class DifferentTouchInput
 		float ymax = 1.0f;
 		float minRange = 1.0f;
 
-		XperiaMiniTouchpadTouchInput()
+		XperiaPlayTouchpadTouchInput()
 		{
 			super();
 			int[] devIds = InputDevice.getDeviceIds();

@@ -437,6 +437,7 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean dispatchTouchEvent(final MotionEvent ev)
 	{
+		//System.out.println("dispatchTouchEvent: " + ev.getAction() + " coords " + ev.getX() + ":" + ev.getY() );
 		if(_screenKeyboard != null)
 			_screenKeyboard.dispatchTouchEvent(ev);
 		else
@@ -454,6 +455,7 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean dispatchGenericMotionEvent (MotionEvent ev)
 	{
+		//System.out.println("dispatchGenericMotionEvent: " + ev.getAction() + " coords " + ev.getX() + ":" + ev.getY() );
 		// This code fails to run for Android 1.6, so there will be no generic motion event for Andorid screen keyboard
 		/*
 		if(_screenKeyboard != null)
