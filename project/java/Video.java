@@ -276,12 +276,14 @@ abstract class DifferentTouchInput
 			}
 			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_MOVE ) // Support bluetooth/USB mouse - available since Android 3.1
 			{
+				/*
 				if( !ExternalMouseDetected )
 				{
 					ExternalMouseDetected = true;
 					Settings.nativeSetExternalMouseDetected();
 					Toast.makeText(MainActivity.instance, R.string.hardware_mouse_detected, Toast.LENGTH_SHORT).show();
 				}
+				*/
 				// TODO: it is possible that multiple pointers return that event, but we're handling only pointer #0
 				if( touchEvents[0].down )
 					action = Mouse.SDL_FINGER_UP;
@@ -345,15 +347,19 @@ abstract class DifferentTouchInput
 		{
 			if( event.getSource() != InputDevice.SOURCE_TOUCHPAD )
 			{
-				if( !ExternalMouseDetected && event.getSource() == InputDevice.SOURCE_MOUSE )
+				/*
+				if( !ExternalMouseDetected &&
+					( event.getSource() == InputDevice.SOURCE_MOUSE || event.getSource() == InputDevice.SOURCE_STYLUS ) )
 				{
 					ExternalMouseDetected = true;
 					Settings.nativeSetExternalMouseDetected();
 					Toast.makeText(MainActivity.instance, R.string.hardware_mouse_detected, Toast.LENGTH_SHORT).show();
 				}
+				*/
 				process(event);
 				return;
 			}
+			
 			int x = (int)((event.getX() - xmin) / xmax * 65535.0f);
 			int y = (int)((event.getY() - ymin) / ymax * 65535.0f);
 			// Use only left square part of a touch surface - I've heard reports that it breaks functionality, feel free to uncomment and test it.
