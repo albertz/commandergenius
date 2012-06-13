@@ -615,11 +615,12 @@ int main(int argc, char* argv[])
 		val1 = misaligned_mem_access(val0, 1);
 		val2 = misaligned_mem_access(val0, 2);
 		val3 = misaligned_mem_access(val0, 3);
+		/*
 		print_num_hex(screen, font_hex, 0, 40, val0);
 		print_num_hex(screen, font_hex, 0, 60, val1);
 		print_num_hex(screen, font_hex, 0, 80, val2);
 		print_num_hex(screen, font_hex, 0, 100, val3);
-
+		*/
 
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
 		++fps_count;
@@ -643,10 +644,12 @@ int main(int argc, char* argv[])
 		if( b )
 		{
 			color = 0;
-			if( b & SDL_BUTTON_LEFT )
-				color |= 0xff00;
-			if( b & SDL_BUTTON_RIGHT )
-				color |= 0xff0000;
+			if( b & SDL_BUTTON_LMASK )
+				color |= 0xf000;
+			if( b & SDL_BUTTON_RMASK )
+				color |= 0x1f0;
+			if( b & SDL_BUTTON_MMASK )
+				color |= 0x1f;
 		}
 		r.x = mx;
 		r.y = my;

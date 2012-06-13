@@ -83,40 +83,45 @@ SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL};
 static int TrackballDampening = 0; // in milliseconds
 static Uint32 lastTrackballAction = 0;
 enum { TOUCH_PTR_UP = 0, TOUCH_PTR_MOUSE = 1, TOUCH_PTR_SCREENKB = 2 };
-int touchPointers[MAX_MULTITOUCH_POINTERS] = {0};
-int firstMousePointerId = -1;
+static int touchPointers[MAX_MULTITOUCH_POINTERS] = {0};
+static int firstMousePointerId = -1;
 enum { MAX_MULTITOUCH_GESTURES = 4 };
-int multitouchGestureKeycode[MAX_MULTITOUCH_GESTURES] = {
+static int multitouchGestureKeycode[MAX_MULTITOUCH_GESTURES] = {
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_6)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_7)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_8)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_9))
 };
-int multitouchGestureKeyPressed[MAX_MULTITOUCH_GESTURES] = { 0, 0, 0, 0 };
-int multitouchGestureSensitivity = 0;
-int multitouchGestureDist = -1;
-int multitouchGestureAngle = 0;
-int multitouchGestureX = -1;
-int multitouchGestureY = -1;
+static int multitouchGestureKeyPressed[MAX_MULTITOUCH_GESTURES] = { 0, 0, 0, 0 };
+static int multitouchGestureSensitivity = 0;
+static int multitouchGestureDist = -1;
+static int multitouchGestureAngle = 0;
+static int multitouchGestureX = -1;
+static int multitouchGestureY = -1;
 int SDL_ANDROID_TouchscreenCalibrationWidth = 480;
 int SDL_ANDROID_TouchscreenCalibrationHeight = 320;
 int SDL_ANDROID_TouchscreenCalibrationX = 0;
 int SDL_ANDROID_TouchscreenCalibrationY = 0;
-int leftClickTimeout = 0;
-int rightClickTimeout = 0;
-int mouseInitialX = -1;
-int mouseInitialY = -1;
-unsigned int mouseInitialTime = 0;
-volatile int deferredMouseTap = 0;
-int relativeMovement = 0;
-int relativeMovementSpeed = 2;
-int relativeMovementAccel = 0;
-int relativeMovementX = 0;
-int relativeMovementY = 0;
-unsigned int relativeMovementTime = 0;
-int oldMouseX = 0;
-int oldMouseY = 0;
-int oldMouseButtons = 0;
+static int leftClickTimeout = 0;
+static int rightClickTimeout = 0;
+static int mouseInitialX = -1;
+static int mouseInitialY = -1;
+static unsigned int mouseInitialTime = 0;
+static volatile int deferredMouseTap = 0;
+static int relativeMovement = 0;
+static int relativeMovementSpeed = 2;
+static int relativeMovementAccel = 0;
+static int relativeMovementX = 0;
+static int relativeMovementY = 0;
+static unsigned int relativeMovementTime = 0;
+static int oldMouseX = 0;
+static int oldMouseY = 0;
+static int oldMouseButtons = 0;
+
+static int hardwareMouseDetected = 0;
+enum { MOUSE_HW_BUTTON_LEFT = 1, MOUSE_HW_BUTTON_RIGHT = 2, MOUSE_HW_BUTTON_MIDDLE = 4, MOUSE_HW_BUTTON_BACK = 8, MOUSE_HW_BUTTON_FORWARD = 16, MOUSE_HW_BUTTON_MAX = MOUSE_HW_BUTTON_FORWARD };
+static int hardwareMouseButtonsPressed = 0;
+static int hardwareMouseButtonsPressedOld = 0;
 
 static int UnicodeToUtf8(int src, char * dest)
 {
@@ -265,7 +270,7 @@ void UpdateScreenUnderFingerRect(int x, int y)
 
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
 {
 	// TODO: this method is damn huge
 	int i;
@@ -351,7 +356,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 			}
 		}
 	}
-	else
+	else if( !hardwareMouseDetected )
 	{
 		if( firstMousePointerId != pointerId )
 		{
@@ -438,6 +443,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 #endif
 
 		// The old, bad, deprecated, but still used multitouch API
+		/*
 		if( action == MOUSE_DOWN )
 			SDL_ANDROID_MainThreadPushJoystickButton(pointerId+1, 0, SDL_PRESSED);
 		SDL_ANDROID_MainThreadPushJoystickAxis(pointerId+1, 0, x);
@@ -446,6 +452,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 		SDL_ANDROID_MainThreadPushJoystickAxis(pointerId+1, 3, radius);
 		if( action == MOUSE_UP )
 			SDL_ANDROID_MainThreadPushJoystickButton(pointerId+1, 0, SDL_RELEASED);
+		*/
 		// The new, good, clean multitouch API, which is using only the first joystick, and sending both X and Y coords simultaneously in one event
 		if( action == MOUSE_DOWN )
 			SDL_ANDROID_MainThreadPushJoystickButton(0, pointerId, SDL_PRESSED);
@@ -465,7 +472,46 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouse) ( JNIEnv*  env, jobject  thiz, j
 	if( !isMouseUsed )
 		return;
 
-	if( pointerId == firstMousePointerId )
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Mouse buttons %d pointerId %d firstMousePointerId %d", hardwareMouseButtonsPressed, pointerId, firstMousePointerId);
+	if( pointerId == firstMousePointerId && (hardwareMouseButtonsPressedOld != hardwareMouseButtonsPressed || hardwareMouseButtonsPressed != 0) )
+	{
+		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
+		for( i = 1; i <= MOUSE_HW_BUTTON_MAX; i *= 2 )
+		{
+			int btn = SDL_BUTTON_LEFT;
+			switch(i)
+			{
+				case MOUSE_HW_BUTTON_LEFT:
+					btn = SDL_BUTTON_LEFT;
+					break;
+				case MOUSE_HW_BUTTON_RIGHT:
+					btn = SDL_BUTTON_RIGHT;
+					break;
+				case MOUSE_HW_BUTTON_MIDDLE:
+					btn = SDL_BUTTON_MIDDLE;
+					break;
+				case MOUSE_HW_BUTTON_BACK:
+					btn = SDL_BUTTON_WHEELUP;
+					break;
+				case MOUSE_HW_BUTTON_FORWARD:
+					btn = SDL_BUTTON_WHEELDOWN;
+					break;
+			}
+			if( (hardwareMouseButtonsPressed & i) && !(hardwareMouseButtonsPressedOld & i) )
+			{
+				//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Mouse button DOWN: %d", btn);
+				SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, btn );
+			}
+			else
+			if( !(hardwareMouseButtonsPressed & i) && (hardwareMouseButtonsPressedOld & i) )
+			{
+				//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Mouse button UP  : %d", btn);
+				SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, btn );
+			}
+		}
+		hardwareMouseButtonsPressedOld = hardwareMouseButtonsPressed;
+	}
+	else if( pointerId == firstMousePointerId )
 	{
 		if( relativeMovement )
 		{
@@ -919,16 +965,54 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetExternalMouseDetected) (JNIEnv* env, jobject thiz)
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeHardwareMouseDetected) (JNIEnv* env, jobject thiz, int detected)
 {
 	if( !isMouseUsed )
 		return;
 
-	leftClickMethod = LEFT_CLICK_NORMAL;
-	SDL_ANDROID_ShowScreenUnderFinger = 0;
-	leftClickTimeout = 0;
-	relativeMovement = 0;
-	SDL_ANDROID_ShowMouseCursor = 0;
+	static struct {
+		int leftClickMethod;
+		int ShowScreenUnderFinger;
+		int leftClickTimeout;
+		int relativeMovement;
+		int ShowMouseCursor;
+	} cfg = { 0 };
+
+	if( hardwareMouseDetected != detected )
+	{
+		hardwareMouseDetected = detected;
+		if(detected)
+		{
+			cfg.leftClickMethod = leftClickMethod;
+			cfg.ShowScreenUnderFinger = SDL_ANDROID_ShowScreenUnderFinger;
+			cfg.leftClickTimeout = leftClickTimeout;
+			cfg.relativeMovement = relativeMovement;
+			cfg.ShowMouseCursor = SDL_ANDROID_ShowMouseCursor;
+			
+			leftClickMethod = LEFT_CLICK_NORMAL;
+			SDL_ANDROID_ShowScreenUnderFinger = 0;
+			leftClickTimeout = 0;
+			relativeMovement = 0;
+			SDL_ANDROID_ShowMouseCursor = 0;
+		}
+		else
+		{
+			leftClickMethod = cfg.leftClickMethod;
+			SDL_ANDROID_ShowScreenUnderFinger = cfg.ShowScreenUnderFinger;
+			leftClickTimeout = cfg.leftClickTimeout;
+			relativeMovement = cfg.relativeMovement;
+			SDL_ANDROID_ShowMouseCursor = cfg.ShowMouseCursor;
+		}
+	}
+}
+
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseButtonsPressed) (JNIEnv* env, jobject thiz, int buttons)
+{
+	if( !isMouseUsed )
+		return;
+
+	hardwareMouseButtonsPressed = buttons;
 }
 
 JNIEXPORT void JNICALL 
