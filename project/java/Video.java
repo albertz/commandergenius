@@ -337,9 +337,13 @@ abstract class DifferentTouchInput
 				minRange = Math.min( Math.abs(ymax - ymin), Math.abs(xmax - xmin) );
 			}
 		}
+		private int GalaxyNoteGingerStylus = 0;
 		public void process(final MotionEvent event)
 		{
-			boolean hwMouseEvent = ( event.getSource() == InputDevice.SOURCE_MOUSE || event.getSource() == InputDevice.SOURCE_STYLUS );
+			boolean hwMouseEvent = (	event.getSource() == InputDevice.SOURCE_MOUSE ||
+										event.getSource() == InputDevice.SOURCE_STYLUS ||
+										(event.getMetaState() & KeyEvent.FLAG_TRACKING) != 0 ); // Hack to recognize Galaxy Note Gingerbread stylus
+			System.out.println("Event source: " + event.getSource() + " stylus: " + hwMouseEvent + " meta " + event.getMetaState());
 			if( ExternalMouseDetected != hwMouseEvent )
 			{
 				ExternalMouseDetected = hwMouseEvent;
@@ -670,7 +674,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	// This seems like redundant code - it handled in MainActivity.java
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event) {
-		//System.out.println("Got key down event, id " + keyCode);
+		//System.out.println("Got key down event, id " + keyCode + " meta " + event.getMetaState() + " event " + event.toString());
 		if( nativeKey( keyCode, 1 ) == 0 )
 				return super.onKeyDown(keyCode, event);
 		return true;
@@ -678,7 +682,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	
 	@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event) {
-		//System.out.println("Got key up event, id " + keyCode);
+		//System.out.println("Got key up event, id " + keyCode + " meta " + event.getMetaState());
 		if( nativeKey( keyCode, 0 ) == 0 )
 				return super.onKeyUp(keyCode, event);
 		return true;

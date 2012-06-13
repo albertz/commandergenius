@@ -206,6 +206,7 @@ class Settings
 			// And I don't know whether this is true for ICS update for Galaxy Note
 			Globals.RemapHwKeycode[112] = SDL_1_2_Keycodes.SDLK_UNKNOWN;
 		}
+		
 
 		try {
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
