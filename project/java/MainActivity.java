@@ -248,8 +248,10 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onPause() {
-		if( downloader != null ) {
-			synchronized( downloader ) {
+		if( downloader != null )
+		{
+			synchronized( downloader )
+			{
 				downloader.setStatusField(null);
 			}
 		}
@@ -263,10 +265,16 @@ public class MainActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 		if( mGLView != null )
+		{
 			mGLView.onResume();
+			DimSystemStatusBar.get().dim(_videoLayout);
+			DimSystemStatusBar.get().dim(mGLView);
+		}
 		else
-		if( downloader != null ) {
-			synchronized( downloader ) {
+		if( downloader != null )
+		{
+			synchronized( downloader )
+			{
 				downloader.setStatusField(_tv);
 				if( downloader.DownloadComplete )
 					initSDL();
@@ -283,8 +291,10 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onDestroy() 
 	{
-		if( downloader != null ) {
-			synchronized( downloader ) {
+		if( downloader != null )
+		{
+			synchronized( downloader )
+			{
 				downloader.setStatusField(null);
 			}
 		}
@@ -371,7 +381,7 @@ public class MainActivity extends Activity {
 			if( downloader.DownloadFailed )
 				System.exit(1);
 			if( !downloader.DownloadComplete )
-			 onStop();
+				onStop();
 		}
 		else
 		if( keyListener != null )
@@ -391,6 +401,11 @@ public class MainActivity extends Activity {
 		{
 			if( mGLView.nativeKey( keyCode, 0 ) == 0 )
 				return super.onKeyUp(keyCode, event);
+			if( keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU )
+			{
+				DimSystemStatusBar.get().dim(_videoLayout);
+				DimSystemStatusBar.get().dim(mGLView);
+			}
 		}
 		return true;
 	}
@@ -817,43 +832,13 @@ abstract class DimSystemStatusBar
 		}
 	    public void dim(final View view)
 	    {
-	      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-	         System.out.println("Dimming system status bar for Honeycomb");
-	         setLowProfileMode(view);
-	         // This part of code generates lot of debug messages on emulator: "V/PhoneStatusBar(  133): setLightsOn(true)"
-	         /*
-	         view.setOnSystemUiVisibilityChangeListener(
-	               new View.OnSystemUiVisibilityChangeListener() {
-	                  public void onSystemUiVisibilityChange(int visibility) {
-	                        android.os.Handler handler = new Handler() {
-	                           @Override
-	                           public void handleMessage(Message msg) {
-	                              if(msg.what == 10) {
-	                                 setLowProfileMode(view);
-	                              }
-	                           }
-	                        };
-	                        Message msg = handler.obtainMessage(10);
-	                        handler.sendMessageDelayed(msg,1000);
-	                   }
-	               }
-	         );
-	         */
-	      }
-	   }
-	   // *** HONEYCOMB / ICS FIX FOR FULLSCREEN MODE ***
-	   private void setLowProfileMode(final View view)
-	   {
-	       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-	         int hiddenStatusCode = android.view.View.STATUS_BAR_HIDDEN;
 	         /*
 	         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 	            // ICS has the same constant redefined with a different name.
 	            hiddenStatusCode = android.view.View.SYSTEM_UI_FLAG_LOW_PROFILE;
 	         }
 	         */
-	         view.setSystemUiVisibility(hiddenStatusCode);
-	      }
+	         view.setSystemUiVisibility(android.view.View.STATUS_BAR_HIDDEN);
 	   }
 	}
 	private static class DimSystemStatusBarDummy extends DimSystemStatusBar
