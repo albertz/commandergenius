@@ -270,7 +270,7 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject thiz )
 {
 	JavaEnv = env;
-	JavaRenderer = thiz;
+	JavaRenderer = (*JavaEnv)->NewGlobalRef( JavaEnv, thiz );
 	
 	JavaRendererClass = (*JavaEnv)->GetObjectClass(JavaEnv, thiz);
 	JavaSwapBuffers = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "swapBuffers", "()I");

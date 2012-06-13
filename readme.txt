@@ -8,7 +8,7 @@ Also this port is developed very slowly, although the same is true for an offici
 Installation
 ============
 
-This project should be compiled with Android 3.1 SDK (API level 12) and NDK r8, r7c, r6 or r5c,
+This project should be compiled with Android 3.1 SDK (API level 15) and NDK r8, r7c, r6 or r5c,
 google for them and install them as described in their docs.
 You'll need to install Java Ant too.
 The application will run on Android OS 1.6 and above, don't mind the 3.1 dependency.
@@ -28,12 +28,12 @@ Launch commands
 	rm project/jni/application/src
 	ln -s ballfield project/jni/application/src
 	./ChangeAppSettings.sh -a
-	android update project -p project -t android-12
+	android update project -p project -t android-15
 Then edit file build.sh if needed to add NDK dir to your PATH, then launch it.
 It will compile a bunch of libs under project/libs/armeabi,
 create file project/bin/DemoActivity-debug.apk and install it on your device or emulator.
 Then you can test it by launching Ballfield icon from Android applications menu.
-It's designed for 320x240, so if you have smaller screen it will be resized.
+It's designed for 320x240, so if you have bigger screen it will be resized.
 
 The game enforces horizontal screen orientation, you may slide-open your keyboard if you have it
 and use it for additional keys - the device will just keep current screen orientation.
