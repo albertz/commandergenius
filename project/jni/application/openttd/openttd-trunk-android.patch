@@ -1,8 +1,92 @@
+Index: src/main_gui.cpp
+===================================================================
+--- src/main_gui.cpp	(revision 24340)
++++ src/main_gui.cpp	(working copy)
+@@ -458,7 +458,11 @@
+ 	Hotkey<MainWindow>('C', "center", GHK_CENTER),
+ 	Hotkey<MainWindow>('Z', "center_zoom", GHK_CENTER_ZOOM),
+ 	Hotkey<MainWindow>(WKC_ESC, "reset_object_to_place", GHK_RESET_OBJECT_TO_PLACE),
++#ifdef ANDROID
++	Hotkey<MainWindow>(WKC_DELETE, "delete_windows", GHK_DELETE_NONVITAL_WINDOWS),
++#else
+ 	Hotkey<MainWindow>(WKC_DELETE, "delete_windows", GHK_DELETE_WINDOWS),
++#endif
+ 	Hotkey<MainWindow>(WKC_DELETE | WKC_SHIFT, "delete_all_windows", GHK_DELETE_NONVITAL_WINDOWS),
+ 	Hotkey<MainWindow>('R' | WKC_CTRL, "refresh_screen", GHK_REFRESH_SCREEN),
+ #if defined(_DEBUG)
+Index: src/script/api/script_date.cpp
+===================================================================
+--- src/script/api/script_date.cpp	(revision 24340)
++++ src/script/api/script_date.cpp	(working copy)
+@@ -9,8 +9,8 @@
+ 
+ /** @file script_date.cpp Implementation of ScriptDate. */
+ 
++#include "../../stdafx.h"
+ #include <time.h>
+-#include "../../stdafx.h"
+ #include "script_date.hpp"
+ #include "../../date_func.h"
+ 
+Index: src/network/core/os_abstraction.h
+===================================================================
+--- src/network/core/os_abstraction.h	(revision 24340)
++++ src/network/core/os_abstraction.h	(working copy)
+@@ -161,7 +161,7 @@
+ #		include <net/if.h>
+ /* According to glibc/NEWS, <ifaddrs.h> appeared in glibc-2.3. */
+ #		if !defined(__sgi__) && !defined(SUNOS) && !defined(__MORPHOS__) && !defined(__BEOS__) && !defined(__HAIKU__) && !defined(__INNOTEK_LIBC__) \
+-		   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX)
++		   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX) && !defined(ANDROID)
+ /* If for any reason ifaddrs.h does not exist on your system, comment out
+  *   the following two lines and an alternative way will be used to fetch
+  *   the list of IPs from the system. */
+Index: src/window.cpp
+===================================================================
+--- src/window.cpp	(revision 24340)
++++ src/window.cpp	(working copy)
+@@ -2354,6 +2354,10 @@
+ 	 * But there is no company related window open anyway, so _current_company is not used. */
+ 	assert(HasModalProgress() || IsLocalCompany());
+ 
++#ifdef ANDROID
++	_settings_client.gui.left_mouse_btn_scrolling = true;
++#endif
++
+ 	HandlePlacePresize();
+ 	UpdateTileSelection();
+ 
 Index: src/video/sdl_v.cpp
 ===================================================================
---- src/video/sdl_v.cpp	(revision 23445)
+--- src/video/sdl_v.cpp	(revision 24340)
 +++ src/video/sdl_v.cpp	(working copy)
-@@ -353,6 +353,8 @@
+@@ -25,6 +25,9 @@
+ #include "../fileio_func.h"
+ #include "sdl_v.h"
+ #include <SDL.h>
++#ifdef ANDROID
++#include <SDL_screenkeyboard.h>
++#endif
+ 
+ static FVideoDriver_SDL iFVideoDriver_SDL;
+ 
+@@ -241,7 +244,14 @@
+ 			SDL_CALL SDL_FreeSurface(icon);
+ 		}
+ 	}
+-
++#ifdef ANDROID
++	SDL_Rect r;
++	r.h = SDL_ListModes(NULL, 0)[0]->h / 10;
++	r.w = r.h;
++	r.x = SDL_ListModes(NULL, 0)[0]->w - r.w;
++	r.y = SDL_ListModes(NULL, 0)[0]->h - r.h;
++	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, &r);
++#endif
+ 	/* DO NOT CHANGE TO HWSURFACE, IT DOES NOT WORK */
+ 	newscreen = SDL_CALL SDL_SetVideoMode(w, h, bpp, SDL_SWSURFACE | SDL_HWPALETTE | (_fullscreen ? SDL_FULLSCREEN : SDL_RESIZABLE));
+ 	if (newscreen == NULL) {
+@@ -381,6 +391,8 @@
  	if (sym->scancode == 49) key = WKC_BACKSPACE;
  #elif defined(__sgi__)
  	if (sym->scancode == 22) key = WKC_BACKQUOTE;
@@ -11,7 +95,7 @@ Index: src/video/sdl_v.cpp
  #else
  	if (sym->scancode == 49) key = WKC_BACKQUOTE;
  #endif
-@@ -484,6 +486,9 @@
+@@ -519,6 +531,9 @@
  	SDL_CALL SDL_EnableUNICODE(1);
  
  	_draw_threaded = GetDriverParam(parm, "no_threads") == NULL && GetDriverParam(parm, "no_thread") == NULL;
@@ -23,16 +107,20 @@ Index: src/video/sdl_v.cpp
  }
 Index: src/sound/sdl_s.cpp
 ===================================================================
---- src/sound/sdl_s.cpp	(revision 23445)
+--- src/sound/sdl_s.cpp	(revision 24340)
 +++ src/sound/sdl_s.cpp	(working copy)
-@@ -20,9 +20,16 @@
- 
+@@ -21,6 +21,10 @@
+ /** Factory for the SDL sound driver. */
  static FSoundDriver_SDL iFSoundDriver_SDL;
  
 +#ifdef ANDROID
 +extern void Android_MidiMixMusic(Sint16 *stream, int len);
 +#endif
 +
+ /**
+  * Callback that fills the sound buffer.
+  * @param userdata Ignored.
+@@ -30,6 +34,9 @@
  static void CDECL fill_sound_buffer(void *userdata, Uint8 *stream, int len)
  {
  	MxMixSamples(stream, len / 4);
@@ -44,23 +132,17 @@ Index: src/sound/sdl_s.cpp
  const char *SoundDriver_SDL::Start(const char * const *parm)
 Index: src/music/libtimidity.cpp
 ===================================================================
---- src/music/libtimidity.cpp	(revision 23445)
+--- src/music/libtimidity.cpp	(revision 24340)
 +++ src/music/libtimidity.cpp	(working copy)
-@@ -22,10 +22,13 @@
+@@ -22,6 +22,7 @@
  #include <sys/stat.h>
  #include <errno.h>
  #include <timidity.h>
 +#include <SDL.h>
-+
  #if defined(PSP)
  #include <pspaudiolib.h>
  #endif /* PSP */
- 
-+
- enum MidiState {
- 	MIDI_STOPPED = 0,
- 	MIDI_PLAYING = 1,
-@@ -50,6 +53,24 @@
+@@ -51,6 +52,24 @@
  	}
  }
  #endif /* PSP */
@@ -83,56 +165,11 @@ Index: src/music/libtimidity.cpp
 +}
 +#endif
  
+ /** Factory for the libtimidity driver. */
  static FMusicDriver_LibTimidity iFMusicDriver_LibTimidity;
- 
-Index: src/table/settings.h
-===================================================================
---- src/table/settings.h	(revision 23445)
-+++ src/table/settings.h	(working copy)
-@@ -270,9 +270,15 @@
- 	  SDTG_STR("savegame_format",  SLE_STRB, S, 0, _savegame_format,       NULL,    STR_NULL, NULL),
- 	 SDTG_BOOL("rightclick_emulate",         S, 0, _rightclick_emulate,   false,    STR_NULL, NULL),
- #ifdef WITH_FREETYPE
-+#ifdef ANDROID
-+	  SDTG_STR("small_font",       SLE_STRB, S, 0, _freetype.small_font,   "fonts/FreeSans.ttf",    STR_NULL, NULL),
-+	  SDTG_STR("medium_font",      SLE_STRB, S, 0, _freetype.medium_font,  "fonts/FreeSans.ttf",    STR_NULL, NULL),
-+	  SDTG_STR("large_font",       SLE_STRB, S, 0, _freetype.large_font,   "fonts/FreeSerif.ttf",    STR_NULL, NULL),
-+#else
- 	  SDTG_STR("small_font",       SLE_STRB, S, 0, _freetype.small_font,   NULL,    STR_NULL, NULL),
- 	  SDTG_STR("medium_font",      SLE_STRB, S, 0, _freetype.medium_font,  NULL,    STR_NULL, NULL),
- 	  SDTG_STR("large_font",       SLE_STRB, S, 0, _freetype.large_font,   NULL,    STR_NULL, NULL),
-+#endif
- 	  SDTG_VAR("small_size",       SLE_UINT, S, 0, _freetype.small_size,   8, 0, 72, 0, STR_NULL, NULL),
- 	  SDTG_VAR("medium_size",      SLE_UINT, S, 0, _freetype.medium_size, 10, 0, 72, 0, STR_NULL, NULL),
- 	  SDTG_VAR("large_size",       SLE_UINT, S, 0, _freetype.large_size,  16, 0, 72, 0, STR_NULL, NULL),
-Index: src/os/unix/unix.cpp
-===================================================================
---- src/os/unix/unix.cpp	(revision 23445)
-+++ src/os/unix/unix.cpp	(working copy)
-@@ -24,7 +24,7 @@
- 
- #ifdef __APPLE__
- 	#include <sys/mount.h>
--#elif (defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L) || defined(__GLIBC__)
-+#elif ((defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L) || defined(__GLIBC__)) && !defined(ANDROID)
- 	#define HAS_STATVFS
- #endif
- 
-@@ -245,6 +245,11 @@
- void cocoaReleaseAutoreleasePool();
- #endif
- 
-+#ifdef ANDROID
-+#define main SDL_main
-+extern "C" int CDECL main(int, char *[]);
-+#endif
-+
- int CDECL main(int argc, char *argv[])
- {
- 	int ret;
 Index: src/os/unix/crashlog_unix.cpp
 ===================================================================
---- src/os/unix/crashlog_unix.cpp	(revision 23445)
+--- src/os/unix/crashlog_unix.cpp	(revision 24340)
 +++ src/os/unix/crashlog_unix.cpp	(working copy)
 @@ -141,7 +141,11 @@
  };
@@ -146,37 +183,71 @@ Index: src/os/unix/crashlog_unix.cpp
  
  /**
   * Entry point for the crash handler.
-Index: src/window.cpp
+Index: src/os/unix/unix.cpp
 ===================================================================
---- src/window.cpp	(revision 23445)
-+++ src/window.cpp	(working copy)
-@@ -2160,6 +2160,10 @@
- 	 * But there is no company related window open anyway, so _current_company is not used. */
- 	assert(IsGeneratingWorld() || IsLocalCompany());
+--- src/os/unix/unix.cpp	(revision 24340)
++++ src/os/unix/unix.cpp	(working copy)
+@@ -25,7 +25,7 @@
+ 
+ #ifdef __APPLE__
+ 	#include <sys/mount.h>
+-#elif (defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L) || defined(__GLIBC__)
++#elif ((defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L) || defined(__GLIBC__)) && !defined(ANDROID)
+ 	#define HAS_STATVFS
+ #endif
+ 
+@@ -254,6 +254,11 @@
+ void cocoaReleaseAutoreleasePool();
+ #endif
  
 +#ifdef ANDROID
-+	_settings_client.gui.left_mouse_btn_scrolling = true;
++#define main SDL_main
++extern "C" int CDECL main(int, char *[]);
 +#endif
 +
- 	HandlePlacePresize();
- 	UpdateTileSelection();
- 
-Index: src/network/core/os_abstraction.h
+ int CDECL main(int argc, char *argv[])
+ {
+ 	int ret;
+Index: src/table/misc_settings.ini
 ===================================================================
---- src/network/core/os_abstraction.h	(revision 23445)
-+++ src/network/core/os_abstraction.h	(working copy)
-@@ -161,7 +161,7 @@
- #		include <net/if.h>
- /* According to glibc/NEWS, <ifaddrs.h> appeared in glibc-2.3. */
- #		if !defined(__sgi__) && !defined(SUNOS) && !defined(__MORPHOS__) && !defined(__BEOS__) && !defined(__HAIKU__) && !defined(__INNOTEK_LIBC__) \
--		   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX)
-+		   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX) && !defined(ANDROID)
- /* If for any reason ifaddrs.h does not exist on your system, comment out
-  *   the following two lines and an alternative way will be used to fetch
-  *   the list of IPs from the system. */
+--- src/table/misc_settings.ini	(revision 24340)
++++ src/table/misc_settings.ini	(working copy)
+@@ -128,28 +128,28 @@
+ name     = ""small_font""
+ type     = SLE_STRB
+ var      = _freetype.small_font
+-def      = NULL
++def      = ""fonts/FreeSans.ttf""
+ 
+ [SDTG_STR]
+ ifdef    = WITH_FREETYPE
+ name     = ""medium_font""
+ type     = SLE_STRB
+ var      = _freetype.medium_font
+-def      = NULL
++def      = ""fonts/FreeSerif.ttf""
+ 
+ [SDTG_STR]
+ ifdef    = WITH_FREETYPE
+ name     = ""large_font""
+ type     = SLE_STRB
+ var      = _freetype.large_font
+-def      = NULL
++def      = ""fonts/FreeSerif.ttf""
+ 
+ [SDTG_STR]
+ ifdef    = WITH_FREETYPE
+ name     = ""mono_font""
+ type     = SLE_STRB
+ var      = _freetype.mono_font
+-def      = NULL
++def      = ""fonts/FreeMono.ttf""
+ 
+ [SDTG_VAR]
+ ifdef    = WITH_FREETYPE
 Index: src/debug.cpp
 ===================================================================
---- src/debug.cpp	(revision 23445)
+--- src/debug.cpp	(revision 24340)
 +++ src/debug.cpp	(working copy)
 @@ -16,6 +16,9 @@
  #include "string_func.h"
@@ -188,7 +259,7 @@ Index: src/debug.cpp
  
  #include <time.h>
  
-@@ -76,6 +79,9 @@
+@@ -82,6 +85,9 @@
   */
  static void debug_print(const char *dbg, const char *buf)
  {
@@ -198,25 +269,9 @@ Index: src/debug.cpp
  #if defined(ENABLE_NETWORK)
  	if (_debug_socket != INVALID_SOCKET) {
  		char buf2[1024 + 32];
-Index: src/main_gui.cpp
-===================================================================
---- src/main_gui.cpp	(revision 23445)
-+++ src/main_gui.cpp	(working copy)
-@@ -460,7 +460,11 @@
- 	Hotkey<MainWindow>('C', "center", GHK_CENTER),
- 	Hotkey<MainWindow>('Z', "center_zoom", GHK_CENTER_ZOOM),
- 	Hotkey<MainWindow>(WKC_ESC, "reset_object_to_place", GHK_RESET_OBJECT_TO_PLACE),
-+#ifdef ANDROID
-+	Hotkey<MainWindow>(WKC_DELETE, "delete_windows", GHK_DELETE_NONVITAL_WINDOWS),
-+#else
- 	Hotkey<MainWindow>(WKC_DELETE, "delete_windows", GHK_DELETE_WINDOWS),
-+#endif
- 	Hotkey<MainWindow>(WKC_DELETE | WKC_SHIFT, "delete_all_windows", GHK_DELETE_NONVITAL_WINDOWS),
- 	Hotkey<MainWindow>('R' | WKC_CTRL, "refresh_screen", GHK_REFRESH_SCREEN),
- #if defined(_DEBUG)
 Index: findversion.sh
 ===================================================================
---- findversion.sh	(revision 23445)
+--- findversion.sh	(revision 24340)
 +++ findversion.sh	(working copy)
 @@ -134,6 +134,7 @@
  	REV_NR=""
