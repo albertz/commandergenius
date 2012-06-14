@@ -343,7 +343,7 @@ abstract class DifferentTouchInput
 			boolean hwMouseEvent = (	event.getSource() == InputDevice.SOURCE_MOUSE ||
 										event.getSource() == InputDevice.SOURCE_STYLUS ||
 										(event.getMetaState() & KeyEvent.FLAG_TRACKING) != 0 ); // Hack to recognize Galaxy Note Gingerbread stylus
-			System.out.println("Event source: " + event.getSource() + " stylus: " + hwMouseEvent + " meta " + event.getMetaState());
+			//System.out.println("Event source: " + event.getSource() + " stylus: " + hwMouseEvent + " meta " + event.getMetaState());
 			if( ExternalMouseDetected != hwMouseEvent )
 			{
 				ExternalMouseDetected = hwMouseEvent;
