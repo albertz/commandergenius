@@ -19,6 +19,8 @@ APP_SUBDIRS := $(filter-out %.c %.cpp, $(APP_SUBDIRS))
 LOCAL_SRC_FILES += $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wildcard $(LOCAL_PATH)/$(F)/*.cpp))))
 LOCAL_SRC_FILES += $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wildcard $(LOCAL_PATH)/$(F)/*.c))))
 
+LOCAL_CPP_FEATURES := exceptions rtti
+
 LOCAL_CFLAGS :=
 LOCAL_C_INCLUDES :=
 
