@@ -97,9 +97,9 @@
 <string name="storage_custom">Укажите каталог</string>
 <string name="storage_commandline">Укажите параметры командной строки</string>
 <string name="calibrate_touchscreen">Калибровка сенсорного экрана</string>
-<string name="calibrate_touchscreen_touch">Дотроньтесь до всех четырех краев экрана, потом нажмите MENU</string>
+<string name="calibrate_touchscreen_touch">Дотроньтесь до всех краев экрана, потом нажмите Назад/BACK</string>
 <string name="screenkb_custom_layout">Настройка расположения кнопок</string>
-<string name="screenkb_custom_layout_help">Провезите по экрану, чтобы добавить кнопку, нажмите клавишу Меню, чтобы отменить последнюю кнопку</string>
+<string name="screenkb_custom_layout_help">Проведите по экрану, чтобы добавить кнопку, нажмите клавишу Назад/BACK, чтобы отменить последнюю кнопку</string>
 <string name="rightclick_key">Физическая кнопка</string>
 <string name="pointandclick_showcreenunderfinger2">Наэкранная лупа</string>
 <string name="video">Настройки видео</string>

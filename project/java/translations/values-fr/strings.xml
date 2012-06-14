@@ -139,17 +139,17 @@
 <string name="remap_screenkb_button_rotateright">Geste de rotation à droite avec deux doigts</string>
 
 <string name="screenkb_custom_layout">Personnalisation de la présentation du clavier à l\'écran</string>
-<string name="screenkb_custom_layout_help">Faites glisser l\'écran pour ajouter le bouton, appuyez sur Menu pour annuler le dernier bouton</string>
+<string name="screenkb_custom_layout_help">Faites glisser l\'écran pour ajouter le bouton, appuyez sur Retour/BACK pour annuler le dernier bouton</string>
 
 <string name="calibrate_touchscreen">Calibrer l\'écran tactile</string>
-<string name="calibrate_touchscreen_touch">Touchez les quatre bords de l\'écran, appuyez sur MENU lorsque vous avez terminé</string>
+<string name="calibrate_touchscreen_touch">Touchez les bords de l\'écran, appuyez sur Retour/BACK lorsque vous avez terminé</string>
 
 
 <string name="video">Paramètres vidéo</string>
 <string name="video_smooth">Fluidité de la vidéo</string>
 <string name="video_separatethread">Thread séparé pour la vidéo : permet paroifs d\'augmenter FPS</string>
 
-<string name="text_edit_click_here">Appuyez pour commencer à taper, appuyez sur Retour lorsque vous avez terminé</string>
+<string name="text_edit_click_here">Appuyez pour commencer à taper, appuyez sur Retour/BACK lorsque vous avez terminé</string>
 
 <string name="display_size_mouse">Mode d\'émulation de la souris</string>
 <string name="display_size">Sélectionnez votre taille d\'affichage</string>
