@@ -343,7 +343,6 @@ abstract class DifferentTouchInput
 			boolean hwMouseEvent = (	event.getSource() == InputDevice.SOURCE_MOUSE ||
 										event.getSource() == InputDevice.SOURCE_STYLUS ||
 										(event.getMetaState() & KeyEvent.FLAG_TRACKING) != 0 ); // Hack to recognize Galaxy Note Gingerbread stylus
-			//System.out.println("Event source: " + event.getSource() + " stylus: " + hwMouseEvent + " meta " + event.getMetaState());
 			if( ExternalMouseDetected != hwMouseEvent )
 			{
 				ExternalMouseDetected = hwMouseEvent;
@@ -393,13 +392,18 @@ abstract class DifferentTouchInput
 		private int buttonState = 0;
 		public void process(final MotionEvent event)
 		{
-			if( event.getButtonState() != buttonState )
+			//System.out.println("Got motion event, type " + (int)(event.getAction()) + " X " + (int)event.getX() + " Y " + (int)event.getY() + " buttons " + buttonState + " source " + event.getSource());
+			super.process(event); // Push mouse coordinate first
+			int buttonStateNew = event.getButtonState();
+			if( buttonStateNew != buttonState )
 			{
-				buttonState = event.getButtonState();
-				//System.out.println("IcsTouchInput: button state " + buttonState);
-				DemoGLSurfaceView.nativeMouseButtonsPressed(buttonState);
+				for( int i = 1; i <= MotionEvent.BUTTON_FORWARD; i *= 2 )
+				{
+					if( (buttonStateNew & i) != (buttonState & i) )
+						DemoGLSurfaceView.nativeMouseButtonsPressed(i, ((buttonStateNew & i) == 0) ? 0 : 1);
+				}
+				buttonState = buttonStateNew;
 			}
-			super.process(event);
 		}
 	}
 }
@@ -697,7 +701,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public static native void nativeTouchpad( int x, int y, int down, int multitouch );
 	public static native void initJavaCallbacks();
 	public static native void nativeHardwareMouseDetected( int detected );
-	public static native void nativeMouseButtonsPressed( int buttons );
+	public static native void nativeMouseButtonsPressed( int buttonId, int pressedState );
 
 }
 

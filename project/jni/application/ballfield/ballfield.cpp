@@ -640,6 +640,7 @@ int main(int argc, char* argv[])
 		}
 		int mx, my;
 		int b = SDL_GetMouseState(&mx, &my);
+		//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Mouse buttons: %d", b);
 		Uint32 color = 0xff;
 		if( b )
 		{

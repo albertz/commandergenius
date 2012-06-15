@@ -200,10 +200,10 @@ class Settings
 
 		System.out.println("android.os.Build.MODEL: " + android.os.Build.MODEL);
 		if( (android.os.Build.MODEL.equals("GT-N7000") || android.os.Build.MODEL.equals("SGH-I717"))
-			/* && android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.GINGERBREAD_MR1 */ )
+			&& android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.GINGERBREAD_MR1 )
 		{
 			// Samsung Galaxy Note generates a keypress when you hover a stylus over the screen, and that messes up OpenTTD dialogs
-			// And I don't know whether this is true for ICS update for Galaxy Note
+			// ICS update sends events in a proper way
 			Globals.RemapHwKeycode[112] = SDL_1_2_Keycodes.SDLK_UNKNOWN;
 		}
 		

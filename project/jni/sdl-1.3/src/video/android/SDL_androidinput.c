@@ -120,7 +120,6 @@ static int currentMouseButtons = 0;
 
 static int hardwareMouseDetected = 0;
 enum { MOUSE_HW_BUTTON_LEFT = 1, MOUSE_HW_BUTTON_RIGHT = 2, MOUSE_HW_BUTTON_MIDDLE = 4, MOUSE_HW_BUTTON_BACK = 8, MOUSE_HW_BUTTON_FORWARD = 16, MOUSE_HW_BUTTON_MAX = MOUSE_HW_BUTTON_FORWARD };
-static int hardwareMouseButtonsPressed = 0;
 
 static int UnicodeToUtf8(int src, char * dest)
 {
@@ -471,45 +470,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 	if( !isMouseUsed )
 		return;
 
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Mouse buttons %d pointerId %d firstMousePointerId %d", hardwareMouseButtonsPressed, pointerId, firstMousePointerId);
-	if( pointerId == firstMousePointerId && (currentMouseButtons != hardwareMouseButtonsPressed || hardwareMouseButtonsPressed != 0) )
-	{
-		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
-		for( i = 1; i <= MOUSE_HW_BUTTON_MAX; i *= 2 )
-		{
-			int btn = SDL_BUTTON_LEFT;
-			switch(i)
-			{
-				case MOUSE_HW_BUTTON_LEFT:
-					btn = SDL_BUTTON_LEFT;
-					break;
-				case MOUSE_HW_BUTTON_RIGHT:
-					btn = SDL_BUTTON_RIGHT;
-					break;
-				case MOUSE_HW_BUTTON_MIDDLE:
-					btn = SDL_BUTTON_MIDDLE;
-					break;
-				case MOUSE_HW_BUTTON_BACK:
-					btn = SDL_BUTTON_WHEELUP;
-					break;
-				case MOUSE_HW_BUTTON_FORWARD:
-					btn = SDL_BUTTON_WHEELDOWN;
-					break;
-			}
-			if( (hardwareMouseButtonsPressed & i) && !(currentMouseButtons & i) )
-			{
-				//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Mouse button DOWN: %d", btn);
-				SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, btn );
-			}
-			else
-			if( !(hardwareMouseButtonsPressed & i) && (currentMouseButtons & i) )
-			{
-				//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Mouse button UP  : %d", btn);
-				SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, btn );
-			}
-		}
-	}
-	else if( pointerId == firstMousePointerId )
+	if( pointerId == firstMousePointerId )
 	{
 		if( relativeMovement )
 		{
@@ -1005,12 +966,31 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeHardwareMouseDetected) (JNIEnv* env, jo
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseButtonsPressed) (JNIEnv* env, jobject thiz, int buttons)
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseButtonsPressed) (JNIEnv* env, jobject thiz, jint buttonId, jint pressedState)
 {
+	int btn = SDL_BUTTON_LEFT;
 	if( !isMouseUsed )
 		return;
 
-	hardwareMouseButtonsPressed = buttons;
+	switch(buttonId)
+	{
+		case MOUSE_HW_BUTTON_LEFT:
+			btn = SDL_BUTTON_LEFT;
+			break;
+		case MOUSE_HW_BUTTON_RIGHT:
+			btn = SDL_BUTTON_RIGHT;
+			break;
+		case MOUSE_HW_BUTTON_MIDDLE:
+			btn = SDL_BUTTON_MIDDLE;
+			break;
+		case MOUSE_HW_BUTTON_BACK:
+			btn = SDL_BUTTON_WHEELUP;
+			break;
+		case MOUSE_HW_BUTTON_FORWARD:
+			btn = SDL_BUTTON_WHEELDOWN;
+			break;
+	}
+	SDL_ANDROID_MainThreadPushMouseButton( pressedState ? SDL_PRESSED : SDL_RELEASED, btn );
 }
 
 JNIEXPORT void JNICALL 
