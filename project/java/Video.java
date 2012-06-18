@@ -308,6 +308,7 @@ abstract class DifferentTouchInput
 		float ymin = 0.0f;
 		float ymax = 1.0f;
 		float minRange = 1.0f;
+		float xshift = 0.0f;
 
 		XperiaPlayTouchpadTouchInput()
 		{
@@ -339,6 +340,7 @@ abstract class DifferentTouchInput
 				// Xperia Play has long wide touchpad with joystick-like embossing on the sides, so we'll leave only a left joystick to function
 				// I don't know how to use the second joystick, so I'll just ignore it for now
 				minRange = Math.min( Math.abs(ymax - ymin), Math.abs(xmax - xmin) );
+				xshift = xmax - minRange;
 			}
 		}
 		public void process(final MotionEvent event)
@@ -364,8 +366,8 @@ abstract class DifferentTouchInput
 			int x = (int)((event.getX() - xmin) / xmax * 65535.0f);
 			int y = (int)((event.getY() - ymin) / ymax * 65535.0f);
 			*/
-			// Use only left square part of a touch surface - I've heard reports that it breaks functionality, feel free to uncomment and test it.
-			int x = (int)((event.getX() - xmin) / minRange * 65535.0f);
+			// Use only right square part of a touch surface - I've heard reports that it breaks functionality, feel free to uncomment and test it.
+			int x = (int)((event.getX() - xshift) / minRange * 65535.0f);
 			int y = (int)((event.getY() - ymin) / minRange * 65535.0f);
 			if( x > 65535 )
 				x = 65535;
