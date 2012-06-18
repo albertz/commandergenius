@@ -69,11 +69,14 @@ import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
 import java.util.concurrent.Semaphore;
+import android.content.pm.ActivityInfo;
 
 public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 		instance = this;
 		// fullscreen mode
