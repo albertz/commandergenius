@@ -322,14 +322,14 @@ abstract class DifferentTouchInput
 				if( (device.getSources() & InputDevice.SOURCE_TOUCHPAD) != InputDevice.SOURCE_TOUCHPAD )
 					continue;
 				System.out.println("libSDL: input device ID " + id + " type " + device.getSources()  + " name " + device.getName() + " is a touchpad" );
-				InputDevice.MotionRange range = device.getMotionRange(MotionEvent.AXIS_X);
+				InputDevice.MotionRange range = device.getMotionRange(MotionEvent.AXIS_X, InputDevice.SOURCE_TOUCHPAD);
 				if(range != null)
 				{
 					xmin = range.getMin();
 					xmax = range.getMax() - range.getMin();
 					System.out.println("libSDL: touch pad X range " + xmin + ":" + xmax );
 				}
-				range = device.getMotionRange(MotionEvent.AXIS_Y);
+				range = device.getMotionRange(MotionEvent.AXIS_Y, InputDevice.SOURCE_TOUCHPAD);
 				if(range != null)
 				{
 					ymin = range.getMin();
@@ -341,7 +341,6 @@ abstract class DifferentTouchInput
 				minRange = Math.min( Math.abs(ymax - ymin), Math.abs(xmax - xmin) );
 			}
 		}
-		private int GalaxyNoteGingerStylus = 0;
 		public void process(final MotionEvent event)
 		{
 			boolean hwMouseEvent = (	event.getSource() == InputDevice.SOURCE_MOUSE ||
@@ -361,14 +360,13 @@ abstract class DifferentTouchInput
 				process(event);
 				return;
 			}
-			
+			/*
 			int x = (int)((event.getX() - xmin) / xmax * 65535.0f);
 			int y = (int)((event.getY() - ymin) / ymax * 65535.0f);
+			*/
 			// Use only left square part of a touch surface - I've heard reports that it breaks functionality, feel free to uncomment and test it.
-			/*
 			int x = (int)((event.getX() - xmin) / minRange * 65535.0f);
 			int y = (int)((event.getY() - ymin) / minRange * 65535.0f);
-			*/
 			if( x > 65535 )
 				x = 65535;
 			if( x < 0 )
@@ -384,7 +382,7 @@ abstract class DifferentTouchInput
 				down = 0;
 			// TODO: we're processing only one touch pointer, touchpad will most probably support multitouch
 			//System.out.println("libSDL: touch pad event: " + x + ":" + y + " action " + event.getAction() + " down " + down + " multitouch " + multitouch );
-			DemoGLSurfaceView.nativeTouchpad( x, 65535-y, down, multitouch ); // Y axis is inverted, as you may have guessed
+			DemoGLSurfaceView.nativeTouchpad( x, 65535 - y, down, multitouch ); // Y axis is inverted, as you may have guessed
 		}
 	}
 	private static class IcsTouchInput extends XperiaPlayTouchpadTouchInput
