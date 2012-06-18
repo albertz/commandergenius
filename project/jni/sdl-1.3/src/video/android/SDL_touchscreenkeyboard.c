@@ -48,7 +48,7 @@
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 
-enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT-1 } ; // Max amount of custom buttons
+enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT-1, BUTTON_ARROWS = MAX_BUTTONS } ; // Max amount of custom buttons
 
 int SDL_ANDROID_isTouchscreenKeyboardUsed = 0;
 static int touchscreenKeyboardTheme = 0;
@@ -58,7 +58,7 @@ static int buttonsize = 1;
 static int buttonDrawSize = 1;
 static int transparency = 128;
 
-static SDL_Rect arrows, buttons[MAX_BUTTONS], buttonsAutoFireRect[MAX_BUTTONS_AUTOFIRE];
+static SDL_Rect arrows, arrowsExtended, buttons[MAX_BUTTONS], buttonsAutoFireRect[MAX_BUTTONS_AUTOFIRE];
 static SDL_Rect arrowsDraw, buttonsDraw[MAX_BUTTONS];
 static SDLKey buttonKeysyms[MAX_BUTTONS] = { 
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_0)),
@@ -298,7 +298,7 @@ static void drawTouchscreenKeyboardSun()
 	int i;
 
 	drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 255, 255, 255, transparency );
-	if(pointerInButtonRect[MAX_BUTTONS] != -1)
+	if(pointerInButtonRect[BUTTON_ARROWS] != -1)
 	{
 		SDL_Rect touch = arrowsDraw;
 		touch.w /= 2;
@@ -425,9 +425,9 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 		if( InsideRect( &arrows, x, y ) )
 		{
 			processed = 1;
-			if( pointerInButtonRect[MAX_BUTTONS] == -1 )
+			if( pointerInButtonRect[BUTTON_ARROWS] == -1 )
 			{
-				pointerInButtonRect[MAX_BUTTONS] = pointerId;
+				pointerInButtonRect[BUTTON_ARROWS] = pointerId;
 				joystickTouchPoints[0] = x;
 				joystickTouchPoints[1] = y;
 				if( SDL_ANDROID_isJoystickUsed )
@@ -481,10 +481,10 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 	if( action == MOUSE_UP )
 	{
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "touch %03dx%03d ptr %d action %d", x, y, pointerId, action);
-		if( pointerInButtonRect[MAX_BUTTONS] == pointerId )
+		if( pointerInButtonRect[BUTTON_ARROWS] == pointerId )
 		{
 			processed = 1;
-			pointerInButtonRect[MAX_BUTTONS] = -1;
+			pointerInButtonRect[BUTTON_ARROWS] = -1;
 			if( SDL_ANDROID_isJoystickUsed )
 			{
 				SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, 0 );
@@ -532,12 +532,12 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 		
 		// Process cases when pointer leaves button area
 		// TODO: huge code size, split it or somehow make it more readable
-		if( pointerInButtonRect[MAX_BUTTONS] == pointerId )
+		if( pointerInButtonRect[BUTTON_ARROWS] == pointerId )
 		{
 			processed = 1;
-			if( ! InsideRect( &arrows, x, y ) )
+			if( ! InsideRect( &arrowsExtended, x, y ) )
 			{
-				pointerInButtonRect[MAX_BUTTONS] = -1;
+				pointerInButtonRect[BUTTON_ARROWS] = -1;
 				if( SDL_ANDROID_isJoystickUsed )
 				{
 					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, 0 );
@@ -702,6 +702,11 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	// Move to the screen edge
 	arrows.x = 0;
 	arrows.y = SDL_ANDROID_sWindowHeight - arrows.h;
+
+	arrowsExtended.w = arrows.w * 2;
+	arrowsExtended.h = arrows.h * 2;
+	arrowsExtended.x = arrows.x + arrows.w / 2 - arrowsExtended.w / 2;
+	arrowsExtended.y = arrows.y + arrows.h / 2 - arrowsExtended.h / 2;
 	/*
 	// This will leave some unused space near the edge
 	arrows.x = SDL_ANDROID_sWindowWidth / 4;
@@ -925,6 +930,10 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	if( buttonId == SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD )
 	{
 		arrows = *pos;
+		arrowsExtended.w = arrows.w * 2;
+		arrowsExtended.h = arrows.h * 2;
+		arrowsExtended.x = arrows.x + arrows.w / 2 - arrowsExtended.w / 2;
+		arrowsExtended.y = arrows.y + arrows.h / 2 - arrowsExtended.h / 2;
 		shrinkButtonRect(arrows, &arrowsDraw);
 	}
 	else

@@ -44,6 +44,8 @@
 #include "jniwrapperstuff.h"
 #include "atan2i.h"
 
+#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
+#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 
 static SDLKey SDL_android_keymap[KEYCODE_LAST+1];
 
@@ -1678,7 +1680,7 @@ extern void SDL_ANDROID_MainThreadPushJoystickAxis(int joy, int axis, int value)
 	ev->type = SDL_JOYAXISMOTION;
 	ev->jaxis.which = joy;
 	ev->jaxis.axis = axis;
-	ev->jaxis.value = value;
+	ev->jaxis.value = MAX( -32768, MIN( 32767, value ) );
 	
 	BufferedEventsEnd = nextEvent;
 	SDL_mutexV(BufferedEventsMutex);
