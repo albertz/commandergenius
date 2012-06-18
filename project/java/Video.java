@@ -109,7 +109,11 @@ abstract class DifferentTouchInput
 		}
 		try {
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH && IcsTouchInput.Holder.sInstance != null )
+			{
+				if(android.os.Build.MODEL.equals("GT-N7000") || android.os.Build.MODEL.equals("SGH-I717"))
+					return GalaxyNoteIcsTouchInput.Holder.sInstance;
 				return IcsTouchInput.Holder.sInstance;
+			}
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD && XperiaPlayTouchpadTouchInput.Holder.sInstance != null )
 				return XperiaPlayTouchpadTouchInput.Holder.sInstance;
 			if (multiTouchAvailable1 && multiTouchAvailable2)
@@ -404,6 +408,20 @@ abstract class DifferentTouchInput
 				}
 				buttonState = buttonStateNew;
 			}
+		}
+	}
+	private static class GalaxyNoteIcsTouchInput extends IcsTouchInput
+	{
+		private static class Holder
+		{
+			private static final GalaxyNoteIcsTouchInput sInstance = new GalaxyNoteIcsTouchInput();
+		}
+		public void process(final MotionEvent event)
+		{
+			// HACK for Galaxy Note stylus, which pushes the cursor to the lower-right part of the screen, when you lift the stylus.
+			// Also it reports the stylus as the mouse
+			if(! (event.getSource() == InputDevice.SOURCE_MOUSE && (int)event.getX() == 0 && (int)event.getY() == 799))
+				super.process(event);
 		}
 	}
 }
