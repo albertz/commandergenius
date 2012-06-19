@@ -108,13 +108,13 @@ abstract class DifferentTouchInput
 				multiTouchAvailable2 = true;
 		}
 		try {
-			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH && IcsTouchInput.Holder.sInstance != null )
+			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH )
 			{
 				if(android.os.Build.MODEL.equals("GT-N7000") || android.os.Build.MODEL.equals("SGH-I717"))
 					return GalaxyNoteIcsTouchInput.Holder.sInstance;
 				return IcsTouchInput.Holder.sInstance;
 			}
-			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD && XperiaPlayTouchpadTouchInput.Holder.sInstance != null )
+			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
 				return XperiaPlayTouchpadTouchInput.Holder.sInstance;
 			if (multiTouchAvailable1 && multiTouchAvailable2)
 				return MultiTouchInput.Holder.sInstance;
