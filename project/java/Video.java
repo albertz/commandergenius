@@ -120,13 +120,13 @@ abstract class DifferentTouchInput
 				return MultiTouchInput.Holder.sInstance;
 			else
 				return SingleTouchInput.Holder.sInstance;
-		} catch( java.lang.NoSuchMethodError e ) {
+		} catch( Exception e ) {
 			try {
 				if (multiTouchAvailable1 && multiTouchAvailable2)
 					return MultiTouchInput.Holder.sInstance;
 				else
 					return SingleTouchInput.Holder.sInstance;
-			} catch( java.lang.NoSuchMethodError ee ) {
+			} catch( Exception ee ) {
 				return SingleTouchInput.Holder.sInstance;
 			}
 		}

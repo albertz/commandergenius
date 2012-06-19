@@ -2276,7 +2276,7 @@ class Settings
 			void setupButton(boolean undo)
 			{
 				do {
-					currentButton += undo ? -1 : 1;
+					currentButton += (undo ? -1 : 1);
 					if(currentButton >= Globals.ScreenKbControlsLayout.length)
 					{
 						p.getVideoLayout().removeView(layout);
@@ -2312,6 +2312,11 @@ class Settings
 
 			public void onTouchEvent(final MotionEvent ev)
 			{
+				if(Globals.ScreenKbControlsLayout.length >= currentButton)
+				{
+					setupButton(false);
+					return;
+				}
 				if( ev.getAction() == MotionEvent.ACTION_DOWN )
 				{
 					Globals.ScreenKbControlsLayout[currentButton][0] = (int)ev.getX();
