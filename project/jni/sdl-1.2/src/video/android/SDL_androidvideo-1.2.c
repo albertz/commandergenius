@@ -1144,15 +1144,18 @@ void SDL_ANDROID_MultiThreadedVideoLoopInit()
 
 void SDL_ANDROID_MultiThreadedVideoLoop()
 {
+	int lastUpdate = SDL_GetTicks(); // For compat mode
+	int nextUpdateDelay = 100; // For compat mode
 	while(1)
 	{
 		int signalNeeded = 0;
 		int swapBuffersNeeded = 0;
 		int ret;
+		int currentTime;
 		SDL_mutexP(videoThread.mutex);
 		videoThread.threadReady = 1;
 		SDL_CondSignal(videoThread.cond2);
-		ret = SDL_CondWaitTimeout(videoThread.cond, videoThread.mutex, SDL_ANDROID_CompatibilityHacks ? 100 : 1000);
+		ret = SDL_CondWaitTimeout(videoThread.cond, videoThread.mutex, SDL_ANDROID_CompatibilityHacks ? nextUpdateDelay : 1000);
 		if( videoThread.execute )
 		{
 			videoThread.threadReady = 0;
@@ -1169,14 +1172,28 @@ void SDL_ANDROID_MultiThreadedVideoLoop()
 					ANDROID_VideoQuit(videoThread._this);
 					break;
 				case CMD_UPDATERECTS:
-					if( ! SDL_ANDROID_CompatibilityHacks ) // DIRTY HACK for MilkyTracker
+					if( SDL_ANDROID_CompatibilityHacks ) // DIRTY HACK for MilkyTracker - DO NOT update screen when application requests that, update 50 ms later
+					{
+						if( nextUpdateDelay >= 100 )
+							nextUpdateDelay = 50;
+						else
+							nextUpdateDelay = lastUpdate + 50 - (int)SDL_GetTicks();
+					}
+					else
 					{
 						ANDROID_FlipHWSurfaceInternal(videoThread.numrects, videoThread.rects);
 						swapBuffersNeeded = 1;
 					}
 					break;
 				case CMD_FLIP:
-					if( ! SDL_ANDROID_CompatibilityHacks ) // DIRTY HACK for MilkyTracker
+					if( SDL_ANDROID_CompatibilityHacks ) // DIRTY HACK for MilkyTracker - DO NOT update screen when application requests that, update 50 ms later
+					{
+						if( nextUpdateDelay >= 100 )
+							nextUpdateDelay = 50;
+						else
+							nextUpdateDelay = lastUpdate + 50 - (int)SDL_GetTicks();
+					}
+					else
 					{
 						ANDROID_FlipHWSurfaceInternal(0, NULL);
 						swapBuffersNeeded = 1;
@@ -1186,10 +1203,13 @@ void SDL_ANDROID_MultiThreadedVideoLoop()
 			videoThread.execute = 0;
 			signalNeeded = 1;
 		}
-		else if( SDL_ANDROID_CompatibilityHacks && ret == SDL_MUTEX_TIMEDOUT && SDL_CurrentVideoSurface )
+		if( SDL_ANDROID_CompatibilityHacks && SDL_CurrentVideoSurface &&
+				( ret == SDL_MUTEX_TIMEDOUT || nextUpdateDelay <= 0 ) )
 		{
 			ANDROID_FlipHWSurfaceInternal(0, NULL);
 			swapBuffersNeeded = 1;
+			lastUpdate = SDL_GetTicks();
+			nextUpdateDelay = 100;
 		}
 		SDL_mutexV(videoThread.mutex);
 		if( signalNeeded )
