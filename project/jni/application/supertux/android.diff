@@ -1,0 +1,177 @@
+diff --git a/src/audio/ogg_sound_file.cpp b/src/audio/ogg_sound_file.cpp
+index fd7c7fc..ebf978b 100644
+--- a/src/audio/ogg_sound_file.cpp
++++ b/src/audio/ogg_sound_file.cpp
+@@ -83,8 +83,8 @@ OggSoundFile::read(void* _buffer, size_t buffer_size)
+     }
+ 
+     long bytesRead
+-      = ov_read(&vorbis_file, buffer, bytes_to_read, bigendian,
+-                2, 1, &section);
++      = ov_read(&vorbis_file, buffer, bytes_to_read,
++                &section);
+     if(bytesRead == 0) {
+       break;
+     }
+diff --git a/src/audio/ogg_sound_file.hpp b/src/audio/ogg_sound_file.hpp
+index 0a9b8b1..8344177 100644
+--- a/src/audio/ogg_sound_file.hpp
++++ b/src/audio/ogg_sound_file.hpp
+@@ -18,7 +18,7 @@
+ #define HEADER_SUPERTUX_AUDIO_OGG_SOUND_FILE_HPP
+ 
+ #include <physfs.h>
+-#include <vorbis/vorbisfile.h>
++#include <tremor/ivorbisfile.h>
+ 
+ #include "audio/sound_file.hpp"
+ 
+diff --git a/src/control/joystickkeyboardcontroller.cpp b/src/control/joystickkeyboardcontroller.cpp
+index de414fa..92ba634 100644
+--- a/src/control/joystickkeyboardcontroller.cpp
++++ b/src/control/joystickkeyboardcontroller.cpp
+@@ -70,7 +70,7 @@ JoystickKeyboardController::JoystickKeyboardController() :
+   keymap[SDLK_END]      = Controller::PEEK_DOWN;
+ 
+   jump_with_up_joy = false;
+-  jump_with_up_kbd = false;
++  jump_with_up_kbd = true;
+ 
+   updateAvailableJoysticks();
+ 
+diff --git a/src/supertux/main.cpp b/src/supertux/main.cpp
+index 3dccd6e..f4b179d 100644
+--- a/src/supertux/main.cpp
++++ b/src/supertux/main.cpp
+@@ -20,7 +20,7 @@
+ #include <SDL_image.h>
+ #include <physfs.h>
+ #include <iostream>
+-#include <binreloc.h>
++//#include <binreloc.h>
+ #include <tinygettext/log.hpp>
+ #include <boost/format.hpp>
+ extern "C" {
+@@ -163,6 +163,7 @@ Main::init_physfs(const char* argv0)
+       sourcedir = true;
+     }
+   }
++  PHYSFS_addToSearchPath("data", 1);
+ 
+ #ifdef MACOSX
+   {
+diff --git a/src/util/log.cpp b/src/util/log.cpp
+index 6ce6f73..e12edf7 100644
+--- a/src/util/log.cpp
++++ b/src/util/log.cpp
+@@ -18,12 +18,81 @@
+ #include "util/log.hpp"
+ 
+ #include <iostream>
++#include <android/log.h>
+ 
+ #include "math/rectf.hpp"
+ #include "supertux/console.hpp"
+ 
++class _android_debugbuf: public std::streambuf
++{
++ public:
++ _android_debugbuf()
++ {
++    pos = 0;
++    buf[0] = 0;
++ }
++
++ protected:
++
++
++virtual int overflow(int c = EOF)
++{
++	if (EOF == c)
++	{
++		return '\0';  // returning EOF indicates an error
++	}
++	else
++	{
++		outputchar(c);
++		return c;
++	}
++};
++
++
++// we don’t do input so always return EOF
++virtual int uflow() {return EOF;}
++
++// we don’t do input so always return 0 chars read
++virtual int xsgetn(char *, int) {return 0;}
++
++// Calls outputchar() for each character.
++virtual int xsputn(const char *s, int n)
++{
++	for (int i = 0; i < n; ++i)
++	{
++		outputchar(s[i]);
++	}
++	return n;// we always process all of the chars
++};
++
++private:
++
++// the buffer
++char buf[256];
++int pos;
++
++void outputchar(char c)
++{
++	// TODO: mutex
++	if( pos >= sizeof(buf)-1 || c == '\n' || c == '\r' || c == 0 )
++	{
++		buf[pos] = 0;
++		__android_log_print(ANDROID_LOG_INFO, "SuperTux", "%s", buf);
++		pos = 0;
++		buf[pos] = 0;
++		return;
++	};
++	buf[pos] = c;
++	pos++;
++};
++
++};
++
++static std::ostream android_logcat(new _android_debugbuf());
++
+ static std::ostream& get_logging_instance (void)
+ {
++  return android_logcat;
+   if (Console::instance != NULL)
+     return (Console::output);
+   else
+diff --git a/src/video/gl/gl_texture.cpp b/src/video/gl/gl_texture.cpp
+index 9e2b70d..885ae87 100644
+--- a/src/video/gl/gl_texture.cpp
++++ b/src/video/gl/gl_texture.cpp
+@@ -146,9 +146,11 @@ GLTexture::GLTexture(SDL_Surface* image) :
+     }
+     else
+     { // build mipmaps
++#ifndef GL_VERSION_ES_CM_1_0
+       gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, texture_width,
+                         texture_height, sdl_format,
+                         GL_UNSIGNED_BYTE, convert->pixels);
++#endif
+     }
+ 
+     if(SDL_MUSTLOCK(convert))
+diff --git a/src/video/glutil.hpp b/src/video/glutil.hpp
+index e51240d..2330b0a 100644
+--- a/src/video/glutil.hpp
++++ b/src/video/glutil.hpp
+@@ -76,7 +76,7 @@ static inline void check_gl_error(const char* message)
+         msg << "Unknown error (code " << error << ")";
+     }
+ 
+-    throw std::runtime_error(msg.str());
++    //throw std::runtime_error(msg.str());
+   }
+ }
+ 
