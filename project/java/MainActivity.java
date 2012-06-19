@@ -309,13 +309,21 @@ public class MainActivity extends Activity {
 
 	public void showScreenKeyboard(final String oldText, boolean sendBackspace)
 	{
+		if(Globals.CompatibilityHacksTextInputEmulatesHwKeyboard)
+		{
+			_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
+			mGLView.setFocusable(true);
+			mGLView.setFocusableInTouchMode(true);
+			mGLView.requestFocus();
+			return;
+		}
 		if(_screenKeyboard != null)
 			return;
-		class myKeyListener implements OnKeyListener
+		class simpleKeyListener implements OnKeyListener
 		{
 			MainActivity _parent;
 			boolean sendBackspace;
-			myKeyListener(MainActivity parent, boolean sendBackspace) { _parent = parent; this.sendBackspace = sendBackspace; };
+			simpleKeyListener(MainActivity parent, boolean sendBackspace) { _parent = parent; this.sendBackspace = sendBackspace; };
 			public boolean onKey(View v, int keyCode, KeyEvent event) 
 			{
 				if ((event.getAction() == KeyEvent.ACTION_UP) && ((keyCode == KeyEvent.KEYCODE_ENTER) || (keyCode == KeyEvent.KEYCODE_BACK)))
@@ -335,7 +343,7 @@ public class MainActivity extends Activity {
 		};
 		_screenKeyboard = new EditText(this);
 		_videoLayout.addView(_screenKeyboard);
-		_screenKeyboard.setOnKeyListener(new myKeyListener(this, sendBackspace));
+		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this, sendBackspace));
 		_screenKeyboard.setHint(R.string.text_edit_click_here);
 		_screenKeyboard.setText(oldText);
 		_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
