@@ -567,6 +567,7 @@ public class MainActivity extends Activity {
 				}
 				catch( UnsatisfiedLinkError e )
 				{
+					System.out.println("libSDL: error loading lib " + l + ": " + e.toString());
 					System.loadLibrary(l);
 				}
 			}

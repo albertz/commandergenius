@@ -102,18 +102,8 @@ Also make sure that your HW textures are not wider than 1024 pixels, or it will 
 texture on HTC G1, and other low-end devices. Software surfaces may be of any size of course.
 
 If you want HW acceleration - just use OpenGL, that's the easiest and most cross-platform way,
-however if you'll use on-screen keyboard (even the text input button) the OpenGL state will get
-messed up after each frame - after each SDL_GL_SwapBuffers() you'll need to call:
-
-glEnable(GL_TEXTURE_2D);
-glBindTexture(GL_TEXTURE_2D, your_texture_id);
-glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-glEnable(GL_BLEND);
-glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-Previously I've got the code to save/restore OpenGL state, but it doens't work on every device -
-you may wish to uncomment it inside file SDL_touchscreenkeyboard.c in functions beginDrawingTex() and endDrawingTex().
+however note that on-screen keyboard (even the text input button) is also drawn using OpenGL,
+so it might mess up your GL state (although it should not do that due to recent code changes).
 
 If you don't use on-screen keyboard you don't need to reinit OpenGL state - set following in AndroidAppSettings.cfg:
 AppNeedsArrowKeys=n

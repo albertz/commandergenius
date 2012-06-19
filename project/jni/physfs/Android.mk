@@ -16,7 +16,7 @@ LOCAL_SRC_FILES := $(foreach F, $(APP_SUBDIRS), $(addprefix $(F)/,$(notdir $(wil
 
 LOCAL_STATIC_LIBRARIES :=
 
-LOCAL_SHARED_LIBRARIES := lzma
+LOCAL_SHARED_LIBRARIES :=
 
 LOCAL_LDLIBS := -lz
 
