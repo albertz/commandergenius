@@ -426,65 +426,6 @@ class Settings
 	public static void showConfig(final MainActivity p, final boolean firstStart)
 	{
 		settingsChanged = true;
-		if( !Globals.BrokenLibCMessageShown )
-		{
-			Globals.BrokenLibCMessageShown = true;
-			try {
-				InputStream in = p.getAssets().open("stdout-test");
-				File outDir = p.getFilesDir();
-				try {
-					outDir.mkdirs();
-				} catch( SecurityException ee ) { };
-				
-				byte[] buf = new byte[16384];
-				OutputStream out = null;
-				String path = outDir.getAbsolutePath() + "/" + "stdout-test";
-
-				out = new FileOutputStream( path );
-				int len = in.read(buf);
-				while (len >= 0)
-				{
-					if(len > 0)
-						out.write(buf, 0, len);
-					len = in.read(buf);
-				}
-
-				out.flush();
-				out.close();
-				Settings.nativeChmod(path, 0755);
-				if( (new ProcessBuilder().command(path).start()).waitFor() != 42 )
-				{
-					System.out.println("libSDL: stdout-test FAILED, your libc is broken");
-					AlertDialog.Builder builder = new AlertDialog.Builder(p);
-					builder.setTitle(p.getResources().getString(R.string.broken_libc_title));
-					builder.setMessage(p.getResources().getString(R.string.broken_libc_text));
-					builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
-					{
-						public void onClick(DialogInterface dialog, int item) 
-						{
-							dialog.dismiss();
-							showConfig(p, firstStart);
-						}
-					});
-					builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-					{
-						public void onCancel(DialogInterface dialog)
-						{
-							dialog.dismiss();
-							showConfig(p, firstStart);
-						}
-					});
-					AlertDialog alert = builder.create();
-					alert.setOwnerActivity(p);
-					alert.show();
-					return;
-				}
-				System.out.println("libSDL: stdout-test passed, your libc seems to be good");
-			} catch ( Exception eeee ) {
-				System.out.println("libSDL: Cannot run stdout-test: " + eeee.toString());
-			}
-		}
-
 		if( Globals.OptionalDataDownload == null )
 		{
 			String downloads[] = Globals.DataDownloadUrl.split("\\^");
