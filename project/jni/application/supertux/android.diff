@@ -39,6 +39,24 @@ index de414fa..92ba634 100644
  
    updateAvailableJoysticks();
  
+diff --git a/src/supertux/gameconfig.cpp b/src/supertux/gameconfig.cpp
+index 235198c..6126b25 100644
+--- a/src/supertux/gameconfig.cpp
++++ b/src/supertux/gameconfig.cpp
+@@ -27,11 +27,11 @@
+ 
+ Config::Config() :
+   profile(1),
+-  fullscreen_size(800, 600),
++  fullscreen_size(SDL_GetVideoInfo()->current_w, SDL_GetVideoInfo()->current_h),
+   window_size(800, 600),
+   aspect_size(0, 0), // auto detect
+   magnification(0.0f),
+-  use_fullscreen(false),
++  use_fullscreen(true),
+   video(VideoSystem::AUTO_VIDEO),
+   try_vsync(true),
+   show_fps(false),
 diff --git a/src/supertux/main.cpp b/src/supertux/main.cpp
 index 3dccd6e..f4b179d 100644
 --- a/src/supertux/main.cpp
@@ -60,6 +78,54 @@ index 3dccd6e..f4b179d 100644
  
  #ifdef MACOSX
    {
+diff --git a/src/supertux/screen_manager.cpp b/src/supertux/screen_manager.cpp
+index ffd9599..c19c74f 100644
+--- a/src/supertux/screen_manager.cpp
++++ b/src/supertux/screen_manager.cpp
+@@ -187,7 +187,7 @@ ScreenManager::update_gamelogic(float elapsed_time)
+ }
+ 
+ void
+-ScreenManager::process_events()
++ScreenManager::process_events(DrawingContext &context)
+ {
+   g_jk_controller->update();
+   Uint8* keystate = SDL_GetKeyState(NULL);
+@@ -206,8 +206,12 @@ ScreenManager::process_events()
+         break;
+               
+       case SDL_VIDEORESIZE:
++        #ifdef ANDROID
++        context.init_renderer(); // This should re-init GL context and re-upload all textures
++        #else
+         Renderer::instance()->resize(event.resize.w, event.resize.h);
+         MenuManager::recalc_pos();
++        #endif
+         break;
+             
+       case SDL_KEYDOWN:
+@@ -318,7 +322,7 @@ ScreenManager::run(DrawingContext &context)
+       timestep *= speed;
+       game_time += timestep;
+ 
+-      process_events();
++      process_events(context);
+       update_gamelogic(timestep);
+       frames += 1;
+     }
+diff --git a/src/supertux/screen_manager.hpp b/src/supertux/screen_manager.hpp
+index d885443..c436f72 100644
+--- a/src/supertux/screen_manager.hpp
++++ b/src/supertux/screen_manager.hpp
+@@ -59,7 +59,7 @@ private:
+   void draw_fps(DrawingContext& context, float fps);
+   void draw(DrawingContext& context);
+   void update_gamelogic(float elapsed_time);
+-  void process_events();
++  void process_events(DrawingContext &context);
+   void handle_screen_switch();
+ 
+ private:
 diff --git a/src/util/log.cpp b/src/util/log.cpp
 index 6ce6f73..e12edf7 100644
 --- a/src/util/log.cpp
@@ -146,11 +212,128 @@ index 6ce6f73..e12edf7 100644
    if (Console::instance != NULL)
      return (Console::output);
    else
+diff --git a/src/video/gl/gl_lightmap.cpp b/src/video/gl/gl_lightmap.cpp
+index 2ac49ef..dd5953b 100644
+--- a/src/video/gl/gl_lightmap.cpp
++++ b/src/video/gl/gl_lightmap.cpp
+@@ -60,7 +60,7 @@ GLLightmap::GLLightmap() :
+ 
+   lightmap_uv_right = static_cast<float>(lightmap_width) / static_cast<float>(width);
+   lightmap_uv_bottom = static_cast<float>(lightmap_height) / static_cast<float>(height);
+-  texture_manager->register_texture(lightmap.get());
++  //texture_manager->register_texture(lightmap.get());
+ }
+ 
+ GLLightmap::~GLLightmap()
 diff --git a/src/video/gl/gl_texture.cpp b/src/video/gl/gl_texture.cpp
-index 9e2b70d..885ae87 100644
+index 9e2b70d..a5081e3 100644
 --- a/src/video/gl/gl_texture.cpp
 +++ b/src/video/gl/gl_texture.cpp
-@@ -146,9 +146,11 @@ GLTexture::GLTexture(SDL_Surface* image) :
+@@ -16,6 +16,8 @@
+ 
+ #include "supertux/gameconfig.hpp"
+ #include "video/gl/gl_texture.hpp"
++#include "video/texture_manager.hpp"
++#include "util/log.hpp"
+ 
+ namespace {
+ 
+@@ -39,7 +41,8 @@ GLTexture::GLTexture(unsigned int width, unsigned int height) :
+   texture_width(),
+   texture_height(),
+   image_width(),
+-  image_height()
++  image_height(),
++  pixels(NULL)
+ {
+ #ifdef GL_VERSION_ES_CM_1_0
+   assert(is_power_of_2(width));
+@@ -64,6 +67,8 @@ GLTexture::GLTexture(unsigned int width, unsigned int height) :
+     glDeleteTextures(1, &handle);
+     throw;
+   }
++  if (texture_manager)
++    texture_manager->register_texture(this);
+ }
+ 
+ GLTexture::GLTexture(SDL_Surface* image) :
+@@ -71,7 +76,8 @@ GLTexture::GLTexture(SDL_Surface* image) :
+   texture_width(),
+   texture_height(),
+   image_width(),
+-  image_height()
++  image_height(),
++  pixels(NULL)
+ {
+ #ifdef GL_VERSION_ES_CM_1_0
+   texture_width = next_power_of_two(image->w);
+@@ -108,11 +114,49 @@ GLTexture::GLTexture(SDL_Surface* image) :
+ 
+   SDL_SetAlpha(image, 0, 0);
+   SDL_BlitSurface(image, 0, convert, 0);
++  pixels = convert;
+ 
++  reupload();
++  if (texture_manager)
++    texture_manager->register_texture(this);
++}
++
++GLTexture::~GLTexture()
++{
++  if (texture_manager)
++    texture_manager->remove_texture(this);
++  if(pixels)
++    SDL_FreeSurface(pixels);
++  glDeleteTextures(1, &handle);
++}
++
++void
++GLTexture::set_texture_params()
++{
++  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
++  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++
++  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
++  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
++
++  assert_gl("set texture params");
++}
++
++void GLTexture::reupload()
++{
+   assert_gl("before creating texture");
+   glGenTextures(1, &handle);
+ 
+-  try {
++  //log_info << "GL texture: reupload: this " << this << " pixels " << pixels << " GL handle " << handle << std::endl;
++  SDL_Surface* convert = pixels;
++  if( !convert )
++  {
++    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_width,
++                 texture_height, 0, GL_RGBA,
++                 GL_UNSIGNED_BYTE, NULL);
++    return;
++  }
++/*
+     GLenum sdl_format;
+     if(convert->format->BytesPerPixel == 3)
+       sdl_format = GL_RGB;
+@@ -122,7 +166,7 @@ GLTexture::GLTexture(SDL_Surface* image) :
+       sdl_format = GL_RGBA;
+       assert(false);
+     }
+-
++*/
+     glBindTexture(GL_TEXTURE_2D, handle);
+     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+ #ifdef GL_UNPACK_ROW_LENGTH
+@@ -141,14 +185,16 @@ GLTexture::GLTexture(SDL_Surface* image) :
+     if (true)
+     { // no not use mipmaps
+       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_width,
+-                 texture_height, 0, sdl_format,
++                 texture_height, 0, GL_RGBA,
+                  GL_UNSIGNED_BYTE, convert->pixels);
      }
      else
      { // build mipmaps
@@ -162,6 +345,58 @@ index 9e2b70d..885ae87 100644
      }
  
      if(SDL_MUSTLOCK(convert))
+@@ -159,29 +205,8 @@ GLTexture::GLTexture(SDL_Surface* image) :
+     assert_gl("creating texture");
+ 
+     set_texture_params();
+-  } catch(...) {
+-    glDeleteTextures(1, &handle);
+-    SDL_FreeSurface(convert);
+-    throw;
+-  }
+-  SDL_FreeSurface(convert);
+-}
+ 
+-GLTexture::~GLTexture()
+-{
+-  glDeleteTextures(1, &handle);
+-}
+-
+-void
+-GLTexture::set_texture_params()
+-{
+-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+-
+-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+-
+-  assert_gl("set texture params");
++  set_texture_params();
+ }
+ 
+ /* EOF */
+diff --git a/src/video/gl/gl_texture.hpp b/src/video/gl/gl_texture.hpp
+index 4b24d48..699053a 100644
+--- a/src/video/gl/gl_texture.hpp
++++ b/src/video/gl/gl_texture.hpp
+@@ -32,6 +32,7 @@ protected:
+   unsigned int texture_height;
+   unsigned int image_width;
+   unsigned int image_height;
++  SDL_Surface* pixels;
+ 
+ public:
+   GLTexture(unsigned int width, unsigned int height);
+@@ -76,6 +77,8 @@ public:
+     image_height = height;
+   }
+ 
++  void reupload();
++
+ private:
+   void set_texture_params();
+ };
 diff --git a/src/video/glutil.hpp b/src/video/glutil.hpp
 index e51240d..2330b0a 100644
 --- a/src/video/glutil.hpp
@@ -174,4 +409,95 @@ index e51240d..2330b0a 100644
 +    //throw std::runtime_error(msg.str());
    }
  }
+ 
+diff --git a/src/video/sdl/sdl_texture.cpp b/src/video/sdl/sdl_texture.cpp
+index b58f7cc..422bec8 100644
+--- a/src/video/sdl/sdl_texture.cpp
++++ b/src/video/sdl/sdl_texture.cpp
+@@ -679,5 +679,9 @@ SDLTexture::get_transform(const Color &color, DrawingEffect effect)
+   return cache[effect][color];
+ }
+ 
++void SDLTexture::reupload()
++{
++}
++
+ /* vim: set sw=2 sts=2 et : */
+ /* EOF */
+diff --git a/src/video/sdl/sdl_texture.hpp b/src/video/sdl/sdl_texture.hpp
+index 97c38cb..61ceedb 100644
+--- a/src/video/sdl/sdl_texture.hpp
++++ b/src/video/sdl/sdl_texture.hpp
+@@ -136,6 +136,7 @@ public:
+     {
+     return height;
+     }*/
++  void reupload();
+ 
+ private:
+   SDLTexture(const SDLTexture&);
+diff --git a/src/video/texture.hpp b/src/video/texture.hpp
+index e814547..710a488 100644
+--- a/src/video/texture.hpp
++++ b/src/video/texture.hpp
+@@ -63,6 +63,7 @@ public:
+   virtual unsigned int get_texture_height() const = 0;
+   virtual unsigned int get_image_width() const = 0;
+   virtual unsigned int get_image_height() const = 0;
++  virtual void reupload() = 0;
+ 
+ private:
+   Texture(const Texture&);
+diff --git a/src/video/texture_manager.cpp b/src/video/texture_manager.cpp
+index 7343a45..86af07e 100644
+--- a/src/video/texture_manager.cpp
++++ b/src/video/texture_manager.cpp
+@@ -219,6 +219,7 @@ TextureManager::create_dummy_texture()
+ void
+ TextureManager::save_textures()
+ {
++#if 0
+ #ifdef GL_PACK_ROW_LENGTH
+   /* all this stuff is not support by OpenGL ES */
+   glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+@@ -236,11 +237,13 @@ TextureManager::save_textures()
+       i != image_textures.end(); ++i) {
+     save_texture(dynamic_cast<GLTexture*>(i->second.lock().get()));
+   }
++#endif
+ }
+ 
+ void
+ TextureManager::save_texture(GLTexture* texture)
+ {
++#if 0
+   SavedTexture saved_texture;
+   saved_texture.texture = texture;
+   glBindTexture(GL_TEXTURE_2D, texture->get_handle());
+@@ -275,11 +278,13 @@ TextureManager::save_texture(GLTexture* texture)
+   texture->set_handle(0);
+ 
+   assert_gl("retrieving texture for save");
++#endif
+ }
+ 
+ void
+ TextureManager::reload_textures()
+ {
++#if 0
+ #ifdef GL_UNPACK_ROW_LENGTH
+   /* OpenGL ES doesn't support these */
+   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+@@ -320,6 +325,12 @@ TextureManager::reload_textures()
+   }
+ 
+   saved_textures.clear();
++#endif
++  for(Textures::iterator i = textures.begin(); i != textures.end(); ++i) {
++    //log_info << "Texture manager: reuploading texture " << *i << std::endl;
++
++    (*i)->reupload();
++  }
+ }
+ #endif
  
