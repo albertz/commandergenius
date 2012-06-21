@@ -221,11 +221,11 @@ SDL_ANDROID_SetApplicationPutToBackgroundCallback( callback_t appPutToBackground
 where callback_t is function pointer of type "void (*) void".
 The default callbacks will call another Android-specific functions:
 SDL_ANDROID_PauseAudioPlayback() and SDL_ANDROID_ResumeAudioPlayback()
-which will pause and resume audio from HW layer, so appplication does not need to destroy and re-init audio.
+which will pause and resume audio from HW layer, so appplication does not need to destroy and re-init audio,
+and in general you don't need to redefine those functions, unless you want to play audio in background.
 Also, the usual event SDL_ACTIVEEVENT with flag SDL_APPACTIVE will be sent when that happens,
 and also SDL_VIDEORESIZE event will be sent (the same behavior as in MacOsX SDL implementation).
-If you're using OpenAL for an audio playback you have to call functions al_android_pause_playback()
-and al_android_resume_playback() by yourself when SDL calls your callbacks.
+If you're using OpenAL it will be paused automatically when your app goes to background.
 
 If you're using pure SDL 1.2 API (with or without HW acceleration) you don't need to worry about anything -
 the SDL itself will re-create GL textures and fill them with pixel data from existing SDL HW surfaces,

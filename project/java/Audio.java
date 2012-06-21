@@ -57,7 +57,7 @@ class AudioThread {
 		if( mParent.isPaused() )
 		{
 			try{
-				Thread.sleep(200);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {}
 		}
 		else

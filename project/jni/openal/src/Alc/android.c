@@ -28,6 +28,12 @@
 #include "AL/alc.h"
 #include "AL/android.h"
 
+typedef void ( * SDL_ANDROID_ApplicationPutToBackgroundCallback_t ) (void);
+
+extern int SDL_ANDROID_SetOpenALPutToBackgroundCallback(
+		SDL_ANDROID_ApplicationPutToBackgroundCallback_t PutToBackground,
+		SDL_ANDROID_ApplicationPutToBackgroundCallback_t Restored );
+
 static int doPause=0;
 int resumeHandled;
 int pauseHandled;
@@ -106,6 +112,10 @@ static void* thread_function(void* arg)
 		{
 			(*env)->CallNonvirtualVoidMethod(env, track, cAudioTrack, mPause);
 			pauseHandled=1;
+			while(doPause)
+			{
+				usleep(500000);
+			}
 		}
 		if(!doPause && !resumeHandled)
 		{
@@ -144,6 +154,7 @@ static ALCboolean android_open_playback(ALCdevice *device, const ALCchar *device
     int channels;
     int bytes;
 
+    SDL_ANDROID_SetOpenALPutToBackgroundCallback(al_android_pause_playback, al_android_resume_playback);
     if (!cAudioTrack)
     {
         /* Cache AudioTrack class and it's method id's

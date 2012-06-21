@@ -986,10 +986,10 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseButtonsPressed) (JNIEnv* env, jobj
 			btn = SDL_BUTTON_MIDDLE;
 			break;
 		case MOUSE_HW_BUTTON_BACK:
-			btn = SDL_BUTTON_WHEELUP;
+			btn = SDL_BUTTON_X1;
 			break;
 		case MOUSE_HW_BUTTON_FORWARD:
-			btn = SDL_BUTTON_WHEELDOWN;
+			btn = SDL_BUTTON_X2;
 			break;
 	}
 	SDL_ANDROID_MainThreadPushMouseButton( pressedState ? SDL_PRESSED : SDL_RELEASED, btn );

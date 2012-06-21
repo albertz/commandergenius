@@ -84,6 +84,8 @@ static void appRestoredCallbackDefault(void)
 
 static SDL_ANDROID_ApplicationPutToBackgroundCallback_t appPutToBackgroundCallback = appPutToBackgroundCallbackDefault;
 static SDL_ANDROID_ApplicationPutToBackgroundCallback_t appRestoredCallback = appRestoredCallbackDefault;
+static SDL_ANDROID_ApplicationPutToBackgroundCallback_t openALPutToBackgroundCallback = NULL;
+static SDL_ANDROID_ApplicationPutToBackgroundCallback_t openALRestoredCallback = NULL;
 
 int SDL_ANDROID_CallJavaSwapBuffers()
 {
@@ -120,6 +122,8 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "OpenGL context recreated, refreshing textures");
 		SDL_ANDROID_VideoContextRecreated();
 		appRestoredCallback();
+		if(openALRestoredCallback)
+			openALRestoredCallback();
 	}
 	if( showScreenKeyboardDeferred )
 	{
@@ -195,6 +199,9 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeGlContextLost) ( JNIEnv*  env, jobject  thiz
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "OpenGL context lost, waiting for new OpenGL context");
 	glContextLost = 1;
 	appPutToBackgroundCallback();
+	if(openALPutToBackgroundCallback)
+		openALPutToBackgroundCallback();
+
 #if SDL_VERSION_ATLEAST(1,3,0)
 	//if( ANDROID_CurrentWindow )
 	//	SDL_SendWindowEvent(ANDROID_CurrentWindow, SDL_WINDOWEVENT_MINIMIZED, 0, 0);
@@ -291,6 +298,18 @@ int SDL_ANDROID_SetApplicationPutToBackgroundCallback(
 
 	if( appRestoredCallback )
 		appRestoredCallback = appRestored;
+}
+
+extern int SDL_ANDROID_SetOpenALPutToBackgroundCallback(
+		SDL_ANDROID_ApplicationPutToBackgroundCallback_t PutToBackground,
+		SDL_ANDROID_ApplicationPutToBackgroundCallback_t Restored );
+
+int SDL_ANDROID_SetOpenALPutToBackgroundCallback(
+		SDL_ANDROID_ApplicationPutToBackgroundCallback_t PutToBackground,
+		SDL_ANDROID_ApplicationPutToBackgroundCallback_t Restored )
+{
+	openALPutToBackgroundCallback = PutToBackground;
+	openALRestoredCallback = Restored;
 }
 
 JNIEXPORT void JNICALL
