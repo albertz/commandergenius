@@ -225,6 +225,47 @@ index 2ac49ef..dd5953b 100644
  }
  
  GLLightmap::~GLLightmap()
+diff --git a/src/video/gl/gl_renderer.cpp b/src/video/gl/gl_renderer.cpp
+index 361f30a..f26db81 100644
+--- a/src/video/gl/gl_renderer.cpp
++++ b/src/video/gl/gl_renderer.cpp
+@@ -118,8 +118,8 @@ GLRenderer::draw_surface(const DrawingRequest& request)
+ 
+   glBindTexture(GL_TEXTURE_2D, gltexture->get_handle());
+   intern_draw(request.pos.x, request.pos.y,
+-              request.pos.x + surface->get_width(),
+-              request.pos.y + surface->get_height(),
++              request.pos.x + (float)surface->get_width() * 1.02f, // There are seams between textures because of floating-point rounding, so we're adding small offset to prevent that
++              request.pos.y + (float)surface->get_height() * 1.02f,
+               surface_data->get_uv_left(),
+               surface_data->get_uv_top(),
+               surface_data->get_uv_right(),
+@@ -150,8 +150,8 @@ GLRenderer::draw_surface_part(const DrawingRequest& request)
+ 
+   glBindTexture(GL_TEXTURE_2D, gltexture->get_handle());
+   intern_draw(request.pos.x, request.pos.y,
+-              request.pos.x + surfacepartrequest->size.x,
+-              request.pos.y + surfacepartrequest->size.y,
++              request.pos.x + surfacepartrequest->size.x + 0.001f,
++              request.pos.y + surfacepartrequest->size.y + 0.001f,
+               uv_left,
+               uv_top,
+               uv_right,
+diff --git a/src/video/gl/gl_renderer.hpp b/src/video/gl/gl_renderer.hpp
+index 9e20859..8b7e04e 100644
+--- a/src/video/gl/gl_renderer.hpp
++++ b/src/video/gl/gl_renderer.hpp
+@@ -63,8 +63,8 @@ inline void intern_draw(float left, float top, float right, float bottom,
+     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+   } else {
+     // rotated blit
+-    float center_x = (left + right) / 2;
+-    float center_y = (top + bottom) / 2;
++    float center_x = (left + right) / 2.0f;
++    float center_y = (top + bottom) / 2.0f;
+ 
+     float sa = sinf(angle/180.0f*M_PI);
+     float ca = cosf(angle/180.0f*M_PI);
 diff --git a/src/video/gl/gl_texture.cpp b/src/video/gl/gl_texture.cpp
 index 9e2b70d..a5081e3 100644
 --- a/src/video/gl/gl_texture.cpp
