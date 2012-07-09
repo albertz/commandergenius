@@ -175,6 +175,15 @@ unpack it and put "timidity" dir into your game data zipfile.
 Or you may paste this URL directly as an optional download in ChangeAppSettings.sh:
 MIDI music support (18 Mb)|http://sourceforge.net/projects/libsdl-android/files/timidity.zip/download
 
+SDL by default listens to the Volume Up and Volume Down hardware keys, and sends them to the application,
+instead of changing volume. Most users expect those keys to actually change volume, instead of performing some in-game action.
+To make SDL ignore those keys, and let the Android framework handle them instead, set
+RedefinedKeys="XXX YYY NO_REMAP NO_REMAP ZZZ BBB CCC" inside AndroidAppSettings.cfg, that is,
+the third and fourth keycode should be a special value "NO_REMAP" instead of SDL keycode.
+XXX, YYY and ZZZ are placeholders for SDL keycodes of other hardware keys -
+XXX is sent when user touches the screen and app is not using mouse or multitouch,
+YYY is for DPAD_CENTER/SEARCH keys, ZZZ is for MENU key, BBB is for BACK key, CCC is for CAMERA key.
+
 The ARM architecture has some limitations which you have to be aware about -
 if you'll access integer that's not 4-byte aligned you'll get garbage instead of correct value,
 and it's processor-model specific - it may work on some devices and do not work on another ones -
