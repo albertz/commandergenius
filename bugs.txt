@@ -23,6 +23,8 @@ Requested features
 
 - Perform a check for free space available on SD card before writing there, and write to the internal storage if SD card is unplugged.
 
+- Force SW video mode from AndroidAppSettings.cfg, ignore SDL_HWSURFACE if app does not explicitly support it.
+
 - Split Settings.java into several files
 
 - Show/hide screen controls with longpress on Text Edit button.
