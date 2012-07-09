@@ -30,7 +30,7 @@ LOCAL_C_INCLUDES += $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) \
 
 LOCAL_CFLAGS += $(APPLICATION_ADDITIONAL_CFLAGS)
 
-#Change C++ file extension as appropriate
+# Change C++ file extension as appropriate
 LOCAL_CPP_EXTENSION := .cpp
 
 ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
@@ -52,6 +52,8 @@ LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
 ifneq ($(NDK_R7_TOOLCHAIN)$(CRYSTAX_R7_TOOLCHAIN),) # NDK r7 broke it even more
 LOCAL_C_INCLUDES += $(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/include
 LOCAL_LDLIBS += -L$(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/libs/$(TARGET_ARCH_ABI) -lgnustl_static
+# You can have multiple C++ file extensions starting from NDK r7
+LOCAL_CPP_EXTENSION := .cpp .cxx .cc
 else
 ifneq ($(NDK_R6_TOOLCHAIN),) # NDK r6 broke it
 LOCAL_C_INCLUDES += $(NDK_PATH)/sources/cxx-stl/gnu-libstdc++/include
