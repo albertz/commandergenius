@@ -11,12 +11,17 @@ Known bugs
 
 - 32-bpp color mode does not work with SW video surface, 24-bpp and 32-bpp mode does not work with SDL_HWSURFACE.
 
-- Fix broken sdtout on Telechips devices, by using --Wl,--wrap flag for the linker
-
-- Text input window should show on-screen keyboard immediately, without "Touch here to start typing" msg.
+- Audio is not paused on Android 4.0 when user presses "Recent apps" button.
 
 Requested features
 ==================
+
+- Support for advertisement frameworks (AdMod most likely), and C interface to control them.
+
+- Change data install path and app working directory to getExternalCacheDir() instead of /sdcard/app-data/...
+  Also Settings.java will need to check if app data is already installed to the app-data, and move it to correct location.
+
+- Perform a check for free space available on SD card before writing there, and write to the internal storage if SD card is unplugged.
 
 - Split Settings.java into several files
 
@@ -33,19 +38,4 @@ Requested features
 
 - Zoom in-out whole screen in SW mode with some SDL key -
   much like the "On-screen magnifying glass" feature (lazy porter's golden hammer)
-
-- HDMI output (HTC Evo and Samsung Epic support that):
-  HDMI output will be tricky - I've read the doc here:
-  https://docs.google.com/View?id=dhtsnvs6_57d2hpqtgr#4_1_HDMI_output_support_338048
-  It says that in order to output something to HDMI you need to have a VideoView class visible on screen:
-  http://developer.android.com/reference/android/widget/VideoView.html .
-  This class does not have any method like "showMyOwnCustomImage()",
-  it just plays the video from the given path, so obvious solution is to create
-  special FIFO file or open a socket, point the VideoView to play this FIFO or socket,
-  and then write raw uncompressed video frames to that FIFO with some small header so that
-  VideoView will recognize it as a proper video format.
-  UQM gives 5 FPS without such hacks, if I'll implement that FPS will drop to 1-2
-  (maybe not that bad, I have to actually try that), because you'll have to do huge memcpy(),
-  plus VideoView will contain some buffer to ensure the playback is smooth,
-  so the data on your TV will lag halfsecond behind the data on the device screen.
 
