@@ -105,7 +105,7 @@ static struct ScreenKbGlState_t
 	GLboolean texture2d;
 	GLuint textureId;
 	GLfloat color[4];
-	GLfloat texEnvMode;
+	GLint texEnvMode;
 	GLboolean blend;
 	GLenum blend1, blend2;
 	GLint texFilter1, texFilter2;
@@ -121,7 +121,7 @@ static inline void beginDrawingTex()
 	oldGlState.texture2d = glIsEnabled(GL_TEXTURE_2D);
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldGlState.textureId);
 	glGetFloatv(GL_CURRENT_COLOR, &(oldGlState.color[0]));
-	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &oldGlState.texEnvMode);
+	glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &oldGlState.texEnvMode);
 	oldGlState.blend = glIsEnabled(GL_BLEND);
 	glGetIntegerv(GL_BLEND_SRC, &oldGlState.blend1);
 	glGetIntegerv(GL_BLEND_DST, &oldGlState.blend2);
@@ -151,7 +151,7 @@ static inline void endDrawingTex()
 		glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, oldGlState.textureId);
 	glColor4f(oldGlState.color[0], oldGlState.color[1], oldGlState.color[2], oldGlState.color[3]);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
 	if( oldGlState.blend == GL_FALSE )
 		glDisable(GL_BLEND);
 	glBlendFunc(oldGlState.blend1, oldGlState.blend2);

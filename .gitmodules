@@ -19,3 +19,6 @@
 [submodule "project/jni/application/gemrb/gemrb"]
 	path = project/jni/application/gemrb/gemrb
 	url = git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb
+[submodule "project/jni/application/openarena/engine"]
+	path = project/jni/application/openarena/engine
+	url = https://github.com/pelya/openarena-engine.git
