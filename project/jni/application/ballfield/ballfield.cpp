@@ -23,8 +23,10 @@
 /*----------------------------------------------------------
 	Definitions...
 ----------------------------------------------------------*/
+
 #define	SCREEN_W	320
 #define	SCREEN_H	240
+
 
 #define	BALLS	300
 
@@ -405,49 +407,6 @@ void tiled_back(SDL_Surface *back, SDL_Surface *screen, int xo, int yo)
 	SDL_BlitSurface(back, NULL, screen, &r);
 }
 
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
-extern "C" unsigned misaligned_mem_access(unsigned value, unsigned shift);
-
-unsigned misaligned_mem_access(unsigned value, unsigned shift)
-{
-    volatile unsigned *iptr = NULL;
-    volatile char *cptr = NULL;
-    volatile unsigned ret = 0;
- 
-#if defined(__GNUC__)
-# if defined(__i386__)
-    /* Enable Alignment Checking on x86 */
-    __asm__("pushf\norl $0x40000,(%esp)\npopf");
-# elif defined(__x86_64__) 
-     /* Enable Alignment Checking on x86_64 */
-    __asm__("pushf\norl $0x40000,(%rsp)\npopf");
-# endif
-#endif
-
-    /* malloc() always provides aligned memory */
-    cptr = (volatile char *)malloc(sizeof(unsigned) + 10);
-
-    /* Increment the pointer by one, making it misaligned */
-    iptr = (volatile unsigned *) (cptr + shift);
-
-    /* Dereference it as an int pointer, causing an unaligned access */
-    /* GCC usually tries to optimize this, thus our test succeeds when it should fail, if we remove "volatile" specifiers */
-    *iptr = value;
-    //memcpy( &ret, iptr, sizeof(unsigned) );
-    ret = *iptr;
-    /*
-    *((volatile char *)(&ret) + 0) = cptr[shift+0];
-    *((volatile char *)(&ret) + 1) = cptr[shift+1];
-    *((volatile char *)(&ret) + 2) = cptr[shift+2];
-    *((volatile char *)(&ret) + 3) = cptr[shift+3];
-    */
-    free((void *)cptr);
-
-    return ret;
-}
-#pragma GCC pop_options
-
 /*----------------------------------------------------------
 	main()
 ----------------------------------------------------------*/
@@ -604,23 +563,7 @@ int main(int argc, char* argv[])
 			fps = (float)fps_count * 1000.0 / (tick - fps_start);
 			fps_count = 0;
 			fps_start = tick;
-			
-			*((unsigned char *)(&val0) + 0) += 1;
-			*((unsigned char *)(&val0) + 1) += 1;
-			*((unsigned char *)(&val0) + 2) += 1;
-			*((unsigned char *)(&val0) + 3) += 1;
 		}
-		// MISALIGNED MEMORY ACCESS HERE! However all the devices that I have won't report it and won't send a signal or write to the /proc/kmsg,
-		// despite the /proc/cpu/alignment flag set.
-		val1 = misaligned_mem_access(val0, 1);
-		val2 = misaligned_mem_access(val0, 2);
-		val3 = misaligned_mem_access(val0, 3);
-		/*
-		print_num_hex(screen, font_hex, 0, 40, val0);
-		print_num_hex(screen, font_hex, 0, 60, val1);
-		print_num_hex(screen, font_hex, 0, 80, val2);
-		print_num_hex(screen, font_hex, 0, 100, val3);
-		*/
 
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
 		++fps_count;

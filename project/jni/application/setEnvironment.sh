@@ -14,13 +14,12 @@ NDK=`readlink -f $NDK`
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
-SCRIPT=setEnvironment-r4b.sh
-CRYSTAX_WCHAR=
-if [ -n "`echo $NDK | grep 'android-ndk-r[56789]'`" ]; then
+if [ -n "`echo $NDK | grep 'android-ndk-r\(8b\|9\)'`" ]; then
+	SCRIPT=setEnvironment-r8b.sh
+elif [ -n "`echo $NDK | grep 'android-ndk-r[5678]'`" ]; then
 	SCRIPT=setEnvironment-r5b.sh
-#	if [ -n "`echo $NDK | grep 'android-ndk-r[56789]-crystax'`" ]; then
-#		CRYSTAX_WCHAR=1
-#	fi
+else
+	SCRIPT=setEnvironment-r4b.sh
 fi
 
-env CRYSTAX_WCHAR=$CRYSTAX_WCHAR $LOCAL_PATH/$SCRIPT "$@"
+env $LOCAL_PATH/$SCRIPT "$@"

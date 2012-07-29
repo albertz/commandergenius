@@ -14,8 +14,10 @@ if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && \
 fi
 
 MYARCH=linux-x86
+NCPU=4
 if uname -s | grep -i "linux" > /dev/null ; then
 	MYARCH=linux-x86
+	NCPU=`cat /proc/cpuinfo | grep -c -i processor`
 fi
 if uname -s | grep -i "darwin" > /dev/null ; then
 	MYARCH=darwin-x86
@@ -26,7 +28,7 @@ fi
 
 rm -r -f project/bin/* # New Android SDK introduced some lame-ass optimizations to the build system which we should take care about
 
-cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build V=1 -j4 && \
+cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build V=1 -j$NCPU && \
  { grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
    [ -`which ndk-build | xargs readlink -f | grep '/android-ndk-r[56789]'` != - ] && \
    echo Stripping libapplication.so by hand \

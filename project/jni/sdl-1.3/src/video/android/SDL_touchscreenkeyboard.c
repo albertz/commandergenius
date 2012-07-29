@@ -115,7 +115,9 @@ oldGlState;
 static inline void beginDrawingTex()
 {
 	// Save OpenGL state
-	// TODO: this code does not work on 1.6 emulator, and on some older devices
+	glGetError(); // Clear error flag
+	// This code does not work on 1.6 emulator, and on some older devices
+	// However GLES 1.1 spec defines all theese values, so it's a device fault for not implementing them
 	oldGlState.texture2d = glIsEnabled(GL_TEXTURE_2D);
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldGlState.textureId);
 	glGetFloatv(GL_CURRENT_COLOR, &(oldGlState.color[0]));
@@ -126,6 +128,18 @@ static inline void beginDrawingTex()
 	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &oldGlState.texFilter1);
 	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &oldGlState.texFilter2);
 	// It's very unlikely that some app will use GL_TEXTURE_CROP_RECT_OES, so just skip it
+	if( glGetError() != GL_NO_ERROR )
+	{
+		// Make the video somehow work on emulator
+		oldGlState.texture2d = GL_FALSE;
+		oldGlState.textureId = 0;
+		oldGlState.texEnvMode = GL_MODULATE;
+		oldGlState.blend = GL_FALSE;
+		oldGlState.blend1 = GL_SRC_ALPHA;
+		oldGlState.blend2 = GL_ONE_MINUS_SRC_ALPHA;
+		oldGlState.texFilter1 = GL_NEAREST;
+		oldGlState.texFilter2 = GL_NEAREST;
+	}
 
 	glEnable(GL_TEXTURE_2D);
 }
@@ -133,12 +147,12 @@ static inline void beginDrawingTex()
 static inline void endDrawingTex()
 {
 	// Restore OpenGL state
-	if( oldGlState.texture2d == GL_FALSE)
+	if( oldGlState.texture2d == GL_FALSE )
 		glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, oldGlState.textureId);
 	glColor4f(oldGlState.color[0], oldGlState.color[1], oldGlState.color[2], oldGlState.color[3]);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
-	if( oldGlState.blend == GL_FALSE)
+	if( oldGlState.blend == GL_FALSE )
 		glDisable(GL_BLEND);
 	glBlendFunc(oldGlState.blend1, oldGlState.blend2);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, oldGlState.texFilter1);
