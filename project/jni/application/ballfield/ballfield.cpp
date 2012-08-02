@@ -593,7 +593,7 @@ int main(int argc, char* argv[])
 			if( b & SDL_BUTTON_RMASK )
 				color |= 0x1f0;
 			if( b & SDL_BUTTON_MMASK )
-				color |= 0x1f;
+				color |= 0x0f;
 		}
 		r.x = mx;
 		r.y = my;
@@ -610,6 +610,12 @@ int main(int argc, char* argv[])
 			if(evt.type == SDL_KEYUP || evt.type == SDL_KEYDOWN)
 			{
 				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL key event: evt %s state %s key %d scancode %d mod %d unicode %d", evt.type == SDL_KEYUP ? "UP  " : "DOWN" , evt.key.state == SDL_PRESSED ? "PRESSED " : "RELEASED", (int)evt.key.keysym.sym, (int)evt.key.keysym.scancode, (int)evt.key.keysym.mod, (int)evt.key.keysym.unicode);
+				if(evt.key.keysym.sym == SDLK_ESCAPE)
+					return 0;
+			}
+			if(evt.type == SDL_MOUSEBUTTONUP || evt.type == SDL_MOUSEBUTTONDOWN)
+			{
+				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL mouse button event: evt %s state %s button %d coords %d:%d", evt.type == SDL_MOUSEBUTTONUP ? "UP  " : "DOWN" , evt.button.state == SDL_PRESSED ? "PRESSED " : "RELEASED", (int)evt.button.button, (int)evt.button.x, (int)evt.button.y);
 				if(evt.key.keysym.sym == SDLK_ESCAPE)
 					return 0;
 			}

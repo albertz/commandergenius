@@ -397,7 +397,6 @@ abstract class DifferentTouchInput
 		public void process(final MotionEvent event)
 		{
 			//System.out.println("Got motion event, type " + (int)(event.getAction()) + " X " + (int)event.getX() + " Y " + (int)event.getY() + " buttons " + buttonState + " source " + event.getSource());
-			super.process(event); // Push mouse coordinate first
 			int buttonStateNew = event.getButtonState();
 			if( buttonStateNew != buttonState )
 			{
@@ -408,6 +407,19 @@ abstract class DifferentTouchInput
 				}
 				buttonState = buttonStateNew;
 			}
+			super.process(event); // Push mouse coordinate first
+		}
+		public void processGenericEvent(final MotionEvent event)
+		{
+			// Process mousewheel
+			if( event.getAction() == MotionEvent.ACTION_SCROLL )
+			{
+				int scrollX = Math.round(event.getAxisValue(MotionEvent.AXIS_HSCROLL));
+				int scrollY = Math.round(event.getAxisValue(MotionEvent.AXIS_VSCROLL));
+				DemoGLSurfaceView.nativeMouseWheel(scrollX, scrollY);
+				return;
+			}
+			super.processGenericEvent(event);
 		}
 	}
 	private static class GalaxyNoteIcsTouchInput extends IcsTouchInput
@@ -720,7 +732,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public static native void initJavaCallbacks();
 	public static native void nativeHardwareMouseDetected( int detected );
 	public static native void nativeMouseButtonsPressed( int buttonId, int pressedState );
-
+	public static native void nativeMouseWheel(int scrollX, int scrollY);
 }
 
 

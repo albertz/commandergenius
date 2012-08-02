@@ -22,3 +22,6 @@
 [submodule "project/jni/application/openarena/engine"]
 	path = project/jni/application/openarena/engine
 	url = https://github.com/pelya/openarena-engine.git
+[submodule "project/jni/application/scummvm/scummvm"]
+	path = project/jni/application/scummvm/scummvm
+	url = https://github.com/scummvm/scummvm.git

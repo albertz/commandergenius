@@ -574,7 +574,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 			if( leftClickMethod == LEFT_CLICK_NORMAL )
 			{
 				SDL_ANDROID_MainThreadPushMouseMotion(x, y);
-				SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
+				if( !hardwareMouseDetected || currentMouseButtons == 0 )
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
 			}
 			else
 			{
@@ -993,6 +994,52 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseButtonsPressed) (JNIEnv* env, jobj
 			break;
 	}
 	SDL_ANDROID_MainThreadPushMouseButton( pressedState ? SDL_PRESSED : SDL_RELEASED, btn );
+}
+
+JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseWheel) (JNIEnv* env, jobject thiz, jint scrollX, jint scrollY)
+{
+#if SDL_VERSION_ATLEAST(1,3,0)
+	SDL_ANDROID_MainThreadPushMouseWheel( scrollX, scrollY );
+#else
+	// TODO: direction might get inverted
+	for( ; scrollX > 0; scrollX-- )
+	{
+		SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_RIGHT) );
+		SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT) );
+	}
+	for( ; scrollX < 0; scrollX++ )
+	{
+		SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_LEFT) );
+		SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT) );
+	}
+	for( ; scrollY > 0; scrollY-- )
+	{
+		if(!isMouseUsed)
+		{
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_DOWN) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN) );
+		}
+		else
+		{
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_WHEELDOWN );
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_WHEELDOWN );
+		}
+	}
+	for( ; scrollY < 0; scrollY++ )
+	{
+		if(!isMouseUsed)
+		{
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_UP) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP) );
+		}
+		else
+		{
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_WHEELUP );
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_WHEELUP );
+		}
+	}
+#endif
 }
 
 JNIEXPORT void JNICALL 
@@ -1443,7 +1490,7 @@ extern void SDL_ANDROID_PumpEvents()
 		switch( ev.type )
 		{
 			case SDL_MOUSEMOTION:
-				SDL_SendMouseMotion(ANDROID_CurrentWindow, 0, ev.motion.x, ev.motion.y);
+				SDL_SendMouseMotion( ANDROID_CurrentWindow, 0, ev.motion.x, ev.motion.y );
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				if( ((oldMouseButtons & SDL_BUTTON(ev.button.button)) != 0) != ev.button.state )
@@ -1477,6 +1524,9 @@ extern void SDL_ANDROID_PumpEvents()
 				break;
 			case SDL_TEXTINPUT:
 				SDL_SendKeyboardText(ev.text.text);
+				break;
+			case SDL_MOUSEWHEEL:
+				SDL_SendMouseWheel( ANDROID_CurrentWindow, ev.wheel.x, ev.wheel.y );
 				break;
 #endif
 		}
@@ -1763,6 +1813,24 @@ extern void SDL_ANDROID_MainThreadPushMultitouchMotion(int id, int x, int y, int
 	SDL_mutexV(BufferedEventsMutex);
 #endif
 };
+
+extern void SDL_ANDROID_MainThreadPushMouseWheel(int x, int y)
+{
+#if SDL_VERSION_ATLEAST(1,3,0)
+	int nextEvent = getNextEventAndLock();
+	if( nextEvent == -1 )
+		return;
+	
+	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+	
+	ev->type = SDL_MOUSEWHEEL;
+	ev->wheel.x = x;
+	ev->wheel.y = y;
+	
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+#endif
+}
 
 enum { DEFERRED_TEXT_COUNT = 256 };
 static struct { int scancode; int unicode; int down; } deferredText[DEFERRED_TEXT_COUNT];

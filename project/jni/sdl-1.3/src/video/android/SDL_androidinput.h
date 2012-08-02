@@ -194,12 +194,12 @@ extern int SDL_ANDROID_isTouchscreenKeyboardUsed;
 extern void SDL_ANDROID_MainThreadPushMouseMotion(int x, int y);
 extern void SDL_ANDROID_MainThreadPushMouseButton(int pressed, int button);
 extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key);
-extern void SDL_ANDROID_MainThreadPushMultitouchButton(int id, int pressed, int x, int y, int force);
-extern void SDL_ANDROID_MainThreadPushMultitouchMotion(int id, int x, int y, int force);
+extern void SDL_ANDROID_MainThreadPushMultitouchButton(int id, int pressed, int x, int y, int force); // SDL 1.3 only
+extern void SDL_ANDROID_MainThreadPushMultitouchMotion(int id, int x, int y, int force); // SDL 1.3 only
 extern void SDL_ANDROID_MainThreadPushJoystickAxis(int joy, int axis, int value);
 extern void SDL_ANDROID_MainThreadPushJoystickButton(int joy, int button, int pressed);
 extern void SDL_ANDROID_MainThreadPushJoystickBall(int joy, int ball, int x, int y);
 extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode );
 extern void SDL_android_init_keymap(SDLKey *SDL_android_keymap);
-
+extern void SDL_ANDROID_MainThreadPushMouseWheel( int x, int y ); // SDL 1.3 only
 #endif
