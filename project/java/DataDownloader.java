@@ -462,6 +462,7 @@ class DataDownloader extends Thread
 
 				OutputStream out = null;
 				path = getOutFilePath(entry.getName());
+				float percent = 0.0f;
 
 				System.out.println("Saving file '" + path + "'");
 
@@ -482,6 +483,9 @@ class DataDownloader extends Thread
 						throw new Exception();
 					}
 					System.out.println("File '" + path + "' exists and passed CRC check - not overwriting it");
+					if( totalLen > 0 )
+						percent = stream.getBytesRead() * 100.0f / totalLen;
+					Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
 					continue;
 				} catch( Exception e ) { }
 
@@ -499,7 +503,6 @@ class DataDownloader extends Thread
 					return false;
 				}
 
-				float percent = 0.0f;
 				if( totalLen > 0 )
 					percent = stream.getBytesRead() * 100.0f / totalLen;
 				Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );

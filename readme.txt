@@ -35,6 +35,13 @@ create file project/bin/DemoActivity-debug.apk and install it on your device or 
 Then you can test it by launching Ballfield icon from Android applications menu.
 It's designed for 320x240, so if you have bigger screen it will be resized.
 
+There are other applications inside project/jni/application directory,
+some of them are referenced using Git submodule mechanism, you may download them using command
+git submodule update --init
+Some of them may be outdated and won't compile, some contain only patch file and no sources,
+so you should check out Git logs before compiling some app:
+gitk project/jni/application/<directory>
+
 The game enforces horizontal screen orientation, you may slide-open your keyboard if you have it
 and use it for additional keys - the device will just keep current screen orientation.
 Recent Android phone models like HTC Evo have no keyboard at all, on-screen keyboard built into SDL
