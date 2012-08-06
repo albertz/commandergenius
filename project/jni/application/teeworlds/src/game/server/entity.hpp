@@ -2,6 +2,7 @@
 #define GAME_SERVER_ENTITY_H
 
 #include <new>
+#include <cstddef>
 #include <base/vmath.hpp>
 
 #define MACRO_ALLOC_HEAP() \
