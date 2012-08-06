@@ -9,8 +9,6 @@
  * software, or work derived from it, under other terms.
  */
 
-#include <sstream>
-#include <iostream>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -25,7 +23,7 @@
 ----------------------------------------------------------*/
 
 #define	SCREEN_W	320
-#define	SCREEN_H	240
+#define	SCREEN_H	200
 
 
 #define	BALLS	300
@@ -411,12 +409,6 @@ void tiled_back(SDL_Surface *back, SDL_Surface *screen, int xo, int yo)
 	main()
 ----------------------------------------------------------*/
 
-extern "C" void unaligned_test(unsigned * data, unsigned * target);
-extern "C" unsigned val0, val1, val2, val3, val4;
-
-unsigned val0 = 0x01234567, val1, val2, val3;
-
-
 int main(int argc, char* argv[])
 {
 	ballfield_t	*balls;
@@ -425,7 +417,7 @@ int main(int argc, char* argv[])
 	SDL_Surface	*back, *logo, *font, *font_hex;
 	SDL_Event	event;
 	int		bpp = 16,
-			flags = 0,
+			flags = SDL_HWSURFACE,
 			alpha = 1;
 	int		x_offs = 0, y_offs = 0;
 	long		tick,
@@ -677,8 +669,5 @@ int main(int argc, char* argv[])
 	SDL_FreeSurface(back);
 	SDL_FreeSurface(logo);
 	SDL_FreeSurface(font);
-	std::ostringstream os;
-	os << "lalala" << std::endl << "more text" << std::endl;
-	std::cout << os.str() << std::endl << "text text" << std::endl;
-	exit(0);
+	return 0;
 }

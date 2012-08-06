@@ -42,6 +42,7 @@ extern int SDL_ANDROID_TouchscreenCalibrationX;
 extern int SDL_ANDROID_TouchscreenCalibrationY;
 extern int SDL_ANDROID_SmoothVideo;
 extern int SDL_ANDROID_VideoMultithreaded;
+extern int SDL_ANDROID_VideoForceSoftwareMode;
 extern int SDL_ANDROID_CompatibilityHacks;
 extern int SDL_ANDROID_ShowMouseCursor;
 extern int SDL_ANDROID_UseGles2;

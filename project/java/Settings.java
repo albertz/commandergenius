@@ -2417,6 +2417,8 @@ class Settings
 			Globals.SwVideoMode = true;
 			nativeSetCompatibilityHacks();
 		}
+		if( Globals.SwVideoMode )
+			nativeSetVideoForceSoftwareMode();
 		if( Globals.SwVideoMode && Globals.MultiThreadedVideo )
 			nativeSetVideoMultithreaded();
 		if( Globals.PhoneHasTrackball )
@@ -2557,6 +2559,7 @@ class Settings
 	private static native void nativeSetVideoDepth(int bpp, int gles2);
 	private static native void nativeSetCompatibilityHacks();
 	private static native void nativeSetVideoMultithreaded();
+	private static native void nativeSetVideoForceSoftwareMode();
 	private static native void nativeSetupScreenKeyboard(int size, int drawsize, int theme, int nbuttonsAutoFire, int transparency);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	private static native void nativeInitKeymap();

@@ -307,12 +307,21 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		return NULL;
 	}
 
+	if( SDL_ANDROID_VideoForceSoftwareMode )
+	{
+		if( flags & SDL_HWSURFACE )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): application requested hardware video mode - forcing software video mode");
+		if( flags & SDL_OPENGL )
+			__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: application requested OpenGL context - SDL will ignore this. Set SwVideoMode=n inside AndroidAppSettings.cfg to enable OpenGL inside SDL.");
+		flags = (flags & SDL_FULLSCREEN) | (flags & SDL_DOUBLEBUF);
+	}
+
 	sdl_opengl = (flags & SDL_OPENGL) ? 1 : 0;
 
 	SDL_ANDROID_sFakeWindowWidth = width;
 	SDL_ANDROID_sFakeWindowHeight = height;
 
-	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_OPENGL) | SDL_DOUBLEBUF | ( flags & SDL_HWSURFACE );
+	current->flags = (flags & SDL_FULLSCREEN) | (flags & SDL_OPENGL) | SDL_DOUBLEBUF | (flags & SDL_HWSURFACE);
 	current->w = width;
 	current->h = height;
 	current->pitch = SDL_ANDROID_sFakeWindowWidth * SDL_ANDROID_BYTESPERPIXEL;
@@ -456,7 +465,13 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 	}
 
 	if ( ! (surface->w && surface->h) )
-		return(-1);
+		return -1;
+
+	if( SDL_ANDROID_VideoForceSoftwareMode )
+	{
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_SetVideoMode(): ignoring application attempt to allocate HW surface");
+		return -1;
+	}
 
 	DEBUGOUT("ANDROID_AllocHWSurface() surface %p w %d h %d", surface, surface->w, surface->h);
 	Uint32 format = PixelFormatEnumColorkey; // 1-bit alpha for color key, every surface will have colorkey so it's easier for us
@@ -514,7 +529,6 @@ static int ANDROID_AllocHWSurface(_THIS, SDL_Surface *surface)
 	
 	surface->flags |= SDL_HWSURFACE | SDL_HWACCEL;
 	
-
 	HwSurfaceCount++;
 	DEBUGOUT("ANDROID_AllocHWSurface() in HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 	HwSurfaceList = SDL_realloc( HwSurfaceList, HwSurfaceCount * sizeof(SDL_Surface *) );
@@ -554,9 +568,7 @@ static void ANDROID_FreeHWSurface(_THIS, SDL_Surface *surface)
 		}
 	}
 	if( i != -1 )
-	{
 		SDL_SetError("ANDROID_FreeHWSurface: cannot find freed HW surface in HwSurfaceList array");
-	}
 }
 
 static int ANDROID_LockHWSurface(_THIS, SDL_Surface *surface)

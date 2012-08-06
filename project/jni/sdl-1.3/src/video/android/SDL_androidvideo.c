@@ -67,6 +67,7 @@ static const char * showScreenKeyboardOldText = "";
 static int showScreenKeyboardSendBackspace = 0;
 int SDL_ANDROID_SmoothVideo = 0;
 int SDL_ANDROID_VideoMultithreaded = 0;
+int SDL_ANDROID_VideoForceSoftwareMode = 0;
 int SDL_ANDROID_CompatibilityHacks = 0;
 int SDL_ANDROID_BYTESPERPIXEL = 2;
 int SDL_ANDROID_BITSPERPIXEL = 16;
@@ -322,6 +323,12 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetVideoMultithreaded) (JNIEnv* env, jobject thiz)
 {
 	SDL_ANDROID_VideoMultithreaded = 1;
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetVideoForceSoftwareMode) (JNIEnv* env, jobject thiz)
+{
+	SDL_ANDROID_VideoForceSoftwareMode = 1;
 }
 
 JNIEXPORT void JNICALL
