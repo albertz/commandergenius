@@ -56,7 +56,8 @@ bool select_gameplay( void )
 	JE_loadPic(VGAScreen, 2, false);
 	JE_dString(VGAScreen, JE_fontCenter(gameplay_name[0], FONT_SHAPES), 20, gameplay_name[0], FONT_SHAPES);
 
-	int gameplay = 1,
+	const JE_byte menu_top = 30, menu_spacing = 24;
+	JE_shortint gameplay = 1,
 	    gameplay_max = 4;
 
 	bool fade_in = true;
@@ -64,7 +65,7 @@ bool select_gameplay( void )
 	{
 		for (int i = 1; i <= gameplay_max; i++)
 		{
-			JE_outTextAdjust(VGAScreen, JE_fontCenter(gameplay_name[i], SMALL_FONT_SHAPES), i * 24 + 30, gameplay_name[i], 15, - 4 + (i == gameplay ? 2 : 0) - (i == 4 ? 4 : 0), SMALL_FONT_SHAPES, true);
+			JE_outTextAdjust(VGAScreen, JE_fontCenter(gameplay_name[i], SMALL_FONT_SHAPES), i * menu_spacing + menu_top, gameplay_name[i], 15, - 4 + (i == gameplay ? 2 : 0) - (i == 4 ? 4 : 0), SMALL_FONT_SHAPES, true);
 		}
 		JE_showVGA();
 
@@ -76,6 +77,9 @@ bool select_gameplay( void )
 
 		JE_word temp = 0;
 		JE_textMenuWait(&temp, false);
+
+		if (select_menuitem_by_touch(menu_top, menu_spacing, gameplay_max, &gameplay))
+			continue;
 
 		if (newkey)
 		{
