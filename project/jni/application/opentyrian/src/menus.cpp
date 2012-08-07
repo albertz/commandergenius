@@ -31,6 +31,26 @@
 
 char episode_name[6][31], difficulty_name[7][21], gameplay_name[5][26];
 
+bool
+select_menuitem_by_touch(JE_byte menu_top, JE_byte menu_spacing, JE_shortint menu_item_count, JE_shortint *current_item)
+{
+	if (!mousedown)
+		return false;
+
+	char new_item = (mouse_y - menu_top) / menu_spacing;
+
+	if (mouse_y >= menu_top && mouse_y < menu_top + (menu_item_count+1) * menu_spacing)
+	{
+		if (new_item == *current_item)
+			return false;
+
+		JE_playSampleNum(S_CURSOR);
+
+		*current_item = new_item;
+	}
+	return true;
+}
+
 bool select_gameplay( void )
 {
 	JE_loadPic(VGAScreen, 2, false);
