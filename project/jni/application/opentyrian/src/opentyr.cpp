@@ -28,6 +28,7 @@
 #include "jukebox.h"
 #include "keyboard.h"
 #include "loudness.h"
+#include "menus.h"
 #include "mainint.h"
 #include "mtrand.h"
 #include "musmast.h"
@@ -79,7 +80,8 @@ char *strnztcpy( char *to, const char *from, size_t count )
 
 void opentyrian_menu( void )
 {
-	int sel = 0;
+	const JE_byte menu_top = 36, menu_spacing = 20;
+	JE_shortint sel = 0;
 	const int maxSel = COUNTOF(opentyrian_menu_items) - 1;
 	bool quit = false, fade_in = true;
 	
@@ -111,7 +113,7 @@ void opentyrian_menu( void )
 				text = buffer;
 			}
 
-			draw_font_hv_shadow(VGAScreen, VGAScreen->w / 2, (i != maxSel) ? i * 16 + 32 : 118, text, normal_font, centered, 15, (i != sel) ? -4 : -2, false, 2);
+			draw_font_hv_shadow(VGAScreen, VGAScreen->w / 2, (i != maxSel) ? i * menu_spacing + menu_top : 118, text, normal_font, centered, 15, (i != sel) ? -4 : -2, false, 2);
 		}
 
 		JE_showVGA();
@@ -125,6 +127,9 @@ void opentyrian_menu( void )
 
 		tempW = 0;
 		JE_textMenuWait(&tempW, false);
+
+		if (select_menuitem_by_touch(menu_top, menu_spacing, maxSel, &sel))
+			continue;
 
 		if (newkey)
 		{
