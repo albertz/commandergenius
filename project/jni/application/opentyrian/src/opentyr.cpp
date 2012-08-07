@@ -165,7 +165,7 @@ void opentyrian_menu( void )
 					JE_playSampleNum(S_CURSOR);
 					break;
 				case SDLK_LEFT:
-					if (sel == 2)
+					if (sel == menu_item_scaler)
 					{
 						do
 						{
@@ -178,7 +178,10 @@ void opentyrian_menu( void )
 					}
 					break;
 				case SDLK_RIGHT:
-					if (sel == 2)
+#ifdef ANDROID
+				case SDLK_RETURN:
+#endif
+					if (sel == menu_item_scaler)
 					{
 						do
 						{
@@ -189,8 +192,10 @@ void opentyrian_menu( void )
 						while (!can_init_scaler(temp_scaler, fullscreen_enabled));
 						JE_playSampleNum(S_CURSOR);
 					}
+#ifndef ANDROID
 					break;
 				case SDLK_RETURN:
+#endif
 				case SDLK_SPACE:
 					switch (sel)
 					{
