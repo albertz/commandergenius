@@ -220,15 +220,16 @@ bool select_difficulty( void )
 	JE_loadPic(VGAScreen, 2, false);
 	JE_dString(VGAScreen, JE_fontCenter(difficulty_name[0], FONT_SHAPES), 20, difficulty_name[0], FONT_SHAPES);
 
+	const JE_byte menu_top = 30, menu_spacing = 24;
 	difficultyLevel = 2;
-	int difficulty_max = 3;
+	JE_shortint difficulty_max = 3;
 
 	bool fade_in = true;
 	for (; ; )
 	{
 		for (int i = 1; i <= difficulty_max; i++)
 		{
-			JE_outTextAdjust(VGAScreen, JE_fontCenter(difficulty_name[i], SMALL_FONT_SHAPES), i * 24 + 30, difficulty_name[i], 15, -4 + (i == difficultyLevel ? 2 : 0), SMALL_FONT_SHAPES, true);
+			JE_outTextAdjust(VGAScreen, JE_fontCenter(difficulty_name[i], SMALL_FONT_SHAPES), i * menu_spacing + menu_top, difficulty_name[i], 15, -4 + (i == difficultyLevel ? 2 : 0), SMALL_FONT_SHAPES, true);
 		}
 		JE_showVGA();
 
@@ -240,6 +241,9 @@ bool select_difficulty( void )
 
 		JE_word temp = 0;
 		JE_textMenuWait(&temp, false);
+
+		if (select_menuitem_by_touch(menu_top, menu_spacing, difficulty_max, &difficultyLevel))
+			continue;
 
 		if (SDL_GetModState() & KMOD_SHIFT)
 		{
