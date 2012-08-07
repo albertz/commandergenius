@@ -146,18 +146,18 @@ typedef struct
 	JE_word     eenemydie;
 } JE_EnemyDatType[ENEMY_NUM + 1]; /* [0..enemynum] */
 
-extern JE_WeaponPortType weaponPort;
-extern JE_WeaponType weapons;
-extern JE_PowerType powerSys;
-extern JE_ShipType ships;
-extern JE_OptionType options[OPTION_NUM + 1]; /* [0..optionnum] */
-extern JE_ShieldType shields;
-extern JE_SpecialType special;
-extern JE_EnemyDatType enemyDat;
-extern JE_byte initial_episode_num, episodeNum;
-extern JE_boolean episodeAvail[EPISODE_MAX];
+extern "C" JE_WeaponPortType weaponPort;
+extern "C" JE_WeaponType weapons;
+extern "C" JE_PowerType powerSys;
+extern "C" JE_ShipType ships;
+extern "C" JE_OptionType options[OPTION_NUM + 1]; /* [0..optionnum] */
+extern "C" JE_ShieldType shields;
+extern "C" JE_SpecialType special;
+extern "C" JE_EnemyDatType enemyDat;
+extern "C" JE_byte initial_episode_num, episodeNum;
+extern "C" JE_boolean episodeAvail[EPISODE_MAX];
 
-extern char episode_file[13], cube_file[13];
+extern "C" char episode_file[13], cube_file[13];
 
 extern JE_longint episode1DataLoc;
 extern JE_boolean bonusLevel;
