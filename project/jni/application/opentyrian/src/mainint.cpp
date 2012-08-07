@@ -1205,10 +1205,13 @@ JE_boolean JE_inGameSetup( void )
 
 		JE_outTextAdjust(VGAScreen, 10, 147, mainMenuHelp[help[sel-1]-1], 14, 6, TINY_FONT, true);
 
-		JE_barDrawShadow(VGAScreen, 120, 20, 1, 16, tyrMusicVolume / 12, 3, 13);
-		JE_barDrawShadow(VGAScreen, 120, 40, 1, 16, fxVolume / 12, 3, 13);
+		JE_barDrawShadow(VGAScreen, 120, 20, 1, music_disabled ? 12 : 16, tyrMusicVolume / 12, 3, 13);
+		JE_barDrawShadow(VGAScreen, 120, 40, 1, samples_disabled ? 12 : 16, fxVolume / 12, 3, 13);
 
 		JE_showVGA();
+
+		if (mousedown && sel >= 3 && sel <= 4)
+			wait_noinput(true, true, true);
 
 		if (first)
 		{
@@ -2525,8 +2528,9 @@ void JE_operation( JE_byte slot )
 			}
 		}
 	}
-
+#ifndef ANDROID // This hangs on input stuff with touch-emulated mouse:
 	wait_noinput(false, true, false);
+#endif
 }
 
 void JE_inGameDisplays( void )
@@ -2873,6 +2877,14 @@ void JE_pauseGame( void )
 {
 	JE_boolean done = false;
 	JE_word mouseX, mouseY;
+#ifdef ANDROID
+	bool saved_music_disabled = music_disabled, saved_samples_disabled = samples_disabled;
+
+	music_disabled = samples_disabled = true;
+	SDL_ANDROID_PauseAudioPlayback();
+#else
+	set_volume(tyrMusicVolume / 2, fxVolume);
+#endif
 
 	//tempScreenSeg = VGAScreenSeg; // sega000
 	if (!superPause)
@@ -2882,8 +2894,6 @@ void JE_pauseGame( void )
 		VGAScreen = VGAScreenSeg;
 		JE_showVGA();
 	}
-
-	set_volume(tyrMusicVolume / 2, fxVolume);
 
 	if (isNetworkGame)
 	{
@@ -2956,7 +2966,13 @@ void JE_pauseGame( void )
 		}
 	}
 
+#ifdef ANDROID
+	music_disabled = saved_music_disabled;
+	samples_disabled = saved_samples_disabled;
+	SDL_ANDROID_ResumeAudioPlayback();
+#else
 	set_volume(tyrMusicVolume, fxVolume);
+#endif
 
 	//skipStarShowVGA = true;
 }
