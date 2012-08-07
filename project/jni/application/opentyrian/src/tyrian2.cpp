@@ -2377,7 +2377,7 @@ draw_player_shot_loop_end:
 	}
 	else // input handling for pausing, menu, cheats
 	{
-		service_SDL_events(false);
+		service_SDL_events_ignore_pause(false);
 
 		if (newkey)
 		{

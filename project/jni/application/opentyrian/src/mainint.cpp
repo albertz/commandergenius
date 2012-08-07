@@ -2783,7 +2783,7 @@ void JE_mainKeyboardInput( void )
 	}
 
 	/* pause game */
-	pause_pressed = pause_pressed || keysactive[SDLK_p];
+	pause_pressed = pause_pressed || keysactive[SDLK_p] || keysactive[SDLK_PAUSE];
 
 	/* in-game setup */
 	ingamemenu_pressed = ingamemenu_pressed || keysactive[SDLK_ESCAPE];
@@ -2915,6 +2915,7 @@ void JE_pauseGame( void )
 
 		push_joysticks_as_keyboard();
 		service_SDL_events(true);
+		JE_showVGA();
 
 		if ((newkey && lastkey_sym != SDLK_LCTRL && lastkey_sym != SDLK_RCTRL && lastkey_sym != SDLK_LALT && lastkey_sym != SDLK_RALT)
 		    || JE_mousePosition(&mouseX, &mouseY) > 0)
@@ -2938,6 +2939,8 @@ void JE_pauseGame( void )
 				done = true;
 			}
 		}
+		else
+			SDL_Delay(300);
 
 		wait_delay();
 	} while (!done);
@@ -3172,10 +3175,10 @@ redo:
 					}
 				}
 
-				service_SDL_events(false);
+				service_SDL_events_ignore_pause(false);
 
-				/* mouse input */
-				/*
+				/* mouse input algorithm which is not suitable for touch-emulated mouse */
+#ifndef ANDROID
 				if ((inputDevice == 0 || inputDevice == 2) && has_mouse)
 				{
 					button[0] |= mouse_pressed[0];
@@ -3194,9 +3197,7 @@ redo:
 						set_mouse_position(159, 100);
 					}
 				}
-				*/
-
-
+#endif
 				/* keyboard input */
 				if ((inputDevice == 0 || inputDevice == 1 || inputDevice == 2) && !play_demo)
 				{

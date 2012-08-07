@@ -285,6 +285,17 @@ public class MainActivity extends Activity {
 		}
 		_isPaused = false;
 	}
+
+	@Override
+	public void onWindowFocusChanged (boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
+		if (hasFocus == false) {
+			synchronized(textInput) {
+				// Send 'SDLK_PAUSE' (to enter pause mode) to native code:
+				DemoRenderer.nativeTextInput( 19, 19 );
+			}
+		}
+	}
 	
 	public boolean isPaused()
 	{
