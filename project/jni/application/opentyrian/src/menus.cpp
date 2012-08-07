@@ -139,7 +139,8 @@ bool select_episode( void )
 	JE_loadPic(VGAScreen, 2, false);
 	JE_dString(VGAScreen, JE_fontCenter(episode_name[0], FONT_SHAPES), 20, episode_name[0], FONT_SHAPES);
 
-	int episode = 1,
+	const JE_byte menu_top = 20, menu_spacing = 30;
+	JE_shortint episode = 1,
 	    episode_max = EPISODE_MAX - 1;
 
 	bool fade_in = true;
@@ -147,7 +148,7 @@ bool select_episode( void )
 	{
 		for (int i = 1; i <= episode_max; i++)
 		{
-			JE_outTextAdjust(VGAScreen, 20, i * 30 + 20, episode_name[i], 15, -4 + (i == episode ? 2 : 0) - (!episodeAvail[i - 1] ? 4 : 0), SMALL_FONT_SHAPES, true);
+			JE_outTextAdjust(VGAScreen, 20, i * menu_spacing + menu_top, episode_name[i], 15, -4 + (i == episode ? 2 : 0) - (!episodeAvail[i - 1] ? 4 : 0), SMALL_FONT_SHAPES, true);
 		}
 		JE_showVGA();
 
@@ -159,6 +160,9 @@ bool select_episode( void )
 
 		JE_word temp = 0;
 		JE_textMenuWait(&temp, false);
+
+		if (select_menuitem_by_touch(menu_top, menu_spacing, episode_max, &episode))
+			continue;
 
 		if (newkey)
 		{
