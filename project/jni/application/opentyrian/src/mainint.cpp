@@ -1167,21 +1167,20 @@ void JE_doInGameSetup( void )
 
 JE_boolean JE_inGameSetup( void )
 {
+	const JE_byte menu_top = 20, menu_spacing = 20;
+	const JE_shortint menu_items = 6;
+	JE_shortint sel = 1;
 	SDL_Surface *temp_surface = VGAScreen;
 	VGAScreen = VGAScreenSeg; /* side-effect of game_screen */
 
 	JE_boolean returnvalue = false;
 
 	const JE_byte help[6] /* [1..6] */ = {15, 15, 28, 29, 26, 27};
-	JE_byte  sel;
-	JE_boolean quit;
+	JE_boolean quit = false;
 
 	bool first = true;
 
 	//tempScreenSeg = VGAScreenSeg; /* <MXD> ? should work as VGAScreen */
-
-	quit = false;
-	sel = 1;
 
 	JE_barShade(VGAScreen, 3, 13, 217, 137); /*Main Box*/
 	JE_barShade(VGAScreen, 5, 15, 215, 135);
@@ -1194,9 +1193,9 @@ JE_boolean JE_inGameSetup( void )
 	{
 		memcpy(VGAScreen->pixels, VGAScreen2->pixels, VGAScreen->pitch * VGAScreen->h);
 
-		for (x = 0; x < 6; x++)
+		for (x = 0; x < menu_items; x++)
 		{
-			JE_outTextAdjust(VGAScreen, 10, (x + 1) * 20, inGameText[x], 15, ((sel == x+1) << 1) - 4, SMALL_FONT_SHAPES, true);
+			JE_outTextAdjust(VGAScreen, 10, menu_top + x*menu_spacing, inGameText[x], 15, ((sel == x+1) << 1) - 4, SMALL_FONT_SHAPES, true);
 		}
 
 		JE_outTextAdjust(VGAScreen, 120, 3 * 20, detailLevel[processorType-1], 15, ((sel == 3) << 1) - 4, SMALL_FONT_SHAPES, true);
@@ -1217,6 +1216,22 @@ JE_boolean JE_inGameSetup( void )
 
 		tempW = 0;
 		JE_textMenuWait(&tempW, true);
+
+		sel--;
+		if (select_menuitem_by_touch(menu_top, menu_spacing, menu_items, &sel))
+		{
+			sel++;
+			continue;
+		}
+		sel++;
+
+		if (mousedown && sel < 5)
+		{
+			if (lastmouse_x > 160)
+				lastkey_sym = SDLK_RIGHT;
+			else
+				lastkey_sym = SDLK_LEFT;
+		}
 
 		if (inputDetected)
 		{
