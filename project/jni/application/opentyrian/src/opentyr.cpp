@@ -62,7 +62,9 @@ const char *opentyrian_str = "OpenTyrian",
 const char *opentyrian_menu_items[] =
 {
 	"About OpenTyrian",
+#ifndef ANDROID
 	"Toggle Fullscreen",
+#endif
 	"Scaler: None",
 	"Jukebox",
 #ifdef ANDROID
@@ -70,6 +72,15 @@ const char *opentyrian_menu_items[] =
 #endif
 	"Return to Main Menu"
 };
+
+#ifndef ANDROID
+const int menu_item_scaler   = 2;
+const int menu_item_jukebox  = 3;
+#else
+const int menu_item_scaler   = 1;
+const int menu_item_jukebox  = 2;
+const int menu_item_destruct = 3;
+#endif
 
 /* zero-terminated strncpy */
 char *strnztcpy( char *to, const char *from, size_t count )
@@ -107,7 +118,7 @@ void opentyrian_menu( void )
 			const char *text = opentyrian_menu_items[i];
 			char buffer[100];
 
-			if (i == 2) /* Scaler */
+			if (i == menu_item_scaler) /* Scaler */
 			{
 				snprintf(buffer, sizeof(buffer), "Scaler: %s", scalers[temp_scaler].name);
 				text = buffer;
@@ -192,6 +203,7 @@ void opentyrian_menu( void )
 							JE_showVGA();
 							fade_in = true;
 							break;
+#ifndef ANDROID
 						case 1: /* Fullscreen */
 							JE_playSampleNum(S_SELECT);
 
@@ -203,7 +215,8 @@ void opentyrian_menu( void )
 							}
 							set_palette(colors, 0, 255); // for switching between 8 bpp scalers
 							break;
-						case 2: /* Scaler */
+#endif
+						case menu_item_scaler: /* Scaler */
 							JE_playSampleNum(S_SELECT);
 
 							if (scaler != temp_scaler)
@@ -217,7 +230,7 @@ void opentyrian_menu( void )
 								set_palette(colors, 0, 255); // for switching between 8 bpp scalers
 							}
 							break;
-						case 3: /* Jukebox */
+						case menu_item_jukebox: /* Jukebox */
 							JE_playSampleNum(S_SELECT);
 
 							fade_black(10);
@@ -228,7 +241,7 @@ void opentyrian_menu( void )
 							fade_in = true;
 							break;
 #ifdef ANDROID
-						case 4: /* Destruct */
+						case menu_item_destruct: /* Destruct */
 							JE_playSampleNum(S_SELECT);
 							loadDestruct = true;
 							fade_black(10);
