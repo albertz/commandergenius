@@ -124,6 +124,9 @@ void opentyrian_menu( void )
 				text = buffer;
 			}
 
+			// Destruct is not adapted for touch input, so we show it only if keyboard is used:
+			if (i == menu_item_destruct && (mousedown || lastkey_sym == SDLK_ESCAPE))
+				continue;
 			draw_font_hv_shadow(VGAScreen, VGAScreen->w / 2, (i != maxSel) ? i * menu_spacing + menu_top : 118, text, normal_font, centered, 15, (i != sel) ? -4 : -2, false, 2);
 		}
 
