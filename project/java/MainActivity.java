@@ -307,6 +307,12 @@ public class MainActivity extends Activity {
 		System.exit(0);
 	}
 
+	public void togglePlainAndroidSoftKeyboardInput()
+	{
+		InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+	}
+
 	public void showScreenKeyboard(final String oldText, boolean sendBackspace)
 	{
 		if(Globals.CompatibilityHacksTextInputEmulatesHwKeyboard)
