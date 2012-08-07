@@ -1,8 +1,17 @@
 #!/bin/sh
-set -eu
+#set -eu # Bashism, does not work with default shell on Ubuntu 12.04
 
-if [ $# -gt 0 -a $1 = "-r" ]; then
+install_apk=false
+run_apk=false
+
+if [ "$#" -gt 0 -a "$1" = "-i" ]; then
 	shift
+	install_apk=true
+fi
+
+if [ "$#" -gt 0 -a "$1" = "-r" ]; then
+	shift
+	install_apk=true
 	run_apk=true
 fi
 
@@ -44,16 +53,13 @@ cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build V=1 -j$NCPU && \
    `which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-4.4.3/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi/libapplication.so \
    || true ; } && \
  ant debug && \
- [ -n "`adb devices | tail -n +2`" ] && \
-if [ $# -eq 0 ]; then # It seems peyla wanted build.sh to not install if an arg is given..
- cd bin
- { adb install -r MainActivity-debug.apk | grep 'Failure' && \
- adb uninstall `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'` && adb install -r MainActivity-debug.apk ; true ; } && \
- if [ "$run_apk" = true ]; then
+ $install_apk && [ -n "`adb devices | tail -n +2`" ] && \
+ { cd bin && adb install -r MainActivity-debug.apk | grep 'Failure' && \
+   adb uninstall `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'` && adb install -r MainActivity-debug.apk ; true ; } && \
+  $run_apk && {
    ActivityName="`grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'`/.MainActivity"
    RUN_APK="adb shell am start -n $ActivityName"
    echo "Running $ActivityName on the USB-connected device:"
    echo "$RUN_APK"
    eval $RUN_APK
- fi
-fi
+ }
