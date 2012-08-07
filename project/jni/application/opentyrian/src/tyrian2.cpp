@@ -3352,9 +3352,13 @@ new_game:
 bool JE_titleScreen( JE_boolean animate )
 {
 	bool quit = false;
-
-	const JE_shortint menunum = 7;
-	const JE_byte menu_top = 102, menu_spacing = 14;
+#ifdef ANDROID
+	const JE_shortint menunum = 5; // Quit not possible, Android manages life cycle!
+	const JE_byte menu_top = 96, menu_spacing = 16;
+#else
+	const JE_shortint menunum = 6;
+	const JE_byte menu_top = 96, menu_spacing = 14;
+#endif
 
 	unsigned int arcade_code_i[SA_ENGAGE] = { 0 };
 
@@ -3506,7 +3510,7 @@ bool JE_titleScreen( JE_boolean animate )
 					strcpy(menuText[4], opentyrian_str);  // OpenTyrian override
 
 					/* Draw Menu Text on Screen */
-					for (int i = 0; i < menunum; ++i)
+					for (int i = 0; i <= menunum; ++i)
 					{
 						int x = VGAScreen->w / 2, y = menu_top + i * menu_spacing;
 
