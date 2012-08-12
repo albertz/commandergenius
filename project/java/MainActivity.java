@@ -289,12 +289,19 @@ public class MainActivity extends Activity {
 	@Override
 	public void onWindowFocusChanged (boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
+		System.out.println("libSDL: onWindowFocusChanged: " + hasFocus + " - sending onPause/onResume");
+		if (hasFocus == false)
+			onPause();
+		else
+			onResume();
+		/*
 		if (hasFocus == false) {
 			synchronized(textInput) {
 				// Send 'SDLK_PAUSE' (to enter pause mode) to native code:
 				DemoRenderer.nativeTextInput( 19, 19 );
 			}
 		}
+		*/
 	}
 	
 	public boolean isPaused()
@@ -303,7 +310,7 @@ public class MainActivity extends Activity {
 	}
 
 	@Override
-	protected void onDestroy() 
+	protected void onDestroy()
 	{
 		if( downloader != null )
 		{

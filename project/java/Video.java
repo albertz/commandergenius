@@ -572,7 +572,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	}
 	public void DrawLogo(GL10 gl)
 	{
-		System.out.println("libSDL: DrawLogo");
+		// TODO: this not quite works, as it seems
 		BitmapDrawable bmp = null;
 		try
 		{
@@ -645,6 +645,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	private boolean mGlContextLost = false;
 	public boolean mGlSurfaceCreated = false;
 	public boolean mPaused = false;
+	//public boolean mPutToBackground = false;
 	private boolean mFirstTimeStart = true;
 	public int mWidth = 0;
 	public int mHeight = 0;
@@ -699,10 +700,12 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	@Override
 	public void onPause() {
+		if(mRenderer.mPaused)
+			return;
+		mRenderer.mPaused = true;
 		if( mRenderer.accelerometer != null ) // For some reason it crashes here often - are we getting this event before initialization?
 			mRenderer.accelerometer.stop();
 		super.onPause();
-		mRenderer.mPaused = true;
 	};
 	
 	public boolean isPaused() {
@@ -711,8 +714,10 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	@Override
 	public void onResume() {
-		super.onResume();
+		if(!mRenderer.mPaused)
+			return;
 		mRenderer.mPaused = false;
+		super.onResume();
 		System.out.println("libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused);
 		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused || Globals.NonBlockingSwapBuffers )
 			mRenderer.nativeGlContextRecreated();
