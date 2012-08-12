@@ -61,7 +61,7 @@ static jclass JavaRendererClass = NULL;
 static jobject JavaRenderer = NULL;
 static jmethodID JavaSwapBuffers = NULL;
 static jmethodID JavaShowScreenKeyboard = NULL;
-static jmethodID JavaTogglePlainAndroidSoftKeyboardInput = NULL;
+static jmethodID JavaToggleScreenKeyboardWithoutTextInput = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
@@ -226,9 +226,10 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeGlContextRecreated) ( JNIEnv*  env, jobject 
 #endif
 }
 
-void SDL_ANDROID_CallJavaTogglePlainAndroidSoftKeyboardInput()
+int SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(void)
 {
-	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaTogglePlainAndroidSoftKeyboardInput );
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaToggleScreenKeyboardWithoutTextInput );
+	return 1;
 }
 
 volatile static textInputFinished = 0;
@@ -289,7 +290,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaRendererClass = (*JavaEnv)->GetObjectClass(JavaEnv, thiz);
 	JavaSwapBuffers = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "swapBuffers", "()I");
 	JavaShowScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboard", "(Ljava/lang/String;I)V");
-	JavaTogglePlainAndroidSoftKeyboardInput = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "togglePlainAndroidSoftKeyboardInput", "()V");
+	JavaToggleScreenKeyboardWithoutTextInput = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboardWithoutTextInputField", "()V");
 	
 	ANDROID_InitOSKeymap();
 }

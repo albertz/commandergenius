@@ -318,20 +318,17 @@ public class MainActivity extends Activity {
 		System.exit(0);
 	}
 
-	public void togglePlainAndroidSoftKeyboardInput()
+	public void showScreenKeyboardWithoutTextInputField()
 	{
-		InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-		imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+		_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+		_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
 	}
 
 	public void showScreenKeyboard(final String oldText, boolean sendBackspace)
 	{
 		if(Globals.CompatibilityHacksTextInputEmulatesHwKeyboard)
 		{
-			_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
-			mGLView.setFocusable(true);
-			mGLView.setFocusableInTouchMode(true);
-			mGLView.requestFocus();
+			showScreenKeyboardWithoutTextInputField();
 			return;
 		}
 		if(_screenKeyboard != null)

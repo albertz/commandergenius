@@ -86,16 +86,19 @@ extern DECLSPEC
 
 /* Buttons 0 and 1 may have auto-fire state */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardAutoFireButtonsAmount(int nbuttons);
-extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardAutoFireButtonsAmount();
+extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardAutoFireButtonsAmount(void);
 
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardShown(int shown);
-extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardShown();
+extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardShown(void);
 
-extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardSize();
+extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardSize(void);
 
 /* Show Android on-screen keyboard, and pass entered text back to application as SDL keypress events,
 previousText is UTF-8 encoded, it may be NULL, only 256 first bytes will be used, and this call will not block */
 extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleScreenKeyboardTextInput(const char * previousText);
+
+/* Show only the bare Android on-screen keyboard without any text input field, so it won't cover the screen */
+extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(void);
 
 /* Show Android on-screen keyboard, and pass entered text back to application in a buffer,
 using buffer contents as previous text (UTF-8 encoded), the buffer may be of any size -
@@ -103,10 +106,8 @@ this call will block until user typed all text. */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardTextInput(char * textBuf, int textBufSize);
 
 /* Whether user redefined on-screen keyboard layout via SDL menu, app should not enforce it's own layout in that case */
-extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardRedefinedByUser();
+extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardRedefinedByUser(void);
 
-/* Show only the bare Android on-screen keyboard without any text input field */
-extern DECLSPEC void SDLCALL SDL_ANDROID_CallJavaTogglePlainAndroidSoftKeyboardInput();
 
 #ifdef __cplusplus
 }

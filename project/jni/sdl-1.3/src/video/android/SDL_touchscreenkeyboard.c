@@ -1004,7 +1004,7 @@ int SDL_ANDROID_SetScreenKeyboardAutoFireButtonsAmount(int nbuttons)
 	return 1;
 };
 
-int SDL_ANDROID_GetScreenKeyboardAutoFireButtonsAmount()
+int SDL_ANDROID_GetScreenKeyboardAutoFireButtonsAmount(void)
 {
 	return AutoFireButtonsNum;
 };
@@ -1014,12 +1014,12 @@ int SDL_ANDROID_SetScreenKeyboardShown(int shown)
 	touchscreenKeyboardShown = shown;
 };
 
-int SDL_ANDROID_GetScreenKeyboardShown()
+int SDL_ANDROID_GetScreenKeyboardShown(void)
 {
 	return touchscreenKeyboardShown;
 };
 
-int SDL_ANDROID_GetScreenKeyboardSize()
+int SDL_ANDROID_GetScreenKeyboardSize(void)
 {
 	return buttonsize;
 };
