@@ -1,6 +1,6 @@
 /*
 Simple DirectMedia Layer
-Java source code (C) 2009-2011 Sergii Pylypenko
+Java source code (C) 2009-2012 Sergii Pylypenko
   
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -206,7 +206,6 @@ class Settings
 			// ICS update sends events in a proper way
 			Globals.RemapHwKeycode[112] = SDL_1_2_Keycodes.SDLK_UNKNOWN;
 		}
-		
 
 		try {
 			ObjectInputStream settingsFile = new ObjectInputStream(new FileInputStream( p.getFilesDir().getAbsolutePath() + "/" + SettingsFileName ));
@@ -325,30 +324,25 @@ class Settings
 		} catch ( IOException e ) {};
 		
 		if( Globals.DataDir.length() == 0 )
-			Globals.DataDir = Globals.DownloadToSdcard ?
-								Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
-								p.getFilesDir().getAbsolutePath();
-
-		// This code fails for both of my phones!
-		/*
-		Configuration c = new Configuration();
-		c.setToDefaults();
-		
-		if( c.navigation == Configuration.NAVIGATION_TRACKBALL || 
-			c.navigation == Configuration.NAVIGATION_DPAD ||
-			c.navigation == Configuration.NAVIGATION_WHEEL )
 		{
-			Globals.AppNeedsArrowKeys = false;
+			if( !Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) )
+			{
+				System.out.println("libSDL: SD card or external storage is not mounted (state " + Environment.getExternalStorageState() + "), switching to the internal storage.");
+				Globals.DownloadToSdcard = false;
+			}
+			Globals.DataDir = Globals.DownloadToSdcard ?
+								SdcardAppPath.get().path(p) :
+								p.getFilesDir().getAbsolutePath();
+			if( Globals.DownloadToSdcard )
+			{
+				// Check if data already installed into deprecated location at /sdcard/app-data/<package-name>
+				String[] fileList = new File(SdcardAppPath.deprecatedPath(p)).list();
+				if( fileList != null )
+					for( String s: fileList )
+						if( s.toUpperCase().startsWith(DataDownloader.DOWNLOAD_FLAG_FILENAME.toUpperCase()) )
+							Globals.DataDir = SdcardAppPath.deprecatedPath(p);
+			}
 		}
-		
-		System.out.println( "libSDL: Phone keypad type: " + 
-				(
-				c.navigation == Configuration.NAVIGATION_TRACKBALL ? "Trackball" :
-				c.navigation == Configuration.NAVIGATION_DPAD ? "Dpad" :
-				c.navigation == Configuration.NAVIGATION_WHEEL ? "Wheel" :
-				c.navigation == Configuration.NAVIGATION_NONAV ? "None" :
-				"Unknown" ) );
-		*/
 
 		System.out.println("libSDL: Settings.Load(): loading settings failed, running config dialog");
 		p.setUpStatusLabel();
@@ -2538,6 +2532,45 @@ class Settings
 			if( Globals.TouchscreenKeyboardTheme == 2 )
 			{
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.sun));
+			}
+		}
+	}
+
+	abstract static class SdcardAppPath
+	{
+		public static SdcardAppPath get()
+		{
+			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.FROYO)
+				return Froyo.Holder.sInstance;
+			else
+				return Dummy.Holder.sInstance;
+		}
+		public abstract String path(final Context p);
+		public static String deprecatedPath(final Context p)
+		{
+			return Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + p.getPackageName();
+		}
+
+		private static class Froyo extends SdcardAppPath
+		{
+			private static class Holder
+			{
+				private static final Froyo sInstance = new Froyo();
+			}
+			public String path(final Context p)
+			{
+				return p.getExternalFilesDir(null).getAbsolutePath();
+			}
+		}
+		private static class Dummy extends SdcardAppPath
+		{
+			private static class Holder
+			{
+				private static final Dummy sInstance = new Dummy();
+			}
+			public String path(final Context p)
+			{
+				return Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + p.getPackageName() + "/files";
 			}
 		}
 	}
