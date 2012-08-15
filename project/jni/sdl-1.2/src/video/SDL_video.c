@@ -504,6 +504,7 @@ static int SDL_GetVideoMode (int *w, int *h, int *BitsPerPixel, Uint32 flags)
 /* This should probably go somewhere else -- like SDL_surface.c */
 static void SDL_ClearSurface(SDL_Surface *surface)
 {
+#ifndef __ANDROID__
 	Uint32 black;
 
 	black = SDL_MapRGB(surface->format, 0, 0, 0);
@@ -515,6 +516,7 @@ static void SDL_ClearSurface(SDL_Surface *surface)
 	if (surface->flags&SDL_FULLSCREEN) {
 		SDL_Flip(surface);
 	}
+#endif
 }
 
 /*
