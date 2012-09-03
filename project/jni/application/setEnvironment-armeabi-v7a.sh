@@ -53,7 +53,6 @@ MISSING_LIB=
 
 
 CFLAGS="\
--fexceptions -frtti \
 -MMD -MP -MF -fpic -ffunction-sections -funwind-tables -fstack-protector \
 -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
 -Wno-psabi -march=armv7-a -mfloat-abi=softfp -mfpu=vfp -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
@@ -74,7 +73,7 @@ if [ -n "$NO_SHARED_LIBS" ]; then
 fi
 
 LDFLAGS="\
--fexceptions -frtti $SHARED \
+$SHARED \
 --sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
 `echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/armeabi-v7a/lib\1.so@g\"` \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
@@ -95,7 +94,7 @@ $MISSING_LIB $LDFLAGS"
 
 env PATH=$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \
-CXXFLAGS="$CFLAGS" \
+CXXFLAGS="$CXXFLAGS $CFLAGS" \
 LDFLAGS="$LDFLAGS" \
 CC="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-gcc" \
 CXX="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-g++" \

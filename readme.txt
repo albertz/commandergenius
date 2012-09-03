@@ -93,6 +93,11 @@ Also you have to create an icon image file at project/res/drawable/icon.png, and
 project/jni/application/src/AndroidData/logo.png to be used as a splash screen image.
 Then you may launch build.sh.
 
+C++ RTTI and exceptions give very slight memory overhead, if you need them -
+add "-frtti -fexceptions" to the AppCflags inside AndroidAppSettings.cfg
+If you use autoconf/automake/configure scripts with setEnvironment.sh, you may write
+env CXXFLAGS='-frtti -fexceptions' ../setEnvironment.sh ./configure
+
 Application data may be bundled with app itself, or downloaded from the internet on the first run -
 if you want to put app data inside .apk file - create a .zip archive and put it into the directory
 project/jni/application/src/AndroidData (create it if it doesn't exist), then run ChangeAppSettings.sh
