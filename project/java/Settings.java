@@ -60,7 +60,6 @@ import android.content.Intent;
 import android.app.PendingIntent;
 import android.app.AlarmManager;
 
-
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
 class Settings
 {

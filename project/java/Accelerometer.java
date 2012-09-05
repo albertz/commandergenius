@@ -37,7 +37,8 @@ import android.hardware.SensorEvent;
 import android.widget.TextView;
 
 
-class AccelerometerReader implements SensorEventListener {
+class AccelerometerReader implements SensorEventListener
+{
 
 	private SensorManager _manager = null;
 

@@ -22,12 +22,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- ==ADMOB== --> <activity android:name="com.google.ads.AdActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
     </application>
 
     <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="15"/>
     <uses-permission android:name="android.permission.INTERNET"></uses-permission>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
+    <!-- ==ADMOB== --> <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
     <!-- <uses-permission android:name="android.permission.VIBRATE"></uses-permission> --> <!-- Vibrator not supported yet by SDL -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <!-- ==SCREEN-SIZE-SMALL== --> <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" />
+    <!-- ==SCREEN-SIZE-NORMAL== --> <supports-screens android:smallScreens="false" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" />
+    <!-- ==SCREEN-SIZE-LARGE== --> <supports-screens android:smallScreens="false" android:normalScreens="false" android:largeScreens="true" android:xlargeScreens="true" />
 
 </manifest>

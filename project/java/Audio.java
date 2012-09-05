@@ -37,7 +37,8 @@ import android.util.Log;
 import java.lang.Thread;
 
 
-class AudioThread {
+class AudioThread
+{
 
 	private MainActivity mParent;
 	private AudioTrack mAudio;

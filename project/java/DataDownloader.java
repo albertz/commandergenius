@@ -59,7 +59,8 @@ import java.lang.String;
 import android.text.SpannedString;
 
 
-class CountingInputStream extends BufferedInputStream {
+class CountingInputStream extends BufferedInputStream
+{
 
 	private long bytesReadMark = 0;
 	private long bytesRead = 0;

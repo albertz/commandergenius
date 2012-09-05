@@ -37,6 +37,7 @@
 #include "SDL_mouse.h"
 #include "SDL_mutex.h"
 #include "SDL_thread.h"
+#include "SDL_android.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
@@ -62,6 +63,8 @@ static jobject JavaRenderer = NULL;
 static jmethodID JavaSwapBuffers = NULL;
 static jmethodID JavaShowScreenKeyboard = NULL;
 static jmethodID JavaToggleScreenKeyboardWithoutTextInput = NULL;
+static jmethodID JavaGetAdvertisementParams = NULL;
+static jmethodID JavaSetAdvertisementParams = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
@@ -291,6 +294,11 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaSwapBuffers = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "swapBuffers", "()I");
 	JavaShowScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboard", "(Ljava/lang/String;I)V");
 	JavaToggleScreenKeyboardWithoutTextInput = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboardWithoutTextInputField", "()V");
+	// TODO: implement it
+	/*
+	JavaGetAdvertisementParams = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "GetAdvertisementParams", "()V");
+	JavaSetAdvertisementParams = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "SetAdvertisementParams", "(III)V");
+	*/
 	
 	ANDROID_InitOSKeymap();
 }
