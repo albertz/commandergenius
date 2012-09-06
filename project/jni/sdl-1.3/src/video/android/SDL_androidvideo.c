@@ -64,7 +64,8 @@ static jmethodID JavaSwapBuffers = NULL;
 static jmethodID JavaShowScreenKeyboard = NULL;
 static jmethodID JavaToggleScreenKeyboardWithoutTextInput = NULL;
 static jmethodID JavaGetAdvertisementParams = NULL;
-static jmethodID JavaSetAdvertisementParams = NULL;
+static jmethodID JavaSetAdvertisementVisible = NULL;
+static jmethodID JavaSetAdvertisementPosition = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
@@ -295,10 +296,9 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaShowScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboard", "(Ljava/lang/String;I)V");
 	JavaToggleScreenKeyboardWithoutTextInput = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboardWithoutTextInputField", "()V");
 	// TODO: implement it
-	/*
-	JavaGetAdvertisementParams = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "GetAdvertisementParams", "()V");
-	JavaSetAdvertisementParams = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "SetAdvertisementParams", "(III)V");
-	*/
+	JavaGetAdvertisementParams = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "getAdvertisementParams", "([I)V");
+	JavaSetAdvertisementVisible = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setAdvertisementVisible", "(I)V");
+	JavaSetAdvertisementPosition = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setAdvertisementPosition", "(II)V");
 	
 	ANDROID_InitOSKeymap();
 }
@@ -359,4 +359,36 @@ JAVA_EXPORT_NAME(Settings_nativeSetVideoDepth) (JNIEnv* env, jobject thiz, jint 
 	SDL_ANDROID_BITSPERPIXEL = bpp;
 	SDL_ANDROID_BYTESPERPIXEL = SDL_ANDROID_BITSPERPIXEL / 8;
 	SDL_ANDROID_UseGles2 = UseGles2;
+}
+
+int SDLCALL SDL_ANDROID_GetAdvertisementParams(int * visible, SDL_Rect * position)
+{
+	jint arr[5];
+	jintArray elemArr = (*JavaEnv)->NewIntArray(JavaEnv, 5);
+	if (elemArr == NULL)
+		return 0;
+	(*JavaEnv)->SetIntArrayRegion(JavaEnv, elemArr, 0, 5, arr);
+	(*JavaEnv)->CallVoidMethod(JavaEnv, JavaRenderer, JavaGetAdvertisementParams, elemArr);
+	(*JavaEnv)->GetIntArrayRegion(JavaEnv, elemArr, 0, 5, arr);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, elemArr);
+	if(visible)
+		*visible = arr[0];
+	if(position)
+	{
+		position->x = arr[1];
+		position->y = arr[2];
+		position->w = arr[3];
+		position->h = arr[4];
+	}
+	return 1;
+}
+int SDLCALL SDL_ANDROID_SetAdvertisementVisible(int visible)
+{
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetAdvertisementVisible, (jint)visible );
+	return 1;
+}
+int SDLCALL SDL_ANDROID_SetAdvertisementPosition(int left, int top)
+{
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetAdvertisementPosition, (jint)left, (jint)top );
+	return 1;
 }

@@ -16,6 +16,7 @@
 
 #include "SDL.h"
 #include "SDL_image.h"
+#include "SDL_android.h"
 
 
 /*----------------------------------------------------------
@@ -430,8 +431,17 @@ int main(int argc, char* argv[])
 	int		fps_count = 0;
 	int		fps_start = 0;
 	float		x_speed, y_speed, z_speed;
+	SDL_Rect adSize;
+	int physicalW = 0, physicalH = 0;
+	int showAd = 0;
+
+	SDL_ANDROID_GetAdvertisementParams(NULL, &adSize);
+	__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Advertisement size %dx%d pos %d:%d", (int)adSize.w, (int)adSize.h, (int)adSize.x, (int)adSize.y);
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
+
+	physicalW = SDL_GetVideoInfo()->current_w;
+	physicalH = SDL_GetVideoInfo()->current_h;
 
 	atexit(SDL_Quit);
 
@@ -555,7 +565,21 @@ int main(int argc, char* argv[])
 			fps = (float)fps_count * 1000.0 / (tick - fps_start);
 			fps_count = 0;
 			fps_start = tick;
+			showAd++;
+			if(showAd > 3)
+				showAd = 0;
+			SDL_ANDROID_SetAdvertisementVisible(showAd);
 		}
+
+		int adX = abs(x_offs / 100) % (physicalW - adSize.w);
+		int adY = abs(y_offs / 80) % (physicalH - adSize.h);
+		SDL_ANDROID_SetAdvertisementPosition(adX, adY);
+		SDL_Rect adRect;
+		adRect.x = adX * SCREEN_W / physicalW;
+		adRect.w = adSize.w * SCREEN_W / physicalW;
+		adRect.y = adY * SCREEN_H / physicalH;
+		adRect.h = adSize.h * SCREEN_H / physicalH;
+		SDL_FillRect(screen, &adRect, 0xff0);
 
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
 		++fps_count;

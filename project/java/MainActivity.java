@@ -422,38 +422,54 @@ public class MainActivity extends Activity
 		mGLView.requestFocus();
 	};
 
-	public void setAdvertisementParams(int visible, int left, int top)
+	public void setAdvertisementPosition(int left, int top)
+	{
+		
+		if( _ad.getView() != null )
+		{
+			final FrameLayout.LayoutParams layout = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.LEFT);
+			layout.leftMargin = left;
+			layout.topMargin = top;
+			class Callback implements Runnable
+			{
+				public void run()
+				{
+					_ad.getView().setLayoutParams(layout);
+				}
+			};
+			runOnUiThread(new Callback());
+		}
+	}
+	public void setAdvertisementVisible(final int visible)
 	{
 		if( _ad.getView() != null )
 		{
-			if( visible == 0 )
-				_ad.getView().setVisibility(View.GONE);
-			else
+			class Callback implements Runnable
 			{
-				FrameLayout.LayoutParams layout = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.LEFT);
-				layout.leftMargin = left;
-				layout.topMargin = top;
-				_ad.getView().setLayoutParams(layout);
-				_ad.getView().setVisibility(View.VISIBLE);
+				public void run()
+				{
+					if( visible == 0 )
+						_ad.getView().setVisibility(View.GONE);
+					else
+						_ad.getView().setVisibility(View.VISIBLE);
+				}
 			}
+			runOnUiThread(new Callback());
 		}
 	}
 
-	public void getAdvertisementParams(int size[])
+	public void getAdvertisementParams(int params[])
 	{
-		size[0] = 0;
-		size[1] = 0;
-		size[2] = 0;
-		size[3] = 0;
-		size[4] = 0;
+		for( int i = 0; i < 5; i++ )
+			params[i] = 0;
 		if( _ad.getView() != null )
 		{
-			size[0] = _ad.getView().getMeasuredWidth();
-			size[1] = _ad.getView().getMeasuredHeight();
-			size[2] = (_ad.getView().getVisibility() == View.VISIBLE) ? 1 : 0;
+			params[0] = (_ad.getView().getVisibility() == View.VISIBLE) ? 1 : 0;
 			FrameLayout.LayoutParams layout = (FrameLayout.LayoutParams) _ad.getView().getLayoutParams();
-			size[3] = layout.leftMargin;
-			size[4] = layout.topMargin;
+			params[1] = layout.leftMargin;
+			params[2] = layout.topMargin;
+			params[3] = _ad.getView().getMeasuredWidth();
+			params[4] = _ad.getView().getMeasuredHeight();
 		}
 	}
 

@@ -45,8 +45,12 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_SetApplicationPutToBackgroundCallback(
 extern DECLSPEC int SDLCALL SDL_ANDROID_PauseAudioPlayback(void);
 extern DECLSPEC int SDLCALL SDL_ANDROID_ResumeAudioPlayback(void);
 
+/* Get the advertisement size, position and visibility */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetAdvertisementParams(int * visible, SDL_Rect * position);
-extern DECLSPEC int SDLCALL SDL_ANDROID_SetAdvertisementParams(int visible, int left, int top);
+/* Control the advertisement placement */
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetAdvertisementVisible(int visible);
+/* Control the advertisement visibility */
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetAdvertisementPosition(int left, int top);
 
 #ifdef __cplusplus
 }

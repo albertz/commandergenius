@@ -561,7 +561,20 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public void exitApp()
 	{
 		 nativeDone();
-	};
+	}
+
+	public void getAdvertisementParams(int params[])
+	{
+		context.getAdvertisementParams(params);
+	}
+	public void setAdvertisementVisible(int visible)
+	{
+		context.setAdvertisementVisible(visible);
+	}
+	public void setAdvertisementPosition(int left, int top)
+	{
+		context.setAdvertisementPosition(left, top);
+	}
 
 	private int PowerOf2(int i)
 	{
