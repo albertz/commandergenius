@@ -219,6 +219,10 @@ and it will remove them from internal storage right after starting up,
 so you still need that space free, but only temporarily. 
 However your application will start up slower.
 
+SDL supports AdMob advertisements, you need to set your publisher ID inside AndroidAppSettings.cfg,
+see project test-advertisements for details.
+Also you can hide or reposition your ad from C code, check out file SDL_android.h for details.
+
 
 How to compile your own application using automake/configure scripts
 ====================================================================
