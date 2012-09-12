@@ -422,14 +422,37 @@ public class MainActivity extends Activity
 		mGLView.requestFocus();
 	};
 
-	public void setAdvertisementPosition(int left, int top)
+	final static int ADVERTISEMENT_POSITION_RIGHT = -1;
+	final static int ADVERTISEMENT_POSITION_BOTTOM = -1;
+	final static int ADVERTISEMENT_POSITION_CENTER = -2;
+
+	public void setAdvertisementPosition(int x, int y)
 	{
 		
 		if( _ad.getView() != null )
 		{
-			final FrameLayout.LayoutParams layout = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.LEFT);
-			layout.leftMargin = left;
-			layout.topMargin = top;
+			final FrameLayout.LayoutParams layout = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			layout.gravity = 0;
+			layout.leftMargin = 0;
+			layout.topMargin = 0;
+			if( x == ADVERTISEMENT_POSITION_RIGHT )
+				layout.gravity |= Gravity.RIGHT;
+			else if ( x == ADVERTISEMENT_POSITION_CENTER )
+				layout.gravity |= Gravity.CENTER_HORIZONTAL;
+			else
+			{
+				layout.gravity |= Gravity.LEFT;
+				layout.leftMargin = x;
+			}
+			if( y == ADVERTISEMENT_POSITION_BOTTOM )
+				layout.gravity |= Gravity.BOTTOM;
+			else if ( x == ADVERTISEMENT_POSITION_CENTER )
+				layout.gravity |= Gravity.CENTER_VERTICAL;
+			else
+			{
+				layout.gravity |= Gravity.TOP;
+				layout.topMargin = y;
+			}
 			class Callback implements Runnable
 			{
 				public void run()
@@ -470,6 +493,20 @@ public class MainActivity extends Activity
 			params[2] = layout.topMargin;
 			params[3] = _ad.getView().getMeasuredWidth();
 			params[4] = _ad.getView().getMeasuredHeight();
+		}
+	}
+	public void requestNewAdvertisement()
+	{
+		if( _ad.getView() != null )
+		{
+			class Callback implements Runnable
+			{
+				public void run()
+				{
+					_ad.requestNewAd();
+				}
+			}
+			runOnUiThread(new Callback());
 		}
 	}
 

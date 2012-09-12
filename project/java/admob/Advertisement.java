@@ -64,4 +64,12 @@ class Advertisement
 	{
 		return ad;
 	}
+
+	public void requestNewAd()
+	{
+		AdRequest adRequest = new AdRequest();
+		adRequest.addTestDevice(AdRequest.TEST_EMULATOR); // Copy GoogleAdMobAdsSdk.jar to the directory project/libs
+		adRequest.addTestDevice(Globals.AdmobTestDeviceId);
+		ad.loadAd(adRequest);
+	}
 }

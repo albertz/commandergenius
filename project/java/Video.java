@@ -575,6 +575,10 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	{
 		context.setAdvertisementPosition(left, top);
 	}
+	public void requestNewAdvertisement()
+	{
+		context.requestNewAdvertisement();
+	}
 
 	private int PowerOf2(int i)
 	{

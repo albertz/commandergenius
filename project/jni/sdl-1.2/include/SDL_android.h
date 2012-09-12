@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-/* 
+/*
 Sets callbacks to be called when OS decides to put application to background, and restored to foreground.
 */
 typedef void ( * SDL_ANDROID_ApplicationPutToBackgroundCallback_t ) (void);
@@ -45,12 +45,36 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_SetApplicationPutToBackgroundCallback(
 extern DECLSPEC int SDLCALL SDL_ANDROID_PauseAudioPlayback(void);
 extern DECLSPEC int SDLCALL SDL_ANDROID_ResumeAudioPlayback(void);
 
-/* Get the advertisement size, position and visibility */
+/*
+Get the advertisement size, position and visibility.
+If the advertisement is not yet loaded, this function will return zero width and height,
+so you'll need to account for that in your code, because you can never know
+whether the user has no access to network, or if ad server is accessbile.
+This function will return the coordinates in the physical screen pixels,
+not in the "stretched" coordinates, which you get when you call SDL_SetVideoMode(640, 480, 0, 0);
+The physical screen size is returned by SDL_ListModes(NULL, 0)[0].
+*/
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetAdvertisementParams(int * visible, SDL_Rect * position);
-/* Control the advertisement placement */
-extern DECLSPEC int SDLCALL SDL_ANDROID_SetAdvertisementVisible(int visible);
 /* Control the advertisement visibility */
-extern DECLSPEC int SDLCALL SDL_ANDROID_SetAdvertisementPosition(int left, int top);
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetAdvertisementVisible(int visible);
+/*
+Control the advertisement  placement, you may use constants
+ADVERTISEMENT_POSITION_RIGHT, ADVERTISEMENT_POSITION_BOTTOM, ADVERTISEMENT_POSITION_CENTER
+to position the advertisement on the screen without needing to know the advertisment size
+(which may be reported as zero, if the ad is still not loaded),
+and to convert between "stretched" and physical coorinates.
+*/
+enum {
+	ADVERTISEMENT_POSITION_LEFT = 0,
+	ADVERTISEMENT_POSITION_TOP = 0,
+	ADVERTISEMENT_POSITION_RIGHT = -1,
+	ADVERTISEMENT_POSITION_BOTTOM = -1,
+	ADVERTISEMENT_POSITION_CENTER = -2
+};
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetAdvertisementPosition(int x, int y);
+
+/* Request a new advertisement to be loaded */
+extern DECLSPEC int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void);
 
 #ifdef __cplusplus
 }

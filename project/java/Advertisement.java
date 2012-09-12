@@ -43,4 +43,8 @@ class Advertisement
 	{
 		return null;
 	}
+
+	public void requestNewAd()
+	{
+	}
 }

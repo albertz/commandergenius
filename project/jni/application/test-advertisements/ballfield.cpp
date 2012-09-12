@@ -433,7 +433,7 @@ int main(int argc, char* argv[])
 	float		x_speed, y_speed, z_speed;
 	SDL_Rect adSize;
 	int physicalW = 0, physicalH = 0;
-	int showAd = 0;
+	int showAd = 0, newAd = 0;
 
 	SDL_ANDROID_GetAdvertisementParams(NULL, &adSize);
 	__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Advertisement size %dx%d pos %d:%d", (int)adSize.w, (int)adSize.h, (int)adSize.x, (int)adSize.y);
@@ -569,8 +569,16 @@ int main(int argc, char* argv[])
 			if(showAd > 3)
 				showAd = 0;
 			SDL_ANDROID_SetAdvertisementVisible(showAd);
+			if(showAd == 1)
+			{
+				newAd++;
+				if(newAd % 5)
+					SDL_ANDROID_RequestNewAdvertisement();
+			}
 		}
 
+		if(adSize.w == 0 || adSize.h == 0)
+			SDL_ANDROID_GetAdvertisementParams(NULL, &adSize);
 		int adX = abs(x_offs / 100) % (physicalW - adSize.w);
 		int adY = abs(y_offs / 80) % (physicalH - adSize.h);
 		SDL_ANDROID_SetAdvertisementPosition(adX, adY);

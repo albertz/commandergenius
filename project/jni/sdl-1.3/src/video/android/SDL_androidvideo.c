@@ -66,6 +66,7 @@ static jmethodID JavaToggleScreenKeyboardWithoutTextInput = NULL;
 static jmethodID JavaGetAdvertisementParams = NULL;
 static jmethodID JavaSetAdvertisementVisible = NULL;
 static jmethodID JavaSetAdvertisementPosition = NULL;
+static jmethodID JavaRequestNewAdvertisement = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
@@ -299,6 +300,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaGetAdvertisementParams = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "getAdvertisementParams", "([I)V");
 	JavaSetAdvertisementVisible = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setAdvertisementVisible", "(I)V");
 	JavaSetAdvertisementPosition = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setAdvertisementPosition", "(II)V");
+	JavaRequestNewAdvertisement = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "requestNewAdvertisement", "()V");
 	
 	ANDROID_InitOSKeymap();
 }
@@ -390,5 +392,10 @@ int SDLCALL SDL_ANDROID_SetAdvertisementVisible(int visible)
 int SDLCALL SDL_ANDROID_SetAdvertisementPosition(int left, int top)
 {
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetAdvertisementPosition, (jint)left, (jint)top );
+	return 1;
+}
+int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void)
+{
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestNewAdvertisement );
 	return 1;
 }
