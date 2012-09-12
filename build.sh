@@ -42,8 +42,7 @@ if uname -s | grep -i "windows" > /dev/null ; then
 fi
 
 rm -r -f project/bin/* # New Android SDK introduced some lame-ass optimizations to the build system which we should take care about
-
-cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build V=1 -j$NCPU && \
+cd project && env PATH=$NDKBUILDPATH nice -n19 ndk-build -j$NCPU && \
  { grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
    [ -`which ndk-build | xargs readlink -f | grep '/android-ndk-r[56789]'` != - ] && \
    echo Stripping libapplication.so by hand \

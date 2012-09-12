@@ -330,7 +330,7 @@ class Settings
 				Globals.DownloadToSdcard = false;
 			}
 			Globals.DataDir = Globals.DownloadToSdcard ?
-								SdcardAppPath.get().path(p) :
+								SdcardAppPath.getPath(p) :
 								p.getFilesDir().getAbsolutePath();
 			if( Globals.DownloadToSdcard )
 			{
@@ -2537,7 +2537,7 @@ class Settings
 
 	abstract static class SdcardAppPath
 	{
-		public static SdcardAppPath get()
+		private static SdcardAppPath get()
 		{
 			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.FROYO)
 				return Froyo.Holder.sInstance;
@@ -2548,6 +2548,13 @@ class Settings
 		public static String deprecatedPath(final Context p)
 		{
 			return Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + p.getPackageName();
+		}
+		public static String getPath(final Context p)
+		{
+			try {
+				return get().path(p);
+			} catch(Exception e) { }
+			return Dummy.Holder.sInstance.path(p);
 		}
 
 		private static class Froyo extends SdcardAppPath
