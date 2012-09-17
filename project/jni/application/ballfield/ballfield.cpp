@@ -22,8 +22,8 @@
 	Definitions...
 ----------------------------------------------------------*/
 
-#define	SCREEN_W	320
-#define	SCREEN_H	200
+#define	SCREEN_W	640
+#define	SCREEN_H	480
 
 
 #define	BALLS	300
@@ -430,6 +430,13 @@ int main(int argc, char* argv[])
 	int		fps_count = 0;
 	int		fps_start = 0;
 	float		x_speed, y_speed, z_speed;
+	enum { MAX_POINTERS = 16 };
+	// some random colors
+	int colors[MAX_POINTERS] = { 0xaaaaaa, 0xffffff, 0x888888, 0xcccccc, 0x666666, 0x999999, 0xdddddd, 0xeeeeee, 0xaaaaaa, 0xffffff, 0x888888, 0xcccccc, 0x666666, 0x999999, 0xdddddd, 0xeeeeee };
+	struct TouchPointer_t { int x; int y; int pressure; int pressed; } touchPointers[MAX_POINTERS];
+	int accel[2], screenjoy[2];
+	SDL_Surface	*mouse[4];
+
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
 
@@ -516,15 +523,27 @@ int main(int argc, char* argv[])
 	font_hex = SDL_DisplayFormat(temp_image);
 	SDL_FreeSurface(temp_image);
 
+	for(i = 0; i < 4; i++)
+	{
+		char name[32];
+		sprintf(name, "mouse%d.png", i);
+		temp_image = IMG_Load(name);
+		if(!temp_image)
+		{
+			fprintf(stderr, "Could not load %s!\n", name);
+			exit(-1);
+		}
+		//mouse[i] = SDL_DisplayFormat(temp_image);
+		//SDL_FreeSurface(temp_image);
+		mouse[i] = temp_image; // Keep alpha
+	}
+
 	last_avg_tick = last_tick = SDL_GetTicks();
 	
-	enum { MAX_POINTERS = 16, PTR_PRESSED = 4 };
-	int touchPointers[MAX_POINTERS][5];
-	
 	memset(touchPointers, 0, sizeof(touchPointers));
-	SDL_Joystick * joysticks[MAX_POINTERS+1];
-	for(i=0; i<MAX_POINTERS; i++)
-		joysticks[i] = SDL_JoystickOpen(i);
+	memset(accel, 0, sizeof(accel));
+	memset(screenjoy, 0, sizeof(screenjoy));
+	SDL_Joystick * joystick = SDL_JoystickOpen(0);
 
 	while(1)
 	{
@@ -562,38 +581,48 @@ int main(int argc, char* argv[])
 
 		for(i=0; i<MAX_POINTERS; i++)
 		{
-			if( !touchPointers[i][PTR_PRESSED] )
+			if( !touchPointers[i].pressed )
 				continue;
-			r.x = touchPointers[i][0];
-			r.y = touchPointers[i][1];
-			r.w = 80 + touchPointers[i][2] / 10; // Pressure
-			r.h = 80 + touchPointers[i][3] / 10; // Touch point size
+			r.x = touchPointers[i].x;
+			r.y = touchPointers[i].y;
+			r.w = 50 + touchPointers[i].pressure / 5;
+			r.h = 50 + touchPointers[i].pressure / 5;
 			r.x -= r.w/2;
 			r.y -= r.h/2;
-			SDL_FillRect(screen, &r, 0xaaaaaa);
-			print_num(screen, font, r.x, r.y, i+1);
+			SDL_FillRect(screen, &r, colors[i]);
 		}
+		r.x = SCREEN_W/2 + accel[0] * SCREEN_H / 65536;
+		r.y = SCREEN_H/2 + accel[1] * SCREEN_H / 65536;
+		//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Accel: %d %d screen %d %d", accel[0], accel[1], r.x, r.y);
+		r.w = 10;
+		r.h = 10;
+		r.x -= r.w/2;
+		r.y -= r.h/2;
+		SDL_FillRect(screen, &r, 0xffffff);
+		r.x = SCREEN_W/2 + screenjoy[0] * SCREEN_H / 65536;
+		r.y = SCREEN_H/2 + screenjoy[1] * SCREEN_H / 65536;
+		//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Screen joystick: %d %d screen %d %d", screenjoy[0], screenjoy[1], r.x, r.y);
+		r.w = 6;
+		r.h = 6;
+		r.x -= r.w/2;
+		r.y -= r.h/2;
+		SDL_FillRect(screen, &r, 0x000000);
+
 		int mx, my;
 		int b = SDL_GetMouseState(&mx, &my);
 		//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Mouse buttons: %d", b);
-		Uint32 color = 0xff;
-		if( b )
-		{
-			color = 0;
-			if( b & SDL_BUTTON_LMASK )
-				color |= 0xf000;
-			if( b & SDL_BUTTON_RMASK )
-				color |= 0x1f0;
-			if( b & SDL_BUTTON_MMASK )
-				color |= 0x0f;
-		}
+		int cursorIdx = 0;
+		if( b & SDL_BUTTON_LMASK )
+			cursorIdx |= 1;
+		if( b & SDL_BUTTON_RMASK )
+			cursorIdx |= 2;
 		r.x = mx;
 		r.y = my;
-		r.w = 30;
-		r.h = 30;
+		r.w = mouse[cursorIdx]->w;
+		r.h = mouse[cursorIdx]->h;
 		r.x -= r.w/2;
 		r.y -= r.h/2;
-		SDL_FillRect(screen, &r, color);
+		SDL_BlitSurface(mouse[cursorIdx], NULL, screen, &r);
 
 		SDL_Flip(SDL_GetVideoSurface());
 		SDL_Event evt;
@@ -615,41 +644,29 @@ int main(int argc, char* argv[])
 				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL resize event: %d x %d", evt.resize.w, evt.resize.h);
 			if(evt.type == SDL_ACTIVEEVENT)
 				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "======= SDL active event: gain %d state %d", evt.active.gain, evt.active.state);
-			/*
-			if( evt.type == SDL_ACTIVEEVENT && evt.active.gain == 0 && evt.active.state & SDL_APPACTIVE )
-			{
-				// We've lost GL context, we are not allowed to do any GFX output here, or app will crash!
-				while( 1 )
-				{
-					SDL_PollEvent(&evt);
-					if( evt.type == SDL_ACTIVEEVENT && evt.active.gain && evt.active.state & SDL_APPACTIVE )
-					{
-						__android_log_print(ANDROID_LOG_INFO, "Ballfield", "======= SDL active event: gain %d state %d", evt.active.gain, evt.active.state);
-						SDL_Flip(SDL_GetVideoSurface()); // One SDL_Flip() call is required here to restore OpenGL context
-						// Re-load all textures, matrixes and all other GL states if we're in SDL+OpenGL mode
-						// Re-load all images to SDL_Texture if we're using it
-						// Now we can draw
-						break;
-					}
-					// Process network stuff, maybe play some sounds using SDL_ANDROID_PauseAudioPlayback() / SDL_ANDROID_ResumeAudioPlayback()
-					SDL_Delay(300);
-					__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Waiting");
-				}
-			}
-			*/
+			// Android-specific events - accelerometer, multitoush, and on-screen joystick
 			if( evt.type == SDL_JOYAXISMOTION )
 			{
-				if( evt.jaxis.which == 0 ) // 0 = The accelerometer
-					continue;
-				int joyid = evt.jaxis.which - 1;
-				touchPointers[joyid][evt.jaxis.axis] = evt.jaxis.value; // Axis 0 and 1 are coordinates, 2 and 3 are pressure and touch point radius
+				if(evt.jaxis.axis < 4)
+				{
+					if(evt.jaxis.axis < 2)
+						screenjoy[evt.jaxis.axis] = evt.jaxis.value;
+					else
+						accel[evt.jaxis.axis - 2] = evt.jaxis.value;
+				}
+				else
+				{
+					touchPointers[evt.jaxis.axis - 4].pressure = evt.jaxis.value;
+				}
 			}
 			if( evt.type == SDL_JOYBUTTONDOWN || evt.type == SDL_JOYBUTTONUP )
 			{
-				if( evt.jbutton.which == 0 ) // 0 = The accelerometer
-					continue;
-				int joyid = evt.jbutton.which - 1;
-				touchPointers[joyid][PTR_PRESSED] = (evt.jbutton.state == SDL_PRESSED);
+				touchPointers[evt.jbutton.button].pressed = (evt.jbutton.state == SDL_PRESSED);
+			}
+			if( evt.type == SDL_JOYBALLMOTION )
+			{
+				touchPointers[evt.jball.ball].x = evt.jball.xrel;
+				touchPointers[evt.jball.ball].y = evt.jball.yrel;
 			}
 		}
 

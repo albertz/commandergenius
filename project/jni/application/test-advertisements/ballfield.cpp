@@ -23,8 +23,8 @@
 	Definitions...
 ----------------------------------------------------------*/
 
-#define	SCREEN_W	320
-#define	SCREEN_H	200
+#define	SCREEN_W	480
+#define	SCREEN_H	800
 
 
 #define	BALLS	300

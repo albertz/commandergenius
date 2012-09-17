@@ -48,6 +48,8 @@ Recent Android phone models like HTC Evo have no keyboard at all, on-screen keyb
 is available for such devices - it has joystick (which can be configured as arrow buttons or analog joystick),
 and 6 configurable keys, full text input is toggled with 7-th key. Both user and application may redefine
 button layout and returned keycodes, and also toggle full text input - see SDL_screenkeyboard.h.
+Also you can read multitouch events and accelerometer events - they are passed as joystick events,
+see Ballfield sample app for the input event handling code.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
 to compile it remove project/jni/application/src symlink and make new one pointing to glxgears, and run build.sh

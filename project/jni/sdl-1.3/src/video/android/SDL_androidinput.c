@@ -80,6 +80,7 @@ static int moveMouseWithKbAccelUpdateNeeded = 0;
 static int maxForce = 0;
 static int maxRadius = 0;
 int SDL_ANDROID_isJoystickUsed = 0;
+static int SDL_ANDROID_isAccelerometerUsed = 0;
 static int isMultitouchUsed = 0;
 SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1] = {NULL};
 static int TrackballDampening = 0; // in milliseconds
@@ -442,22 +443,10 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 			SDL_ANDROID_MainThreadPushMultitouchButton(pointerId, action == MOUSE_DOWN ? 1 : 0, x, y, force + radius);
 #endif
 
-		// The old, bad, deprecated, but still used multitouch API
-		/*
-		if( action == MOUSE_DOWN )
-			SDL_ANDROID_MainThreadPushJoystickButton(pointerId+1, 0, SDL_PRESSED);
-		SDL_ANDROID_MainThreadPushJoystickAxis(pointerId+1, 0, x);
-		SDL_ANDROID_MainThreadPushJoystickAxis(pointerId+1, 1, y);
-		SDL_ANDROID_MainThreadPushJoystickAxis(pointerId+1, 2, force);
-		SDL_ANDROID_MainThreadPushJoystickAxis(pointerId+1, 3, radius);
-		if( action == MOUSE_UP )
-			SDL_ANDROID_MainThreadPushJoystickButton(pointerId+1, 0, SDL_RELEASED);
-		*/
-		// The new, good, clean multitouch API, which is using only the first joystick, and sending both X and Y coords simultaneously in one event
 		if( action == MOUSE_DOWN )
 			SDL_ANDROID_MainThreadPushJoystickButton(0, pointerId, SDL_PRESSED);
 		SDL_ANDROID_MainThreadPushJoystickBall(0, pointerId, x, y);
-		SDL_ANDROID_MainThreadPushJoystickAxis(0, pointerId+3, force + radius); // Radius is more sensitive usually
+		SDL_ANDROID_MainThreadPushJoystickAxis(0, pointerId+4, force + radius); // Radius is more sensitive usually
 		if( action == MOUSE_UP )
 			SDL_ANDROID_MainThreadPushJoystickButton(0, pointerId, SDL_RELEASED);
 	}
@@ -1049,6 +1038,12 @@ JAVA_EXPORT_NAME(Settings_nativeSetJoystickUsed) (JNIEnv* env, jobject thiz)
 }
 
 JNIEXPORT void JNICALL 
+JAVA_EXPORT_NAME(Settings_nativeSetAccelerometerUsed) (JNIEnv* env, jobject thiz)
+{
+	SDL_ANDROID_isAccelerometerUsed = 1;
+}
+
+JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(Settings_nativeSetMultitouchUsed) ( JNIEnv*  env, jobject thiz)
 {
 	isMultitouchUsed = 1;
@@ -1087,7 +1082,18 @@ void updateOrientation ( float accX, float accY, float accZ )
 
 	static float midX = 0, midY = 0, midZ = 0;
 	static int pressLeft = 0, pressRight = 0, pressUp = 0, pressDown = 0, pressR = 0, pressL = 0;
+
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): %f %f %f", accX, accY, accZ);
 	
+	if( SDL_ANDROID_isAccelerometerUsed )
+	{
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): sending joystick event");
+		SDL_ANDROID_MainThreadPushJoystickAxis(0, 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accX) * 32767.0f))));
+		SDL_ANDROID_MainThreadPushJoystickAxis(0, 3, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accY) * 32767.0f))));
+		//SDL_ANDROID_MainThreadPushJoystickAxis(0, 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accZ) * 32767.0f))));
+		return;
+	}
+
 	if( accelerometerCenterPos == ACCELEROMETER_CENTER_FIXED_START )
 	{
 		accelerometerCenterPos = ACCELEROMETER_CENTER_FIXED_HORIZ;
@@ -1096,16 +1102,12 @@ void updateOrientation ( float accX, float accY, float accZ )
 		midZ = accZ;
 	}
 	
-	// midX = 0.0f; // Do not remember old value for phone tilt, it feels weird
-
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): %f %f %f", accX, accY, accZ);
-	
-	if( SDL_ANDROID_isJoystickUsed ) // TODO: mutex for that stuff?
+	if( SDL_ANDROID_isJoystickUsed )
 	{
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): sending joystick event");
 		SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accX - midX) * joystickSensitivity))));
 		SDL_ANDROID_MainThreadPushJoystickAxis(0, 1, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accY - midY) * joystickSensitivity))));
-		SDL_ANDROID_MainThreadPushJoystickAxis(0, 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accZ - midZ) * joystickSensitivity))));
+		//SDL_ANDROID_MainThreadPushJoystickAxis(0, 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accZ - midZ) * joystickSensitivity))));
 
 		if( accelerometerCenterPos == ACCELEROMETER_CENTER_FLOATING )
 		{
@@ -1118,10 +1120,8 @@ void updateOrientation ( float accX, float accY, float accZ )
 			if( accZ > midZ + dz*2 )
 				midZ = accZ - dz*2;
 		}
-	}
-
-	if(SDL_ANDROID_isJoystickUsed)
 		return;
+	}
 
 	if( accX < midX - dx )
 	{
@@ -1372,10 +1372,10 @@ void SDL_ANDROID_processAndroidTrackballDampening()
 int SDL_SYS_JoystickInit(void)
 {
 	SDL_numjoysticks = 0;
-	if( SDL_ANDROID_isJoystickUsed )
+	if( SDL_ANDROID_isJoystickUsed || isMultitouchUsed || SDL_ANDROID_isAccelerometerUsed )
 		SDL_numjoysticks = 1;
-	if( isMultitouchUsed )
-		SDL_numjoysticks = MAX_MULTITOUCH_POINTERS+1;
+	//if( isMultitouchUsed )
+	//	SDL_numjoysticks = MAX_MULTITOUCH_POINTERS+1;
 
 	return(SDL_numjoysticks);
 }
@@ -1383,9 +1383,7 @@ int SDL_SYS_JoystickInit(void)
 /* Function to get the device-dependent name of a joystick */
 const char *SDL_SYS_JoystickName(int index)
 {
-	if(index)
-		return("Android multitouch");
-	return("Android accelerometer/orientation sensor");
+	return("Android accelerometer/multitouch sensor");
 }
 
 /* Function to open a joystick for use.
@@ -1400,18 +1398,13 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 	joystick->nballs = 0;
 	if( joystick->index == 0 )
 	{
-		joystick->naxes = 3;
+		joystick->naxes = 4; // Joystick plus accelerometer
 		if(isMultitouchUsed)
 		{
-			joystick->naxes = 3 + MAX_MULTITOUCH_POINTERS; // Accelerometer/orientation, plus touch pressure/size
+			joystick->naxes = 4 + MAX_MULTITOUCH_POINTERS; // Joystick plus accelerometer, plus touch pressure/size
 			joystick->nbuttons = MAX_MULTITOUCH_POINTERS;
 			joystick->nballs = MAX_MULTITOUCH_POINTERS;
 		}
-	}
-	else
-	{
-		joystick->naxes = 4;
-		joystick->nbuttons = 1;
 	}
 	SDL_ANDROID_CurrentJoysticks[joystick->index] = joystick;
 	return(0);
@@ -1438,8 +1431,7 @@ void SDL_SYS_JoystickClose(SDL_Joystick *joystick)
 void SDL_SYS_JoystickQuit(void)
 {
 	int i;
-	for(i=0; i<MAX_MULTITOUCH_POINTERS+1; i++)
-		SDL_ANDROID_CurrentJoysticks[i] = NULL;
+	SDL_ANDROID_CurrentJoysticks[0] = NULL;
 	return;
 }
 

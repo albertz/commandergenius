@@ -845,17 +845,10 @@ class Settings
 		}
 		boolean enabled()
 		{
-			return Globals.UseAccelerometerAsArrowKeys || ! Globals.AppHandlesJoystickSensitivity;
+			return Globals.UseAccelerometerAsArrowKeys;
 		}
 		void run (final MainActivity p)
 		{
-			if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
-			{
-				Globals.AccelerometerSensitivity = 2; // Slow, full range
-				showAccelerometerCenterConfig(p);
-				return;
-			}
-			
 			final CharSequence[] items = { p.getResources().getString(R.string.accel_fast),
 											p.getResources().getString(R.string.accel_medium),
 											p.getResources().getString(R.string.accel_slow) };
@@ -885,13 +878,6 @@ class Settings
 		}
 		static void showAccelerometerCenterConfig(final MainActivity p)
 		{
-			if( ! Globals.UseAccelerometerAsArrowKeys || Globals.AppHandlesJoystickSensitivity )
-			{
-				Globals.AccelerometerCenterPos = 2; // Fixed horizontal center position
-				goBack(p);
-				return;
-			}
-			
 			final CharSequence[] items = { p.getResources().getString(R.string.accel_floating),
 											p.getResources().getString(R.string.accel_fixed_start),
 											p.getResources().getString(R.string.accel_fixed_horiz) };
@@ -2436,6 +2422,8 @@ class Settings
 								Globals.ShowMouseCursor ? 1 : 0 );
 		if( Globals.AppUsesJoystick && (Globals.UseAccelerometerAsArrowKeys || Globals.UseTouchscreenKeyboard) )
 			nativeSetJoystickUsed();
+		if( Globals.AppUsesAccelerometer )
+			nativeSetAccelerometerUsed();
 		if( Globals.AppUsesMultitouch )
 			nativeSetMultitouchUsed();
 		nativeSetAccelerometerSettings(Globals.AccelerometerSensitivity, Globals.AccelerometerCenterPos);
@@ -2592,6 +2580,7 @@ class Settings
 													int relativeMovement, int relativeMovementSpeed,
 													int relativeMovementAccel, int showMouseCursor);
 	private static native void nativeSetJoystickUsed();
+	private static native void nativeSetAccelerometerUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
 	private static native void nativeSetSmoothVideo();

@@ -44,7 +44,6 @@ class AccelerometerReader implements SensorEventListener
 
 	public AccelerometerReader(Activity context)
 	{
-		System.out.println("libSDL: accelerometer start required: " + String.valueOf(Globals.UseAccelerometerAsArrowKeys));
 		_manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 		start();
 	}
@@ -53,14 +52,13 @@ class AccelerometerReader implements SensorEventListener
 	{
 		if( _manager != null )
 		{
-			System.out.println("libSDL: stopping accelerometer");
 			_manager.unregisterListener(this);
 		}
 	}
 
 	public synchronized void start()
 	{
-		if( Globals.UseAccelerometerAsArrowKeys )
+		if( Globals.UseAccelerometerAsArrowKeys || Globals.AppUsesAccelerometer )
 		{
 			if( _manager != null )
 			{
@@ -97,5 +95,3 @@ class AccelerometerReader implements SensorEventListener
 	private native void nativeAccelerometer(float accX, float accY, float accZ);
 	private native void nativeOrientation(float accX, float accY, float accZ);
 }
-
-

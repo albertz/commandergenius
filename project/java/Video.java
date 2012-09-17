@@ -502,9 +502,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	{
 		if( ! super.SwapBuffers() && Globals.NonBlockingSwapBuffers )
 		{
-			synchronized(this)
+			if(mRatelimitTouchEvents)
 			{
-				this.notify();
+				synchronized(this)
+				{
+					this.notify();
+				}
 			}
 			return 0;
 		}
@@ -517,9 +520,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		}
 
 		// Unblock event processing thread only after we've finished rendering
-		synchronized(this)
+		if(mRatelimitTouchEvents)
 		{
-			this.notify();
+			synchronized(this)
+			{
+				this.notify();
+			}
 		}
 		return 1;
 	}
@@ -662,10 +668,11 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	private boolean mGlContextLost = false;
 	public boolean mGlSurfaceCreated = false;
 	public boolean mPaused = false;
-	//public boolean mPutToBackground = false;
 	private boolean mFirstTimeStart = true;
 	public int mWidth = 0;
 	public int mHeight = 0;
+
+	public static final boolean mRatelimitTouchEvents = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO);
 }
 
 class DemoGLSurfaceView extends GLSurfaceView_SDL {
@@ -682,7 +689,10 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public boolean onTouchEvent(final MotionEvent event) 
 	{
 		touchInput.process(event);
-		limitEventRate(event);
+		if( DemoRenderer.mRatelimitTouchEvents )
+		{
+			limitEventRate(event);
+		}
 		return true;
 	};
 
@@ -690,7 +700,10 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public boolean onGenericMotionEvent (final MotionEvent event)
 	{
 		touchInput.processGenericEvent(event);
-		limitEventRate(event);
+		if( DemoRenderer.mRatelimitTouchEvents )
+		{
+			limitEventRate(event);
+		}
 		return true;
 	}
 	

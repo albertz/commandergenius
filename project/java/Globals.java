@@ -52,7 +52,7 @@ class Globals
 	public static boolean AppNeedsArrowKeys = true;
 	public static boolean AppNeedsTextInput = true;
 	public static boolean AppUsesJoystick = false;
-	public static boolean AppHandlesJoystickSensitivity = false;
+	public static boolean AppUsesAccelerometer = false;
 	public static boolean AppUsesMultitouch = false;
 	public static boolean NonBlockingSwapBuffers = false;
 	public static boolean ResetSdlConfigForThisVersion = false;

@@ -277,9 +277,8 @@ fi
 
 if [ -z "$AppUsesJoystick" -o -z "$AUTO" ]; then
 echo
-echo "Application uses joystick (y) or (n), the accelerometer (2-axis) or orientation sensor (3-axis)"
-echo "will be used as joystick 0, also on-screen DPAD will be used as joystick -"
-echo -n "make sure you can navigate all app menus with joystick or mouse ($AppUsesJoystick): "
+echo "Application uses joystick (y) or (n), the on-screen DPAD will be used"
+echo -n " as joystick 0 axes 0-1, you will also need to set AppNeedsArrowKeys=y ($AppUsesJoystick): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesJoystick="$var"
@@ -287,13 +286,12 @@ if [ -n "$var" ] ; then
 fi
 fi
 
-if [ -z "$AppHandlesJoystickSensitivity" -o -z "$AUTO" ]; then
+if [ -z "$AppUsesAccelerometer" -o -z "$AUTO" ]; then
 echo
-echo "Application will handle joystick center and sensitivity itself, "
-echo -n "SDL will send raw accelerometer data and won't show 'Accelerometer sensitivity' dialog (y) or (n) ($AppHandlesJoystickSensitivity): "
+echo -n "Application uses accelerometer (y) or (n), the accelerometer will be used as joystick 0 axes 2-3 ($AppUsesAccelerometer): "
 read var
 if [ -n "$var" ] ; then
-	AppHandlesJoystickSensitivity="$var"
+	AppUsesAccelerometer="$var"
 	CHANGED=1
 fi
 fi
@@ -301,7 +299,7 @@ fi
 if [ -z "$AppUsesMultitouch" -o -z "$AUTO" ]; then
 echo
 echo "Application uses multitouch (y) or (n), multitouch events are passed as SDL_JOYBUTTONDOWN/SDL_JOYBALLMOTION events"
-echo -n " for the first joystick, or additionally as SDL_FINGERDOWN/UP/MOTION events in SDL 1.3 ($AppUsesMultitouch): "
+echo -n " for the joystick 0, or additionally as SDL_FINGERDOWN/UP/MOTION events in SDL 1.3 ($AppUsesMultitouch): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesMultitouch="$var"
@@ -635,7 +633,7 @@ echo ForceRelativeMouseMode=$ForceRelativeMouseMode >> AndroidAppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
 echo AppNeedsTextInput=$AppNeedsTextInput >> AndroidAppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AndroidAppSettings.cfg
-echo AppHandlesJoystickSensitivity=$AppHandlesJoystickSensitivity >> AndroidAppSettings.cfg
+echo AppUsesAccelerometer=$AppUsesAccelerometer >> AndroidAppSettings.cfg
 echo AppUsesMultitouch=$AppUsesMultitouch >> AndroidAppSettings.cfg
 echo NonBlockingSwapBuffers=$NonBlockingSwapBuffers >> AndroidAppSettings.cfg
 echo RedefinedKeys=\"$RedefinedKeys\" >> AndroidAppSettings.cfg
@@ -784,10 +782,10 @@ else
 	AppUsesJoystick=false
 fi
 
-if [ "$AppHandlesJoystickSensitivity" = "y" ] ; then
-	AppHandlesJoystickSensitivity=true
+if [ "$AppUsesAccelerometer" = "y" ] ; then
+	AppUsesAccelerometer=true
 else
-	AppHandlesJoystickSensitivity=false
+	AppUsesAccelerometer=false
 fi
 
 if [ "$AppUsesMultitouch" = "y" ] ; then
@@ -921,7 +919,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" | \
 	sed "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" | \
 	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \
-	sed "s/public static boolean AppHandlesJoystickSensitivity = .*;/public static boolean AppHandlesJoystickSensitivity = $AppHandlesJoystickSensitivity;/" | \
+	sed "s/public static boolean AppUsesAccelerometer = .*;/public static boolean AppUsesAccelerometer = $AppUsesAccelerometer;/" | \
 	sed "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" | \
 	sed "s/public static boolean NonBlockingSwapBuffers = .*;/public static boolean NonBlockingSwapBuffers = $NonBlockingSwapBuffers;/" | \
 	sed "s/public static boolean ResetSdlConfigForThisVersion = .*;/public static boolean ResetSdlConfigForThisVersion = $ResetSdlConfigForThisVersion;/" | \

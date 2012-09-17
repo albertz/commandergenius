@@ -240,7 +240,7 @@ public class MainActivity extends Activity
 			return;
 		System.out.println("libSDL: Initializing video and SDL application");
 		sdlInited = true;
-		if(Globals.UseAccelerometerAsArrowKeys)
+		if(Globals.UseAccelerometerAsArrowKeys || Globals.AppUsesAccelerometer)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		_videoLayout.removeView(_layout);
