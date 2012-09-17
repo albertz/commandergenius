@@ -25,6 +25,7 @@
 
 #include "SDL_video.h"
 #include "SDL_screenkeyboard.h"
+#include <jni.h>
 
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
@@ -75,6 +76,11 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_SetAdvertisementPosition(int x, int y);
 
 /* Request a new advertisement to be loaded */
 extern DECLSPEC int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void);
+
+
+/** Exports for Java environment and Video object instance */
+extern DECLSPEC JNIEnv* SDL_ANDROID_JniEnv();
+extern DECLSPEC jobject SDL_ANDROID_JniVideoObject();
 
 #ifdef __cplusplus
 }

@@ -8,7 +8,7 @@
 #include "SDL_version.h"
 #include "SDL_thread.h"
 #include "SDL_main.h"
-#include "SDL_screenkeyboard.h"
+#include "SDL_android.h"
 
 /* JNI-C wrapper stuff */
 
