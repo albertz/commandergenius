@@ -97,26 +97,29 @@ public class MainActivity extends Activity
 		_layout2 = new LinearLayout(this);
 		_layout2.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-		_btn = new Button(this);
-		_btn.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-		_btn.setText(getResources().getString(R.string.device_change_cfg));
-		class onClickListener implements View.OnClickListener
+		if( Globals.StartupMenuButtonTimeout > 0 )
 		{
-				public MainActivity p;
-				onClickListener( MainActivity _p ) { p = _p; }
-				public void onClick(View v)
-				{
-					setUpStatusLabel();
-					System.out.println("libSDL: User clicked change phone config button");
-					Settings.showConfig(p, false);
-				}
-		};
-		_btn.setOnClickListener(new onClickListener(this));
+			_btn = new Button(this);
+			_btn.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+			_btn.setText(getResources().getString(R.string.device_change_cfg));
+			class onClickListener implements View.OnClickListener
+			{
+					public MainActivity p;
+					onClickListener( MainActivity _p ) { p = _p; }
+					public void onClick(View v)
+					{
+						setUpStatusLabel();
+						System.out.println("libSDL: User clicked change phone config button");
+						Settings.showConfig(p, false);
+					}
+			};
+			_btn.setOnClickListener(new onClickListener(this));
 
-		_layout2.addView(_btn);
+			_layout2.addView(_btn);
+		}
 
 		_layout.addView(_layout2);
-		
+
 		ImageView img = new ImageView(this);
 
 		img.setScaleType(ImageView.ScaleType.FIT_CENTER /* FIT_XY */ );

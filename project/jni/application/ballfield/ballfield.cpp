@@ -602,8 +602,8 @@ int main(int argc, char* argv[])
 		r.x = SCREEN_W/2 + screenjoy[0] * SCREEN_H / 65536;
 		r.y = SCREEN_H/2 + screenjoy[1] * SCREEN_H / 65536;
 		//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Screen joystick: %d %d screen %d %d", screenjoy[0], screenjoy[1], r.x, r.y);
-		r.w = 6;
-		r.h = 6;
+		r.w = 10;
+		r.h = 10;
 		r.x -= r.w/2;
 		r.y -= r.h/2;
 		SDL_FillRect(screen, &r, 0x000000);
