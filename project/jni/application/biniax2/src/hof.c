@@ -28,6 +28,7 @@ For complete product license refer to LICENSE.TXT file
 INCLUDES
 ******************************************************************************/
 #include <string.h>
+#include <SDL_screenkeyboard.h>
 
 #include "inc.h"
 
@@ -95,10 +96,10 @@ BNX_BOOL hofInit()
 	for ( i = 0; i < cHofEntries; ++i )
 	{
 		strcpy( Hof.arcade[ i ].name, "JORDAN                       " );
-		Hof.arcade[ i ].score = (cHofEntries - i) * cHofInitScore;
+		Hof.arcade[ i ].score = (cHofEntries - i - 1) * cHofInitScore;
 
 		strcpy( Hof.tactic[ i ].name, "JORDAN                       " );
-		Hof.tactic[ i ].score = (cHofEntries - i) * cHofInitScore;
+		Hof.tactic[ i ].score = (cHofEntries - i - 1) * cHofInitScore;
 	}
 
 	if ( sysGetFileLen( sysGetFullFileName( csHOFName ) ) != cHOFFileSize )
@@ -221,11 +222,14 @@ BNX_BOOL hofEnter( BNX_GAME *game )
 
 	strcpy( recEntry->name, "                             " );
 	recEntry->score = game->score[ cPlayer1 ];
+	#ifdef __ANDROID__
+	//strcpy( recEntry->name, "Player" );
+	//SDL_ANDROID_GetScreenKeyboardTextInput(recEntry->name, 30);
+	#endif
 	inpInit();
 	do
 	{
 		startTime = sysGetTime();
-
 		gfxGetVirtualChar( game, inpDirect() );
 		cChar = inpGetChar();
 		if ( cChar > 0 )
@@ -286,7 +290,7 @@ void hofView()
 			sysUpdate();
 		}
 	}
-	while ( inpKeyA() == BNX_FALSE );
+	while ( inpKeyA() == BNX_FALSE && inpKeyB() == BNX_FALSE );
 }
 
 BNX_HALL *hofGet()

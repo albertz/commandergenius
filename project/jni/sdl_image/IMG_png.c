@@ -481,7 +481,11 @@ SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src)
 			                 (Uint8)transv->red,
 			                 (Uint8)transv->green,
 			                 (Uint8)transv->blue);
+#if (SDL_VERSION_ATLEAST(1,3,0))
 	        SDL_SetColorKey(surface, SDL_TRUE, ckey);
+#else
+	        SDL_SetColorKey(surface, SDL_SRCCOLORKEY, ckey);
+#endif
 	}
 
 	/* Create the array of pointers to image data */

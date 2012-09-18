@@ -30,6 +30,7 @@ INCLUDES
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <android/log.h>
 
 #include "inc.h"
 #include "txt.h"

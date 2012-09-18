@@ -56,8 +56,8 @@ BNX_BOOL cfgInit()
 
 	_Cfg.sound = BNX_TRUE;
 	_Cfg.music = BNX_TRUE;
-	_Cfg.fullscreen = BNX_FALSE;
-	_Cfg.touch = BNX_FALSE;
+	_Cfg.fullscreen = BNX_TRUE;
+	_Cfg.touch = BNX_TRUE;
 
 	f = fopen( sysGetFullFileName( csConfigName ), "rt" );
 	if ( f == 0 )
