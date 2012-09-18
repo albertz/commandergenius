@@ -142,8 +142,6 @@ public class MainActivity extends Activity
 		{
 			_videoLayout.addView(_ad.getView());
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.RIGHT));
-			_ad.getView().setFocusable(true);
-			_ad.getView().setFocusableInTouchMode(true);
 		}
 		
 		setContentView(_videoLayout);
@@ -265,9 +263,6 @@ public class MainActivity extends Activity
 		{
 			_videoLayout.addView(_ad.getView());
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT));
-			_ad.getView().setFocusable(true);
-			_ad.getView().setFocusableInTouchMode(true);
-			_ad.getView().requestFocus();
 		}
 		// Receive keyboard events
 		DimSystemStatusBar.get().dim(_videoLayout);

@@ -17,6 +17,8 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
+#define fprintf(X, ...) __android_log_print(ANDROID_LOG_INFO, "Ballfield", __VA_ARGS__)
+#define printf(...) __android_log_print(ANDROID_LOG_INFO, "Ballfield", __VA_ARGS__)
 
 /*----------------------------------------------------------
 	Definitions...

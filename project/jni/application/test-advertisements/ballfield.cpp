@@ -18,13 +18,15 @@
 #include "SDL_image.h"
 #include "SDL_android.h"
 
+#define fprintf(X, ...) __android_log_print(ANDROID_LOG_INFO, "Ballfield", __VA_ARGS__)
+#define printf(...) __android_log_print(ANDROID_LOG_INFO, "Ballfield", __VA_ARGS__)
 
 /*----------------------------------------------------------
 	Definitions...
 ----------------------------------------------------------*/
 
-#define	SCREEN_W	480
-#define	SCREEN_H	800
+#define	SCREEN_W	800
+#define	SCREEN_H	480
 
 
 #define	BALLS	300
@@ -638,51 +640,17 @@ int main(int argc, char* argv[])
 					return 0;
 			}
 			if(evt.type == SDL_MOUSEBUTTONUP || evt.type == SDL_MOUSEBUTTONDOWN)
-			{
 				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL mouse button event: evt %s state %s button %d coords %d:%d", evt.type == SDL_MOUSEBUTTONUP ? "UP  " : "DOWN" , evt.button.state == SDL_PRESSED ? "PRESSED " : "RELEASED", (int)evt.button.button, (int)evt.button.x, (int)evt.button.y);
-				if(evt.key.keysym.sym == SDLK_ESCAPE)
-					return 0;
-			}
-			if(evt.type == SDL_VIDEORESIZE)
-				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL resize event: %d x %d", evt.resize.w, evt.resize.h);
-			if(evt.type == SDL_ACTIVEEVENT)
-				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "======= SDL active event: gain %d state %d", evt.active.gain, evt.active.state);
-			/*
-			if( evt.type == SDL_ACTIVEEVENT && evt.active.gain == 0 && evt.active.state & SDL_APPACTIVE )
-			{
-				// We've lost GL context, we are not allowed to do any GFX output here, or app will crash!
-				while( 1 )
-				{
-					SDL_PollEvent(&evt);
-					if( evt.type == SDL_ACTIVEEVENT && evt.active.gain && evt.active.state & SDL_APPACTIVE )
-					{
-						__android_log_print(ANDROID_LOG_INFO, "Ballfield", "======= SDL active event: gain %d state %d", evt.active.gain, evt.active.state);
-						SDL_Flip(SDL_GetVideoSurface()); // One SDL_Flip() call is required here to restore OpenGL context
-						// Re-load all textures, matrixes and all other GL states if we're in SDL+OpenGL mode
-						// Re-load all images to SDL_Texture if we're using it
-						// Now we can draw
-						break;
-					}
-					// Process network stuff, maybe play some sounds using SDL_ANDROID_PauseAudioPlayback() / SDL_ANDROID_ResumeAudioPlayback()
-					SDL_Delay(300);
-					__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Waiting");
-				}
-			}
-			*/
-			if( evt.type == SDL_JOYAXISMOTION )
-			{
-				if( evt.jaxis.which == 0 ) // 0 = The accelerometer
-					continue;
-				int joyid = evt.jaxis.which - 1;
-				touchPointers[joyid][evt.jaxis.axis] = evt.jaxis.value; // Axis 0 and 1 are coordinates, 2 and 3 are pressure and touch point radius
-			}
 			if( evt.type == SDL_JOYBUTTONDOWN || evt.type == SDL_JOYBUTTONUP )
+				touchPointers[evt.jbutton.button][PTR_PRESSED] = (evt.jbutton.state == SDL_PRESSED);
+			if( evt.type == SDL_JOYBALLMOTION )
 			{
-				if( evt.jbutton.which == 0 ) // 0 = The accelerometer
-					continue;
-				int joyid = evt.jbutton.which - 1;
-				touchPointers[joyid][PTR_PRESSED] = (evt.jbutton.state == SDL_PRESSED);
+				touchPointers[evt.jball.ball][0] = evt.jball.xrel;
+				touchPointers[evt.jball.ball][1] = evt.jball.yrel;
 			}
+			if( evt.type == SDL_JOYAXISMOTION )
+				if(evt.jaxis.axis >= 4)
+					touchPointers[evt.jaxis.axis - 4][2] = evt.jaxis.value;
 		}
 
 		/* Animate */
