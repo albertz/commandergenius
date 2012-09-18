@@ -292,8 +292,22 @@ class DataDownloader extends Thread
 			Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.connecting_to, url) );
 			if( url.indexOf("http://") == -1 && url.indexOf("https://") == -1 ) // File inside assets
 			{
-				System.out.println("Fetching file from assets: " + url);
+				InputStream stream1 = null;
+				try {
+					stream1 = Parent.getAssets().open(url);
+					stream1.close();
+				} catch( Exception e ) {
+					try {
+						stream1 = Parent.getAssets().open(url + "00");
+						stream1.close();
+					} catch( Exception ee ) {
+						System.out.println("Failed to open file in assets: " + url);
+						downloadUrlIndex++;
+						continue;
+					}
+				}
 				FileInAssets = true;
+				System.out.println("Fetching file from assets: " + url);
 				break;
 			}
 			else
