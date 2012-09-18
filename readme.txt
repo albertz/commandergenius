@@ -91,7 +91,7 @@ and the Java code is a part of SDL lib, the application generally should not car
 You may take AndroidAppSettings.cfg file from some other application to get sane defaults,
 you may launch ChangeAppSettings.sh with -a or -v parameter to skip questions altogether or to ask only version code.
 The C++ files shall have .cpp extension to be compiled, rename them if necessary.
-Also you have to create an icon image file at project/res/drawable/icon.png, and you may create a file
+Also you have to create an icon image file at project/jni/application/src/icon.png, and you may create a file
 project/jni/application/src/AndroidData/logo.png to be used as a splash screen image.
 Then you may launch build.sh.
 
