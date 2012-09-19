@@ -103,7 +103,7 @@
 <string name="rightclick_key">Фізична кнопка</string>
 <string name="pointandclick_showcreenunderfinger2">Наекранна лупа</string>
 <string name="video">Налаштування відео</string>
-<string name="video_smooth">Згладити відео</string>
+<string name="video_smooth">Лінійне сглажування відео</string>
 <string name="accel_veryslow">Дуже повільно</string>
 <string name="leftclick_timeout">Натискання з затримкою</string>
 <string name="leftclick_tap">Швидке натискання</string>

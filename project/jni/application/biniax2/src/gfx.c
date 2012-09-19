@@ -30,7 +30,6 @@ INCLUDES
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <android/log.h>
 
 #include "inc.h"
 #include "txt.h"
@@ -54,6 +53,9 @@ void gfxInitParticles();
 void gfxNewParticle( BNX_INT16 x, BNX_INT16 y );
 void gfxUpdateParticles();
 void gfxRenderParticles();
+
+void gfxUpdateFallingBlocks();
+void gfxRenderFallingBlocks();
 
 void gfxRoadmap( BNX_INT32 prev, BNX_INT32 score );
 
@@ -93,6 +95,7 @@ BNX_BOOL gfxInit()
 	}
 
 	gfxInitParticles();
+	gfxInitFallingBlocks();
 
 	return BNX_TRUE;
 }
@@ -310,6 +313,9 @@ void gfxRenderGame( BNX_GAME *game )
 		/* PARTICLES */
 		gfxRenderParticles();
 		gfxUpdateParticles();
+
+		gfxRenderFallingBlocks();
+		gfxUpdateFallingBlocks();
 
 		/* JUMPY TEXT */
 		gfxUpdateJumpyText();
@@ -747,7 +753,9 @@ BNX_BOOL gfxLoadImage( char *filename, SDL_Surface **img )
 	temp = IMG_Load( filename );
 	if ( temp != 0 )
 	{
-		*img = SDL_DisplayFormat( temp );
+		*img = ( temp->format->Amask == 0 ) ?
+				SDL_DisplayFormat( temp ) :
+				SDL_DisplayFormatAlpha( temp );
 		SDL_FreeSurface( temp );
 		return BNX_TRUE;
 	}
@@ -1085,6 +1093,71 @@ void gfxRenderParticles()
 
 				SDL_BlitSurface( _Gfx.part[ index ], NULL, _Gfx.screen, &pos );
 			}
+		}
+	}
+}
+
+void gfxInitFallingBlocks()
+{
+	BNX_INT16 j;
+
+	for ( j = 0; j < cGfxMaxParticles; ++j )
+	{
+		_Gfx.falling_blocks[ j ].id = -1;
+	}
+}
+
+void gfxNewFallingBlock( BNX_INT16 x, BNX_INT16 y, BNX_INT16 id )
+{
+	BNX_INT16 j;
+
+	for ( j = 0; j < cGfxMaxParticles; ++j )
+	{
+		if ( _Gfx.falling_blocks[ j ].id < 0 )
+		{
+			break;
+		}
+	}
+	j %= cGfxMaxParticles;
+	_Gfx.falling_blocks[ j ].id	= id;
+	_Gfx.falling_blocks[ j ].x	= cGfxZeroX + x * cGfxPairPlusX;
+	_Gfx.falling_blocks[ j ].y	= cGfxZeroY + y * cGfxPairPlusY + cGfxParticleFall;
+	_Gfx.falling_blocks[ j ].dx	= cGfxParticleSpeed - ( sysRand( cGfxParticleSpeed<<1 ) + cGfxParticleMinSp );
+	_Gfx.falling_blocks[ j ].dy	= cGfxParticleFall;
+}
+
+void gfxUpdateFallingBlocks()
+{
+	BNX_INT16 j;
+
+	for ( j = 0; j < cGfxMaxParticles; ++j )
+	{
+		if ( _Gfx.falling_blocks[ j ].id >= 0 )
+		{
+			_Gfx.falling_blocks[ j ].x	+= _Gfx.falling_blocks[ j ].dx;
+			_Gfx.falling_blocks[ j ].y	+= _Gfx.falling_blocks[ j ].dy;
+			_Gfx.falling_blocks[ j ].dy	+= cGfxParticleFall;
+			if( _Gfx.falling_blocks[ j ].y >= cGfxScreenY )
+				_Gfx.falling_blocks[ j ].id = -1;
+		}
+	}
+}
+
+void gfxRenderFallingBlocks()
+{
+	BNX_INT16	j;
+	SDL_Rect	pos;
+
+	for ( j = 0; j < cGfxMaxParticles; ++j )
+	{
+		if ( _Gfx.falling_blocks[ j ].id >= 0 )
+		{
+			pos.x = _Gfx.falling_blocks[ j ].x;
+			pos.y = _Gfx.falling_blocks[ j ].y;
+
+			SDL_BlitSurface( _Gfx.elements[ _Gfx.falling_blocks[ j ].id ], NULL, _Gfx.screen, &pos );
+			pos.x += cGfxNextPlusX;
+			SDL_BlitSurface( _Gfx.elements[ _Gfx.falling_blocks[ j ].id ], NULL, _Gfx.screen, &pos );
 		}
 	}
 }

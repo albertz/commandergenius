@@ -136,7 +136,9 @@ enum BNX_Options
 	cOptionContinue = 0,
 	cOptionNewRealtime,
 	cOptionNewTurn,
+#ifndef __ANDROID__
 	cOptionNewMultiplayer,
+#endif
 	cOptionHall,
 	cOptionHelp,
 	cOptionQuit,

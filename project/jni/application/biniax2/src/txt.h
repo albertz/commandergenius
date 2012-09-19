@@ -38,7 +38,9 @@ char *TXT_MenuMain[ cMaxOptions ] = {
 		"CONTINUE LAST GAME",
 		"NEW ARCADE GAME",
 		"NEW TACTIC GAME",
+#ifndef __ANDROID__
 		"MULTIPLAYER",
+#endif
 		"HALL OF FAME",
 		"HELP",
 		"EXIT"

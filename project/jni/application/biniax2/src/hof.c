@@ -28,7 +28,6 @@ For complete product license refer to LICENSE.TXT file
 INCLUDES
 ******************************************************************************/
 #include <string.h>
-#include <SDL_screenkeyboard.h>
 
 #include "inc.h"
 
@@ -222,10 +221,6 @@ BNX_BOOL hofEnter( BNX_GAME *game )
 
 	strcpy( recEntry->name, "                             " );
 	recEntry->score = game->score[ cPlayer1 ];
-	#ifdef __ANDROID__
-	//strcpy( recEntry->name, "Player" );
-	//SDL_ANDROID_GetScreenKeyboardTextInput(recEntry->name, 30);
-	#endif
 	inpInit();
 	do
 	{

@@ -178,7 +178,9 @@ static BNX_BOX _BNX_MENU_BOXES[ cMaxOptions ] = {
 	{ 241, 395, 420, 420 },
 	{ 232, 430, 426, 457 },
 	{ 296, 468, 364, 492 },
+#ifndef __ANDROID__
 	{ 295, 503, 362, 528 }
+#endif
 };
 
 static char virtualKBD[ cGfxKeyGridY ][ cGfxKeyGridX ] = {
@@ -203,6 +205,15 @@ typedef struct BNX_PARTICLE
 	BNX_INT16	status;
 
 } BNX_PARTICLE;
+
+typedef struct BNX_FALLINGBLOCK
+{
+	BNX_INT16	x;
+	BNX_INT16	y;
+	BNX_INT16	dx;
+	BNX_INT16	dy;
+	BNX_INT16	id;
+} BNX_FALLINGBLOCK;
 
 typedef struct BNX_JUMPYTEXT
 {
@@ -238,6 +249,7 @@ typedef struct BNX_GFX
 	BNX_JUMPYTEXT	jtext;
 
 	BNX_PARTICLE	particle[ cGfxMaxParticles ];
+	BNX_FALLINGBLOCK falling_blocks[ cGfxMaxParticles ];
 
 } BNX_GFX;
 
@@ -272,6 +284,9 @@ void gfxGetVirtualChar( BNX_GAME *game, BNX_INP *inp );
 BNX_INT16 gfxGetMenuOption( BNX_INP *inp );
 
 void gfxGetHelpPen( BNX_INP *inp );
+
+void gfxInitFallingBlocks();
+void gfxNewFallingBlock( BNX_INT16 x, BNX_INT16 y, BNX_INT16 id );
 
 /******************************************************************************
 HELPER FUNCTIONS

@@ -151,11 +151,13 @@ int main( int argc, char *argv[] )
 					loadHiScore( &Game );
 					enterState = cStateGame;
 					break;
+#ifndef __ANDROID__
 				case cOptionNewMultiplayer:
 					initGame( &Game );
 					Game.mode = cModeMultiplayer;
 					enterState = cStateGame;
 					break;
+#endif
 				case cOptionHall:
 					enterState = cStateHallView;
 					break;
@@ -455,6 +457,7 @@ BNX_BOOL takePair( BNX_GAME *game, BNX_INT16 x, BNX_INT16 y, BNX_INT16 pIndex )
 {
 	BNX_UINT8	pair = game->grid[ x ][ y ];
 	BNX_BOOL	cantake = BNX_FALSE;
+	BNX_UINT8	player = game->player[ pIndex ].e;
 
 	if ( pair == 0 )
 	{
@@ -462,12 +465,12 @@ BNX_BOOL takePair( BNX_GAME *game, BNX_INT16 x, BNX_INT16 y, BNX_INT16 pIndex )
 		return BNX_TRUE;
 	}
 
-	if ( pairLeft( pair ) == game->player[ pIndex ].e )
+	if ( pairLeft( pair ) == player )
 	{
 		game->player[ pIndex ].e = pairRight( pair );
 		cantake = BNX_TRUE;
 	}
-	else if ( pairRight( pair ) == game->player[ pIndex ].e )
+	else if ( pairRight( pair ) == player )
 	{
 		game->player[ pIndex ].e = pairLeft( pair );
 		cantake = BNX_TRUE;
@@ -479,6 +482,7 @@ BNX_BOOL takePair( BNX_GAME *game, BNX_INT16 x, BNX_INT16 y, BNX_INT16 pIndex )
 
 	if ( cantake == BNX_TRUE )
 	{
+		gfxNewFallingBlock( x, y, player );
 		game->grid[ x ][ y ] = cPlayerFlag;
 		game->score[ pIndex ] += cScoreStep;
 	}
@@ -489,7 +493,7 @@ BNX_BOOL takePair( BNX_GAME *game, BNX_INT16 x, BNX_INT16 y, BNX_INT16 pIndex )
 BNX_BOOL moveUp( BNX_GAME *game, BNX_INT16 pIndex )
 {
 	BNX_PLAYER	*p = &game->player[ pIndex ];
-	BNX_INT8	newY = p->y + 1;
+	BNX_INT16	newY = p->y + 1;
 
 	if ( newY < cGridY )
 	{
@@ -507,7 +511,7 @@ BNX_BOOL moveUp( BNX_GAME *game, BNX_INT16 pIndex )
 BNX_BOOL moveDown( BNX_GAME *game, BNX_INT16 pIndex )
 {
 	BNX_PLAYER	*p = &game->player[ pIndex ];
-	BNX_INT8	newY = p->y - 1;
+	BNX_INT16	newY = p->y - 1;
 
 	if ( newY >= 0 )
 	{
@@ -525,7 +529,7 @@ BNX_BOOL moveDown( BNX_GAME *game, BNX_INT16 pIndex )
 BNX_BOOL moveLeft( BNX_GAME *game, BNX_INT16 pIndex )
 {
 	BNX_PLAYER	*p = &game->player[ pIndex ];
-	BNX_INT8	newX = p->x - 1;
+	BNX_INT16	newX = p->x - 1;
 
 	if ( newX >= 0 )
 	{
@@ -543,7 +547,7 @@ BNX_BOOL moveLeft( BNX_GAME *game, BNX_INT16 pIndex )
 BNX_BOOL moveRight( BNX_GAME *game, BNX_INT16 pIndex )
 {
 	BNX_PLAYER	*p = &game->player[ pIndex ];
-	BNX_INT8	newX = p->x + 1;
+	BNX_INT16	newX = p->x + 1;
 
 	if ( newX < cGridX )
 	{
@@ -633,6 +637,7 @@ BNX_INT16 gameSession( BNX_GAME *game )
 	BNX_BOOL			prevIngame = BNX_FALSE;
 
 	inpInit();
+	gfxInitFallingBlocks();
 	while ( bgameSes )
 	{
 		startTime = sysGetTime();
