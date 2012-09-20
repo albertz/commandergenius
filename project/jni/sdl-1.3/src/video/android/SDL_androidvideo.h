@@ -40,7 +40,7 @@ extern int SDL_ANDROID_TouchscreenCalibrationWidth;
 extern int SDL_ANDROID_TouchscreenCalibrationHeight;
 extern int SDL_ANDROID_TouchscreenCalibrationX;
 extern int SDL_ANDROID_TouchscreenCalibrationY;
-extern int SDL_ANDROID_SmoothVideo;
+extern int SDL_ANDROID_VideoLinearFilter;
 extern int SDL_ANDROID_VideoMultithreaded;
 extern int SDL_ANDROID_VideoForceSoftwareMode;
 extern int SDL_ANDROID_CompatibilityHacks;

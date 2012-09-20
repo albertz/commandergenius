@@ -71,7 +71,7 @@ static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
 static int showScreenKeyboardSendBackspace = 0;
-int SDL_ANDROID_SmoothVideo = 0;
+int SDL_ANDROID_VideoLinearFilter = 0;
 int SDL_ANDROID_VideoMultithreaded = 0;
 int SDL_ANDROID_VideoForceSoftwareMode = 0;
 int SDL_ANDROID_CompatibilityHacks = 0;
@@ -332,9 +332,9 @@ int SDL_ANDROID_SetOpenALPutToBackgroundCallback(
 }
 
 JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetSmoothVideo) (JNIEnv* env, jobject thiz)
+JAVA_EXPORT_NAME(Settings_nativeSetVideoLinearFilter) (JNIEnv* env, jobject thiz)
 {
-	SDL_ANDROID_SmoothVideo = 1;
+	SDL_ANDROID_VideoLinearFilter = 1;
 }
 
 JNIEXPORT void JNICALL

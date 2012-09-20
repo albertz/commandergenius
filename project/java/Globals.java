@@ -107,7 +107,7 @@ class Globals
 	public static int MultitouchGestureSensitivity = 1;
 	public static int TouchscreenCalibration[] = new int[4];
 	public static String DataDir = new String("");
-	public static boolean SmoothVideo = false;
+	public static boolean VideoLinearFilter = true;
 	public static boolean MultiThreadedVideo = false;
 	public static boolean BrokenLibCMessageShown = false;
 }

@@ -1121,9 +1121,9 @@ void gfxNewFallingBlock( BNX_INT16 x, BNX_INT16 y, BNX_INT16 id )
 	j %= cGfxMaxParticles;
 	_Gfx.falling_blocks[ j ].id	= id;
 	_Gfx.falling_blocks[ j ].x	= cGfxZeroX + x * cGfxPairPlusX;
-	_Gfx.falling_blocks[ j ].y	= cGfxZeroY + y * cGfxPairPlusY + cGfxParticleFall;
+	_Gfx.falling_blocks[ j ].y	= cGfxZeroY + y * cGfxPairPlusY + cGfxParticleMinSp;
 	_Gfx.falling_blocks[ j ].dx	= cGfxParticleSpeed - ( sysRand( cGfxParticleSpeed<<1 ) + cGfxParticleMinSp );
-	_Gfx.falling_blocks[ j ].dy	= cGfxParticleFall;
+	_Gfx.falling_blocks[ j ].dy	= cGfxParticleMinSp;
 }
 
 void gfxUpdateFallingBlocks()

@@ -132,7 +132,7 @@ class Settings
 					out.writeInt(Globals.ScreenKbControlsLayout[i][ii]);
 			out.writeInt(Globals.LeftClickKey);
 			out.writeInt(Globals.RightClickKey);
-			out.writeBoolean(Globals.SmoothVideo);
+			out.writeBoolean(Globals.VideoLinearFilter);
 			out.writeInt(Globals.LeftClickTimeout);
 			out.writeInt(Globals.RightClickTimeout);
 			out.writeBoolean(Globals.RelativeMouseMovement);
@@ -278,7 +278,7 @@ class Settings
 					Globals.ScreenKbControlsLayout[i][ii] = settingsFile.readInt();
 			Globals.LeftClickKey = settingsFile.readInt();
 			Globals.RightClickKey = settingsFile.readInt();
-			Globals.SmoothVideo = settingsFile.readBoolean();
+			Globals.VideoLinearFilter = settingsFile.readBoolean();
 			Globals.LeftClickTimeout = settingsFile.readInt();
 			Globals.RightClickTimeout = settingsFile.readInt();
 			Globals.RelativeMouseMovement = settingsFile.readBoolean();
@@ -2292,7 +2292,7 @@ class Settings
 			};
 			boolean defaults[] = { 
 				Globals.KeepAspectRatio,
-				Globals.SmoothVideo
+				Globals.VideoLinearFilter
 			};
 
 			if(Globals.SwVideoMode && !Globals.CompatibilityHacksVideo)
@@ -2304,7 +2304,7 @@ class Settings
 				};
 				boolean defaults2[] = { 
 					Globals.KeepAspectRatio,
-					Globals.SmoothVideo,
+					Globals.VideoLinearFilter,
 					Globals.MultiThreadedVideo
 				};
 				items = items2;
@@ -2332,7 +2332,7 @@ class Settings
 					if( item == 0 )
 						Globals.KeepAspectRatio = isChecked;
 					if( item == 1 )
-						Globals.SmoothVideo = isChecked;
+						Globals.VideoLinearFilter = isChecked;
 					if( item == 2 )
 						Globals.MultiThreadedVideo = isChecked;
 				}
@@ -2388,8 +2388,8 @@ class Settings
 	static void Apply(Activity p)
 	{
 		nativeSetVideoDepth(Globals.VideoDepthBpp, Globals.NeedGles2 ? 1 : 0);
-		if(Globals.SmoothVideo)
-			nativeSetSmoothVideo();
+		if(Globals.VideoLinearFilter)
+			nativeSetVideoLinearFilter();
 		if( Globals.CompatibilityHacksVideo )
 		{
 			Globals.MultiThreadedVideo = true;
@@ -2583,7 +2583,7 @@ class Settings
 	private static native void nativeSetAccelerometerUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
-	private static native void nativeSetSmoothVideo();
+	private static native void nativeSetVideoLinearFilter();
 	private static native void nativeSetVideoDepth(int bpp, int gles2);
 	private static native void nativeSetCompatibilityHacks();
 	private static native void nativeSetVideoMultithreaded();
