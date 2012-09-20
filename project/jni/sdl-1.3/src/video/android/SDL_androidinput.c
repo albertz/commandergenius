@@ -1386,11 +1386,6 @@ const char *SDL_SYS_JoystickName(int index)
 	return("Android accelerometer/multitouch sensor");
 }
 
-/* Function to open a joystick for use.
-   The joystick to open is specified by the index field of the joystick.
-   This should fill the nbuttons and naxes fields of the joystick structure.
-   It returns 0, or -1 if there is an error.
- */
 int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 {
 	joystick->nbuttons = 0;
@@ -1410,11 +1405,6 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 	return(0);
 }
 
-/* Function to update the state of a joystick - called as a device poll.
- * This function shouldn't update the joystick structure directly,
- * but instead should call SDL_PrivateJoystick*() to deliver events
- * and update joystick device state.
- */
 void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
 {
 	return;
@@ -1454,6 +1444,18 @@ extern SDL_Window * ANDROID_CurrentWindow;
 
 #endif
 
+/* We need our own event queue, because Free Heroes 2 game uses
+ * SDL_SetEventFilter(), and it calls SDL_Flip() from inside
+ * it's custom filter function, and SDL_Flip() does not work
+ * when it's not called from the main() thread.
+ * So we, like, push the events into our own queue,
+ * read each event from that queue inside SDL_ANDROID_PumpEvents(),
+ * unlock the mutex, and push the event to SDL queue,
+ * which is then immediately read by SDL from the same thread,
+ * and then SDL invokes event filter function from FHeroes2.
+ * FHeroes2 call SDL_Flip() from inside that event filter function,
+ * and it works, because it is called from the main() thread.
+ */
 extern void SDL_ANDROID_PumpEvents()
 {
 	static int oldMouseButtons = 0;
