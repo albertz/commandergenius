@@ -202,4 +202,5 @@ extern void SDL_ANDROID_MainThreadPushJoystickBall(int joy, int ball, int x, int
 extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode );
 extern void SDL_android_init_keymap(SDLKey *SDL_android_keymap);
 extern void SDL_ANDROID_MainThreadPushMouseWheel( int x, int y ); // SDL 1.3 only
+extern void SDL_ANDROID_MainThreadPushAppActive(int active);
 #endif

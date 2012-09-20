@@ -654,6 +654,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	private native void nativeDone();
 	private native void nativeGlContextLost();
 	public native void nativeGlContextRecreated();
+	public native void nativeGlContextLostAsyncEvent();
 	public static native void nativeTextInput( int ascii, int unicode );
 	public static native void nativeTextInputFinished();
 
@@ -733,6 +734,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		if(mRenderer.mPaused)
 			return;
 		mRenderer.mPaused = true;
+		mRenderer.nativeGlContextLostAsyncEvent();
 		if( mRenderer.accelerometer != null ) // For some reason it crashes here often - are we getting this event before initialization?
 			mRenderer.accelerometer.stop();
 		super.onPause();
@@ -783,6 +785,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public static native void nativeHardwareMouseDetected( int detected );
 	public static native void nativeMouseButtonsPressed( int buttonId, int pressedState );
 	public static native void nativeMouseWheel(int scrollX, int scrollY);
+	
 }
 
 

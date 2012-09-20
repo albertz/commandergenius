@@ -1508,6 +1508,14 @@ extern void SDL_ANDROID_PumpEvents()
 					SDL_PrivateJoystickBall( SDL_ANDROID_CurrentJoysticks[ev.jball.which], ev.jball.ball, ev.jball.xrel, ev.jball.yrel );
 				break;
 #if SDL_VERSION_ATLEAST(1,3,0)
+				//if( ANDROID_CurrentWindow )
+				//	SDL_SendWindowEvent(ANDROID_CurrentWindow, SDL_WINDOWEVENT_MINIMIZED, 0, 0);
+#else
+			case SDL_ACTIVEEVENT:
+				SDL_PrivateAppActive(ev.active.gain, ev.active.state);
+				break;
+#endif
+#if SDL_VERSION_ATLEAST(1,3,0)
 			case SDL_FINGERMOTION:
 				SDL_SendTouchMotion(0, ev.tfinger.fingerId, 0, (float)ev.tfinger.x / (float)window->w, (float)ev.tfinger.y / (float)window->h, ev.tfinger.pressure);
 				break;
@@ -1823,6 +1831,28 @@ extern void SDL_ANDROID_MainThreadPushMouseWheel(int x, int y)
 	SDL_mutexV(BufferedEventsMutex);
 #endif
 }
+
+extern void SDL_ANDROID_MainThreadPushAppActive(int active)
+{
+#if SDL_VERSION_ATLEAST(1,3,0)
+				//if( ANDROID_CurrentWindow )
+				//	SDL_SendWindowEvent(ANDROID_CurrentWindow, SDL_WINDOWEVENT_MINIMIZED, 0, 0);
+#else
+	int nextEvent = getNextEventAndLock();
+	if( nextEvent == -1 )
+		return;
+	
+	SDL_Event * ev = &BufferedEvents[BufferedEventsEnd];
+	
+	ev->type = SDL_ACTIVEEVENT;
+	ev->active.gain = active;
+	ev->active.state = SDL_APPACTIVE|SDL_APPINPUTFOCUS|SDL_APPMOUSEFOCUS;
+	
+	BufferedEventsEnd = nextEvent;
+	SDL_mutexV(BufferedEventsMutex);
+#endif
+}
+
 
 enum { DEFERRED_TEXT_COUNT = 256 };
 static struct { int scancode; int unicode; int down; } deferredText[DEFERRED_TEXT_COUNT];
