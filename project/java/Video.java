@@ -673,7 +673,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public int mWidth = 0;
 	public int mHeight = 0;
 
-	public static final boolean mRatelimitTouchEvents = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO);
+	public static final boolean mRatelimitTouchEvents = true; //(Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO);
 }
 
 class DemoGLSurfaceView extends GLSurfaceView_SDL {

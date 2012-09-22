@@ -550,7 +550,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 		if( action == MOUSE_DOWN )
 		{
 			if( (moveMouseWithKbX >= 0 || leftClickMethod == LEFT_CLICK_NEAR_CURSOR) &&
-				abs(currentMouseX - x) < SDL_ANDROID_sFakeWindowWidth / 8 && abs(currentMouseY - y) < SDL_ANDROID_sFakeWindowHeight / 8 )
+				abs(currentMouseX - x) < SDL_ANDROID_sFakeWindowWidth / 10 && abs(currentMouseY - y) < SDL_ANDROID_sFakeWindowHeight / 10 )
 			{
 				SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
 				moveMouseWithKbX = currentMouseX;
@@ -580,6 +580,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 		{
 			if( moveMouseWithKbX >= 0 )
 			{
+				// Mouse lazily follows magnifying glass, not very intuitive for drag&drop
+				/*
 				if( abs(moveMouseWithKbX - x) > SDL_ANDROID_sFakeWindowWidth / 12 )
 					moveMouseWithKbSpeedX += moveMouseWithKbX > x ? -1 : 1;
 				else
@@ -591,9 +593,10 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 
 				moveMouseWithKbX += moveMouseWithKbSpeedX;
 				moveMouseWithKbY += moveMouseWithKbSpeedY;
-
-				if( abs(moveMouseWithKbX - x) > SDL_ANDROID_sFakeWindowWidth / 8 ||
-					abs(moveMouseWithKbY - y) > SDL_ANDROID_sFakeWindowHeight / 8 )
+				*/
+				// Mouse follows touch instantly, when it's out of the snapping distance from mouse cursor
+				if( abs(moveMouseWithKbX - x) >= SDL_ANDROID_sFakeWindowWidth / 10 ||
+					abs(moveMouseWithKbY - y) >= SDL_ANDROID_sFakeWindowHeight / 10 )
 				{
 					moveMouseWithKbX = -1;
 					moveMouseWithKbY = -1;
