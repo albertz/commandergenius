@@ -20,10 +20,11 @@ NDK=`readlink -f $NDK`
 
 #echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
-GCCVER=4.4.3
+GCCVER=4.6
 PLATFORMVER=android-8
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
+ARCH=armeabi-v7a
 #echo LOCAL_PATH $LOCAL_PATH
 
 APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
@@ -42,24 +43,14 @@ done
 MISSING_INCLUDE=
 MISSING_LIB=
 
-#if [ -n "$CRYSTAX_WCHAR" ]; then
-#	MISSING_INCLUDE="$MISSING_INCLUDE -isystem$NDK/sources/crystax/include"
-#	MISSING_LIB="$MISSING_LIB $NDK/sources/crystax/libs/armeabi/libcrystax_static.a"
-#fi
-#if [ -n "$MISSING_LIBCXX_PATH" ]; then
-#	MISSING_INCLUDE="$MISSING_INCLUDE -isystem$NDK/sources/cxx-stl/gnu-libstdc++/include"
-#	MISSING_LIB="$MISSING_LIB -lgnustl_static -lsupc++"
-#fi
-
-
 CFLAGS="\
--MMD -MP -MF -fpic -ffunction-sections -funwind-tables -fstack-protector \
--D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
--Wno-psabi -march=armv7-a -mfloat-abi=softfp -mfpu=vfp -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
+-fpic -ffunction-sections -funwind-tables \
+-D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -Wno-psabi \
+-march=armv7-a -mfloat-abi=softfp -mfpu=vfp -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -DANDROID -Wa,--noexecstack -g -O2 -DNDEBUG -g \
 -isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include \
--isystem$NDK/sources/cxx-stl/gnu-libstdc++/include \
--isystem$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH/include \
 -isystem$LOCAL_PATH/../sdl-1.2/include \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-isystem$LOCAL_PATH/../\1/include@g\"` \
 $MISSING_INCLUDE $CFLAGS"
@@ -75,17 +66,17 @@ fi
 LDFLAGS="\
 $SHARED \
 --sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
-`echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/armeabi-v7a/lib\1.so@g\"` \
+`echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/$ARCH/lib\1.so@g\"` \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libGLESv1_CM.so \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libdl.so \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/liblog.so \
 $NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libz.so \
--L$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a \
+-L$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH \
 -lgnustl_static \
 -L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
--L$LOCAL_PATH/../../obj/local/armeabi-v7a \
+-L$LOCAL_PATH/../../obj/local/$ARCH \
 -Wl,--fix-cortex-a8 -Wl,--no-undefined -Wl,-z,noexecstack \
 -Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++ \
 $MISSING_LIB $LDFLAGS"
