@@ -93,8 +93,9 @@ endif
 #$(error Detected libraries with too long symbol names. Remove all files under project/obj/local/armeabi, make these libs static, and recompile)
 #endif
 
-APP_LIB_DEPENDS := $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).so)) 
-APP_LIB_DEPENDS += $(foreach LIB, $(LOCAL_STATIC_LIBRARIES), $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/lib$(LIB).a))
+SDL_APP_LIB_DEPENDS := $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg
+SDL_APP_LIB_DEPENDS += $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), obj/local/$(TARGET_ARCH_ABI)/lib$(LIB).so)
+SDL_APP_LIB_DEPENDS += $(foreach LIB, $(LOCAL_STATIC_LIBRARIES), obj/local/$(TARGET_ARCH_ABI)/lib$(LIB).a)
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -103,28 +104,23 @@ ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
 # TODO: here we're digging inside NDK internal build system, that's not portable
 # NDK r5b provided the $(PREBUILT_SHARED_LIBRARY) target, however it requires .so file to be already present on disk
 # Also I cannot just launch AndroidBuild.sh from makefile because other libraries are not rebuilt and linking will fail
+.PHONY: OVERRIDE_CUSTOM_LIB
+OVERRIDE_CUSTOM_LIB:
 
 LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 
-.NOTPARALLEL: $(abspath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so) $(LOCAL_PATH)/src/libapplication.so
+ifeq ($(TARGET_ARCH_ABI),armeabi)
+obj/local/armeabi/libapplication.so: $(LOCAL_PATH)/src/libapplication.so
 
-# Enforce rebuilding
-$(shell rm -f $(LOCAL_PATH)/src/libapplication.so)
-$(shell mkdir -p $(LOCAL_PATH)/../../obj/local/armeabi)
-$(shell touch $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so)
+$(LOCAL_PATH)/src/libapplication.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh armeabi
+endif
 
-$(LOCAL_PATH)/src/libapplication.so: $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg $(APP_LIB_DEPENDS)
-	echo Launching script $(LOCAL_PATH_SDL_APPLICATION)/AndroidBuild.sh
-	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+obj/local/armeabi-v7a/libapplication.so: $(LOCAL_PATH)/src/libapplication-armeabi-v7a.so
 
-$(abspath $(LOCAL_PATH)/../../obj/local/armeabi/libapplication.so): $(LOCAL_PATH)/src/libapplication.so OVERRIDE_CUSTOM_LIB
-	cp -f $< $@
-
-obj/local/armeabi/libapplication.so: $(LOCAL_PATH)/src/libapplication.so OVERRIDE_CUSTOM_LIB
-	cp -f $< $@
-
-.PHONY: OVERRIDE_CUSTOM_LIB
-
-OVERRIDE_CUSTOM_LIB:
+$(LOCAL_PATH)/src/libapplication-armeabi-v7a.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh armeabi-v7a
+endif
 
 endif

@@ -25,3 +25,6 @@
 [submodule "project/jni/application/scummvm/scummvm"]
 	path = project/jni/application/scummvm/scummvm
 	url = https://github.com/scummvm/scummvm.git
+[submodule "project/jni/application/openarena/vm"]
+	path = project/jni/application/openarena/vm
+	url = https://github.com/pelya/openarena-vm
