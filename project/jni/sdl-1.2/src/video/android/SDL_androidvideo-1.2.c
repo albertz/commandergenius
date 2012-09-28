@@ -1092,6 +1092,7 @@ void SDL_ANDROID_VideoContextRecreated()
 		{
 			// Allocate HW texture
 			Uint32 format = PixelFormatEnumColorkey; // 1-bit alpha for color key, every surface will have colorkey so it's easier for us
+			int flags = HwSurfaceList[i]->flags;
 			if( HwSurfaceList[i]->format->Amask )
 				format = PixelFormatEnumAlpha;
 			if( HwSurfaceList[i] == SDL_CurrentVideoSurface )
@@ -1104,7 +1105,21 @@ void SDL_ANDROID_VideoContextRecreated()
 			}
 			if( SDL_ANDROID_VideoLinearFilter )
 				SDL_SetTextureScaleMode((SDL_Texture *)HwSurfaceList[i]->hwdata, SDL_SCALEMODE_SLOW);
-			ANDROID_UnlockHWSurface(NULL, HwSurfaceList[i]); // Re-fill texture with graphics
+			if (flags & SDL_SRCALPHA)
+			{
+				int alpha = HwSurfaceList[i]->format->alpha;
+				ANDROID_SetHWAlpha(NULL, HwSurfaceList[i], alpha);
+				ANDROID_UnlockHWSurface(NULL, HwSurfaceList[i]); // Re-fill texture with graphics
+			}
+			else if (flags & SDL_SRCCOLORKEY)
+			{
+				int colorkey = HwSurfaceList[i]->format->colorkey;
+				ANDROID_SetHWColorKey(NULL, HwSurfaceList[i], colorkey);
+			}
+			else
+			{
+				ANDROID_UnlockHWSurface(NULL, HwSurfaceList[i]); // Re-fill texture with graphics
+			}
 		}
 	}
 };
