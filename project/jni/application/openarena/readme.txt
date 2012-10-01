@@ -3,6 +3,7 @@ Download SDL Git repo from https://github.com/pelya/commandergenius,
 install latest Android SDK, Android NDK r8b or newer, and "ant" tool (sudo apt-get install ant),
 then launch commands:
     git submodule update --init project/jni/application/openarena/engine
+    git submodule update --init project/jni/application/openarena/vm
     rm project/jni/application/src # ignore the error
     ln -s openarena project/jni/application/src
     ./ChangeAppSettings.sh -a
