@@ -1,4 +1,6 @@
 This is SDL 1.2 and 1.3 ported to Google Android (also bunch of other libs included).
+Sources or patches of the individual games are in the directory project/jni/application.
+
 The libsdl.org now has an official SDL 1.3 Android port, which is more recent and
 better suited for creating new applications from scratch, this port is focused mainly
 on SDL 1.2 and compiling existing applications, it's up to you to decide which port is better.
@@ -21,6 +23,7 @@ running inside Windows, then install Linux toolchain on it.
 https://sourceforge.net/projects/portableubuntu/
 Cygwin is not supported by the NDK, starting from the NDK r6.
 
+
 How to compile demo application
 ===============================
 
@@ -31,15 +34,15 @@ Launch commands
 	android update project -p project -t android-15
 Then edit file build.sh if needed to add NDK dir to your PATH, then launch it.
 It will compile a bunch of libs under project/libs/armeabi,
-create file project/bin/DemoActivity-debug.apk and install it on your device or emulator.
+create Android package file project/bin/MainActivity-debug.apk,
+and install it to your device or emulator, if you specify option -i or -r to build.sh.
 Then you can test it by launching Ballfield icon from Android applications menu.
-It's designed for 320x240, so if you have bigger screen it will be resized.
 
 There are other applications inside project/jni/application directory,
 some of them are referenced using Git submodule mechanism, you may download them using command
 git submodule update --init
 Some of them may be outdated and won't compile, some contain only patch file and no sources,
-so you should check out Git logs before compiling some app:
+so you should check out Git logs before compiling a particular app, and checkout whole repo at that date:
 gitk project/jni/application/<directory>
 
 The game enforces horizontal screen orientation, you may slide-open your keyboard if you have it
@@ -55,6 +58,7 @@ This port also supports GL ES + SDL combo - there is GLXGears demo app in projec
 to compile it remove project/jni/application/src symlink and make new one pointing to glxgears, and run build.sh
 Note that GL ES is NOT pure OpenGL - there are no glBegin() and glEnd() call and other widely used functions,
 and generally it will take a lot of effort to port OpenGL application to GL ES.
+
 
 How to compile your own application
 ===================================
@@ -237,6 +241,7 @@ generate file project/jni/application/src/libapplication.so, which will be copie
 There is helper script project/jni/application/setEnvironment.sh which will set CFLAGS and LDFLAGS
 for configure script and makefile, see AndroidBuild.sh in project/jni/application/scummvm dir for reference.
 
+
 Android application sleep/resume support
 ========================================
 
@@ -311,7 +316,6 @@ while( SDL_PollEvent(&evt) )
 	}
 }
 
-Note that I did not test that code yet, so test reports are appreciated.
 
 Quick guide to debug native code
 ================================
