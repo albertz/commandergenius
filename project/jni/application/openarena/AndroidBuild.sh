@@ -5,8 +5,8 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 [ "$1" = "armeabi" ] && (
 [ -e libapplication.so ] || ln -s libapplication-armeabi.so libapplication.so
-make -j8 -C vm
-cd vm/build/release-*/baseq3
+make -j8 -C vm BUILD_MISSIONPACK=0
+cd vm/build/release-linux-`uname -m`/baseq3
 zip -r vm.zip vm
 cmp -s vm.zip ../../../../AndroidData/vm.zip || mv -f vm.zip ../../../../AndroidData/vm.zip
 )
