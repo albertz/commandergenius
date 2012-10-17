@@ -20,21 +20,27 @@ NDK=`readlink -f $NDK`
 
 #echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
-GCCVER=4.4.3
+GCCVER=4.6
 PLATFORMVER=android-8
 LOCAL_PATH=`dirname $0`
-LOCAL_PATH=`cd $LOCAL_PATH && pwd`
+if which realpath > /dev/null ; then
+	LOCAL_PATH=`realpath $LOCAL_PATH`
+else
+	LOCAL_PATH=`cd $LOCAL_PATH && pwd`
+fi
 #echo LOCAL_PATH $LOCAL_PATH
+ARCH=armeabi
 
 CFLAGS="\
--fexceptions -frtti \
 -fpic -ffunction-sections -funwind-tables -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  -Wno-psabi \
 -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include -Wa,--noexecstack \
 -DANDROID \
 -DNDEBUG -O2 -g \
--isystem$NDK/sources/cxx-stl/gnu-libstdc++/include \
--isystem$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH/include \
+-isystem$LOCAL_PATH/../sdl-1.2/include \
+`echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-isystem$LOCAL_PATH/../\1/include@g\"` \
 $MISSING_INCLUDE $CFLAGS"
 
 SHARED="-shared -Wl,-soname,libapplication.so"
@@ -45,28 +51,28 @@ if [ -n "$NO_SHARED_LIBS" ]; then
 	APP_SHARED_LIBS=
 fi
 
+
 LDFLAGS="\
--fexceptions -frtti $SHARED \
+$SHARED \
 --sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
--L$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi \
--L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
--lc \
--lm \
--ldl \
--llog \
--lz \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libGLESv1_CM.so \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libdl.so \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/liblog.so \
+$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libz.so \
+-L$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH \
 -lgnustl_static \
--lsupc++ \
--Wl,--no-undefined -Wl,-z,noexecstack \
--Wl,-rpath=/system/lib \
--Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
+-L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
+-L$LOCAL_PATH/../../obj/local/$ARCH -Wl,--no-undefined -Wl,-z,noexecstack \
+-Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++ \
 $MISSING_LIB $LDFLAGS"
 
 #echo env CFLAGS=\""$CFLAGS"\" LDFLAGS=\""$LDFLAGS"\" "$@"
 
 env PATH=$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \
-CXXFLAGS="$CFLAGS" \
+CXXFLAGS="$CXXFLAGS $CFLAGS" \
 LDFLAGS="$LDFLAGS" \
 CC="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-gcc" \
 CXX="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-g++" \

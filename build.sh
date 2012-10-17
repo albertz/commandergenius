@@ -23,7 +23,7 @@ if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && \
 		[ "`readlink AndroidAppSettings.cfg`" -ot "project/src/Globals.java" ] && \
 		[ -z "`find project/java/* project/AndroidManifestTemplate.xml -cnewer project/src/Globals.java`" ] && \
 		[ -z "`find project/jni/application/src/AndroidData/* -cnewer project/src/Globals.java`" ] ) ; then true ; else
-	./ChangeAppSettings.sh -a
+	./changeAppSettings.sh -a
 	sleep 1
 	touch project/src/Globals.java
 fi
@@ -42,7 +42,12 @@ if uname -s | grep -i "windows" > /dev/null ; then
 fi
 
 rm -r -f project/bin/* # New Android SDK introduced some lame-ass optimizations to the build system which we should take care about
-cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j$NCPU && \
+[ -x project/jni/application/src/AndroidPreBuild.sh ] && {
+	cd project/jni/application/src
+	./AndroidPreBuild.sh || { echo "AndroidPreBuild.sh returned with error" ; exit 1 ; }
+	cd ../../../..
+}
+cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j$NCPU V=1 && \
  { grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
    echo Stripping libapplication.so by hand && \
    rm obj/local/armeabi/libapplication.so && \
@@ -58,6 +63,7 @@ cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j
    cp jni/application/src/libapplication-armeabi-v7a.so libs/armeabi-v7a/libapplication.so && \
    `which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-4.6/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi-v7a/libapplication.so \
    || true ; } && \
+ cd .. && ./copyAssets.sh && cd project && \
  ant debug && \
  $install_apk && [ -n "`adb devices | tail -n +2`" ] && \
  { cd bin && adb install -r MainActivity-debug.apk | grep 'Failure' && \
