@@ -28,6 +28,6 @@
 [submodule "project/jni/application/openarena/vm"]
 	path = project/jni/application/openarena/vm
 	url = https://github.com/pelya/openarena-vm
-[submodule "project/jni/application/teeworlds-0.7/src"]
-	path = project/jni/application/teeworlds-0.7/src
+[submodule "project/jni/application/teeworlds/src"]
+	path = project/jni/application/teeworlds/src
 	url = git://github.com/pelya/teeworlds.git
