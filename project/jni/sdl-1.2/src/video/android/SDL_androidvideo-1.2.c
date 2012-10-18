@@ -1040,11 +1040,14 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 void ANDROID_GL_SwapBuffers(_THIS)
 {
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_GL_SwapBuffers");
+	// TeeWorlds use hacky hack to draw from separate thread, however it works surprisingly well
+	/*
 	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);
 		return;
 	}
+	*/
 
 	SDL_ANDROID_CallJavaSwapBuffers();
 };
