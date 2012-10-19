@@ -1,1 +1,0 @@
-../../../../fonteditor/touchscreenfont.h
