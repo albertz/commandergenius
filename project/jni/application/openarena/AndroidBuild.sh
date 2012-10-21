@@ -4,6 +4,7 @@ LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 [ "$1" = "armeabi" ] && (
+mkdir -p AndroidData
 [ -e libapplication.so ] || ln -s libapplication-armeabi.so libapplication.so
 make -j8 -C vm BUILD_MISSIONPACK=0 || exit 1
 cd vm/build/release-linux-`uname -m`/baseq3
