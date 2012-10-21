@@ -766,24 +766,32 @@ public class MainActivity extends Activity
 
 		// ----- VCMI hack -----
 			try {
-				//System.out.println("libSDL: Extracting VCMI server");
+				//System.out.println("libSDL: Extracting binaries");
 				
 				InputStream in = null;
 				try
 				{
 					for( int i = 0; ; i++ )
 					{
-						InputStream in2 = getAssets().open("vcmiserver" + String.valueOf(i));
+						InputStream in2 = getAssets().open("binaries.zip" + String.format("%02d", i));
 						if( in == null )
 							in = in2;
 						else
 							in = new SequenceInputStream( in, in2 );
 					}
 				}
-				catch( IOException ee ) { }
+				catch( IOException ee )
+				{
+					try
+					{
+						if( in == null )
+							in = getAssets().open("binaries.zip");
+					}
+					catch( IOException eee ) {}
+				}
 
 				if( in == null )
-					throw new RuntimeException("libSDL: Extracting VCMI server failed, the .apk file packaged incorrectly");
+					throw new RuntimeException("libSDL: Extracting binaries failed, the .apk file packaged incorrectly");
 
 				ZipInputStream zip = new ZipInputStream(in);
 
@@ -803,7 +811,7 @@ public class MainActivity extends Activity
 					*/
 					if( entry == null )
 					{
-						System.out.println("Extracting libs finished");
+						System.out.println("Extracting binaries finished");
 						break;
 					}
 					if( entry.isDirectory() )
