@@ -1,19 +1,18 @@
+/* config.h.  Generated from config.h.in by configure.  */
 /*
- * "$Id: config.h.in 387 2009-04-18 17:05:52Z mike $"
+ * "$Id: config.h.in 408 2010-09-19 05:26:46Z mike $"
  *
  * Configuration file for Mini-XML, a small XML-like file parsing library.
  *
- * Copyright 2003-2009 by Michael Sweet.
+ * Copyright 2003-2010 by Michael R Sweet.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2, or (at your option) any later version.
+ * These coded instructions, statements, and computer programs are the
+ * property of Michael R Sweet and are protected by Federal copyright
+ * law.  Distribution and use rights are outlined in the file "COPYING"
+ * which should have been included with this file.  If this file is
+ * missing or damaged, see the license at:
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *     http://www.minixml.org/
  */
 
 /*
@@ -31,14 +30,14 @@
  * Version number...
  */
 
-#define MXML_VERSION	"2.6"
+#define MXML_VERSION "Mini-XML v2.7"
 
 
 /*
  * Inline function support...
  */
 
-/* #define inline */
+#define inline
 
 
 /*
@@ -93,5 +92,5 @@ extern int	_mxml_vsnprintf(char *, size_t, const char *, va_list);
 #  endif /* !HAVE_VSNPRINTF */
 
 /*
- * End of "$Id: config.h.in 387 2009-04-18 17:05:52Z mike $".
+ * End of "$Id: config.h.in 408 2010-09-19 05:26:46Z mike $".
  */

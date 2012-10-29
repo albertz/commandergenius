@@ -1062,3 +1062,33 @@ JAVA_EXPORT_NAME(Settings_nativeSetEnv) ( JNIEnv*  env, jobject thiz, jstring j_
     (*env)->ReleaseStringUTFChars(env, j_name, name);
     (*env)->ReleaseStringUTFChars(env, j_value, value);
 }
+
+int SDLCALL SDL_HasScreenKeyboardSupport(void *unused)
+{
+	return 1;
+}
+
+// SDL2 compatibility
+int SDLCALL SDL_ShowScreenKeyboard(void *unused)
+{
+	return SDL_ANDROID_ToggleScreenKeyboardTextInput(NULL);
+}
+
+int SDLCALL SDL_HideScreenKeyboard(void *unused)
+{
+	SDL_ANDROID_CallJavaHideScreenKeyboard();
+	return 1;
+}
+
+int SDLCALL SDL_IsScreenKeyboardShown(void *unused)
+{
+	return SDL_ANDROID_CallJavaIsScreenKeyboardShown();
+}
+
+int SDLCALL SDL_ToggleScreenKeyboard(void *unused)
+{
+	if( SDL_IsScreenKeyboardShown(NULL) )
+		return SDL_HideScreenKeyboard(NULL);
+	else
+		return SDL_ShowScreenKeyboard(NULL);
+}

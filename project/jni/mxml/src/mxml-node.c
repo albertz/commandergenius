@@ -1,37 +1,36 @@
 /*
- * "$Id: mxml-node.c 363 2008-10-26 18:28:05Z mike $"
+ * "$Id: mxml-node.c 436 2011-01-22 01:02:05Z mike $"
  *
  * Node support code for Mini-XML, a small XML-like file parsing library.
  *
- * Copyright 2003-2007 by Michael Sweet.
+ * Copyright 2003-2011 by Michael R Sweet.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2, or (at your option) any later version.
+ * These coded instructions, statements, and computer programs are the
+ * property of Michael R Sweet and are protected by Federal copyright
+ * law.  Distribution and use rights are outlined in the file "COPYING"
+ * which should have been included with this file.  If this file is
+ * missing or damaged, see the license at:
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *     http://www.minixml.org/
  *
  * Contents:
  *
- *   mxmlAdd()        - Add a node to a tree.
- *   mxmlDelete()     - Delete a node and all of its children.
- *   mxmlNewCDATA()   - Create a new CDATA node.
- *   mxmlNewCustom()  - Create a new custom data node.
- *   mxmlNewElement() - Create a new element node.
- *   mxmlNewInteger() - Create a new integer node.
- *   mxmlNewOpaque()  - Create a new opaque string.
- *   mxmlNewReal()    - Create a new real number node.
- *   mxmlNewText()    - Create a new text fragment node.
- *   mxmlNewTextf()   - Create a new formatted text fragment node.
- *   mxmlNewXML()     - Create a new XML document tree.
- *   mxmlRelease()    - Release a node.
- *   mxmlRemove()     - Remove a node from its parent.
- *   mxmlRetain()     - Retain a node.
- *   mxml_new()       - Create a new node.
+ *   mxmlAdd()         - Add a node to a tree.
+ *   mxmlDelete()      - Delete a node and all of its children.
+ *   mxmlGetRefCount() - Get the current reference (use) count for a node.
+ *   mxmlNewCDATA()    - Create a new CDATA node.
+ *   mxmlNewCustom()   - Create a new custom data node.
+ *   mxmlNewElement()  - Create a new element node.
+ *   mxmlNewInteger()  - Create a new integer node.
+ *   mxmlNewOpaque()   - Create a new opaque string.
+ *   mxmlNewReal()     - Create a new real number node.
+ *   mxmlNewText()     - Create a new text fragment node.
+ *   mxmlNewTextf()    - Create a new formatted text fragment node.
+ *   mxmlRemove()      - Remove a node from its parent.
+ *   mxmlNewXML()      - Create a new XML document tree.
+ *   mxmlRelease()     - Release a node.
+ *   mxmlRetain()      - Retain a node.
+ *   mxml_new()        - Create a new node.
  */
 
 /*
@@ -275,6 +274,34 @@ mxmlDelete(mxml_node_t *node)		/* I - Node to delete */
   */
 
   free(node);
+}
+
+
+/*
+ * 'mxmlGetRefCount()' - Get the current reference (use) count for a node.
+ *
+ * The initial reference count of new nodes is 1. Use the @link mxmlRetain@
+ * and @link mxmlRelease@ functions to increment and decrement a node's
+ * reference count.
+ *
+ * @since Mini-XML 2.7@.
+ */
+
+int					/* O - Reference count */
+mxmlGetRefCount(mxml_node_t *node)	/* I - Node */
+{
+ /*
+  * Range check input...
+  */
+
+  if (!node)
+    return (0);
+
+ /*
+  * Return the reference count...
+  */
+
+  return (node->ref_count);
 }
 
 
@@ -776,5 +803,5 @@ mxml_new(mxml_node_t *parent,		/* I - Parent node */
 
 
 /*
- * End of "$Id: mxml-node.c 363 2008-10-26 18:28:05Z mike $".
+ * End of "$Id: mxml-node.c 436 2011-01-22 01:02:05Z mike $".
  */

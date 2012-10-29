@@ -1,31 +1,20 @@
 /*
- * "$Id: mxml-index.c 184 2005-01-29 07:21:44Z mike $"
+ * "$Id: mxml-index.c 426 2011-01-01 23:42:17Z mike $"
  *
  * Index support code for Mini-XML, a small XML-like file parsing library.
  *
- * Copyright 2003-2005 by Michael Sweet.
+ * Copyright 2003-2011 by Michael R Sweet.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2, or (at your option) any later version.
+ * These coded instructions, statements, and computer programs are the
+ * property of Michael R Sweet and are protected by Federal copyright
+ * law.  Distribution and use rights are outlined in the file "COPYING"
+ * which should have been included with this file.  If this file is
+ * missing or damaged, see the license at:
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *     http://www.minixml.org/
  *
  * Contents:
  *
- *   mxmlIndexDelete()   - Delete an index.
- *   mxmlIndexEnum()     - Return the next node in the index.
- *   mxmlIndexFind()     - Find the next matching node.
- *   mxmlIndexNew()      - Create a new index.
- *   mxmlIndexReset()    - Reset the enumeration/find pointer in the index and
- *                         return the first node in the index.
- *   index_compare()     - Compare two nodes.
- *   index_find()        - Compare a node with index values.
- *   index_sort()        - Sort the nodes in the index...
  */
 
 /*
@@ -281,6 +270,30 @@ mxmlIndexFind(mxml_index_t *ind,	/* I - Index to search */
 #endif /* DEBUG */
 
   return (NULL);
+}
+
+
+/*
+ * 'mxmlIndexGetCount()' - Get the number of nodes in an index.
+ *
+ * @since Mini-XML 2.7@
+ */
+
+int					/* I - Number of nodes in index */
+mxmlIndexGetCount(mxml_index_t *ind)	/* I - Index of nodes */
+{
+ /*
+  * Range check input...
+  */
+
+  if (!ind)
+    return (0);
+
+ /*
+  * Return the number of nodes in the index...
+  */
+
+  return (ind->num_nodes);
 }
 
 
@@ -645,5 +658,5 @@ index_sort(mxml_index_t *ind,		/* I - Index to sort */
 
 
 /*
- * End of "$Id: mxml-index.c 184 2005-01-29 07:21:44Z mike $".
+ * End of "$Id: mxml-index.c 426 2011-01-01 23:42:17Z mike $".
  */

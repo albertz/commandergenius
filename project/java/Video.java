@@ -564,6 +564,26 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		context.runOnUiThread(cb);
 	}
 
+	public void hideScreenKeyboard() // Called from native code
+	{
+		class Callback implements Runnable
+		{
+			public MainActivity parent;
+			public void run()
+			{
+				parent.hideScreenKeyboard();
+			}
+		}
+		Callback cb = new Callback();
+		cb.parent = context;
+		context.runOnUiThread(cb);
+	}
+
+	public int isScreenKeyboardShown() // Called from native code
+	{
+		return context.isScreenKeyboardShown() ? 1 : 0;
+	}
+
 	public void exitApp()
 	{
 		 nativeDone();

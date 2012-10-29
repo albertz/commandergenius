@@ -420,6 +420,11 @@ public class MainActivity extends Activity
 		mGLView.requestFocus();
 	};
 
+	public boolean isScreenKeyboardShown()
+	{
+		return _screenKeyboard != null;
+	};
+
 	final static int ADVERTISEMENT_POSITION_RIGHT = -1;
 	final static int ADVERTISEMENT_POSITION_BOTTOM = -1;
 	final static int ADVERTISEMENT_POSITION_CENTER = -2;

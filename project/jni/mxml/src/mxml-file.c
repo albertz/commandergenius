@@ -1,26 +1,24 @@
 /*
- * "$Id: mxml-file.c 391 2009-05-17 05:20:52Z mike $"
+ * "$Id: mxml-file.c 438 2011-03-24 05:47:51Z mike $"
  *
  * File loading code for Mini-XML, a small XML-like file parsing library.
  *
- * Copyright 2003-2009 by Michael Sweet.
+ * Copyright 2003-2011 by Michael R Sweet.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2, or (at your option) any later version.
+ * These coded instructions, statements, and computer programs are the
+ * property of Michael R Sweet and are protected by Federal copyright
+ * law.  Distribution and use rights are outlined in the file "COPYING"
+ * which should have been included with this file.  If this file is
+ * missing or damaged, see the license at:
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *     http://www.minixml.org/
  *
  * Contents:
  *
  *   mxmlLoadFd()            - Load a file descriptor into an XML node tree.
  *   mxmlLoadFile()          - Load a file into an XML node tree.
  *   mxmlLoadString()        - Load a string into an XML node tree.
- *   mxmlSaveAllocString()   - Save an XML node tree to an allocated string.
+ *   mxmlSaveAllocString()   - Save an XML tree to an allocated string.
  *   mxmlSaveFd()            - Save an XML tree to a file descriptor.
  *   mxmlSaveFile()          - Save an XML tree to a file.
  *   mxmlSaveString()        - Save an XML node tree to a string.
@@ -32,7 +30,7 @@
  *                             using a SAX callback.
  *   mxmlSetCustomHandlers() - Set the handling functions for custom data.
  *   mxmlSetErrorCallback()  - Set the error message callback.
- *   mxmlSetWrapMargin()     - Set the the wrap margin when saving XML data.
+ *   mxmlSetWrapMargin()     - Set the wrap margin when saving XML data.
  *   mxml_add_char()         - Add a character to a buffer, expanding as needed.
  *   mxml_fd_getc()          - Read a character from a file descriptor.
  *   mxml_fd_putc()          - Write a character to a file descriptor.
@@ -232,7 +230,7 @@ mxmlLoadString(mxml_node_t    *top,	/* I - Top node */
 
 
 /*
- * 'mxmlSaveAllocString()' - Save an XML node tree to an allocated string.
+ * 'mxmlSaveAllocString()' - Save an XML tree to an allocated string.
  *
  * This function returns a pointer to a string containing the textual
  * representation of the XML node tree.  The string should be freed
@@ -602,7 +600,7 @@ mxmlSetErrorCallback(mxml_error_cb_t cb)/* I - Error callback function */
 
 
 /*
- * 'mxmlSetWrapMargin()' - Set the the wrap margin when saving XML data.
+ * 'mxmlSetWrapMargin()' - Set the wrap margin when saving XML data.
  *
  * Wrapping is disabled when "column" is 0.
  *
@@ -1567,18 +1565,21 @@ mxml_load_data(
 
     if (ch == '<' && whitespace && type == MXML_TEXT)
     {
-      node = mxmlNewText(parent, whitespace, "");
-
-      if (sax_cb)
+      if (parent)
       {
-        (*sax_cb)(node, MXML_SAX_DATA, sax_data);
+	node = mxmlNewText(parent, whitespace, "");
 
-        if (!mxmlRelease(node))
-          node = NULL;
+	if (sax_cb)
+	{
+	  (*sax_cb)(node, MXML_SAX_DATA, sax_data);
+
+	  if (!mxmlRelease(node))
+	    node = NULL;
+	}
+
+	if (!first && node)
+	  first = node;
       }
-
-      if (!first && node)
-        first = node;
 
       whitespace = 0;
     }
@@ -1652,6 +1653,17 @@ mxml_load_data(
 
 	*bufptr = '\0';
 
+        if (!parent && first)
+	{
+	 /*
+	  * There can only be one root element!
+	  */
+
+	  mxml_error("<%s> cannot be a second root node after <%s>", 
+	             buffer, first->value.element.name);
+          goto error; 		     
+	}
+
 	if ((node = mxmlNewElement(parent, buffer)) == NULL)
 	{
 	 /*
@@ -1709,6 +1721,17 @@ mxml_load_data(
 
 	*bufptr = '\0';
 
+        if (!parent && first)
+	{
+	 /*
+	  * There can only be one root element!
+	  */
+
+	  mxml_error("<%s> cannot be a second root node after <%s>", 
+	             buffer, first->value.element.name);
+          goto error; 		     
+	}
+
 	if ((node = mxmlNewElement(parent, buffer)) == NULL)
 	{
 	 /*
@@ -1764,6 +1787,17 @@ mxml_load_data(
 	*/
 
 	*bufptr = '\0';
+
+        if (!parent && first)
+	{
+	 /*
+	  * There can only be one root element!
+	  */
+
+	  mxml_error("<%s> cannot be a second root node after <%s>", 
+	             buffer, first->value.element.name);
+          goto error; 		     
+	}
 
 	if ((node = mxmlNewElement(parent, buffer)) == NULL)
 	{
@@ -1840,6 +1874,17 @@ mxml_load_data(
 
 	*bufptr = '\0';
 
+        if (!parent && first)
+	{
+	 /*
+	  * There can only be one root element!
+	  */
+
+	  mxml_error("<%s> cannot be a second root node after <%s>", 
+	             buffer, first->value.element.name);
+          goto error; 		     
+	}
+
 	if ((node = mxmlNewElement(parent, buffer)) == NULL)
 	{
 	 /*
@@ -1904,7 +1949,8 @@ mxml_load_data(
         {
           (*sax_cb)(node, MXML_SAX_ELEMENT_CLOSE, sax_data);
 
-          mxmlRelease(node);
+          if (!mxmlRelease(node) && first == node)
+	    first = NULL;
         }
 
        /*
@@ -1919,6 +1965,17 @@ mxml_load_data(
        /*
         * Handle open tag...
 	*/
+
+        if (!parent && first)
+	{
+	 /*
+	  * There can only be one root element!
+	  */
+
+	  mxml_error("<%s> cannot be a second root node after <%s>", 
+	             buffer, first->value.element.name);
+          goto error; 		     
+	}
 
         if ((node = mxmlNewElement(parent, buffer)) == NULL)
 	{
@@ -2686,257 +2743,253 @@ mxml_write_node(mxml_node_t     *node,	/* I - Node to write */
   char		s[255];			/* Temporary string */
 
 
-  while (node != NULL)
+ /*
+  * Print the node value...
+  */
+
+  switch (node->type)
   {
-   /*
-    * Print the node value...
-    */
+    case MXML_ELEMENT :
+	col = mxml_write_ws(node, p, cb, MXML_WS_BEFORE_OPEN, col, putc_cb);
 
-    switch (node->type)
-    {
-      case MXML_ELEMENT :
-          col = mxml_write_ws(node, p, cb, MXML_WS_BEFORE_OPEN, col, putc_cb);
+	if ((*putc_cb)('<', p) < 0)
+	  return (-1);
+	if (node->value.element.name[0] == '?' ||
+	    !strncmp(node->value.element.name, "!--", 3) ||
+	    !strncmp(node->value.element.name, "![CDATA[", 8))
+	{
+	 /*
+	  * Comments, CDATA, and processing instructions do not
+	  * use character entities.
+	  */
 
-          if ((*putc_cb)('<', p) < 0)
-	    return (-1);
-          if (node->value.element.name[0] == '?' ||
-	      !strncmp(node->value.element.name, "!--", 3) ||
-	      !strncmp(node->value.element.name, "![CDATA[", 8))
-          {
-	   /*
-	    * Comments, CDATA, and processing instructions do not
-	    * use character entities.
-	    */
-
-	    const char	*ptr;		/* Pointer into name */
+	  const char	*ptr;		/* Pointer into name */
 
 
-	    for (ptr = node->value.element.name; *ptr; ptr ++)
-	      if ((*putc_cb)(*ptr, p) < 0)
-	        return (-1);
-	  }
-	  else if (mxml_write_name(node->value.element.name, p, putc_cb) < 0)
-	    return (-1);
+	  for (ptr = node->value.element.name; *ptr; ptr ++)
+	    if ((*putc_cb)(*ptr, p) < 0)
+	      return (-1);
+	}
+	else if (mxml_write_name(node->value.element.name, p, putc_cb) < 0)
+	  return (-1);
 
-          col += strlen(node->value.element.name) + 1;
+	col += strlen(node->value.element.name) + 1;
 
-	  for (i = node->value.element.num_attrs, attr = node->value.element.attrs;
-	       i > 0;
-	       i --, attr ++)
+	for (i = node->value.element.num_attrs, attr = node->value.element.attrs;
+	     i > 0;
+	     i --, attr ++)
+	{
+	  width = strlen(attr->name);
+
+	  if (attr->value)
+	    width += strlen(attr->value) + 3;
+
+	  if (global->wrap > 0 && (col + width) > global->wrap)
 	  {
-	    width = strlen(attr->name);
-
-	    if (attr->value)
-	      width += strlen(attr->value) + 3;
-
-	    if (global->wrap > 0 && (col + width) > global->wrap)
-	    {
-	      if ((*putc_cb)('\n', p) < 0)
-	        return (-1);
-
-	      col = 0;
-	    }
-	    else
-	    {
-	      if ((*putc_cb)(' ', p) < 0)
-	        return (-1);
-
-	      col ++;
-	    }
-
-            if (mxml_write_name(attr->name, p, putc_cb) < 0)
+	    if ((*putc_cb)('\n', p) < 0)
 	      return (-1);
 
-	    if (attr->value)
-	    {
-              if ((*putc_cb)('=', p) < 0)
-		return (-1);
-              if ((*putc_cb)('\"', p) < 0)
-		return (-1);
-	      if (mxml_write_string(attr->value, p, putc_cb) < 0)
-		return (-1);
-              if ((*putc_cb)('\"', p) < 0)
-		return (-1);
-            }
-
-            col += width;
+	    col = 0;
 	  }
-
-	  if (node->child)
-	  {
-           /*
-	    * Write children...
-	    */
-
-	    if ((*putc_cb)('>', p) < 0)
-	      return (-1);
-	    else
-	      col ++;
-
-            col = mxml_write_ws(node, p, cb, MXML_WS_AFTER_OPEN, col, putc_cb);
-
-	    if ((col = mxml_write_node(node->child, p, cb, col, putc_cb,
-	                               global)) < 0)
-	      return (-1);
-
-           /*
-	    * The ? and ! elements are special-cases and have no end tags...
-	    */
-
-            if (node->value.element.name[0] != '!' &&
-	        node->value.element.name[0] != '?')
-	    {
-              col = mxml_write_ws(node, p, cb, MXML_WS_BEFORE_CLOSE, col, putc_cb);
-
-              if ((*putc_cb)('<', p) < 0)
-		return (-1);
-              if ((*putc_cb)('/', p) < 0)
-		return (-1);
-              if (mxml_write_string(node->value.element.name, p, putc_cb) < 0)
-		return (-1);
-              if ((*putc_cb)('>', p) < 0)
-		return (-1);
-
-              col += strlen(node->value.element.name) + 3;
-
-              col = mxml_write_ws(node, p, cb, MXML_WS_AFTER_CLOSE, col, putc_cb);
-	    }
-	  }
-	  else if (node->value.element.name[0] == '!' ||
-	           node->value.element.name[0] == '?')
-	  {
-           /*
-	    * The ? and ! elements are special-cases...
-	    */
-
-	    if ((*putc_cb)('>', p) < 0)
-	      return (-1);
-	    else
-	      col ++;
-
-            col = mxml_write_ws(node, p, cb, MXML_WS_AFTER_OPEN, col, putc_cb);
-          }
 	  else
 	  {
-            if ((*putc_cb)(' ', p) < 0)
-	      return (-1);
-            if ((*putc_cb)('/', p) < 0)
-	      return (-1);
-            if ((*putc_cb)('>', p) < 0)
+	    if ((*putc_cb)(' ', p) < 0)
 	      return (-1);
 
-	    col += 3;
-
-            col = mxml_write_ws(node, p, cb, MXML_WS_AFTER_OPEN, col, putc_cb);
-	  }
-          break;
-
-      case MXML_INTEGER :
-	  if (node->prev)
-	  {
-	    if (global->wrap > 0 && col > global->wrap)
-	    {
-	      if ((*putc_cb)('\n', p) < 0)
-	        return (-1);
-
-	      col = 0;
-	    }
-	    else if ((*putc_cb)(' ', p) < 0)
-	      return (-1);
-	    else
-	      col ++;
-          }
-
-          sprintf(s, "%d", node->value.integer);
-	  if (mxml_write_string(s, p, putc_cb) < 0)
-	    return (-1);
-
-	  col += strlen(s);
-          break;
-
-      case MXML_OPAQUE :
-          if (mxml_write_string(node->value.opaque, p, putc_cb) < 0)
-	    return (-1);
-
-          col += strlen(node->value.opaque);
-          break;
-
-      case MXML_REAL :
-	  if (node->prev)
-	  {
-	    if (global->wrap > 0 && col > global->wrap)
-	    {
-	      if ((*putc_cb)('\n', p) < 0)
-	        return (-1);
-
-	      col = 0;
-	    }
-	    else if ((*putc_cb)(' ', p) < 0)
-	      return (-1);
-	    else
-	      col ++;
-          }
-
-          sprintf(s, "%f", node->value.real);
-	  if (mxml_write_string(s, p, putc_cb) < 0)
-	    return (-1);
-
-	  col += strlen(s);
-          break;
-
-      case MXML_TEXT :
-	  if (node->value.text.whitespace && col > 0)
-	  {
-	    if (global->wrap > 0 && col > global->wrap)
-	    {
-	      if ((*putc_cb)('\n', p) < 0)
-	        return (-1);
-
-	      col = 0;
-	    }
-	    else if ((*putc_cb)(' ', p) < 0)
-	      return (-1);
-	    else
-	      col ++;
-          }
-
-          if (mxml_write_string(node->value.text.string, p, putc_cb) < 0)
-	    return (-1);
-
-	  col += strlen(node->value.text.string);
-          break;
-
-      case MXML_CUSTOM :
-          if (global->custom_save_cb)
-	  {
-	    char	*data;		/* Custom data string */
-	    const char	*newline;	/* Last newline in string */
-
-
-            if ((data = (*global->custom_save_cb)(node)) == NULL)
-	      return (-1);
-
-            if (mxml_write_string(data, p, putc_cb) < 0)
-	      return (-1);
-
-            if ((newline = strrchr(data, '\n')) == NULL)
-	      col += strlen(data);
-	    else
-              col = strlen(newline);
-
-            free(data);
-	    break;
+	    col ++;
 	  }
 
-      default : /* Should never happen */
-          return (-1);
-    }
+	  if (mxml_write_name(attr->name, p, putc_cb) < 0)
+	    return (-1);
 
-   /*
-    * Next node...
-    */
+	  if (attr->value)
+	  {
+	    if ((*putc_cb)('=', p) < 0)
+	      return (-1);
+	    if ((*putc_cb)('\"', p) < 0)
+	      return (-1);
+	    if (mxml_write_string(attr->value, p, putc_cb) < 0)
+	      return (-1);
+	    if ((*putc_cb)('\"', p) < 0)
+	      return (-1);
+	  }
 
-    node = node->next;
+	  col += width;
+	}
+
+	if (node->child)
+	{
+	 /*
+	  * Write children...
+	  */
+
+	  mxml_node_t *child;		/* Current child */
+
+
+	  if ((*putc_cb)('>', p) < 0)
+	    return (-1);
+	  else
+	    col ++;
+
+	  col = mxml_write_ws(node, p, cb, MXML_WS_AFTER_OPEN, col, putc_cb);
+
+          for (child = node->child; child; child = child->next)
+	  {
+	    if ((col = mxml_write_node(child, p, cb, col, putc_cb, global)) < 0)
+	      return (-1);
+	  }
+
+	 /*
+	  * The ? and ! elements are special-cases and have no end tags...
+	  */
+
+	  if (node->value.element.name[0] != '!' &&
+	      node->value.element.name[0] != '?')
+	  {
+	    col = mxml_write_ws(node, p, cb, MXML_WS_BEFORE_CLOSE, col, putc_cb);
+
+	    if ((*putc_cb)('<', p) < 0)
+	      return (-1);
+	    if ((*putc_cb)('/', p) < 0)
+	      return (-1);
+	    if (mxml_write_string(node->value.element.name, p, putc_cb) < 0)
+	      return (-1);
+	    if ((*putc_cb)('>', p) < 0)
+	      return (-1);
+
+	    col += strlen(node->value.element.name) + 3;
+
+	    col = mxml_write_ws(node, p, cb, MXML_WS_AFTER_CLOSE, col, putc_cb);
+	  }
+	}
+	else if (node->value.element.name[0] == '!' ||
+		 node->value.element.name[0] == '?')
+	{
+	 /*
+	  * The ? and ! elements are special-cases...
+	  */
+
+	  if ((*putc_cb)('>', p) < 0)
+	    return (-1);
+	  else
+	    col ++;
+
+	  col = mxml_write_ws(node, p, cb, MXML_WS_AFTER_OPEN, col, putc_cb);
+	}
+	else
+	{
+	  if ((*putc_cb)(' ', p) < 0)
+	    return (-1);
+	  if ((*putc_cb)('/', p) < 0)
+	    return (-1);
+	  if ((*putc_cb)('>', p) < 0)
+	    return (-1);
+
+	  col += 3;
+
+	  col = mxml_write_ws(node, p, cb, MXML_WS_AFTER_OPEN, col, putc_cb);
+	}
+	break;
+
+    case MXML_INTEGER :
+	if (node->prev)
+	{
+	  if (global->wrap > 0 && col > global->wrap)
+	  {
+	    if ((*putc_cb)('\n', p) < 0)
+	      return (-1);
+
+	    col = 0;
+	  }
+	  else if ((*putc_cb)(' ', p) < 0)
+	    return (-1);
+	  else
+	    col ++;
+	}
+
+	sprintf(s, "%d", node->value.integer);
+	if (mxml_write_string(s, p, putc_cb) < 0)
+	  return (-1);
+
+	col += strlen(s);
+	break;
+
+    case MXML_OPAQUE :
+	if (mxml_write_string(node->value.opaque, p, putc_cb) < 0)
+	  return (-1);
+
+	col += strlen(node->value.opaque);
+	break;
+
+    case MXML_REAL :
+	if (node->prev)
+	{
+	  if (global->wrap > 0 && col > global->wrap)
+	  {
+	    if ((*putc_cb)('\n', p) < 0)
+	      return (-1);
+
+	    col = 0;
+	  }
+	  else if ((*putc_cb)(' ', p) < 0)
+	    return (-1);
+	  else
+	    col ++;
+	}
+
+	sprintf(s, "%f", node->value.real);
+	if (mxml_write_string(s, p, putc_cb) < 0)
+	  return (-1);
+
+	col += strlen(s);
+	break;
+
+    case MXML_TEXT :
+	if (node->value.text.whitespace && col > 0)
+	{
+	  if (global->wrap > 0 && col > global->wrap)
+	  {
+	    if ((*putc_cb)('\n', p) < 0)
+	      return (-1);
+
+	    col = 0;
+	  }
+	  else if ((*putc_cb)(' ', p) < 0)
+	    return (-1);
+	  else
+	    col ++;
+	}
+
+	if (mxml_write_string(node->value.text.string, p, putc_cb) < 0)
+	  return (-1);
+
+	col += strlen(node->value.text.string);
+	break;
+
+    case MXML_CUSTOM :
+	if (global->custom_save_cb)
+	{
+	  char	*data;		/* Custom data string */
+	  const char	*newline;	/* Last newline in string */
+
+
+	  if ((data = (*global->custom_save_cb)(node)) == NULL)
+	    return (-1);
+
+	  if (mxml_write_string(data, p, putc_cb) < 0)
+	    return (-1);
+
+	  if ((newline = strrchr(data, '\n')) == NULL)
+	    col += strlen(data);
+	  else
+	    col = strlen(newline);
+
+	  free(data);
+	  break;
+	}
+
+    default : /* Should never happen */
+	return (-1);
   }
 
   return (col);
@@ -3023,5 +3076,5 @@ mxml_write_ws(mxml_node_t     *node,	/* I - Current node */
 
 
 /*
- * End of "$Id: mxml-file.c 391 2009-05-17 05:20:52Z mike $".
+ * End of "$Id: mxml-file.c 438 2011-03-24 05:47:51Z mike $".
  */
