@@ -1335,7 +1335,11 @@ SDL_Surface *TTF_RenderUNICODE_Solid(TTF_Font *font,
 	palette->colors[1].r = fg.r;
 	palette->colors[1].g = fg.g;
 	palette->colors[1].b = fg.b;
-	SDL_SetColorKey( textbuf, SDL_TRUE, 0 );
+#if (SDL_VERSION_ATLEAST(1,3,0))
+		SDL_SetColorKey( textbuf, SDL_TRUE, 0 );
+#else
+		SDL_SetColorKey( textbuf, SDL_SRCCOLORKEY, 0 );
+#endif
 
 	/* check kerning */
 	use_kerning = FT_HAS_KERNING( font->face ) && font->kerning;
@@ -1471,7 +1475,11 @@ SDL_Surface *TTF_RenderGlyph_Solid(TTF_Font *font, Uint16 ch, SDL_Color fg)
 	palette->colors[1].r = fg.r;
 	palette->colors[1].g = fg.g;
 	palette->colors[1].b = fg.b;
-	SDL_SetColorKey(textbuf, SDL_TRUE, 0);
+#if (SDL_VERSION_ATLEAST(1,3,0))
+		SDL_SetColorKey( textbuf, SDL_TRUE, 0 );
+#else
+		SDL_SetColorKey( textbuf, SDL_SRCCOLORKEY, 0 );
+#endif
 
 	/* Copy the character from the pixmap */
 	src = glyph->bitmap.buffer;
