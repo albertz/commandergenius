@@ -11,15 +11,10 @@ Known bugs
 
 - 32-bpp color mode does not work with SW video surface, 24-bpp and 32-bpp mode does not work with SDL_HWSURFACE.
 
-- Audio is not paused on Android 4.0 when user presses "Recent apps" button.
-
 Requested features
 ==================
 
-- Support for advertisement frameworks (AdMod most likely), and C interface to control them.
-
-- Change data install path and app working directory to getExternalCacheDir() instead of /sdcard/app-data/...
-  Also Settings.java will need to check if app data is already installed to the app-data, and move it to correct location.
+- Support for resuming download of partially-downloaded files.
 
 - Perform a check for free space available on SD card before writing there, and write to the internal storage if SD card is unplugged.
 
