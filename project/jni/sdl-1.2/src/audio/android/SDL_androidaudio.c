@@ -130,6 +130,7 @@ AudioBootStrap ANDROIDAUD_bootstrap = {
 
 static unsigned char * audioBuffer = NULL;
 static size_t audioBufferSize = 0;
+static Uint32 audioLastTick = 0;
 
 // Extremely wicked JNI environment to call Java functions from C code
 static jbyteArray audioBufferJNI = NULL;
@@ -243,6 +244,20 @@ static void ANDROIDAUD_CloseAudio(_THIS)
 static void ANDROIDAUD_WaitAudio(_THIS)
 {
 	/* We will block in PlayAudio(), do nothing here */
+#ifdef SDL_AUDIO_PREVENT_CHOPPING_WITH_DELAY
+	//ZX:
+	if (audioLastTick == 0) {
+		audioLastTick = SDL_GetTicks();
+	} else {
+		unsigned int audioNewTick = SDL_GetTicks();
+		unsigned int delay_in_ms = (this->spec.samples*1000)/this->spec.freq;
+		int deltaTick = audioNewTick - audioLastTick;
+		if (delay_in_ms > deltaTick) {
+			SDL_Delay( delay_in_ms - deltaTick );
+		}
+		audioLastTick = audioNewTick;
+	}
+#endif
 }
 
 static JNIEnv * jniEnvPlaying = NULL;

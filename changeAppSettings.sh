@@ -275,6 +275,16 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$CompatibilityHacksPreventAudioChopping" -o -z "$AUTO" ]; then
+echo
+echo -n "Hack for broken devices: prevent audio chopping, by sleeping a bit after pushing each audio chunk (y)/(n) ($CompatibilityHacksPreventAudioChopping): "
+read var
+if [ -n "$var" ] ; then
+	CompatibilityHacksPreventAudioChopping="$var"
+	CHANGED=1
+fi
+fi
+
 if [ -z "$AppUsesJoystick" -o -z "$AUTO" ]; then
 echo
 echo "Application uses joystick (y) or (n), the on-screen DPAD will be used"
@@ -626,6 +636,7 @@ echo SdlVideoResizeKeepAspect=$SdlVideoResizeKeepAspect >> AndroidAppSettings.cf
 echo CompatibilityHacks=$CompatibilityHacks >> AndroidAppSettings.cfg
 echo CompatibilityHacksStaticInit=$CompatibilityHacksStaticInit >> AndroidAppSettings.cfg
 echo CompatibilityHacksTextInputEmulatesHwKeyboard=$CompatibilityHacksTextInputEmulatesHwKeyboard >> AndroidAppSettings.cfg
+echo CompatibilityHacksPreventAudioChopping=$CompatibilityHacksPreventAudioChopping >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
 echo ShowMouseCursor=$ShowMouseCursor >> AndroidAppSettings.cfg
@@ -738,6 +749,12 @@ if [ "$CompatibilityHacksTextInputEmulatesHwKeyboard" = "y" ] ; then
 	CompatibilityHacksTextInputEmulatesHwKeyboard=true
 else
 	CompatibilityHacksTextInputEmulatesHwKeyboard=false
+fi
+
+if [ "$CompatibilityHacksPreventAudioChopping" = "y" ] ; then
+	CompatibilityHacksPreventAudioChopping=-DSDL_AUDIO_PREVENT_CHOPPING_WITH_DELAY=1
+else
+	CompatibilityHacksPreventAudioChopping=
 fi
 
 if [ "$AppUsesMouse" = "y" ] ; then
@@ -950,7 +967,7 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
-	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes $RedefinedKeycodesScreenKb^" | \
+	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes $RedefinedKeycodesScreenKb $CompatibilityHacksPreventAudioChopping^" | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \
 	sed "s^SDL_VERSION :=.*^SDL_VERSION := $LibSdlVersion^"  >> \

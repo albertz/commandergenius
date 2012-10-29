@@ -719,6 +719,7 @@ class Settings
 		void run (final MainActivity p)
 		{
 			String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
+			boolean [] mandatory = new boolean[downloadFiles.length];
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(p.getResources().getString(R.string.downloads));
@@ -729,6 +730,11 @@ class Settings
 				items[i] = new String(downloadFiles[i].split("[|]")[0]);
 				if( items[i].toString().indexOf("!") == 0 )
 					items[i] = items[i].toString().substring(1);
+				if( items[i].toString().indexOf("!") == 0 )
+				{
+					items[i] = items[i].toString().substring(1);
+					mandatory[i] = true;
+				}
 			}
 
 			if( Globals.OptionalDataDownload == null || Globals.OptionalDataDownload.length != items.length )
@@ -744,7 +750,10 @@ class Settings
 					}
 				}
 				if( oldFormat )
+				{
 					Globals.OptionalDataDownload[0] = true;
+					mandatory[0] = true;
+				}
 			}
 
 			builder.setMultiChoiceItems(items, Globals.OptionalDataDownload, new DialogInterface.OnMultiChoiceClickListener()
@@ -752,6 +761,10 @@ class Settings
 				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 				{
 					Globals.OptionalDataDownload[item] = isChecked;
+					if( mandatory[item] && !isChecked )
+					{
+						((AlertDialog)dialog).getListView().setItemChecked(item, true);
+					}
 				}
 			});
 			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
