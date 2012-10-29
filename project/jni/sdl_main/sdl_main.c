@@ -1,5 +1,3 @@
-#ifdef ANDROID
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -46,10 +44,15 @@ jobject SDL_ANDROID_JniVideoObject()
 extern void SDL_ANDROID_MultiThreadedVideoLoopInit();
 extern void SDL_ANDROID_MultiThreadedVideoLoop();
 
-static int threadedMain(void * unused);
+static int threadedMain(void * waitForDebugger);
 
-int threadedMain(void * unused)
+int threadedMain(void * waitForDebugger)
 {
+	if( waitForDebugger )
+	{
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "We are being debugged - waiting for debugger for 7 seconds");
+		//usleep(7000000);
+	}
 	SDL_main( argc, argv );
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Application closed, calling exit(0)");
 	exit(0);
@@ -57,7 +60,7 @@ int threadedMain(void * unused)
 #endif
 
 extern C_LINKAGE void
-JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring jcurdir, jstring cmdline, jint multiThreadedVideo )
+JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring jcurdir, jstring cmdline, jint multiThreadedVideo, jint waitForDebugger )
 {
 	int i = 0;
 	char curdir[PATH_MAX] = "";
@@ -123,14 +126,19 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	SDL_main( argc, argv );
 #else
 	if( ! multiThreadedVideo )
+	{
+		if( waitForDebugger )
+		{
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "We are being debugged - waiting for debugger for 7 seconds");
+			//usleep(7000000);
+		}
 		SDL_main( argc, argv );
+	}
 	else
 	{
 		SDL_ANDROID_MultiThreadedVideoLoopInit();
-		SDL_CreateThread(threadedMain, NULL);
+		SDL_CreateThread(threadedMain, (void *)waitForDebugger);
 		SDL_ANDROID_MultiThreadedVideoLoop();
 	}
 #endif
 };
-
-#endif

@@ -24,14 +24,9 @@ OBJS_GENIUSAI=$(patsubst %.cpp, out/%.o, $(SOURCES_GENIUSAI))
 SOURCES_ERM=$(wildcard vcmi/Scripting/ERM/*.cpp)
 OBJS_ERM=$(patsubst %.cpp, out/%.o, $(SOURCES_ERM))
 
-all: AndroidData/vcmiserver0
+all: AndroidData/binaries.zip
 
-AndroidData/vcmiserver0: vcmiserver.zip
-	rm -f AndroidData/vcmiserver*
-	split -b 1048576 -d -a 1 $< AndroidData/vcmiserver
-	cp -f AndroidData/vcmiserver* ../../../assets
-
-vcmiserver.zip: vcmiserver AI/libGeniusAI.so AI/libStupidAI.so Scripting/libvcmiERM.so
+AndroidData/binaries.zip: vcmiserver AI/libGeniusAI.so AI/libStupidAI.so Scripting/libvcmiERM.so
 	rm -f $@
 	zip -r $@ $^
 

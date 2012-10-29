@@ -59,6 +59,7 @@ import android.text.SpannedString;
 import android.content.Intent;
 import android.app.PendingIntent;
 import android.app.AlarmManager;
+import android.util.DisplayMetrics;
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
 class Settings
@@ -2472,6 +2473,28 @@ class Settings
 		nativeSetEnv( "LANG", lang );
 		nativeSetEnv( "LANGUAGE", lang );
 		// TODO: get current user name and set envvar USER, the API is not availalbe on Android 1.6 so I don't bother with this
+		nativeSetEnv( "APPDIR", p.getFilesDir().getAbsolutePath() );
+		nativeSetEnv( "SECURE_STORAGE_DIR", p.getFilesDir().getAbsolutePath() );
+		nativeSetEnv( "DATADIR", Globals.DataDir );
+		nativeSetEnv( "UNSECURE_STORAGE_DIR", Globals.DataDir );
+		nativeSetEnv( "HOME", Globals.DataDir );
+		try {
+			DisplayMetrics dm = new DisplayMetrics();
+			p.getWindowManager().getDefaultDisplay().getMetrics(dm);
+			float xx = dm.widthPixels/dm.xdpi;
+			float yy = dm.heightPixels/dm.ydpi;
+			float x = Math.max(xx, yy);
+			float y = Math.min(xx, yy);
+			float displayInches = (float)Math.sqrt( x*x + y*y );
+			nativeSetEnv( "DISPLAY_SIZE", String.valueOf(displayInches) );
+			nativeSetEnv( "DISPLAY_SIZE_MM", String.valueOf((int)(displayInches*25.4f)) );
+			nativeSetEnv( "DISPLAY_WIDTH", String.valueOf(x) );
+			nativeSetEnv( "DISPLAY_HEIGHT", String.valueOf(y) );
+			nativeSetEnv( "DISPLAY_WIDTH_MM", String.valueOf((int)(x*25.4f)) );
+			nativeSetEnv( "DISPLAY_HEIGHT_MM", String.valueOf((int)(y*25.4f)) );
+			nativeSetEnv( "DISPLAY_RESOLUTION_WIDTH", String.valueOf(Math.max(dm.widthPixels, dm.heightPixels)) );
+			nativeSetEnv( "DISPLAY_RESOLUTION_HEIGHT", String.valueOf(Math.min(dm.widthPixels, dm.heightPixels)) );
+		} catch (Exception eeeee) {}
 	}
 
 	static byte [] loadRaw(Activity p, int res)
