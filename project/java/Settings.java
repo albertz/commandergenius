@@ -763,6 +763,7 @@ class Settings
 					Globals.OptionalDataDownload[item] = isChecked;
 					if( mandatory[item] && !isChecked )
 					{
+						Globals.OptionalDataDownload[item] = true;
 						((AlertDialog)dialog).getListView().setItemChecked(item, true);
 					}
 				}
