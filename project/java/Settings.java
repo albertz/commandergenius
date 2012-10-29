@@ -719,7 +719,7 @@ class Settings
 		void run (final MainActivity p)
 		{
 			String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
-			boolean [] mandatory = new boolean[downloadFiles.length];
+			final boolean [] mandatory = new boolean[downloadFiles.length];
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(p.getResources().getString(R.string.downloads));
