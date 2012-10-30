@@ -133,4 +133,8 @@
 <string name="display_size_tiny_touchpad">Крохотный, режим тачпада</string>
 <string name="hardware_mouse_detected">Обнаружена внешняя мышь, эмуляция мыши выключена</string>
 
+<string name="not_enough_ram">Недостаточно оперативной памяти</string>
+<string name="not_enough_ram_size">Для запуска приложения нужно %1$d Мб оперативной памяти, на этом устройстве есть %2$d Мб</string>
+<string name="ignore">Игнорировать</string>
+
 </resources>

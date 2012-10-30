@@ -60,6 +60,7 @@ class Globals
 	public static int AppTouchscreenKeyboardKeysAmount = 4;
 	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 1;
 	public static int StartupMenuButtonTimeout = 3000;
+	public static int AppMinimumRAM = 0;
 	public static Settings.Menu HiddenMenuOptions [] = {};
 	public static Settings.Menu FirstStartMenuOptions [] = { (AppUsesMouse && ! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true) };
 	public static String AdmobPublisherId = "";

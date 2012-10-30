@@ -131,4 +131,9 @@
 <string name="display_size_tiny_touchpad">Крихiтний, режим тачпаду</string>
 <string name="hardware_mouse_detected">Виявлена зовнiшня миша, емуляція миші вимкнена</string>
 
+<string name="broken_libc_title">Broken OS detected</string>
+<string name="broken_libc_text">Your device has broken system libraries, this application will most probably crash. Please install a system update, or flash a custom ROM, or copy file /system/lib/libc.so from another device (experts only!)</string>
+<string name="not_enough_ram">Not enough RAM</string>
+<string name="not_enough_ram_size">This app needs %1$d Mb RAM, your device has %2$d Mb</string>
+<string name="ignore">Ignore</string>
 </resources>

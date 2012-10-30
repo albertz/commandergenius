@@ -442,6 +442,16 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$AppMinimumRAM" -o -z "$AUTO" ]; then
+echo
+echo -n "Minimum amount of RAM application requires, in Mb, SDL will print warning to user if it's lower ($AppMinimumRAM): "
+read var
+if [ -n "$var" ] ; then
+	AppMinimumRAM="$var"
+	CHANGED=1
+fi
+fi
+
 if [ -z "$AppVersionCode" -o "-$AUTO" != "-a" ]; then
 echo
 echo -n "Application version code (integer) ($AppVersionCode): "
@@ -655,6 +665,7 @@ echo StartupMenuButtonTimeout=$StartupMenuButtonTimeout >> AndroidAppSettings.cf
 echo HiddenMenuOptions=\'$HiddenMenuOptions\' >> AndroidAppSettings.cfg
 echo FirstStartMenuOptions=\'$FirstStartMenuOptions\' >> AndroidAppSettings.cfg
 echo MultiABI=$MultiABI >> AndroidAppSettings.cfg
+echo AppMinimumRAM=$AppMinimumRAM >> AndroidAppSettings.cfg
 echo AppVersionCode=$AppVersionCode >> AndroidAppSettings.cfg
 echo AppVersionName=\"$AppVersionName\" >> AndroidAppSettings.cfg
 echo ResetSdlConfigForThisVersion=$ResetSdlConfigForThisVersion >> AndroidAppSettings.cfg
@@ -944,6 +955,7 @@ cat project/src/Globals.java | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" | \
 	sed "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" | \
 	sed "s/public static int StartupMenuButtonTimeout = .*;/public static int StartupMenuButtonTimeout = $StartupMenuButtonTimeout;/" | \
+	sed "s/public static int AppMinimumRAM = .*;/public static int AppMinimumRAM = $AppMinimumRAM;/" | \
 	sed "s/public static Settings.Menu HiddenMenuOptions .*;/public static Settings.Menu HiddenMenuOptions [] = { $HiddenMenuOptions1 };/" | \
 	sed "s@public static Settings.Menu FirstStartMenuOptions .*;@public static Settings.Menu FirstStartMenuOptions [] = { $FirstStartMenuOptions };@" | \
 	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \

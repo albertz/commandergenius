@@ -115,13 +115,11 @@
 <string name="measurepressure_touchplease">Glisser les doigts sur l\'écran pendant deux secondes</string>
 <string name="measurepressure_response">Pression %1$03d rayon %2$03d</string>
 
-
-    <string name="audiobuf_verysmall">Très petite (appareils rapides, plus de réactivité)</string>
-    <string name="audiobuf_small">Petite (appareils rapides)</string>
-    <string name="audiobuf_medium">Moyenne</string>
-    <string name="audiobuf_large">Grande (appareils anciens, si le son est saccadé)</string>
-    <string name="audiobuf_question">Taille du tampon audio</string>
-    
+<string name="audiobuf_verysmall">Très petite (appareils rapides, plus de réactivité)</string>
+<string name="audiobuf_small">Petite (appareils rapides)</string>
+<string name="audiobuf_medium">Moyenne</string>
+<string name="audiobuf_large">Grande (appareils anciens, si le son est saccadé)</string>
+<string name="audiobuf_question">Taille du tampon audio</string>
 
 <string name="remap_hwkeys">Reconfigurer les touches physiques</string>
 <string name="remap_hwkeys_press">Appuyez sur n\'importe quelle touche sauf HOME et POWER, vous pouvez utiliser les touches de volume</string>
@@ -144,7 +142,6 @@
 <string name="calibrate_touchscreen">Calibrer l\'écran tactile</string>
 <string name="calibrate_touchscreen_touch">Touchez les bords de l\'écran, appuyez sur Retour/BACK lorsque vous avez terminé</string>
 
-
 <string name="video">Paramètres vidéo</string>
 <string name="video_smooth">Fluidité de la vidéo</string>
 <string name="video_separatethread">Thread séparé pour la vidéo : permet paroifs d\'augmenter FPS</string>
@@ -158,13 +155,14 @@
 <string name="display_size_small_touchpad">Petit, mode touchpad</string>
 <string name="display_size_tiny">Très petit</string>
 <string name="display_size_tiny_touchpad">Très petit, mode touchpad</string>
-    
-<string name="show_more_options">Afficher plus d\'options</string>
 
+<string name="show_more_options">Afficher plus d\'options</string>
 
 <string name="broken_libc_title">Erreur interne détectée (OS/LibC)</string>
 <string name="broken_libc_text">Certaines librairies sont mal installées et cette application va probablement ne pas fonctionner. Merci de mettre à jour votre système, flash, ROM custom, ou bien de copier le fichier /system/lib/libc.so depuis un autre système (Attention, Experts uniquement !).</string>
 
-
-
+<string name="hardware_mouse_detected">Hardware mouse detected, disabling mouse emulation</string>
+<string name="not_enough_ram">Not enough RAM</string>
+<string name="not_enough_ram_size">This app needs %1$d Mb RAM, your device has %2$d Mb</string>
+<string name="ignore">Ignore</string>
 </resources>

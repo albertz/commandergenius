@@ -60,6 +60,8 @@ import android.content.Intent;
 import android.app.PendingIntent;
 import android.app.AlarmManager;
 import android.util.DisplayMetrics;
+import android.net.Uri;
+import java.util.concurrent.Semaphore;
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
 class Settings
@@ -346,7 +348,8 @@ class Settings
 
 		System.out.println("libSDL: Settings.Load(): loading settings failed, running config dialog");
 		p.setUpStatusLabel();
-		showConfig(p, true);
+		if( checkRamSize(p) )
+			showConfig(p, true);
 	}
 
 	// ===============================================================================================
@@ -2604,6 +2607,61 @@ class Settings
 				return Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + p.getPackageName() + "/files";
 			}
 		}
+	}
+	
+	static boolean checkRamSize(final MainActivity p)
+	{
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader("/proc/meminfo"));
+			String line = null;
+			while( ( line = reader.readLine() ) != null )
+			{
+				if( line.indexOf("MemTotal:") == 0 )
+				{
+					String[] fields = line.split("[ \t]+");
+					Long size = Long.parseLong(fields[1]);
+					System.out.println("Device RAM size: " + size / 1024 + " Mb, required minimum RAM: " + Globals.AppMinimumRAM + " Mb" );
+					if( size / 1024 < Globals.AppMinimumRAM )
+					{
+						settingsChanged = true;
+						AlertDialog.Builder builder = new AlertDialog.Builder(p);
+						builder.setTitle(R.string.not_enough_ram);
+						builder.setMessage(p.getResources().getString( R.string.not_enough_ram_size, (int)(size / 1024), Globals.AppMinimumRAM) );
+						builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
+						{
+							public void onClick(DialogInterface dialog, int item)
+							{
+								p.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + p.getPackageName())));
+								System.exit(0);
+							}
+						});
+						builder.setNegativeButton(p.getResources().getString(R.string.ignore), new DialogInterface.OnClickListener()
+						{
+							public void onClick(DialogInterface dialog, int item)
+							{
+								showConfig(p, true);
+								return;
+							}
+						});
+						builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+						{
+							public void onCancel(DialogInterface dialog)
+							{
+								p.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + p.getPackageName())));
+								System.exit(0);
+							}
+						});
+						final AlertDialog alert = builder.create();
+						alert.setOwnerActivity(p);
+						alert.show();
+						return false;
+					}
+				}
+			}
+		} catch ( Exception e ) {
+			System.out.println("Error: cannot parse /proc/meminfo: " + e.toString());
+		}
+		return true;
 	}
 	
 	private static native void nativeSetTrackballUsed();

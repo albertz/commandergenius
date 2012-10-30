@@ -161,4 +161,8 @@
 
     <string name="hardware_mouse_detected">Hardware mouse detected, disabling mouse emulation</string>
 
+    <string name="not_enough_ram">Not enough RAM</string>
+    <string name="not_enough_ram_size">This app needs %1$d Mb RAM, your device has %2$d Mb</string>
+    <string name="ignore">Ignore</string>
+
 </resources>
