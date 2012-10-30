@@ -277,6 +277,7 @@ class DataDownloader extends Thread
 		boolean DoNotUnzip = false;
 		boolean FileInAssets = false;
 		String url = "";
+		long partialDownloadLen = 0;
 
 		int downloadUrlIndex = 1;
 		while( downloadUrlIndex < downloadUrls.length )
@@ -286,8 +287,12 @@ class DataDownloader extends Thread
 			DoNotUnzip = false;
 			if(url.indexOf(":") == 0)
 			{
+				path = getOutFilePath(url.substring( 1, url.indexOf(":", 1) ));
 				url = url.substring( url.indexOf(":", 1) + 1 );
 				DoNotUnzip = true;
+				File partialDownload = new File( path );
+				if( partialDownload.exists() && !partialDownload.isDirectory() )
+					partialDownloadLen = partialDownload.length();
 			}
 			Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.connecting_to, url) );
 			if( url.indexOf("http://") == -1 && url.indexOf("https://") == -1 ) // File inside assets
@@ -315,6 +320,8 @@ class DataDownloader extends Thread
 				System.out.println("Connecting to: " + url);
 				request = new HttpGet(url);
 				request.addHeader("Accept", "*/*");
+				if( partialDownloadLen > 0 )
+					request.addHeader("Range", "bytes=" + partialDownloadLen + "-");
 				try {
 					DefaultHttpClient client = HttpWithDisabledSslCertCheck();
 					client.getParams().setBooleanParameter("http.protocol.handle-redirects", true);
@@ -325,10 +332,10 @@ class DataDownloader extends Thread
 				};
 				if( response != null )
 				{
-					if( response.getStatusLine().getStatusCode() != 200 )
+					if( response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 206 )
 					{
 						response = null;
-						System.out.println("Failed to connect to " + url);
+						System.out.println("Failed to connect to " + url + " with error " + response.getStatusLine().getStatusCode() + " " + response.getStatusLine().getReasonPhrase() );
 						downloadUrlIndex++;
 					}
 					else
@@ -398,8 +405,6 @@ class DataDownloader extends Thread
 		
 		if(DoNotUnzip)
 		{
-			path = getOutFilePath(downloadUrls[downloadUrlIndex].substring( 1,
-					downloadUrls[downloadUrlIndex].indexOf(":", 1) ));
 			System.out.println("Saving file '" + path + "'");
 			OutputStream out = null;
 			try {
@@ -409,7 +414,27 @@ class DataDownloader extends Thread
 						outDir.mkdirs();
 				} catch( SecurityException e ) { };
 
-				out = new FileOutputStream( path );
+				if( partialDownloadLen > 0 )
+				{
+					try {
+						Header[] range = response.getHeaders("Content-Range");
+						if( range.length > 0 && range[0].getValue().indexOf("bytes") == 0 )
+						{
+							//System.out.println("Resuming download of file '" + path + "': Content-Range: " + range[0].getValue());
+							String[] skippedBytes = range[0].getValue().split("/")[0].split("-")[0].split(" ");
+							if( skippedBytes.length >= 2 && Long.parseLong(skippedBytes[1]) == partialDownloadLen )
+							{
+								out = new FileOutputStream( path, true );
+								System.out.println("Resuming download of file '" + path + "' at pos " + partialDownloadLen);
+							}
+						}
+					} catch (Exception e) { }
+				}
+				if( out == null )
+				{
+					out = new FileOutputStream( path );
+					partialDownloadLen = 0;
+				}
 			} catch( FileNotFoundException e ) {
 				System.out.println("Saving file '" + path + "' - error creating output file: " + e.toString());
 			} catch( SecurityException e ) {
@@ -432,7 +457,7 @@ class DataDownloader extends Thread
 
 					float percent = 0.0f;
 					if( totalLen > 0 )
-						percent = stream.getBytesRead() * 100.0f / totalLen;
+						percent = (stream.getBytesRead() + partialDownloadLen) * 100.0f / (totalLen + partialDownloadLen);
 					Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
 				}
 				out.flush();
