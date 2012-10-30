@@ -223,6 +223,7 @@ class DataDownloader extends Thread
 			return false;
 		
 		Resources res = Parent.getResources();
+		boolean forceOverwrite = false;
 
 		String path = getOutFilePath(DownloadFlagFileName);
 		InputStream checkFile = null;
@@ -251,7 +252,9 @@ class DataDownloader extends Thread
 					throw new IOException();
 				Status.setText( res.getString(R.string.download_unneeded) );
 				return true;
-			} catch ( IOException e ) {};
+			} catch ( IOException e ) {
+				forceOverwrite = true;
+			}
 		}
 		checkFile = null;
 		
@@ -291,7 +294,7 @@ class DataDownloader extends Thread
 				url = url.substring( url.indexOf(":", 1) + 1 );
 				DoNotUnzip = true;
 				File partialDownload = new File( path );
-				if( partialDownload.exists() && !partialDownload.isDirectory() )
+				if( partialDownload.exists() && !partialDownload.isDirectory() && !forceOverwrite )
 					partialDownloadLen = partialDownload.length();
 			}
 			Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.connecting_to, url) );
