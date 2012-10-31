@@ -254,6 +254,7 @@ class DataDownloader extends Thread
 				return true;
 			} catch ( IOException e ) {
 				forceOverwrite = true;
+				new File(path).delete();
 			}
 		}
 		checkFile = null;
