@@ -468,7 +468,7 @@ class DataDownloader extends Thread
 				out.close();
 				out = null;
 			} catch( java.io.IOException e ) {
-				Status.setText( res.getString(R.string.error_write, path) );
+				Status.setText( res.getString(R.string.error_write, path) + ": " + e.getMessage() );
 				System.out.println("Saving file '" + path + "' - error writing: " + e.toString());
 				return false;
 			}
@@ -571,7 +571,7 @@ class DataDownloader extends Thread
 					out.close();
 					out = null;
 				} catch( java.io.IOException e ) {
-					Status.setText( res.getString(R.string.error_write, path) );
+					Status.setText( res.getString(R.string.error_write, path) + ": " + e.getMessage() );
 					System.out.println("Saving file '" + path + "' - error writing or downloading: " + e.toString());
 					return false;
 				}
@@ -594,9 +594,8 @@ class DataDownloader extends Thread
 											" file size in ZIP: " + entry.getSize() + " actual size " + count );
 						throw new Exception();
 					}
-				} catch( Exception e )
-				{
-					Status.setText( res.getString(R.string.error_write, path) );
+				} catch( Exception e ) {
+					Status.setText( res.getString(R.string.error_write, path) + ": " + e.getMessage() );
 					return false;
 				}
 				System.out.println("Saving file '" + path + "' done");
@@ -613,7 +612,7 @@ class DataDownloader extends Thread
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
 		} catch( java.io.IOException e ) {
-			Status.setText( res.getString(R.string.error_write, path) );
+			Status.setText( res.getString(R.string.error_write, path) + ": " + e.getMessage() );
 			return false;
 		};
 		Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_finished) );

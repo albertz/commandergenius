@@ -210,7 +210,7 @@ public class MainActivity extends Activity
 		if( Parent._tv == null )
 		{
 			Parent._tv = new TextView(Parent);
-			Parent._tv.setMaxLines(1);
+			Parent._tv.setMaxLines(2);
 			Parent._tv.setText(R.string.init);
 			Parent._layout2.addView(Parent._tv);
 		}
