@@ -277,7 +277,7 @@ class DataDownloader extends Thread
 		catch( FileNotFoundException e ) {}
 		catch( IOException e ) {};
 
-		HttpResponse response = null;
+		HttpResponse response = null, responseError = null;
 		HttpGet request;
 		long totalLen = 0;
 		CountingInputStream stream;
@@ -342,8 +342,9 @@ class DataDownloader extends Thread
 				{
 					if( response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 206 )
 					{
+						System.out.println("Failed to connect to " + url + " with error " + response.getStatusLine().getStatusCode() + " " + response.getStatusLine().getReasonPhrase());
+						responseError = response;
 						response = null;
-						System.out.println("Failed to connect to " + url + " with error " + response.getStatusLine().getStatusCode() + " " + response.getStatusLine().getReasonPhrase() );
 						downloadUrlIndex++;
 					}
 					else
@@ -397,7 +398,7 @@ class DataDownloader extends Thread
 			if( response == null )
 			{
 				System.out.println("Error connecting to " + url);
-				Status.setText( res.getString(R.string.failed_connecting_to, url) );
+				Status.setText( res.getString(R.string.failed_connecting_to, url) + (responseError == null ? "" : ": " + responseError.getStatusLine().getStatusCode() + " " + responseError.response.getStatusLine().getReasonPhrase()) );
 				return false;
 			}
 
