@@ -218,13 +218,17 @@ class DataDownloader extends Thread
 
 	public boolean DownloadDataFile(final String DataDownloadUrl, final String DownloadFlagFileName, int downloadCount, int downloadTotal)
 	{
+		Resources res = Parent.getResources();
+
 		String [] downloadUrls = DataDownloadUrl.split("[|]");
 		if( downloadUrls.length < 2 )
+		{
+			System.out.println("Error: download string invalid: '" + DataDownloadUrl + "', your AndroidAppSettigns.cfg is broken");
+			Status.setText( res.getString(R.string.error_dl_from, DataDownloadUrl) );
 			return false;
-		
-		Resources res = Parent.getResources();
-		boolean forceOverwrite = false;
+		}
 
+		boolean forceOverwrite = false;
 		String path = getOutFilePath(DownloadFlagFileName);
 		InputStream checkFile = null;
 		try {
