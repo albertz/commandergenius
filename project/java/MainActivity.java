@@ -71,6 +71,7 @@ import android.os.Handler;
 import android.os.Message;
 import java.util.concurrent.Semaphore;
 import android.content.pm.ActivityInfo;
+import android.view.Display;
 
 public class MainActivity extends Activity
 {
@@ -237,9 +238,48 @@ public class MainActivity extends Activity
 
 	public void initSDL()
 	{
+		(new Thread(new Runnable()
+		{
+			public void run()
+			{
+				//int tries = 30;
+				while( isCurrentOrientationHorizontal() != Globals.HorizontalOrientation )
+				{
+					System.out.println("libSDL: Waiting for screen orientation to change - the device is probably in the lockscreen mode");
+					try {
+						Thread.sleep(500);
+					} catch( Exception e ) {}
+					/*
+					tries--;
+					if( tries <= 0 )
+					{
+						System.out.println("libSDL: Giving up waiting for screen orientation change");
+						break;
+					}
+					*/
+					if( _isPaused )
+					{
+						System.out.println("libSDL: Application paused, cancelling SDL initialization until it will be brought to foreground");
+						return;
+					}
+				}
+				runOnUiThread(new Runnable()
+				{
+					public void run()
+					{
+						initSDLInternal();
+					}
+				});
+			}
+		})).start();
+	}
+
+	private void initSDLInternal()
+	{
 		if(sdlInited)
 			return;
 		System.out.println("libSDL: Initializing video and SDL application");
+		
 		sdlInited = true;
 		if(Globals.UseAccelerometerAsArrowKeys || Globals.AppUsesAccelerometer)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
@@ -304,25 +344,6 @@ public class MainActivity extends Activity
 				if( downloader.DownloadComplete )
 				{
 					initSDL();
-					/*
-					// This code does not work
-					(new Thread(new Runnable()
-					{
-						public void run()
-						{
-							try {
-								Thread.sleep(300); // Allow some time for Os to change screen orientation
-							} catch(Exception e) {}
-							runOnUiThread(new Runnable()
-							{
-								public void run()
-								{
-									initSDL();
-								}
-							});
-						}
-					})).start();
-					*/
 				}
 			}
 		}
@@ -934,6 +955,12 @@ public class MainActivity extends Activity
 			System.out.println("libSDL: Cannot get the version of our own package: " + e);
 		}
 		return 0;
+	}
+
+	public boolean isCurrentOrientationHorizontal()
+	{
+		Display getOrient = getWindowManager().getDefaultDisplay();
+		return getOrient.getWidth() >= getOrient.getHeight();
 	}
 
 	public FrameLayout getVideoLayout() { return _videoLayout; }
