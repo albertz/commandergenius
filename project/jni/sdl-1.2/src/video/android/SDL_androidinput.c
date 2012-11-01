@@ -376,7 +376,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 			else
 			{
 				int distMaxDiff = SDL_ANDROID_sFakeWindowHeight / ( 1 + (1 + multitouchGestureSensitivity) * 2 );
-				int angleMaxDiff = atan2i_PI / ( 1 + (1 + multitouchGestureSensitivity) * 2 );
+				int angleMaxDiff = atan2i_PI / 2 / ( 1 + (1 + multitouchGestureSensitivity) * 2 );
 				if( dist - multitouchGestureDist > distMaxDiff )
 				{
 					multitouchGestureKeyPressed[0] = 1;

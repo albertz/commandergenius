@@ -303,6 +303,9 @@ public class MainActivity extends Activity
 				downloader.setStatusField(_tv);
 				if( downloader.DownloadComplete )
 				{
+					initSDL();
+					/*
+					// This code does not work
 					(new Thread(new Runnable()
 					{
 						public void run()
@@ -319,6 +322,7 @@ public class MainActivity extends Activity
 							});
 						}
 					})).start();
+					*/
 				}
 			}
 		}
