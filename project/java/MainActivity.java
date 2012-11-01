@@ -302,7 +302,24 @@ public class MainActivity extends Activity
 			{
 				downloader.setStatusField(_tv);
 				if( downloader.DownloadComplete )
-					initSDL();
+				{
+					(new Thread(new Runnable()
+					{
+						public void run()
+						{
+							try {
+								Thread.sleep(300); // Allow some time for Os to change screen orientation
+							} catch(Exception e) {}
+							runOnUiThread(new Runnable()
+							{
+								public void run()
+								{
+									initSDL();
+								}
+							});
+						}
+					})).start();
+				}
 			}
 		}
 		//if( _ad.getView() != null )
