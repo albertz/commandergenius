@@ -398,7 +398,7 @@ class DataDownloader extends Thread
 			if( response == null )
 			{
 				System.out.println("Error connecting to " + url);
-				Status.setText( res.getString(R.string.failed_connecting_to, url) + (responseError == null ? "" : ": " + responseError.getStatusLine().getStatusCode() + " " + responseError.response.getStatusLine().getReasonPhrase()) );
+				Status.setText( res.getString(R.string.failed_connecting_to, url) + (responseError == null ? "" : ": " + responseError.getStatusLine().getStatusCode() + " " + responseError.getStatusLine().getReasonPhrase()) );
 				return false;
 			}
 

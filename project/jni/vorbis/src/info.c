@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: maintain the info structure, info <-> header packets
- last mod: $Id: info.c 17080 2010-03-26 06:59:58Z xiphmont $
+ last mod: $Id: info.c 18186 2012-02-03 22:08:44Z xiphmont $
 
  ********************************************************************/
 
@@ -31,8 +31,8 @@
 #include "misc.h"
 #include "os.h"
 
-#define GENERAL_VENDOR_STRING "Xiph.Org libVorbis 1.3.1"
-#define ENCODE_VENDOR_STRING "Xiph.Org libVorbis I 20100325 (Everywhere)"
+#define GENERAL_VENDOR_STRING "Xiph.Org libVorbis 1.3.3"
+#define ENCODE_VENDOR_STRING "Xiph.Org libVorbis I 20120203 (Omnipresent)"
 
 /* helpers */
 static int ilog2(unsigned int v){
@@ -550,7 +550,10 @@ int vorbis_commentheader_out(vorbis_comment *vc,
   oggpack_buffer opb;
 
   oggpack_writeinit(&opb);
-  if(_vorbis_pack_comment(&opb,vc)) return OV_EIMPL;
+  if(_vorbis_pack_comment(&opb,vc)){
+    oggpack_writeclear(&opb);
+    return OV_EIMPL;
+  }
 
   op->packet = _ogg_malloc(oggpack_bytes(&opb));
   memcpy(op->packet, opb.buffer, oggpack_bytes(&opb));
@@ -561,6 +564,7 @@ int vorbis_commentheader_out(vorbis_comment *vc,
   op->granulepos=0;
   op->packetno=1;
 
+  oggpack_writeclear(&opb);
   return 0;
 }
 
@@ -645,9 +649,18 @@ int vorbis_analysis_headerout(vorbis_dsp_state *v,
 }
 
 double vorbis_granule_time(vorbis_dsp_state *v,ogg_int64_t granulepos){
-  if(granulepos>=0)
+  if(granulepos == -1) return -1;
+
+  /* We're not guaranteed a 64 bit unsigned type everywhere, so we
+     have to put the unsigned granpo in a signed type. */
+  if(granulepos>=0){
     return((double)granulepos/v->vi->rate);
-  return(-1);
+  }else{
+    ogg_int64_t granuleoff=0xffffffff;
+    granuleoff<<=31;
+    granuleoff|=0x7ffffffff;
+    return(((double)granulepos+2+granuleoff+granuleoff)/v->vi->rate);
+  }
 }
 
 const char *vorbis_version_string(void){
