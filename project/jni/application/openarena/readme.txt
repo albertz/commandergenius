@@ -6,7 +6,7 @@ then launch commands:
     git submodule update --init project/jni/application/openarena/vm
     rm project/jni/application/src # ignore the error
     ln -s openarena project/jni/application/src
-    ./ChangeAppSettings.sh -a
-    android update project -p project -t android-12
+    ./changeAppSettings.sh -a
+    android update project -p project
     ./build.sh
 That should do it.

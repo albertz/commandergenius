@@ -9,7 +9,7 @@ android-sdk-linux/platform-tools
 into your $PATH, then you'll need to go to the SDL repo root and run commands
 rm project/jni/application/src
 ln -s milkytracker project/jni/application/src
-./ChangeAppSettings.sh -a
+./changeAppSettings.sh -a
 android update project -p project -t android-12
 ./build.sh
 and that should be it - it will compile an .apk file and will try to install it onto your device, if it's connected.

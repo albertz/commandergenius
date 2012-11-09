@@ -3,7 +3,7 @@ then install Android SDK 4.0.3, NDK r8b from http://develoiper.android.com/ , an
 then you should launch commands
     rm project/jni/application/src
     ln -s ufoai project/jni/application/src
-    ./ChangeAppSettings.sh -a
+    ./changeAppSettings.sh -a
     android update project -p project
 then download UFO:AI GIT into the dir project/jni/application/ufoai/ufoai
 (or create a symlink to it if you already have downloaded it), and launch build.sh. That should be it.
