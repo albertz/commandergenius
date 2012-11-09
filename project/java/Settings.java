@@ -1203,7 +1203,7 @@ class Settings
 					dialog.dismiss();
 					if( item == size_large )
 					{
-						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
+						Globals.LeftClickMethod = Mouse.LEFT_CLICK_NORMAL;
 						Globals.RelativeMouseMovement = false;
 						Globals.ShowScreenUnderFinger = Mouse.ZOOM_NONE;
 					}
