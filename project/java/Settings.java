@@ -2626,7 +2626,7 @@ class Settings
 						settingsChanged = true;
 						AlertDialog.Builder builder = new AlertDialog.Builder(p);
 						builder.setTitle(R.string.not_enough_ram);
-						builder.setMessage(p.getResources().getString( R.string.not_enough_ram_size, (int)(size / 1024), Globals.AppMinimumRAM) );
+						builder.setMessage(p.getResources().getString( R.string.not_enough_ram_size, Globals.AppMinimumRAM, (int)(size / 1024)) );
 						builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
 						{
 							public void onClick(DialogInterface dialog, int item)
