@@ -21,7 +21,7 @@ struct Sprite {
 
 	Sprite(const char * path)
 	{
-		w = h = upload_w = upload_h = texture = 0;
+		w = h = texcoord_w = texcoord_h = texture = 0;
 		imagePath = path;
 		loadTexture();
 	}
@@ -47,8 +47,11 @@ struct Sprite {
       GLenum glFormat = (pic->format->BitsPerPixel == 32 ? GL_RGBA : GL_RGB);
       w = pic->w;
       h = pic->h;
-      upload_w = powerOfTwo(w);
-      upload_h = powerOfTwo(h);
+      // All OpenGL textures must have size which is power of 2, such as 128, 256, 512 etc
+      int upload_w = powerOfTwo(w);
+      int upload_h = powerOfTwo(h);
+      texcoord_w = (float) w / (float) upload_w;
+      texcoord_h = (float) h / (float) upload_h;
 
       glGenTextures(1, &texture);
 
@@ -66,7 +69,7 @@ struct Sprite {
 
       SDL_FreeSurface(pic);
 
-      return 0;
+      return true;
 	}
 
 	int powerOfTwo(int i)
@@ -82,9 +85,9 @@ struct Sprite {
         return;
       // GL coordinates start at bottom-left corner, which is counter-intuitive for sprite graphics, so we have to flip Y coordinate
       GLfloat textureCoordinates[] = { 0.0f, 0.0f,
-                                       0.0f, 1.0f,
-                                       1.0f, 1.0f,
-                                       1.0f, 0.0f };
+                                       0.0f, texcoord_h,
+                                       texcoord_w, texcoord_h,
+                                       texcoord_w, 0.0f };
       GLfloat vertices[] = { x, screenHeight - y,
                              x, screenHeight - (y + height),
                              x + width, screenHeight - (y + height),
@@ -107,7 +110,8 @@ struct Sprite {
 	}
 
 	GLuint texture;
-	int w, h, upload_w, upload_h;
+	int w, h;
+	GLfloat texcoord_w, texcoord_h; // Fix for textures with non-power-of-2 size
 	std::string imagePath;
 };
 
