@@ -816,6 +816,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeTextInput) ( JNIEnv*  env, jobject thiz, jin
 {
 	if( ascii == 10 )
 		ascii = SDLK_RETURN;
+
 	if( !textInputBuffer )
 		SDL_ANDROID_MainThreadPushText(ascii, unicode);
 	else
@@ -1949,7 +1950,6 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 {
 	int shiftRequired;
 
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_MainThreadPushText(): %i %i", scancode, unicode);
 	int nextEvent = getNextEventAndLock();
 	if( nextEvent == -1 )
 		return;
