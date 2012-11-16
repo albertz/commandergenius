@@ -2,6 +2,7 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_ARM_MODE := arm
+ANDROID_JPEG_NO_ASSEMBLER := true # It is broken in NDK r8c
 
 LOCAL_SRC_FILES := \
 	jcapimin.c jcapistd.c jccoefct.c jccolor.c jcdctmgr.c jchuff.c \
