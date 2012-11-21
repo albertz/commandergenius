@@ -221,6 +221,10 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	int i;
 	static SDL_PixelFormat alphaFormat;
 	int bpp;
+	static int alreadyInitialized = 0;
+	if(alreadyInitialized)
+		__android_log_print(ANDROID_LOG_WARN, "libSDL", "Application calls SDL_Init() multiple times, this is not supported yet!");
+	alreadyInitialized = 1;
 
 	/* Determine the screen depth (use default 16-bit depth) */
 	/* we change this during the SDL_SetVideoMode implementation... */
@@ -409,6 +413,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 */
 void ANDROID_VideoQuit(_THIS)
 {
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Calling VideoQuit()");
 	if( !SDL_ANDROID_InsideVideoThread() )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Error: calling %s not from the main thread!", __PRETTY_FUNCTION__);

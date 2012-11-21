@@ -1,6 +1,6 @@
-diff -ru orig/dosbox-0.74/config.sub dosbox-0.74/config.sub
---- orig/dosbox-0.74/config.sub	2010-05-10 13:43:54.000000000 -0400
-+++ dosbox-0.74/config.sub	2011-02-01 15:00:39.000000000 -0500
+diff -u -r old/dosbox-0.74/config.sub dosbox-0.74/config.sub
+--- old/dosbox-0.74/config.sub	2010-05-10 20:43:54.000000000 +0300
++++ dosbox-0.74/config.sub	2012-11-21 20:07:56.792101410 +0200
 @@ -1298,7 +1298,7 @@
  	      | -ekkobsd* | -kfreebsd* | -freebsd* | -riscix* | -lynxos* \
  	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
@@ -10,10 +10,9 @@ diff -ru orig/dosbox-0.74/config.sub dosbox-0.74/config.sub
  	      | -chorusos* | -chorusrdb* | -cegcc* \
  	      | -cygwin* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
  	      | -mingw32* | -linux-gnu* | -linux-newlib* | -linux-uclibc* \
-
-diff -ru orig/dosbox-0.74/src/dos/drive_local.cpp dosbox-0.74/src/dos/drive_local.cpp
---- orig/dosbox-0.74/src/dos/drive_local.cpp	2010-05-10 13:43:54.000000000 -0400
-+++ dosbox-0.74/src/dos/drive_local.cpp	2010-11-26 07:31:54.000000000 -0500
+diff -u -r old/dosbox-0.74/src/dos/drive_local.cpp dosbox-0.74/src/dos/drive_local.cpp
+--- old/dosbox-0.74/src/dos/drive_local.cpp	2010-05-10 20:43:54.000000000 +0300
++++ dosbox-0.74/src/dos/drive_local.cpp	2012-11-21 20:07:56.792101410 +0200
 @@ -273,7 +273,7 @@
  
  	find_size=(Bit32u) stat_block.st_size;
@@ -41,10 +40,26 @@ diff -ru orig/dosbox-0.74/src/dos/drive_local.cpp dosbox-0.74/src/dos/drive_loca
  		time=DOS_PackTime((Bit16u)ltime->tm_hour,(Bit16u)ltime->tm_min,(Bit16u)ltime->tm_sec);
  		date=DOS_PackDate((Bit16u)(ltime->tm_year+1900),(Bit16u)(ltime->tm_mon+1),(Bit16u)ltime->tm_mday);
  	} else {
-diff -ru orig/dosbox-0.74/src/gui/sdlmain.cpp dosbox-0.74/src/gui/sdlmain.cpp
---- orig/dosbox-0.74/src/gui/sdlmain.cpp	2010-05-10 13:43:54.000000000 -0400
-+++ dosbox-0.74/src/gui/sdlmain.cpp	2011-02-01 15:39:31.000000000 -0500
-@@ -1743,8 +1743,7 @@
+diff -u -r old/dosbox-0.74/src/gui/sdlmain.cpp dosbox-0.74/src/gui/sdlmain.cpp
+--- old/dosbox-0.74/src/gui/sdlmain.cpp	2010-05-10 20:43:54.000000000 +0300
++++ dosbox-0.74/src/gui/sdlmain.cpp	2012-11-21 20:15:34.276097221 +0200
+@@ -32,6 +32,7 @@
+ #include <signal.h>
+ #include <process.h>
+ #endif
++#include <android/log.h>
+ 
+ #include "cross.h"
+ #include "SDL.h"
+@@ -1453,6 +1454,7 @@
+         strcat(buf,"\n");
+ 	va_end(msg);
+ 	if(!no_stdout) printf("%s",buf); //Else buf is parsed again.
++	__android_log_print(ANDROID_LOG_INFO, "DosBox", "%s", buf);
+ }
+ 
+ 
+@@ -1743,8 +1745,7 @@
  #if SDL_VERSION_ATLEAST(1, 2, 14)
  	putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1"));
  #endif
@@ -53,3 +68,4 @@ diff -ru orig/dosbox-0.74/src/gui/sdlmain.cpp dosbox-0.74/src/gui/sdlmain.cpp
 +	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE
  		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
  	sdl.inited = true;
+ 
