@@ -1,6 +1,6 @@
-diff -u -r old/dosbox-0.74/config.sub dosbox-0.74/config.sub
+diff -r -u old/dosbox-0.74/config.sub dosbox-0.74/config.sub
 --- old/dosbox-0.74/config.sub	2010-05-10 20:43:54.000000000 +0300
-+++ dosbox-0.74/config.sub	2012-11-21 20:07:56.792101410 +0200
++++ dosbox-0.74/config.sub	2012-11-21 21:14:48.428064682 +0200
 @@ -1298,7 +1298,7 @@
  	      | -ekkobsd* | -kfreebsd* | -freebsd* | -riscix* | -lynxos* \
  	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
@@ -10,9 +10,9 @@ diff -u -r old/dosbox-0.74/config.sub dosbox-0.74/config.sub
  	      | -chorusos* | -chorusrdb* | -cegcc* \
  	      | -cygwin* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
  	      | -mingw32* | -linux-gnu* | -linux-newlib* | -linux-uclibc* \
-diff -u -r old/dosbox-0.74/src/dos/drive_local.cpp dosbox-0.74/src/dos/drive_local.cpp
+diff -r -u old/dosbox-0.74/src/dos/drive_local.cpp dosbox-0.74/src/dos/drive_local.cpp
 --- old/dosbox-0.74/src/dos/drive_local.cpp	2010-05-10 20:43:54.000000000 +0300
-+++ dosbox-0.74/src/dos/drive_local.cpp	2012-11-21 20:07:56.792101410 +0200
++++ dosbox-0.74/src/dos/drive_local.cpp	2012-11-21 21:14:48.428064682 +0200
 @@ -273,7 +273,7 @@
  
  	find_size=(Bit32u) stat_block.st_size;
@@ -40,9 +40,9 @@ diff -u -r old/dosbox-0.74/src/dos/drive_local.cpp dosbox-0.74/src/dos/drive_loc
  		time=DOS_PackTime((Bit16u)ltime->tm_hour,(Bit16u)ltime->tm_min,(Bit16u)ltime->tm_sec);
  		date=DOS_PackDate((Bit16u)(ltime->tm_year+1900),(Bit16u)(ltime->tm_mon+1),(Bit16u)ltime->tm_mday);
  	} else {
-diff -u -r old/dosbox-0.74/src/gui/sdlmain.cpp dosbox-0.74/src/gui/sdlmain.cpp
+diff -r -u old/dosbox-0.74/src/gui/sdlmain.cpp dosbox-0.74/src/gui/sdlmain.cpp
 --- old/dosbox-0.74/src/gui/sdlmain.cpp	2010-05-10 20:43:54.000000000 +0300
-+++ dosbox-0.74/src/gui/sdlmain.cpp	2012-11-21 20:15:34.276097221 +0200
++++ dosbox-0.74/src/gui/sdlmain.cpp	2012-11-21 21:51:37.128044459 +0200
 @@ -32,6 +32,7 @@
  #include <signal.h>
  #include <process.h>
@@ -51,6 +51,15 @@ diff -u -r old/dosbox-0.74/src/gui/sdlmain.cpp dosbox-0.74/src/gui/sdlmain.cpp
  
  #include "cross.h"
  #include "SDL.h"
+@@ -755,7 +756,7 @@
+ 	sdl.updating=false;
+ 	switch (sdl.desktop.type) {
+ 	case SCREEN_SURFACE:
+-		if (SDL_MUSTLOCK(sdl.surface)) {
++		if (SDL_MUSTLOCK(sdl.surface) || true) {
+ 			if (sdl.blit.surface) {
+ 				SDL_UnlockSurface(sdl.blit.surface);
+ 				int Blit = SDL_BlitSurface( sdl.blit.surface, 0, sdl.surface, &sdl.clip );
 @@ -1453,6 +1454,7 @@
          strcat(buf,"\n");
  	va_end(msg);

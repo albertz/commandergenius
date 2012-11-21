@@ -55,6 +55,9 @@ import android.graphics.Bitmap;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.ScrollView;
+import android.widget.Button;
+import android.view.View;
+import android.widget.LinearLayout;
 import android.text.Editable;
 import android.text.SpannedString;
 import android.content.Intent;
@@ -2395,7 +2398,7 @@ class Settings
 			for( String r: readmes )
 			{
 				if( r.startsWith(lang) )
-					readme = r;
+					readme = r.substring(lang.length());
 			}
 			TextView text = new TextView(p);
 			text.setMaxLines(1000);
@@ -2404,7 +2407,21 @@ class Settings
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			ScrollView scroll = new ScrollView(p);
 			scroll.addView(text);
-			builder.setView(scroll);
+			Button ok = new Button(p);
+			final AlertDialog alertDismiss[] = new AlertDialog[1];
+			ok.setOnClickListener(new View.OnClickListener()
+			{
+				public void onClick(View v)
+				{
+					alertDismiss[0].cancel();
+				}
+			});
+			ok.setText(R.string.ok);
+			LinearLayout layout = new LinearLayout(p);
+			layout.setOrientation(LinearLayout.VERTICAL);
+			layout.addView(scroll);
+			layout.addView(ok);
+			builder.setView(layout);
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
 				public void onCancel(DialogInterface dialog)
@@ -2413,6 +2430,7 @@ class Settings
 				}
 			});
 			AlertDialog alert = builder.create();
+			alertDismiss[0] = alert;
 			alert.setOwnerActivity(p);
 			alert.show();
 		}
