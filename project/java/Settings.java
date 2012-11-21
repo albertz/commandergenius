@@ -54,6 +54,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
 import android.widget.TextView;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.text.Editable;
 import android.text.SpannedString;
 import android.content.Intent;
@@ -304,14 +305,7 @@ class Settings
 					System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion() + " and we need to clean up config file");
 					// Delete settings file, and restart the application
 					settingsFile.close();
-					ObjectOutputStream out = new ObjectOutputStream(p.openFileOutput( SettingsFileName, p.MODE_WORLD_READABLE ));
-					out.writeInt(-1);
-					out.close();
-					new File( p.getFilesDir() + "/" + SettingsFileName ).delete();
-					PendingIntent intent = PendingIntent.getActivity(p, 0, new Intent(p.getIntent()), p.getIntent().getFlags());
-					AlarmManager mgr = (AlarmManager) p.getSystemService(Context.ALARM_SERVICE);
-					mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, intent);
-					System.exit(0);
+					DeleteSdlConfigOnUpgradeAndRestart(p);
 				}
 			}
 			
@@ -323,7 +317,14 @@ class Settings
 			
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
-		} catch ( IOException e ) {};
+		} catch ( IOException e ) {
+			DeleteFilesOnUpgrade();
+			if( Globals.ResetSdlConfigForThisVersion )
+			{
+				System.out.println("libSDL: old cfg version unknown or too old, our version " + p.getApplicationVersion() + " and we need to clean up config file");
+				DeleteSdlConfigOnUpgradeAndRestart(p);
+			}
+		};
 		
 		if( Globals.DataDir.length() == 0 )
 		{
@@ -2376,6 +2377,49 @@ class Settings
 		}
 	}
 
+	static class ShowReadme extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return "Readme";
+		}
+		boolean enabled()
+		{
+			return true;
+		}
+		void run (final MainActivity p)
+		{
+			String readmes[] = Globals.ReadmeText.split("\\^");
+			String lang = new String(Locale.getDefault().getLanguage()) + ":";
+			String readme = readmes[0];
+			for( String r: readmes )
+			{
+				if( r.startsWith(lang) )
+					readme = r;
+			}
+			TextView text = new TextView(p);
+			text.setMaxLines(1000);
+			text.setText(readme);
+			text.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.FILL_PARENT));
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			ScrollView scroll = new ScrollView(p);
+			scroll.addView(text);
+			builder.setView(scroll);
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
+	// ===============================================================================================
+
 	public static boolean deleteRecursively(File dir)
 	{
 		if (dir.isDirectory()) {
@@ -2400,6 +2444,21 @@ class Settings
 			deleteRecursively(f);
 		}
 	}
+	public static void DeleteSdlConfigOnUpgradeAndRestart(final MainActivity p)
+	{
+		try {
+			ObjectOutputStream out = new ObjectOutputStream(p.openFileOutput( SettingsFileName, p.MODE_WORLD_READABLE ));
+			out.writeInt(-1);
+			out.close();
+		} catch( FileNotFoundException e ) {
+		} catch ( IOException e ) { }
+		new File( p.getFilesDir() + "/" + SettingsFileName ).delete();
+		PendingIntent intent = PendingIntent.getActivity(p, 0, new Intent(p.getIntent()), p.getIntent().getFlags());
+		AlarmManager mgr = (AlarmManager) p.getSystemService(Context.ALARM_SERVICE);
+		mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, intent);
+		System.exit(0);
+	}
+
 
 	// ===============================================================================================
 

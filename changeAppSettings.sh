@@ -571,7 +571,11 @@ ReadmeText1=""
 while true; do
 	read var
 	if [ -n "$var" ] ; then
-		ReadmeText1="$ReadmeText1^$var"
+		if [ -n "$ReadmeText1" ] ; then
+			ReadmeText1="$ReadmeText1^$var"
+		else
+			ReadmeText1="$var"
+		fi
 	else
 		break
 	fi
@@ -958,7 +962,7 @@ cat project/src/Globals.java | \
 	sed "s/public static int AppMinimumRAM = .*;/public static int AppMinimumRAM = $AppMinimumRAM;/" | \
 	sed "s/public static Settings.Menu HiddenMenuOptions .*;/public static Settings.Menu HiddenMenuOptions [] = { $HiddenMenuOptions1 };/" | \
 	sed "s@public static Settings.Menu FirstStartMenuOptions .*;@public static Settings.Menu FirstStartMenuOptions [] = { $FirstStartMenuOptions };@" | \
-	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\".replace(\"^\",\"\\\n\");%" | \
+	sed "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\";%" | \
 	sed "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" | \
 	sed "s/public static String AdmobPublisherId = .*/public static String AdmobPublisherId = \"$AdmobPublisherId\";/" | \
 	sed "s/public static String AdmobTestDeviceId = .*/public static String AdmobTestDeviceId = \"$AdmobTestDeviceId\";/" | \
