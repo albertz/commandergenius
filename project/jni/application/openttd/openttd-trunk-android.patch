@@ -1,7 +1,114 @@
-Index: src/os/unix/unix.cpp
-===================================================================
---- src/os/unix/unix.cpp	(revision 24562)
-+++ src/os/unix/unix.cpp	(working copy)
+--- src/debug.cpp	2012-10-31 23:39:00.000000000 +0200
++++ src/debug.cpp	2012-11-22 19:01:14.510763002 +0200
+@@ -16,6 +16,9 @@
+ #include "string_func.h"
+ #include "fileio_func.h"
+ #include "settings_type.h"
++#ifdef __ANDROID__
++#include <android/log.h>
++#endif
+ 
+ #include <time.h>
+ 
+@@ -82,6 +85,9 @@
+  */
+ static void debug_print(const char *dbg, const char *buf)
+ {
++#ifdef __ANDROID__
++	__android_log_print(ANDROID_LOG_INFO, "OpenTTD", "[%s] %s", dbg, buf);
++#endif
+ #if defined(ENABLE_NETWORK)
+ 	if (_debug_socket != INVALID_SOCKET) {
+ 		char buf2[1024 + 32];
+--- src/fontcache.cpp	2012-10-31 23:39:00.000000000 +0200
++++ src/fontcache.cpp	2012-11-23 20:02:36.768406013 +0200
+@@ -808,7 +808,15 @@
+ 	return ret;
+ }
+ 
+-#else /* without WITH_FONTCONFIG */
++#elif defined(__ANDROID__) /* end if defined(WITH_FONTCONFIG) */
++FT_Error GetFontByFaceName(const char *font_name, FT_Face *face) {return FT_Err_Cannot_Open_Resource;}
++bool SetFallbackFont(FreeTypeSettings *settings, const char *language_isocode, int winlangid, MissingGlyphSearcher *callback)
++{
++	callback->SetFontNames(settings, "fonts/FreeSans.ttf"); /* We don't really have other fonts on Android, other than our own */
++	callback->FindMissingGlyphs(NULL);
++	return true;
++}
++#else /* end if defined(__ANDROID__) */
+ FT_Error GetFontByFaceName(const char *font_name, FT_Face *face) {return FT_Err_Cannot_Open_Resource;}
+ bool SetFallbackFont(FreeTypeSettings *settings, const char *language_isocode, int winlangid, MissingGlyphSearcher *callback) { return false; }
+ #endif /* WITH_FONTCONFIG */
+--- src/music/libtimidity.cpp	2012-10-31 23:38:54.000000000 +0200
++++ src/music/libtimidity.cpp	2012-11-22 19:01:14.510763002 +0200
+@@ -13,6 +13,7 @@
+ #include "../openttd.h"
+ #include "../sound_type.h"
+ #include "../debug.h"
++#include "../core/math_func.hpp"
+ #include "libtimidity.h"
+ #include <fcntl.h>
+ #include <sys/types.h>
+@@ -22,6 +23,7 @@
+ #include <sys/stat.h>
+ #include <errno.h>
+ #include <timidity.h>
++#include <SDL.h>
+ #if defined(PSP)
+ #include <pspaudiolib.h>
+ #endif /* PSP */
+@@ -51,6 +53,24 @@
+ 	}
+ }
+ #endif /* PSP */
++#ifdef __ANDROID__
++/* Android does not have Midi chip, we have to route the libtimidity output through SDL audio output */
++void Android_MidiMixMusic(Sint16 *stream, int len)
++{
++	if (_midi.status == MIDI_PLAYING) {
++		Sint16 buf[16384];
++		while( len > 0 )
++		{
++			int minlen = min(sizeof(buf), len);
++			mid_song_read_wave(_midi.song, stream, min(sizeof(buf), len*2));
++			for( Uint16 i = 0; i < minlen; i++ )
++				stream[i] += buf[i];
++			stream += minlen;
++			len -= minlen;
++		}
++	}
++}
++#endif /* __ANDROID__ */
+ 
+ /** Factory for the libtimidity driver. */
+ static FMusicDriver_LibTimidity iFMusicDriver_LibTimidity;
+--- src/network/core/os_abstraction.h	2012-10-31 23:38:59.000000000 +0200
++++ src/network/core/os_abstraction.h	2012-11-22 19:01:14.506763002 +0200
+@@ -161,7 +161,7 @@
+ #		include <net/if.h>
+ /* According to glibc/NEWS, <ifaddrs.h> appeared in glibc-2.3. */
+ #		if !defined(__sgi__) && !defined(SUNOS) && !defined(__MORPHOS__) && !defined(__BEOS__) && !defined(__HAIKU__) && !defined(__INNOTEK_LIBC__) \
+-		   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX)
++		   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX) && !defined(__ANDROID__)
+ /* If for any reason ifaddrs.h does not exist on your system, comment out
+  *   the following two lines and an alternative way will be used to fetch
+  *   the list of IPs from the system. */
+--- src/os/unix/crashlog_unix.cpp	2012-10-31 23:38:54.000000000 +0200
++++ src/os/unix/crashlog_unix.cpp	2012-11-22 19:01:14.506763002 +0200
+@@ -141,7 +141,11 @@
+ };
+ 
+ /** The signals we want our crash handler to handle. */
++#ifdef __ANDROID__
++static const int _signals_to_handle[] = { }; // Default Android signal handler will give us stack trace
++#else
+ static const int _signals_to_handle[] = { SIGSEGV, SIGABRT, SIGFPE, SIGBUS, SIGILL };
++#endif
+ 
+ /**
+  * Entry point for the crash handler.
+--- src/os/unix/unix.cpp	2012-10-31 23:38:54.000000000 +0200
++++ src/os/unix/unix.cpp	2012-11-22 19:01:14.506763002 +0200
 @@ -25,7 +25,7 @@
  
  #ifdef __APPLE__
@@ -23,26 +130,8 @@ Index: src/os/unix/unix.cpp
  int CDECL main(int argc, char *argv[])
  {
  	int ret;
-Index: src/os/unix/crashlog_unix.cpp
-===================================================================
---- src/os/unix/crashlog_unix.cpp	(revision 24562)
-+++ src/os/unix/crashlog_unix.cpp	(working copy)
-@@ -141,7 +141,11 @@
- };
- 
- /** The signals we want our crash handler to handle. */
-+#ifdef __ANDROID__
-+static const int _signals_to_handle[] = { }; // Default Android signal handler will give us stack trace
-+#else
- static const int _signals_to_handle[] = { SIGSEGV, SIGABRT, SIGFPE, SIGBUS, SIGILL };
-+#endif
- 
- /**
-  * Entry point for the crash handler.
-Index: src/osk_gui.cpp
-===================================================================
---- src/osk_gui.cpp	(revision 24562)
-+++ src/osk_gui.cpp	(working copy)
+--- src/osk_gui.cpp	2012-10-31 23:39:00.000000000 +0200
++++ src/osk_gui.cpp	2012-11-22 19:01:14.506763002 +0200
 @@ -21,6 +21,9 @@
  
  #include "table/sprites.h"
@@ -68,23 +157,43 @@ Index: src/osk_gui.cpp
  }
  
  /**
-Index: src/network/core/os_abstraction.h
-===================================================================
---- src/network/core/os_abstraction.h	(revision 24562)
-+++ src/network/core/os_abstraction.h	(working copy)
-@@ -161,7 +161,7 @@
- #		include <net/if.h>
- /* According to glibc/NEWS, <ifaddrs.h> appeared in glibc-2.3. */
- #		if !defined(__sgi__) && !defined(SUNOS) && !defined(__MORPHOS__) && !defined(__BEOS__) && !defined(__HAIKU__) && !defined(__INNOTEK_LIBC__) \
--		   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX)
-+		   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX) && !defined(__ANDROID__)
- /* If for any reason ifaddrs.h does not exist on your system, comment out
-  *   the following two lines and an alternative way will be used to fetch
-  *   the list of IPs from the system. */
-Index: src/video/sdl_v.cpp
-===================================================================
---- src/video/sdl_v.cpp	(revision 24562)
-+++ src/video/sdl_v.cpp	(working copy)
+--- src/script/api/script_date.cpp	2012-10-31 23:38:58.000000000 +0200
++++ src/script/api/script_date.cpp	2012-11-22 19:01:14.510763002 +0200
+@@ -9,8 +9,8 @@
+ 
+ /** @file script_date.cpp Implementation of ScriptDate. */
+ 
++#include "../../stdafx.h" /* Have to be included before time.h, if we want UINT32_MAX macro defined on Android */
+ #include <time.h>
+-#include "../../stdafx.h"
+ #include "script_date.hpp"
+ #include "../../date_func.h"
+ 
+--- src/sound/sdl_s.cpp	2012-10-31 23:38:54.000000000 +0200
++++ src/sound/sdl_s.cpp	2012-11-22 19:01:14.506763002 +0200
+@@ -21,6 +21,10 @@
+ /** Factory for the SDL sound driver. */
+ static FSoundDriver_SDL iFSoundDriver_SDL;
+ 
++#ifdef __ANDROID__
++extern void Android_MidiMixMusic(Sint16 *stream, int len);
++#endif
++
+ /**
+  * Callback that fills the sound buffer.
+  * @param userdata Ignored.
+@@ -30,6 +34,9 @@
+ static void CDECL fill_sound_buffer(void *userdata, Uint8 *stream, int len)
+ {
+ 	MxMixSamples(stream, len / 4);
++#if defined(__ANDROID__) && defined(LIBTIMIDITY)
++	Android_MidiMixMusic((Sint16 *)stream, len / 2);
++#endif
+ }
+ 
+ const char *SoundDriver_SDL::Start(const char * const *parm)
+--- src/video/sdl_v.cpp	2012-10-31 23:38:49.000000000 +0200
++++ src/video/sdl_v.cpp	2012-11-22 19:01:14.506763002 +0200
 @@ -25,6 +25,9 @@
  #include "../fileio_func.h"
  #include "sdl_v.h"
@@ -134,7 +243,7 @@ Index: src/video/sdl_v.cpp
  			}
  			break;
 -
-+#endif
++#endif /* not __ANDROID__ */
  		case SDL_QUIT:
  			HandleExitGameRequest();
  			break;
@@ -150,7 +259,7 @@ Index: src/video/sdl_v.cpp
  			CreateMainSurface(w, h);
  			break;
  		}
-+#endif
++#endif /* not __ANDROID__ */
  		case SDL_VIDEOEXPOSE: {
  			/* Force a redraw of the entire screen. Note
  			 * that SDL 1.2 seems to do this automatically
@@ -164,111 +273,3 @@ Index: src/video/sdl_v.cpp
  
  	return NULL;
  }
-Index: src/sound/sdl_s.cpp
-===================================================================
---- src/sound/sdl_s.cpp	(revision 24562)
-+++ src/sound/sdl_s.cpp	(working copy)
-@@ -21,6 +21,10 @@
- /** Factory for the SDL sound driver. */
- static FSoundDriver_SDL iFSoundDriver_SDL;
- 
-+#ifdef __ANDROID__
-+extern void Android_MidiMixMusic(Sint16 *stream, int len);
-+#endif
-+
- /**
-  * Callback that fills the sound buffer.
-  * @param userdata Ignored.
-@@ -30,6 +34,9 @@
- static void CDECL fill_sound_buffer(void *userdata, Uint8 *stream, int len)
- {
- 	MxMixSamples(stream, len / 4);
-+#if defined(__ANDROID__) && defined(LIBTIMIDITY)
-+	Android_MidiMixMusic((Sint16 *)stream, len / 2);
-+#endif
- }
- 
- const char *SoundDriver_SDL::Start(const char * const *parm)
-Index: src/music/libtimidity.cpp
-===================================================================
---- src/music/libtimidity.cpp	(revision 24562)
-+++ src/music/libtimidity.cpp	(working copy)
-@@ -13,6 +13,7 @@
- #include "../openttd.h"
- #include "../sound_type.h"
- #include "../debug.h"
-+#include "../core/math_func.hpp"
- #include "libtimidity.h"
- #include <fcntl.h>
- #include <sys/types.h>
-@@ -22,6 +23,7 @@
- #include <sys/stat.h>
- #include <errno.h>
- #include <timidity.h>
-+#include <SDL.h>
- #if defined(PSP)
- #include <pspaudiolib.h>
- #endif /* PSP */
-@@ -51,6 +53,24 @@
- 	}
- }
- #endif /* PSP */
-+#ifdef __ANDROID__
-+/* Android does not have Midi chip, we have to route the libtimidity output through SDL audio output */
-+void Android_MidiMixMusic(Sint16 *stream, int len)
-+{
-+	if (_midi.status == MIDI_PLAYING) {
-+		Sint16 buf[16384];
-+		while( len > 0 )
-+		{
-+			int minlen = min(sizeof(buf), len);
-+			mid_song_read_wave(_midi.song, stream, min(sizeof(buf), len*2));
-+			for( Uint16 i = 0; i < minlen; i++ )
-+				stream[i] += buf[i];
-+			stream += minlen;
-+			len -= minlen;
-+		}
-+	}
-+}
-+#endif
- 
- /** Factory for the libtimidity driver. */
- static FMusicDriver_LibTimidity iFMusicDriver_LibTimidity;
-Index: src/script/api/script_date.cpp
-===================================================================
---- src/script/api/script_date.cpp	(revision 24562)
-+++ src/script/api/script_date.cpp	(working copy)
-@@ -9,8 +9,8 @@
- 
- /** @file script_date.cpp Implementation of ScriptDate. */
- 
-+#include "../../stdafx.h" /* Have to be included before time.h, if we want UINT32_MAX macro defined on Android */
- #include <time.h>
--#include "../../stdafx.h"
- #include "script_date.hpp"
- #include "../../date_func.h"
- 
-Index: src/debug.cpp
-===================================================================
---- src/debug.cpp	(revision 24562)
-+++ src/debug.cpp	(working copy)
-@@ -16,6 +16,9 @@
- #include "string_func.h"
- #include "fileio_func.h"
- #include "settings_type.h"
-+#ifdef __ANDROID__
-+#include <android/log.h>
-+#endif
- 
- #include <time.h>
- 
-@@ -82,6 +85,9 @@
-  */
- static void debug_print(const char *dbg, const char *buf)
- {
-+#ifdef __ANDROID__
-+	__android_log_print(ANDROID_LOG_INFO, "OpenTTD", "[%s] %s", dbg, buf);
-+#endif
- #if defined(ENABLE_NETWORK)
- 	if (_debug_socket != INVALID_SOCKET) {
- 		char buf2[1024 + 32];
