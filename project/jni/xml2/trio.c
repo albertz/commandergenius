@@ -137,8 +137,11 @@ typedef unsigned long trio_flags_t;
 #if defined(TRIO_PLATFORM_UNIX)
 # include <unistd.h>
 # include <signal.h>
-# include <locale.h>
-# define USE_LOCALE
+/* locale implementation on Android is broken, at least with NDK 8b */
+# if !defined ANDROID
+#  include <locale.h>
+#  define USE_LOCALE
+# endif
 #endif /* TRIO_PLATFORM_UNIX */
 #if defined(TRIO_PLATFORM_VMS)
 # include <unistd.h>
