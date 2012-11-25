@@ -38,6 +38,8 @@
 #include <string.h> // for memset()
 #include <pthread.h>
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 #define _THIS	SDL_AudioDevice *this
 
 /* Audio driver functions */
@@ -131,6 +133,9 @@ AudioBootStrap ANDROIDAUD_bootstrap = {
 static unsigned char * audioBuffer = NULL;
 static size_t audioBufferSize = 0;
 static Uint32 audioLastTick = 0;
+static unsigned char * shadowAppBuffer = NULL;
+static Uint32 shadowAppBufferPos = 0;
+static Uint32 shadowAppBufferSize = 0;
 
 // Extremely wicked JNI environment to call Java functions from C code
 static jbyteArray audioBufferJNI = NULL;
@@ -144,7 +149,11 @@ static jmethodID JavaResumeAudioPlayback = NULL;
 
 static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS)
 {
+#ifdef SDL_AUDIO_APP_IGNORES_RETURNED_BUFFER_SIZE
+	return(shadowAppBuffer);
+#else
 	return(audioBuffer);
+#endif
 }
 
 
@@ -176,7 +185,7 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): app requested audio bytespersample %d freq %d channels %d samples %d", bytesPerSample, audioFormat->freq, (int)audioFormat->channels, (int)audioFormat->samples);
 
 	if(audioFormat->samples <= 0)
-		audioFormat->samples = 128; // Some sane value
+		audioFormat->samples = 16; // Some sane value
 	if( audioFormat->samples > 32768 ) // Why anyone need so huge audio buffer?
 	{
 		audioFormat->samples = 32768;
@@ -184,7 +193,6 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 	}
 	
 	SDL_CalculateAudioSpec(audioFormat);
-	
 	
 	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
 
@@ -209,12 +217,20 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 	/* We cannot call DetachCurrentThread() from main thread or we'll crash */
 	/* (*jniVM)->DetachCurrentThread(jniVM); */
 
+#ifdef SDL_AUDIO_APP_IGNORES_RETURNED_BUFFER_SIZE
+	shadowAppBufferSize = audioFormat->size;
+	shadowAppBuffer = malloc(shadowAppBufferSize);
+	shadowAppBufferPos = 0;
+	if( shadowAppBufferSize > audioBufferSize )
+		__android_log_print(ANDROID_LOG_FATAL, "libSDL", "ANDROIDAUD_OpenAudio(): Java returned audio buffer smaller than app requested, SDL will crash!");
+#else
 	audioFormat->samples = audioBufferSize / bytesPerSample / audioFormat->channels;
 	audioFormat->size = audioBufferSize;
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): app opened audio bytespersample %d freq %d channels %d bufsize %d", bytesPerSample, audioFormat->freq, (int)audioFormat->channels, audioBufferSize);
+#endif
 
 	SDL_CalculateAudioSpec(audioFormat);
-	
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): app opened audio bytespersample %d freq %d channels %d bufsize %d, SDL returns bufsize %d", bytesPerSample, audioFormat->freq, (int)audioFormat->channels, audioBufferSize, audioFormat->size);
+
 #if SDL_VERSION_ATLEAST(1,3,0)
 	return(1);
 #else
@@ -232,7 +248,10 @@ static void ANDROIDAUD_CloseAudio(_THIS)
 	audioBufferJNI = NULL;
 	audioBuffer = NULL;
 	audioBufferSize = 0;
-	
+#ifdef SDL_AUDIO_APP_IGNORES_RETURNED_BUFFER_SIZE
+	free(shadowAppBuffer);
+	shadowAppBuffer = NULL;
+#endif
 	(*jniEnv)->CallIntMethod( jniEnv, JavaAudioThread, JavaDeinitAudio );
 
 	/* We cannot call DetachCurrentThread() from main thread or we'll crash */
@@ -300,7 +319,7 @@ static void ANDROIDAUD_ThreadDeinit(_THIS)
 	(*jniVM)->DetachCurrentThread(jniVM);
 };
 
-static void ANDROIDAUD_PlayAudio(_THIS)
+static void ANDROIDAUD_SendAudioToJava(void)
 {
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio()");
 	jboolean isCopy = JNI_TRUE;
@@ -317,6 +336,28 @@ static void ANDROIDAUD_PlayAudio(_THIS)
 	if( isCopy == JNI_TRUE )
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio() JNI returns a copy of byte array - that's slow");
 }
+
+#ifdef SDL_AUDIO_APP_IGNORES_RETURNED_BUFFER_SIZE
+static void ANDROIDAUD_PlayAudio(_THIS)
+{
+	int audioCopiedSize = MIN(shadowAppBufferSize, audioBufferSize - shadowAppBufferPos);
+	memcpy(audioBuffer + shadowAppBufferPos, shadowAppBuffer, audioCopiedSize);
+	shadowAppBufferPos += audioCopiedSize;
+	if( shadowAppBufferPos >= audioBufferSize )
+	{
+		ANDROIDAUD_SendAudioToJava();
+		int audioCopiedRemaining = shadowAppBufferSize - audioCopiedSize;
+		memcpy(audioBuffer, shadowAppBuffer + audioCopiedSize, audioCopiedRemaining);
+		shadowAppBufferPos = audioCopiedRemaining;
+	}
+}
+#else
+static void ANDROIDAUD_PlayAudio(_THIS)
+{
+	ANDROIDAUD_SendAudioToJava();
+}
+#endif
+
 
 int SDL_ANDROID_PauseAudioPlayback(void)
 {
