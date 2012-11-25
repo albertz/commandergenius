@@ -30,4 +30,4 @@
 	url = https://github.com/pelya/openarena-vm
 [submodule "project/jni/application/teeworlds/src"]
 	path = project/jni/application/teeworlds/src
-	url = git://github.com/pelya/teeworlds.git
+	url = https://github.com/pelya/teeworlds.git
