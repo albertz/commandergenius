@@ -445,7 +445,10 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 				joystickTouchPoints[1] = y;
 				if( SDL_ANDROID_isJoystickUsed )
 				{
-					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, (x - arrows.x - arrows.w / 2) * 65534 / arrows.w );
+					int xx = (x - arrows.x - arrows.w / 2) * 65534 / arrows.w;
+					if( xx == 0 ) // Do not allow (0,0) coordinate, when the user touches the joystick
+						xx = 1;
+					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, xx );
 					SDL_ANDROID_MainThreadPushJoystickAxis(0, 1, (y - arrows.y - arrows.h / 2) * 65534 / arrows.h );
 				}
 				else
