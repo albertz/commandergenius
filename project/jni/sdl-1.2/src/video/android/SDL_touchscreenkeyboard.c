@@ -104,56 +104,56 @@ static struct ScreenKbGlState_t
 {
 	GLboolean texture2d;
 	GLuint texunitId;
+	GLuint clientTexunitId;
 	GLuint textureId;
 	GLfloat color[4];
-	GLint texEnvMode, texEnvMode1, texEnvMode2;
+	GLint texEnvMode;
 	GLboolean blend;
 	GLenum blend1, blend2;
 	GLint texFilter1, texFilter2;
+	GLboolean colorArray;
 }
 oldGlState;
 
 static inline void beginDrawingTex()
 {
-	int MaxTextureUnits = 1;
 	// Save OpenGL state
 	glGetError(); // Clear error flag
 	// This code does not work on 1.6 emulator, and on some older devices
 	// However GLES 1.1 spec defines all theese values, so it's a device fault for not implementing them
 	oldGlState.texture2d = glIsEnabled(GL_TEXTURE_2D);
 	glGetIntegerv(GL_ACTIVE_TEXTURE, &oldGlState.texunitId);
-	glGetIntegerv(GL_MAX_TEXTURE_UNITS, &MaxTextureUnits);
-	glActiveTexture(GL_TEXTURE0 /* + MaxTextureUnits - 1 */);
+	glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &oldGlState.clientTexunitId);
+	glActiveTexture(GL_TEXTURE0);
+	glClientActiveTexture(GL_TEXTURE0);
 
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldGlState.textureId);
 	glGetFloatv(GL_CURRENT_COLOR, &(oldGlState.color[0]));
 	glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &oldGlState.texEnvMode);
-	glGetTexEnviv(GL_TEXTURE_ENV, GL_COMBINE_RGB, &oldGlState.texEnvMode1);
-	glGetTexEnviv(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, &oldGlState.texEnvMode2);
 	oldGlState.blend = glIsEnabled(GL_BLEND);
 	glGetIntegerv(GL_BLEND_SRC, &oldGlState.blend1);
 	glGetIntegerv(GL_BLEND_DST, &oldGlState.blend2);
+	glGetBooleanv(GL_COLOR_ARRAY, &oldGlState.colorArray);
 	// It's very unlikely that some app will use GL_TEXTURE_CROP_RECT_OES, so just skip it
 	if( glGetError() != GL_NO_ERROR )
 	{
 		// Make the video somehow work on emulator
 		oldGlState.texture2d = GL_FALSE;
 		oldGlState.texunitId = GL_TEXTURE0;
+		oldGlState.clientTexunitId = GL_TEXTURE0;
 		oldGlState.textureId = 0;
 		oldGlState.texEnvMode = GL_MODULATE;
-		oldGlState.texEnvMode1 = GL_MODULATE;
-		oldGlState.texEnvMode2 = GL_MODULATE;
 		oldGlState.blend = GL_FALSE;
 		oldGlState.blend1 = GL_SRC_ALPHA;
 		oldGlState.blend2 = GL_ONE_MINUS_SRC_ALPHA;
+		oldGlState.colorArray = GL_FALSE;
 	}
 
 	glEnable(GL_TEXTURE_2D);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-	glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisableClientState(GL_COLOR_ARRAY);
 }
 
 static inline void endDrawingTex()
@@ -164,12 +164,13 @@ static inline void endDrawingTex()
 	glBindTexture(GL_TEXTURE_2D, oldGlState.textureId);
 	glColor4f(oldGlState.color[0], oldGlState.color[1], oldGlState.color[2], oldGlState.color[3]);
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
-	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, oldGlState.texEnvMode1);
-	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, oldGlState.texEnvMode2);
 	if( oldGlState.blend == GL_FALSE )
 		glDisable(GL_BLEND);
 	glBlendFunc(oldGlState.blend1, oldGlState.blend2);
 	glActiveTexture(oldGlState.texunitId);
+	glClientActiveTexture(oldGlState.clientTexunitId);
+	if( oldGlState.colorArray )
+		glEnableClientState(GL_COLOR_ARRAY);
 }
 
 static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, int flipX, int flipY, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
@@ -182,17 +183,6 @@ static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect *
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 
 	glColor4x(r * 0x100, g * 0x100, b * 0x100,  a * 0x100 );
-
-	if( SDL_ANDROID_VideoLinearFilter )
-	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	}
-	else
-	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	}
 
 	if(src)
 	{
@@ -846,6 +836,17 @@ static int setupScreenKeyboardButtonTexture( GLTexture_t * data, Uint8 * charBuf
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	if( SDL_ANDROID_VideoLinearFilter )
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	}
+	else
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	}
 
 	glDisable(GL_TEXTURE_2D);
 
