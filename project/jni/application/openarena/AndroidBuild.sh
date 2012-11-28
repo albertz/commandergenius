@@ -10,6 +10,8 @@ make -j8 -C vm BUILD_MISSIONPACK=0 || exit 1
 cd vm/build/release-linux-`uname -m`/baseq3
 rm -f ../../../../AndroidData/binaries.zip ../../../../AndroidData/vm.zip
 zip -r ../../../../AndroidData/vm.zip vm
+cd ../../../android
+zip ../../AndroidData/vm.zip *
 )
 
 env NO_SHARED_LIBS=1 BUILD_EXECUTABLE=1 V=1 ../setEnvironment-armeabi.sh make -C vm -j8 PLATFORM=android ARCH=$1 USE_LOCAL_HEADERS=0 BUILD_MISSIONPACK=0 || exit 1
