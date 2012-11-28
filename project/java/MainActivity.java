@@ -746,9 +746,9 @@ public class MainActivity extends Activity
 
 				ZipInputStream zip = new ZipInputStream(in);
 
-				File cacheDir = getCacheDir();
+				File libDir = getFilesDir();
 				try {
-					cacheDir.mkdirs();
+					libDir.mkdirs();
 				} catch( SecurityException ee ) { };
 				
 				byte[] buf = new byte[16384];
@@ -767,14 +767,14 @@ public class MainActivity extends Activity
 					}
 					if( entry.isDirectory() )
 					{
-						File outDir = new File( cacheDir.getAbsolutePath() + "/" + entry.getName() );
+						File outDir = new File( libDir.getAbsolutePath() + "/" + entry.getName() );
 						if( !(outDir.exists() && outDir.isDirectory()) )
 							outDir.mkdirs();
 						continue;
 					}
 
 					OutputStream out = null;
-					String path = cacheDir.getAbsolutePath() + "/" + entry.getName();
+					String path = libDir.getAbsolutePath() + "/" + entry.getName();
 					try {
 						File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
 						if( !(outDir.exists() && outDir.isDirectory()) )
@@ -799,7 +799,7 @@ public class MainActivity extends Activity
 				for(String l : Globals.AppLibraries)
 				{
 					String libname = System.mapLibraryName(l);
-					File libpath = new File(cacheDir, libname);
+					File libpath = new File(libDir, libname);
 					System.out.println("libSDL: loading lib " + libpath.getPath());
 					System.load(libpath.getPath());
 					libpath.delete();
@@ -842,9 +842,9 @@ public class MainActivity extends Activity
 
 				ZipInputStream zip = new ZipInputStream(in);
 
-				File cacheDir = getFilesDir();
+				File libDir = getFilesDir();
 				try {
-					cacheDir.mkdirs();
+					libDir.mkdirs();
 				} catch( SecurityException ee ) { };
 				
 				byte[] buf = new byte[16384];
@@ -863,14 +863,14 @@ public class MainActivity extends Activity
 					}
 					if( entry.isDirectory() )
 					{
-						File outDir = new File( cacheDir.getAbsolutePath() + "/" + entry.getName() );
+						File outDir = new File( libDir.getAbsolutePath() + "/" + entry.getName() );
 						if( !(outDir.exists() && outDir.isDirectory()) )
 							outDir.mkdirs();
 						continue;
 					}
 
 					OutputStream out = null;
-					String path = cacheDir.getAbsolutePath() + "/" + entry.getName();
+					String path = libDir.getAbsolutePath() + "/" + entry.getName();
 					try {
 						File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
 						if( !(outDir.exists() && outDir.isDirectory()) )
@@ -933,7 +933,7 @@ public class MainActivity extends Activity
 				for(String l : libs)
 				{
 					String libname = System.mapLibraryName(l);
-					File libpath = new File(context.getCacheDir(), libname);
+					File libpath = new File(context.getFilesDir(), libname);
 					System.out.println("libSDL: loading lib " + libpath.getPath());
 					System.load(libpath.getPath());
 					libpath.delete();
