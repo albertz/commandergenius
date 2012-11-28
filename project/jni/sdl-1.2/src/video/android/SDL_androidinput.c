@@ -1940,7 +1940,8 @@ void SDL_ANDROID_DeferredTextInput()
 		
 		BufferedEventsEnd = nextEvent;
 		SDL_mutexV(BufferedEventsMutex);
-		SDL_ANDROID_MainThreadPushMouseMotion(currentMouseX + (currentMouseX % 2 ? -1 : 1), currentMouseY); // Force screen redraw
+		if( isMouseUsed )
+			SDL_ANDROID_MainThreadPushMouseMotion(currentMouseX + (currentMouseX % 2 ? -1 : 1), currentMouseY); // Force screen redraw
 	}
 	
 	SDL_mutexV(deferredTextMutex);
