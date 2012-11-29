@@ -16,7 +16,8 @@ zip ../../AndroidData/vm.zip *
 
 env NO_SHARED_LIBS=1 BUILD_EXECUTABLE=1 V=1 ../setEnvironment-armeabi.sh make -C vm -j8 PLATFORM=android ARCH=$1 USE_LOCAL_HEADERS=0 BUILD_MISSIONPACK=0 || exit 1
 
-../setEnvironment-armeabi.sh sh -c "cd vm/build/release-android-$1/baseq3 && \$STRIP --strip-unneeded *.so && zip ../../../../AndroidData/binaries.zip *.so"
+# Do not generate shared game logic libs - QVM files are used instead
+# ../setEnvironment-armeabi.sh sh -c "cd vm/build/release-android-$1/baseq3 && \$STRIP --strip-unneeded *.so && zip ../../../../AndroidData/binaries.zip *.so"
 
 ../setEnvironment-$1.sh make -j8 -C engine release \
 PLATFORM=android ARCH=$1 USE_GLES=1 USE_LOCAL_HEADERS=0 \
