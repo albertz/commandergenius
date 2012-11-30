@@ -15,6 +15,10 @@ if [ "$#" -gt 0 -a "$1" = "-r" ]; then
 	run_apk=true
 fi
 
+[ -e local.properties ] || {
+	android update project -p project || exit 1
+	rm -f project/src/Globals.java
+}
 # Set here your own NDK path if needed
 # export PATH=$PATH:~/src/endless_space/android-ndk-r7
 NDKBUILDPATH=$PATH
