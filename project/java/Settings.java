@@ -300,7 +300,7 @@ class Settings
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			int cfgVersion = settingsFile.readInt();
 			System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion());
-			if( cfgVersion < p.getApplicationVersion() )
+			if( cfgVersion != p.getApplicationVersion() )
 			{
 				DeleteFilesOnUpgrade();
 				if( Globals.ResetSdlConfigForThisVersion )
