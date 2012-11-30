@@ -8,7 +8,7 @@ APPVER=`grep AppVersionName AndroidAppSettings.cfg | sed 's/.*=//' | tr -d '"' |
 tar -c -z --exclude-vcs --exclude="*.o" --exclude="*.d" --exclude="*.dep" \
 -f $APPNAME-$APPVER-src.tar.gz \
 `git ls-files --exclude-standard | grep -v '^project/jni/application/.*'` \
-`find  project/jni/application -maxdepth 1 -type f` \
+`find  project/jni/application -maxdepth 1 -type f -o -type l` \
 project/jni/application/src \
 project/jni/application/`readlink project/jni/application/src` \
 project/AndroidManifest.xml project/src
