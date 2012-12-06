@@ -8,10 +8,10 @@ mkdir -p AndroidData
 [ -e libapplication.so ] || ln -s libapplication-armeabi.so libapplication.so
 make -j8 -C vm BUILD_MISSIONPACK=0 || exit 1
 cd vm/build/release-linux-`uname -m`/baseq3
-rm -f ../../../../AndroidData/binaries.zip ../../../../AndroidData/vm.zip
-zip -r ../../../../AndroidData/vm.zip vm
+#rm -f ../../../../AndroidData/binaries.zip ../../../../AndroidData/pak7-android.pk3
+zip -r ../../../../AndroidData/pak7-android.pk3 vm
 cd ../../../android
-zip ../../AndroidData/vm.zip *
+zip ../../AndroidData/pak7-android.pk3 *
 ln -sf ../engine/misc/quake3-tango.png ../../AndroidData/logo.png
 )
 
