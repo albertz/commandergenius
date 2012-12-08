@@ -11,7 +11,7 @@ if [ "$1" = "armeabi" ]; then (
 	#rm -f ../../../../AndroidData/binaries.zip ../../../../AndroidData/pak7-android.pk3
 	zip -r ../../../../AndroidData/pak7-android.pk3 vm
 	cd ../../../android
-	zip ../../AndroidData/pak7-android.pk3 *
+	zip -r ../../AndroidData/pak7-android.pk3 *
 	ln -sf ../engine/misc/quake3-tango.png ../../AndroidData/logo.png
 	exit 0
 ) || exit 1
