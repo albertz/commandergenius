@@ -627,7 +627,7 @@ class Settings
 					{
 						Globals.DownloadToSdcard = (item != 0);
 						Globals.DataDir = Globals.DownloadToSdcard ?
-										Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
+										SdcardAppPath.getPath(p) :
 										p.getFilesDir().getAbsolutePath();
 						goBack(p);
 					}
