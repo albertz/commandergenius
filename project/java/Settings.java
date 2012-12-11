@@ -2254,7 +2254,7 @@ class Settings
 
 			public void onTouchEvent(final MotionEvent ev)
 			{
-				if(Globals.ScreenKbControlsLayout.length >= currentButton)
+				if(currentButton >= Globals.ScreenKbControlsLayout.length)
 				{
 					setupButton(false);
 					return;
