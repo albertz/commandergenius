@@ -13,8 +13,6 @@ Known bugs
 
 - 32-bpp color mode does not work with SW video surface, 24-bpp and 32-bpp mode does not work with SDL_HWSURFACE.
 
-- Set on-screen button 
-
 Requested features
 ==================
 

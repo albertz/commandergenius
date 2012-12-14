@@ -72,6 +72,7 @@ import android.os.Message;
 import java.util.concurrent.Semaphore;
 import android.content.pm.ActivityInfo;
 import android.view.Display;
+import android.text.InputType;
 
 public class MainActivity extends Activity
 {
@@ -418,13 +419,35 @@ public class MainActivity extends Activity
 					_parent.hideScreenKeyboard();
 					return true;
 				}
-				if ((sendBackspace && event.getAction() == KeyEvent.ACTION_UP) && (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR))
+				if (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR)
 				{
-					synchronized(textInput) {
-						DemoRenderer.nativeTextInput( 8, 0 ); // Send backspace to native code
+					if (sendBackspace && event.getAction() == KeyEvent.ACTION_UP)
+					{
+						synchronized(textInput) {
+							DemoRenderer.nativeTextInput( 8, 0 ); // Send backspace to native code
+						}
 					}
-					return false; // and proceed to delete text in keyboard input field
+					// EditText deletes two characters at a time, here's a hacky fix
+					if (event.getAction() == KeyEvent.ACTION_DOWN && (event.getFlags() | KeyEvent.FLAG_SOFT_KEYBOARD) != 0)
+					{
+						EditText t = (EditText) v;
+						int start = t.getSelectionStart();  //get cursor starting position
+						int end = t.getSelectionEnd();      //get cursor ending position
+						if ( start < 0 )
+							return true;
+						if ( end < 0 || end == start )
+						{
+							start --;
+							if ( start < 0 )
+								return true;
+							end = start + 1;
+						}
+						t.setText(t.getText().toString().substring(0, start) + t.getText().toString().substring(end));
+						t.setSelection(start);
+						return true;
+					}
 				}
+				//System.out.println("Key " + keyCode + " flags " + event.getFlags() + " action " + event.getAction());
 				return false;
 			}
 		};
@@ -433,7 +456,8 @@ public class MainActivity extends Activity
 		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this, sendBackspace));
 		_screenKeyboard.setHint(R.string.text_edit_click_here);
 		_screenKeyboard.setText(oldText);
-		_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
+		//_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
+		_screenKeyboard.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
 		_screenKeyboard.setFocusableInTouchMode(true);
 		_screenKeyboard.setFocusable(true);
 		_screenKeyboard.requestFocus();
