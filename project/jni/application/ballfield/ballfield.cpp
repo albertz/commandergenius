@@ -14,8 +14,9 @@
 #include <math.h>
 #include <android/log.h>
 
-#include "SDL.h"
-#include "SDL_image.h"
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL_screenkeyboard.h>
 
 #define fprintf(X, ...) __android_log_print(ANDROID_LOG_INFO, "Ballfield", __VA_ARGS__)
 #define printf(...) __android_log_print(ANDROID_LOG_INFO, "Ballfield", __VA_ARGS__)
@@ -438,6 +439,7 @@ int main(int argc, char* argv[])
 	struct TouchPointer_t { int x; int y; int pressure; int pressed; } touchPointers[MAX_POINTERS];
 	int accel[2], screenjoy[2];
 	SDL_Surface	*mouse[4];
+	int screenKeyboardShown = 0;
 
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
@@ -670,6 +672,11 @@ int main(int argc, char* argv[])
 				touchPointers[evt.jball.ball].x = evt.jball.xrel;
 				touchPointers[evt.jball.ball].y = evt.jball.yrel;
 			}
+		}
+		if( screenKeyboardShown != SDL_IsScreenKeyboardShown(NULL))
+		{
+			__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Screen keyboard shown: %d -> %d", screenKeyboardShown, SDL_IsScreenKeyboardShown(NULL));
+			screenKeyboardShown = SDL_IsScreenKeyboardShown(NULL);
 		}
 
 		/* Animate */
