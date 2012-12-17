@@ -2002,7 +2002,7 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 		deferredTextIdx2 = 0;
 	deferredText[deferredTextIdx2].down = SDL_RELEASED;
 	deferredText[deferredTextIdx2].scancode = ascii;
-	deferredText[deferredTextIdx2].unicode = unicode;
+	deferredText[deferredTextIdx2].unicode = 0;
 	if( shiftRequired )
 	{
 		deferredTextIdx2++;
