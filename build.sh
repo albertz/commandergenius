@@ -15,7 +15,7 @@ if [ "$#" -gt 0 -a "$1" = "-r" ]; then
 	run_apk=true
 fi
 
-[ -e local.properties ] || {
+[ -e project/local.properties ] || {
 	android update project -p project || exit 1
 	rm -f project/src/Globals.java
 }
@@ -23,7 +23,7 @@ fi
 # export PATH=$PATH:~/src/endless_space/android-ndk-r7
 NDKBUILDPATH=$PATH
 export `grep "AppFullName=" AndroidAppSettings.cfg`
-if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null && \
+if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null 2>&1 && \
 		[ "`readlink AndroidAppSettings.cfg`" -ot "project/src/Globals.java" ] && \
 		[ -z "`find project/java/* project/AndroidManifestTemplate.xml -cnewer project/src/Globals.java`" ] && \
 		[ -z "`find project/jni/application/src/AndroidData/* -cnewer project/src/Globals.java`" ] ) ; then true ; else

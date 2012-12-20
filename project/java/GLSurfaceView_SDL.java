@@ -674,6 +674,8 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             String cfglog = "";
             int idx = 0;
             int selectidx = -1;
+
+            Log.v("SDL", "Desired GL config: " + "R" + mRedSize + "G" + mGreenSize + "B" + mBlueSize + "A" + mAlphaSize + " depth " + mDepthSize + " stencil " + mStencilSize + " type " + (mIsGles2 ? "GLES2" : "GLES"));
             for(EGLConfig config : configs) {
                 if ( config == null )
                     continue;
@@ -699,12 +701,16 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 int distance = Math.abs(r - mRedSize)
                     + Math.abs(g - mGreenSize)
                     + Math.abs(b - mBlueSize) + Math.abs(a - mAlphaSize);
+                int dist2 = distance;
                 if( (d > 0) != (mDepthSize > 0) )
-                    distance += (d > 0) ? 5 : 1; // Small penalty if we don't need zbuffer but it is present
-                if( (s > 0) == (mStencilSize > 0) )
-                    distance += (s > 0) ? 5 : 1;
+                    distance += (mDepthSize > 0) ? 5 : 1; // Small penalty if we don't need zbuffer but it is present
+                int dist3 = distance;
+                if( (s > 0) != (mStencilSize > 0) )
+                    distance += (mStencilSize > 0) ? 5 : 1;
+                int dist4 = distance;
                 if( (rendertype & desiredtype) == 0 )
                     distance += 5;
+                int dist5 = distance;
                 if( caveat == EGL10.EGL_SLOW_CONFIG )
                     distance += 4;
                 if( caveat == EGL10.EGL_NON_CONFORMANT_CONFIG ) // dunno what that means, probably R and B channels swapped
@@ -726,7 +732,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 						caveat == EGL10.EGL_NON_CONFORMANT_CONFIG ? "non-conformant" :
                 						String.valueOf(caveat)));
                 cfgcur += " nr " + nativeRender;
-                cfgcur += " pos " + distance;
+                cfgcur += " pos " + distance + " (" + dist2 + "," + dist3 + "," + dist4 + "," + dist5 + ")";
                 Log.v("SDL", "GL config " + idx + ": " + cfgcur);
                 if (distance < closestDistance) {
                     closestDistance = distance;

@@ -630,7 +630,7 @@ fi
 if [ -z "$AUTO" -o -z "$MinimumScreenSize" ]; then
 echo
 echo "Screen size is used by Google Play to prevent an app to be installed on devices with smaller screens"
-echo -n "Minimum screen size that application supports: (s)mall / (n)ormal / (l)arge ($MinimumScreenSize): "
+echo -n "Minimum screen size that application supports: (s)mall / (m)edium / (l)arge ($MinimumScreenSize): "
 read var
 if [ -n "$var" ] ; then
 	MinimumScreenSize="$var"

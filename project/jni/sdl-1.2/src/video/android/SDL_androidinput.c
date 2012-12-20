@@ -832,7 +832,7 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoRenderer_nativeTextInputFinished) ( JNIEnv*  env, jobject thiz )
 {
 	textInputBuffer = NULL;
-	SDL_ANDROID_TextInputFinished();
+	SDL_ANDROID_TextInputFinished = 1;
 }
 
 static void updateOrientation ( float accX, float accY, float accZ );
@@ -1943,6 +1943,14 @@ void SDL_ANDROID_DeferredTextInput()
 		if( isMouseUsed )
 			SDL_ANDROID_MainThreadPushMouseMotion(currentMouseX + (currentMouseX % 2 ? -1 : 1), currentMouseY); // Force screen redraw
 	}
+	else
+	{
+		if( SDL_ANDROID_TextInputFinished )
+		{
+			SDL_ANDROID_TextInputFinished = 0;
+			SDL_ANDROID_IsScreenKeyboardShownFlag = 0;
+		}
+	}
 	
 	SDL_mutexV(deferredTextMutex);
 };
@@ -1994,7 +2002,7 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 		deferredTextIdx2 = 0;
 	deferredText[deferredTextIdx2].down = SDL_RELEASED;
 	deferredText[deferredTextIdx2].scancode = ascii;
-	deferredText[deferredTextIdx2].unicode = unicode;
+	deferredText[deferredTextIdx2].unicode = 0;
 	if( shiftRequired )
 	{
 		deferredTextIdx2++;

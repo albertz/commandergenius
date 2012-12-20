@@ -1090,7 +1090,7 @@ int SDLCALL SDL_HideScreenKeyboard(void *unused)
 
 int SDLCALL SDL_IsScreenKeyboardShown(void *unused)
 {
-	return SDL_ANDROID_CallJavaIsScreenKeyboardShown();
+	return SDL_ANDROID_IsScreenKeyboardShown();
 }
 
 int SDLCALL SDL_ToggleScreenKeyboard(void *unused)

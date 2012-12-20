@@ -14,8 +14,9 @@
 #include <math.h>
 #include <android/log.h>
 
-#include "SDL.h"
-#include "SDL_image.h"
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL_screenkeyboard.h>
 
 #define fprintf(X, ...) __android_log_print(ANDROID_LOG_INFO, "Ballfield", __VA_ARGS__)
 #define printf(...) __android_log_print(ANDROID_LOG_INFO, "Ballfield", __VA_ARGS__)
@@ -438,9 +439,11 @@ int main(int argc, char* argv[])
 	struct TouchPointer_t { int x; int y; int pressure; int pressed; } touchPointers[MAX_POINTERS];
 	int accel[2], screenjoy[2];
 	SDL_Surface	*mouse[4];
+	int screenKeyboardShown = 0;
 
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
+	SDL_EnableUNICODE(1);
 
 	atexit(SDL_Quit);
 
@@ -632,7 +635,7 @@ int main(int argc, char* argv[])
 		{
 			if(evt.type == SDL_KEYUP || evt.type == SDL_KEYDOWN)
 			{
-				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL key event: evt %s state %s key %d scancode %d mod %d unicode %d", evt.type == SDL_KEYUP ? "UP  " : "DOWN" , evt.key.state == SDL_PRESSED ? "PRESSED " : "RELEASED", (int)evt.key.keysym.sym, (int)evt.key.keysym.scancode, (int)evt.key.keysym.mod, (int)evt.key.keysym.unicode);
+				__android_log_print(ANDROID_LOG_INFO, "Ballfield", "SDL key event: evt %s state %s key %4d %12s scancode %4d mod %2d unicode %d", evt.type == SDL_KEYUP ? "UP  " : "DOWN" , evt.key.state == SDL_PRESSED ? "PRESSED " : "RELEASED", (int)evt.key.keysym.sym, SDL_GetKeyName(evt.key.keysym.sym), (int)evt.key.keysym.scancode, (int)evt.key.keysym.mod, (int)evt.key.keysym.unicode);
 				if(evt.key.keysym.sym == SDLK_ESCAPE)
 					return 0;
 			}
@@ -670,6 +673,11 @@ int main(int argc, char* argv[])
 				touchPointers[evt.jball.ball].x = evt.jball.xrel;
 				touchPointers[evt.jball.ball].y = evt.jball.yrel;
 			}
+		}
+		if( screenKeyboardShown != SDL_IsScreenKeyboardShown(NULL))
+		{
+			__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Screen keyboard shown: %d -> %d", screenKeyboardShown, SDL_IsScreenKeyboardShown(NULL));
+			screenKeyboardShown = SDL_IsScreenKeyboardShown(NULL);
 		}
 
 		/* Animate */

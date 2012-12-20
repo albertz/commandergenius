@@ -300,7 +300,7 @@ class Settings
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			int cfgVersion = settingsFile.readInt();
 			System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion());
-			if( cfgVersion < p.getApplicationVersion() )
+			if( cfgVersion != p.getApplicationVersion() )
 			{
 				DeleteFilesOnUpgrade();
 				if( Globals.ResetSdlConfigForThisVersion )
@@ -627,7 +627,7 @@ class Settings
 					{
 						Globals.DownloadToSdcard = (item != 0);
 						Globals.DataDir = Globals.DownloadToSdcard ?
-										Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
+										SdcardAppPath.getPath(p) :
 										p.getFilesDir().getAbsolutePath();
 						goBack(p);
 					}
@@ -2254,7 +2254,7 @@ class Settings
 
 			public void onTouchEvent(final MotionEvent ev)
 			{
-				if(Globals.ScreenKbControlsLayout.length >= currentButton)
+				if(currentButton >= Globals.ScreenKbControlsLayout.length)
 				{
 					setupButton(false);
 					return;
