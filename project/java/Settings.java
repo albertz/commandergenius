@@ -299,6 +299,12 @@ class Settings
 			Globals.BrokenLibCMessageShown = settingsFile.readBoolean();
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			int cfgVersion = settingsFile.readInt();
+
+			settingsLoaded = true;
+
+			System.out.println("libSDL: Settings.Load(): loaded settings successfully");
+			settingsFile.close();
+
 			System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion());
 			if( cfgVersion != p.getApplicationVersion() )
 			{
@@ -307,15 +313,11 @@ class Settings
 				{
 					System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion() + " and we need to clean up config file");
 					// Delete settings file, and restart the application
-					settingsFile.close();
 					DeleteSdlConfigOnUpgradeAndRestart(p);
 				}
+				Save(p);
 			}
-			
-			settingsLoaded = true;
 
-			System.out.println("libSDL: Settings.Load(): loaded settings successfully");
-			settingsFile.close();
 			return;
 			
 		} catch( FileNotFoundException e ) {
