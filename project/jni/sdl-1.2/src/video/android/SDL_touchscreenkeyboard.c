@@ -48,15 +48,15 @@
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 
-enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT-1, BUTTON_ARROWS = MAX_BUTTONS } ; // Max amount of custom buttons
+enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, BUTTON_ARROWS = MAX_BUTTONS } ; // Max amount of custom buttons
 
 int SDL_ANDROID_isTouchscreenKeyboardUsed = 0;
-static int touchscreenKeyboardTheme = 0;
-static int touchscreenKeyboardShown = 1;
-static int AutoFireButtonsNum = 0;
-static int buttonsize = 1;
-static int buttonDrawSize = 1;
-static int transparency = 128;
+static short touchscreenKeyboardTheme = 0;
+static short touchscreenKeyboardShown = 1;
+static short AutoFireButtonsNum = 0;
+static short buttonsize = 1;
+static short buttonDrawSize = 1;
+static short transparency = 128;
 
 static SDL_Rect arrows, arrowsExtended, buttons[MAX_BUTTONS], buttonsAutoFireRect[MAX_BUTTONS_AUTOFIRE];
 static SDL_Rect arrowsDraw, buttonsDraw[MAX_BUTTONS];
@@ -71,13 +71,14 @@ SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_5)),
 };
 
 enum { ARROW_LEFT = 1, ARROW_RIGHT = 2, ARROW_UP = 4, ARROW_DOWN = 8 };
-static int oldArrows = 0;
-static int ButtonAutoFire[MAX_BUTTONS_AUTOFIRE];
-static int ButtonAutoFireX[MAX_BUTTONS_AUTOFIRE*2];
-static int ButtonAutoFireRot[MAX_BUTTONS_AUTOFIRE];
-static int ButtonAutoFireDecay[MAX_BUTTONS_AUTOFIRE];
+static short oldArrows = 0;
+static short ButtonAutoFire[MAX_BUTTONS_AUTOFIRE];
+static short ButtonAutoFireX[MAX_BUTTONS_AUTOFIRE*2];
+static short ButtonAutoFireRot[MAX_BUTTONS_AUTOFIRE];
+static short ButtonAutoFireDecay[MAX_BUTTONS_AUTOFIRE];
 
-static int pointerInButtonRect[MAX_BUTTONS + 1];
+static short pointerInButtonRect[MAX_BUTTONS + 1];
+static short buttonsGenerateSdlEvents[MAX_BUTTONS + 1];
 
 typedef struct
 {
@@ -416,22 +417,20 @@ static inline int ArrowKeysPressed(int x, int y)
 	return ret;
 }
 
-int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointerId)
+unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointerId)
 {
 	int i;
-	int processed = 0;
-
+	unsigned processed = 0;
 	
 	if( !touchscreenKeyboardShown )
 		return 0;
-
 	
 	if( action == MOUSE_DOWN )
 	{
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "touch %03dx%03d ptr %d action %d", x, y, pointerId, action);
 		if( InsideRect( &arrows, x, y ) )
 		{
-			processed = 1;
+			processed |= 1<<BUTTON_ARROWS;
 			if( pointerInButtonRect[BUTTON_ARROWS] == -1 )
 			{
 				pointerInButtonRect[BUTTON_ARROWS] = pointerId;
@@ -467,7 +466,7 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 				continue;
 			if( InsideRect( &buttons[i], x, y) )
 			{
-				processed = 1;
+				processed |= 1<<i;
 				if( pointerInButtonRect[i] == -1 )
 				{
 					pointerInButtonRect[i] = pointerId;
@@ -493,7 +492,7 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "touch %03dx%03d ptr %d action %d", x, y, pointerId, action);
 		if( pointerInButtonRect[BUTTON_ARROWS] == pointerId )
 		{
-			processed = 1;
+			processed |= 1<<BUTTON_ARROWS;
 			pointerInButtonRect[BUTTON_ARROWS] = -1;
 			if( SDL_ANDROID_isJoystickUsed )
 			{
@@ -515,7 +514,7 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 				continue;
 			if( pointerInButtonRect[i] == pointerId )
 			{
-				processed = 1;
+				processed |= 1<<i;
 				pointerInButtonRect[i] = -1;
 				if( i < AutoFireButtonsNum && ButtonAutoFire[i] )
 				{
@@ -538,13 +537,13 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 	if( action == MOUSE_MOVE )
 	{
 		// Process cases when pointer enters button area (it won't send keypress twice if button already pressed)
-		processed = SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
+		processed |= SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
 		
 		// Process cases when pointer leaves button area
 		// TODO: huge code size, split it or somehow make it more readable
 		if( pointerInButtonRect[BUTTON_ARROWS] == pointerId )
 		{
-			processed = 1;
+			processed |= 1<<BUTTON_ARROWS;
 			if( ! InsideRect( &arrowsExtended, x, y ) )
 			{
 				pointerInButtonRect[BUTTON_ARROWS] = -1;
@@ -601,7 +600,7 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 		{
 			if( pointerInButtonRect[i] == pointerId )
 			{
-				processed = 1;
+				processed |= 1<<i;
 				if( ! InsideRect( &buttonsAutoFireRect[i], x, y ) )
 				{
 					pointerInButtonRect[i] = -1;
@@ -652,8 +651,8 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 				continue;
 			if( pointerInButtonRect[i] == pointerId )
 			{
-				processed = 1;
-				if( ! InsideRect( &buttons[i], x, y ) )
+				processed |= 1<<i;
+				if( ! InsideRect( &buttons[i], x, y ) && ! buttonsGenerateSdlEvents[i] )
 				{
 					pointerInButtonRect[i] = -1;
 					if( i != BUTTON_TEXT_INPUT )
@@ -662,7 +661,10 @@ int SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int pointer
 			}
 		}
 	}
-	
+
+	for( i = 0; i <= MAX_BUTTONS ; i++ )
+		if( ( processed & (1<<i) ) && buttonsGenerateSdlEvents[i] )
+			processed |= TOUCHSCREEN_KEYBOARD_PASS_EVENT_DOWN_TO_SDL;
 	return processed;
 };
 
@@ -959,7 +961,7 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	}
 	else
 	{
-		int i = buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
+		int i = buttonId;
 		buttons[i] = *pos;
 		shrinkButtonRect(buttons[i], &buttonsDraw[i]);
 		if( i < AutoFireButtonsNum )
@@ -984,24 +986,24 @@ int SDL_ANDROID_GetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	}
 	else
 	{
-		*pos = buttons[buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0];
+		*pos = buttons[buttonId];
 	}
 	return 1;
 };
 
 int SDL_ANDROID_SetScreenKeyboardButtonKey(int buttonId, SDLKey key)
 {
-	if( buttonId < SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 || buttonId > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 || ! key )
+	if( buttonId < 0 || buttonId > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 || ! key )
 		return 0;
-	buttonKeysyms[buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0] = key;
+	buttonKeysyms[buttonId] = key;
 	return 1;
 };
 
 SDLKey SDL_ANDROID_GetScreenKeyboardButtonKey(int buttonId)
 {
-	if( buttonId < SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 || buttonId > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 )
+	if( buttonId < 0 || buttonId > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 )
 		return SDLK_UNKNOWN;
-	return buttonKeysyms[buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0];
+	return buttonKeysyms[buttonId];
 };
 
 int SDL_ANDROID_SetScreenKeyboardAutoFireButtonsAmount(int nbuttons)
@@ -1099,4 +1101,38 @@ int SDLCALL SDL_ToggleScreenKeyboard(void *unused)
 		return SDL_HideScreenKeyboard(NULL);
 	else
 		return SDL_ShowScreenKeyboard(NULL);
+}
+
+int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonGenerateTouchEvents(int buttonId, int generateEvents)
+{
+	if( buttonId < 0 || buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM )
+		return 0;
+	buttonsGenerateSdlEvents[buttonId] = generateEvents;
+	return 1;
+}
+
+static int ScreenKbRedefinedByUser = 0;
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyLayout) (JNIEnv* env, jobject thiz, jint keynum, jint x1, jint y1, jint x2, jint y2)
+{
+	SDL_Rect rect = {x1, y1, x2-x1, y2-y1};
+	int key = -1;
+	if( keynum == 0 )
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD;
+	if( keynum == 1 )
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT;
+	if( keynum - 2 >= 0 && keynum - 2 <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
+		key = keynum - 2 + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
+
+	if( key >= 0 )
+	{
+		ScreenKbRedefinedByUser = 1;
+		SDL_ANDROID_SetScreenKeyboardButtonPos(key, &rect);
+	}
+}
+
+int SDL_ANDROID_GetScreenKeyboardRedefinedByUser()
+{
+	return ScreenKbRedefinedByUser;
 }
