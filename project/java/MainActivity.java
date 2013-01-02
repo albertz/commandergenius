@@ -294,8 +294,10 @@ public class MainActivity extends Activity
 		_tv = null;
 		_inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 		_videoLayout = new FrameLayout(this);
+		SetLayerType.get().setLayerType(_videoLayout);
 		setContentView(_videoLayout);
 		mGLView = new DemoGLSurfaceView(this);
+		SetLayerType.get().setLayerType(mGLView);
 		_videoLayout.addView(mGLView);
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
@@ -1049,6 +1051,41 @@ abstract class DimSystemStatusBar
 			private static final DimSystemStatusBarDummy sInstance = new DimSystemStatusBarDummy();
 		}
 		public void dim(final View view)
+		{
+		}
+	}
+}
+
+abstract class SetLayerType
+{
+	public static SetLayerType get()
+	{
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB)
+			return SetLayerTypeHoneycomb.Holder.sInstance;
+		else
+			return SetLayerTypeDummy.Holder.sInstance;
+	}
+	public abstract void setLayerType(final View view);
+
+	private static class SetLayerTypeHoneycomb extends SetLayerType
+	{
+		private static class Holder
+		{
+			private static final SetLayerTypeHoneycomb sInstance = new SetLayerTypeHoneycomb();
+		}
+		public void setLayerType(final View view)
+		{
+			view.setLayerType(android.view.View.LAYER_TYPE_NONE, null);
+			//view.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
+		}
+	}
+	private static class SetLayerTypeDummy extends SetLayerType
+	{
+		private static class Holder
+		{
+			private static final SetLayerTypeDummy sInstance = new SetLayerTypeDummy();
+		}
+		public void setLayerType(final View view)
 		{
 		}
 	}

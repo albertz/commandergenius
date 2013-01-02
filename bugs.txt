@@ -15,8 +15,6 @@ Known bugs
 
 - Option SdlVideoResizeKeepAspect has no effect
 
-- GLSurfaceView is buffered, so the input lags
-
 Requested features
 ==================
 

@@ -896,6 +896,14 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             /*
              * Create an EGL surface we can render into.
              */
+            /*
+            // This does not have any effect on Galaxy Note
+            int [] attribList = new int[4];
+            attribList[0] = mEgl.EGL_RENDER_BUFFER;
+            attribList[1] = mEgl.EGL_SINGLE_BUFFER;
+            attribList[2] = mEgl.EGL_NONE;
+            attribList[3] = mEgl.EGL_NONE;
+            */
             mEglSurface = mEgl.eglCreateWindowSurface(mEglDisplay,
                     mEglConfig, holder, null);
 
