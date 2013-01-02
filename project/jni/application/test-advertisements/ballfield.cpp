@@ -620,6 +620,11 @@ int main(int argc, char* argv[])
 				color |= 0x1f0;
 			if( b & SDL_BUTTON_MMASK )
 				color |= 0x0f;
+
+			adX = mx * physicalW / SCREEN_W - adSize.w - 10;
+			adY = my * physicalH / SCREEN_H - adSize.h - 10;
+			SDL_ANDROID_SetAdvertisementPosition(adX, adY);
+			SDL_ANDROID_SetAdvertisementVisible(1);
 		}
 		r.x = mx;
 		r.y = my;
