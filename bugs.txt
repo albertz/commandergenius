@@ -13,8 +13,14 @@ Known bugs
 
 - 32-bpp color mode does not work with SW video surface, 24-bpp and 32-bpp mode does not work with SDL_HWSURFACE.
 
+- Option SdlVideoResizeKeepAspect has no effect
+
+- GLSurfaceView is buffered, so the input lags
+
 Requested features
 ==================
+
+- It's impossible to do "./build.sh release"
 
 - Perform a check for free space available on SD card before writing there, and write to the internal storage if SD card is unplugged.
 
