@@ -15,7 +15,7 @@ zip -d Signed.apk "META-INF/*"
 # Sign with the new certificate
 echo Using keystore $ANDROID_KEYSTORE_FILE and alias $ANDROID_KEYSTORE_ALIAS
 stty -echo
-jarsigner -verbose -keystore $ANDROID_KEYSTORE_FILE -sigalg MD5withRSA -digestalg SHA1 Signed.apk $ANDROID_KEYSTORE_ALIAS
+jarsigner -verbose -keystore $ANDROID_KEYSTORE_FILE -sigalg MD5withRSA -digestalg SHA1 Signed.apk $ANDROID_KEYSTORE_ALIAS || exit 1
 stty echo
 echo
 zipalign 4 Signed.apk SignedAligned.apk

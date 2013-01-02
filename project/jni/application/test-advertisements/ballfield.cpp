@@ -579,18 +579,6 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		if(adSize.w == 0 || adSize.h == 0)
-			SDL_ANDROID_GetAdvertisementParams(NULL, &adSize);
-		int adX = abs(x_offs / 100) % (physicalW - adSize.w);
-		int adY = abs(y_offs / 80) % (physicalH - adSize.h);
-		SDL_ANDROID_SetAdvertisementPosition(adX, adY);
-		SDL_Rect adRect;
-		adRect.x = adX * SCREEN_W / physicalW;
-		adRect.w = adSize.w * SCREEN_W / physicalW;
-		adRect.y = adY * SCREEN_H / physicalH;
-		adRect.h = adSize.h * SCREEN_H / physicalH;
-		SDL_FillRect(screen, &adRect, 0xff0);
-
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
 		++fps_count;
 
@@ -607,6 +595,7 @@ int main(int argc, char* argv[])
 			SDL_FillRect(screen, &r, 0xaaaaaa);
 			print_num(screen, font, r.x, r.y, i+1);
 		}
+		int adX, adY;
 		int mx, my;
 		int b = SDL_GetMouseState(&mx, &my);
 		//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Mouse buttons: %d", b);
@@ -624,8 +613,22 @@ int main(int argc, char* argv[])
 			adX = mx * physicalW / SCREEN_W - adSize.w - 10;
 			adY = my * physicalH / SCREEN_H - adSize.h - 10;
 			SDL_ANDROID_SetAdvertisementPosition(adX, adY);
-			SDL_ANDROID_SetAdvertisementVisible(1);
 		}
+		else
+		{
+			if(adSize.w == 0 || adSize.h == 0)
+				SDL_ANDROID_GetAdvertisementParams(NULL, &adSize);
+			adX = abs(x_offs / 100) % (physicalW - adSize.w);
+			adY = abs(y_offs / 80) % (physicalH - adSize.h);
+			SDL_ANDROID_SetAdvertisementPosition(adX, adY);
+		}
+		SDL_Rect adRect;
+		adRect.x = adX * SCREEN_W / physicalW;
+		adRect.w = adSize.w * SCREEN_W / physicalW;
+		adRect.y = adY * SCREEN_H / physicalH;
+		adRect.h = adSize.h * SCREEN_H / physicalH;
+		SDL_FillRect(screen, &adRect, 0xff0);
+
 		r.x = mx;
 		r.y = my;
 		r.w = 30;

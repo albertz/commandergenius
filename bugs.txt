@@ -20,8 +20,6 @@ Known bugs
 Requested features
 ==================
 
-- It's impossible to do "./build.sh release"
-
 - Perform a check for free space available on SD card before writing there, and write to the internal storage if SD card is unplugged.
 
 - Split Settings.java into several files
