@@ -46,7 +46,7 @@ MISSING_LIB=
 CFLAGS="\
 -fpic -ffunction-sections -funwind-tables \
 -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -Wno-psabi \
--march=armv7-a -mfloat-abi=softfp -mfpu=vfp -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
+-march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
 -DANDROID -Wa,--noexecstack -g -O2 -DNDEBUG -g \
 -isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
