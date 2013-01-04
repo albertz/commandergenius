@@ -7,7 +7,7 @@ $(shell rm -f ../../../obj/local/armeabi/libvcmi.so)
 LOCAL_PATH=$(shell dirname $0)
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
-GCC_PREFIX=$(if $(shell which ndk-build | grep 'android-ndk-r5'),arm-linux-androideabi,arm-eabi)
+GCC_PREFIX=$(if $(shell which ndk-build | grep 'android-ndk-r8'),arm-linux-androideabi,arm-eabi)
 
 SOURCES_LIB=$(wildcard vcmi/lib/*.cpp vcmi/CConsoleHandler.cpp vcmi/CThreadHelper.cpp)
 OBJS_LIB=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB))
@@ -36,10 +36,10 @@ AndroidData/binaries.zip: vcmiserver AI/libGeniusAI.so AI/libStupidAI.so Scripti
 $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
 	../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
-	-c \$$CXXFLAGS -Ivcmi -Ivcmi/lib \
-	-DDATA_DIR=\\\"/sdcard/app-data/eu.vcmi\\\" \
-	-DBIN_DIR=\\\"/data/data/eu.vcmi/files\\\" \
-	-DLIB_DIR=\\\"/data/data/eu.vcmi/files\\\" \
+	-c \$$CXXFLAGS -Ivcmi -std=c++11 -Ivcmi/lib \
+	-DM_DATA_DIR=\\\"/sdcard/app-data/eu.vcmi\\\" \
+	-DM_BIN_DIR=\\\"/data/data/eu.vcmi/files\\\" \
+	-DM_LIB_DIR=\\\"/data/data/eu.vcmi/files\\\" \
 	-DWITH_AVCODEC_DECODE_VIDEO2=1 \
 	-Wstrict-aliasing -Wcast-align -Wpointer-arith -Waddress \
 	$< -o $@"
