@@ -24,7 +24,10 @@ OBJS_GENIUSAI=$(patsubst %.cpp, out/%.o, $(SOURCES_GENIUSAI))
 SOURCES_ERM=$(wildcard vcmi/Scripting/ERM/*.cpp)
 OBJS_ERM=$(patsubst %.cpp, out/%.o, $(SOURCES_ERM))
 
-all: AndroidData/binaries.zip
+SOURCES_CLIENT=$(wildcard vcmi/client/*.cpp vcmi/CCallback.cpp)
+OBJS_CLIENT=$(patsubst %.cpp, out/%.o, $(SOURCES_CLIENT))
+
+all: AndroidData/binaries.zip libapplication.so
 
 AndroidData/binaries.zip: vcmiserver AI/libGeniusAI.so AI/libStupidAI.so Scripting/libvcmiERM.so
 	rm -f $@
@@ -74,6 +77,11 @@ Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi
 
 libvcmi.so: $(OBJS_LIB)
 	$(LINK_LIB)
+
+libapplication.so: $(OBJS_CLIENT) libvcmi.so
+	env BUILD_EXECUTABLE=1 ../setEnvironment.sh sh -c \
+	"$(GCC_PREFIX)-g++ $^ -o $@ \
+	\$$LDFLAGS -L. -lvcmi -lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread"
 
 clean:
 	rm -rf out debug *.so vcmiserver* AndroidData/vcmiserver* libapplication.so AI Scripting
