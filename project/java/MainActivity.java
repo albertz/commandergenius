@@ -838,15 +838,18 @@ public class MainActivity extends Activity
 		}
 
 		// ----- VCMI hack -----
+		String [] binaryZipNames = { "binaries-" + android.os.Build.CPU_ABI + ".zip", "binaries.zip" };
+		for(String binaryZip: binaryZipNames)
+		{
 			try {
-				//System.out.println("libSDL: Extracting binaries");
+				System.out.println("libSDL: Trying to extract binaries from assets " + binaryZip);
 				
 				InputStream in = null;
 				try
 				{
 					for( int i = 0; ; i++ )
 					{
-						InputStream in2 = getAssets().open("binaries.zip" + String.format("%02d", i));
+						InputStream in2 = getAssets().open(binaryZip + String.format("%02d", i));
 						if( in == null )
 							in = in2;
 						else
@@ -858,7 +861,7 @@ public class MainActivity extends Activity
 					try
 					{
 						if( in == null )
-							in = getAssets().open("binaries.zip");
+							in = getAssets().open(binaryZip);
 					}
 					catch( IOException eee ) {}
 				}
@@ -937,6 +940,7 @@ public class MainActivity extends Activity
 			{
 				//System.out.println("libSDL: Error: " + eee.toString());
 			}
+		}
 		// ----- VCMI hack -----
 
 	};
