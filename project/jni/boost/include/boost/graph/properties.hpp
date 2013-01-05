@@ -11,7 +11,7 @@
 #define BOOST_GRAPH_PROPERTIES_HPP
 
 #include <boost/config.hpp>
-#include <cassert>
+#include <boost/assert.hpp>
 #include <boost/pending/property.hpp>
 #include <boost/detail/workaround.hpp>
 
@@ -115,6 +115,7 @@ namespace boost {
   BOOST_DEF_PROPERTY(vertex, lowpoint);
   BOOST_DEF_PROPERTY(vertex, potential);
   BOOST_DEF_PROPERTY(vertex, update);
+  BOOST_DEF_PROPERTY(vertex, underlying);
   BOOST_DEF_PROPERTY(edge, reverse);
   BOOST_DEF_PROPERTY(edge, capacity);
   BOOST_DEF_PROPERTY(edge, flow);
@@ -123,10 +124,12 @@ namespace boost {
   BOOST_DEF_PROPERTY(edge, discover_time);
   BOOST_DEF_PROPERTY(edge, update);
   BOOST_DEF_PROPERTY(edge, finished);
+  BOOST_DEF_PROPERTY(edge, underlying);
   BOOST_DEF_PROPERTY(graph, visitor);
 
   // These tags are used for property bundles
-  BOOST_DEF_PROPERTY(graph, bundle);
+  // BOOST_DEF_PROPERTY(graph, bundle); -- needed in graph_traits.hpp, so enum is defined there
+  BOOST_INSTALL_PROPERTY(graph, bundle);
   BOOST_DEF_PROPERTY(vertex, bundle);
   BOOST_DEF_PROPERTY(edge, bundle);
 
@@ -266,7 +269,7 @@ namespace boost {
   class graph_property {
   public:
     typedef typename property_value<
-      typename Graph::graph_property_type, Property
+      typename boost::graph_property_type<Graph>::type, Property
     >::type type;
   };
 
@@ -353,7 +356,7 @@ namespace boost {
   >
   make_container_vertex_map(RandomAccessContainer& c, const PropertyGraph& g)
   {
-    assert(c.size() >= num_vertices(g));
+    BOOST_ASSERT(c.size() >= num_vertices(g));
     return make_iterator_vertex_map(c.begin(), g);
   }
 

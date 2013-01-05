@@ -35,6 +35,7 @@
 #include <boost/pending/property.hpp>
 #include <boost/graph/adjacency_iterator.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/assert.hpp>
 
 // Symbol truncation problems with MSVC, trying to shorten names.
 #define stored_edge se_
@@ -1216,7 +1217,7 @@ namespace boost {
         std::pair<out_edge_iterator, out_edge_iterator> rng =
           get_parallel_edge_sublist(e, g, (OutEdgeListS*)(0));
         rng.first = std::find(rng.first, rng.second, e);
-        assert(rng.first != rng.second);
+        BOOST_ASSERT(rng.first != rng.second);
         remove_edge(rng.first);
       }
 
@@ -2757,17 +2758,6 @@ namespace boost {
 
 #if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 namespace boost {
-
-  #if BOOST_WORKAROUND( _STLPORT_VERSION, >= 0x500 )
-  // STLport 5 already defines a hash<void*> specialization.
-  #else
-  template <>
-  struct hash< void* > // Need this when vertex_descriptor=void*
-  {
-    std::size_t
-    operator()(void* v) const { return (std::size_t)v; }
-  };
-  #endif
 
   template <typename V>
   struct hash< boost::detail::stored_edge<V> >

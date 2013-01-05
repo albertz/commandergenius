@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2009. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2011. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -24,7 +24,7 @@
 
 namespace boost {
 namespace interprocess {
-namespace detail{
+namespace ipcdetail{
 
    #if defined BOOST_INTERPROCESS_POSIX_PROCESS_SHARED
 
@@ -50,7 +50,6 @@ namespace detail{
       pthread_mutexattr_t m_attr;
    };
 
-#if !defined(ANDROID)
    //!Makes pthread_condattr_t cleanup easy when using exceptions
    struct condattr_wrapper 
    {
@@ -70,7 +69,6 @@ namespace detail{
 
       pthread_condattr_t m_attr;
    };
-#endif
 
    //!Makes initialized pthread_mutex_t cleanup easy when using exceptions
    class mutex_initializer
@@ -159,7 +157,7 @@ namespace detail{
 
    #endif   //#if defined(BOOST_INTERPROCESS_POSIX_BARRIERS) && defined(BOOST_INTERPROCESS_POSIX_PROCESS_SHARED)
 
-}//namespace detail
+}//namespace ipcdetail
 
 }//namespace interprocess
 

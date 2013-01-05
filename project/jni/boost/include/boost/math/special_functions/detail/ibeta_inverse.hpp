@@ -455,6 +455,24 @@ T ibeta_inv_imp(T a, T b, T p, T q, const Policy& pol, T* py)
    BOOST_MATH_STD_USING  // For ADL of math functions.
 
    //
+   // Handle trivial cases first:
+   //
+   if(q == 0)
+   {
+      if(py) *py = 0;
+      return 1;
+   }
+   else if(p == 0)
+   {
+      if(py) *py = 1;
+      return 0;
+   }
+   else if((a == 1) && (b == 1))
+   {
+      if(py) *py = 1 - p;
+      return p;
+   }
+   //
    // The flag invert is set to true if we swap a for b and p for q,
    // in which case the result has to be subtracted from 1:
    //
@@ -477,31 +495,16 @@ T ibeta_inv_imp(T a, T b, T p, T q, const Policy& pol, T* py)
    // Student's T with b = 0.5 gets handled as a special case, swap
    // around if the arguments are in the "wrong" order:
    //
-   if(a == 0.5f)
+   if((a == 0.5f) && (b >= 0.5f))
    {
       std::swap(a, b);
       std::swap(p, q);
       invert = !invert;
    }
    //
-   // Handle trivial cases first:
+   // Select calculation method for the initial estimate:
    //
-   if(q == 0)
-   {
-      if(py) *py = 0;
-      return 1;
-   }
-   else if(p == 0)
-   {
-      if(py) *py = 1;
-      return 0;
-   }
-   else if((a == 1) && (b == 1))
-   {
-      if(py) *py = 1 - p;
-      return p;
-   }
-   else if((b == 0.5f) && (a >= 0.5f))
+   if((b == 0.5f) && (a >= 0.5f))
    {
       //
       // We have a Student's T distribution:
@@ -541,7 +544,7 @@ T ibeta_inv_imp(T a, T b, T p, T q, const Policy& pol, T* py)
          T r = a + b;
          T theta = asin(sqrt(a / r));
          T lambda = minv / r;
-         if((lambda >= 0.2) && (lambda <= 0.8) && (lambda >= 10))
+         if((lambda >= 0.2) && (lambda <= 0.8) && (r >= 10))
          {
             //
             // The second error function case is the next cheapest
@@ -620,7 +623,7 @@ T ibeta_inv_imp(T a, T b, T p, T q, const Policy& pol, T* py)
       {
          std::swap(a, b);
          std::swap(p, q);
-         invert = true;
+         invert = !invert;
          xs = 1 - xs;
       }
       T xg = pow(a * p * boost::math::beta(a, b, pol), 1/a);
@@ -652,7 +655,7 @@ T ibeta_inv_imp(T a, T b, T p, T q, const Policy& pol, T* py)
          std::swap(a, b);
          std::swap(p, q);
          std::swap(xs, xs2);
-         invert = true;
+         invert = !invert;
       }
       //
       // Estimate x and y, using expm1 to get a good estimate
@@ -716,7 +719,7 @@ T ibeta_inv_imp(T a, T b, T p, T q, const Policy& pol, T* py)
       {
          std::swap(a, b);
          std::swap(p, q);
-         invert = true;
+         invert = !invert;
       }
       if(pow(p, 1/a) < 0.5)
       {
@@ -798,7 +801,7 @@ T ibeta_inv_imp(T a, T b, T p, T q, const Policy& pol, T* py)
    boost::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
    x = boost::math::tools::halley_iterate(
       boost::math::detail::ibeta_roots<T, Policy>(a, b, (p < q ? p : q), (p < q ? false : true)), x, lower, upper, digits, max_iter);
-   policies::check_root_iterations("boost::math::ibeta<%1%>(%1%, %1%, %1%)", max_iter, pol);
+   policies::check_root_iterations<T>("boost::math::ibeta<%1%>(%1%, %1%, %1%)", max_iter, pol);
    //
    // We don't really want these asserts here, but they are useful for sanity
    // checking that we have the limits right, uncomment if you suspect bugs *only*.

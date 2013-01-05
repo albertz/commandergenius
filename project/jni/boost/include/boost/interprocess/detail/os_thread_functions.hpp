@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2009. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2011. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -23,6 +23,7 @@
 #     include <pthread.h>
 #     include <unistd.h>
 #     include <sched.h>
+#     include <time.h>
 #  else
 #     error Unknown platform
 #  endif
@@ -30,7 +31,7 @@
 
 namespace boost {
 namespace interprocess {
-namespace detail{
+namespace ipcdetail{
 
 #if (defined BOOST_INTERPROCESS_WINDOWS)
 
@@ -57,6 +58,9 @@ inline bool equal_thread_id(OS_thread_id_t id1, OS_thread_id_t id2)
 
 inline void thread_yield()
 {  winapi::sched_yield();  }
+
+inline void thread_sleep(unsigned int ms)
+{  winapi::Sleep(ms);  }
 
 //systemwide thread
 inline OS_systemwide_thread_id_t get_current_systemwide_thread_id()
@@ -160,6 +164,12 @@ inline bool equal_thread_id(OS_thread_id_t id1, OS_thread_id_t id2)
 inline void thread_yield()
 {  ::sched_yield();  }
 
+inline void thread_sleep(unsigned int ms)
+{
+   const struct timespec rqt = { ms/1000u, (ms%1000u)*1000000u  };
+   ::nanosleep(&rqt, 0);
+}
+
 //systemwide thread
 inline OS_systemwide_thread_id_t get_current_systemwide_thread_id()
 {
@@ -192,7 +202,7 @@ inline void get_pid_str(pid_str_t &pid_str, OS_process_id_t pid)
 inline void get_pid_str(pid_str_t &pid_str)
 {  get_pid_str(pid_str, get_current_process_id());  }
 
-}  //namespace detail{
+}  //namespace ipcdetail{
 }  //namespace interprocess {
 }  //namespace boost {
 
