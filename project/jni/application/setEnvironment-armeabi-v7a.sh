@@ -44,10 +44,10 @@ MISSING_INCLUDE=
 MISSING_LIB=
 
 CFLAGS="\
--fpic -ffunction-sections -funwind-tables \
--D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -Wno-psabi \
--march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
--DANDROID -Wa,--noexecstack -g -O2 -DNDEBUG -g \
+-fpic -ffunction-sections -funwind-tables -fstack-protector -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
+-no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb \
+-Os -g -DNDEBUG -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
+-DANDROID -O2 -g -finline-functions -Wa,--noexecstack \
 -isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH/include \
@@ -55,30 +55,33 @@ CFLAGS="\
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-isystem$LOCAL_PATH/../\1/include@g\"` \
 $MISSING_INCLUDE $CFLAGS"
 
-SHARED="-shared -Wl,-soname,libapplication.so"
+
+if [ -z "$SHARED_LIBRARY_NAME" ]; then
+	SHARED_LIBRARY_NAME=libapplication.so
+fi
+UNRESOLVED="-Wl,--no-undefined"
+SHARED="-shared -Wl,-soname,$SHARED_LIBRARY_NAME"
 if [ -n "$BUILD_EXECUTABLE" ]; then
-	SHARED=
+	SHARED="-Wl,--gc-sections -Wl,-z,nocopyreloc"
 fi
 if [ -n "$NO_SHARED_LIBS" ]; then
 	APP_SHARED_LIBS=
+fi
+if [ -n "$ALLOW_UNRESOLVED_SYMBOLS" ]; then
+	UNRESOLVED=
 fi
 
 LDFLAGS="\
 $SHARED \
 --sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
+-L$LOCAL_PATH/../../obj/local/$ARCH \
 `echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/$ARCH/lib\1.so@g\"` \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libGLESv1_CM.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libdl.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/liblog.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libz.so \
+-L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
+-lc -lm -lGLESv1_CM -ldl -llog -lz \
 -L$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH \
 -lgnustl_static \
--L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
--L$LOCAL_PATH/../../obj/local/$ARCH \
--Wl,--fix-cortex-a8 -Wl,--no-undefined -Wl,-z,noexecstack \
--Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++ \
+-no-canonical-prefixes -march=armv7-a -Wl,--fix-cortex-a8 $UNRESOLVED -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now \
+-lsupc++ \
 $MISSING_LIB $LDFLAGS"
 
 #echo env CFLAGS=\""$CFLAGS"\" LDFLAGS=\""$LDFLAGS"\" "$@"
