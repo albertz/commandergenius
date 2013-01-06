@@ -21,7 +21,7 @@ NDK=`readlink -f $NDK`
 #echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
 GCCVER=4.6
-PLATFORMVER=android-8
+PLATFORMVER=android-14
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 ARCH=armeabi-v7a
