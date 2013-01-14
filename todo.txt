@@ -1,2 +1,23 @@
-I'm not planning any more games to port, or any development on this SDL port.
-See bugs.txt if you want to contribute.
+Requested features
+==================
+
+- Option for default on-screen key theme in AndroidAppSettings.cfg.
+
+- Perform a check for free space available on SD card before writing there, and write to the internal storage if SD card is unplugged.
+
+- Split Settings.java into several files
+
+- Show/hide screen controls with longpress on Text Edit button.
+
+- Support of libjnigraphics (it will disable on-screen keyboard, only SW SDL screen surface supported)
+
+- Floating on-screen joystick - initially invisible, it appears when you touch the screen,
+  centered on your finger, then it slides with your finger if you bump the joystick edge.
+
+- Export phone vibrator to SDL - interface is available in SDL 1.3
+
+- Control screen brightness with SDL_SetGamma()
+
+- Zoom in-out whole screen in SW mode with some SDL key -
+  much like the "On-screen magnifying glass" feature (lazy porter's golden hammer)
+
