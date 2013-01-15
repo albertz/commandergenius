@@ -2223,6 +2223,20 @@ class Settings
 				boundary.setImageBitmap(boundaryBmp);
 				layout.addView(boundary);
 				currentButton = 0;
+				if( Globals.TouchscreenKeyboardTheme == 2 )
+				{
+					int buttons2[] = {
+						R.drawable.sun_dpad,
+						R.drawable.sun_keyboard,
+						R.drawable.sun_b1,
+						R.drawable.sun_b2,
+						R.drawable.sun_b3,
+						R.drawable.sun_b4,
+						R.drawable.sun_b5,
+						R.drawable.sun_b6
+					};
+					buttons = buttons2;
+				}
 				setupButton(true);
 			}
 			
