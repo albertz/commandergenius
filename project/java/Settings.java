@@ -66,6 +66,7 @@ import android.app.AlarmManager;
 import android.util.DisplayMetrics;
 import android.net.Uri;
 import java.util.concurrent.Semaphore;
+import android.graphics.Color;
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
 class Settings
@@ -2194,8 +2195,10 @@ class Settings
 		{
 			MainActivity p;
 			FrameLayout layout = null;
-			ImageView imgs[] =  new ImageView[Globals.ScreenKbControlsLayout.length];
+			ImageView imgs[] = new ImageView[Globals.ScreenKbControlsLayout.length];
 			Bitmap bmps[] = new Bitmap[Globals.ScreenKbControlsLayout.length];
+			ImageView boundary = null;
+			Bitmap boundaryBmp = null;
 			int currentButton = 0;
 			int buttons[] = {
 				R.drawable.dpad,
@@ -2213,6 +2216,12 @@ class Settings
 				p = _p;
 				layout = new FrameLayout(p);
 				p.getVideoLayout().addView(layout);
+				boundary = new ImageView(p);
+				boundary.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+				boundary.setScaleType(ImageView.ScaleType.MATRIX);
+				boundaryBmp = BitmapFactory.decodeResource( p.getResources(), R.drawable.rectangle );
+				boundary.setImageBitmap(boundaryBmp);
+				layout.addView(boundary);
 				currentButton = 0;
 				setupButton(true);
 			}
@@ -2240,11 +2249,28 @@ class Settings
 				if( imgs[currentButton] == null )
 				{
 					imgs[currentButton] = new ImageView(p);
-					imgs[currentButton].setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+					imgs[currentButton].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 					imgs[currentButton].setScaleType(ImageView.ScaleType.MATRIX);
 					bmps[currentButton] = BitmapFactory.decodeResource( p.getResources(), buttons[currentButton] );
 					imgs[currentButton].setImageBitmap(bmps[currentButton]);
 					layout.addView(imgs[currentButton]);
+					boundary.bringToFront();
+				}
+				if( Globals.ScreenKbControlsLayout[currentButton][0] == Globals.ScreenKbControlsLayout[currentButton][2] ||
+					Globals.ScreenKbControlsLayout[currentButton][1] == Globals.ScreenKbControlsLayout[currentButton][3] )
+				{
+					int displayX = 800;
+					int displayY = 480;
+					try {
+						DisplayMetrics dm = new DisplayMetrics();
+						p.getWindowManager().getDefaultDisplay().getMetrics(dm);
+						displayX = dm.widthPixels;
+						displayY = dm.heightPixels;
+					} catch (Exception eeeee) {}
+					Globals.ScreenKbControlsLayout[currentButton][0] = displayX / 2 - displayX / 6;
+					Globals.ScreenKbControlsLayout[currentButton][2] = displayX / 2 + displayX / 6;
+					Globals.ScreenKbControlsLayout[currentButton][1] = displayY / 2 - displayY / 4;
+					Globals.ScreenKbControlsLayout[currentButton][3] = displayY / 2 + displayY / 4;
 				}
 				Matrix m = new Matrix();
 				RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
@@ -2252,6 +2278,10 @@ class Settings
 										Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
 				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 				imgs[currentButton].setImageMatrix(m);
+				m = new Matrix();
+				src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
+				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+				boundary.setImageMatrix(m);
 			}
 
 			public void onTouchEvent(final MotionEvent ev)
@@ -2286,6 +2316,10 @@ class Settings
 										Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
 				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 				imgs[currentButton].setImageMatrix(m);
+				m = new Matrix();
+				src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
+				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+				boundary.setImageMatrix(m);
 
 				if( ev.getAction() == MotionEvent.ACTION_UP )
 					setupButton(false);
