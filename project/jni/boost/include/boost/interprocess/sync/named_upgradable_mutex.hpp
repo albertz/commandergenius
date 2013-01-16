@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2009. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2011. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -23,7 +23,7 @@
 #include <boost/interprocess/detail/managed_open_or_create_impl.hpp>
 #include <boost/interprocess/sync/interprocess_upgradable_mutex.hpp>
 #include <boost/interprocess/detail/posix_time_types_wrk.hpp>
-#include <boost/interprocess/sync/emulation/named_creation_functor.hpp>
+#include <boost/interprocess/sync/shm/named_creation_functor.hpp>
 #include <boost/interprocess/permissions.hpp>
 
 //!\file
@@ -33,7 +33,7 @@ namespace boost {
 namespace interprocess {
 
 /// @cond
-namespace detail{ class interprocess_tester; }
+namespace ipcdetail{ class interprocess_tester; }
 /// @endcond
 
 class named_condition;
@@ -94,7 +94,7 @@ class named_upgradable_mutex
    bool try_lock();
 
    //!Effects: The calling thread tries to acquire exclusive ownership of the mutex
-   //!   waiting if necessary until no other thread has has exclusive, sharable or
+   //!   waiting if necessary until no other thread has exclusive, sharable or
    //!   upgradable ownership of the mutex or abs_time is reached. 
    //!Returns: If acquires exclusive ownership, returns true. Otherwise returns false. 
    //!Throws: interprocess_exception on error.
@@ -108,13 +108,13 @@ class named_upgradable_mutex
    //Sharable locking
 
    //!Effects: The calling thread tries to obtain sharable ownership of the mutex,
-   //!   and if another thread has exclusive or upgradable ownership of the mutex,
+   //!   and if another thread has exclusive ownership of the mutex,
    //!   waits until it can obtain the ownership.
    //!Throws: interprocess_exception on error.
    void lock_sharable();
 
    //!Effects: The calling thread tries to acquire sharable ownership of the mutex
-   //!   without waiting. If no other thread has has exclusive or upgradable ownership
+   //!   without waiting. If no other thread has exclusive ownership
    //!   of the mutex this succeeds. 
    //!Returns: If it can acquire sharable ownership immediately returns true. If it
    //!   has to wait, returns false. 
@@ -122,7 +122,7 @@ class named_upgradable_mutex
    bool try_lock_sharable();
 
    //!Effects: The calling thread tries to acquire sharable ownership of the mutex
-   //!   waiting if necessary until no other thread has has exclusive or upgradable
+   //!   waiting if necessary until no other thread has exclusive
    //!   ownership of the mutex or abs_time is reached. 
    //!Returns: If acquires sharable ownership, returns true. Otherwise returns false. 
    //!Throws: interprocess_exception on error.
@@ -142,7 +142,7 @@ class named_upgradable_mutex
    void lock_upgradable();
 
    //!Effects: The calling thread tries to acquire upgradable ownership of the mutex
-   //!   without waiting. If no other thread has has exclusive or upgradable ownership
+   //!   without waiting. If no other thread has exclusive or upgradable ownership
    //!   of the mutex this succeeds. 
    //!Returns: If it can acquire upgradable ownership immediately returns true.
    //!   If it has to wait, returns false.
@@ -150,7 +150,7 @@ class named_upgradable_mutex
    bool try_lock_upgradable();
 
    //!Effects: The calling thread tries to acquire upgradable ownership of the mutex
-   //!   waiting if necessary until no other thread has has exclusive or upgradable
+   //!   waiting if necessary until no other thread has exclusive or upgradable
    //!   ownership of the mutex or abs_time is reached.
    //!Returns: If acquires upgradable ownership, returns true. Otherwise returns false. 
    //!Throws: interprocess_exception on error.
@@ -223,14 +223,14 @@ class named_upgradable_mutex
 
    /// @cond
    private:
-   friend class detail::interprocess_tester;
+   friend class ipcdetail::interprocess_tester;
    void dont_close_on_destruction();
 
    interprocess_upgradable_mutex *mutex() const
    {  return static_cast<interprocess_upgradable_mutex*>(m_shmem.get_user_address()); }
 
-   detail::managed_open_or_create_impl<shared_memory_object> m_shmem;
-   typedef detail::named_creation_functor<interprocess_upgradable_mutex> construct_func_t;
+   ipcdetail::managed_open_or_create_impl<shared_memory_object> m_shmem;
+   typedef ipcdetail::named_creation_functor<interprocess_upgradable_mutex> construct_func_t;
    /// @endcond
 };
 
@@ -244,11 +244,11 @@ inline named_upgradable_mutex::named_upgradable_mutex
    :  m_shmem  (create_only
                ,name
                ,sizeof(interprocess_upgradable_mutex) +
-                  detail::managed_open_or_create_impl<shared_memory_object>::
+                  ipcdetail::managed_open_or_create_impl<shared_memory_object>::
                      ManagedOpenOrCreateUserOffset
                ,read_write
                ,0
-               ,construct_func_t(detail::DoCreate)
+               ,construct_func_t(ipcdetail::DoCreate)
                ,perm)
 {}
 
@@ -257,11 +257,11 @@ inline named_upgradable_mutex::named_upgradable_mutex
    :  m_shmem  (open_or_create
                ,name
                ,sizeof(interprocess_upgradable_mutex) +
-                  detail::managed_open_or_create_impl<shared_memory_object>::
+                  ipcdetail::managed_open_or_create_impl<shared_memory_object>::
                      ManagedOpenOrCreateUserOffset
                ,read_write
                ,0
-               ,construct_func_t(detail::DoOpenOrCreate)
+               ,construct_func_t(ipcdetail::DoOpenOrCreate)
                ,perm)
 {}
 
@@ -271,11 +271,11 @@ inline named_upgradable_mutex::named_upgradable_mutex
                ,name
                ,read_write
                ,0
-               ,construct_func_t(detail::DoOpen))
+               ,construct_func_t(ipcdetail::DoOpen))
 {}
 
 inline void named_upgradable_mutex::dont_close_on_destruction()
-{  detail::interprocess_tester::dont_close_on_destruction(m_shmem);  }
+{  ipcdetail::interprocess_tester::dont_close_on_destruction(m_shmem);  }
 
 inline void named_upgradable_mutex::lock()
 {  this->mutex()->lock();  }

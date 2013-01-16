@@ -7,7 +7,7 @@ $(shell rm -f ../../../obj/local/armeabi/libvcmi.so)
 LOCAL_PATH=$(shell dirname $0)
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
-GCC_PREFIX=$(if $(shell which ndk-build | grep 'android-ndk-r5'),arm-linux-androideabi,arm-eabi)
+GCC_PREFIX=$(if $(shell which ndk-build | grep 'android-ndk-r8'),arm-linux-androideabi,arm-eabi)
 
 SOURCES_LIB=$(wildcard vcmi/lib/*.cpp vcmi/lib/Filesystem/*.cpp vcmi/CConsoleHandler.cpp vcmi/CThreadHelper.cpp)
 OBJS_LIB=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB))
@@ -39,7 +39,10 @@ OBJS_VCAI=$(patsubst %.cpp, out/%.o, $(SOURCES_VCAI))
 SOURCES_ERM=$(wildcard vcmi/Scripting/ERM/*.cpp)
 OBJS_ERM=$(patsubst %.cpp, out/%.o, $(SOURCES_ERM))
 
-all: AndroidData/binaries.zip
+SOURCES_CLIENT=$(wildcard vcmi/client/*.cpp vcmi/CCallback.cpp)
+OBJS_CLIENT=$(patsubst %.cpp, out/%.o, $(SOURCES_CLIENT))
+
+all: AndroidData/binaries.zip libapplication.so
 
 AndroidData/binaries.zip: vcmiserver AI/libGeniusAI.so AI/libStupidAI.so Scripting/libvcmiERM.so
 	rm -f $@
@@ -48,10 +51,10 @@ AndroidData/binaries.zip: vcmiserver AI/libGeniusAI.so AI/libStupidAI.so Scripti
 $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_BATTLEAI) $(OBJS_EMPTYAI) $(OBJS_FUZZYLITE) $(OBJS_STUPIDAI) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
 	../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
-	-c \$$CXXFLAGS -Ivcmi -Ivcmi/lib \
-	-DDATA_DIR=\\\"/sdcard/app-data/eu.vcmi\\\" \
-	-DBIN_DIR=\\\"/data/data/eu.vcmi/files\\\" \
-	-DLIB_DIR=\\\"/data/data/eu.vcmi/files\\\" \
+	-c \$$CXXFLAGS -Ivcmi -std=c++11 -Ivcmi/lib \
+	-DM_DATA_DIR=\\\"/sdcard/app-data/eu.vcmi\\\" \
+	-DM_BIN_DIR=\\\"/data/data/eu.vcmi/files\\\" \
+	-DM_LIB_DIR=\\\"/data/data/eu.vcmi/files\\\" \
 	-DWITH_AVCODEC_DECODE_VIDEO2=1 \
 	-Wstrict-aliasing -Wcast-align -Wpointer-arith -Waddress \
 	$< -o $@"
@@ -86,6 +89,11 @@ Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi
 
 libvcmi.so: $(OBJS_LIB)
 	$(LINK_LIB)
+
+libapplication.so: $(OBJS_CLIENT) libvcmi.so
+	env BUILD_EXECUTABLE=1 ../setEnvironment.sh sh -c \
+	"$(GCC_PREFIX)-g++ $^ -o $@ \
+	\$$LDFLAGS -L. -lvcmi -lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread"
 
 clean:
 	rm -rf out debug *.so vcmiserver* AndroidData/vcmiserver* libapplication.so AI Scripting

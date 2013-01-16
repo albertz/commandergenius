@@ -43,10 +43,7 @@ extern "C" {
 #endif
 
 /* Button IDs */
-enum { 
-
-	SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD = 0, /* Joystick/D-Pad button */
-
+enum {
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, /* Main (usually Fire) button */
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_1,
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_2,
@@ -55,6 +52,8 @@ enum {
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_5,
 
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, /* Button to show screen keyboard */
+
+	SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, /* Joystick/D-Pad button */
 
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM
 };
@@ -88,10 +87,14 @@ extern DECLSPEC
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardAutoFireButtonsAmount(int nbuttons);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardAutoFireButtonsAmount(void);
 
+/* Hide the whole screen keyboard */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardShown(int shown);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardShown(void);
-
+/* Get the button size modifier, as configured by user with SDL startup menu */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardSize(void);
+
+/* Set a particular button to pass a mouse/multitouch events down to the application, by default all buttons block touch events */
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonGenerateTouchEvents(int buttonId, int generateEvents);
 
 /* Show Android on-screen keyboard, and pass entered text back to application as SDL keypress events,
 previousText is UTF-8 encoded, it may be NULL, only 256 first bytes will be used, and this call will not block */

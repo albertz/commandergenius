@@ -13,10 +13,10 @@ LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 prefix=$LOCAL_PATH/../freetype
-exec_prefix=$LOCAL_PATH/../../obj/local/armeabi
+#exec_prefix=$LOCAL_PATH/../../obj/local/armeabi # Breaks armeabi-v7a build
 exec_prefix_set=no
 includedir=${prefix}/include
-libdir=${exec_prefix}/lib
+#libdir=${exec_prefix}/lib
 enable_shared=
 wl=-Wl,
 hardcode_libdir_flag_spec='${wl}-rpath ${wl}$libdir'
@@ -146,7 +146,7 @@ if test "$echo_libs" = "yes" ; then
   fi
   libs="-lfreetype  "
   if test "$libdir" != "/usr/lib" && test "$libdir" != "/usr/lib64"; then
-    echo -L$libdir $rpath $libs
+    echo $rpath $libs #-L$libdir
   else
     echo $libs
   fi

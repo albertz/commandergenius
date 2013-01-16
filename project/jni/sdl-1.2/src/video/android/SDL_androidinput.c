@@ -297,25 +297,28 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 	// even if the finger is not anymore above screen kb button it will not acr as mouse event, and if it's initially
 	// touches the screen outside of screen kb it won't trigger button keypress -
 	// I think it's more logical this way
-	if( SDL_ANDROID_isTouchscreenKeyboardUsed && ( action == MOUSE_DOWN || touchPointers[pointerId] == TOUCH_PTR_SCREENKB ) )
+	if( SDL_ANDROID_isTouchscreenKeyboardUsed && ( action == MOUSE_DOWN || touchPointers[pointerId] & TOUCH_PTR_SCREENKB ) )
 	{
-		if( SDL_ANDROID_processTouchscreenKeyboard(x, y, action, pointerId) && action == MOUSE_DOWN )
-			touchPointers[pointerId] = TOUCH_PTR_SCREENKB;
-		if( touchPointers[pointerId] == TOUCH_PTR_SCREENKB )
+		unsigned processed = SDL_ANDROID_processTouchscreenKeyboard(x, y, action, pointerId);
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_processTouchscreenKeyboard: ptr %d action %d ret 0x%08x", pointerId, action, processed);
+		if( processed && action == MOUSE_DOWN )
+			touchPointers[pointerId] |= TOUCH_PTR_SCREENKB;
+		if( touchPointers[pointerId] & TOUCH_PTR_SCREENKB )
 		{
 			if( action == MOUSE_UP )
 				touchPointers[pointerId] = TOUCH_PTR_UP;
-			return;
+			if( !(processed & TOUCHSCREEN_KEYBOARD_PASS_EVENT_DOWN_TO_SDL) )
+				return;
 		}
 	}
 	
 	if( action == MOUSE_DOWN )
 	{
-		touchPointers[pointerId] = TOUCH_PTR_MOUSE;
+		touchPointers[pointerId] |= TOUCH_PTR_MOUSE;
 		firstMousePointerId = -1;
 		for( i = 0; i < MAX_MULTITOUCH_POINTERS; i++ )
 		{
-			if( touchPointers[i] == TOUCH_PTR_MOUSE )
+			if( touchPointers[i] & TOUCH_PTR_MOUSE )
 			{
 				firstMousePointerId = i;
 				break;
@@ -680,7 +683,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 		firstMousePointerId = -1;
 		for( i = 0; i < MAX_MULTITOUCH_POINTERS; i++ )
 		{
-			if( touchPointers[i] == TOUCH_PTR_MOUSE )
+			if( touchPointers[i] |= TOUCH_PTR_MOUSE )
 			{
 				firstMousePointerId = i;
 				break;
@@ -832,7 +835,7 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoRenderer_nativeTextInputFinished) ( JNIEnv*  env, jobject thiz )
 {
 	textInputBuffer = NULL;
-	SDL_ANDROID_TextInputFinished();
+	SDL_ANDROID_TextInputFinished = 1;
 }
 
 static void updateOrientation ( float accX, float accY, float accZ );
@@ -1943,6 +1946,14 @@ void SDL_ANDROID_DeferredTextInput()
 		if( isMouseUsed )
 			SDL_ANDROID_MainThreadPushMouseMotion(currentMouseX + (currentMouseX % 2 ? -1 : 1), currentMouseY); // Force screen redraw
 	}
+	else
+	{
+		if( SDL_ANDROID_TextInputFinished )
+		{
+			SDL_ANDROID_TextInputFinished = 0;
+			SDL_ANDROID_IsScreenKeyboardShownFlag = 0;
+		}
+	}
 	
 	SDL_mutexV(deferredTextMutex);
 };
@@ -1994,7 +2005,7 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 		deferredTextIdx2 = 0;
 	deferredText[deferredTextIdx2].down = SDL_RELEASED;
 	deferredText[deferredTextIdx2].scancode = ascii;
-	deferredText[deferredTextIdx2].unicode = unicode;
+	deferredText[deferredTextIdx2].unicode = 0;
 	if( shiftRequired )
 	{
 		deferredTextIdx2++;
@@ -2149,32 +2160,6 @@ JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenCalibration) (JNIEnv* env, jobject
 	SDL_ANDROID_TouchscreenCalibrationY = y1;
 	SDL_ANDROID_TouchscreenCalibrationWidth = x2 - x1;
 	SDL_ANDROID_TouchscreenCalibrationHeight = y2 - y1;
-}
-
-static int ScreenKbRedefinedByUser = 0;
-
-JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyLayout) (JNIEnv* env, jobject thiz, jint keynum, jint x1, jint y1, jint x2, jint y2)
-{
-	SDL_Rect rect = {x1, y1, x2-x1, y2-y1};
-	int key = -1;
-	if( keynum == 0 )
-		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD;
-	if( keynum == 1 )
-		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT;
-	if( keynum - 2 >= 0 && keynum - 2 <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
-		key = keynum - 2 + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
-		
-	if( key >= 0 )
-	{
-		ScreenKbRedefinedByUser = 1;
-		SDL_ANDROID_SetScreenKeyboardButtonPos(key, &rect);
-	}
-}
-
-int SDL_ANDROID_GetScreenKeyboardRedefinedByUser()
-{
-	return ScreenKbRedefinedByUser;
 }
 
 JNIEXPORT void JNICALL 

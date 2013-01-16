@@ -42,8 +42,8 @@ void SDL_android_init_keymap(SDLKey *SDL_android_keymap)
   keymap[KEYCODE_7] = SDL_KEY(7);
   keymap[KEYCODE_8] = SDL_KEY(8);
   keymap[KEYCODE_9] = SDL_KEY(9);
-  keymap[KEYCODE_STAR] = SDL_KEY(KP_DIVIDE);
-  keymap[KEYCODE_POUND] = SDL_KEY(KP_MULTIPLY);
+  keymap[KEYCODE_STAR] = SDL_KEY(KP_MULTIPLY);
+  keymap[KEYCODE_POUND] = SDL_KEY(HASH);
 
   keymap[KEYCODE_DPAD_UP] = SDL_KEY(UP);
   keymap[KEYCODE_DPAD_DOWN] = SDL_KEY(DOWN);
@@ -52,10 +52,10 @@ void SDL_android_init_keymap(SDLKey *SDL_android_keymap)
 
   keymap[KEYCODE_SOFT_LEFT] = SDL_KEY(KP_4);
   keymap[KEYCODE_SOFT_RIGHT] = SDL_KEY(KP_6);
-  keymap[KEYCODE_ENTER] = SDL_KEY(RETURN); //SDL_KEY(KP_ENTER);
+  keymap[KEYCODE_ENTER] = SDL_KEY(RETURN);
 
 
-  keymap[KEYCODE_CLEAR] = SDL_KEY(BACKSPACE);
+  keymap[KEYCODE_CLEAR] = SDL_KEY(CLEAR);
   keymap[KEYCODE_A] = SDL_KEY(A);
   keymap[KEYCODE_B] = SDL_KEY(B);
   keymap[KEYCODE_C] = SDL_KEY(C);
@@ -86,10 +86,10 @@ void SDL_android_init_keymap(SDLKey *SDL_android_keymap)
   keymap[KEYCODE_PERIOD] = SDL_KEY(PERIOD);
   keymap[KEYCODE_TAB] = SDL_KEY(TAB);
   keymap[KEYCODE_SPACE] = SDL_KEY(SPACE);
-  keymap[KEYCODE_DEL] = SDL_KEY(DELETE);
+  keymap[KEYCODE_DEL] = SDL_KEY(BACKSPACE);
   keymap[KEYCODE_GRAVE] = SDL_KEY(GRAVE);
-  keymap[KEYCODE_MINUS] = SDL_KEY(KP_MINUS);
-  keymap[KEYCODE_PLUS] = SDL_KEY(KP_PLUS);
+  keymap[KEYCODE_MINUS] = SDL_KEY(MINUS);
+  keymap[KEYCODE_PLUS] = SDL_KEY(PLUS);
   keymap[KEYCODE_EQUALS] = SDL_KEY(EQUALS);
   keymap[KEYCODE_LEFT_BRACKET] = SDL_KEY(LEFTBRACKET);
   keymap[KEYCODE_RIGHT_BRACKET] = SDL_KEY(RIGHTBRACKET);
@@ -97,7 +97,7 @@ void SDL_android_init_keymap(SDLKey *SDL_android_keymap)
   keymap[KEYCODE_SEMICOLON] = SDL_KEY(SEMICOLON);
   keymap[KEYCODE_APOSTROPHE] = SDL_KEY(APOSTROPHE);
   keymap[KEYCODE_SLASH] = SDL_KEY(SLASH);
-  keymap[KEYCODE_AT] = SDL_KEY(KP_PERIOD);
+  keymap[KEYCODE_AT] = SDL_KEY(AT);
 
   keymap[KEYCODE_MEDIA_PLAY_PAUSE] = SDL_KEY(KP_2);
   keymap[KEYCODE_MEDIA_STOP] = SDL_KEY(HELP);

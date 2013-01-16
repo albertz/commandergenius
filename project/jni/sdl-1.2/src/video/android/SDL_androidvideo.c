@@ -73,6 +73,8 @@ static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
 static int showScreenKeyboardSendBackspace = 0;
+int SDL_ANDROID_IsScreenKeyboardShownFlag = 0;
+int SDL_ANDROID_TextInputFinished = 0;
 int SDL_ANDROID_VideoLinearFilter = 0;
 int SDL_ANDROID_VideoMultithreaded = 0;
 int SDL_ANDROID_VideoForceSoftwareMode = 0;
@@ -240,12 +242,6 @@ int SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(void)
 	return 1;
 }
 
-volatile static textInputFinished = 0;
-void SDL_ANDROID_TextInputFinished()
-{
-	textInputFinished = 1;
-};
-
 #if SDL_VERSION_ATLEAST(1,3,0)
 #else
 extern int SDL_Flip(SDL_Surface *screen);
@@ -254,6 +250,8 @@ extern SDL_Surface *SDL_GetVideoSurface(void);
 
 void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf, int outBufLen)
 {
+	SDL_ANDROID_TextInputFinished = 0;
+	SDL_ANDROID_IsScreenKeyboardShownFlag = 1;
 	if( !outBuf )
 	{
 		showScreenKeyboardDeferred = 1;
@@ -266,7 +264,6 @@ void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf,
 	}
 	else
 	{
-		textInputFinished = 0;
 		SDL_ANDROID_TextInputInit(outBuf, outBufLen);
 
 		if( SDL_ANDROID_VideoMultithreaded )
@@ -283,9 +280,10 @@ void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf,
 		else
 			(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard, (*JavaEnv)->NewStringUTF(JavaEnv, oldText), 0 );
 
-		while( !textInputFinished )
+		while( !SDL_ANDROID_TextInputFinished )
 			SDL_Delay(100);
-		textInputFinished = 0;
+		SDL_ANDROID_TextInputFinished = 0;
+		SDL_ANDROID_IsScreenKeyboardShownFlag = 0;
 	}
 }
 
@@ -294,9 +292,9 @@ void SDL_ANDROID_CallJavaHideScreenKeyboard()
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaHideScreenKeyboard );
 }
 
-int SDL_ANDROID_CallJavaIsScreenKeyboardShown()
+int SDL_ANDROID_IsScreenKeyboardShown()
 {
-	return (*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaIsScreenKeyboardShown );
+	return SDL_ANDROID_IsScreenKeyboardShownFlag;
 }
 
 JNIEXPORT void JNICALL

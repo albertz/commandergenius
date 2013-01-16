@@ -49,7 +49,7 @@ extern int SDL_ANDROID_UseGles2;
 extern int SDL_ANDROID_BYTESPERPIXEL;
 extern int SDL_ANDROID_BITSPERPIXEL;
 extern void SDL_ANDROID_TextInputInit(char * buffer, int len);
-extern void SDL_ANDROID_TextInputFinished();
+extern int SDL_ANDROID_TextInputFinished;
 extern SDL_Surface *SDL_CurrentVideoSurface;
 extern SDL_Rect SDL_ANDROID_ForceClearScreenRect;
 extern int SDL_ANDROID_ShowScreenUnderFinger;
@@ -57,7 +57,8 @@ extern SDL_Rect SDL_ANDROID_ShowScreenUnderFingerRect, SDL_ANDROID_ShowScreenUnd
 extern int SDL_ANDROID_CallJavaSwapBuffers();
 extern void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf, int outBufLen);
 extern void SDL_ANDROID_CallJavaHideScreenKeyboard();
-extern int SDL_ANDROID_CallJavaIsScreenKeyboardShown();
+extern int SDL_ANDROID_IsScreenKeyboardShown();
+extern int SDL_ANDROID_IsScreenKeyboardShownFlag;
 extern int SDL_ANDROID_drawTouchscreenKeyboard();
 extern void SDL_ANDROID_VideoContextLost();
 extern void SDL_ANDROID_VideoContextRecreated();

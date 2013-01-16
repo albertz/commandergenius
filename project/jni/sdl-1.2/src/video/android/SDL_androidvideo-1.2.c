@@ -115,7 +115,7 @@ int ANDROID_ToggleFullScreen(_THIS, int fullscreen)
 	return 1;
 }
 
-#define SDL_NUMMODES 14
+#define SDL_NUMMODES 23
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -284,7 +284,16 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[11]->w = 544; SDL_modelist[11]->h = 332; // I have no idea where this videomode is used
 	SDL_modelist[12]->w = 640; SDL_modelist[12]->h = 350; // For PrefClub app
 	SDL_modelist[13]->w = 320; SDL_modelist[13]->h = 256; // For UAE4ALL2
-	SDL_modelist[14] = NULL;
+	SDL_modelist[14]->w = 640; SDL_modelist[14]->h = 200; // For UAE4ALL2
+	SDL_modelist[15]->w = 640; SDL_modelist[15]->h = 240; // For UAE4ALL2
+	SDL_modelist[16]->w = 640; SDL_modelist[16]->h = 256; // For UAE4ALL2
+	SDL_modelist[17]->w = 320; SDL_modelist[17]->h = 262; // For UAE4ALL2
+	SDL_modelist[18]->w = 640; SDL_modelist[18]->h = 262; // For UAE4ALL2
+	SDL_modelist[19]->w = 320; SDL_modelist[19]->h = 270; // For UAE4ALL2
+	SDL_modelist[20]->w = 640; SDL_modelist[20]->h = 270; // For UAE4ALL2
+	SDL_modelist[21]->w = 320; SDL_modelist[21]->h = 216; // For UAE4ALL2
+	SDL_modelist[22]->w = 640; SDL_modelist[22]->h = 216; // For UAE4ALL2
+	SDL_modelist[23] = NULL;
 	
 	SDL_VideoInit_1_3(NULL, 0);
 	

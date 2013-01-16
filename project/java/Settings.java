@@ -66,6 +66,7 @@ import android.app.AlarmManager;
 import android.util.DisplayMetrics;
 import android.net.Uri;
 import java.util.concurrent.Semaphore;
+import android.graphics.Color;
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
 class Settings
@@ -299,23 +300,25 @@ class Settings
 			Globals.BrokenLibCMessageShown = settingsFile.readBoolean();
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			int cfgVersion = settingsFile.readInt();
+
+			settingsLoaded = true;
+
+			System.out.println("libSDL: Settings.Load(): loaded settings successfully");
+			settingsFile.close();
+
 			System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion());
-			if( cfgVersion < p.getApplicationVersion() )
+			if( cfgVersion != p.getApplicationVersion() )
 			{
 				DeleteFilesOnUpgrade();
 				if( Globals.ResetSdlConfigForThisVersion )
 				{
 					System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion() + " and we need to clean up config file");
 					// Delete settings file, and restart the application
-					settingsFile.close();
 					DeleteSdlConfigOnUpgradeAndRestart(p);
 				}
+				Save(p);
 			}
-			
-			settingsLoaded = true;
 
-			System.out.println("libSDL: Settings.Load(): loaded settings successfully");
-			settingsFile.close();
 			return;
 			
 		} catch( FileNotFoundException e ) {
@@ -627,7 +630,7 @@ class Settings
 					{
 						Globals.DownloadToSdcard = (item != 0);
 						Globals.DataDir = Globals.DownloadToSdcard ?
-										Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + Globals.class.getPackage().getName() :
+										SdcardAppPath.getPath(p) :
 										p.getFilesDir().getAbsolutePath();
 						goBack(p);
 					}
@@ -2192,8 +2195,10 @@ class Settings
 		{
 			MainActivity p;
 			FrameLayout layout = null;
-			ImageView imgs[] =  new ImageView[Globals.ScreenKbControlsLayout.length];
+			ImageView imgs[] = new ImageView[Globals.ScreenKbControlsLayout.length];
 			Bitmap bmps[] = new Bitmap[Globals.ScreenKbControlsLayout.length];
+			ImageView boundary = null;
+			Bitmap boundaryBmp = null;
 			int currentButton = 0;
 			int buttons[] = {
 				R.drawable.dpad,
@@ -2211,7 +2216,27 @@ class Settings
 				p = _p;
 				layout = new FrameLayout(p);
 				p.getVideoLayout().addView(layout);
+				boundary = new ImageView(p);
+				boundary.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+				boundary.setScaleType(ImageView.ScaleType.MATRIX);
+				boundaryBmp = BitmapFactory.decodeResource( p.getResources(), R.drawable.rectangle );
+				boundary.setImageBitmap(boundaryBmp);
+				layout.addView(boundary);
 				currentButton = 0;
+				if( Globals.TouchscreenKeyboardTheme == 2 )
+				{
+					int buttons2[] = {
+						R.drawable.sun_dpad,
+						R.drawable.sun_keyboard,
+						R.drawable.sun_b1,
+						R.drawable.sun_b2,
+						R.drawable.sun_b3,
+						R.drawable.sun_b4,
+						R.drawable.sun_b5,
+						R.drawable.sun_b6
+					};
+					buttons = buttons2;
+				}
 				setupButton(true);
 			}
 			
@@ -2238,11 +2263,28 @@ class Settings
 				if( imgs[currentButton] == null )
 				{
 					imgs[currentButton] = new ImageView(p);
-					imgs[currentButton].setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+					imgs[currentButton].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 					imgs[currentButton].setScaleType(ImageView.ScaleType.MATRIX);
 					bmps[currentButton] = BitmapFactory.decodeResource( p.getResources(), buttons[currentButton] );
 					imgs[currentButton].setImageBitmap(bmps[currentButton]);
 					layout.addView(imgs[currentButton]);
+					boundary.bringToFront();
+				}
+				if( Globals.ScreenKbControlsLayout[currentButton][0] == Globals.ScreenKbControlsLayout[currentButton][2] ||
+					Globals.ScreenKbControlsLayout[currentButton][1] == Globals.ScreenKbControlsLayout[currentButton][3] )
+				{
+					int displayX = 800;
+					int displayY = 480;
+					try {
+						DisplayMetrics dm = new DisplayMetrics();
+						p.getWindowManager().getDefaultDisplay().getMetrics(dm);
+						displayX = dm.widthPixels;
+						displayY = dm.heightPixels;
+					} catch (Exception eeeee) {}
+					Globals.ScreenKbControlsLayout[currentButton][0] = displayX / 2 - displayX / 6;
+					Globals.ScreenKbControlsLayout[currentButton][2] = displayX / 2 + displayX / 6;
+					Globals.ScreenKbControlsLayout[currentButton][1] = displayY / 2 - displayY / 4;
+					Globals.ScreenKbControlsLayout[currentButton][3] = displayY / 2 + displayY / 4;
 				}
 				Matrix m = new Matrix();
 				RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
@@ -2250,11 +2292,15 @@ class Settings
 										Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
 				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 				imgs[currentButton].setImageMatrix(m);
+				m = new Matrix();
+				src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
+				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+				boundary.setImageMatrix(m);
 			}
 
 			public void onTouchEvent(final MotionEvent ev)
 			{
-				if(Globals.ScreenKbControlsLayout.length >= currentButton)
+				if(currentButton >= Globals.ScreenKbControlsLayout.length)
 				{
 					setupButton(false);
 					return;
@@ -2284,6 +2330,10 @@ class Settings
 										Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
 				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 				imgs[currentButton].setImageMatrix(m);
+				m = new Matrix();
+				src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
+				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+				boundary.setImageMatrix(m);
 
 				if( ev.getAction() == MotionEvent.ACTION_UP )
 					setupButton(false);

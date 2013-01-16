@@ -630,7 +630,7 @@ fi
 if [ -z "$AUTO" -o -z "$MinimumScreenSize" ]; then
 echo
 echo "Screen size is used by Google Play to prevent an app to be installed on devices with smaller screens"
-echo -n "Minimum screen size that application supports: (s)mall / (n)ormal / (l)arge ($MinimumScreenSize): "
+echo -n "Minimum screen size that application supports: (s)mall / (m)edium / (l)arge ($MinimumScreenSize): "
 read var
 if [ -n "$var" ] ; then
 	MinimumScreenSize="$var"
@@ -662,6 +662,7 @@ echo CompatibilityHacksStaticInit=$CompatibilityHacksStaticInit >> AndroidAppSet
 echo CompatibilityHacksTextInputEmulatesHwKeyboard=$CompatibilityHacksTextInputEmulatesHwKeyboard >> AndroidAppSettings.cfg
 echo CompatibilityHacksPreventAudioChopping=$CompatibilityHacksPreventAudioChopping >> AndroidAppSettings.cfg
 echo CompatibilityHacksAppIgnoresAudioBufferSize=$CompatibilityHacksAppIgnoresAudioBufferSize >> AndroidAppSettings.cfg
+echo CompatibilityHacksAdditionalPreloadedSharedLibraries=\"$CompatibilityHacksAdditionalPreloadedSharedLibraries\" >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
 echo ShowMouseCursor=$ShowMouseCursor >> AndroidAppSettings.cfg
@@ -879,7 +880,7 @@ fi
 
 LibrariesToLoad="\\\"sdl-$LibSdlVersion\\\""
 StaticLibraries=`grep 'APP_AVAILABLE_STATIC_LIBS' project/jni/SettingsTemplate.mk | sed 's/.*=\(.*\)/\1/'`
-for lib in $CompiledLibraries; do
+for lib in $CompiledLibraries $CompatibilityHacksAdditionalPreloadedSharedLibraries; do
 	process=true
 	for lib1 in $StaticLibraries; do
 		if [ "$lib" = "$lib1" ]; then process=false; fi

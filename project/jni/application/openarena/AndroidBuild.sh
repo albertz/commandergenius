@@ -3,16 +3,19 @@
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
-[ "$1" = "armeabi" ] && (
-mkdir -p AndroidData
-[ -e libapplication.so ] || ln -s libapplication-armeabi.so libapplication.so
-make -j8 -C vm BUILD_MISSIONPACK=0 || exit 1
-cd vm/build/release-linux-`uname -m`/baseq3
-rm -f ../../../../AndroidData/binaries.zip ../../../../AndroidData/vm.zip
-zip -r ../../../../AndroidData/vm.zip vm
-cd ../../../android
-zip ../../AndroidData/vm.zip *
-)
+if [ "$1" = "armeabi" ]; then (
+	mkdir -p AndroidData
+	[ -e libapplication.so ] || ln -s libapplication-armeabi.so libapplication.so
+	make -j8 -C vm BUILD_MISSIONPACK=0 || exit 1
+	cd vm/build/release-linux-`uname -m`/baseq3
+	#rm -f ../../../../AndroidData/binaries.zip ../../../../AndroidData/pak7-android.pk3
+	zip -r ../../../../AndroidData/pak7-android.pk3 vm
+	cd ../../../android
+	zip -r ../../AndroidData/pak7-android.pk3 *
+	ln -sf ../engine/misc/quake3-tango.png ../../AndroidData/logo.png
+	exit 0
+) || exit 1
+fi
 
 env NO_SHARED_LIBS=1 BUILD_EXECUTABLE=1 V=1 ../setEnvironment-armeabi.sh make -C vm -j8 PLATFORM=android ARCH=$1 USE_LOCAL_HEADERS=0 BUILD_MISSIONPACK=0 || exit 1
 

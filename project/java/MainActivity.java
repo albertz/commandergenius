@@ -72,6 +72,7 @@ import android.os.Message;
 import java.util.concurrent.Semaphore;
 import android.content.pm.ActivityInfo;
 import android.view.Display;
+import android.text.InputType;
 
 public class MainActivity extends Activity
 {
@@ -293,8 +294,10 @@ public class MainActivity extends Activity
 		_tv = null;
 		_inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 		_videoLayout = new FrameLayout(this);
+		SetLayerType.get().setLayerType(_videoLayout);
 		setContentView(_videoLayout);
 		mGLView = new DemoGLSurfaceView(this);
+		SetLayerType.get().setLayerType(mGLView);
 		_videoLayout.addView(mGLView);
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
@@ -418,13 +421,35 @@ public class MainActivity extends Activity
 					_parent.hideScreenKeyboard();
 					return true;
 				}
-				if ((sendBackspace && event.getAction() == KeyEvent.ACTION_UP) && (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR))
+				if (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR)
 				{
-					synchronized(textInput) {
-						DemoRenderer.nativeTextInput( 8, 0 ); // Send backspace to native code
+					if (sendBackspace && event.getAction() == KeyEvent.ACTION_UP)
+					{
+						synchronized(textInput) {
+							DemoRenderer.nativeTextInput( 8, 0 ); // Send backspace to native code
+						}
 					}
-					return false; // and proceed to delete text in keyboard input field
+					// EditText deletes two characters at a time, here's a hacky fix
+					if (event.getAction() == KeyEvent.ACTION_DOWN && (event.getFlags() | KeyEvent.FLAG_SOFT_KEYBOARD) != 0)
+					{
+						EditText t = (EditText) v;
+						int start = t.getSelectionStart();  //get cursor starting position
+						int end = t.getSelectionEnd();      //get cursor ending position
+						if ( start < 0 )
+							return true;
+						if ( end < 0 || end == start )
+						{
+							start --;
+							if ( start < 0 )
+								return true;
+							end = start + 1;
+						}
+						t.setText(t.getText().toString().substring(0, start) + t.getText().toString().substring(end));
+						t.setSelection(start);
+						return true;
+					}
 				}
+				//System.out.println("Key " + keyCode + " flags " + event.getFlags() + " action " + event.getAction());
 				return false;
 			}
 		};
@@ -433,7 +458,8 @@ public class MainActivity extends Activity
 		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this, sendBackspace));
 		_screenKeyboard.setHint(R.string.text_edit_click_here);
 		_screenKeyboard.setText(oldText);
-		_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
+		//_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
+		_screenKeyboard.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
 		_screenKeyboard.setFocusableInTouchMode(true);
 		_screenKeyboard.setFocusable(true);
 		_screenKeyboard.requestFocus();
@@ -812,15 +838,18 @@ public class MainActivity extends Activity
 		}
 
 		// ----- VCMI hack -----
+		String [] binaryZipNames = { "binaries-" + android.os.Build.CPU_ABI + ".zip", "binaries.zip" };
+		for(String binaryZip: binaryZipNames)
+		{
 			try {
-				//System.out.println("libSDL: Extracting binaries");
+				System.out.println("libSDL: Trying to extract binaries from assets " + binaryZip);
 				
 				InputStream in = null;
 				try
 				{
 					for( int i = 0; ; i++ )
 					{
-						InputStream in2 = getAssets().open("binaries.zip" + String.format("%02d", i));
+						InputStream in2 = getAssets().open(binaryZip + String.format("%02d", i));
 						if( in == null )
 							in = in2;
 						else
@@ -832,7 +861,7 @@ public class MainActivity extends Activity
 					try
 					{
 						if( in == null )
-							in = getAssets().open("binaries.zip");
+							in = getAssets().open(binaryZip);
 					}
 					catch( IOException eee ) {}
 				}
@@ -911,6 +940,7 @@ public class MainActivity extends Activity
 			{
 				//System.out.println("libSDL: Error: " + eee.toString());
 			}
+		}
 		// ----- VCMI hack -----
 
 	};
@@ -1025,6 +1055,41 @@ abstract class DimSystemStatusBar
 			private static final DimSystemStatusBarDummy sInstance = new DimSystemStatusBarDummy();
 		}
 		public void dim(final View view)
+		{
+		}
+	}
+}
+
+abstract class SetLayerType
+{
+	public static SetLayerType get()
+	{
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB)
+			return SetLayerTypeHoneycomb.Holder.sInstance;
+		else
+			return SetLayerTypeDummy.Holder.sInstance;
+	}
+	public abstract void setLayerType(final View view);
+
+	private static class SetLayerTypeHoneycomb extends SetLayerType
+	{
+		private static class Holder
+		{
+			private static final SetLayerTypeHoneycomb sInstance = new SetLayerTypeHoneycomb();
+		}
+		public void setLayerType(final View view)
+		{
+			view.setLayerType(android.view.View.LAYER_TYPE_NONE, null);
+			//view.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
+		}
+	}
+	private static class SetLayerTypeDummy extends SetLayerType
+	{
+		private static class Holder
+		{
+			private static final SetLayerTypeDummy sInstance = new SetLayerTypeDummy();
+		}
+		public void setLayerType(final View view)
 		{
 		}
 	}
