@@ -1,5 +1,5 @@
-Known bugs
-==========
+Known bugs (see also todo.txt)
+==============================
 
 - Stylus input is broken in Cyanogenmod 10.1 and in stock JellyBean Samsung ROM.
 
