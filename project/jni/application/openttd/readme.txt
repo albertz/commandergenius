@@ -1,5 +1,7 @@
 Quick compilation guide:
-Download my GIT repo from https://github.com/pelya/commandergenius,
+Install liblzma-dev, it's needed for configure script
+sudo apt-get install liblzma-dev
+Download my Git repo from https://github.com/pelya/commandergenius,
 then install Android SDK, Android NDK, and "ant" tool, then launch commands
     rm project/jni/application/src
     ln -s openttd project/jni/application/src
