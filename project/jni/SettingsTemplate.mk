@@ -28,15 +28,17 @@ SDL_TRACKBALL_KEYUP_DELAY := 1
 # resized in HW-accelerated way, however it eats a tiny bit of CPU
 SDL_VIDEO_RENDER_RESIZE := 1
 
-SDL_VIDEO_RENDER_RESIZE_KEEP_ASPECT := 0
-
 COMPILED_LIBRARIES := tremor ogg
 
 APPLICATION_ADDITIONAL_CFLAGS := -finline-functions -O2 -DTREMOR=1 -DBUILD_TYPE=LINUX32 -DTARGET_LNX=1 -Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
 
 APPLICATION_ADDITIONAL_LDFLAGS := -ltremor
 
+APPLICATION_OVERLAPS_SYSTEM_HEADERS := n
+
 APPLICATION_SUBDIRS_BUILD := src/*
+
+APPLICATION_BUILD_EXCLUDE := 
 
 APPLICATION_CUSTOM_BUILD_SCRIPT := 
 
