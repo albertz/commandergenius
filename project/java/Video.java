@@ -108,10 +108,9 @@ abstract class DifferentTouchInput
 				multiTouchAvailable2 = true;
 		}
 		try {
+			System.out.println("Device model: " + android.os.Build.MODEL);
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH )
 			{
-				if(android.os.Build.MODEL.equals("GT-N7000") || android.os.Build.MODEL.equals("SGH-I717"))
-					return GalaxyNoteIcsTouchInput.Holder.sInstance;
 				return IcsTouchInput.Holder.sInstance;
 			}
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
@@ -345,8 +344,8 @@ abstract class DifferentTouchInput
 		}
 		public void process(final MotionEvent event)
 		{
-			boolean hwMouseEvent = (	event.getSource() == InputDevice.SOURCE_MOUSE ||
-										event.getSource() == InputDevice.SOURCE_STYLUS ||
+			boolean hwMouseEvent = (	(event.getSource() & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE ||
+										(event.getSource() & InputDevice.SOURCE_STYLUS) == InputDevice.SOURCE_STYLUS ||
 										(event.getMetaState() & KeyEvent.FLAG_TRACKING) != 0 ); // Hack to recognize Galaxy Note Gingerbread stylus
 			if( ExternalMouseDetected != hwMouseEvent )
 			{
@@ -420,20 +419,6 @@ abstract class DifferentTouchInput
 				return;
 			}
 			super.processGenericEvent(event);
-		}
-	}
-	private static class GalaxyNoteIcsTouchInput extends IcsTouchInput
-	{
-		private static class Holder
-		{
-			private static final GalaxyNoteIcsTouchInput sInstance = new GalaxyNoteIcsTouchInput();
-		}
-		public void process(final MotionEvent event)
-		{
-			// HACK for Galaxy Note stylus, which pushes the cursor to the lower-right part of the screen, when you lift the stylus.
-			// Also it reports the stylus as the mouse
-			if(! (event.getSource() == InputDevice.SOURCE_MOUSE && (int)event.getX() == 0 && (int)event.getY() == 799))
-				super.process(event);
 		}
 	}
 }
