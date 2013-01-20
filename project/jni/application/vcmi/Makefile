@@ -1,7 +1,9 @@
 
 $(shell mkdir -p AI debug/AI Scripting debug/Scripting \
-	out/vcmi/lib out/vcmi/server out/vcmi/AI/StupidAI \
-	out/vcmi/AI/GeniusAI out/vcmi/client out/vcmi/Scripting/ERM)
+	out/vcmi/lib out/vcmi/lib/Filesystem out/vcmi/server out/vcmi/AI/StupidAI \
+	out/vcmi/AI/BattleAI out/vcmi/AI/EmptyAI \
+	out/vcmi/AI/Fuzzylite out/vcmi/AI/VCAI \
+	out/vcmi/client out/vcmi/Scripting/ERM)
 $(shell rm -f ../../../obj/local/armeabi/libvcmi.so)
 
 LOCAL_PATH=$(shell dirname $0)
@@ -44,7 +46,7 @@ OBJS_CLIENT=$(patsubst %.cpp, out/%.o, $(SOURCES_CLIENT))
 
 all: AndroidData/binaries.zip libapplication.so
 
-AndroidData/binaries.zip: vcmiserver AI/libGeniusAI.so AI/libStupidAI.so Scripting/libvcmiERM.so
+AndroidData/binaries.zip: vcmiserver AI/libAI.so Scripting/libvcmiERM.so
 	rm -f $@
 	zip -r $@ $^
 
@@ -65,7 +67,7 @@ vcmiserver: $(OBJS_SERVER) $(OBJS_LIB)
 	"$(GCC_PREFIX)-g++ \
 	$^ -o $@ \
 	\$$LDFLAGS -L. \
-	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread" && \
+	-lboost_system -lboost_filesystem -lboost_iostreams  -lboost_thread" && \
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
 
@@ -81,7 +83,7 @@ LINK_LIB= \
 .PHONY: -lvcmi
 -lvcmi: libvcmi.so
 
-AI/libStupidAI.so: $(OBJS_STUPIDAI) -lvcmi
+AI/libAI.so: $(OBJS_BATTLEAI) $(OBJS_EMPTYAI) $(OBJS_FUZZYLITE) $(OBJS_STUPIDAI) $(OBJS_VCAI) -lvcmi
 	$(LINK_LIB)
 
 Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi
