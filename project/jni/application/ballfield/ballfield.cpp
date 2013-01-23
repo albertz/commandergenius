@@ -25,7 +25,7 @@
 	Definitions...
 ----------------------------------------------------------*/
 
-#define	SCREEN_W	640
+#define	SCREEN_W	800
 #define	SCREEN_H	480
 
 
@@ -437,13 +437,16 @@ int main(int argc, char* argv[])
 	// some random colors
 	int colors[MAX_POINTERS] = { 0xaaaaaa, 0xffffff, 0x888888, 0xcccccc, 0x666666, 0x999999, 0xdddddd, 0xeeeeee, 0xaaaaaa, 0xffffff, 0x888888, 0xcccccc, 0x666666, 0x999999, 0xdddddd, 0xeeeeee };
 	struct TouchPointer_t { int x; int y; int pressure; int pressed; } touchPointers[MAX_POINTERS];
-	int accel[2], screenjoy[2];
+	int accel[2], screenjoy[4], gamepads[4][8];
 	SDL_Surface	*mouse[4];
 	int screenKeyboardShown = 0;
 
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
 	SDL_EnableUNICODE(1);
+	SDL_Joystick * joysticks[6];
+	for( i = 0; i < 6; i++ )
+		joysticks[i] = SDL_JoystickOpen(i);
 
 	atexit(SDL_Quit);
 
@@ -548,7 +551,7 @@ int main(int argc, char* argv[])
 	memset(touchPointers, 0, sizeof(touchPointers));
 	memset(accel, 0, sizeof(accel));
 	memset(screenjoy, 0, sizeof(screenjoy));
-	SDL_Joystick * joystick = SDL_JoystickOpen(0);
+	memset(gamepads, 0, sizeof(gamepads));
 
 	while(1)
 	{
@@ -596,22 +599,32 @@ int main(int argc, char* argv[])
 			r.y -= r.h/2;
 			SDL_FillRect(screen, &r, colors[i]);
 		}
-		r.x = SCREEN_W/2 + accel[0] * SCREEN_H / 65536;
-		r.y = SCREEN_H/2 + accel[1] * SCREEN_H / 65536;
-		//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Accel: %d %d screen %d %d", accel[0], accel[1], r.x, r.y);
-		r.w = 10;
-		r.h = 10;
-		r.x -= r.w/2;
-		r.y -= r.h/2;
-		SDL_FillRect(screen, &r, 0xffffff);
-		r.x = SCREEN_W/2 + screenjoy[0] * SCREEN_H / 65536;
-		r.y = SCREEN_H/2 + screenjoy[1] * SCREEN_H / 65536;
-		//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Screen joystick: %d %d screen %d %d", screenjoy[0], screenjoy[1], r.x, r.y);
-		r.w = 10;
-		r.h = 10;
-		r.x -= r.w/2;
-		r.y -= r.h/2;
-		SDL_FillRect(screen, &r, 0x000000);
+		int joyInput[][3] = {	
+			{accel[0], accel[1], 10},
+			{screenjoy[0], screenjoy[1], 10},
+			{screenjoy[2], screenjoy[3], 10},
+			{gamepads[0][0], gamepads[0][1], 10 + gamepads[0][4] * 100 / 32767},
+			{gamepads[0][2], gamepads[0][3], 10 + gamepads[0][5] * 100 / 32767},
+			{gamepads[0][6], gamepads[0][7], 10},
+			{gamepads[1][0], gamepads[1][1], 10 + gamepads[1][4] * 100 / 32767},
+			{gamepads[1][2], gamepads[1][3], 10 + gamepads[1][5] * 100 / 32767},
+			{gamepads[1][6], gamepads[1][7], 10},
+			{gamepads[2][0], gamepads[2][1], 10 + gamepads[2][4] * 100 / 32767},
+			{gamepads[2][2], gamepads[2][3], 10 + gamepads[2][5] * 100 / 32767},
+			{gamepads[2][6], gamepads[2][7], 10},
+			{gamepads[3][0], gamepads[3][1], 10 + gamepads[3][4] * 100 / 32767},
+			{gamepads[3][2], gamepads[3][3], 10 + gamepads[3][5] * 100 / 32767},
+			{gamepads[3][6], gamepads[3][7], 10},
+		};
+		for( i = 0; i < 15; i++ )
+		{
+			r.w = joyInput[i][2];
+			r.h = joyInput[i][2];
+			r.x = SCREEN_W/2 + joyInput[i][0] * SCREEN_H / 65536 - r.w/2;
+			r.y = SCREEN_H/2 + joyInput[i][1] * SCREEN_H / 65536 - r.w/2;
+			//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Joy input %d: %d %d %d", i, joyInput[i][0], joyInput[i][1], joyInput[i][2] );
+			SDL_FillRect(screen, &r, i * 123);
+		}
 
 		int mx, my;
 		int b = SDL_GetMouseState(&mx, &my);
@@ -652,26 +665,35 @@ int main(int argc, char* argv[])
 			// Android-specific events - accelerometer, multitoush, and on-screen joystick
 			if( evt.type == SDL_JOYAXISMOTION )
 			{
-				if(evt.jaxis.axis < 4)
+				if(evt.jaxis.which == 0) // Multitouch and on-screen joysticks
 				{
-					if(evt.jaxis.axis < 2)
+					if(evt.jaxis.axis < 4)
 						screenjoy[evt.jaxis.axis] = evt.jaxis.value;
 					else
-						accel[evt.jaxis.axis - 2] = evt.jaxis.value;
+						touchPointers[evt.jaxis.axis - 4].pressure = evt.jaxis.value;
 				}
-				else
+				if(evt.jaxis.which == 1)
 				{
-					touchPointers[evt.jaxis.axis - 4].pressure = evt.jaxis.value;
+					accel[evt.jaxis.axis] = evt.jaxis.value;
+				}
+				if(evt.jaxis.which >= 2)
+				{
+					// Each gamepad has 8 axes - two joystick hats, two triggers, and Ouya touchpad
+					gamepads[evt.jaxis.which - 2][evt.jaxis.axis] = evt.jaxis.value;
 				}
 			}
 			if( evt.type == SDL_JOYBUTTONDOWN || evt.type == SDL_JOYBUTTONUP )
 			{
-				touchPointers[evt.jbutton.button].pressed = (evt.jbutton.state == SDL_PRESSED);
+				if(evt.jbutton.which == 0) // Multitouch and on-screen joystick
+					touchPointers[evt.jbutton.button].pressed = (evt.jbutton.state == SDL_PRESSED);
 			}
 			if( evt.type == SDL_JOYBALLMOTION )
 			{
-				touchPointers[evt.jball.ball].x = evt.jball.xrel;
-				touchPointers[evt.jball.ball].y = evt.jball.yrel;
+				if(evt.jball.which == 0) // Multitouch and on-screen joystick
+				{
+					touchPointers[evt.jball.ball].x = evt.jball.xrel;
+					touchPointers[evt.jball.ball].y = evt.jball.yrel;
+				}
 			}
 		}
 		if( screenKeyboardShown != SDL_IsScreenKeyboardShown(NULL))

@@ -59,10 +59,13 @@ static inline SDL_scancode TranslateKey(int scancode)
 static int isTrackballUsed = 0;
 static int isMouseUsed = 0;
 
+#define NORMALIZE_FLOAT_32767(X) (fminf(32767.0f, fmax(-32767.0f, (X) * 32767.0f)))
+
 enum { RIGHT_CLICK_NONE = 0, RIGHT_CLICK_WITH_MULTITOUCH = 1, RIGHT_CLICK_WITH_PRESSURE = 2, 
 		RIGHT_CLICK_WITH_KEY = 3, RIGHT_CLICK_WITH_TIMEOUT = 4 };
 enum { LEFT_CLICK_NORMAL = 0, LEFT_CLICK_NEAR_CURSOR = 1, LEFT_CLICK_WITH_MULTITOUCH = 2, LEFT_CLICK_WITH_PRESSURE = 3,
 		LEFT_CLICK_WITH_KEY = 4, LEFT_CLICK_WITH_TIMEOUT = 5, LEFT_CLICK_WITH_TAP = 6, LEFT_CLICK_WITH_TAP_OR_TIMEOUT = 7 };
+enum { JOY_TOUCHSCREEN = 0, JOY_ACCELGYRO = 1, JOY_GAMEPAD1 = 2, JOY_GAMEPAD2 = 3, JOY_GAMEPAD3 = 4, JOY_GAMEPAD4 = 5 };
 static int leftClickMethod = LEFT_CLICK_NORMAL;
 static int rightClickMethod = RIGHT_CLICK_NONE;
 static int leftClickKey = KEYCODE_DPAD_CENTER;
@@ -447,11 +450,11 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 #endif
 
 		if( action == MOUSE_DOWN )
-			SDL_ANDROID_MainThreadPushJoystickButton(0, pointerId, SDL_PRESSED);
-		SDL_ANDROID_MainThreadPushJoystickBall(0, pointerId, x, y);
-		SDL_ANDROID_MainThreadPushJoystickAxis(0, pointerId+4, force + radius); // Radius is more sensitive usually
+			SDL_ANDROID_MainThreadPushJoystickButton(JOY_TOUCHSCREEN, pointerId, SDL_PRESSED);
+		SDL_ANDROID_MainThreadPushJoystickBall(JOY_TOUCHSCREEN, pointerId, x, y);
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_TOUCHSCREEN, pointerId+4, force + radius); // Radius is more sensitive usually
 		if( action == MOUSE_UP )
-			SDL_ANDROID_MainThreadPushJoystickButton(0, pointerId, SDL_RELEASED);
+			SDL_ANDROID_MainThreadPushJoystickButton(JOY_TOUCHSCREEN, pointerId, SDL_RELEASED);
 	}
 	if( !isMouseUsed && !SDL_ANDROID_isTouchscreenKeyboardUsed )
 	{
@@ -965,7 +968,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeHardwareMouseDetected) (JNIEnv* env, jo
 	}
 }
 
-JNIEXPORT void JNICALL 
+JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseButtonsPressed) (JNIEnv* env, jobject thiz, jint buttonId, jint pressedState)
 {
 	int btn = SDL_BUTTON_LEFT;
@@ -1062,7 +1065,7 @@ static float dx = 0.04, dy = 0.1, dz = 0.1, joystickSensitivity = 400.0f; // For
 enum { ACCELEROMETER_CENTER_FLOATING, ACCELEROMETER_CENTER_FIXED_START, ACCELEROMETER_CENTER_FIXED_HORIZ };
 static int accelerometerCenterPos = ACCELEROMETER_CENTER_FLOATING;
 
-JNIEXPORT void JNICALL 
+JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetAccelerometerSettings) ( JNIEnv*  env, jobject thiz, jint sensitivity, jint centerPos)
 {
 	dx = 0.04; dy = 0.08; dz = 0.08; joystickSensitivity = 32767.0f * 3.0f; // Fast sensitivity
@@ -1077,7 +1080,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetAccelerometerSettings) ( JNIEnv*  env, jobjec
 	accelerometerCenterPos = centerPos;
 }
 
-JNIEXPORT void JNICALL 
+JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetTrackballDampening) ( JNIEnv*  env, jobject thiz, jint value)
 {
 	TrackballDampening = (value * 200);
@@ -1096,8 +1099,8 @@ void updateOrientation ( float accX, float accY, float accZ )
 	if( SDL_ANDROID_isAccelerometerUsed )
 	{
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): sending joystick event");
-		SDL_ANDROID_MainThreadPushJoystickAxis(0, 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accX) * 32767.0f))));
-		SDL_ANDROID_MainThreadPushJoystickAxis(0, 3, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accY) * 32767.0f))));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 0, NORMALIZE_FLOAT_32767(accX));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 1, NORMALIZE_FLOAT_32767(-accY));
 		//SDL_ANDROID_MainThreadPushJoystickAxis(0, 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accZ) * 32767.0f))));
 		return;
 	}
@@ -1113,8 +1116,8 @@ void updateOrientation ( float accX, float accY, float accZ )
 	if( SDL_ANDROID_isJoystickUsed )
 	{
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): sending joystick event");
-		SDL_ANDROID_MainThreadPushJoystickAxis(0, 0, (Sint16)(fminf(32767.0f, fmax(-32767.0f, (accX - midX) * joystickSensitivity))));
-		SDL_ANDROID_MainThreadPushJoystickAxis(0, 1, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accY - midY) * joystickSensitivity))));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_TOUCHSCREEN, 0, NORMALIZE_FLOAT_32767((accX - midX) * joystickSensitivity));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_TOUCHSCREEN, 1, NORMALIZE_FLOAT_32767(-(accY - midY) * joystickSensitivity));
 		//SDL_ANDROID_MainThreadPushJoystickAxis(0, 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accZ - midZ) * joystickSensitivity))));
 
 		if( accelerometerCenterPos == ACCELEROMETER_CENTER_FLOATING )
@@ -1255,6 +1258,18 @@ void updateOrientation ( float accX, float accY, float accZ )
 
 }
 
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeGamepadAnalogJoystickInput) (JNIEnv* env, jobject thiz,
+	jfloat stick1x, jfloat stick1y, jfloat stick2x, jfloat stick2y, jfloat rtrigger, jfloat ltrigger)
+{
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 0, NORMALIZE_FLOAT_32767(stick1x));
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 1, NORMALIZE_FLOAT_32767(stick1y));
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 2, NORMALIZE_FLOAT_32767(stick2x));
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 3, NORMALIZE_FLOAT_32767(stick2y));
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 4, NORMALIZE_FLOAT_32767(ltrigger));
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 5, NORMALIZE_FLOAT_32767(rtrigger));
+}
+
 static int leftPressed = 0, rightPressed = 0, upPressed = 0, downPressed = 0;
 
 int processAndroidTrackball(int key, int action)
@@ -1379,11 +1394,7 @@ void SDL_ANDROID_processAndroidTrackballDampening()
 
 int SDL_SYS_JoystickInit(void)
 {
-	SDL_numjoysticks = 0;
-	if( SDL_ANDROID_isJoystickUsed || isMultitouchUsed || SDL_ANDROID_isAccelerometerUsed )
-		SDL_numjoysticks = 1;
-	//if( isMultitouchUsed )
-	//	SDL_numjoysticks = MAX_MULTITOUCH_POINTERS+1;
+	SDL_numjoysticks = JOY_GAMEPAD4 + 1;
 
 	return(SDL_numjoysticks);
 }
@@ -1391,7 +1402,19 @@ int SDL_SYS_JoystickInit(void)
 /* Function to get the device-dependent name of a joystick */
 const char *SDL_SYS_JoystickName(int index)
 {
-	return("Android accelerometer/multitouch sensor");
+	if( index == JOY_TOUCHSCREEN )
+		return "Multitouch and on-screen joystick";
+	if( index == JOY_ACCELGYRO )
+		return "Accelerometer/gyroscope";
+	if( index == JOY_GAMEPAD1 )
+		return "Gamepad 1";
+	if( index == JOY_GAMEPAD2 )
+		return "Gamepad 2";
+	if( index == JOY_GAMEPAD3 )
+		return "Gamepad 3";
+	if( index == JOY_GAMEPAD4 )
+		return "Gamepad 4";
+	return "This joystick does not exist, check your code";
 }
 
 int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
@@ -1399,15 +1422,23 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 	joystick->nbuttons = 0;
 	joystick->nhats = 0;
 	joystick->nballs = 0;
-	if( joystick->index == 0 )
+	if( joystick->index == JOY_TOUCHSCREEN )
 	{
-		joystick->naxes = 4; // Joystick plus accelerometer
+		joystick->naxes = 4; // Two on-screen joysticks (I'm planning to implement second joystick soon)
 		if(isMultitouchUsed)
 		{
 			joystick->naxes = 4 + MAX_MULTITOUCH_POINTERS; // Joystick plus accelerometer, plus touch pressure/size
 			joystick->nbuttons = MAX_MULTITOUCH_POINTERS;
 			joystick->nballs = MAX_MULTITOUCH_POINTERS;
 		}
+	}
+	if( joystick->index == JOY_ACCELGYRO )
+	{
+		joystick->naxes = 2; // Accelerometer/gyroscope angles
+	}
+	if( joystick->index >= JOY_GAMEPAD1 || joystick->index <= JOY_GAMEPAD4 )
+	{
+		joystick->naxes = 8; // Two analog stick + two trigger buttons + Ouya touchpad
 	}
 	SDL_ANDROID_CurrentJoysticks[joystick->index] = joystick;
 	return(0);

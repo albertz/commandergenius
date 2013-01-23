@@ -410,6 +410,16 @@ abstract class DifferentTouchInput
 		}
 		public void processGenericEvent(final MotionEvent event)
 		{
+			// Joysticks are supported since Honeycomb, but I don't care about it, because very little devices have it
+			if( (event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) == InputDevice.SOURCE_CLASS_JOYSTICK )
+			{
+				// event.getAxisValue(AXIS_HAT_X) and event.getAxisValue(AXIS_HAT_Y) are joystick arrow keys, they also send keyboard events
+				DemoGLSurfaceView.nativeGamepadAnalogJoystickInput(
+					event.getAxisValue(MotionEvent.AXIS_X), event.getAxisValue(MotionEvent.AXIS_Y),
+					event.getAxisValue(MotionEvent.AXIS_Z), event.getAxisValue(MotionEvent.AXIS_RZ),
+					event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_LTRIGGER) );
+				return;
+			}
 			// Process mousewheel
 			if( event.getAction() == MotionEvent.ACTION_SCROLL )
 			{
@@ -790,8 +800,8 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public static native void initJavaCallbacks();
 	public static native void nativeHardwareMouseDetected( int detected );
 	public static native void nativeMouseButtonsPressed( int buttonId, int pressedState );
-	public static native void nativeMouseWheel(int scrollX, int scrollY);
-	
+	public static native void nativeMouseWheel( int scrollX, int scrollY );
+	public static native void nativeGamepadAnalogJoystickInput( float stick1x,  float stick1y, float stick2x, float stick2y, float rtrigger, float ltrigger );
 }
 
 
