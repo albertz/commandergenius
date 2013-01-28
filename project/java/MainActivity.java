@@ -60,6 +60,7 @@ import java.io.FileInputStream;
 import java.util.zip.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.Set;
 import android.text.SpannedString;
 import java.io.BufferedReader;
 import java.io.BufferedInputStream;
@@ -91,6 +92,18 @@ public class MainActivity extends Activity
 		if(Globals.InhibitSuspend)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+		if( getIntent().getCategories() != null )
+		{
+			for( String cat: getIntent().getCategories() )
+			{
+				System.out.println("libSDL: getIntent().getCategories(): " + cat);
+				if( cat.equals("ouya.intent.category.GAME") ) {
+					System.out.println("libSDL: Ouya game console detected");
+					Globals.IsOuya = true;
+				}
+			}
+		}
 
 		System.out.println("libSDL: Creating startup screen");
 		_layout = new LinearLayout(this);

@@ -4,7 +4,7 @@
 #include "SDL_androidinput.h"
 #include "SDL_screenkeyboard.h"
 
-void SDL_android_init_keymap(SDLKey *SDL_android_keymap)
+void SDL_android_init_keymap(SDLKey *SDL_android_keymap, int isOuya)
 {
   int i;
   SDLKey * keymap = SDL_android_keymap;
@@ -131,7 +131,7 @@ void SDL_android_init_keymap(SDLKey *SDL_android_keymap)
   keymap[KEYCODE_PICTSYMBOLS] = SDL_KEY(LSHIFT);
   keymap[KEYCODE_SWITCH_CHARSET] = SDL_KEY(LSHIFT);
   keymap[KEYCODE_BUTTON_A] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_2));
-  keymap[KEYCODE_BUTTON_B] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_3));
+  keymap[KEYCODE_BUTTON_B] = isOuya ? SDL_KEY(ESCAPE) : SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_3));
   keymap[KEYCODE_BUTTON_C] = SDL_KEY(C);
   keymap[KEYCODE_BUTTON_X] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_0));
   keymap[KEYCODE_BUTTON_Y] = SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_1));
