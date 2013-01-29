@@ -2194,7 +2194,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenCalibration) (JNIEnv* env, jobject
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz, jint isOuya )
+JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )
 {
-	SDL_android_init_keymap(SDL_android_keymap, isOuya);
+	SDL_android_init_keymap(SDL_android_keymap);
 }

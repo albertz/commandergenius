@@ -112,5 +112,4 @@ class Globals
 	public static boolean VideoLinearFilter = true;
 	public static boolean MultiThreadedVideo = false;
 	public static boolean BrokenLibCMessageShown = false;
-	public static boolean IsOuya = false; // Ouya game console has no Back key, so we need to map some game controller key to Back key
 }

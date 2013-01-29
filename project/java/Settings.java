@@ -170,7 +170,7 @@ class Settings
 			return;
 		}
 		System.out.println("libSDL: Settings.Load(): enter");
-		nativeInitKeymap(Globals.IsOuya ? 1 : 0);
+		nativeInitKeymap();
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
 		{
 			int sdlKey = nativeGetKeymapKey(i);
@@ -2812,7 +2812,7 @@ class Settings
 	private static native void nativeSetVideoForceSoftwareMode();
 	private static native void nativeSetupScreenKeyboard(int size, int drawsize, int theme, int nbuttonsAutoFire, int transparency);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
-	private static native void nativeInitKeymap(int isOuya);
+	private static native void nativeInitKeymap();
 	private static native int  nativeGetKeymapKey(int key);
 	private static native void nativeSetKeymapKey(int javakey, int key);
 	private static native int  nativeGetKeymapKeyScreenKb(int keynum);

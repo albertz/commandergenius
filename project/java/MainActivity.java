@@ -93,18 +93,6 @@ public class MainActivity extends Activity
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-		if( getIntent().getCategories() != null )
-		{
-			for( String cat: getIntent().getCategories() )
-			{
-				System.out.println("libSDL: getIntent().getCategories(): " + cat);
-				if( cat.equals("ouya.intent.category.GAME") ) {
-					System.out.println("libSDL: Ouya game console detected");
-					Globals.IsOuya = true;
-				}
-			}
-		}
-
 		System.out.println("libSDL: Creating startup screen");
 		_layout = new LinearLayout(this);
 		_layout.setOrientation(LinearLayout.VERTICAL);
