@@ -580,6 +580,15 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		return context.isScreenKeyboardShown() ? 1 : 0;
 	}
 
+	public void startAccelerometerGyroscope(int started)
+	{
+		accelerometer.openedBySDL = (started != 0);
+		if( accelerometer.openedBySDL && !mPaused )
+			accelerometer.start();
+		else
+			accelerometer.stop();
+	}
+
 	public void exitApp()
 	{
 		 nativeDone();
@@ -769,7 +778,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		System.out.println("libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused);
 		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused || Globals.NonBlockingSwapBuffers )
 			mRenderer.nativeGlContextRecreated();
-		if( mRenderer.accelerometer != null ) // For some reason it crashes here often - are we getting this event before initialization?
+		if( mRenderer.accelerometer != null && mRenderer.accelerometer.openedBySDL ) // For some reason it crashes here often - are we getting this event before initialization?
 			mRenderer.accelerometer.start();
 	};
 

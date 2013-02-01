@@ -308,10 +308,20 @@ fi
 
 if [ -z "$AppUsesAccelerometer" -o -z "$AUTO" ]; then
 echo
-echo -n "Application uses accelerometer (y) or (n), the accelerometer will be used as joystick 0 axes 2-3 ($AppUsesAccelerometer): "
+echo -n "Application uses accelerometer (y) or (n), the accelerometer will be used as joystick 1 axes 0-1 ($AppUsesAccelerometer): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesAccelerometer="$var"
+	CHANGED=1
+fi
+fi
+
+if [ -z "$AppUsesGyroscope" -o -z "$AUTO" ]; then
+echo
+echo -n "Application uses gyroscope (y) or (n), the gyroscope will be used as joystick 1 axes 2-4 ($AppUsesGyroscope): "
+read var
+if [ -n "$var" ] ; then
+	AppUsesGyroscope="$var"
 	CHANGED=1
 fi
 fi
@@ -671,6 +681,7 @@ echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
 echo AppNeedsTextInput=$AppNeedsTextInput >> AndroidAppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AndroidAppSettings.cfg
 echo AppUsesAccelerometer=$AppUsesAccelerometer >> AndroidAppSettings.cfg
+echo AppUsesGyroscope=$AppUsesGyroscope >> AndroidAppSettings.cfg
 echo AppUsesMultitouch=$AppUsesMultitouch >> AndroidAppSettings.cfg
 echo NonBlockingSwapBuffers=$NonBlockingSwapBuffers >> AndroidAppSettings.cfg
 echo RedefinedKeys=\"$RedefinedKeys\" >> AndroidAppSettings.cfg
@@ -840,6 +851,12 @@ else
 	AppUsesAccelerometer=false
 fi
 
+if [ "$AppUsesGyroscope" = "y" ] ; then
+	AppUsesGyroscope=true
+else
+	AppUsesGyroscope=false
+fi
+
 if [ "$AppUsesMultitouch" = "y" ] ; then
 	AppUsesMultitouch=true
 else
@@ -973,6 +990,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" | \
 	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \
 	sed "s/public static boolean AppUsesAccelerometer = .*;/public static boolean AppUsesAccelerometer = $AppUsesAccelerometer;/" | \
+	sed "s/public static boolean AppUsesGyroscope = .*;/public static boolean AppUsesGyroscope = $AppUsesGyroscope;/" | \
 	sed "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" | \
 	sed "s/public static boolean NonBlockingSwapBuffers = .*;/public static boolean NonBlockingSwapBuffers = $NonBlockingSwapBuffers;/" | \
 	sed "s/public static boolean ResetSdlConfigForThisVersion = .*;/public static boolean ResetSdlConfigForThisVersion = $ResetSdlConfigForThisVersion;/" | \

@@ -864,14 +864,27 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(AccelerometerReader_nativeOrientation) ( JNIEnv*  env, jobject  thiz, jfloat accX, jfloat accY, jfloat accZ )
+JAVA_EXPORT_NAME(AccelerometerReader_nativeGyroscope) ( JNIEnv*  env, jobject thiz, jfloat X, jfloat Y, jfloat Z )
 {
 #if SDL_VERSION_ATLEAST(1,3,0)
 #else
 	if( !SDL_CurrentVideoSurface )
 		return;
 #endif
-	updateOrientation (accX, accY, accZ); // TODO: make values in range 0.0:1.0
+	while ( X != 0.0f || Y != 0.0f || Z != 0.0f )
+	{
+		float dx = ( X >= 1.0f ? 1.0f : ( X <= -1.0f ? -1.0f : X ) );
+		float dy = ( Y >= 1.0f ? 1.0f : ( Y <= -1.0f ? -1.0f : Y ) );
+		float dz = ( Z >= 1.0f ? 1.0f : ( Z <= -1.0f ? -1.0f : Z ) );
+
+		X -= dx;
+		Y -= dy;
+		Z -= dz;
+
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 2, NORMALIZE_FLOAT_32767(dx));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 3, NORMALIZE_FLOAT_32767(dy));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 4, NORMALIZE_FLOAT_32767(dz));
+	}
 }
 
 JNIEXPORT void JNICALL 
@@ -1434,7 +1447,8 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 	}
 	if( joystick->index == JOY_ACCELGYRO )
 	{
-		joystick->naxes = 2; // Accelerometer/gyroscope angles
+		joystick->naxes = 5; // Accelerometer = axes 0-1, gyroscope = axes 2-4
+		SDL_ANDROID_CallJavaStartAccelerometerGyroscope(1);
 	}
 	if( joystick->index >= JOY_GAMEPAD1 || joystick->index <= JOY_GAMEPAD4 )
 	{
@@ -1453,6 +1467,8 @@ void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
 void SDL_SYS_JoystickClose(SDL_Joystick *joystick)
 {
 	SDL_ANDROID_CurrentJoysticks[joystick->index] = NULL;
+	if( joystick->index == JOY_ACCELGYRO )
+		SDL_ANDROID_CallJavaStartAccelerometerGyroscope(0);
 	return;
 }
 

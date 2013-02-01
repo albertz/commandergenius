@@ -437,7 +437,7 @@ int main(int argc, char* argv[])
 	// some random colors
 	int colors[MAX_POINTERS] = { 0xaaaaaa, 0xffffff, 0x888888, 0xcccccc, 0x666666, 0x999999, 0xdddddd, 0xeeeeee, 0xaaaaaa, 0xffffff, 0x888888, 0xcccccc, 0x666666, 0x999999, 0xdddddd, 0xeeeeee };
 	struct TouchPointer_t { int x; int y; int pressure; int pressed; } touchPointers[MAX_POINTERS];
-	int accel[2], screenjoy[4], gamepads[4][8];
+	int accel[5], screenjoy[4], gamepads[4][8];
 	SDL_Surface	*mouse[4];
 	int screenKeyboardShown = 0;
 
@@ -601,6 +601,7 @@ int main(int argc, char* argv[])
 		}
 		int joyInput[][3] = {	
 			{accel[0], accel[1], 10},
+			{accel[2], accel[3], 10 + abs(accel[4]) * 100 / 32767},
 			{screenjoy[0], screenjoy[1], 10},
 			{screenjoy[2], screenjoy[3], 10},
 			{gamepads[0][0], gamepads[0][1], 10 + gamepads[0][4] * 100 / 32767},
@@ -674,7 +675,7 @@ int main(int argc, char* argv[])
 				}
 				if(evt.jaxis.which == 1)
 				{
-					accel[evt.jaxis.axis] = evt.jaxis.value;
+					accel[evt.jaxis.axis] = evt.jaxis.value; // accelerometer and gyroscope
 				}
 				if(evt.jaxis.which >= 2)
 				{
