@@ -1,6 +1,11 @@
 Requested features (see also bugs.txt)
 ======================================
 
+- Fast event queue and joystick event trottling in SDL - remove mutex from SDL_ANDROID_PumpEvents(),
+  and add another compatibility hack option, because queue got bloated and my phone rebooted.
+
+- Gyroscope calibration dialog.
+
 - Option for default on-screen key theme in AndroidAppSettings.cfg.
 
 - Select between normal mouse input and magnifying glass/relative input automatically, based on screen size.

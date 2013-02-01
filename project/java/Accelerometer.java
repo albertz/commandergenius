@@ -42,6 +42,7 @@ class AccelerometerReader implements SensorEventListener
 
 	private SensorManager _manager = null;
 	public boolean openedBySDL = false;
+	private final GyroscopeListener gyro = new GyroscopeListener();
 
 	public AccelerometerReader(Activity context)
 	{
@@ -54,6 +55,7 @@ class AccelerometerReader implements SensorEventListener
 		{
 			System.out.println("libSDL: stopping accelerometer/gyroscope");
 			_manager.unregisterListener(this);
+			_manager.unregisterListener(gyro);
 		}
 	}
 
@@ -62,38 +64,42 @@ class AccelerometerReader implements SensorEventListener
 		if( (Globals.UseAccelerometerAsArrowKeys || Globals.AppUsesAccelerometer) && _manager != null )
 		{
 			System.out.println("libSDL: starting accelerometer");
-			// TODO: orientation allows for 3rd axis - azimuth, but it will be way too hard to the user
-			// if( ! _manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_GAME) )
 			_manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
 		}
 		if( Globals.AppUsesGyroscope && _manager != null )
 		{
 			System.out.println("libSDL: starting gyroscope");
-			_manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
+			_manager.registerListener(gyro, _manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
 		}
 	}
 
-	public synchronized void onSensorChanged(SensorEvent event) {
+	public void onSensorChanged(SensorEvent event)
+	{
+		if( Globals.HorizontalOrientation )
+			nativeAccelerometer(event.values[1], -event.values[0], event.values[2]);
+		else
+			nativeAccelerometer(event.values[0], event.values[1], event.values[2]); // TODO: not tested!
+	}
+	public void onAccuracyChanged(Sensor s, int a)
+	{
+	}
 
-		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) 
+	class GyroscopeListener implements SensorEventListener
+	{
+		public GyroscopeListener()
 		{
-			if( Globals.HorizontalOrientation )
-				nativeAccelerometer(event.values[1], -event.values[0], event.values[2]);
-			else
-				nativeAccelerometer(event.values[0], event.values[1], event.values[2]); // TODO: not tested!
 		}
-		if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE)
+		public void onSensorChanged(SensorEvent event)
 		{
+			// TODO: vertical orientation
 			//if( Globals.HorizontalOrientation )
 			nativeGyroscope(event.values[0], event.values[1], event.values[2]);
-			// TODO: vertical orientation
 		}
-
+		public synchronized void onAccuracyChanged(Sensor s, int a)
+		{
+		}
 	}
 
-	public synchronized void onAccuracyChanged(Sensor s, int a) {
-	}
-
-	private native void nativeAccelerometer(float accX, float accY, float accZ);
-	private native void nativeGyroscope(float X, float Y, float Z);
+	private static native void nativeAccelerometer(float accX, float accY, float accZ);
+	private static native void nativeGyroscope(float X, float Y, float Z);
 }
