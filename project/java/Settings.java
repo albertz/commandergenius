@@ -2569,14 +2569,14 @@ class Settings
 			img.setImageMatrix(m);
 			p.getVideoLayout().addView(img);
 			numEvents = 0;
-			AccelerometerReader.gyro.x1 = 0;
-			AccelerometerReader.gyro.x2 = 0;
+			AccelerometerReader.gyro.x1 = 100;
+			AccelerometerReader.gyro.x2 = -100;
 			AccelerometerReader.gyro.xc = 0;
-			AccelerometerReader.gyro.y1 = 0;
-			AccelerometerReader.gyro.y2 = 0;
+			AccelerometerReader.gyro.y1 = 100;
+			AccelerometerReader.gyro.y2 = -100;
 			AccelerometerReader.gyro.yc = 0;
-			AccelerometerReader.gyro.z1 = 0;
-			AccelerometerReader.gyro.z2 = 0;
+			AccelerometerReader.gyro.z1 = 100;
+			AccelerometerReader.gyro.z2 = -100;
 			AccelerometerReader.gyro.zc = 0;
 			AccelerometerReader.gyro.registerListener(p, this);
 			(new Thread(new Runnable()
@@ -2609,12 +2609,12 @@ class Settings
 			AccelerometerReader.gyro.xc += x;
 			AccelerometerReader.gyro.yc += y;
 			AccelerometerReader.gyro.zc += z;
-			AccelerometerReader.gyro.x1 = Math.min(AccelerometerReader.gyro.x1, x);
-			AccelerometerReader.gyro.x2 = Math.max(AccelerometerReader.gyro.x2, x);
-			AccelerometerReader.gyro.y1 = Math.min(AccelerometerReader.gyro.y1, y);
-			AccelerometerReader.gyro.y2 = Math.max(AccelerometerReader.gyro.y2, y);
-			AccelerometerReader.gyro.z1 = Math.min(AccelerometerReader.gyro.z1, z);
-			AccelerometerReader.gyro.z2 = Math.max(AccelerometerReader.gyro.z2, z);
+			AccelerometerReader.gyro.x1 = Math.min(AccelerometerReader.gyro.x1, x * 1.1f); // Small safety bound coefficient
+			AccelerometerReader.gyro.x2 = Math.max(AccelerometerReader.gyro.x2, x * 1.1f);
+			AccelerometerReader.gyro.y1 = Math.min(AccelerometerReader.gyro.y1, y * 1.1f);
+			AccelerometerReader.gyro.y2 = Math.max(AccelerometerReader.gyro.y2, y * 1.1f);
+			AccelerometerReader.gyro.z1 = Math.min(AccelerometerReader.gyro.z1, z * 1.1f);
+			AccelerometerReader.gyro.z2 = Math.max(AccelerometerReader.gyro.z2, z * 1.1f);
 			final Matrix m = new Matrix();
 			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
 			RectF dst = new RectF(	x * 5000 + p.getVideoLayout().getWidth()/2 - 50, y * 5000 + p.getVideoLayout().getHeight()/2 - 50,
@@ -2634,7 +2634,7 @@ class Settings
 			try {
 				Thread.sleep(200); // Just in case we have pending events
 			} catch( Exception e ) {}
-			if( numEvents > 0 )
+			if( numEvents > 5 )
 			{
 				AccelerometerReader.gyro.xc /= (float)numEvents;
 				AccelerometerReader.gyro.yc /= (float)numEvents;

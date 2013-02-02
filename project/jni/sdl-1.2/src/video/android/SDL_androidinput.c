@@ -871,11 +871,14 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeGyroscope) ( JNIEnv*  env, jobject th
 	if( !SDL_CurrentVideoSurface )
 		return;
 #endif
+	X *= 0.25f;
+	Y *= 0.25f;
+	Z *= 0.25f;
 	while ( X != 0.0f || Y != 0.0f || Z != 0.0f )
 	{
-		float dx = ( X >= 1.0f ? 1.0f : ( X <= -1.0f ? -1.0f : X ) );
-		float dy = ( Y >= 1.0f ? 1.0f : ( Y <= -1.0f ? -1.0f : Y ) );
-		float dz = ( Z >= 1.0f ? 1.0f : ( Z <= -1.0f ? -1.0f : Z ) );
+		float dx = ( X > 1.0f ? 1.0f : ( X < -1.0f ? -1.0f : X ) );
+		float dy = ( Y > 1.0f ? 1.0f : ( Y < -1.0f ? -1.0f : Y ) );
+		float dz = ( Z > 1.0f ? 1.0f : ( Z < -1.0f ? -1.0f : Z ) );
 
 		X -= dx;
 		Y -= dy;
@@ -884,6 +887,7 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeGyroscope) ( JNIEnv*  env, jobject th
 		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 2, NORMALIZE_FLOAT_32767(dx));
 		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 3, NORMALIZE_FLOAT_32767(dy));
 		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 4, NORMALIZE_FLOAT_32767(dz));
+		//if( fabs(dx) >= 1.0f || fabs(dy) >= 1.0f || fabs(dz) >= 1.0f ) __android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeGyroscope(): sending several events, this eats CPU!");
 	}
 }
 
