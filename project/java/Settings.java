@@ -67,6 +67,9 @@ import android.util.DisplayMetrics;
 import android.net.Uri;
 import java.util.concurrent.Semaphore;
 import android.graphics.Color;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorEvent;
+import android.hardware.Sensor;
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
 class Settings
@@ -154,6 +157,15 @@ class Settings
 			out.writeBoolean(Globals.BrokenLibCMessageShown);
 			out.writeInt(Globals.TouchscreenKeyboardDrawSize);
 			out.writeInt(p.getApplicationVersion());
+			out.writeFloat(Globals.gyro_x1);
+			out.writeFloat(Globals.gyro_x2);
+			out.writeFloat(Globals.gyro_xc);
+			out.writeFloat(Globals.gyro_y1);
+			out.writeFloat(Globals.gyro_y2);
+			out.writeFloat(Globals.gyro_yc);
+			out.writeFloat(Globals.gyro_z1);
+			out.writeFloat(Globals.gyro_z2);
+			out.writeFloat(Globals.gyro_zc);
 
 			out.close();
 			settingsLoaded = true;
@@ -300,6 +312,15 @@ class Settings
 			Globals.BrokenLibCMessageShown = settingsFile.readBoolean();
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			int cfgVersion = settingsFile.readInt();
+			Globals.gyro_x1 = settingsFile.readFloat();
+			Globals.gyro_x2 = settingsFile.readFloat();
+			Globals.gyro_xc = settingsFile.readFloat();
+			Globals.gyro_y1 = settingsFile.readFloat();
+			Globals.gyro_y2 = settingsFile.readFloat();
+			Globals.gyro_yc = settingsFile.readFloat();
+			Globals.gyro_z1 = settingsFile.readFloat();
+			Globals.gyro_z2 = settingsFile.readFloat();
+			Globals.gyro_zc = settingsFile.readFloat();
 
 			settingsLoaded = true;
 
@@ -531,6 +552,7 @@ class Settings
 				new MouseConfigMainMenu(),
 				new ArrowKeysConfig(),
 				new AccelerometerConfig(),
+				new GyroscopeCalibration(),
 				new AudioConfig(),
 				new RemapHwKeysConfig(),
 				new ScreenGesturesConfig(),
@@ -2483,6 +2505,149 @@ class Settings
 			alertDismiss[0] = alert;
 			alert.setOwnerActivity(p);
 			alert.show();
+		}
+	}
+
+	static class GyroscopeCalibration extends Menu implements SensorEventListener
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.calibrate_gyroscope);
+		}
+		boolean enabled()
+		{
+			return Globals.AppUsesGyroscope;
+		}
+		void run (final MainActivity p)
+		{
+			if( !Globals.AppUsesGyroscope || !AccelerometerReader.gyro.available(p) )
+			{
+				goBack(p);
+				return;
+			}
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.calibrate_gyroscope));
+			builder.setMessage(p.getResources().getString(R.string.calibrate_gyroscope_text));
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					startCalibration(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		ImageView img;
+		Bitmap bmp;
+		int numEvents;
+		MainActivity p;
+
+		void startCalibration(final MainActivity _p)
+		{
+			p = _p;
+			img = new ImageView(p);
+			img.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+			img.setScaleType(ImageView.ScaleType.MATRIX);
+			bmp = BitmapFactory.decodeResource( p.getResources(), R.drawable.calibrate );
+			img.setImageBitmap(bmp);
+			Matrix m = new Matrix();
+			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
+			RectF dst = new RectF(	p.getVideoLayout().getWidth()/2 - 50, p.getVideoLayout().getHeight()/2 - 50,
+									p.getVideoLayout().getWidth()/2 + 50, p.getVideoLayout().getHeight()/2 + 50);
+			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+			img.setImageMatrix(m);
+			p.getVideoLayout().addView(img);
+			numEvents = 0;
+			AccelerometerReader.gyro.x1 = 0;
+			AccelerometerReader.gyro.x2 = 0;
+			AccelerometerReader.gyro.xc = 0;
+			AccelerometerReader.gyro.y1 = 0;
+			AccelerometerReader.gyro.y2 = 0;
+			AccelerometerReader.gyro.yc = 0;
+			AccelerometerReader.gyro.z1 = 0;
+			AccelerometerReader.gyro.z2 = 0;
+			AccelerometerReader.gyro.zc = 0;
+			AccelerometerReader.gyro.registerListener(p, this);
+			(new Thread(new Runnable()
+			{
+				public void run()
+				{
+					for(int count = 1; count < 10; count++)
+					{
+						p.setText("" + count + "0% ...");
+						try {
+							Thread.sleep(500);
+						} catch( Exception e ) {}
+					}
+					finishCalibration(p);
+				}
+			}
+			)).start();
+		}
+
+		public void onSensorChanged(SensorEvent event)
+		{
+			gyroscopeEvent(event.values[0], event.values[1], event.values[2]);
+		}
+		public void onAccuracyChanged(Sensor s, int a)
+		{
+		}
+		void gyroscopeEvent(float x, float y, float z)
+		{
+			numEvents++;
+			AccelerometerReader.gyro.xc += x;
+			AccelerometerReader.gyro.yc += y;
+			AccelerometerReader.gyro.zc += z;
+			AccelerometerReader.gyro.x1 = Math.min(AccelerometerReader.gyro.x1, x);
+			AccelerometerReader.gyro.x2 = Math.max(AccelerometerReader.gyro.x2, x);
+			AccelerometerReader.gyro.y1 = Math.min(AccelerometerReader.gyro.y1, y);
+			AccelerometerReader.gyro.y2 = Math.max(AccelerometerReader.gyro.y2, y);
+			AccelerometerReader.gyro.z1 = Math.min(AccelerometerReader.gyro.z1, z);
+			AccelerometerReader.gyro.z2 = Math.max(AccelerometerReader.gyro.z2, z);
+			final Matrix m = new Matrix();
+			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
+			RectF dst = new RectF(	x * 5000 + p.getVideoLayout().getWidth()/2 - 50, y * 5000 + p.getVideoLayout().getHeight()/2 - 50,
+									x * 5000 + p.getVideoLayout().getWidth()/2 + 50, y * 5000 + p.getVideoLayout().getHeight()/2 + 50);
+			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+			p.runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					img.setImageMatrix(m);
+				}
+			});
+		}
+		void finishCalibration(final MainActivity p)
+		{
+			AccelerometerReader.gyro.unregisterListener(p, this);
+			try {
+				Thread.sleep(200); // Just in case we have pending events
+			} catch( Exception e ) {}
+			if( numEvents > 0 )
+			{
+				AccelerometerReader.gyro.xc /= (float)numEvents;
+				AccelerometerReader.gyro.yc /= (float)numEvents;
+				AccelerometerReader.gyro.zc /= (float)numEvents;
+			}
+			p.runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					p.getVideoLayout().removeView(img);
+					goBack(p);
+				}
+			});
 		}
 	}
 

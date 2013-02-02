@@ -10,10 +10,10 @@ Also this port is developed very slowly, although the same is true for an offici
 Installation
 ============
 
-This project should be compiled with Android 3.1 SDK (API level 15) and NDK r8, r7c, r6 or r5c,
+This project should be compiled with Android 4.2 SDK (API level 17) and NDK r8, r7c, r6 or r5c,
 google for them and install them as described in their docs.
 You'll need to install Java Ant too.
-The application will run on Android OS 1.6 and above, don't mind the 3.1 dependency.
+The application will run on Android OS 1.6 and above, but will use features from Android 4.2 if available.
 Also it's compatible with NDK r4b and all versions of CrystaX NDK starting from r4b.
 CrystaX NDK adds support for wide chars, and required if you want to use Boost libraries.
 http://www.crystax.net/android/ndk.php

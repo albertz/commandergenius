@@ -64,7 +64,7 @@ class Globals
 	public static int StartupMenuButtonTimeout = 3000;
 	public static int AppMinimumRAM = 0;
 	public static Settings.Menu HiddenMenuOptions [] = {};
-	public static Settings.Menu FirstStartMenuOptions [] = { (AppUsesMouse && ! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true) };
+	public static Settings.Menu FirstStartMenuOptions [] = { (AppUsesMouse && ! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true), new Settings.GyroscopeCalibration() };
 	public static String AdmobPublisherId = "";
 	public static String AdmobTestDeviceId = "";
 	public static String AdmobBannerSize = "";
@@ -113,4 +113,6 @@ class Globals
 	public static boolean VideoLinearFilter = true;
 	public static boolean MultiThreadedVideo = false;
 	public static boolean BrokenLibCMessageShown = false;
+	// Gyroscope calibration
+	public static float gyro_x1, gyro_x2, gyro_xc, gyro_y1, gyro_y2, gyro_yc, gyro_z1, gyro_z2, gyro_zc;
 }
