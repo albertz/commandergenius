@@ -40,13 +40,9 @@
 #include "SDL_androidvideo.h"
 #include "SDL_androidinput.h"
 #include "jniwrapperstuff.h"
-
-// #include "touchscreentheme.h" // Not used yet
+#include "atan2i.h"
 
 // TODO: this code is a HUGE MESS
-
-#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
-#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 
 enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, BUTTON_ARROWS = MAX_BUTTONS } ; // Max amount of custom buttons
 
