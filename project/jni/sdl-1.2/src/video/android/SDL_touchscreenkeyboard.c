@@ -56,7 +56,7 @@ static short touchscreenKeyboardShown = 1;
 static short AutoFireButtonsNum = 0;
 static short buttonsize = 1;
 static short buttonDrawSize = 1;
-static short transparency = 128;
+static float transparency = 128.0f/255.0f;
 
 static SDL_Rect arrows, arrowsExtended, buttons[MAX_BUTTONS], buttonsAutoFireRect[MAX_BUTTONS_AUTOFIRE];
 static SDL_Rect arrowsDraw, buttonsDraw[MAX_BUTTONS];
@@ -174,7 +174,7 @@ static inline void endDrawingTex()
 		glEnableClientState(GL_COLOR_ARRAY);
 }
 
-static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, int flipX, int flipY, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, int flipX, int flipY, float r, float g, float b, float a)
 {
 	GLint cropRect[4];
 
@@ -183,7 +183,7 @@ static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect *
 
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 
-	glColor4x(r * 0x100, g * 0x100, b * 0x100,  a * 0x100 );
+	glColor4f(r, g, b, a);
 
 	if(src)
 	{
@@ -213,7 +213,7 @@ static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect *
 	glDrawTexiOES(dest->x, SDL_ANDROID_sWindowHeight - dest->y - dest->h, 0, dest->w, dest->h);
 }
 
-static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, float r, float g, float b, float a)
 {
 	drawCharTexFlip(tex, src, dest, 0, 0, r, g, b, a);
 }
@@ -221,24 +221,24 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * des
 static void drawTouchscreenKeyboardLegacy()
 {
 	int i;
-	int blendFactor;
+	float blendFactor;
 
 	blendFactor =		( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
 	if( blendFactor == 0 )
-		drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 255, 255, 255, transparency );
+		drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency );
 	else
 	{
 		if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
-			drawCharTex( &arrowImages[1], NULL, &arrowsDraw, 255, 255, 255, transparency / blendFactor );
+			drawCharTex( &arrowImages[1], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency / blendFactor );
 		if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
-			drawCharTex( &arrowImages[2], NULL, &arrowsDraw, 255, 255, 255, transparency / blendFactor );
+			drawCharTex( &arrowImages[2], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency / blendFactor );
 		if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
-			drawCharTex( &arrowImages[3], NULL, &arrowsDraw, 255, 255, 255, transparency / blendFactor );
+			drawCharTex( &arrowImages[3], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency / blendFactor );
 		if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
-			drawCharTex( &arrowImages[4], NULL, &arrowsDraw, 255, 255, 255, transparency / blendFactor );
+			drawCharTex( &arrowImages[4], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency / blendFactor );
 	}
 
 	for( i = 0; i < MAX_BUTTONS; i++ )
@@ -274,7 +274,7 @@ static void drawTouchscreenKeyboardLegacy()
 			autoFireDest.w = pos1dst;
 			
 			drawCharTex( &buttonImages[i*2+1],
-						&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
+						&autoFireCrop, &autoFireDest, 1.0f, 1.0f, 1.0f, transparency );
 
 			autoFireCrop.x = pos2src;
 			autoFireCrop.w = buttonImages[i*2+1].w - pos2src;
@@ -282,7 +282,7 @@ static void drawTouchscreenKeyboardLegacy()
 			autoFireDest.w = buttonsDraw[i].w - pos2dst;
 
 			drawCharTex( &buttonImages[i*2+1],
-						&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
+						&autoFireCrop, &autoFireDest, 1.0f, 1.0f, 1.0f, transparency );
 			
 			autoFireCrop.x = pos1src;
 			autoFireCrop.w = pos2src - pos1src;
@@ -290,13 +290,13 @@ static void drawTouchscreenKeyboardLegacy()
 			autoFireDest.w = pos2dst - pos1dst;
 
 			drawCharTex( &buttonAutoFireImages[i*2+1],
-						&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
+						&autoFireCrop, &autoFireDest, 1.0f, 1.0f, 1.0f, transparency );
 		}
 		else
 		{
 			drawCharTex( ( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? &buttonAutoFireImages[i*2] :
 						&buttonImages[ SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? (i * 2 + 1) : (i * 2) ],
-						NULL, &buttonsDraw[i], 255, 255, 255, transparency );
+						NULL, &buttonsDraw[i], 1.0f, 1.0f, 1.0f, transparency );
 		}
 	}
 }
@@ -305,7 +305,7 @@ static void drawTouchscreenKeyboardSun()
 {
 	int i;
 
-	drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 255, 255, 255, transparency );
+	drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency );
 	if(pointerInButtonRect[BUTTON_ARROWS] != -1)
 	{
 		SDL_Rect touch = arrowsDraw;
@@ -313,7 +313,7 @@ static void drawTouchscreenKeyboardSun()
 		touch.h /= 2;
 		touch.x = joystickTouchPoints[0] - touch.w / 2;
 		touch.y = joystickTouchPoints[1] - touch.h / 2;
-		drawCharTex( &arrowImages[0], NULL, &touch, 255, 255, 255, transparency );
+		drawCharTex( &arrowImages[0], NULL, &touch, 1.0f, 1.0f, 1.0f, transparency );
 	}
 
 	for( i = 0; i < MAX_BUTTONS; i++ )
@@ -339,10 +339,10 @@ static void drawTouchscreenKeyboardSun()
 
 		if( i < AutoFireButtonsNum && ButtonAutoFire[i] )
 			drawCharTex( &buttonAutoFireImages[i*2+1],
-						NULL, &buttonsDraw[i], 255, 255, 255, transparency );
+						NULL, &buttonsDraw[i], 1.0f, 1.0f, 1.0f, transparency );
 
 		drawCharTexFlip( &buttonImages[ pressed ? (i * 2 + 1) : (i * 2) ],
-						NULL, &buttonsDraw[i], (i >= 2 && pressed), 0, 255, 255, 255, transparency );
+						NULL, &buttonsDraw[i], (i >= 2 && pressed), 0, 1.0f, 1.0f, 1.0f, transparency );
 
 		if( i < AutoFireButtonsNum && ! ButtonAutoFire[i] &&
 			( ButtonAutoFireX[i*2] > 0 || ButtonAutoFireX[i*2+1] > 0 ) )
@@ -359,7 +359,7 @@ static void drawTouchscreenKeyboardSun()
 			autoFireDest.y = buttonsDraw[i].y + buttonsDraw[i].h/2 - autoFireDest.h/2;
 
 			drawCharTex( &buttonAutoFireImages[i*2],
-						NULL, &autoFireDest, 255, 255, 255, transparency );
+						NULL, &autoFireDest, 1.0f, 1.0f, 1.0f, transparency );
 		}
 	}
 }
@@ -700,12 +700,12 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	buttonDrawSize = drawsize;
 	switch(_transparency)
 	{
-		case 0: transparency = 32; break;
-		case 1: transparency = 64; break;
-		case 2: transparency = 128; break;
-		case 3: transparency = 192; break;
-		case 4: transparency = 255; break;
-		default: transparency = 192; break;
+		case 0: transparency = 32.0f/255.0f; break;
+		case 1: transparency = 64.0f/255.0f; break;
+		case 2: transparency = 128.0f/255.0f; break;
+		case 3: transparency = 192.0f/255.0f; break;
+		case 4: transparency = 255.0f/255.0f; break;
+		default: transparency = 192.0f/255.0f; break;
 	}
 	
 	// Arrows to the lower-left part of screen
@@ -778,16 +778,16 @@ JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenKeyboardUsed) ( JNIEnv*  env, jobj
 	SDL_ANDROID_isTouchscreenKeyboardUsed = 1;
 }
 
-void SDL_ANDROID_DrawMouseCursor(int x, int y, int size, int alpha)
+void SDL_ANDROID_DrawMouseCursor(int x, int y, int size, float alpha)
 {
 	SDL_Rect r;
-	// I've failed with size calcualtions, so leaving it as-is
+	// I've failed with size calculations, so leaving it as-is
 	r.x = x - MOUSE_POINTER_X;
 	r.y = y - MOUSE_POINTER_Y;
 	r.w = MOUSE_POINTER_W;
 	r.h = MOUSE_POINTER_H;
 	beginDrawingTex();
-	drawCharTex( &mousePointer, NULL, &r, 255, 255, 255, alpha );
+	drawCharTex( &mousePointer, NULL, &r, 1.0f, 1.0f, 1.0f, alpha );
 	endDrawingTex();
 }
 

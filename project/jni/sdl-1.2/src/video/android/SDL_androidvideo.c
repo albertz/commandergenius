@@ -111,8 +111,8 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 	{
 		glPushMatrix();
 		glLoadIdentity();
-		glOrthox( 0, (SDL_ANDROID_sRealWindowWidth) * 0x10000, SDL_ANDROID_sRealWindowHeight * 0x10000, 0, 0, 1 * 0x10000 );
-		glColor4x(0, 0, 0, 0x10000);
+		glOrthof( 0.0f, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight, 0.0f, 0.0f, 1.0f );
+		glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		
 		GLshort vertices[] = {	SDL_ANDROID_ForceClearScreenRect.x, SDL_ANDROID_ForceClearScreenRect.y,
