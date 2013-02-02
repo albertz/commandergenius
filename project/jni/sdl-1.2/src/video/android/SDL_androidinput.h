@@ -203,4 +203,18 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode );
 extern void SDL_android_init_keymap(SDLKey *SDL_android_keymap);
 extern void SDL_ANDROID_MainThreadPushMouseWheel( int x, int y ); // SDL 1.3 only
 extern void SDL_ANDROID_MainThreadPushAppActive(int active);
+
+// Internal input queue stuff
+extern SDLKey SDL_android_keymap[];
+extern SDL_Joystick *SDL_ANDROID_CurrentJoysticks[];
+extern int SDL_ANDROID_isMouseUsed;
+extern int SDL_ANDROID_currentMouseX, SDL_ANDROID_currentMouseY, SDL_ANDROID_currentMouseButtons;
+extern int SDL_ANDROID_moveMouseWithArrowKeys;
+extern int SDL_ANDROID_moveMouseWithKbSpeed;
+extern int SDL_ANDROID_moveMouseWithKbAccel;
+extern int SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY;
+extern int SDL_ANDROID_moveMouseWithKbSpeedX, SDL_ANDROID_moveMouseWithKbSpeedY;
+extern int SDL_ANDROID_moveMouseWithKbAccelX, SDL_ANDROID_moveMouseWithKbAccelY;
+extern int SDL_ANDROID_moveMouseWithKbAccelUpdateNeeded;
+
 #endif
