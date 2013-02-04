@@ -114,16 +114,30 @@ oldGlState;
 
 static inline void beginDrawingTex()
 {
+#ifndef SDL_TOUCHSCREEN_KEYBOARD_SAVE_RESTORE_OPENGL_STATE
+	// Make the video somehow work on emulator
+	oldGlState.texture2d = GL_TRUE;
+	oldGlState.texunitId = GL_TEXTURE0;
+	oldGlState.clientTexunitId = GL_TEXTURE0;
+	oldGlState.textureId = 0;
+	oldGlState.texEnvMode = GL_MODULATE;
+	oldGlState.blend = GL_TRUE;
+	oldGlState.blend1 = GL_SRC_ALPHA;
+	oldGlState.blend2 = GL_ONE_MINUS_SRC_ALPHA;
+	oldGlState.colorArray = GL_FALSE;
+#else
 	// Save OpenGL state
-	glGetError(); // Clear error flag
 	// This code does not work on 1.6 emulator, and on some older devices
 	// However GLES 1.1 spec defines all theese values, so it's a device fault for not implementing them
 	oldGlState.texture2d = glIsEnabled(GL_TEXTURE_2D);
 	glGetIntegerv(GL_ACTIVE_TEXTURE, &oldGlState.texunitId);
 	glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &oldGlState.clientTexunitId);
+#endif
+
 	glActiveTexture(GL_TEXTURE0);
 	glClientActiveTexture(GL_TEXTURE0);
 
+#ifdef SDL_TOUCHSCREEN_KEYBOARD_SAVE_RESTORE_OPENGL_STATE
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldGlState.textureId);
 	glGetFloatv(GL_CURRENT_COLOR, &(oldGlState.color[0]));
 	glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &oldGlState.texEnvMode);
@@ -132,19 +146,7 @@ static inline void beginDrawingTex()
 	glGetIntegerv(GL_BLEND_DST, &oldGlState.blend2);
 	glGetBooleanv(GL_COLOR_ARRAY, &oldGlState.colorArray);
 	// It's very unlikely that some app will use GL_TEXTURE_CROP_RECT_OES, so just skip it
-	if( glGetError() != GL_NO_ERROR )
-	{
-		// Make the video somehow work on emulator
-		oldGlState.texture2d = GL_FALSE;
-		oldGlState.texunitId = GL_TEXTURE0;
-		oldGlState.clientTexunitId = GL_TEXTURE0;
-		oldGlState.textureId = 0;
-		oldGlState.texEnvMode = GL_MODULATE;
-		oldGlState.blend = GL_FALSE;
-		oldGlState.blend1 = GL_SRC_ALPHA;
-		oldGlState.blend2 = GL_ONE_MINUS_SRC_ALPHA;
-		oldGlState.colorArray = GL_FALSE;
-	}
+#endif
 
 	glEnable(GL_TEXTURE_2D);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
