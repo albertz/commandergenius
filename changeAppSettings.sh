@@ -182,6 +182,17 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState" -o -z "$AUTO" ]; then
+echo
+echo "Touchscreen keyboard will save and restore OpenGL state before drawing itself -"
+echo -n "this works reliably only on Android 4.X devices, many Andorid 2.X devices do not support glGet() (y)/(n) ($CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState): "
+read var
+if [ -n "$var" ] ; then
+	CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState="$var"
+	CHANGED=1
+fi
+fi
+
 fi
 
 if [ -z "$SdlVideoResize" -o -z "$AUTO" ]; then
@@ -291,6 +302,17 @@ echo -n "Hack for broken apps: application ignores audio buffer size returned by
 read var
 if [ -n "$var" ] ; then
 	CompatibilityHacksAppIgnoresAudioBufferSize="$var"
+	CHANGED=1
+fi
+fi
+
+if [ -z "$CompatibilityHacksSlowCompatibleEventQueue" -o -z "$AUTO" ]; then
+echo
+echo "Hack for Free Heroes 2, which redraws the screen inside SDL_PumpEvents(): slow and compatible SDL event queue -"
+echo -n "do not use it with accelerometer/gyroscope, or your app may freeze at random (y)/(n) ($CompatibilityHacksSlowCompatibleEventQueue): "
+read var
+if [ -n "$var" ] ; then
+	CompatibilityHacksSlowCompatibleEventQueue="$var"
 	CHANGED=1
 fi
 fi
@@ -673,6 +695,8 @@ echo CompatibilityHacksTextInputEmulatesHwKeyboard=$CompatibilityHacksTextInputE
 echo CompatibilityHacksPreventAudioChopping=$CompatibilityHacksPreventAudioChopping >> AndroidAppSettings.cfg
 echo CompatibilityHacksAppIgnoresAudioBufferSize=$CompatibilityHacksAppIgnoresAudioBufferSize >> AndroidAppSettings.cfg
 echo CompatibilityHacksAdditionalPreloadedSharedLibraries=\"$CompatibilityHacksAdditionalPreloadedSharedLibraries\" >> AndroidAppSettings.cfg
+echo CompatibilityHacksSlowCompatibleEventQueue=$CompatibilityHacksSlowCompatibleEventQueue >> AndroidAppSettings.cfg
+echo CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState=$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
 echo ShowMouseCursor=$ShowMouseCursor >> AndroidAppSettings.cfg
@@ -801,6 +825,18 @@ if [ "$CompatibilityHacksAppIgnoresAudioBufferSize" = "y" ] ; then
 	CompatibilityHacksAppIgnoresAudioBufferSize=-DSDL_AUDIO_APP_IGNORES_RETURNED_BUFFER_SIZE=1
 else
 	CompatibilityHacksAppIgnoresAudioBufferSize=
+fi
+
+if [ "$CompatibilityHacksSlowCompatibleEventQueue" = "y" ]; then
+	CompatibilityHacksSlowCompatibleEventQueue=-DSDL_COMPATIBILITY_HACKS_SLOW_COMPATIBLE_EVENT_QUEUE=1
+else
+	CompatibilityHacksSlowCompatibleEventQueue=
+fi
+
+if [ "$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState" = "y" ]; then
+	CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState=-DSDL_TOUCHSCREEN_KEYBOARD_SAVE_RESTORE_OPENGL_STATE=1
+else
+	CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState=
 fi
 
 if [ "$AppUsesMouse" = "y" ] ; then
@@ -1022,7 +1058,7 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
 	sed "s^APPLICATION_OVERLAPS_SYSTEM_HEADERS :=.*^APPLICATION_OVERLAPS_SYSTEM_HEADERS := $AppOverlapsSystemHeaders^" | \
-	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes $RedefinedKeycodesScreenKb $CompatibilityHacksPreventAudioChopping $CompatibilityHacksAppIgnoresAudioBufferSize^" | \
+	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes $RedefinedKeycodesScreenKb $CompatibilityHacksPreventAudioChopping $CompatibilityHacksAppIgnoresAudioBufferSize $CompatibilityHacksSlowCompatibleEventQueue $CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState^" | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
 	sed "s^APPLICATION_BUILD_EXCLUDE :=.*^APPLICATION_BUILD_EXCLUDE := $AppBuildExclude^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \

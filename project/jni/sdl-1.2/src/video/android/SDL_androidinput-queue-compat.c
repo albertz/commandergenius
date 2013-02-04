@@ -44,6 +44,10 @@
 #include "atan2i.h"
 
 
+#ifdef SDL_COMPATIBILITY_HACKS_SLOW_COMPATIBLE_EVENT_QUEUE
+
+// This code is left here to rot - it's bad, complicated and needed by only one applicaiton
+
 #if SDL_VERSION_ATLEAST(1,3,0)
 
 #define SDL_SendKeyboardKey(state, keysym) SDL_SendKeyboardKey(state, (keysym)->sym)
@@ -585,3 +589,4 @@ extern void SDL_ANDROID_MainThreadPushText( int ascii, int unicode )
 	SDL_mutexV(BufferedEventsMutex);
 };
 
+#endif
