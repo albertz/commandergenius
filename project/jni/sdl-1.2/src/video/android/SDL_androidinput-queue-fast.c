@@ -187,7 +187,7 @@ extern void SDL_ANDROID_MainThreadPushJoystickAxis(int joy, int axis, int value)
 
 	if( joystickEventsCount > 64 )
 	{
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Too many joystick events in the queue - dropping some events");
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Too many joystick events in the queue - dropping some events");
 		return;
 	}
 
