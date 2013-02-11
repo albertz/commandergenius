@@ -66,6 +66,10 @@ import android.app.AlarmManager;
 import android.util.DisplayMetrics;
 import android.net.Uri;
 import java.util.concurrent.Semaphore;
+import android.graphics.Color;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorEvent;
+import android.hardware.Sensor;
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
 class Settings
@@ -153,6 +157,15 @@ class Settings
 			out.writeBoolean(Globals.BrokenLibCMessageShown);
 			out.writeInt(Globals.TouchscreenKeyboardDrawSize);
 			out.writeInt(p.getApplicationVersion());
+			out.writeFloat(Globals.gyro_x1);
+			out.writeFloat(Globals.gyro_x2);
+			out.writeFloat(Globals.gyro_xc);
+			out.writeFloat(Globals.gyro_y1);
+			out.writeFloat(Globals.gyro_y2);
+			out.writeFloat(Globals.gyro_yc);
+			out.writeFloat(Globals.gyro_z1);
+			out.writeFloat(Globals.gyro_z2);
+			out.writeFloat(Globals.gyro_zc);
 
 			out.close();
 			settingsLoaded = true;
@@ -299,6 +312,15 @@ class Settings
 			Globals.BrokenLibCMessageShown = settingsFile.readBoolean();
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			int cfgVersion = settingsFile.readInt();
+			Globals.gyro_x1 = settingsFile.readFloat();
+			Globals.gyro_x2 = settingsFile.readFloat();
+			Globals.gyro_xc = settingsFile.readFloat();
+			Globals.gyro_y1 = settingsFile.readFloat();
+			Globals.gyro_y2 = settingsFile.readFloat();
+			Globals.gyro_yc = settingsFile.readFloat();
+			Globals.gyro_z1 = settingsFile.readFloat();
+			Globals.gyro_z2 = settingsFile.readFloat();
+			Globals.gyro_zc = settingsFile.readFloat();
 
 			settingsLoaded = true;
 
@@ -530,6 +552,7 @@ class Settings
 				new MouseConfigMainMenu(),
 				new ArrowKeysConfig(),
 				new AccelerometerConfig(),
+				new GyroscopeCalibration(),
 				new AudioConfig(),
 				new RemapHwKeysConfig(),
 				new ScreenGesturesConfig(),
@@ -2194,8 +2217,10 @@ class Settings
 		{
 			MainActivity p;
 			FrameLayout layout = null;
-			ImageView imgs[] =  new ImageView[Globals.ScreenKbControlsLayout.length];
+			ImageView imgs[] = new ImageView[Globals.ScreenKbControlsLayout.length];
 			Bitmap bmps[] = new Bitmap[Globals.ScreenKbControlsLayout.length];
+			ImageView boundary = null;
+			Bitmap boundaryBmp = null;
 			int currentButton = 0;
 			int buttons[] = {
 				R.drawable.dpad,
@@ -2213,7 +2238,27 @@ class Settings
 				p = _p;
 				layout = new FrameLayout(p);
 				p.getVideoLayout().addView(layout);
+				boundary = new ImageView(p);
+				boundary.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+				boundary.setScaleType(ImageView.ScaleType.MATRIX);
+				boundaryBmp = BitmapFactory.decodeResource( p.getResources(), R.drawable.rectangle );
+				boundary.setImageBitmap(boundaryBmp);
+				layout.addView(boundary);
 				currentButton = 0;
+				if( Globals.TouchscreenKeyboardTheme == 2 )
+				{
+					int buttons2[] = {
+						R.drawable.sun_dpad,
+						R.drawable.sun_keyboard,
+						R.drawable.sun_b1,
+						R.drawable.sun_b2,
+						R.drawable.sun_b3,
+						R.drawable.sun_b4,
+						R.drawable.sun_b5,
+						R.drawable.sun_b6
+					};
+					buttons = buttons2;
+				}
 				setupButton(true);
 			}
 			
@@ -2240,11 +2285,28 @@ class Settings
 				if( imgs[currentButton] == null )
 				{
 					imgs[currentButton] = new ImageView(p);
-					imgs[currentButton].setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+					imgs[currentButton].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 					imgs[currentButton].setScaleType(ImageView.ScaleType.MATRIX);
 					bmps[currentButton] = BitmapFactory.decodeResource( p.getResources(), buttons[currentButton] );
 					imgs[currentButton].setImageBitmap(bmps[currentButton]);
 					layout.addView(imgs[currentButton]);
+					boundary.bringToFront();
+				}
+				if( Globals.ScreenKbControlsLayout[currentButton][0] == Globals.ScreenKbControlsLayout[currentButton][2] ||
+					Globals.ScreenKbControlsLayout[currentButton][1] == Globals.ScreenKbControlsLayout[currentButton][3] )
+				{
+					int displayX = 800;
+					int displayY = 480;
+					try {
+						DisplayMetrics dm = new DisplayMetrics();
+						p.getWindowManager().getDefaultDisplay().getMetrics(dm);
+						displayX = dm.widthPixels;
+						displayY = dm.heightPixels;
+					} catch (Exception eeeee) {}
+					Globals.ScreenKbControlsLayout[currentButton][0] = displayX / 2 - displayX / 6;
+					Globals.ScreenKbControlsLayout[currentButton][2] = displayX / 2 + displayX / 6;
+					Globals.ScreenKbControlsLayout[currentButton][1] = displayY / 2 - displayY / 4;
+					Globals.ScreenKbControlsLayout[currentButton][3] = displayY / 2 + displayY / 4;
 				}
 				Matrix m = new Matrix();
 				RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
@@ -2252,6 +2314,10 @@ class Settings
 										Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
 				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 				imgs[currentButton].setImageMatrix(m);
+				m = new Matrix();
+				src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
+				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+				boundary.setImageMatrix(m);
 			}
 
 			public void onTouchEvent(final MotionEvent ev)
@@ -2286,6 +2352,10 @@ class Settings
 										Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
 				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 				imgs[currentButton].setImageMatrix(m);
+				m = new Matrix();
+				src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
+				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+				boundary.setImageMatrix(m);
 
 				if( ev.getAction() == MotionEvent.ACTION_UP )
 					setupButton(false);
@@ -2435,6 +2505,149 @@ class Settings
 			alertDismiss[0] = alert;
 			alert.setOwnerActivity(p);
 			alert.show();
+		}
+	}
+
+	static class GyroscopeCalibration extends Menu implements SensorEventListener
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.calibrate_gyroscope);
+		}
+		boolean enabled()
+		{
+			return Globals.AppUsesGyroscope;
+		}
+		void run (final MainActivity p)
+		{
+			if( !Globals.AppUsesGyroscope || !AccelerometerReader.gyro.available(p) )
+			{
+				goBack(p);
+				return;
+			}
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.calibrate_gyroscope));
+			builder.setMessage(p.getResources().getString(R.string.calibrate_gyroscope_text));
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					startCalibration(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		ImageView img;
+		Bitmap bmp;
+		int numEvents;
+		MainActivity p;
+
+		void startCalibration(final MainActivity _p)
+		{
+			p = _p;
+			img = new ImageView(p);
+			img.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+			img.setScaleType(ImageView.ScaleType.MATRIX);
+			bmp = BitmapFactory.decodeResource( p.getResources(), R.drawable.calibrate );
+			img.setImageBitmap(bmp);
+			Matrix m = new Matrix();
+			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
+			RectF dst = new RectF(	p.getVideoLayout().getWidth()/2 - 50, p.getVideoLayout().getHeight()/2 - 50,
+									p.getVideoLayout().getWidth()/2 + 50, p.getVideoLayout().getHeight()/2 + 50);
+			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+			img.setImageMatrix(m);
+			p.getVideoLayout().addView(img);
+			numEvents = 0;
+			AccelerometerReader.gyro.x1 = 100;
+			AccelerometerReader.gyro.x2 = -100;
+			AccelerometerReader.gyro.xc = 0;
+			AccelerometerReader.gyro.y1 = 100;
+			AccelerometerReader.gyro.y2 = -100;
+			AccelerometerReader.gyro.yc = 0;
+			AccelerometerReader.gyro.z1 = 100;
+			AccelerometerReader.gyro.z2 = -100;
+			AccelerometerReader.gyro.zc = 0;
+			AccelerometerReader.gyro.registerListener(p, this);
+			(new Thread(new Runnable()
+			{
+				public void run()
+				{
+					for(int count = 1; count < 10; count++)
+					{
+						p.setText("" + count + "0% ...");
+						try {
+							Thread.sleep(500);
+						} catch( Exception e ) {}
+					}
+					finishCalibration(p);
+				}
+			}
+			)).start();
+		}
+
+		public void onSensorChanged(SensorEvent event)
+		{
+			gyroscopeEvent(event.values[0], event.values[1], event.values[2]);
+		}
+		public void onAccuracyChanged(Sensor s, int a)
+		{
+		}
+		void gyroscopeEvent(float x, float y, float z)
+		{
+			numEvents++;
+			AccelerometerReader.gyro.xc += x;
+			AccelerometerReader.gyro.yc += y;
+			AccelerometerReader.gyro.zc += z;
+			AccelerometerReader.gyro.x1 = Math.min(AccelerometerReader.gyro.x1, x * 1.1f); // Small safety bound coefficient
+			AccelerometerReader.gyro.x2 = Math.max(AccelerometerReader.gyro.x2, x * 1.1f);
+			AccelerometerReader.gyro.y1 = Math.min(AccelerometerReader.gyro.y1, y * 1.1f);
+			AccelerometerReader.gyro.y2 = Math.max(AccelerometerReader.gyro.y2, y * 1.1f);
+			AccelerometerReader.gyro.z1 = Math.min(AccelerometerReader.gyro.z1, z * 1.1f);
+			AccelerometerReader.gyro.z2 = Math.max(AccelerometerReader.gyro.z2, z * 1.1f);
+			final Matrix m = new Matrix();
+			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
+			RectF dst = new RectF(	x * 5000 + p.getVideoLayout().getWidth()/2 - 50, y * 5000 + p.getVideoLayout().getHeight()/2 - 50,
+									x * 5000 + p.getVideoLayout().getWidth()/2 + 50, y * 5000 + p.getVideoLayout().getHeight()/2 + 50);
+			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+			p.runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					img.setImageMatrix(m);
+				}
+			});
+		}
+		void finishCalibration(final MainActivity p)
+		{
+			AccelerometerReader.gyro.unregisterListener(p, this);
+			try {
+				Thread.sleep(200); // Just in case we have pending events
+			} catch( Exception e ) {}
+			if( numEvents > 5 )
+			{
+				AccelerometerReader.gyro.xc /= (float)numEvents;
+				AccelerometerReader.gyro.yc /= (float)numEvents;
+				AccelerometerReader.gyro.zc /= (float)numEvents;
+			}
+			p.runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					p.getVideoLayout().removeView(img);
+					goBack(p);
+				}
+			});
 		}
 	}
 

@@ -182,6 +182,17 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState" -o -z "$AUTO" ]; then
+echo
+echo "Touchscreen keyboard will save and restore OpenGL state before drawing itself -"
+echo -n "this works reliably only on Android 4.X devices, many Andorid 2.X devices do not support glGet() (y)/(n) ($CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState): "
+read var
+if [ -n "$var" ] ; then
+	CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState="$var"
+	CHANGED=1
+fi
+fi
+
 fi
 
 if [ -z "$SdlVideoResize" -o -z "$AUTO" ]; then
@@ -295,6 +306,17 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$CompatibilityHacksSlowCompatibleEventQueue" -o -z "$AUTO" ]; then
+echo
+echo "Hack for Free Heroes 2, which redraws the screen inside SDL_PumpEvents(): slow and compatible SDL event queue -"
+echo -n "do not use it with accelerometer/gyroscope, or your app may freeze at random (y)/(n) ($CompatibilityHacksSlowCompatibleEventQueue): "
+read var
+if [ -n "$var" ] ; then
+	CompatibilityHacksSlowCompatibleEventQueue="$var"
+	CHANGED=1
+fi
+fi
+
 if [ -z "$AppUsesJoystick" -o -z "$AUTO" ]; then
 echo
 echo "Application uses joystick (y) or (n), the on-screen DPAD will be used"
@@ -308,10 +330,20 @@ fi
 
 if [ -z "$AppUsesAccelerometer" -o -z "$AUTO" ]; then
 echo
-echo -n "Application uses accelerometer (y) or (n), the accelerometer will be used as joystick 0 axes 2-3 ($AppUsesAccelerometer): "
+echo -n "Application uses accelerometer (y) or (n), the accelerometer will be used as joystick 1 axes 0-1 ($AppUsesAccelerometer): "
 read var
 if [ -n "$var" ] ; then
 	AppUsesAccelerometer="$var"
+	CHANGED=1
+fi
+fi
+
+if [ -z "$AppUsesGyroscope" -o -z "$AUTO" ]; then
+echo
+echo -n "Application uses gyroscope (y) or (n), the gyroscope will be used as joystick 1 axes 2-4 ($AppUsesGyroscope): "
+read var
+if [ -n "$var" ] ; then
+	AppUsesGyroscope="$var"
 	CHANGED=1
 fi
 fi
@@ -425,7 +457,7 @@ if [ -n "$var" ] ; then
 fi
 fi
 
-FirstStartMenuOptionsDefault='(AppUsesMouse \&\& \! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true)'
+FirstStartMenuOptionsDefault='(AppUsesMouse \&\& \! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true), new Settings.GyroscopeCalibration()'
 if [ -z "$AUTO" ]; then
 echo
 echo "Menu items to show at startup - this is Java code snippet, leave empty for default"
@@ -663,6 +695,8 @@ echo CompatibilityHacksTextInputEmulatesHwKeyboard=$CompatibilityHacksTextInputE
 echo CompatibilityHacksPreventAudioChopping=$CompatibilityHacksPreventAudioChopping >> AndroidAppSettings.cfg
 echo CompatibilityHacksAppIgnoresAudioBufferSize=$CompatibilityHacksAppIgnoresAudioBufferSize >> AndroidAppSettings.cfg
 echo CompatibilityHacksAdditionalPreloadedSharedLibraries=\"$CompatibilityHacksAdditionalPreloadedSharedLibraries\" >> AndroidAppSettings.cfg
+echo CompatibilityHacksSlowCompatibleEventQueue=$CompatibilityHacksSlowCompatibleEventQueue >> AndroidAppSettings.cfg
+echo CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState=$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
 echo ShowMouseCursor=$ShowMouseCursor >> AndroidAppSettings.cfg
@@ -671,6 +705,7 @@ echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
 echo AppNeedsTextInput=$AppNeedsTextInput >> AndroidAppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AndroidAppSettings.cfg
 echo AppUsesAccelerometer=$AppUsesAccelerometer >> AndroidAppSettings.cfg
+echo AppUsesGyroscope=$AppUsesGyroscope >> AndroidAppSettings.cfg
 echo AppUsesMultitouch=$AppUsesMultitouch >> AndroidAppSettings.cfg
 echo NonBlockingSwapBuffers=$NonBlockingSwapBuffers >> AndroidAppSettings.cfg
 echo RedefinedKeys=\"$RedefinedKeys\" >> AndroidAppSettings.cfg
@@ -690,7 +725,9 @@ echo CompiledLibraries=\"$CompiledLibraries\" >> AndroidAppSettings.cfg
 echo CustomBuildScript=$CustomBuildScript >> AndroidAppSettings.cfg
 echo AppCflags=\'$AppCflags\' >> AndroidAppSettings.cfg
 echo AppLdflags=\'$AppLdflags\' >> AndroidAppSettings.cfg
+echo AppOverlapsSystemHeaders=$AppOverlapsSystemHeaders >> AndroidAppSettings.cfg
 echo AppSubdirsBuild=\'$AppSubdirsBuild\' >> AndroidAppSettings.cfg
+echo AppBuildExclude=\'$AppBuildExclude\' >> AndroidAppSettings.cfg
 echo AppCmdline=\'$AppCmdline\' >> AndroidAppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AndroidAppSettings.cfg
 echo MinimumScreenSize=$MinimumScreenSize >> AndroidAppSettings.cfg
@@ -725,9 +762,9 @@ else
 fi
 
 if [ "$SdlVideoResizeKeepAspect" = "y" ] ; then
-	SdlVideoResizeKeepAspect=1
+	SdlVideoResizeKeepAspect=true
 else
-	SdlVideoResizeKeepAspect=0
+	SdlVideoResizeKeepAspect=false
 fi
 
 if [ "$InhibitSuspend" = "y" ] ; then
@@ -790,6 +827,18 @@ else
 	CompatibilityHacksAppIgnoresAudioBufferSize=
 fi
 
+if [ "$CompatibilityHacksSlowCompatibleEventQueue" = "y" ]; then
+	CompatibilityHacksSlowCompatibleEventQueue=-DSDL_COMPATIBILITY_HACKS_SLOW_COMPATIBLE_EVENT_QUEUE=1
+else
+	CompatibilityHacksSlowCompatibleEventQueue=
+fi
+
+if [ "$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState" = "y" ]; then
+	CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState=-DSDL_TOUCHSCREEN_KEYBOARD_SAVE_RESTORE_OPENGL_STATE=1
+else
+	CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState=
+fi
+
 if [ "$AppUsesMouse" = "y" ] ; then
 	AppUsesMouse=true
 else
@@ -836,6 +885,12 @@ if [ "$AppUsesAccelerometer" = "y" ] ; then
 	AppUsesAccelerometer=true
 else
 	AppUsesAccelerometer=false
+fi
+
+if [ "$AppUsesGyroscope" = "y" ] ; then
+	AppUsesGyroscope=true
+else
+	AppUsesGyroscope=false
 fi
 
 if [ "$AppUsesMultitouch" = "y" ] ; then
@@ -910,8 +965,8 @@ mkdir -p project/src
 cd project/java
 for F in *.java; do
 	echo Patching $F
-	echo '// DO NOT EDIT THIS FILE - it is automatically generated, edit file under project/java dir' > ../src/$F
-	cat $F | sed "s/package .*;/package $AppFullName;/" >> ../src/$F
+	echo '// DO NOT EDIT THIS FILE - it is automatically generated, ALL YOUR CHANGES WILL BE OVERWRITTEN, edit the file under project/java dir' > ../src/$F
+	cat $F | sed "s/package .*;/package $AppFullName;/" >> ../src/$F # | sed 's@$@ // THIS FILE IS AUTO-GENERATED@' >>
 done
 cd ../..
 
@@ -961,6 +1016,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean CompatibilityHacksStaticInit = .*;/public static boolean CompatibilityHacksStaticInit = $CompatibilityHacksStaticInit;/" | \
 	sed "s/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = .*;/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = $CompatibilityHacksTextInputEmulatesHwKeyboard;/" | \
 	sed "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" | \
+	sed "s^public static boolean KeepAspectRatioDefaultSetting = .*^public static boolean KeepAspectRatioDefaultSetting = $SdlVideoResizeKeepAspect;^" | \
 	sed "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" | \
 	sed "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" | \
 	sed "s/public static boolean AppNeedsTwoButtonMouse = .*;/public static boolean AppNeedsTwoButtonMouse = $AppNeedsTwoButtonMouse;/" | \
@@ -970,6 +1026,7 @@ cat project/src/Globals.java | \
 	sed "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" | \
 	sed "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" | \
 	sed "s/public static boolean AppUsesAccelerometer = .*;/public static boolean AppUsesAccelerometer = $AppUsesAccelerometer;/" | \
+	sed "s/public static boolean AppUsesGyroscope = .*;/public static boolean AppUsesGyroscope = $AppUsesGyroscope;/" | \
 	sed "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" | \
 	sed "s/public static boolean NonBlockingSwapBuffers = .*;/public static boolean NonBlockingSwapBuffers = $NonBlockingSwapBuffers;/" | \
 	sed "s/public static boolean ResetSdlConfigForThisVersion = .*;/public static boolean ResetSdlConfigForThisVersion = $ResetSdlConfigForThisVersion;/" | \
@@ -997,12 +1054,13 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s/SDL_JAVA_PACKAGE_PATH := .*/SDL_JAVA_PACKAGE_PATH := $AppFullNameUnderscored/" | \
 	sed "s^SDL_CURDIR_PATH := .*^SDL_CURDIR_PATH := $DataPath^" | \
 	sed "s^SDL_VIDEO_RENDER_RESIZE := .*^SDL_VIDEO_RENDER_RESIZE := $SdlVideoResize^" | \
-	sed "s^SDL_VIDEO_RENDER_RESIZE_KEEP_ASPECT := .*^SDL_VIDEO_RENDER_RESIZE_KEEP_ASPECT := $SdlVideoResizeKeepAspect^" | \
 	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
-	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes $RedefinedKeycodesScreenKb $CompatibilityHacksPreventAudioChopping $CompatibilityHacksAppIgnoresAudioBufferSize^" | \
+	sed "s^APPLICATION_OVERLAPS_SYSTEM_HEADERS :=.*^APPLICATION_OVERLAPS_SYSTEM_HEADERS := $AppOverlapsSystemHeaders^" | \
+	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes $RedefinedKeycodesScreenKb $CompatibilityHacksPreventAudioChopping $CompatibilityHacksAppIgnoresAudioBufferSize $CompatibilityHacksSlowCompatibleEventQueue $CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState^" | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
+	sed "s^APPLICATION_BUILD_EXCLUDE :=.*^APPLICATION_BUILD_EXCLUDE := $AppBuildExclude^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \
 	sed "s^SDL_VERSION :=.*^SDL_VERSION := $LibSdlVersion^"  >> \
 	project/jni/Settings.mk
@@ -1039,6 +1097,12 @@ done
 done
 rm -rf project/bin/classes
 rm -rf project/bin/res
+
+if which convert > /dev/null; then
+	convert project/res/drawable/ouya_icon.png -resize '732x412!' project/res/drawable-xhdpi/ouya_icon.png
+else
+	echo "Install ImageMagick to auto-resize Ouya icon from icon.png"
+fi
 
 ./copyAssets.sh || exit 1
 

@@ -41,57 +41,89 @@ class AccelerometerReader implements SensorEventListener
 {
 
 	private SensorManager _manager = null;
+	public boolean openedBySDL = false;
+	public static final GyroscopeListener gyro = new GyroscopeListener();
 
 	public AccelerometerReader(Activity context)
 	{
 		_manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-		start();
 	}
 	
 	public synchronized void stop()
 	{
 		if( _manager != null )
 		{
+			System.out.println("libSDL: stopping accelerometer/gyroscope");
 			_manager.unregisterListener(this);
+			_manager.unregisterListener(gyro);
 		}
 	}
 
 	public synchronized void start()
 	{
-		if( Globals.UseAccelerometerAsArrowKeys || Globals.AppUsesAccelerometer )
+		if( (Globals.UseAccelerometerAsArrowKeys || Globals.AppUsesAccelerometer) &&
+			_manager != null && _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null )
 		{
-			if( _manager != null )
-			{
-				System.out.println("libSDL: starting accelerometer");
-				// TODO: orientation allows for 3rd axis - azimuth, but it will be way too hard to the user
-				// if( ! _manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_GAME) )
-				_manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
-			}
+			System.out.println("libSDL: starting accelerometer");
+			_manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
+		}
+		if( Globals.AppUsesGyroscope && _manager != null && _manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null )
+		{
+			System.out.println("libSDL: starting gyroscope");
+			_manager.registerListener(gyro, _manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
 		}
 	}
 
-	public synchronized void onSensorChanged(SensorEvent event) {
-
-		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) 
-		{
-			if( Globals.HorizontalOrientation )
-				nativeAccelerometer(event.values[1], -event.values[0], event.values[2]);
-			else
-				nativeAccelerometer(event.values[0], event.values[1], event.values[2]); // TODO: not tested!
-		}
+	public void onSensorChanged(SensorEvent event)
+	{
+		if( Globals.HorizontalOrientation )
+			nativeAccelerometer(event.values[1], -event.values[0], event.values[2]);
 		else
+			nativeAccelerometer(event.values[0], event.values[1], event.values[2]); // TODO: not tested!
+	}
+	public void onAccuracyChanged(Sensor s, int a)
+	{
+	}
+
+	static class GyroscopeListener implements SensorEventListener
+	{
+		public float x1, x2, xc, y1, y2, yc, z1, z2, zc;
+		public GyroscopeListener()
 		{
-			if( Globals.HorizontalOrientation )
-				nativeOrientation(event.values[1], -event.values[2], event.values[0]);
-			else
-				nativeOrientation(event.values[2], event.values[1], event.values[0]);
 		}
-		
+		public void onSensorChanged(SensorEvent event)
+		{
+			// TODO: vertical orientation
+			//if( Globals.HorizontalOrientation )
+			if( event.values[0] < x1 || event.values[0] > x2 ||
+				event.values[1] < y1 || event.values[1] > y2 ||
+				event.values[2] < z1 || event.values[2] > z2 )
+				nativeGyroscope(event.values[0] - xc, event.values[1] - yc, event.values[2] - zc);
+		}
+		public void onAccuracyChanged(Sensor s, int a)
+		{
+		}
+		public boolean available(Activity context)
+		{
+			SensorManager manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+			return ( manager != null && manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null );
+		}
+		public void registerListener(Activity context, SensorEventListener l)
+		{
+			SensorManager manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+			if ( manager == null && manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) == null )
+				return;
+			manager.registerListener(l, manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
+		}
+		public void unregisterListener(Activity context,SensorEventListener l)
+		{
+			SensorManager manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+			if ( manager == null )
+				return;
+			manager.unregisterListener(l);
+		}
 	}
 
-	public synchronized void onAccuracyChanged(Sensor s, int a) {
-	}
-
-	private native void nativeAccelerometer(float accX, float accY, float accZ);
-	private native void nativeOrientation(float accX, float accY, float accZ);
+	private static native void nativeAccelerometer(float accX, float accY, float accZ);
+	private static native void nativeGyroscope(float X, float Y, float Z);
 }

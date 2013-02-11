@@ -30,4 +30,7 @@ static inline int atan2i(int y, int x)
       return(angle);
 };
 
+#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
+#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
+
 #endif

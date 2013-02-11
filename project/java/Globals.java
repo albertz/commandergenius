@@ -42,6 +42,7 @@ class Globals
 	public static boolean CompatibilityHacksStaticInit = false;
 	public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = false;
 	public static boolean HorizontalOrientation = true;
+	public static boolean KeepAspectRatioDefaultSetting = false;
 	public static boolean InhibitSuspend = false;
 	public static String ReadmeText = "^You may press \"Home\" now - the data will be downloaded in background".replace("^","\n");
 	public static String CommandLine = "";
@@ -53,6 +54,7 @@ class Globals
 	public static boolean AppNeedsTextInput = true;
 	public static boolean AppUsesJoystick = false;
 	public static boolean AppUsesAccelerometer = false;
+	public static boolean AppUsesGyroscope = false;
 	public static boolean AppUsesMultitouch = false;
 	public static boolean NonBlockingSwapBuffers = false;
 	public static boolean ResetSdlConfigForThisVersion = false;
@@ -62,7 +64,7 @@ class Globals
 	public static int StartupMenuButtonTimeout = 3000;
 	public static int AppMinimumRAM = 0;
 	public static Settings.Menu HiddenMenuOptions [] = {};
-	public static Settings.Menu FirstStartMenuOptions [] = { (AppUsesMouse && ! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true) };
+	public static Settings.Menu FirstStartMenuOptions [] = { (AppUsesMouse && ! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true), new Settings.GyroscopeCalibration() };
 	public static String AdmobPublisherId = "";
 	public static String AdmobTestDeviceId = "";
 	public static String AdmobBannerSize = "";
@@ -96,7 +98,7 @@ class Globals
 	public static int RelativeMouseMovementSpeed = 2;
 	public static int RelativeMouseMovementAccel = 0;
 	public static int ShowScreenUnderFinger = Mouse.ZOOM_NONE;
-	public static boolean KeepAspectRatio = false;
+	public static boolean KeepAspectRatio = KeepAspectRatioDefaultSetting;
 	public static int ClickScreenPressure = 0;
 	public static int ClickScreenTouchspotSize = 0;
 	public static int RemapHwKeycode[] = new int[SDL_Keys.JAVA_KEYCODE_LAST];
@@ -111,4 +113,6 @@ class Globals
 	public static boolean VideoLinearFilter = true;
 	public static boolean MultiThreadedVideo = false;
 	public static boolean BrokenLibCMessageShown = false;
+	// Gyroscope calibration
+	public static float gyro_x1, gyro_x2, gyro_xc, gyro_y1, gyro_y2, gyro_yc, gyro_z1, gyro_z2, gyro_zc;
 }

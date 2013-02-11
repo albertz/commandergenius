@@ -40,13 +40,9 @@
 #include "SDL_androidvideo.h"
 #include "SDL_androidinput.h"
 #include "jniwrapperstuff.h"
-
-// #include "touchscreentheme.h" // Not used yet
+#include "atan2i.h"
 
 // TODO: this code is a HUGE MESS
-
-#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
-#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 
 enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, BUTTON_ARROWS = MAX_BUTTONS } ; // Max amount of custom buttons
 
@@ -56,7 +52,7 @@ static short touchscreenKeyboardShown = 1;
 static short AutoFireButtonsNum = 0;
 static short buttonsize = 1;
 static short buttonDrawSize = 1;
-static short transparency = 128;
+static float transparency = 128.0f/255.0f;
 
 static SDL_Rect arrows, arrowsExtended, buttons[MAX_BUTTONS], buttonsAutoFireRect[MAX_BUTTONS_AUTOFIRE];
 static SDL_Rect arrowsDraw, buttonsDraw[MAX_BUTTONS];
@@ -118,16 +114,30 @@ oldGlState;
 
 static inline void beginDrawingTex()
 {
+#ifndef SDL_TOUCHSCREEN_KEYBOARD_SAVE_RESTORE_OPENGL_STATE
+	// Make the video somehow work on emulator
+	oldGlState.texture2d = GL_TRUE;
+	oldGlState.texunitId = GL_TEXTURE0;
+	oldGlState.clientTexunitId = GL_TEXTURE0;
+	oldGlState.textureId = 0;
+	oldGlState.texEnvMode = GL_MODULATE;
+	oldGlState.blend = GL_TRUE;
+	oldGlState.blend1 = GL_SRC_ALPHA;
+	oldGlState.blend2 = GL_ONE_MINUS_SRC_ALPHA;
+	oldGlState.colorArray = GL_FALSE;
+#else
 	// Save OpenGL state
-	glGetError(); // Clear error flag
 	// This code does not work on 1.6 emulator, and on some older devices
 	// However GLES 1.1 spec defines all theese values, so it's a device fault for not implementing them
 	oldGlState.texture2d = glIsEnabled(GL_TEXTURE_2D);
 	glGetIntegerv(GL_ACTIVE_TEXTURE, &oldGlState.texunitId);
 	glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &oldGlState.clientTexunitId);
+#endif
+
 	glActiveTexture(GL_TEXTURE0);
 	glClientActiveTexture(GL_TEXTURE0);
 
+#ifdef SDL_TOUCHSCREEN_KEYBOARD_SAVE_RESTORE_OPENGL_STATE
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldGlState.textureId);
 	glGetFloatv(GL_CURRENT_COLOR, &(oldGlState.color[0]));
 	glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &oldGlState.texEnvMode);
@@ -136,19 +146,7 @@ static inline void beginDrawingTex()
 	glGetIntegerv(GL_BLEND_DST, &oldGlState.blend2);
 	glGetBooleanv(GL_COLOR_ARRAY, &oldGlState.colorArray);
 	// It's very unlikely that some app will use GL_TEXTURE_CROP_RECT_OES, so just skip it
-	if( glGetError() != GL_NO_ERROR )
-	{
-		// Make the video somehow work on emulator
-		oldGlState.texture2d = GL_FALSE;
-		oldGlState.texunitId = GL_TEXTURE0;
-		oldGlState.clientTexunitId = GL_TEXTURE0;
-		oldGlState.textureId = 0;
-		oldGlState.texEnvMode = GL_MODULATE;
-		oldGlState.blend = GL_FALSE;
-		oldGlState.blend1 = GL_SRC_ALPHA;
-		oldGlState.blend2 = GL_ONE_MINUS_SRC_ALPHA;
-		oldGlState.colorArray = GL_FALSE;
-	}
+#endif
 
 	glEnable(GL_TEXTURE_2D);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -164,7 +162,7 @@ static inline void endDrawingTex()
 		glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, oldGlState.textureId);
 	glColor4f(oldGlState.color[0], oldGlState.color[1], oldGlState.color[2], oldGlState.color[3]);
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
 	if( oldGlState.blend == GL_FALSE )
 		glDisable(GL_BLEND);
 	glBlendFunc(oldGlState.blend1, oldGlState.blend2);
@@ -174,7 +172,7 @@ static inline void endDrawingTex()
 		glEnableClientState(GL_COLOR_ARRAY);
 }
 
-static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, int flipX, int flipY, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, int flipX, int flipY, float r, float g, float b, float a)
 {
 	GLint cropRect[4];
 
@@ -183,7 +181,7 @@ static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect *
 
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 
-	glColor4x(r * 0x100, g * 0x100, b * 0x100,  a * 0x100 );
+	glColor4f(r, g, b, a);
 
 	if(src)
 	{
@@ -213,7 +211,7 @@ static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect *
 	glDrawTexiOES(dest->x, SDL_ANDROID_sWindowHeight - dest->y - dest->h, 0, dest->w, dest->h);
 }
 
-static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, float r, float g, float b, float a)
 {
 	drawCharTexFlip(tex, src, dest, 0, 0, r, g, b, a);
 }
@@ -221,24 +219,24 @@ static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * des
 static void drawTouchscreenKeyboardLegacy()
 {
 	int i;
-	int blendFactor;
+	float blendFactor;
 
 	blendFactor =		( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
 	if( blendFactor == 0 )
-		drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 255, 255, 255, transparency );
+		drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency );
 	else
 	{
 		if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
-			drawCharTex( &arrowImages[1], NULL, &arrowsDraw, 255, 255, 255, transparency / blendFactor );
+			drawCharTex( &arrowImages[1], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency / blendFactor );
 		if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
-			drawCharTex( &arrowImages[2], NULL, &arrowsDraw, 255, 255, 255, transparency / blendFactor );
+			drawCharTex( &arrowImages[2], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency / blendFactor );
 		if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
-			drawCharTex( &arrowImages[3], NULL, &arrowsDraw, 255, 255, 255, transparency / blendFactor );
+			drawCharTex( &arrowImages[3], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency / blendFactor );
 		if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
-			drawCharTex( &arrowImages[4], NULL, &arrowsDraw, 255, 255, 255, transparency / blendFactor );
+			drawCharTex( &arrowImages[4], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency / blendFactor );
 	}
 
 	for( i = 0; i < MAX_BUTTONS; i++ )
@@ -274,7 +272,7 @@ static void drawTouchscreenKeyboardLegacy()
 			autoFireDest.w = pos1dst;
 			
 			drawCharTex( &buttonImages[i*2+1],
-						&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
+						&autoFireCrop, &autoFireDest, 1.0f, 1.0f, 1.0f, transparency );
 
 			autoFireCrop.x = pos2src;
 			autoFireCrop.w = buttonImages[i*2+1].w - pos2src;
@@ -282,7 +280,7 @@ static void drawTouchscreenKeyboardLegacy()
 			autoFireDest.w = buttonsDraw[i].w - pos2dst;
 
 			drawCharTex( &buttonImages[i*2+1],
-						&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
+						&autoFireCrop, &autoFireDest, 1.0f, 1.0f, 1.0f, transparency );
 			
 			autoFireCrop.x = pos1src;
 			autoFireCrop.w = pos2src - pos1src;
@@ -290,13 +288,13 @@ static void drawTouchscreenKeyboardLegacy()
 			autoFireDest.w = pos2dst - pos1dst;
 
 			drawCharTex( &buttonAutoFireImages[i*2+1],
-						&autoFireCrop, &autoFireDest, 255, 255, 255, transparency );
+						&autoFireCrop, &autoFireDest, 1.0f, 1.0f, 1.0f, transparency );
 		}
 		else
 		{
 			drawCharTex( ( i < AutoFireButtonsNum && ButtonAutoFire[i] ) ? &buttonAutoFireImages[i*2] :
 						&buttonImages[ SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] ? (i * 2 + 1) : (i * 2) ],
-						NULL, &buttonsDraw[i], 255, 255, 255, transparency );
+						NULL, &buttonsDraw[i], 1.0f, 1.0f, 1.0f, transparency );
 		}
 	}
 }
@@ -305,7 +303,7 @@ static void drawTouchscreenKeyboardSun()
 {
 	int i;
 
-	drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 255, 255, 255, transparency );
+	drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency );
 	if(pointerInButtonRect[BUTTON_ARROWS] != -1)
 	{
 		SDL_Rect touch = arrowsDraw;
@@ -313,7 +311,7 @@ static void drawTouchscreenKeyboardSun()
 		touch.h /= 2;
 		touch.x = joystickTouchPoints[0] - touch.w / 2;
 		touch.y = joystickTouchPoints[1] - touch.h / 2;
-		drawCharTex( &arrowImages[0], NULL, &touch, 255, 255, 255, transparency );
+		drawCharTex( &arrowImages[0], NULL, &touch, 1.0f, 1.0f, 1.0f, transparency );
 	}
 
 	for( i = 0; i < MAX_BUTTONS; i++ )
@@ -339,10 +337,10 @@ static void drawTouchscreenKeyboardSun()
 
 		if( i < AutoFireButtonsNum && ButtonAutoFire[i] )
 			drawCharTex( &buttonAutoFireImages[i*2+1],
-						NULL, &buttonsDraw[i], 255, 255, 255, transparency );
+						NULL, &buttonsDraw[i], 1.0f, 1.0f, 1.0f, transparency );
 
 		drawCharTexFlip( &buttonImages[ pressed ? (i * 2 + 1) : (i * 2) ],
-						NULL, &buttonsDraw[i], (i >= 2 && pressed), 0, 255, 255, 255, transparency );
+						NULL, &buttonsDraw[i], (i >= 2 && pressed), 0, 1.0f, 1.0f, 1.0f, transparency );
 
 		if( i < AutoFireButtonsNum && ! ButtonAutoFire[i] &&
 			( ButtonAutoFireX[i*2] > 0 || ButtonAutoFireX[i*2+1] > 0 ) )
@@ -359,7 +357,7 @@ static void drawTouchscreenKeyboardSun()
 			autoFireDest.y = buttonsDraw[i].y + buttonsDraw[i].h/2 - autoFireDest.h/2;
 
 			drawCharTex( &buttonAutoFireImages[i*2],
-						NULL, &autoFireDest, 255, 255, 255, transparency );
+						NULL, &autoFireDest, 1.0f, 1.0f, 1.0f, transparency );
 		}
 	}
 }
@@ -700,12 +698,12 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	buttonDrawSize = drawsize;
 	switch(_transparency)
 	{
-		case 0: transparency = 32; break;
-		case 1: transparency = 64; break;
-		case 2: transparency = 128; break;
-		case 3: transparency = 192; break;
-		case 4: transparency = 255; break;
-		default: transparency = 192; break;
+		case 0: transparency = 32.0f/255.0f; break;
+		case 1: transparency = 64.0f/255.0f; break;
+		case 2: transparency = 128.0f/255.0f; break;
+		case 3: transparency = 192.0f/255.0f; break;
+		case 4: transparency = 255.0f/255.0f; break;
+		default: transparency = 192.0f/255.0f; break;
 	}
 	
 	// Arrows to the lower-left part of screen
@@ -778,16 +776,16 @@ JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenKeyboardUsed) ( JNIEnv*  env, jobj
 	SDL_ANDROID_isTouchscreenKeyboardUsed = 1;
 }
 
-void SDL_ANDROID_DrawMouseCursor(int x, int y, int size, int alpha)
+void SDL_ANDROID_DrawMouseCursor(int x, int y, int size, float alpha)
 {
 	SDL_Rect r;
-	// I've failed with size calcualtions, so leaving it as-is
+	// I've failed with size calculations, so leaving it as-is
 	r.x = x - MOUSE_POINTER_X;
 	r.y = y - MOUSE_POINTER_Y;
 	r.w = MOUSE_POINTER_W;
 	r.h = MOUSE_POINTER_H;
 	beginDrawingTex();
-	drawCharTex( &mousePointer, NULL, &r, 255, 255, 255, alpha );
+	drawCharTex( &mousePointer, NULL, &r, 1.0f, 1.0f, 1.0f, alpha );
 	endDrawingTex();
 }
 

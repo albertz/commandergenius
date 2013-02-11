@@ -910,10 +910,9 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			// Do it old-fashioned way with direct GL calls
 			glPushMatrix();
 			glLoadIdentity();
-			glOrthox( 0, SDL_ANDROID_sFakeWindowWidth * 0x10000, SDL_ANDROID_sFakeWindowHeight * 0x10000, 0, 0, 1 * 0x10000 );
-			glColor4x(0, 0, 0, 0x10000);
+			glOrthof( 0.0f, SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight, 0.0f, 0.0f, 1.0f );
 			glEnableClientState(GL_VERTEX_ARRAY);
-			glColor4x(0, 0, 0, 0x10000);
+			glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
 			GLshort vertices[] = {	frame.x, frame.y,
 									frame.x + frame.w, frame.y,
 									frame.x + frame.w, frame.y + frame.h,
@@ -991,7 +990,7 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 				SDL_GetMouseState(&x, &y);
 				x = x * SDL_ANDROID_sRealWindowWidth / SDL_ANDROID_sFakeWindowWidth;
 				y = y * SDL_ANDROID_sRealWindowHeight / SDL_ANDROID_sFakeWindowHeight;
-				SDL_ANDROID_DrawMouseCursor( x, y, 0, 255 );
+				SDL_ANDROID_DrawMouseCursor( x, y, 0, 1.0f );
 			}
 			if( SDL_ANDROID_ShowScreenUnderFinger != ZOOM_NONE )
 			{
@@ -1005,7 +1004,7 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 					SDL_ANDROID_ShowScreenUnderFingerRect.h / SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
 				x = x * SDL_ANDROID_sRealWindowWidth / SDL_ANDROID_sFakeWindowWidth;
 				y = y * SDL_ANDROID_sRealWindowHeight / SDL_ANDROID_sFakeWindowHeight;
-				SDL_ANDROID_DrawMouseCursor( x, y, 16, 255 );
+				SDL_ANDROID_DrawMouseCursor( x, y, 16, 1.0f );
 			}
 		}
 	}

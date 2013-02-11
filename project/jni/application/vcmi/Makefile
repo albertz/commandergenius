@@ -1,8 +1,15 @@
 
 $(shell mkdir -p AI debug/AI Scripting debug/Scripting \
+<<<<<<< HEAD
 	out/vcmi/lib out/vcmi/lib/Filesystem out/vcmi/lib/Mapping \
 	out/vcmi/lib/RMG out/vcmi/server out/vcmi/AI/StupidAI \
 	out/vcmi/AI/GeniusAI out/vcmi/client out/vcmi/Scripting/ERM)
+=======
+	out/vcmi/lib out/vcmi/lib/Filesystem out/vcmi/server out/vcmi/AI/StupidAI \
+	out/vcmi/AI/BattleAI out/vcmi/AI/EmptyAI \
+	out/vcmi/AI/Fuzzylite out/vcmi/AI/VCAI \
+	out/vcmi/client out/vcmi/Scripting/ERM)
+>>>>>>> 2986a60b94e08c9946f3b29f2598b4eb0a53a8b0
 $(shell rm -f ../../../obj/local/armeabi/libvcmi.so)
 
 LOCAL_PATH=$(shell dirname $0)
@@ -10,7 +17,7 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 GCC_PREFIX=$(if $(shell which ndk-build | grep 'android-ndk-r8'),arm-linux-androideabi,arm-eabi)
 
-SOURCES_LIB=$(wildcard vcmi/lib/*.cpp vcmi/CConsoleHandler.cpp vcmi/CThreadHelper.cpp)
+SOURCES_LIB=$(wildcard vcmi/lib/*.cpp vcmi/lib/Filesystem/*.cpp vcmi/CConsoleHandler.cpp vcmi/CThreadHelper.cpp)
 OBJS_LIB=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB))
 
 SOURCES_LIB_FILESYSTEM=$(wildcard vcmi/lib/Filesystem/*.cpp)
@@ -25,11 +32,26 @@ OBJS_LIB_RMG=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_RMG))
 SOURCES_SERVER=$(wildcard vcmi/server/*.cpp)
 OBJS_SERVER=$(patsubst %.cpp, out/%.o, $(SOURCES_SERVER))
 
+SOURCES_CLIENT=$(wildcard vcmi/client/*.cpp vcmi/client/BattleInterface/*.cpp vcmi/client/UIFramework/*.cpp)
+OBJS_CLIENT=$(patsubst %.cpp, out/%.o, $(SOURCES_CLIENT))
+
+#SOURCES_GENIUSAI=$(filter-out %/ExpertSystem.cpp, $(wildcard vcmi/AI/GeniusAI/*.cpp))
+#OBJS_GENIUSAI=$(patsubst %.cpp, out/%.o, $(SOURCES_GENIUSAI))
+
+SOURCES_BATTLEAI=$(wildcard vcmi/AI/BattleAI/*.cpp)
+OBJS_BATTLEAI=$(patsubst %.cpp, out/%.o, $(SOURCES_BATTLEAI))
+
+SOURCES_EMPTYAI=$(wildcard vcmi/AI/EmptyAI/*.cpp)
+OBJS_BATTLEAI=$(patsubst %.cpp, out/%.o, $(SOURCES_EMPTYAI))
+
+SOURCES_FUZZYLITE=$(wildcard vcmi/AI/FuzzyLite/*.cpp)
+OBJS_FUZZYLITE=$(patsubst %.cpp, out/%.o, $(SOURCES_FUZZYLITE))
+
 SOURCES_STUPIDAI=$(wildcard vcmi/AI/StupidAI/*.cpp)
 OBJS_STUPIDAI=$(patsubst %.cpp, out/%.o, $(SOURCES_STUPIDAI))
 
-SOURCES_GENIUSAI=$(filter-out %/ExpertSystem.cpp, $(wildcard vcmi/AI/GeniusAI/*.cpp))
-OBJS_GENIUSAI=$(patsubst %.cpp, out/%.o, $(SOURCES_GENIUSAI))
+SOURCES_VCAI=$(wildcard vcmi/AI/VCAI/*.cpp)
+OBJS_VCAI=$(patsubst %.cpp, out/%.o, $(SOURCES_VCAI))
 
 SOURCES_ERM=$(wildcard vcmi/Scripting/ERM/*.cpp)
 OBJS_ERM=$(patsubst %.cpp, out/%.o, $(SOURCES_ERM))
@@ -39,11 +61,15 @@ OBJS_CLIENT=$(patsubst %.cpp, out/%.o, $(SOURCES_CLIENT))
 
 all: AndroidData/binaries.zip libapplication.so
 
-AndroidData/binaries.zip: vcmiserver AI/libGeniusAI.so AI/libStupidAI.so Scripting/libvcmiERM.so
+AndroidData/binaries.zip: vcmiserver AI/libAI.so Scripting/libvcmiERM.so
 	rm -f $@
 	zip -r $@ $^
 
+<<<<<<< HEAD
 $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
+=======
+$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_BATTLEAI) $(OBJS_EMPTYAI) $(OBJS_FUZZYLITE) $(OBJS_STUPIDAI) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
+>>>>>>> 2986a60b94e08c9946f3b29f2598b4eb0a53a8b0
 	../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	-c \$$CXXFLAGS -Ivcmi -std=c++11 -Ivcmi/lib \
@@ -59,8 +85,13 @@ vcmiserver: $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 ../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	$^ -o $@ \
+<<<<<<< HEAD
 	\$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 \
 	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lgnustl_static" && \
+=======
+	\$$LDFLAGS -L. \
+	-lboost_system -lboost_filesystem -lboost_iostreams  -lboost_thread" && \
+>>>>>>> 2986a60b94e08c9946f3b29f2598b4eb0a53a8b0
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
 
@@ -76,10 +107,7 @@ LINK_LIB= \
 .PHONY: -lvcmi
 -lvcmi: libvcmi.so
 
-AI/libGeniusAI.so: $(OBJS_GENIUSAI) -lvcmi
-	$(LINK_LIB)
-
-AI/libStupidAI.so: $(OBJS_STUPIDAI) -lvcmi
+AI/libAI.so: $(OBJS_BATTLEAI) $(OBJS_EMPTYAI) $(OBJS_FUZZYLITE) $(OBJS_STUPIDAI) $(OBJS_VCAI) -lvcmi
 	$(LINK_LIB)
 
 Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi

@@ -10,10 +10,10 @@ Also this port is developed very slowly, although the same is true for an offici
 Installation
 ============
 
-This project should be compiled with Android 3.1 SDK (API level 15) and NDK r8, r7c, r6 or r5c,
+This project should be compiled with Android 4.2 SDK (API level 17) and NDK r8, r7c, r6 or r5c,
 google for them and install them as described in their docs.
 You'll need to install Java Ant too.
-The application will run on Android OS 1.6 and above, don't mind the 3.1 dependency.
+The application will run on Android OS 1.6 and above, but will use features from Android 4.2 if available.
 Also it's compatible with NDK r4b and all versions of CrystaX NDK starting from r4b.
 CrystaX NDK adds support for wide chars, and required if you want to use Boost libraries.
 http://www.crystax.net/android/ndk.php
@@ -120,8 +120,21 @@ Also make sure that your HW textures are not wider than 1024 pixels, or it will 
 texture on HTC G1, and other low-end devices. Software surfaces may be of any size of course.
 
 If you want HW acceleration - just use OpenGL, that's the easiest and most cross-platform way,
-however note that on-screen keyboard (even the text input button) is also drawn using OpenGL,
-so it might mess up your GL state (although it should not do that due to recent code changes).
+however if you'll use on-screen keyboard (even the text input button) the OpenGL state will get
+messed up after each frame - after each SDL_GL_SwapBuffers() you'll need to restore following GL state:
+
+glEnable(GL_TEXTURE_2D);
+glActiveTexture(GL_TEXTURE0);
+glClientActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, your_texture_id);
+glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+glEnable(GL_BLEND);
+glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+glEnableClientState(GL_COLOR_ARRAY);
+
+Previously I've got the code to save/restore OpenGL state, but it doens't work on every device -
+you may wish to uncomment it inside file SDL_touchscreenkeyboard.c in functions beginDrawingTex() and endDrawingTex().
 
 If you don't use on-screen keyboard you don't need to reinit OpenGL state - set following in AndroidAppSettings.cfg:
 AppNeedsArrowKeys=n

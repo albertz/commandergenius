@@ -1,2 +1,24 @@
-I'm not planning any more games to port, or any development on this SDL port.
-See bugs.txt if you want to contribute.
+Requested features (see also bugs.txt)
+======================================
+
+- Option for default on-screen key theme in AndroidAppSettings.cfg.
+
+- Select between normal mouse input and magnifying glass/relative input automatically, based on screen size.
+
+- Split Settings.java into several files.
+
+- Show/hide screen controls with longpress on Text Edit button.
+
+- Floating on-screen joystick - initially invisible, it appears when you touch the screen,
+  centered on your finger, then it slides with your finger if you bump the joystick edge.
+
+- Export phone vibrator to SDL - interface is available in SDL 1.3.
+
+- Control screen brightness with SDL_SetGamma().
+
+- Zoom in-out whole screen in SW mode with some SDL key or gesture, as in AndroidVNC. -
+
+- Support of libjnigraphics (it will disable on-screen keyboard, only SW SDL screen surface supported).
+  This is not relevant already, as every device around is fast enough with GL.
+
+- Second joystick, to be used in TeeWorlds.

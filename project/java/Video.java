@@ -108,14 +108,13 @@ abstract class DifferentTouchInput
 				multiTouchAvailable2 = true;
 		}
 		try {
+			System.out.println("Device model: " + android.os.Build.MODEL);
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH )
 			{
-				if(android.os.Build.MODEL.equals("GT-N7000") || android.os.Build.MODEL.equals("SGH-I717"))
-					return GalaxyNoteIcsTouchInput.Holder.sInstance;
 				return IcsTouchInput.Holder.sInstance;
 			}
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
-				return XperiaPlayTouchpadTouchInput.Holder.sInstance;
+				return GingerbreadTouchInput.Holder.sInstance;
 			if (multiTouchAvailable1 && multiTouchAvailable2)
 				return MultiTouchInput.Holder.sInstance;
 			else
@@ -296,57 +295,21 @@ abstract class DifferentTouchInput
 			}
 		}
 	}
-	private static class XperiaPlayTouchpadTouchInput extends MultiTouchInput
+	private static class GingerbreadTouchInput extends MultiTouchInput
 	{
 		private static class Holder
 		{
-			private static final XperiaPlayTouchpadTouchInput sInstance = new XperiaPlayTouchpadTouchInput();
+			private static final GingerbreadTouchInput sInstance = new GingerbreadTouchInput();
 		}
 
-		float xmin = 0.0f;
-		float xmax = 1.0f;
-		float ymin = 0.0f;
-		float ymax = 1.0f;
-		float minRange = 1.0f;
-		float xshift = 0.0f;
-
-		XperiaPlayTouchpadTouchInput()
+		GingerbreadTouchInput()
 		{
 			super();
-			int[] devIds = InputDevice.getDeviceIds();
-			for( int id : devIds )
-			{
-				InputDevice device = InputDevice.getDevice(id);
-				if( device == null )
-					continue;
-				System.out.println("libSDL: input device ID " + id + " type " + device.getSources()  + " name " + device.getName() );
-				if( (device.getSources() & InputDevice.SOURCE_TOUCHPAD) != InputDevice.SOURCE_TOUCHPAD )
-					continue;
-				System.out.println("libSDL: input device ID " + id + " type " + device.getSources()  + " name " + device.getName() + " is a touchpad" );
-				InputDevice.MotionRange range = device.getMotionRange(MotionEvent.AXIS_X /*, InputDevice.SOURCE_TOUCHPAD*/);
-				if(range != null)
-				{
-					xmin = range.getMin();
-					xmax = range.getMax() - range.getMin();
-					System.out.println("libSDL: touch pad X range " + xmin + ":" + xmax );
-				}
-				range = device.getMotionRange(MotionEvent.AXIS_Y /*, InputDevice.SOURCE_TOUCHPAD*/);
-				if(range != null)
-				{
-					ymin = range.getMin();
-					ymax = range.getMax() - range.getMin();
-					System.out.println("libSDL: touch pad Y range " + ymin + ":" + ymax );
-				}
-				// Xperia Play has long wide touchpad with joystick-like embossing on the sides, so we'll leave only a left joystick to function
-				// I don't know how to use the second joystick, so I'll just ignore it for now
-				minRange = Math.min( Math.abs(ymax - ymin), Math.abs(xmax - xmin) );
-				xshift = xmax - minRange;
-			}
 		}
 		public void process(final MotionEvent event)
 		{
-			boolean hwMouseEvent = (	event.getSource() == InputDevice.SOURCE_MOUSE ||
-										event.getSource() == InputDevice.SOURCE_STYLUS ||
+			boolean hwMouseEvent = (	(event.getSource() & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE ||
+										(event.getSource() & InputDevice.SOURCE_STYLUS) == InputDevice.SOURCE_STYLUS ||
 										(event.getMetaState() & KeyEvent.FLAG_TRACKING) != 0 ); // Hack to recognize Galaxy Note Gingerbread stylus
 			if( ExternalMouseDetected != hwMouseEvent )
 			{
@@ -357,37 +320,10 @@ abstract class DifferentTouchInput
 		}
 		public void processGenericEvent(final MotionEvent event)
 		{
-			if( event.getSource() != InputDevice.SOURCE_TOUCHPAD )
-			{
-				process(event);
-				return;
-			}
-			/*
-			int x = (int)((event.getX() - xmin) / xmax * 65535.0f);
-			int y = (int)((event.getY() - ymin) / ymax * 65535.0f);
-			*/
-			// Use only right square part of a touch surface - I've heard reports that it breaks functionality, feel free to uncomment and test it.
-			int x = (int)((event.getX() - xshift) / minRange * 65535.0f);
-			int y = (int)((event.getY() - ymin) / minRange * 65535.0f);
-			if( x > 65535 )
-				x = 65535;
-			if( x < 0 )
-				x = 0;
-			if( y > 65535 )
-				y = 65535;
-			if( y < 0 )
-				y = 0;
-			int down = 1;
-			int multitouch = event.getPointerCount() - 1;
-			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP ||
-				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_CANCEL )
-				down = 0;
-			// TODO: we're processing only one touch pointer, touchpad will most probably support multitouch
-			//System.out.println("libSDL: touch pad event: " + x + ":" + y + " action " + event.getAction() + " down " + down + " multitouch " + multitouch );
-			DemoGLSurfaceView.nativeTouchpad( x, 65535 - y, down, multitouch ); // Y axis is inverted, as you may have guessed
+			process(event);
 		}
 	}
-	private static class IcsTouchInput extends XperiaPlayTouchpadTouchInput
+	private static class IcsTouchInput extends GingerbreadTouchInput
 	{
 		private static class Holder
 		{
@@ -411,6 +347,16 @@ abstract class DifferentTouchInput
 		}
 		public void processGenericEvent(final MotionEvent event)
 		{
+			// Joysticks are supported since Honeycomb, but I don't care about it, because very little devices have it
+			if( (event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) == InputDevice.SOURCE_CLASS_JOYSTICK )
+			{
+				// event.getAxisValue(AXIS_HAT_X) and event.getAxisValue(AXIS_HAT_Y) are joystick arrow keys, they also send keyboard events
+				DemoGLSurfaceView.nativeGamepadAnalogJoystickInput(
+					event.getAxisValue(MotionEvent.AXIS_X), event.getAxisValue(MotionEvent.AXIS_Y),
+					event.getAxisValue(MotionEvent.AXIS_Z), event.getAxisValue(MotionEvent.AXIS_RZ),
+					event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_LTRIGGER) );
+				return;
+			}
 			// Process mousewheel
 			if( event.getAction() == MotionEvent.ACTION_SCROLL )
 			{
@@ -420,20 +366,6 @@ abstract class DifferentTouchInput
 				return;
 			}
 			super.processGenericEvent(event);
-		}
-	}
-	private static class GalaxyNoteIcsTouchInput extends IcsTouchInput
-	{
-		private static class Holder
-		{
-			private static final GalaxyNoteIcsTouchInput sInstance = new GalaxyNoteIcsTouchInput();
-		}
-		public void process(final MotionEvent event)
-		{
-			// HACK for Galaxy Note stylus, which pushes the cursor to the lower-right part of the screen, when you lift the stylus.
-			// Also it reports the stylus as the mouse
-			if(! (event.getSource() == InputDevice.SOURCE_MOUSE && (int)event.getX() == 0 && (int)event.getY() == 799))
-				super.process(event);
 		}
 	}
 }
@@ -583,6 +515,15 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public int isScreenKeyboardShown() // Called from native code
 	{
 		return context.isScreenKeyboardShown() ? 1 : 0;
+	}
+
+	public void startAccelerometerGyroscope(int started)
+	{
+		accelerometer.openedBySDL = (started != 0);
+		if( accelerometer.openedBySDL && !mPaused )
+			accelerometer.start();
+		else
+			accelerometer.stop();
 	}
 
 	public void exitApp()
@@ -774,7 +715,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		System.out.println("libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused);
 		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused || Globals.NonBlockingSwapBuffers )
 			mRenderer.nativeGlContextRecreated();
-		if( mRenderer.accelerometer != null ) // For some reason it crashes here often - are we getting this event before initialization?
+		if( mRenderer.accelerometer != null && mRenderer.accelerometer.openedBySDL ) // For some reason it crashes here often - are we getting this event before initialization?
 			mRenderer.accelerometer.start();
 	};
 
@@ -805,8 +746,8 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public static native void initJavaCallbacks();
 	public static native void nativeHardwareMouseDetected( int detected );
 	public static native void nativeMouseButtonsPressed( int buttonId, int pressedState );
-	public static native void nativeMouseWheel(int scrollX, int scrollY);
-	
+	public static native void nativeMouseWheel( int scrollX, int scrollY );
+	public static native void nativeGamepadAnalogJoystickInput( float stick1x,  float stick1y, float stick2x, float stick2y, float rtrigger, float ltrigger );
 }
 
 

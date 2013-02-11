@@ -65,6 +65,7 @@ static jmethodID JavaShowScreenKeyboard = NULL;
 static jmethodID JavaToggleScreenKeyboardWithoutTextInput = NULL;
 static jmethodID JavaHideScreenKeyboard = NULL;
 static jmethodID JavaIsScreenKeyboardShown = NULL;
+static jmethodID JavaStartAccelerometerGyroscope = NULL;
 static jmethodID JavaGetAdvertisementParams = NULL;
 static jmethodID JavaSetAdvertisementVisible = NULL;
 static jmethodID JavaSetAdvertisementPosition = NULL;
@@ -110,8 +111,8 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 	{
 		glPushMatrix();
 		glLoadIdentity();
-		glOrthox( 0, (SDL_ANDROID_sRealWindowWidth) * 0x10000, SDL_ANDROID_sRealWindowHeight * 0x10000, 0, 0, 1 * 0x10000 );
-		glColor4x(0, 0, 0, 0x10000);
+		glOrthof( 0.0f, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight, 0.0f, 0.0f, 1.0f );
+		glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		
 		GLshort vertices[] = {	SDL_ANDROID_ForceClearScreenRect.x, SDL_ANDROID_ForceClearScreenRect.y,
@@ -297,6 +298,11 @@ int SDL_ANDROID_IsScreenKeyboardShown()
 	return SDL_ANDROID_IsScreenKeyboardShownFlag;
 }
 
+void SDL_ANDROID_CallJavaStartAccelerometerGyroscope(int start)
+{
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaStartAccelerometerGyroscope, (jint) start );
+}
+
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject thiz )
 {
@@ -309,7 +315,8 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaToggleScreenKeyboardWithoutTextInput = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboardWithoutTextInputField", "()V");
 	JavaHideScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "hideScreenKeyboard", "()V");
 	JavaIsScreenKeyboardShown = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "isScreenKeyboardShown", "()I");
-	// TODO: implement it
+	JavaStartAccelerometerGyroscope = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "startAccelerometerGyroscope", "(I)V");
+
 	JavaGetAdvertisementParams = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "getAdvertisementParams", "([I)V");
 	JavaSetAdvertisementVisible = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setAdvertisementVisible", "(I)V");
 	JavaSetAdvertisementPosition = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setAdvertisementPosition", "(II)V");
