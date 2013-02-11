@@ -10,7 +10,7 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 GCC_PREFIX=$(if $(shell which ndk-build | grep 'android-ndk-r8'),arm-linux-androideabi,arm-eabi)
 
-SOURCES_LIB=$(wildcard vcmi/lib/*.cpp vcmi/lib/Filesystem/*.cpp vcmi/CConsoleHandler.cpp vcmi/CThreadHelper.cpp)
+SOURCES_LIB=$(wildcard vcmi/lib/*.cpp vcmi/CConsoleHandler.cpp vcmi/CThreadHelper.cpp)
 OBJS_LIB=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB))
 
 SOURCES_LIB_FILESYSTEM=$(wildcard vcmi/lib/Filesystem/*.cpp)
