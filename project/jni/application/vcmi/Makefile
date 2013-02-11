@@ -1,6 +1,7 @@
 
 $(shell mkdir -p AI debug/AI Scripting debug/Scripting \
-	out/vcmi/lib out/vcmi/server out/vcmi/AI/StupidAI \
+	out/vcmi/lib out/vcmi/lib/Filesystem out/vcmi/lib/Mapping \
+	out/vcmi/lib/RMG out/vcmi/server out/vcmi/AI/StupidAI \
 	out/vcmi/AI/GeniusAI out/vcmi/client out/vcmi/Scripting/ERM)
 $(shell rm -f ../../../obj/local/armeabi/libvcmi.so)
 
@@ -11,6 +12,15 @@ GCC_PREFIX=$(if $(shell which ndk-build | grep 'android-ndk-r8'),arm-linux-andro
 
 SOURCES_LIB=$(wildcard vcmi/lib/*.cpp vcmi/CConsoleHandler.cpp vcmi/CThreadHelper.cpp)
 OBJS_LIB=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB))
+
+SOURCES_LIB_FILESYSTEM=$(wildcard vcmi/lib/Filesystem/*.cpp)
+OBJS_LIB_FILESYSTEM=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_FILESYSTEM))
+
+SOURCES_LIB_MAPPING=$(wildcard vcmi/lib/Mapping/*.cpp)
+OBJS_LIB_MAPPING=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_MAPPING))
+
+SOURCES_LIB_RMG=$(wildcard vcmi/lib/RMG/*.cpp)
+OBJS_LIB_RMG=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_RMG))
 
 SOURCES_SERVER=$(wildcard vcmi/server/*.cpp)
 OBJS_SERVER=$(patsubst %.cpp, out/%.o, $(SOURCES_SERVER))
@@ -33,7 +43,7 @@ AndroidData/binaries.zip: vcmiserver AI/libGeniusAI.so AI/libStupidAI.so Scripti
 	rm -f $@
 	zip -r $@ $^
 
-$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
+$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
 	../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	-c \$$CXXFLAGS -Ivcmi -std=c++11 -Ivcmi/lib \
@@ -45,12 +55,12 @@ $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT) $(OB
 	$< -o $@"
 #	-Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
 
-vcmiserver: $(OBJS_SERVER) $(OBJS_LIB)
+vcmiserver: $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG)
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 ../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	$^ -o $@ \
-	\$$LDFLAGS -L. \
-	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread" && \
+	\$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 \
+	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lgnustl_static" && \
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
 
@@ -58,8 +68,8 @@ LINK_LIB= \
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 ../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	$^ -o $@ \
-	-shared \$$LDFLAGS -L. \
-	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread" && \
+	-shared \$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 \
+	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lgnustl_static" && \
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
 
@@ -75,13 +85,13 @@ AI/libStupidAI.so: $(OBJS_STUPIDAI) -lvcmi
 Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi
 	$(LINK_LIB)
 
-libvcmi.so: $(OBJS_LIB)
+libvcmi.so: $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG)
 	$(LINK_LIB)
 
 libapplication.so: $(OBJS_CLIENT) libvcmi.so
 	env BUILD_EXECUTABLE=1 ../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ $^ -o $@ \
-	\$$LDFLAGS -L. -lvcmi -lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread"
+	\$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 -lvcmi -lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lgnustl_static"
 
 clean:
 	rm -rf out debug *.so vcmiserver* AndroidData/vcmiserver* libapplication.so AI Scripting
