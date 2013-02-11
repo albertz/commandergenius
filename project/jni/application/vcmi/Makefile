@@ -56,7 +56,7 @@ AndroidData/binaries.zip: vcmiserver AI/libAI.so Scripting/libvcmiERM.so
 	rm -f $@
 	zip -r $@ $^
 
-$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_BATTLEAI) $(OBJS_EMPTYAI) $(OBJS_FUZZYLITE) $(OBJS_STUPIDAI) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
+$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_BATTLEAI) $(OBJS_EMPTYAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
 	../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	-c \$$CXXFLAGS -Ivcmi -std=c++11 -Ivcmi/lib \
@@ -89,7 +89,7 @@ LINK_LIB= \
 .PHONY: -lvcmi
 -lvcmi: libvcmi.so
 
-AI/libAI.so: $(OBJS_BATTLEAI) $(OBJS_EMPTYAI) $(OBJS_FUZZYLITE) $(OBJS_STUPIDAI) $(OBJS_VCAI) -lvcmi
+AI/libAI.so: $(OBJS_BATTLEAI) $(OBJS_EMPTYAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) -lvcmi
 	$(LINK_LIB)
 
 Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi
