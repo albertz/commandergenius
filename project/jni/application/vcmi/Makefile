@@ -1,15 +1,8 @@
 
 $(shell mkdir -p AI debug/AI Scripting debug/Scripting \
-<<<<<<< HEAD
 	out/vcmi/lib out/vcmi/lib/Filesystem out/vcmi/lib/Mapping \
 	out/vcmi/lib/RMG out/vcmi/server out/vcmi/AI/StupidAI \
 	out/vcmi/AI/GeniusAI out/vcmi/client out/vcmi/Scripting/ERM)
-=======
-	out/vcmi/lib out/vcmi/lib/Filesystem out/vcmi/server out/vcmi/AI/StupidAI \
-	out/vcmi/AI/BattleAI out/vcmi/AI/EmptyAI \
-	out/vcmi/AI/Fuzzylite out/vcmi/AI/VCAI \
-	out/vcmi/client out/vcmi/Scripting/ERM)
->>>>>>> 2986a60b94e08c9946f3b29f2598b4eb0a53a8b0
 $(shell rm -f ../../../obj/local/armeabi/libvcmi.so)
 
 LOCAL_PATH=$(shell dirname $0)
@@ -65,11 +58,7 @@ AndroidData/binaries.zip: vcmiserver AI/libAI.so Scripting/libvcmiERM.so
 	rm -f $@
 	zip -r $@ $^
 
-<<<<<<< HEAD
 $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
-=======
-$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_BATTLEAI) $(OBJS_EMPTYAI) $(OBJS_FUZZYLITE) $(OBJS_STUPIDAI) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
->>>>>>> 2986a60b94e08c9946f3b29f2598b4eb0a53a8b0
 	../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	-c \$$CXXFLAGS -Ivcmi -std=c++11 -Ivcmi/lib \
@@ -85,13 +74,8 @@ vcmiserver: $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 ../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	$^ -o $@ \
-<<<<<<< HEAD
 	\$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 \
 	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lgnustl_static" && \
-=======
-	\$$LDFLAGS -L. \
-	-lboost_system -lboost_filesystem -lboost_iostreams  -lboost_thread" && \
->>>>>>> 2986a60b94e08c9946f3b29f2598b4eb0a53a8b0
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
 
