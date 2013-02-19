@@ -4,7 +4,7 @@ $(shell mkdir -p AI debug/AI Scripting debug/Scripting \
 	out/vcmi/lib/RMG out/vcmi/server out/vcmi/AI/StupidAI \
 	out/vcmi/AI/BattleAI out/vcmi/AI/FuzzyLite out/vcmi/AI/VCAI \
 	out/vcmi/AI/EmptyAI out/vcmi/client out/vcmi/Scripting/ERM)
-$(shell rm -f ../../../obj/local/armeabi/libvcmi.so)
+#$(shell rm -f ../../../obj/local/armeabi/libvcmi.so)
 
 LOCAL_PATH=$(shell dirname $0)
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
@@ -52,7 +52,7 @@ OBJS_CLIENT=$(patsubst %.cpp, out/%.o, $(SOURCES_CLIENT))
 
 all: AndroidData/binaries.zip libapplication.so
 
-AndroidData/binaries.zip: vcmiserver AI/libAI.so Scripting/libvcmiERM.so
+AndroidData/binaries.zip: vcmiserver debug/libvcmi.so AI/libAI.so Scripting/libvcmiERM.so
 	rm -f $@
 	zip -r $@ $^
 
@@ -101,7 +101,7 @@ libvcmi.so: $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RM
 libapplication.so: $(OBJS_CLIENT) libvcmi.so
 	env BUILD_EXECUTABLE=1 ../setEnvironment.sh sh -c \
 	"$(GCC_PREFIX)-g++ $^ -o $@ \
-	\$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 -lvcmi -lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lgnustl_static"
+	\$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 -lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lgnustl_static"
 
 clean:
 	rm -rf out debug *.so vcmiserver* AndroidData/vcmiserver* libapplication.so AI Scripting
