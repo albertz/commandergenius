@@ -731,113 +731,6 @@ public class MainActivity extends Activity
 			System.out.println("libSDL: Cannot load GLESv2 lib");
 		}
 
-		try
-		{
-			for(String l : Globals.AppLibraries)
-			{
-				try
-				{
-					String libname = System.mapLibraryName(l);
-					File libpath = new File(getFilesDir().getAbsolutePath() + "/../lib/" + libname);
-					System.out.println("libSDL: loading lib " + libpath.getAbsolutePath());
-					System.load(libpath.getPath());
-				}
-				catch( UnsatisfiedLinkError e )
-				{
-					System.out.println("libSDL: error loading lib " + l + ": " + e.toString());
-					System.loadLibrary(l);
-				}
-			}
-		}
-		catch ( UnsatisfiedLinkError e )
-		{
-			try {
-				System.out.println("libSDL: Extracting APP2SD-ed libs");
-				
-				InputStream in = null;
-				try
-				{
-					for( int i = 0; ; i++ )
-					{
-						InputStream in2 = getAssets().open("bindata" + String.valueOf(i));
-						if( in == null )
-							in = in2;
-						else
-							in = new SequenceInputStream( in, in2 );
-					}
-				}
-				catch( IOException ee ) { }
-
-				if( in == null )
-					throw new RuntimeException("libSDL: Extracting APP2SD-ed libs failed, the .apk file packaged incorrectly");
-
-				ZipInputStream zip = new ZipInputStream(in);
-
-				File libDir = getFilesDir();
-				try {
-					libDir.mkdirs();
-				} catch( SecurityException ee ) { };
-				
-				byte[] buf = new byte[16384];
-				while(true)
-				{
-					ZipEntry entry = null;
-					entry = zip.getNextEntry();
-					/*
-					if( entry != null )
-						System.out.println("Extracting lib " + entry.getName());
-					*/
-					if( entry == null )
-					{
-						System.out.println("Extracting libs finished");
-						break;
-					}
-					if( entry.isDirectory() )
-					{
-						File outDir = new File( libDir.getAbsolutePath() + "/" + entry.getName() );
-						if( !(outDir.exists() && outDir.isDirectory()) )
-							outDir.mkdirs();
-						continue;
-					}
-
-					OutputStream out = null;
-					String path = libDir.getAbsolutePath() + "/" + entry.getName();
-					try {
-						File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
-						if( !(outDir.exists() && outDir.isDirectory()) )
-							outDir.mkdirs();
-					} catch( SecurityException eeeee ) { };
-
-					System.out.println("Saving to file '" + path + "'");
-
-					out = new FileOutputStream( path );
-					int len = zip.read(buf);
-					while (len >= 0)
-					{
-						if(len > 0)
-							out.write(buf, 0, len);
-						len = zip.read(buf);
-					}
-
-					out.flush();
-					out.close();
-				}
-
-				for(String l : Globals.AppLibraries)
-				{
-					String libname = System.mapLibraryName(l);
-					File libpath = new File(libDir, libname);
-					System.out.println("libSDL: loading lib " + libpath.getPath());
-					System.load(libpath.getPath());
-					libpath.delete();
-				}
-			}
-			catch ( Exception ee )
-			{
-				System.out.println("libSDL: Error: " + ee.toString());
-			}
-		}
-
 		// ----- VCMI hack -----
 		String [] binaryZipNames = { "binaries-" + android.os.Build.CPU_ABI + ".zip", "binaries.zip" };
 		for(String binaryZip: binaryZipNames)
@@ -943,6 +836,126 @@ public class MainActivity extends Activity
 			}
 		}
 		// ----- VCMI hack -----
+
+		// Load all libraries
+		try
+		{
+			for(String l : Globals.AppLibraries)
+			{
+				try
+				{
+					String libname = System.mapLibraryName(l);
+					File libpath = new File(getFilesDir().getAbsolutePath() + "/../lib/" + libname);
+					System.out.println("libSDL: loading lib " + libpath.getAbsolutePath());
+					System.load(libpath.getPath());
+				}
+				catch( UnsatisfiedLinkError e )
+				{
+					System.out.println("libSDL: error loading lib " + l + ": " + e.toString());
+					try
+					{
+						String libname = System.mapLibraryName(l);
+						File libpath = new File(getFilesDir().getAbsolutePath() + "/" + libname);
+						System.out.println("libSDL: loading lib " + libpath.getAbsolutePath());
+						System.load(libpath.getPath());
+					}
+					catch( UnsatisfiedLinkError ee )
+					{
+						System.out.println("libSDL: error loading lib " + l + ": " + ee.toString());
+						System.loadLibrary(l);
+					}
+				}
+			}
+		}
+		catch ( UnsatisfiedLinkError e )
+		{
+			try {
+				System.out.println("libSDL: Extracting APP2SD-ed libs");
+				
+				InputStream in = null;
+				try
+				{
+					for( int i = 0; ; i++ )
+					{
+						InputStream in2 = getAssets().open("bindata" + String.valueOf(i));
+						if( in == null )
+							in = in2;
+						else
+							in = new SequenceInputStream( in, in2 );
+					}
+				}
+				catch( IOException ee ) { }
+
+				if( in == null )
+					throw new RuntimeException("libSDL: Extracting APP2SD-ed libs failed, the .apk file packaged incorrectly");
+
+				ZipInputStream zip = new ZipInputStream(in);
+
+				File libDir = getFilesDir();
+				try {
+					libDir.mkdirs();
+				} catch( SecurityException ee ) { };
+				
+				byte[] buf = new byte[16384];
+				while(true)
+				{
+					ZipEntry entry = null;
+					entry = zip.getNextEntry();
+					/*
+					if( entry != null )
+						System.out.println("Extracting lib " + entry.getName());
+					*/
+					if( entry == null )
+					{
+						System.out.println("Extracting libs finished");
+						break;
+					}
+					if( entry.isDirectory() )
+					{
+						File outDir = new File( libDir.getAbsolutePath() + "/" + entry.getName() );
+						if( !(outDir.exists() && outDir.isDirectory()) )
+							outDir.mkdirs();
+						continue;
+					}
+
+					OutputStream out = null;
+					String path = libDir.getAbsolutePath() + "/" + entry.getName();
+					try {
+						File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
+						if( !(outDir.exists() && outDir.isDirectory()) )
+							outDir.mkdirs();
+					} catch( SecurityException eeeee ) { };
+
+					System.out.println("Saving to file '" + path + "'");
+
+					out = new FileOutputStream( path );
+					int len = zip.read(buf);
+					while (len >= 0)
+					{
+						if(len > 0)
+							out.write(buf, 0, len);
+						len = zip.read(buf);
+					}
+
+					out.flush();
+					out.close();
+				}
+
+				for(String l : Globals.AppLibraries)
+				{
+					String libname = System.mapLibraryName(l);
+					File libpath = new File(libDir, libname);
+					System.out.println("libSDL: loading lib " + libpath.getPath());
+					System.load(libpath.getPath());
+					libpath.delete();
+				}
+			}
+			catch ( Exception ee )
+			{
+				System.out.println("libSDL: Error: " + ee.toString());
+			}
+		}
+
 
 	};
 
