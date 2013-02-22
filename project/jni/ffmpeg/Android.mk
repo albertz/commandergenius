@@ -7,7 +7,7 @@ LOCAL_PATH:=$(call my-dir)
 ifeq ($(notdir $(LOCAL_PATH)),ffmpeg) # Build only from ffmpeg directory, ignore symlinks
 
 FFMPEG_ROOT_DIR := $(LOCAL_PATH)
-FFMPEG_CONFIG_DIR := android/build
+FFMPEG_CONFIG_DIR := android/$(TARGET_ARCH_ABI)
 
 VERSION_SUFFIX := -$(shell (cat $(FFMPEG_ROOT_DIR)/RELEASE))
 
