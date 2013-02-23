@@ -10,3 +10,4 @@ project/AndroidManifest.xml
 project/jni/Settings.mk
 project/jni/application/*/libapplication*.so
 project/jni/application/src
+project/res/drawable-xhdpi/ouya_icon.png

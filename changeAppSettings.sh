@@ -1099,6 +1099,7 @@ rm -rf project/bin/classes
 rm -rf project/bin/res
 
 if which convert > /dev/null; then
+	mkdir -p project/res/drawable-xhdpi
 	convert project/res/drawable/ouya_icon.png -resize '732x412!' project/res/drawable-xhdpi/ouya_icon.png
 else
 	echo "Install ImageMagick to auto-resize Ouya icon from icon.png"
