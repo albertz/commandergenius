@@ -17,7 +17,7 @@ if [ -z "$OUT" ]; then
 fi
 
 S1=`date +%s -d "$DATE"`
-S2=`date +%s -d now`
+S2=`date +%s -d "-20 seconds"`
 SECONDS=`expr $S1 - $S2`
 MINUTES=`expr $SECONDS / 60`
 HOURS=`expr $MINUTES / 60`
