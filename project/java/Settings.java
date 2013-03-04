@@ -453,7 +453,7 @@ class Settings
 		settingsChanged = true;
 		if( Globals.OptionalDataDownload == null )
 		{
-			String downloads[] = Globals.DataDownloadUrl.split("\\^");
+			String downloads[] = Globals.DataDownloadUrl;
 			Globals.OptionalDataDownload = new boolean[downloads.length];
 			boolean oldFormat = true;
 			for( int i = 0; i < downloads.length; i++ )
@@ -750,7 +750,7 @@ class Settings
 		}
 		void run (final MainActivity p)
 		{
-			String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
+			String [] downloadFiles = Globals.DataDownloadUrl;
 			final boolean [] mandatory = new boolean[downloadFiles.length];
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);

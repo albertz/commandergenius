@@ -188,7 +188,7 @@ class DataDownloader extends Thread
 	@Override
 	public void run()
 	{
-		String [] downloadFiles = Globals.DataDownloadUrl.split("\\^");
+		String [] downloadFiles = Globals.DataDownloadUrl;
 		int total = 0;
 		int count = 0;
 		for( int i = 0; i < downloadFiles.length; i++ )
@@ -204,7 +204,7 @@ class DataDownloader extends Thread
 				( Globals.OptionalDataDownload.length > i && Globals.OptionalDataDownload[i] ) ||
 				( Globals.OptionalDataDownload.length <= i && downloadFiles[i].indexOf("!") == 0 ) )
 			{
-				if( ! DownloadDataFile(downloadFiles[i], DOWNLOAD_FLAG_FILENAME + String.valueOf(i) + ".flag", count+1, total) )
+				if( ! DownloadDataFile(downloadFiles[i], DOWNLOAD_FLAG_FILENAME + String.valueOf(i) + ".flag", count+1, total, i) )
 				{
 					DownloadFailed = true;
 					return;
@@ -216,7 +216,7 @@ class DataDownloader extends Thread
 		initParent();
 	}
 
-	public boolean DownloadDataFile(final String DataDownloadUrl, final String DownloadFlagFileName, int downloadCount, int downloadTotal)
+	public boolean DownloadDataFile(final String DataDownloadUrl, final String DownloadFlagFileName, int downloadCount, int downloadTotal, int downloadIndex)
 	{
 		Resources res = Parent.getResources();
 
@@ -238,7 +238,7 @@ class DataDownloader extends Thread
 		if( checkFile != null )
 		{
 			try {
-				byte b[] = new byte[ Globals.DataDownloadUrl.getBytes("UTF-8").length + 1 ];
+				byte b[] = new byte[ Globals.DataDownloadUrl[downloadIndex].getBytes("UTF-8").length + 1 ];
 				int readed = checkFile.read(b);
 				String compare = "";
 				if( readed > 0 )

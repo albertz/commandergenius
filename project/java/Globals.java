@@ -32,7 +32,7 @@ class Globals
 	public static String ApplicationName = "CommanderGenius";
 	public static String AppLibraries[] = { "sdl-1.2", };
 	public static final boolean Using_SDL_1_3 = false;
-	public static String DataDownloadUrl = "Data files are 2 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-data.zip/download^High-quality GFX and music - 40 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-hqp.zip/download";
+	public static String[] DataDownloadUrl = { "Data files are 2 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-data.zip/download", "High-quality GFX and music - 40 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-hqp.zip/download" };
 	public static int VideoDepthBpp = 16;
 	public static boolean SwVideoMode = false;
 	public static boolean NeedDepthBuffer = false;
