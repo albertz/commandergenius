@@ -115,7 +115,7 @@ int ANDROID_ToggleFullScreen(_THIS, int fullscreen)
 	return 1;
 }
 
-#define SDL_NUMMODES 23
+#define SDL_NUMMODES 24
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -293,7 +293,8 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[20]->w = 640; SDL_modelist[20]->h = 270; // For UAE4ALL2
 	SDL_modelist[21]->w = 320; SDL_modelist[21]->h = 216; // For UAE4ALL2
 	SDL_modelist[22]->w = 640; SDL_modelist[22]->h = 216; // For UAE4ALL2
-	SDL_modelist[23] = NULL;
+	SDL_modelist[23]->w = 384; SDL_modelist[23]->h = 272; // For VCMI
+	SDL_modelist[24] = NULL;
 	
 	SDL_VideoInit_1_3(NULL, 0);
 	
