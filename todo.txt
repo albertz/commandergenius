@@ -1,6 +1,10 @@
 Requested features (see also bugs.txt)
 ======================================
 
+- Option to reset SDL config to default.
+
+- Remove accelerometer-as-keys config and trackball config.
+
 - Do not highlight analog on-screen joystick when pressing arrow buttons.
 
 - Option for default on-screen key theme in AndroidAppSettings.cfg.
