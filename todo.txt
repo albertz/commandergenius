@@ -1,6 +1,8 @@
 Requested features (see also bugs.txt)
 ======================================
 
+- Do not highlight analog on-screen joystick when pressing arrow buttons.
+
 - Option for default on-screen key theme in AndroidAppSettings.cfg.
 
 - Select between normal mouse input and magnifying glass/relative input automatically, based on screen size.
