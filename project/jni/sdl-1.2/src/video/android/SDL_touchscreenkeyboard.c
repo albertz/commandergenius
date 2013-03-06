@@ -225,7 +225,7 @@ static void drawTouchscreenKeyboardLegacy()
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
-	if( blendFactor == 0 )
+	if( blendFactor == 0 || SDL_ANDROID_isJoystickUsed )
 		drawCharTex( &arrowImages[0], NULL, &arrowsDraw, 1.0f, 1.0f, 1.0f, transparency );
 	else
 	{
