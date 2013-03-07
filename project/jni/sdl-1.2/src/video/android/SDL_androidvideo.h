@@ -57,6 +57,7 @@ extern SDL_Rect SDL_ANDROID_ShowScreenUnderFingerRect, SDL_ANDROID_ShowScreenUnd
 extern int SDL_ANDROID_CallJavaSwapBuffers();
 extern void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf, int outBufLen);
 extern void SDL_ANDROID_CallJavaHideScreenKeyboard();
+extern void SDL_ANDROID_CallJavaSetScreenKeyboardHintMessage(const char *hint);
 extern int SDL_ANDROID_IsScreenKeyboardShown();
 extern int SDL_ANDROID_IsScreenKeyboardShownFlag;
 extern int SDL_ANDROID_drawTouchscreenKeyboard();

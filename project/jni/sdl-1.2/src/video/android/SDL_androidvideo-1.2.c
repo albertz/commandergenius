@@ -293,7 +293,7 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[20]->w = 640; SDL_modelist[20]->h = 270; // For UAE4ALL2
 	SDL_modelist[21]->w = 320; SDL_modelist[21]->h = 216; // For UAE4ALL2
 	SDL_modelist[22]->w = 640; SDL_modelist[22]->h = 216; // For UAE4ALL2
-	SDL_modelist[23]->w = 384; SDL_modelist[23]->h = 272; // For VCMI
+	SDL_modelist[23]->w = 384; SDL_modelist[23]->h = 272; // For VICE
 	SDL_modelist[24] = NULL;
 	
 	SDL_VideoInit_1_3(NULL, 0);

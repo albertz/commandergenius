@@ -464,7 +464,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		{
 			try {
 				Thread.sleep(50); // Give some time to the keyboard input thread
-			catch(Exception e) { };
+			} catch(Exception e) { };
 		}
 		return 1;
 	}
@@ -521,6 +521,11 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public int isScreenKeyboardShown() // Called from native code
 	{
 		return context.isScreenKeyboardShown() ? 1 : 0;
+	}
+
+	public void setScreenKeyboardHintMessage(String s)
+	{
+		context.setScreenKeyboardHintMessage(s);
 	}
 
 	public void startAccelerometerGyroscope(int started)

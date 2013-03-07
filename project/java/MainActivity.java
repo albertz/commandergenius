@@ -455,10 +455,23 @@ public class MainActivity extends Activity
 			}
 		};
 		_screenKeyboard = new EditText(this);
-		_videoLayout.addView(_screenKeyboard);
-		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this, sendBackspace));
-		_screenKeyboard.setHint(R.string.text_edit_click_here);
+		// This code does not work
+		/*
+		_screenKeyboard.setMaxLines(100);
+		ViewGroup.LayoutParams layout = _screenKeyboard.getLayoutParams();
+		if( layout != null )
+		{
+			layout.width = ViewGroup.LayoutParams.FILL_PARENT;
+			layout.height = ViewGroup.LayoutParams.FILL_PARENT;
+			_screenKeyboard.setLayoutParams(layout);
+		}
+		_screenKeyboard.setGravity(android.view.Gravity.BOTTOM | android.view.Gravity.LEFT);
+		*/
+		String hint = _screenKeyboardHintMessage;
+		_screenKeyboard.setHint(hint != null ? hint : getString(R.string.text_edit_click_here));
 		_screenKeyboard.setText(oldText);
+		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this, sendBackspace));
+		_videoLayout.addView(_screenKeyboard);
 		//_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
 		_screenKeyboard.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
 		_screenKeyboard.setFocusableInTouchMode(true);
@@ -493,6 +506,23 @@ public class MainActivity extends Activity
 	{
 		return _screenKeyboard != null;
 	};
+	
+	public void setScreenKeyboardHintMessage(String s)
+	{
+		_screenKeyboardHintMessage = s;
+		//System.out.println("setScreenKeyboardHintMessage: " + (_screenKeyboardHintMessage != null ? _screenKeyboardHintMessage : getString(R.string.text_edit_click_here)));
+		runOnUiThread(new Runnable()
+		{
+			public void run()
+			{
+				if( _screenKeyboard != null )
+				{
+					String hint = _screenKeyboardHintMessage;
+					_screenKeyboard.setHint(hint != null ? hint : getString(R.string.text_edit_click_here));
+				}
+			}
+		} );
+	}
 
 	final static int ADVERTISEMENT_POSITION_RIGHT = -1;
 	final static int ADVERTISEMENT_POSITION_BOTTOM = -1;
@@ -1023,6 +1053,7 @@ public class MainActivity extends Activity
 
 	private FrameLayout _videoLayout = null;
 	private EditText _screenKeyboard = null;
+	private String _screenKeyboardHintMessage = null;
 	private boolean sdlInited = false;
 	public Settings.TouchEventsListener touchListener = null;
 	public Settings.KeyEventsListener keyListener = null;

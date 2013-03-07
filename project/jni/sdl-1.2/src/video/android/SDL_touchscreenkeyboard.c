@@ -1134,3 +1134,9 @@ int SDL_ANDROID_GetScreenKeyboardRedefinedByUser()
 {
 	return ScreenKbRedefinedByUser;
 }
+
+int SDL_ANDROID_SetScreenKeyboardHintMesage(const char * hint)
+{
+	SDL_ANDROID_CallJavaSetScreenKeyboardHintMessage(hint);
+	return 1;
+}

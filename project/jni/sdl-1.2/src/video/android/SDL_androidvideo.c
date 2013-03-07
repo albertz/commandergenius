@@ -65,6 +65,7 @@ static jmethodID JavaShowScreenKeyboard = NULL;
 static jmethodID JavaToggleScreenKeyboardWithoutTextInput = NULL;
 static jmethodID JavaHideScreenKeyboard = NULL;
 static jmethodID JavaIsScreenKeyboardShown = NULL;
+static jmethodID JavaSetScreenKeyboardHintMessage = NULL;
 static jmethodID JavaStartAccelerometerGyroscope = NULL;
 static jmethodID JavaGetAdvertisementParams = NULL;
 static jmethodID JavaSetAdvertisementVisible = NULL;
@@ -295,7 +296,23 @@ void SDL_ANDROID_CallJavaHideScreenKeyboard()
 
 int SDL_ANDROID_IsScreenKeyboardShown()
 {
+	/*
+	// Efficient implementation sometimes fails for no real reason, so poll Java from time to time
+	// Or maybe not, this was when I've added some debug code, not observed anymore
+	static int safetyCounter = 0;
+	if( safetyCounter >= 60 ) {
+		safetyCounter = 0;
+		SDL_ANDROID_IsScreenKeyboardShownFlag = (*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaIsScreenKeyboardShown );
+	}
+	safetyCounter ++;
+	*/
+
 	return SDL_ANDROID_IsScreenKeyboardShownFlag;
+}
+
+void SDL_ANDROID_CallJavaSetScreenKeyboardHintMessage(const char *hint)
+{
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetScreenKeyboardHintMessage, hint ? (*JavaEnv)->NewStringUTF(JavaEnv, hint) : NULL );
 }
 
 void SDL_ANDROID_CallJavaStartAccelerometerGyroscope(int start)
@@ -315,6 +332,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaToggleScreenKeyboardWithoutTextInput = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboardWithoutTextInputField", "()V");
 	JavaHideScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "hideScreenKeyboard", "()V");
 	JavaIsScreenKeyboardShown = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "isScreenKeyboardShown", "()I");
+	JavaSetScreenKeyboardHintMessage = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setScreenKeyboardHintMessage", "(Ljava/lang/String;)V");
 	JavaStartAccelerometerGyroscope = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "startAccelerometerGyroscope", "(I)V");
 
 	JavaGetAdvertisementParams = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "getAdvertisementParams", "([I)V");

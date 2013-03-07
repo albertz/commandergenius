@@ -111,6 +111,9 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardTextInput(char * textBu
 /* Whether user redefined on-screen keyboard layout via SDL menu, app should not enforce it's own layout in that case */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardRedefinedByUser(void);
 
+/* Set hint message for the text input field, it may be multi-line, set NULL to reset hint to default */
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardHintMesage(const char * hint);
+
 /* API compatible to SDL2, it's a wrapper to the SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(), it does not block */
 
 extern DECLSPEC int SDLCALL SDL_HasScreenKeyboardSupport(void *unused);
