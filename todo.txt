@@ -1,6 +1,8 @@
 Requested features (see also bugs.txt)
 ======================================
 
+- Add game action text to keys in the on-screen keyboard layout dialog.
+
 - Redesign on-screen keyboard layout dialog.
 
 - Option to reset SDL config to default.

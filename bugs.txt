@@ -12,5 +12,3 @@ Known bugs (see also todo.txt)
 - SDL_FillRect() does not work with SDL 1.2 in HW mode (and probably with SDL 1.3 too).
 
 - 32-bpp color mode does not work with SW video surface, 24-bpp and 32-bpp mode does not work with SDL_HWSURFACE.
-
-- Option SdlVideoResizeKeepAspect has no effect
