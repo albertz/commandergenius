@@ -460,6 +460,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 				this.notify();
 			}
 		}
+		if( context.isScreenKeyboardShown() )
+		{
+			try {
+				Thread.sleep(50); // Give some time to the keyboard input thread
+			catch(Exception e) { };
+		}
 		return 1;
 	}
 
