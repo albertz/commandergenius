@@ -66,6 +66,7 @@ enum {
    use SDL_ListModes()[0] to determine the actual screen boundaries. */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos);
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonImagePos(int buttonId, SDL_Rect * pos);
 
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonKey(int buttonId,
 #if SDL_VERSION_ATLEAST(1,3,0)

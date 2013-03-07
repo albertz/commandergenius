@@ -973,6 +973,19 @@ int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	return 1;
 };
 
+int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonImagePos(int buttonId, SDL_Rect * pos)
+{
+	if( buttonId < 0 || buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM || ! pos )
+		return 0;
+
+	if( buttonId == SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD )
+		arrowsDraw = *pos;
+	else
+		buttonsDraw[buttonId] = *pos;
+
+	return 1;
+}
+
 int SDL_ANDROID_GetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 {
 	if( buttonId < 0 || buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM || ! pos )

@@ -140,8 +140,10 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 	}
 	if( showScreenKeyboardDeferred )
 	{
+		jstring s = (*JavaEnv)->NewStringUTF(JavaEnv, showScreenKeyboardOldText);
 		showScreenKeyboardDeferred = 0;
-		(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard, (*JavaEnv)->NewStringUTF(JavaEnv, showScreenKeyboardOldText), showScreenKeyboardSendBackspace );
+		(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard, s, showScreenKeyboardSendBackspace );
+		(*JavaEnv)->DeleteLocalRef( JavaEnv, s );
 	}
 	SDL_ANDROID_ProcessDeferredEvents();
 	return 1;
@@ -280,7 +282,11 @@ void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf,
 #endif
 		}
 		else
-			(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard, (*JavaEnv)->NewStringUTF(JavaEnv, oldText), 0 );
+		{
+			jstring s = (*JavaEnv)->NewStringUTF( JavaEnv, oldText );
+			(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard, s, 0 );
+			(*JavaEnv)->DeleteLocalRef( JavaEnv, s );
+		}
 
 		while( !SDL_ANDROID_TextInputFinished )
 			SDL_Delay(100);
@@ -312,7 +318,10 @@ int SDL_ANDROID_IsScreenKeyboardShown()
 
 void SDL_ANDROID_CallJavaSetScreenKeyboardHintMessage(const char *hint)
 {
-	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetScreenKeyboardHintMessage, hint ? (*JavaEnv)->NewStringUTF(JavaEnv, hint) : NULL );
+	jstring s = hint ? (*JavaEnv)->NewStringUTF(JavaEnv, hint) : NULL;
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetScreenKeyboardHintMessage, s );
+	if( s )
+		(*JavaEnv)->DeleteLocalRef( JavaEnv, s );
 }
 
 void SDL_ANDROID_CallJavaStartAccelerometerGyroscope(int start)
