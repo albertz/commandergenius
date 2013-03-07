@@ -1,6 +1,8 @@
 Requested features (see also bugs.txt)
 ======================================
 
+- Redesign on-screen keyboard layout dialog.
+
 - Option to reset SDL config to default.
 
 - Remove accelerometer-as-keys config and trackball config.
