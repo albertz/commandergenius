@@ -257,7 +257,7 @@ fi
 
 if [ -z "$AppNeedsArrowKeys" -o -z "$AUTO" ]; then
 echo
-echo "Application needs arrow keys (y) or (n), if (y) the accelerometer or touchscreen keyboard"
+echo "Application needs arrow keys (y) or (n), if (y) touchscreen keyboard"
 echo -n "will be used as arrow keys if phone does not have dpad/trackball ($AppNeedsArrowKeys): "
 read var
 if [ -n "$var" ] ; then

@@ -9,8 +9,6 @@ Requested features (see also bugs.txt)
 
 - Option to reset SDL config to default.
 
-- Remove accelerometer-as-keys config and trackball config.
-
 - Option for default on-screen key theme in AndroidAppSettings.cfg.
 
 - Select between normal mouse input and magnifying glass/relative input automatically, based on screen size.
