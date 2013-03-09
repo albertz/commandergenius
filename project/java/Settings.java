@@ -70,6 +70,8 @@ import android.graphics.Color;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorEvent;
 import android.hardware.Sensor;
+import android.widget.Toast;
+
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
 class Settings
@@ -554,6 +556,7 @@ class Settings
 				new RemapHwKeysConfig(),
 				new ScreenGesturesConfig(),
 				new VideoSettingsConfig(),
+				new ResetToDefaultsConfig(),
 				new OkButton(),
 			};
 			showMenuOptionsList(p, options);
@@ -2333,6 +2336,8 @@ class Settings
 		{
 			if( !Globals.AppUsesGyroscope || !AccelerometerReader.gyro.available(p) )
 			{
+				Toast toast = Toast.makeText(p, p.getResources().getString(R.string.calibrate_gyroscope_not_supported), Toast.LENGTH_LONG);
+				toast.show();
 				goBack(p);
 				return;
 			}
@@ -2461,6 +2466,53 @@ class Settings
 			});
 		}
 	}
+
+	static class ResetToDefaultsConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.reset_config);
+		}
+		boolean enabled()
+		{
+			return true;
+		}
+		void run (final MainActivity p)
+		{
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.reset_config_ask));
+			builder.setMessage(p.getResources().getString(R.string.reset_config_ask));
+			
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					DeleteSdlConfigOnUpgradeAndRestart(p); // Never returns
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setNegativeButton(p.getResources().getString(R.string.cancel), new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
 
 	// ===============================================================================================
 

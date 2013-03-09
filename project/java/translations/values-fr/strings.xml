@@ -165,4 +165,10 @@
 <string name="not_enough_ram">Not enough RAM</string>
 <string name="not_enough_ram_size">This app needs %1$d Mb RAM, your device has %2$d Mb</string>
 <string name="ignore">Ignore</string>
+<string name="calibrate_gyroscope">Calibrate gyroscope</string>
+<string name="calibrate_gyroscope_text">Put your phone on a flat surface</string>
+<string name="reset_config">Reset config to defaults</string>
+<string name="cancel">Cancel</string>
+<string name="calibrate_gyroscope_not_supported">Your device does not have gyroscope</string>
+<string name="reset_config_ask">Reset all options to default values?</string>
 </resources>

@@ -27,6 +27,7 @@
     <string name="optional_downloads">Downloads</string>
     <string name="downloads">Downloads</string>
     <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 
     <string name="controls_arrows">Arrows / joystick / dpad</string>
     <string name="controls_trackball">Trackball</string>
@@ -166,6 +167,10 @@
     <string name="ignore">Ignore</string>
 
     <string name="calibrate_gyroscope">Calibrate gyroscope</string>
-    <string name="calibrate_gyroscope_text">Put your phone on a flat surface</string>
+    <string name="calibrate_gyroscope_text">Put your device on a flat surface</string>
+    <string name="calibrate_gyroscope_not_supported">Your device does not have gyroscope</string>
+
+    <string name="reset_config">Reset config to defaults</string>
+    <string name="reset_config_ask">Reset all options to default values?</string>
 
 </resources>

@@ -14,8 +14,9 @@ grep '<string name=' values/strings.xml | while read str; do
 		trans=`grep "<string name=\"$var\">" $dir/strings.xml`
 		transtext=`echo $trans | sed 's/<string name=["][^"]*["]>\([^<]*\).*/\1/'`
 		if [ -z "$transtext" ] ; then
-			transtext=`./translate.py en $lang "$text"`
-			echo "$transtext" | grep 'Suspected Terms of Service Abuse' > /dev/null && transtext="$text"
+			#transtext=`./translate.py en $lang "$text"`
+			#echo "$transtext" | grep 'Suspected Terms of Service Abuse' > /dev/null && transtext="$text"
+			transtext="$text"
 			grep -v "^[<]/resources[>]\$" $dir/strings.xml > $dir/strings.1.xml
 			echo "<string name=\"$var\">$transtext</string>" >> $dir/strings.1.xml
 			echo "</resources>" >> $dir/strings.1.xml

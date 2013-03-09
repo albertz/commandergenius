@@ -17,7 +17,7 @@
 <string name="storage_sd">SD карта - %d Мб</string>
 <string name="storage_question">Куда сохранять данные приложения</string>
 <string name="optional_downloads">Дополнительные загрузки</string>
-<string name="ok">ОК</string>
+<string name="ok">Продолжить</string>
 <string name="controls_arrows">Стрелки / джойстик / Dpad</string>
 <string name="controls_trackball">Трекбол</string>
 <string name="controls_accel">Акселерометр</string>
@@ -137,4 +137,10 @@
 <string name="not_enough_ram_size">Для запуска приложения нужно %1$d Мб оперативной памяти, на этом устройстве есть %2$d Мб</string>
 <string name="ignore">Игнорировать</string>
 
+<string name="calibrate_gyroscope">Калибровать гироскоп</string>
+<string name="calibrate_gyroscope_text">Положите устройство на ровную поверхность</string>
+<string name="reset_config">Сбросить все настройки</string>
+<string name="cancel">Отменить</string>
+<string name="calibrate_gyroscope_not_supported">Гироскоп отсутствует</string>
+<string name="reset_config_ask">Сбросить все настройки в значения по умолчанию?</string>
 </resources>
