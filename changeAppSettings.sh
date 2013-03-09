@@ -434,6 +434,22 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$RedefinedKeysScreenKbNames" -o -z "$AUTO" ]; then
+if [ -z "$RedefinedKeysScreenKbNames" ]; then
+	RedefinedKeysScreenKbNames="$RedefinedKeysScreenKb"
+	CHANGED=1
+fi
+echo
+echo "Names for on-screen keyboard keys, such as Fire, Jump, Run etc, separated by spaces, they are used in SDL config menu"
+echo "$RedefinedKeysScreenKbNames"
+echo -n ": "
+read var
+if [ -n "$var" ] ; then
+	RedefinedKeysScreenKbNames="$var"
+	CHANGED=1
+fi
+fi
+
 if [ -z "$StartupMenuButtonTimeout" -o -z "$AUTO" ]; then
 echo
 echo -n "How long to show startup menu button, in msec, 0 to disable startup menu ($StartupMenuButtonTimeout): "
@@ -712,6 +728,7 @@ echo RedefinedKeys=\"$RedefinedKeys\" >> AndroidAppSettings.cfg
 echo AppTouchscreenKeyboardKeysAmount=$AppTouchscreenKeyboardKeysAmount >> AndroidAppSettings.cfg
 echo AppTouchscreenKeyboardKeysAmountAutoFire=$AppTouchscreenKeyboardKeysAmountAutoFire >> AndroidAppSettings.cfg
 echo RedefinedKeysScreenKb=\"$RedefinedKeysScreenKb\" >> AndroidAppSettings.cfg
+echo RedefinedKeysScreenKbNames=\"$RedefinedKeysScreenKbNames\" >> AndroidAppSettings.cfg
 echo StartupMenuButtonTimeout=$StartupMenuButtonTimeout >> AndroidAppSettings.cfg
 echo HiddenMenuOptions=\'$HiddenMenuOptions\' >> AndroidAppSettings.cfg
 echo FirstStartMenuOptions=\'$FirstStartMenuOptions\' >> AndroidAppSettings.cfg
@@ -1038,6 +1055,7 @@ sed -i "s/public static boolean ResetSdlConfigForThisVersion = .*;/public static
 sed -i "s|public static String DeleteFilesOnUpgrade = .*;|public static String DeleteFilesOnUpgrade = \"$DeleteFilesOnUpgrade\";|" project/src/Globals.java
 sed -i "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" project/src/Globals.java
 sed -i "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" project/src/Globals.java
+sed -i "s@public static String\\[\\] AppTouchscreenKeyboardKeysNames = .*;@public static String[] AppTouchscreenKeyboardKeysNames = \"$RedefinedKeysScreenKbNames\".split(\" \");@" project/src/Globals.java
 sed -i "s/public static int StartupMenuButtonTimeout = .*;/public static int StartupMenuButtonTimeout = $StartupMenuButtonTimeout;/" project/src/Globals.java
 sed -i "s/public static int AppMinimumRAM = .*;/public static int AppMinimumRAM = $AppMinimumRAM;/" project/src/Globals.java
 sed -i "s/public static Settings.Menu HiddenMenuOptions .*;/public static Settings.Menu HiddenMenuOptions [] = { $HiddenMenuOptions1 };/" project/src/Globals.java

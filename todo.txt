@@ -3,8 +3,6 @@ Requested features (see also bugs.txt)
 
 - When downloading data, show cancel dialog when pressing Back.
 
-- Add game action text to keys in the on-screen keyboard layout dialog.
-
 - Redesign on-screen keyboard layout dialog.
 
 - Option to reset SDL config to default.

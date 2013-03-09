@@ -2057,6 +2057,25 @@ class Settings
 					};
 					buttons = buttons2;
 				}
+
+				for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+				{
+					imgs[i] = new ImageView(p);
+					imgs[i].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+					imgs[i].setScaleType(ImageView.ScaleType.MATRIX);
+					bmps[i] = BitmapFactory.decodeResource( p.getResources(), buttons[i] );
+					imgs[i].setImageBitmap(bmps[i]);
+					imgs[i].setAlpha(128);
+					layout.addView(imgs[i]);
+					Matrix m = new Matrix();
+					RectF src = new RectF(0, 0, bmps[i].getWidth(), bmps[i].getHeight());
+					RectF dst = new RectF(Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][1],
+											Globals.ScreenKbControlsLayout[i][2], Globals.ScreenKbControlsLayout[i][3]);
+					m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+					imgs[i].setImageMatrix(m);
+				}
+				boundary.bringToFront();
+
 				setupButton(true);
 			}
 			
@@ -2080,16 +2099,6 @@ class Settings
 					}
 				} while( ! Globals.ScreenKbControlsShown[currentButton] );
 				
-				if( imgs[currentButton] == null )
-				{
-					imgs[currentButton] = new ImageView(p);
-					imgs[currentButton].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-					imgs[currentButton].setScaleType(ImageView.ScaleType.MATRIX);
-					bmps[currentButton] = BitmapFactory.decodeResource( p.getResources(), buttons[currentButton] );
-					imgs[currentButton].setImageBitmap(bmps[currentButton]);
-					layout.addView(imgs[currentButton]);
-					boundary.bringToFront();
-				}
 				if( Globals.ScreenKbControlsLayout[currentButton][0] == Globals.ScreenKbControlsLayout[currentButton][2] ||
 					Globals.ScreenKbControlsLayout[currentButton][1] == Globals.ScreenKbControlsLayout[currentButton][3] )
 				{
@@ -2116,6 +2125,10 @@ class Settings
 				src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
 				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 				boundary.setImageMatrix(m);
+				String buttonText = (currentButton == 0 ? "DPAD" : ( currentButton == 1 ? "Text input" : "" ));
+				if ( currentButton >= 2 && currentButton - 2 < Globals.AppTouchscreenKeyboardKeysNames.length )
+					buttonText = Globals.AppTouchscreenKeyboardKeysNames[currentButton - 2];
+				p.setText(p.getResources().getString(R.string.screenkb_custom_layout_help) + "\n" + buttonText.replace("_", " "));
 			}
 
 			public void onTouchEvent(final MotionEvent ev)
