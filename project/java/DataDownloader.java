@@ -57,6 +57,8 @@ import android.content.Context;
 import android.content.res.Resources;
 import java.lang.String;
 import android.text.SpannedString;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 
 class CountingInputStream extends BufferedInputStream
@@ -188,6 +190,7 @@ class DataDownloader extends Thread
 	@Override
 	public void run()
 	{
+		Parent.keyListener = new BackKeyListener(Parent);
 		String [] downloadFiles = Globals.DataDownloadUrl;
 		int total = 0;
 		int count = 0;
@@ -213,11 +216,13 @@ class DataDownloader extends Thread
 			}
 		}
 		DownloadComplete = true;
+		Parent.keyListener = null;
 		initParent();
 	}
 
 	public boolean DownloadDataFile(final String DataDownloadUrl, final String DownloadFlagFileName, int downloadCount, int downloadTotal, int downloadIndex)
 	{
+		DownloadCanBeResumed = false;
 		Resources res = Parent.getResources();
 
 		String [] downloadUrls = DataDownloadUrl.split("[|]");
@@ -298,6 +303,7 @@ class DataDownloader extends Thread
 				path = getOutFilePath(url.substring( 1, url.indexOf(":", 1) ));
 				url = url.substring( url.indexOf(":", 1) + 1 );
 				DoNotUnzip = true;
+				DownloadCanBeResumed = true;
 				File partialDownload = new File( path );
 				if( partialDownload.exists() && !partialDownload.isDirectory() && !forceOverwrite )
 					partialDownloadLen = partialDownload.length();
@@ -674,10 +680,56 @@ class DataDownloader extends Thread
         return http;
 		*/
 	}
-	
+
+
+	public class BackKeyListener implements Settings.KeyEventsListener
+	{
+		MainActivity p;
+		public BackKeyListener(MainActivity _p)
+		{
+			p = _p;
+		}
+
+		public void onKeyEvent(final int keyCode)
+		{
+			if( DownloadFailed )
+				System.exit(1);
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.cancel_download));
+			builder.setMessage(p.getResources().getString(R.string.cancel_download) + (DownloadCanBeResumed ? " " + p.getResources().getString(R.string.cancel_download_resume) : ""));
+			
+			builder.setPositiveButton(p.getResources().getString(R.string.yes), new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					System.exit(1);
+					dialog.dismiss();
+				}
+			});
+			builder.setNegativeButton(p.getResources().getString(R.string.no), new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+	}
+
 	public StatusWriter Status;
 	public boolean DownloadComplete = false;
 	public boolean DownloadFailed = false;
+	public boolean DownloadCanBeResumed = false;
 	private MainActivity Parent;
 	private String outFilesDir = null;
 }

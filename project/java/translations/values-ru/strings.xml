@@ -143,4 +143,8 @@
 <string name="cancel">Отменить</string>
 <string name="calibrate_gyroscope_not_supported">Гироскоп отсутствует</string>
 <string name="reset_config_ask">Сбросить все настройки в значения по умолчанию?</string>
+<string name="cancel_download">Остановить загрузку?</string>
+<string name="cancel_download_resume">Загрузка может быть продолжена позднее.</string>
+<string name="yes">Да</string>
+<string name="no">Нет</string>
 </resources>

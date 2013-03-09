@@ -623,6 +623,7 @@ public class MainActivity extends Activity
 			if( mGLView.nativeKey( keyCode, 1 ) == 0 )
 				return super.onKeyDown(keyCode, event);
 		}
+		/*
 		else
 		if( keyCode == KeyEvent.KEYCODE_BACK && downloader != null )
 		{
@@ -631,6 +632,7 @@ public class MainActivity extends Activity
 			if( !downloader.DownloadComplete )
 				onStop();
 		}
+		*/
 		else
 		if( keyListener != null )
 		{

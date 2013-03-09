@@ -5,8 +5,6 @@ Requested features (see also bugs.txt)
 
 - Redesign on-screen keyboard layout dialog.
 
-- Option to reset SDL config to default.
-
 - Option for default on-screen key theme in AndroidAppSettings.cfg.
 
 - Select between normal mouse input and magnifying glass/relative input automatically, based on screen size.

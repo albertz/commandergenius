@@ -171,4 +171,8 @@
 <string name="cancel">Cancel</string>
 <string name="calibrate_gyroscope_not_supported">Your device does not have gyroscope</string>
 <string name="reset_config_ask">Reset all options to default values?</string>
+<string name="cancel_download">Cancel data downloading?</string>
+<string name="cancel_download_resume">You can resume it later, the data will not be downloaded twice.</string>
+<string name="yes">Yes</string>
+<string name="no">No</string>
 </resources>
