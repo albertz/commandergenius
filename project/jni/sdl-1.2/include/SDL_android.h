@@ -25,6 +25,7 @@
 
 #include "SDL_video.h"
 #include "SDL_screenkeyboard.h"
+#include "SDL_audio.h"
 #include <jni.h>
 
 #include "begin_code.h"
@@ -81,6 +82,18 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void);
 /** Exports for Java environment and Video object instance */
 extern DECLSPEC JNIEnv* SDL_ANDROID_JniEnv();
 extern DECLSPEC jobject SDL_ANDROID_JniVideoObject();
+
+/*
+Open audio recording device, it will use parameters freq, format, channels, size and callback,
+and return internal buffer size on success, which you may ignore,
+because your callback will always be called with buffer size you specified.
+Returns 0 on failure (most probably hardware does not support requested audio rate).
+SDL_Init(SDL_INIT_AUDIO) has to be done before calling this function.
+*/
+extern DECLSPEC int SDLCALL SDL_ANDROID_OpenAudioRecording(SDL_AudioSpec *spec);
+/* Close audio recording device, SDL_Init(SDL_INIT_AUDIO) has to be done before calling this function. */
+extern DECLSPEC void SDLCALL SDL_ANDROID_CloseAudioRecording(void);
+
 
 #ifdef __cplusplus
 }

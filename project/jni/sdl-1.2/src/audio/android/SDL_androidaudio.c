@@ -146,6 +146,12 @@ static jmethodID JavaDeinitAudio = NULL;
 static jmethodID JavaPauseAudioPlayback = NULL;
 static jmethodID JavaResumeAudioPlayback = NULL;
 
+// Audio recording
+
+static SDL_AudioSpec recording;
+static jmethodID JavaStartRecording = NULL;
+static jmethodID JavaStopRecording = NULL;
+
 
 static Uint8 *ANDROIDAUD_GetAudioBuf(_THIS)
 {
@@ -199,7 +205,7 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 	if( !jniEnv )
 	{
 		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_OpenAudio: Java VM AttachCurrentThread() failed");
-		return (-1); // TODO: enable format conversion? Don't know how to do that in SDL
+		return (-1);
 	}
 
 	// The returned audioBufferSize may be huge, up to 100 Kb for 44100 because user may have selected large audio buffer to get rid of choppy sound
@@ -312,6 +318,10 @@ static void ANDROIDAUD_ThreadInit(_THIS)
 
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_ThreadInit()");
 	SDL_memset(audioBuffer, this->spec.silence, this->spec.size);
+
+	// Audio recording
+	JavaStartRecording = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "startRecording", "(IIII)I");
+	JavaStopRecording = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "stopRecording", "()V");
 };
 
 static void ANDROIDAUD_ThreadDeinit(_THIS)
@@ -322,19 +332,19 @@ static void ANDROIDAUD_ThreadDeinit(_THIS)
 static void ANDROIDAUD_SendAudioToJava(void)
 {
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio()");
-	jboolean isCopy = JNI_TRUE;
+	//jboolean isCopy = JNI_TRUE;
 
 	(*jniEnvPlaying)->ReleaseByteArrayElements(jniEnvPlaying, audioBufferJNI, (jbyte *)audioBuffer, 0);
 	audioBuffer = NULL;
 
 	(*jniEnvPlaying)->CallIntMethod( jniEnvPlaying, JavaAudioThread, JavaFillBuffer );
 
-	audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetByteArrayElements(jniEnvPlaying, audioBufferJNI, &isCopy);
+	audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetByteArrayElements(jniEnvPlaying, audioBufferJNI, NULL);
 	if( !audioBuffer )
 		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_PlayAudio() JNI::GetByteArrayElements() failed! we will crash now");
 
-	if( isCopy == JNI_TRUE )
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio() JNI returns a copy of byte array - that's slow");
+	//if( isCopy == JNI_TRUE )
+	//	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio() JNI returns a copy of byte array - that's slow");
 }
 
 #ifdef SDL_AUDIO_APP_IGNORES_RETURNED_BUFFER_SIZE
@@ -403,3 +413,51 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 	jniVM = vm;
 };
 
+// ----- Audio recording -----
+
+JNIEXPORT void JNICALL JAVA_EXPORT_NAME(AudioThread_nativeAudioRecordCallback) (JNIEnv * jniEnv, jobject thiz, jbyteArray jbuffer)
+{
+	int len = (*jniEnv)->GetArrayLength(jniEnv, jbuffer);
+	Uint8 *buffer = (Uint8 *) (*jniEnv)->GetByteArrayElements(jniEnv, jbuffer, NULL);
+	if( !buffer )
+		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "AudioThread_nativeAudioRecordCallbacks() JNI::GetByteArrayElements() failed! we will crash now");
+
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "AudioThread_nativeAudioRecordCallbacks(): got buffer %p len %d", buffer, len);
+
+	recording.callback(recording.userdata, buffer, len);
+
+	(*jniEnv)->ReleaseByteArrayElements(jniEnv, jbuffer, (jbyte *)buffer, 0);
+}
+
+extern DECLSPEC int SDLCALL SDL_ANDROID_OpenAudioRecording(SDL_AudioSpec *spec)
+{
+	JNIEnv * jniEnv = NULL;
+
+	recording = *spec;
+
+	if( ! (recording.format == AUDIO_S8 || recording.format == AUDIO_S16) )
+	{
+		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "Application requested unsupported audio format - only S8 and S16 are supported");
+		return 0;
+	}
+
+	if( ! recording.callback )
+	{
+		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "Application did not provide callback");
+		return 0;
+	}
+
+	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
+
+	return (*jniEnv)->CallIntMethod( jniEnv, JavaAudioThread, JavaStartRecording, (jint)recording.freq, (jint)recording.channels,
+										(jint)(recording.format == AUDIO_S16 ? 1 : 0), (jint)recording.size );
+}
+
+extern DECLSPEC void SDLCALL SDL_ANDROID_CloseAudioRecording(void)
+{
+	JNIEnv * jniEnv = NULL;
+
+	(*jniVM)->AttachCurrentThread(jniVM, &jniEnv, NULL);
+
+	(*jniEnv)->CallVoidMethod( jniEnv, JavaAudioThread, JavaStopRecording );
+}

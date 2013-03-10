@@ -32,6 +32,8 @@ import android.view.WindowManager;
 import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.media.AudioFormat;
+import android.media.AudioRecord;
+import android.media.MediaRecorder.AudioSource;
 import java.io.*;
 import android.util.Log;
 import java.lang.Thread;
@@ -132,9 +134,12 @@ class AudioThread
 		if( mAudio != null )
 		{
 			mAudio.pause();
-			return 1;
 		}
-		return 0;
+		if( mRecorder != null )
+		{
+			mRecorder.stop();
+		}
+		return 1;
 	}
 
 	public int resumeAudioPlayback()
@@ -142,11 +147,118 @@ class AudioThread
 		if( mAudio != null )
 		{
 			mAudio.play();
-			return 1;
 		}
-		return 0;
+		if( mRecorder != null )
+		{
+			mRecorder.startRecording();
+		}
+		return 1;
 	}
-	
-	private native int nativeAudioInitJavaCallbacks();
-}
 
+	private native int nativeAudioInitJavaCallbacks();
+
+	// ----- Audio recording -----
+
+	private AudioRecord mRecorder = null;
+	private RecordingThread mRecordThread = null;
+	//private int mRecordSize;
+	//private int mRecordPos;
+
+	private int startRecording(int rate, int channels, int encoding, int bufsize)
+	{
+		//mRecordSize = bufsize;
+		//mRecordPos = 0;
+		if( mRecordThread != null )
+		{
+			System.out.println("SDL: error: application already opened audio recording device");
+			return 0;
+		}
+		channels = ( channels == 1 ) ? AudioFormat.CHANNEL_IN_MONO :
+										AudioFormat.CHANNEL_IN_STEREO;
+		encoding = ( encoding == 1 ) ? AudioFormat.ENCODING_PCM_16BIT :
+										AudioFormat.ENCODING_PCM_8BIT;
+
+		int minBufDevice = AudioRecord.getMinBufferSize(rate, channels, encoding);
+		int minBufferSize = Math.max(bufsize * 8, minBufDevice + (bufsize - (minBufDevice % bufsize)));
+		System.out.println("SDL: app opened recording device, rate " + rate + " channels " + channels + " sample size " + (encoding+1) + " bufsize " + bufsize + " internal bufsize " + minBufferSize);
+		try {
+			mRecorder = new AudioRecord(AudioSource.DEFAULT, rate, channels, encoding, minBufferSize);
+		} catch (IllegalArgumentException e) {
+			System.out.println("SDL: error: failed to open recording device!");
+			return 0;
+		}
+		mRecordThread = new RecordingThread(bufsize);
+		mRecorder.startRecording();
+		mRecordThread.start();
+		return minBufferSize;
+	}
+
+	private void stopRecording()
+	{
+		if( mRecordThread == null )
+		{
+			System.out.println("SDL: error: application already closed audio recording device");
+			return;
+		}
+		mRecordThread.terminate = true;
+		while( !mRecordThread.stopped )
+		{
+			try{
+				Thread.sleep(100);
+			} catch (InterruptedException e) {}
+		}
+		mRecordThread = null;
+		mRecorder.stop();
+		mRecorder.release();
+		mRecorder = null;
+		System.out.println("SDL: app closed recording device");
+	}
+
+	private class RecordingThread extends Thread
+	{
+		public boolean terminate = false;
+		public boolean stopped = false;
+		private byte[] mRecordBuffer;
+
+		RecordingThread(int bufsize)
+		{
+			super();
+			mRecordBuffer = new byte[bufsize];
+		}
+
+		public void run()
+		{
+			while( !terminate )
+			{
+				int got = mRecorder.read(mRecordBuffer, 0, mRecordBuffer.length);
+				if( got != mRecordBuffer.length )
+				{
+					System.out.println("SDL: warning: RecordingThread: mRecorder.read returned short byte count " + got + " for bufsize " + mRecordBuffer.length);
+					// TODO: record in a loop?
+				}
+				System.out.println("SDL: nativeAudioRecordCallback with len " + mRecordBuffer.length);
+				nativeAudioRecordCallback(mRecordBuffer);
+				System.out.println("SDL: nativeAudioRecordCallback returned");
+			}
+			stopped = true;
+		}
+	}
+
+	private native void nativeAudioRecordCallback(byte[] buffer);
+
+	/*
+	private int recordRead()
+	{
+		mRecordPos += mRecordSize;
+		if( mRecordPos >= mRecordBuffer.length )
+			mRecordPos = 0;
+		mRecorder.read(mRecordBuffer, mRecordPos, mRecordSize);
+		return mRecordPos;
+	}
+
+	public byte[] getRecordBuffer()
+	{
+		return mRecordBuffer;
+	}
+	*/
+}
