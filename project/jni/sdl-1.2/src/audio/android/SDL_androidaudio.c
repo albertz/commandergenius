@@ -420,9 +420,12 @@ JNIEXPORT void JNICALL JAVA_EXPORT_NAME(AudioThread_nativeAudioRecordCallback) (
 	int len = (*jniEnv)->GetArrayLength(jniEnv, jbuffer);
 	Uint8 *buffer = (Uint8 *) (*jniEnv)->GetByteArrayElements(jniEnv, jbuffer, NULL);
 	if( !buffer )
+	{
 		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "AudioThread_nativeAudioRecordCallbacks() JNI::GetByteArrayElements() failed! we will crash now");
+		return;
+	}
 
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "AudioThread_nativeAudioRecordCallbacks(): got buffer %p len %d", buffer, len);
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "AudioThread_nativeAudioRecordCallbacks(): got buffer %p len %d", buffer, len);
 
 	recording.callback(recording.userdata, buffer, len);
 
