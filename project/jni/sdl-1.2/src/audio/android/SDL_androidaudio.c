@@ -425,7 +425,7 @@ JNIEXPORT void JNICALL JAVA_EXPORT_NAME(AudioThread_nativeAudioRecordCallback) (
 		return;
 	}
 
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "AudioThread_nativeAudioRecordCallbacks(): got buffer %p len %d", buffer, len);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "AudioThread_nativeAudioRecordCallbacks(): got buffer %p len %d", buffer, len);
 
 	recording.callback(recording.userdata, buffer, len);
 
