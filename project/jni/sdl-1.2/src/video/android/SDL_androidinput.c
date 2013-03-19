@@ -1248,12 +1248,59 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeGamepadAnalogJoystickInput) (JNIEnv* env, jobject thiz,
 	jfloat stick1x, jfloat stick1y, jfloat stick2x, jfloat stick2y, jfloat rtrigger, jfloat ltrigger)
 {
-	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 0, NORMALIZE_FLOAT_32767(stick1x));
-	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 1, NORMALIZE_FLOAT_32767(stick1y));
-	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 2, NORMALIZE_FLOAT_32767(stick2x));
-	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 3, NORMALIZE_FLOAT_32767(stick2y));
-	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 4, NORMALIZE_FLOAT_32767(ltrigger));
-	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 5, NORMALIZE_FLOAT_32767(rtrigger));
+	if( SDL_ANDROID_CurrentJoysticks[JOY_GAMEPAD1] )
+	{
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 0, NORMALIZE_FLOAT_32767(stick1x));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 1, NORMALIZE_FLOAT_32767(stick1y));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 2, NORMALIZE_FLOAT_32767(stick2x));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 3, NORMALIZE_FLOAT_32767(stick2y));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 4, NORMALIZE_FLOAT_32767(ltrigger));
+		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 5, NORMALIZE_FLOAT_32767(rtrigger));
+	}
+	else
+	{
+		// Translate to up/down/left/right
+		if( stick1x < -0.5f )
+		{
+			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(LEFT) );
+		}
+		else
+		{
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(LEFT) );
+		}
+		if( stick1x > 0.5f )
+		{
+			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(RIGHT) );
+		}
+		else
+		{
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(RIGHT) );
+		}
+		if( stick1y < -0.5f )
+		{
+			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(UP) );
+		}
+		else
+		{
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(UP) );
+		}
+		if( stick1y > 0.5f )
+		{
+			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(DOWN) );
+		}
+		else
+		{
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(DOWN) );
+		}
+	}
 }
 
 static int leftPressed = 0, rightPressed = 0, upPressed = 0, downPressed = 0;
