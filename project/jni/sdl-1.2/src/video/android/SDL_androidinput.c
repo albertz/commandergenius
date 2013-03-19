@@ -57,7 +57,7 @@ static inline SDL_scancode TranslateKey(int scancode)
 static int isTrackballUsed = 0;
 int SDL_ANDROID_isMouseUsed = 0;
 
-#define NORMALIZE_FLOAT_32767(X) (fminf(32767.0f, fmax(-32767.0f, (X) * 32767.0f)))
+#define NORMALIZE_FLOAT_32767(X) (fminf(32767.0f, fmaxf(-32767.0f, (X) * 32767.0f)))
 
 enum { RIGHT_CLICK_NONE = 0, RIGHT_CLICK_WITH_MULTITOUCH = 1, RIGHT_CLICK_WITH_PRESSURE = 2, 
 		RIGHT_CLICK_WITH_KEY = 3, RIGHT_CLICK_WITH_TIMEOUT = 4 };
@@ -826,6 +826,9 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 		normal = 0.00001f;
 	
 	updateOrientation (accPosX/normal, accPosY/normal, 0.0f);
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 5, fminf(32767.0f, fmaxf(-32767.0f, accPosX*1000.0f))); // Do not consider wraparound case
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 6, fminf(32767.0f, fmaxf(-32767.0f, accPosY*1000.0f)));
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 7, fminf(32767.0f, fmaxf(-32767.0f, accPosZ*1000.0f)));
 }
 
 
@@ -1417,7 +1420,7 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 	}
 	if( joystick->index == JOY_ACCELGYRO )
 	{
-		joystick->naxes = 5; // Accelerometer = axes 0-1, gyroscope = axes 2-4
+		joystick->naxes = 8; // Normalized accelerometer = axes 0-1, gyroscope = axes 2-4, raw accelerometer = axes 5-7
 		SDL_ANDROID_CallJavaStartAccelerometerGyroscope(1);
 	}
 	if( joystick->index >= JOY_GAMEPAD1 || joystick->index <= JOY_GAMEPAD4 )
