@@ -254,12 +254,17 @@ class AudioThread
 					int got = mRecorder.read(mRecordBuffer, 0, mRecordBuffer.length);
 					if( got != mRecordBuffer.length )
 					{
-						System.out.println("SDL: warning: RecordingThread: mRecorder.read returned short byte count " + got + " for bufsize " + mRecordBuffer.length);
-						// TODO: record in a loop?
+						// Audio is stopped here, sleep a bit.
+						try{
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {}
 					}
-					//System.out.println("SDL: nativeAudioRecordCallback with len " + mRecordBuffer.length);
-					nativeAudioRecordCallback();
-					//System.out.println("SDL: nativeAudioRecordCallback returned");
+					else
+					{
+						//System.out.println("SDL: nativeAudioRecordCallback with len " + mRecordBuffer.length);
+						nativeAudioRecordCallback();
+						//System.out.println("SDL: nativeAudioRecordCallback returned");
+					}
 				}
 
 				stopped = true;
