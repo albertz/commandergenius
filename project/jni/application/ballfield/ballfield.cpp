@@ -553,6 +553,8 @@ int main(int argc, char* argv[])
 	memset(screenjoy, 0, sizeof(screenjoy));
 	memset(gamepads, 0, sizeof(gamepads));
 
+	__android_log_print(ANDROID_LOG_INFO, "Ballfield", "sizeof(int) %d long %d long long %d size_t %d", sizeof(int), sizeof(long), sizeof(long long), sizeof(size_t));
+
 	while(1)
 	{
 		SDL_Rect r;
