@@ -990,6 +990,13 @@ fi
 
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 
+
+SEDI="sed -i"
+if uname -s | grep -i "darwin" > /dev/null ; then
+	SEDI="sed -i.killme.tmp" # MacOsX version of sed is buggy, and requires a mandatory parameter
+fi
+
+
 rm -rf project/src
 mkdir -p project/src
 cd project/java
@@ -1008,7 +1015,7 @@ cat project/AndroidManifestTemplate.xml | \
 	sed "s^android:versionName=.*^android:versionName=\"$AppVersionName\"^" > \
 	project/AndroidManifest.xml
 if [ "$AdmobPublisherId" = "n" -o -z "$AdmobPublisherId" ] ; then
-	sed -i "/==ADMOB==/ d" project/AndroidManifest.xml
+	$SEDI "/==ADMOB==/ d" project/AndroidManifest.xml
 	AdmobPublisherId=""
 else
 	F=project/java/admob/Advertisement.java
@@ -1018,71 +1025,71 @@ else
 fi
 
 if [ "$AppRecordsAudio" = "n" -o -z "$AppRecordsAudio" ] ; then
-	sed -i "/==RECORD_AUDIO==/ d" project/AndroidManifest.xml
+	$SEDI "/==RECORD_AUDIO==/ d" project/AndroidManifest.xml
 fi
 
 case "$MinimumScreenSize" in
 	n|m)
-		sed -i "/==SCREEN-SIZE-SMALL==/ d" project/AndroidManifest.xml
-		sed -i "/==SCREEN-SIZE-LARGE==/ d" project/AndroidManifest.xml
+		$SEDI "/==SCREEN-SIZE-SMALL==/ d" project/AndroidManifest.xml
+		$SEDI "/==SCREEN-SIZE-LARGE==/ d" project/AndroidManifest.xml
 		;;
 	l)
-		sed -i "/==SCREEN-SIZE-SMALL==/ d" project/AndroidManifest.xml
-		sed -i "/==SCREEN-SIZE-NORMAL==/ d" project/AndroidManifest.xml
+		$SEDI "/==SCREEN-SIZE-SMALL==/ d" project/AndroidManifest.xml
+		$SEDI "/==SCREEN-SIZE-NORMAL==/ d" project/AndroidManifest.xml
 		;;
 	*)
-		sed -i "/==SCREEN-SIZE-NORMAL==/ d" project/AndroidManifest.xml
-		sed -i "/==SCREEN-SIZE-LARGE==/ d" project/AndroidManifest.xml
+		$SEDI "/==SCREEN-SIZE-NORMAL==/ d" project/AndroidManifest.xml
+		$SEDI "/==SCREEN-SIZE-LARGE==/ d" project/AndroidManifest.xml
 		;;
 esac
 
 echo Patching project/src/Globals.java
-sed -i "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" project/src/Globals.java
-sed -i "s/public static final boolean Using_SDL_1_3 = .*;/public static final boolean Using_SDL_1_3 = $UsingSdl13;/" project/src/Globals.java
+$SEDI "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" project/src/Globals.java
+$SEDI "s/public static final boolean Using_SDL_1_3 = .*;/public static final boolean Using_SDL_1_3 = $UsingSdl13;/" project/src/Globals.java
 
 # Work around "Argument list too long" problem when compiling VICE
-#sed -i "s@public static String DataDownloadUrl = .*@public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";@" project/src/Globals.java
-sed -i "s@public static String\[\] DataDownloadUrl = .*@public static String[] DataDownloadUrl = { ### };@" project/src/Globals.java
-echo "$AppDataDownloadUrl1" | tr '^' '\n' | while read URL; do sed -i "s@###@\"$URL\", ###@" project/src/Globals.java ; done
-sed -i "s@###@@" project/src/Globals.java
+#$SEDI "s@public static String DataDownloadUrl = .*@public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";@" project/src/Globals.java
+$SEDI "s@public static String\[\] DataDownloadUrl = .*@public static String[] DataDownloadUrl = { ### };@" project/src/Globals.java
+echo "$AppDataDownloadUrl1" | tr '^' '\n' | while read URL; do $SEDI "s@###@\"$URL\", ###@" project/src/Globals.java ; done
+$SEDI "s@###@@" project/src/Globals.java
 
-sed -i "s/public static boolean SwVideoMode = .*;/public static boolean SwVideoMode = $SwVideoMode;/" project/src/Globals.java
-sed -i "s/public static int VideoDepthBpp = .*;/public static int VideoDepthBpp = $VideoDepthBpp;/" project/src/Globals.java
-sed -i "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" project/src/Globals.java
-sed -i "s/public static boolean NeedStencilBuffer = .*;/public static boolean NeedStencilBuffer = $NeedStencilBuffer;/" project/src/Globals.java
-sed -i "s/public static boolean NeedGles2 = .*;/public static boolean NeedGles2 = $NeedGles2;/" project/src/Globals.java
-sed -i "s/public static boolean CompatibilityHacksVideo = .*;/public static boolean CompatibilityHacksVideo = $CompatibilityHacks;/" project/src/Globals.java
-sed -i "s/public static boolean CompatibilityHacksStaticInit = .*;/public static boolean CompatibilityHacksStaticInit = $CompatibilityHacksStaticInit;/" project/src/Globals.java
-sed -i "s/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = .*;/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = $CompatibilityHacksTextInputEmulatesHwKeyboard;/" project/src/Globals.java
-sed -i "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" project/src/Globals.java
-sed -i "s^public static boolean KeepAspectRatioDefaultSetting = .*^public static boolean KeepAspectRatioDefaultSetting = $SdlVideoResizeKeepAspect;^" project/src/Globals.java
-sed -i "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" project/src/Globals.java
-sed -i "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" project/src/Globals.java
-sed -i "s/public static boolean AppNeedsTwoButtonMouse = .*;/public static boolean AppNeedsTwoButtonMouse = $AppNeedsTwoButtonMouse;/" project/src/Globals.java
-sed -i "s/public static boolean ForceRelativeMouseMode = .*;/public static boolean ForceRelativeMouseMode = $ForceRelativeMouseMode;/" project/src/Globals.java
-sed -i "s/public static boolean ShowMouseCursor = .*;/public static boolean ShowMouseCursor = $ShowMouseCursor;/" project/src/Globals.java
-sed -i "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" project/src/Globals.java
-sed -i "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" project/src/Globals.java
-sed -i "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" project/src/Globals.java
-sed -i "s/public static boolean AppUsesAccelerometer = .*;/public static boolean AppUsesAccelerometer = $AppUsesAccelerometer;/" project/src/Globals.java
-sed -i "s/public static boolean AppUsesGyroscope = .*;/public static boolean AppUsesGyroscope = $AppUsesGyroscope;/" project/src/Globals.java
-sed -i "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" project/src/Globals.java
-sed -i "s/public static boolean NonBlockingSwapBuffers = .*;/public static boolean NonBlockingSwapBuffers = $NonBlockingSwapBuffers;/" project/src/Globals.java
-sed -i "s/public static boolean ResetSdlConfigForThisVersion = .*;/public static boolean ResetSdlConfigForThisVersion = $ResetSdlConfigForThisVersion;/" project/src/Globals.java
-sed -i "s|public static String DeleteFilesOnUpgrade = .*;|public static String DeleteFilesOnUpgrade = \"$DeleteFilesOnUpgrade\";|" project/src/Globals.java
-sed -i "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" project/src/Globals.java
-sed -i "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" project/src/Globals.java
-sed -i "s@public static String\\[\\] AppTouchscreenKeyboardKeysNames = .*;@public static String[] AppTouchscreenKeyboardKeysNames = \"$RedefinedKeysScreenKbNames\".split(\" \");@" project/src/Globals.java
-sed -i "s/public static int StartupMenuButtonTimeout = .*;/public static int StartupMenuButtonTimeout = $StartupMenuButtonTimeout;/" project/src/Globals.java
-sed -i "s/public static int AppMinimumRAM = .*;/public static int AppMinimumRAM = $AppMinimumRAM;/" project/src/Globals.java
-sed -i "s/public static Settings.Menu HiddenMenuOptions .*;/public static Settings.Menu HiddenMenuOptions [] = { $HiddenMenuOptions1 };/" project/src/Globals.java
-sed -i "s@public static Settings.Menu FirstStartMenuOptions .*;@public static Settings.Menu FirstStartMenuOptions [] = { $FirstStartMenuOptions };@" project/src/Globals.java
-sed -i "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\";%" project/src/Globals.java
-sed -i "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" project/src/Globals.java
-sed -i "s/public static String AdmobPublisherId = .*/public static String AdmobPublisherId = \"$AdmobPublisherId\";/" project/src/Globals.java
-sed -i "s/public static String AdmobTestDeviceId = .*/public static String AdmobTestDeviceId = \"$AdmobTestDeviceId\";/" project/src/Globals.java
-sed -i "s/public static String AdmobBannerSize = .*/public static String AdmobBannerSize = \"$AdmobBannerSize\";/" project/src/Globals.java
-sed -i "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" project/src/Globals.java
+$SEDI "s/public static boolean SwVideoMode = .*;/public static boolean SwVideoMode = $SwVideoMode;/" project/src/Globals.java
+$SEDI "s/public static int VideoDepthBpp = .*;/public static int VideoDepthBpp = $VideoDepthBpp;/" project/src/Globals.java
+$SEDI "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" project/src/Globals.java
+$SEDI "s/public static boolean NeedStencilBuffer = .*;/public static boolean NeedStencilBuffer = $NeedStencilBuffer;/" project/src/Globals.java
+$SEDI "s/public static boolean NeedGles2 = .*;/public static boolean NeedGles2 = $NeedGles2;/" project/src/Globals.java
+$SEDI "s/public static boolean CompatibilityHacksVideo = .*;/public static boolean CompatibilityHacksVideo = $CompatibilityHacks;/" project/src/Globals.java
+$SEDI "s/public static boolean CompatibilityHacksStaticInit = .*;/public static boolean CompatibilityHacksStaticInit = $CompatibilityHacksStaticInit;/" project/src/Globals.java
+$SEDI "s/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = .*;/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = $CompatibilityHacksTextInputEmulatesHwKeyboard;/" project/src/Globals.java
+$SEDI "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" project/src/Globals.java
+$SEDI "s^public static boolean KeepAspectRatioDefaultSetting = .*^public static boolean KeepAspectRatioDefaultSetting = $SdlVideoResizeKeepAspect;^" project/src/Globals.java
+$SEDI "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" project/src/Globals.java
+$SEDI "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" project/src/Globals.java
+$SEDI "s/public static boolean AppNeedsTwoButtonMouse = .*;/public static boolean AppNeedsTwoButtonMouse = $AppNeedsTwoButtonMouse;/" project/src/Globals.java
+$SEDI "s/public static boolean ForceRelativeMouseMode = .*;/public static boolean ForceRelativeMouseMode = $ForceRelativeMouseMode;/" project/src/Globals.java
+$SEDI "s/public static boolean ShowMouseCursor = .*;/public static boolean ShowMouseCursor = $ShowMouseCursor;/" project/src/Globals.java
+$SEDI "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" project/src/Globals.java
+$SEDI "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" project/src/Globals.java
+$SEDI "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" project/src/Globals.java
+$SEDI "s/public static boolean AppUsesAccelerometer = .*;/public static boolean AppUsesAccelerometer = $AppUsesAccelerometer;/" project/src/Globals.java
+$SEDI "s/public static boolean AppUsesGyroscope = .*;/public static boolean AppUsesGyroscope = $AppUsesGyroscope;/" project/src/Globals.java
+$SEDI "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" project/src/Globals.java
+$SEDI "s/public static boolean NonBlockingSwapBuffers = .*;/public static boolean NonBlockingSwapBuffers = $NonBlockingSwapBuffers;/" project/src/Globals.java
+$SEDI "s/public static boolean ResetSdlConfigForThisVersion = .*;/public static boolean ResetSdlConfigForThisVersion = $ResetSdlConfigForThisVersion;/" project/src/Globals.java
+$SEDI "s|public static String DeleteFilesOnUpgrade = .*;|public static String DeleteFilesOnUpgrade = \"$DeleteFilesOnUpgrade\";|" project/src/Globals.java
+$SEDI "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" project/src/Globals.java
+$SEDI "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" project/src/Globals.java
+$SEDI "s@public static String\\[\\] AppTouchscreenKeyboardKeysNames = .*;@public static String[] AppTouchscreenKeyboardKeysNames = \"$RedefinedKeysScreenKbNames\".split(\" \");@" project/src/Globals.java
+$SEDI "s/public static int StartupMenuButtonTimeout = .*;/public static int StartupMenuButtonTimeout = $StartupMenuButtonTimeout;/" project/src/Globals.java
+$SEDI "s/public static int AppMinimumRAM = .*;/public static int AppMinimumRAM = $AppMinimumRAM;/" project/src/Globals.java
+$SEDI "s/public static Settings.Menu HiddenMenuOptions .*;/public static Settings.Menu HiddenMenuOptions [] = { $HiddenMenuOptions1 };/" project/src/Globals.java
+$SEDI "s@public static Settings.Menu FirstStartMenuOptions .*;@public static Settings.Menu FirstStartMenuOptions [] = { $FirstStartMenuOptions };@" project/src/Globals.java
+$SEDI "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\";%" project/src/Globals.java
+$SEDI "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" project/src/Globals.java
+$SEDI "s/public static String AdmobPublisherId = .*/public static String AdmobPublisherId = \"$AdmobPublisherId\";/" project/src/Globals.java
+$SEDI "s/public static String AdmobTestDeviceId = .*/public static String AdmobTestDeviceId = \"$AdmobTestDeviceId\";/" project/src/Globals.java
+$SEDI "s/public static String AdmobBannerSize = .*/public static String AdmobBannerSize = \"$AdmobBannerSize\";/" project/src/Globals.java
+$SEDI "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" project/src/Globals.java
 
 echo Patching project/jni/Settings.mk
 echo '# DO NOT EDIT THIS FILE - it is automatically generated, edit file SettingsTemplate.mk' > project/jni/Settings.mk
@@ -1146,5 +1153,9 @@ else
 fi
 
 ./copyAssets.sh || exit 1
+
+if uname -s | grep -i "darwin" > /dev/null ; then
+	find project/src -name "*.killme.tmp" -delete
+fi
 
 echo Done
