@@ -4,6 +4,19 @@
 
 LOCAL_PATH:=$(call my-dir)
 
+ifneq ($(FFMPEG_REBUILD_FROM_SOURCE),yes)
+
+# FFMPEG compilation is hacky and buggy, so we're using prebuilt libraries by default
+include $(CLEAR_VARS)
+LOCAL_MODULE := $(notdir $(LOCAL_PATH))
+ifneq ($(LOCAL_MODULE),ffmpeg)
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
+LOCAL_SRC_FILES := lib/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
+include $(PREBUILT_SHARED_LIBRARY)
+endif
+
+else
+
 ifeq ($(notdir $(LOCAL_PATH)),ffmpeg) # Build only from ffmpeg directory, ignore symlinks
 
 FFMPEG_VERBOSE_BUILD := yes
@@ -612,4 +625,5 @@ ifeq ($(CONFIG_FFSERVER),yes)
 endif
 #========================================================================
 endif #CONFIG_FFMPEG_COMPILE_TOOLS
+endif
 endif
