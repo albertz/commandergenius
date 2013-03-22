@@ -18,6 +18,8 @@ NDK=`which ndk-build`
 NDK=`dirname $NDK`
 NDK=`readlink -f $NDK`
 
+grep "64.bit" "$NDK/RELEASE.TXT" >/dev/null 2>&1 && MYARCH="${MYARCH}_64"
+
 #echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
 GCCVER=4.6
@@ -28,7 +30,6 @@ if which realpath > /dev/null ; then
 else
 	LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 fi
-#echo LOCAL_PATH $LOCAL_PATH
 ARCH=armeabi
 
 APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`

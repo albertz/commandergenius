@@ -50,9 +50,9 @@ LOCAL_STATIC_LIBRARIES := $(filter $(APP_AVAILABLE_STATIC_LIBS), $(COMPILED_LIBR
 
 APP_STL := gnustl_static
 
-LOCAL_STATIC_LIBRARIES += gnustl_static
+#LOCAL_STATIC_LIBRARIES += gnustl_static
 
-LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz
+LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog -lz # -lgnustl_static
 
 LOCAL_LDFLAGS := -Lobj/local/armeabi
 
