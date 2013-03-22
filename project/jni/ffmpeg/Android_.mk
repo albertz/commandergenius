@@ -55,6 +55,9 @@ FFNAME := $(NAME)
 FFLIBS += $(FFLIBS-yes)
 #FFLIBS := $(foreach NAME, $(FFLIBS), lib$(NAME)$(VERSION_SUFFIX))
 FFLIBS := $(foreach NAME, $(FFLIBS), $(NAME))
+ifeq ($(FFNAME),avfilter)
+FFLIBS += avcodec avformat swscale
+endif
 FFLIBS := $(sort $(FFLIBS))
 FFCFLAGS := -DHAVE_AV_CONFIG_H $(CFLAGS) \
 

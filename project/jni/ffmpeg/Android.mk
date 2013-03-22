@@ -6,6 +6,8 @@ LOCAL_PATH:=$(call my-dir)
 
 ifeq ($(notdir $(LOCAL_PATH)),ffmpeg) # Build only from ffmpeg directory, ignore symlinks
 
+FFMPEG_VERBOSE_BUILD := yes
+
 FFMPEG_ROOT_DIR := $(LOCAL_PATH)
 FFMPEG_CONFIG_DIR := android/$(TARGET_ARCH_ABI)
 

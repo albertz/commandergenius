@@ -157,6 +157,18 @@ ifneq ($(FF_CONFIGURATION_STRING), $(FF_LAST_CONFIGURATION_STRING_OUTPUT))
     $(warning Done.)
     $(warning ============================================================)
 
+    ARCH_ARM := 0
+    ARCH_MIPS := 0
+    ARCH_X86 := 0
+    ifeq ($(TARGET_ARCH),arm)
+        ARCH_ARM := 1
+    endif
+    ifeq ($(TARGET_ARCH),mips)
+        ARCH_MIPS := 1
+    endif
+    ifeq ($(TARGET_ARCH),x86)
+        ARCH_X86 := 1
+    endif
 
 
     ifeq ($(VERSION_BRANCH),1.1)
@@ -164,12 +176,17 @@ ifneq ($(FF_CONFIGURATION_STRING), $(FF_LAST_CONFIGURATION_STRING_OUTPUT))
             cd $(FFMPEG_ROOT_DIR)/$(FFMPEG_CONFIG_DIR); \
             \
             cat config.h | \
-            sed 's/\#define ARCH_ARM /\#ifdef ARCH_ARM\n\#undef ARCH_ARM\n\#endif\n\#define ARCH_ARM /g' | \
-            sed 's/\#define ARCH_MIPS /\#ifdef ARCH_MIPS\n\#undef ARCH_MIPS\n\#endif\n\#define ARCH_MIPS /g' | \
-            sed 's/\#define ARCH_X86 /\#ifdef ARCH_X86\n\#undef ARCH_X86\n\#endif\n\#define ARCH_X86 /g' | \
+            sed 's/\#define ARCH_ARM .*/\#ifdef ARCH_ARM\n\#undef ARCH_ARM\n\#endif\n\#define ARCH_ARM $(ARCH_ARM)/g' | \
+            sed 's/\#define ARCH_MIPS .*/\#ifdef ARCH_MIPS\n\#undef ARCH_MIPS\n\#endif\n\#define ARCH_MIPS $(ARCH_MIPS)/g' | \
+            sed 's/\#define ARCH_X86 .*/\#ifdef ARCH_X86\n\#undef ARCH_X86\n\#endif\n\#define ARCH_X86 $(ARCH_X86)/g' | \
+            sed 's/\#define ARCH_X86_32 .*/\#ifdef ARCH_X86_32\n\#undef ARCH_X86_32\n\#endif\n\#define ARCH_X86_32 $(ARCH_X86)/g' | \
+            sed 's/\#define ARCH_X86_64 .*/\#ifdef ARCH_X86_64\n\#undef ARCH_X86_64\n\#endif\n\#define ARCH_X86_64 0/g' | \
             sed 's/\#define HAVE_PTHREADS/\#ifdef HAVE_PTHREADS\n\#undef HAVE_PTHREADS\n\#endif\n\#define HAVE_PTHREADS/g' | \
             sed 's/\#define HAVE_MALLOC_H/\#ifdef HAVE_MALLOC_H\n\#undef HAVE_MALLOC_H\n\#endif\n\#define HAVE_MALLOC_H/g' | \
             sed 's/\#define HAVE_STRERROR_R 1/\#define HAVE_STRERROR_R 0/g' | \
+            sed 's/\#define HAVE_SYSCTL 1/\#define HAVE_SYSCTL 0/g' | \
+            sed 's/\#define HAVE_POSIX_MEMALIGN 1/\#define HAVE_POSIX_MEMALIGN 0/g' | \
+            sed 's/\#define HAVE_PTHREAD_CANCEL 1/\#define HAVE_PTHREAD_CANCEL 0/g' | \
             cat > config.h.tmp; \
             mv config.h config.h.bak; \
             mv config.h.tmp config.h; \
