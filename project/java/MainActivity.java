@@ -100,6 +100,8 @@ public class MainActivity extends Activity
 		_layout2 = new LinearLayout(this);
 		_layout2.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+		final Semaphore loadedLibraries = new Semaphore(0);
+
 		if( Globals.StartupMenuButtonTimeout > 0 )
 		{
 			_btn = new Button(this);
@@ -113,6 +115,7 @@ public class MainActivity extends Activity
 					{
 						setUpStatusLabel();
 						System.out.println("libSDL: User clicked change phone config button");
+						loadedLibraries.acquireUninterruptibly();
 						Settings.showConfig(p, false);
 					}
 			};
@@ -173,6 +176,7 @@ public class MainActivity extends Activity
 						{
 							Settings.Load(Parent);
 							loaded.release();
+							loadedLibraries.release();
 						}
 					}
 					Callback2 cb = new Callback2();
