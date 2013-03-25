@@ -149,8 +149,6 @@ static jmethodID JavaResumeAudioPlayback = NULL;
 // Audio recording
 
 static SDL_AudioSpec recording;
-static jmethodID JavaStartRecording = NULL;
-static jmethodID JavaStopRecording = NULL;
 static jbyteArray recordingBufferJNI = NULL;
 static size_t recordingBufferSize = 0;
 
@@ -306,10 +304,6 @@ static void ANDROIDAUD_ThreadInit(_THIS)
 	JavaInitThread = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "initAudioThread", "()I");
 	(*jniEnvPlaying)->CallIntMethod( jniEnvPlaying, JavaAudioThread, JavaInitThread );
 
-	// Audio recording
-	JavaStartRecording = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "startRecording", "(IIII)[B");
-	JavaStopRecording = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "stopRecording", "()V");
-
 	JavaGetBuffer = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "getBuffer", "()[B");
 	audioBufferJNI = (*jniEnvPlaying)->CallObjectMethod( jniEnvPlaying, JavaAudioThread, JavaGetBuffer );
 	audioBufferJNI = (*jniEnvPlaying)->NewGlobalRef(jniEnvPlaying, audioBufferJNI);
@@ -450,6 +444,8 @@ JNIEXPORT void JNICALL JAVA_EXPORT_NAME(AudioThread_nativeAudioRecordCallback) (
 extern DECLSPEC int SDLCALL SDL_ANDROID_OpenAudioRecording(SDL_AudioSpec *spec)
 {
 	JNIEnv * jniEnv = NULL;
+	jclass JavaAudioThreadClass = NULL;
+	jmethodID JavaStartRecording = NULL;
 
 	recording = *spec;
 
@@ -465,9 +461,11 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_OpenAudioRecording(SDL_AudioSpec *spec)
 		return 0;
 	}
 
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_OpenAudioRecording(): VM %p", jniVM);
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_OpenAudioRecording(): VM %p JavaAudioThread %p JavaStartRecording %p", jniVM, JavaAudioThread, JavaStartRecording);
 
 	(*jniVM)->AttachCurrentThread( jniVM, &jniEnv, NULL );
+	JavaAudioThreadClass = (*jniEnv)->GetObjectClass( jniEnv, JavaAudioThread );
+	JavaStartRecording = (*jniEnv)->GetMethodID( jniEnv, JavaAudioThreadClass, "startRecording", "(IIII)[B" );
 
 	recordingBufferJNI = (*jniEnv)->CallObjectMethod( jniEnv, JavaAudioThread, JavaStartRecording,
 														(jint)recording.freq, (jint)recording.channels,
@@ -479,15 +477,19 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_OpenAudioRecording(SDL_AudioSpec *spec)
 	}
 	recordingBufferJNI = (*jniEnv)->NewGlobalRef( jniEnv, recordingBufferJNI );
 	recordingBufferSize = (*jniEnv)->GetArrayLength( jniEnv, recordingBufferJNI );
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_OpenAudioRecording(): JNI buffer %p len %d", recordingBufferJNI, recordingBufferSize);
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_OpenAudioRecording(): JNI buffer %p len %d", recordingBufferJNI, recordingBufferSize);
 	return 1;
 }
 
 extern DECLSPEC void SDLCALL SDL_ANDROID_CloseAudioRecording(void)
 {
 	JNIEnv * jniEnv = NULL;
+	jclass JavaAudioThreadClass = NULL;
+	jmethodID JavaStopRecording = NULL;
 
 	(*jniVM)->AttachCurrentThread( jniVM, &jniEnv, NULL );
+	JavaAudioThreadClass = (*jniEnv)->GetObjectClass( jniEnv, JavaAudioThread );
+	JavaStopRecording = (*jniEnv)->GetMethodID( jniEnv, JavaAudioThreadClass, "stopRecording", "()V" );
 
 	(*jniEnv)->CallVoidMethod( jniEnv, JavaAudioThread, JavaStopRecording );
 	if( recordingBufferJNI )
