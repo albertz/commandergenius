@@ -306,10 +306,15 @@ static void ANDROIDAUD_ThreadInit(_THIS)
 	JavaInitThread = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "initAudioThread", "()I");
 	(*jniEnvPlaying)->CallIntMethod( jniEnvPlaying, JavaAudioThread, JavaInitThread );
 
+	// Audio recording
+	JavaStartRecording = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "startRecording", "(IIII)[B");
+	JavaStopRecording = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "stopRecording", "()V");
+
 	JavaGetBuffer = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "getBuffer", "()[B");
 	audioBufferJNI = (*jniEnvPlaying)->CallObjectMethod( jniEnvPlaying, JavaAudioThread, JavaGetBuffer );
 	audioBufferJNI = (*jniEnvPlaying)->NewGlobalRef(jniEnvPlaying, audioBufferJNI);
-	audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetByteArrayElements(jniEnvPlaying, audioBufferJNI, &isCopy);
+	//audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetByteArrayElements(jniEnvPlaying, audioBufferJNI, &isCopy);
+	audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetPrimitiveArrayCritical(jniEnvPlaying, audioBufferJNI, &isCopy);
 	if( !audioBuffer )
 	{
 		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_ThreadInit() JNI::GetByteArrayElements() failed! we will crash now");
@@ -320,14 +325,13 @@ static void ANDROIDAUD_ThreadInit(_THIS)
 
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_ThreadInit()");
 	SDL_memset(audioBuffer, this->spec.silence, this->spec.size);
-
-	// Audio recording
-	JavaStartRecording = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "startRecording", "(IIII)[B");
-	JavaStopRecording = (*jniEnvPlaying)->GetMethodID(jniEnvPlaying, JavaAudioThreadClass, "stopRecording", "()V");
 };
 
 static void ANDROIDAUD_ThreadDeinit(_THIS)
 {
+	//(*jniEnvPlaying)->ReleaseByteArrayElements(jniEnvPlaying, audioBufferJNI, (jbyte *)audioBuffer, 0);
+	(*jniEnvPlaying)->ReleasePrimitiveArrayCritical(jniEnvPlaying, audioBufferJNI, (jbyte *)audioBuffer, 0);
+	// (*jniEnvPlaying)->DeleteGlobalRef(jniEnvPlaying, audioBufferJNI); // Application crashes here for some unknown reason
 	(*jniVM)->DetachCurrentThread(jniVM);
 };
 
@@ -336,12 +340,14 @@ static void ANDROIDAUD_SendAudioToJava(void)
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_PlayAudio()");
 	//jboolean isCopy = JNI_TRUE;
 
-	(*jniEnvPlaying)->ReleaseByteArrayElements(jniEnvPlaying, audioBufferJNI, (jbyte *)audioBuffer, 0);
+	//(*jniEnvPlaying)->ReleaseByteArrayElements(jniEnvPlaying, audioBufferJNI, (jbyte *)audioBuffer, 0);
+	(*jniEnvPlaying)->ReleasePrimitiveArrayCritical(jniEnvPlaying, audioBufferJNI, (jbyte *)audioBuffer, 0);
 	audioBuffer = NULL;
 
 	(*jniEnvPlaying)->CallIntMethod( jniEnvPlaying, JavaAudioThread, JavaFillBuffer );
 
-	audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetByteArrayElements(jniEnvPlaying, audioBufferJNI, NULL);
+	//audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetByteArrayElements(jniEnvPlaying, audioBufferJNI, NULL);
+	audioBuffer = (unsigned char *) (*jniEnvPlaying)->GetPrimitiveArrayCritical(jniEnvPlaying, audioBufferJNI, NULL);
 	if( !audioBuffer )
 		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "ANDROIDAUD_PlayAudio() JNI::GetByteArrayElements() failed! we will crash now");
 
@@ -425,7 +431,8 @@ JNIEXPORT void JNICALL JAVA_EXPORT_NAME(AudioThread_nativeAudioRecordCallback) (
 		return;
 	}
 
-	Uint8 *buffer = (Uint8 *) (*jniEnv)->GetByteArrayElements(jniEnv, recordingBufferJNI, NULL);
+	//Uint8 *buffer = (Uint8 *) (*jniEnv)->GetByteArrayElements(jniEnv, recordingBufferJNI, NULL);
+	Uint8 *buffer = (Uint8 *) (*jniEnv)->GetPrimitiveArrayCritical(jniEnv, recordingBufferJNI, NULL);
 	if( !buffer )
 	{
 		__android_log_print(ANDROID_LOG_ERROR, "libSDL", "AudioThread_nativeAudioRecordCallbacks(): error: JNI::GetByteArrayElements() failed!");
@@ -436,7 +443,8 @@ JNIEXPORT void JNICALL JAVA_EXPORT_NAME(AudioThread_nativeAudioRecordCallback) (
 
 	recording.callback(recording.userdata, buffer, recordingBufferSize);
 
-	(*jniEnv)->ReleaseByteArrayElements(jniEnv, recordingBufferJNI, (jbyte *)buffer, 0);
+	//(*jniEnv)->ReleaseByteArrayElements(jniEnv, recordingBufferJNI, (jbyte *)buffer, 0);
+	(*jniEnv)->ReleasePrimitiveArrayCritical(jniEnv, recordingBufferJNI, (jbyte *)buffer, 0);
 }
 
 extern DECLSPEC int SDLCALL SDL_ANDROID_OpenAudioRecording(SDL_AudioSpec *spec)
@@ -457,6 +465,8 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_OpenAudioRecording(SDL_AudioSpec *spec)
 		return 0;
 	}
 
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_OpenAudioRecording(): VM %p", jniVM);
+
 	(*jniVM)->AttachCurrentThread( jniVM, &jniEnv, NULL );
 
 	recordingBufferJNI = (*jniEnv)->CallObjectMethod( jniEnv, JavaAudioThread, JavaStartRecording,
@@ -469,7 +479,7 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_OpenAudioRecording(SDL_AudioSpec *spec)
 	}
 	recordingBufferJNI = (*jniEnv)->NewGlobalRef( jniEnv, recordingBufferJNI );
 	recordingBufferSize = (*jniEnv)->GetArrayLength( jniEnv, recordingBufferJNI );
-	//__android_log_print(ANDROID_LOG_ERROR, "libSDL", "SDL_ANDROID_OpenAudioRecording(): JNI buffer %p len %d", recordingBufferJNI, recordingBufferSize);
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_OpenAudioRecording(): JNI buffer %p len %d", recordingBufferJNI, recordingBufferSize);
 	return 1;
 }
 

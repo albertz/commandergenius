@@ -363,7 +363,7 @@ if [ -z "$AppRecordsAudio" -o -z "$AUTO" ]; then
 echo
 echo "Application records audio (it will use any available source, such a s microphone)"
 echo "API is defined in file SDL_android.h: int SDL_ANDROID_OpenAudioRecording(SDL_AudioSpec *spec); void SDL_ANDROID_CloseAudioRecording(void);"
-echo -n "This option will add additional permission to Android manifest ($AppRecordsAudio): "
+echo -n "This option will add additional permission to Android manifest (y)/(n) ($AppRecordsAudio): "
 read var
 if [ -n "$var" ] ; then
 	AppRecordsAudio="$var"
