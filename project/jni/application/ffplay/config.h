@@ -1,0 +1,33 @@
+#ifndef __COINFIG_H__
+#define __COINFIG_H__
+
+#define CONFIG_AVUTIL 1
+#define CONFIG_AVCODEC 1
+#define CONFIG_AVFORMAT 1
+#define CONFIG_AVDEVICE 1
+#define CONFIG_AVFILTER 1
+#define CONFIG_SWSCALE 1
+#define CONFIG_SWRESAMPLE 1
+
+#define CONFIG_RTSP_DEMUXER 1
+#define CONFIG_MMSH_PROTOCOL 1
+#define CONFIG_NETWORK 1
+
+#define CONFIG_GPL 1
+
+#define FFMPEG_CONFIGURATION ""
+#define FFMPEG_DATADIR "."
+#define AVCONV_DATADIR "."
+#define CC_IDENT "Android NDK r8e"
+
+#define HAVE_STRUCT_SOCKADDR_STORAGE 1
+#define HAVE_STRUCT_ADDRINFO 1
+#define HAVE_UNISTD_H 1
+#define HAVE_ARPA_INET_H 1
+#define HAVE_POLL_H 1
+#define HAVE_GETADDRINFO 1
+#define HAVE_SYS_RESOURCE_H 1
+
+#define HAVE_SDL_VIDEO_SIZE 1
+
+#endif
