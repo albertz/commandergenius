@@ -103,7 +103,8 @@ ifneq ($(FF_CONFIGURATION_STRING), $(FF_LAST_CONFIGURATION_STRING_OUTPUT))
                 --enable-shared \
                 --disable-static \
                 --enable-avresample \
-                --disable-everything \
+                --disable-indevs \
+                --disable-outdevs \
                 --disable-mmx \
                 --disable-yasm; \
             make -j4; \
@@ -172,6 +173,7 @@ ifneq ($(FF_CONFIGURATION_STRING), $(FF_LAST_CONFIGURATION_STRING_OUTPUT))
 
 
     ifeq ($(VERSION_BRANCH),1.1)
+        # NEON presence is checked at runtime, so enable it
         FF_FIX_CONFIGURATION_COMMAND := \
             cd $(FFMPEG_ROOT_DIR)/$(FFMPEG_CONFIG_DIR); \
             \
@@ -187,12 +189,38 @@ ifneq ($(FF_CONFIGURATION_STRING), $(FF_LAST_CONFIGURATION_STRING_OUTPUT))
             sed 's/\#define HAVE_SYSCTL 1/\#define HAVE_SYSCTL 0/g' | \
             sed 's/\#define HAVE_POSIX_MEMALIGN 1/\#define HAVE_POSIX_MEMALIGN 0/g' | \
             sed 's/\#define HAVE_PTHREAD_CANCEL 1/\#define HAVE_PTHREAD_CANCEL 0/g' | \
+            sed 's/\#define HAVE_GLOB 1/\#define HAVE_GLOB 0/g' | \
+            sed 's/\#define HAVE_LOG2 1/\#define HAVE_LOG2 0/g' | \
+            sed 's/\#define HAVE_LOG2F 1/\#define HAVE_LOG2F 0/g' | \
+            sed 's/\#define HAVE_FAST_CMOV 1/\#define HAVE_FAST_CMOV 0/g' | \
+            sed 's/\#define HAVE_CMOV 1/\#define HAVE_CMOV 0/g' | \
+            sed 's/\#define HAVE_EBP_AVAILABLE 1/\#define HAVE_EBP_AVAILABLE 0/g' | \
+            sed 's/\#define HAVE_EBX_AVAILABLE 1/\#define HAVE_EBX_AVAILABLE 0/g' | \
+            sed 's/\#define HAVE_FAST_CLZ 1/\#define HAVE_FAST_CLZ 1/g' | \
+            sed 's/\#define HAVE_FAST_UNALIGNED 1/\#define HAVE_FAST_UNALIGNED 0/g' | \
+            sed 's/\#define CONFIG_FAST_UNALIGNED 1/\#define CONFIG_FAST_UNALIGNED 0/g' | \
+            sed 's/\#define HAVE_ARMV5TE 0/\#define HAVE_ARMV5TE 1/g' | \
+            sed 's/\#define HAVE_VFP 0/\#define HAVE_VFP 1/g' | \
+            sed 's/\#define HAVE_NEON 0/\#define HAVE_NEON 1/g' | \
+            sed 's/\#define HAVE_ARMV6 0/\#define HAVE_ARMV6 1/g' | \
             cat > config.h.tmp; \
             mv config.h config.h.bak; \
             mv config.h.tmp config.h; \
             \
             cat config.mak | \
             sed 's/HAVE_STRERROR_R=yes/!HAVE_STRERROR_R=yes/g' | \
+            sed 's/ARCH=x86/ARCH=arm/g' | \
+            sed 's/ARCH_X86=yes/!ARCH_X86=yes/g' | \
+            sed 's/ARCH_X86_32=yes/!ARCH_X86_32=yes/g' | \
+            sed 's/ARCH_X86_64=yes/!ARCH_X86_64=yes/g' | \
+            sed 's/!ARCH_ARM=yes/ARCH_ARM=yes/g' | \
+            sed 's/!HAVE_ARMV5TE=yes/HAVE_ARMV5TE=yes/g' | \
+            sed 's/!HAVE_ARMV6=yes/HAVE_ARMV6=yes/g' | \
+            sed 's/!HAVE_NEON=yes/HAVE_NEON=yes/g' | \
+            sed 's/!HAVE_VFP=yes/HAVE_VFP=yes/g' | \
+            sed 's/HAVE_FAST_UNALIGNED=yes/!HAVE_FAST_UNALIGNED=yes/g' | \
+            sed 's/HAVE_LOG2=yes/!HAVE_LOG2=yes/g' | \
+            sed 's/HAVE_LOG2F=yes/!HAVE_LOG2F=yes/g' | \
             cat > config.mak.tmp; \
             mv config.mak config.mak.bak; \
             mv config.mak.tmp config.mak; \
