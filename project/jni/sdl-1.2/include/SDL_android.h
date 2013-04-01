@@ -80,8 +80,7 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void);
 
 
 /** Exports for Java environment and Video object instance */
-extern DECLSPEC JNIEnv* SDL_ANDROID_JniEnv();
-extern DECLSPEC jobject SDL_ANDROID_JniVideoObject();
+extern DECLSPEC JavaVM* SDL_ANDROID_JavaVM();
 
 /*
 Open audio recording device, it will use parameters freq, format, channels, size and callback,

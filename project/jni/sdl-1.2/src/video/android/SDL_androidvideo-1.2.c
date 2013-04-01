@@ -115,7 +115,7 @@ int ANDROID_ToggleFullScreen(_THIS, int fullscreen)
 	return 1;
 }
 
-#define SDL_NUMMODES 24
+enum { SDL_NUMMODES = 28 };
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -267,18 +267,15 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 		SDL_modelist[i]->x = SDL_modelist[i]->y = 0;
 	}
 	/* Modes sorted largest to smallest */
-	SDL_modelist[0]->w = SDL_ANDROID_sWindowWidth;
-	SDL_modelist[0]->h = SDL_ANDROID_sWindowHeight;
-	SDL_modelist[1]->w = 800; SDL_modelist[1]->h = 600; // Will likely be shrinked
-	SDL_modelist[2]->w = 640; SDL_modelist[2]->h = 480; // Will likely be shrinked
-	SDL_modelist[3]->w = 640; SDL_modelist[3]->h = 400; // Will likely be shrinked
-	SDL_modelist[4]->w = 320; SDL_modelist[4]->h = 240; // Always available on any screen and any orientation
-	SDL_modelist[5]->w = 320; SDL_modelist[5]->h = 200; // Always available on any screen and any orientation
+	SDL_modelist[0]->w = SDL_ANDROID_sWindowWidth; SDL_modelist[0]->h = SDL_ANDROID_sWindowHeight;
+	SDL_modelist[1]->w = 800; SDL_modelist[1]->h = 600; // Widely used on PC
+	SDL_modelist[2]->w = 640; SDL_modelist[2]->h = 480; // Widely used on PC
+	SDL_modelist[3]->w = 640; SDL_modelist[3]->h = 400; // Widely used on PC
+	SDL_modelist[4]->w = 320; SDL_modelist[4]->h = 240; // For older games
+	SDL_modelist[5]->w = 320; SDL_modelist[5]->h = 200; // For even older games
 	SDL_modelist[6]->w = 256; SDL_modelist[6]->h = 224; // For REminiscence
-	SDL_modelist[7]->w = SDL_ANDROID_sWindowWidth * 2 / 3;
-	SDL_modelist[7]->h = SDL_ANDROID_sWindowHeight * 2 / 3;
-	SDL_modelist[8]->w = SDL_ANDROID_sWindowWidth / 2;
-	SDL_modelist[8]->h = SDL_ANDROID_sWindowHeight / 2;
+	SDL_modelist[7]->w = SDL_ANDROID_sWindowWidth * 2 / 3; SDL_modelist[7]->h = SDL_ANDROID_sWindowHeight * 2 / 3;
+	SDL_modelist[8]->w = SDL_ANDROID_sWindowWidth / 2; SDL_modelist[8]->h = SDL_ANDROID_sWindowHeight / 2;
 	SDL_modelist[9]->w = 480; SDL_modelist[9]->h = 320; // Virtual wide-screen mode
 	SDL_modelist[10]->w = 800; SDL_modelist[10]->h = 480; // Virtual wide-screen mode
 	SDL_modelist[11]->w = 544; SDL_modelist[11]->h = 332; // I have no idea where this videomode is used
@@ -294,7 +291,12 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[21]->w = 320; SDL_modelist[21]->h = 216; // For UAE4ALL2
 	SDL_modelist[22]->w = 640; SDL_modelist[22]->h = 216; // For UAE4ALL2
 	SDL_modelist[23]->w = 384; SDL_modelist[23]->h = 272; // For VICE
-	SDL_modelist[24] = NULL;
+	SDL_modelist[24]->w = 854; SDL_modelist[24]->h = 480; // Virtual wide-screen mode
+	SDL_modelist[25]->w = 1280; SDL_modelist[25]->h = 720; // Virtual wide-screen mode
+	SDL_modelist[26]->w = 1920; SDL_modelist[26]->h = 1080; // Virtual wide-screen mode
+	SDL_modelist[27]->w = 1024; SDL_modelist[27]->h = 768; // Widely used on PC
+	SDL_modelist[28] = NULL;
+	// If you going to add another video mode, increase SDL_NUMMODES constant
 	
 	SDL_VideoInit_1_3(NULL, 0);
 	

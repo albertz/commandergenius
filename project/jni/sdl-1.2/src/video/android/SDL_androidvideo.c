@@ -452,3 +452,4 @@ int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void)
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestNewAdvertisement );
 	return 1;
 }
+

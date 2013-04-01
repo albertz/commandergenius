@@ -1,9 +1,7 @@
 Requested features (see also bugs.txt)
 ======================================
 
-- When downloading data, show cancel dialog when pressing Back.
-
-- Redesign on-screen keyboard layout dialog.
+- Redesign on-screen keyboard layout dialog, to show all keys, and to use dragon droppings.
 
 - Option for default on-screen key theme in AndroidAppSettings.cfg.
 

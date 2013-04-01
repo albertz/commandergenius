@@ -497,3 +497,8 @@ extern DECLSPEC void SDLCALL SDL_ANDROID_CloseAudioRecording(void)
 	recordingBufferJNI = NULL;
 	recordingBufferSize = 0;
 }
+
+extern DECLSPEC JavaVM* SDL_ANDROID_JavaVM()
+{
+	return jniVM;
+}
