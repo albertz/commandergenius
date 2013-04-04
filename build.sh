@@ -58,6 +58,7 @@ fi
 if uname -s | grep -i "windows" > /dev/null ; then
 	MYARCH=windows-x86
 fi
+grep "64.bit" "`which ndk-build | sed 's@/ndk-build@@'`/RELEASE.TXT" >/dev/null 2>&1 && MYARCH="${MYARCH}_64"
 
 rm -r -f project/bin/* # New Android SDK introduced some lame-ass optimizations to the build system which we should take care about
 [ -x project/jni/application/src/AndroidPreBuild.sh ] && {

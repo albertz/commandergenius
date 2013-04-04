@@ -2,7 +2,7 @@
 
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
-VER=1.2.3
+VER=1.3.0
 
 
 if [ \! -d openttd-$VER ] ; then
