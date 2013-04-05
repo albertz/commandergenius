@@ -115,7 +115,7 @@ int ANDROID_ToggleFullScreen(_THIS, int fullscreen)
 	return 1;
 }
 
-enum { SDL_NUMMODES = 28 };
+enum { SDL_NUMMODES = 55 };
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -295,7 +295,34 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[25]->w = 1280; SDL_modelist[25]->h = 720; // Virtual wide-screen mode
 	SDL_modelist[26]->w = 1920; SDL_modelist[26]->h = 1080; // Virtual wide-screen mode
 	SDL_modelist[27]->w = 1024; SDL_modelist[27]->h = 768; // Widely used on PC
-	SDL_modelist[28] = NULL;
+	SDL_modelist[28]->w = 640; SDL_modelist[28]->h = 512; // For P-UAE
+	SDL_modelist[29]->w = 640; SDL_modelist[29]->h = 524; // For P-UAE
+	SDL_modelist[30]->w = 640; SDL_modelist[30]->h = 540; // For P-UAE
+	SDL_modelist[31]->w = 352; SDL_modelist[31]->h = 200; // For UAE4ALL2
+	SDL_modelist[32]->w = 352; SDL_modelist[32]->h = 216; // For UAE4ALL2
+	SDL_modelist[33]->w = 352; SDL_modelist[33]->h = 240; // For UAE4ALL2
+	SDL_modelist[34]->w = 352; SDL_modelist[34]->h = 256; // For UAE4ALL2
+	SDL_modelist[35]->w = 352; SDL_modelist[35]->h = 262; // For UAE4ALL2
+	SDL_modelist[36]->w = 352; SDL_modelist[36]->h = 270; // For UAE4ALL2
+	SDL_modelist[37]->w = 384; SDL_modelist[37]->h = 200; // For UAE4ALL2
+	SDL_modelist[38]->w = 384; SDL_modelist[38]->h = 216; // For UAE4ALL2
+	SDL_modelist[39]->w = 384; SDL_modelist[39]->h = 240; // For UAE4ALL2
+	SDL_modelist[40]->w = 384; SDL_modelist[40]->h = 256; // For UAE4ALL2
+	SDL_modelist[41]->w = 384; SDL_modelist[41]->h = 262; // For UAE4ALL2
+	SDL_modelist[42]->w = 384; SDL_modelist[42]->h = 270; // For UAE4ALL2
+	SDL_modelist[43]->w = 704; SDL_modelist[43]->h = 200; // For UAE4ALL2
+	SDL_modelist[44]->w = 704; SDL_modelist[44]->h = 216; // For UAE4ALL2
+	SDL_modelist[45]->w = 704; SDL_modelist[45]->h = 240; // For UAE4ALL2
+	SDL_modelist[46]->w = 704; SDL_modelist[46]->h = 256; // For UAE4ALL2
+	SDL_modelist[47]->w = 704; SDL_modelist[47]->h = 262; // For UAE4ALL2
+	SDL_modelist[48]->w = 704; SDL_modelist[48]->h = 270; // For UAE4ALL2
+	SDL_modelist[49]->w = 768; SDL_modelist[49]->h = 200; // For UAE4ALL2
+	SDL_modelist[50]->w = 768; SDL_modelist[50]->h = 216; // For UAE4ALL2
+	SDL_modelist[51]->w = 768; SDL_modelist[51]->h = 240; // For UAE4ALL2
+	SDL_modelist[52]->w = 768; SDL_modelist[52]->h = 256; // For UAE4ALL2
+	SDL_modelist[53]->w = 768; SDL_modelist[53]->h = 262; // For UAE4ALL2
+	SDL_modelist[54]->w = 768; SDL_modelist[54]->h = 270; // For UAE4ALL2
+	SDL_modelist[55] = NULL;
 	// If you going to add another video mode, increase SDL_NUMMODES constant
 	
 	SDL_VideoInit_1_3(NULL, 0);
