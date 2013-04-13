@@ -2650,7 +2650,7 @@ class Settings
 		nativeSetEnv( "DATADIR", Globals.DataDir );
 		nativeSetEnv( "UNSECURE_STORAGE_DIR", Globals.DataDir );
 		nativeSetEnv( "HOME", Globals.DataDir );
-		nativeSetEnv( "ANDROID_VERSION", android.os.Build.VERSION.SDK_INT );
+		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
 		try {
 			DisplayMetrics dm = new DisplayMetrics();
 			p.getWindowManager().getDefaultDisplay().getMetrics(dm);
