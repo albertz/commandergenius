@@ -2065,7 +2065,7 @@ class Settings
 
 				for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
 				{
-					if( ! Globals.ScreenKbControlsShown[currentButton] )
+					if( ! Globals.ScreenKbControlsShown[i] )
 						continue;
 					if( currentButton == -1 )
 						currentButton = i;
@@ -2089,10 +2089,10 @@ class Settings
 							displayX = dm.widthPixels;
 							displayY = dm.heightPixels;
 						} catch (Exception eeeee) {}
-						Globals.ScreenKbControlsLayout[i][0] = displayX / 2 - displayX / 6;
-						Globals.ScreenKbControlsLayout[i][2] = displayX / 2 + displayX / 6;
-						Globals.ScreenKbControlsLayout[i][1] = displayY / 2 - displayY / 4;
-						Globals.ScreenKbControlsLayout[i][3] = displayY / 2 + displayY / 4;
+						Globals.ScreenKbControlsLayout[i][0] = displayX / 2 - displayX / 10;
+						Globals.ScreenKbControlsLayout[i][2] = displayX / 2 + displayX / 10;
+						Globals.ScreenKbControlsLayout[i][1] = displayY / 2 - displayY / 8;
+						Globals.ScreenKbControlsLayout[i][3] = displayY / 2 + displayY / 8;
 					}
 					RectF dst = new RectF(Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][1],
 											Globals.ScreenKbControlsLayout[i][2], Globals.ScreenKbControlsLayout[i][3]);
@@ -2133,12 +2133,12 @@ class Settings
 					resizing = true;
 					for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
 					{
-						if( ! Globals.ScreenKbControlsShown[currentButton] )
+						if( ! Globals.ScreenKbControlsShown[i] )
 							continue;
-						if( Globals.ScreenKbControlsLayout[currentButton][0] <= oldX &&
-							Globals.ScreenKbControlsLayout[currentButton][2] >= oldX &&
-							Globals.ScreenKbControlsLayout[currentButton][1] <= oldY &&
-							Globals.ScreenKbControlsLayout[currentButton][2] >= oldY )
+						if( Globals.ScreenKbControlsLayout[i][0] <= oldX &&
+							Globals.ScreenKbControlsLayout[i][2] >= oldX &&
+							Globals.ScreenKbControlsLayout[i][1] <= oldY &&
+							Globals.ScreenKbControlsLayout[i][3] >= oldY )
 						{
 							currentButton = i;
 							setupButton(currentButton);
@@ -2158,8 +2158,8 @@ class Settings
 						dy /= 6;
 						Globals.ScreenKbControlsLayout[currentButton][0] -= dx;
 						Globals.ScreenKbControlsLayout[currentButton][2] += dx;
-						Globals.ScreenKbControlsLayout[currentButton][1] -= dy;
-						Globals.ScreenKbControlsLayout[currentButton][3] += dy;
+						Globals.ScreenKbControlsLayout[currentButton][1] += dy;
+						Globals.ScreenKbControlsLayout[currentButton][3] -= dy;
 						dx *= 6;
 						dy *= 6;
 					}
