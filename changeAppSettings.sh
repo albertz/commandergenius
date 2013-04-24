@@ -485,7 +485,7 @@ if [ -n "$var" ] ; then
 fi
 fi
 
-FirstStartMenuOptionsDefault='(AppUsesMouse \&\& \! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true), new Settings.GyroscopeCalibration()'
+FirstStartMenuOptionsDefault='(ReadmeText.length() > 2 ? new Settings.ShowReadme() : new Settings.DummyMenu()), (AppUsesMouse \&\& \! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true), new Settings.GyroscopeCalibration()'
 if [ -z "$AUTO" ]; then
 echo
 echo "Menu items to show at startup - this is Java code snippet, leave empty for default"
@@ -627,9 +627,12 @@ if [ -n "$var" ] ; then
 fi
 fi
 
-if [ -z "$ReadmeText" -o -z "$AUTO" ]; then
+if [ -z "$AUTO" ]; then
 echo
-echo "Here you may type some short readme text - it is currently not used anywhere"
+echo "Here you may type readme text, which will be shown during startup. Format is:"
+echo "Text in English, use \\n for newline"
+echo "de:Text in Deutsch"
+echo "ru:Text in Russian, and so on"
 echo "Current text:"
 echo
 echo "`echo $ReadmeText | tr '^' '\\n'`"

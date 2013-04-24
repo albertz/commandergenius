@@ -137,7 +137,6 @@
 <string name="remap_screenkb_button_rotateright">Geste de rotation à droite avec deux doigts</string>
 
 <string name="screenkb_custom_layout">Personnalisation de la présentation du clavier à l\'écran</string>
-<string name="screenkb_custom_layout_help">Faites glisser l\'écran pour ajouter le bouton, appuyez sur Retour/BACK pour annuler le dernier bouton</string>
 
 <string name="calibrate_touchscreen">Calibrer l\'écran tactile</string>
 <string name="calibrate_touchscreen_touch">Touchez les bords de l\'écran, appuyez sur Retour/BACK lorsque vous avez terminé</string>
@@ -158,9 +157,6 @@
 
 <string name="show_more_options">Afficher plus d\'options</string>
 
-<string name="broken_libc_title">Erreur interne détectée (OS/LibC)</string>
-<string name="broken_libc_text">Certaines librairies sont mal installées et cette application va probablement ne pas fonctionner. Merci de mettre à jour votre système, flash, ROM custom, ou bien de copier le fichier /system/lib/libc.so depuis un autre système (Attention, Experts uniquement !).</string>
-
 <string name="hardware_mouse_detected">Hardware mouse detected, disabling mouse emulation</string>
 <string name="not_enough_ram">Not enough RAM</string>
 <string name="not_enough_ram_size">This app needs %1$d Mb RAM, your device has %2$d Mb</string>
@@ -175,4 +171,5 @@
 <string name="cancel_download_resume">You can resume it later, the data will not be downloaded twice.</string>
 <string name="yes">Yes</string>
 <string name="no">No</string>
+<string name="screenkb_custom_layout_help">Press BACK when done. Resize buttons by sliding on empty space.</string>
 </resources>

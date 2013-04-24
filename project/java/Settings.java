@@ -2033,6 +2033,8 @@ class Settings
 				R.drawable.b5,
 				R.drawable.b6
 			};
+			int oldX = 0, oldY = 0;
+			boolean resizing = false;
 			
 			public CustomizeScreenKbLayoutTool(MainActivity _p) 
 			{
@@ -2045,7 +2047,7 @@ class Settings
 				boundaryBmp = BitmapFactory.decodeResource( p.getResources(), R.drawable.rectangle );
 				boundary.setImageBitmap(boundaryBmp);
 				layout.addView(boundary);
-				currentButton = 0;
+				currentButton = -1;
 				if( Globals.TouchscreenKeyboardTheme == 2 )
 				{
 					int buttons2[] = {
@@ -2063,6 +2065,10 @@ class Settings
 
 				for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
 				{
+					if( ! Globals.ScreenKbControlsShown[currentButton] )
+						continue;
+					if( currentButton == -1 )
+						currentButton = i;
 					imgs[i] = new ImageView(p);
 					imgs[i].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 					imgs[i].setScaleType(ImageView.ScaleType.MATRIX);
@@ -2072,115 +2078,123 @@ class Settings
 					layout.addView(imgs[i]);
 					Matrix m = new Matrix();
 					RectF src = new RectF(0, 0, bmps[i].getWidth(), bmps[i].getHeight());
+					if( Globals.ScreenKbControlsLayout[i][0] == Globals.ScreenKbControlsLayout[i][2] ||
+						Globals.ScreenKbControlsLayout[i][1] == Globals.ScreenKbControlsLayout[i][3] )
+					{
+						int displayX = 800;
+						int displayY = 480;
+						try {
+							DisplayMetrics dm = new DisplayMetrics();
+							p.getWindowManager().getDefaultDisplay().getMetrics(dm);
+							displayX = dm.widthPixels;
+							displayY = dm.heightPixels;
+						} catch (Exception eeeee) {}
+						Globals.ScreenKbControlsLayout[i][0] = displayX / 2 - displayX / 6;
+						Globals.ScreenKbControlsLayout[i][2] = displayX / 2 + displayX / 6;
+						Globals.ScreenKbControlsLayout[i][1] = displayY / 2 - displayY / 4;
+						Globals.ScreenKbControlsLayout[i][3] = displayY / 2 + displayY / 4;
+					}
 					RectF dst = new RectF(Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][1],
 											Globals.ScreenKbControlsLayout[i][2], Globals.ScreenKbControlsLayout[i][3]);
 					m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 					imgs[i].setImageMatrix(m);
 				}
 				boundary.bringToFront();
-
-				setupButton(true);
+				if( currentButton == -1 )
+					onKeyEvent( KeyEvent.KEYCODE_BACK ); // All buttons disabled - do not show anything
+				else
+					setupButton(currentButton);
 			}
 			
-			void setupButton(boolean undo)
+			void setupButton(int i)
 			{
-				do {
-					currentButton += (undo ? -1 : 1);
-					if(currentButton >= Globals.ScreenKbControlsLayout.length)
-					{
-						p.getVideoLayout().removeView(layout);
-						layout = null;
-						p.touchListener = null;
-						p.keyListener = null;
-						goBack(p);
-						return;
-					}
-					if(currentButton < 0)
-					{
-						currentButton = 0;
-						undo = false;
-					}
-				} while( ! Globals.ScreenKbControlsShown[currentButton] );
-				
-				if( Globals.ScreenKbControlsLayout[currentButton][0] == Globals.ScreenKbControlsLayout[currentButton][2] ||
-					Globals.ScreenKbControlsLayout[currentButton][1] == Globals.ScreenKbControlsLayout[currentButton][3] )
-				{
-					int displayX = 800;
-					int displayY = 480;
-					try {
-						DisplayMetrics dm = new DisplayMetrics();
-						p.getWindowManager().getDefaultDisplay().getMetrics(dm);
-						displayX = dm.widthPixels;
-						displayY = dm.heightPixels;
-					} catch (Exception eeeee) {}
-					Globals.ScreenKbControlsLayout[currentButton][0] = displayX / 2 - displayX / 6;
-					Globals.ScreenKbControlsLayout[currentButton][2] = displayX / 2 + displayX / 6;
-					Globals.ScreenKbControlsLayout[currentButton][1] = displayY / 2 - displayY / 4;
-					Globals.ScreenKbControlsLayout[currentButton][3] = displayY / 2 + displayY / 4;
-				}
 				Matrix m = new Matrix();
-				RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
-				RectF dst = new RectF(Globals.ScreenKbControlsLayout[currentButton][0], Globals.ScreenKbControlsLayout[currentButton][1],
-										Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
+				RectF src = new RectF(0, 0, bmps[i].getWidth(), bmps[i].getHeight());
+				RectF dst = new RectF(Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][1],
+										Globals.ScreenKbControlsLayout[i][2], Globals.ScreenKbControlsLayout[i][3]);
 				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
-				imgs[currentButton].setImageMatrix(m);
+				imgs[i].setImageMatrix(m);
 				m = new Matrix();
 				src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
 				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 				boundary.setImageMatrix(m);
-				String buttonText = (currentButton == 0 ? "DPAD" : ( currentButton == 1 ? "Text input" : "" ));
-				if ( currentButton >= 2 && currentButton - 2 < Globals.AppTouchscreenKeyboardKeysNames.length )
-					buttonText = Globals.AppTouchscreenKeyboardKeysNames[currentButton - 2];
+				String buttonText = (i == 0 ? "Joystick" : ( i == 1 ? "Text input" : "" ));
+				if ( i >= 2 && i - 2 < Globals.AppTouchscreenKeyboardKeysNames.length )
+					buttonText = Globals.AppTouchscreenKeyboardKeysNames[i - 2];
 				p.setText(p.getResources().getString(R.string.screenkb_custom_layout_help) + "\n" + buttonText.replace("_", " "));
 			}
 
 			public void onTouchEvent(final MotionEvent ev)
 			{
-				if(currentButton >= Globals.ScreenKbControlsLayout.length)
-				{
-					setupButton(false);
-					return;
-				}
 				if( ev.getAction() == MotionEvent.ACTION_DOWN )
 				{
-					Globals.ScreenKbControlsLayout[currentButton][0] = (int)ev.getX();
-					Globals.ScreenKbControlsLayout[currentButton][1] = (int)ev.getY();
-					Globals.ScreenKbControlsLayout[currentButton][2] = (int)ev.getX();
-					Globals.ScreenKbControlsLayout[currentButton][3] = (int)ev.getY();
+					oldX = (int)ev.getX();
+					oldY = (int)ev.getY();
+					resizing = true;
+					for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+					{
+						if( ! Globals.ScreenKbControlsShown[currentButton] )
+							continue;
+						if( Globals.ScreenKbControlsLayout[currentButton][0] <= oldX &&
+							Globals.ScreenKbControlsLayout[currentButton][2] >= oldX &&
+							Globals.ScreenKbControlsLayout[currentButton][1] <= oldY &&
+							Globals.ScreenKbControlsLayout[currentButton][2] >= oldY )
+						{
+							currentButton = i;
+							setupButton(currentButton);
+							resizing = false;
+							break;
+						}
+					}
 				}
 				if( ev.getAction() == MotionEvent.ACTION_MOVE )
 				{
-					if( Globals.ScreenKbControlsLayout[currentButton][0] > (int)ev.getX() )
-						Globals.ScreenKbControlsLayout[currentButton][0] = (int)ev.getX();
-					if( Globals.ScreenKbControlsLayout[currentButton][1] > (int)ev.getY() )
-						Globals.ScreenKbControlsLayout[currentButton][1] = (int)ev.getY();
-					if( Globals.ScreenKbControlsLayout[currentButton][2] < (int)ev.getX() )
-						Globals.ScreenKbControlsLayout[currentButton][2] = (int)ev.getX();
-					if( Globals.ScreenKbControlsLayout[currentButton][3] < (int)ev.getY() )
-						Globals.ScreenKbControlsLayout[currentButton][3] = (int)ev.getY();
+					int dx = (int)ev.getX() - oldX;
+					int dy = (int)ev.getY() - oldY;
+					if( resizing )
+					{
+						// Resize slowly, with 1/3 of movement speed
+						dx /= 6;
+						dy /= 6;
+						Globals.ScreenKbControlsLayout[currentButton][0] -= dx;
+						Globals.ScreenKbControlsLayout[currentButton][2] += dx;
+						Globals.ScreenKbControlsLayout[currentButton][1] -= dy;
+						Globals.ScreenKbControlsLayout[currentButton][3] += dy;
+						dx *= 6;
+						dy *= 6;
+					}
+					else
+					{
+						Globals.ScreenKbControlsLayout[currentButton][0] += dx;
+						Globals.ScreenKbControlsLayout[currentButton][2] += dx;
+						Globals.ScreenKbControlsLayout[currentButton][1] += dy;
+						Globals.ScreenKbControlsLayout[currentButton][3] += dy;
+					}
+					oldX += dx;
+					oldY += dy;
+					Matrix m = new Matrix();
+					RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
+					RectF dst = new RectF(Globals.ScreenKbControlsLayout[currentButton][0], Globals.ScreenKbControlsLayout[currentButton][1],
+											Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
+					m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+					imgs[currentButton].setImageMatrix(m);
+					m = new Matrix();
+					src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
+					m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
+					boundary.setImageMatrix(m);
 				}
-
-				Matrix m = new Matrix();
-				RectF src = new RectF(0, 0, bmps[currentButton].getWidth(), bmps[currentButton].getHeight());
-				RectF dst = new RectF(Globals.ScreenKbControlsLayout[currentButton][0], Globals.ScreenKbControlsLayout[currentButton][1],
-										Globals.ScreenKbControlsLayout[currentButton][2], Globals.ScreenKbControlsLayout[currentButton][3]);
-				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
-				imgs[currentButton].setImageMatrix(m);
-				m = new Matrix();
-				src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
-				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
-				boundary.setImageMatrix(m);
-
-				if( ev.getAction() == MotionEvent.ACTION_UP )
-					setupButton(false);
 			}
 
 			public void onKeyEvent(final int keyCode)
 			{
-				if( layout != null && imgs[currentButton] != null )
-					layout.removeView(imgs[currentButton]);
-				imgs[currentButton] = null;
-				setupButton(true);
+				if( keyCode == KeyEvent.KEYCODE_BACK )
+				{
+					p.getVideoLayout().removeView(layout);
+					layout = null;
+					p.touchListener = null;
+					p.keyListener = null;
+					goBack(p);
+				}
 			}
 		}
 	}
