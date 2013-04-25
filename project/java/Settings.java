@@ -218,6 +218,22 @@ class Settings
 		}
 		for( int i = 0; i < Globals.MultitouchGesturesUsed.length; i++ )
 			Globals.MultitouchGesturesUsed[i] = true;
+		// Adjust coordinates of on-screen buttons from 800x480
+		int displayX = 800;
+		int displayY = 480;
+		try {
+			DisplayMetrics dm = new DisplayMetrics();
+			p.getWindowManager().getDefaultDisplay().getMetrics(dm);
+			displayX = dm.widthPixels;
+			displayY = dm.heightPixels;
+		} catch (Exception eeeee) {}
+		for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+		{
+			Globals.ScreenKbControlsLayout[i][0] *= (float)displayX / 800.0f;
+			Globals.ScreenKbControlsLayout[i][2] *= (float)displayX / 800.0f;
+			Globals.ScreenKbControlsLayout[i][1] *= (float)displayY / 480.0f;
+			Globals.ScreenKbControlsLayout[i][3] *= (float)displayY / 480.0f;
+		}
 
 		System.out.println("android.os.Build.MODEL: " + android.os.Build.MODEL);
 		if( (android.os.Build.MODEL.equals("GT-N7000") || android.os.Build.MODEL.equals("SGH-I717"))
@@ -2078,22 +2094,6 @@ class Settings
 					layout.addView(imgs[i]);
 					Matrix m = new Matrix();
 					RectF src = new RectF(0, 0, bmps[i].getWidth(), bmps[i].getHeight());
-					if( Globals.ScreenKbControlsLayout[i][0] == Globals.ScreenKbControlsLayout[i][2] ||
-						Globals.ScreenKbControlsLayout[i][1] == Globals.ScreenKbControlsLayout[i][3] )
-					{
-						int displayX = 800;
-						int displayY = 480;
-						try {
-							DisplayMetrics dm = new DisplayMetrics();
-							p.getWindowManager().getDefaultDisplay().getMetrics(dm);
-							displayX = dm.widthPixels;
-							displayY = dm.heightPixels;
-						} catch (Exception eeeee) {}
-						Globals.ScreenKbControlsLayout[i][0] = displayX / 2 - displayX / 10;
-						Globals.ScreenKbControlsLayout[i][2] = displayX / 2 + displayX / 10;
-						Globals.ScreenKbControlsLayout[i][1] = displayY / 2 - displayY / 8;
-						Globals.ScreenKbControlsLayout[i][3] = displayY / 2 + displayY / 8;
-					}
 					RectF dst = new RectF(Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][1],
 											Globals.ScreenKbControlsLayout[i][2], Globals.ScreenKbControlsLayout[i][3]);
 					m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
@@ -2299,6 +2299,12 @@ class Settings
 			{
 				if( r.startsWith(lang) )
 					readme = r.substring(lang.length());
+			}
+			readme = readme.trim();
+			if( readme.length() <= 2 )
+			{
+				goBack(p);
+				return;
 			}
 			TextView text = new TextView(p);
 			text.setMaxLines(1000);

@@ -105,7 +105,7 @@ class Globals
 	public static int RemapHwKeycode[] = new int[SDL_Keys.JAVA_KEYCODE_LAST];
 	public static int RemapScreenKbKeycode[] = new int[6];
 	public static boolean ScreenKbControlsShown[] = new boolean[8]; /* Also joystick and text input button added */
-	public static int ScreenKbControlsLayout[][] = new int[8][4];
+	public static int ScreenKbControlsLayout[][] = new int[][] { { 712, 392, 800, 480 }, { 624, 392, 712, 480 }, { 712, 304, 800, 392 }, { 624, 304, 712, 392 }, { 712, 216, 800, 304 }, { 624, 216, 712, 304 }, { 0, 0, 48, 48 }, { 0, 303, 177, 480 } }; // Values for 800x480 resolution
 	public static int RemapMultitouchGestureKeycode[] = new int[4];
 	public static boolean MultitouchGesturesUsed[] = new boolean[4];
 	public static int MultitouchGestureSensitivity = 1;
