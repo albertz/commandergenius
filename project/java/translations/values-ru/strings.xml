@@ -99,7 +99,7 @@
 <string name="calibrate_touchscreen">Калибровка сенсорного экрана</string>
 <string name="calibrate_touchscreen_touch">Дотроньтесь до всех краев экрана, потом нажмите Назад/BACK</string>
 <string name="screenkb_custom_layout">Настройка расположения кнопок</string>
-<string name="screenkb_custom_layout_help">Проведите по экрану, чтобы добавить кнопку, нажмите клавишу Назад/BACK, чтобы отменить последнюю кнопку</string>
+<string name="screenkb_custom_layout_help">Нажмите клавишу Назад/BACK для завершения. Проведите по пустому месту, чтобы изменить размер кнопки</string>
 <string name="rightclick_key">Физическая кнопка</string>
 <string name="pointandclick_showcreenunderfinger2">Наэкранная лупа</string>
 <string name="video">Настройки видео</string>
@@ -126,8 +126,6 @@
 <string name="display_size_small">Маленький (телефон)</string>
 <string name="display_size_tiny">Крохотный</string>
 <string name="show_more_options">Показать больше параметров</string>
-<string name="broken_libc_title">Обнаружена бракованная прошивка</string>
-<string name="broken_libc_text">Ваше устройство содержит дефективные системные библиотеки, данное приложение скорее всего не будет работать. Пожалуйста, установите обновление, либо установите неофициальную прошивку, либо скопируйте /system/lib/libc.so с другого устройства (только для специалистов!)</string>
 <string name="controls_screenkb_drawsize">Размер изображения кнопок</string>
 <string name="display_size_small_touchpad">Маленький, режим тачпада</string>
 <string name="display_size_tiny_touchpad">Крохотный, режим тачпада</string>

@@ -555,6 +555,14 @@ int main(int argc, char* argv[])
 
 	__android_log_print(ANDROID_LOG_INFO, "Ballfield", "sizeof(int) %d long %d long long %d size_t %d", sizeof(int), sizeof(long), sizeof(long long), sizeof(size_t));
 
+	__android_log_print(ANDROID_LOG_VERBOSE, "Ballfield", "On-screen buttons:");
+	for(i = 0; i < SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM; i++)
+	{
+		SDL_Rect r;
+		SDL_ANDROID_GetScreenKeyboardButtonPos(i, &r);
+		__android_log_print(ANDROID_LOG_VERBOSE, "Ballfield", "{ %d, %d, %d, %d },", r.x, r.y, r.x+r.h, r.y+r.w);
+	}
+	
 	while(1)
 	{
 		SDL_Rect r;

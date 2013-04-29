@@ -99,7 +99,7 @@
 <string name="calibrate_touchscreen">Калібрування сенсорного екрану</string>
 <string name="calibrate_touchscreen_touch">Доторкнiться до всіх країв екрану, потiм натисніть Назад/BACK</string>
 <string name="screenkb_custom_layout">Налаштування положення кнопок</string>
-<string name="screenkb_custom_layout_help">Проведiть по екрану, щоб додати кнопку, натисніть Назад/BACK, щоб скасувати останню кнопку</string>
+<string name="screenkb_custom_layout_help">Натисніть Назад/BACK для завершення. Проведiть по екрану, щоб змінити розмір кнопки</string>
 <string name="rightclick_key">Фізична кнопка</string>
 <string name="pointandclick_showcreenunderfinger2">Наекранна лупа</string>
 <string name="video">Налаштування відео</string>
@@ -131,19 +131,17 @@
 <string name="display_size_tiny_touchpad">Крихiтний, режим тачпаду</string>
 <string name="hardware_mouse_detected">Виявлена зовнiшня миша, емуляція миші вимкнена</string>
 
-<string name="broken_libc_title">Broken OS detected</string>
-<string name="broken_libc_text">Your device has broken system libraries, this application will most probably crash. Please install a system update, or flash a custom ROM, or copy file /system/lib/libc.so from another device (experts only!)</string>
-<string name="not_enough_ram">Not enough RAM</string>
-<string name="not_enough_ram_size">This app needs %1$d Mb RAM, your device has %2$d Mb</string>
-<string name="ignore">Ignore</string>
-<string name="calibrate_gyroscope">Calibrate gyroscope</string>
-<string name="calibrate_gyroscope_text">Put your phone on a flat surface</string>
-<string name="reset_config">Reset config to defaults</string>
-<string name="cancel">Cancel</string>
-<string name="calibrate_gyroscope_not_supported">Your device does not have gyroscope</string>
-<string name="reset_config_ask">Reset all options to default values?</string>
-<string name="cancel_download">Cancel data downloading?</string>
-<string name="cancel_download_resume">You can resume it later, the data will not be downloaded twice.</string>
-<string name="yes">Yes</string>
-<string name="no">No</string>
+<string name="not_enough_ram">Недостатньо пам’яті</string>
+<string name="not_enough_ram_size">Потрібно %1$d Mb пам’яті, доступно лише %2$d Mb</string>
+<string name="ignore">Ігнорувати</string>
+<string name="calibrate_gyroscope">Калібрувати гіроскоп</string>
+<string name="calibrate_gyroscope_text">Покладіть телефон на рівну поверхню</string>
+<string name="reset_config">Скинути всі налаштування</string>
+<string name="cancel">Відмінити</string>
+<string name="calibrate_gyroscope_not_supported">Гіроскоп відсутній</string>
+<string name="reset_config_ask">Скинути всі налаштування у значення за замовчуванням?</string>
+<string name="cancel_download">Припинити завантаження?</string>
+<string name="cancel_download_resume">Завантаження може бути відновлено пізніше.</string>
+<string name="yes">Так</string>
+<string name="no">Ні</string>
 </resources>
