@@ -173,7 +173,7 @@ class AudioThread
 		}
 		if( !mRecordThread.isStopped() )
 		{
-			System.out.println("SDL: error: application already opened audio recording device");
+			Log.i("SDL", "SDL: error: application already opened audio recording device");
 			return null;
 		}
 
@@ -186,7 +186,7 @@ class AudioThread
 
 		int minBufDevice = AudioRecord.getMinBufferSize(rate, channelConfig, encodingConfig);
 		int minBufferSize = Math.max(bufsize * 8, minBufDevice + (bufsize - (minBufDevice % bufsize)));
-		System.out.println("SDL: app opened recording device, rate " + rate + " channels " + channels + " sample size " + (encoding+1) + " bufsize " + bufsize + " internal bufsize " + minBufferSize);
+		Log.i("SDL", "SDL: app opened recording device, rate " + rate + " channels " + channels + " sample size " + (encoding+1) + " bufsize " + bufsize + " internal bufsize " + minBufferSize);
 		if( mRecorder == null || mRecorder.getSampleRate() != rate ||
 			mRecorder.getChannelCount() != channels ||
 			mRecorder.getAudioFormat() != encodingConfig ||
@@ -199,13 +199,13 @@ class AudioThread
 				mRecorder = new AudioRecord(AudioSource.DEFAULT, rate, channelConfig, encodingConfig, minBufferSize);
 				mRecorderBufferSize = minBufferSize;
 			} catch (IllegalArgumentException e) {
-				System.out.println("SDL: error: failed to open recording device!");
+				Log.i("SDL", "SDL: error: failed to open recording device!");
 				return null;
 			}
 		}
 		else
 		{
-			System.out.println("SDL: reusing old recording device");
+			Log.i("SDL", "SDL: reusing old recording device");
 		}
 		mRecordThread.startRecording();
 		return mRecordThread.mRecordBuffer;
@@ -215,11 +215,11 @@ class AudioThread
 	{
 		if( mRecordThread == null || mRecordThread.isStopped() )
 		{
-			System.out.println("SDL: error: application already closed audio recording device");
+			Log.i("SDL", "SDL: error: application already closed audio recording device");
 			return;
 		}
 		mRecordThread.stopRecording();
-		System.out.println("SDL: app closed recording device");
+		Log.i("SDL", "SDL: app closed recording device");
 	}
 
 	private class RecordingThread extends Thread
@@ -261,9 +261,9 @@ class AudioThread
 					}
 					else
 					{
-						//System.out.println("SDL: nativeAudioRecordCallback with len " + mRecordBuffer.length);
+						//Log.i("SDL", "SDL: nativeAudioRecordCallback with len " + mRecordBuffer.length);
 						nativeAudioRecordCallback();
-						//System.out.println("SDL: nativeAudioRecordCallback returned");
+						//Log.i("SDL", "SDL: nativeAudioRecordCallback returned");
 					}
 				}
 

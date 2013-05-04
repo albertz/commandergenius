@@ -183,7 +183,7 @@ class Settings
 		{
 			return;
 		}
-		System.out.println("libSDL: Settings.Load(): enter");
+		Log.i("SDL", "libSDL: Settings.Load(): enter");
 		nativeInitKeymap();
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
 		{
@@ -239,7 +239,7 @@ class Settings
 			Globals.ScreenKbControlsLayout[i][3] = Globals.ScreenKbControlsLayout[i][1] + wh;
 		}
 
-		System.out.println("android.os.Build.MODEL: " + android.os.Build.MODEL);
+		Log.i("SDL", "android.os.Build.MODEL: " + android.os.Build.MODEL);
 		if( (android.os.Build.MODEL.equals("GT-N7000") || android.os.Build.MODEL.equals("SGH-I717"))
 			&& android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.GINGERBREAD_MR1 )
 		{
@@ -346,16 +346,16 @@ class Settings
 
 			settingsLoaded = true;
 
-			System.out.println("libSDL: Settings.Load(): loaded settings successfully");
+			Log.i("SDL", "libSDL: Settings.Load(): loaded settings successfully");
 			settingsFile.close();
 
-			System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion());
+			Log.i("SDL", "libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion());
 			if( cfgVersion != p.getApplicationVersion() )
 			{
 				DeleteFilesOnUpgrade();
 				if( Globals.ResetSdlConfigForThisVersion )
 				{
-					System.out.println("libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion() + " and we need to clean up config file");
+					Log.i("SDL", "libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion() + " and we need to clean up config file");
 					// Delete settings file, and restart the application
 					DeleteSdlConfigOnUpgradeAndRestart(p);
 				}
@@ -370,7 +370,7 @@ class Settings
 			DeleteFilesOnUpgrade();
 			if( Globals.ResetSdlConfigForThisVersion )
 			{
-				System.out.println("libSDL: old cfg version unknown or too old, our version " + p.getApplicationVersion() + " and we need to clean up config file");
+				Log.i("SDL", "libSDL: old cfg version unknown or too old, our version " + p.getApplicationVersion() + " and we need to clean up config file");
 				DeleteSdlConfigOnUpgradeAndRestart(p);
 			}
 		};
@@ -379,7 +379,7 @@ class Settings
 		{
 			if( !Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) )
 			{
-				System.out.println("libSDL: SD card or external storage is not mounted (state " + Environment.getExternalStorageState() + "), switching to the internal storage.");
+				Log.i("SDL", "libSDL: SD card or external storage is not mounted (state " + Environment.getExternalStorageState() + "), switching to the internal storage.");
 				Globals.DownloadToSdcard = false;
 			}
 			Globals.DataDir = Globals.DownloadToSdcard ?
@@ -396,7 +396,7 @@ class Settings
 			}
 		}
 
-		System.out.println("libSDL: Settings.Load(): loading settings failed, running config dialog");
+		Log.i("SDL", "libSDL: Settings.Load(): loading settings failed, running config dialog");
 		p.setUpStatusLabel();
 		if( checkRamSize(p) )
 			showConfig(p, true);
@@ -1617,7 +1617,7 @@ class Settings
 					p.touchListener = null;
 					Globals.ClickScreenPressure = getAverageForce();
 					Globals.ClickScreenTouchspotSize = getAverageRadius();
-					System.out.println("SDL: measured average force " + Globals.ClickScreenPressure + " radius " + Globals.ClickScreenTouchspotSize);
+					Log.i("SDL", "SDL: measured average force " + Globals.ClickScreenPressure + " radius " + Globals.ClickScreenTouchspotSize);
 					goBack(p);
 				}
 			}
@@ -2097,7 +2097,7 @@ class Settings
 						continue;
 					if( currentButton == -1 )
 						currentButton = i;
-					System.out.println("Screen kb button " + i + " coords " + Globals.ScreenKbControlsLayout[i][0] + ":" + Globals.ScreenKbControlsLayout[i][1] + ":" + Globals.ScreenKbControlsLayout[i][2] + ":" + Globals.ScreenKbControlsLayout[i][3] );
+					Log.i("SDL", "Screen kb button " + i + " coords " + Globals.ScreenKbControlsLayout[i][0] + ":" + Globals.ScreenKbControlsLayout[i][1] + ":" + Globals.ScreenKbControlsLayout[i][2] + ":" + Globals.ScreenKbControlsLayout[i][3] );
 					// Check if the button is off screen edge or shrunk to zero
 					if( Globals.ScreenKbControlsLayout[i][0] > Globals.ScreenKbControlsLayout[i][2] - displayY/12 )
 						Globals.ScreenKbControlsLayout[i][0] = Globals.ScreenKbControlsLayout[i][2] - displayY/12;
@@ -2127,7 +2127,7 @@ class Settings
 						Globals.ScreenKbControlsLayout[i][1] -= Globals.ScreenKbControlsLayout[i][3] - displayY;
 						Globals.ScreenKbControlsLayout[i][3] = displayY;
 					}
-					System.out.println("After bounds check coords " + Globals.ScreenKbControlsLayout[i][0] + ":" + Globals.ScreenKbControlsLayout[i][1] + ":" + Globals.ScreenKbControlsLayout[i][2] + ":" + Globals.ScreenKbControlsLayout[i][3] );
+					Log.i("SDL", "After bounds check coords " + Globals.ScreenKbControlsLayout[i][0] + ":" + Globals.ScreenKbControlsLayout[i][1] + ":" + Globals.ScreenKbControlsLayout[i][2] + ":" + Globals.ScreenKbControlsLayout[i][3] );
 
 					imgs[i] = new ImageView(p);
 					imgs[i].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
@@ -2714,7 +2714,7 @@ class Settings
 		String lang = new String(Locale.getDefault().getLanguage());
 		if( Locale.getDefault().getCountry().length() > 0 )
 			lang = lang + "_" + Locale.getDefault().getCountry();
-		System.out.println( "libSDL: setting envvar LANGUAGE to '" + lang + "'");
+		Log.i("SDL",  "libSDL: setting envvar LANGUAGE to '" + lang + "'");
 		nativeSetEnv( "LANG", lang );
 		nativeSetEnv( "LANGUAGE", lang );
 		// TODO: get current user name and set envvar USER, the API is not availalbe on Android 1.6 so I don't bother with this
@@ -2849,7 +2849,7 @@ class Settings
 				{
 					String[] fields = line.split("[ \t]+");
 					Long size = Long.parseLong(fields[1]);
-					System.out.println("Device RAM size: " + size / 1024 + " Mb, required minimum RAM: " + Globals.AppMinimumRAM + " Mb" );
+					Log.i("SDL", "Device RAM size: " + size / 1024 + " Mb, required minimum RAM: " + Globals.AppMinimumRAM + " Mb" );
 					if( size / 1024 < Globals.AppMinimumRAM )
 					{
 						settingsChanged = true;
@@ -2888,7 +2888,7 @@ class Settings
 				}
 			}
 		} catch ( Exception e ) {
-			System.out.println("Error: cannot parse /proc/meminfo: " + e.toString());
+			Log.i("SDL", "Error: cannot parse /proc/meminfo: " + e.toString());
 		}
 		return true;
 	}
