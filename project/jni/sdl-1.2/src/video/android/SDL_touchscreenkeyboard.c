@@ -44,7 +44,7 @@
 
 // TODO: this code is a HUGE MESS
 
-enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, BUTTON_ARROWS = MAX_BUTTONS } ; // Max amount of custom buttons
+enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, BUTTON_ARROWS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD } ; // Max amount of custom buttons
 
 int SDL_ANDROID_isTouchscreenKeyboardUsed = 0;
 static short touchscreenKeyboardTheme = 0;
@@ -56,7 +56,7 @@ static float transparency = 128.0f/255.0f;
 
 static SDL_Rect arrows, arrowsExtended, buttons[MAX_BUTTONS], buttonsAutoFireRect[MAX_BUTTONS_AUTOFIRE];
 static SDL_Rect arrowsDraw, buttonsDraw[MAX_BUTTONS];
-static SDLKey buttonKeysyms[MAX_BUTTONS] = { 
+static SDLKey buttonKeysyms[MAX_BUTTONS] = {
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_0)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_1)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_2)),
@@ -535,7 +535,19 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 	if( action == MOUSE_MOVE )
 	{
 		// Process cases when pointer enters button area (it won't send keypress twice if button already pressed)
-		processed |= SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
+		int processOtherButtons = 1;
+		for( i = 0; i < MAX_BUTTONS; i++ )
+		{
+			if( buttonsGenerateSdlEvents[i] && pointerInButtonRect[i] == pointerId )
+			{
+				processOtherButtons = 0;
+				break;
+			}
+		}
+		if( processOtherButtons )
+		{
+			processed |= SDL_ANDROID_processTouchscreenKeyboard(x, y, MOUSE_DOWN, pointerId);
+		}
 		
 		// Process cases when pointer leaves button area
 		// TODO: huge code size, split it or somehow make it more readable
