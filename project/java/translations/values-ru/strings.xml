@@ -26,10 +26,10 @@
 <string name="controls_additional">Дополнительные элементы управления</string>
 <string name="controls_screenkb">Экранная клавиатура</string>
 <string name="controls_accelnav">Акселерометр</string>
-<string name="controls_screenkb_size">Экранная клавиатура размером</string>
+<string name="controls_screenkb_size">Размер экранной клавиатуры</string>
 <string name="controls_screenkb_large">Большой</string>
 <string name="controls_screenkb_medium">Средний</string>
-<string name="controls_screenkb_small">Малые</string>
+<string name="controls_screenkb_small">Маленький</string>
 <string name="controls_screenkb_tiny">Крошечный</string>
 <string name="controls_screenkb_theme">Тема клавиатуры</string>
 <string name="controls_screenkb_by">%1$s от %2$s</string>
@@ -87,10 +87,10 @@
 <string name="remap_screenkb_joystick">Экранный джойстик</string>
 <string name="remap_screenkb_button">Экранные кнопки</string>
 <string name="remap_screenkb_button_text">Экранная кнопка ввода текста</string>
-<string name="remap_screenkb_button_zoomin">Увеличить двумя пальцами жест</string>
-<string name="remap_screenkb_button_zoomout">Уменьшить двумя пальцами жест</string>
-<string name="remap_screenkb_button_rotateleft">Повернуть налево двумя пальцами жест</string>
-<string name="remap_screenkb_button_rotateright">Повернуть вправо двумя пальцами жест</string>
+<string name="remap_screenkb_button_zoomin">Увеличить двумя пальцами</string>
+<string name="remap_screenkb_button_zoomout">Уменьшить двумя пальцами</string>
+<string name="remap_screenkb_button_rotateleft">Повернуть налево двумя пальцами</string>
+<string name="remap_screenkb_button_rotateright">Повернуть вправо двумя пальцами</string>
 <string name="remap_screenkb_button_gestures">Жест двумя пальцами по экрану</string>
 <string name="accel_veryfast">Очень быстро</string>
 <string name="remap_screenkb_button_gestures_sensitivity">Чувствительность жеста двумя пальцами по экрану</string>
@@ -145,4 +145,5 @@
 <string name="cancel_download_resume">Загрузка может быть продолжена позднее.</string>
 <string name="yes">Да</string>
 <string name="no">Нет</string>
+<string name="controls_screenkb_custom">Пользовательские настройки</string>
 </resources>

@@ -77,6 +77,7 @@ class Globals
 	public static boolean UseAccelerometerAsArrowKeys = false;
 	public static boolean UseTouchscreenKeyboard = true;
 	public static int TouchscreenKeyboardSize = 1;
+	public static final int TOUCHSCREEN_KEYBOARD_CUSTOM = 4;
 	public static int TouchscreenKeyboardDrawSize = 1;
 	public static int TouchscreenKeyboardTheme = 2;
 	public static int TouchscreenKeyboardTransparency = 2;

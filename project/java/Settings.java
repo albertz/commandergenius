@@ -233,6 +233,10 @@ class Settings
 			Globals.ScreenKbControlsLayout[i][2] *= (float)displayX / 800.0f;
 			Globals.ScreenKbControlsLayout[i][1] *= (float)displayY / 480.0f;
 			Globals.ScreenKbControlsLayout[i][3] *= (float)displayY / 480.0f;
+			// Make them square
+			int wh = Math.min( Globals.ScreenKbControlsLayout[i][2] - Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][3] - Globals.ScreenKbControlsLayout[i][1] );
+			Globals.ScreenKbControlsLayout[i][2] = Globals.ScreenKbControlsLayout[i][0] + wh;
+			Globals.ScreenKbControlsLayout[i][3] = Globals.ScreenKbControlsLayout[i][1] + wh;
 		}
 
 		System.out.println("android.os.Build.MODEL: " + android.os.Build.MODEL);
@@ -860,22 +864,21 @@ class Settings
 			final CharSequence[] items = {	p.getResources().getString(R.string.controls_screenkb_large),
 											p.getResources().getString(R.string.controls_screenkb_medium),
 											p.getResources().getString(R.string.controls_screenkb_small),
-											p.getResources().getString(R.string.controls_screenkb_tiny) };
-
-			for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
-				for( int ii = 0; ii < 4; ii++ )
-					Globals.ScreenKbControlsLayout[i][ii] = 0;
+											p.getResources().getString(R.string.controls_screenkb_tiny),
+											p.getResources().getString(R.string.controls_screenkb_custom) };
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(p.getResources().getString(R.string.controls_screenkb_size));
 			builder.setSingleChoiceItems(items, Globals.TouchscreenKeyboardSize, new DialogInterface.OnClickListener() 
 			{
-				public void onClick(DialogInterface dialog, int item) 
+				public void onClick(DialogInterface dialog, int item)
 				{
 					Globals.TouchscreenKeyboardSize = item;
-
 					dialog.dismiss();
-					goBack(p);
+					if( Globals.TouchscreenKeyboardSize == Globals.TOUCHSCREEN_KEYBOARD_CUSTOM )
+						new CustomizeScreenKbLayout().run(p);
+					else
+						goBack(p);
 				}
 			});
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
@@ -2028,6 +2031,7 @@ class Settings
 			CustomizeScreenKbLayoutTool tool = new CustomizeScreenKbLayoutTool(p);
 			p.touchListener = tool;
 			p.keyListener = tool;
+			Globals.TouchscreenKeyboardSize = Globals.TOUCHSCREEN_KEYBOARD_CUSTOM;
 		}
 
 		static class CustomizeScreenKbLayoutTool implements TouchEventsListener, KeyEventsListener
@@ -2093,32 +2097,37 @@ class Settings
 						continue;
 					if( currentButton == -1 )
 						currentButton = i;
-
+					System.out.println("Screen kb button " + i + " coords " + Globals.ScreenKbControlsLayout[i][0] + ":" + Globals.ScreenKbControlsLayout[i][1] + ":" + Globals.ScreenKbControlsLayout[i][2] + ":" + Globals.ScreenKbControlsLayout[i][3] );
 					// Check if the button is off screen edge or shrunk to zero
-					if( Globals.ScreenKbControlsLayout[i][0] > Globals.ScreenKbControlsLayout[i][2] - displayX/15 )
-						Globals.ScreenKbControlsLayout[i][0] = Globals.ScreenKbControlsLayout[i][2] - displayX/15;
-					if( Globals.ScreenKbControlsLayout[i][1] > Globals.ScreenKbControlsLayout[i][3] - displayY/15 )
-						Globals.ScreenKbControlsLayout[i][1] = Globals.ScreenKbControlsLayout[i][3] - displayY/15;
+					if( Globals.ScreenKbControlsLayout[i][0] > Globals.ScreenKbControlsLayout[i][2] - displayY/12 )
+						Globals.ScreenKbControlsLayout[i][0] = Globals.ScreenKbControlsLayout[i][2] - displayY/12;
+					if( Globals.ScreenKbControlsLayout[i][1] > Globals.ScreenKbControlsLayout[i][3] - displayY/12 )
+						Globals.ScreenKbControlsLayout[i][1] = Globals.ScreenKbControlsLayout[i][3] - displayY/12;
+					if( Globals.ScreenKbControlsLayout[i][0] < Globals.ScreenKbControlsLayout[i][2] - displayY*2/3 )
+						Globals.ScreenKbControlsLayout[i][0] = Globals.ScreenKbControlsLayout[i][2] - displayY*2/3;
+					if( Globals.ScreenKbControlsLayout[i][1] < Globals.ScreenKbControlsLayout[i][3] - displayY*2/3 )
+						Globals.ScreenKbControlsLayout[i][1] = Globals.ScreenKbControlsLayout[i][3] - displayY*2/3;
 					if( Globals.ScreenKbControlsLayout[i][0] < 0 )
 					{
-						Globals.ScreenKbControlsLayout[i][2] = -Globals.ScreenKbControlsLayout[i][0];
+						Globals.ScreenKbControlsLayout[i][2] += -Globals.ScreenKbControlsLayout[i][0];
 						Globals.ScreenKbControlsLayout[i][0] = 0;
 					}
 					if( Globals.ScreenKbControlsLayout[i][2] > displayX )
 					{
-						Globals.ScreenKbControlsLayout[i][0] = Globals.ScreenKbControlsLayout[i][2] - displayX;
+						Globals.ScreenKbControlsLayout[i][0] -= Globals.ScreenKbControlsLayout[i][2] - displayX;
 						Globals.ScreenKbControlsLayout[i][2] = displayX;
 					}
 					if( Globals.ScreenKbControlsLayout[i][1] < 0 )
 					{
-						Globals.ScreenKbControlsLayout[i][3] = -Globals.ScreenKbControlsLayout[i][0];
+						Globals.ScreenKbControlsLayout[i][3] += -Globals.ScreenKbControlsLayout[i][1];
 						Globals.ScreenKbControlsLayout[i][1] = 0;
 					}
 					if( Globals.ScreenKbControlsLayout[i][3] > displayY )
 					{
-						Globals.ScreenKbControlsLayout[i][1] = Globals.ScreenKbControlsLayout[i][2] - displayY;
+						Globals.ScreenKbControlsLayout[i][1] -= Globals.ScreenKbControlsLayout[i][3] - displayY;
 						Globals.ScreenKbControlsLayout[i][3] = displayY;
 					}
+					System.out.println("After bounds check coords " + Globals.ScreenKbControlsLayout[i][0] + ":" + Globals.ScreenKbControlsLayout[i][1] + ":" + Globals.ScreenKbControlsLayout[i][2] + ":" + Globals.ScreenKbControlsLayout[i][3] );
 
 					imgs[i] = new ImageView(p);
 					imgs[i].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
@@ -2191,10 +2200,16 @@ class Settings
 						// Resize slowly, with 1/3 of movement speed
 						dx /= 6;
 						dy /= 6;
-						Globals.ScreenKbControlsLayout[currentButton][0] -= dx;
-						Globals.ScreenKbControlsLayout[currentButton][2] += dx;
-						Globals.ScreenKbControlsLayout[currentButton][1] += dy;
-						Globals.ScreenKbControlsLayout[currentButton][3] -= dy;
+						if( Globals.ScreenKbControlsLayout[currentButton][0] <= Globals.ScreenKbControlsLayout[currentButton][2] + dx*2 )
+						{
+							Globals.ScreenKbControlsLayout[currentButton][0] -= dx;
+							Globals.ScreenKbControlsLayout[currentButton][2] += dx;
+						}
+						if( Globals.ScreenKbControlsLayout[currentButton][1] <= Globals.ScreenKbControlsLayout[currentButton][3] + dy*2 )
+						{
+							Globals.ScreenKbControlsLayout[currentButton][1] += dy;
+							Globals.ScreenKbControlsLayout[currentButton][3] -= dy;
+						}
 						dx *= 6;
 						dy *= 6;
 					}
@@ -2673,10 +2688,13 @@ class Settings
 				SetupTouchscreenKeyboardGraphics(p);
 				for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
 					nativeSetKeymapKeyScreenKb(i, SDL_Keys.values[Globals.RemapScreenKbKeycode[i]]);
-				for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
-					if( Globals.ScreenKbControlsLayout[i][0] < Globals.ScreenKbControlsLayout[i][2] )
-						nativeSetScreenKbKeyLayout( i, Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][1],
-							Globals.ScreenKbControlsLayout[i][2], Globals.ScreenKbControlsLayout[i][3]);
+				if( Globals.TouchscreenKeyboardSize == Globals.TOUCHSCREEN_KEYBOARD_CUSTOM )
+				{
+					for( int i = 0; i < Globals.ScreenKbControlsLayout.length; i++ )
+						if( Globals.ScreenKbControlsLayout[i][0] < Globals.ScreenKbControlsLayout[i][2] )
+							nativeSetScreenKbKeyLayout( i, Globals.ScreenKbControlsLayout[i][0], Globals.ScreenKbControlsLayout[i][1],
+								Globals.ScreenKbControlsLayout[i][2], Globals.ScreenKbControlsLayout[i][3]);
+				}
 				for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
 					nativeSetScreenKbKeyUsed(i, Globals.ScreenKbControlsShown[i] ? 1 : 0);
 			}
