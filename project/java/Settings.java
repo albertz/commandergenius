@@ -203,7 +203,7 @@ class Settings
 					idx = ii;
 			Globals.RemapScreenKbKeycode[i] = idx;
 		}
-		Globals.ScreenKbControlsShown[0] = Globals.AppNeedsArrowKeys;
+		Globals.ScreenKbControlsShown[0] = (Globals.AppNeedsArrowKeys || Globals.AppUsesJoystick);
 		Globals.ScreenKbControlsShown[1] = Globals.AppNeedsTextInput;
 		for( int i = 2; i < Globals.ScreenKbControlsShown.length; i++ )
 			Globals.ScreenKbControlsShown[i] = ( i - 2 < Globals.AppTouchscreenKeyboardKeysAmount );

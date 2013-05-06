@@ -51,8 +51,7 @@ Recent Android phone models like HTC Evo have no keyboard at all, on-screen keyb
 is available for such devices - it has joystick (which can be configured as arrow buttons or analog joystick),
 and 6 configurable keys, full text input is toggled with 7-th key. Both user and application may redefine
 button layout and returned keycodes, and also toggle full text input - see SDL_screenkeyboard.h.
-Also you can read multitouch events and accelerometer events - they are passed as joystick events,
-see Ballfield sample app for the input event handling code.
+Also you can read multitouch events and accelerometer events - they are passed as joystick events.
 
 This port also supports GL ES + SDL combo - there is GLXGears demo app in project/jni/application/glxgears,
 to compile it remove project/jni/application/src symlink and make new one pointing to glxgears, and run build.sh
@@ -245,6 +244,29 @@ However your application will start up slower.
 SDL supports AdMob advertisements, you need to set your publisher ID inside AndroidAppSettings.cfg,
 see project test-advertisements for details.
 Also you can hide or reposition your ad from C code, check out file SDL_android.h for details.
+
+SDL reports several joysticks, which are used to pass accelerometer and multitouch events.
+On-screen joystick events are sent as SDL_JOYAXISMOTION in event.jaxis.jalue, scaled from -32767 to 32767,
+with event.jaxis.which == 0 and event.jaxis.axis from 0 to 1, you will need to set AppUsesJoystick=y
+in AndroidAppSettings.cfg and call SDL_JoystickOpen(0) in your code.
+Multitouch events are sent as SDL_JOYBALLMOTION in event.jball.xrel and event.jball.yrel, scaled to screen size,
+with event.jball.which == 0 and e.jball.ball from 0 to 15, you will need to set AppUsesMultitouch=y
+in AndroidAppSettings.cfg and call SDL_JoystickOpen(0). SDL_JOYBUTTONDOWN and  SDL_JOYBUTTONUP events
+are sent when the screen is touched or released, with e.jbutton.which == 0 and e.jbutton.button from 0 to 15.
+Additionally, the touch pressure is sent as SDL_JOYAXISMOTION, scaled from 0 to 32767,
+with event.jaxis.which == 0 and event.jaxis.axis from 4 to 19.
+Accelerometer events are sent as SDL_JOYAXISMOTION, with event.jaxis.which == 1 and event.jaxis.axis from 0 to 1,
+scaled from -32767 to 32767, denoting the device tilt angles from the horizontal.
+Raw accelerometer events are sent with event.jaxis.axis from 5 to 7, with Earth gravity having a value 9800.
+You will need to set AppUsesAccelerometer=y in AndroidAppSettings.cfg, and call SDL_JoystickOpen(1) in your code.
+Gyroscope events are sent as SDL_JOYAXISMOTION, with event.jaxis.which == 1 and event.jaxis.axis from 2 to 4,
+with value 32767 equal to 0.25 rad/s. You will need to set AppUsesGyroscope=y in AndroidAppSettings.cfg to use it.
+Gyroscope hardware is much more precise and less noisy than accelerometer, it is present on newer devices
+starting from Galaxy S II, but older devices do no have it - it is emulated with accelerometer + compass.
+SDL also supports gamepad - you can plug PS3/Xbox gamepad to almost any tablet, some devices have built-in gamepad.
+Gamepad stick events are sent as SDL_JOYAXISMOTION, with event.jaxis.which == 2 and event.jaxis.axis from 0 to 3.
+Gamepad analog L1/R1 buttons are sent as SDL_JOYAXISMOTION, with event.jaxis.which == 2 and event.jaxis.axis from 4 to 5.
+Other gamepad buttons generate key events, which are taken from RedefinedKeysScreenKb in AndroidAppSettings.cfg.
 
 
 How to compile your own application using automake/configure scripts
