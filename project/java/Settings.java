@@ -2406,8 +2406,11 @@ class Settings
 		{
 			if( !Globals.AppUsesGyroscope || !AccelerometerReader.gyro.available(p) )
 			{
-				Toast toast = Toast.makeText(p, p.getResources().getString(R.string.calibrate_gyroscope_not_supported), Toast.LENGTH_LONG);
-				toast.show();
+				if( Globals.AppUsesGyroscope )
+				{
+					Toast toast = Toast.makeText(p, p.getResources().getString(R.string.calibrate_gyroscope_not_supported), Toast.LENGTH_LONG);
+					toast.show();
+				}
 				goBack(p);
 				return;
 			}
