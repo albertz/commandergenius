@@ -84,6 +84,7 @@ extern SDL_Window * ANDROID_CurrentWindow;
 enum { MAX_MULTITOUCH_POINTERS = 16 };
 extern void ANDROID_InitOSKeymap();
 extern int SDL_ANDROID_isJoystickUsed;
+extern int SDL_ANDROID_isSecondJoystickUsed;
 // Events have to be sent only from main thread from PumpEvents(), so we'll buffer them here
 extern void SDL_ANDROID_PumpEvents();
 

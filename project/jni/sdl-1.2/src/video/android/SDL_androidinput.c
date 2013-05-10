@@ -81,6 +81,7 @@ int SDL_ANDROID_moveMouseWithKbAccelUpdateNeeded = 0;
 static int maxForce = 0;
 static int maxRadius = 0;
 int SDL_ANDROID_isJoystickUsed = 0;
+int SDL_ANDROID_isSecondJoystickUsed = 0;
 static int SDL_ANDROID_isAccelerometerUsed = 0;
 static int isMultitouchUsed = 0;
 SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1];
@@ -300,6 +301,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 #if SDL_VIDEO_RENDER_RESIZE
 	// Translate mouse coordinates
 
+	x -= (SDL_ANDROID_sRealWindowWidth - SDL_ANDROID_sWindowWidth) / 2;
 	x = x * SDL_ANDROID_sFakeWindowWidth / SDL_ANDROID_TouchscreenCalibrationWidth;
 	y = y * SDL_ANDROID_sFakeWindowHeight / SDL_ANDROID_TouchscreenCalibrationHeight;
 	if( x < 0 )
@@ -310,6 +312,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 		y = 0;
 	if( y > SDL_ANDROID_sFakeWindowHeight )
 		y = SDL_ANDROID_sFakeWindowHeight;
+	
 #else
 	x = x * SDL_ANDROID_sRealWindowWidth / SDL_ANDROID_TouchscreenCalibrationWidth;
 	y = y * SDL_ANDROID_sRealWindowHeight / SDL_ANDROID_TouchscreenCalibrationHeight;
@@ -807,8 +810,6 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeTextInputFinished) ( JNIEnv*  env, jobject t
 	SDL_ANDROID_TextInputFinished = 1;
 }
 
-static void updateOrientation ( float accX, float accY, float accZ );
-
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobject  thiz, jfloat accPosX, jfloat accPosY, jfloat accPosZ )
 {
@@ -817,15 +818,15 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	if( !SDL_CurrentVideoSurface )
 		return;
 #endif
-	// Calculate two angles from three coordinates - TODO: this is faulty!
-	//float accX = atan2f(-accPosX, sqrtf(accPosY*accPosY+accPosZ*accPosZ) * ( accPosY > 0 ? 1.0f : -1.0f ) ) * M_1_PI * 180.0f;
-	//float accY = atan2f(accPosZ, accPosY) * M_1_PI;
-	
+	// Calculate two angles from three coordinates
 	float normal = sqrt(accPosX*accPosX+accPosY*accPosY+accPosZ*accPosZ);
 	if(normal <= 0.0000001f)
 		normal = 0.00001f;
 	
-	updateOrientation (accPosX/normal, accPosY/normal, 0.0f);
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 0, NORMALIZE_FLOAT_32767(accPosX/normal));
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 1, NORMALIZE_FLOAT_32767(-accPosY/normal));
+
+	// Also send raw coordinates
 	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 5, fminf(32767.0f, fmaxf(-32767.0f, accPosX*1000.0f))); // Do not consider wraparound case
 	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 6, fminf(32767.0f, fmaxf(-32767.0f, accPosY*1000.0f)));
 	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 7, fminf(32767.0f, fmaxf(-32767.0f, accPosZ*1000.0f)));
@@ -1029,9 +1030,10 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseWheel) (JNIEnv* env, jobject thiz,
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetJoystickUsed) (JNIEnv* env, jobject thiz)
+JAVA_EXPORT_NAME(Settings_nativeSetJoystickUsed) (JNIEnv* env, jobject thiz, jint first, jint second)
 {
-	SDL_ANDROID_isJoystickUsed = 1;
+	SDL_ANDROID_isJoystickUsed = first;
+	SDL_ANDROID_isSecondJoystickUsed = second;
 }
 
 JNIEXPORT void JNICALL 
@@ -1070,178 +1072,6 @@ JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetTrackballDampening) ( JNIEnv*  env, jobject thiz, jint value)
 {
 	TrackballDampening = (value * 200);
-}
-
-void updateOrientation ( float accX, float accY, float accZ )
-{
-	SDL_keysym keysym;
-	// TODO: ask user for accelerometer precision from Java
-
-	static float midX = 0, midY = 0, midZ = 0;
-	static int pressLeft = 0, pressRight = 0, pressUp = 0, pressDown = 0, pressR = 0, pressL = 0;
-
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): %f %f %f", accX, accY, accZ);
-	
-	if( SDL_ANDROID_isAccelerometerUsed )
-	{
-		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): sending joystick event");
-		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 0, NORMALIZE_FLOAT_32767(accX));
-		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 1, NORMALIZE_FLOAT_32767(-accY));
-		//SDL_ANDROID_MainThreadPushJoystickAxis(0, 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accZ) * 32767.0f))));
-		return;
-	}
-
-	if( accelerometerCenterPos == ACCELEROMETER_CENTER_FIXED_START )
-	{
-		accelerometerCenterPos = ACCELEROMETER_CENTER_FIXED_HORIZ;
-		midX = accX;
-		midY = accY;
-		midZ = accZ;
-	}
-	
-	if( SDL_ANDROID_isJoystickUsed )
-	{
-		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "updateOrientation(): sending joystick event");
-		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_TOUCHSCREEN, 0, NORMALIZE_FLOAT_32767((accX - midX) * joystickSensitivity));
-		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_TOUCHSCREEN, 1, NORMALIZE_FLOAT_32767(-(accY - midY) * joystickSensitivity));
-		//SDL_ANDROID_MainThreadPushJoystickAxis(0, 2, (Sint16)(fminf(32767.0f, fmax(-32767.0f, -(accZ - midZ) * joystickSensitivity))));
-
-		if( accelerometerCenterPos == ACCELEROMETER_CENTER_FLOATING )
-		{
-			if( accY < midY - dy*2 )
-				midY = accY + dy*2;
-			if( accY > midY + dy*2 )
-				midY = accY - dy*2;
-			if( accZ < midZ - dz*2 )
-				midZ = accZ + dz*2;
-			if( accZ > midZ + dz*2 )
-				midZ = accZ - dz*2;
-		}
-		return;
-	}
-
-	if( accX < midX - dx )
-	{
-		if( !pressLeft )
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press left, acc %f mid %f d %f", accX, midX, dx);
-			pressLeft = 1;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_LEFT) );
-		}
-	}
-	else
-	{
-		if( pressLeft )
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release left, acc %f mid %f d %f", accX, midX, dx);
-			pressLeft = 0;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT) );
-		}
-	}
-	if( accX < midX - dx*2 )
-		midX = accX + dx*2;
-
-	if( accX > midX + dx )
-	{
-		if( !pressRight )
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press right, acc %f mid %f d %f", accX, midX, dx);
-			pressRight = 1;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_RIGHT) );
-		}
-	}
-	else
-	{
-		if( pressRight )
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release right, acc %f mid %f d %f", accX, midX, dx);
-			pressRight = 0;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT) );
-		}
-	}
-	if( accX > midX + dx*2 )
-		midX = accX - dx*2;
-
-	if( accY < midY - dy )
-	{
-		if( !pressUp )
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press up, acc %f mid %f d %f", accY, midY, dy);
-			pressUp = 1;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_DOWN) );
-		}
-	}
-	else
-	{
-		if( pressUp )
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release up, acc %f mid %f d %f", accY, midY, dy);
-			pressUp = 0;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN) );
-		}
-	}
-	if( accY < midY - dy*2 )
-		midY = accY + dy*2;
-
-	if( accY > midY + dy )
-	{
-		if( !pressDown )
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: press down, acc %f mid %f d %f", accY, midY, dy);
-			pressDown = 1;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_UP) );
-		}
-	}
-	else
-	{
-		if( pressDown )
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Accelerometer: release down, acc %f mid %f d %f", accY, midY, dy);
-			pressDown = 0;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP) );
-		}
-	}
-	if( accY > midY + dy*2 )
-		midY = accY - dy*2;
-
-	if( accZ < midZ - dz )
-	{
-		if( !pressL )
-		{
-			pressL = 1;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_ALT_LEFT) );
-		}
-	}
-	else
-	{
-		if( pressL )
-		{
-			pressL = 0;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_ALT_LEFT) );
-		}
-	}
-	if( accZ < midZ - dz*2 )
-		midZ = accZ + dz*2;
-
-	if( accZ > midZ + dz )
-	{
-		if( !pressR )
-		{
-			pressR = 1;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_ALT_RIGHT) );
-		}
-	}
-	else
-	{
-		if( pressR )
-		{
-			pressR = 0;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_ALT_RIGHT) );
-		}
-	}
-	if( accZ > midZ + dz*2 )
-		midZ = accZ - dz*2;
-
 }
 
 JNIEXPORT void JNICALL

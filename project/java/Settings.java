@@ -2666,8 +2666,7 @@ class Settings
 								Globals.RelativeMouseMovementSpeed,
 								Globals.RelativeMouseMovementAccel,
 								Globals.ShowMouseCursor ? 1 : 0 );
-		if( Globals.AppUsesJoystick && (Globals.UseAccelerometerAsArrowKeys || Globals.UseTouchscreenKeyboard) )
-			nativeSetJoystickUsed();
+		nativeSetJoystickUsed(Globals.AppUsesJoystick ? 1 : 0, Globals.AppUsesSecondJoystick ? 1 : 0);
 		if( Globals.AppUsesAccelerometer )
 			nativeSetAccelerometerUsed();
 		if( Globals.AppUsesMultitouch )
@@ -2906,7 +2905,7 @@ class Settings
 													int leftClickTimeout, int rightClickTimeout,
 													int relativeMovement, int relativeMovementSpeed,
 													int relativeMovementAccel, int showMouseCursor);
-	private static native void nativeSetJoystickUsed();
+	private static native void nativeSetJoystickUsed(int firstJoystickUsed, int secondJoystickUsed);
 	private static native void nativeSetAccelerometerUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();

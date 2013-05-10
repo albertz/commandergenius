@@ -249,6 +249,8 @@ SDL reports several joysticks, which are used to pass accelerometer and multitou
 On-screen joystick events are sent as SDL_JOYAXISMOTION in event.jaxis.jalue, scaled from -32767 to 32767,
 with event.jaxis.which == 0 and event.jaxis.axis from 0 to 1, you will need to set AppUsesJoystick=y
 in AndroidAppSettings.cfg and call SDL_JoystickOpen(0) in your code.
+If you specify AppUsesSecondJoystick=y in AndroidAppSettings.cfg, there will be second on-screen joystick,
+it will send events with event.jaxis.which == 0 and event.jaxis.axis from 2 to 3.
 Multitouch events are sent as SDL_JOYBALLMOTION in event.jball.xrel and event.jball.yrel, scaled to screen size,
 with event.jball.which == 0 and e.jball.ball from 0 to 15, you will need to set AppUsesMultitouch=y
 in AndroidAppSettings.cfg and call SDL_JoystickOpen(0). SDL_JOYBUTTONDOWN and  SDL_JOYBUTTONUP events

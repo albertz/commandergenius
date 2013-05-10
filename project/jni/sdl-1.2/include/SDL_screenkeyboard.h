@@ -54,6 +54,7 @@ enum {
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, /* Button to show screen keyboard */
 
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, /* Joystick/D-Pad button */
+	SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD2, /* Second joystick button */
 
 	SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM
 };

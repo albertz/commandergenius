@@ -53,6 +53,7 @@ class Globals
 	public static boolean AppNeedsArrowKeys = true;
 	public static boolean AppNeedsTextInput = true;
 	public static boolean AppUsesJoystick = false;
+	public static boolean AppUsesSecondJoystick = false;
 	public static boolean AppUsesAccelerometer = false;
 	public static boolean AppUsesGyroscope = false;
 	public static boolean AppUsesMultitouch = false;

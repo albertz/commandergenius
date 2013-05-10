@@ -328,6 +328,20 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ "$AppUsesJoystick" = "y" ]; then
+if [ -z "$AppUsesSecondJoystick" -o -z "$AUTO" ]; then
+echo
+echo -n "Application uses second on-screen joystick, as SDL joystick 0 axes 2-3 (y)/(n) ($AppUsesSecondJoystick): "
+read var
+if [ -n "$var" ] ; then
+	AppUsesSecondJoystick="$var"
+	CHANGED=1
+fi
+fi
+else
+AppUsesSecondJoystick=n
+fi
+
 if [ -z "$AppUsesAccelerometer" -o -z "$AUTO" ]; then
 echo
 echo -n "Application uses accelerometer (y) or (n), the accelerometer will be used as joystick 1 axes 0-1 ($AppUsesAccelerometer): "
@@ -736,6 +750,7 @@ echo ForceRelativeMouseMode=$ForceRelativeMouseMode >> AndroidAppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
 echo AppNeedsTextInput=$AppNeedsTextInput >> AndroidAppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AndroidAppSettings.cfg
+echo AppUsesSecondJoystick=$AppUsesSecondJoystick >> AndroidAppSettings.cfg
 echo AppUsesAccelerometer=$AppUsesAccelerometer >> AndroidAppSettings.cfg
 echo AppUsesGyroscope=$AppUsesGyroscope >> AndroidAppSettings.cfg
 echo AppUsesMultitouch=$AppUsesMultitouch >> AndroidAppSettings.cfg
@@ -915,6 +930,12 @@ else
 	AppUsesJoystick=false
 fi
 
+if [ "$AppUsesSecondJoystick" = "y" ] ; then
+	AppUsesSecondJoystick=true
+else
+	AppUsesSecondJoystick=false
+fi
+
 if [ "$AppUsesAccelerometer" = "y" ] ; then
 	AppUsesAccelerometer=true
 else
@@ -1075,6 +1096,7 @@ $SEDI "s/public static boolean ShowMouseCursor = .*;/public static boolean ShowM
 $SEDI "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" project/src/Globals.java
 $SEDI "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" project/src/Globals.java
+$SEDI "s/public static boolean AppUsesSecondJoystick = .*;/public static boolean AppUsesSecondJoystick = $AppUsesSecondJoystick;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesAccelerometer = .*;/public static boolean AppUsesAccelerometer = $AppUsesAccelerometer;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesGyroscope = .*;/public static boolean AppUsesGyroscope = $AppUsesGyroscope;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" project/src/Globals.java
