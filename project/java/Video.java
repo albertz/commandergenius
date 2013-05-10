@@ -389,7 +389,14 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	}
 
 	public void onSurfaceChanged(GL10 gl, int w, int h) {
-		Log.i("SDL", "libSDL: DemoRenderer.onSurfaceChanged(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
+		Log.i("SDL", "libSDL: DemoRenderer.onSurfaceChanged(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart + " w " + w + " h " + h);
+		if( w < h && Globals.HorizontalOrientation )
+		{
+			// Sometimes when Android awakes from lockscreen, portrait orientation is kept
+			int x = w;
+			w = h;
+			h = x;
+		}
 		mWidth = w;
 		mHeight = h;
 		mGl = gl;
@@ -569,6 +576,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	}
 	public void DrawLogo(GL10 gl)
 	{
+		/*
 		// TODO: this not quite works, as it seems
 		BitmapDrawable bmp = null;
 		try
@@ -619,6 +627,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		gl.glDeleteTextures(1, mTextureNameWorkspace, 0);
 
 		gl.glFlush();
+		*/
 	}
 
 

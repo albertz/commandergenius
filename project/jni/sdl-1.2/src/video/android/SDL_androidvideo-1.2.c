@@ -382,7 +382,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		SDL_RendererInfo SDL_VideoRendererInfo;
 		
 		SDL_SelectVideoDisplay(0);
-		SDL_VideoWindow = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
+		SDL_VideoWindow = SDL_CreateWindow("", (SDL_ANDROID_sRealWindowWidth-SDL_ANDROID_sWindowWidth)/2, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
 
 		SDL_memset(&mode, 0, sizeof(mode));
 		mode.format = PixelFormatEnum;
@@ -422,7 +422,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 			DEBUGOUT("ANDROID_SetVideoMode() HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 		}
 		glViewport(0, 0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
-		glOrthof(0.0, (GLfloat) SDL_ANDROID_sWindowWidth, (GLfloat) SDL_ANDROID_sWindowHeight, 0.0, 0.0, 1.0);
+		glOrthof(0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sWindowHeight, 0, 0, 1);
 	}
 
 	/* Allocate the new pixel format for the screen */
@@ -1134,7 +1134,7 @@ void SDL_ANDROID_VideoContextRecreated()
 		SDL_SelectRenderer(SDL_VideoWindow); // Re-apply glOrtho() and blend modes
 		// Re-apply our custom 4:3 screen aspect ratio
 		glViewport(0, 0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
-		glOrthof(0.0, (GLfloat) SDL_ANDROID_sWindowWidth, (GLfloat) SDL_ANDROID_sWindowHeight, 0.0, 0.0, 1.0);
+		glOrthof(0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sWindowHeight, 0, 0, 1);
 		for( i = 0; i < HwSurfaceCount; i++ )
 		{
 			// Allocate HW texture

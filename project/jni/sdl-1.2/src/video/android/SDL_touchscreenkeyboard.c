@@ -208,7 +208,7 @@ static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect *
 		cropRect[3] = -cropRect[3];
 	}
 	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
-	glDrawTexiOES(dest->x, SDL_ANDROID_sWindowHeight - dest->y - dest->h, 0, dest->w, dest->h);
+	glDrawTexiOES(dest->x, SDL_ANDROID_sRealWindowHeight - dest->y - dest->h, 0, dest->w, dest->h);
 }
 
 static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, float r, float g, float b, float a)
@@ -719,26 +719,16 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	}
 	
 	// Arrows to the lower-left part of screen
-	arrows.w = SDL_ANDROID_sWindowWidth / (size + 2) * 2 / 3;
+	arrows.w = SDL_ANDROID_sRealWindowWidth / (size + 2) * 2 / 3;
 	arrows.h = arrows.w;
 	// Move to the screen edge
 	arrows.x = 0;
-	arrows.y = SDL_ANDROID_sWindowHeight - arrows.h;
+	arrows.y = SDL_ANDROID_sRealWindowHeight - arrows.h;
 
 	arrowsExtended.w = arrows.w * 2;
 	arrowsExtended.h = arrows.h * 2;
 	arrowsExtended.x = arrows.x + arrows.w / 2 - arrowsExtended.w / 2;
 	arrowsExtended.y = arrows.y + arrows.h / 2 - arrowsExtended.h / 2;
-	/*
-	// This will leave some unused space near the edge
-	arrows.x = SDL_ANDROID_sWindowWidth / 4;
-	arrows.y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowWidth / 4;
-	arrows.x -= arrows.w/2;
-	arrows.y -= arrows.h/2;
-	// Move arrows from the center of the screen
-	arrows.x -= size * SDL_ANDROID_sWindowWidth / 32;
-	arrows.y += size * SDL_ANDROID_sWindowWidth / 32;
-	*/
 
 	// Buttons to the lower-right in 2 rows
 	for(i = 0; i < 3; i++)
@@ -746,23 +736,16 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	{
 		// Custom button ordering
 		int iii = ii + i*2;
-		buttons[iii].w = SDL_ANDROID_sWindowWidth / (size + 2) / 3;
+		buttons[iii].w = SDL_ANDROID_sRealWindowWidth / (size + 2) / 3;
 		buttons[iii].h = buttons[iii].w;
 		// Move to the screen edge
-		buttons[iii].x = SDL_ANDROID_sWindowWidth - buttons[iii].w * (ii + 1);
-		buttons[iii].y = SDL_ANDROID_sWindowHeight - buttons[iii].h * (i + 1);
-		/*
-		// This will leave some unused space near the edge and between buttons
-		buttons[iii].x = SDL_ANDROID_sWindowWidth - SDL_ANDROID_sWindowWidth / 12 - (SDL_ANDROID_sWindowWidth * ii / 6);
-		buttons[iii].y = SDL_ANDROID_sWindowHeight - SDL_ANDROID_sWindowHeight / 8 - (SDL_ANDROID_sWindowHeight * i / 4);
-		buttons[iii].x -= buttons[iii].w/2;
-		buttons[iii].y -= buttons[iii].h/2;
-		*/
+		buttons[iii].x = SDL_ANDROID_sRealWindowWidth - buttons[iii].w * (ii + 1);
+		buttons[iii].y = SDL_ANDROID_sRealWindowHeight - buttons[iii].h * (i + 1);
 	}
 	buttons[6].x = 0;
 	buttons[6].y = 0;
-	buttons[6].w = SDL_ANDROID_sWindowHeight/10;
-	buttons[6].h = SDL_ANDROID_sWindowHeight/10;
+	buttons[6].w = SDL_ANDROID_sRealWindowHeight/10;
+	buttons[6].h = SDL_ANDROID_sRealWindowHeight/10;
 
 	for( i = 0; i < sizeof(pointerInButtonRect)/sizeof(pointerInButtonRect[0]); i++ )
 	{
