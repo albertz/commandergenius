@@ -1,1099 +1,72 @@
-Index: libs/md5/md5.c
+Index: uqm/comm/arilou/arilouc.c
 ===================================================================
---- libs/md5/md5.c	(revision 3779)
-+++ libs/md5/md5.c	(working copy)
-@@ -21,7 +21,7 @@
+--- uqm/comm/arilou/arilouc.c	(revision 3779)
++++ uqm/comm/arilou/arilouc.c	(working copy)
+@@ -18,7 +18,7 @@
  
- /* Written by Ulrich Drepper <drepper@gnu.ai.mit.edu>, 1995.  */
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../arilou/strings.h"
  
--#include <config.h>
-+#include "config.h"
+ #include "uqm/gameev.h"
  
- #include "md5.h"
- 
-Index: libs/resource/filecntl.c
+Index: uqm/comm/slyland/slyland.c
 ===================================================================
---- libs/resource/filecntl.c	(revision 3779)
-+++ libs/resource/filecntl.c	(working copy)
-@@ -26,6 +26,7 @@
- #include "port.h"
- #include "resintrn.h"
- #include "libs/uio.h"
-+#include "libs/log.h"
- 
- uio_Stream *
- res_OpenResFile (uio_DirHandle *dir, const char *filename, const char *mode)
-@@ -34,7 +35,10 @@
- 	struct stat sb;
- 
- 	if (uio_stat (dir, filename, &sb) == 0 && S_ISDIR(sb.st_mode))
-+	{
-+		log_add (log_Debug, "res_OpenResFile('%s', '%s') - cannot open dir as file", filename, mode);
- 		return ((uio_Stream *) ~0);
-+	}
- 
- 	fp = uio_fopen (dir, filename, mode);
- 
-Index: libs/sound/decoders/oggaud.c
-===================================================================
---- libs/sound/decoders/oggaud.c	(revision 3779)
-+++ libs/sound/decoders/oggaud.c	(working copy)
-@@ -270,7 +270,7 @@
- 	// this is the closest to a frame there is in ogg vorbis stream
- 	// doesn't seem to be a func to retrive it
- #ifdef OVCODEC_TREMOR
--	return ova->vf.os->pageno;
-+	return ova->vf.os.pageno;
- #else
- 	return ova->vf.os.pageno;
- #endif  /* OVCODEC_TREMOR */
-Index: libs/network/netmanager/netmanager_win.c
-===================================================================
---- libs/network/netmanager/netmanager_win.c	(revision 3779)
-+++ libs/network/netmanager/netmanager_win.c	(working copy)
-@@ -16,6 +16,8 @@
-  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-  */
- 
-+#ifdef WIN32
-+
- #define PORT_WANT_ERRNO
- #include "port.h"
- #include "../netport.h"
-@@ -461,4 +463,4 @@
- 	return 0;
- }
- 
--
-+#endif
-Index: libs/network/network_win.c
-===================================================================
---- libs/network/network_win.c	(revision 3779)
-+++ libs/network/network_win.c	(working copy)
-@@ -16,6 +16,8 @@
-  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-  */
- 
-+#ifdef WIN32
-+
- #include "netport.h"
- 
- #include "network.h"
-@@ -72,4 +74,4 @@
- 	}
- }
- 
--
-+#endif
-Index: libs/network/socket/socket_win.c
-===================================================================
---- libs/network/socket/socket_win.c	(revision 3779)
-+++ libs/network/socket/socket_win.c	(working copy)
-@@ -18,6 +18,8 @@
- 
- // Socket functions for Winsock sockets.
- 
-+#ifdef WIN32
-+
- #define PORT_WANT_ERRNO
- #include "port.h"
- #include "../netport.h"
-@@ -311,4 +313,4 @@
- 	return 0;
- }
- 
--
-+#endif
-Index: libs/graphics/sdl/pure.c
-===================================================================
---- libs/graphics/sdl/pure.c	(revision 3779)
-+++ libs/graphics/sdl/pure.c	(working copy)
-@@ -20,6 +20,10 @@
- #include "scalers.h"
- #include "libs/log.h"
- 
-+#ifdef ANDROID
-+#include <SDL/SDL_screenkeyboard.h>
-+#endif
-+
- static SDL_Surface *fade_color_surface = NULL;
- static SDL_Surface *fade_temp = NULL;
- static SDL_Surface *scaled_display = NULL;
-@@ -104,6 +108,7 @@
- {
- 	int i, videomode_flags;
- 	SDL_PixelFormat conv_fmt;
-+	int BPP = 32;
- 	
- 	GraphicsDriver = driver;
- 
-@@ -128,6 +133,20 @@
- 					"under pure SDL, using 640x480", width, height);
- 	}
- 
-+#ifdef ANDROID
-+	videomode_flags = SDL_SWSURFACE;
-+	ScreenWidthActual = 320;
-+	ScreenHeightActual = 240;
-+	graphics_backend = &pure_unscaled_backend;
-+	BPP = 16;
-+	/* Make the on-screen buttons slightly overlap, so we can hit them with one finger */
-+	SDL_Rect b0;
-+	SDL_ANDROID_GetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &b0);
-+	b0.x -= b0.w * 0.2;
-+	b0.w += b0.w * 0.2;
-+	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &b0);
-+#endif
-+
- 	videomode_flags |= SDL_ANYFORMAT;
- 	if (flags & TFB_GFXFLAGS_FULLSCREEN)
- 		videomode_flags |= SDL_FULLSCREEN;
-@@ -135,7 +154,7 @@
- 	/* We'll ask for a 32bpp frame, but it doesn't really matter, because we've set
- 	   SDL_ANYFORMAT */
- 	SDL_Video = SDL_SetVideoMode (ScreenWidthActual, ScreenHeightActual, 
--		32, videomode_flags);
-+		BPP, videomode_flags);
- 
- 	if (SDL_Video == NULL)
- 	{
-Index: libs/cdp/cdpapi.c
-===================================================================
---- libs/cdp/cdpapi.c	(revision 3779)
-+++ libs/cdp/cdpapi.c	(working copy)
-@@ -20,6 +20,8 @@
-  * the API is used by both the engine and modules
-  */
- 
-+#ifndef ANDROID
-+
- #include "cdp.h"
- #include "port.h"
- #include "cdpint.h"
-@@ -862,3 +864,5 @@
- 	}
- 	return ret;
- }
-+
-+#endif
-Index: libs/cdp/cdp.c
-===================================================================
---- libs/cdp/cdp.c	(revision 3779)
-+++ libs/cdp/cdp.c	(working copy)
-@@ -19,6 +19,8 @@
-  * CDP library definitions
-  */
- 
-+#ifndef ANDROID
-+
- #include <string.h>
- #include <stdio.h>
- #include "cdp.h"
-@@ -435,3 +437,5 @@
- 			cdp_FreeModule (cdp);
- 	}
- }
-+
-+#endif
-Index: libs/cdp/windl.c
-===================================================================
---- libs/cdp/windl.c	(revision 3779)
-+++ libs/cdp/windl.c	(working copy)
-@@ -19,6 +19,8 @@
-  * CDP dlopen() & Co. WIN32 implementation
-  */
- 
-+#ifdef WIN32
-+
- #include "windl.h"
- #include "port.h"
- #define WIN32_LEAN_AND_MEAN
-@@ -74,3 +76,5 @@
- 	else
- 		return NULL;
- }
-+
-+#endif
-Index: libs/input/sdl/input.c
-===================================================================
---- libs/input/sdl/input.c	(revision 3779)
-+++ libs/input/sdl/input.c	(working copy)
-@@ -186,6 +186,13 @@
- 		   directory. */
- 		LoadResourceIndex (contentDir, "uqm.key", "keys.");
- 	}
-+	
-+#ifdef ANDROID // TODO: hacky
-+	res_PutString("keys.1.up.2", "joystick 0 axis 1 negative");
-+	res_PutString("keys.1.down.2", "joystick 0 axis 1 positive");
-+	res_PutString("keys.1.left.2", "joystick 0 axis 0 negative");
-+	res_PutString("keys.1.right.2", "joystick 0 axis 0 positive");
-+#endif
- 
- 	register_flight_controls ();
- 
-Index: libs/input/sdl/vcontrol.c
-===================================================================
---- libs/input/sdl/vcontrol.c	(revision 3779)
-+++ libs/input/sdl/vcontrol.c	(working copy)
-@@ -46,6 +46,7 @@
- typedef struct vcontrol_joystick_axis {
- 	keybinding *neg, *pos;
- 	int polarity;
-+	int value;
- } axis_type;
- 
- typedef struct vcontrol_joystick_hat {
-@@ -66,7 +67,7 @@
- 
- #endif /* HAVE_JOYSTICK */
- 
--static unsigned int joycount;
-+static unsigned int joycount = 0;
- static unsigned int num_sdl_keys = 0;
- static keybinding **bindings = NULL;
- 
-@@ -818,6 +819,7 @@
- 	int t;
- 	if (!joysticks[port].stick)
- 		return;
-+	joysticks[port].axes[axis].value = value;
- 	t = joysticks[port].threshold;
- 	if (value > t)
- 	{
-@@ -894,6 +896,25 @@
- #endif /* HAVE_JOYSTICK */
- }
- 
-+int
-+VControl_GetJoyAxis(int port, int axis)
-+{
-+#ifdef HAVE_JOYSTICK
-+	if( joycount <= port )
-+		return 0;
-+	if (!joysticks[port].stick || joysticks[port].numaxes <= axis )
-+		return 0;
-+	return joysticks[port].axes[axis].value;
-+#else
-+	return 0;
-+#endif /* HAVE_JOYSTICK */
-+};
-+
-+int VControl_GetJoysticksAmount()
-+{
-+	return joycount;
-+};
-+
- void
- VControl_ResetInput (void)
- {
-Index: libs/input/sdl/vcontrol.h
-===================================================================
---- libs/input/sdl/vcontrol.h	(revision 3779)
-+++ libs/input/sdl/vcontrol.h	(working copy)
-@@ -76,6 +76,9 @@
- void VControl_ProcessJoyAxis (int port, int axis, int value);
- void VControl_ProcessJoyHat (int port, int which, Uint8 value);
- 
-+int VControl_GetJoyAxis(int port, int axis);
-+int VControl_GetJoysticksAmount();
-+
- /* Force the input into the blank state.  For preventing "sticky" keys. */
- void VControl_ResetInput (void);
- 
-Index: libs/log/msgbox_stub.c
-===================================================================
---- libs/log/msgbox_stub.c	(revision 3779)
-+++ libs/log/msgbox_stub.c	(working copy)
-@@ -16,6 +16,9 @@
- 
- #include "msgbox.h"
- #include "loginternal.h"
-+#ifdef ANDROID
-+#include <android/log.h>
-+#endif
- 
- void
- log_displayBox (const /*UTF-8*/char *title, int isError,
-@@ -26,6 +29,9 @@
- 	// So just inform the user of our predicament
- 	fprintf (streamOut, "Do not know how to display %s box\n",
- 			isError ? "an error" : "a");
-+#ifdef ANDROID
-+	__android_log_print( isError ? ANDROID_LOG_FATAL : ANDROID_LOG_INFO, "Ur-Quan Masters", "%s: %s", title, msg );
-+#endif
- 	
- 	// Suppress the compiler warnings in any case.
- 	(void)title;
-Index: libs/log/uqmlog.c
-===================================================================
---- libs/log/uqmlog.c	(revision 3779)
-+++ libs/log/uqmlog.c	(working copy)
-@@ -23,6 +23,9 @@
- #include <stdlib.h>
- #include <signal.h>
- #include <errno.h>
-+#ifdef ANDROID
-+#include <android/log.h>
-+#endif
- #include "libs/threadlib.h"
- 
- #ifndef MAX_LOG_ENTRY_SIZE
-@@ -191,6 +194,9 @@
- 	if ((int)level <= maxStreamLevel)
- 	{
- 		fprintf (streamOut, "%s\n", full_msg);
-+#ifdef ANDROID
-+	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
-+#endif
- 	}
- 
- 	if ((int)level <= maxLevel)
-@@ -227,6 +233,9 @@
- 	if ((int)level <= maxStreamLevel)
- 	{
- 		fprintf (streamOut, "%s\n", full_msg);
-+#ifdef ANDROID
-+	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
-+#endif
- 	}
- 
- 	if ((int)level <= maxLevel)
-Index: libs/log/msgbox_win.c
-===================================================================
---- libs/log/msgbox_win.c	(revision 3779)
-+++ libs/log/msgbox_win.c	(working copy)
-@@ -14,6 +14,7 @@
+--- uqm/comm/slyland/slyland.c	(revision 3779)
++++ uqm/comm/slyland/slyland.c	(working copy)
+@@ -16,10 +16,10 @@
   *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   */
  
-+#ifndef ANDROID
- #include "msgbox.h"
- #define WIN32_LEAN_AND_MEAN
- #include <windows.h>
-@@ -64,4 +65,4 @@
- 	free (swTitle);
- 	free (swMsg);
- }
--
-+#endif
-Index: libs/uio/match.c
-===================================================================
---- libs/uio/match.c	(revision 3779)
-+++ libs/uio/match.c	(working copy)
-@@ -506,7 +506,7 @@
- 		return match_ENOTINIT;
- 	}
- 	if (context->errorString) {
--		uio_free(context->errorString);
-+		uio_free(context->errorString); //TODO: why does it crash here on Android?
- 		context->errorString = NULL;
- 	}
- 	retval = regexec(&context->native, string, 0, NULL, 0);
-Index: libs/uio/match.h
-===================================================================
---- libs/uio/match.h	(revision 3779)
-+++ libs/uio/match.h	(working copy)
-@@ -79,7 +79,7 @@
- 
- #include <sys/types.h>
- #ifdef HAVE_REGEX
--#	include <regex.h>
-+#include <regex.h>
- #endif
- 
- #include "uioport.h"
-Index: libs/uio/io.c
-===================================================================
---- libs/uio/io.c	(revision 3779)
-+++ libs/uio/io.c	(working copy)
-@@ -35,6 +35,7 @@
- #include "mem.h"
- #include "uioutils.h"
- #include "uioport.h"
-+#include "../log.h"
- #ifdef uio_MEM_DEBUG
- #	include "memdebug.h"
- #endif
-@@ -193,6 +194,7 @@
- 			errno = EINVAL;
- 			return NULL;
- 		}
-+		log_add (log_Info, "uio_open %s", sourcePath);
- 		handle = uio_open(sourceDir, sourcePath,
- 				((flags & uio_MOUNT_RDONLY) == uio_MOUNT_RDONLY ?
- 				O_RDONLY : O_RDWR)
-@@ -201,12 +203,14 @@
- #endif
- 				, 0);
- 		if (handle == NULL) {
-+			log_add (log_Info, "uio_open failed for %s", sourcePath);
- 			// errno is set
- 			return NULL;
- 		}
- 	}
- 
- 	handler = uio_getFileSystemHandler(fsType);
-+	log_add (log_Info, "uio_getFileSystemHandler %p", handler);
- 	if (handler == NULL) {
- 		if (handle)
- 			uio_close(handle);
-@@ -800,6 +804,7 @@
- 			&readMountInfo, &readPDirHandle, NULL,
- 			&writeMountInfo, &writePDirHandle, NULL, &name) == -1) {
- 		// errno is set
-+		log_add (log_Info, "uio_open: uio_getPhysicalAccess  failed for '%s'", path);
- 		return NULL;
- 	}
- 	
-@@ -826,6 +831,7 @@
- 				uio_PDirHandle_unref(readPDirHandle);
- 				uio_PDirHandle_unref(writePDirHandle);
- 				errno = EEXIST;
-+				log_add (log_Info, "uio_open: O_CREAT | O_EXCL: file already exists '%s'", name);
- 				return NULL;
- 			}
- 			if ((flags & O_TRUNC) == O_TRUNC) {
-@@ -842,6 +848,7 @@
- 					uio_PDirHandle_unref(readPDirHandle);
- 					uio_PDirHandle_unref(writePDirHandle);
- 					errno = savedErrno;
-+					log_add (log_Info, "uio_open: uio_copyFilePhysical failed '%s'", name);
- 					return NULL;
- 				}
- 			}
-@@ -863,6 +870,7 @@
- 	handle = (pDirHandle->pRoot->handler->open)(pDirHandle, name, flags, mode);
- 			// Also adds a new entry to the physical dir if appropriate.
- 	if (handle == NULL) {
-+		log_add (log_Info, "uio_open: open file failed '%s'", name);
- 		int savedErrno = errno;
- 		uio_free(name);
- 		uio_PDirHandle_unref(pDirHandle);
-Index: libs/uio/zip/zip.c
-===================================================================
---- libs/uio/zip/zip.c	(revision 3779)
-+++ libs/uio/zip/zip.c	(working copy)
-@@ -1366,6 +1366,10 @@
- 				gPFileData->gid = (uid_t) makeUInt16(buf[12], buf[13]);
- 				break;
- 			}
-+			case 0x7875:  // 'Unix string UID/GID'
-+				// Just skip it
-+				break;
-+
- 			default:
- #ifdef DEBUG
- 				fprintf(stderr, "Debug: Extra field 0x%04x unsupported, "
-Index: config_unix.h
-===================================================================
---- config_unix.h	(revision 0)
-+++ config_unix.h	(working copy)
-@@ -0,0 +1,63 @@
-+/* This file contains some compile-time configuration options for *nix
-+ * systems.
-+ * config_unix.h is generated from config_unix.h.in by build.sh
-+ * When building on MS Windows using build.sh (MinGW, Cygwin),
-+ * config_win.h is generated from src/config_win.h.in.
-+ * When using MSVC on MS Windows, you'll have to edit src/config_vc6.h
-+ * manually if you want anything else than the defaults.
-+ */
-+
-+#ifndef _CONFIG_UNIX_H
-+#define _CONFIG_UNIX_H
-+
-+/* Directory where the UQM game data is located */
-+#define CONTENTDIR ""
-+
-+/* Directory where game data will be stored */
-+#define USERDIR "config/"
-+
-+/* Directory where config files will be stored */
-+#define CONFIGDIR USERDIR
-+
-+/* Directory where supermelee teams will be stored */
-+#define MELEEDIR "teams/"
-+
-+/* Directory where save games will be stored */
-+#define SAVEDIR "save/"
-+
-+/* Defined if words are stored with the most significant byte first */
-+#undef WORDS_BIGENDIAN
-+
-+/* Defined if your system has readdir_r of its own */
-+#define HAVE_READDIR_R
-+
-+/* Defined if your system has setenv of its own */
-+#define HAVE_SETENV
-+
-+/* Defined if your system has strupr of its own */
-+#undef HAVE_STRUPR
-+
-+/* Defined if your system has strcasecmp of its own */
-+#define HAVE_STRCASECMP_UQM
-+		// Not using "HAVE_STRCASECMP" as that conflicts with SDL.
-+
-+/* Defined if your system has stricmp of its own */
-+#undef HAVE_STRICMP
-+
-+/* Defined if your system has getopt_long */
-+#define HAVE_GETOPT_LONG
-+
-+/* Defined if your system has iswgraph of its own*/
-+#define HAVE_ISWGRAPH
-+
-+/* Defined if your system has wchar_t of its own */
-+#define HAVE_WCHAR_T
-+
-+/* Defined if your system has wint_t of its own */
-+#define HAVE_WINT_T
-+
-+/* Defined if your system has _Bool of its own */
-+#define HAVE__BOOL
-+
-+#endif  /* _CONFIG_UNIX_H */
-+
-Index: uqm/confirm.c
-===================================================================
---- uqm/confirm.c	(revision 3779)
-+++ uqm/confirm.c	(working copy)
-@@ -36,22 +36,29 @@
- #define CONFIRM_WIN_HEIGHT 22
- 
- static void
--DrawConfirmationWindow (BOOLEAN answer)
-+DrawConfirmationWindow (int answer)
- {
- 	Color oldfg = SetContextForeGroundColor (MENU_TEXT_COLOR);
- 	FONT  oldfont = SetContextFont (StarConFont);
- 	FRAME oldFontEffect = SetContextFontEffect (NULL);
- 	RECT r;
- 	TEXT t;
-+	int textOffset;
- 
- 	BatchGraphics ();
- 	r.corner.x = (SCREEN_WIDTH - CONFIRM_WIN_WIDTH) >> 1;
- 	r.corner.y = (SCREEN_HEIGHT - CONFIRM_WIN_HEIGHT) >> 1;
- 	r.extent.width = CONFIRM_WIN_WIDTH;
- 	r.extent.height = CONFIRM_WIN_HEIGHT;
-+	textOffset = r.extent.width >> 1;
-+	if (GLOBAL (CurrentActivity) & IN_BATTLE)
-+	{
-+		r.corner.x -= CONFIRM_WIN_WIDTH;
-+		r.extent.width += CONFIRM_WIN_WIDTH * 2;
-+		textOffset = r.extent.width / 3;
-+	}
- 	DrawShadowedBox (&r, SHADOWBOX_BACKGROUND_COLOR, 
- 			SHADOWBOX_DARK_COLOR, SHADOWBOX_MEDIUM_COLOR);
--
- 	t.baseline.x = r.corner.x + (r.extent.width >> 1);
- 	t.baseline.y = r.corner.y + 8;
- 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE); // "Really Quit?"
-@@ -59,14 +66,21 @@
- 	t.CharCount = (COUNT)~0;
- 	font_DrawText (&t);
- 	t.baseline.y += 10;
--	t.baseline.x = r.corner.x + (r.extent.width >> 2);
-+	t.baseline.x = r.corner.x + (textOffset >> 1);
- 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE + 1); // "Yes"
--	SetContextForeGroundColor (answer ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
-+	SetContextForeGroundColor (answer == 1 ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
- 	font_DrawText (&t);
--	t.baseline.x += (r.extent.width >> 1);
-+	t.baseline.x += textOffset;
- 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE + 2); // "No"
--	SetContextForeGroundColor (answer ? MENU_TEXT_COLOR : MENU_HIGHLIGHT_COLOR);	
-+	SetContextForeGroundColor (answer == 0 ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
- 	font_DrawText (&t);
-+	if (GLOBAL (CurrentActivity) & IN_BATTLE)
-+	{
-+		t.baseline.x += textOffset;
-+		t.pStr = "Escape unit"; // GAME_STRING (QUITMENU_STRING_BASE + 3); // TODO: modify gamestrings.txt 
-+		SetContextForeGroundColor (answer == 2 ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
-+		font_DrawText (&t);
-+	}
- 
- 	UnbatchGraphics ();
- 
-@@ -75,6 +89,8 @@
- 	SetContextForeGroundColor (oldfg);
- }
- 
-+BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
-+
- BOOLEAN
- DoConfirmExit (void)
- {
-@@ -91,7 +107,11 @@
- 		RECT ctxRect;
- 		CONTEXT oldContext;
- 		RECT oldRect;
--		BOOLEAN response = FALSE, done;
-+		int response = 0;
-+		BOOLEAN done;
-+		int responseMax = 1;
-+		if (GLOBAL (CurrentActivity) & IN_BATTLE)
-+			responseMax = 2;
- 
- 		oldContext = SetContext (ScreenContext);
- 		GetContextClipRect (&oldRect);
-@@ -119,7 +139,7 @@
- 			if (GLOBAL (CurrentActivity) & CHECK_ABORT)
- 			{	// something else triggered an exit
- 				done = TRUE;
--				response = TRUE;
-+				response = 1;
- 			}
- 			else if (PulsedInputState.menu[KEY_MENU_SELECT])
- 			{
-@@ -129,11 +149,16 @@
- 			else if (PulsedInputState.menu[KEY_MENU_CANCEL])
- 			{
- 				done = TRUE;
--				response = FALSE;
-+				response = 0;
- 			}
- 			else if (PulsedInputState.menu[KEY_MENU_LEFT] || PulsedInputState.menu[KEY_MENU_RIGHT])
- 			{
--				response = !response;
-+				
-+				response += PulsedInputState.menu[KEY_MENU_LEFT] ? 1 : -1;
-+				if(response < 0)
-+					response = responseMax;
-+				if( response > responseMax )
-+					response = 0;
- 				DrawConfirmationWindow (response);
- 				PlayMenuSound (MENU_SOUND_MOVE);
- 			}
-@@ -144,15 +169,19 @@
- 		DrawStamp (&s);
- 		DestroyDrawable (ReleaseDrawable (s.frame));
- 		ClearSystemRect ();
--		if (response || (GLOBAL (CurrentActivity) & CHECK_ABORT))
-+		if (response == 1 || (GLOBAL (CurrentActivity) & CHECK_ABORT))
- 		{
- 			result = TRUE;
- 			GLOBAL (CurrentActivity) |= CHECK_ABORT;
--		}		
-+		}
- 		else
- 		{
- 			result = FALSE;
- 		}
-+		if( response == 2 )
-+		{
-+			EmergencyEscapeWarpUnitActivatedFromMenu = TRUE;
-+		}
- 		ExitRequested = FALSE;
- 		GamePaused = FALSE;
- 		FlushInput ();
-Index: uqm/battle.c
-===================================================================
---- uqm/battle.c	(revision 3779)
-+++ uqm/battle.c	(working copy)
-@@ -16,6 +16,10 @@
-  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
-+#ifdef ANDROID
-+#include <android/log.h>
-+#endif
-+
- #include "battle.h"
- 
- #include "battlecontrols.h"
-@@ -44,6 +48,8 @@
- #include "libs/graphics/gfx_common.h"
- #include "libs/log.h"
- #include "libs/mathlib.h"
-+#include "globdata.h"
-+#include "libs/input/sdl/vcontrol.h"
- 
- 
- BYTE battle_counter[NUM_SIDES];
-@@ -138,7 +144,8 @@
- frameInputHuman (HumanInputContext *context, STARSHIP *StarShipPtr)
- {
- 	(void) StarShipPtr;
--	return CurrentInputToBattleInput (context->playerNr);
-+
-+	return CurrentInputToBattleInput (context->playerNr, StarShipPtr ? StarShipPtr->ShipFacing : -1);
- }
- 
- static void
-@@ -208,8 +215,11 @@
- 						StarShipPtr->ship_input_state |= SPECIAL;
- 
- 					if (CanRunAway && cur_player == 0 &&
--							(InputState & BATTLE_ESCAPE))
-+							((InputState & BATTLE_ESCAPE) || EmergencyEscapeWarpUnitActivatedFromMenu))
-+					{
-+						EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
- 						DoRunAway (StarShipPtr);
-+					}
- 				}
- 			}
- 
-Index: uqm/intel.c
-===================================================================
---- uqm/intel.c	(revision 3779)
-+++ uqm/intel.c	(working copy)
-@@ -45,10 +45,10 @@
- 			// Allow a player to warp-escape in cyborg mode
- 			if (StarShipPtr->playerNr == RPG_PLAYER_NUM)
- 				InputState |= CurrentInputToBattleInput (
--						context->playerNr) & BATTLE_ESCAPE;
-+						context->playerNr, -1) & BATTLE_ESCAPE;
- 		}
- 		else
--			InputState = CurrentInputToBattleInput (context->playerNr);
-+			InputState = CurrentInputToBattleInput (context->playerNr, -1);
- 	}
- 	else if (!(PlayerControl[context->playerNr] & PSYTRON_CONTROL))
- 		InputState = 0;
-Index: uqm/controls.h
-===================================================================
---- uqm/controls.h	(revision 3779)
-+++ uqm/controls.h	(working copy)
-@@ -90,13 +90,14 @@
- #define BATTLE_ESCAPE     ((BATTLE_INPUT_STATE)(1 << 5))
- #define BATTLE_DOWN       ((BATTLE_INPUT_STATE)(1 << 6))
- 
--BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player);
-+BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player, int direction /* = -1 for no directional input */);
- BATTLE_INPUT_STATE PulsedInputToBattleInput (COUNT player);
- 
- extern CONTROLLER_INPUT_STATE CurrentInputState;
- extern CONTROLLER_INPUT_STATE PulsedInputState;
- extern volatile CONTROLLER_INPUT_STATE ImmediateInputState;
- extern CONTROL_TEMPLATE PlayerControls[];
-+extern BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu;
- 
- void UpdateInputState (void);
- extern void FlushInput (void);
-@@ -116,6 +117,9 @@
- BOOLEAN WaitForNoInput (TimePeriod duration, BOOLEAN resetInput);
- BOOLEAN WaitForNoInputUntil (TimeCount timeOut, BOOLEAN resetInput);
- 
-+/* TODO: only joystick #0 and player #0 supported currently */
-+extern BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction);
-+
- void DoPopupWindow(const char *msg);
- 
- typedef void (InputFrameCallback) (void);
-Index: uqm/planets/solarsys.c
-===================================================================
---- uqm/planets/solarsys.c	(revision 3779)
-+++ uqm/planets/solarsys.c	(working copy)
-@@ -837,18 +837,19 @@
- static void
- ProcessShipControls (void)
- {
--	COUNT index;
-+	COUNT index = GetFrameIndex (GLOBAL (ShipStamp.frame));;
- 	SIZE delta_x, delta_y;
-+	BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index);
- 
--	if (CurrentInputState.key[PlayerControls[0]][KEY_UP])
-+	if (InputState & BATTLE_THRUST)
- 		delta_y = -1;
- 	else
- 		delta_y = 0;
- 
- 	delta_x = 0;
--	if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
-+	if (InputState & BATTLE_LEFT)
- 		delta_x -= 1;
--	if (CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
-+	if (InputState & BATTLE_RIGHT)
- 		delta_x += 1;
- 		
- 	if (delta_x || delta_y < 0)
-@@ -861,7 +862,6 @@
- 	else
- 		delta_y = 0;
- 
--	index = GetFrameIndex (GLOBAL (ShipStamp.frame));
- 	if (pSolarSysState->turn_counter)
- 		--pSolarSysState->turn_counter;
- 	else if (delta_x)
-Index: uqm/planets/lander.c
-===================================================================
---- uqm/planets/lander.c	(revision 3779)
-+++ uqm/planets/lander.c	(working copy)
-@@ -1591,15 +1591,15 @@
- 		if (crew_left)
- 		{
- 			SIZE index = GetFrameIndex (LanderFrame[0]);
-+			BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index);
- 			if (turn_wait)
- 				--turn_wait;
--			else if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT] ||
--					CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
-+			else if ((InputState & BATTLE_LEFT) || (InputState & BATTLE_RIGHT))
- 			{
- 				COUNT landerSpeedNumer;
- 				COUNT angle;
- 
--				if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
-+				if (InputState & BATTLE_LEFT)
- 					--index;
- 				else
- 					++index;
-@@ -1623,7 +1623,7 @@
- 				turn_wait = SHUTTLE_TURN_WAIT;
- 			}
- 
--			if (!CurrentInputState.key[PlayerControls[0]][KEY_UP])
-+			if (!(InputState & BATTLE_THRUST))
- 			{
- 				dx = 0;
- 				dy = 0;
-Index: uqm/setupmenu.c
-===================================================================
---- uqm/setupmenu.c	(revision 3779)
-+++ uqm/setupmenu.c	(working copy)
-@@ -75,7 +75,7 @@
- #endif
- 
- #define MENU_COUNT          8
--#define CHOICE_COUNT       24
-+#define CHOICE_COUNT       25
- #define SLIDER_COUNT        4
- #define BUTTON_COUNT       10
- #define LABEL_COUNT         4
-@@ -98,7 +98,7 @@
- static int choice_widths[CHOICE_COUNT] = {
- 	3, 2, 3, 3, 2, 2, 2, 2, 2, 2, 
- 	2, 2, 3, 2, 2, 3, 3, 2,	3, 3, 
--	3, 2, 2, 2 };
-+	3, 2, 2, 2, 2 };
- 
- static HANDLER button_handlers[BUTTON_COUNT] = {
- 	quit_main_menu, quit_sub_menu, do_graphics, do_engine,
-@@ -157,6 +157,7 @@
- 	(WIDGET *)(&choices[12]),
- 	(WIDGET *)(&choices[15]),
- 	(WIDGET *)(&choices[16]),
-+	(WIDGET *)(&choices[24]),
- 	(WIDGET *)(&buttons[1]),
- 	NULL };
- 	
-@@ -416,6 +417,7 @@
- 	choices[21].selected = opts.musicremix;
- 	choices[22].selected = opts.speech;
- 	choices[23].selected = opts.keepaspect;
-+	choices[24].selected = opts.directionaljoystick;
- 
- 	sliders[0].value = opts.musicvol;
- 	sliders[1].value = opts.sfxvol;
-@@ -450,6 +452,7 @@
- 	opts.musicremix = choices[21].selected;
- 	opts.speech = choices[22].selected;
- 	opts.keepaspect = choices[23].selected;
-+	opts.directionaljoystick = choices[24].selected;
- 
- 	opts.musicvol = sliders[0].value;
- 	opts.sfxvol = sliders[1].value;
-@@ -1277,6 +1280,7 @@
- 	opts->musicremix = optRemixMusic ? OPTVAL_ENABLED : OPTVAL_DISABLED;
- 	opts->speech = optSpeech ? OPTVAL_ENABLED : OPTVAL_DISABLED;
- 	opts->keepaspect = optKeepAspectRatio ? OPTVAL_ENABLED : OPTVAL_DISABLED;
-+	opts->directionaljoystick = optDirectionalJoystick ? OPTVAL_ENABLED : OPTVAL_DISABLED;
- 	switch (snddriver) {
- 	case audio_DRIVER_OPENAL:
- 		opts->adriver = OPTVAL_OPENAL;
-@@ -1518,6 +1522,7 @@
- 	optWhichIntro = (opts->intro == OPTVAL_3DO) ? OPT_3DO : OPT_PC;
- 	optStereoSFX = (opts->stereo == OPTVAL_ENABLED);
- 	optKeepAspectRatio = (opts->keepaspect == OPTVAL_ENABLED);
-+	optDirectionalJoystick = (opts->directionaljoystick == OPTVAL_ENABLED) ? TRUE : FALSE;
- 	PlayerControls[0] = opts->player1;
- 	PlayerControls[1] = opts->player2;
- 
-@@ -1532,6 +1537,7 @@
- 	res_PutBoolean ("config.speech", opts->speech == OPTVAL_ENABLED);
- 	res_PutBoolean ("config.3domovies", opts->intro == OPTVAL_3DO);
- 	res_PutBoolean ("config.showfps", opts->fps == OPTVAL_ENABLED);
-+	res_PutBoolean ("config.directionaljoystick", opts->directionaljoystick == OPTVAL_ENABLED);
- 	res_PutBoolean ("config.smoothmelee", opts->meleezoom == OPTVAL_3DO);
- 	res_PutBoolean ("config.positionalsfx", opts->stereo == OPTVAL_ENABLED); 
- 	res_PutBoolean ("config.pulseshield", opts->shield == OPTVAL_3DO);
-Index: uqm/setupmenu.h
-===================================================================
---- uqm/setupmenu.h	(revision 3779)
-+++ uqm/setupmenu.h	(working copy)
-@@ -81,6 +81,7 @@
- 	OPT_ENABLABLE fullscreen, subtitles, scanlines, fps, stereo;
- 	OPT_ENABLABLE music3do, musicremix, speech;
- 	OPT_ENABLABLE keepaspect;
-+	OPT_ENABLABLE directionaljoystick;
- 	OPT_CONSOLETYPE menu, text, cscan, scroll, intro, meleezoom, shield;
- 	CONTROL_TEMPLATE player1, player2;
- 	int speechvol, musicvol, sfxvol;
-Index: uqm/gameinp.c
-===================================================================
---- uqm/gameinp.c	(revision 3779)
-+++ uqm/gameinp.c	(working copy)
-@@ -16,6 +16,7 @@
-  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
++#include "../slyland/strings.h"
 +#include <stdlib.h>
- #include "controls.h"
- #include "battlecontrols.h"
- #include "init.h"
-@@ -33,11 +34,14 @@
- #include "libs/timelib.h"
- #include "libs/threadlib.h"
+ #include "../commall.h"
+-#include <stdlib.h>
+ #include "resinst.h"
+-#include "strings.h"
  
--
-+#ifdef ANDROID
-+#define ACCELERATION_INCREMENT (ONE_SECOND)
-+#define MENU_REPEAT_DELAY (ONE_SECOND)
-+#else
- #define ACCELERATION_INCREMENT (ONE_SECOND / 12)
- #define MENU_REPEAT_DELAY (ONE_SECOND / 2)
-+#endif
+ #include "options.h"
+ #include "uqm/battle.h"
+Index: uqm/comm/thradd/thraddc.c
+===================================================================
+--- uqm/comm/thradd/thraddc.c	(revision 3779)
++++ uqm/comm/thradd/thraddc.c	(working copy)
+@@ -18,7 +18,7 @@
  
--
- typedef struct
- {
- 	BOOLEAN (*InputFunc) (void *pInputState);
-@@ -416,16 +420,10 @@
- }
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../thradd/strings.h"
  
- static BATTLE_INPUT_STATE
--ControlInputToBattleInput (const int *keyState)
-+ControlInputToBattleInput (const int *keyState, int direction)
- {
- 	BATTLE_INPUT_STATE InputState = 0;
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/chmmr/chmmrc.c
+===================================================================
+--- uqm/comm/chmmr/chmmrc.c	(revision 3779)
++++ uqm/comm/chmmr/chmmrc.c	(working copy)
+@@ -18,7 +18,7 @@
  
--	if (keyState[KEY_UP])
--		InputState |= BATTLE_THRUST;
--	if (keyState[KEY_LEFT])
--		InputState |= BATTLE_LEFT;
--	if (keyState[KEY_RIGHT])
--		InputState |= BATTLE_RIGHT;
- 	if (keyState[KEY_WEAPON])
- 		InputState |= BATTLE_WEAPON;
- 	if (keyState[KEY_SPECIAL])
-@@ -435,21 +433,35 @@
- 	if (keyState[KEY_DOWN])
- 		InputState |= BATTLE_DOWN;
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../chmmr/strings.h"
  
-+	if(direction < 0)
-+	{
-+		if (keyState[KEY_UP])
-+			InputState |= BATTLE_THRUST;
-+		if (keyState[KEY_LEFT])
-+			InputState |= BATTLE_LEFT;
-+		if (keyState[KEY_RIGHT])
-+			InputState |= BATTLE_RIGHT;
-+	}
-+	else
-+	{
-+		InputState |= GetDirectionalJoystickInput(direction);
-+	}
-+
- 	return InputState;
- }
+ #include "uqm/build.h"
+ #include "uqm/hyper.h"
+Index: uqm/comm/ilwrath/ilwrathc.c
+===================================================================
+--- uqm/comm/ilwrath/ilwrathc.c	(revision 3779)
++++ uqm/comm/ilwrath/ilwrathc.c	(working copy)
+@@ -18,7 +18,7 @@
  
- BATTLE_INPUT_STATE
--CurrentInputToBattleInput (COUNT player)
-+CurrentInputToBattleInput (COUNT player, int direction)
- {
- 	return ControlInputToBattleInput(
--			CurrentInputState.key[PlayerControls[player]]);
-+			CurrentInputState.key[PlayerControls[player]], direction);
- }
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../ilwrath/strings.h"
  
- BATTLE_INPUT_STATE
- PulsedInputToBattleInput (COUNT player)
- {
- 	return ControlInputToBattleInput(
--			PulsedInputState.key[PlayerControls[player]]);
-+			PulsedInputState.key[PlayerControls[player]], -1);
- }
+ #include "uqm/gameev.h"
  
- BOOLEAN
-@@ -494,3 +506,76 @@
- 	return result;
- }
- 
-+// Fast arctan2, returns angle in radians as integer, with fractional part in lower 16 bits
-+// Stolen from http://www.dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization , precision is said to be 0.07 rads
-+
-+#ifndef M_PI
-+#define M_PI 3.14159265358979323846
-+#endif
-+enum { atan2i_coeff_1 = ((int)(M_PI*65536.0/4)), atan2i_coeff_2 = (3*atan2i_coeff_1), atan2i_PI = (int)(M_PI * 65536.0), SHIP_DIRECTIONS = 16 };
-+
-+static inline int atan2i(int y, int x)
-+{
-+   int angle;
-+   int abs_y = abs(y);
-+   if( abs_y == 0 )
-+      abs_y = 1;
-+   if (x>=0)
-+   {
-+      angle = atan2i_coeff_1 - atan2i_coeff_1 * (x - abs_y) / (x + abs_y);
-+   }
-+   else
-+   {
-+      angle = atan2i_coeff_2 - atan2i_coeff_1 * (x + abs_y) / (abs_y - x);
-+   }
-+   if (y < 0)
-+      return(-angle);     // negate if in quad III or IV
-+   else
-+      return(angle);
-+}
-+
-+
-+BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction)
-+{
-+	BATTLE_INPUT_STATE InputState = 0;
-+	if(VControl_GetJoysticksAmount() <= 0 || !optDirectionalJoystick)
-+	{
-+		if(CurrentInputState.key[PlayerControls[0]][KEY_UP])
-+			InputState |= BATTLE_THRUST;
-+		if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
-+			InputState |= BATTLE_LEFT;
-+		if (CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
-+			InputState |= BATTLE_RIGHT;
-+	}
-+	else
-+	{
-+		/* TODO: only joystick #0 supported currently */
-+		int axisX = VControl_GetJoyAxis(0, 0), axisY = VControl_GetJoyAxis(0, 1);
-+		if( axisX != 0 || axisY != 0 )
-+		{
-+			int angle = atan2i(axisY, axisX), diff;
-+			// Convert it to 16 directions used by Melee
-+			angle += atan2i_PI / SHIP_DIRECTIONS;
-+			if( angle < 0 )
-+				angle += atan2i_PI * 2;
-+			if( angle > atan2i_PI * 2 )
-+				angle -= atan2i_PI * 2;
-+			angle = angle * SHIP_DIRECTIONS / atan2i_PI / 2;
-+			
-+			diff = angle - direction - SHIP_DIRECTIONS / 4;
-+			while( diff >= SHIP_DIRECTIONS )
-+				diff -= SHIP_DIRECTIONS;
-+			while( diff < 0 )
-+				diff += SHIP_DIRECTIONS;
-+
-+			if( diff < SHIP_DIRECTIONS / 2 )
-+				InputState |= BATTLE_LEFT;
-+			if( diff > SHIP_DIRECTIONS / 2 )
-+				InputState |= BATTLE_RIGHT;
-+
-+			if( ((axisX*axisX)>>1) + ((axisY*axisY)>>1) > (16384*16384)>>1 ) // Force of joystick tilt, equation is clumsy because (axisX*axisX + axisY*axisY) may overflow int32
-+				InputState |= BATTLE_THRUST;
-+		}
-+	}
-+	return InputState;
-+}
 Index: uqm/comm/urquan/urquanc.c
 ===================================================================
 --- uqm/comm/urquan/urquanc.c	(revision 3779)
@@ -1380,75 +353,547 @@ Index: uqm/comm/mycon/myconc.c
  
  #include "uqm/gameev.h"
  #include "libs/mathlib.h"
-Index: uqm/comm/arilou/arilouc.c
+Index: uqm/setupmenu.c
 ===================================================================
---- uqm/comm/arilou/arilouc.c	(revision 3779)
-+++ uqm/comm/arilou/arilouc.c	(working copy)
-@@ -18,7 +18,7 @@
+--- uqm/setupmenu.c	(revision 3779)
++++ uqm/setupmenu.c	(working copy)
+@@ -75,7 +75,7 @@
+ #endif
  
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../arilou/strings.h"
+ #define MENU_COUNT          8
+-#define CHOICE_COUNT       24
++#define CHOICE_COUNT       25
+ #define SLIDER_COUNT        4
+ #define BUTTON_COUNT       10
+ #define LABEL_COUNT         4
+@@ -98,7 +98,7 @@
+ static int choice_widths[CHOICE_COUNT] = {
+ 	3, 2, 3, 3, 2, 2, 2, 2, 2, 2, 
+ 	2, 2, 3, 2, 2, 3, 3, 2,	3, 3, 
+-	3, 2, 2, 2 };
++	3, 2, 2, 2, 2 };
  
- #include "uqm/gameev.h"
+ static HANDLER button_handlers[BUTTON_COUNT] = {
+ 	quit_main_menu, quit_sub_menu, do_graphics, do_engine,
+@@ -157,6 +157,7 @@
+ 	(WIDGET *)(&choices[12]),
+ 	(WIDGET *)(&choices[15]),
+ 	(WIDGET *)(&choices[16]),
++	(WIDGET *)(&choices[24]),
+ 	(WIDGET *)(&buttons[1]),
+ 	NULL };
+ 	
+@@ -416,6 +417,7 @@
+ 	choices[21].selected = opts.musicremix;
+ 	choices[22].selected = opts.speech;
+ 	choices[23].selected = opts.keepaspect;
++	choices[24].selected = opts.directionaljoystick;
  
-Index: uqm/comm/slyland/slyland.c
+ 	sliders[0].value = opts.musicvol;
+ 	sliders[1].value = opts.sfxvol;
+@@ -450,6 +452,7 @@
+ 	opts.musicremix = choices[21].selected;
+ 	opts.speech = choices[22].selected;
+ 	opts.keepaspect = choices[23].selected;
++	opts.directionaljoystick = choices[24].selected;
+ 
+ 	opts.musicvol = sliders[0].value;
+ 	opts.sfxvol = sliders[1].value;
+@@ -1277,6 +1280,7 @@
+ 	opts->musicremix = optRemixMusic ? OPTVAL_ENABLED : OPTVAL_DISABLED;
+ 	opts->speech = optSpeech ? OPTVAL_ENABLED : OPTVAL_DISABLED;
+ 	opts->keepaspect = optKeepAspectRatio ? OPTVAL_ENABLED : OPTVAL_DISABLED;
++	opts->directionaljoystick = optDirectionalJoystick ? OPTVAL_ENABLED : OPTVAL_DISABLED;
+ 	switch (snddriver) {
+ 	case audio_DRIVER_OPENAL:
+ 		opts->adriver = OPTVAL_OPENAL;
+@@ -1518,6 +1522,7 @@
+ 	optWhichIntro = (opts->intro == OPTVAL_3DO) ? OPT_3DO : OPT_PC;
+ 	optStereoSFX = (opts->stereo == OPTVAL_ENABLED);
+ 	optKeepAspectRatio = (opts->keepaspect == OPTVAL_ENABLED);
++	optDirectionalJoystick = (opts->directionaljoystick == OPTVAL_ENABLED) ? TRUE : FALSE;
+ 	PlayerControls[0] = opts->player1;
+ 	PlayerControls[1] = opts->player2;
+ 
+@@ -1532,6 +1537,7 @@
+ 	res_PutBoolean ("config.speech", opts->speech == OPTVAL_ENABLED);
+ 	res_PutBoolean ("config.3domovies", opts->intro == OPTVAL_3DO);
+ 	res_PutBoolean ("config.showfps", opts->fps == OPTVAL_ENABLED);
++	res_PutBoolean ("config.directionaljoystick", opts->directionaljoystick == OPTVAL_ENABLED);
+ 	res_PutBoolean ("config.smoothmelee", opts->meleezoom == OPTVAL_3DO);
+ 	res_PutBoolean ("config.positionalsfx", opts->stereo == OPTVAL_ENABLED); 
+ 	res_PutBoolean ("config.pulseshield", opts->shield == OPTVAL_3DO);
+Index: uqm/setupmenu.h
 ===================================================================
---- uqm/comm/slyland/slyland.c	(revision 3779)
-+++ uqm/comm/slyland/slyland.c	(working copy)
-@@ -16,10 +16,10 @@
+--- uqm/setupmenu.h	(revision 3779)
++++ uqm/setupmenu.h	(working copy)
+@@ -81,6 +81,7 @@
+ 	OPT_ENABLABLE fullscreen, subtitles, scanlines, fps, stereo;
+ 	OPT_ENABLABLE music3do, musicremix, speech;
+ 	OPT_ENABLABLE keepaspect;
++	OPT_ENABLABLE directionaljoystick;
+ 	OPT_CONSOLETYPE menu, text, cscan, scroll, intro, meleezoom, shield;
+ 	CONTROL_TEMPLATE player1, player2;
+ 	int speechvol, musicvol, sfxvol;
+Index: uqm/intel.c
+===================================================================
+--- uqm/intel.c	(revision 3779)
++++ uqm/intel.c	(working copy)
+@@ -45,10 +45,10 @@
+ 			// Allow a player to warp-escape in cyborg mode
+ 			if (StarShipPtr->playerNr == RPG_PLAYER_NUM)
+ 				InputState |= CurrentInputToBattleInput (
+-						context->playerNr) & BATTLE_ESCAPE;
++						context->playerNr, -1) & BATTLE_ESCAPE;
+ 		}
+ 		else
+-			InputState = CurrentInputToBattleInput (context->playerNr);
++			InputState = CurrentInputToBattleInput (context->playerNr, -1);
+ 	}
+ 	else if (!(PlayerControl[context->playerNr] & PSYTRON_CONTROL))
+ 		InputState = 0;
+Index: uqm/controls.h
+===================================================================
+--- uqm/controls.h	(revision 3779)
++++ uqm/controls.h	(working copy)
+@@ -90,13 +90,14 @@
+ #define BATTLE_ESCAPE     ((BATTLE_INPUT_STATE)(1 << 5))
+ #define BATTLE_DOWN       ((BATTLE_INPUT_STATE)(1 << 6))
+ 
+-BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player);
++BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player, int direction /* = -1 for no directional input */);
+ BATTLE_INPUT_STATE PulsedInputToBattleInput (COUNT player);
+ 
+ extern CONTROLLER_INPUT_STATE CurrentInputState;
+ extern CONTROLLER_INPUT_STATE PulsedInputState;
+ extern volatile CONTROLLER_INPUT_STATE ImmediateInputState;
+ extern CONTROL_TEMPLATE PlayerControls[];
++extern BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu;
+ 
+ void UpdateInputState (void);
+ extern void FlushInput (void);
+@@ -116,6 +117,9 @@
+ BOOLEAN WaitForNoInput (TimePeriod duration, BOOLEAN resetInput);
+ BOOLEAN WaitForNoInputUntil (TimeCount timeOut, BOOLEAN resetInput);
+ 
++/* TODO: only joystick #0 and player #0 supported currently */
++extern BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction);
++
+ void DoPopupWindow(const char *msg);
+ 
+ typedef void (InputFrameCallback) (void);
+Index: uqm/battle.c
+===================================================================
+--- uqm/battle.c	(revision 3779)
++++ uqm/battle.c	(working copy)
+@@ -16,6 +16,10 @@
   *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   */
  
-+#include "../slyland/strings.h"
++#ifdef ANDROID
++#include <android/log.h>
++#endif
++
+ #include "battle.h"
+ 
+ #include "battlecontrols.h"
+@@ -44,6 +48,8 @@
+ #include "libs/graphics/gfx_common.h"
+ #include "libs/log.h"
+ #include "libs/mathlib.h"
++#include "globdata.h"
++#include "libs/input/sdl/vcontrol.h"
+ 
+ 
+ BYTE battle_counter[NUM_SIDES];
+@@ -138,7 +144,8 @@
+ frameInputHuman (HumanInputContext *context, STARSHIP *StarShipPtr)
+ {
+ 	(void) StarShipPtr;
+-	return CurrentInputToBattleInput (context->playerNr);
++
++	return CurrentInputToBattleInput (context->playerNr, StarShipPtr ? StarShipPtr->ShipFacing : -1);
+ }
+ 
+ static void
+@@ -208,8 +215,11 @@
+ 						StarShipPtr->ship_input_state |= SPECIAL;
+ 
+ 					if (CanRunAway && cur_player == 0 &&
+-							(InputState & BATTLE_ESCAPE))
++							((InputState & BATTLE_ESCAPE) || EmergencyEscapeWarpUnitActivatedFromMenu))
++					{
++						EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
+ 						DoRunAway (StarShipPtr);
++					}
+ 				}
+ 			}
+ 
+Index: uqm/gameinp.c
+===================================================================
+--- uqm/gameinp.c	(revision 3779)
++++ uqm/gameinp.c	(working copy)
+@@ -16,6 +16,7 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
 +#include <stdlib.h>
- #include "../commall.h"
--#include <stdlib.h>
- #include "resinst.h"
--#include "strings.h"
+ #include "controls.h"
+ #include "battlecontrols.h"
+ #include "init.h"
+@@ -33,11 +34,14 @@
+ #include "libs/timelib.h"
+ #include "libs/threadlib.h"
  
- #include "options.h"
- #include "uqm/battle.h"
-Index: uqm/comm/thradd/thraddc.c
+-
++#ifdef ANDROID
++#define ACCELERATION_INCREMENT (ONE_SECOND)
++#define MENU_REPEAT_DELAY (ONE_SECOND)
++#else
+ #define ACCELERATION_INCREMENT (ONE_SECOND / 12)
+ #define MENU_REPEAT_DELAY (ONE_SECOND / 2)
++#endif
+ 
+-
+ typedef struct
+ {
+ 	BOOLEAN (*InputFunc) (void *pInputState);
+@@ -416,16 +420,10 @@
+ }
+ 
+ static BATTLE_INPUT_STATE
+-ControlInputToBattleInput (const int *keyState)
++ControlInputToBattleInput (const int *keyState, int direction)
+ {
+ 	BATTLE_INPUT_STATE InputState = 0;
+ 
+-	if (keyState[KEY_UP])
+-		InputState |= BATTLE_THRUST;
+-	if (keyState[KEY_LEFT])
+-		InputState |= BATTLE_LEFT;
+-	if (keyState[KEY_RIGHT])
+-		InputState |= BATTLE_RIGHT;
+ 	if (keyState[KEY_WEAPON])
+ 		InputState |= BATTLE_WEAPON;
+ 	if (keyState[KEY_SPECIAL])
+@@ -435,21 +433,35 @@
+ 	if (keyState[KEY_DOWN])
+ 		InputState |= BATTLE_DOWN;
+ 
++	if(direction < 0)
++	{
++		if (keyState[KEY_UP])
++			InputState |= BATTLE_THRUST;
++		if (keyState[KEY_LEFT])
++			InputState |= BATTLE_LEFT;
++		if (keyState[KEY_RIGHT])
++			InputState |= BATTLE_RIGHT;
++	}
++	else
++	{
++		InputState |= GetDirectionalJoystickInput(direction);
++	}
++
+ 	return InputState;
+ }
+ 
+ BATTLE_INPUT_STATE
+-CurrentInputToBattleInput (COUNT player)
++CurrentInputToBattleInput (COUNT player, int direction)
+ {
+ 	return ControlInputToBattleInput(
+-			CurrentInputState.key[PlayerControls[player]]);
++			CurrentInputState.key[PlayerControls[player]], direction);
+ }
+ 
+ BATTLE_INPUT_STATE
+ PulsedInputToBattleInput (COUNT player)
+ {
+ 	return ControlInputToBattleInput(
+-			PulsedInputState.key[PlayerControls[player]]);
++			PulsedInputState.key[PlayerControls[player]], -1);
+ }
+ 
+ BOOLEAN
+@@ -494,3 +506,76 @@
+ 	return result;
+ }
+ 
++// Fast arctan2, returns angle in radians as integer, with fractional part in lower 16 bits
++// Stolen from http://www.dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization , precision is said to be 0.07 rads
++
++#ifndef M_PI
++#define M_PI 3.14159265358979323846
++#endif
++enum { atan2i_coeff_1 = ((int)(M_PI*65536.0/4)), atan2i_coeff_2 = (3*atan2i_coeff_1), atan2i_PI = (int)(M_PI * 65536.0), SHIP_DIRECTIONS = 16 };
++
++static inline int atan2i(int y, int x)
++{
++   int angle;
++   int abs_y = abs(y);
++   if( abs_y == 0 )
++      abs_y = 1;
++   if (x>=0)
++   {
++      angle = atan2i_coeff_1 - atan2i_coeff_1 * (x - abs_y) / (x + abs_y);
++   }
++   else
++   {
++      angle = atan2i_coeff_2 - atan2i_coeff_1 * (x + abs_y) / (abs_y - x);
++   }
++   if (y < 0)
++      return(-angle);     // negate if in quad III or IV
++   else
++      return(angle);
++}
++
++
++BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction)
++{
++	BATTLE_INPUT_STATE InputState = 0;
++	if(VControl_GetJoysticksAmount() <= 0 || !optDirectionalJoystick)
++	{
++		if(CurrentInputState.key[PlayerControls[0]][KEY_UP])
++			InputState |= BATTLE_THRUST;
++		if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
++			InputState |= BATTLE_LEFT;
++		if (CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
++			InputState |= BATTLE_RIGHT;
++	}
++	else
++	{
++		/* TODO: only joystick #0 supported currently */
++		int axisX = VControl_GetJoyAxis(0, 0), axisY = VControl_GetJoyAxis(0, 1);
++		if( axisX != 0 || axisY != 0 )
++		{
++			int angle = atan2i(axisY, axisX), diff;
++			// Convert it to 16 directions used by Melee
++			angle += atan2i_PI / SHIP_DIRECTIONS;
++			if( angle < 0 )
++				angle += atan2i_PI * 2;
++			if( angle > atan2i_PI * 2 )
++				angle -= atan2i_PI * 2;
++			angle = angle * SHIP_DIRECTIONS / atan2i_PI / 2;
++			
++			diff = angle - direction - SHIP_DIRECTIONS / 4;
++			while( diff >= SHIP_DIRECTIONS )
++				diff -= SHIP_DIRECTIONS;
++			while( diff < 0 )
++				diff += SHIP_DIRECTIONS;
++
++			if( diff < SHIP_DIRECTIONS / 2 )
++				InputState |= BATTLE_LEFT;
++			if( diff > SHIP_DIRECTIONS / 2 )
++				InputState |= BATTLE_RIGHT;
++
++			if( ((axisX*axisX)>>1) + ((axisY*axisY)>>1) > (16384*16384)>>1 ) // Force of joystick tilt, equation is clumsy because (axisX*axisX + axisY*axisY) may overflow int32
++				InputState |= BATTLE_THRUST;
++		}
++	}
++	return InputState;
++}
+Index: uqm/confirm.c
 ===================================================================
---- uqm/comm/thradd/thraddc.c	(revision 3779)
-+++ uqm/comm/thradd/thraddc.c	(working copy)
-@@ -18,7 +18,7 @@
+--- uqm/confirm.c	(revision 3779)
++++ uqm/confirm.c	(working copy)
+@@ -36,22 +36,29 @@
+ #define CONFIRM_WIN_HEIGHT 22
  
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../thradd/strings.h"
+ static void
+-DrawConfirmationWindow (BOOLEAN answer)
++DrawConfirmationWindow (int answer)
+ {
+ 	Color oldfg = SetContextForeGroundColor (MENU_TEXT_COLOR);
+ 	FONT  oldfont = SetContextFont (StarConFont);
+ 	FRAME oldFontEffect = SetContextFontEffect (NULL);
+ 	RECT r;
+ 	TEXT t;
++	int textOffset;
  
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: uqm/comm/chmmr/chmmrc.c
+ 	BatchGraphics ();
+ 	r.corner.x = (SCREEN_WIDTH - CONFIRM_WIN_WIDTH) >> 1;
+ 	r.corner.y = (SCREEN_HEIGHT - CONFIRM_WIN_HEIGHT) >> 1;
+ 	r.extent.width = CONFIRM_WIN_WIDTH;
+ 	r.extent.height = CONFIRM_WIN_HEIGHT;
++	textOffset = r.extent.width >> 1;
++	if (GLOBAL (CurrentActivity) & IN_BATTLE)
++	{
++		r.corner.x -= CONFIRM_WIN_WIDTH;
++		r.extent.width += CONFIRM_WIN_WIDTH * 2;
++		textOffset = r.extent.width / 3;
++	}
+ 	DrawShadowedBox (&r, SHADOWBOX_BACKGROUND_COLOR, 
+ 			SHADOWBOX_DARK_COLOR, SHADOWBOX_MEDIUM_COLOR);
+-
+ 	t.baseline.x = r.corner.x + (r.extent.width >> 1);
+ 	t.baseline.y = r.corner.y + 8;
+ 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE); // "Really Quit?"
+@@ -59,14 +66,21 @@
+ 	t.CharCount = (COUNT)~0;
+ 	font_DrawText (&t);
+ 	t.baseline.y += 10;
+-	t.baseline.x = r.corner.x + (r.extent.width >> 2);
++	t.baseline.x = r.corner.x + (textOffset >> 1);
+ 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE + 1); // "Yes"
+-	SetContextForeGroundColor (answer ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
++	SetContextForeGroundColor (answer == 1 ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
+ 	font_DrawText (&t);
+-	t.baseline.x += (r.extent.width >> 1);
++	t.baseline.x += textOffset;
+ 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE + 2); // "No"
+-	SetContextForeGroundColor (answer ? MENU_TEXT_COLOR : MENU_HIGHLIGHT_COLOR);	
++	SetContextForeGroundColor (answer == 0 ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
+ 	font_DrawText (&t);
++	if (GLOBAL (CurrentActivity) & IN_BATTLE)
++	{
++		t.baseline.x += textOffset;
++		t.pStr = "Escape unit"; // GAME_STRING (QUITMENU_STRING_BASE + 3); // TODO: modify gamestrings.txt 
++		SetContextForeGroundColor (answer == 2 ? MENU_HIGHLIGHT_COLOR : MENU_TEXT_COLOR);
++		font_DrawText (&t);
++	}
+ 
+ 	UnbatchGraphics ();
+ 
+@@ -75,6 +89,8 @@
+ 	SetContextForeGroundColor (oldfg);
+ }
+ 
++BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
++
+ BOOLEAN
+ DoConfirmExit (void)
+ {
+@@ -91,7 +107,11 @@
+ 		RECT ctxRect;
+ 		CONTEXT oldContext;
+ 		RECT oldRect;
+-		BOOLEAN response = FALSE, done;
++		int response = 0;
++		BOOLEAN done;
++		int responseMax = 1;
++		if (GLOBAL (CurrentActivity) & IN_BATTLE)
++			responseMax = 2;
+ 
+ 		oldContext = SetContext (ScreenContext);
+ 		GetContextClipRect (&oldRect);
+@@ -119,7 +139,7 @@
+ 			if (GLOBAL (CurrentActivity) & CHECK_ABORT)
+ 			{	// something else triggered an exit
+ 				done = TRUE;
+-				response = TRUE;
++				response = 1;
+ 			}
+ 			else if (PulsedInputState.menu[KEY_MENU_SELECT])
+ 			{
+@@ -129,11 +149,16 @@
+ 			else if (PulsedInputState.menu[KEY_MENU_CANCEL])
+ 			{
+ 				done = TRUE;
+-				response = FALSE;
++				response = 0;
+ 			}
+ 			else if (PulsedInputState.menu[KEY_MENU_LEFT] || PulsedInputState.menu[KEY_MENU_RIGHT])
+ 			{
+-				response = !response;
++				
++				response += PulsedInputState.menu[KEY_MENU_LEFT] ? 1 : -1;
++				if(response < 0)
++					response = responseMax;
++				if( response > responseMax )
++					response = 0;
+ 				DrawConfirmationWindow (response);
+ 				PlayMenuSound (MENU_SOUND_MOVE);
+ 			}
+@@ -144,15 +169,19 @@
+ 		DrawStamp (&s);
+ 		DestroyDrawable (ReleaseDrawable (s.frame));
+ 		ClearSystemRect ();
+-		if (response || (GLOBAL (CurrentActivity) & CHECK_ABORT))
++		if (response == 1 || (GLOBAL (CurrentActivity) & CHECK_ABORT))
+ 		{
+ 			result = TRUE;
+ 			GLOBAL (CurrentActivity) |= CHECK_ABORT;
+-		}		
++		}
+ 		else
+ 		{
+ 			result = FALSE;
+ 		}
++		if( response == 2 )
++		{
++			EmergencyEscapeWarpUnitActivatedFromMenu = TRUE;
++		}
+ 		ExitRequested = FALSE;
+ 		GamePaused = FALSE;
+ 		FlushInput ();
+Index: uqm/planets/solarsys.c
 ===================================================================
---- uqm/comm/chmmr/chmmrc.c	(revision 3779)
-+++ uqm/comm/chmmr/chmmrc.c	(working copy)
-@@ -18,7 +18,7 @@
+--- uqm/planets/solarsys.c	(revision 3779)
++++ uqm/planets/solarsys.c	(working copy)
+@@ -837,18 +837,19 @@
+ static void
+ ProcessShipControls (void)
+ {
+-	COUNT index;
++	COUNT index = GetFrameIndex (GLOBAL (ShipStamp.frame));;
+ 	SIZE delta_x, delta_y;
++	BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index);
  
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../chmmr/strings.h"
+-	if (CurrentInputState.key[PlayerControls[0]][KEY_UP])
++	if (InputState & BATTLE_THRUST)
+ 		delta_y = -1;
+ 	else
+ 		delta_y = 0;
  
- #include "uqm/build.h"
- #include "uqm/hyper.h"
-Index: uqm/comm/ilwrath/ilwrathc.c
+ 	delta_x = 0;
+-	if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
++	if (InputState & BATTLE_LEFT)
+ 		delta_x -= 1;
+-	if (CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
++	if (InputState & BATTLE_RIGHT)
+ 		delta_x += 1;
+ 		
+ 	if (delta_x || delta_y < 0)
+@@ -861,7 +862,6 @@
+ 	else
+ 		delta_y = 0;
+ 
+-	index = GetFrameIndex (GLOBAL (ShipStamp.frame));
+ 	if (pSolarSysState->turn_counter)
+ 		--pSolarSysState->turn_counter;
+ 	else if (delta_x)
+Index: uqm/planets/lander.c
 ===================================================================
---- uqm/comm/ilwrath/ilwrathc.c	(revision 3779)
-+++ uqm/comm/ilwrath/ilwrathc.c	(working copy)
-@@ -18,7 +18,7 @@
+--- uqm/planets/lander.c	(revision 3779)
++++ uqm/planets/lander.c	(working copy)
+@@ -1591,15 +1591,15 @@
+ 		if (crew_left)
+ 		{
+ 			SIZE index = GetFrameIndex (LanderFrame[0]);
++			BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index);
+ 			if (turn_wait)
+ 				--turn_wait;
+-			else if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT] ||
+-					CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
++			else if ((InputState & BATTLE_LEFT) || (InputState & BATTLE_RIGHT))
+ 			{
+ 				COUNT landerSpeedNumer;
+ 				COUNT angle;
  
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../ilwrath/strings.h"
+-				if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
++				if (InputState & BATTLE_LEFT)
+ 					--index;
+ 				else
+ 					++index;
+@@ -1623,7 +1623,7 @@
+ 				turn_wait = SHUTTLE_TURN_WAIT;
+ 			}
  
- #include "uqm/gameev.h"
- 
+-			if (!CurrentInputState.key[PlayerControls[0]][KEY_UP])
++			if (!(InputState & BATTLE_THRUST))
+ 			{
+ 				dx = 0;
+ 				dy = 0;
 Index: options.c
 ===================================================================
 --- options.c	(revision 3779)
@@ -1493,6 +938,17 @@ Index: uqm.c
  
  #define INIT_CONFIG_OPTION(name, val) \
  	{ val, false }
+@@ -247,8 +248,8 @@
+ 		INIT_CONFIG_OPTION(  gamma,             1.0f ),
+ 		INIT_CONFIG_OPTION(  soundDriver,       audio_DRIVER_MIXSDL ),
+ 		INIT_CONFIG_OPTION(  soundQuality,      audio_QUALITY_MEDIUM ),
+-		INIT_CONFIG_OPTION(  use3doMusic,       true ),
+-		INIT_CONFIG_OPTION(  useRemixMusic,     false ),
++		INIT_CONFIG_OPTION(  use3doMusic,       false ),
++		INIT_CONFIG_OPTION(  useRemixMusic,     true ),
+ 		INIT_CONFIG_OPTION(  useSpeech,         true ),
+ 		INIT_CONFIG_OPTION(  whichCoarseScan,   OPT_PC ),
+ 		INIT_CONFIG_OPTION(  whichMenu,         OPT_PC ),
 @@ -263,6 +264,7 @@
  		INIT_CONFIG_OPTION(  sfxVolumeScale,    1.0f ),
  		INIT_CONFIG_OPTION(  speechVolumeScale, 1.0f ),
@@ -1517,3 +973,488 @@ Index: uqm.c
  	getBoolConfigValue (&options->keepAspectRatio, "config.keepaspectratio");
  	getGammaConfigValue (&options->gamma, "config.gamma");
  
+Index: libs/md5/md5.c
+===================================================================
+--- libs/md5/md5.c	(revision 3779)
++++ libs/md5/md5.c	(working copy)
+@@ -21,7 +21,7 @@
+ 
+ /* Written by Ulrich Drepper <drepper@gnu.ai.mit.edu>, 1995.  */
+ 
+-#include <config.h>
++#include "config.h"
+ 
+ #include "md5.h"
+ 
+Index: libs/input/sdl/vcontrol.c
+===================================================================
+--- libs/input/sdl/vcontrol.c	(revision 3779)
++++ libs/input/sdl/vcontrol.c	(working copy)
+@@ -46,6 +46,7 @@
+ typedef struct vcontrol_joystick_axis {
+ 	keybinding *neg, *pos;
+ 	int polarity;
++	int value;
+ } axis_type;
+ 
+ typedef struct vcontrol_joystick_hat {
+@@ -66,7 +67,7 @@
+ 
+ #endif /* HAVE_JOYSTICK */
+ 
+-static unsigned int joycount;
++static unsigned int joycount = 0;
+ static unsigned int num_sdl_keys = 0;
+ static keybinding **bindings = NULL;
+ 
+@@ -818,6 +819,7 @@
+ 	int t;
+ 	if (!joysticks[port].stick)
+ 		return;
++	joysticks[port].axes[axis].value = value;
+ 	t = joysticks[port].threshold;
+ 	if (value > t)
+ 	{
+@@ -894,6 +896,25 @@
+ #endif /* HAVE_JOYSTICK */
+ }
+ 
++int
++VControl_GetJoyAxis(int port, int axis)
++{
++#ifdef HAVE_JOYSTICK
++	if( joycount <= port )
++		return 0;
++	if (!joysticks[port].stick || joysticks[port].numaxes <= axis )
++		return 0;
++	return joysticks[port].axes[axis].value;
++#else
++	return 0;
++#endif /* HAVE_JOYSTICK */
++};
++
++int VControl_GetJoysticksAmount()
++{
++	return joycount;
++};
++
+ void
+ VControl_ResetInput (void)
+ {
+Index: libs/input/sdl/vcontrol.h
+===================================================================
+--- libs/input/sdl/vcontrol.h	(revision 3779)
++++ libs/input/sdl/vcontrol.h	(working copy)
+@@ -76,6 +76,9 @@
+ void VControl_ProcessJoyAxis (int port, int axis, int value);
+ void VControl_ProcessJoyHat (int port, int which, Uint8 value);
+ 
++int VControl_GetJoyAxis(int port, int axis);
++int VControl_GetJoysticksAmount();
++
+ /* Force the input into the blank state.  For preventing "sticky" keys. */
+ void VControl_ResetInput (void);
+ 
+Index: libs/input/sdl/input.c
+===================================================================
+--- libs/input/sdl/input.c	(revision 3779)
++++ libs/input/sdl/input.c	(working copy)
+@@ -186,6 +186,13 @@
+ 		   directory. */
+ 		LoadResourceIndex (contentDir, "uqm.key", "keys.");
+ 	}
++	
++#ifdef ANDROID // TODO: hacky
++	res_PutString("keys.1.up.2", "joystick 0 axis 1 negative");
++	res_PutString("keys.1.down.2", "joystick 0 axis 1 positive");
++	res_PutString("keys.1.left.2", "joystick 0 axis 0 negative");
++	res_PutString("keys.1.right.2", "joystick 0 axis 0 positive");
++#endif
+ 
+ 	register_flight_controls ();
+ 
+Index: libs/graphics/sdl/pure.c
+===================================================================
+--- libs/graphics/sdl/pure.c	(revision 3779)
++++ libs/graphics/sdl/pure.c	(working copy)
+@@ -20,6 +20,10 @@
+ #include "scalers.h"
+ #include "libs/log.h"
+ 
++#ifdef ANDROID
++#include <SDL/SDL_screenkeyboard.h>
++#endif
++
+ static SDL_Surface *fade_color_surface = NULL;
+ static SDL_Surface *fade_temp = NULL;
+ static SDL_Surface *scaled_display = NULL;
+@@ -104,6 +108,7 @@
+ {
+ 	int i, videomode_flags;
+ 	SDL_PixelFormat conv_fmt;
++	int BPP = 32;
+ 	
+ 	GraphicsDriver = driver;
+ 
+@@ -128,6 +133,20 @@
+ 					"under pure SDL, using 640x480", width, height);
+ 	}
+ 
++#ifdef ANDROID
++	videomode_flags = SDL_SWSURFACE;
++	ScreenWidthActual = 320;
++	ScreenHeightActual = 240;
++	graphics_backend = &pure_unscaled_backend;
++	BPP = 16;
++	/* Make the on-screen buttons slightly overlap, so we can hit them with one finger */
++	SDL_Rect b0;
++	SDL_ANDROID_GetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &b0);
++	b0.x -= b0.w * 0.2;
++	b0.w += b0.w * 0.2;
++	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &b0);
++#endif
++
+ 	videomode_flags |= SDL_ANYFORMAT;
+ 	if (flags & TFB_GFXFLAGS_FULLSCREEN)
+ 		videomode_flags |= SDL_FULLSCREEN;
+@@ -135,7 +154,7 @@
+ 	/* We'll ask for a 32bpp frame, but it doesn't really matter, because we've set
+ 	   SDL_ANYFORMAT */
+ 	SDL_Video = SDL_SetVideoMode (ScreenWidthActual, ScreenHeightActual, 
+-		32, videomode_flags);
++		BPP, videomode_flags);
+ 
+ 	if (SDL_Video == NULL)
+ 	{
+Index: libs/cdp/cdpapi.c
+===================================================================
+--- libs/cdp/cdpapi.c	(revision 3779)
++++ libs/cdp/cdpapi.c	(working copy)
+@@ -20,6 +20,8 @@
+  * the API is used by both the engine and modules
+  */
+ 
++#ifndef ANDROID
++
+ #include "cdp.h"
+ #include "port.h"
+ #include "cdpint.h"
+@@ -862,3 +864,5 @@
+ 	}
+ 	return ret;
+ }
++
++#endif
+Index: libs/cdp/cdp.c
+===================================================================
+--- libs/cdp/cdp.c	(revision 3779)
++++ libs/cdp/cdp.c	(working copy)
+@@ -19,6 +19,8 @@
+  * CDP library definitions
+  */
+ 
++#ifndef ANDROID
++
+ #include <string.h>
+ #include <stdio.h>
+ #include "cdp.h"
+@@ -435,3 +437,5 @@
+ 			cdp_FreeModule (cdp);
+ 	}
+ }
++
++#endif
+Index: libs/cdp/windl.c
+===================================================================
+--- libs/cdp/windl.c	(revision 3779)
++++ libs/cdp/windl.c	(working copy)
+@@ -19,6 +19,8 @@
+  * CDP dlopen() & Co. WIN32 implementation
+  */
+ 
++#ifdef WIN32
++
+ #include "windl.h"
+ #include "port.h"
+ #define WIN32_LEAN_AND_MEAN
+@@ -74,3 +76,5 @@
+ 	else
+ 		return NULL;
+ }
++
++#endif
+Index: libs/sound/decoders/oggaud.c
+===================================================================
+--- libs/sound/decoders/oggaud.c	(revision 3779)
++++ libs/sound/decoders/oggaud.c	(working copy)
+@@ -270,7 +270,7 @@
+ 	// this is the closest to a frame there is in ogg vorbis stream
+ 	// doesn't seem to be a func to retrive it
+ #ifdef OVCODEC_TREMOR
+-	return ova->vf.os->pageno;
++	return ova->vf.os.pageno;
+ #else
+ 	return ova->vf.os.pageno;
+ #endif  /* OVCODEC_TREMOR */
+Index: libs/strings/getstr.c
+===================================================================
+--- libs/strings/getstr.c	(revision 3779)
++++ libs/strings/getstr.c	(working copy)
+@@ -72,7 +72,7 @@
+ // returns FALSE if and only if the buffer needs to be enlarged but
+ // memory allocation failed.
+ static BOOLEAN
+-ensureBufSize (char **buf, size_t *curSize, size_t minSize, size_t increment)
++ensureBufSize (char **buf, DWORD *curSize, DWORD minSize, DWORD increment)
+ {
+ 	char *newBuf;
+ 	size_t newSize;
+Index: libs/log/uqmlog.c
+===================================================================
+--- libs/log/uqmlog.c	(revision 3779)
++++ libs/log/uqmlog.c	(working copy)
+@@ -23,6 +23,9 @@
+ #include <stdlib.h>
+ #include <signal.h>
+ #include <errno.h>
++#ifdef ANDROID
++#include <android/log.h>
++#endif
+ #include "libs/threadlib.h"
+ 
+ #ifndef MAX_LOG_ENTRY_SIZE
+@@ -191,6 +194,9 @@
+ 	if ((int)level <= maxStreamLevel)
+ 	{
+ 		fprintf (streamOut, "%s\n", full_msg);
++#ifdef ANDROID
++	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
++#endif
+ 	}
+ 
+ 	if ((int)level <= maxLevel)
+@@ -227,6 +233,9 @@
+ 	if ((int)level <= maxStreamLevel)
+ 	{
+ 		fprintf (streamOut, "%s\n", full_msg);
++#ifdef ANDROID
++	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
++#endif
+ 	}
+ 
+ 	if ((int)level <= maxLevel)
+Index: libs/log/msgbox_win.c
+===================================================================
+--- libs/log/msgbox_win.c	(revision 3779)
++++ libs/log/msgbox_win.c	(working copy)
+@@ -14,6 +14,7 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
++#ifndef ANDROID
+ #include "msgbox.h"
+ #define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+@@ -64,4 +65,4 @@
+ 	free (swTitle);
+ 	free (swMsg);
+ }
+-
++#endif
+Index: libs/log/msgbox_stub.c
+===================================================================
+--- libs/log/msgbox_stub.c	(revision 3779)
++++ libs/log/msgbox_stub.c	(working copy)
+@@ -16,6 +16,9 @@
+ 
+ #include "msgbox.h"
+ #include "loginternal.h"
++#ifdef ANDROID
++#include <android/log.h>
++#endif
+ 
+ void
+ log_displayBox (const /*UTF-8*/char *title, int isError,
+@@ -26,6 +29,9 @@
+ 	// So just inform the user of our predicament
+ 	fprintf (streamOut, "Do not know how to display %s box\n",
+ 			isError ? "an error" : "a");
++#ifdef ANDROID
++	__android_log_print( isError ? ANDROID_LOG_FATAL : ANDROID_LOG_INFO, "Ur-Quan Masters", "%s: %s", title, msg );
++#endif
+ 	
+ 	// Suppress the compiler warnings in any case.
+ 	(void)title;
+Index: libs/resource/filecntl.c
+===================================================================
+--- libs/resource/filecntl.c	(revision 3779)
++++ libs/resource/filecntl.c	(working copy)
+@@ -26,6 +26,7 @@
+ #include "port.h"
+ #include "resintrn.h"
+ #include "libs/uio.h"
++#include "libs/log.h"
+ 
+ uio_Stream *
+ res_OpenResFile (uio_DirHandle *dir, const char *filename, const char *mode)
+@@ -34,7 +35,10 @@
+ 	struct stat sb;
+ 
+ 	if (uio_stat (dir, filename, &sb) == 0 && S_ISDIR(sb.st_mode))
++	{
++		log_add (log_Debug, "res_OpenResFile('%s', '%s') - cannot open dir as file", filename, mode);
+ 		return ((uio_Stream *) ~0);
++	}
+ 
+ 	fp = uio_fopen (dir, filename, mode);
+ 
+Index: libs/uio/zip/zip.c
+===================================================================
+--- libs/uio/zip/zip.c	(revision 3779)
++++ libs/uio/zip/zip.c	(working copy)
+@@ -1366,6 +1366,10 @@
+ 				gPFileData->gid = (uid_t) makeUInt16(buf[12], buf[13]);
+ 				break;
+ 			}
++			case 0x7875:  // 'Unix string UID/GID'
++				// Just skip it
++				break;
++
+ 			default:
+ #ifdef DEBUG
+ 				fprintf(stderr, "Debug: Extra field 0x%04x unsupported, "
+Index: libs/uio/io.c
+===================================================================
+--- libs/uio/io.c	(revision 3779)
++++ libs/uio/io.c	(working copy)
+@@ -35,6 +35,7 @@
+ #include "mem.h"
+ #include "uioutils.h"
+ #include "uioport.h"
++#include "../log.h"
+ #ifdef uio_MEM_DEBUG
+ #	include "memdebug.h"
+ #endif
+@@ -193,6 +194,7 @@
+ 			errno = EINVAL;
+ 			return NULL;
+ 		}
++		log_add (log_Info, "uio_open %s", sourcePath);
+ 		handle = uio_open(sourceDir, sourcePath,
+ 				((flags & uio_MOUNT_RDONLY) == uio_MOUNT_RDONLY ?
+ 				O_RDONLY : O_RDWR)
+@@ -201,12 +203,14 @@
+ #endif
+ 				, 0);
+ 		if (handle == NULL) {
++			log_add (log_Info, "uio_open failed for %s", sourcePath);
+ 			// errno is set
+ 			return NULL;
+ 		}
+ 	}
+ 
+ 	handler = uio_getFileSystemHandler(fsType);
++	log_add (log_Info, "uio_getFileSystemHandler %p", handler);
+ 	if (handler == NULL) {
+ 		if (handle)
+ 			uio_close(handle);
+@@ -800,6 +804,7 @@
+ 			&readMountInfo, &readPDirHandle, NULL,
+ 			&writeMountInfo, &writePDirHandle, NULL, &name) == -1) {
+ 		// errno is set
++		log_add (log_Info, "uio_open: uio_getPhysicalAccess  failed for '%s'", path);
+ 		return NULL;
+ 	}
+ 	
+@@ -826,6 +831,7 @@
+ 				uio_PDirHandle_unref(readPDirHandle);
+ 				uio_PDirHandle_unref(writePDirHandle);
+ 				errno = EEXIST;
++				log_add (log_Info, "uio_open: O_CREAT | O_EXCL: file already exists '%s'", name);
+ 				return NULL;
+ 			}
+ 			if ((flags & O_TRUNC) == O_TRUNC) {
+@@ -842,6 +848,7 @@
+ 					uio_PDirHandle_unref(readPDirHandle);
+ 					uio_PDirHandle_unref(writePDirHandle);
+ 					errno = savedErrno;
++					log_add (log_Info, "uio_open: uio_copyFilePhysical failed '%s'", name);
+ 					return NULL;
+ 				}
+ 			}
+@@ -863,6 +870,7 @@
+ 	handle = (pDirHandle->pRoot->handler->open)(pDirHandle, name, flags, mode);
+ 			// Also adds a new entry to the physical dir if appropriate.
+ 	if (handle == NULL) {
++		log_add (log_Info, "uio_open: open file failed '%s'", name);
+ 		int savedErrno = errno;
+ 		uio_free(name);
+ 		uio_PDirHandle_unref(pDirHandle);
+Index: config_unix.h
+===================================================================
+--- config_unix.h	(revision 0)
++++ config_unix.h	(working copy)
+@@ -0,0 +1,63 @@
++/* This file contains some compile-time configuration options for *nix
++ * systems.
++ * config_unix.h is generated from config_unix.h.in by build.sh
++ * When building on MS Windows using build.sh (MinGW, Cygwin),
++ * config_win.h is generated from src/config_win.h.in.
++ * When using MSVC on MS Windows, you'll have to edit src/config_vc6.h
++ * manually if you want anything else than the defaults.
++ */
++
++#ifndef _CONFIG_UNIX_H
++#define _CONFIG_UNIX_H
++
++/* Directory where the UQM game data is located */
++#define CONTENTDIR ""
++
++/* Directory where game data will be stored */
++#define USERDIR "config/"
++
++/* Directory where config files will be stored */
++#define CONFIGDIR USERDIR
++
++/* Directory where supermelee teams will be stored */
++#define MELEEDIR "teams/"
++
++/* Directory where save games will be stored */
++#define SAVEDIR "save/"
++
++/* Defined if words are stored with the most significant byte first */
++#undef WORDS_BIGENDIAN
++
++/* Defined if your system has readdir_r of its own */
++#define HAVE_READDIR_R
++
++/* Defined if your system has setenv of its own */
++#define HAVE_SETENV
++
++/* Defined if your system has strupr of its own */
++#undef HAVE_STRUPR
++
++/* Defined if your system has strcasecmp of its own */
++#define HAVE_STRCASECMP_UQM
++		// Not using "HAVE_STRCASECMP" as that conflicts with SDL.
++
++/* Defined if your system has stricmp of its own */
++#undef HAVE_STRICMP
++
++/* Defined if your system has getopt_long */
++#define HAVE_GETOPT_LONG
++
++/* Defined if your system has iswgraph of its own*/
++#define HAVE_ISWGRAPH
++
++/* Defined if your system has wchar_t of its own */
++#define HAVE_WCHAR_T
++
++/* Defined if your system has wint_t of its own */
++#define HAVE_WINT_T
++
++/* Defined if your system has _Bool of its own */
++#define HAVE__BOOL
++
++#endif  /* _CONFIG_UNIX_H */
++
