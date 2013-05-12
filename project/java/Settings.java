@@ -66,6 +66,7 @@ import android.app.AlarmManager;
 import android.util.DisplayMetrics;
 import android.net.Uri;
 import java.util.concurrent.Semaphore;
+import java.util.Arrays;
 import android.graphics.Color;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorEvent;
@@ -207,6 +208,8 @@ class Settings
 		Globals.ScreenKbControlsShown[1] = Globals.AppNeedsTextInput;
 		for( int i = 2; i < Globals.ScreenKbControlsShown.length; i++ )
 			Globals.ScreenKbControlsShown[i] = ( i - 2 < Globals.AppTouchscreenKeyboardKeysAmount );
+		if( Globals.AppUsesSecondJoystick )
+			Globals.ScreenKbControlsShown[8] = true;
 		for( int i = 0; i < Globals.RemapMultitouchGestureKeycode.length; i++ )
 		{
 			int sdlKey = nativeGetKeymapKeyMultitouchGesture(i);
@@ -1720,25 +1723,24 @@ class Settings
 				p.getResources().getString(R.string.remap_screenkb_button) + " 6",
 			};
 
-			boolean defaults[] = { 
-				Globals.ScreenKbControlsShown[0],
-				Globals.ScreenKbControlsShown[1],
-				Globals.ScreenKbControlsShown[2],
-				Globals.ScreenKbControlsShown[3],
-				Globals.ScreenKbControlsShown[4],
-				Globals.ScreenKbControlsShown[5],
-				Globals.ScreenKbControlsShown[6],
-				Globals.ScreenKbControlsShown[7],
-			};
-			
+			boolean defaults[] = Arrays.copyOf(Globals.ScreenKbControlsShown, Globals.ScreenKbControlsShown.length);
+			if( Globals.AppUsesSecondJoystick )
+			{
+				items = Arrays.copyOf(items, items.length + 1);
+				items[items.length - 1] = p.getResources().getString(R.string.remap_screenkb_joystick) + " 2";
+				defaults = Arrays.copyOf(defaults, defaults.length + 1);
+				defaults[defaults.length - 1] = true;
+			}
+
+			for( int i = 0; i < Math.min(6, Globals.AppTouchscreenKeyboardKeysNames.length); i++ )
+				items[i+2] += " - " + Globals.AppTouchscreenKeyboardKeysNames[i];
+
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(p.getResources().getString(R.string.remap_screenkb));
 			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
 			{
 				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 				{
-					if( ! Globals.UseTouchscreenKeyboard )
-						item += 8;
 					Globals.ScreenKbControlsShown[item] = isChecked;
 				}
 			});
@@ -1772,7 +1774,10 @@ class Settings
 				p.getResources().getString(R.string.remap_screenkb_button) + " 5",
 				p.getResources().getString(R.string.remap_screenkb_button) + " 6",
 			};
-			
+
+			for( int i = 0; i < Math.min(6, Globals.AppTouchscreenKeyboardKeysNames.length); i++ )
+				items[i] += " - " + Globals.AppTouchscreenKeyboardKeysNames[i];
+
 			if( currentButton >= Globals.RemapScreenKbKeycode.length )
 			{
 				goBack(p);
@@ -2051,7 +2056,8 @@ class Settings
 				R.drawable.b3,
 				R.drawable.b4,
 				R.drawable.b5,
-				R.drawable.b6
+				R.drawable.b6,
+				R.drawable.dpad
 			};
 			int oldX = 0, oldY = 0;
 			boolean resizing = false;
@@ -2078,7 +2084,8 @@ class Settings
 						R.drawable.sun_b3,
 						R.drawable.sun_b4,
 						R.drawable.sun_b5,
-						R.drawable.sun_b6
+						R.drawable.sun_b6,
+						R.drawable.sun_dpad
 					};
 				}
 
@@ -2097,7 +2104,7 @@ class Settings
 						continue;
 					if( currentButton == -1 )
 						currentButton = i;
-					Log.i("SDL", "Screen kb button " + i + " coords " + Globals.ScreenKbControlsLayout[i][0] + ":" + Globals.ScreenKbControlsLayout[i][1] + ":" + Globals.ScreenKbControlsLayout[i][2] + ":" + Globals.ScreenKbControlsLayout[i][3] );
+					//Log.i("SDL", "Screen kb button " + i + " coords " + Globals.ScreenKbControlsLayout[i][0] + ":" + Globals.ScreenKbControlsLayout[i][1] + ":" + Globals.ScreenKbControlsLayout[i][2] + ":" + Globals.ScreenKbControlsLayout[i][3] );
 					// Check if the button is off screen edge or shrunk to zero
 					if( Globals.ScreenKbControlsLayout[i][0] > Globals.ScreenKbControlsLayout[i][2] - displayY/12 )
 						Globals.ScreenKbControlsLayout[i][0] = Globals.ScreenKbControlsLayout[i][2] - displayY/12;
@@ -2127,7 +2134,7 @@ class Settings
 						Globals.ScreenKbControlsLayout[i][1] -= Globals.ScreenKbControlsLayout[i][3] - displayY;
 						Globals.ScreenKbControlsLayout[i][3] = displayY;
 					}
-					Log.i("SDL", "After bounds check coords " + Globals.ScreenKbControlsLayout[i][0] + ":" + Globals.ScreenKbControlsLayout[i][1] + ":" + Globals.ScreenKbControlsLayout[i][2] + ":" + Globals.ScreenKbControlsLayout[i][3] );
+					//Log.i("SDL", "After bounds check coords " + Globals.ScreenKbControlsLayout[i][0] + ":" + Globals.ScreenKbControlsLayout[i][1] + ":" + Globals.ScreenKbControlsLayout[i][2] + ":" + Globals.ScreenKbControlsLayout[i][3] );
 
 					imgs[i] = new ImageView(p);
 					imgs[i].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
@@ -2162,9 +2169,17 @@ class Settings
 				src = new RectF(0, 0, boundaryBmp.getWidth(), boundaryBmp.getHeight());
 				m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 				boundary.setImageMatrix(m);
-				String buttonText = (i == 0 ? "Joystick" : ( i == 1 ? "Text input" : "" ));
-				if ( i >= 2 && i - 2 < Globals.AppTouchscreenKeyboardKeysNames.length )
+				String buttonText = "";
+				if( i >= 2 && i <= 7 )
+					buttonText = p.getResources().getString(R.string.remap_screenkb_button) + (i - 2);
+				if( i >= 2 && i - 2 < Globals.AppTouchscreenKeyboardKeysNames.length )
 					buttonText = Globals.AppTouchscreenKeyboardKeysNames[i - 2];
+				if( i == 0 )
+					buttonText = "Joystick";
+				if( i == 1 )
+					buttonText = "Text input";
+				if( i == 8 )
+					buttonText = "Joystick 2";
 				p.setText(p.getResources().getString(R.string.screenkb_custom_layout_help) + "\n" + buttonText.replace("_", " "));
 			}
 
