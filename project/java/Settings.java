@@ -1733,7 +1733,7 @@ class Settings
 			}
 
 			for( int i = 0; i < Math.min(6, Globals.AppTouchscreenKeyboardKeysNames.length); i++ )
-				items[i+2] += " - " + Globals.AppTouchscreenKeyboardKeysNames[i];
+				items[i+2] = items[i+2] + " - " + Globals.AppTouchscreenKeyboardKeysNames[i];
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(p.getResources().getString(R.string.remap_screenkb));
@@ -1776,7 +1776,7 @@ class Settings
 			};
 
 			for( int i = 0; i < Math.min(6, Globals.AppTouchscreenKeyboardKeysNames.length); i++ )
-				items[i] += " - " + Globals.AppTouchscreenKeyboardKeysNames[i];
+				items[i] = items[i] + " - " + Globals.AppTouchscreenKeyboardKeysNames[i];
 
 			if( currentButton >= Globals.RemapScreenKbKeycode.length )
 			{
