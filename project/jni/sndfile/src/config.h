@@ -41,7 +41,7 @@
 #define HAVE_ENDIAN_H 1
 
 /* Will be set to 1 if flac, ogg and vorbis are available. */
-/* #define HAVE_EXTERNAL_LIBS 1 */
+#define HAVE_EXTERNAL_LIBS 1
 
 /* Set to 1 if the compile supports the struct hack. */
 #define HAVE_FLEXIBLE_ARRAY 1
@@ -213,7 +213,7 @@
 #define PACKAGE_VERSION "1.0.25"
 
 /* Set to maximum allowed value of sf_count_t type. */
-#define SF_COUNT_MAX 0x7FFFFFFFFFFFFFFFLL
+#define SF_COUNT_MAX 0x7FFFFFFFL
 
 /* The size of `double', as computed by sizeof. */
 #define SIZEOF_DOUBLE 8
@@ -243,7 +243,7 @@
 #define SIZEOF_OFF_T 4
 
 /* Set to sizeof (long) if unknown. */
-#define SIZEOF_SF_COUNT_T 8
+#define SIZEOF_SF_COUNT_T 4
 
 /* The size of `short', as computed by sizeof. */
 #define SIZEOF_SHORT 2
@@ -264,7 +264,7 @@
 #define STDC_HEADERS 1
 
 /* Set to long if unknown. */
-#define TYPEOF_SF_COUNT_T int64_t
+#define TYPEOF_SF_COUNT_T int32_t
 
 /* Set to 1 to use the native windows API */
 #define USE_WINDOWS_API 0
