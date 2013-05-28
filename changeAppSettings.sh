@@ -643,7 +643,7 @@ fi
 if [ -z "$AUTO" ]; then
 echo
 echo "Here you may type readme text, which will be shown during startup. Format is:"
-echo "Text in English, use \\n to separate lines"
+echo "Text in English, use \\\\n to separate lines (that's four backslashes, nice isn't it?)"
 echo "de:Text in Deutsch"
 echo "ru:Text in Russian, and so on"
 echo
@@ -918,7 +918,7 @@ echo "# Application command line parameters, including app name as 0-th param" >
 echo AppCmdline=\'$AppCmdline\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Here you may type readme text, which will be shown during startup. Format is:" >> AndroidAppSettings.cfg
-echo "# Text in English, use \\\\n to separate lines^de:Text in Deutsch^ru:Text in Russian, and so on" >> AndroidAppSettings.cfg
+echo "# Text in English, use \\\\\\\\\\\\\\\\n to separate lines^de:Text in Deutsch^ru:Text in Russian, and so on (that's four backslashes, nice isn't it?)" >> AndroidAppSettings.cfg
 echo ReadmeText=\'$ReadmeText\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Screen size is used by Google Play to prevent an app to be installed on devices with smaller screens" >> AndroidAppSettings.cfg

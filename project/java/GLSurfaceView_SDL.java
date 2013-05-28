@@ -37,6 +37,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.app.KeyguardManager;
 
 /**
  * An implementation of SurfaceView that uses the dedicated surface for
@@ -1100,6 +1101,10 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
         }
 
         private boolean needToWait() {
+            if (((KeyguardManager)getContext().getSystemService(Context.KEYGUARD_SERVICE)).inKeyguardRestrictedInputMode()) {
+                return true; // We're in lockscreen - sleep until user unlocks the device
+            }
+
             if (mDone) {
                 return false;
             }
