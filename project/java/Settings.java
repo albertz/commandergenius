@@ -355,7 +355,7 @@ class Settings
 			Log.i("SDL", "libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion());
 			if( cfgVersion != p.getApplicationVersion() )
 			{
-				DeleteFilesOnUpgrade();
+				DeleteFilesOnUpgrade(p);
 				if( Globals.ResetSdlConfigForThisVersion )
 				{
 					Log.i("SDL", "libSDL: old cfg version " + cfgVersion + ", our version " + p.getApplicationVersion() + " and we need to clean up config file");
@@ -370,7 +370,7 @@ class Settings
 		} catch( FileNotFoundException e ) {
 		} catch( SecurityException e ) {
 		} catch ( IOException e ) {
-			DeleteFilesOnUpgrade();
+			DeleteFilesOnUpgrade(p);
 			if( Globals.ResetSdlConfigForThisVersion )
 			{
 				Log.i("SDL", "libSDL: old cfg version unknown or too old, our version " + p.getApplicationVersion() + " and we need to clean up config file");
@@ -2608,7 +2608,8 @@ class Settings
 	{
 		if (dir.isDirectory()) {
 			String[] children = dir.list();
-			for (int i=0; i<children.length; i++) {
+			for (int i=0; i<children.length; i++)
+			{
 				boolean success = deleteRecursively(new File(dir, children[i]));
 				if (!success)
 					return false;
@@ -2616,16 +2617,31 @@ class Settings
 		}
 		return dir.delete();
 	}
-	public static void DeleteFilesOnUpgrade()
+	public static boolean deleteRecursivelyAndLog(File dir)
+	{
+		Log.v("SDL", "Deleting old file: " + dir.getAbsolutePath() + " exists " + dir.exists());
+		if (dir.isDirectory()) {
+			String[] children = dir.list();
+			for (int i=0; i<children.length; i++)
+			{
+				boolean success = deleteRecursively(new File(dir, children[i]));
+				if (!success)
+					return false;
+			}
+		}
+		return dir.delete();
+	}
+	public static void DeleteFilesOnUpgrade(final MainActivity p)
 	{
 		String [] files = Globals.DeleteFilesOnUpgrade.split(" ");
-		for(String path: files) {
+		for(String path: files)
+		{
 			if( path.equals("") )
 				continue;
-			File f = new File( Globals.DataDir + "/" + path );
-			if( !f.exists() )
-				continue;
-			deleteRecursively(f);
+			
+			deleteRecursivelyAndLog(new File( SdcardAppPath.getPath(p) + "/" + path ));
+			deleteRecursivelyAndLog(new File( p.getFilesDir().getAbsolutePath() + "/" + path ));
+			deleteRecursivelyAndLog(new File( SdcardAppPath.deprecatedPath(p) + "/" + path ));
 		}
 	}
 	public static void DeleteSdlConfigOnUpgradeAndRestart(final MainActivity p)
