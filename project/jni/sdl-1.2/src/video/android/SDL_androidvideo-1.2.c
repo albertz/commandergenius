@@ -115,7 +115,7 @@ int ANDROID_ToggleFullScreen(_THIS, int fullscreen)
 	return 1;
 }
 
-enum { SDL_NUMMODES = 55 };
+enum { SDL_NUMMODES = 56 };
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -322,7 +322,8 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[52]->w = 768; SDL_modelist[52]->h = 256; // For UAE4ALL2
 	SDL_modelist[53]->w = 768; SDL_modelist[53]->h = 262; // For UAE4ALL2
 	SDL_modelist[54]->w = 768; SDL_modelist[54]->h = 270; // For UAE4ALL2
-	SDL_modelist[55] = NULL;
+	SDL_modelist[55]->w = 1280; SDL_modelist[55]->h = 960; // For UQM-HD
+	SDL_modelist[56] = NULL;
 	// If you going to add another video mode, increase SDL_NUMMODES constant
 	
 	SDL_VideoInit_1_3(NULL, 0);
