@@ -2360,10 +2360,20 @@ class Settings
 			String readmes[] = Globals.ReadmeText.split("\\^");
 			String lang = new String(Locale.getDefault().getLanguage()) + ":";
 			String readme = readmes[0];
+			String buttonName = "", buttonUrl = "";
 			for( String r: readmes )
 			{
 				if( r.startsWith(lang) )
 					readme = r.substring(lang.length());
+				if( r.startsWith("button:") )
+				{
+					buttonName = r.substring("button:".length());
+					if( buttonName.indexOf(":") != -1 )
+					{
+						buttonUrl = buttonName.substring(buttonName.indexOf(":") + 1);
+						buttonName = buttonName.substring(0, buttonName.indexOf(":"));
+					}
+				}
 			}
 			readme = readme.trim();
 			if( readme.length() <= 2 )
@@ -2392,6 +2402,27 @@ class Settings
 			layout.setOrientation(LinearLayout.VERTICAL);
 			layout.addView(scroll);
 			layout.addView(ok);
+			if( buttonName.length() > 0 )
+			{
+				Button cancel = new Button(p);
+				cancel.setText(buttonName);
+				final String url = buttonUrl;
+				cancel.setOnClickListener(new View.OnClickListener()
+				{
+					public void onClick(View v)
+					{
+						if( url.length() > 0 )
+						{
+							Intent i = new Intent(Intent.ACTION_VIEW);
+							i.setData(Uri.parse(url));
+							p.startActivity(i);
+						}
+						alertDismiss[0].cancel();
+						System.exit(0);
+					}
+				});
+				layout.addView(cancel);
+			}
 			builder.setView(layout);
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
