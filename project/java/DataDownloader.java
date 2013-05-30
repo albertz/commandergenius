@@ -334,8 +334,10 @@ class DataDownloader extends Thread
 				Log.i("SDL", "Connecting to: " + url);
 				request = new HttpGet(url);
 				request.addHeader("Accept", "*/*");
-				if( partialDownloadLen > 0 )
+				if( partialDownloadLen > 0 ) {
 					request.addHeader("Range", "bytes=" + partialDownloadLen + "-");
+					Log.i("SDL", "Trying to resume download at pos " + partialDownloadLen);
+				}
 				try {
 					DefaultHttpClient client = HttpWithDisabledSslCertCheck();
 					client.getParams().setBooleanParameter("http.protocol.handle-redirects", true);
@@ -443,6 +445,8 @@ class DataDownloader extends Thread
 								Log.i("SDL", "Resuming download of file '" + path + "' at pos " + partialDownloadLen);
 							}
 						}
+						else
+							Log.i("SDL", "Server does not support partial downloads. " + (range.length == 0 ? "" : range[0].getValue()));
 					} catch (Exception e) { }
 				}
 				if( out == null )

@@ -508,7 +508,7 @@ class Settings
 							hidden = true;
 					}
 					if( ! hidden )
-						menuStack.add(m);
+						menuStack.add(0, m);
 				}
 			}
 			goBack(p);
