@@ -1,1172 +1,3 @@
-Index: uqm/hyper.c
-===================================================================
---- uqm/hyper.c	(revision 1307)
-+++ uqm/hyper.c	(working copy)
-@@ -1930,7 +1930,6 @@
- 	Color OldColor;
- 	CONTEXT OldContext;
- 	MENU_STATE MenuState;
--
- UnbatchGraphics ();
- 
- 	OldContext = SetContext (SpaceContext);
-Index: uqm/intro.c
-===================================================================
---- uqm/intro.c	(revision 1307)
-+++ uqm/intro.c	(working copy)
-@@ -909,7 +909,9 @@
- 	pis.MovieFrame = -1;
- 	pis.StartTime = GetTimeCounter ();
- 	pis.LastSyncTime = pis.StartTime;
-+	TFB_SetOnScreenKeyboard_Hidden ();
- 	DoInput (&pis, TRUE);
-+	TFB_SetOnScreenKeyboard_Menu();
- 
- 	SleepThreadUntil (FadeMusic (0, ONE_SECOND));
- 	StopMusic ();
-@@ -1001,7 +1003,9 @@
- 	vis.InputFunc = DoVideoInput;
- 	vis.CurVideo = ref;
- 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
-+	TFB_SetOnScreenKeyboard_Hidden ();
- 	DoInput (&vis, TRUE);
-+	TFB_SetOnScreenKeyboard_Menu ();
- 
- 	StopLegacyVideo (ref);
- 	FadeClearScreen ();
-@@ -1017,6 +1021,7 @@
- 	{
- 		return FALSE;
- 	}
-+
- 	if (!strcmp (resType, "STRTAB"))
- 	{
- 		STRING pres = CaptureStringTable (LoadStringTable (res));
-Index: uqm/intel.c
-===================================================================
---- uqm/intel.c	(revision 1307)
-+++ uqm/intel.c	(working copy)
-@@ -45,10 +45,10 @@
- 			// Allow a player to warp-escape in cyborg mode
- 			if (StarShipPtr->playerNr == RPG_PLAYER_NUM)
- 				InputState |= CurrentInputToBattleInput (
--						context->playerNr) & BATTLE_ESCAPE;
-+						context->playerNr, -1) & BATTLE_ESCAPE;
- 		}
- 		else
--			InputState = CurrentInputToBattleInput (context->playerNr);
-+			InputState = CurrentInputToBattleInput (context->playerNr, -1);
- 	}
- 	else if (!(PlayerControl[context->playerNr] & PSYTRON_CONTROL))
- 		InputState = 0;
-Index: uqm/menu.c
-===================================================================
---- uqm/menu.c	(revision 1307)
-+++ uqm/menu.c	(working copy)
-@@ -508,7 +508,7 @@
- 	s.origin.x = RADAR_X - r.corner.x;
- 	s.origin.y = RADAR_Y - r.corner.y;
- 	r.corner.x = s.origin.x - 1;
--	r.corner.y = s.origin.y - (11 << RESOLUTION_FACTOR); // JMS_GFX
-+	r.corner.y = s.origin.y - (40 << RESOLUTION_FACTOR); // JMS_GFX
- 	r.extent.width = RADAR_WIDTH + 2;
- 	BatchGraphics ();
- 	SetContextForeGroundColor (
-Index: uqm/controls.h
-===================================================================
---- uqm/controls.h	(revision 1307)
-+++ uqm/controls.h	(working copy)
-@@ -32,6 +32,7 @@
- 	KEY_WEAPON,
- 	KEY_SPECIAL,
- 	KEY_ESCAPE,
-+	KEY_THRUST,
- 	NUM_KEYS
- };
- enum {
-@@ -90,13 +91,14 @@
- #define BATTLE_ESCAPE     ((BATTLE_INPUT_STATE)(1 << 5))
- #define BATTLE_DOWN       ((BATTLE_INPUT_STATE)(1 << 6))
- 
--BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player);
-+BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player, int direction /* = -1 for no directional input */);
- BATTLE_INPUT_STATE PulsedInputToBattleInput (COUNT player);
- 
- extern CONTROLLER_INPUT_STATE CurrentInputState;
- extern CONTROLLER_INPUT_STATE PulsedInputState;
- extern volatile CONTROLLER_INPUT_STATE ImmediateInputState;
- extern CONTROL_TEMPLATE PlayerControls[];
-+extern BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu;
- 
- void UpdateInputState (void);
- extern void FlushInput (void);
-@@ -116,6 +118,8 @@
- BOOLEAN WaitForNoInput (TimePeriod duration, BOOLEAN resetInput);
- BOOLEAN WaitForNoInputUntil (TimeCount timeOut, BOOLEAN resetInput);
- 
-+extern BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction, int player);
-+
- void DoPopupWindow(const char *msg);
- 
- typedef void (InputFrameCallback) (void);
-Index: uqm/battle.c
-===================================================================
---- uqm/battle.c	(revision 1307)
-+++ uqm/battle.c	(working copy)
-@@ -16,6 +16,10 @@
-  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
-+#ifdef ANDROID
-+#include <android/log.h>
-+#endif
-+
- #include "battle.h"
- 
- #include "battlecontrols.h"
-@@ -43,6 +47,8 @@
- #include "libs/graphics/gfx_common.h"
- #include "libs/log.h"
- #include "libs/mathlib.h"
-+#include "globdata.h"
-+#include "libs/input/sdl/vcontrol.h"
- 
- 
- BYTE battle_counter[NUM_SIDES];
-@@ -137,7 +143,8 @@
- frameInputHuman (HumanInputContext *context, STARSHIP *StarShipPtr)
- {
- 	(void) StarShipPtr;
--	return CurrentInputToBattleInput (context->playerNr);
-+
-+	return CurrentInputToBattleInput (context->playerNr, StarShipPtr ? StarShipPtr->ShipFacing : -1);
- }
- 
- static void
-@@ -207,8 +214,11 @@
- 						StarShipPtr->ship_input_state |= SPECIAL;
- 
- 					if (CanRunAway && cur_player == 0 &&
--							(InputState & BATTLE_ESCAPE))
-+							((InputState & BATTLE_ESCAPE) || EmergencyEscapeWarpUnitActivatedFromMenu))
-+					{
-+						EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
- 						DoRunAway (StarShipPtr);
-+					}
- 				}
- 			}
- 
-@@ -399,6 +409,11 @@
- 
- 	LockMutex (GraphicsLock);
- 
-+	TFB_SetOnScreenKeyboard_Melee ();
-+	if (PlayerControl[1] & HUMAN_CONTROL) {
-+		TFB_SetOnScreenKeyboard_TwoPlayersMelee ();
-+	}
-+
- #if !(DEMO_MODE || CREATE_JOURNAL)
- 	if (LOBYTE (GLOBAL (CurrentActivity)) != SUPER_MELEE) {
- 		// In Supermelee, the RNG is already initialised.
-@@ -512,6 +527,8 @@
- 	UninitShips ();
- 	FreeBattleSong ();
- 
-+	TFB_SetOnScreenKeyboard_Menu ();
-+
- 	UnlockMutex (GraphicsLock);
- 	
- 	return (BOOLEAN) (num_ships < 0);
-Index: uqm/supermelee/melee.c
-===================================================================
---- uqm/supermelee/melee.c	(revision 1307)
-+++ uqm/supermelee/melee.c	(working copy)
-@@ -2124,7 +2124,7 @@
- 			PlayerControl[0] = HUMAN_CONTROL | STANDARD_RATING;
- 			Melee_LocalChange_team (&MenuState, 0,
- 					MenuState.load.preBuiltList[0]);
--			PlayerControl[1] = COMPUTER_CONTROL | STANDARD_RATING;
-+			PlayerControl[1] = HUMAN_CONTROL | STANDARD_RATING; // COMPUTER_CONTROL | STANDARD_RATING;
- 			Melee_LocalChange_team (&MenuState, 1,
- 					MenuState.load.preBuiltList[1]);
- 		}
-Index: uqm/gameinp.c
-===================================================================
---- uqm/gameinp.c	(revision 1307)
-+++ uqm/gameinp.c	(working copy)
-@@ -16,6 +16,7 @@
-  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
-+#include <stdlib.h>
- #include "controls.h"
- #include "battlecontrols.h"
- #include "init.h"
-@@ -32,11 +33,14 @@
- #include "libs/timelib.h"
- #include "libs/threadlib.h"
- 
--
-+#ifdef ANDROID
-+#define ACCELERATION_INCREMENT (ONE_SECOND)
-+#define MENU_REPEAT_DELAY (ONE_SECOND)
-+#else
- #define ACCELERATION_INCREMENT (ONE_SECOND / 12)
- #define MENU_REPEAT_DELAY (ONE_SECOND / 2)
-+#endif
- 
--
- typedef struct
- {
- 	BOOLEAN (*InputFunc) (void *pInputState);
-@@ -66,6 +70,7 @@
- 
- volatile BOOLEAN ExitRequested;
- volatile BOOLEAN GamePaused;
-+volatile BOOLEAN OnScreenKeyboardLocked;
- 
- static InputFrameCallback *inputCallback;
- 
-@@ -422,16 +427,10 @@
- }
- 
- static BATTLE_INPUT_STATE
--ControlInputToBattleInput (const int *keyState)
-+ControlInputToBattleInput (const int *keyState, COUNT player, int direction)
- {
- 	BATTLE_INPUT_STATE InputState = 0;
- 
--	if (keyState[KEY_UP])
--		InputState |= BATTLE_THRUST;
--	if (keyState[KEY_LEFT])
--		InputState |= BATTLE_LEFT;
--	if (keyState[KEY_RIGHT])
--		InputState |= BATTLE_RIGHT;
- 	if (keyState[KEY_WEAPON])
- 		InputState |= BATTLE_WEAPON;
- 	if (keyState[KEY_SPECIAL])
-@@ -441,21 +440,35 @@
- 	if (keyState[KEY_DOWN])
- 		InputState |= BATTLE_DOWN;
- 
-+	if(direction < 0)
-+	{
-+		if (keyState[KEY_LEFT])
-+			InputState |= BATTLE_LEFT;
-+		if (keyState[KEY_RIGHT])
-+			InputState |= BATTLE_RIGHT;
-+		if (keyState[KEY_UP])
-+			InputState |= BATTLE_THRUST;
-+	}
-+	else
-+	{
-+		InputState |= GetDirectionalJoystickInput(direction, player);
-+	}
-+
- 	return InputState;
- }
- 
- BATTLE_INPUT_STATE
--CurrentInputToBattleInput (COUNT player)
-+CurrentInputToBattleInput (COUNT player, int direction)
- {
- 	return ControlInputToBattleInput(
--			CurrentInputState.key[PlayerControls[player]]);
-+			CurrentInputState.key[PlayerControls[player]], player, direction);
- }
- 
- BATTLE_INPUT_STATE
- PulsedInputToBattleInput (COUNT player)
- {
- 	return ControlInputToBattleInput(
--			PulsedInputState.key[PlayerControls[player]]);
-+			PulsedInputState.key[PlayerControls[player]], player, -1);
- }
- 
- BOOLEAN
-@@ -500,3 +513,98 @@
- 	return result;
- }
- 
-+// Fast arctan2, returns angle in radians as integer, with fractional part in lower 16 bits
-+// Stolen from http://www.dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization , precision is said to be 0.07 rads
-+
-+#ifndef M_PI
-+#define M_PI 3.14159265358979323846
-+#endif
-+enum { atan2i_coeff_1 = ((int)(M_PI*65536.0/4)), atan2i_coeff_2 = (3*atan2i_coeff_1), atan2i_PI = (int)(M_PI * 65536.0), SHIP_DIRECTIONS = 16 };
-+
-+static inline int atan2i(int y, int x)
-+{
-+   int angle;
-+   int abs_y = abs(y);
-+   if( abs_y == 0 )
-+      abs_y = 1;
-+   if (x>=0)
-+   {
-+      angle = atan2i_coeff_1 - atan2i_coeff_1 * (x - abs_y) / (x + abs_y);
-+   }
-+   else
-+   {
-+      angle = atan2i_coeff_2 - atan2i_coeff_1 * (x + abs_y) / (abs_y - x);
-+   }
-+   if (y < 0)
-+      return(-angle);     // negate if in quad III or IV
-+   else
-+      return(angle);
-+}
-+
-+
-+BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction, int player)
-+{
-+	BATTLE_INPUT_STATE InputState = 0;
-+	static BOOLEAN JoystickThrust[NUM_PLAYERS] = { FALSE, FALSE };
-+	static BOOLEAN JoystickTapFlag[NUM_PLAYERS] = { FALSE, FALSE };
-+	static TimeCount JoystickTapTime[NUM_PLAYERS] = { 0, 0 };
-+
-+	if (CurrentInputState.key[PlayerControls[player]][KEY_THRUST])
-+		InputState |= BATTLE_THRUST;
-+
-+	if(VControl_GetJoysticksAmount() <= 0)
-+	{
-+		if (CurrentInputState.key[PlayerControls[player]][KEY_LEFT])
-+			InputState |= BATTLE_LEFT;
-+		if (CurrentInputState.key[PlayerControls[player]][KEY_RIGHT])
-+			InputState |= BATTLE_RIGHT;
-+		if (CurrentInputState.key[PlayerControls[player]][KEY_UP])
-+			InputState |= BATTLE_THRUST;
-+	}
-+	else
-+	{
-+		int axisX = VControl_GetJoyAxis(0, player * 2), axisY = VControl_GetJoyAxis(0, player * 2 + 1);
-+		if( axisX != 0 || axisY != 0 )
-+		{
-+			int angle = atan2i(axisY, axisX), diff;
-+			// Convert it to 16 directions used by Melee
-+			angle += atan2i_PI / SHIP_DIRECTIONS;
-+			if( angle < 0 )
-+				angle += atan2i_PI * 2;
-+			if( angle > atan2i_PI * 2 )
-+				angle -= atan2i_PI * 2;
-+			angle = angle * SHIP_DIRECTIONS / atan2i_PI / 2;
-+			
-+			diff = angle - direction - SHIP_DIRECTIONS / 4;
-+			while( diff >= SHIP_DIRECTIONS )
-+				diff -= SHIP_DIRECTIONS;
-+			while( diff < 0 )
-+				diff += SHIP_DIRECTIONS;
-+
-+			if( diff < SHIP_DIRECTIONS / 2 )
-+				InputState |= BATTLE_LEFT;
-+			if( diff > SHIP_DIRECTIONS / 2 )
-+				InputState |= BATTLE_RIGHT;
-+
-+			if( !JoystickTapFlag[player] )
-+			{
-+				JoystickTapFlag[player] = TRUE;
-+				if( GetTimeCounter() < JoystickTapTime[player] + ONE_SECOND )
-+					JoystickThrust[player] = !JoystickThrust[player];
-+				else
-+					JoystickThrust[player] = TRUE;
-+			}
-+			if( JoystickThrust[player] )
-+				InputState |= BATTLE_THRUST;
-+		}
-+		else
-+		{
-+			if( JoystickTapFlag[player] )
-+			{
-+				JoystickTapFlag[player] = FALSE;
-+				JoystickTapTime[player] = GetTimeCounter();
-+			}
-+		}
-+	}
-+	return InputState;
-+}
-Index: uqm/status.c
-===================================================================
---- uqm/status.c	(revision 1307)
-+++ uqm/status.c	(working copy)
-@@ -328,7 +328,7 @@
- 				StarShipPtr->RaceDescPtr->characteristics.energy_wait;
- 
- 		DeltaStatistics (ShipInfoPtr, status_y_offsets[StarShipPtr->playerNr],
--				0, energy_delta);
-+				0, energy_delta, StarShipPtr->playerNr);
- 	}
- 
- 	return (retval);
-@@ -370,7 +370,7 @@
- 	}
- 
- 	DeltaStatistics (ShipInfoPtr, status_y_offsets[StarShipPtr->playerNr],
--			crew_delta, 0);
-+			crew_delta, 0, StarShipPtr->playerNr);
- 
- 	return (retval);
- }
-Index: uqm/status.h
-===================================================================
---- uqm/status.h	(revision 1307)
-+++ uqm/status.h	(working copy)
-@@ -36,9 +36,15 @@
- #define CAPTAIN_HEIGHT RES_STAT_SCALE(30) // JMS_GFX
- #define CAPTAIN_XOFFS ((STATUS_WIDTH - CAPTAIN_WIDTH) >> 1) // JMS_GFX
- #define CAPTAIN_YOFFS (SHIP_INFO_HEIGHT + (4 << RESOLUTION_FACTOR)) // JMS_GFX
--#define SHIP_STATUS_HEIGHT (STATUS_HEIGHT >> 1)
--#define BAD_GUY_YOFFS 0
--#define GOOD_GUY_YOFFS SHIP_STATUS_HEIGHT
-+#define SHIP_STATUS_HEIGHT ((STATUS_HEIGHT >> 1) - (17 << RESOLUTION_FACTOR))
-+#define BAD_GUY_YOFFS (-1 << RESOLUTION_FACTOR)
-+#define GOOD_GUY_YOFFS (STATUS_HEIGHT - SHIP_STATUS_HEIGHT)
-+#define HORIZ_CREW_ENERGY_SIZE (18 << RESOLUTION_FACTOR)
-+#define HORIZ_CREW_XOFFS (2 << RESOLUTION_FACTOR)
-+#define BAD_GUY_HORIZ_CREW_YOFFS (BAD_GUY_YOFFS + SHIP_STATUS_HEIGHT + (HORIZ_CREW_ENERGY_SIZE >> 1))
-+#define GOOD_GUY_HORIZ_CREW_YOFFS (GOOD_GUY_YOFFS - HORIZ_CREW_ENERGY_SIZE + (1 << RESOLUTION_FACTOR))
-+#define BAD_GUY_HORIZ_ENERGY_YOFFS (BAD_GUY_YOFFS + SHIP_STATUS_HEIGHT)
-+#define GOOD_GUY_HORIZ_ENERGY_YOFFS (GOOD_GUY_YOFFS - (HORIZ_CREW_ENERGY_SIZE >> 1) + (1 << RESOLUTION_FACTOR))
- #define STARCON_TEXT_HEIGHT (7 << RESOLUTION_FACTOR) // JMS_GFX
- #define TINY_TEXT_HEIGHT (9 << RESOLUTION_FACTOR) // JMS_GFX
- #define BATTLE_CREW_X RES_STAT_SCALE(10) // JMS_GFX
-@@ -54,7 +60,7 @@
- extern void InitShipStatus (SHIP_INFO *ShipInfoPtr, STARSHIP *StarShipPtr, RECT *pClipRect, BOOLEAN inMeleeMenu);
- 			// StarShipPtr or pClipRect can be NULL
- extern void DeltaStatistics (SHIP_INFO *ShipInfoPtr, COORD y_offs,
--		SIZE crew_delta, SIZE energy_delta);
-+		SIZE crew_delta, SIZE energy_delta, SIZE player_num);
- extern void DrawBattleCrewAmount (SHIP_INFO *ShipInfoPtr, COORD y_offs);
- 
- extern void DrawCaptainsWindow (STARSHIP *StarShipPtr);
-Index: uqm/planets/solarsys.c
-===================================================================
---- uqm/planets/solarsys.c	(revision 1307)
-+++ uqm/planets/solarsys.c	(working copy)
-@@ -1245,18 +1245,19 @@
- static void
- ProcessShipControls (void)
- {
--	COUNT index;
-+	COUNT index = GetFrameIndex (GLOBAL (ShipStamp.frame));;
- 	SIZE delta_x, delta_y;
-+	BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index, 0);
- 
--	if (CurrentInputState.key[PlayerControls[0]][KEY_UP])
-+	if (InputState & BATTLE_THRUST)
- 		delta_y = -1;
- 	else
- 		delta_y = 0;
- 
- 	delta_x = 0;
--	if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
-+	if (InputState & BATTLE_LEFT)
- 		delta_x -= 1;
--	if (CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
-+	if (InputState & BATTLE_RIGHT)
- 		delta_x += 1;
- 		
- 	if (delta_x || delta_y < 0)
-@@ -1269,7 +1270,6 @@
- 	else
- 		delta_y = 0;
- 
--	index = GetFrameIndex (GLOBAL (ShipStamp.frame));
- 	if (pSolarSysState->turn_counter)
- 		--pSolarSysState->turn_counter;
- 	else if (delta_x)
-@@ -2473,7 +2473,9 @@
- 	InitSolarSys ();
- 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
- 	SolarSysState.InputFunc = DoIpFlight;
-+	TFB_SetOnScreenKeyboard_Melee ();
- 	DoInput (&SolarSysState, FALSE);
-+	TFB_SetOnScreenKeyboard_Menu ();
- 	UninitSolarSys ();
- 	pSolarSysState = 0;
- }
-@@ -2751,13 +2753,17 @@
- 
- 	if (pSS->InOrbit)
- 	{	// CheckShipLocation() or InitSolarSys() sent us to orbital
-+		TFB_SetOnScreenKeyboard_Menu ();
- 		EnterPlanetOrbit ();
-+		TFB_SetOnScreenKeyboard_Melee ();
- 		SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
- 		pSS->InOrbit = FALSE;
- 	}
- 	else if (cancel || LastActivity == CHECK_LOAD)
- 	{
-+		TFB_SetOnScreenKeyboard_Menu ();
- 		SolarSysMenu ();
-+		TFB_SetOnScreenKeyboard_Melee ();
- 		SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
- 	}
- 	else
-Index: uqm/planets/pstarmap.c
-===================================================================
---- uqm/planets/pstarmap.c	(revision 1307)
-+++ uqm/planets/pstarmap.c	(working copy)
-@@ -2005,7 +2005,9 @@
- 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
- 	SetMenuRepeatDelay (MIN_ACCEL_DELAY, MAX_ACCEL_DELAY, STEP_ACCEL_DELAY,
- 			TRUE);
-+	TFB_SetOnScreenKeyboard_Starmap ();
- 	DoInput (&MenuState, FALSE);
-+	TFB_SetOnScreenKeyboard_Menu ();
- 	SetMenuSounds (MENU_SOUND_ARROWS, MENU_SOUND_SELECT);
- 	SetDefaultMenuRepeatDelay ();
- 
-Index: uqm/planets/lander.c
-===================================================================
---- uqm/planets/lander.c	(revision 1307)
-+++ uqm/planets/lander.c	(working copy)
-@@ -1852,15 +1852,15 @@
- 		if (crew_left)
- 		{
- 			SIZE index = GetFrameIndex (LanderFrame[0]);
-+			BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index, 0);
- 			if (turn_wait)
- 				--turn_wait;
--			else if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT] ||
--					CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
-+			else if ((InputState & BATTLE_LEFT) || (InputState & BATTLE_RIGHT))
- 			{
- 				COUNT landerSpeedNumer;
- 				COUNT angle;
- 
--				if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
-+				if (InputState & BATTLE_LEFT)
- 					--index;
- 				else
- 					++index;
-@@ -1884,7 +1884,7 @@
- 				turn_wait = SHUTTLE_TURN_WAIT;
- 			}
- 
--			if (!CurrentInputState.key[PlayerControls[0]][KEY_UP])
-+			if (!(InputState & BATTLE_THRUST))
- 			{
- 				dx = 0;
- 				dy = 0;
-@@ -2212,7 +2212,9 @@
- 	landerInputState.Initialized = FALSE;
- 	landerInputState.InputFunc = DoPlanetSide;
- 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
-+	TFB_SetOnScreenKeyboard_Melee ();
- 	DoInput (&landerInputState, FALSE);
-+	TFB_SetOnScreenKeyboard_Menu ();
- 
- 	if (!(GLOBAL (CurrentActivity) & CHECK_ABORT))
- 	{
-Index: uqm/confirm.c
-===================================================================
---- uqm/confirm.c	(revision 1307)
-+++ uqm/confirm.c	(working copy)
-@@ -34,9 +34,11 @@
- #include <stdlib.h>
- 
- 
--#define CONFIRM_WIN_WIDTH (80 << RESOLUTION_FACTOR) // JMS_GFX
-+#define CONFIRM_WIN_WIDTH (160 << RESOLUTION_FACTOR) // JMS_GFX
- #define CONFIRM_WIN_HEIGHT (22 << RESOLUTION_FACTOR) // JMS_GFX
- 
-+BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
-+
- static void
- DrawConfirmationWindow (BOOLEAN answer)
- {
-@@ -67,6 +69,8 @@
- 	font_DrawText (&t);
- 	t.baseline.x += (r.extent.width >> 1);
- 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE + 2); // "No"
-+	if (GLOBAL (CurrentActivity) & IN_BATTLE)
-+		t.pStr = "Escape unit"; // GAME_STRING (QUITMENU_STRING_BASE + 3); // TODO: modify gamestrings.txt 
- 	SetContextForeGroundColor (answer ? MENU_TEXT_COLOR : MENU_HIGHLIGHT_COLOR);	
- 	font_DrawText (&t);
- 
-@@ -111,8 +115,16 @@
- 
- 		FlushInput ();
- 		done = FALSE;
-+
-+		#ifdef ANDROID
-+		if ( !(GLOBAL (CurrentActivity) & IN_BATTLE) ) {
-+			/* Abort immediately */
-+			response = TRUE;
-+			done = TRUE;
-+		}
-+		#endif
- 		
--		do {
-+		while (!done) {
- 			// Forbid recursive calls or pausing here!
- 			ExitRequested = FALSE;
- 			GamePaused = FALSE;
-@@ -139,7 +151,7 @@
- 				PlayMenuSound (MENU_SOUND_MOVE);
- 			}
- 			SleepThread (ONE_SECOND / 30);
--		} while (!done);
-+		}
- 
- 		// Restore the screen under the confirmation window
- 		DrawStamp (&s);
-@@ -152,6 +164,8 @@
- 		}		
- 		else
- 		{
-+			if (GLOBAL (CurrentActivity) & IN_BATTLE)
-+				EmergencyEscapeWarpUnitActivatedFromMenu = TRUE;
- 			result = FALSE;
- 		}
- 		ExitRequested = FALSE;
-Index: uqm/comm/syreen/syreenc.c
-===================================================================
---- uqm/comm/syreen/syreenc.c	(revision 1307)
-+++ uqm/comm/syreen/syreenc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../syreen/strings.h"
- 
- #include "libs/sound/sound.h"
- #include "uqm/build.h"
-Index: uqm/comm/chmmr/chmmrc.c
-===================================================================
---- uqm/comm/chmmr/chmmrc.c	(revision 1307)
-+++ uqm/comm/chmmr/chmmrc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../chmmr/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/hyper.h"
-Index: uqm/comm/slyland/slyland.c
-===================================================================
---- uqm/comm/slyland/slyland.c	(revision 1307)
-+++ uqm/comm/slyland/slyland.c	(working copy)
-@@ -16,10 +16,10 @@
-  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
-+#include "../slyland/strings.h"
-+#include <stdlib.h>
- #include "../commall.h"
--#include <stdlib.h>
- #include "resinst.h"
--#include "strings.h"
- 
- #include "options.h"
- #include "uqm/battle.h"
-Index: uqm/comm/ilwrath/ilwrathc.c
-===================================================================
---- uqm/comm/ilwrath/ilwrathc.c	(revision 1307)
-+++ uqm/comm/ilwrath/ilwrathc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../ilwrath/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: uqm/comm/supox/supoxc.c
-===================================================================
---- uqm/comm/supox/supoxc.c	(revision 1307)
-+++ uqm/comm/supox/supoxc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../supox/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: uqm/comm/vux/vuxc.c
-===================================================================
---- uqm/comm/vux/vuxc.c	(revision 1307)
-+++ uqm/comm/vux/vuxc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../vux/strings.h"
- 
- static LOCDATA vux_desc_1x =
- {
-Index: uqm/comm/zoqfot/zoqfotc.c
-===================================================================
---- uqm/comm/zoqfot/zoqfotc.c	(revision 1307)
-+++ uqm/comm/zoqfot/zoqfotc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../zoqfot/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: uqm/comm/shofixt/shofixt.c
-===================================================================
---- uqm/comm/shofixt/shofixt.c	(revision 1307)
-+++ uqm/comm/shofixt/shofixt.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../shofixt/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: uqm/comm/pkunk/pkunkc.c
-===================================================================
---- uqm/comm/pkunk/pkunkc.c	(revision 1307)
-+++ uqm/comm/pkunk/pkunkc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../pkunk/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: uqm/comm/rebel/rebel.c
-===================================================================
---- uqm/comm/rebel/rebel.c	(revision 1307)
-+++ uqm/comm/rebel/rebel.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "../yehat/resinst.h"
--#include "strings.h"
-+#include "../rebel/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: uqm/comm/arilou/arilouc.c
-===================================================================
---- uqm/comm/arilou/arilouc.c	(revision 1307)
-+++ uqm/comm/arilou/arilouc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../arilou/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: uqm/comm/spahome/spahome.c
-===================================================================
---- uqm/comm/spahome/spahome.c	(revision 1307)
-+++ uqm/comm/spahome/spahome.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "../spathi/resinst.h"
--#include "strings.h"
-+#include "../spahome/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: uqm/comm/starbas/starbas.c
-===================================================================
---- uqm/comm/starbas/starbas.c	(revision 1307)
-+++ uqm/comm/starbas/starbas.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "../comandr/resinst.h"
--#include "strings.h"
-+#include "../starbas/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/setup.h"
-Index: uqm/comm/utwig/utwigc.c
-===================================================================
---- uqm/comm/utwig/utwigc.c	(revision 1307)
-+++ uqm/comm/utwig/utwigc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../utwig/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: uqm/comm/umgah/umgahc.c
-===================================================================
---- uqm/comm/umgah/umgahc.c	(revision 1307)
-+++ uqm/comm/umgah/umgahc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../umgah/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: uqm/comm/talkpet/talkpet.c
-===================================================================
---- uqm/comm/talkpet/talkpet.c	(revision 1307)
-+++ uqm/comm/talkpet/talkpet.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../talkpet/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: uqm/comm/thradd/thraddc.c
-===================================================================
---- uqm/comm/thradd/thraddc.c	(revision 1307)
-+++ uqm/comm/thradd/thraddc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../thradd/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: uqm/comm/melnorm/melnorm.c
-===================================================================
---- uqm/comm/melnorm/melnorm.c	(revision 1307)
-+++ uqm/comm/melnorm/melnorm.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../melnorm/strings.h"
- 
- #include "uqm/gameev.h"
- #include "uqm/setup.h"
-Index: uqm/comm/yehat/yehatc.c
-===================================================================
---- uqm/comm/yehat/yehatc.c	(revision 1307)
-+++ uqm/comm/yehat/yehatc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../yehat/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: uqm/comm/orz/orzc.c
-===================================================================
---- uqm/comm/orz/orzc.c	(revision 1307)
-+++ uqm/comm/orz/orzc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../orz/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: uqm/comm/urquan/urquanc.c
-===================================================================
---- uqm/comm/urquan/urquanc.c	(revision 1307)
-+++ uqm/comm/urquan/urquanc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../urquan/strings.h"
- 
- static LOCDATA urquan_desc =
- {
-Index: uqm/comm/slyhome/slyhome.c
-===================================================================
---- uqm/comm/slyhome/slyhome.c	(revision 1307)
-+++ uqm/comm/slyhome/slyhome.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../slyhome/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: uqm/comm/comandr/comandr.c
-===================================================================
---- uqm/comm/comandr/comandr.c	(revision 1307)
-+++ uqm/comm/comandr/comandr.c	(working copy)
-@@ -20,7 +20,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../comandr/strings.h"
- 
- #include "uqm/setup.h"
- #include "uqm/sis.h"
-Index: uqm/comm/blackur/blackurc.c
-===================================================================
---- uqm/comm/blackur/blackurc.c	(revision 1307)
-+++ uqm/comm/blackur/blackurc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../blackur/strings.h"
- 
- static LOCDATA blackurq_desc =
- {
-Index: uqm/comm/mycon/myconc.c
-===================================================================
---- uqm/comm/mycon/myconc.c	(revision 1307)
-+++ uqm/comm/mycon/myconc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../mycon/strings.h"
- 
- #include "uqm/gameev.h"
- #include "libs/mathlib.h"
-Index: uqm/comm/spathi/spathic.c
-===================================================================
---- uqm/comm/spathi/spathic.c	(revision 1307)
-+++ uqm/comm/spathi/spathic.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../spathi/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: uqm/comm/druuge/druugec.c
-===================================================================
---- uqm/comm/druuge/druugec.c	(revision 1307)
-+++ uqm/comm/druuge/druugec.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../druuge/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/setup.h"
-Index: uqm/shipstat.c
-===================================================================
---- uqm/shipstat.c	(revision 1307)
-+++ uqm/shipstat.c	(working copy)
-@@ -144,6 +144,45 @@
- 	DrawFilledRectangle (&r);
- }
- 
-+static void
-+DrawCrewEnergyBoxOutline (RECT *box)
-+{
-+	RECT r;
-+
-+	SetContextForeGroundColor (
-+			BUILD_COLOR (MAKE_RGB15 (0x10, 0x10, 0x10), 0x19));
-+	r.corner.x = box->corner.x;
-+	r.corner.y = box->corner.y + box->extent.height - 1;
-+	r.extent.width = box->extent.width;
-+	r.extent.height = 1;
-+	DrawFilledRectangle (&r);
-+	r.corner.x = box->corner.x + box->extent.width - 1;
-+	r.corner.y = box->corner.y;
-+	r.extent.width = 1;
-+	r.extent.height = box->extent.height;
-+	DrawFilledRectangle (&r);
-+
-+	SetContextForeGroundColor (
-+			BUILD_COLOR (MAKE_RGB15 (0x08, 0x08, 0x08), 0x1F));
-+	r.corner.x = box->corner.x;
-+	r.corner.y = box->corner.y;
-+	r.extent.width = box->extent.width;
-+	r.extent.height = 1;
-+	DrawFilledRectangle (&r);
-+	r.corner.x = box->corner.x;
-+	r.corner.y = box->corner.y;
-+	r.extent.width = 1;
-+	r.extent.height = box->extent.height;
-+	DrawFilledRectangle (&r);
-+
-+	SetContextForeGroundColor (BLACK_COLOR);
-+	r.corner.x = box->corner.x + 1;
-+	r.corner.y = box->corner.y + 1;
-+	r.extent.width = box->extent.width - 2;
-+	r.extent.height = box->extent.height - 2;
-+	DrawFilledRectangle (&r);
-+}
-+
- void
- InitShipStatus (SHIP_INFO *SIPtr, STARSHIP *StarShipPtr, RECT *pClipRect, BOOLEAN inMeleeMenu)
- {
-@@ -256,6 +295,28 @@
- 		r.extent.height = energy_height;
- 		r.corner.y = y - r.extent.height + GAUGE_YOFFS + 1;
- 		DrawFilledRectangle (&r);
-+
-+		// TODO: replace the above ugly code with DrawCrewEnergyBoxOutline(), but I don't want to touch that as long as it works
-+		r.corner.x = RESOLUTION_FACTOR == 2 ? 3 : RESOLUTION_FACTOR;
-+		r.corner.y = BAD_GUY_HORIZ_CREW_YOFFS;
-+		if (StarShipPtr && StarShipPtr->playerNr == RPG_PLAYER_NUM)
-+			r.corner.y = GOOD_GUY_HORIZ_CREW_YOFFS;
-+		r.corner.y += RESOLUTION_FACTOR == 2 ? 3 : RESOLUTION_FACTOR;
-+		r.extent.width = 1000;
-+		r.extent.height = STAT_WIDTH + (2 << RESOLUTION_FACTOR);
-+		SetContextForeGroundColor (BLACK_COLOR);
-+		DrawFilledRectangle (&r);
-+		r.extent.width = crew_height + (2 << RESOLUTION_FACTOR);
-+		DrawCrewEnergyBoxOutline (&r);
-+		r.corner.y = BAD_GUY_HORIZ_ENERGY_YOFFS;
-+		if (StarShipPtr && StarShipPtr->playerNr == RPG_PLAYER_NUM)
-+			r.corner.y = GOOD_GUY_HORIZ_ENERGY_YOFFS;
-+		r.corner.y += RESOLUTION_FACTOR == 2 ? 3 : RESOLUTION_FACTOR;
-+		r.extent.width = 1000;
-+		SetContextForeGroundColor (BLACK_COLOR);
-+		DrawFilledRectangle (&r);
-+		r.extent.width = energy_height + (2 << RESOLUTION_FACTOR);
-+		DrawCrewEnergyBoxOutline (&r);
- 	}
- 	
- 	if (!StarShipPtr || StarShipPtr->captains_name_index)
-@@ -315,7 +376,7 @@
- 		// DeltaStatistics() below will add specified values to these
- 		SIPtr->crew_level = 0;
- 		SIPtr->energy_level = 0;
--		DeltaStatistics (SIPtr, y, crew_delta, energy_delta);
-+		DeltaStatistics (SIPtr, y, crew_delta, energy_delta, StarShipPtr ? StarShipPtr->playerNr : NPC_PLAYER_NUM);
- 	}
- 	
- 	UnbatchGraphics ();
-@@ -333,10 +394,11 @@
- //      crew_delta <= ShipInfoPtr->max_crew - ShipInfoPtr->crew_level
- void
- DeltaStatistics (SHIP_INFO *ShipInfoPtr, COORD y_offs,
--		SIZE crew_delta, SIZE energy_delta)
-+		SIZE crew_delta, SIZE energy_delta, SIZE player_num)
- {
--	COORD x, y;
--	RECT r;
-+	COORD x, y, y2;
-+	RECT r, r2;
-+	SIZE max_crew_size, max_energy_size;
- 
- 	if (crew_delta == 0 && energy_delta == 0)
- 		return;
-@@ -346,13 +408,15 @@
- 
- 	r.extent.width = UNIT_WIDTH;
- 	r.extent.height = UNIT_HEIGHT;
-+#define MIN(a, b) (((a) <= (b)) ? (a) : (b))
-+	max_crew_size = MIN(ShipInfoPtr->max_crew, MAX_CREW_SIZE);
-+	max_energy_size = ShipInfoPtr->max_energy;
- 
- 	if (crew_delta != 0)
- 	{
- 		COUNT oldNumBlocks, newNumBlocks, blockI;
- 		COUNT newCrewLevel;
- 
--#define MIN(a, b) (((a) <= (b)) ? (a) : (b))
- 		oldNumBlocks = MIN(ShipInfoPtr->crew_level, MAX_CREW_SIZE);
- 		newCrewLevel = ShipInfoPtr->crew_level + crew_delta;
- 		newNumBlocks = MIN(newCrewLevel, MAX_CREW_SIZE);
-@@ -419,10 +483,33 @@
- 			// Always print a number for the SIS in the full game.
- 			DrawBattleCrewAmount (ShipInfoPtr, y_offs);
- 		}
-+
-+		y2 = BAD_GUY_HORIZ_CREW_YOFFS;
-+		if (player_num == RPG_PLAYER_NUM)
-+			y2 = GOOD_GUY_HORIZ_CREW_YOFFS;
-+
-+		r2.extent.height = UNIT_WIDTH;
-+		r2.extent.width = UNIT_HEIGHT;
-+
-+		for (blockI = 0; blockI < max_crew_size; blockI++)
-+		{
-+			SetContextForeGroundColor (
-+					(ShipInfoPtr->ship_flags & CREW_IMMUNE) ?
-+					ROBOT_UNIT_COLOR : CREW_UNIT_COLOR);
-+			if (blockI >= newNumBlocks)
-+				SetContextForeGroundColor (BLACK_COLOR);
-+
-+			r2.corner.x = HORIZ_CREW_XOFFS + (blockI >> 1) * (UNIT_HEIGHT + 1);
-+			r2.corner.y = y2 + HORIZ_CREW_XOFFS;
-+			if (blockI & 1)
-+				r2.corner.y += UNIT_WIDTH + 1;
-+			DrawFilledRectangle (&r2);
-+		}
- 	}
- 
- 	if (energy_delta != 0)
- 	{
-+		COUNT blockI;
- 		if (energy_delta > 0)
- 		{
- #define FUEL_UNIT_COLOR BUILD_COLOR (MAKE_RGB15 (0x14, 0x00, 0x00), 0x04)
-@@ -458,6 +545,26 @@
- 				--ShipInfoPtr->energy_level;
- 			} while (++energy_delta);
- 		}
-+
-+		y2 = BAD_GUY_HORIZ_ENERGY_YOFFS;
-+		if (player_num == RPG_PLAYER_NUM)
-+			y2 = GOOD_GUY_HORIZ_ENERGY_YOFFS;
-+
-+		r2.extent.height = UNIT_WIDTH;
-+		r2.extent.width = UNIT_HEIGHT;
-+
-+		for (blockI = 0; blockI < max_energy_size; blockI++)
-+		{
-+			SetContextForeGroundColor (FUEL_UNIT_COLOR);
-+			if (blockI >= ShipInfoPtr->energy_level)
-+				SetContextForeGroundColor (BLACK_COLOR);
-+
-+			r2.corner.x = HORIZ_CREW_XOFFS + (blockI >> 1) * (UNIT_HEIGHT + 1);
-+			r2.corner.y = y2 + HORIZ_CREW_XOFFS;
-+			if (blockI & 1)
-+				r2.corner.y += UNIT_WIDTH + 1;
-+			DrawFilledRectangle (&r2);
-+		}
- 	}
- }
- 
-Index: uqm/starcon.c
-===================================================================
---- uqm/starcon.c	(revision 1307)
-+++ uqm/starcon.c	(working copy)
-@@ -240,6 +240,7 @@
- 		if (LastActivity == (CHECK_LOAD | CHECK_RESTART))
- 			AskNameForCaptainAndShip();
- 
-+		TFB_SetOnScreenKeyboard_Melee ();
- 		do
- 		{
- #ifdef DEBUG
 Index: options.c
 ===================================================================
 --- options.c	(revision 1307)
@@ -1232,30 +63,19 @@ Index: uqm.c
  	TFB_PreInit ();
  	mem_init ();
  	InitThreadSystem ();
-Index: libs/log/msgbox_stub.c
+Index: libs/sound/decoders/oggaud.c
 ===================================================================
---- libs/log/msgbox_stub.c	(revision 1307)
-+++ libs/log/msgbox_stub.c	(working copy)
-@@ -16,6 +16,9 @@
- 
- #include "msgbox.h"
- #include "loginternal.h"
-+#ifdef ANDROID
-+#include <android/log.h>
-+#endif
- 
- void
- log_displayBox (const /*UTF-8*/char *title, int isError,
-@@ -26,6 +29,9 @@
- 	// So just inform the user of our predicament
- 	fprintf (streamOut, "Do not know how to display %s box\n",
- 			isError ? "an error" : "a");
-+#ifdef ANDROID
-+	__android_log_print( isError ? ANDROID_LOG_FATAL : ANDROID_LOG_INFO, "Ur-Quan Masters", "%s: %s", title, msg );
-+#endif
- 	
- 	// Suppress the compiler warnings in any case.
- 	(void)title;
+--- libs/sound/decoders/oggaud.c	(revision 1307)
++++ libs/sound/decoders/oggaud.c	(working copy)
+@@ -270,7 +270,7 @@
+ 	// this is the closest to a frame there is in ogg vorbis stream
+ 	// doesn't seem to be a func to retrive it
+ #ifdef OVCODEC_TREMOR
+-	return ova->vf.os->pageno;
++	return ova->vf.os.pageno;
+ #else
+ 	return ova->vf.os.pageno;
+ #endif  /* OVCODEC_TREMOR */
 Index: libs/log/uqmlog.c
 ===================================================================
 --- libs/log/uqmlog.c	(revision 1307)
@@ -1308,6 +128,30 @@ Index: libs/log/msgbox_win.c
  }
 -
 +#endif
+Index: libs/log/msgbox_stub.c
+===================================================================
+--- libs/log/msgbox_stub.c	(revision 1307)
++++ libs/log/msgbox_stub.c	(working copy)
+@@ -16,6 +16,9 @@
+ 
+ #include "msgbox.h"
+ #include "loginternal.h"
++#ifdef ANDROID
++#include <android/log.h>
++#endif
+ 
+ void
+ log_displayBox (const /*UTF-8*/char *title, int isError,
+@@ -26,6 +29,9 @@
+ 	// So just inform the user of our predicament
+ 	fprintf (streamOut, "Do not know how to display %s box\n",
+ 			isError ? "an error" : "a");
++#ifdef ANDROID
++	__android_log_print( isError ? ANDROID_LOG_FATAL : ANDROID_LOG_INFO, "Ur-Quan Masters", "%s: %s", title, msg );
++#endif
+ 	
+ 	// Suppress the compiler warnings in any case.
+ 	(void)title;
 Index: libs/resource/filecntl.c
 ===================================================================
 --- libs/resource/filecntl.c	(revision 1307)
@@ -1331,21 +175,6 @@ Index: libs/resource/filecntl.c
  
  	fp = uio_fopen (dir, filename, mode);
  
-Index: libs/uio/zip/zip.c
-===================================================================
---- libs/uio/zip/zip.c	(revision 1307)
-+++ libs/uio/zip/zip.c	(working copy)
-@@ -1366,6 +1366,10 @@
- 				gPFileData->gid = (uid_t) makeUInt16(buf[12], buf[13]);
- 				break;
- 			}
-+			case 0x7875:  // 'Unix string UID/GID'
-+				// Just skip it
-+				break;
-+
- 			default:
- #ifdef DEBUG
- 				fprintf(stderr, "Debug: Extra field 0x%04x unsupported, "
 Index: libs/uio/io.c
 ===================================================================
 --- libs/uio/io.c	(revision 1307)
@@ -1413,6 +242,21 @@ Index: libs/uio/io.c
  		int savedErrno = errno;
  		uio_free(name);
  		uio_PDirHandle_unref(pDirHandle);
+Index: libs/uio/zip/zip.c
+===================================================================
+--- libs/uio/zip/zip.c	(revision 1307)
++++ libs/uio/zip/zip.c	(working copy)
+@@ -1366,6 +1366,10 @@
+ 				gPFileData->gid = (uid_t) makeUInt16(buf[12], buf[13]);
+ 				break;
+ 			}
++			case 0x7875:  // 'Unix string UID/GID'
++				// Just skip it
++				break;
++
+ 			default:
+ #ifdef DEBUG
+ 				fprintf(stderr, "Debug: Extra field 0x%04x unsupported, "
 Index: libs/md5/md5.c
 ===================================================================
 --- libs/md5/md5.c	(revision 1307)
@@ -1425,20 +269,6 @@ Index: libs/md5/md5.c
 +#include "config.h"
  
  #include "md5.h"
- 
-Index: libs/input/sdl/vcontrol.h
-===================================================================
---- libs/input/sdl/vcontrol.h	(revision 1307)
-+++ libs/input/sdl/vcontrol.h	(working copy)
-@@ -76,6 +76,9 @@
- void VControl_ProcessJoyAxis (int port, int axis, int value);
- void VControl_ProcessJoyHat (int port, int which, Uint8 value);
- 
-+int VControl_GetJoyAxis(int port, int axis);
-+int VControl_GetJoysticksAmount();
-+
- /* Force the input into the blank state.  For preventing "sticky" keys. */
- void VControl_ResetInput (void);
  
 Index: libs/input/sdl/input.c
 ===================================================================
@@ -1524,6 +354,20 @@ Index: libs/input/sdl/vcontrol.c
  void
  VControl_ResetInput (void)
  {
+Index: libs/input/sdl/vcontrol.h
+===================================================================
+--- libs/input/sdl/vcontrol.h	(revision 1307)
++++ libs/input/sdl/vcontrol.h	(working copy)
+@@ -76,6 +76,9 @@
+ void VControl_ProcessJoyAxis (int port, int axis, int value);
+ void VControl_ProcessJoyHat (int port, int which, Uint8 value);
+ 
++int VControl_GetJoyAxis(int port, int axis);
++int VControl_GetJoysticksAmount();
++
+ /* Force the input into the blank state.  For preventing "sticky" keys. */
+ void VControl_ResetInput (void);
+ 
 Index: libs/graphics/gfx_common.h
 ===================================================================
 --- libs/graphics/gfx_common.h	(revision 1307)
@@ -1539,42 +383,6 @@ Index: libs/graphics/gfx_common.h
 +void TFB_SetOnScreenKeyboard_TwoPlayersMelee (void);
 +
  #endif
-Index: libs/graphics/sdl/pure.c
-===================================================================
---- libs/graphics/sdl/pure.c	(revision 1307)
-+++ libs/graphics/sdl/pure.c	(working copy)
-@@ -128,6 +128,7 @@
- {
- 	int i, videomode_flags;
- 	SDL_PixelFormat conv_fmt;
-+	int BPP = 32;
- 	
- 	GraphicsDriver = driver;
- 
-@@ -169,6 +170,14 @@
- 		}
- 	}
- 
-+#ifdef ANDROID
-+	videomode_flags = SDL_SWSURFACE;
-+	//ScreenWidthActual = 1280;
-+	//ScreenHeightActual = 960;
-+	graphics_backend = &pure_unscaled_backend;
-+	BPP = 24;
-+#endif
-+
- 	videomode_flags |= SDL_ANYFORMAT;
- 	if (flags & TFB_GFXFLAGS_FULLSCREEN)
- 		videomode_flags |= SDL_FULLSCREEN;
-@@ -176,7 +185,7 @@
- 	/* We'll ask for a 32bpp frame, but it doesn't really matter, because we've set
- 	   SDL_ANYFORMAT */
- 	SDL_Video = SDL_SetVideoMode (ScreenWidthActual, ScreenHeightActual, 
--		32, videomode_flags);
-+		BPP, videomode_flags);
- 
- 	if (SDL_Video == NULL)
- 	{
 Index: libs/graphics/sdl/sdl_common.c
 ===================================================================
 --- libs/graphics/sdl/sdl_common.c	(revision 1307)
@@ -1767,19 +575,42 @@ Index: libs/graphics/sdl/sdl_common.h
 +void TFB_InitOnScreenKeyboard (void);
 +
  #endif
-Index: libs/sound/decoders/oggaud.c
+Index: libs/graphics/sdl/pure.c
 ===================================================================
---- libs/sound/decoders/oggaud.c	(revision 1307)
-+++ libs/sound/decoders/oggaud.c	(working copy)
-@@ -270,7 +270,7 @@
- 	// this is the closest to a frame there is in ogg vorbis stream
- 	// doesn't seem to be a func to retrive it
- #ifdef OVCODEC_TREMOR
--	return ova->vf.os->pageno;
-+	return ova->vf.os.pageno;
- #else
- 	return ova->vf.os.pageno;
- #endif  /* OVCODEC_TREMOR */
+--- libs/graphics/sdl/pure.c	(revision 1307)
++++ libs/graphics/sdl/pure.c	(working copy)
+@@ -128,6 +128,7 @@
+ {
+ 	int i, videomode_flags;
+ 	SDL_PixelFormat conv_fmt;
++	int BPP = 32;
+ 	
+ 	GraphicsDriver = driver;
+ 
+@@ -169,6 +170,14 @@
+ 		}
+ 	}
+ 
++#ifdef ANDROID
++	videomode_flags = SDL_SWSURFACE;
++	//ScreenWidthActual = 1280;
++	//ScreenHeightActual = 960;
++	graphics_backend = &pure_unscaled_backend;
++	BPP = 24;
++#endif
++
+ 	videomode_flags |= SDL_ANYFORMAT;
+ 	if (flags & TFB_GFXFLAGS_FULLSCREEN)
+ 		videomode_flags |= SDL_FULLSCREEN;
+@@ -176,7 +185,7 @@
+ 	/* We'll ask for a 32bpp frame, but it doesn't really matter, because we've set
+ 	   SDL_ANYFORMAT */
+ 	SDL_Video = SDL_SetVideoMode (ScreenWidthActual, ScreenHeightActual, 
+-		32, videomode_flags);
++		BPP, videomode_flags);
+ 
+ 	if (SDL_Video == NULL)
+ 	{
 Index: config_unix.h
 ===================================================================
 --- config_unix.h	(revision 0)
@@ -1848,3 +679,1185 @@ Index: config_unix.h
 +
 +#endif  /* _CONFIG_UNIX_H */
 +
+Index: uqm/controls.h
+===================================================================
+--- uqm/controls.h	(revision 1307)
++++ uqm/controls.h	(working copy)
+@@ -32,6 +32,7 @@
+ 	KEY_WEAPON,
+ 	KEY_SPECIAL,
+ 	KEY_ESCAPE,
++	KEY_THRUST,
+ 	NUM_KEYS
+ };
+ enum {
+@@ -90,13 +91,14 @@
+ #define BATTLE_ESCAPE     ((BATTLE_INPUT_STATE)(1 << 5))
+ #define BATTLE_DOWN       ((BATTLE_INPUT_STATE)(1 << 6))
+ 
+-BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player);
++BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player, int direction /* = -1 for no directional input */);
+ BATTLE_INPUT_STATE PulsedInputToBattleInput (COUNT player);
+ 
+ extern CONTROLLER_INPUT_STATE CurrentInputState;
+ extern CONTROLLER_INPUT_STATE PulsedInputState;
+ extern volatile CONTROLLER_INPUT_STATE ImmediateInputState;
+ extern CONTROL_TEMPLATE PlayerControls[];
++extern BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu;
+ 
+ void UpdateInputState (void);
+ extern void FlushInput (void);
+@@ -116,6 +118,8 @@
+ BOOLEAN WaitForNoInput (TimePeriod duration, BOOLEAN resetInput);
+ BOOLEAN WaitForNoInputUntil (TimeCount timeOut, BOOLEAN resetInput);
+ 
++extern BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction, int player);
++
+ void DoPopupWindow(const char *msg);
+ 
+ typedef void (InputFrameCallback) (void);
+Index: uqm/starcon.c
+===================================================================
+--- uqm/starcon.c	(revision 1307)
++++ uqm/starcon.c	(working copy)
+@@ -240,6 +240,7 @@
+ 		if (LastActivity == (CHECK_LOAD | CHECK_RESTART))
+ 			AskNameForCaptainAndShip();
+ 
++		TFB_SetOnScreenKeyboard_Melee ();
+ 		do
+ 		{
+ #ifdef DEBUG
+Index: uqm/hyper.c
+===================================================================
+--- uqm/hyper.c	(revision 1307)
++++ uqm/hyper.c	(working copy)
+@@ -1930,7 +1930,6 @@
+ 	Color OldColor;
+ 	CONTEXT OldContext;
+ 	MENU_STATE MenuState;
+-
+ UnbatchGraphics ();
+ 
+ 	OldContext = SetContext (SpaceContext);
+Index: uqm/intro.c
+===================================================================
+--- uqm/intro.c	(revision 1307)
++++ uqm/intro.c	(working copy)
+@@ -909,7 +909,9 @@
+ 	pis.MovieFrame = -1;
+ 	pis.StartTime = GetTimeCounter ();
+ 	pis.LastSyncTime = pis.StartTime;
++	TFB_SetOnScreenKeyboard_Hidden ();
+ 	DoInput (&pis, TRUE);
++	TFB_SetOnScreenKeyboard_Menu();
+ 
+ 	SleepThreadUntil (FadeMusic (0, ONE_SECOND));
+ 	StopMusic ();
+@@ -1001,7 +1003,9 @@
+ 	vis.InputFunc = DoVideoInput;
+ 	vis.CurVideo = ref;
+ 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
++	TFB_SetOnScreenKeyboard_Hidden ();
+ 	DoInput (&vis, TRUE);
++	TFB_SetOnScreenKeyboard_Menu ();
+ 
+ 	StopLegacyVideo (ref);
+ 	FadeClearScreen ();
+@@ -1017,6 +1021,7 @@
+ 	{
+ 		return FALSE;
+ 	}
++
+ 	if (!strcmp (resType, "STRTAB"))
+ 	{
+ 		STRING pres = CaptureStringTable (LoadStringTable (res));
+Index: uqm/battle.c
+===================================================================
+--- uqm/battle.c	(revision 1307)
++++ uqm/battle.c	(working copy)
+@@ -16,6 +16,10 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
++#ifdef ANDROID
++#include <android/log.h>
++#endif
++
+ #include "battle.h"
+ 
+ #include "battlecontrols.h"
+@@ -43,6 +47,8 @@
+ #include "libs/graphics/gfx_common.h"
+ #include "libs/log.h"
+ #include "libs/mathlib.h"
++#include "globdata.h"
++#include "libs/input/sdl/vcontrol.h"
+ 
+ 
+ BYTE battle_counter[NUM_SIDES];
+@@ -137,7 +143,8 @@
+ frameInputHuman (HumanInputContext *context, STARSHIP *StarShipPtr)
+ {
+ 	(void) StarShipPtr;
+-	return CurrentInputToBattleInput (context->playerNr);
++
++	return CurrentInputToBattleInput (context->playerNr, StarShipPtr ? StarShipPtr->ShipFacing : -1);
+ }
+ 
+ static void
+@@ -207,8 +214,11 @@
+ 						StarShipPtr->ship_input_state |= SPECIAL;
+ 
+ 					if (CanRunAway && cur_player == 0 &&
+-							(InputState & BATTLE_ESCAPE))
++							((InputState & BATTLE_ESCAPE) || EmergencyEscapeWarpUnitActivatedFromMenu))
++					{
++						EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
+ 						DoRunAway (StarShipPtr);
++					}
+ 				}
+ 			}
+ 
+@@ -399,6 +409,11 @@
+ 
+ 	LockMutex (GraphicsLock);
+ 
++	TFB_SetOnScreenKeyboard_Melee ();
++	if (PlayerControl[1] & HUMAN_CONTROL) {
++		TFB_SetOnScreenKeyboard_TwoPlayersMelee ();
++	}
++
+ #if !(DEMO_MODE || CREATE_JOURNAL)
+ 	if (LOBYTE (GLOBAL (CurrentActivity)) != SUPER_MELEE) {
+ 		// In Supermelee, the RNG is already initialised.
+@@ -512,6 +527,8 @@
+ 	UninitShips ();
+ 	FreeBattleSong ();
+ 
++	TFB_SetOnScreenKeyboard_Menu ();
++
+ 	UnlockMutex (GraphicsLock);
+ 	
+ 	return (BOOLEAN) (num_ships < 0);
+Index: uqm/supermelee/melee.c
+===================================================================
+--- uqm/supermelee/melee.c	(revision 1307)
++++ uqm/supermelee/melee.c	(working copy)
+@@ -2124,7 +2124,7 @@
+ 			PlayerControl[0] = HUMAN_CONTROL | STANDARD_RATING;
+ 			Melee_LocalChange_team (&MenuState, 0,
+ 					MenuState.load.preBuiltList[0]);
+-			PlayerControl[1] = COMPUTER_CONTROL | STANDARD_RATING;
++			PlayerControl[1] = HUMAN_CONTROL | STANDARD_RATING; // COMPUTER_CONTROL | STANDARD_RATING;
+ 			Melee_LocalChange_team (&MenuState, 1,
+ 					MenuState.load.preBuiltList[1]);
+ 		}
+Index: uqm/intel.c
+===================================================================
+--- uqm/intel.c	(revision 1307)
++++ uqm/intel.c	(working copy)
+@@ -45,10 +45,10 @@
+ 			// Allow a player to warp-escape in cyborg mode
+ 			if (StarShipPtr->playerNr == RPG_PLAYER_NUM)
+ 				InputState |= CurrentInputToBattleInput (
+-						context->playerNr) & BATTLE_ESCAPE;
++						context->playerNr, -1) & BATTLE_ESCAPE;
+ 		}
+ 		else
+-			InputState = CurrentInputToBattleInput (context->playerNr);
++			InputState = CurrentInputToBattleInput (context->playerNr, -1);
+ 	}
+ 	else if (!(PlayerControl[context->playerNr] & PSYTRON_CONTROL))
+ 		InputState = 0;
+Index: uqm/status.c
+===================================================================
+--- uqm/status.c	(revision 1307)
++++ uqm/status.c	(working copy)
+@@ -328,7 +328,7 @@
+ 				StarShipPtr->RaceDescPtr->characteristics.energy_wait;
+ 
+ 		DeltaStatistics (ShipInfoPtr, status_y_offsets[StarShipPtr->playerNr],
+-				0, energy_delta);
++				0, energy_delta, StarShipPtr->playerNr);
+ 	}
+ 
+ 	return (retval);
+@@ -370,7 +370,7 @@
+ 	}
+ 
+ 	DeltaStatistics (ShipInfoPtr, status_y_offsets[StarShipPtr->playerNr],
+-			crew_delta, 0);
++			crew_delta, 0, StarShipPtr->playerNr);
+ 
+ 	return (retval);
+ }
+Index: uqm/status.h
+===================================================================
+--- uqm/status.h	(revision 1307)
++++ uqm/status.h	(working copy)
+@@ -36,9 +36,15 @@
+ #define CAPTAIN_HEIGHT RES_STAT_SCALE(30) // JMS_GFX
+ #define CAPTAIN_XOFFS ((STATUS_WIDTH - CAPTAIN_WIDTH) >> 1) // JMS_GFX
+ #define CAPTAIN_YOFFS (SHIP_INFO_HEIGHT + (4 << RESOLUTION_FACTOR)) // JMS_GFX
+-#define SHIP_STATUS_HEIGHT (STATUS_HEIGHT >> 1)
+-#define BAD_GUY_YOFFS 0
+-#define GOOD_GUY_YOFFS SHIP_STATUS_HEIGHT
++#define SHIP_STATUS_HEIGHT ((STATUS_HEIGHT >> 1) - (17 << RESOLUTION_FACTOR))
++#define BAD_GUY_YOFFS (-1 << RESOLUTION_FACTOR)
++#define GOOD_GUY_YOFFS (STATUS_HEIGHT - SHIP_STATUS_HEIGHT)
++#define HORIZ_CREW_ENERGY_SIZE (18 << RESOLUTION_FACTOR)
++#define HORIZ_CREW_XOFFS (2 << RESOLUTION_FACTOR)
++#define BAD_GUY_HORIZ_CREW_YOFFS (BAD_GUY_YOFFS + SHIP_STATUS_HEIGHT + (HORIZ_CREW_ENERGY_SIZE >> 1))
++#define GOOD_GUY_HORIZ_CREW_YOFFS (GOOD_GUY_YOFFS - HORIZ_CREW_ENERGY_SIZE + (1 << RESOLUTION_FACTOR))
++#define BAD_GUY_HORIZ_ENERGY_YOFFS (BAD_GUY_YOFFS + SHIP_STATUS_HEIGHT)
++#define GOOD_GUY_HORIZ_ENERGY_YOFFS (GOOD_GUY_YOFFS - (HORIZ_CREW_ENERGY_SIZE >> 1) + (1 << RESOLUTION_FACTOR))
+ #define STARCON_TEXT_HEIGHT (7 << RESOLUTION_FACTOR) // JMS_GFX
+ #define TINY_TEXT_HEIGHT (9 << RESOLUTION_FACTOR) // JMS_GFX
+ #define BATTLE_CREW_X RES_STAT_SCALE(10) // JMS_GFX
+@@ -54,7 +60,7 @@
+ extern void InitShipStatus (SHIP_INFO *ShipInfoPtr, STARSHIP *StarShipPtr, RECT *pClipRect, BOOLEAN inMeleeMenu);
+ 			// StarShipPtr or pClipRect can be NULL
+ extern void DeltaStatistics (SHIP_INFO *ShipInfoPtr, COORD y_offs,
+-		SIZE crew_delta, SIZE energy_delta);
++		SIZE crew_delta, SIZE energy_delta, SIZE player_num);
+ extern void DrawBattleCrewAmount (SHIP_INFO *ShipInfoPtr, COORD y_offs);
+ 
+ extern void DrawCaptainsWindow (STARSHIP *StarShipPtr);
+Index: uqm/comm/vux/vuxc.c
+===================================================================
+--- uqm/comm/vux/vuxc.c	(revision 1307)
++++ uqm/comm/vux/vuxc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../vux/strings.h"
+ 
+ static LOCDATA vux_desc_1x =
+ {
+Index: uqm/comm/shofixt/shofixt.c
+===================================================================
+--- uqm/comm/shofixt/shofixt.c	(revision 1307)
++++ uqm/comm/shofixt/shofixt.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../shofixt/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: uqm/comm/pkunk/pkunkc.c
+===================================================================
+--- uqm/comm/pkunk/pkunkc.c	(revision 1307)
++++ uqm/comm/pkunk/pkunkc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../pkunk/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/spathi/spathic.c
+===================================================================
+--- uqm/comm/spathi/spathic.c	(revision 1307)
++++ uqm/comm/spathi/spathic.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../spathi/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/comm/rebel/rebel.c
+===================================================================
+--- uqm/comm/rebel/rebel.c	(revision 1307)
++++ uqm/comm/rebel/rebel.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "../yehat/resinst.h"
+-#include "strings.h"
++#include "../rebel/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/comm/druuge/druugec.c
+===================================================================
+--- uqm/comm/druuge/druugec.c	(revision 1307)
++++ uqm/comm/druuge/druugec.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../druuge/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/setup.h"
+Index: uqm/comm/spahome/spahome.c
+===================================================================
+--- uqm/comm/spahome/spahome.c	(revision 1307)
++++ uqm/comm/spahome/spahome.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "../spathi/resinst.h"
+-#include "strings.h"
++#include "../spahome/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/starbas/starbas.c
+===================================================================
+--- uqm/comm/starbas/starbas.c	(revision 1307)
++++ uqm/comm/starbas/starbas.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "../comandr/resinst.h"
+-#include "strings.h"
++#include "../starbas/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/setup.h"
+Index: uqm/comm/utwig/utwigc.c
+===================================================================
+--- uqm/comm/utwig/utwigc.c	(revision 1307)
++++ uqm/comm/utwig/utwigc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../utwig/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/umgah/umgahc.c
+===================================================================
+--- uqm/comm/umgah/umgahc.c	(revision 1307)
++++ uqm/comm/umgah/umgahc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../umgah/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/comm/talkpet/talkpet.c
+===================================================================
+--- uqm/comm/talkpet/talkpet.c	(revision 1307)
++++ uqm/comm/talkpet/talkpet.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../talkpet/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/comm/syreen/syreenc.c
+===================================================================
+--- uqm/comm/syreen/syreenc.c	(revision 1307)
++++ uqm/comm/syreen/syreenc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../syreen/strings.h"
+ 
+ #include "libs/sound/sound.h"
+ #include "uqm/build.h"
+Index: uqm/comm/melnorm/melnorm.c
+===================================================================
+--- uqm/comm/melnorm/melnorm.c	(revision 1307)
++++ uqm/comm/melnorm/melnorm.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../melnorm/strings.h"
+ 
+ #include "uqm/gameev.h"
+ #include "uqm/setup.h"
+Index: uqm/comm/yehat/yehatc.c
+===================================================================
+--- uqm/comm/yehat/yehatc.c	(revision 1307)
++++ uqm/comm/yehat/yehatc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../yehat/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/orz/orzc.c
+===================================================================
+--- uqm/comm/orz/orzc.c	(revision 1307)
++++ uqm/comm/orz/orzc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../orz/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/comm/slyhome/slyhome.c
+===================================================================
+--- uqm/comm/slyhome/slyhome.c	(revision 1307)
++++ uqm/comm/slyhome/slyhome.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../slyhome/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: uqm/comm/zoqfot/zoqfotc.c
+===================================================================
+--- uqm/comm/zoqfot/zoqfotc.c	(revision 1307)
++++ uqm/comm/zoqfot/zoqfotc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../zoqfot/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/comandr/comandr.c
+===================================================================
+--- uqm/comm/comandr/comandr.c	(revision 1307)
++++ uqm/comm/comandr/comandr.c	(working copy)
+@@ -20,7 +20,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../comandr/strings.h"
+ 
+ #include "uqm/setup.h"
+ #include "uqm/sis.h"
+Index: uqm/comm/blackur/blackurc.c
+===================================================================
+--- uqm/comm/blackur/blackurc.c	(revision 1307)
++++ uqm/comm/blackur/blackurc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../blackur/strings.h"
+ 
+ static LOCDATA blackurq_desc =
+ {
+Index: uqm/comm/mycon/myconc.c
+===================================================================
+--- uqm/comm/mycon/myconc.c	(revision 1307)
++++ uqm/comm/mycon/myconc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../mycon/strings.h"
+ 
+ #include "uqm/gameev.h"
+ #include "libs/mathlib.h"
+Index: uqm/comm/arilou/arilouc.c
+===================================================================
+--- uqm/comm/arilou/arilouc.c	(revision 1307)
++++ uqm/comm/arilou/arilouc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../arilou/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: uqm/comm/chmmr/chmmrc.c
+===================================================================
+--- uqm/comm/chmmr/chmmrc.c	(revision 1307)
++++ uqm/comm/chmmr/chmmrc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../chmmr/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/hyper.h"
+Index: uqm/comm/thradd/thraddc.c
+===================================================================
+--- uqm/comm/thradd/thraddc.c	(revision 1307)
++++ uqm/comm/thradd/thraddc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../thradd/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: uqm/comm/slyland/slyland.c
+===================================================================
+--- uqm/comm/slyland/slyland.c	(revision 1307)
++++ uqm/comm/slyland/slyland.c	(working copy)
+@@ -16,10 +16,10 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
++#include "../slyland/strings.h"
++#include <stdlib.h>
+ #include "../commall.h"
+-#include <stdlib.h>
+ #include "resinst.h"
+-#include "strings.h"
+ 
+ #include "options.h"
+ #include "uqm/battle.h"
+Index: uqm/comm/ilwrath/ilwrathc.c
+===================================================================
+--- uqm/comm/ilwrath/ilwrathc.c	(revision 1307)
++++ uqm/comm/ilwrath/ilwrathc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../ilwrath/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: uqm/comm/urquan/urquanc.c
+===================================================================
+--- uqm/comm/urquan/urquanc.c	(revision 1307)
++++ uqm/comm/urquan/urquanc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../urquan/strings.h"
+ 
+ static LOCDATA urquan_desc =
+ {
+Index: uqm/comm/supox/supoxc.c
+===================================================================
+--- uqm/comm/supox/supoxc.c	(revision 1307)
++++ uqm/comm/supox/supoxc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../supox/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: uqm/shipstat.c
+===================================================================
+--- uqm/shipstat.c	(revision 1307)
++++ uqm/shipstat.c	(working copy)
+@@ -144,6 +144,45 @@
+ 	DrawFilledRectangle (&r);
+ }
+ 
++static void
++DrawCrewEnergyBoxOutline (RECT *box)
++{
++	RECT r;
++
++	SetContextForeGroundColor (
++			BUILD_COLOR (MAKE_RGB15 (0x10, 0x10, 0x10), 0x19));
++	r.corner.x = box->corner.x;
++	r.corner.y = box->corner.y + box->extent.height - 1;
++	r.extent.width = box->extent.width;
++	r.extent.height = 1;
++	DrawFilledRectangle (&r);
++	r.corner.x = box->corner.x + box->extent.width - 1;
++	r.corner.y = box->corner.y;
++	r.extent.width = 1;
++	r.extent.height = box->extent.height;
++	DrawFilledRectangle (&r);
++
++	SetContextForeGroundColor (
++			BUILD_COLOR (MAKE_RGB15 (0x08, 0x08, 0x08), 0x1F));
++	r.corner.x = box->corner.x;
++	r.corner.y = box->corner.y;
++	r.extent.width = box->extent.width;
++	r.extent.height = 1;
++	DrawFilledRectangle (&r);
++	r.corner.x = box->corner.x;
++	r.corner.y = box->corner.y;
++	r.extent.width = 1;
++	r.extent.height = box->extent.height;
++	DrawFilledRectangle (&r);
++
++	SetContextForeGroundColor (BLACK_COLOR);
++	r.corner.x = box->corner.x + 1;
++	r.corner.y = box->corner.y + 1;
++	r.extent.width = box->extent.width - 2;
++	r.extent.height = box->extent.height - 2;
++	DrawFilledRectangle (&r);
++}
++
+ void
+ InitShipStatus (SHIP_INFO *SIPtr, STARSHIP *StarShipPtr, RECT *pClipRect, BOOLEAN inMeleeMenu)
+ {
+@@ -256,6 +295,28 @@
+ 		r.extent.height = energy_height;
+ 		r.corner.y = y - r.extent.height + GAUGE_YOFFS + 1;
+ 		DrawFilledRectangle (&r);
++
++		// TODO: replace the above ugly code with DrawCrewEnergyBoxOutline(), but I don't want to touch that as long as it works
++		r.corner.x = RESOLUTION_FACTOR == 2 ? 3 : RESOLUTION_FACTOR;
++		r.corner.y = BAD_GUY_HORIZ_CREW_YOFFS;
++		if (StarShipPtr && StarShipPtr->playerNr == RPG_PLAYER_NUM)
++			r.corner.y = GOOD_GUY_HORIZ_CREW_YOFFS;
++		r.corner.y += RESOLUTION_FACTOR == 2 ? 3 : RESOLUTION_FACTOR;
++		r.extent.width = 1000;
++		r.extent.height = STAT_WIDTH + (2 << RESOLUTION_FACTOR);
++		SetContextForeGroundColor (BLACK_COLOR);
++		DrawFilledRectangle (&r);
++		r.extent.width = crew_height + (2 << RESOLUTION_FACTOR);
++		DrawCrewEnergyBoxOutline (&r);
++		r.corner.y = BAD_GUY_HORIZ_ENERGY_YOFFS;
++		if (StarShipPtr && StarShipPtr->playerNr == RPG_PLAYER_NUM)
++			r.corner.y = GOOD_GUY_HORIZ_ENERGY_YOFFS;
++		r.corner.y += RESOLUTION_FACTOR == 2 ? 3 : RESOLUTION_FACTOR;
++		r.extent.width = 1000;
++		SetContextForeGroundColor (BLACK_COLOR);
++		DrawFilledRectangle (&r);
++		r.extent.width = energy_height + (2 << RESOLUTION_FACTOR);
++		DrawCrewEnergyBoxOutline (&r);
+ 	}
+ 	
+ 	if (!StarShipPtr || StarShipPtr->captains_name_index)
+@@ -315,7 +376,7 @@
+ 		// DeltaStatistics() below will add specified values to these
+ 		SIPtr->crew_level = 0;
+ 		SIPtr->energy_level = 0;
+-		DeltaStatistics (SIPtr, y, crew_delta, energy_delta);
++		DeltaStatistics (SIPtr, y, crew_delta, energy_delta, StarShipPtr ? StarShipPtr->playerNr : NPC_PLAYER_NUM);
+ 	}
+ 	
+ 	UnbatchGraphics ();
+@@ -333,10 +394,11 @@
+ //      crew_delta <= ShipInfoPtr->max_crew - ShipInfoPtr->crew_level
+ void
+ DeltaStatistics (SHIP_INFO *ShipInfoPtr, COORD y_offs,
+-		SIZE crew_delta, SIZE energy_delta)
++		SIZE crew_delta, SIZE energy_delta, SIZE player_num)
+ {
+-	COORD x, y;
+-	RECT r;
++	COORD x, y, y2;
++	RECT r, r2;
++	SIZE max_crew_size, max_energy_size;
+ 
+ 	if (crew_delta == 0 && energy_delta == 0)
+ 		return;
+@@ -346,13 +408,15 @@
+ 
+ 	r.extent.width = UNIT_WIDTH;
+ 	r.extent.height = UNIT_HEIGHT;
++#define MIN(a, b) (((a) <= (b)) ? (a) : (b))
++	max_crew_size = MIN(ShipInfoPtr->max_crew, MAX_CREW_SIZE);
++	max_energy_size = ShipInfoPtr->max_energy;
+ 
+ 	if (crew_delta != 0)
+ 	{
+ 		COUNT oldNumBlocks, newNumBlocks, blockI;
+ 		COUNT newCrewLevel;
+ 
+-#define MIN(a, b) (((a) <= (b)) ? (a) : (b))
+ 		oldNumBlocks = MIN(ShipInfoPtr->crew_level, MAX_CREW_SIZE);
+ 		newCrewLevel = ShipInfoPtr->crew_level + crew_delta;
+ 		newNumBlocks = MIN(newCrewLevel, MAX_CREW_SIZE);
+@@ -419,10 +483,33 @@
+ 			// Always print a number for the SIS in the full game.
+ 			DrawBattleCrewAmount (ShipInfoPtr, y_offs);
+ 		}
++
++		y2 = BAD_GUY_HORIZ_CREW_YOFFS;
++		if (player_num == RPG_PLAYER_NUM)
++			y2 = GOOD_GUY_HORIZ_CREW_YOFFS;
++
++		r2.extent.height = UNIT_WIDTH;
++		r2.extent.width = UNIT_HEIGHT;
++
++		for (blockI = 0; blockI < max_crew_size; blockI++)
++		{
++			SetContextForeGroundColor (
++					(ShipInfoPtr->ship_flags & CREW_IMMUNE) ?
++					ROBOT_UNIT_COLOR : CREW_UNIT_COLOR);
++			if (blockI >= newNumBlocks)
++				SetContextForeGroundColor (BLACK_COLOR);
++
++			r2.corner.x = HORIZ_CREW_XOFFS + (blockI >> 1) * (UNIT_HEIGHT + 1);
++			r2.corner.y = y2 + HORIZ_CREW_XOFFS;
++			if (blockI & 1)
++				r2.corner.y += UNIT_WIDTH + 1;
++			DrawFilledRectangle (&r2);
++		}
+ 	}
+ 
+ 	if (energy_delta != 0)
+ 	{
++		COUNT blockI;
+ 		if (energy_delta > 0)
+ 		{
+ #define FUEL_UNIT_COLOR BUILD_COLOR (MAKE_RGB15 (0x14, 0x00, 0x00), 0x04)
+@@ -458,6 +545,26 @@
+ 				--ShipInfoPtr->energy_level;
+ 			} while (++energy_delta);
+ 		}
++
++		y2 = BAD_GUY_HORIZ_ENERGY_YOFFS;
++		if (player_num == RPG_PLAYER_NUM)
++			y2 = GOOD_GUY_HORIZ_ENERGY_YOFFS;
++
++		r2.extent.height = UNIT_WIDTH;
++		r2.extent.width = UNIT_HEIGHT;
++
++		for (blockI = 0; blockI < max_energy_size; blockI++)
++		{
++			SetContextForeGroundColor (FUEL_UNIT_COLOR);
++			if (blockI >= ShipInfoPtr->energy_level)
++				SetContextForeGroundColor (BLACK_COLOR);
++
++			r2.corner.x = HORIZ_CREW_XOFFS + (blockI >> 1) * (UNIT_HEIGHT + 1);
++			r2.corner.y = y2 + HORIZ_CREW_XOFFS;
++			if (blockI & 1)
++				r2.corner.y += UNIT_WIDTH + 1;
++			DrawFilledRectangle (&r2);
++		}
+ 	}
+ }
+ 
+Index: uqm/gameinp.c
+===================================================================
+--- uqm/gameinp.c	(revision 1307)
++++ uqm/gameinp.c	(working copy)
+@@ -16,6 +16,7 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
++#include <stdlib.h>
+ #include "controls.h"
+ #include "battlecontrols.h"
+ #include "init.h"
+@@ -32,11 +33,14 @@
+ #include "libs/timelib.h"
+ #include "libs/threadlib.h"
+ 
+-
++#ifdef ANDROID
++#define ACCELERATION_INCREMENT (ONE_SECOND)
++#define MENU_REPEAT_DELAY (ONE_SECOND)
++#else
+ #define ACCELERATION_INCREMENT (ONE_SECOND / 12)
+ #define MENU_REPEAT_DELAY (ONE_SECOND / 2)
++#endif
+ 
+-
+ typedef struct
+ {
+ 	BOOLEAN (*InputFunc) (void *pInputState);
+@@ -66,6 +70,7 @@
+ 
+ volatile BOOLEAN ExitRequested;
+ volatile BOOLEAN GamePaused;
++volatile BOOLEAN OnScreenKeyboardLocked;
+ 
+ static InputFrameCallback *inputCallback;
+ 
+@@ -422,16 +427,10 @@
+ }
+ 
+ static BATTLE_INPUT_STATE
+-ControlInputToBattleInput (const int *keyState)
++ControlInputToBattleInput (const int *keyState, COUNT player, int direction)
+ {
+ 	BATTLE_INPUT_STATE InputState = 0;
+ 
+-	if (keyState[KEY_UP])
+-		InputState |= BATTLE_THRUST;
+-	if (keyState[KEY_LEFT])
+-		InputState |= BATTLE_LEFT;
+-	if (keyState[KEY_RIGHT])
+-		InputState |= BATTLE_RIGHT;
+ 	if (keyState[KEY_WEAPON])
+ 		InputState |= BATTLE_WEAPON;
+ 	if (keyState[KEY_SPECIAL])
+@@ -441,21 +440,35 @@
+ 	if (keyState[KEY_DOWN])
+ 		InputState |= BATTLE_DOWN;
+ 
++	if(direction < 0)
++	{
++		if (keyState[KEY_LEFT])
++			InputState |= BATTLE_LEFT;
++		if (keyState[KEY_RIGHT])
++			InputState |= BATTLE_RIGHT;
++		if (keyState[KEY_UP])
++			InputState |= BATTLE_THRUST;
++	}
++	else
++	{
++		InputState |= GetDirectionalJoystickInput(direction, player);
++	}
++
+ 	return InputState;
+ }
+ 
+ BATTLE_INPUT_STATE
+-CurrentInputToBattleInput (COUNT player)
++CurrentInputToBattleInput (COUNT player, int direction)
+ {
+ 	return ControlInputToBattleInput(
+-			CurrentInputState.key[PlayerControls[player]]);
++			CurrentInputState.key[PlayerControls[player]], player, direction);
+ }
+ 
+ BATTLE_INPUT_STATE
+ PulsedInputToBattleInput (COUNT player)
+ {
+ 	return ControlInputToBattleInput(
+-			PulsedInputState.key[PlayerControls[player]]);
++			PulsedInputState.key[PlayerControls[player]], player, -1);
+ }
+ 
+ BOOLEAN
+@@ -500,3 +513,111 @@
+ 	return result;
+ }
+ 
++// Fast arctan2, returns angle in radians as integer, with fractional part in lower 16 bits
++// Stolen from http://www.dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization , precision is said to be 0.07 rads
++
++#ifndef M_PI
++#define M_PI 3.14159265358979323846
++#endif
++enum { atan2i_coeff_1 = ((int)(M_PI*65536.0/4)), atan2i_coeff_2 = (3*atan2i_coeff_1), atan2i_PI = (int)(M_PI * 65536.0), SHIP_DIRECTIONS = 16 };
++
++static inline int atan2i(int y, int x)
++{
++   int angle;
++   int abs_y = abs(y);
++   if( abs_y == 0 )
++      abs_y = 1;
++   if (x>=0)
++   {
++      angle = atan2i_coeff_1 - atan2i_coeff_1 * (x - abs_y) / (x + abs_y);
++   }
++   else
++   {
++      angle = atan2i_coeff_2 - atan2i_coeff_1 * (x + abs_y) / (abs_y - x);
++   }
++   if (y < 0)
++      return(-angle);     // negate if in quad III or IV
++   else
++      return(angle);
++}
++
++
++BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction, int player)
++{
++	BATTLE_INPUT_STATE InputState = 0;
++	static BOOLEAN JoystickThrust[NUM_PLAYERS] = { FALSE, FALSE };
++	static BOOLEAN JoystickTapFlag[NUM_PLAYERS] = { FALSE, FALSE };
++	static TimeCount JoystickTapTime[NUM_PLAYERS] = { 0, 0 };
++
++	if (CurrentInputState.key[PlayerControls[player]][KEY_THRUST])
++		InputState |= BATTLE_THRUST;
++
++	if(VControl_GetJoysticksAmount() <= 0)
++	{
++		if (CurrentInputState.key[PlayerControls[player]][KEY_LEFT])
++			InputState |= BATTLE_LEFT;
++		if (CurrentInputState.key[PlayerControls[player]][KEY_RIGHT])
++			InputState |= BATTLE_RIGHT;
++		if (CurrentInputState.key[PlayerControls[player]][KEY_UP])
++			InputState |= BATTLE_THRUST;
++	}
++	else
++	{
++		int axisX = VControl_GetJoyAxis(0, player * 2), axisY = VControl_GetJoyAxis(0, player * 2 + 1);
++
++		if( axisX == 0 && axisY == 0 )
++		{
++			// Some basic gamepad input support
++			axisX = VControl_GetJoyAxis(2, player * 2);
++			axisY = VControl_GetJoyAxis(2, player * 2 + 1);
++			if( axisX != 0 || axisY != 0 )
++			{
++				JoystickTapFlag[player] = TRUE;
++				JoystickThrust[player] = FALSE;
++			}
++		}
++
++		if( axisX != 0 || axisY != 0 )
++		{
++			int angle = atan2i(axisY, axisX), diff;
++			// Convert it to 16 directions used by Melee
++			angle += atan2i_PI / SHIP_DIRECTIONS;
++			if( angle < 0 )
++				angle += atan2i_PI * 2;
++			if( angle > atan2i_PI * 2 )
++				angle -= atan2i_PI * 2;
++			angle = angle * SHIP_DIRECTIONS / atan2i_PI / 2;
++			
++			diff = angle - direction - SHIP_DIRECTIONS / 4;
++			while( diff >= SHIP_DIRECTIONS )
++				diff -= SHIP_DIRECTIONS;
++			while( diff < 0 )
++				diff += SHIP_DIRECTIONS;
++
++			if( diff < SHIP_DIRECTIONS / 2 )
++				InputState |= BATTLE_LEFT;
++			if( diff > SHIP_DIRECTIONS / 2 )
++				InputState |= BATTLE_RIGHT;
++
++			if( !JoystickTapFlag[player] )
++			{
++				JoystickTapFlag[player] = TRUE;
++				if( GetTimeCounter() < JoystickTapTime[player] + ONE_SECOND )
++					JoystickThrust[player] = !JoystickThrust[player];
++				else
++					JoystickThrust[player] = TRUE;
++			}
++			if( JoystickThrust[player] )
++				InputState |= BATTLE_THRUST;
++		}
++		else
++		{
++			if( JoystickTapFlag[player] )
++			{
++				JoystickTapFlag[player] = FALSE;
++				JoystickTapTime[player] = GetTimeCounter();
++			}
++		}
++	}
++	return InputState;
++}
+Index: uqm/planets/solarsys.c
+===================================================================
+--- uqm/planets/solarsys.c	(revision 1307)
++++ uqm/planets/solarsys.c	(working copy)
+@@ -1245,18 +1245,19 @@
+ static void
+ ProcessShipControls (void)
+ {
+-	COUNT index;
++	COUNT index = GetFrameIndex (GLOBAL (ShipStamp.frame));;
+ 	SIZE delta_x, delta_y;
++	BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index, 0);
+ 
+-	if (CurrentInputState.key[PlayerControls[0]][KEY_UP])
++	if (InputState & BATTLE_THRUST)
+ 		delta_y = -1;
+ 	else
+ 		delta_y = 0;
+ 
+ 	delta_x = 0;
+-	if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
++	if (InputState & BATTLE_LEFT)
+ 		delta_x -= 1;
+-	if (CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
++	if (InputState & BATTLE_RIGHT)
+ 		delta_x += 1;
+ 		
+ 	if (delta_x || delta_y < 0)
+@@ -1269,7 +1270,6 @@
+ 	else
+ 		delta_y = 0;
+ 
+-	index = GetFrameIndex (GLOBAL (ShipStamp.frame));
+ 	if (pSolarSysState->turn_counter)
+ 		--pSolarSysState->turn_counter;
+ 	else if (delta_x)
+@@ -2473,7 +2473,9 @@
+ 	InitSolarSys ();
+ 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
+ 	SolarSysState.InputFunc = DoIpFlight;
++	TFB_SetOnScreenKeyboard_Melee ();
+ 	DoInput (&SolarSysState, FALSE);
++	TFB_SetOnScreenKeyboard_Menu ();
+ 	UninitSolarSys ();
+ 	pSolarSysState = 0;
+ }
+@@ -2751,13 +2753,17 @@
+ 
+ 	if (pSS->InOrbit)
+ 	{	// CheckShipLocation() or InitSolarSys() sent us to orbital
++		TFB_SetOnScreenKeyboard_Menu ();
+ 		EnterPlanetOrbit ();
++		TFB_SetOnScreenKeyboard_Melee ();
+ 		SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
+ 		pSS->InOrbit = FALSE;
+ 	}
+ 	else if (cancel || LastActivity == CHECK_LOAD)
+ 	{
++		TFB_SetOnScreenKeyboard_Menu ();
+ 		SolarSysMenu ();
++		TFB_SetOnScreenKeyboard_Melee ();
+ 		SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
+ 	}
+ 	else
+Index: uqm/planets/pstarmap.c
+===================================================================
+--- uqm/planets/pstarmap.c	(revision 1307)
++++ uqm/planets/pstarmap.c	(working copy)
+@@ -2005,7 +2005,9 @@
+ 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
+ 	SetMenuRepeatDelay (MIN_ACCEL_DELAY, MAX_ACCEL_DELAY, STEP_ACCEL_DELAY,
+ 			TRUE);
++	TFB_SetOnScreenKeyboard_Starmap ();
+ 	DoInput (&MenuState, FALSE);
++	TFB_SetOnScreenKeyboard_Menu ();
+ 	SetMenuSounds (MENU_SOUND_ARROWS, MENU_SOUND_SELECT);
+ 	SetDefaultMenuRepeatDelay ();
+ 
+Index: uqm/planets/lander.c
+===================================================================
+--- uqm/planets/lander.c	(revision 1307)
++++ uqm/planets/lander.c	(working copy)
+@@ -1852,15 +1852,15 @@
+ 		if (crew_left)
+ 		{
+ 			SIZE index = GetFrameIndex (LanderFrame[0]);
++			BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index, 0);
+ 			if (turn_wait)
+ 				--turn_wait;
+-			else if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT] ||
+-					CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
++			else if ((InputState & BATTLE_LEFT) || (InputState & BATTLE_RIGHT))
+ 			{
+ 				COUNT landerSpeedNumer;
+ 				COUNT angle;
+ 
+-				if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
++				if (InputState & BATTLE_LEFT)
+ 					--index;
+ 				else
+ 					++index;
+@@ -1884,7 +1884,7 @@
+ 				turn_wait = SHUTTLE_TURN_WAIT;
+ 			}
+ 
+-			if (!CurrentInputState.key[PlayerControls[0]][KEY_UP])
++			if (!(InputState & BATTLE_THRUST))
+ 			{
+ 				dx = 0;
+ 				dy = 0;
+@@ -2212,7 +2212,9 @@
+ 	landerInputState.Initialized = FALSE;
+ 	landerInputState.InputFunc = DoPlanetSide;
+ 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
++	TFB_SetOnScreenKeyboard_Melee ();
+ 	DoInput (&landerInputState, FALSE);
++	TFB_SetOnScreenKeyboard_Menu ();
+ 
+ 	if (!(GLOBAL (CurrentActivity) & CHECK_ABORT))
+ 	{
+Index: uqm/confirm.c
+===================================================================
+--- uqm/confirm.c	(revision 1307)
++++ uqm/confirm.c	(working copy)
+@@ -34,9 +34,11 @@
+ #include <stdlib.h>
+ 
+ 
+-#define CONFIRM_WIN_WIDTH (80 << RESOLUTION_FACTOR) // JMS_GFX
++#define CONFIRM_WIN_WIDTH (160 << RESOLUTION_FACTOR) // JMS_GFX
+ #define CONFIRM_WIN_HEIGHT (22 << RESOLUTION_FACTOR) // JMS_GFX
+ 
++BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
++
+ static void
+ DrawConfirmationWindow (BOOLEAN answer)
+ {
+@@ -67,6 +69,8 @@
+ 	font_DrawText (&t);
+ 	t.baseline.x += (r.extent.width >> 1);
+ 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE + 2); // "No"
++	if (GLOBAL (CurrentActivity) & IN_BATTLE)
++		t.pStr = "Escape unit"; // GAME_STRING (QUITMENU_STRING_BASE + 3); // TODO: modify gamestrings.txt 
+ 	SetContextForeGroundColor (answer ? MENU_TEXT_COLOR : MENU_HIGHLIGHT_COLOR);	
+ 	font_DrawText (&t);
+ 
+@@ -111,8 +115,16 @@
+ 
+ 		FlushInput ();
+ 		done = FALSE;
++
++		#ifdef ANDROID
++		if ( !(GLOBAL (CurrentActivity) & IN_BATTLE) ) {
++			/* Abort immediately */
++			response = TRUE;
++			done = TRUE;
++		}
++		#endif
+ 		
+-		do {
++		while (!done) {
+ 			// Forbid recursive calls or pausing here!
+ 			ExitRequested = FALSE;
+ 			GamePaused = FALSE;
+@@ -139,7 +151,7 @@
+ 				PlayMenuSound (MENU_SOUND_MOVE);
+ 			}
+ 			SleepThread (ONE_SECOND / 30);
+-		} while (!done);
++		}
+ 
+ 		// Restore the screen under the confirmation window
+ 		DrawStamp (&s);
+@@ -152,6 +164,8 @@
+ 		}		
+ 		else
+ 		{
++			if (GLOBAL (CurrentActivity) & IN_BATTLE)
++				EmergencyEscapeWarpUnitActivatedFromMenu = TRUE;
+ 			result = FALSE;
+ 		}
+ 		ExitRequested = FALSE;
+Index: uqm/menu.c
+===================================================================
+--- uqm/menu.c	(revision 1307)
++++ uqm/menu.c	(working copy)
+@@ -508,7 +508,7 @@
+ 	s.origin.x = RADAR_X - r.corner.x;
+ 	s.origin.y = RADAR_Y - r.corner.y;
+ 	r.corner.x = s.origin.x - 1;
+-	r.corner.y = s.origin.y - (11 << RESOLUTION_FACTOR); // JMS_GFX
++	r.corner.y = s.origin.y - (40 << RESOLUTION_FACTOR); // JMS_GFX
+ 	r.extent.width = RADAR_WIDTH + 2;
+ 	BatchGraphics ();
+ 	SetContextForeGroundColor (
