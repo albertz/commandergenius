@@ -1,5 +1,5 @@
---- src/debug.cpp	2013-03-31 23:56:27.000000000 +0300
-+++ src/debug.cpp	2013-04-04 21:22:32.082336178 +0300
+--- src/debug.cpp	2013-05-31 23:57:15.000000000 +0300
++++ src/debug.cpp	2013-06-02 17:34:54.700814123 +0300
 @@ -16,6 +16,9 @@
  #include "string_func.h"
  #include "fileio_func.h"
@@ -20,8 +20,8 @@
  #if defined(ENABLE_NETWORK)
  	if (_debug_socket != INVALID_SOCKET) {
  		char buf2[1024 + 32];
---- src/fontcache.cpp	2013-03-31 23:56:27.000000000 +0300
-+++ src/fontcache.cpp	2013-04-04 21:22:32.082336178 +0300
+--- src/fontcache.cpp	2013-05-31 23:57:15.000000000 +0300
++++ src/fontcache.cpp	2013-06-02 17:34:54.700814123 +0300
 @@ -808,7 +808,15 @@
  	return ret;
  }
@@ -39,8 +39,8 @@
  FT_Error GetFontByFaceName(const char *font_name, FT_Face *face) {return FT_Err_Cannot_Open_Resource;}
  bool SetFallbackFont(FreeTypeSettings *settings, const char *language_isocode, int winlangid, MissingGlyphSearcher *callback) { return false; }
  #endif /* WITH_FONTCONFIG */
---- src/music/libtimidity.cpp	2013-03-31 23:56:08.000000000 +0300
-+++ src/music/libtimidity.cpp	2013-04-04 21:22:32.082336178 +0300
+--- src/music/libtimidity.cpp	2013-05-31 23:56:52.000000000 +0300
++++ src/music/libtimidity.cpp	2013-06-02 17:34:54.700814123 +0300
 @@ -13,6 +13,7 @@
  #include "../openttd.h"
  #include "../sound_type.h"
@@ -82,8 +82,8 @@
  
  /** Factory for the libtimidity driver. */
  static FMusicDriver_LibTimidity iFMusicDriver_LibTimidity;
---- src/network/core/os_abstraction.h	2013-03-31 23:56:21.000000000 +0300
-+++ src/network/core/os_abstraction.h	2013-04-04 21:22:32.086336178 +0300
+--- src/network/core/os_abstraction.h	2013-05-31 23:57:06.000000000 +0300
++++ src/network/core/os_abstraction.h	2013-06-02 17:34:54.700814123 +0300
 @@ -161,7 +161,7 @@
  #		include <net/if.h>
  /* According to glibc/NEWS, <ifaddrs.h> appeared in glibc-2.3. */
@@ -93,8 +93,8 @@
  /* If for any reason ifaddrs.h does not exist on your system, comment out
   *   the following two lines and an alternative way will be used to fetch
   *   the list of IPs from the system. */
---- src/os/unix/crashlog_unix.cpp	2013-03-31 23:56:09.000000000 +0300
-+++ src/os/unix/crashlog_unix.cpp	2013-04-04 21:22:32.086336178 +0300
+--- src/os/unix/crashlog_unix.cpp	2013-05-31 23:56:54.000000000 +0300
++++ src/os/unix/crashlog_unix.cpp	2013-06-02 17:34:54.700814123 +0300
 @@ -141,7 +141,11 @@
  };
  
@@ -107,8 +107,8 @@
  
  /**
   * Entry point for the crash handler.
---- src/os/unix/unix.cpp	2013-03-31 23:56:09.000000000 +0300
-+++ src/os/unix/unix.cpp	2013-04-04 21:22:32.086336178 +0300
+--- src/os/unix/unix.cpp	2013-05-31 23:56:54.000000000 +0300
++++ src/os/unix/unix.cpp	2013-06-02 17:34:54.704814123 +0300
 @@ -25,7 +25,7 @@
  
  #ifdef __APPLE__
@@ -130,8 +130,8 @@
  int CDECL main(int argc, char *argv[])
  {
  	int ret;
---- src/osk_gui.cpp	2013-03-31 23:56:27.000000000 +0300
-+++ src/osk_gui.cpp	2013-04-04 21:24:19.418335198 +0300
+--- src/osk_gui.cpp	2013-05-31 23:57:15.000000000 +0300
++++ src/osk_gui.cpp	2013-06-02 17:41:23.344810333 +0300
 @@ -21,6 +21,9 @@
  
  #include "table/sprites.h"
@@ -142,13 +142,15 @@
  
  char _keyboard_opt[2][OSK_KEYBOARD_ENTRIES * 4 + 1];
  static WChar _keyboard[2][OSK_KEYBOARD_ENTRIES];
-@@ -411,6 +414,14 @@
+@@ -411,6 +414,16 @@
  
  	GetKeyboardLayout();
  	new OskWindow(&_osk_desc, parent, button);
 +#ifdef __ANDROID__
-+	SDL_ANDROID_GetScreenKeyboardTextInput(parent->text.buf, parent->text.max_bytes); /* Invoke Android built-in screen keyboard */
++	char text[256];
++	SDL_ANDROID_GetScreenKeyboardTextInput(text, sizeof(text) - 1); /* Invoke Android built-in screen keyboard */
 +	OskWindow *osk = dynamic_cast<OskWindow *>(FindWindowById(WC_OSK, 0));
++	osk->qs->text.Assign(text);
 +	free(osk->orig_str_buf);
 +	osk->orig_str_buf = strdup(osk->qs->text.buf);
 +
@@ -157,8 +159,8 @@
  }
  
  /**
---- src/script/api/script_date.cpp	2013-03-31 23:56:17.000000000 +0300
-+++ src/script/api/script_date.cpp	2013-04-04 21:22:32.090336178 +0300
+--- src/script/api/script_date.cpp	2013-05-31 23:57:01.000000000 +0300
++++ src/script/api/script_date.cpp	2013-06-02 17:34:54.704814123 +0300
 @@ -9,8 +9,8 @@
  
  /** @file script_date.cpp Implementation of ScriptDate. */
@@ -169,8 +171,8 @@
  #include "script_date.hpp"
  #include "../../date_func.h"
  
---- src/sound/sdl_s.cpp	2013-03-31 23:56:07.000000000 +0300
-+++ src/sound/sdl_s.cpp	2013-04-04 21:22:32.090336178 +0300
+--- src/sound/sdl_s.cpp	2013-05-31 23:56:51.000000000 +0300
++++ src/sound/sdl_s.cpp	2013-06-02 17:34:54.704814123 +0300
 @@ -21,6 +21,10 @@
  /** Factory for the SDL sound driver. */
  static FSoundDriver_SDL iFSoundDriver_SDL;
@@ -192,8 +194,8 @@
  }
  
  const char *SoundDriver_SDL::Start(const char * const *parm)
---- src/video/sdl_v.cpp	2013-03-31 23:55:59.000000000 +0300
-+++ src/video/sdl_v.cpp	2013-04-04 21:26:10.534334178 +0300
+--- src/video/sdl_v.cpp	2013-05-31 23:56:34.000000000 +0300
++++ src/video/sdl_v.cpp	2013-06-02 17:34:54.704814123 +0300
 @@ -25,6 +25,9 @@
  #include "../fileio_func.h"
  #include "sdl_v.h"
