@@ -1,18 +1,18 @@
 [submodule "project/jni/application/NewRAW"]
 	path = project/jni/application/NewRAW
-	url = https://github.com/usineur/android-newraw.git
+	url = git@github.com:usineur/android-newraw.git
 [submodule "project/jni/boost/src"]
 	path = project/jni/boost/src
-	url = git://github.com/pelya/Boost-for-Android.git
+	url = git@github.com:pelya/Boost-for-Android.git
 [submodule "project/jni/application/commandergenius/commandergenius"]
 	path = project/jni/application/commandergenius/commandergenius
-	url = git://github.com/gerstrong/Commander-Genius.git
+	url = git@github.com:gerstrong/Commander-Genius.git
 [submodule "project/jni/application/gemrb-sdl-1.3/gemrb"]
 	path = project/jni/application/gemrb-sdl-1.3/gemrb
 	url = git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb
 [submodule "project/jni/application/frogatto"]
 	path = project/jni/application/frogatto
-	url = https://github.com/frogatto/frogatto.git
+	url = git@github.com:frogatto/frogatto.git
 [submodule "project/jni/application/ufoai/ufoai"]
 	path = project/jni/application/ufoai/ufoai
 	url = git://ufoai.git.sourceforge.net/gitroot/ufoai/ufoai
@@ -21,13 +21,13 @@
 	url = git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb
 [submodule "project/jni/application/openarena/engine"]
 	path = project/jni/application/openarena/engine
-	url = https://github.com/pelya/openarena-engine.git
+	url = git@github.com:pelya/openarena-engine.git
 [submodule "project/jni/application/scummvm/scummvm"]
 	path = project/jni/application/scummvm/scummvm
-	url = https://github.com/scummvm/scummvm.git
+	url = git@github.com:scummvm/scummvm.git
 [submodule "project/jni/application/openarena/vm"]
 	path = project/jni/application/openarena/vm
-	url = https://github.com/pelya/openarena-vm
+	url = git@github.com:pelya/openarena-vm
 [submodule "project/jni/application/teeworlds/src"]
 	path = project/jni/application/teeworlds/src
-	url = https://github.com/pelya/teeworlds.git
+	url = git@github.com:pelya/teeworlds.git
