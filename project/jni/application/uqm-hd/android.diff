@@ -1,187 +1,6 @@
-Index: src/libs/log/msgbox_win.c
-===================================================================
---- src/libs/log/msgbox_win.c	(revision 1317)
-+++ src/libs/log/msgbox_win.c	(working copy)
-@@ -14,6 +14,7 @@
-  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
-+#ifndef ANDROID
- #include "msgbox.h"
- #define WIN32_LEAN_AND_MEAN
- #include <windows.h>
-@@ -64,4 +65,4 @@
- 	free (swTitle);
- 	free (swMsg);
- }
--
-+#endif
-Index: src/libs/log/msgbox_stub.c
-===================================================================
---- src/libs/log/msgbox_stub.c	(revision 1317)
-+++ src/libs/log/msgbox_stub.c	(working copy)
-@@ -16,6 +16,9 @@
- 
- #include "msgbox.h"
- #include "loginternal.h"
-+#ifdef ANDROID
-+#include <android/log.h>
-+#endif
- 
- void
- log_displayBox (const /*UTF-8*/char *title, int isError,
-@@ -26,6 +29,9 @@
- 	// So just inform the user of our predicament
- 	fprintf (streamOut, "Do not know how to display %s box\n",
- 			isError ? "an error" : "a");
-+#ifdef ANDROID
-+	__android_log_print( isError ? ANDROID_LOG_FATAL : ANDROID_LOG_INFO, "Ur-Quan Masters", "%s: %s", title, msg );
-+#endif
- 	
- 	// Suppress the compiler warnings in any case.
- 	(void)title;
-Index: src/libs/log/uqmlog.c
-===================================================================
---- src/libs/log/uqmlog.c	(revision 1317)
-+++ src/libs/log/uqmlog.c	(working copy)
-@@ -23,6 +23,9 @@
- #include <stdlib.h>
- #include <signal.h>
- #include <errno.h>
-+#ifdef ANDROID
-+#include <android/log.h>
-+#endif
- #include "libs/threadlib.h"
- 
- #ifndef MAX_LOG_ENTRY_SIZE
-@@ -190,6 +193,9 @@
- 	if ((int)level <= maxStreamLevel)
- 	{
- 		fprintf (streamOut, "%s\n", full_msg);
-+#ifdef ANDROID
-+	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
-+#endif
- 	}
- 
- 	if ((int)level <= maxLevel)
-@@ -226,6 +232,9 @@
- 	if ((int)level <= maxStreamLevel)
- 	{
- 		fprintf (streamOut, "%s\n", full_msg);
-+#ifdef ANDROID
-+	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
-+#endif
- 	}
- 
- 	if ((int)level <= maxLevel)
-Index: src/libs/resource/filecntl.c
-===================================================================
---- src/libs/resource/filecntl.c	(revision 1317)
-+++ src/libs/resource/filecntl.c	(working copy)
-@@ -26,6 +26,7 @@
- #include "port.h"
- #include "resintrn.h"
- #include "libs/uio.h"
-+#include "libs/log.h"
- 
- uio_Stream *
- res_OpenResFile (uio_DirHandle *dir, const char *filename, const char *mode)
-@@ -34,7 +35,10 @@
- 	struct stat sb;
- 
- 	if (uio_stat (dir, filename, &sb) == 0 && S_ISDIR(sb.st_mode))
-+	{
-+		log_add (log_Debug, "res_OpenResFile('%s', '%s') - cannot open dir as file", filename, mode);
- 		return ((uio_Stream *) ~0);
-+	}
- 
- 	fp = uio_fopen (dir, filename, mode);
- 
-Index: src/libs/uio/io.c
-===================================================================
---- src/libs/uio/io.c	(revision 1317)
-+++ src/libs/uio/io.c	(working copy)
-@@ -35,6 +35,7 @@
- #include "mem.h"
- #include "uioutils.h"
- #include "uioport.h"
-+#include "../log.h"
- #ifdef uio_MEM_DEBUG
- #	include "memdebug.h"
- #endif
-@@ -193,6 +194,7 @@
- 			errno = EINVAL;
- 			return NULL;
- 		}
-+		log_add (log_Info, "uio_open %s", sourcePath);
- 		handle = uio_open(sourceDir, sourcePath,
- 				((flags & uio_MOUNT_RDONLY) == uio_MOUNT_RDONLY ?
- 				O_RDONLY : O_RDWR)
-@@ -201,12 +203,14 @@
- #endif
- 				, 0);
- 		if (handle == NULL) {
-+			log_add (log_Info, "uio_open failed for %s", sourcePath);
- 			// errno is set
- 			return NULL;
- 		}
- 	}
- 
- 	handler = uio_getFileSystemHandler(fsType);
-+	log_add (log_Info, "uio_getFileSystemHandler %p", handler);
- 	if (handler == NULL) {
- 		if (handle)
- 			uio_close(handle);
-@@ -703,6 +707,7 @@
- 			&readMountInfo, &readPDirHandle, NULL,
- 			&writeMountInfo, &writePDirHandle, NULL, &name) == -1) {
- 		// errno is set
-+		log_add (log_Info, "uio_open: uio_getPhysicalAccess  failed for '%s'", path);
- 		return NULL;
- 	}
- 	
-@@ -729,6 +734,7 @@
- 				uio_PDirHandle_unref(readPDirHandle);
- 				uio_PDirHandle_unref(writePDirHandle);
- 				errno = EEXIST;
-+				log_add (log_Info, "uio_open: O_CREAT | O_EXCL: file already exists '%s'", name);
- 				return NULL;
- 			}
- 			if ((flags & O_TRUNC) == O_TRUNC) {
-@@ -745,6 +751,7 @@
- 					uio_PDirHandle_unref(readPDirHandle);
- 					uio_PDirHandle_unref(writePDirHandle);
- 					errno = savedErrno;
-+					log_add (log_Info, "uio_open: uio_copyFilePhysical failed '%s'", name);
- 					return NULL;
- 				}
- 			}
-@@ -766,6 +773,7 @@
- 	handle = (pDirHandle->pRoot->handler->open)(pDirHandle, name, flags, mode);
- 			// Also adds a new entry to the physical dir if appropriate.
- 	if (handle == NULL) {
-+		log_add (log_Info, "uio_open: open file failed '%s'", name);
- 		int savedErrno = errno;
- 		uio_free(name);
- 		uio_PDirHandle_unref(pDirHandle);
-Index: src/libs/uio/zip/zip.c
-===================================================================
---- src/libs/uio/zip/zip.c	(revision 1317)
-+++ src/libs/uio/zip/zip.c	(working copy)
-@@ -1366,6 +1366,10 @@
- 				gPFileData->gid = (uid_t) makeUInt16(buf[12], buf[13]);
- 				break;
- 			}
-+			case 0x7875:  // 'Unix string UID/GID'
-+				// Just skip it
-+				break;
-+
- 			default:
- #ifdef DEBUG
- 				fprintf(stderr, "Debug: Extra field 0x%04x unsupported, "
 Index: src/libs/md5/md5.c
 ===================================================================
---- src/libs/md5/md5.c	(revision 1317)
+--- src/libs/md5/md5.c	(revision 1330)
 +++ src/libs/md5/md5.c	(working copy)
 @@ -21,7 +21,7 @@
  
@@ -192,36 +11,9 @@ Index: src/libs/md5/md5.c
  
  #include "md5.h"
  
-Index: src/libs/input/input_common.h
-===================================================================
---- src/libs/input/input_common.h	(revision 1317)
-+++ src/libs/input/input_common.h	(working copy)
-@@ -31,7 +31,7 @@
- extern int TFB_InitInput (int driver, int flags);
- extern void TFB_UninitInput (void);
- 
--#define MAX_FLIGHT_ALTERNATES  2
-+#define MAX_FLIGHT_ALTERNATES  3
- 
- extern void TFB_SetInputVectors (volatile int menu[], int num_menu,
- 		volatile int flight[], int num_templ, int num_flight);
-Index: src/libs/input/sdl/vcontrol.h
-===================================================================
---- src/libs/input/sdl/vcontrol.h	(revision 1317)
-+++ src/libs/input/sdl/vcontrol.h	(working copy)
-@@ -76,6 +76,9 @@
- void VControl_ProcessJoyAxis (int port, int axis, int value);
- void VControl_ProcessJoyHat (int port, int which, Uint8 value);
- 
-+int VControl_GetJoyAxis(int port, int axis);
-+int VControl_GetJoysticksAmount();
-+
- /* Force the input into the blank state.  For preventing "sticky" keys. */
- void VControl_ResetInput (void);
- 
 Index: src/libs/input/sdl/input.c
 ===================================================================
---- src/libs/input/sdl/input.c	(revision 1317)
+--- src/libs/input/sdl/input.c	(revision 1330)
 +++ src/libs/input/sdl/input.c	(working copy)
 @@ -88,6 +88,7 @@
  	"weapon",
@@ -242,7 +34,7 @@ Index: src/libs/input/sdl/input.c
  	return;
 Index: src/libs/input/sdl/vcontrol.c
 ===================================================================
---- src/libs/input/sdl/vcontrol.c	(revision 1317)
+--- src/libs/input/sdl/vcontrol.c	(revision 1330)
 +++ src/libs/input/sdl/vcontrol.c	(working copy)
 @@ -46,6 +46,7 @@
  typedef struct vcontrol_joystick_axis {
@@ -303,9 +95,72 @@ Index: src/libs/input/sdl/vcontrol.c
  void
  VControl_ResetInput (void)
  {
+Index: src/libs/input/sdl/vcontrol.h
+===================================================================
+--- src/libs/input/sdl/vcontrol.h	(revision 1330)
++++ src/libs/input/sdl/vcontrol.h	(working copy)
+@@ -76,6 +76,9 @@
+ void VControl_ProcessJoyAxis (int port, int axis, int value);
+ void VControl_ProcessJoyHat (int port, int which, Uint8 value);
+ 
++int VControl_GetJoyAxis(int port, int axis);
++int VControl_GetJoysticksAmount();
++
+ /* Force the input into the blank state.  For preventing "sticky" keys. */
+ void VControl_ResetInput (void);
+ 
+Index: src/libs/input/input_common.h
+===================================================================
+--- src/libs/input/input_common.h	(revision 1330)
++++ src/libs/input/input_common.h	(working copy)
+@@ -31,7 +31,7 @@
+ extern int TFB_InitInput (int driver, int flags);
+ extern void TFB_UninitInput (void);
+ 
+-#define MAX_FLIGHT_ALTERNATES  2
++#define MAX_FLIGHT_ALTERNATES  3
+ 
+ extern void TFB_SetInputVectors (volatile int menu[], int num_menu,
+ 		volatile int flight[], int num_templ, int num_flight);
+Index: src/libs/resource/filecntl.c
+===================================================================
+--- src/libs/resource/filecntl.c	(revision 1330)
++++ src/libs/resource/filecntl.c	(working copy)
+@@ -26,6 +26,7 @@
+ #include "port.h"
+ #include "resintrn.h"
+ #include "libs/uio.h"
++#include "libs/log.h"
+ 
+ uio_Stream *
+ res_OpenResFile (uio_DirHandle *dir, const char *filename, const char *mode)
+@@ -34,7 +35,10 @@
+ 	struct stat sb;
+ 
+ 	if (uio_stat (dir, filename, &sb) == 0 && S_ISDIR(sb.st_mode))
++	{
++		log_add (log_Debug, "res_OpenResFile('%s', '%s') - cannot open dir as file", filename, mode);
+ 		return ((uio_Stream *) ~0);
++	}
+ 
+ 	fp = uio_fopen (dir, filename, mode);
+ 
+Index: src/libs/sound/decoders/oggaud.c
+===================================================================
+--- src/libs/sound/decoders/oggaud.c	(revision 1330)
++++ src/libs/sound/decoders/oggaud.c	(working copy)
+@@ -270,7 +270,7 @@
+ 	// this is the closest to a frame there is in ogg vorbis stream
+ 	// doesn't seem to be a func to retrive it
+ #ifdef OVCODEC_TREMOR
+-	return ova->vf.os->pageno;
++	return ova->vf.os.pageno;
+ #else
+ 	return ova->vf.os.pageno;
+ #endif  /* OVCODEC_TREMOR */
 Index: src/libs/graphics/gfx_common.h
 ===================================================================
---- src/libs/graphics/gfx_common.h	(revision 1317)
+--- src/libs/graphics/gfx_common.h	(revision 1330)
 +++ src/libs/graphics/gfx_common.h	(working copy)
 @@ -119,4 +119,10 @@
  extern int ScreenColorDepth;
@@ -320,7 +175,7 @@ Index: src/libs/graphics/gfx_common.h
  #endif
 Index: src/libs/graphics/sdl/pure.c
 ===================================================================
---- src/libs/graphics/sdl/pure.c	(revision 1317)
+--- src/libs/graphics/sdl/pure.c	(revision 1330)
 +++ src/libs/graphics/sdl/pure.c	(working copy)
 @@ -128,6 +128,7 @@
  {
@@ -356,7 +211,7 @@ Index: src/libs/graphics/sdl/pure.c
  	{
 Index: src/libs/graphics/sdl/sdl_common.c
 ===================================================================
---- src/libs/graphics/sdl/sdl_common.c	(revision 1317)
+--- src/libs/graphics/sdl/sdl_common.c	(revision 1330)
 +++ src/libs/graphics/sdl/sdl_common.c	(working copy)
 @@ -34,7 +34,11 @@
  #include "libs/memlib.h"
@@ -537,7 +392,7 @@ Index: src/libs/graphics/sdl/sdl_common.c
 +#endif
 Index: src/libs/graphics/sdl/sdl_common.h
 ===================================================================
---- src/libs/graphics/sdl/sdl_common.h	(revision 1317)
+--- src/libs/graphics/sdl/sdl_common.h	(revision 1330)
 +++ src/libs/graphics/sdl/sdl_common.h	(working copy)
 @@ -50,4 +50,6 @@
  
@@ -546,19 +401,164 @@ Index: src/libs/graphics/sdl/sdl_common.h
 +void TFB_InitOnScreenKeyboard (void);
 +
  #endif
-Index: src/libs/sound/decoders/oggaud.c
+Index: src/libs/log/msgbox_stub.c
 ===================================================================
---- src/libs/sound/decoders/oggaud.c	(revision 1317)
-+++ src/libs/sound/decoders/oggaud.c	(working copy)
-@@ -270,7 +270,7 @@
- 	// this is the closest to a frame there is in ogg vorbis stream
- 	// doesn't seem to be a func to retrive it
- #ifdef OVCODEC_TREMOR
--	return ova->vf.os->pageno;
-+	return ova->vf.os.pageno;
- #else
- 	return ova->vf.os.pageno;
- #endif  /* OVCODEC_TREMOR */
+--- src/libs/log/msgbox_stub.c	(revision 1330)
++++ src/libs/log/msgbox_stub.c	(working copy)
+@@ -16,6 +16,9 @@
+ 
+ #include "msgbox.h"
+ #include "loginternal.h"
++#ifdef ANDROID
++#include <android/log.h>
++#endif
+ 
+ void
+ log_displayBox (const /*UTF-8*/char *title, int isError,
+@@ -26,6 +29,9 @@
+ 	// So just inform the user of our predicament
+ 	fprintf (streamOut, "Do not know how to display %s box\n",
+ 			isError ? "an error" : "a");
++#ifdef ANDROID
++	__android_log_print( isError ? ANDROID_LOG_FATAL : ANDROID_LOG_INFO, "Ur-Quan Masters", "%s: %s", title, msg );
++#endif
+ 	
+ 	// Suppress the compiler warnings in any case.
+ 	(void)title;
+Index: src/libs/log/uqmlog.c
+===================================================================
+--- src/libs/log/uqmlog.c	(revision 1330)
++++ src/libs/log/uqmlog.c	(working copy)
+@@ -23,6 +23,9 @@
+ #include <stdlib.h>
+ #include <signal.h>
+ #include <errno.h>
++#ifdef ANDROID
++#include <android/log.h>
++#endif
+ #include "libs/threadlib.h"
+ 
+ #ifndef MAX_LOG_ENTRY_SIZE
+@@ -190,6 +193,9 @@
+ 	if ((int)level <= maxStreamLevel)
+ 	{
+ 		fprintf (streamOut, "%s\n", full_msg);
++#ifdef ANDROID
++	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
++#endif
+ 	}
+ 
+ 	if ((int)level <= maxLevel)
+@@ -226,6 +232,9 @@
+ 	if ((int)level <= maxStreamLevel)
+ 	{
+ 		fprintf (streamOut, "%s\n", full_msg);
++#ifdef ANDROID
++	__android_log_print( ANDROID_LOG_INFO, "Ur-Quan Masters", "%s", full_msg );
++#endif
+ 	}
+ 
+ 	if ((int)level <= maxLevel)
+Index: src/libs/log/msgbox_win.c
+===================================================================
+--- src/libs/log/msgbox_win.c	(revision 1330)
++++ src/libs/log/msgbox_win.c	(working copy)
+@@ -14,6 +14,7 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
++#ifndef ANDROID
+ #include "msgbox.h"
+ #define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+@@ -64,4 +65,4 @@
+ 	free (swTitle);
+ 	free (swMsg);
+ }
+-
++#endif
+Index: src/libs/uio/io.c
+===================================================================
+--- src/libs/uio/io.c	(revision 1330)
++++ src/libs/uio/io.c	(working copy)
+@@ -35,6 +35,7 @@
+ #include "mem.h"
+ #include "uioutils.h"
+ #include "uioport.h"
++#include "../log.h"
+ #ifdef uio_MEM_DEBUG
+ #	include "memdebug.h"
+ #endif
+@@ -193,6 +194,7 @@
+ 			errno = EINVAL;
+ 			return NULL;
+ 		}
++		log_add (log_Info, "uio_open %s", sourcePath);
+ 		handle = uio_open(sourceDir, sourcePath,
+ 				((flags & uio_MOUNT_RDONLY) == uio_MOUNT_RDONLY ?
+ 				O_RDONLY : O_RDWR)
+@@ -201,12 +203,14 @@
+ #endif
+ 				, 0);
+ 		if (handle == NULL) {
++			log_add (log_Info, "uio_open failed for %s", sourcePath);
+ 			// errno is set
+ 			return NULL;
+ 		}
+ 	}
+ 
+ 	handler = uio_getFileSystemHandler(fsType);
++	log_add (log_Info, "uio_getFileSystemHandler %p", handler);
+ 	if (handler == NULL) {
+ 		if (handle)
+ 			uio_close(handle);
+@@ -703,6 +707,7 @@
+ 			&readMountInfo, &readPDirHandle, NULL,
+ 			&writeMountInfo, &writePDirHandle, NULL, &name) == -1) {
+ 		// errno is set
++		log_add (log_Info, "uio_open: uio_getPhysicalAccess  failed for '%s'", path);
+ 		return NULL;
+ 	}
+ 	
+@@ -729,6 +734,7 @@
+ 				uio_PDirHandle_unref(readPDirHandle);
+ 				uio_PDirHandle_unref(writePDirHandle);
+ 				errno = EEXIST;
++				log_add (log_Info, "uio_open: O_CREAT | O_EXCL: file already exists '%s'", name);
+ 				return NULL;
+ 			}
+ 			if ((flags & O_TRUNC) == O_TRUNC) {
+@@ -745,6 +751,7 @@
+ 					uio_PDirHandle_unref(readPDirHandle);
+ 					uio_PDirHandle_unref(writePDirHandle);
+ 					errno = savedErrno;
++					log_add (log_Info, "uio_open: uio_copyFilePhysical failed '%s'", name);
+ 					return NULL;
+ 				}
+ 			}
+@@ -766,6 +773,7 @@
+ 	handle = (pDirHandle->pRoot->handler->open)(pDirHandle, name, flags, mode);
+ 			// Also adds a new entry to the physical dir if appropriate.
+ 	if (handle == NULL) {
++		log_add (log_Info, "uio_open: open file failed '%s'", name);
+ 		int savedErrno = errno;
+ 		uio_free(name);
+ 		uio_PDirHandle_unref(pDirHandle);
+Index: src/libs/uio/zip/zip.c
+===================================================================
+--- src/libs/uio/zip/zip.c	(revision 1330)
++++ src/libs/uio/zip/zip.c	(working copy)
+@@ -1366,6 +1366,10 @@
+ 				gPFileData->gid = (uid_t) makeUInt16(buf[12], buf[13]);
+ 				break;
+ 			}
++			case 0x7875:  // 'Unix string UID/GID'
++				// Just skip it
++				break;
++
+ 			default:
+ #ifdef DEBUG
+ 				fprintf(stderr, "Debug: Extra field 0x%04x unsupported, "
 Index: src/config_unix.h
 ===================================================================
 --- src/config_unix.h	(revision 0)
@@ -627,26 +627,95 @@ Index: src/config_unix.h
 +
 +#endif  /* _CONFIG_UNIX_H */
 +
-Index: src/uqm/intel.c
+Index: src/uqm/setupmenu.c
 ===================================================================
---- src/uqm/intel.c	(revision 1317)
-+++ src/uqm/intel.c	(working copy)
-@@ -45,10 +45,10 @@
- 			// Allow a player to warp-escape in cyborg mode
- 			if (StarShipPtr->playerNr == RPG_PLAYER_NUM)
- 				InputState |= CurrentInputToBattleInput (
--						context->playerNr) & BATTLE_ESCAPE;
-+						context->playerNr, -1) & BATTLE_ESCAPE;
- 		}
- 		else
--			InputState = CurrentInputToBattleInput (context->playerNr);
-+			InputState = CurrentInputToBattleInput (context->playerNr, -1);
- 	}
- 	else if (!(PlayerControl[context->playerNr] & PSYTRON_CONTROL))
- 		InputState = 0;
+--- src/uqm/setupmenu.c	(revision 1330)
++++ src/uqm/setupmenu.c	(working copy)
+@@ -83,7 +83,7 @@
+ #endif
+ 
+ #define MENU_COUNT          8
+-#define CHOICE_COUNT       29 // JMS: New options added.
++#define CHOICE_COUNT       30 // JMS: New options added.
+ #define SLIDER_COUNT        3
+ #define BUTTON_COUNT       10
+ #define LABEL_COUNT         4
+@@ -106,7 +106,7 @@
+ static int choice_widths[CHOICE_COUNT] = {
+ 	3, 2, 3, 2, 2, 2, 2, 2, 2, 2, 
+ 	2, 2, 2, 2, 2, 3, 3, 2,	3, 3, 
+-	3, 2, 3, 2, 2, 2, 2, 2, 2 };
++	3, 2, 3, 2, 2, 2, 2, 2, 2, 2 };
+ 
+ static HANDLER button_handlers[BUTTON_COUNT] = {
+ 	quit_main_menu, quit_sub_menu, do_graphics, do_engine,
+@@ -117,7 +117,7 @@
+ // JMS: The first 8 was 7 (sound options.) Added mainmenumusic on/off.
+ // JMS: The HAVE_OPENGL options were 5 and 4. Added cheatMode, mineralSubmenu, nebulae and planet options.
+ static int menu_sizes[MENU_COUNT] = {
+-	7, 6, 8, 8, 2, 5,
++	7, 6, 8, 8, 2, 6,
+ #ifdef HAVE_OPENGL
+ 	10,
+ #else
+@@ -185,6 +185,7 @@
+ static WIDGET *keyconfig_widgets[] = {
+ 	(WIDGET *)(&choices[18]),
+ 	(WIDGET *)(&choices[19]),
++	(WIDGET *)(&choices[29]), // Directional joystick
+ 	(WIDGET *)(&labels[1]),
+ 	(WIDGET *)(&buttons[8]),
+ 	(WIDGET *)(&buttons[1]) };
+@@ -414,6 +415,7 @@
+ 	choices[26].selected = opts.rotatingIpPlanets; // JMS
+ 	choices[27].selected = opts.texturedIpPlanets || opts.rotatingIpPlanets; // JMS
+ 	choices[28].selected = opts.cheatMode; // JMS
++	choices[29].selected = opts.directionalJoystick;
+ 	
+ 	sliders[0].value = opts.musicvol;
+ 	sliders[1].value = opts.sfxvol;
+@@ -452,6 +454,7 @@
+ 	opts.rotatingIpPlanets = choices[26].selected; // JMS
+ 	opts.texturedIpPlanets = choices[27].selected || opts.rotatingIpPlanets; // JMS
+ 	opts.cheatMode = choices[28].selected; // JMS
++	opts.directionalJoystick = choices[29].selected;
+ 	
+ 	opts.musicvol = sliders[0].value;
+ 	opts.sfxvol = sliders[1].value;
+@@ -1164,6 +1167,7 @@
+ 	opts->rotatingIpPlanets = optRotatingIpPlanets ? OPTVAL_ENABLED : OPTVAL_DISABLED;
+ 	opts->texturedIpPlanets = (optTexturedIpPlanets ? OPTVAL_ENABLED : OPTVAL_DISABLED) || opts->rotatingIpPlanets;
+ 	opts->cheatMode = optCheatMode ? OPTVAL_ENABLED : OPTVAL_DISABLED;
++	opts->directionalJoystick = optDirectionalJoystick ? OPTVAL_ENABLED : OPTVAL_DISABLED;
+ 	
+ 	/* Work out resolution.  On the way, try to guess a good default
+ 	 * for config.alwaysgl, then overwrite it if it was set previously. */
+@@ -1376,6 +1380,9 @@
+ 	res_PutBoolean ("config.cheatMode", opts->cheatMode == OPTVAL_ENABLED);
+ 	optCheatMode = opts->cheatMode == OPTVAL_ENABLED;
+ 	
++	res_PutBoolean ("config.directionaljoystick", opts->directionalJoystick == OPTVAL_ENABLED);
++	optDirectionalJoystick = (opts->directionalJoystick == OPTVAL_ENABLED) ? TRUE : FALSE;
++	
+ 	if (NewWidth == 320 && NewHeight == 240)
+ 	{
+ 		switch (opts->scaler)
+Index: src/uqm/setupmenu.h
+===================================================================
+--- src/uqm/setupmenu.h	(revision 1330)
++++ src/uqm/setupmenu.h	(working copy)
+@@ -86,7 +86,7 @@
+ 	OPT_CONSOLETYPE menu, text, cscan, scroll, intro, meleezoom, shield;
+ 	CONTROL_TEMPLATE player1, player2;
+ 	int speechvol, musicvol, sfxvol;
+-	BOOLEAN mainmenuMusic, mineralSubmenu, nebulae, rotatingIpPlanets, texturedIpPlanets, cheatMode; // JMS
++	BOOLEAN mainmenuMusic, mineralSubmenu, nebulae, rotatingIpPlanets, texturedIpPlanets, cheatMode, directionalJoystick; // JMS
+ } GLOBALOPTS;
+ 
+ void SetupMenu (void);
 Index: src/uqm/shipstat.c
 ===================================================================
---- src/uqm/shipstat.c	(revision 1317)
+--- src/uqm/shipstat.c	(revision 1330)
 +++ src/uqm/shipstat.c	(working copy)
 @@ -144,6 +144,45 @@
  	DrawFilledRectangle (&r);
@@ -825,22 +894,21 @@ Index: src/uqm/shipstat.c
  	}
  }
  
-Index: src/uqm/globdata.c
+Index: src/uqm/units.h
 ===================================================================
---- src/uqm/globdata.c	(revision 1317)
-+++ src/uqm/globdata.c	(working copy)
-@@ -130,7 +130,7 @@
- 		OldContext = SetContext (RadarContext);
- 		SetContextFGFrame (Screen);
- 		r.corner.x = RADAR_X;
--		r.corner.y = RADAR_Y;
-+		r.corner.y = RADAR_Y_LIFTED_UP;
- 		r.extent.width = RADAR_WIDTH;
- 		r.extent.height = RADAR_HEIGHT;
- 		SetContextClipRect (&r);
+--- src/uqm/units.h	(revision 1330)
++++ src/uqm/units.h	(working copy)
+@@ -67,6 +67,7 @@
+ #define RADAR_WIDTH (STATUS_WIDTH - RES_STAT_SCALE(8))							// JMS_GFX
+ #define RADAR_HEIGHT RES_STAT_SCALE(53)											// JMS_GFX
+ #define RADAR_Y (SIS_ORG_Y + SIS_SCREEN_HEIGHT - (53 << RESOLUTION_FACTOR))		// JMS_GFX
++#define RADAR_Y_LIFTED_UP  (RADAR_Y - (40 << RESOLUTION_FACTOR))
+ 
+ 		/* Blue boxes which display messages and the green date box. */
+ #define SIS_TITLE_BOX_WIDTH    (57 << RESOLUTION_FACTOR)						// JMS_GFX
 Index: src/uqm/gameinp.c
 ===================================================================
---- src/uqm/gameinp.c	(revision 1317)
+--- src/uqm/gameinp.c	(revision 1330)
 +++ src/uqm/gameinp.c	(working copy)
 @@ -16,6 +16,7 @@
   *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
@@ -1063,489 +1131,51 @@ Index: src/uqm/gameinp.c
 +	}
 +	return InputState;
 +}
-Index: src/uqm/shipyard.c
+Index: src/uqm/planets/lander.c
 ===================================================================
---- src/uqm/shipyard.c	(revision 1317)
-+++ src/uqm/shipyard.c	(working copy)
-@@ -212,9 +212,9 @@
- 	OldContext = SetContext (StatusContext);
- 	GetContextClipRect (&r);
- 	s.origin.x = RADAR_X - r.corner.x;
--	s.origin.y = RADAR_Y - r.corner.y;
-+	s.origin.y = RADAR_Y_LIFTED_UP - r.corner.y;
- 	r.corner.x = s.origin.x - 1;
--	r.corner.y = s.origin.y - RES_CASE(11,24,33); // JMS_GFX
-+	r.corner.y = s.origin.y - RES_CASE(1,2,3); // JMS_GFX
- 	r.extent.width = RADAR_WIDTH + 2;
- 	r.extent.height = RES_CASE(11,24,33); // JMS_GFX
- 	BatchGraphics ();
-@@ -242,8 +242,6 @@
- 		hStarShip = GetAvailableRaceFromIndex (NewRaceItem);
- 		NewRaceItem = GetIndexFromStarShip (&GLOBAL (avail_race_q),
- 				hStarShip);
--		s.frame = SetAbsFrameIndex (pMS->ModuleFrame, 3 + NewRaceItem);
--		DrawStamp (&s);
- 		FleetPtr = LockFleetInfo (&GLOBAL (avail_race_q), hStarShip);
- 		s.frame = FleetPtr->melee_icon;
- 		UnlockFleetInfo (&GLOBAL (avail_race_q), hStarShip);
-@@ -253,6 +251,12 @@
- 		s.origin.x += (RADAR_WIDTH >> 1);
- 		s.origin.y += (RADAR_HEIGHT >> 1);
- 		DrawStamp (&s);
-+		// Draw the ship name, above the ship image.
-+		s.origin.x -= (RADAR_WIDTH >> 1);
-+		s.origin.y -= (RADAR_HEIGHT >> 2);
-+		s.frame = SetAbsFrameIndex (pMS->ModuleFrame, 3 + NewRaceItem);
-+		DrawStamp (&s);
-+
- 		t.align = ALIGN_RIGHT;
- 		t.CharCount = (COUNT)~0;
- 		t.pStr = buf;
-Index: src/uqm/sis.c
-===================================================================
---- src/uqm/sis.c	(revision 1317)
-+++ src/uqm/sis.c	(working copy)
-@@ -1810,7 +1810,7 @@
-  			GetContextClipRect (&clip_r);
-  			pRect = &temp_r;
-  			temp_r.corner.x = RADAR_X - clip_r.corner.x;
-- 			temp_r.corner.y = RADAR_Y - clip_r.corner.y;
-+ 			temp_r.corner.y = RADAR_Y_LIFTED_UP - clip_r.corner.y;
-  			temp_r.extent.width = RADAR_WIDTH;
-  			temp_r.extent.height = RADAR_HEIGHT;
-  			SetContext (ScreenContext);
-Index: src/uqm/comm/mycon/myconc.c
-===================================================================
---- src/uqm/comm/mycon/myconc.c	(revision 1317)
-+++ src/uqm/comm/mycon/myconc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../mycon/strings.h"
- 
- #include "uqm/gameev.h"
- #include "libs/mathlib.h"
-Index: src/uqm/comm/spathi/spathic.c
-===================================================================
---- src/uqm/comm/spathi/spathic.c	(revision 1317)
-+++ src/uqm/comm/spathi/spathic.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../spathi/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/druuge/druugec.c
-===================================================================
---- src/uqm/comm/druuge/druugec.c	(revision 1317)
-+++ src/uqm/comm/druuge/druugec.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../druuge/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/setup.h"
-Index: src/uqm/comm/syreen/syreenc.c
-===================================================================
---- src/uqm/comm/syreen/syreenc.c	(revision 1317)
-+++ src/uqm/comm/syreen/syreenc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../syreen/strings.h"
- 
- #include "libs/sound/sound.h"
- #include "uqm/build.h"
-Index: src/uqm/comm/chmmr/chmmrc.c
-===================================================================
---- src/uqm/comm/chmmr/chmmrc.c	(revision 1317)
-+++ src/uqm/comm/chmmr/chmmrc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../chmmr/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/hyper.h"
-Index: src/uqm/comm/slyland/slyland.c
-===================================================================
---- src/uqm/comm/slyland/slyland.c	(revision 1317)
-+++ src/uqm/comm/slyland/slyland.c	(working copy)
-@@ -16,10 +16,10 @@
-  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
-+#include "../slyland/strings.h"
-+#include <stdlib.h>
- #include "../commall.h"
--#include <stdlib.h>
- #include "resinst.h"
--#include "strings.h"
- 
- #include "options.h"
- #include "uqm/battle.h"
-Index: src/uqm/comm/ilwrath/ilwrathc.c
-===================================================================
---- src/uqm/comm/ilwrath/ilwrathc.c	(revision 1317)
-+++ src/uqm/comm/ilwrath/ilwrathc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../ilwrath/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: src/uqm/comm/supox/supoxc.c
-===================================================================
---- src/uqm/comm/supox/supoxc.c	(revision 1317)
-+++ src/uqm/comm/supox/supoxc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../supox/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/vux/vuxc.c
-===================================================================
---- src/uqm/comm/vux/vuxc.c	(revision 1317)
-+++ src/uqm/comm/vux/vuxc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../vux/strings.h"
- 
- static LOCDATA vux_desc_1x =
- {
-Index: src/uqm/comm/zoqfot/zoqfotc.c
-===================================================================
---- src/uqm/comm/zoqfot/zoqfotc.c	(revision 1317)
-+++ src/uqm/comm/zoqfot/zoqfotc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../zoqfot/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/shofixt/shofixt.c
-===================================================================
---- src/uqm/comm/shofixt/shofixt.c	(revision 1317)
-+++ src/uqm/comm/shofixt/shofixt.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../shofixt/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: src/uqm/comm/pkunk/pkunkc.c
-===================================================================
---- src/uqm/comm/pkunk/pkunkc.c	(revision 1317)
-+++ src/uqm/comm/pkunk/pkunkc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../pkunk/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/rebel/rebel.c
-===================================================================
---- src/uqm/comm/rebel/rebel.c	(revision 1317)
-+++ src/uqm/comm/rebel/rebel.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "../yehat/resinst.h"
--#include "strings.h"
-+#include "../rebel/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/arilou/arilouc.c
-===================================================================
---- src/uqm/comm/arilou/arilouc.c	(revision 1317)
-+++ src/uqm/comm/arilou/arilouc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../arilou/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: src/uqm/comm/spahome/spahome.c
-===================================================================
---- src/uqm/comm/spahome/spahome.c	(revision 1317)
-+++ src/uqm/comm/spahome/spahome.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "../spathi/resinst.h"
--#include "strings.h"
-+#include "../spahome/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/starbas/starbas.c
-===================================================================
---- src/uqm/comm/starbas/starbas.c	(revision 1317)
-+++ src/uqm/comm/starbas/starbas.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "../comandr/resinst.h"
--#include "strings.h"
-+#include "../starbas/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/setup.h"
-Index: src/uqm/comm/utwig/utwigc.c
-===================================================================
---- src/uqm/comm/utwig/utwigc.c	(revision 1317)
-+++ src/uqm/comm/utwig/utwigc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../utwig/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/umgah/umgahc.c
-===================================================================
---- src/uqm/comm/umgah/umgahc.c	(revision 1317)
-+++ src/uqm/comm/umgah/umgahc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../umgah/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/talkpet/talkpet.c
-===================================================================
---- src/uqm/comm/talkpet/talkpet.c	(revision 1317)
-+++ src/uqm/comm/talkpet/talkpet.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../talkpet/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/thradd/thraddc.c
-===================================================================
---- src/uqm/comm/thradd/thraddc.c	(revision 1317)
-+++ src/uqm/comm/thradd/thraddc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../thradd/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/melnorm/melnorm.c
-===================================================================
---- src/uqm/comm/melnorm/melnorm.c	(revision 1317)
-+++ src/uqm/comm/melnorm/melnorm.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../melnorm/strings.h"
- 
- #include "uqm/gameev.h"
- #include "uqm/setup.h"
-Index: src/uqm/comm/yehat/yehatc.c
-===================================================================
---- src/uqm/comm/yehat/yehatc.c	(revision 1317)
-+++ src/uqm/comm/yehat/yehatc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../yehat/strings.h"
- 
- #include "uqm/build.h"
- #include "uqm/gameev.h"
-Index: src/uqm/comm/orz/orzc.c
-===================================================================
---- src/uqm/comm/orz/orzc.c	(revision 1317)
-+++ src/uqm/comm/orz/orzc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../orz/strings.h"
- 
- #include "uqm/build.h"
- 
-Index: src/uqm/comm/urquan/urquanc.c
-===================================================================
---- src/uqm/comm/urquan/urquanc.c	(revision 1317)
-+++ src/uqm/comm/urquan/urquanc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../urquan/strings.h"
- 
- static LOCDATA urquan_desc =
- {
-Index: src/uqm/comm/slyhome/slyhome.c
-===================================================================
---- src/uqm/comm/slyhome/slyhome.c	(revision 1317)
-+++ src/uqm/comm/slyhome/slyhome.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../slyhome/strings.h"
- 
- #include "uqm/gameev.h"
- 
-Index: src/uqm/comm/comandr/comandr.c
-===================================================================
---- src/uqm/comm/comandr/comandr.c	(revision 1317)
-+++ src/uqm/comm/comandr/comandr.c	(working copy)
-@@ -20,7 +20,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../comandr/strings.h"
- 
- #include "uqm/setup.h"
- #include "uqm/sis.h"
-Index: src/uqm/comm/blackur/blackurc.c
-===================================================================
---- src/uqm/comm/blackur/blackurc.c	(revision 1317)
-+++ src/uqm/comm/blackur/blackurc.c	(working copy)
-@@ -18,7 +18,7 @@
- 
- #include "../commall.h"
- #include "resinst.h"
--#include "strings.h"
-+#include "../blackur/strings.h"
- 
- static LOCDATA blackurq_desc =
- {
-Index: src/uqm/units.h
-===================================================================
---- src/uqm/units.h	(revision 1317)
-+++ src/uqm/units.h	(working copy)
-@@ -67,6 +67,7 @@
- #define RADAR_WIDTH (STATUS_WIDTH - RES_STAT_SCALE(8))							// JMS_GFX
- #define RADAR_HEIGHT RES_STAT_SCALE(53)											// JMS_GFX
- #define RADAR_Y (SIS_ORG_Y + SIS_SCREEN_HEIGHT - (53 << RESOLUTION_FACTOR))		// JMS_GFX
-+#define RADAR_Y_LIFTED_UP  (RADAR_Y - (40 << RESOLUTION_FACTOR))
- 
- 		/* Blue boxes which display messages and the green date box. */
- #define SIS_TITLE_BOX_WIDTH    (57 << RESOLUTION_FACTOR)						// JMS_GFX
-Index: src/uqm/confirm.c
-===================================================================
---- src/uqm/confirm.c	(revision 1317)
-+++ src/uqm/confirm.c	(working copy)
-@@ -34,9 +34,11 @@
- #include <stdlib.h>
- 
- 
--#define CONFIRM_WIN_WIDTH (80 << RESOLUTION_FACTOR) // JMS_GFX
-+#define CONFIRM_WIN_WIDTH (160 << RESOLUTION_FACTOR) // JMS_GFX
- #define CONFIRM_WIN_HEIGHT (22 << RESOLUTION_FACTOR) // JMS_GFX
- 
-+BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
-+
- static void
- DrawConfirmationWindow (BOOLEAN answer)
- {
-@@ -67,6 +69,8 @@
- 	font_DrawText (&t);
- 	t.baseline.x += (r.extent.width >> 1);
- 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE + 2); // "No"
-+	if (GLOBAL (CurrentActivity) & IN_BATTLE)
-+		t.pStr = "Escape unit"; // GAME_STRING (QUITMENU_STRING_BASE + 3); // TODO: modify gamestrings.txt 
- 	SetContextForeGroundColor (answer ? MENU_TEXT_COLOR : MENU_HIGHLIGHT_COLOR);	
- 	font_DrawText (&t);
- 
-@@ -111,8 +115,16 @@
- 
- 		FlushInput ();
- 		done = FALSE;
-+
-+		#ifdef ANDROID
-+		if ( !(GLOBAL (CurrentActivity) & IN_BATTLE) ) {
-+			/* Abort immediately */
-+			response = TRUE;
-+			done = TRUE;
-+		}
-+		#endif
- 		
--		do {
-+		while (!done) {
- 			// Forbid recursive calls or pausing here!
- 			ExitRequested = FALSE;
- 			GamePaused = FALSE;
-@@ -139,7 +151,7 @@
- 				PlayMenuSound (MENU_SOUND_MOVE);
- 			}
- 			SleepThread (ONE_SECOND / 30);
--		} while (!done);
-+		}
- 
- 		// Restore the screen under the confirmation window
- 		DrawStamp (&s);
-@@ -152,6 +164,8 @@
- 		}		
- 		else
+--- src/uqm/planets/lander.c	(revision 1330)
++++ src/uqm/planets/lander.c	(working copy)
+@@ -1852,15 +1852,15 @@
+ 		if (crew_left)
  		{
-+			if (GLOBAL (CurrentActivity) & IN_BATTLE)
-+				EmergencyEscapeWarpUnitActivatedFromMenu = TRUE;
- 			result = FALSE;
- 		}
- 		ExitRequested = FALSE;
+ 			SIZE index = GetFrameIndex (LanderFrame[0]);
++			BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index, 0);
+ 			if (turn_wait)
+ 				--turn_wait;
+-			else if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT] ||
+-					CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
++			else if ((InputState & BATTLE_LEFT) || (InputState & BATTLE_RIGHT))
+ 			{
+ 				COUNT landerSpeedNumer;
+ 				COUNT angle;
+ 
+-				if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
++				if (InputState & BATTLE_LEFT)
+ 					--index;
+ 				else
+ 					++index;
+@@ -1884,7 +1884,7 @@
+ 				turn_wait = SHUTTLE_TURN_WAIT;
+ 			}
+ 
+-			if (!CurrentInputState.key[PlayerControls[0]][KEY_UP])
++			if (!(InputState & BATTLE_THRUST))
+ 			{
+ 				dx = 0;
+ 				dy = 0;
+@@ -2212,7 +2212,9 @@
+ 	landerInputState.Initialized = FALSE;
+ 	landerInputState.InputFunc = DoPlanetSide;
+ 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
++	TFB_SetOnScreenKeyboard_Melee ();
+ 	DoInput (&landerInputState, FALSE);
++	TFB_SetOnScreenKeyboard_Menu ();
+ 
+ 	if (!(GLOBAL (CurrentActivity) & CHECK_ABORT))
+ 	{
 Index: src/uqm/planets/solarsys.c
 ===================================================================
---- src/uqm/planets/solarsys.c	(revision 1317)
+--- src/uqm/planets/solarsys.c	(revision 1330)
 +++ src/uqm/planets/solarsys.c	(working copy)
 @@ -1245,18 +1245,19 @@
  static void
@@ -1609,7 +1239,7 @@ Index: src/uqm/planets/solarsys.c
  	else
 Index: src/uqm/planets/pstarmap.c
 ===================================================================
---- src/uqm/planets/pstarmap.c	(revision 1317)
+--- src/uqm/planets/pstarmap.c	(revision 1330)
 +++ src/uqm/planets/pstarmap.c	(working copy)
 @@ -2005,7 +2005,9 @@
  	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
@@ -1621,113 +1251,9 @@ Index: src/uqm/planets/pstarmap.c
  	SetMenuSounds (MENU_SOUND_ARROWS, MENU_SOUND_SELECT);
  	SetDefaultMenuRepeatDelay ();
  
-Index: src/uqm/planets/lander.c
-===================================================================
---- src/uqm/planets/lander.c	(revision 1317)
-+++ src/uqm/planets/lander.c	(working copy)
-@@ -1852,15 +1852,15 @@
- 		if (crew_left)
- 		{
- 			SIZE index = GetFrameIndex (LanderFrame[0]);
-+			BATTLE_INPUT_STATE InputState = GetDirectionalJoystickInput(index, 0);
- 			if (turn_wait)
- 				--turn_wait;
--			else if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT] ||
--					CurrentInputState.key[PlayerControls[0]][KEY_RIGHT])
-+			else if ((InputState & BATTLE_LEFT) || (InputState & BATTLE_RIGHT))
- 			{
- 				COUNT landerSpeedNumer;
- 				COUNT angle;
- 
--				if (CurrentInputState.key[PlayerControls[0]][KEY_LEFT])
-+				if (InputState & BATTLE_LEFT)
- 					--index;
- 				else
- 					++index;
-@@ -1884,7 +1884,7 @@
- 				turn_wait = SHUTTLE_TURN_WAIT;
- 			}
- 
--			if (!CurrentInputState.key[PlayerControls[0]][KEY_UP])
-+			if (!(InputState & BATTLE_THRUST))
- 			{
- 				dx = 0;
- 				dy = 0;
-@@ -2212,7 +2212,9 @@
- 	landerInputState.Initialized = FALSE;
- 	landerInputState.InputFunc = DoPlanetSide;
- 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
-+	TFB_SetOnScreenKeyboard_Melee ();
- 	DoInput (&landerInputState, FALSE);
-+	TFB_SetOnScreenKeyboard_Menu ();
- 
- 	if (!(GLOBAL (CurrentActivity) & CHECK_ABORT))
- 	{
-Index: src/uqm/controls.h
-===================================================================
---- src/uqm/controls.h	(revision 1317)
-+++ src/uqm/controls.h	(working copy)
-@@ -32,6 +32,7 @@
- 	KEY_WEAPON,
- 	KEY_SPECIAL,
- 	KEY_ESCAPE,
-+	KEY_THRUST,
- 	NUM_KEYS
- };
- enum {
-@@ -90,13 +91,14 @@
- #define BATTLE_ESCAPE     ((BATTLE_INPUT_STATE)(1 << 5))
- #define BATTLE_DOWN       ((BATTLE_INPUT_STATE)(1 << 6))
- 
--BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player);
-+BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player, int direction /* = -1 for no directional input */);
- BATTLE_INPUT_STATE PulsedInputToBattleInput (COUNT player);
- 
- extern CONTROLLER_INPUT_STATE CurrentInputState;
- extern CONTROLLER_INPUT_STATE PulsedInputState;
- extern volatile CONTROLLER_INPUT_STATE ImmediateInputState;
- extern CONTROL_TEMPLATE PlayerControls[];
-+extern BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu;
- 
- void UpdateInputState (void);
- extern void FlushInput (void);
-@@ -116,6 +118,8 @@
- BOOLEAN WaitForNoInput (TimePeriod duration, BOOLEAN resetInput);
- BOOLEAN WaitForNoInputUntil (TimeCount timeOut, BOOLEAN resetInput);
- 
-+extern BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction, int player);
-+
- void DoPopupWindow(const char *msg);
- 
- typedef void (InputFrameCallback) (void);
-Index: src/uqm/starcon.c
-===================================================================
---- src/uqm/starcon.c	(revision 1317)
-+++ src/uqm/starcon.c	(working copy)
-@@ -240,6 +240,7 @@
- 		if (LastActivity == (CHECK_LOAD | CHECK_RESTART))
- 			AskNameForCaptainAndShip();
- 
-+		TFB_SetOnScreenKeyboard_Melee ();
- 		do
- 		{
- #ifdef DEBUG
-Index: src/uqm/supermelee/melee.c
-===================================================================
---- src/uqm/supermelee/melee.c	(revision 1317)
-+++ src/uqm/supermelee/melee.c	(working copy)
-@@ -2124,7 +2124,7 @@
- 			PlayerControl[0] = HUMAN_CONTROL | STANDARD_RATING;
- 			Melee_LocalChange_team (&MenuState, 0,
- 					MenuState.load.preBuiltList[0]);
--			PlayerControl[1] = COMPUTER_CONTROL | STANDARD_RATING;
-+			PlayerControl[1] = HUMAN_CONTROL | STANDARD_RATING; // COMPUTER_CONTROL | STANDARD_RATING;
- 			Melee_LocalChange_team (&MenuState, 1,
- 					MenuState.load.preBuiltList[1]);
- 		}
 Index: src/uqm/menu.c
 ===================================================================
---- src/uqm/menu.c	(revision 1317)
+--- src/uqm/menu.c	(revision 1330)
 +++ src/uqm/menu.c	(working copy)
 @@ -508,7 +508,7 @@
  	s.origin.x = RADAR_X - r.corner.x;
@@ -1738,9 +1264,178 @@ Index: src/uqm/menu.c
  	r.extent.width = RADAR_WIDTH + 2;
  	BatchGraphics ();
  	SetContextForeGroundColor (
+Index: src/uqm/globdata.c
+===================================================================
+--- src/uqm/globdata.c	(revision 1330)
++++ src/uqm/globdata.c	(working copy)
+@@ -130,7 +130,7 @@
+ 		OldContext = SetContext (RadarContext);
+ 		SetContextFGFrame (Screen);
+ 		r.corner.x = RADAR_X;
+-		r.corner.y = RADAR_Y;
++		r.corner.y = RADAR_Y_LIFTED_UP;
+ 		r.extent.width = RADAR_WIDTH;
+ 		r.extent.height = RADAR_HEIGHT;
+ 		SetContextClipRect (&r);
+Index: src/uqm/shipyard.c
+===================================================================
+--- src/uqm/shipyard.c	(revision 1330)
++++ src/uqm/shipyard.c	(working copy)
+@@ -212,9 +212,9 @@
+ 	OldContext = SetContext (StatusContext);
+ 	GetContextClipRect (&r);
+ 	s.origin.x = RADAR_X - r.corner.x;
+-	s.origin.y = RADAR_Y - r.corner.y;
++	s.origin.y = RADAR_Y_LIFTED_UP - r.corner.y;
+ 	r.corner.x = s.origin.x - 1;
+-	r.corner.y = s.origin.y - RES_CASE(11,24,33); // JMS_GFX
++	r.corner.y = s.origin.y - RES_CASE(1,2,3); // JMS_GFX
+ 	r.extent.width = RADAR_WIDTH + 2;
+ 	r.extent.height = RES_CASE(11,24,33); // JMS_GFX
+ 	BatchGraphics ();
+@@ -242,8 +242,6 @@
+ 		hStarShip = GetAvailableRaceFromIndex (NewRaceItem);
+ 		NewRaceItem = GetIndexFromStarShip (&GLOBAL (avail_race_q),
+ 				hStarShip);
+-		s.frame = SetAbsFrameIndex (pMS->ModuleFrame, 3 + NewRaceItem);
+-		DrawStamp (&s);
+ 		FleetPtr = LockFleetInfo (&GLOBAL (avail_race_q), hStarShip);
+ 		s.frame = FleetPtr->melee_icon;
+ 		UnlockFleetInfo (&GLOBAL (avail_race_q), hStarShip);
+@@ -253,6 +251,12 @@
+ 		s.origin.x += (RADAR_WIDTH >> 1);
+ 		s.origin.y += (RADAR_HEIGHT >> 1);
+ 		DrawStamp (&s);
++		// Draw the ship name, above the ship image.
++		s.origin.x -= (RADAR_WIDTH >> 1);
++		s.origin.y -= (RADAR_HEIGHT >> 2);
++		s.frame = SetAbsFrameIndex (pMS->ModuleFrame, 3 + NewRaceItem);
++		DrawStamp (&s);
++
+ 		t.align = ALIGN_RIGHT;
+ 		t.CharCount = (COUNT)~0;
+ 		t.pStr = buf;
+Index: src/uqm/confirm.c
+===================================================================
+--- src/uqm/confirm.c	(revision 1330)
++++ src/uqm/confirm.c	(working copy)
+@@ -34,9 +34,11 @@
+ #include <stdlib.h>
+ 
+ 
+-#define CONFIRM_WIN_WIDTH (80 << RESOLUTION_FACTOR) // JMS_GFX
++#define CONFIRM_WIN_WIDTH (160 << RESOLUTION_FACTOR) // JMS_GFX
+ #define CONFIRM_WIN_HEIGHT (22 << RESOLUTION_FACTOR) // JMS_GFX
+ 
++BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu = FALSE;
++
+ static void
+ DrawConfirmationWindow (BOOLEAN answer)
+ {
+@@ -67,6 +69,8 @@
+ 	font_DrawText (&t);
+ 	t.baseline.x += (r.extent.width >> 1);
+ 	t.pStr = GAME_STRING (QUITMENU_STRING_BASE + 2); // "No"
++	if (GLOBAL (CurrentActivity) & IN_BATTLE)
++		t.pStr = "Escape unit"; // GAME_STRING (QUITMENU_STRING_BASE + 3); // TODO: modify gamestrings.txt 
+ 	SetContextForeGroundColor (answer ? MENU_TEXT_COLOR : MENU_HIGHLIGHT_COLOR);	
+ 	font_DrawText (&t);
+ 
+@@ -111,8 +115,16 @@
+ 
+ 		FlushInput ();
+ 		done = FALSE;
++
++		#ifdef ANDROID
++		if ( !(GLOBAL (CurrentActivity) & IN_BATTLE) ) {
++			/* Abort immediately */
++			response = TRUE;
++			done = TRUE;
++		}
++		#endif
+ 		
+-		do {
++		while (!done) {
+ 			// Forbid recursive calls or pausing here!
+ 			ExitRequested = FALSE;
+ 			GamePaused = FALSE;
+@@ -139,7 +151,7 @@
+ 				PlayMenuSound (MENU_SOUND_MOVE);
+ 			}
+ 			SleepThread (ONE_SECOND / 30);
+-		} while (!done);
++		}
+ 
+ 		// Restore the screen under the confirmation window
+ 		DrawStamp (&s);
+@@ -152,6 +164,8 @@
+ 		}		
+ 		else
+ 		{
++			if (GLOBAL (CurrentActivity) & IN_BATTLE)
++				EmergencyEscapeWarpUnitActivatedFromMenu = TRUE;
+ 			result = FALSE;
+ 		}
+ 		ExitRequested = FALSE;
+Index: src/uqm/hyper.c
+===================================================================
+--- src/uqm/hyper.c	(revision 1330)
++++ src/uqm/hyper.c	(working copy)
+@@ -1930,7 +1930,6 @@
+ 	Color OldColor;
+ 	CONTEXT OldContext;
+ 	MENU_STATE MenuState;
+-
+ UnbatchGraphics ();
+ 
+ 	OldContext = SetContext (SpaceContext);
+Index: src/uqm/intro.c
+===================================================================
+--- src/uqm/intro.c	(revision 1330)
++++ src/uqm/intro.c	(working copy)
+@@ -909,7 +909,9 @@
+ 	pis.MovieFrame = -1;
+ 	pis.StartTime = GetTimeCounter ();
+ 	pis.LastSyncTime = pis.StartTime;
++	TFB_SetOnScreenKeyboard_Hidden ();
+ 	DoInput (&pis, TRUE);
++	TFB_SetOnScreenKeyboard_Menu();
+ 
+ 	SleepThreadUntil (FadeMusic (0, ONE_SECOND));
+ 	StopMusic ();
+@@ -1001,7 +1003,9 @@
+ 	vis.InputFunc = DoVideoInput;
+ 	vis.CurVideo = ref;
+ 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
++	TFB_SetOnScreenKeyboard_Hidden ();
+ 	DoInput (&vis, TRUE);
++	TFB_SetOnScreenKeyboard_Menu ();
+ 
+ 	StopLegacyVideo (ref);
+ 	FadeClearScreen ();
+@@ -1017,6 +1021,7 @@
+ 	{
+ 		return FALSE;
+ 	}
++
+ 	if (!strcmp (resType, "STRTAB"))
+ 	{
+ 		STRING pres = CaptureStringTable (LoadStringTable (res));
+Index: src/uqm/starcon.c
+===================================================================
+--- src/uqm/starcon.c	(revision 1330)
++++ src/uqm/starcon.c	(working copy)
+@@ -240,6 +240,7 @@
+ 		if (LastActivity == (CHECK_LOAD | CHECK_RESTART))
+ 			AskNameForCaptainAndShip();
+ 
++		TFB_SetOnScreenKeyboard_Melee ();
+ 		do
+ 		{
+ #ifdef DEBUG
 Index: src/uqm/battle.c
 ===================================================================
---- src/uqm/battle.c	(revision 1317)
+--- src/uqm/battle.c	(revision 1330)
 +++ src/uqm/battle.c	(working copy)
 @@ -16,6 +16,10 @@
   *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
@@ -1806,53 +1501,46 @@ Index: src/uqm/battle.c
  	UnlockMutex (GraphicsLock);
  	
  	return (BOOLEAN) (num_ships < 0);
-Index: src/uqm/hyper.c
+Index: src/uqm/controls.h
 ===================================================================
---- src/uqm/hyper.c	(revision 1317)
-+++ src/uqm/hyper.c	(working copy)
-@@ -1930,7 +1930,6 @@
- 	Color OldColor;
- 	CONTEXT OldContext;
- 	MENU_STATE MenuState;
--
- UnbatchGraphics ();
+--- src/uqm/controls.h	(revision 1330)
++++ src/uqm/controls.h	(working copy)
+@@ -32,6 +32,7 @@
+ 	KEY_WEAPON,
+ 	KEY_SPECIAL,
+ 	KEY_ESCAPE,
++	KEY_THRUST,
+ 	NUM_KEYS
+ };
+ enum {
+@@ -90,13 +91,14 @@
+ #define BATTLE_ESCAPE     ((BATTLE_INPUT_STATE)(1 << 5))
+ #define BATTLE_DOWN       ((BATTLE_INPUT_STATE)(1 << 6))
  
- 	OldContext = SetContext (SpaceContext);
-Index: src/uqm/intro.c
-===================================================================
---- src/uqm/intro.c	(revision 1317)
-+++ src/uqm/intro.c	(working copy)
-@@ -909,7 +909,9 @@
- 	pis.MovieFrame = -1;
- 	pis.StartTime = GetTimeCounter ();
- 	pis.LastSyncTime = pis.StartTime;
-+	TFB_SetOnScreenKeyboard_Hidden ();
- 	DoInput (&pis, TRUE);
-+	TFB_SetOnScreenKeyboard_Menu();
+-BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player);
++BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player, int direction /* = -1 for no directional input */);
+ BATTLE_INPUT_STATE PulsedInputToBattleInput (COUNT player);
  
- 	SleepThreadUntil (FadeMusic (0, ONE_SECOND));
- 	StopMusic ();
-@@ -1001,7 +1003,9 @@
- 	vis.InputFunc = DoVideoInput;
- 	vis.CurVideo = ref;
- 	SetMenuSounds (MENU_SOUND_NONE, MENU_SOUND_NONE);
-+	TFB_SetOnScreenKeyboard_Hidden ();
- 	DoInput (&vis, TRUE);
-+	TFB_SetOnScreenKeyboard_Menu ();
+ extern CONTROLLER_INPUT_STATE CurrentInputState;
+ extern CONTROLLER_INPUT_STATE PulsedInputState;
+ extern volatile CONTROLLER_INPUT_STATE ImmediateInputState;
+ extern CONTROL_TEMPLATE PlayerControls[];
++extern BOOLEAN EmergencyEscapeWarpUnitActivatedFromMenu;
  
- 	StopLegacyVideo (ref);
- 	FadeClearScreen ();
-@@ -1017,6 +1021,7 @@
- 	{
- 		return FALSE;
- 	}
+ void UpdateInputState (void);
+ extern void FlushInput (void);
+@@ -116,6 +118,8 @@
+ BOOLEAN WaitForNoInput (TimePeriod duration, BOOLEAN resetInput);
+ BOOLEAN WaitForNoInputUntil (TimeCount timeOut, BOOLEAN resetInput);
+ 
++extern BATTLE_INPUT_STATE GetDirectionalJoystickInput(int direction, int player);
 +
- 	if (!strcmp (resType, "STRTAB"))
- 	{
- 		STRING pres = CaptureStringTable (LoadStringTable (res));
+ void DoPopupWindow(const char *msg);
+ 
+ typedef void (InputFrameCallback) (void);
 Index: src/uqm/outfit.c
 ===================================================================
---- src/uqm/outfit.c	(revision 1317)
+--- src/uqm/outfit.c	(revision 1330)
 +++ src/uqm/outfit.c	(working copy)
 @@ -59,7 +59,7 @@
  	OldContext = SetContext (StatusContext);
@@ -1863,95 +1551,381 @@ Index: src/uqm/outfit.c
  	r.corner.x = s.origin.x - 1;
  	r.corner.y = s.origin.y - 11;
  	r.extent.width = RADAR_WIDTH + 2;
-Index: src/uqm/setupmenu.c
+Index: src/uqm/comm/vux/vuxc.c
 ===================================================================
---- src/uqm/setupmenu.c	(revision 1317)
-+++ src/uqm/setupmenu.c	(working copy)
-@@ -83,7 +83,7 @@
- #endif
+--- src/uqm/comm/vux/vuxc.c	(revision 1330)
++++ src/uqm/comm/vux/vuxc.c	(working copy)
+@@ -18,7 +18,7 @@
  
- #define MENU_COUNT          8
--#define CHOICE_COUNT       29 // JMS: New options added.
-+#define CHOICE_COUNT       30 // JMS: New options added.
- #define SLIDER_COUNT        3
- #define BUTTON_COUNT       10
- #define LABEL_COUNT         4
-@@ -106,7 +106,7 @@
- static int choice_widths[CHOICE_COUNT] = {
- 	3, 2, 3, 2, 2, 2, 2, 2, 2, 2, 
- 	2, 2, 2, 2, 2, 3, 3, 2,	3, 3, 
--	3, 2, 3, 2, 2, 2, 2, 2, 2 };
-+	3, 2, 3, 2, 2, 2, 2, 2, 2, 2 };
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../vux/strings.h"
  
- static HANDLER button_handlers[BUTTON_COUNT] = {
- 	quit_main_menu, quit_sub_menu, do_graphics, do_engine,
-@@ -117,7 +117,7 @@
- // JMS: The first 8 was 7 (sound options.) Added mainmenumusic on/off.
- // JMS: The HAVE_OPENGL options were 5 and 4. Added cheatMode, mineralSubmenu, nebulae and planet options.
- static int menu_sizes[MENU_COUNT] = {
--	7, 6, 8, 8, 2, 5,
-+	7, 6, 8, 8, 2, 6,
- #ifdef HAVE_OPENGL
- 	10,
- #else
-@@ -185,6 +185,7 @@
- static WIDGET *keyconfig_widgets[] = {
- 	(WIDGET *)(&choices[18]),
- 	(WIDGET *)(&choices[19]),
-+	(WIDGET *)(&choices[29]), // Directional joystick
- 	(WIDGET *)(&labels[1]),
- 	(WIDGET *)(&buttons[8]),
- 	(WIDGET *)(&buttons[1]) };
-@@ -414,6 +415,7 @@
- 	choices[26].selected = opts.rotatingIpPlanets; // JMS
- 	choices[27].selected = opts.texturedIpPlanets || opts.rotatingIpPlanets; // JMS
- 	choices[28].selected = opts.cheatMode; // JMS
-+	choices[29].selected = opts.directionalJoystick;
- 	
- 	sliders[0].value = opts.musicvol;
- 	sliders[1].value = opts.sfxvol;
-@@ -452,6 +454,7 @@
- 	opts.rotatingIpPlanets = choices[26].selected; // JMS
- 	opts.texturedIpPlanets = choices[27].selected || opts.rotatingIpPlanets; // JMS
- 	opts.cheatMode = choices[28].selected; // JMS
-+	opts.directionalJoystick = choices[29].selected;
- 	
- 	opts.musicvol = sliders[0].value;
- 	opts.sfxvol = sliders[1].value;
-@@ -1164,6 +1167,7 @@
- 	opts->rotatingIpPlanets = optRotatingIpPlanets ? OPTVAL_ENABLED : OPTVAL_DISABLED;
- 	opts->texturedIpPlanets = (optTexturedIpPlanets ? OPTVAL_ENABLED : OPTVAL_DISABLED) || opts->rotatingIpPlanets;
- 	opts->cheatMode = optCheatMode ? OPTVAL_ENABLED : OPTVAL_DISABLED;
-+	opts->directionalJoystick = optDirectionalJoystick ? OPTVAL_ENABLED : OPTVAL_DISABLED;
- 	
- 	/* Work out resolution.  On the way, try to guess a good default
- 	 * for config.alwaysgl, then overwrite it if it was set previously. */
-@@ -1376,6 +1380,9 @@
- 	res_PutBoolean ("config.cheatMode", opts->cheatMode == OPTVAL_ENABLED);
- 	optCheatMode = opts->cheatMode == OPTVAL_ENABLED;
- 	
-+	res_PutBoolean ("config.directionaljoystick", opts->directionalJoystick == OPTVAL_ENABLED);
-+	optDirectionalJoystick = (opts->directionalJoystick == OPTVAL_ENABLED) ? TRUE : FALSE;
-+	
- 	if (NewWidth == 320 && NewHeight == 240)
- 	{
- 		switch (opts->scaler)
-Index: src/uqm/setupmenu.h
+ static LOCDATA vux_desc_1x =
+ {
+Index: src/uqm/comm/shofixt/shofixt.c
 ===================================================================
---- src/uqm/setupmenu.h	(revision 1317)
-+++ src/uqm/setupmenu.h	(working copy)
-@@ -86,7 +86,7 @@
- 	OPT_CONSOLETYPE menu, text, cscan, scroll, intro, meleezoom, shield;
- 	CONTROL_TEMPLATE player1, player2;
- 	int speechvol, musicvol, sfxvol;
--	BOOLEAN mainmenuMusic, mineralSubmenu, nebulae, rotatingIpPlanets, texturedIpPlanets, cheatMode; // JMS
-+	BOOLEAN mainmenuMusic, mineralSubmenu, nebulae, rotatingIpPlanets, texturedIpPlanets, cheatMode, directionalJoystick; // JMS
- } GLOBALOPTS;
+--- src/uqm/comm/shofixt/shofixt.c	(revision 1330)
++++ src/uqm/comm/shofixt/shofixt.c	(working copy)
+@@ -18,7 +18,7 @@
  
- void SetupMenu (void);
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../shofixt/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: src/uqm/comm/pkunk/pkunkc.c
+===================================================================
+--- src/uqm/comm/pkunk/pkunkc.c	(revision 1330)
++++ src/uqm/comm/pkunk/pkunkc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../pkunk/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: src/uqm/comm/spathi/spathic.c
+===================================================================
+--- src/uqm/comm/spathi/spathic.c	(revision 1330)
++++ src/uqm/comm/spathi/spathic.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../spathi/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: src/uqm/comm/rebel/rebel.c
+===================================================================
+--- src/uqm/comm/rebel/rebel.c	(revision 1330)
++++ src/uqm/comm/rebel/rebel.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "../yehat/resinst.h"
+-#include "strings.h"
++#include "../rebel/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: src/uqm/comm/druuge/druugec.c
+===================================================================
+--- src/uqm/comm/druuge/druugec.c	(revision 1330)
++++ src/uqm/comm/druuge/druugec.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../druuge/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/setup.h"
+Index: src/uqm/comm/spahome/spahome.c
+===================================================================
+--- src/uqm/comm/spahome/spahome.c	(revision 1330)
++++ src/uqm/comm/spahome/spahome.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "../spathi/resinst.h"
+-#include "strings.h"
++#include "../spahome/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: src/uqm/comm/starbas/starbas.c
+===================================================================
+--- src/uqm/comm/starbas/starbas.c	(revision 1330)
++++ src/uqm/comm/starbas/starbas.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "../comandr/resinst.h"
+-#include "strings.h"
++#include "../starbas/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/setup.h"
+Index: src/uqm/comm/utwig/utwigc.c
+===================================================================
+--- src/uqm/comm/utwig/utwigc.c	(revision 1330)
++++ src/uqm/comm/utwig/utwigc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../utwig/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: src/uqm/comm/umgah/umgahc.c
+===================================================================
+--- src/uqm/comm/umgah/umgahc.c	(revision 1330)
++++ src/uqm/comm/umgah/umgahc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../umgah/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: src/uqm/comm/talkpet/talkpet.c
+===================================================================
+--- src/uqm/comm/talkpet/talkpet.c	(revision 1330)
++++ src/uqm/comm/talkpet/talkpet.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../talkpet/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: src/uqm/comm/syreen/syreenc.c
+===================================================================
+--- src/uqm/comm/syreen/syreenc.c	(revision 1330)
++++ src/uqm/comm/syreen/syreenc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../syreen/strings.h"
+ 
+ #include "libs/sound/sound.h"
+ #include "uqm/build.h"
+Index: src/uqm/comm/melnorm/melnorm.c
+===================================================================
+--- src/uqm/comm/melnorm/melnorm.c	(revision 1330)
++++ src/uqm/comm/melnorm/melnorm.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../melnorm/strings.h"
+ 
+ #include "uqm/gameev.h"
+ #include "uqm/setup.h"
+Index: src/uqm/comm/yehat/yehatc.c
+===================================================================
+--- src/uqm/comm/yehat/yehatc.c	(revision 1330)
++++ src/uqm/comm/yehat/yehatc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../yehat/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: src/uqm/comm/orz/orzc.c
+===================================================================
+--- src/uqm/comm/orz/orzc.c	(revision 1330)
++++ src/uqm/comm/orz/orzc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../orz/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: src/uqm/comm/slyhome/slyhome.c
+===================================================================
+--- src/uqm/comm/slyhome/slyhome.c	(revision 1330)
++++ src/uqm/comm/slyhome/slyhome.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../slyhome/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: src/uqm/comm/zoqfot/zoqfotc.c
+===================================================================
+--- src/uqm/comm/zoqfot/zoqfotc.c	(revision 1330)
++++ src/uqm/comm/zoqfot/zoqfotc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../zoqfot/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: src/uqm/comm/comandr/comandr.c
+===================================================================
+--- src/uqm/comm/comandr/comandr.c	(revision 1330)
++++ src/uqm/comm/comandr/comandr.c	(working copy)
+@@ -20,7 +20,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../comandr/strings.h"
+ 
+ #include "uqm/setup.h"
+ #include "uqm/sis.h"
+Index: src/uqm/comm/blackur/blackurc.c
+===================================================================
+--- src/uqm/comm/blackur/blackurc.c	(revision 1330)
++++ src/uqm/comm/blackur/blackurc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../blackur/strings.h"
+ 
+ static LOCDATA blackurq_desc =
+ {
+Index: src/uqm/comm/mycon/myconc.c
+===================================================================
+--- src/uqm/comm/mycon/myconc.c	(revision 1330)
++++ src/uqm/comm/mycon/myconc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../mycon/strings.h"
+ 
+ #include "uqm/gameev.h"
+ #include "libs/mathlib.h"
+Index: src/uqm/comm/arilou/arilouc.c
+===================================================================
+--- src/uqm/comm/arilou/arilouc.c	(revision 1330)
++++ src/uqm/comm/arilou/arilouc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../arilou/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: src/uqm/comm/chmmr/chmmrc.c
+===================================================================
+--- src/uqm/comm/chmmr/chmmrc.c	(revision 1330)
++++ src/uqm/comm/chmmr/chmmrc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../chmmr/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/hyper.h"
+Index: src/uqm/comm/thradd/thraddc.c
+===================================================================
+--- src/uqm/comm/thradd/thraddc.c	(revision 1330)
++++ src/uqm/comm/thradd/thraddc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../thradd/strings.h"
+ 
+ #include "uqm/build.h"
+ #include "uqm/gameev.h"
+Index: src/uqm/comm/slyland/slyland.c
+===================================================================
+--- src/uqm/comm/slyland/slyland.c	(revision 1330)
++++ src/uqm/comm/slyland/slyland.c	(working copy)
+@@ -16,10 +16,10 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
++#include "../slyland/strings.h"
++#include <stdlib.h>
+ #include "../commall.h"
+-#include <stdlib.h>
+ #include "resinst.h"
+-#include "strings.h"
+ 
+ #include "options.h"
+ #include "uqm/battle.h"
+Index: src/uqm/comm/ilwrath/ilwrathc.c
+===================================================================
+--- src/uqm/comm/ilwrath/ilwrathc.c	(revision 1330)
++++ src/uqm/comm/ilwrath/ilwrathc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../ilwrath/strings.h"
+ 
+ #include "uqm/gameev.h"
+ 
+Index: src/uqm/comm/urquan/urquanc.c
+===================================================================
+--- src/uqm/comm/urquan/urquanc.c	(revision 1330)
++++ src/uqm/comm/urquan/urquanc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../urquan/strings.h"
+ 
+ static LOCDATA urquan_desc =
+ {
+Index: src/uqm/comm/supox/supoxc.c
+===================================================================
+--- src/uqm/comm/supox/supoxc.c	(revision 1330)
++++ src/uqm/comm/supox/supoxc.c	(working copy)
+@@ -18,7 +18,7 @@
+ 
+ #include "../commall.h"
+ #include "resinst.h"
+-#include "strings.h"
++#include "../supox/strings.h"
+ 
+ #include "uqm/build.h"
+ 
+Index: src/uqm/intel.c
+===================================================================
+--- src/uqm/intel.c	(revision 1330)
++++ src/uqm/intel.c	(working copy)
+@@ -45,10 +45,10 @@
+ 			// Allow a player to warp-escape in cyborg mode
+ 			if (StarShipPtr->playerNr == RPG_PLAYER_NUM)
+ 				InputState |= CurrentInputToBattleInput (
+-						context->playerNr) & BATTLE_ESCAPE;
++						context->playerNr, -1) & BATTLE_ESCAPE;
+ 		}
+ 		else
+-			InputState = CurrentInputToBattleInput (context->playerNr);
++			InputState = CurrentInputToBattleInput (context->playerNr, -1);
+ 	}
+ 	else if (!(PlayerControl[context->playerNr] & PSYTRON_CONTROL))
+ 		InputState = 0;
 Index: src/uqm/status.c
 ===================================================================
---- src/uqm/status.c	(revision 1317)
+--- src/uqm/status.c	(revision 1330)
 +++ src/uqm/status.c	(working copy)
 @@ -328,7 +328,7 @@
  				StarShipPtr->RaceDescPtr->characteristics.energy_wait;
@@ -1971,9 +1945,22 @@ Index: src/uqm/status.c
  
  	return (retval);
  }
+Index: src/uqm/supermelee/melee.c
+===================================================================
+--- src/uqm/supermelee/melee.c	(revision 1330)
++++ src/uqm/supermelee/melee.c	(working copy)
+@@ -2124,7 +2124,7 @@
+ 			PlayerControl[0] = HUMAN_CONTROL | STANDARD_RATING;
+ 			Melee_LocalChange_team (&MenuState, 0,
+ 					MenuState.load.preBuiltList[0]);
+-			PlayerControl[1] = COMPUTER_CONTROL | STANDARD_RATING;
++			PlayerControl[1] = HUMAN_CONTROL | STANDARD_RATING; // COMPUTER_CONTROL | STANDARD_RATING;
+ 			Melee_LocalChange_team (&MenuState, 1,
+ 					MenuState.load.preBuiltList[1]);
+ 		}
 Index: src/uqm/status.h
 ===================================================================
---- src/uqm/status.h	(revision 1317)
+--- src/uqm/status.h	(revision 1330)
 +++ src/uqm/status.h	(working copy)
 @@ -36,9 +36,15 @@
  #define CAPTAIN_HEIGHT RES_STAT_SCALE(30) // JMS_GFX
@@ -2003,9 +1990,22 @@ Index: src/uqm/status.h
  extern void DrawBattleCrewAmount (SHIP_INFO *ShipInfoPtr, COORD y_offs);
  
  extern void DrawCaptainsWindow (STARSHIP *StarShipPtr);
+Index: src/uqm/sis.c
+===================================================================
+--- src/uqm/sis.c	(revision 1330)
++++ src/uqm/sis.c	(working copy)
+@@ -1810,7 +1810,7 @@
+  			GetContextClipRect (&clip_r);
+  			pRect = &temp_r;
+  			temp_r.corner.x = RADAR_X - clip_r.corner.x;
+- 			temp_r.corner.y = RADAR_Y - clip_r.corner.y;
++ 			temp_r.corner.y = RADAR_Y_LIFTED_UP - clip_r.corner.y;
+  			temp_r.extent.width = RADAR_WIDTH;
+  			temp_r.extent.height = RADAR_HEIGHT;
+  			SetContext (ScreenContext);
 Index: src/options.c
 ===================================================================
---- src/options.c	(revision 1317)
+--- src/options.c	(revision 1330)
 +++ src/options.c	(working copy)
 @@ -67,6 +67,7 @@
  BOOLEAN optRotatingIpPlanets;
@@ -2025,7 +2025,7 @@ Index: src/options.c
  					relativeFlags | uio_MOUNT_RDONLY,
 Index: src/options.h
 ===================================================================
---- src/options.h	(revision 1317)
+--- src/options.h	(revision 1330)
 +++ src/options.h	(working copy)
 @@ -54,6 +54,7 @@
  extern BOOLEAN optRotatingIpPlanets;
@@ -2037,7 +2037,7 @@ Index: src/options.h
  extern BOOLEAN optRemixMusic;
 Index: src/uqm.c
 ===================================================================
---- src/uqm.c	(revision 1317)
+--- src/uqm.c	(revision 1330)
 +++ src/uqm.c	(working copy)
 @@ -63,6 +63,22 @@
  			// Including this is actually necessary on OSX.
