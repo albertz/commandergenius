@@ -686,7 +686,7 @@ class DataDownloader extends Thread
 	}
 
 
-	public class BackKeyListener implements Settings.KeyEventsListener
+	public class BackKeyListener implements MainActivity.KeyEventsListener
 	{
 		MainActivity p;
 		public BackKeyListener(MainActivity _p)

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHANGE_APP_SETTINGS_VERSION=18
+CHANGE_APP_SETTINGS_VERSION=19
 AUTO=
 CHANGED=
 
@@ -485,10 +485,15 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+MenuOptionsAvailable=
+for FF in Menu MenuMisc MenuMouse MenuKeyboard ; do
+	MenuOptionsAvailable1=`grep 'extends Menu' project/java/Settings$FF.java | sed "s/.* class \(.*\) extends .*/Settings$FF.\1/" | tr '\n' ' '`
+	MenuOptionsAvailable="$MenuOptionsAvailable $MenuOptionsAvailable1"
+done
 if [ -z "$AUTO" ]; then
 echo
 echo "Menu items to hide from startup menu, available menu items:"
-echo "`grep 'extends Menu' project/java/Settings.java | sed 's/.* class \(.*\) extends .*/\1/'`"
+echo "$MenuOptionsAvailable"
 echo "($HiddenMenuOptions)"
 echo -n ": "
 read var
@@ -498,13 +503,13 @@ if [ -n "$var" ] ; then
 fi
 fi
 
-FirstStartMenuOptionsDefault='new Settings.ShowReadme(), (AppUsesMouse \&\& \! ForceRelativeMouseMode \? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true), new Settings.GyroscopeCalibration()'
+FirstStartMenuOptionsDefault='new SettingsMenuMisc.ShowReadme(), (AppUsesMouse \&\& \! ForceRelativeMouseMode \? new SettingsMenuMouse.DisplaySizeConfig(true) : new SettingsMenu.DummyMenu()), new SettingsMenuMisc.OptionalDownloadConfig(true), new SettingsMenuMisc.GyroscopeCalibration()'
 if [ -z "$AUTO" ]; then
 echo
-echo "Menu items to show at startup - this is Java code snippet, leave empty for default"
-echo $FirstStartMenuOptionsDefault
+echo "Menu items to show at startup - this is Java code snippet, leave empty for default:"
+echo "$FirstStartMenuOptionsDefault"
 echo "Available menu items:"
-echo "`grep 'extends Menu' project/java/Settings.java | sed 's/.* class \(.*\) extends .*/new Settings.\1(), /'`"
+echo "$MenuOptionsAvailable"
 echo "Current value: " "$FirstStartMenuOptions"
 echo -n ": "
 read var
@@ -863,13 +868,13 @@ echo "# How long to show startup menu button, in msec, 0 to disable startup menu
 echo StartupMenuButtonTimeout=$StartupMenuButtonTimeout >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Menu items to hide from startup menu, available menu items:" >> AndroidAppSettings.cfg
-echo "# `grep 'extends Menu' project/java/Settings.java | sed 's/.* class \(.*\) extends .*/\1/' | tr '\n' ' '`" >> AndroidAppSettings.cfg
+echo "# $MenuOptionsAvailable" >> AndroidAppSettings.cfg
 echo HiddenMenuOptions=\'$HiddenMenuOptions\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Menu items to show at startup - this is Java code snippet, leave empty for default:" >> AndroidAppSettings.cfg
+echo "# Menu items to show at startup - this is Java code snippet, leave empty for default" >> AndroidAppSettings.cfg
 echo "# $FirstStartMenuOptionsDefault" >> AndroidAppSettings.cfg
 echo "# Available menu items:" >> AndroidAppSettings.cfg
-echo "# `grep 'extends Menu' project/java/Settings.java | sed 's/.* class \(.*\) extends .*/new Settings.\1(), /' | tr -d '\n'`" >> AndroidAppSettings.cfg
+echo "# $MenuOptionsAvailable" >> AndroidAppSettings.cfg
 echo FirstStartMenuOptions=\'$FirstStartMenuOptions\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Enable multi-ABI binary, with hardware FPU support - it will also work on old devices," >> AndroidAppSettings.cfg
@@ -1157,12 +1162,17 @@ fi
 
 HiddenMenuOptions1=""
 for F in $HiddenMenuOptions; do
-	HiddenMenuOptions1="$HiddenMenuOptions1 new Settings.$F(),"
+	HiddenMenuOptions1="$HiddenMenuOptions1 new $F(),"
 done
 
-if [ -z "$FirstStartMenuOptions" ]; then
-	FirstStartMenuOptions="$FirstStartMenuOptionsDefault"
-fi
+FirstStartMenuOptions1=""
+for F in $FirstStartMenuOptions; do
+	FirstStartMenuOptions1="$FirstStartMenuOptions1 new $F(),"
+done
+
+#if [ -z "$FirstStartMenuOptions" ]; then
+#	FirstStartMenuOptions="$FirstStartMenuOptionsDefault"
+#fi
 
 ReadmeText="`echo $ReadmeText | sed 's/\"/\\\\\\\\\"/g' | sed 's/[&%]//g'`"
 
@@ -1259,14 +1269,15 @@ $SEDI "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public
 $SEDI "s@public static String\\[\\] AppTouchscreenKeyboardKeysNames = .*;@public static String[] AppTouchscreenKeyboardKeysNames = \"$RedefinedKeysScreenKbNames\".split(\" \");@" project/src/Globals.java
 $SEDI "s/public static int StartupMenuButtonTimeout = .*;/public static int StartupMenuButtonTimeout = $StartupMenuButtonTimeout;/" project/src/Globals.java
 $SEDI "s/public static int AppMinimumRAM = .*;/public static int AppMinimumRAM = $AppMinimumRAM;/" project/src/Globals.java
-$SEDI "s/public static Settings.Menu HiddenMenuOptions .*;/public static Settings.Menu HiddenMenuOptions [] = { $HiddenMenuOptions1 };/" project/src/Globals.java
-$SEDI "s@public static Settings.Menu FirstStartMenuOptions .*;@public static Settings.Menu FirstStartMenuOptions [] = { $FirstStartMenuOptions };@" project/src/Globals.java
+$SEDI "s/public static SettingsMenu.Menu HiddenMenuOptions .*;/public static SettingsMenu.Menu HiddenMenuOptions [] = { $HiddenMenuOptions1 };/" project/src/Globals.java
+[ -n "$FirstStartMenuOptions1" ] && $SEDI "s@public static SettingsMenu.Menu FirstStartMenuOptions .*;@public static SettingsMenu.Menu FirstStartMenuOptions [] = { $FirstStartMenuOptions1 };@" project/src/Globals.java
 $SEDI "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\";%" project/src/Globals.java
 $SEDI "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" project/src/Globals.java
 $SEDI "s/public static String AdmobPublisherId = .*/public static String AdmobPublisherId = \"$AdmobPublisherId\";/" project/src/Globals.java
 $SEDI "s/public static String AdmobTestDeviceId = .*/public static String AdmobTestDeviceId = \"$AdmobTestDeviceId\";/" project/src/Globals.java
 $SEDI "s/public static String AdmobBannerSize = .*/public static String AdmobBannerSize = \"$AdmobBannerSize\";/" project/src/Globals.java
 $SEDI "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" project/src/Globals.java
+
 
 echo Patching project/jni/Settings.mk
 echo '# DO NOT EDIT THIS FILE - it is automatically generated, edit file SettingsTemplate.mk' > project/jni/Settings.mk

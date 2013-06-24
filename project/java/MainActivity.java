@@ -117,7 +117,7 @@ public class MainActivity extends Activity
 						setUpStatusLabel();
 						Log.i("SDL", "libSDL: User clicked change phone config button");
 						loadedLibraries.acquireUninterruptibly();
-						Settings.showConfig(p, false);
+						SettingsMenu.showConfig(p, false);
 					}
 			};
 			_btn.setOnClickListener(new onClickListener(this));
@@ -394,6 +394,9 @@ public class MainActivity extends Activity
 		if( mGLView != null )
 			mGLView.exitApp();
 		super.onDestroy();
+		try{
+			Thread.sleep(2000); // The event is sent asynchronously, allow app to save it's state, and call exit() itself.
+		} catch (InterruptedException e) {}
 		System.exit(0);
 	}
 
@@ -1059,8 +1062,19 @@ public class MainActivity extends Activity
 	private EditText _screenKeyboard = null;
 	private String _screenKeyboardHintMessage = null;
 	private boolean sdlInited = false;
-	public Settings.TouchEventsListener touchListener = null;
-	public Settings.KeyEventsListener keyListener = null;
+
+	public interface TouchEventsListener
+	{
+		public void onTouchEvent(final MotionEvent ev);
+	}
+
+	public interface KeyEventsListener
+	{
+		public void onKeyEvent(final int keyCode);
+	}
+
+	public TouchEventsListener touchListener = null;
+	public KeyEventsListener keyListener = null;
 	boolean _isPaused = false;
 	private InputMethodManager _inputManager = null;
 
