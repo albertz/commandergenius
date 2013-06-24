@@ -525,6 +525,16 @@ class SDL_Keys
 	
 	static final int JAVA_KEYCODE_LAST = 255; // Android 2.3 added several new gaming keys, Android 3.1 added even more - keep in sync with javakeycodes.h
 
+	static String getName(int v)
+	{
+		for( int f = 0; f < values.length; f++ )
+		{
+			if( values[f] == v )
+				return names[f];
+		}
+		return names[0];
+	}
+
 	static
 	{
 		ArrayList<String> Names = new ArrayList<String> ();

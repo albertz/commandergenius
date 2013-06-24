@@ -124,6 +124,8 @@
     <string name="remap_hwkeys">Remap physical keys</string>
     <string name="remap_hwkeys_press">Press any key except HOME and POWER, you may use volume keys</string>
     <string name="remap_hwkeys_select">Select SDL keycode</string>
+    <string name="remap_hwkeys_select_simple">Select action</string>
+    <string name="remap_hwkeys_select_more_keys">Show all keycodes</string>
 
     <string name="remap_screenkb">Remap on-screen controls</string>
     <string name="remap_screenkb_joystick">Joystick</string>

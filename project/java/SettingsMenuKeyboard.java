@@ -265,7 +265,6 @@ class SettingsMenuKeyboard extends SettingsMenu
 		{
 			return p.getResources().getString(R.string.remap_hwkeys);
 		}
-		//boolean enabled() { return true; };
 		void run (final MainActivity p)
 		{
 			p.setText(p.getResources().getString(R.string.remap_hwkeys_press));
@@ -290,13 +289,55 @@ class SettingsMenuKeyboard extends SettingsMenu
 					keyIndex = 0;
 
 				final int KeyIndexFinal = keyIndex;
+				CharSequence[] items = {
+					SDL_Keys.names[Globals.RemapScreenKbKeycode[0]],
+					SDL_Keys.names[Globals.RemapScreenKbKeycode[1]],
+					SDL_Keys.names[Globals.RemapScreenKbKeycode[2]],
+					SDL_Keys.names[Globals.RemapScreenKbKeycode[3]],
+					SDL_Keys.names[Globals.RemapScreenKbKeycode[4]],
+					SDL_Keys.names[Globals.RemapScreenKbKeycode[5]],
+					p.getResources().getString(R.string.remap_hwkeys_select_more_keys),
+				};
+				
+				for( int i = 0; i < Math.min(6, Globals.AppTouchscreenKeyboardKeysNames.length); i++ )
+					items[i] = Globals.AppTouchscreenKeyboardKeysNames[i].replace("_", " ");
+
 				AlertDialog.Builder builder = new AlertDialog.Builder(p);
-				builder.setTitle(R.string.remap_hwkeys_select);
-				builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapHwKeycode[keyIndex]], new DialogInterface.OnClickListener()
+				builder.setTitle(R.string.remap_hwkeys_select_simple);
+				builder.setItems(items, new DialogInterface.OnClickListener()
 				{
 					public void onClick(DialogInterface dialog, int item)
 					{
-						Globals.RemapHwKeycode[KeyIndexFinal] = SDL_Keys.namesSortedIdx[item];
+						dialog.dismiss();
+						if( item >= 6 )
+							ShowAllKeys(KeyIndexFinal);
+						else
+						{
+							Globals.RemapHwKeycode[KeyIndexFinal] = Globals.RemapScreenKbKeycode[item];
+							goBack(p);
+						}
+					}
+				});
+				builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+				{
+					public void onCancel(DialogInterface dialog)
+					{
+						goBack(p);
+					}
+				});
+				AlertDialog alert = builder.create();
+				alert.setOwnerActivity(p);
+				alert.show();
+			}
+			public void ShowAllKeys(final int KeyIndex)
+			{
+				AlertDialog.Builder builder = new AlertDialog.Builder(p);
+				builder.setTitle(R.string.remap_hwkeys_select);
+				builder.setSingleChoiceItems(SDL_Keys.namesSorted, SDL_Keys.namesSortedBackIdx[Globals.RemapHwKeycode[KeyIndex]], new DialogInterface.OnClickListener()
+				{
+					public void onClick(DialogInterface dialog, int item)
+					{
+						Globals.RemapHwKeycode[KeyIndex] = SDL_Keys.namesSortedIdx[item];
 
 						dialog.dismiss();
 						goBack(p);
@@ -346,7 +387,7 @@ class SettingsMenuKeyboard extends SettingsMenu
 			}
 
 			for( int i = 0; i < Math.min(6, Globals.AppTouchscreenKeyboardKeysNames.length); i++ )
-				items[i+2] = items[i+2] + " - " + Globals.AppTouchscreenKeyboardKeysNames[i];
+				items[i+2] = items[i+2] + " - " + Globals.AppTouchscreenKeyboardKeysNames[i].replace("_", " ");
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(p.getResources().getString(R.string.remap_screenkb));
@@ -389,7 +430,7 @@ class SettingsMenuKeyboard extends SettingsMenu
 			};
 
 			for( int i = 0; i < Math.min(6, Globals.AppTouchscreenKeyboardKeysNames.length); i++ )
-				items[i] = items[i] + " - " + Globals.AppTouchscreenKeyboardKeysNames[i];
+				items[i] = items[i] + " - " + Globals.AppTouchscreenKeyboardKeysNames[i].replace("_", " ");
 
 			if( currentButton >= Globals.RemapScreenKbKeycode.length )
 			{
@@ -707,14 +748,14 @@ class SettingsMenuKeyboard extends SettingsMenu
 				if( i >= 2 && i <= 7 )
 					buttonText = p.getResources().getString(R.string.remap_screenkb_button) + (i - 2);
 				if( i >= 2 && i - 2 < Globals.AppTouchscreenKeyboardKeysNames.length )
-					buttonText = Globals.AppTouchscreenKeyboardKeysNames[i - 2];
+					buttonText = Globals.AppTouchscreenKeyboardKeysNames[i - 2].replace("_", " ");
 				if( i == 0 )
 					buttonText = "Joystick";
 				if( i == 1 )
 					buttonText = "Text input";
 				if( i == 8 )
 					buttonText = "Joystick 2";
-				p.setText(p.getResources().getString(R.string.screenkb_custom_layout_help) + "\n" + buttonText.replace("_", " "));
+				p.setText(p.getResources().getString(R.string.screenkb_custom_layout_help) + "\n" + buttonText);
 			}
 
 			public void onTouchEvent(final MotionEvent ev)
