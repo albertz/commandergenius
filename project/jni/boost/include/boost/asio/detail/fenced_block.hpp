@@ -25,7 +25,8 @@
 # include <boost/asio/detail/macos_fenced_block.hpp>
 #elif defined(__sun)
 # include <boost/asio/detail/solaris_fenced_block.hpp>
-#elif defined(__GNUC__) && defined(__arm__) && !defined(__thumb__)
+#elif defined(__GNUC__) && defined(__arm__) \
+  && !defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
 # include <boost/asio/detail/gcc_arm_fenced_block.hpp>
 #elif defined(__GNUC__) && (defined(__hppa) || defined(__hppa__))
 # include <boost/asio/detail/gcc_hppa_fenced_block.hpp>
@@ -34,8 +35,7 @@
 #elif defined(__GNUC__) \
   && ((__GNUC__ == 4 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 4)) \
   && !defined(__INTEL_COMPILER) && !defined(__ICL) \
-  && !defined(__ICC) && !defined(__ECC) && !defined(__PATHSCALE__) \
-  && !defined(ANDROID) && !defined(__ANDROID__)
+  && !defined(__ICC) && !defined(__ECC) && !defined(__PATHSCALE__)
 # include <boost/asio/detail/gcc_sync_fenced_block.hpp>
 #elif defined(BOOST_WINDOWS) && !defined(UNDER_CE)
 # include <boost/asio/detail/win_fenced_block.hpp>
@@ -55,7 +55,8 @@ typedef null_fenced_block fenced_block;
 typedef macos_fenced_block fenced_block;
 #elif defined(__sun)
 typedef solaris_fenced_block fenced_block;
-#elif defined(__GNUC__) && defined(__arm__) && !defined(__thumb__)
+#elif defined(__GNUC__) && defined(__arm__) \
+  && !defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
 typedef gcc_arm_fenced_block fenced_block;
 #elif defined(__GNUC__) && (defined(__hppa) || defined(__hppa__))
 typedef gcc_hppa_fenced_block fenced_block;
@@ -64,8 +65,7 @@ typedef gcc_x86_fenced_block fenced_block;
 #elif defined(__GNUC__) \
   && ((__GNUC__ == 4 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 4)) \
   && !defined(__INTEL_COMPILER) && !defined(__ICL) \
-  && !defined(__ICC) && !defined(__ECC) && !defined(__PATHSCALE__) \
-  && !defined(ANDROID) && !defined(__ANDROID__)
+  && !defined(__ICC) && !defined(__ECC) && !defined(__PATHSCALE__)
 typedef gcc_sync_fenced_block fenced_block;
 #elif defined(BOOST_WINDOWS) && !defined(UNDER_CE)
 typedef win_fenced_block fenced_block;
