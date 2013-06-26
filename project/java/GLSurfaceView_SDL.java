@@ -699,15 +699,18 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                         EGL10.EGL_NATIVE_RENDERABLE, 0);
                 int caveat = findConfigAttrib(egl, display, config,
                         EGL10.EGL_CONFIG_CAVEAT, EGL10.EGL_NONE);
-                int distance = Math.abs(r - mRedSize)
-                    + Math.abs(g - mGreenSize)
-                    + Math.abs(b - mBlueSize) + Math.abs(a - mAlphaSize);
+                int distance = Math.abs(r - mRedSize) + Math.abs(g - mGreenSize) + Math.abs(b - mBlueSize);
+                int dist1 = distance;
+                if( mAlphaSize - a > 0 )
+                    distance += mAlphaSize - a;
+                else if( mAlphaSize - a < 0 )
+                    distance += 1; // Small penalty if we don't need alpha channel but it is present
                 int dist2 = distance;
                 if( (d > 0) != (mDepthSize > 0) )
                     distance += (mDepthSize > 0) ? 5 : 1; // Small penalty if we don't need zbuffer but it is present
                 int dist3 = distance;
                 if( (s > 0) != (mStencilSize > 0) )
-                    distance += (mStencilSize > 0) ? 5 : 1;
+                    distance += (mStencilSize > 0) ? 5 : 1; // Small penalty if we don't need stencil buffer but it is present
                 int dist4 = distance;
                 if( (rendertype & desiredtype) == 0 )
                     distance += 5;
@@ -733,7 +736,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 						caveat == EGL10.EGL_NON_CONFORMANT_CONFIG ? "non-conformant" :
                 						String.valueOf(caveat)));
                 cfgcur += " nr " + nativeRender;
-                cfgcur += " pos " + distance + " (" + dist2 + "," + dist3 + "," + dist4 + "," + dist5 + ")";
+                cfgcur += " pos " + distance + " (" + dist1 + "," +  dist2 + "," + dist3 + "," + dist4 + "," + dist5 + ")";
                 Log.v("SDL", "GL config " + idx + ": " + cfgcur);
                 if (distance < closestDistance) {
                     closestDistance = distance;
