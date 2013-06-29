@@ -130,7 +130,7 @@ struct point_to_range
         // check if other segments are closer
         for (++prev, ++it; it != boost::end(view); ++prev, ++it)
         {
-            return_type const ds = ps_strategy.apply(point, *prev, *it);
+            return_type const ds = eps_strategy.apply(point, *prev, *it);
             if (geometry::math::equals(ds, zero))
             {
                 return ds;
@@ -369,7 +369,10 @@ struct distance
                     <
                         segment_tag,
                         Point,
-                        typename point_type<Linestring>::type
+                        typename point_type<Linestring>::type,
+                        typename cs_tag<Point>::type,
+                        typename cs_tag<typename point_type<Linestring>::type>::type,
+                        Strategy
                     >::type ps_strategy_type;
 
         return detail::distance::point_to_range

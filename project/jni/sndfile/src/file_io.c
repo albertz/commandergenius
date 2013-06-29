@@ -227,7 +227,6 @@ psf_set_stdio (SF_PRIVATE *psf)
 	{	case SFM_RDWR :
 				error = SFE_OPEN_PIPE_RDWR ;
 				break ;
-
 		case SFM_READ :
 				psf->file.filedes = 0 ;
 				break ;
@@ -235,7 +234,6 @@ psf_set_stdio (SF_PRIVATE *psf)
 		case SFM_WRITE :
 				psf->file.filedes = 1 ;
 				break ;
-
 		default :
 				error = SFE_BAD_OPEN_MODE ;
 				break ;

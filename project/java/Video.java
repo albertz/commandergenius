@@ -47,6 +47,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.content.res.Resources;
 import android.content.res.AssetManager;
 import android.widget.Toast;
+import android.util.Log;
 
 import android.widget.TextView;
 import java.lang.Thread;
@@ -108,7 +109,7 @@ abstract class DifferentTouchInput
 				multiTouchAvailable2 = true;
 		}
 		try {
-			System.out.println("Device model: " + android.os.Build.MODEL);
+			Log.i("SDL", "Device model: " + android.os.Build.MODEL);
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH )
 			{
 				return IcsTouchInput.Holder.sInstance;
@@ -191,7 +192,7 @@ abstract class DifferentTouchInput
 		{
 			int action = -1;
 
-			//System.out.println("Got motion event, type " + (int)(event.getAction()) + " X " + (int)event.getX() + " Y " + (int)event.getY());
+			//Log.i("SDL", "Got motion event, type " + (int)(event.getAction()) + " X " + (int)event.getX() + " Y " + (int)event.getY());
 			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP ||
 				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_CANCEL )
 			{
@@ -231,7 +232,7 @@ abstract class DifferentTouchInput
 				{
 					s += " p" + event.getPointerId(i) + "=" + (int)event.getX(i) + ":" + (int)event.getY(i);
 				}
-				System.out.println(s);
+				Log.i("SDL", s);
 				*/
 				int pointerReleased = -1;
 				if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_UP )
@@ -332,7 +333,7 @@ abstract class DifferentTouchInput
 		private int buttonState = 0;
 		public void process(final MotionEvent event)
 		{
-			//System.out.println("Got motion event, type " + (int)(event.getAction()) + " X " + (int)event.getX() + " Y " + (int)event.getY() + " buttons " + buttonState + " source " + event.getSource());
+			//Log.i("SDL", "Got motion event, type " + (int)(event.getAction()) + " X " + (int)event.getX() + " Y " + (int)event.getY() + " buttons " + buttonState + " source " + event.getSource());
 			int buttonStateNew = event.getButtonState();
 			if( buttonStateNew != buttonState )
 			{
@@ -379,7 +380,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	}
 	
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		System.out.println("libSDL: DemoRenderer.onSurfaceCreated(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
+		Log.i("SDL", "libSDL: DemoRenderer.onSurfaceCreated(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
 		mGlSurfaceCreated = true;
 		mGl = gl;
 		if( ! mPaused && ! mFirstTimeStart )
@@ -388,7 +389,14 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	}
 
 	public void onSurfaceChanged(GL10 gl, int w, int h) {
-		System.out.println("libSDL: DemoRenderer.onSurfaceChanged(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
+		Log.i("SDL", "libSDL: DemoRenderer.onSurfaceChanged(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart + " w " + w + " h " + h);
+		if( w < h && Globals.HorizontalOrientation )
+		{
+			// Sometimes when Android awakes from lockscreen, portrait orientation is kept
+			int x = w;
+			w = h;
+			h = x;
+		}
 		mWidth = w;
 		mHeight = h;
 		mGl = gl;
@@ -396,7 +404,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	}
 	
 	public void onSurfaceDestroyed() {
-		System.out.println("libSDL: DemoRenderer.onSurfaceDestroyed(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
+		Log.i("SDL", "libSDL: DemoRenderer.onSurfaceDestroyed(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
 		mGlSurfaceCreated = false;
 		mGlContextLost = true;
 		nativeGlContextLost();
@@ -568,6 +576,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	}
 	public void DrawLogo(GL10 gl)
 	{
+		/*
 		// TODO: this not quite works, as it seems
 		BitmapDrawable bmp = null;
 		try
@@ -618,6 +627,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		gl.glDeleteTextures(1, mTextureNameWorkspace, 0);
 
 		gl.glFlush();
+		*/
 	}
 
 
@@ -723,7 +733,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 			return;
 		mRenderer.mPaused = false;
 		super.onResume();
-		System.out.println("libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused);
+		Log.i("SDL", "libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused);
 		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused || Globals.NonBlockingSwapBuffers )
 			mRenderer.nativeGlContextRecreated();
 		if( mRenderer.accelerometer != null && mRenderer.accelerometer.openedBySDL ) // For some reason it crashes here often - are we getting this event before initialization?
@@ -733,7 +743,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	// This seems like redundant code - it handled in MainActivity.java
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event) {
-		//System.out.println("Got key down event, id " + keyCode + " meta " + event.getMetaState() + " event " + event.toString());
+		//Log.i("SDL", "Got key down event, id " + keyCode + " meta " + event.getMetaState() + " event " + event.toString());
 		if( nativeKey( keyCode, 1 ) == 0 )
 				return super.onKeyDown(keyCode, event);
 		return true;
@@ -741,7 +751,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	
 	@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event) {
-		//System.out.println("Got key up event, id " + keyCode + " meta " + event.getMetaState());
+		//Log.i("SDL", "Got key up event, id " + keyCode + " meta " + event.getMetaState());
 		if( nativeKey( keyCode, 0 ) == 0 )
 				return super.onKeyUp(keyCode, event);
 		return true;

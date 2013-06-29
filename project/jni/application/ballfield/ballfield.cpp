@@ -25,7 +25,7 @@
 	Definitions...
 ----------------------------------------------------------*/
 
-#define	SCREEN_W	800
+#define	SCREEN_W	640
 #define	SCREEN_H	480
 
 
@@ -562,6 +562,8 @@ int main(int argc, char* argv[])
 		SDL_ANDROID_GetScreenKeyboardButtonPos(i, &r);
 		__android_log_print(ANDROID_LOG_VERBOSE, "Ballfield", "{ %d, %d, %d, %d },", r.x, r.y, r.x+r.h, r.y+r.w);
 	}
+	//SDL_ANDROID_SetScreenKeyboardButtonGenerateTouchEvents(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, 1);
+	//SDL_ANDROID_SetScreenKeyboardButtonGenerateTouchEvents(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, 1);
 	
 	while(1)
 	{

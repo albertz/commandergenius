@@ -54,7 +54,8 @@ int SDL_ANDROID_sWindowHeight = 0;
 int SDL_ANDROID_sRealWindowWidth  = 0;
 int SDL_ANDROID_sRealWindowHeight = 0;
 
-SDL_Rect SDL_ANDROID_ForceClearScreenRect = { 0, 0, 0, 0 };
+SDL_Rect SDL_ANDROID_ForceClearScreenRect[2] = { { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
+int SDL_ANDROID_ForceClearScreenRectAmount = 0;
 
 // Extremely wicked JNI environment to call Java functions from C code
 static JNIEnv* JavaEnv = NULL;
@@ -102,29 +103,35 @@ static SDL_ANDROID_ApplicationPutToBackgroundCallback_t openALRestoredCallback =
 
 int SDL_ANDROID_CallJavaSwapBuffers()
 {
+
 	if( !glContextLost )
 	{
-		SDL_ANDROID_drawTouchscreenKeyboard();
-	}
-	
-	// Clear part of screen not used by SDL - on Android the screen contains garbage after each frame
-	if( SDL_ANDROID_ForceClearScreenRect.w != 0 && SDL_ANDROID_ForceClearScreenRect.h != 0 )
-	{
-		glPushMatrix();
-		glLoadIdentity();
-		glOrthof( 0.0f, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight, 0.0f, 0.0f, 1.0f );
-		glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		
-		GLshort vertices[] = {	SDL_ANDROID_ForceClearScreenRect.x, SDL_ANDROID_ForceClearScreenRect.y,
-								SDL_ANDROID_ForceClearScreenRect.x + SDL_ANDROID_ForceClearScreenRect.w, SDL_ANDROID_ForceClearScreenRect.y,
-								SDL_ANDROID_ForceClearScreenRect.x + SDL_ANDROID_ForceClearScreenRect.w, SDL_ANDROID_ForceClearScreenRect.y + SDL_ANDROID_ForceClearScreenRect.h,
-								SDL_ANDROID_ForceClearScreenRect.x, SDL_ANDROID_ForceClearScreenRect.y + SDL_ANDROID_ForceClearScreenRect.h };
-		glVertexPointer(2, GL_SHORT, 0, vertices);
-		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		// Clear part of screen not used by SDL - on Android the screen contains garbage after each frame
+		if( SDL_ANDROID_ForceClearScreenRectAmount > 0 )
+		{
+			int i;
 
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glPopMatrix();
+			glPushMatrix();
+			glLoadIdentity();
+			glOrthof( 0.0f, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight, 0.0f, 0.0f, 1.0f );
+			glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			
+			for( i = 0; i < SDL_ANDROID_ForceClearScreenRectAmount; i++ )
+			{
+				GLshort vertices[] = {	SDL_ANDROID_ForceClearScreenRect[i].x, SDL_ANDROID_ForceClearScreenRect[i].y,
+										SDL_ANDROID_ForceClearScreenRect[i].x + SDL_ANDROID_ForceClearScreenRect[i].w, SDL_ANDROID_ForceClearScreenRect[i].y,
+										SDL_ANDROID_ForceClearScreenRect[i].x + SDL_ANDROID_ForceClearScreenRect[i].w, SDL_ANDROID_ForceClearScreenRect[i].y + SDL_ANDROID_ForceClearScreenRect[i].h,
+										SDL_ANDROID_ForceClearScreenRect[i].x, SDL_ANDROID_ForceClearScreenRect[i].y + SDL_ANDROID_ForceClearScreenRect[i].h };
+				glVertexPointer(2, GL_SHORT, 0, vertices);
+				glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+			}
+
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glPopMatrix();
+		}
+
+		SDL_ANDROID_drawTouchscreenKeyboard();
 	}
 
 	if( ! (*JavaEnv)->CallIntMethod( JavaEnv, JavaRenderer, JavaSwapBuffers ) )
@@ -167,30 +174,22 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint 
 			// TODO: tweak that parameters when app calls SetVideoMode(), not here - app may request something else than 640x480, it's okay for most apps though
 			SDL_ANDROID_sWindowWidth  = (SDL_ANDROID_sFakeWindowWidth*h)/SDL_ANDROID_sFakeWindowHeight;
 			SDL_ANDROID_sWindowHeight = h;
-			SDL_ANDROID_ForceClearScreenRect.x = SDL_ANDROID_sWindowWidth;
-			SDL_ANDROID_ForceClearScreenRect.y = 0;
-			SDL_ANDROID_ForceClearScreenRect.w = w - SDL_ANDROID_sWindowWidth;
-			SDL_ANDROID_ForceClearScreenRect.h = h;
-
-			if(SDL_ANDROID_sWindowWidth >= w) 
-			{
-				SDL_ANDROID_sWindowWidth  = w;
-				SDL_ANDROID_sWindowHeight = (SDL_ANDROID_sFakeWindowHeight*w)/SDL_ANDROID_sFakeWindowWidth;
-				SDL_ANDROID_ForceClearScreenRect.x = 0;
-				SDL_ANDROID_ForceClearScreenRect.y = SDL_ANDROID_sWindowHeight;
-				SDL_ANDROID_ForceClearScreenRect.w = w;
-				SDL_ANDROID_ForceClearScreenRect.h = SDL_ANDROID_sWindowHeight - h; // OpenGL vertical coord is inverted
-			}
+			SDL_ANDROID_ForceClearScreenRect[0].x = 0;
+			SDL_ANDROID_ForceClearScreenRect[0].y = 0;
+			SDL_ANDROID_ForceClearScreenRect[0].w = (SDL_ANDROID_sRealWindowWidth - SDL_ANDROID_sWindowWidth) / 2;
+			SDL_ANDROID_ForceClearScreenRect[0].h = h;
+			SDL_ANDROID_ForceClearScreenRect[1].x = SDL_ANDROID_sRealWindowWidth - SDL_ANDROID_ForceClearScreenRect[0].w;
+			SDL_ANDROID_ForceClearScreenRect[1].y = 0;
+			SDL_ANDROID_ForceClearScreenRect[1].w = SDL_ANDROID_ForceClearScreenRect[0].w;
+			SDL_ANDROID_ForceClearScreenRect[1].h = h;
+			SDL_ANDROID_ForceClearScreenRectAmount = 2;
 		}
 		else
 #endif
 		{
-			SDL_ANDROID_ForceClearScreenRect.w = 0;
-			SDL_ANDROID_ForceClearScreenRect.h = 0;
-			SDL_ANDROID_ForceClearScreenRect.x = 0;
-			SDL_ANDROID_ForceClearScreenRect.y = 0;
 			SDL_ANDROID_sWindowWidth = w;
 			SDL_ANDROID_sWindowHeight = h;
+			SDL_ANDROID_ForceClearScreenRectAmount = 0;
 		}
 		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Physical screen resolution is %dx%d, virtual screen %dx%d", w, h, SDL_ANDROID_sWindowWidth, SDL_ANDROID_sWindowHeight );
 		SDL_ANDROID_TouchscreenCalibrationWidth = SDL_ANDROID_sWindowWidth;

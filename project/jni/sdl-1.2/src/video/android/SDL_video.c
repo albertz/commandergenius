@@ -2441,18 +2441,18 @@ SDL_RenderClear()
 #if SDL_VIDEO_RENDER_RESIZE
 
 static inline void
-SDL_RESIZE_resizePoints(int realW, int fakeW, int realH, int fakeH,
+SDL_RESIZE_resizePoints(int realW, int fakeW, int realH, int fakeH, int offsetX, int offsetY,
                         const SDL_Point * src, SDL_Point * dest, int count )
 {
     int i;
     for( i = 0; i < count; i++ ) {
-        dest[i].x = src[i].x * realW / fakeW;
-        dest[i].y = src[i].y * realH / fakeH;
+        dest[i].x = src[i].x * realW / fakeW + offsetX;
+        dest[i].y = src[i].y * realH / fakeH + offsetY;
     }
 }
 
 static inline void
-SDL_RESIZE_resizeRects(int realW, int fakeW, int realH, int fakeH,
+SDL_RESIZE_resizeRects(int realW, int fakeW, int realH, int fakeH, int offsetX, int offsetY,
                        const SDL_Rect ** src, SDL_Rect * dest, int count )
 {
     int i;
@@ -2463,6 +2463,8 @@ SDL_RESIZE_resizeRects(int realW, int fakeW, int realH, int fakeH,
         dest[i].y = src[i]->y * realH / fakeH;
         dest[i].w = (src[i]->w + src[i]->x) * realW / fakeW - dest[i].x;
         dest[i].h = (src[i]->h + src[i]->y) * realH / fakeH - dest[i].y;
+        dest[i].x += offsetX;
+        dest[i].y += offsetY;
     }
 }
 
@@ -2505,8 +2507,8 @@ SDL_RenderDrawPoints(const SDL_Point * points, int count)
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
-    realW = renderer->window->display->desktop_mode.w;
-    realH = renderer->window->display->desktop_mode.h;
+    realW = renderer->window->display->desktop_mode.w - renderer->window->x;
+    realH = renderer->window->display->desktop_mode.h - renderer->window->y;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
     //if( fakeW > realW || fakeH > realH )
@@ -2516,7 +2518,7 @@ SDL_RenderDrawPoints(const SDL_Point * points, int count)
             SDL_OutOfMemory();
             return -1;
         }
-        SDL_RESIZE_resizePoints( realW, fakeW, realH, fakeH, points, resized, count );
+        SDL_RESIZE_resizePoints( realW, fakeW, realH, fakeH, renderer->window->x, renderer->window->y, points, resized, count );
         ret = renderer->RenderDrawPoints(renderer, resized, count);
         SDL_stack_free(resized);
         return ret;
@@ -2564,8 +2566,8 @@ SDL_RenderDrawLines(const SDL_Point * points, int count)
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
-    realW = renderer->window->display->desktop_mode.w;
-    realH = renderer->window->display->desktop_mode.h;
+    realW = renderer->window->display->desktop_mode.w - renderer->window->x;
+    realH = renderer->window->display->desktop_mode.h - renderer->window->y;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
     //if( fakeW > realW || fakeH > realH )
@@ -2575,7 +2577,7 @@ SDL_RenderDrawLines(const SDL_Point * points, int count)
             SDL_OutOfMemory();
             return -1;
         }
-        SDL_RESIZE_resizePoints( realW, fakeW, realH, fakeH, points, resized, count );
+        SDL_RESIZE_resizePoints( realW, fakeW, realH, fakeH, renderer->window->x, renderer->window->y, points, resized, count );
         ret = renderer->RenderDrawLines(renderer, resized, count);
         SDL_stack_free(resized);
         return ret;
@@ -2633,8 +2635,8 @@ SDL_RenderDrawRects(const SDL_Rect ** rects, int count)
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
-    realW = renderer->window->display->desktop_mode.w;
-    realH = renderer->window->display->desktop_mode.h;
+    realW = renderer->window->display->desktop_mode.w - renderer->window->x;
+    realH = renderer->window->display->desktop_mode.h - renderer->window->y;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
     //if( fakeW > realW || fakeH > realH )
@@ -2654,7 +2656,7 @@ SDL_RenderDrawRects(const SDL_Rect ** rects, int count)
         for( i = 0; i < count; i++ ) {
             resizedPtrs[i] = &(resized[i]);
         }
-        SDL_RESIZE_resizeRects( realW, fakeW, realH, fakeH, rects, resized, count );
+        SDL_RESIZE_resizeRects( realW, fakeW, realH, fakeH, renderer->window->x, renderer->window->y, rects, resized, count );
         ret = renderer->RenderDrawRects(renderer, resizedPtrs, count);
         SDL_stack_free(resizedPtrs);
         SDL_stack_free(resized);
@@ -2713,8 +2715,8 @@ SDL_RenderFillRects(const SDL_Rect ** rects, int count)
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
-    realW = renderer->window->display->desktop_mode.w;
-    realH = renderer->window->display->desktop_mode.h;
+    realW = renderer->window->display->desktop_mode.w - renderer->window->x;
+    realH = renderer->window->display->desktop_mode.h - renderer->window->y;
     fakeW = renderer->window->w;
     fakeH = renderer->window->h;
     //if( fakeW > realW || fakeH > realH )
@@ -2734,7 +2736,7 @@ SDL_RenderFillRects(const SDL_Rect ** rects, int count)
         for( i = 0; i < count; i++ ) {
             resizedPtrs[i] = &(resized[i]);
         }
-        SDL_RESIZE_resizeRects( realW, fakeW, realH, fakeH, rects, resized, count );
+        SDL_RESIZE_resizeRects( realW, fakeW, realH, fakeH, renderer->window->x, renderer->window->y, rects, resized, count );
         ret = renderer->RenderFillRects(renderer, resizedPtrs, count);
         SDL_stack_free(resizedPtrs);
         SDL_stack_free(resized);
@@ -2810,8 +2812,8 @@ SDL_RenderCopy(SDL_Texture * texture, const SDL_Rect * srcrect,
     }
 
 #if SDL_VIDEO_RENDER_RESIZE
-    realW = window->display->desktop_mode.w;
-    realH = window->display->desktop_mode.h;
+    realW = window->display->desktop_mode.w - renderer->window->x;
+    realH = window->display->desktop_mode.h - renderer->window->y;
     fakeW = window->w;
     fakeH = window->h;
     //if( fakeW > realW || fakeH > realH )
@@ -2824,6 +2826,10 @@ SDL_RenderCopy(SDL_Texture * texture, const SDL_Rect * srcrect,
         real_dstrect.y = real_dstrect.y * realH / fakeH;
         real_dstrect.w -= real_dstrect.x;
         real_dstrect.h -= real_dstrect.y;
+        real_dstrect.x += renderer->window->x;
+        real_dstrect.y += renderer->window->y;
+        real_dstrect.w -= renderer->window->x;
+        real_dstrect.h -= renderer->window->y;
         //__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_RenderCopy dest %d:%d+%d+%d desktop_mode %d:%d", (int)real_dstrect.x, (int)real_dstrect.y, (int)real_dstrect.w, (int)real_dstrect.h, (int)realW, (int)realH);
     }
 #endif

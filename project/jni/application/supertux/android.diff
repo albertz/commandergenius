@@ -1,33 +1,5 @@
-diff --git a/src/audio/ogg_sound_file.cpp b/src/audio/ogg_sound_file.cpp
-index fd7c7fc..ebf978b 100644
---- a/src/audio/ogg_sound_file.cpp
-+++ b/src/audio/ogg_sound_file.cpp
-@@ -83,8 +83,8 @@ OggSoundFile::read(void* _buffer, size_t buffer_size)
-     }
- 
-     long bytesRead
--      = ov_read(&vorbis_file, buffer, bytes_to_read, bigendian,
--                2, 1, &section);
-+      = ov_read(&vorbis_file, buffer, bytes_to_read,
-+                &section);
-     if(bytesRead == 0) {
-       break;
-     }
-diff --git a/src/audio/ogg_sound_file.hpp b/src/audio/ogg_sound_file.hpp
-index 0a9b8b1..8344177 100644
---- a/src/audio/ogg_sound_file.hpp
-+++ b/src/audio/ogg_sound_file.hpp
-@@ -18,7 +18,7 @@
- #define HEADER_SUPERTUX_AUDIO_OGG_SOUND_FILE_HPP
- 
- #include <physfs.h>
--#include <vorbis/vorbisfile.h>
-+#include <tremor/ivorbisfile.h>
- 
- #include "audio/sound_file.hpp"
- 
 diff --git a/src/control/joystickkeyboardcontroller.cpp b/src/control/joystickkeyboardcontroller.cpp
-index de414fa..92ba634 100644
+index 6c9e9c0..dbb8a9e 100644
 --- a/src/control/joystickkeyboardcontroller.cpp
 +++ b/src/control/joystickkeyboardcontroller.cpp
 @@ -70,7 +70,7 @@ JoystickKeyboardController::JoystickKeyboardController() :
@@ -58,7 +30,7 @@ index 235198c..6126b25 100644
    try_vsync(true),
    show_fps(false),
 diff --git a/src/supertux/main.cpp b/src/supertux/main.cpp
-index 3dccd6e..f4b179d 100644
+index d89420f..2c80b2b 100644
 --- a/src/supertux/main.cpp
 +++ b/src/supertux/main.cpp
 @@ -20,7 +20,7 @@
@@ -213,7 +185,7 @@ index 6ce6f73..e12edf7 100644
      return (Console::output);
    else
 diff --git a/src/video/gl/gl_lightmap.cpp b/src/video/gl/gl_lightmap.cpp
-index 2ac49ef..dd5953b 100644
+index f8a6735..9638b64 100644
 --- a/src/video/gl/gl_lightmap.cpp
 +++ b/src/video/gl/gl_lightmap.cpp
 @@ -60,7 +60,7 @@ GLLightmap::GLLightmap() :
@@ -226,12 +198,12 @@ index 2ac49ef..dd5953b 100644
  
  GLLightmap::~GLLightmap()
 diff --git a/src/video/gl/gl_renderer.cpp b/src/video/gl/gl_renderer.cpp
-index 361f30a..f26db81 100644
+index 0e66433..abf65b8 100644
 --- a/src/video/gl/gl_renderer.cpp
 +++ b/src/video/gl/gl_renderer.cpp
-@@ -118,8 +118,8 @@ GLRenderer::draw_surface(const DrawingRequest& request)
- 
-   glBindTexture(GL_TEXTURE_2D, gltexture->get_handle());
+@@ -123,8 +123,8 @@ GLRenderer::draw_surface(const DrawingRequest& request)
+     glBindTexture(GL_TEXTURE_2D, th);
+   }
    intern_draw(request.pos.x, request.pos.y,
 -              request.pos.x + surface->get_width(),
 -              request.pos.y + surface->get_height(),
@@ -240,9 +212,9 @@ index 361f30a..f26db81 100644
                surface_data->get_uv_left(),
                surface_data->get_uv_top(),
                surface_data->get_uv_right(),
-@@ -150,8 +150,8 @@ GLRenderer::draw_surface_part(const DrawingRequest& request)
- 
-   glBindTexture(GL_TEXTURE_2D, gltexture->get_handle());
+@@ -159,8 +159,8 @@ GLRenderer::draw_surface_part(const DrawingRequest& request)
+     glBindTexture(GL_TEXTURE_2D, th);
+   }
    intern_draw(request.pos.x, request.pos.y,
 -              request.pos.x + surfacepartrequest->size.x,
 -              request.pos.y + surfacepartrequest->size.y,
@@ -252,7 +224,7 @@ index 361f30a..f26db81 100644
                uv_top,
                uv_right,
 diff --git a/src/video/gl/gl_renderer.hpp b/src/video/gl/gl_renderer.hpp
-index 9e20859..8b7e04e 100644
+index d5d9995..4fdacf8 100644
 --- a/src/video/gl/gl_renderer.hpp
 +++ b/src/video/gl/gl_renderer.hpp
 @@ -63,8 +63,8 @@ inline void intern_draw(float left, float top, float right, float bottom,
@@ -490,10 +462,10 @@ index e814547..710a488 100644
  private:
    Texture(const Texture&);
 diff --git a/src/video/texture_manager.cpp b/src/video/texture_manager.cpp
-index 7343a45..86af07e 100644
+index 0c77a5a..378853b 100644
 --- a/src/video/texture_manager.cpp
 +++ b/src/video/texture_manager.cpp
-@@ -219,6 +219,7 @@ TextureManager::create_dummy_texture()
+@@ -228,6 +228,7 @@ TextureManager::create_dummy_texture()
  void
  TextureManager::save_textures()
  {
@@ -501,7 +473,7 @@ index 7343a45..86af07e 100644
  #ifdef GL_PACK_ROW_LENGTH
    /* all this stuff is not support by OpenGL ES */
    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-@@ -236,11 +237,13 @@ TextureManager::save_textures()
+@@ -245,11 +246,13 @@ TextureManager::save_textures()
        i != image_textures.end(); ++i) {
      save_texture(dynamic_cast<GLTexture*>(i->second.lock().get()));
    }
@@ -515,7 +487,7 @@ index 7343a45..86af07e 100644
    SavedTexture saved_texture;
    saved_texture.texture = texture;
    glBindTexture(GL_TEXTURE_2D, texture->get_handle());
-@@ -275,11 +278,13 @@ TextureManager::save_texture(GLTexture* texture)
+@@ -284,11 +287,13 @@ TextureManager::save_texture(GLTexture* texture)
    texture->set_handle(0);
  
    assert_gl("retrieving texture for save");
@@ -529,7 +501,7 @@ index 7343a45..86af07e 100644
  #ifdef GL_UNPACK_ROW_LENGTH
    /* OpenGL ES doesn't support these */
    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-@@ -320,6 +325,12 @@ TextureManager::reload_textures()
+@@ -329,6 +334,12 @@ TextureManager::reload_textures()
    }
  
    saved_textures.clear();

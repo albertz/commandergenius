@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2011. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -21,7 +21,7 @@
 #include <vector>
 #include <memory>
 
-#if (defined _MSC_VER) && (_MSC_VER >= 1200)
+#if defined (_MSC_VER) && (_MSC_VER >= 1200)
 #  pragma once
 #  pragma comment( lib, "advapi32.lib" )
 #  pragma comment( lib, "oleaut32.lib" )
@@ -46,9 +46,11 @@ namespace winapi {
 //Some used constants
 static const unsigned long infinite_time        = 0xFFFFFFFF;
 static const unsigned long error_already_exists = 183L;
+static const unsigned long error_invalid_handle = 6L;
 static const unsigned long error_sharing_violation = 32L;
 static const unsigned long error_file_not_found = 2u;
 static const unsigned long error_no_more_files  = 18u;
+static const unsigned long error_not_locked     = 158L;
 //Retries in CreateFile, see http://support.microsoft.com/kb/316609
 static const unsigned int  error_sharing_violation_tries = 3u;
 static const unsigned int  error_sharing_violation_sleep_ms = 250u;
@@ -60,6 +62,7 @@ static const unsigned long mutex_all_access     = (0x000F0000L)|(0x00100000L)|0x
 static const unsigned long page_readonly        = 0x02;
 static const unsigned long page_readwrite       = 0x04;
 static const unsigned long page_writecopy       = 0x08;
+static const unsigned long page_noaccess        = 0x01;
 
 static const unsigned long standard_rights_required   = 0x000F0000L;
 static const unsigned long section_query              = 0x0001;
@@ -137,7 +140,14 @@ static const unsigned long lang_neutral         = (unsigned long)0x00;
 static const unsigned long sublang_default      = (unsigned long)0x01;
 static const unsigned long invalid_file_size    = (unsigned long)0xFFFFFFFF;
 static const unsigned long invalid_file_attributes =  ((unsigned long)-1);
-static       void * const  invalid_handle_value = (void*)(long)(-1);
+static       void * const  invalid_handle_value = ((void*)(long)(-1));
+
+static const unsigned long file_type_char    =  0x0002L;
+static const unsigned long file_type_disk    =  0x0001L;
+static const unsigned long file_type_pipe    =  0x0003L;
+static const unsigned long file_type_remote  =  0x8000L;
+static const unsigned long file_type_unknown =  0x0000L;
+
 static const unsigned long create_new        = 1;
 static const unsigned long create_always     = 2;
 static const unsigned long open_existing     = 3;
@@ -159,7 +169,6 @@ static const long BootAndSystemstampLength   = 16;
 static const long BootstampLength            = 8;
 static const unsigned long MaxPath           = 260;
 
-
 //Keys
 static void * const  hkey_local_machine = (void*)(unsigned long*)(long)(0x80000002);
 static unsigned long key_query_value    = 0x0001;
@@ -179,6 +188,27 @@ const   signed long WBEM_INFINITE_BIPC = 0xffffffffL;
 const   signed long RPC_E_TOO_LATE_BIPC = 0x80010119L;
 const   signed long S_OK_BIPC = 0L;
 const   signed long S_FALSE_BIPC = 1;
+const   signed long RPC_E_CHANGED_MODE_BIPC = 0x80010106L;
+const unsigned long COINIT_APARTMENTTHREADED_BIPC   = 0x2;
+const unsigned long COINIT_MULTITHREADED_BIPC       = 0x0;
+const unsigned long COINIT_DISABLE_OLE1DDE_BIPC     = 0x4;
+const unsigned long COINIT_SPEED_OVER_MEMORY_BIPC   = 0x4;
+
+//If the user needs to change default COM initialization model,
+//it can define BOOST_INTERPROCESS_WINDOWS_COINIT_MODEL to one of these:
+//
+// COINIT_APARTMENTTHREADED_BIPC
+// COINIT_MULTITHREADED_BIPC
+// COINIT_DISABLE_OLE1DDE_BIPC
+// COINIT_SPEED_OVER_MEMORY_BIPC
+#if !defined(BOOST_INTERPROCESS_WINDOWS_COINIT_MODEL)
+   #define BOOST_INTERPROCESS_WINDOWS_COINIT_MODEL COINIT_APARTMENTTHREADED_BIPC
+#elif (BOOST_INTERPROCESS_WINDOWS_COINIT_MODEL != COINIT_APARTMENTTHREADED_BIPC) &&\
+      (BOOST_INTERPROCESS_WINDOWS_COINIT_MODEL != COINIT_MULTITHREADED_BIPC)     &&\
+      (BOOST_INTERPROCESS_WINDOWS_COINIT_MODEL != COINIT_DISABLE_OLE1DDE_BIPC)   &&\
+      (BOOST_INTERPROCESS_WINDOWS_COINIT_MODEL != COINIT_SPEED_OVER_MEMORY_BIPC)
+   #error "Wrong value for BOOST_INTERPROCESS_WINDOWS_COINIT_MODEL macro"
+#endif
 
 }  //namespace winapi {
 }  //namespace interprocess  {
@@ -211,161 +241,159 @@ struct wchar_variant
    } value;
 };
 
-   struct IUnknown_BIPC
-   {
-      public:
-      virtual long __stdcall QueryInterface( 
-            /* [in] */ const GUID_BIPC &riid,
-            /* [iid_is][out] */ void **ppvObject) = 0;
-      
-      virtual unsigned long __stdcall AddRef( void) = 0;
-      
-      virtual unsigned long __stdcall Release( void) = 0;
-   };
+struct IUnknown_BIPC
+{
+   public:
+   virtual long __stdcall QueryInterface(
+      const GUID_BIPC &riid,  // [in]
+      void **ppvObject) = 0;  // [iid_is][out]
+
+   virtual unsigned long __stdcall AddRef (void) = 0;
+   virtual unsigned long __stdcall Release(void) = 0;
+};
 
 struct IWbemClassObject_BIPC : public IUnknown_BIPC
 {
    public:
-   virtual long __stdcall GetQualifierSet( 
+   virtual long __stdcall GetQualifierSet(
       /* [out] */ void **ppQualSet) = 0;
-   
-   virtual long __stdcall Get( 
+
+   virtual long __stdcall Get(
       /* [string][in] */ const wchar_t * wszName,
       /* [in] */ long lFlags,
       /* [unique][in][out] */ wchar_variant *pVal,
       /* [unique][in][out] */ long *pType,
       /* [unique][in][out] */ long *plFlavor) = 0;
-   
-   virtual long __stdcall Put( 
+
+   virtual long __stdcall Put(
       /* [string][in] */ const wchar_t * wszName,
       /* [in] */ long lFlags,
       /* [in] */ wchar_variant *pVal,
       /* [in] */ long Type) = 0;
-   
-   virtual long __stdcall Delete( 
+
+   virtual long __stdcall Delete(
       /* [string][in] */ const wchar_t * wszName) = 0;
-   
-   virtual long __stdcall GetNames( 
+
+   virtual long __stdcall GetNames(
       /* [string][in] */ const wchar_t * wszQualifierName,
       /* [in] */ long lFlags,
       /* [in] */ wchar_variant *pQualifierVal,
       /* [out] */ void * *pNames) = 0;
-   
-   virtual long __stdcall BeginEnumeration( 
+
+   virtual long __stdcall BeginEnumeration(
       /* [in] */ long lEnumFlags) = 0;
-   
-   virtual long __stdcall Next( 
+
+   virtual long __stdcall Next(
       /* [in] */ long lFlags,
       /* [unique][in][out] */ wchar_t * *strName,
       /* [unique][in][out] */ wchar_variant *pVal,
       /* [unique][in][out] */ long *pType,
       /* [unique][in][out] */ long *plFlavor) = 0;
-   
+
    virtual long __stdcall EndEnumeration( void) = 0;
-   
-   virtual long __stdcall GetPropertyQualifierSet( 
+
+   virtual long __stdcall GetPropertyQualifierSet(
       /* [string][in] */ const wchar_t * wszProperty,
       /* [out] */ void **ppQualSet) = 0;
-   
-   virtual long __stdcall Clone( 
+
+   virtual long __stdcall Clone(
       /* [out] */ IWbemClassObject_BIPC **ppCopy) = 0;
-   
-   virtual long __stdcall GetObjectText( 
+
+   virtual long __stdcall GetObjectText(
       /* [in] */ long lFlags,
       /* [out] */ wchar_t * *pstrObjectText) = 0;
-   
-   virtual long __stdcall SpawnDerivedClass( 
+
+   virtual long __stdcall SpawnDerivedClass(
       /* [in] */ long lFlags,
       /* [out] */ IWbemClassObject_BIPC **ppNewClass) = 0;
-   
-   virtual long __stdcall SpawnInstance( 
+
+   virtual long __stdcall SpawnInstance(
       /* [in] */ long lFlags,
       /* [out] */ IWbemClassObject_BIPC **ppNewInstance) = 0;
-   
-   virtual long __stdcall CompareTo( 
+
+   virtual long __stdcall CompareTo(
       /* [in] */ long lFlags,
       /* [in] */ IWbemClassObject_BIPC *pCompareTo) = 0;
-   
-   virtual long __stdcall GetPropertyOrigin( 
+
+   virtual long __stdcall GetPropertyOrigin(
       /* [string][in] */ const wchar_t * wszName,
       /* [out] */ wchar_t * *pstrClassName) = 0;
-   
-   virtual long __stdcall InheritsFrom( 
+
+   virtual long __stdcall InheritsFrom(
       /* [in] */ const wchar_t * strAncestor) = 0;
-   
-   virtual long __stdcall GetMethod( 
+
+   virtual long __stdcall GetMethod(
       /* [string][in] */ const wchar_t * wszName,
       /* [in] */ long lFlags,
       /* [out] */ IWbemClassObject_BIPC **ppInSignature,
       /* [out] */ IWbemClassObject_BIPC **ppOutSignature) = 0;
-   
-   virtual long __stdcall PutMethod( 
+
+   virtual long __stdcall PutMethod(
       /* [string][in] */ const wchar_t * wszName,
       /* [in] */ long lFlags,
       /* [in] */ IWbemClassObject_BIPC *pInSignature,
       /* [in] */ IWbemClassObject_BIPC *pOutSignature) = 0;
-   
-   virtual long __stdcall DeleteMethod( 
+
+   virtual long __stdcall DeleteMethod(
       /* [string][in] */ const wchar_t * wszName) = 0;
-   
-   virtual long __stdcall BeginMethodEnumeration( 
+
+   virtual long __stdcall BeginMethodEnumeration(
       /* [in] */ long lEnumFlags) = 0;
-   
-   virtual long __stdcall NextMethod( 
+
+   virtual long __stdcall NextMethod(
       /* [in] */ long lFlags,
       /* [unique][in][out] */ wchar_t * *pstrName,
       /* [unique][in][out] */ IWbemClassObject_BIPC **ppInSignature,
       /* [unique][in][out] */ IWbemClassObject_BIPC **ppOutSignature) = 0;
-   
+
    virtual long __stdcall EndMethodEnumeration( void) = 0;
-   
-   virtual long __stdcall GetMethodQualifierSet( 
+
+   virtual long __stdcall GetMethodQualifierSet(
       /* [string][in] */ const wchar_t * wszMethod,
       /* [out] */ void **ppQualSet) = 0;
-   
-   virtual long __stdcall GetMethodOrigin( 
+
+   virtual long __stdcall GetMethodOrigin(
       /* [string][in] */ const wchar_t * wszMethodName,
       /* [out] */ wchar_t * *pstrClassName) = 0;
-   
-};
 
+};
 
 struct IWbemContext_BIPC : public IUnknown_BIPC
 {
 public:
-   virtual long __stdcall Clone( 
+   virtual long __stdcall Clone(
       /* [out] */ IWbemContext_BIPC **ppNewCopy) = 0;
-   
-   virtual long __stdcall GetNames( 
+
+   virtual long __stdcall GetNames(
       /* [in] */ long lFlags,
       /* [out] */ void * *pNames) = 0;
-   
-   virtual long __stdcall BeginEnumeration( 
+
+   virtual long __stdcall BeginEnumeration(
       /* [in] */ long lFlags) = 0;
-   
-   virtual long __stdcall Next( 
+
+   virtual long __stdcall Next(
       /* [in] */ long lFlags,
       /* [out] */ wchar_t * *pstrName,
       /* [out] */ wchar_variant *pValue) = 0;
-   
+
    virtual long __stdcall EndEnumeration( void) = 0;
-   
-   virtual long __stdcall SetValue( 
+
+   virtual long __stdcall SetValue(
       /* [string][in] */ const wchar_t * wszName,
       /* [in] */ long lFlags,
       /* [in] */ wchar_variant *pValue) = 0;
-   
-   virtual long __stdcall GetValue( 
+
+   virtual long __stdcall GetValue(
       /* [string][in] */ const wchar_t * wszName,
       /* [in] */ long lFlags,
       /* [out] */ wchar_variant *pValue) = 0;
-   
-   virtual long __stdcall DeleteValue( 
+
+   virtual long __stdcall DeleteValue(
       /* [string][in] */ const wchar_t * wszName,
       /* [in] */ long lFlags) = 0;
-   
+
    virtual long __stdcall DeleteAll( void) = 0;
-   
+
 };
 
 
@@ -373,157 +401,157 @@ struct IEnumWbemClassObject_BIPC : public IUnknown_BIPC
 {
 public:
    virtual long __stdcall Reset( void) = 0;
-   
-   virtual long __stdcall Next( 
+
+   virtual long __stdcall Next(
       /* [in] */ long lTimeout,
       /* [in] */ unsigned long uCount,
       /* [length_is][size_is][out] */ IWbemClassObject_BIPC **apObjects,
       /* [out] */ unsigned long *puReturned) = 0;
-   
-   virtual long __stdcall NextAsync( 
+
+   virtual long __stdcall NextAsync(
       /* [in] */ unsigned long uCount,
       /* [in] */ void *pSink) = 0;
-   
-   virtual long __stdcall Clone( 
+
+   virtual long __stdcall Clone(
       /* [out] */ void **ppEnum) = 0;
-   
-   virtual long __stdcall Skip( 
+
+   virtual long __stdcall Skip(
       /* [in] */ long lTimeout,
       /* [in] */ unsigned long nCount) = 0;
-   
+
 };
 
 struct IWbemServices_BIPC : public IUnknown_BIPC
 {
 public:
-   virtual long __stdcall OpenNamespace( 
+   virtual long __stdcall OpenNamespace(
       /* [in] */ const wchar_t * strNamespace,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [unique][in][out] */ void **ppWorkingNamespace,
       /* [unique][in][out] */ void **ppResult) = 0;
-   
-   virtual long __stdcall CancelAsyncCall( 
+
+   virtual long __stdcall CancelAsyncCall(
       /* [in] */ void *pSink) = 0;
-   
-   virtual long __stdcall QueryObjectSink( 
+
+   virtual long __stdcall QueryObjectSink(
       /* [in] */ long lFlags,
       /* [out] */ void **ppResponseHandler) = 0;
-   
-   virtual long __stdcall GetObject( 
+
+   virtual long __stdcall GetObject(
       /* [in] */ const wchar_t * strObjectPath,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [unique][in][out] */ void **ppObject,
       /* [unique][in][out] */ void **ppCallResult) = 0;
-   
-   virtual long __stdcall GetObjectAsync( 
+
+   virtual long __stdcall GetObjectAsync(
       /* [in] */ const wchar_t * strObjectPath,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [in] */ void *pResponseHandler) = 0;
-   
-   virtual long __stdcall PutClass( 
+
+   virtual long __stdcall PutClass(
       /* [in] */ IWbemClassObject_BIPC *pObject,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [unique][in][out] */ void **ppCallResult) = 0;
-   
-   virtual long __stdcall PutClassAsync( 
+
+   virtual long __stdcall PutClassAsync(
       /* [in] */ IWbemClassObject_BIPC *pObject,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [in] */ void *pResponseHandler) = 0;
-   
-   virtual long __stdcall DeleteClass( 
+
+   virtual long __stdcall DeleteClass(
       /* [in] */ const wchar_t * strClass,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [unique][in][out] */ void **ppCallResult) = 0;
-   
-   virtual long __stdcall DeleteClassAsync( 
+
+   virtual long __stdcall DeleteClassAsync(
       /* [in] */ const wchar_t * strClass,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [in] */ void *pResponseHandler) = 0;
-   
-   virtual long __stdcall CreateClassEnum( 
+
+   virtual long __stdcall CreateClassEnum(
       /* [in] */ const wchar_t * strSuperclass,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [out] */ void **ppEnum) = 0;
-   
-   virtual long __stdcall CreateClassEnumAsync( 
+
+   virtual long __stdcall CreateClassEnumAsync(
       /* [in] */ const wchar_t * strSuperclass,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [in] */ void *pResponseHandler) = 0;
-   
-   virtual long __stdcall PutInstance( 
+
+   virtual long __stdcall PutInstance(
       /* [in] */ void *pInst,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [unique][in][out] */ void **ppCallResult) = 0;
-   
-   virtual long __stdcall PutInstanceAsync( 
+
+   virtual long __stdcall PutInstanceAsync(
       /* [in] */ void *pInst,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [in] */ void *pResponseHandler) = 0;
-   
-   virtual long __stdcall DeleteInstance( 
+
+   virtual long __stdcall DeleteInstance(
       /* [in] */ const wchar_t * strObjectPath,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [unique][in][out] */ void **ppCallResult) = 0;
-   
-   virtual long __stdcall DeleteInstanceAsync( 
+
+   virtual long __stdcall DeleteInstanceAsync(
       /* [in] */ const wchar_t * strObjectPath,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [in] */ void *pResponseHandler) = 0;
-   
-   virtual long __stdcall CreateInstanceEnum( 
+
+   virtual long __stdcall CreateInstanceEnum(
       /* [in] */ const wchar_t * strFilter,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [out] */ void **ppEnum) = 0;
-   
-   virtual long __stdcall CreateInstanceEnumAsync( 
+
+   virtual long __stdcall CreateInstanceEnumAsync(
       /* [in] */ const wchar_t * strFilter,
       /* [in] */ long lFlags,
       /* [in] */ void *pCtx,
       /* [in] */ void *pResponseHandler) = 0;
-   
-   virtual long __stdcall ExecQuery( 
+
+   virtual long __stdcall ExecQuery(
       /* [in] */ const wchar_t * strQueryLanguage,
       /* [in] */ const wchar_t * strQuery,
       /* [in] */ long lFlags,
       /* [in] */ IWbemContext_BIPC *pCtx,
       /* [out] */ IEnumWbemClassObject_BIPC **ppEnum) = 0;
 
-   virtual long __stdcall ExecQueryAsync( 
+   virtual long __stdcall ExecQueryAsync(
       /* [in] */ const wchar_t * strQueryLanguage,
       /* [in] */ const wchar_t * strQuery,
       /* [in] */ long lFlags,
       /* [in] */ IWbemContext_BIPC *pCtx,
       /* [in] */ void *pResponseHandler) = 0;
-   
-   virtual long __stdcall ExecNotificationQuery( 
+
+   virtual long __stdcall ExecNotificationQuery(
       /* [in] */ const wchar_t * strQueryLanguage,
       /* [in] */ const wchar_t * strQuery,
       /* [in] */ long lFlags,
       /* [in] */ IWbemContext_BIPC *pCtx,
       /* [out] */ void **ppEnum) = 0;
-   
-   virtual long __stdcall ExecNotificationQueryAsync( 
+
+   virtual long __stdcall ExecNotificationQueryAsync(
       /* [in] */ const wchar_t * strQueryLanguage,
       /* [in] */ const wchar_t * strQuery,
       /* [in] */ long lFlags,
       /* [in] */ IWbemContext_BIPC *pCtx,
       /* [in] */ void *pResponseHandler) = 0;
-   
-   virtual long __stdcall ExecMethod( 
+
+   virtual long __stdcall ExecMethod(
       /* [in] */ const wchar_t * strObjectPath,
       /* [in] */ const wchar_t * strMethodName,
       /* [in] */ long lFlags,
@@ -531,21 +559,21 @@ public:
       /* [in] */ IWbemClassObject_BIPC *pInParams,
       /* [unique][in][out] */ IWbemClassObject_BIPC **ppOutParams,
       /* [unique][in][out] */ void **ppCallResult) = 0;
-   
-   virtual long __stdcall ExecMethodAsync( 
+
+   virtual long __stdcall ExecMethodAsync(
       /* [in] */ const wchar_t * strObjectPath,
       /* [in] */ const wchar_t * strMethodName,
       /* [in] */ long lFlags,
       /* [in] */ IWbemContext_BIPC *pCtx,
       /* [in] */ IWbemClassObject_BIPC *pInParams,
       /* [in] */ void *pResponseHandler) = 0;
-   
+
 };
 
 struct IWbemLocator_BIPC : public IUnknown_BIPC
 {
 public:
-   virtual long __stdcall ConnectServer( 
+   virtual long __stdcall ConnectServer(
       /* [in] */ const wchar_t * strNetworkResource,
       /* [in] */ const wchar_t * strUser,
       /* [in] */ const wchar_t * strPassword,
@@ -554,12 +582,10 @@ public:
       /* [in] */ const wchar_t * strAuthority,
       /* [in] */ void *pCtx,
       /* [out] */ IWbemServices_BIPC **ppNamespace) = 0;
-   
+
 };
- 
 
-
-struct interprocess_overlapped 
+struct interprocess_overlapped
 {
    unsigned long *internal;
    unsigned long *internal_high;
@@ -574,9 +600,22 @@ struct interprocess_overlapped
    void *h_event;
 };
 
+struct interprocess_semaphore_basic_information
+{
+	unsigned int count;		// current semaphore count
+	unsigned int limit;		// max semaphore count
+};
+
+struct interprocess_section_basic_information
+{
+  void *          base_address;
+  unsigned long   section_attributes;
+  __int64         section_size;
+};
+
 struct interprocess_filetime
-{  
-   unsigned long  dwLowDateTime;  
+{
+   unsigned long  dwLowDateTime;
    unsigned long  dwHighDateTime;
 };
 
@@ -622,7 +661,7 @@ struct system_info {
 
 struct interprocess_memory_basic_information
 {
-   void *         BaseAddress;  
+   void *         BaseAddress;
    void *         AllocationBase;
    unsigned long  AllocationProtect;
    unsigned long  RegionSize;
@@ -631,14 +670,14 @@ struct interprocess_memory_basic_information
    unsigned long  Type;
 };
 
-typedef struct _interprocess_acl
+struct interprocess_acl
 {
    unsigned char  AclRevision;
    unsigned char  Sbz1;
    unsigned short AclSize;
    unsigned short AceCount;
    unsigned short Sbz2;
-} interprocess_acl;
+};
 
 typedef struct _interprocess_security_descriptor
 {
@@ -693,6 +732,10 @@ enum file_information_class_t {
    file_inherit_content_index_information,
    file_ole_information,
    file_maximum_information
+};
+
+enum semaphore_information_class {
+   semaphore_basic_information = 0
 };
 
 struct file_name_information_t {
@@ -779,6 +822,12 @@ enum object_information_class
    object_data_information
 };
 
+enum section_information_class
+{
+   section_basic_information,
+   section_image_information
+};
+
 struct object_name_information_t
 {
    unicode_string_t Name;
@@ -803,6 +852,7 @@ extern "C" __declspec(dllimport) int __stdcall DuplicateHandle
    , void *hTargetProcessHandle,    void **lpTargetHandle
    , unsigned long dwDesiredAccess, int bInheritHandle
    , unsigned long dwOptions);
+extern "C" __declspec(dllimport) long __stdcall GetFileType(void *hFile);
 extern "C" __declspec(dllimport) void *__stdcall FindFirstFileA(const char *lpFileName, win32_find_data_t *lpFindFileData);
 extern "C" __declspec(dllimport) int   __stdcall FindNextFileA(void *hFindFile, win32_find_data_t *lpFindFileData);
 extern "C" __declspec(dllimport) int   __stdcall FindClose(void *hFindFile);
@@ -824,11 +874,13 @@ extern "C" __declspec(dllimport) int __stdcall    DeleteFileA (const char *);
 extern "C" __declspec(dllimport) int __stdcall    MoveFileExA (const char *, const char *, unsigned long);
 extern "C" __declspec(dllimport) void __stdcall GetSystemInfo (struct system_info *);
 extern "C" __declspec(dllimport) int __stdcall FlushViewOfFile (void *, std::size_t);
+extern "C" __declspec(dllimport) int __stdcall VirtualUnlock (void *, std::size_t);
+extern "C" __declspec(dllimport) int __stdcall VirtualProtect (void *, std::size_t, unsigned long, unsigned long *);
 extern "C" __declspec(dllimport) int __stdcall FlushFileBuffers (void *);
 extern "C" __declspec(dllimport) int __stdcall GetFileSizeEx (void *, __int64 *size);
 extern "C" __declspec(dllimport) unsigned long __stdcall FormatMessageA
-   (unsigned long dwFlags,       const void *lpSource,   unsigned long dwMessageId, 
-   unsigned long dwLanguageId,   char *lpBuffer,         unsigned long nSize, 
+   (unsigned long dwFlags,       const void *lpSource,   unsigned long dwMessageId,
+   unsigned long dwLanguageId,   char *lpBuffer,         unsigned long nSize,
    std::va_list *Arguments);
 extern "C" __declspec(dllimport) void *__stdcall LocalFree (void *);
 extern "C" __declspec(dllimport) unsigned long __stdcall GetFileAttributesA(const char *);
@@ -844,6 +896,7 @@ extern "C" __declspec(dllimport) int __stdcall UnlockFile(void *hnd, unsigned lo
 extern "C" __declspec(dllimport) int __stdcall LockFileEx(void *hnd, unsigned long flags, unsigned long reserved, unsigned long size_low, unsigned long size_high, interprocess_overlapped* overlapped);
 extern "C" __declspec(dllimport) int __stdcall UnlockFileEx(void *hnd, unsigned long reserved, unsigned long size_low, unsigned long size_high, interprocess_overlapped* overlapped);
 extern "C" __declspec(dllimport) int __stdcall WriteFile(void *hnd, const void *buffer, unsigned long bytes_to_write, unsigned long *bytes_written, interprocess_overlapped* overlapped);
+extern "C" __declspec(dllimport) int __stdcall ReadFile(void *hnd, void *buffer, unsigned long bytes_to_read, unsigned long *bytes_read, interprocess_overlapped* overlapped);
 extern "C" __declspec(dllimport) int __stdcall InitializeSecurityDescriptor(interprocess_security_descriptor *pSecurityDescriptor, unsigned long dwRevision);
 extern "C" __declspec(dllimport) int __stdcall SetSecurityDescriptorDacl(interprocess_security_descriptor *pSecurityDescriptor, int bDaclPresent, interprocess_acl *pDacl, int bDaclDefaulted);
 extern "C" __declspec(dllimport) void *__stdcall LoadLibraryA(const char *);
@@ -858,17 +911,17 @@ extern "C" __declspec(dllimport) long __stdcall RegCloseKey(void *);
 extern "C" __declspec(dllimport) int  __stdcall QueryPerformanceCounter(__int64 *lpPerformanceCount);
 
 //COM API
-extern "C" __declspec(dllimport) long __stdcall CoInitialize(void *pvReserved);
+extern "C" __declspec(dllimport) long __stdcall CoInitializeEx(void *pvReserved, unsigned long dwCoInit);
 extern "C" __declspec(dllimport) long __stdcall CoInitializeSecurity(
-                    void*         pSecDesc,
-                    long                         cAuthSvc,
-                    void *asAuthSvc,
-                    void                        *pReserved1,
-                    unsigned long                        dwAuthnLevel,
-                    unsigned long                        dwImpLevel,
-                    void                        *pAuthList,
-                    unsigned long                        dwCapabilities,
-                    void                        *pReserved3 );
+                    void*          pSecDesc,
+                    long           cAuthSvc,
+                    void *         asAuthSvc,
+                    void          *pReserved1,
+                    unsigned long  dwAuthnLevel,
+                    unsigned long  dwImpLevel,
+                    void          *pAuthList,
+                    unsigned long  dwCapabilities,
+                    void          *pReserved3 );
 
  extern "C" __declspec(dllimport) long __stdcall CoSetProxyBlanket(
                      IUnknown_BIPC *pProxy,
@@ -889,10 +942,12 @@ extern "C" __declspec(dllimport) void __stdcall CoUninitialize(void);
 
 //API function typedefs
 //Pointer to functions
-typedef long (__stdcall *NtDeleteFile_t)(object_attributes_t *ObjectAttributes); 
-typedef long (__stdcall *NtSetInformationFile_t)(void *FileHandle, io_status_block_t *IoStatusBlock, void *FileInformation, unsigned long Length, int FileInformationClass ); 
-typedef long (__stdcall * NtQuerySystemInformation_t)(int, void*, unsigned long, unsigned long *); 
-typedef long (__stdcall * NtQueryObject_t)(void*, object_information_class, void *, unsigned long, unsigned long *); 
+typedef long (__stdcall *NtDeleteFile_t)(object_attributes_t *ObjectAttributes);
+typedef long (__stdcall *NtSetInformationFile_t)(void *FileHandle, io_status_block_t *IoStatusBlock, void *FileInformation, unsigned long Length, int FileInformationClass );
+typedef long (__stdcall *NtQuerySystemInformation_t)(int, void*, unsigned long, unsigned long *);
+typedef long (__stdcall *NtQueryObject_t)(void*, object_information_class, void *, unsigned long, unsigned long *);
+typedef long (__stdcall *NtQuerySemaphore_t)(void*, unsigned int info_class, interprocess_semaphore_basic_information *pinfo, unsigned int info_size, unsigned int *ret_len);
+typedef long (__stdcall *NtQuerySection_t)(void*, section_information_class, interprocess_section_basic_information *pinfo, unsigned long info_size, unsigned long *ret_len);
 typedef long (__stdcall *NtQueryInformationFile_t)(void *,io_status_block_t *,void *, long, int);
 typedef long (__stdcall *NtOpenFile_t)(void*,unsigned long ,object_attributes_t*,io_status_block_t*,unsigned long,unsigned long);
 typedef long (__stdcall *NtClose_t) (void*);
@@ -977,6 +1032,12 @@ inline bool duplicate_current_process_handle
       , lpTargetHandle,       0,                0
       , duplicate_same_access);
 }
+
+inline unsigned long get_file_type(void *hFile)
+{
+   return GetFileType(hFile);
+}
+
 /*
 inline void get_system_time_as_file_time(interprocess_filetime *filetime)
 {  GetSystemTimeAsFileTime(filetime);  }
@@ -1000,13 +1061,16 @@ inline int unmap_view_of_file(void *address)
 inline void *open_or_create_semaphore(const char *name, long initial_count, long maximum_count, interprocess_security_attributes *attr)
 {  return CreateSemaphoreA(attr, initial_count, maximum_count, name);  }
 
+inline void *open_semaphore(const char *name)
+{  return OpenSemaphoreA(semaphore_all_access, 0, name);  }
+
 inline int release_semaphore(void *handle, long release_count, long *prev_count)
 {  return ReleaseSemaphore(handle, release_count, prev_count); }
 
 class interprocess_all_access_security
 {
    interprocess_security_attributes sa;
-   interprocess_security_descriptor sd; 
+   interprocess_security_descriptor sd;
    bool initialized;
 
    public:
@@ -1027,16 +1091,21 @@ class interprocess_all_access_security
    {  return &sa; }
 };
 
-inline void * create_file_mapping (void * handle, unsigned long access, unsigned long high_size, unsigned long low_size, const char * name, interprocess_security_attributes *psec)
+inline void * create_file_mapping (void * handle, unsigned long access, unsigned __int64 file_offset, const char * name, interprocess_security_attributes *psec)
 {
-   return CreateFileMappingA (handle, psec, access, high_size, low_size, name); 
+   const unsigned long high_size(file_offset >> 32), low_size((boost::uint32_t)file_offset);
+   return CreateFileMappingA (handle, psec, access, high_size, low_size, name);
 }
 
 inline void * open_file_mapping (unsigned long access, const char *name)
 {  return OpenFileMappingA (access, 0, name);   }
 
-inline void *map_view_of_file_ex(void *handle, unsigned long file_access, unsigned long highoffset, unsigned long lowoffset, std::size_t numbytes, void *base_addr)
-{  return MapViewOfFileEx(handle, file_access, highoffset, lowoffset, numbytes, base_addr);  }
+inline void *map_view_of_file_ex(void *handle, unsigned long file_access, unsigned __int64 offset, std::size_t numbytes, void *base_addr)
+{
+   const unsigned long offset_low  = (unsigned long)(offset & ((unsigned __int64)0xFFFFFFFF));
+   const unsigned long offset_high = offset >> 32;
+   return MapViewOfFileEx(handle, file_access, offset_high, offset_low, numbytes, base_addr);
+}
 
 inline void *create_file(const char *name, unsigned long access, unsigned long creation_flags, unsigned long attributes, interprocess_security_attributes *psec)
 {
@@ -1051,7 +1120,7 @@ inline void *create_file(const char *name, unsigned long access, unsigned long c
       if (error_sharing_violation != get_last_error()){
          return handle;
       }
-      Sleep(error_sharing_violation_sleep_ms);
+      sleep(error_sharing_violation_sleep_ms);
    }
    return invalid_handle_value;
 }
@@ -1068,6 +1137,12 @@ inline void get_system_info(system_info *info)
 inline bool flush_view_of_file(void *base_addr, std::size_t numbytes)
 {  return 0 != FlushViewOfFile(base_addr, numbytes); }
 
+inline bool virtual_unlock(void *base_addr, std::size_t numbytes)
+{  return 0 != VirtualUnlock(base_addr, numbytes); }
+
+inline bool virtual_protect(void *base_addr, std::size_t numbytes, unsigned long flNewProtect, unsigned long &lpflOldProtect)
+{  return 0 != VirtualProtect(base_addr, numbytes, flNewProtect, &lpflOldProtect); }
+
 inline bool flush_file_buffers(void *handle)
 {  return 0 != FlushFileBuffers(handle); }
 
@@ -1075,9 +1150,9 @@ inline bool get_file_size(void *handle, __int64 &size)
 {  return 0 != GetFileSizeEx(handle, &size);  }
 
 inline bool create_directory(const char *name)
-{  
+{
    interprocess_all_access_security sec;
-   return 0 != CreateDirectoryA(name, sec.get_attributes());   
+   return 0 != CreateDirectoryA(name, sec.get_attributes());
 }
 
 inline bool remove_directory(const char *lpPathName)
@@ -1100,6 +1175,9 @@ inline bool unlock_file_ex(void *hnd, unsigned long reserved, unsigned long size
 
 inline bool write_file(void *hnd, const void *buffer, unsigned long bytes_to_write, unsigned long *bytes_written, interprocess_overlapped* overlapped)
 {  return 0 != WriteFile(hnd, buffer, bytes_to_write, bytes_written, overlapped);  }
+
+inline bool read_file(void *hnd, void *buffer, unsigned long bytes_to_read, unsigned long *bytes_read, interprocess_overlapped* overlapped)
+{  return 0 != ReadFile(hnd, buffer, bytes_to_read, bytes_read, overlapped);  }
 
 inline bool get_file_information_by_handle(void *hnd, interprocess_by_handle_file_information *info)
 {  return 0 != GetFileInformationByHandle(hnd, info);  }
@@ -1176,7 +1254,7 @@ inline void rtl_init_empty_unicode_string(unicode_string_t *ucStr, wchar_t *buf,
 template<int Dummy>
 struct function_address_holder
 {
-   enum { NtSetInformationFile, NtQuerySystemInformation, NtQueryObject, NumFunction };
+   enum { NtSetInformationFile, NtQuerySystemInformation, NtQueryObject, NtQuerySemaphore, NtQuerySection, NumFunction };
    enum { NtDll_dll, NumModule };
 
    private:
@@ -1213,7 +1291,7 @@ struct function_address_holder
    static void *get_address_from_dll(const unsigned int id)
    {
       assert(id < (unsigned int)NumFunction);
-      const char *function[] = { "NtSetInformationFile", "NtQuerySystemInformation", "NtQueryObject" };
+      const char *function[] = { "NtSetInformationFile", "NtQuerySystemInformation", "NtQueryObject", "NtQuerySemaphore", "NtQuerySection" };
       bool compile_check[sizeof(function)/sizeof(function[0]) == NumFunction];
       (void)compile_check;
       return get_proc_address(get_module(NtDll_dll), function[id]);
@@ -1264,7 +1342,7 @@ struct library_unloader
 
 //pszFilename must have room for at least MaxPath+1 characters
 inline bool get_file_name_from_handle_function
-   (void * hFile, wchar_t *pszFilename, std::size_t length, std::size_t &out_length) 
+   (void * hFile, wchar_t *pszFilename, std::size_t length, std::size_t &out_length)
 {
    if(length <= MaxPath){
       return false;
@@ -1285,17 +1363,17 @@ inline bool get_file_name_from_handle_function
    bool bSuccess = false;
 
    // Create a file mapping object.
-   void * hFileMap = create_file_mapping(hFile, page_readonly, 0, 1, 0, 0);
+   void * hFileMap = create_file_mapping(hFile, page_readonly, 1, 0, 0);
    if(hFileMap){
       // Create a file mapping to get the file name.
-      void* pMem = map_view_of_file_ex(hFileMap, file_map_read, 0, 0, 1, 0);
+      void* pMem = map_view_of_file_ex(hFileMap, file_map_read, 0, 1, 0);
 
       if (pMem){
          //out_length = pfGMFN(get_current_process(), pMem, pszFilename, MaxPath);
          out_length = get_mapped_file_name(get_current_process(), pMem, pszFilename, MaxPath);
          if(out_length){
             bSuccess = true;
-         } 
+         }
          unmap_view_of_file(pMem);
       }
       close_handle(hFileMap);
@@ -1307,7 +1385,6 @@ inline bool get_file_name_from_handle_function
 inline bool get_system_time_of_day_information(system_timeofday_information &info)
 {
    NtQuerySystemInformation_t pNtQuerySystemInformation = (NtQuerySystemInformation_t)
-      //get_proc_address(get_module_handle("ntdll.dll"), "NtQuerySystemInformation");
          dll_func::get(dll_func::NtQuerySystemInformation);
    unsigned long res;
    long status = pNtQuerySystemInformation(system_time_of_day_information, &info, sizeof(info), &res);
@@ -1384,9 +1461,12 @@ inline bool get_boot_and_system_time_wstr(wchar_t *bootsystemstamp, std::size_t 
 class handle_closer
 {
    void *handle_;
+   handle_closer(const handle_closer &);
+   handle_closer& operator=(const handle_closer &);
    public:
-   handle_closer(void *handle) : handle_(handle){}
-   ~handle_closer(){ close_handle(handle_);  }
+   explicit handle_closer(void *handle) : handle_(handle){}
+   ~handle_closer()
+   {  close_handle(handle_);  }
 };
 
 union ntquery_mem_t
@@ -1401,81 +1481,92 @@ union ntquery_mem_t
 
 inline bool unlink_file(const char *filename)
 {
-   if(!delete_file(filename)){
-      try{
-         NtSetInformationFile_t pNtSetInformationFile =
-            //(NtSetInformationFile_t)get_proc_address(get_module_handle("ntdll.dll"), "NtSetInformationFile"); 
-            (NtSetInformationFile_t)dll_func::get(dll_func::NtSetInformationFile);
-         if(!pNtSetInformationFile){
-            return false;
-         }
+   //Don't try to optimize doing a DeleteFile first
+   //as there are interactions with permissions and
+   //in-use files.
+   //
+   //if(!delete_file(filename)){
+   //   (...)
+   //
 
-         NtQueryObject_t pNtQueryObject =
-            //(NtQueryObject_t)get_proc_address(get_module_handle("ntdll.dll"), "NtQueryObject"); 
-            (NtQueryObject_t)dll_func::get(dll_func::NtQueryObject);
-
-         //First step: Obtain a handle to the file using Win32 rules. This resolves relative paths
-         void *fh = create_file(filename, generic_read | delete_access, open_existing,
-            file_flag_backup_semantics | file_flag_delete_on_close, 0); 
-         if(fh == invalid_handle_value){
-            return false;
-         }
-
-         handle_closer h_closer(fh);
-
-         std::auto_ptr<ntquery_mem_t> pmem(new ntquery_mem_t);
-         file_rename_information_t *pfri = &pmem->ren.info;
-         const std::size_t RenMaxNumChars =
-            ((char*)pmem.get() - (char*)&pmem->ren.info.FileName[0])/sizeof(wchar_t);
-
-         //Obtain file name
-         unsigned long size;
-         if(pNtQueryObject(fh, object_name_information, pmem.get(), sizeof(ntquery_mem_t), &size)){
-            return false;
-         }
-
-         //Copy filename to the rename member
-         std::memmove(pmem->ren.info.FileName, pmem->name.Name.Buffer, pmem->name.Name.Length);
-         std::size_t filename_string_length = pmem->name.Name.Length/sizeof(wchar_t);
-
-         //Second step: obtain the complete native-nt filename
-         //if(!get_file_name_from_handle_function(fh, pfri->FileName, RenMaxNumChars, filename_string_length)){
-         //return 0;
-         //}
-
-         //Add trailing mark
-         if((RenMaxNumChars-filename_string_length) < (SystemTimeOfDayInfoLength*2)){
-            return false;
-         }
-
-         //Search '\\' character to replace it
-         for(std::size_t i = filename_string_length; i != 0; --filename_string_length){
-            if(pmem->ren.info.FileName[--i] == L'\\')
-               break;
-         }
-
-         //Add random number
-         std::size_t s = RenMaxNumChars - filename_string_length;
-         if(!get_boot_and_system_time_wstr(&pfri->FileName[filename_string_length], s)){
-            return false;
-         }
-         filename_string_length += s;
-
-         //Fill rename information (FileNameLength is in bytes)
-         pfri->FileNameLength = static_cast<unsigned long>(sizeof(wchar_t)*(filename_string_length));
-         pfri->Replace = 1;
-         pfri->RootDir = 0;
-
-         //Final step: change the name of the in-use file:
-         io_status_block_t io;
-         if(0 != pNtSetInformationFile(fh, &io, pfri, sizeof(ntquery_mem_t::ren_t), file_rename_information)){
-            return false;
-         }
-         return true;
-      }
-      catch(...){
+   //This functions tries to emulate UNIX unlink semantics in windows.
+   //
+   //- Open the file and mark the handle as delete-on-close
+   //- Rename the file to an arbitrary name based on a random number
+   //- Close the handle. If there are no file users, it will be deleted.
+   //  Otherwise it will be used by already connected handles but the
+   //  file name can't be used to open this file again
+   try{
+      NtSetInformationFile_t pNtSetInformationFile =
+         (NtSetInformationFile_t)dll_func::get(dll_func::NtSetInformationFile);
+      if(!pNtSetInformationFile){
          return false;
       }
+
+      NtQueryObject_t pNtQueryObject =
+         (NtQueryObject_t)dll_func::get(dll_func::NtQueryObject);
+
+      //First step: Obtain a handle to the file using Win32 rules. This resolves relative paths
+      void *fh = create_file(filename, generic_read | delete_access, open_existing,
+         file_flag_backup_semantics | file_flag_delete_on_close, 0);
+      if(fh == invalid_handle_value){
+         return false;
+      }
+
+      handle_closer h_closer(fh);
+
+      std::auto_ptr<ntquery_mem_t> pmem(new ntquery_mem_t);
+      file_rename_information_t *pfri = &pmem->ren.info;
+      const std::size_t RenMaxNumChars =
+         ((char*)pmem.get() - (char*)&pmem->ren.info.FileName[0])/sizeof(wchar_t);
+
+      //Obtain file name
+      unsigned long size;
+      if(pNtQueryObject(fh, object_name_information, pmem.get(), sizeof(ntquery_mem_t), &size)){
+         return false;
+      }
+
+      //Copy filename to the rename member
+      std::memmove(pmem->ren.info.FileName, pmem->name.Name.Buffer, pmem->name.Name.Length);
+      std::size_t filename_string_length = pmem->name.Name.Length/sizeof(wchar_t);
+
+      //Second step: obtain the complete native-nt filename
+      //if(!get_file_name_from_handle_function(fh, pfri->FileName, RenMaxNumChars, filename_string_length)){
+      //return 0;
+      //}
+
+      //Add trailing mark
+      if((RenMaxNumChars-filename_string_length) < (SystemTimeOfDayInfoLength*2)){
+         return false;
+      }
+
+      //Search '\\' character to replace it
+      for(std::size_t i = filename_string_length; i != 0; --filename_string_length){
+         if(pmem->ren.info.FileName[--i] == L'\\')
+            break;
+      }
+
+      //Add random number
+      std::size_t s = RenMaxNumChars - filename_string_length;
+      if(!get_boot_and_system_time_wstr(&pfri->FileName[filename_string_length], s)){
+         return false;
+      }
+      filename_string_length += s;
+
+      //Fill rename information (FileNameLength is in bytes)
+      pfri->FileNameLength = static_cast<unsigned long>(sizeof(wchar_t)*(filename_string_length));
+      pfri->Replace = 1;
+      pfri->RootDir = 0;
+
+      //Final step: change the name of the in-use file:
+      io_status_block_t io;
+      if(0 != pNtSetInformationFile(fh, &io, pfri, sizeof(ntquery_mem_t::ren_t), file_rename_information)){
+         return false;
+      }
+      return true;
+   }
+   catch(...){
+      return false;
    }
    return true;
 }
@@ -1493,116 +1584,77 @@ struct reg_closer
 inline void get_shared_documents_folder(std::string &s)
 {
    s.clear();
-   //void *hAdvapi = load_library("Advapi32.dll");
-   //if (hAdvapi){
-      //library_unloader unloader(hAdvapi);
-      //  Pointer to function RegOpenKeyA
-      //RegOpenKeyEx_t pRegOpenKey =
-         //(RegOpenKeyEx_t)get_proc_address(hAdvapi, "RegOpenKeyExA");
-      //if (pRegOpenKey){
-         //  Pointer to function RegCloseKey
-         //RegCloseKey_t pRegCloseKey =
-            //(RegCloseKey_t)get_proc_address(hAdvapi, "RegCloseKey");
-         //if (pRegCloseKey){
-            //  Pointer to function RegQueryValueA
-            //RegQueryValueEx_t pRegQueryValue =
-               //(RegQueryValueEx_t)get_proc_address(hAdvapi, "RegQueryValueExA");
-            //if (pRegQueryValue){
-               //Open the key
-               void *key;
-               //if ((*pRegOpenKey)( hkey_local_machine
-                                 //, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"
-                                 //, 0
-                                 //, key_query_value
-                                 //, &key) == 0){
-                  //reg_closer key_closer(pRegCloseKey, key);
-               if (reg_open_key_ex( hkey_local_machine
-                                 , "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"
-                                 , 0
-                                 , key_query_value
-                                 , &key) == 0){
-                  reg_closer key_closer(key);
+   void *key;
+   if (reg_open_key_ex( hkey_local_machine
+                     , "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"
+                     , 0
+                     , key_query_value
+                     , &key) == 0){
+      reg_closer key_closer(key);
 
-                  //Obtain the value
-                  unsigned long size;
-                  unsigned long type;
-                  const char *const reg_value = "Common AppData";
-                  //long err = (*pRegQueryValue)( key, reg_value, 0, &type, 0, &size);
-                  long err = reg_query_value_ex( key, reg_value, 0, &type, 0, &size);
-                  if(!err){
-                     //Size includes terminating NULL
-                     s.resize(size);
-                     //err = (*pRegQueryValue)( key, reg_value, 0, &type, (unsigned char*)(&s[0]), &size);
-                     err = reg_query_value_ex( key, reg_value, 0, &type, (unsigned char*)(&s[0]), &size);
-                     if(!err)
-                        s.erase(s.end()-1);
-                     (void)err;
-                  }
-               }
-            //}
-         //}
-      //}
-   //}
+      //Obtain the value
+      unsigned long size;
+      unsigned long type;
+      const char *const reg_value = "Common AppData";
+      //long err = (*pRegQueryValue)( key, reg_value, 0, &type, 0, &size);
+      long err = reg_query_value_ex( key, reg_value, 0, &type, 0, &size);
+      if(!err){
+         //Size includes terminating NULL
+         s.resize(size);
+         //err = (*pRegQueryValue)( key, reg_value, 0, &type, (unsigned char*)(&s[0]), &size);
+         err = reg_query_value_ex( key, reg_value, 0, &type, (unsigned char*)(&s[0]), &size);
+         if(!err)
+            s.erase(s.end()-1);
+         (void)err;
+      }
+   }
 }
-
 
 inline void get_registry_value(const char *folder, const char *value_key, std::vector<unsigned char> &s)
 {
    s.clear();
-   //void *hAdvapi = load_library("Advapi32.dll");
-   //if (hAdvapi){
-      //library_unloader unloader(hAdvapi);
-      //  Pointer to function RegOpenKeyA
-      //RegOpenKeyEx_t pRegOpenKey =
-         //(RegOpenKeyEx_t)get_proc_address(hAdvapi, "RegOpenKeyExA");
-      //if (pRegOpenKey){
-         //  Pointer to function RegCloseKey
-         //RegCloseKey_t pRegCloseKey =
-            //(RegCloseKey_t)get_proc_address(hAdvapi, "RegCloseKey");
-         //if (pRegCloseKey){
-            //  Pointer to function RegQueryValueA
-            //RegQueryValueEx_t pRegQueryValue =
-               //(RegQueryValueEx_t)get_proc_address(hAdvapi, "RegQueryValueExA");
-            //if (pRegQueryValue){
-               //Open the key
-               void *key;
-               //if ((*pRegOpenKey)( hkey_local_machine
-                                 //, folder
-                                 //, 0
-                                 //, key_query_value
-                                 //, &key) == 0){
-                  //reg_closer key_closer(pRegCloseKey, key);
-               if (reg_open_key_ex( hkey_local_machine
-                                 , folder
-                                 , 0
-                                 , key_query_value
-                                 , &key) == 0){
-                  reg_closer key_closer(key);
+   void *key;
+   if (reg_open_key_ex( hkey_local_machine
+                     , folder
+                     , 0
+                     , key_query_value
+                     , &key) == 0){
+      reg_closer key_closer(key);
 
-                  //Obtain the value
-                  unsigned long size;
-                  unsigned long type;
-                  const char *const reg_value = value_key;
-                  //long err = (*pRegQueryValue)( key, reg_value, 0, &type, 0, &size);
-                  long err = reg_query_value_ex( key, reg_value, 0, &type, 0, &size);
-                  if(!err){
-                     //Size includes terminating NULL
-                     s.resize(size);
-                     //err = (*pRegQueryValue)( key, reg_value, 0, &type, (unsigned char*)(&s[0]), &size);
-                     err = reg_query_value_ex( key, reg_value, 0, &type, (unsigned char*)(&s[0]), &size);
-                     if(!err)
-                        s.erase(s.end()-1);
-                     (void)err;
-                  }
-               }
-            //}
-         //}
-      //}
-   //}
+      //Obtain the value
+      unsigned long size;
+      unsigned long type;
+      const char *const reg_value = value_key;
+      //long err = (*pRegQueryValue)( key, reg_value, 0, &type, 0, &size);
+      long err = reg_query_value_ex( key, reg_value, 0, &type, 0, &size);
+      if(!err){
+         //Size includes terminating NULL
+         s.resize(size);
+         //err = (*pRegQueryValue)( key, reg_value, 0, &type, (unsigned char*)(&s[0]), &size);
+         err = reg_query_value_ex( key, reg_value, 0, &type, (unsigned char*)(&s[0]), &size);
+         if(!err)
+            s.erase(s.end()-1);
+         (void)err;
+      }
+   }
 }
 
 struct co_uninitializer
-{  ~co_uninitializer()  {  CoUninitialize(); }  };
+{
+   co_uninitializer(bool b_uninitialize)
+      : m_b_uninitialize(b_uninitialize)
+   {}
+
+   ~co_uninitializer()
+   {
+      if(m_b_uninitialize){
+         CoUninitialize();
+      }
+   }
+
+   private:
+   const bool m_b_uninitialize;
+};
 
 template<class Object>
 struct com_releaser
@@ -1615,29 +1667,32 @@ struct com_releaser
 inline bool get_wmi_class_attribute( std::wstring& strValue, const wchar_t *wmi_class, const wchar_t *wmi_class_var)
 {
    //See example http://msdn.microsoft.com/en-us/library/aa390423%28v=VS.85%29.aspx
-   long co_init_ret = CoInitialize(0);
-   if(co_init_ret != S_OK_BIPC && co_init_ret != S_FALSE_BIPC)
+   //
+   //See BOOST_INTERPROCESS_WINDOWS_COINIT_MODEL definition if you need to change the
+   //default value of this macro in your application
+   long co_init_ret = CoInitializeEx(0, BOOST_INTERPROCESS_WINDOWS_COINIT_MODEL);
+   if(co_init_ret != S_OK_BIPC && co_init_ret != S_FALSE_BIPC && co_init_ret != RPC_E_CHANGED_MODE_BIPC)
       return false;
-   co_uninitializer co_initialize_end;
+   co_uninitializer co_initialize_end(co_init_ret != RPC_E_CHANGED_MODE_BIPC);
    (void)co_initialize_end;
 
    bool bRet = false;
    long sec_init_ret = CoInitializeSecurity
-      ( 0   //pVoid 
-      ,-1   //cAuthSvc 
-      , 0   //asAuthSvc 
-      , 0   //pReserved1 
-      , RPC_C_AUTHN_LEVEL_PKT_BIPC //dwAuthnLevel 
-      , RPC_C_IMP_LEVEL_IMPERSONATE_BIPC //dwImpLevel 
-      , 0   //pAuthList 
-      , EOAC_NONE_BIPC //dwCapabilities 
-      , 0   //pReserved3 
+      ( 0   //pVoid
+      ,-1   //cAuthSvc
+      , 0   //asAuthSvc
+      , 0   //pReserved1
+      , RPC_C_AUTHN_LEVEL_PKT_BIPC //dwAuthnLevel
+      , RPC_C_IMP_LEVEL_IMPERSONATE_BIPC //dwImpLevel
+      , 0   //pAuthList
+      , EOAC_NONE_BIPC //dwCapabilities
+      , 0   //pReserved3
       );
    if( 0 == sec_init_ret || RPC_E_TOO_LATE_BIPC == sec_init_ret)
    {
       IWbemLocator_BIPC * pIWbemLocator = 0;
       const wchar_t * bstrNamespace = L"root\\cimv2";
- 
+
       if( 0 != CoCreateInstance(
             CLSID_WbemAdministrativeLocator,
             0,
@@ -1645,7 +1700,7 @@ inline bool get_wmi_class_attribute( std::wstring& strValue, const wchar_t *wmi_
             IID_IUnknown, (void **)&pIWbemLocator)){
          return false;
       }
- 
+
       com_releaser<IWbemLocator_BIPC> IWbemLocator_releaser(pIWbemLocator);
 
       IWbemServices_BIPC *pWbemServices = 0;
@@ -1677,7 +1732,7 @@ inline bool get_wmi_class_attribute( std::wstring& strValue, const wchar_t *wmi_
          ){
          return false;
       }
- 
+
       com_releaser<IWbemServices_BIPC> IWbemServices_releaser(pWbemServices);
 
       strValue.clear();
@@ -1757,9 +1812,40 @@ inline bool is_directory(const char *path)
 	        (attrib & file_attribute_directory));
 }
 
-}  //namespace winapi 
+inline bool get_file_mapping_size(void *file_mapping_hnd, __int64 &size)
+{
+   NtQuerySection_t pNtQuerySection =
+      (NtQuerySection_t)dll_func::get(dll_func::NtQuerySection);
+   //Obtain file name
+   interprocess_section_basic_information info;
+   unsigned long ntstatus =
+      pNtQuerySection(file_mapping_hnd, section_basic_information, &info, sizeof(info), 0);
+   if(ntstatus){
+      return false;
+   }
+   size = info.section_size;
+   return true;
+}
+
+inline bool get_semaphore_info(void *handle, long &count, long &limit)
+{
+   winapi::interprocess_semaphore_basic_information info;
+   winapi::NtQuerySemaphore_t pNtQuerySemaphore =
+         (winapi::NtQuerySemaphore_t)dll_func::get(winapi::dll_func::NtQuerySemaphore);
+   unsigned int ret_len;
+   long status = pNtQuerySemaphore(handle, winapi::semaphore_basic_information, &info, sizeof(info), &ret_len);
+   if(status){
+      return false;
+   }
+   count = info.count;
+   limit = info.limit;
+   return true;
+}
+
+
+}  //namespace winapi
 }  //namespace interprocess
-}  //namespace boost 
+}  //namespace boost
 
 #include <boost/interprocess/detail/config_end.hpp>
 

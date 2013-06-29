@@ -74,6 +74,7 @@ import java.util.concurrent.Semaphore;
 import android.content.pm.ActivityInfo;
 import android.view.Display;
 import android.text.InputType;
+import android.util.Log;
 
 public class MainActivity extends Activity
 {
@@ -93,7 +94,7 @@ public class MainActivity extends Activity
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-		System.out.println("libSDL: Creating startup screen");
+		Log.i("SDL", "libSDL: Creating startup screen");
 		_layout = new LinearLayout(this);
 		_layout.setOrientation(LinearLayout.VERTICAL);
 		_layout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
@@ -114,9 +115,9 @@ public class MainActivity extends Activity
 					public void onClick(View v)
 					{
 						setUpStatusLabel();
-						System.out.println("libSDL: User clicked change phone config button");
+						Log.i("SDL", "libSDL: User clicked change phone config button");
 						loadedLibraries.acquireUninterruptibly();
-						Settings.showConfig(p, false);
+						SettingsMenu.showConfig(p, false);
 					}
 			};
 			_btn.setOnClickListener(new onClickListener(this));
@@ -164,10 +165,10 @@ public class MainActivity extends Activity
 
 				if(p.mAudioThread == null)
 				{
-					System.out.println("libSDL: Loading libraries");
+					Log.i("SDL", "libSDL: Loading libraries");
 					p.LoadLibraries();
 					p.mAudioThread = new AudioThread(p);
-					System.out.println("libSDL: Loading settings");
+					Log.i("SDL", "libSDL: Loading settings");
 					final Semaphore loaded = new Semaphore(0);
 					class Callback2 implements Runnable
 					{
@@ -191,14 +192,14 @@ public class MainActivity extends Activity
 				{
 					if( Globals.StartupMenuButtonTimeout > 0 )
 					{
-						System.out.println("libSDL: " + String.valueOf(Globals.StartupMenuButtonTimeout) + "-msec timeout in startup screen");
+						Log.i("SDL", "libSDL: " + String.valueOf(Globals.StartupMenuButtonTimeout) + "-msec timeout in startup screen");
 						try {
 							Thread.sleep(Globals.StartupMenuButtonTimeout);
 						} catch( InterruptedException e ) {};
 					}
 					if( Settings.settingsChanged )
 						return;
-					System.out.println("libSDL: Timeout reached in startup screen, process with downloader");
+					Log.i("SDL", "libSDL: Timeout reached in startup screen, process with downloader");
 					p.startDownloader();
 				}
 			}
@@ -225,14 +226,14 @@ public class MainActivity extends Activity
 
 	public void startDownloader()
 	{
-		System.out.println("libSDL: Starting data downloader");
+		Log.i("SDL", "libSDL: Starting data downloader");
 		class Callback implements Runnable
 		{
 			public MainActivity Parent;
 			public void run()
 			{
 				setUpStatusLabel();
-				System.out.println("libSDL: Starting downloader");
+				Log.i("SDL", "libSDL: Starting downloader");
 				if( Parent.downloader == null )
 					Parent.downloader = new DataDownloader(Parent, Parent._tv);
 			}
@@ -251,7 +252,7 @@ public class MainActivity extends Activity
 				//int tries = 30;
 				while( isCurrentOrientationHorizontal() != Globals.HorizontalOrientation )
 				{
-					System.out.println("libSDL: Waiting for screen orientation to change - the device is probably in the lockscreen mode");
+					Log.i("SDL", "libSDL: Waiting for screen orientation to change - the device is probably in the lockscreen mode");
 					try {
 						Thread.sleep(500);
 					} catch( Exception e ) {}
@@ -259,13 +260,13 @@ public class MainActivity extends Activity
 					tries--;
 					if( tries <= 0 )
 					{
-						System.out.println("libSDL: Giving up waiting for screen orientation change");
+						Log.i("SDL", "libSDL: Giving up waiting for screen orientation change");
 						break;
 					}
 					*/
 					if( _isPaused )
 					{
-						System.out.println("libSDL: Application paused, cancelling SDL initialization until it will be brought to foreground");
+						Log.i("SDL", "libSDL: Application paused, cancelling SDL initialization until it will be brought to foreground");
 						return;
 					}
 				}
@@ -284,12 +285,9 @@ public class MainActivity extends Activity
 	{
 		if(sdlInited)
 			return;
-		System.out.println("libSDL: Initializing video and SDL application");
+		Log.i("SDL", "libSDL: Initializing video and SDL application");
 		
 		sdlInited = true;
-		if(Globals.UseAccelerometerAsArrowKeys || Globals.AppUsesAccelerometer)
-			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
-					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		_videoLayout.removeView(_layout);
 		if( _ad.getView() != null )
 			_videoLayout.removeView(_ad.getView());
@@ -363,7 +361,7 @@ public class MainActivity extends Activity
 	@Override
 	public void onWindowFocusChanged (boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
-		System.out.println("libSDL: onWindowFocusChanged: " + hasFocus + " - sending onPause/onResume");
+		Log.i("SDL", "libSDL: onWindowFocusChanged: " + hasFocus + " - sending onPause/onResume");
 		if (hasFocus == false)
 			onPause();
 		else
@@ -396,6 +394,9 @@ public class MainActivity extends Activity
 		if( mGLView != null )
 			mGLView.exitApp();
 		super.onDestroy();
+		try{
+			Thread.sleep(2000); // The event is sent asynchronously, allow app to save it's state, and call exit() itself.
+		} catch (InterruptedException e) {}
 		System.exit(0);
 	}
 
@@ -454,7 +455,7 @@ public class MainActivity extends Activity
 						return true;
 					}
 				}
-				//System.out.println("Key " + keyCode + " flags " + event.getFlags() + " action " + event.getAction());
+				//Log.i("SDL", "Key " + keyCode + " flags " + event.getFlags() + " action " + event.getAction());
 				return false;
 			}
 		};
@@ -514,7 +515,7 @@ public class MainActivity extends Activity
 	public void setScreenKeyboardHintMessage(String s)
 	{
 		_screenKeyboardHintMessage = s;
-		//System.out.println("setScreenKeyboardHintMessage: " + (_screenKeyboardHintMessage != null ? _screenKeyboardHintMessage : getString(R.string.text_edit_click_here)));
+		//Log.i("SDL", "setScreenKeyboardHintMessage: " + (_screenKeyboardHintMessage != null ? _screenKeyboardHintMessage : getString(R.string.text_edit_click_here)));
 		runOnUiThread(new Runnable()
 		{
 			public void run()
@@ -667,7 +668,7 @@ public class MainActivity extends Activity
 	@Override
 	public boolean dispatchTouchEvent(final MotionEvent ev)
 	{
-		//System.out.println("dispatchTouchEvent: " + ev.getAction() + " coords " + ev.getX() + ":" + ev.getY() );
+		//Log.i("SDL", "dispatchTouchEvent: " + ev.getAction() + " coords " + ev.getX() + ":" + ev.getY() );
 		if(_screenKeyboard != null)
 			_screenKeyboard.dispatchTouchEvent(ev);
 		else
@@ -694,7 +695,7 @@ public class MainActivity extends Activity
 	@Override
 	public boolean dispatchGenericMotionEvent (MotionEvent ev)
 	{
-		//System.out.println("dispatchGenericMotionEvent: " + ev.getAction() + " coords " + ev.getX() + ":" + ev.getY() );
+		//Log.i("SDL", "dispatchGenericMotionEvent: " + ev.getAction() + " coords " + ev.getX() + ":" + ev.getY() );
 		// This code fails to run for Android 1.6, so there will be no generic motion event for Andorid screen keyboard
 		/*
 		if(_screenKeyboard != null)
@@ -760,11 +761,11 @@ public class MainActivity extends Activity
 		{
 			if(Globals.NeedGles2)
 				System.loadLibrary("GLESv2");
-			System.out.println("libSDL: loaded GLESv2 lib");
+			Log.i("SDL", "libSDL: loaded GLESv2 lib");
 		}
 		catch ( UnsatisfiedLinkError e )
 		{
-			System.out.println("libSDL: Cannot load GLESv2 lib");
+			Log.i("SDL", "libSDL: Cannot load GLESv2 lib");
 		}
 
 		// ----- VCMI hack -----
@@ -772,7 +773,7 @@ public class MainActivity extends Activity
 		for(String binaryZip: binaryZipNames)
 		{
 			try {
-				System.out.println("libSDL: Trying to extract binaries from assets " + binaryZip);
+				Log.i("SDL", "libSDL: Trying to extract binaries from assets " + binaryZip);
 				
 				InputStream in = null;
 				try
@@ -813,11 +814,11 @@ public class MainActivity extends Activity
 					entry = zip.getNextEntry();
 					/*
 					if( entry != null )
-						System.out.println("Extracting lib " + entry.getName());
+						Log.i("SDL", "Extracting lib " + entry.getName());
 					*/
 					if( entry == null )
 					{
-						System.out.println("Extracting binaries finished");
+						Log.i("SDL", "Extracting binaries finished");
 						break;
 					}
 					if( entry.isDirectory() )
@@ -846,11 +847,11 @@ public class MainActivity extends Activity
 							ff.delete();
 							throw new Exception();
 						}
-						System.out.println("File '" + path + "' exists and passed CRC check - not overwriting it");
+						Log.i("SDL", "File '" + path + "' exists and passed CRC check - not overwriting it");
 						continue;
 					} catch( Exception eeeeee ) { }
 
-					System.out.println("Saving to file '" + path + "'");
+					Log.i("SDL", "Saving to file '" + path + "'");
 
 					out = new FileOutputStream( path );
 					int len = zip.read(buf);
@@ -868,7 +869,7 @@ public class MainActivity extends Activity
 			}
 			catch ( Exception eee )
 			{
-				//System.out.println("libSDL: Error: " + eee.toString());
+				//Log.i("SDL", "libSDL: Error: " + eee.toString());
 			}
 		}
 		// ----- VCMI hack -----
@@ -882,22 +883,22 @@ public class MainActivity extends Activity
 				{
 					String libname = System.mapLibraryName(l);
 					File libpath = new File(getFilesDir().getAbsolutePath() + "/../lib/" + libname);
-					System.out.println("libSDL: loading lib " + libpath.getAbsolutePath());
+					Log.i("SDL", "libSDL: loading lib " + libpath.getAbsolutePath());
 					System.load(libpath.getPath());
 				}
 				catch( UnsatisfiedLinkError e )
 				{
-					System.out.println("libSDL: error loading lib " + l + ": " + e.toString());
+					Log.i("SDL", "libSDL: error loading lib " + l + ": " + e.toString());
 					try
 					{
 						String libname = System.mapLibraryName(l);
 						File libpath = new File(getFilesDir().getAbsolutePath() + "/" + libname);
-						System.out.println("libSDL: loading lib " + libpath.getAbsolutePath());
+						Log.i("SDL", "libSDL: loading lib " + libpath.getAbsolutePath());
 						System.load(libpath.getPath());
 					}
 					catch( UnsatisfiedLinkError ee )
 					{
-						System.out.println("libSDL: error loading lib " + l + ": " + ee.toString());
+						Log.i("SDL", "libSDL: error loading lib " + l + ": " + ee.toString());
 						System.loadLibrary(l);
 					}
 				}
@@ -906,7 +907,7 @@ public class MainActivity extends Activity
 		catch ( UnsatisfiedLinkError e )
 		{
 			try {
-				System.out.println("libSDL: Extracting APP2SD-ed libs");
+				Log.i("SDL", "libSDL: Extracting APP2SD-ed libs");
 				
 				InputStream in = null;
 				try
@@ -939,11 +940,11 @@ public class MainActivity extends Activity
 					entry = zip.getNextEntry();
 					/*
 					if( entry != null )
-						System.out.println("Extracting lib " + entry.getName());
+						Log.i("SDL", "Extracting lib " + entry.getName());
 					*/
 					if( entry == null )
 					{
-						System.out.println("Extracting libs finished");
+						Log.i("SDL", "Extracting libs finished");
 						break;
 					}
 					if( entry.isDirectory() )
@@ -962,7 +963,7 @@ public class MainActivity extends Activity
 							outDir.mkdirs();
 					} catch( SecurityException eeeee ) { };
 
-					System.out.println("Saving to file '" + path + "'");
+					Log.i("SDL", "Saving to file '" + path + "'");
 
 					out = new FileOutputStream( path );
 					int len = zip.read(buf);
@@ -981,14 +982,14 @@ public class MainActivity extends Activity
 				{
 					String libname = System.mapLibraryName(l);
 					File libpath = new File(libDir, libname);
-					System.out.println("libSDL: loading lib " + libpath.getPath());
+					Log.i("SDL", "libSDL: loading lib " + libpath.getPath());
 					System.load(libpath.getPath());
 					libpath.delete();
 				}
 			}
 			catch ( Exception ee )
 			{
-				System.out.println("libSDL: Error: " + ee.toString());
+				Log.i("SDL", "libSDL: Error: " + ee.toString());
 			}
 		}
 
@@ -1007,21 +1008,21 @@ public class MainActivity extends Activity
 		}
 		catch ( UnsatisfiedLinkError e )
 		{
-			System.out.println("libSDL: error loading lib: " + e.toString());
+			Log.i("SDL", "libSDL: error loading lib: " + e.toString());
 			try
 			{
 				for(String l : libs)
 				{
 					String libname = System.mapLibraryName(l);
 					File libpath = new File(context.getFilesDir(), libname);
-					System.out.println("libSDL: loading lib " + libpath.getPath());
+					Log.i("SDL", "libSDL: loading lib " + libpath.getPath());
 					System.load(libpath.getPath());
 					libpath.delete();
 				}
 			}
 			catch ( UnsatisfiedLinkError ee )
 			{
-				System.out.println("libSDL: error loading lib: " + ee.toString());
+				Log.i("SDL", "libSDL: error loading lib: " + ee.toString());
 			}
 		}
 	}
@@ -1032,7 +1033,7 @@ public class MainActivity extends Activity
 			PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
 			return packageInfo.versionCode;
 		} catch (PackageManager.NameNotFoundException e) {
-			System.out.println("libSDL: Cannot get the version of our own package: " + e);
+			Log.i("SDL", "libSDL: Cannot get the version of our own package: " + e);
 		}
 		return 0;
 	}
@@ -1061,8 +1062,19 @@ public class MainActivity extends Activity
 	private EditText _screenKeyboard = null;
 	private String _screenKeyboardHintMessage = null;
 	private boolean sdlInited = false;
-	public Settings.TouchEventsListener touchListener = null;
-	public Settings.KeyEventsListener keyListener = null;
+
+	public interface TouchEventsListener
+	{
+		public void onTouchEvent(final MotionEvent ev);
+	}
+
+	public interface KeyEventsListener
+	{
+		public void onKeyEvent(final int keyCode);
+	}
+
+	public TouchEventsListener touchListener = null;
+	public KeyEventsListener keyListener = null;
 	boolean _isPaused = false;
 	private InputMethodManager _inputManager = null;
 

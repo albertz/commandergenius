@@ -115,7 +115,7 @@ int ANDROID_ToggleFullScreen(_THIS, int fullscreen)
 	return 1;
 }
 
-enum { SDL_NUMMODES = 55 };
+enum { SDL_NUMMODES = 56 };
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -322,7 +322,8 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[52]->w = 768; SDL_modelist[52]->h = 256; // For UAE4ALL2
 	SDL_modelist[53]->w = 768; SDL_modelist[53]->h = 262; // For UAE4ALL2
 	SDL_modelist[54]->w = 768; SDL_modelist[54]->h = 270; // For UAE4ALL2
-	SDL_modelist[55] = NULL;
+	SDL_modelist[55]->w = 1280; SDL_modelist[55]->h = 960; // For UQM-HD
+	SDL_modelist[56] = NULL;
 	// If you going to add another video mode, increase SDL_NUMMODES constant
 	
 	SDL_VideoInit_1_3(NULL, 0);
@@ -382,7 +383,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		SDL_RendererInfo SDL_VideoRendererInfo;
 		
 		SDL_SelectVideoDisplay(0);
-		SDL_VideoWindow = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
+		SDL_VideoWindow = SDL_CreateWindow("", (SDL_ANDROID_sRealWindowWidth-SDL_ANDROID_sWindowWidth)/2, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
 
 		SDL_memset(&mode, 0, sizeof(mode));
 		mode.format = PixelFormatEnum;
@@ -422,7 +423,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 			DEBUGOUT("ANDROID_SetVideoMode() HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 		}
 		glViewport(0, 0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
-		glOrthof(0.0, (GLfloat) SDL_ANDROID_sWindowWidth, (GLfloat) SDL_ANDROID_sWindowHeight, 0.0, 0.0, 1.0);
+		glOrthof(0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sWindowHeight, 0, 0, 1);
 	}
 
 	/* Allocate the new pixel format for the screen */
@@ -1134,7 +1135,7 @@ void SDL_ANDROID_VideoContextRecreated()
 		SDL_SelectRenderer(SDL_VideoWindow); // Re-apply glOrtho() and blend modes
 		// Re-apply our custom 4:3 screen aspect ratio
 		glViewport(0, 0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
-		glOrthof(0.0, (GLfloat) SDL_ANDROID_sWindowWidth, (GLfloat) SDL_ANDROID_sWindowHeight, 0.0, 0.0, 1.0);
+		glOrthof(0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sWindowHeight, 0, 0, 1);
 		for( i = 0; i < HwSurfaceCount; i++ )
 		{
 			// Allocate HW texture

@@ -33,7 +33,7 @@ import android.hardware.SensorManager;
 import android.hardware.SensorEventListener;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
-
+import android.util.Log;
 import android.widget.TextView;
 
 
@@ -53,7 +53,7 @@ class AccelerometerReader implements SensorEventListener
 	{
 		if( _manager != null )
 		{
-			System.out.println("libSDL: stopping accelerometer/gyroscope");
+			Log.i("SDL", "libSDL: stopping accelerometer/gyroscope");
 			_manager.unregisterListener(this);
 			_manager.unregisterListener(gyro);
 		}
@@ -64,12 +64,12 @@ class AccelerometerReader implements SensorEventListener
 		if( (Globals.UseAccelerometerAsArrowKeys || Globals.AppUsesAccelerometer) &&
 			_manager != null && _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null )
 		{
-			System.out.println("libSDL: starting accelerometer");
+			Log.i("SDL", "libSDL: starting accelerometer");
 			_manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
 		}
 		if( Globals.AppUsesGyroscope && _manager != null && _manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null )
 		{
-			System.out.println("libSDL: starting gyroscope");
+			Log.i("SDL", "libSDL: starting gyroscope");
 			_manager.registerListener(gyro, _manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
 		}
 	}

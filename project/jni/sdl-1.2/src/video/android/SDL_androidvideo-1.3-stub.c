@@ -85,8 +85,8 @@ int ANDROID_VideoInit(_THIS)
 	SDL_VideoDisplay display;
 	SDL_DisplayMode mode;
 
-	mode.w = SDL_ANDROID_sWindowWidth;
-	mode.h = SDL_ANDROID_sWindowHeight;
+	mode.w = SDL_ANDROID_sRealWindowWidth;
+	mode.h = SDL_ANDROID_sRealWindowHeight;
 	mode.refresh_rate = 0;
 	mode.format = SDL_PIXELFORMAT_RGB565;
 	mode.driverdata = NULL;
@@ -103,8 +103,8 @@ int ANDROID_VideoInit(_THIS)
 void ANDROID_GetDisplayModes(_THIS, SDL_VideoDisplay * display)
 {
 	SDL_DisplayMode mode;
-	mode.w = SDL_ANDROID_sWindowWidth;
-	mode.h = SDL_ANDROID_sWindowHeight;
+	mode.w = SDL_ANDROID_sRealWindowWidth;
+	mode.h = SDL_ANDROID_sRealWindowHeight;
 	mode.refresh_rate = 0;
 	mode.format = SDL_PIXELFORMAT_RGB565;
 	mode.driverdata = NULL;
@@ -113,8 +113,8 @@ void ANDROID_GetDisplayModes(_THIS, SDL_VideoDisplay * display)
 
 int ANDROID_GetDisplayBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect)
 {
-	rect->w = SDL_ANDROID_sWindowWidth;
-	rect->h = SDL_ANDROID_sWindowHeight;
+	rect->w = SDL_ANDROID_sRealWindowWidth;
+	rect->h = SDL_ANDROID_sRealWindowHeight;
 	return 1;
 };
 

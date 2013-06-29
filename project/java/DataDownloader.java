@@ -228,7 +228,7 @@ class DataDownloader extends Thread
 		String [] downloadUrls = DataDownloadUrl.split("[|]");
 		if( downloadUrls.length < 2 )
 		{
-			System.out.println("Error: download string invalid: '" + DataDownloadUrl + "', your AndroidAppSettigns.cfg is broken");
+			Log.i("SDL", "Error: download string invalid: '" + DataDownloadUrl + "', your AndroidAppSettigns.cfg is broken");
 			Status.setText( res.getString(R.string.error_dl_from, DataDownloadUrl) );
 			return false;
 		}
@@ -249,14 +249,14 @@ class DataDownloader extends Thread
 				if( readed > 0 )
 					compare = new String( b, 0, readed, "UTF-8" );
 				boolean matched = false;
-				//System.out.println("Read URL: '" + compare + "'");
+				//Log.i("SDL", "Read URL: '" + compare + "'");
 				for( int i = 1; i < downloadUrls.length; i++ )
 				{
-					//System.out.println("Comparing: '" + downloadUrls[i] + "'");
+					//Log.i("SDL", "Comparing: '" + downloadUrls[i] + "'");
 					if( compare.compareTo(downloadUrls[i]) == 0 )
 						matched = true;
 				}
-				//System.out.println("Matched: " + String.valueOf(matched));
+				//Log.i("SDL", "Matched: " + String.valueOf(matched));
 				if( ! matched )
 					throw new IOException();
 				Status.setText( res.getString(R.string.download_unneeded) );
@@ -269,7 +269,7 @@ class DataDownloader extends Thread
 		checkFile = null;
 		
 		// Create output directory (not necessary for phone storage)
-		System.out.println("Downloading data to: '" + outFilesDir + "'");
+		Log.i("SDL", "Downloading data to: '" + outFilesDir + "'");
 		try {
 			File outDir = new File( outFilesDir );
 			if( !(outDir.exists() && outDir.isDirectory()) )
@@ -295,7 +295,7 @@ class DataDownloader extends Thread
 		int downloadUrlIndex = 1;
 		while( downloadUrlIndex < downloadUrls.length )
 		{
-			System.out.println("Processing download " + downloadUrls[downloadUrlIndex]);
+			Log.i("SDL", "Processing download " + downloadUrls[downloadUrlIndex]);
 			url = new String(downloadUrls[downloadUrlIndex]);
 			DoNotUnzip = false;
 			if(url.indexOf(":") == 0)
@@ -320,35 +320,37 @@ class DataDownloader extends Thread
 						stream1 = Parent.getAssets().open(url + "00");
 						stream1.close();
 					} catch( Exception ee ) {
-						System.out.println("Failed to open file in assets: " + url);
+						Log.i("SDL", "Failed to open file in assets: " + url);
 						downloadUrlIndex++;
 						continue;
 					}
 				}
 				FileInAssets = true;
-				System.out.println("Fetching file from assets: " + url);
+				Log.i("SDL", "Fetching file from assets: " + url);
 				break;
 			}
 			else
 			{
-				System.out.println("Connecting to: " + url);
+				Log.i("SDL", "Connecting to: " + url);
 				request = new HttpGet(url);
 				request.addHeader("Accept", "*/*");
-				if( partialDownloadLen > 0 )
+				if( partialDownloadLen > 0 ) {
 					request.addHeader("Range", "bytes=" + partialDownloadLen + "-");
+					Log.i("SDL", "Trying to resume download at pos " + partialDownloadLen);
+				}
 				try {
 					DefaultHttpClient client = HttpWithDisabledSslCertCheck();
 					client.getParams().setBooleanParameter("http.protocol.handle-redirects", true);
 					response = client.execute(request);
 				} catch (IOException e) {
-					System.out.println("Failed to connect to " + url);
+					Log.i("SDL", "Failed to connect to " + url);
 					downloadUrlIndex++;
 				};
 				if( response != null )
 				{
 					if( response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 206 )
 					{
-						System.out.println("Failed to connect to " + url + " with error " + response.getStatusLine().getStatusCode() + " " + response.getStatusLine().getReasonPhrase());
+						Log.i("SDL", "Failed to connect to " + url + " with error " + response.getStatusLine().getStatusCode() + " " + response.getStatusLine().getReasonPhrase());
 						responseError = response;
 						response = null;
 						downloadUrlIndex++;
@@ -376,7 +378,7 @@ class DataDownloader extends Thread
 						multipart = s;
 					else
 						multipart = new SequenceInputStream(multipart, s);
-					System.out.println("Multipart archive found: " + url1);
+					Log.i("SDL", "Multipart archive found: " + url1);
 				} catch( IOException e ) {
 					break;
 				}
@@ -393,7 +395,7 @@ class DataDownloader extends Thread
 					stream.close();
 					stream = new CountingInputStream(Parent.getAssets().open(url), 8192);
 				} catch( IOException e ) {
-					System.out.println("Unpacking from assets '" + url + "' - error: " + e.toString());
+					Log.i("SDL", "Unpacking from assets '" + url + "' - error: " + e.toString());
 					Status.setText( res.getString(R.string.error_dl_from, url) );
 					return false;
 				}
@@ -403,7 +405,7 @@ class DataDownloader extends Thread
 		{
 			if( response == null )
 			{
-				System.out.println("Error connecting to " + url);
+				Log.i("SDL", "Error connecting to " + url);
 				Status.setText( res.getString(R.string.failed_connecting_to, url) + (responseError == null ? "" : ": " + responseError.getStatusLine().getStatusCode() + " " + responseError.getStatusLine().getReasonPhrase()) );
 				return false;
 			}
@@ -420,7 +422,7 @@ class DataDownloader extends Thread
 		
 		if(DoNotUnzip)
 		{
-			System.out.println("Saving file '" + path + "'");
+			Log.i("SDL", "Saving file '" + path + "'");
 			OutputStream out = null;
 			try {
 				try {
@@ -435,14 +437,16 @@ class DataDownloader extends Thread
 						Header[] range = response.getHeaders("Content-Range");
 						if( range.length > 0 && range[0].getValue().indexOf("bytes") == 0 )
 						{
-							//System.out.println("Resuming download of file '" + path + "': Content-Range: " + range[0].getValue());
+							//Log.i("SDL", "Resuming download of file '" + path + "': Content-Range: " + range[0].getValue());
 							String[] skippedBytes = range[0].getValue().split("/")[0].split("-")[0].split(" ");
 							if( skippedBytes.length >= 2 && Long.parseLong(skippedBytes[1]) == partialDownloadLen )
 							{
 								out = new FileOutputStream( path, true );
-								System.out.println("Resuming download of file '" + path + "' at pos " + partialDownloadLen);
+								Log.i("SDL", "Resuming download of file '" + path + "' at pos " + partialDownloadLen);
 							}
 						}
+						else
+							Log.i("SDL", "Server does not support partial downloads. " + (range.length == 0 ? "" : range[0].getValue()));
 					} catch (Exception e) { }
 				}
 				if( out == null )
@@ -451,14 +455,14 @@ class DataDownloader extends Thread
 					partialDownloadLen = 0;
 				}
 			} catch( FileNotFoundException e ) {
-				System.out.println("Saving file '" + path + "' - error creating output file: " + e.toString());
+				Log.i("SDL", "Saving file '" + path + "' - error creating output file: " + e.toString());
 			} catch( SecurityException e ) {
-				System.out.println("Saving file '" + path + "' - error creating output file: " + e.toString());
+				Log.i("SDL", "Saving file '" + path + "' - error creating output file: " + e.toString());
 			};
 			if( out == null )
 			{
 				Status.setText( res.getString(R.string.error_write, path) );
-				System.out.println("Saving file '" + path + "' - error creating output file");
+				Log.i("SDL", "Saving file '" + path + "' - error creating output file");
 				return false;
 			}
 
@@ -480,14 +484,14 @@ class DataDownloader extends Thread
 				out = null;
 			} catch( java.io.IOException e ) {
 				Status.setText( res.getString(R.string.error_write, path) + ": " + e.getMessage() );
-				System.out.println("Saving file '" + path + "' - error writing: " + e.toString());
+				Log.i("SDL", "Saving file '" + path + "' - error writing: " + e.toString());
 				return false;
 			}
-			System.out.println("Saving file '" + path + "' done");
+			Log.i("SDL", "Saving file '" + path + "' done");
 		}
 		else
 		{
-			System.out.println("Reading from zip file '" + url + "'");
+			Log.i("SDL", "Reading from zip file '" + url + "'");
 			ZipInputStream zip = new ZipInputStream(stream);
 			
 			while(true)
@@ -496,20 +500,20 @@ class DataDownloader extends Thread
 				try {
 					entry = zip.getNextEntry();
 					if( entry != null )
-						System.out.println("Reading from zip file '" + url + "' entry '" + entry.getName() + "'");
+						Log.i("SDL", "Reading from zip file '" + url + "' entry '" + entry.getName() + "'");
 				} catch( java.io.IOException e ) {
 					Status.setText( res.getString(R.string.error_dl_from, url) );
-					System.out.println("Error reading from zip file '" + url + "': " + e.toString());
+					Log.i("SDL", "Error reading from zip file '" + url + "': " + e.toString());
 					return false;
 				}
 				if( entry == null )
 				{
-					System.out.println("Reading from zip file '" + url + "' finished");
+					Log.i("SDL", "Reading from zip file '" + url + "' finished");
 					break;
 				}
 				if( entry.isDirectory() )
 				{
-					System.out.println("Creating dir '" + getOutFilePath(entry.getName()) + "'");
+					Log.i("SDL", "Creating dir '" + getOutFilePath(entry.getName()) + "'");
 					try {
 						File outDir = new File( getOutFilePath(entry.getName()) );
 						if( !(outDir.exists() && outDir.isDirectory()) )
@@ -522,7 +526,7 @@ class DataDownloader extends Thread
 				path = getOutFilePath(entry.getName());
 				float percent = 0.0f;
 
-				System.out.println("Saving file '" + path + "'");
+				Log.i("SDL", "Saving file '" + path + "'");
 
 				try {
 					File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
@@ -540,7 +544,7 @@ class DataDownloader extends Thread
 						ff.delete();
 						throw new Exception();
 					}
-					System.out.println("File '" + path + "' exists and passed CRC check - not overwriting it");
+					Log.i("SDL", "File '" + path + "' exists and passed CRC check - not overwriting it");
 					if( totalLen > 0 )
 						percent = stream.getBytesRead() * 100.0f / totalLen;
 					Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
@@ -550,14 +554,14 @@ class DataDownloader extends Thread
 				try {
 					out = new FileOutputStream( path );
 				} catch( FileNotFoundException e ) {
-					System.out.println("Saving file '" + path + "' - cannot create file: " + e.toString());
+					Log.i("SDL", "Saving file '" + path + "' - cannot create file: " + e.toString());
 				} catch( SecurityException e ) {
-					System.out.println("Saving file '" + path + "' - cannot create file: " + e.toString());
+					Log.i("SDL", "Saving file '" + path + "' - cannot create file: " + e.toString());
 				};
 				if( out == null )
 				{
 					Status.setText( res.getString(R.string.error_write, path) );
-					System.out.println("Saving file '" + path + "' - cannot create file");
+					Log.i("SDL", "Saving file '" + path + "' - cannot create file");
 					return false;
 				}
 
@@ -583,7 +587,7 @@ class DataDownloader extends Thread
 					out = null;
 				} catch( java.io.IOException e ) {
 					Status.setText( res.getString(R.string.error_write, path) + ": " + e.getMessage() );
-					System.out.println("Saving file '" + path + "' - error writing or downloading: " + e.toString());
+					Log.i("SDL", "Saving file '" + path + "' - error writing or downloading: " + e.toString());
 					return false;
 				}
 				
@@ -600,7 +604,7 @@ class DataDownloader extends Thread
 					{
 						File ff = new File(path);
 						ff.delete();
-						System.out.println("Saving file '" + path + "' - CRC check failed, ZIP: " +
+						Log.i("SDL", "Saving file '" + path + "' - CRC check failed, ZIP: " +
 											String.format("%x", entry.getCrc()) + " actual file: " + String.format("%x", check.getChecksum().getValue()) +
 											" file size in ZIP: " + entry.getSize() + " actual size " + count );
 						throw new Exception();
@@ -609,7 +613,7 @@ class DataDownloader extends Thread
 					Status.setText( res.getString(R.string.error_write, path) + ": " + e.getMessage() );
 					return false;
 				}
-				System.out.println("Saving file '" + path + "' done");
+				Log.i("SDL", "Saving file '" + path + "' done");
 			}
 		};
 
@@ -682,7 +686,7 @@ class DataDownloader extends Thread
 	}
 
 
-	public class BackKeyListener implements Settings.KeyEventsListener
+	public class BackKeyListener implements MainActivity.KeyEventsListener
 	{
 		MainActivity p;
 		public BackKeyListener(MainActivity _p)

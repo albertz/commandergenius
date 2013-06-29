@@ -53,6 +53,7 @@ class Globals
 	public static boolean AppNeedsArrowKeys = true;
 	public static boolean AppNeedsTextInput = true;
 	public static boolean AppUsesJoystick = false;
+	public static boolean AppUsesSecondJoystick = false;
 	public static boolean AppUsesAccelerometer = false;
 	public static boolean AppUsesGyroscope = false;
 	public static boolean AppUsesMultitouch = false;
@@ -64,8 +65,8 @@ class Globals
 	public static String[] AppTouchscreenKeyboardKeysNames = "Fire Shoot Switch_weapon Jump Run Hide/Seek".split(" ");
 	public static int StartupMenuButtonTimeout = 3000;
 	public static int AppMinimumRAM = 0;
-	public static Settings.Menu HiddenMenuOptions [] = {};
-	public static Settings.Menu FirstStartMenuOptions [] = { (AppUsesMouse && ! ForceRelativeMouseMode ? new Settings.DisplaySizeConfig(true) : new Settings.DummyMenu()), new Settings.OptionalDownloadConfig(true), new Settings.GyroscopeCalibration() };
+	public static SettingsMenu.Menu HiddenMenuOptions [] = {}; // If you see error here - update HiddenMenuOptions in your AndroidAppSettings.cfg: change OptionalDownloadConfig to SettingsMenuMisc.OptionalDownloadConfig etc.
+	public static SettingsMenu.Menu FirstStartMenuOptions [] = { new SettingsMenuMisc.ShowReadme(), (AppUsesMouse && ! ForceRelativeMouseMode ? new SettingsMenuMouse.DisplaySizeConfig() : new SettingsMenu.DummyMenu()), new SettingsMenuMisc.OptionalDownloadConfig(), new SettingsMenuMisc.GyroscopeCalibration() };
 	public static String AdmobPublisherId = "";
 	public static String AdmobTestDeviceId = "";
 	public static String AdmobBannerSize = "";
@@ -77,6 +78,7 @@ class Globals
 	public static boolean UseAccelerometerAsArrowKeys = false;
 	public static boolean UseTouchscreenKeyboard = true;
 	public static int TouchscreenKeyboardSize = 1;
+	public static final int TOUCHSCREEN_KEYBOARD_CUSTOM = 4;
 	public static int TouchscreenKeyboardDrawSize = 1;
 	public static int TouchscreenKeyboardTheme = 2;
 	public static int TouchscreenKeyboardTransparency = 2;
@@ -104,8 +106,10 @@ class Globals
 	public static int ClickScreenTouchspotSize = 0;
 	public static int RemapHwKeycode[] = new int[SDL_Keys.JAVA_KEYCODE_LAST];
 	public static int RemapScreenKbKeycode[] = new int[6];
-	public static boolean ScreenKbControlsShown[] = new boolean[8]; /* Also joystick and text input button added */
-	public static int ScreenKbControlsLayout[][] = new int[][] { { 0, 303, 177, 480 }, { 0, 0, 48, 48 }, { 712, 392, 800, 480 }, { 624, 392, 712, 480 }, { 712, 304, 800, 392 }, { 624, 304, 712, 392 }, { 712, 216, 800, 304 }, { 624, 216, 712, 304 } }; // Values for 800x480 resolution
+	public static int ScreenKbControlsLayout[][] = AppUsesSecondJoystick ? // Values for 800x480 resolution
+													new int[][] { { 0, 303, 177, 480 }, { 0, 0, 48, 48 }, { 400, 392, 488, 480 }, { 312, 392, 400, 480 }, { 400, 304, 488, 392 }, { 312, 304, 400, 392 }, { 400, 216, 488, 304 }, { 312, 216, 400, 304 }, { 623, 303, 800, 480 } } :
+													new int[][] { { 0, 303, 177, 480 }, { 0, 0, 48, 48 }, { 712, 392, 800, 480 }, { 624, 392, 712, 480 }, { 712, 304, 800, 392 }, { 624, 304, 712, 392 }, { 712, 216, 800, 304 }, { 624, 216, 712, 304 } };
+	public static boolean ScreenKbControlsShown[] = new boolean[ScreenKbControlsLayout.length]; /* Also joystick and text input button added */
 	public static int RemapMultitouchGestureKeycode[] = new int[4];
 	public static boolean MultitouchGesturesUsed[] = new boolean[4];
 	public static int MultitouchGestureSensitivity = 1;

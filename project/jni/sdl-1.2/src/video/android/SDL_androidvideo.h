@@ -51,7 +51,8 @@ extern int SDL_ANDROID_BITSPERPIXEL;
 extern void SDL_ANDROID_TextInputInit(char * buffer, int len);
 extern int SDL_ANDROID_TextInputFinished;
 extern SDL_Surface *SDL_CurrentVideoSurface;
-extern SDL_Rect SDL_ANDROID_ForceClearScreenRect;
+extern SDL_Rect SDL_ANDROID_ForceClearScreenRect[];
+extern int SDL_ANDROID_ForceClearScreenRectAmount;
 extern int SDL_ANDROID_ShowScreenUnderFinger;
 extern SDL_Rect SDL_ANDROID_ShowScreenUnderFingerRect, SDL_ANDROID_ShowScreenUnderFingerRectSrc;
 extern int SDL_ANDROID_CallJavaSwapBuffers();
@@ -83,6 +84,7 @@ extern SDL_Window * ANDROID_CurrentWindow;
 enum { MAX_MULTITOUCH_POINTERS = 16 };
 extern void ANDROID_InitOSKeymap();
 extern int SDL_ANDROID_isJoystickUsed;
+extern int SDL_ANDROID_isSecondJoystickUsed;
 // Events have to be sent only from main thread from PumpEvents(), so we'll buffer them here
 extern void SDL_ANDROID_PumpEvents();
 

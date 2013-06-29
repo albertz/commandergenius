@@ -87,10 +87,10 @@
 <string name="remap_screenkb_joystick">Наекранний джойстік</string>
 <string name="remap_screenkb_button">Наекранні кнопки</string>
 <string name="remap_screenkb_button_text">Наекранна кнопка вводу тексту</string>
-<string name="remap_screenkb_button_zoomin">Збільшити двома пальцями жест</string>
-<string name="remap_screenkb_button_zoomout">Зменшити двома пальцями жест</string>
-<string name="remap_screenkb_button_rotateleft">Повернути наліво двома пальцями жест</string>
-<string name="remap_screenkb_button_rotateright">Повернути праворуч двома пальцями жест</string>
+<string name="remap_screenkb_button_zoomin">Збільшити двома пальцями</string>
+<string name="remap_screenkb_button_zoomout">Зменшити двома пальцями</string>
+<string name="remap_screenkb_button_rotateleft">Повернути наліво двома пальцями</string>
+<string name="remap_screenkb_button_rotateright">Повернути праворуч двома пальцями</string>
 <string name="remap_screenkb_button_gestures">Жест двома пальцями по екрану</string>
 <string name="accel_veryfast">Дуже швидко</string>
 <string name="remap_screenkb_button_gestures_sensitivity">Чутливість жесту двома пальцями по екрану</string>
@@ -144,4 +144,5 @@
 <string name="cancel_download_resume">Завантаження може бути відновлено пізніше.</string>
 <string name="yes">Так</string>
 <string name="no">Ні</string>
+<string name="controls_screenkb_custom">Налаштування користувача</string>
 </resources>
