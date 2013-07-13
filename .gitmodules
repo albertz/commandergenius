@@ -31,3 +31,6 @@
 [submodule "project/jni/application/teeworlds/src"]
 	path = project/jni/application/teeworlds/src
 	url = git@github.com:pelya/teeworlds.git
+[submodule "project/jni/application/c-dogs/src"]
+	path = project/jni/application/c-dogs/src
+	url = git@github.com:cxong/cdogs-sdl.git

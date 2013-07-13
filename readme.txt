@@ -40,7 +40,7 @@ Then you can test it by launching Ballfield icon from Android applications menu.
 
 There are other applications inside project/jni/application directory,
 some of them are referenced using Git submodule mechanism, you may download them using command
-git submodule update --init
+git submodule update --init --recursive
 Some of them may be outdated and won't compile, some contain only patch file and no sources,
 so you should check out Git logs before compiling a particular app, and checkout whole repo at that date:
 gitk project/jni/application/<directory>
