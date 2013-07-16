@@ -1474,3 +1474,27 @@ JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )
 {
 	SDL_android_init_keymap(SDL_android_keymap);
 }
+
+void SDL_ANDROID_set_java_gamepad_keymap(int A, int B, int C, int X, int Y, int Z, int L1, int R1, int L2, int R2)
+{
+        /*
+        Arguments are SDL keycodes. Use the SDLK_ constants.
+        Pass zero to leave a button mapping untouched.
+
+        On OUYA: O = A
+                 U = X
+                 Y = Y
+                 A = B
+                 C and Z do not exist
+        */
+	if (A) SDL_android_keymap[KEYCODE_BUTTON_A] = A;
+	if (B) SDL_android_keymap[KEYCODE_BUTTON_B] = B;
+	if (C) SDL_android_keymap[KEYCODE_BUTTON_C] = C;
+	if (X) SDL_android_keymap[KEYCODE_BUTTON_X] = X;
+	if (Y) SDL_android_keymap[KEYCODE_BUTTON_Y] = Y;
+	if (Z) SDL_android_keymap[KEYCODE_BUTTON_Z] = Z;
+	if (L1) SDL_android_keymap[KEYCODE_BUTTON_L1] = L1;
+	if (R1) SDL_android_keymap[KEYCODE_BUTTON_R1] = R1;
+	if (L2) SDL_android_keymap[KEYCODE_BUTTON_L2] = L2;
+	if (R2) SDL_android_keymap[KEYCODE_BUTTON_R2] = R2;
+}
