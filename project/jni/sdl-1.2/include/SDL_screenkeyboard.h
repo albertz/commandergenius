@@ -128,6 +128,8 @@ extern DECLSPEC int SDLCALL SDL_ToggleScreenKeyboard(void *unused);
 
 extern DECLSPEC int SDLCALL SDL_IsScreenKeyboardShown(void *unused);
 
+extern DECLSPEC void SDLCALL SDL_ANDROID_set_java_gamepad_keymap(int A, int B, int C, int X, int Y, int Z, int L1, int R1, int L2, int R2, int LT, int RT);
+
 #ifdef __cplusplus
 }
 #endif
