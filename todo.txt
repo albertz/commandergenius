@@ -23,8 +23,10 @@ Requested features (see also bugs.txt)
 - Support of libjnigraphics (it will disable on-screen keyboard, only SW SDL screen surface supported).
   This is not relevant already, as every device around is fast enough with GL.
 
-- Second joystick, to be used in TeeWorlds.
+- TeeWorlds: jump with gamepad button, remove it from gamepad joystick.
+
+- TeeWorlds: external mouse support.
 
 - OpenTTD: make English the default language, because there are no fonts for many languages.
 
-- UQM: On-screen buttons are re-appearing when using gamepag and switching between game screens.
+- UQM: On-screen buttons are re-appearing when using gamepad and switching between game screens.
