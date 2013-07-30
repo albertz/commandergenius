@@ -1475,7 +1475,7 @@ JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )
 	SDL_android_init_keymap(SDL_android_keymap);
 }
 
-void SDL_ANDROID_set_java_gamepad_keymap(int A, int B, int C, int X, int Y, int Z, int L1, int R1, int L2, int R2, int LT, int RT)
+void SDL_ANDROID_SetGamepadKeymap(int A, int B, int X, int Y, int L1, int R1, int L2, int R2, int LThumb, int RThumb)
 {
         /*
         Arguments are SDL keycodes. Use the SDLK_ constants.
@@ -1485,18 +1485,18 @@ void SDL_ANDROID_set_java_gamepad_keymap(int A, int B, int C, int X, int Y, int 
                  U = X
                  Y = Y
                  A = B
-                 C and Z do not exist
+                 C and Z do not exist, they also do not exist on any gamepad I've seen (PS3/XBox/SHIELD)
         */
 	if (A) SDL_android_keymap[KEYCODE_BUTTON_A] = A;
 	if (B) SDL_android_keymap[KEYCODE_BUTTON_B] = B;
-	if (C) SDL_android_keymap[KEYCODE_BUTTON_C] = C;
+	//if (C) SDL_android_keymap[KEYCODE_BUTTON_C] = C;
 	if (X) SDL_android_keymap[KEYCODE_BUTTON_X] = X;
 	if (Y) SDL_android_keymap[KEYCODE_BUTTON_Y] = Y;
-	if (Z) SDL_android_keymap[KEYCODE_BUTTON_Z] = Z;
+	//if (Z) SDL_android_keymap[KEYCODE_BUTTON_Z] = Z;
 	if (L1) SDL_android_keymap[KEYCODE_BUTTON_L1] = L1;
 	if (R1) SDL_android_keymap[KEYCODE_BUTTON_R1] = R1;
 	if (L2) SDL_android_keymap[KEYCODE_BUTTON_L2] = L2;
 	if (R2) SDL_android_keymap[KEYCODE_BUTTON_R2] = R2;
-	if (LT) SDL_android_keymap[KEYCODE_BUTTON_THUMBL] = LT;
-	if (RT) SDL_android_keymap[KEYCODE_BUTTON_THUMBR] = RT;
+	if (LThumb) SDL_android_keymap[KEYCODE_BUTTON_THUMBL] = LThumb;
+	if (RThumb) SDL_android_keymap[KEYCODE_BUTTON_THUMBR] = RThumb;
 }
