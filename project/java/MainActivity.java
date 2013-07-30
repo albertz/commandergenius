@@ -1038,6 +1038,16 @@ public class MainActivity extends Activity
 		return 0;
 	}
 
+	public boolean isRunningOnOUYA()
+	{
+		try {
+			PackageInfo packageInfo = getPackageManager().getPackageInfo("tv.ouya", 0);
+			return true;
+		} catch (PackageManager.NameNotFoundException e) {
+		}
+		return false;
+	}
+
 	public boolean isCurrentOrientationHorizontal()
 	{
 		Display getOrient = getWindowManager().getDefaultDisplay();

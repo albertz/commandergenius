@@ -186,6 +186,8 @@ class Settings
 		}
 		Log.i("SDL", "libSDL: Settings.Load(): enter");
 		nativeInitKeymap();
+		if( p.isRunningOnOUYA() )
+			nativeSetKeymapKey(KeyEvent.KEYCODE_MENU, nativeGetKeymapKey(KeyEvent.KEYCODE_BACK)); // Ouya does not have Back key, only Menu, so remap Back keycode to Menu
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
 		{
 			int sdlKey = nativeGetKeymapKey(i);
@@ -464,7 +466,7 @@ class Settings
 
 	// ===============================================================================================
 
-	static void Apply(Activity p)
+	static void Apply(MainActivity p)
 	{
 		nativeSetVideoDepth(Globals.VideoDepthBpp, Globals.NeedGles2 ? 1 : 0);
 		if(Globals.VideoLinearFilter)
@@ -559,6 +561,9 @@ class Settings
 		nativeSetEnv( "UNSECURE_STORAGE_DIR", Globals.DataDir );
 		nativeSetEnv( "HOME", Globals.DataDir );
 		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
+		Log.d("SDL", "libSDL: Is running on OUYA: " p.isRunningOnOUYA());
+		if( p.isRunningOnOUYA() )
+			nativeSetEnv( "OUYA", "1" );
 		try {
 			DisplayMetrics dm = new DisplayMetrics();
 			p.getWindowManager().getDefaultDisplay().getMetrics(dm);
