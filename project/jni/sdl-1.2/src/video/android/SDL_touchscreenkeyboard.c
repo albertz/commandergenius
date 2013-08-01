@@ -49,6 +49,7 @@ enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_JOYSTICKS = 2,
 int SDL_ANDROID_isTouchscreenKeyboardUsed = 0;
 static short touchscreenKeyboardTheme = 0;
 static short touchscreenKeyboardShown = 1;
+static SDL_Rect hiddenButtons[SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM];
 static short AutoFireButtonsNum = 0;
 static short buttonsize = 1;
 static short buttonDrawSize = 1;
@@ -91,6 +92,7 @@ enum { MOUSE_POINTER_W = 32, MOUSE_POINTER_H = 32, MOUSE_POINTER_X = 5, MOUSE_PO
 
 static int sunTheme = 0;
 static int joystickTouchPoints[MAX_JOYSTICKS*2];
+
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
@@ -779,9 +781,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	buttons[6].h = SDL_ANDROID_sRealWindowHeight/10;
 
 	for( i = 0; i < sizeof(pointerInButtonRect)/sizeof(pointerInButtonRect[0]); i++ )
-	{
 		pointerInButtonRect[i] = -1;
-	}
 	for( i = 0; i < nbuttonsAutoFire; i++ )
 	{
 		buttonsAutoFireRect[i].w = buttons[i].w * 2;
@@ -789,14 +789,12 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		buttonsAutoFireRect[i].x = buttons[i].x - buttons[i].w / 2;
 		buttonsAutoFireRect[i].y = buttons[i].y - buttons[i].h / 2;
 	}
-	for(i = 0; i < MAX_JOYSTICKS; i++)
-	{
+	for( i = 0; i < MAX_JOYSTICKS; i++ )
 		shrinkButtonRect(arrows[i], &arrowsDraw[i]);
-	}
-	for(i = 0; i < MAX_BUTTONS; i++)
-	{
+	for( i = 0; i < MAX_BUTTONS; i++ )
 		shrinkButtonRect(buttons[i], &buttonsDraw[i]);
-	}
+	for( i = 0; i < SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM; i++ )
+		SDL_ANDROID_GetScreenKeyboardButtonPos(i, &hiddenButtons[i]);
 };
 
 JNIEXPORT void JNICALL
@@ -1068,6 +1066,26 @@ int SDL_ANDROID_SetScreenKeyboardShown(int shown)
 int SDL_ANDROID_GetScreenKeyboardShown(void)
 {
 	return touchscreenKeyboardShown;
+};
+
+int SDL_ANDROID_SetScreenKeyboardButtonShown(int buttonId, int shown)
+{
+	if( buttonId < 0 || buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM )
+		return 0;
+
+	if( !shown && SDL_ANDROID_GetScreenKeyboardButtonShown(buttonId) )
+		SDL_ANDROID_GetScreenKeyboardButtonPos(buttonId, &hiddenButtons[buttonId]);
+	if( shown && !SDL_ANDROID_GetScreenKeyboardButtonShown(buttonId) )
+		SDL_ANDROID_SetScreenKeyboardButtonPos(buttonId, &hiddenButtons[buttonId]);
+	return 1;
+};
+
+int SDL_ANDROID_GetScreenKeyboardButtonShown(int buttonId)
+{
+	SDL_Rect pos;
+	if( !SDL_ANDROID_GetScreenKeyboardButtonPos(buttonId, &pos) )
+		return 0;
+	return pos.h > 0 && pos.w > 0;
 };
 
 int SDL_ANDROID_GetScreenKeyboardSize(void)

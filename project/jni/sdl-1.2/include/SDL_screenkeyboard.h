@@ -67,6 +67,8 @@ enum {
    use SDL_ListModes()[0] to determine the actual screen boundaries. */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos);
+
+/* Set button image position - it can be smaller than the button area */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonImagePos(int buttonId, SDL_Rect * pos);
 
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonKey(int buttonId,
@@ -89,35 +91,38 @@ extern DECLSPEC
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardAutoFireButtonsAmount(int nbuttons);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardAutoFireButtonsAmount(void);
 
-/* Hide the whole screen keyboard */
+/* Hide all on-screen buttons (not the QWERTY text input) */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardShown(int shown);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardShown(void);
+/* Hide individual buttons - this will just put button width and height to 0, but it will save previous button size */
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonShown(int buttonId, int shown);
+extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardButtonShown(int buttonId);
 /* Get the button size modifier, as configured by user with SDL startup menu */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardSize(void);
 
 /* Set a particular button to pass a mouse/multitouch events down to the application, by default all buttons block touch events */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonGenerateTouchEvents(int buttonId, int generateEvents);
 
-/* Show Android on-screen keyboard, and pass entered text back to application as SDL keypress events,
-previousText is UTF-8 encoded, it may be NULL, only 256 first bytes will be used, and this call will not block */
+/* Show Android QWERTY keyboard, and pass entered text back to application as SDL keypress events,
+   previousText is UTF-8 encoded, it may be NULL, only 256 first bytes will be used, and this call will not block */
 extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleScreenKeyboardTextInput(const char * previousText);
 
-/* Show only the bare Android on-screen keyboard without any text input field, so it won't cover the screen */
+/* Show only the bare Android QWERTY keyboard without any text input field, so it won't cover the screen */
 extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(void);
 
-/* Show Android on-screen keyboard, and pass entered text back to application in a buffer,
-using buffer contents as previous text (UTF-8 encoded), the buffer may be of any size -
-this call will block until user typed all text. */
+/* Show Android QWERTY keyboard, and pass entered text back to application in a buffer,
+   using buffer contents as previous text (UTF-8 encoded), the buffer may be of any size -
+   this call will block until user typed all text. */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardTextInput(char * textBuf, int textBufSize);
 
 /* Whether user redefined on-screen keyboard layout via SDL menu, app should not enforce it's own layout in that case */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardRedefinedByUser(void);
 
-/* Set hint message for the text input field, it may be multi-line, set NULL to reset hint to default */
+/* Set hint message for the QWERTY text input field, it may be multi-line, set NULL to reset hint to default */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardHintMesage(const char * hint);
 
-/* API compatible to SDL2, it's a wrapper to the SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(), it does not block */
-
+/* API compatible to SDL2, it's a wrapper to the SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(), it does not block.
+   These functions control native Android QWERTY keyboard, not the overlay buttons */
 extern DECLSPEC int SDLCALL SDL_HasScreenKeyboardSupport(void *unused);
 
 extern DECLSPEC int SDLCALL SDL_ShowScreenKeyboard(void *unused);
