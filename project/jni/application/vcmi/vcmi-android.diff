@@ -1,16 +1,16 @@
-Index: lib/vcmi_endian.h
+Index: client/battle/CBattleInterface.cpp
 ===================================================================
---- lib/vcmi_endian.h	(revision 3490)
-+++ lib/vcmi_endian.h	(working copy)
-@@ -19,7 +19,7 @@
-  *    memory. On big endian machines, the value will be byteswapped.
-  */
+--- client/battle/CBattleInterface.cpp	(revision 3490)
++++ client/battle/CBattleInterface.cpp	(working copy)
+@@ -34,7 +34,7 @@
+ #include "../gui/CGuiHandler.h"
+ #include "../CMT.h"
  
--#if defined(linux) && (defined(sparc) || defined(__arm__))
-+#if defined(ANDROID) || defined(linux) && (defined(sparc) || defined(__arm__))
- /* SPARC does not support unaligned memory access. Let gcc know when
-  * to emit the right code. */
- struct unaligned_Uint16 { ui16 val __attribute__(( packed )); };
+-#if defined(_MSC_VER) && _MSC_VER >= 1800
++#if (defined(_MSC_VER) && _MSC_VER >= 1800) || defined(ANDROID)
+ #define _USE_MATH_DEFINES
+ #include <cmath>
+ #else
 Index: client/CMT.cpp
 ===================================================================
 --- client/CMT.cpp	(revision 3490)
@@ -24,3 +24,16 @@ Index: client/CMT.cpp
  int SDL_main(int argc, char *argv[])
  #else
  int main(int argc, char** argv)
+Index: lib/vcmi_endian.h
+===================================================================
+--- lib/vcmi_endian.h	(revision 3490)
++++ lib/vcmi_endian.h	(working copy)
+@@ -19,7 +19,7 @@
+  *    memory. On big endian machines, the value will be byteswapped.
+  */
+ 
+-#if defined(linux) && (defined(sparc) || defined(__arm__))
++#if defined(ANDROID) || defined(linux) && (defined(sparc) || defined(__arm__))
+ /* SPARC does not support unaligned memory access. Let gcc know when
+  * to emit the right code. */
+ struct unaligned_Uint16 { ui16 val __attribute__(( packed )); };

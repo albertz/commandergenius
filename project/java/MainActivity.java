@@ -864,7 +864,9 @@ public class MainActivity extends Activity
 
 					out.flush();
 					out.close();
-					Settings.nativeChmod(path, 0755);
+					//Settings.nativeChmod(path, 0755);
+					String chmod[] = { "/system/bin/chmod", "0755", path };
+					Runtime.getRuntime().exec(chmod).waitFor();
 				}
 			}
 			catch ( Exception eee )

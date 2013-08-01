@@ -1,9 +1,10 @@
 
 $(shell mkdir -p AI debug/AI \
 	out/vcmi/lib out/vcmi/lib/logging out/vcmi/lib/filesystem \
-	out/vcmi/lib/mapping out/vcmi/lib/rmg out/vcmi/lib/minigzip \
-	 out/vcmi/server out/vcmi/AI/StupidAI out/vcmi/AI/BattleAI \
-	out/vcmi/AI/VCAI out/vcmi/scripting/erm out/vcmi/client \
+	out/vcmi/lib/mapping out/vcmi/lib/rmg out/vcmi/lib/minizip \
+	out/vcmi/server out/vcmi/AI/StupidAI out/vcmi/AI/BattleAI \
+	out/vcmi/AI/VCAI out/vcmi/AI/FuzzyLite \
+	out/vcmi/scripting/erm out/vcmi/client \
 	out/vcmi/client/gui out/vcmi/client/battle)
 
 LOCAL_PATH=$(shell dirname $0)
@@ -12,8 +13,11 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 GCC_PREFIX=arm-linux-androideabi
 GCC_VERSION=4.8
 
-SOURCES_LIB=$(wildcard vcmi/lib/*.cpp vcmi/lib/logging/*.cpp vcmi/lib/minigzip/*.c vcmi/CCallback.cpp)
+SOURCES_LIB=$(wildcard vcmi/lib/*.cpp vcmi/lib/logging/*.cpp)
 OBJS_LIB=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB))
+
+SOURCES_MINIZIP=vcmi/lib/minizip/zip.c vcmi/lib/minizip/unzip.c vcmi/lib/minizip/ioapi.c
+OBJS_MINIZIP=$(patsubst %.c, out/%.o, $(SOURCES_MINIZIP))
 
 SOURCES_LIB_FILESYSTEM:=$(wildcard vcmi/lib/filesystem/*.cpp)
 OBJS_LIB_FILESYSTEM:=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_FILESYSTEM))
@@ -39,6 +43,9 @@ OBJS_STUPIDAI:=$(patsubst %.cpp, out/%.o, $(SOURCES_STUPIDAI))
 SOURCES_VCAI:=$(wildcard vcmi/AI/VCAI/*.cpp)
 OBJS_VCAI:=$(patsubst %.cpp, out/%.o, $(SOURCES_VCAI))
 
+SOURCES_FUZZYLITE:=$(wildcard vcmi/AI/FuzzyLite/*.cpp)
+OBJS_FUZZYLITE:=$(patsubst %.cpp, out/%.o, $(SOURCES_FUZZYLITE))
+
 SOURCES_ERM:=$(wildcard vcmi/scripting/erm/*.cpp)
 OBJS_ERM:=$(patsubst %.cpp, out/%.o, $(SOURCES_ERM))
 
@@ -49,7 +56,7 @@ AndroidData/binaries.zip: vcmiserver libvcmi.so AI/libBattleAI.so AI/libStupidAI
 	zip -r $@ $^
 
 # With default -O3 optimization each G++ process eats 2Gb RAM, so tone optimization down to -O2, and limit make to two jobs
-$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_BATTLEAI) $(OBJS_EMPTYAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
+$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_BATTLEAI) $(OBJS_STUPIDAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
 	env GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	-c \$$CXXFLAGS -O2 -Ivcmi -std=c++11 -Ivcmi/lib \
@@ -60,12 +67,19 @@ $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB
 	$< -o $@"
 #	-Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
 
+$(OBJS_MINIZIP): out/%.o: %.c
+	env GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
+	"$(GCC_PREFIX)-gcc \
+	-c \$$CFLAGS -O2 -DDLL_EXPORT= -DIOAPI_NO_64 \
+	-Wstrict-aliasing -Wcast-align -Wpointer-arith -Waddress \
+	$< -o $@"
+
 vcmiserver: $(OBJS_SERVER) -lvcmi
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	$^ -o $@ \
 	\$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 \
-	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lgnustl_static" && \
+	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lgnustl_static" && \
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
 
@@ -74,7 +88,7 @@ LINK_LIB= \
 	"$(GCC_PREFIX)-g++ \
 	$^ -o $@ \
 	-shared \$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 \
-	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lgnustl_static" && \
+	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lgnustl_static" && \
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
 
@@ -87,7 +101,7 @@ AI/libBattleAI.so: $(OBJS_BATTLEAI) -lvcmi
 AI/libEmptyAI.so: $(OBJS_EMPTYAI) -lvcmi
 	$(LINK_LIB)
 
-AI/libStupidAI.so: $(OBJS_STUPID) -lvcmi
+AI/libStupidAI.so: $(OBJS_STUPIDAI) -lvcmi
 	$(LINK_LIB)
 
 AI/libVCAI.so: $(OBJS_VCAI) $(OBJS_FUZZYLITE) -lvcmi
@@ -96,7 +110,7 @@ AI/libVCAI.so: $(OBJS_VCAI) $(OBJS_FUZZYLITE) -lvcmi
 Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi
 	$(LINK_LIB)
 
-libvcmi.so: $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG)
+libvcmi.so: $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_MINIZIP)
 	$(LINK_LIB)
 
 libapplication.so: $(OBJS_CLIENT) libvcmi.so
