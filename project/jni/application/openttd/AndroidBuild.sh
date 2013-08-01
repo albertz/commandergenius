@@ -2,11 +2,12 @@
 
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
-VER=1.3.1
+VER=1.3.2
 
 
 if [ \! -d openttd-$VER ] ; then
 	wget http://binaries.openttd.org/releases/$VER/openttd-$VER-source.tar.gz -O - | tar xvz && \
+	cp -a -f openttd-$VER openttd-$VER-orig && \
 	patch -p 0 -d openttd-$VER < openttd-trunk-android.patch && patch -p 0 -d openttd-$VER < findversion.sh.patch || exit 1
 fi
 

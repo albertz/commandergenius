@@ -1,5 +1,5 @@
---- src/debug.cpp	2013-05-31 23:57:15.000000000 +0300
-+++ src/debug.cpp	2013-06-02 17:34:54.700814123 +0300
+--- src/debug.cpp	2013-07-27 18:09:40.000000000 +0300
++++ src/debug.cpp	2013-08-01 19:17:24.013408999 +0300
 @@ -16,6 +16,9 @@
  #include "string_func.h"
  #include "fileio_func.h"
@@ -20,9 +20,9 @@
  #if defined(ENABLE_NETWORK)
  	if (_debug_socket != INVALID_SOCKET) {
  		char buf2[1024 + 32];
---- src/fontcache.cpp	2013-05-31 23:57:15.000000000 +0300
-+++ src/fontcache.cpp	2013-06-02 17:34:54.700814123 +0300
-@@ -808,7 +808,15 @@
+--- src/fontdetection.cpp	2013-07-27 18:09:39.000000000 +0300
++++ src/fontdetection.cpp	2013-08-01 19:19:43.089408999 +0300
+@@ -772,7 +772,15 @@
  	return ret;
  }
  
@@ -39,8 +39,8 @@
  FT_Error GetFontByFaceName(const char *font_name, FT_Face *face) {return FT_Err_Cannot_Open_Resource;}
  bool SetFallbackFont(FreeTypeSettings *settings, const char *language_isocode, int winlangid, MissingGlyphSearcher *callback) { return false; }
  #endif /* WITH_FONTCONFIG */
---- src/music/libtimidity.cpp	2013-05-31 23:56:52.000000000 +0300
-+++ src/music/libtimidity.cpp	2013-06-02 17:34:54.700814123 +0300
+--- src/music/libtimidity.cpp	2013-07-27 18:09:28.000000000 +0300
++++ src/music/libtimidity.cpp	2013-08-01 19:17:24.013408999 +0300
 @@ -13,6 +13,7 @@
  #include "../openttd.h"
  #include "../sound_type.h"
@@ -82,8 +82,8 @@
  
  /** Factory for the libtimidity driver. */
  static FMusicDriver_LibTimidity iFMusicDriver_LibTimidity;
---- src/network/core/os_abstraction.h	2013-05-31 23:57:06.000000000 +0300
-+++ src/network/core/os_abstraction.h	2013-06-02 17:34:54.700814123 +0300
+--- src/network/core/os_abstraction.h	2013-07-27 18:09:36.000000000 +0300
++++ src/network/core/os_abstraction.h	2013-08-01 19:17:24.013408999 +0300
 @@ -161,7 +161,7 @@
  #		include <net/if.h>
  /* According to glibc/NEWS, <ifaddrs.h> appeared in glibc-2.3. */
@@ -93,8 +93,8 @@
  /* If for any reason ifaddrs.h does not exist on your system, comment out
   *   the following two lines and an alternative way will be used to fetch
   *   the list of IPs from the system. */
---- src/os/unix/crashlog_unix.cpp	2013-05-31 23:56:54.000000000 +0300
-+++ src/os/unix/crashlog_unix.cpp	2013-06-02 17:34:54.700814123 +0300
+--- src/os/unix/crashlog_unix.cpp	2013-07-27 18:09:32.000000000 +0300
++++ src/os/unix/crashlog_unix.cpp	2013-08-01 19:17:24.017408999 +0300
 @@ -141,7 +141,11 @@
  };
  
@@ -107,8 +107,8 @@
  
  /**
   * Entry point for the crash handler.
---- src/os/unix/unix.cpp	2013-05-31 23:56:54.000000000 +0300
-+++ src/os/unix/unix.cpp	2013-06-02 17:34:54.704814123 +0300
+--- src/os/unix/unix.cpp	2013-07-27 18:09:32.000000000 +0300
++++ src/os/unix/unix.cpp	2013-08-01 19:17:24.017408999 +0300
 @@ -25,7 +25,7 @@
  
  #ifdef __APPLE__
@@ -130,8 +130,8 @@
  int CDECL main(int argc, char *argv[])
  {
  	int ret;
---- src/osk_gui.cpp	2013-05-31 23:57:15.000000000 +0300
-+++ src/osk_gui.cpp	2013-06-02 17:41:23.344810333 +0300
+--- src/osk_gui.cpp	2013-07-27 18:09:40.000000000 +0300
++++ src/osk_gui.cpp	2013-08-01 19:17:24.017408999 +0300
 @@ -21,6 +21,9 @@
  
  #include "table/sprites.h"
@@ -159,8 +159,8 @@
  }
  
  /**
---- src/script/api/script_date.cpp	2013-05-31 23:57:01.000000000 +0300
-+++ src/script/api/script_date.cpp	2013-06-02 17:34:54.704814123 +0300
+--- src/script/api/script_date.cpp	2013-07-27 18:09:35.000000000 +0300
++++ src/script/api/script_date.cpp	2013-08-01 19:17:24.017408999 +0300
 @@ -9,8 +9,8 @@
  
  /** @file script_date.cpp Implementation of ScriptDate. */
@@ -171,8 +171,8 @@
  #include "script_date.hpp"
  #include "../../date_func.h"
  
---- src/sound/sdl_s.cpp	2013-05-31 23:56:51.000000000 +0300
-+++ src/sound/sdl_s.cpp	2013-06-02 17:34:54.704814123 +0300
+--- src/sound/sdl_s.cpp	2013-07-27 18:09:28.000000000 +0300
++++ src/sound/sdl_s.cpp	2013-08-01 19:17:24.017408999 +0300
 @@ -21,6 +21,10 @@
  /** Factory for the SDL sound driver. */
  static FSoundDriver_SDL iFSoundDriver_SDL;
@@ -194,8 +194,8 @@
  }
  
  const char *SoundDriver_SDL::Start(const char * const *parm)
---- src/video/sdl_v.cpp	2013-05-31 23:56:34.000000000 +0300
-+++ src/video/sdl_v.cpp	2013-06-02 17:34:54.704814123 +0300
+--- src/video/sdl_v.cpp	2013-07-27 18:09:22.000000000 +0300
++++ src/video/sdl_v.cpp	2013-08-01 19:17:24.017408999 +0300
 @@ -25,6 +25,9 @@
  #include "../fileio_func.h"
  #include "sdl_v.h"
@@ -206,7 +206,7 @@
  
  static FVideoDriver_SDL iFVideoDriver_SDL;
  
-@@ -348,6 +351,15 @@
+@@ -349,6 +352,15 @@
  	 * surface, for example). */
  	_requested_hwpalette = want_hwpalette;
  
@@ -222,7 +222,7 @@
  	/* DO NOT CHANGE TO HWSURFACE, IT DOES NOT WORK */
  	newscreen = SDL_CALL SDL_SetVideoMode(w, h, bpp, SDL_SWSURFACE | (want_hwpalette ? SDL_HWPALETTE : 0) | (_fullscreen ? SDL_FULLSCREEN : SDL_RESIZABLE));
  	if (newscreen == NULL) {
-@@ -515,6 +527,8 @@
+@@ -521,6 +533,8 @@
  	if (sym->scancode == 49) key = WKC_BACKSPACE;
  #elif defined(__sgi__)
  	if (sym->scancode == 22) key = WKC_BACKQUOTE;
@@ -231,7 +231,7 @@
  #else
  	if (sym->scancode == 49) key = WKC_BACKQUOTE;
  #endif
-@@ -590,7 +604,7 @@
+@@ -596,7 +610,7 @@
  			}
  			HandleMouseEvents();
  			break;
@@ -240,7 +240,7 @@
  		case SDL_ACTIVEEVENT:
  			if (!(ev.active.state & SDL_APPMOUSEFOCUS)) break;
  
-@@ -601,7 +615,7 @@
+@@ -607,7 +621,7 @@
  				_cursor.in_window = false;
  			}
  			break;
@@ -249,7 +249,7 @@
  		case SDL_QUIT:
  			HandleExitGameRequest();
  			break;
-@@ -614,13 +628,14 @@
+@@ -620,13 +634,14 @@
  				HandleKeypress(ConvertSdlKeyIntoMy(&ev.key.keysym));
  			}
  			break;
@@ -265,8 +265,8 @@
  		case SDL_VIDEOEXPOSE: {
  			/* Force a redraw of the entire screen. Note
  			 * that SDL 1.2 seems to do this automatically
-@@ -654,6 +669,9 @@
- 	SDL_CALL SDL_EnableUNICODE(1);
+@@ -658,6 +673,9 @@
+ 	SetupKeyboard();
  
  	_draw_threaded = GetDriverParam(parm, "no_threads") == NULL && GetDriverParam(parm, "no_thread") == NULL;
 +#ifdef __ANDROID__

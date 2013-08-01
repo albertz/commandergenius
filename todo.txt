@@ -27,8 +27,6 @@ Requested features (see also bugs.txt)
 
 - TeeWorlds: external mouse support.
 
-- OpenTTD: make English the default language, because there are no fonts for many languages.
-
 - UQM: On-screen buttons are re-appearing when using gamepad and switching between game screens.
 
 - UQM: Redesign gamepad controls.
