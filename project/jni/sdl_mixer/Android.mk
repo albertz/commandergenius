@@ -42,6 +42,6 @@ LOCAL_MODULE := timidity_sdl_mixer
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/timidity $(LOCAL_PATH)/../sdl-$(SDL_VERSION)/include
 LOCAL_CFLAGS := -O3
 LOCAL_SRC_FILES := $(addprefix timidity/, $(notdir $(wildcard $(LOCAL_PATH)/timidity/*.c)))
-LOCAL_LDLIBS := -llog
+#LOCAL_LDLIBS := -llog
 
 include $(BUILD_STATIC_LIBRARY)
