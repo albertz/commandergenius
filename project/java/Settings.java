@@ -561,7 +561,7 @@ class Settings
 		nativeSetEnv( "UNSECURE_STORAGE_DIR", Globals.DataDir );
 		nativeSetEnv( "HOME", Globals.DataDir );
 		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
-		Log.d("SDL", "libSDL: Is running on OUYA: " p.isRunningOnOUYA());
+		Log.d("SDL", "libSDL: Is running on OUYA: " + p.isRunningOnOUYA());
 		if( p.isRunningOnOUYA() )
 			nativeSetEnv( "OUYA", "1" );
 		try {
