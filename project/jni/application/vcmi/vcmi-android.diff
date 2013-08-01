@@ -1,19 +1,6 @@
-Index: lib/VCMIDirs.h
-===================================================================
---- lib/VCMIDirs.h	(revision 3221)
-+++ lib/VCMIDirs.h	(working copy)
-@@ -29,7 +29,7 @@
- #else
- 		try {
- #ifdef ANDROID
--			UserPath = DATA_DIR;
-+			UserPath = GameConstants::DATA_DIR;
- #elif defined(__APPLE__)
-             // This is Cocoa code that should be normally used to get path to Application Support folder but can't use it here for now...
-             // NSArray* urls = [[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
 Index: lib/vcmi_endian.h
 ===================================================================
---- lib/vcmi_endian.h	(revision 3221)
+--- lib/vcmi_endian.h	(revision 3490)
 +++ lib/vcmi_endian.h	(working copy)
 @@ -19,7 +19,7 @@
   *    memory. On big endian machines, the value will be byteswapped.
@@ -26,12 +13,12 @@ Index: lib/vcmi_endian.h
  struct unaligned_Uint16 { ui16 val __attribute__(( packed )); };
 Index: client/CMT.cpp
 ===================================================================
---- client/CMT.cpp	(revision 3221)
+--- client/CMT.cpp	(revision 3490)
 +++ client/CMT.cpp	(working copy)
-@@ -177,7 +177,7 @@
+@@ -194,7 +194,7 @@
  
  #ifdef _WIN32
- int _tmain(int argc, _TCHAR* argv[])
+ int wmain(int argc, wchar_t* argv[])
 -#elif defined(__APPLE__)
 +#elif defined(__APPLE__) || defined(ANDROID)
  int SDL_main(int argc, char *argv[])

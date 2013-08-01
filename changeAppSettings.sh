@@ -1136,12 +1136,10 @@ done
 
 if [ "$MultiABI" = "y" ] ; then
 	MultiABI="armeabi armeabi-v7a"
-elif [ "$MultiABI" = "x86" ] ; then
-	MultiABI="armeabi x86"
-elif [ "$MultiABI" = "all" ] ; then
-	MultiABI="all" # Starting form NDK r7
-else
+elif [ "$MultiABI" = "n" ] ; then
 	MultiABI="armeabi"
+else
+	MultiABI="$MultiABI" # Eh okay
 fi
 
 LibrariesToLoad="\\\"sdl-$LibSdlVersion\\\""

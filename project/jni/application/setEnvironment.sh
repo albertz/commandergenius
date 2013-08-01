@@ -56,6 +56,7 @@ CFLAGS="\
 -isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include/backward \
 -isystem$LOCAL_PATH/../sdl-1.2/include \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-isystem$LOCAL_PATH/../\1/include@g\"` \
 $MISSING_INCLUDE $CFLAGS"

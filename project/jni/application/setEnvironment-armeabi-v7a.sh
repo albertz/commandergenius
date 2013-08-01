@@ -22,8 +22,8 @@ grep "64.bit" "$NDK/RELEASE.TXT" >/dev/null 2>&1 && MYARCH="${MYARCH}_64"
 
 #echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
-GCCVER=4.6
-PLATFORMVER=android-14
+[ -z "$GCCVER" ] && GCCVER=4.6
+[ -z "$PLATFORMVER" ] && PLATFORMVER=android-14
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then
 	LOCAL_PATH=`realpath $LOCAL_PATH`
@@ -49,13 +49,14 @@ MISSING_INCLUDE=
 MISSING_LIB=
 
 CFLAGS="\
--fpic -ffunction-sections -funwind-tables -fstack-protector -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
+-fpic -ffunction-sections -funwind-tables -fstack-protector \
 -no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb \
--fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
--DANDROID -DNDEBUG -O2 -g -finline-functions -Wa,--noexecstack \
+-fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 -marm -fno-omit-frame-pointer \
+-DANDROID -DNDEBUG -O2 -g -finline-functions -Wa,--noexecstack -Wformat -Werror=format-security \
 -isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include/backward \
 -isystem$LOCAL_PATH/../sdl-1.2/include \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-isystem$LOCAL_PATH/../\1/include@g\"` \
 $MISSING_INCLUDE $CFLAGS"
