@@ -24,6 +24,20 @@ Index: client/CMT.cpp
  int SDL_main(int argc, char *argv[])
  #else
  int main(int argc, char** argv)
+Index: CMakeLists.txt
+===================================================================
+--- CMakeLists.txt	(revision 3490)
++++ CMakeLists.txt	(working copy)
+@@ -117,6 +117,9 @@
+ add_definitions(-DM_BIN_DIR="${CMAKE_INSTALL_PREFIX}/${BIN_DIR}")
+ add_definitions(-DM_LIB_DIR="${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
+ 
++#add_definitions(-DDLL_EXPORT=)
++add_definitions(-DIOAPI_NO_64)
++
+ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/vcmi")
+ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+ 
 Index: lib/vcmi_endian.h
 ===================================================================
 --- lib/vcmi_endian.h	(revision 3490)
@@ -37,3 +51,37 @@ Index: lib/vcmi_endian.h
  /* SPARC does not support unaligned memory access. Let gcc know when
   * to emit the right code. */
  struct unaligned_Uint16 { ui16 val __attribute__(( packed )); };
+Index: lib/logging/CLogger.cpp
+===================================================================
+--- lib/logging/CLogger.cpp	(revision 3490)
++++ lib/logging/CLogger.cpp	(working copy)
+@@ -1,6 +1,10 @@
+ #include "StdInc.h"
+ #include "CLogger.h"
++#ifdef ANDROID
++#include <android/log.h>
++#endif
+ 
++
+ const std::string CLoggerDomain::DOMAIN_GLOBAL = "global";
+ 
+ CLoggerDomain::CLoggerDomain(const std::string & name) : name(name)
+@@ -379,6 +383,8 @@
+ 
+ CLogConsoleTarget::CLogConsoleTarget(CConsoleHandler * console) : console(console), threshold(ELogLevel::INFO), coloredOutputEnabled(true)
+ {
++	__android_log_print(ANDROID_LOG_INFO, "VCMI", "CLogConsoleTarget::CLogConsoleTarget()");
++
+ 	formatter.setPattern("%m");
+ }
+ 
+@@ -387,6 +393,9 @@
+ 	if(threshold > record.level) return;
+ 
+ 	std::string message = formatter.format(record);
++#ifdef ANDROID
++	__android_log_print(ANDROID_LOG_INFO, "VCMI", "%s", message.c_str());
++#endif
+ 	bool printToStdErr = record.level >= ELogLevel::WARN;
+ 	if(console)
+ 	{

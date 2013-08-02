@@ -13,7 +13,7 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 GCC_PREFIX=arm-linux-androideabi
 GCC_VERSION=4.8
 
-SOURCES_LIB=$(wildcard vcmi/lib/*.cpp vcmi/lib/logging/*.cpp)
+SOURCES_LIB=$(wildcard vcmi/lib/*.cpp)
 OBJS_LIB=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB))
 
 SOURCES_MINIZIP=vcmi/lib/minizip/zip.c vcmi/lib/minizip/unzip.c vcmi/lib/minizip/ioapi.c
@@ -21,6 +21,9 @@ OBJS_MINIZIP=$(patsubst %.c, out/%.o, $(SOURCES_MINIZIP))
 
 SOURCES_LIB_FILESYSTEM:=$(wildcard vcmi/lib/filesystem/*.cpp)
 OBJS_LIB_FILESYSTEM:=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_FILESYSTEM))
+
+SOURCES_LIB_LOGGING:=$(wildcard  vcmi/lib/logging/*.cpp)
+OBJS_LIB_LOGGING:=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_LOGGING))
 
 SOURCES_LIB_MAPPING:=$(wildcard vcmi/lib/mapping/*.cpp)
 OBJS_LIB_MAPPING:=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_MAPPING))
@@ -56,7 +59,7 @@ AndroidData/binaries.zip: vcmiserver libvcmi.so AI/libBattleAI.so AI/libStupidAI
 	zip -r $@ $^
 
 # With default -O3 optimization each G++ process eats 2Gb RAM, so tone optimization down to -O2, and limit make to two jobs
-$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_BATTLEAI) $(OBJS_STUPIDAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
+$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_BATTLEAI) $(OBJS_STUPIDAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
 	env GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	-c \$$CXXFLAGS -O2 -Ivcmi -std=c++11 -Ivcmi/lib \
@@ -87,7 +90,7 @@ LINK_LIB= \
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	$^ -o $@ \
-	-shared \$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 \
+	-shared \$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 -Wl,-soname,libvcmi.so \
 	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lgnustl_static" && \
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
@@ -110,7 +113,7 @@ AI/libVCAI.so: $(OBJS_VCAI) $(OBJS_FUZZYLITE) -lvcmi
 Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi
 	$(LINK_LIB)
 
-libvcmi.so: $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_MINIZIP)
+libvcmi.so: $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_LIB) $(OBJS_MINIZIP)
 	$(LINK_LIB)
 
 libapplication.so: $(OBJS_CLIENT) libvcmi.so
