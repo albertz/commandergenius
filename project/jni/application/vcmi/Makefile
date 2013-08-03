@@ -65,11 +65,12 @@ $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB
  $(OBJS_BATTLEAI) $(OBJS_STUPIDAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
 	env GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
-	-c \$$CXXFLAGS -O1 -Ivcmi -std=c++11 -Ivcmi/lib \
+	-c \$$CXXFLAGS -O1 -Ivcmi -std=c++0x -Ivcmi/lib \
 	-DM_DATA_DIR=\\\".\\\" \
 	-DM_BIN_DIR=\\\"/data/data/eu.vcmi/files\\\" \
 	-DM_LIB_DIR=\\\"/data/data/eu.vcmi/files\\\" \
-	-Wstrict-aliasing -Wcast-align -Wpointer-arith -Waddress -D__SOURCE_FILE__=\\\"$<\\\" \
+	-Wstrict-aliasing -Wcast-align -Wpointer-arith -Waddress \
+	-D__SOURCE_FILE__=\\\"$<\\\" \
 	$< -o $@"
 #	-Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
 
