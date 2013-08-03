@@ -1144,7 +1144,7 @@ fi
 
 LibrariesToLoad="\\\"sdl-$LibSdlVersion\\\""
 StaticLibraries=`grep 'APP_AVAILABLE_STATIC_LIBS' project/jni/SettingsTemplate.mk | sed 's/.*=\(.*\)/\1/'`
-for lib in $CompiledLibraries $CompatibilityHacksAdditionalPreloadedSharedLibraries; do
+for lib in $CompiledLibraries; do
 	process=true
 	for lib1 in $StaticLibraries; do
 		if [ "$lib" = "$lib1" ]; then process=false; fi
@@ -1153,6 +1153,12 @@ for lib in $CompiledLibraries $CompatibilityHacksAdditionalPreloadedSharedLibrar
 		LibrariesToLoad="$LibrariesToLoad, \\\"$lib\\\""
 	fi
 done
+
+MainLibrariesToLoad=""
+for lib in $CompatibilityHacksAdditionalPreloadedSharedLibraries; do
+	MainLibrariesToLoad="$MainLibrariesToLoad \\\"$lib\\\","
+done
+MainLibrariesToLoad="$MainLibrariesToLoad \\\"application\\\", \\\"sdl_main\\\""
 
 if [ "$CustomBuildScript" = "n" ] ; then
 	CustomBuildScript=
@@ -1275,6 +1281,7 @@ $SEDI "s/public static String AdmobPublisherId = .*/public static String AdmobPu
 $SEDI "s/public static String AdmobTestDeviceId = .*/public static String AdmobTestDeviceId = \"$AdmobTestDeviceId\";/" project/src/Globals.java
 $SEDI "s/public static String AdmobBannerSize = .*/public static String AdmobBannerSize = \"$AdmobBannerSize\";/" project/src/Globals.java
 $SEDI "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" project/src/Globals.java
+$SEDI "s/public static String AppMainLibraries.*/public static String AppMainLibraries[] = { $MainLibrariesToLoad };/" project/src/Globals.java
 
 
 echo Patching project/jni/Settings.mk

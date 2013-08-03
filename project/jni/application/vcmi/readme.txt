@@ -1,6 +1,6 @@
 Quick compilation guide:
 Download my GIT repo from https://github.com/pelya/commandergenius,
-then install Android SDK and NDK from http://developer.android.com,
+then install Android SDK and NDK r9 from http://developer.android.com,
 ANT, patch and Subversion tools, then launch commands
     android update project -p project
     rm project/jni/application/src

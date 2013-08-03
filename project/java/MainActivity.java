@@ -768,114 +768,6 @@ public class MainActivity extends Activity
 			Log.i("SDL", "libSDL: Cannot load GLESv2 lib");
 		}
 
-		// ----- VCMI hack -----
-		String [] binaryZipNames = { "binaries-" + android.os.Build.CPU_ABI + ".zip", "binaries.zip" };
-		for(String binaryZip: binaryZipNames)
-		{
-			try {
-				Log.i("SDL", "libSDL: Trying to extract binaries from assets " + binaryZip);
-				
-				InputStream in = null;
-				try
-				{
-					for( int i = 0; ; i++ )
-					{
-						InputStream in2 = getAssets().open(binaryZip + String.format("%02d", i));
-						if( in == null )
-							in = in2;
-						else
-							in = new SequenceInputStream( in, in2 );
-					}
-				}
-				catch( IOException ee )
-				{
-					try
-					{
-						if( in == null )
-							in = getAssets().open(binaryZip);
-					}
-					catch( IOException eee ) {}
-				}
-
-				if( in == null )
-					throw new RuntimeException("libSDL: Extracting binaries failed, the .apk file packaged incorrectly");
-
-				ZipInputStream zip = new ZipInputStream(in);
-
-				File libDir = getFilesDir();
-				try {
-					libDir.mkdirs();
-				} catch( SecurityException ee ) { };
-				
-				byte[] buf = new byte[16384];
-				while(true)
-				{
-					ZipEntry entry = null;
-					entry = zip.getNextEntry();
-					/*
-					if( entry != null )
-						Log.i("SDL", "Extracting lib " + entry.getName());
-					*/
-					if( entry == null )
-					{
-						Log.i("SDL", "Extracting binaries finished");
-						break;
-					}
-					if( entry.isDirectory() )
-					{
-						File outDir = new File( libDir.getAbsolutePath() + "/" + entry.getName() );
-						if( !(outDir.exists() && outDir.isDirectory()) )
-							outDir.mkdirs();
-						continue;
-					}
-
-					OutputStream out = null;
-					String path = libDir.getAbsolutePath() + "/" + entry.getName();
-					try {
-						File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
-						if( !(outDir.exists() && outDir.isDirectory()) )
-							outDir.mkdirs();
-					} catch( SecurityException eeeeeee ) { };
-
-					try {
-						CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
-						while( check.read(buf, 0, buf.length) > 0 ) {};
-						check.close();
-						if( check.getChecksum().getValue() != entry.getCrc() )
-						{
-							File ff = new File(path);
-							ff.delete();
-							throw new Exception();
-						}
-						Log.i("SDL", "File '" + path + "' exists and passed CRC check - not overwriting it");
-						continue;
-					} catch( Exception eeeeee ) { }
-
-					Log.i("SDL", "Saving to file '" + path + "'");
-
-					out = new FileOutputStream( path );
-					int len = zip.read(buf);
-					while (len >= 0)
-					{
-						if(len > 0)
-							out.write(buf, 0, len);
-						len = zip.read(buf);
-					}
-
-					out.flush();
-					out.close();
-					//Settings.nativeChmod(path, 0755);
-					String chmod[] = { "/system/bin/chmod", "0755", path };
-					Runtime.getRuntime().exec(chmod).waitFor();
-				}
-			}
-			catch ( Exception eee )
-			{
-				//Log.i("SDL", "libSDL: Error: " + eee.toString());
-			}
-		}
-		// ----- VCMI hack -----
-
 		// Load all libraries
 		try
 		{
@@ -995,36 +887,142 @@ public class MainActivity extends Activity
 			}
 		}
 
+		// ----- VCMI hack -----
+		String [] binaryZipNames = { "binaries-" + android.os.Build.CPU_ABI + ".zip", "binaries.zip" };
+		for(String binaryZip: binaryZipNames)
+		{
+			try {
+				Log.i("SDL", "libSDL: Trying to extract binaries from assets " + binaryZip);
+				
+				InputStream in = null;
+				try
+				{
+					for( int i = 0; ; i++ )
+					{
+						InputStream in2 = getAssets().open(binaryZip + String.format("%02d", i));
+						if( in == null )
+							in = in2;
+						else
+							in = new SequenceInputStream( in, in2 );
+					}
+				}
+				catch( IOException ee )
+				{
+					try
+					{
+						if( in == null )
+							in = getAssets().open(binaryZip);
+					}
+					catch( IOException eee ) {}
+				}
 
+				if( in == null )
+					throw new RuntimeException("libSDL: Extracting binaries failed, the .apk file packaged incorrectly");
+
+				ZipInputStream zip = new ZipInputStream(in);
+
+				File libDir = getFilesDir();
+				try {
+					libDir.mkdirs();
+				} catch( SecurityException ee ) { };
+				
+				byte[] buf = new byte[16384];
+				while(true)
+				{
+					ZipEntry entry = null;
+					entry = zip.getNextEntry();
+					/*
+					if( entry != null )
+						Log.i("SDL", "Extracting lib " + entry.getName());
+					*/
+					if( entry == null )
+					{
+						Log.i("SDL", "Extracting binaries finished");
+						break;
+					}
+					if( entry.isDirectory() )
+					{
+						File outDir = new File( libDir.getAbsolutePath() + "/" + entry.getName() );
+						if( !(outDir.exists() && outDir.isDirectory()) )
+							outDir.mkdirs();
+						continue;
+					}
+
+					OutputStream out = null;
+					String path = libDir.getAbsolutePath() + "/" + entry.getName();
+					try {
+						File outDir = new File( path.substring(0, path.lastIndexOf("/") ));
+						if( !(outDir.exists() && outDir.isDirectory()) )
+							outDir.mkdirs();
+					} catch( SecurityException eeeeeee ) { };
+
+					try {
+						CheckedInputStream check = new CheckedInputStream( new FileInputStream(path), new CRC32() );
+						while( check.read(buf, 0, buf.length) > 0 ) {};
+						check.close();
+						if( check.getChecksum().getValue() != entry.getCrc() )
+						{
+							File ff = new File(path);
+							ff.delete();
+							throw new Exception();
+						}
+						Log.i("SDL", "File '" + path + "' exists and passed CRC check - not overwriting it");
+						continue;
+					} catch( Exception eeeeee ) { }
+
+					Log.i("SDL", "Saving to file '" + path + "'");
+
+					out = new FileOutputStream( path );
+					int len = zip.read(buf);
+					while (len >= 0)
+					{
+						if(len > 0)
+							out.write(buf, 0, len);
+						len = zip.read(buf);
+					}
+
+					out.flush();
+					out.close();
+					Settings.nativeChmod(path, 0755);
+					//String chmod[] = { "/system/bin/chmod", "0755", path };
+					//Runtime.getRuntime().exec(chmod).waitFor();
+				}
+			}
+			catch ( Exception eee )
+			{
+				//Log.i("SDL", "libSDL: Error: " + eee.toString());
+			}
+		}
+		// ----- VCMI hack -----
 	};
 
 	public static void LoadApplicationLibrary(final Context context)
 	{
-		String libs[] = { "application", "sdl_main" };
-		try
+		Settings.nativeChdir(Globals.DataDir);
+		for(String l : Globals.AppMainLibraries)
 		{
-			for(String l : libs)
-			{
-				System.loadLibrary(l);
-			}
-		}
-		catch ( UnsatisfiedLinkError e )
-		{
-			Log.i("SDL", "libSDL: error loading lib: " + e.toString());
 			try
 			{
-				for(String l : libs)
+				String libname = System.mapLibraryName(l);
+				File libpath = new File(context.getFilesDir().getAbsolutePath() + "/../lib/" + libname);
+				Log.i("SDL", "libSDL: loading lib " + libpath.getAbsolutePath());
+				System.load(libpath.getPath());
+			}
+			catch( UnsatisfiedLinkError e )
+			{
+				Log.i("SDL", "libSDL: error loading lib " + l + ": " + e.toString());
+				try
 				{
 					String libname = System.mapLibraryName(l);
-					File libpath = new File(context.getFilesDir(), libname);
-					Log.i("SDL", "libSDL: loading lib " + libpath.getPath());
+					File libpath = new File(context.getFilesDir().getAbsolutePath() + "/" + libname);
+					Log.i("SDL", "libSDL: loading lib " + libpath.getAbsolutePath());
 					System.load(libpath.getPath());
-					libpath.delete();
 				}
-			}
-			catch ( UnsatisfiedLinkError ee )
-			{
-				Log.i("SDL", "libSDL: error loading lib: " + ee.toString());
+				catch( UnsatisfiedLinkError ee )
+				{
+					Log.i("SDL", "libSDL: error loading lib " + l + ": " + ee.toString());
+					System.loadLibrary(l);
+				}
 			}
 		}
 	}

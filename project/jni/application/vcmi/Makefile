@@ -31,7 +31,7 @@ OBJS_LIB_MAPPING:=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_MAPPING))
 SOURCES_LIB_RMG:=$(wildcard vcmi/lib/rmg/*.cpp)
 OBJS_LIB_RMG:=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_RMG))
 
-OBJS_LIB_ALL:=$(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_LIB) $(OBJS_MINIZIP)
+OBJS_LIB_ALL:= $(OBJS_MINIZIP) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_LIB)
 
 SOURCES_SERVER:=$(wildcard vcmi/server/*.cpp)
 OBJS_SERVER:=$(patsubst %.cpp, out/%.o, $(SOURCES_SERVER))
@@ -65,11 +65,11 @@ $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB
  $(OBJS_BATTLEAI) $(OBJS_STUPIDAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
 	env GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
-	-c \$$CXXFLAGS -O2 -Ivcmi -std=c++11 -Ivcmi/lib \
+	-c \$$CXXFLAGS -O1 -Ivcmi -std=c++11 -Ivcmi/lib \
 	-DM_DATA_DIR=\\\".\\\" \
 	-DM_BIN_DIR=\\\"/data/data/eu.vcmi/files\\\" \
 	-DM_LIB_DIR=\\\"/data/data/eu.vcmi/files\\\" \
-	-Wstrict-aliasing -Wcast-align -Wpointer-arith -Waddress \
+	-Wstrict-aliasing -Wcast-align -Wpointer-arith -Waddress -D__SOURCE_FILE__=\\\"$<\\\" \
 	$< -o $@"
 #	-Werror=strict-aliasing -Werror=cast-align -Werror=pointer-arith -Werror=address
 
