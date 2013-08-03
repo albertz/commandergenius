@@ -76,7 +76,7 @@ cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j
 		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-4.6/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi/libapplication.so \
 		|| true ; } && \
 	{	grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
-		grep "MultiABI=y" ../AndroidAppSettings.cfg > /dev/null && \
+		grep "MultiABI=" ../AndroidAppSettings.cfg | grep "y\\|armeabi-v7a" > /dev/null && \
 		echo Stripping libapplication-armeabi-v7a.so by hand && \
 		rm obj/local/armeabi-v7a/libapplication.so && \
 		cp jni/application/src/libapplication-armeabi-v7a.so obj/local/armeabi-v7a/libapplication.so && \

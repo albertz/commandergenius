@@ -31,6 +31,8 @@ OBJS_LIB_MAPPING:=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_MAPPING))
 SOURCES_LIB_RMG:=$(wildcard vcmi/lib/rmg/*.cpp)
 OBJS_LIB_RMG:=$(patsubst %.cpp, out/%.o, $(SOURCES_LIB_RMG))
 
+OBJS_LIB_ALL:=$(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_LIB) $(OBJS_MINIZIP)
+
 SOURCES_SERVER:=$(wildcard vcmi/server/*.cpp)
 OBJS_SERVER:=$(patsubst %.cpp, out/%.o, $(SOURCES_SERVER))
 
@@ -54,12 +56,13 @@ OBJS_ERM:=$(patsubst %.cpp, out/%.o, $(SOURCES_ERM))
 
 all: AndroidData/binaries.zip libapplication.so
 
-AndroidData/binaries.zip: vcmiserver libvcmi.so AI/libBattleAI.so AI/libStupidAI.so AI/libVCAI.so # Scripting/libvcmiERM.so AI/libEmptyAI.so
+AndroidData/binaries.zip: libvcmi.so vcmiserver AI/libBattleAI.so AI/libStupidAI.so AI/libVCAI.so # Scripting/libvcmiERM.so AI/libEmptyAI.so
 	rm -f $@
 	zip -r $@ $^
 
 # With default -O3 optimization each G++ process eats 2Gb RAM, so tone optimization down to -O2, and limit make to two jobs
-$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_BATTLEAI) $(OBJS_STUPIDAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
+$(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) \
+ $(OBJS_BATTLEAI) $(OBJS_STUPIDAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
 	env GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	-c \$$CXXFLAGS -O2 -Ivcmi -std=c++11 -Ivcmi/lib \
@@ -77,21 +80,14 @@ $(OBJS_MINIZIP): out/%.o: %.c
 	-Wstrict-aliasing -Wcast-align -Wpointer-arith -Waddress \
 	$< -o $@"
 
-vcmiserver: $(OBJS_SERVER) -lvcmi
-	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
-	"$(GCC_PREFIX)-g++ \
-	$^ -o $@ \
-	\$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 \
-	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lgnustl_static" && \
-	cp $@ debug/$@ && \
-	$(GCC_PREFIX)-strip $@
+LINK_BOOST_LIBS:=-L../../boost/lib/arm-linux-androideabi-4.6 \
+	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lgnustl_static
 
 LINK_LIB= \
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
 	$^ -o $@ \
-	-shared \$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 -Wl,-soname,libvcmi.so \
-	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lgnustl_static" && \
+	-shared \$$LDFLAGS -L. $(LINK_BOOST_LIBS)" && \
 	cp $@ debug/$@ && \
 	$(GCC_PREFIX)-strip $@
 
@@ -113,13 +109,21 @@ AI/libVCAI.so: $(OBJS_VCAI) $(OBJS_FUZZYLITE) -lvcmi
 Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi
 	$(LINK_LIB)
 
-libvcmi.so: $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB_MAPPING) $(OBJS_LIB_RMG) $(OBJS_LIB) $(OBJS_MINIZIP)
+libvcmi.so: $(OBJS_LIB_ALL)
 	$(LINK_LIB)
 
-libapplication.so: $(OBJS_CLIENT) libvcmi.so
+libapplication.so: $(OBJS_CLIENT) -lvcmi
 	env GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
 	"$(GCC_PREFIX)-g++ $^ -o $@ \
-	\$$LDFLAGS -L. -L../../boost/lib/arm-linux-androideabi-4.6 -lboost_program_options -lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lgnustl_static"
+	\$$LDFLAGS -L. $(LINK_BOOST_LIBS)"
+
+vcmiserver: $(OBJS_SERVER) -lvcmi
+	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
+	"$(GCC_PREFIX)-g++ \
+	$^ -o $@ \
+	\$$LDFLAGS -L. $(LINK_BOOST_LIBS)" && \
+	cp $@ debug/$@ && \
+	$(GCC_PREFIX)-strip $@
 
 clean:
 	rm -rf out debug *.so vcmiserver* AndroidData/vcmiserver* libapplication.so AI Scripting
