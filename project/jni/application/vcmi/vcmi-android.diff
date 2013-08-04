@@ -1,25 +1,3 @@
-Index: client/CPreGame.cpp
-===================================================================
---- client/CPreGame.cpp	(revision 3494)
-+++ client/CPreGame.cpp	(working copy)
-@@ -1141,7 +1141,7 @@
- 
- 			// Create the map info object
- 			CMapInfo mapInfo;
--			mapInfo.mapHeader = make_unique<CMapHeader>();
-+			mapInfo.mapHeader = std::make_shared<CMapHeader>(CMapHeader());
- 			mapInfo.scenarioOpts = new StartInfo;
- 			lf >> *(mapInfo.mapHeader.get()) >> mapInfo.scenarioOpts;
- 			mapInfo.fileURI = file.getName();
-@@ -1836,7 +1836,7 @@
- 	// Generate header info
- 	mapInfo = make_unique<CMapInfo>();
- 	mapInfo->isRandomMap = true;
--	mapInfo->mapHeader = make_unique<CMapHeader>();
-+	mapInfo->mapHeader = std::make_shared<CMapHeader>(CMapHeader());
- 	mapInfo->mapHeader->version = EMapFormat::SOD;
- 	mapInfo->mapHeader->name = CGI->generaltexth->allTexts[740];
- 	mapInfo->mapHeader->description = CGI->generaltexth->allTexts[741];
 Index: client/CMT.cpp
 ===================================================================
 --- client/CMT.cpp	(revision 3494)
@@ -106,144 +84,15 @@ Index: client/CMT.cpp
  
  	if(!gNoGUI )
  	{
-@@ -370,8 +389,8 @@
+@@ -370,7 +389,7 @@
  	}
  
  	CSDL_Ext::update(screen);
 -	loading.join();
--    logGlobal->infoStream()<<"Initialization of VCMI (together): "<<total.getDiff();
 +	//loading.join();
-+    logGlobal->infoStream()<<"Initialization of VCMI (together): "<<total.getDiff(); 
+     logGlobal->infoStream()<<"Initialization of VCMI (together): "<<total.getDiff();
+ 
  	if(!vm.count("battle"))
- 	{
-Index: Global.h
-===================================================================
---- Global.h	(revision 3494)
-+++ Global.h	(working copy)
-@@ -62,7 +62,35 @@
- 
- #include <cstdio>
- #include <stdio.h>
--
-+#ifdef ANDROID
-+/*
-+#define move disable_move // It crashes with NDK r9 and GCC 4.8
-+#include <algorithm>
-+#undef move
-+namespace std
-+{
-+	template<typename _Tp>
-+		_Tp move(_Tp __t)
-+	{
-+		return __t; // Unoptimized version that does not crash
-+	}
-+
-+	template<class InputIt, class OutputIt>
-+	OutputIt move(InputIt first, InputIt last, OutputIt d_first)
-+	{
-+		while (first != last)
-+		{
-+			*d_first++ = *first++;
-+		}
-+		return d_first;
-+	}
-+}
-+*/
-+/*
-+#include <memory>
-+#define unique_ptr shared_ptr
-+*/
-+#endif
- #include <algorithm>
- #include <array>
- #include <cassert>
-Index: lib/filesystem/Filesystem.cpp
-===================================================================
---- lib/filesystem/Filesystem.cpp	(revision 3494)
-+++ lib/filesystem/Filesystem.cpp	(working copy)
-@@ -24,14 +24,14 @@
- 
- ResourceID::ResourceID(std::string name)
- {
--	CFileInfo info(std::move(name));
-+	CFileInfo info(/*std::move*/(name));
- 	setName(info.getStem());
- 	setType(info.getType());
- }
- 
- ResourceID::ResourceID(std::string name, EResType::Type type)
- {
--	setName(std::move(name));
-+	setName(/*std::move*/(name));
- 	setType(type);
- }
- 
-@@ -47,7 +47,7 @@
- 
- void ResourceID::setName(std::string name)
- {
--	this->name = std::move(name);
-+	this->name = /*std::move*/(name);
- 
- 	size_t dotPos = this->name.find_last_of("/.");
- 
-Index: lib/filesystem/CFileInfo.cpp
-===================================================================
---- lib/filesystem/CFileInfo.cpp	(revision 3494)
-+++ lib/filesystem/CFileInfo.cpp	(working copy)
-@@ -7,7 +7,7 @@
- }
- 
- CFileInfo::CFileInfo(std::string name)
--	: name(std::move(name))
-+	: name(/*std::move*/(name))
- {
- 
- }
-Index: lib/mapping/CMapInfo.cpp
-===================================================================
---- lib/mapping/CMapInfo.cpp	(revision 3494)
-+++ lib/mapping/CMapInfo.cpp	(working copy)
-@@ -35,7 +35,7 @@
- 
- }
- 
--#define STEAL(x) x = std::move(tmp.x)
-+#define STEAL(x) x = /*std::move*/(tmp.x)
- 
- CMapInfo::CMapInfo(CMapInfo && tmp)
- {
-@@ -54,13 +54,13 @@
- void CMapInfo::mapInit(const std::string & fname)
- {
- 	fileURI = fname;
--	mapHeader = CMapService::loadMapHeader(fname);
-+	mapHeader = std::make_shared<CMapHeader>(*CMapService::loadMapHeader(fname));
- 	countPlayers();
- }
- 
- void CMapInfo::campaignInit()
- {
--	campaignHeader = std::unique_ptr<CCampaignHeader>(new CCampaignHeader(CCampaignHandler::getHeader(fileURI)));
-+	campaignHeader = std::make_shared<CCampaignHeader>(CCampaignHandler::getHeader(fileURI));
- }
- 
- CMapInfo & CMapInfo::operator=(CMapInfo &&tmp)
-Index: lib/mapping/CMapInfo.h
-===================================================================
---- lib/mapping/CMapInfo.h	(revision 3494)
-+++ lib/mapping/CMapInfo.h	(working copy)
-@@ -20,8 +20,8 @@
- class DLL_LINKAGE CMapInfo
- {
- public:
--	unique_ptr<CMapHeader> mapHeader; //may be nullptr if campaign
--	unique_ptr<CCampaignHeader> campaignHeader; //may be nullptr if scenario
-+	shared_ptr<CMapHeader> mapHeader; //may be nullptr if campaign
-+	shared_ptr<CCampaignHeader> campaignHeader; //may be nullptr if scenario
- 	StartInfo * scenarioOpts; //options with which scenario has been started (used only with saved games)
- 	std::string fileURI;
- 	std::string date;
 Index: lib/logging/CLogger.cpp
 ===================================================================
 --- lib/logging/CLogger.cpp	(revision 3494)
@@ -287,19 +136,49 @@ Index: lib/JsonNode.cpp
  				          std::back_inserter(dest.Vector()));
  			}
  			break;
-Index: lib/vcmi_endian.h
+Index: lib/filesystem/Filesystem.cpp
 ===================================================================
---- lib/vcmi_endian.h	(revision 3494)
-+++ lib/vcmi_endian.h	(working copy)
-@@ -19,7 +19,7 @@
-  *    memory. On big endian machines, the value will be byteswapped.
-  */
+--- lib/filesystem/Filesystem.cpp	(revision 3494)
++++ lib/filesystem/Filesystem.cpp	(working copy)
+@@ -24,14 +24,14 @@
  
--#if defined(linux) && (defined(sparc) || defined(__arm__))
-+#if defined(ANDROID) || defined(linux) && (defined(sparc) || defined(__arm__))
- /* SPARC does not support unaligned memory access. Let gcc know when
-  * to emit the right code. */
- struct unaligned_Uint16 { ui16 val __attribute__(( packed )); };
+ ResourceID::ResourceID(std::string name)
+ {
+-	CFileInfo info(std::move(name));
++	CFileInfo info(/*std::move*/(name));
+ 	setName(info.getStem());
+ 	setType(info.getType());
+ }
+ 
+ ResourceID::ResourceID(std::string name, EResType::Type type)
+ {
+-	setName(std::move(name));
++	setName(/*std::move*/(name));
+ 	setType(type);
+ }
+ 
+@@ -47,7 +47,7 @@
+ 
+ void ResourceID::setName(std::string name)
+ {
+-	this->name = std::move(name);
++	this->name = /*std::move*/(name);
+ 
+ 	size_t dotPos = this->name.find_last_of("/.");
+ 
+Index: lib/filesystem/CFileInfo.cpp
+===================================================================
+--- lib/filesystem/CFileInfo.cpp	(revision 3494)
++++ lib/filesystem/CFileInfo.cpp	(working copy)
+@@ -7,7 +7,7 @@
+ }
+ 
+ CFileInfo::CFileInfo(std::string name)
+-	: name(std::move(name))
++	: name(/*std::move*/(name))
+ {
+ 
+ }
 Index: lib/VCMIDirs.cpp
 ===================================================================
 --- lib/VCMIDirs.cpp	(revision 3494)
@@ -332,3 +211,16 @@ Index: lib/VCMIDirs.cpp
  	return ".";
  }
  
+Index: lib/vcmi_endian.h
+===================================================================
+--- lib/vcmi_endian.h	(revision 3494)
++++ lib/vcmi_endian.h	(working copy)
+@@ -19,7 +19,7 @@
+  *    memory. On big endian machines, the value will be byteswapped.
+  */
+ 
+-#if defined(linux) && (defined(sparc) || defined(__arm__))
++#if defined(ANDROID) || defined(linux) && (defined(sparc) || defined(__arm__))
+ /* SPARC does not support unaligned memory access. Let gcc know when
+  * to emit the right code. */
+ struct unaligned_Uint16 { ui16 val __attribute__(( packed )); };
