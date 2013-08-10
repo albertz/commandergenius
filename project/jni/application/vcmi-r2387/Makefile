@@ -1,13 +1,9 @@
-ifeq ($(ARCH),)
-ARCH:=armeabi
-endif
-
 $(shell mkdir -p $(ARCH)/AI debug/$(ARCH)/AI $(ARCH)/Scripting debug/$(ARCH)/Scripting \
 	$(ARCH)/out/vcmi/lib $(ARCH)/out/vcmi/server $(ARCH)/out/vcmi/AI/StupidAI \
 	$(ARCH)/out/vcmi/AI/GeniusAI $(ARCH)/out/vcmi/client $(ARCH)/out/vcmi/Scripting/ERM)
 
-LOCAL_PATH:=$(shell dirname $0)
-LOCAL_PATH:=`cd $LOCAL_PATH && pwd`
+GCC_VERSION:=4.8
+ARCH:=armeabi-v7a
 
 SOURCES_LIB:=$(wildcard vcmi/lib/*.cpp vcmi/CConsoleHandler.cpp vcmi/CThreadHelper.cpp)
 OBJS_LIB:=$(patsubst %.cpp, $(ARCH)/out/%.o, $(SOURCES_LIB))
@@ -29,12 +25,12 @@ OBJS_CLIENT:=$(patsubst %.cpp, $(ARCH)/out/%.o, $(SOURCES_CLIENT))
 
 all: AndroidData/binaries-$(ARCH).zip libapplication-$(ARCH).so
 
-AndroidData/binaries-$(ARCH).zip: $(ARCH)/vcmiserver $(ARCH)/AI/libGeniusAI.so $(ARCH)/AI/libStupidAI.so $(ARCH)/Scripting/libvcmiERM.so # $(ARCH)/libvcmi.so
+AndroidData/binaries-$(ARCH).zip: $(ARCH)/vcmiserver $(ARCH)/AI/libGeniusAI.so $(ARCH)/AI/libStupidAI.so $(ARCH)/Scripting/libvcmiERM.so $(ARCH)/libvcmi.so
 	rm -f $@
 	cd $(ARCH) && zip -r ../$@ $(foreach F, $^, $(patsubst $(ARCH)/%,%,$(F)))
 
 $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT) $(OBJS_ERM): $(ARCH)/out/%.o: %.cpp
-	../setEnvironment-$(ARCH).sh sh -c \
+	env GCCVER=$(GCC_VERSION) ../setEnvironment-$(ARCH).sh sh -c \
 	"\$$CXX \
 	-c \$$CXXFLAGS -Ivcmi -Ivcmi/lib \
 	-DDATA_DIR=\\\"/sdcard/Android/data/eu.vcmi/files\\\" \
@@ -47,10 +43,13 @@ $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_GENIUSAI) $(OBJS_STUPIDAI) $(OBJS_CLIENT) $(OB
 
 #ALLOW_UNRESOLVED_SYMBOLS=1
 LINK_LIB= \
-	env NO_SHARED_LIBS=1 SHARED_LIBRARY_NAME=`basename $@` ../setEnvironment-$(ARCH).sh sh -c \
-	"echo SHARED_LIBRARY_NAME \$$SHARED_LIBRARY_NAME && \$$CXX \
+	env GCCVER=$(GCC_VERSION) NO_SHARED_LIBS=1 SHARED_LIBRARY_NAME=`basename $@` \
+	../setEnvironment-$(ARCH).sh sh -c \
+	"\$$CXX \
 	-Wl,--whole-archive $^ -Wl,--no-whole-archive -o $@ \
 	\$$LDFLAGS -L$(ARCH) \
+	-Wl,--undefined=__gnu_thumb1_case_uqi -Wl,--undefined=__gnu_thumb1_case_uhi \
+	-Wl,--undefined=__clzsi2 -lgcc \
 	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread && \
 	cp $@ debug/$@ && \
 	\$$STRIP --strip-unneeded $@"
@@ -62,7 +61,7 @@ $(ARCH)/libvcmi.so: $(OBJS_LIB)
 	$(LINK_LIB)
 
 -lvcmi: $(ARCH)/libvcmi.so
-	cp -f $^ ../../../libs/$^
+#	cp -f $^ ../../../libs/$^
 
 .PHONY: -lvcmi
 
@@ -76,7 +75,7 @@ $(ARCH)/Scripting/libvcmiERM.so: $(OBJS_ERM) -lvcmi
 	$(LINK_LIB)
 
 $(ARCH)/vcmiserver: $(OBJS_SERVER) -lvcmi
-	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 ../setEnvironment-$(ARCH).sh sh -c \
+	env GCCVER=$(GCC_VERSION) BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 ../setEnvironment-$(ARCH).sh sh -c \
 	"\$$CXX \
 	-Wl,--whole-archive $^ -Wl,--no-whole-archive -o $@ \
 	\$$LDFLAGS -L$(ARCH) -Wl,-rpath,/data/data/eu.vcmi/lib \
@@ -85,7 +84,7 @@ $(ARCH)/vcmiserver: $(OBJS_SERVER) -lvcmi
 	\$$STRIP --strip-unneeded $@"
 
 libapplication-$(ARCH).so: $(OBJS_CLIENT) -lvcmi
-	env ../setEnvironment-$(ARCH).sh sh -c \
+	env GCCVER=$(GCC_VERSION) ../setEnvironment-$(ARCH).sh sh -c \
 	"\$$CXX \
 	-Wl,--whole-archive $^ -Wl,--no-whole-archive -o $@ \
 	\$$LDFLAGS -L$(ARCH) \

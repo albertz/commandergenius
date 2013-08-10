@@ -136,7 +136,7 @@ extern DECLSPEC int SDLCALL SDL_IsScreenKeyboardShown(void *unused);
 /* Remap SDL keycodes returned by gamepad buttons.
    Pass the SDLK_ constants, or 0 to leave old value.
    On OUYA: O = A, U = X, Y = Y, A = B */
-extern DECLSPEC void SDLCALL SDL_ANDROID_SetGamepadKeymap(int A, int B, int X, int Y, int L1, int R1, int L2, int R2, int LT, int RT);
+extern DECLSPEC void SDLCALL SDL_ANDROID_SetGamepadKeymap(int A, int B, int X, int Y, int L1, int R1, int L2, int R2, int LThumb, int RThumb);
 
 #ifdef __cplusplus
 }

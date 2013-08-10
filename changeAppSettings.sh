@@ -475,6 +475,23 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$RedefinedKeysGamepad" -o -z "$AUTO" ]; then
+if [ -z "$RedefinedKeysGamepad" ]; then
+	RedefinedKeysGamepad="$RedefinedKeysScreenKb"
+	CHANGED=1
+fi
+echo
+echo "Redefine gamepad keys to SDL keysyms, button order is:"
+echo "A B X Y L1 R1 L2 R2 LThumb RThumb"
+echo "$RedefinedKeysGamepad - current SDL keycodes"
+echo -n ": "
+read var
+if [ -n "$var" ] ; then
+	RedefinedKeysGamepad="$var"
+	CHANGED=1
+fi
+fi
+
 if [ -z "$StartupMenuButtonTimeout" -o -z "$AUTO" ]; then
 echo
 echo -n "How long to show startup menu button, in msec, 0 to disable startup menu ($StartupMenuButtonTimeout): "
@@ -864,6 +881,10 @@ echo >> AndroidAppSettings.cfg
 echo "# Names for on-screen keyboard keys, such as Fire, Jump, Run etc, separated by spaces, they are used in SDL config menu" >> AndroidAppSettings.cfg
 echo RedefinedKeysScreenKbNames=\"$RedefinedKeysScreenKbNames\" >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Redefine gamepad keys to SDL keysyms, button order is:" >> AndroidAppSettings.cfg
+echo "# A B X Y L1 R1 L2 R2 LThumb RThumb" >> AndroidAppSettings.cfg
+echo RedefinedKeysGamepad=\"$RedefinedKeysGamepad\" >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# How long to show startup menu button, in msec, 0 to disable startup menu" >> AndroidAppSettings.cfg
 echo StartupMenuButtonTimeout=$StartupMenuButtonTimeout >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
@@ -1134,6 +1155,12 @@ for KEY in $RedefinedKeysScreenKb; do
 	KEY2=`expr $KEY2 '+' 1`
 done
 
+KEY2=0
+for KEY in $RedefinedKeysGamepad; do
+	RedefinedKeycodesGamepad="$RedefinedKeycodesGamepad -DSDL_ANDROID_GAMEPAD_KEYCODE_$KEY2=$KEY"
+	KEY2=`expr $KEY2 '+' 1`
+done
+
 if [ "$MultiABI" = "y" ] ; then
 	MultiABI="armeabi armeabi-v7a"
 elif [ "$MultiABI" = "n" ] ; then
@@ -1296,7 +1323,7 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
 	sed "s^APPLICATION_OVERLAPS_SYSTEM_HEADERS :=.*^APPLICATION_OVERLAPS_SYSTEM_HEADERS := $AppOverlapsSystemHeaders^" | \
-	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes $RedefinedKeycodesScreenKb $CompatibilityHacksPreventAudioChopping $CompatibilityHacksAppIgnoresAudioBufferSize $CompatibilityHacksSlowCompatibleEventQueue $CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState^" | \
+	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes $RedefinedKeycodesScreenKb $RedefinedKeycodesGamepad $CompatibilityHacksPreventAudioChopping $CompatibilityHacksAppIgnoresAudioBufferSize $CompatibilityHacksSlowCompatibleEventQueue $CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState^" | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
 	sed "s^APPLICATION_BUILD_EXCLUDE :=.*^APPLICATION_BUILD_EXCLUDE := $AppBuildExclude^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \
