@@ -82,7 +82,7 @@ typedef SDL_Keysym SDL_keysym;
 #define KP_8 KP8
 #define KP_9 KP9
 #define NUMLOCKCLEAR NUMLOCK
-#define GRAVE DOLLAR
+#define GRAVE BACKQUOTE
 #define APOSTROPHE QUOTE
 #define LGUI LMETA
 #define RGUI RMETA
