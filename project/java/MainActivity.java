@@ -218,7 +218,8 @@ public class MainActivity extends Activity
 		if( Parent._tv == null )
 		{
 			Parent._tv = new TextView(Parent);
-			Parent._tv.setMaxLines(2);
+			Parent._tv.setMaxLines(2); // To show some long texts on smaller devices
+			Parent._tv.setMinLines(2); // Otherwise the background picture is getting resized at random, which does not look good
 			Parent._tv.setText(R.string.init);
 			Parent._layout2.addView(Parent._tv);
 		}
