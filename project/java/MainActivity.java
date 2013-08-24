@@ -38,6 +38,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.FrameLayout;
 import android.graphics.drawable.Drawable;
+import android.graphics.Color;
 import android.content.res.Configuration;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -477,13 +478,17 @@ public class MainActivity extends Activity
 		_screenKeyboard.setHint(hint != null ? hint : getString(R.string.text_edit_click_here));
 		_screenKeyboard.setText(oldText);
 		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this, sendBackspace));
+		_screenKeyboard.setBackgroundColor(Color.BLACK); // Full opaque - do not show semi-transparent edit box, it's confusing
+		_screenKeyboard.setTextColor(Color.WHITE); // Just to be sure about gamma
+		if( isRunningOnOUYA() )
+			_screenKeyboard.setPadding(100, 100, 100, 100); // Bad bad HDMI TVs all have cropped borders
 		_videoLayout.addView(_screenKeyboard);
 		//_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
-		_screenKeyboard.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+		_screenKeyboard.setInputType(InputType.TYPE_CLASS_TEXT);
 		_screenKeyboard.setFocusableInTouchMode(true);
 		_screenKeyboard.setFocusable(true);
 		_screenKeyboard.requestFocus();
-		_inputManager.showSoftInput(_screenKeyboard, InputMethodManager.SHOW_FORCED);
+		_inputManager.showSoftInput(_screenKeyboard, InputMethodManager.SHOW_IMPLICIT);
 	};
 
 	public void hideScreenKeyboard()
