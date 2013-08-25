@@ -145,12 +145,15 @@ public class MainActivity extends Activity
 		_videoLayout = new FrameLayout(this);
 		_videoLayout.addView(_layout);
 
+		// Do not show advertisement in SDL menu
+		/*
 		_ad = new Advertisement(this);
 		if( _ad.getView() != null )
 		{
 			_videoLayout.addView(_ad.getView());
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.RIGHT));
 		}
+		*/
 		
 		setContentView(_videoLayout);
 
@@ -291,8 +294,8 @@ public class MainActivity extends Activity
 		
 		sdlInited = true;
 		_videoLayout.removeView(_layout);
-		if( _ad.getView() != null )
-			_videoLayout.removeView(_ad.getView());
+		//if( _ad.getView() != null )
+		//	_videoLayout.removeView(_ad.getView());
 		_layout = null;
 		_layout2 = null;
 		_btn = null;
@@ -307,10 +310,11 @@ public class MainActivity extends Activity
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
 		mGLView.requestFocus();
+		_ad = new Advertisement(this);
 		if( _ad.getView() != null )
 		{
-			_videoLayout.addView(_ad.getView());
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT));
+			_videoLayout.addView(_ad.getView());
 		}
 		// Receive keyboard events
 		DimSystemStatusBar.get().dim(_videoLayout);
@@ -489,6 +493,7 @@ public class MainActivity extends Activity
 		_screenKeyboard.setFocusable(true);
 		_screenKeyboard.requestFocus();
 		_inputManager.showSoftInput(_screenKeyboard, InputMethodManager.SHOW_IMPLICIT);
+		
 	};
 
 	public void hideScreenKeyboard()
