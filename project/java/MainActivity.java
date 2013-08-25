@@ -493,7 +493,17 @@ public class MainActivity extends Activity
 		_screenKeyboard.setFocusable(true);
 		_screenKeyboard.requestFocus();
 		_inputManager.showSoftInput(_screenKeyboard, InputMethodManager.SHOW_IMPLICIT);
-		
+		// Hack to try to force on-screen keyboard
+		final EditText keyboard = _screenKeyboard;
+		keyboard.postDelayed( new Runnable()
+			{
+				public void run()
+				{
+					keyboard.requestFocus();
+					//_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+					_inputManager.showSoftInput(keyboard, InputMethodManager.SHOW_FORCED);
+				}
+			}, 500 );
 	};
 
 	public void hideScreenKeyboard()
