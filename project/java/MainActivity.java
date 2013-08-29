@@ -71,6 +71,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import java.util.concurrent.Semaphore;
 import android.content.pm.ActivityInfo;
 import android.view.Display;
@@ -410,6 +411,7 @@ public class MainActivity extends Activity
 	{
 		_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 		_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 	}
 
 	public void showScreenKeyboard(final String oldText, boolean sendBackspace)
@@ -493,6 +495,7 @@ public class MainActivity extends Activity
 		_screenKeyboard.setFocusable(true);
 		_screenKeyboard.requestFocus();
 		_inputManager.showSoftInput(_screenKeyboard, InputMethodManager.SHOW_IMPLICIT);
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 		// Hack to try to force on-screen keyboard
 		final EditText keyboard = _screenKeyboard;
 		keyboard.postDelayed( new Runnable()
@@ -502,6 +505,9 @@ public class MainActivity extends Activity
 					keyboard.requestFocus();
 					//_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 					_inputManager.showSoftInput(keyboard, InputMethodManager.SHOW_FORCED);
+					// Hack from Stackoverflow, to force text input on Ouya
+					keyboard.dispatchTouchEvent(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN , 0, 0, 0));
+					keyboard.dispatchTouchEvent(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_UP , 0, 0, 0));                       
 				}
 			}, 500 );
 	};
