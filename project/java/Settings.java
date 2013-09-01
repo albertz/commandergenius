@@ -170,6 +170,8 @@ class Settings
 			out.writeFloat(Globals.gyro_z2);
 			out.writeFloat(Globals.gyro_zc);
 
+			out.writeBoolean(Globals.OuyaEmulation);
+
 			out.close();
 			settingsLoaded = true;
 			
@@ -348,6 +350,8 @@ class Settings
 			Globals.gyro_z1 = settingsFile.readFloat();
 			Globals.gyro_z2 = settingsFile.readFloat();
 			Globals.gyro_zc = settingsFile.readFloat();
+
+			Globals.OuyaEmulation = settingsFile.readBoolean();
 
 			settingsLoaded = true;
 

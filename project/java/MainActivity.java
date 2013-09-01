@@ -1072,7 +1072,7 @@ public class MainActivity extends Activity
 			return true;
 		} catch (PackageManager.NameNotFoundException e) {
 		}
-		return false;
+		return Globals.OuyaEmulation;
 	}
 
 	public boolean isCurrentOrientationHorizontal()

@@ -332,6 +332,7 @@ class SettingsMenuMisc extends SettingsMenu
 
 	static class VideoSettingsConfig extends Menu
 	{
+		static int debugMenuShowCount = 0;
 		String title(final MainActivity p)
 		{
 			return p.getResources().getString(R.string.video);
@@ -339,6 +340,7 @@ class SettingsMenuMisc extends SettingsMenu
 		//boolean enabled() { return true; };
 		void run (final MainActivity p)
 		{
+			debugMenuShowCount++;
 			CharSequence[] items = {
 				p.getResources().getString(R.string.pointandclick_keepaspectratio),
 				p.getResources().getString(R.string.video_smooth)
@@ -388,6 +390,48 @@ class SettingsMenuMisc extends SettingsMenu
 						Globals.VideoLinearFilter = isChecked;
 					if( item == 2 )
 						Globals.MultiThreadedVideo = isChecked;
+				}
+			});
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					if( debugMenuShowCount > 5 || Globals.OuyaEmulation )
+						showDebugMenu(p);
+					else
+						goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		void showDebugMenu (final MainActivity p)
+		{
+			CharSequence[] items = {
+				"OUYA emulation"
+			};
+			boolean defaults[] = {
+				false,
+			};
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle("Debug settings");
+			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+				{
+					if( item == 0 )
+						Globals.OuyaEmulation = isChecked;
 				}
 			});
 			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 

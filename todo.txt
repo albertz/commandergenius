@@ -1,13 +1,9 @@
 Requested features (see also bugs.txt)
 ======================================
 
-- Redesign on-screen keyboard layout dialog, to show all keys, and to use dragon droppings.
-
 - Option for default on-screen key theme in AndroidAppSettings.cfg.
 
 - Select between normal mouse input and magnifying glass/relative input automatically, based on screen size.
-
-- Split Settings.java into several files.
 
 - Show/hide screen controls with longpress on Text Edit button.
 
