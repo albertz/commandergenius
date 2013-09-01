@@ -421,7 +421,7 @@ class SettingsMenuMisc extends SettingsMenu
 				"OUYA emulation"
 			};
 			boolean defaults[] = {
-				false,
+				Globals.OuyaEmulation,
 			};
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
