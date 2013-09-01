@@ -8,7 +8,7 @@ if [ -d "project/jni/application/src/AndroidData" ] ; then
 	for F in project/assets/*; do
 		if [ `cat $F | wc -c` -gt 1000000 ] ; then
 			echo "The file $F is bigger than 1 megabyte - splitting it into smaller chunks"
-			split -b 1000000 -d $F $F && rm $F || { echo "Error: 'split' command not installed" ; exit 1 ; }
+			split -b 1000000 -a 3 -d $F $F && rm $F || { echo "Error: 'split' command not installed" ; exit 1 ; }
 		fi
 	done
 fi
