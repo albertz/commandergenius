@@ -479,6 +479,7 @@ public class MainActivity extends Activity
 		String hint = _screenKeyboardHintMessage;
 		_screenKeyboard.setHint(hint != null ? hint : getString(R.string.text_edit_click_here));
 		_screenKeyboard.setText(oldText);
+		_screenKeyboard.setSelection(_screenKeyboard.getText().length());
 		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this, sendBackspace));
 		_screenKeyboard.setBackgroundColor(Color.BLACK); // Full opaque - do not show semi-transparent edit box, it's confusing
 		_screenKeyboard.setTextColor(Color.WHITE); // Just to be sure about gamma
