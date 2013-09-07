@@ -504,7 +504,14 @@ public class MainActivity extends Activity
 					_inputManager.showSoftInput(keyboard, InputMethodManager.SHOW_FORCED);
 					// Hack from Stackoverflow, to force text input on Ouya
 					keyboard.dispatchTouchEvent(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN , 0, 0, 0));
-					keyboard.dispatchTouchEvent(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_UP , 0, 0, 0));                       
+					keyboard.dispatchTouchEvent(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_UP , 0, 0, 0));
+					keyboard.postDelayed( new Runnable()
+					{
+						public void run()
+						{
+							keyboard.setSelection(keyboard.getText().length());
+						}
+					}, 100 );
 				}
 			}, 500 );
 	};
