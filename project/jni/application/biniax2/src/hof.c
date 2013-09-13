@@ -263,6 +263,10 @@ BNX_BOOL hofEnter( BNX_GAME *game )
 		{
 			sysUpdate();
 		}
+#ifdef __ANDROID__
+		if ( !SDL_IsScreenKeyboardShown(NULL) )
+			break;
+#endif
 	}
 	while ( inpKeyA() == BNX_FALSE && inpKeyB() == BNX_FALSE );
 	hofResetCursor( curPos, recEntry->name );

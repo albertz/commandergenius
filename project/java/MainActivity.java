@@ -424,9 +424,20 @@ public class MainActivity extends Activity
 			MainActivity _parent;
 			boolean sendBackspace;
 			simpleKeyListener(MainActivity parent, boolean sendBackspace) { _parent = parent; this.sendBackspace = sendBackspace; };
-			public boolean onKey(View v, int keyCode, KeyEvent event) 
+			public boolean onKey(View v, int keyCode, KeyEvent event)
 			{
-				if ((event.getAction() == KeyEvent.ACTION_UP) && ((keyCode == KeyEvent.KEYCODE_ENTER) || (keyCode == KeyEvent.KEYCODE_BACK)))
+				if ((event.getAction() == KeyEvent.ACTION_UP) && (
+					keyCode == KeyEvent.KEYCODE_ENTER ||
+					keyCode == KeyEvent.KEYCODE_BACK ||
+					keyCode == KeyEvent.KEYCODE_MENU ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_A ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_B ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_X ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_Y ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_1 ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_2 ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_3 ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_4 ))
 				{
 					_parent.hideScreenKeyboard();
 					return true;
