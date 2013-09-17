@@ -24,3 +24,5 @@ Requested features (see also bugs.txt)
 - UQM: Redesign gamepad controls.
 
 - UQM: Arrow keys do not steer the ship.
+
+- OpenArena: move 3-rd person camera to the side, above shoulder.
