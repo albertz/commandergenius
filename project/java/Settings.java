@@ -518,6 +518,8 @@ class Settings
 			for( int i = 0; i < Globals.ScreenKbControlsShown.length; i++ )
 				if( Globals.ScreenKbControlsShown[i] )
 					screenKbReallyUsed = true;
+			if( p.isRunningOnOUYA() )
+				screenKbReallyUsed = false;
 			if( screenKbReallyUsed )
 			{
 				nativeSetTouchscreenKeyboardUsed();
