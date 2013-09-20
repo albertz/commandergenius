@@ -149,20 +149,35 @@ for f in Keen/*.png; do
 done
 
 rm -f ../res/raw/keen.raw
-printf '\000\000\000\012' > ../res/raw/keen.raw # size, 012 = 10
+printf '\000\000\000\030' > ../res/raw/keen.raw # size, 030 = 24
 
 for F in \
-keen-01 \
+dpad \
+dpad_left \
+dpad_right \
+dpad_up \
+dpad_down \
 \
-keen-02 \
-keen-03 \
-keen-04 \
-keen-05 \
-keen-06 \
-keen-07 \
-keen-08 \
-keen-09 \
-keen-10 \
+1auto_pressed \
+1auto \
+2auto_pressed \
+2auto \
+\
+1 \
+1pressed \
+2 \
+2pressed \
+3 \
+3pressed \
+4 \
+4pressed \
+5 \
+5pressed \
+6 \
+6pressed \
+keyboard \
+keyboard \
+mouse_pointer \
 ; do
 	if [ \! -e ../res/raw/$F.png.raw ]; then
 		echo Cannot find ../res/raw/$F.png.raw - check if all files are in place
@@ -172,7 +187,7 @@ keen-10 \
 	cat ../res/raw/$F.png.raw >> ../res/raw/keen.raw
 done
 
-rm ../res/raw/keen*.png.raw
+rm ../res/raw/*.png.raw
 
 gzip -9 < ../res/raw/keen.raw > ../res/raw/keen.raw.gz
 mv -f ../res/raw/keen.raw.gz ../res/raw/keen.raw
