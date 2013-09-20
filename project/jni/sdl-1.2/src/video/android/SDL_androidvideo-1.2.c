@@ -41,6 +41,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <math.h>
 #include <string.h> // for memset()
 #include <dlfcn.h>
@@ -381,9 +382,54 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	{
 		SDL_DisplayMode mode;
 		SDL_RendererInfo SDL_VideoRendererInfo;
-		
+		SDL_Rect window;
+
+		SDL_ANDROID_sWindowWidth = SDL_ANDROID_sRealWindowWidth;
+		SDL_ANDROID_sWindowHeight = SDL_ANDROID_sRealWindowHeight;
+
+		SDL_ANDROID_ForceClearScreenRectAmount = 0;
+		if( SDL_ANDROID_ScreenKeep43Ratio )
+		{
+			SDL_ANDROID_sWindowWidth = (SDL_ANDROID_sFakeWindowWidth * SDL_ANDROID_sRealWindowHeight) / SDL_ANDROID_sFakeWindowHeight;
+			SDL_ANDROID_TouchscreenCalibrationWidth = SDL_ANDROID_sWindowWidth;
+			SDL_ANDROID_ForceClearScreenRectAmount = 2;
+		}
+
+		window.x = (SDL_ANDROID_sRealWindowWidth - SDL_ANDROID_sWindowWidth) / 2;
+		window.y = 0;
+		window.w = width;
+		window.h = height;
+
+		if( getenv("OUYA") )
+		{
+			// Leave 10% at the borders blank, because all TVs have crazy thick edges and not enough pixels
+			// Also this is enforced by Ouya guidelines, so there's not much choice.
+			window.x += window.w / 10;
+			window.y += window.h / 10;
+			window.w -= window.w / 5;
+			window.h -= window.h / 5;
+			SDL_ANDROID_ForceClearScreenRectAmount = 4;
+		}
+
+		SDL_ANDROID_ForceClearScreenRect[0].x = 0;
+		SDL_ANDROID_ForceClearScreenRect[0].y = 0;
+		SDL_ANDROID_ForceClearScreenRect[0].w = window.x;
+		SDL_ANDROID_ForceClearScreenRect[0].h = SDL_ANDROID_sRealWindowHeight;
+		SDL_ANDROID_ForceClearScreenRect[1].x = SDL_ANDROID_sRealWindowWidth - window.x;
+		SDL_ANDROID_ForceClearScreenRect[1].y = 0;
+		SDL_ANDROID_ForceClearScreenRect[1].w = window.x;
+		SDL_ANDROID_ForceClearScreenRect[1].h = SDL_ANDROID_sRealWindowHeight;
+		SDL_ANDROID_ForceClearScreenRect[2].x = window.x;
+		SDL_ANDROID_ForceClearScreenRect[2].y = 0;
+		SDL_ANDROID_ForceClearScreenRect[2].w = SDL_ANDROID_sRealWindowWidth - window.x * 2;
+		SDL_ANDROID_ForceClearScreenRect[2].h = window.y;
+		SDL_ANDROID_ForceClearScreenRect[3].x = window.x;
+		SDL_ANDROID_ForceClearScreenRect[3].y = SDL_ANDROID_sRealWindowHeight - window.y;
+		SDL_ANDROID_ForceClearScreenRect[3].w = SDL_ANDROID_sRealWindowWidth - window.x * 2;
+		SDL_ANDROID_ForceClearScreenRect[3].h = window.y;
+
 		SDL_SelectVideoDisplay(0);
-		SDL_VideoWindow = SDL_CreateWindow("", (SDL_ANDROID_sRealWindowWidth-SDL_ANDROID_sWindowWidth)/2, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
+		SDL_VideoWindow = SDL_CreateWindow("", window.x, window.y, window.w, window.h, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
 
 		SDL_memset(&mode, 0, sizeof(mode));
 		mode.format = PixelFormatEnum;
@@ -423,7 +469,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 			DEBUGOUT("ANDROID_SetVideoMode() HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 		}
 		glViewport(0, 0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
-		glOrthof(0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sWindowHeight, 0, 0, 1);
+		glOrthof(0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight, 0, 0, 1);
 	}
 
 	/* Allocate the new pixel format for the screen */

@@ -36,6 +36,7 @@ extern int SDL_ANDROID_sRealWindowWidth;
 extern int SDL_ANDROID_sRealWindowHeight;
 extern int SDL_ANDROID_sFakeWindowWidth; // SDL 1.2 only
 extern int SDL_ANDROID_sFakeWindowHeight; // SDL 1.2 only
+extern int SDL_ANDROID_ScreenKeep43Ratio;
 extern int SDL_ANDROID_TouchscreenCalibrationWidth;
 extern int SDL_ANDROID_TouchscreenCalibrationHeight;
 extern int SDL_ANDROID_TouchscreenCalibrationX;

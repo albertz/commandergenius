@@ -112,6 +112,8 @@ abstract class DifferentTouchInput
 			Log.i("SDL", "Device model: " + android.os.Build.MODEL);
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH )
 			{
+				if( DetectCrappyDragonRiseDatexGamepad() )
+					return CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance;
 				return IcsTouchInput.Holder.sInstance;
 			}
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
@@ -131,6 +133,13 @@ abstract class DifferentTouchInput
 			}
 		}
 	}
+	private static boolean DetectCrappyDragonRiseDatexGamepad()
+	{
+		if( CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance == null )
+			return false;
+		return CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance.detect();
+	}
+
 	private static class SingleTouchInput extends DifferentTouchInput
 	{
 		private static class Holder
@@ -351,7 +360,6 @@ abstract class DifferentTouchInput
 			// Joysticks are supported since Honeycomb, but I don't care about it, because very little devices have it
 			if( (event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) == InputDevice.SOURCE_CLASS_JOYSTICK )
 			{
-				// event.getAxisValue(AXIS_HAT_X) and event.getAxisValue(AXIS_HAT_Y) are joystick arrow keys, they also send keyboard events
 				DemoGLSurfaceView.nativeGamepadAnalogJoystickInput(
 					event.getAxisValue(MotionEvent.AXIS_X), event.getAxisValue(MotionEvent.AXIS_Y),
 					event.getAxisValue(MotionEvent.AXIS_Z), event.getAxisValue(MotionEvent.AXIS_RZ),
@@ -367,6 +375,69 @@ abstract class DifferentTouchInput
 				return;
 			}
 			super.processGenericEvent(event);
+		}
+	}
+	private static class CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad extends IcsTouchInput
+	{
+		private static class Holder
+		{
+			private static final CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad sInstance = new CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad();
+		}
+		float hatX = 0.0f, hatY = 0.0f;
+		public void processGenericEvent(final MotionEvent event)
+		{
+			// Joysticks are supported since Honeycomb, but I don't care about it, because very little devices have it
+			if( (event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) == InputDevice.SOURCE_CLASS_JOYSTICK )
+			{
+				// event.getAxisValue(AXIS_HAT_X) and event.getAxisValue(AXIS_HAT_Y) are joystick arrow keys, they also send keyboard events
+				DemoGLSurfaceView.nativeGamepadAnalogJoystickInput(
+					event.getAxisValue(MotionEvent.AXIS_X), event.getAxisValue(MotionEvent.AXIS_Y),
+					event.getAxisValue(MotionEvent.AXIS_RX), event.getAxisValue(MotionEvent.AXIS_RZ),
+					0, 0);
+				if( event.getAxisValue(MotionEvent.AXIS_HAT_X) != hatX )
+				{
+					hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X);
+					if( hatX == 0.0f )
+					{
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_LEFT, 0);
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_RIGHT, 0);
+					}
+					else
+						DemoGLSurfaceView.nativeKey(hatX < 0.0f ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT, 1);
+				}
+				if( event.getAxisValue(MotionEvent.AXIS_HAT_Y) != hatY )
+				{
+					hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
+					if( hatY == 0.0f )
+					{
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_UP, 0);
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_DOWN, 0);
+					}
+					else
+						DemoGLSurfaceView.nativeKey(hatY < 0.0f ? KeyEvent.KEYCODE_DPAD_UP : KeyEvent.KEYCODE_DPAD_DOWN, 1);
+				}
+				return;
+			}
+			super.processGenericEvent(event);
+		}
+		public boolean detect()
+		{
+			int[] devIds = InputDevice.getDeviceIds();
+			for( int id : devIds )
+			{
+				InputDevice device = InputDevice.getDevice(id);
+				if( device == null )
+					continue;
+				System.out.println("libSDL: input device ID " + id + " type " + device.getSources()  + " name " + device.getName() );
+				if( (device.getSources() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD &&
+					(device.getSources() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK && 
+					device.getName().indexOf("DragonRise Inc") == 0 )
+				{
+					System.out.println("libSDL: Detected crappy DragonRise gamepad, enabling special hack for it. Please press button labeled 'Analog', otherwise it won't work, because it's cheap and crappy");
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }

@@ -38,6 +38,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.FrameLayout;
 import android.graphics.drawable.Drawable;
+import android.graphics.Color;
 import android.content.res.Configuration;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -70,6 +71,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import java.util.concurrent.Semaphore;
 import android.content.pm.ActivityInfo;
 import android.view.Display;
@@ -218,7 +220,8 @@ public class MainActivity extends Activity
 		if( Parent._tv == null )
 		{
 			Parent._tv = new TextView(Parent);
-			Parent._tv.setMaxLines(2);
+			Parent._tv.setMaxLines(2); // To show some long texts on smaller devices
+			Parent._tv.setMinLines(2); // Otherwise the background picture is getting resized at random, which does not look good
 			Parent._tv.setText(R.string.init);
 			Parent._layout2.addView(Parent._tv);
 		}
@@ -404,6 +407,7 @@ public class MainActivity extends Activity
 	{
 		_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 		_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 	}
 
 	public void showScreenKeyboard(final String oldText, boolean sendBackspace)
@@ -420,9 +424,20 @@ public class MainActivity extends Activity
 			MainActivity _parent;
 			boolean sendBackspace;
 			simpleKeyListener(MainActivity parent, boolean sendBackspace) { _parent = parent; this.sendBackspace = sendBackspace; };
-			public boolean onKey(View v, int keyCode, KeyEvent event) 
+			public boolean onKey(View v, int keyCode, KeyEvent event)
 			{
-				if ((event.getAction() == KeyEvent.ACTION_UP) && ((keyCode == KeyEvent.KEYCODE_ENTER) || (keyCode == KeyEvent.KEYCODE_BACK)))
+				if ((event.getAction() == KeyEvent.ACTION_UP) && (
+					keyCode == KeyEvent.KEYCODE_ENTER ||
+					keyCode == KeyEvent.KEYCODE_BACK ||
+					keyCode == KeyEvent.KEYCODE_MENU ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_A ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_B ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_X ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_Y ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_1 ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_2 ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_3 ||
+					keyCode == KeyEvent.KEYCODE_BUTTON_4 ))
 				{
 					_parent.hideScreenKeyboard();
 					return true;
@@ -475,14 +490,41 @@ public class MainActivity extends Activity
 		String hint = _screenKeyboardHintMessage;
 		_screenKeyboard.setHint(hint != null ? hint : getString(R.string.text_edit_click_here));
 		_screenKeyboard.setText(oldText);
+		_screenKeyboard.setSelection(_screenKeyboard.getText().length());
 		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this, sendBackspace));
+		_screenKeyboard.setBackgroundColor(Color.BLACK); // Full opaque - do not show semi-transparent edit box, it's confusing
+		_screenKeyboard.setTextColor(Color.WHITE); // Just to be sure about gamma
+		if( isRunningOnOUYA() )
+			_screenKeyboard.setPadding(100, 100, 100, 100); // Bad bad HDMI TVs all have cropped borders
 		_videoLayout.addView(_screenKeyboard);
 		//_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
-		_screenKeyboard.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+		_screenKeyboard.setInputType(InputType.TYPE_CLASS_TEXT);
 		_screenKeyboard.setFocusableInTouchMode(true);
 		_screenKeyboard.setFocusable(true);
 		_screenKeyboard.requestFocus();
-		_inputManager.showSoftInput(_screenKeyboard, InputMethodManager.SHOW_FORCED);
+		_inputManager.showSoftInput(_screenKeyboard, InputMethodManager.SHOW_IMPLICIT);
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+		// Hack to try to force on-screen keyboard
+		final EditText keyboard = _screenKeyboard;
+		keyboard.postDelayed( new Runnable()
+			{
+				public void run()
+				{
+					keyboard.requestFocus();
+					//_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+					_inputManager.showSoftInput(keyboard, InputMethodManager.SHOW_FORCED);
+					// Hack from Stackoverflow, to force text input on Ouya
+					keyboard.dispatchTouchEvent(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN , 0, 0, 0));
+					keyboard.dispatchTouchEvent(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_UP , 0, 0, 0));
+					keyboard.postDelayed( new Runnable()
+					{
+						public void run()
+						{
+							keyboard.setSelection(keyboard.getText().length());
+						}
+					}, 100 );
+				}
+			}, 500 );
 	};
 
 	public void hideScreenKeyboard()
@@ -1045,7 +1087,7 @@ public class MainActivity extends Activity
 			return true;
 		} catch (PackageManager.NameNotFoundException e) {
 		}
-		return false;
+		return Globals.OuyaEmulation;
 	}
 
 	public boolean isCurrentOrientationHorizontal()

@@ -475,6 +475,22 @@ if [ -n "$var" ] ; then
 fi
 fi
 
+if [ -z "$TouchscreenKeysTheme" -o -z "$AUTO" ]; then
+echo
+echo "On-screen keys theme"
+echo "1 = Ultimate Droid by Sean Stieber (green, with gamepad joystick)"
+echo "2 = Simple Theme by Beholder (white, with gamepad joystick)"
+echo "3 = Sun by Sirea (yellow, with round joystick)"
+echo "4 = Mystery by Gerstrong (unknown color, unknown joystick)"
+echo ""
+echo -n "($TouchscreenKeysTheme): "
+read var
+if [ -n "$var" ] ; then
+	TouchscreenKeysTheme="$var"
+	CHANGED=1
+fi
+fi
+
 if [ -z "$RedefinedKeysGamepad" -o -z "$AUTO" ]; then
 if [ -z "$RedefinedKeysGamepad" ]; then
 	RedefinedKeysGamepad="$RedefinedKeysScreenKb"
@@ -880,6 +896,13 @@ echo RedefinedKeysScreenKb=\"$RedefinedKeysScreenKb\" >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Names for on-screen keyboard keys, such as Fire, Jump, Run etc, separated by spaces, they are used in SDL config menu" >> AndroidAppSettings.cfg
 echo RedefinedKeysScreenKbNames=\"$RedefinedKeysScreenKbNames\" >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# On-screen keys theme" >> AndroidAppSettings.cfg
+echo "# 1 = Ultimate Droid by Sean Stieber (green, with gamepad joystick)" >> AndroidAppSettings.cfg
+echo "# 2 = Simple Theme by Beholder (white, with gamepad joystick)" >> AndroidAppSettings.cfg
+echo "# 3 = Sun by Sirea (yellow, with round joystick)" >> AndroidAppSettings.cfg
+echo "# 4 = Mystery by Gerstrong (unknown color, unknown joystick)" >> AndroidAppSettings.cfg
+echo TouchscreenKeysTheme=$TouchscreenKeysTheme >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Redefine gamepad keys to SDL keysyms, button order is:" >> AndroidAppSettings.cfg
 echo "# A B X Y L1 R1 L2 R2 LThumb RThumb" >> AndroidAppSettings.cfg
@@ -1298,6 +1321,7 @@ $SEDI "s|public static String DeleteFilesOnUpgrade = .*;|public static String De
 $SEDI "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" project/src/Globals.java
 $SEDI "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" project/src/Globals.java
 $SEDI "s@public static String\\[\\] AppTouchscreenKeyboardKeysNames = .*;@public static String[] AppTouchscreenKeyboardKeysNames = \"$RedefinedKeysScreenKbNames\".split(\" \");@" project/src/Globals.java
+$SEDI "s/public static int TouchscreenKeyboardTheme = .*;/public static int TouchscreenKeyboardTheme = $TouchscreenKeysTheme;/" project/src/Globals.java
 $SEDI "s/public static int StartupMenuButtonTimeout = .*;/public static int StartupMenuButtonTimeout = $StartupMenuButtonTimeout;/" project/src/Globals.java
 $SEDI "s/public static int AppMinimumRAM = .*;/public static int AppMinimumRAM = $AppMinimumRAM;/" project/src/Globals.java
 $SEDI "s/public static SettingsMenu.Menu HiddenMenuOptions .*;/public static SettingsMenu.Menu HiddenMenuOptions [] = { $HiddenMenuOptions1 };/" project/src/Globals.java

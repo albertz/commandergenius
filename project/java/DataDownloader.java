@@ -317,7 +317,7 @@ class DataDownloader extends Thread
 					stream1.close();
 				} catch( Exception e ) {
 					try {
-						stream1 = Parent.getAssets().open(url + "00");
+						stream1 = Parent.getAssets().open(url + "000");
 						stream1.close();
 					} catch( Exception ee ) {
 						Log.i("SDL", "Failed to open file in assets: " + url);
@@ -367,8 +367,8 @@ class DataDownloader extends Thread
 			while( true )
 			{
 				try {
-					// Make string ".zip00", ".zip01" etc for multipart archives
-					String url1 = url + String.format("%02d", multipartCounter);
+					// Make string ".zip000", ".zip001" etc for multipart archives
+					String url1 = url + String.format("%03d", multipartCounter);
 					CountingInputStream stream1 = new CountingInputStream(Parent.getAssets().open(url1), 8192);
 					while( stream1.skip(65536) > 0 ) { };
 					totalLen += stream1.getBytesRead();
@@ -419,6 +419,8 @@ class DataDownloader extends Thread
 				return false;
 			}
 		}
+		
+		long updateStatusTime = 0;
 		
 		if(DoNotUnzip)
 		{
@@ -477,7 +479,11 @@ class DataDownloader extends Thread
 					float percent = 0.0f;
 					if( totalLen > 0 )
 						percent = (stream.getBytesRead() + partialDownloadLen) * 100.0f / (totalLen + partialDownloadLen);
-					Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
+					if( System.currentTimeMillis() > updateStatusTime + 1000 )
+					{
+						updateStatusTime = System.currentTimeMillis();
+						Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
+					}
 				}
 				out.flush();
 				out.close();
@@ -547,7 +553,11 @@ class DataDownloader extends Thread
 					Log.i("SDL", "File '" + path + "' exists and passed CRC check - not overwriting it");
 					if( totalLen > 0 )
 						percent = stream.getBytesRead() * 100.0f / totalLen;
-					Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
+					if( System.currentTimeMillis() > updateStatusTime + 1000 )
+					{
+						updateStatusTime = System.currentTimeMillis();
+						Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
+					}
 					continue;
 				} catch( Exception e ) { }
 
@@ -567,7 +577,11 @@ class DataDownloader extends Thread
 
 				if( totalLen > 0 )
 					percent = stream.getBytesRead() * 100.0f / totalLen;
-				Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
+				if( System.currentTimeMillis() > updateStatusTime + 1000 )
+				{
+					updateStatusTime = System.currentTimeMillis();
+					Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
+				}
 				
 				try {
 					int len = zip.read(buf);
@@ -580,7 +594,11 @@ class DataDownloader extends Thread
 						percent = 0.0f;
 						if( totalLen > 0 )
 							percent = stream.getBytesRead() * 100.0f / totalLen;
-						Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
+						if( System.currentTimeMillis() > updateStatusTime + 1000 )
+						{
+							updateStatusTime = System.currentTimeMillis();
+							Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
+						}
 					}
 					out.flush();
 					out.close();

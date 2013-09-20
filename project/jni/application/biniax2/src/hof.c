@@ -28,6 +28,9 @@ For complete product license refer to LICENSE.TXT file
 INCLUDES
 ******************************************************************************/
 #include <string.h>
+#ifdef __ANDROID__
+#include <SDL_screenkeyboard.h>
+#endif
 
 #include "inc.h"
 
@@ -222,6 +225,10 @@ BNX_BOOL hofEnter( BNX_GAME *game )
 	strcpy( recEntry->name, "                             " );
 	recEntry->score = game->score[ cPlayer1 ];
 	inpInit();
+#ifdef __ANDROID__
+	SDL_ANDROID_SetScreenKeyboardHintMesage("Enter your name");
+	SDL_ANDROID_ToggleScreenKeyboardTextInput("");
+#endif
 	do
 	{
 		startTime = sysGetTime();
@@ -256,6 +263,10 @@ BNX_BOOL hofEnter( BNX_GAME *game )
 		{
 			sysUpdate();
 		}
+#ifdef __ANDROID__
+		if ( !SDL_IsScreenKeyboardShown(NULL) )
+			break;
+#endif
 	}
 	while ( inpKeyA() == BNX_FALSE && inpKeyB() == BNX_FALSE );
 	hofResetCursor( curPos, recEntry->name );

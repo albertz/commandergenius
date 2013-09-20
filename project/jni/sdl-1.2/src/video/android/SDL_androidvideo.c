@@ -54,7 +54,9 @@ int SDL_ANDROID_sWindowHeight = 0;
 int SDL_ANDROID_sRealWindowWidth  = 0;
 int SDL_ANDROID_sRealWindowHeight = 0;
 
-SDL_Rect SDL_ANDROID_ForceClearScreenRect[2] = { { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
+int SDL_ANDROID_ScreenKeep43Ratio = 0;
+
+SDL_Rect SDL_ANDROID_ForceClearScreenRect[4] = { { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
 int SDL_ANDROID_ForceClearScreenRectAmount = 0;
 
 // Extremely wicked JNI environment to call Java functions from C code
@@ -162,38 +164,16 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint w, jint h, jint keepRatio )
 {
-	if( SDL_ANDROID_sWindowWidth == 0 )
+	if( SDL_ANDROID_sRealWindowWidth == 0 )
 	{
 		SDL_ANDROID_sRealWindowWidth = w;
 		SDL_ANDROID_sRealWindowHeight = h;
-#if SDL_VERSION_ATLEAST(1,3,0)
-		// Not supported in SDL 1.3
-#else
-		if( keepRatio )
-		{
-			// TODO: tweak that parameters when app calls SetVideoMode(), not here - app may request something else than 640x480, it's okay for most apps though
-			SDL_ANDROID_sWindowWidth  = (SDL_ANDROID_sFakeWindowWidth*h)/SDL_ANDROID_sFakeWindowHeight;
-			SDL_ANDROID_sWindowHeight = h;
-			SDL_ANDROID_ForceClearScreenRect[0].x = 0;
-			SDL_ANDROID_ForceClearScreenRect[0].y = 0;
-			SDL_ANDROID_ForceClearScreenRect[0].w = (SDL_ANDROID_sRealWindowWidth - SDL_ANDROID_sWindowWidth) / 2;
-			SDL_ANDROID_ForceClearScreenRect[0].h = h;
-			SDL_ANDROID_ForceClearScreenRect[1].x = SDL_ANDROID_sRealWindowWidth - SDL_ANDROID_ForceClearScreenRect[0].w;
-			SDL_ANDROID_ForceClearScreenRect[1].y = 0;
-			SDL_ANDROID_ForceClearScreenRect[1].w = SDL_ANDROID_ForceClearScreenRect[0].w;
-			SDL_ANDROID_ForceClearScreenRect[1].h = h;
-			SDL_ANDROID_ForceClearScreenRectAmount = 2;
-		}
-		else
-#endif
-		{
-			SDL_ANDROID_sWindowWidth = w;
-			SDL_ANDROID_sWindowHeight = h;
-			SDL_ANDROID_ForceClearScreenRectAmount = 0;
-		}
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Physical screen resolution is %dx%d, virtual screen %dx%d", w, h, SDL_ANDROID_sWindowWidth, SDL_ANDROID_sWindowHeight );
+		SDL_ANDROID_sWindowWidth = w;
+		SDL_ANDROID_sWindowHeight = h;
 		SDL_ANDROID_TouchscreenCalibrationWidth = SDL_ANDROID_sWindowWidth;
 		SDL_ANDROID_TouchscreenCalibrationHeight = SDL_ANDROID_sWindowHeight;
+		SDL_ANDROID_ScreenKeep43Ratio = keepRatio;
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Physical screen resolution is %dx%d", w, h );
 	}
 }
 
