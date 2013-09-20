@@ -481,7 +481,7 @@ echo "On-screen keys theme"
 echo "1 = Ultimate Droid by Sean Stieber (green, with gamepad joystick)"
 echo "2 = Simple Theme by Beholder (white, with gamepad joystick)"
 echo "3 = Sun by Sirea (yellow, with round joystick)"
-echo "4 = Mystery by Gerstrong (unknown color, unknown joystick)"
+echo "4 = Keen by Gerstrong (multicolor, with round joystick)"
 echo ""
 echo -n "($TouchscreenKeysTheme): "
 read var
@@ -901,7 +901,7 @@ echo "# On-screen keys theme" >> AndroidAppSettings.cfg
 echo "# 1 = Ultimate Droid by Sean Stieber (green, with gamepad joystick)" >> AndroidAppSettings.cfg
 echo "# 2 = Simple Theme by Beholder (white, with gamepad joystick)" >> AndroidAppSettings.cfg
 echo "# 3 = Sun by Sirea (yellow, with round joystick)" >> AndroidAppSettings.cfg
-echo "# 4 = Mystery by Gerstrong (unknown color, unknown joystick)" >> AndroidAppSettings.cfg
+echo "# 4 = Keen by Gerstrong (multicolor, with round joystick)" >> AndroidAppSettings.cfg
 echo TouchscreenKeysTheme=$TouchscreenKeysTheme >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Redefine gamepad keys to SDL keysyms, button order is:" >> AndroidAppSettings.cfg
