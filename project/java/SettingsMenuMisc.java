@@ -469,6 +469,8 @@ class SettingsMenuMisc extends SettingsMenu
 		{
 			String readmes[] = Globals.ReadmeText.split("\\^");
 			String lang = new String(Locale.getDefault().getLanguage()) + ":";
+			if( p.isRunningOnOUYA() )
+				lang = "ouya:";
 			String readme = readmes[0];
 			String buttonName = "", buttonUrl = "";
 			for( String r: readmes )
