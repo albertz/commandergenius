@@ -657,7 +657,7 @@ namespace boost { namespace property_tree
     template<class Type> inline
     Type basic_ptree<K, D, C>::get_value() const
     {
-        return get_value<Type>(
+	return get_value<Type>(
             typename translator_between<data_type, Type>::type());
     }
 

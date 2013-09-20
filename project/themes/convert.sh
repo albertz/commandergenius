@@ -139,3 +139,40 @@ rm ../res/raw/sun*.png.raw
 
 gzip -9 < ../res/raw/sun.raw > ../res/raw/sun.raw.gz
 mv -f ../res/raw/sun.raw.gz ../res/raw/sun.raw
+
+
+
+# Keen Icon Set by Gerstrong (Gerhard Stein)
+for f in Keen/*.png; do
+	newname=`echo $f | sed 's@.*/@@' | tr '[A-Z]' '[a-z]'`.raw
+	./converter $f ../res/raw/$newname 32
+done
+
+rm -f ../res/raw/keen.raw
+printf '\000\000\000\012' > ../res/raw/keen.raw # size, 012 = 10
+
+for F in \
+keen-01 \
+\
+keen-02 \
+keen-03 \
+keen-04 \
+keen-05 \
+keen-06 \
+keen-07 \
+keen-08 \
+keen-09 \
+keen-10 \
+; do
+	if [ \! -e ../res/raw/$F.png.raw ]; then
+		echo Cannot find ../res/raw/$F.png.raw - check if all files are in place
+		exit 1
+	fi
+	
+	cat ../res/raw/$F.png.raw >> ../res/raw/keen.raw
+done
+
+rm ../res/raw/keen*.png.raw
+
+gzip -9 < ../res/raw/keen.raw > ../res/raw/keen.raw.gz
+mv -f ../res/raw/keen.raw.gz ../res/raw/keen.raw

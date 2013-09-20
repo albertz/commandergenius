@@ -192,7 +192,8 @@ class SettingsMenuKeyboard extends SettingsMenu
 			final CharSequence[] items = {
 				p.getResources().getString(R.string.controls_screenkb_by, "Ultimate Droid", "Sean Stieber"),
 				p.getResources().getString(R.string.controls_screenkb_by, "Simple Theme", "Beholder"),
-				p.getResources().getString(R.string.controls_screenkb_by, "Sun", "Sirea")
+				p.getResources().getString(R.string.controls_screenkb_by, "Sun", "Sirea"),
+				p.getResources().getString(R.string.controls_screenkb_by, "Keen", "Gerstrong")
 				};
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);

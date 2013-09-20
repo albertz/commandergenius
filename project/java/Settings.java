@@ -614,8 +614,8 @@ class Settings
 		{
 			if(Globals.TouchscreenKeyboardTheme < 0)
 				Globals.TouchscreenKeyboardTheme = 0;
-			if(Globals.TouchscreenKeyboardTheme > 2)
-				Globals.TouchscreenKeyboardTheme = 2;
+			if(Globals.TouchscreenKeyboardTheme > 3)
+				Globals.TouchscreenKeyboardTheme = 3;
 
 			if( Globals.TouchscreenKeyboardTheme == 0 )
 			{
@@ -628,6 +628,10 @@ class Settings
 			if( Globals.TouchscreenKeyboardTheme == 2 )
 			{
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.sun));
+			}
+			if( Globals.TouchscreenKeyboardTheme == 3 )
+			{
+				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.keen));
 			}
 		}
 	}
