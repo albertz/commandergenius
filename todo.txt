@@ -20,8 +20,6 @@ Requested features, might never get implemented
 TODO, which will get actually done
 ==================================
 
-- TeeWorlds: add accelerometer jump, improve touchscreen controls if possible.
-
 - TeeWorlds: fix Ouya bugs (whole-screen shrink, remove controls from settings), submit to Ouya store.
 
 - UQM: On-screen buttons are re-appearing when using gamepad and switching between game screens.
@@ -31,8 +29,6 @@ TODO, which will get actually done
 - UQM: Arrow keys do not steer the ship.
 
 - OpenArena: move 3-rd person camera to the side, above shoulder.
-
-- OpenArena: finish Ouya port.
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper.
 
