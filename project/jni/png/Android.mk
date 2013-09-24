@@ -20,7 +20,7 @@ pngwrite.c \
 pngwtran.c \
 pngwutil.c \
 
-common_CFLAGS := -O3
+common_CFLAGS := -O3 -DHAVE_CONFIG_H
 
 common_C_INCLUDES += $(LOCAL_PATH)/include $(LOCAL_PATH)
 
