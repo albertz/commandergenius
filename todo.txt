@@ -20,6 +20,8 @@ Requested features, might never get implemented
 TODO, which will get actually done
 ==================================
 
+- Fix diagonal movements via analog gamepad with AppUsesJoystick=n.
+
 - TeeWorlds: fix Ouya bugs (whole-screen shrink, remove controls from settings), submit to Ouya store.
 
 - UQM: On-screen buttons are re-appearing when using gamepad and switching between game screens.
@@ -29,6 +31,22 @@ TODO, which will get actually done
 - UQM: Arrow keys do not steer the ship.
 
 - OpenArena: move 3-rd person camera to the side, above shoulder.
+
+- OpenArena: chat text input should be faster.
+
+- OpenArena: Shift and Ctrl keys on USB keyboard do not work for text input.
+
+- OpenArena: Play silence if audio buffer underrun.
+
+- OpenArena: When entering with USB keyboard into chatbox, first 't' disappears.
+
+- OpenArena: enable mouse events, make mouse move with HOVER event, remove warnings.
+
+- OpenArena: Help image with controller buttons for Ouya: https://www.dropbox.com/s/ynrso4n8kpkf3b9/OUYA_Controller_Overlay-01.png
+
+- OpenArena: option to switch analog joysticks on gamepad.
+
+- OpenArena: move sliders with left/right arrows by 1/20 of total length.
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper.
 

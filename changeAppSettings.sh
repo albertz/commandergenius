@@ -968,7 +968,7 @@ echo AppCmdline=\'$AppCmdline\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Here you may type readme text, which will be shown during startup. Format is:" >> AndroidAppSettings.cfg
 echo "# Text in English, use \\\\\\\\\\\\\\\\n to separate lines^de:Text in Deutsch^ru:Text in Russian, and so on (that's four backslashes, nice isn't it?)" >> AndroidAppSettings.cfg
-echo ReadmeText=\'$ReadmeText\' >> AndroidAppSettings.cfg
+echo ReadmeText=\'$ReadmeText\' | sed 's/\\\\n/\\\\\\\\n/g' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Screen size is used by Google Play to prevent an app to be installed on devices with smaller screens" >> AndroidAppSettings.cfg
 echo "# Minimum screen size that application supports: (s)mall / (m)edium / (l)arge" >> AndroidAppSettings.cfg
