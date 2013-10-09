@@ -6,7 +6,11 @@
 #include "SDL_version.h"
 #include "SDL_thread.h"
 #include "SDL_main.h"
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+#else
 #include "SDL_android.h"
+#endif
 
 /* JNI-C wrapper stuff */
 
