@@ -56,7 +56,9 @@ import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.Button;
+import android.widget.Scroller;
 import android.view.View;
+import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.text.Editable;
 import android.text.SpannedString;
@@ -494,12 +496,17 @@ class SettingsMenuMisc extends SettingsMenu
 				return;
 			}
 			TextView text = new TextView(p);
-			text.setMaxLines(1000);
+			text.setMaxLines(100);
+			//text.setScroller(new Scroller(p));
+			//text.setVerticalScrollBarEnabled(true);
 			text.setText(readme);
-			text.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.FILL_PARENT));
+			text.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+			text.setPadding(0, 5, 0, 20);
+			text.setTextSize(20.0f);
+			text.setGravity(Gravity.CENTER);
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			ScrollView scroll = new ScrollView(p);
-			scroll.addView(text);
+			scroll.addView(text, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 			Button ok = new Button(p);
 			final AlertDialog alertDismiss[] = new AlertDialog[1];
 			ok.setOnClickListener(new View.OnClickListener()
@@ -513,6 +520,7 @@ class SettingsMenuMisc extends SettingsMenu
 			LinearLayout layout = new LinearLayout(p);
 			layout.setOrientation(LinearLayout.VERTICAL);
 			layout.addView(scroll);
+			//layout.addView(text);
 			layout.addView(ok);
 			if( buttonName.length() > 0 )
 			{
