@@ -26,7 +26,7 @@ echo "If you will supply empty string as answer the previous value will be used"
 
 if [ -z "$LibSdlVersion" -o -z "$AUTO" ]; then
 echo
-echo -n "libSDL version to use (1.2 or 1.3, specify 1.3 for SDL2) ($LibSdlVersion): "
+echo -n "libSDL version to use (1.2, 1.3, or 2.0) ($LibSdlVersion): "
 read var
 if [ -n "$var" ] ; then
 	LibSdlVersion="$var"
