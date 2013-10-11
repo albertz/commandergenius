@@ -368,7 +368,7 @@ class SettingsMenuMisc extends SettingsMenu
 				defaults = defaults2;
 			}
 
-			if(Globals.Using_SDL_1_3)
+			if(Globals.Using_SDL_1_3 || Globals.Using_SDL_2_0)
 			{
 				CharSequence[] items2 = {
 					p.getResources().getString(R.string.pointandclick_keepaspectratio),

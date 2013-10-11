@@ -187,7 +187,7 @@ class Settings
 			return;
 		}
 		Log.i("SDL", "libSDL: Settings.Load(): enter");
-		nativeInitKeymap();
+//		nativeInitKeymap();
 		if( p.isRunningOnOUYA() )
 			nativeSetKeymapKey(KeyEvent.KEYCODE_MENU, nativeGetKeymapKey(KeyEvent.KEYCODE_BACK)); // Ouya does not have Back key, only Menu, so remap Back keycode to Menu
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )

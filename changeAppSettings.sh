@@ -1002,6 +1002,11 @@ if [ "$LibSdlVersion" = "1.3" ] ; then
 	UsingSdl13=true
 fi
 
+UsingSdl20=false
+if [ "$LibSdlVersion" = "2.0" ] ; then
+	UsingSdl20=true
+fi
+
 if [ "$ScreenOrientation" = "h" -o "$ScreenOrientation" = "l" ] ; then
 	ScreenOrientation1=landscape
 	HorizontalOrientation=true
@@ -1291,6 +1296,8 @@ esac
 echo Patching project/src/Globals.java
 $SEDI "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" project/src/Globals.java
 $SEDI "s/public static final boolean Using_SDL_1_3 = .*;/public static final boolean Using_SDL_1_3 = $UsingSdl13;/" project/src/Globals.java
+
+$SEDI "s/public static final boolean Using_SDL_2_0 = .*;/public static final boolean Using_SDL_2_0 = $UsingSdl20;/" project/src/Globals.java
 
 # Work around "Argument list too long" problem when compiling VICE
 #$SEDI "s@public static String DataDownloadUrl = .*@public static String DataDownloadUrl = \"$AppDataDownloadUrl1\";@" project/src/Globals.java
