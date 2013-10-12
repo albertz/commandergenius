@@ -25,6 +25,58 @@ import org.libsdl.app.SDLActivity;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.KeyEvent;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.EditText;
+import android.text.Editable;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.FrameLayout;
+import android.graphics.drawable.Drawable;
+import android.graphics.Color;
+import android.content.res.Configuration;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.view.View.OnKeyListener;
+import android.view.MenuItem;
+import android.view.Menu;
+import android.view.Gravity;
+import android.text.method.TextKeyListener;
+import java.util.LinkedList;
+import java.io.SequenceInputStream;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.zip.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.Set;
+import android.text.SpannedString;
+import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.InputStreamReader;
+import android.view.inputmethod.InputMethodManager;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.os.Handler;
+import android.os.Message;
+import android.os.SystemClock;
+import java.util.concurrent.Semaphore;
+import android.content.pm.ActivityInfo;
+import android.view.Display;
+import android.text.InputType;
 import android.util.Log;
 
 /* 
@@ -58,10 +110,10 @@ public class MainActivity extends SDLActivity
 
 		final Semaphore loadedLibraries = new Semaphore(0);
 */
-		/*if( Globals.StartupMenuButtonTimeout > 0 )
+		if( Globals.StartupMenuButtonTimeout > 0 )
 		{
 			_btn = new Button(this);
-			_btn.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+		/*	_btn.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 			_btn.setText(getResources().getString(R.string.device_change_cfg));
 			class onClickListener implements View.OnClickListener
 			{
@@ -77,8 +129,8 @@ public class MainActivity extends SDLActivity
 			};
 			_btn.setOnClickListener(new onClickListener(this));
 
-			_layout2.addView(_btn);
-		}*/
+			_layout2.addView(_btn);*/
+		}
 
 /*		_layout.addView(_layout2);
 
@@ -162,5 +214,40 @@ public class MainActivity extends SDLActivity
 		(new Thread(new Callback(this))).start();*/
 	}
 
+
+	static int NOTIFY_ID = 12367098; // Random ID
+
+//	private static DemoGLSurfaceView mGLView = null;
+//	private static AudioThread mAudioThread = null;
+//	private static DataDownloader downloader = null;
+
+	private TextView _tv = null;
+	private Button _btn = null;
+	private LinearLayout _layout = null;
+	private LinearLayout _layout2 = null;
+//	private Advertisement _ad = null;
+
+	private FrameLayout _videoLayout = null;
+	private EditText _screenKeyboard = null;
+	private String _screenKeyboardHintMessage = null;
+	private boolean sdlInited = false;
+
+
+	public interface TouchEventsListener
+	{
+		public void onTouchEvent(final MotionEvent ev);
+	}
+
+	public interface KeyEventsListener
+	{
+		public void onKeyEvent(final int keyCode);
+	}
+
+	public TouchEventsListener touchListener = null;
+	public KeyEventsListener keyListener = null;
+	boolean _isPaused = false;
+	private InputMethodManager _inputManager = null;
+
+	public LinkedList<Integer> textInput = new LinkedList<Integer> ();
 	public static MainActivity instance = null;
 }

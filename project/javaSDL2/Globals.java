@@ -26,7 +26,7 @@ import android.content.Context;
 import java.util.Vector;
 import android.view.KeyEvent;*/
 
-/*class Globals
+class Globals
 {
 	// These config options are modified by ChangeAppsettings.sh script - see the detailed descriptions there
 	public static String ApplicationName = "CommanderGenius";
@@ -66,7 +66,7 @@ import android.view.KeyEvent;*/
 	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 1;
 	public static String[] AppTouchscreenKeyboardKeysNames = "Fire Shoot Switch_weapon Jump Run Hide/Seek".split(" ");
 	public static int StartupMenuButtonTimeout = 3000;
-	public static int AppMinimumRAM = 0;
+	/*public static int AppMinimumRAM = 0;
 	public static SettingsMenu.Menu HiddenMenuOptions [] = {}; // If you see error here - update HiddenMenuOptions in your AndroidAppSettings.cfg: change OptionalDownloadConfig to SettingsMenuMisc.OptionalDownloadConfig etc.
 	public static SettingsMenu.Menu FirstStartMenuOptions [] = { new SettingsMenuMisc.ShowReadme(), (AppUsesMouse && ! ForceRelativeMouseMode ? new SettingsMenuMouse.DisplaySizeConfig() : new SettingsMenu.DummyMenu()), new SettingsMenuMisc.OptionalDownloadConfig(), new SettingsMenuMisc.GyroscopeCalibration() };
 	public static String AdmobPublisherId = "";
@@ -122,5 +122,5 @@ import android.view.KeyEvent;*/
 	public static boolean BrokenLibCMessageShown = false;
 	// Gyroscope calibration
 	public static float gyro_x1, gyro_x2, gyro_xc, gyro_y1, gyro_y2, gyro_yc, gyro_z1, gyro_z2, gyro_zc;
-	public static boolean OuyaEmulation = false; // For debugging
-}*/
+	public static boolean OuyaEmulation = false; // For debugging*/
+}
