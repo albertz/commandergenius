@@ -21,12 +21,12 @@ freely, subject to the following restrictions:
 
 package net.sourceforge.clonekeenplus;
 
-import android.app.Activity;
+/*import android.app.Activity;
 import android.content.Context;
 import java.util.Vector;
-import android.view.KeyEvent;
+import android.view.KeyEvent;*/
 
-class Globals
+/*class Globals
 {
 	// These config options are modified by ChangeAppsettings.sh script - see the detailed descriptions there
 	public static String ApplicationName = "CommanderGenius";
@@ -111,7 +111,7 @@ class Globals
 	public static int ScreenKbControlsLayout[][] = AppUsesSecondJoystick ? // Values for 800x480 resolution
 													new int[][] { { 0, 303, 177, 480 }, { 0, 0, 48, 48 }, { 400, 392, 488, 480 }, { 312, 392, 400, 480 }, { 400, 304, 488, 392 }, { 312, 304, 400, 392 }, { 400, 216, 488, 304 }, { 312, 216, 400, 304 }, { 623, 303, 800, 480 } } :
 													new int[][] { { 0, 303, 177, 480 }, { 0, 0, 48, 48 }, { 712, 392, 800, 480 }, { 624, 392, 712, 480 }, { 712, 304, 800, 392 }, { 624, 304, 712, 392 }, { 712, 216, 800, 304 }, { 624, 216, 712, 304 } };
-	public static boolean ScreenKbControlsShown[] = new boolean[ScreenKbControlsLayout.length]; /* Also joystick and text input button added */
+	public static boolean ScreenKbControlsShown[] = new boolean[ScreenKbControlsLayout.length]; // Also joystick and text input button added
 	public static int RemapMultitouchGestureKeycode[] = new int[4];
 	public static boolean MultitouchGesturesUsed[] = new boolean[4];
 	public static int MultitouchGestureSensitivity = 1;
@@ -123,4 +123,4 @@ class Globals
 	// Gyroscope calibration
 	public static float gyro_x1, gyro_x2, gyro_xc, gyro_y1, gyro_y2, gyro_yc, gyro_z1, gyro_z2, gyro_zc;
 	public static boolean OuyaEmulation = false; // For debugging
-}
+}*/
