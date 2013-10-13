@@ -52,12 +52,13 @@ public class SDLActivity extends Activity {
 
     // Load the .so
     static {
-        System.loadLibrary("SDL2");
-        //System.loadLibrary("SDL2_image");
+        System.loadLibrary("sdl-2.0");
+        System.loadLibrary("sdl2_image");
         //System.loadLibrary("SDL2_mixer");
         //System.loadLibrary("SDL2_net");
         //System.loadLibrary("SDL2_ttf");
-        System.loadLibrary("main");
+        System.loadLibrary("application");
+        System.loadLibrary("sdl_main");
     }
 
     // Setup
