@@ -90,18 +90,24 @@ public class MainActivity extends SDLActivity
 	{
 		super.onCreate(savedInstanceState);
 
-		setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+//		setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 		instance = this;
+
 		// fullscreen mode
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
+/*		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
 		if(Globals.InhibitSuspend)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-		Log.i("SDL", "libSDL: Creating startup screen");
+
+
+*/
+		/*Log.i("SDL", "libSDL: Creating startup screen");
 		_layout = new LinearLayout(this);
 		_layout.setOrientation(LinearLayout.VERTICAL);
 		_layout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
@@ -158,9 +164,9 @@ public class MainActivity extends SDLActivity
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.RIGHT));
 		}
 		
-		setContentView(_videoLayout);
+		setContentView(_videoLayout);*/
 
-		class Callback implements Runnable
+		/*class Callback implements Runnable
 		{
 			MainActivity p;
 			Callback( MainActivity _p ) { p = _p; }
@@ -182,7 +188,7 @@ public class MainActivity extends SDLActivity
 						public MainActivity Parent;
 						public void run()
 						{
-							Settings.Load(Parent);
+							//Settings.Load(Parent); -> TODO: Still needs to be adapted to SDL2
 							loaded.release();
 							loadedLibraries.release();
 						}
@@ -211,7 +217,7 @@ public class MainActivity extends SDLActivity
 				}
 			}
 		};
-		(new Thread(new Callback(this))).start();
+		(new Thread(new Callback(this))).start();*/
 	}
 	public void setUpStatusLabel()
 	{
@@ -1029,7 +1035,9 @@ public class MainActivity extends SDLActivity
 
 					out.flush();
 					out.close();
-					Settings.nativeChmod(path, 0755);
+					//Settings.nativeChmod(path, 0755); -> TODO: DOes not work yet.
+
+
 					//String chmod[] = { "/system/bin/chmod", "0755", path };
 					//Runtime.getRuntime().exec(chmod).waitFor();
 				}
@@ -1044,7 +1052,7 @@ public class MainActivity extends SDLActivity
 
 	public static void LoadApplicationLibrary(final Context context)
 	{
-		Settings.nativeChdir(Globals.DataDir);
+		//Settings.nativeChdir(Globals.DataDir);
 		for(String l : Globals.AppMainLibraries)
 		{
 			try
