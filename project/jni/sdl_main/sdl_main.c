@@ -1,3 +1,8 @@
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+#include "SDL_config.h"
+#endif
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -8,6 +13,32 @@
 #include "SDL_main.h"
 
 #if SDL_VERSION_ATLEAST(2,0,0)
+
+
+
+// Called before SDL_main() to initialize JNI bindings in SDL library
+extern void SDL_Android_Init(JNIEnv* env, jclass cls);
+
+// Start up the SDL app
+void Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass cls, jobject obj)
+{
+    /* This interface could expand with ABI negotiation, calbacks, etc. */
+    SDL_Android_Init(env, cls);
+
+    SDL_SetMainReady();
+
+    /* Run the application code! */
+    int status;
+    char *argv[2];
+    argv[0] = SDL_strdup("SDL_app");
+    argv[1] = NULL;
+    status = SDL_main(1, argv);
+
+    /* Do not issue an exit or the whole application will terminate instead of just the SDL thread */
+    //exit(status);
+}
+
+
 #else
 #include "SDL_android.h"
 #endif

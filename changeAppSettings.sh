@@ -1218,7 +1218,9 @@ MainLibrariesToLoad=""
 for lib in $CompatibilityHacksAdditionalPreloadedSharedLibraries; do
 	MainLibrariesToLoad="$MainLibrariesToLoad \\\"$lib\\\","
 done
+
 MainLibrariesToLoad="$MainLibrariesToLoad \\\"application\\\", \\\"sdl_main\\\""
+
 
 if [ "$CustomBuildScript" = "n" ] ; then
 	CustomBuildScript=

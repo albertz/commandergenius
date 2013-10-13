@@ -58,7 +58,7 @@ public class SDLActivity extends Activity {
         //System.loadLibrary("SDL2_net");
         //System.loadLibrary("SDL2_ttf");
         System.loadLibrary("application");
-        System.loadLibrary("sdl_main");
+        System.loadLibrary("sdl2_main");
     }
 
     // Setup
