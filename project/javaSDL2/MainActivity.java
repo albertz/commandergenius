@@ -107,7 +107,7 @@ public class MainActivity extends SDLActivity
 
 
 */
-		/*Log.i("SDL", "libSDL: Creating startup screen");
+		Log.i("SDL", "libSDL: Creating startup screen");
 		_layout = new LinearLayout(this);
 		_layout.setOrientation(LinearLayout.VERTICAL);
 		_layout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
@@ -164,9 +164,9 @@ public class MainActivity extends SDLActivity
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.RIGHT));
 		}
 		
-		setContentView(_videoLayout);*/
+		setContentView(_videoLayout);
 
-		/*class Callback implements Runnable
+		class Callback implements Runnable
 		{
 			MainActivity p;
 			Callback( MainActivity _p ) { p = _p; }
@@ -188,7 +188,7 @@ public class MainActivity extends SDLActivity
 						public MainActivity Parent;
 						public void run()
 						{
-							//Settings.Load(Parent); -> TODO: Still needs to be adapted to SDL2
+							Settings.Load(Parent);
 							loaded.release();
 							loadedLibraries.release();
 						}
@@ -217,7 +217,7 @@ public class MainActivity extends SDLActivity
 				}
 			}
 		};
-		(new Thread(new Callback(this))).start();*/
+		(new Thread(new Callback(this))).start();
 	}
 	public void setUpStatusLabel()
 	{
