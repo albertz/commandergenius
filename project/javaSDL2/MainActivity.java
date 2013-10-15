@@ -258,7 +258,9 @@ public class MainActivity extends SDLActivity
 
 	public void initSDL()
 	{
-		(new Thread(new Runnable()
+		Settings.Apply(this);
+		super.nativeInit();
+		/*(new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -268,7 +270,7 @@ public class MainActivity extends SDLActivity
 					Log.i("SDL", "libSDL: Waiting for screen orientation to change - the device is probably in the lockscreen mode");
 					try {
 						Thread.sleep(500);
-					} catch( Exception e ) {}
+					} catch( Exception e ) {}*/
 					/*
 					tries--;
 					if( tries <= 0 )
@@ -277,7 +279,7 @@ public class MainActivity extends SDLActivity
 						break;
 					}
 					*/
-					if( _isPaused )
+/*					if( _isPaused )
 					{
 						Log.i("SDL", "libSDL: Application paused, cancelling SDL initialization until it will be brought to foreground");
 						return;
@@ -291,7 +293,7 @@ public class MainActivity extends SDLActivity
 					}
 				});
 			}
-		})).start();
+		})).start();*/
 	}
 
 	private void initSDLInternal()
@@ -312,12 +314,12 @@ public class MainActivity extends SDLActivity
 		_videoLayout = new FrameLayout(this);
 		SetLayerType.get().setLayerType(_videoLayout);
 		setContentView(_videoLayout);
-		mGLView = new DemoGLSurfaceView(this);
-		SetLayerType.get().setLayerType(mGLView);
-		_videoLayout.addView(mGLView);
-		mGLView.setFocusableInTouchMode(true);
-		mGLView.setFocusable(true);
-		mGLView.requestFocus();
+		//mGLView = new DemoGLSurfaceView(this);
+		//SetLayerType.get().setLayerType(mGLView);
+		//_videoLayout.addView(mGLView);
+		//mGLView.setFocusableInTouchMode(true);
+		//mGLView.setFocusable(true);
+		//mGLView.requestFocus();
 		if( _ad.getView() != null )
 		{
 			_videoLayout.addView(_ad.getView());
@@ -325,7 +327,7 @@ public class MainActivity extends SDLActivity
 		}
 		// Receive keyboard events
 		DimSystemStatusBar.get().dim(_videoLayout);
-		DimSystemStatusBar.get().dim(mGLView);
+		//DimSystemStatusBar.get().dim(mGLView);
 	}
 
 	@Override

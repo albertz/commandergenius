@@ -432,6 +432,8 @@ int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void)
 	return 1;
 }
 
+
+/*
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetEnv) ( JNIEnv*  env, jobject thiz, jstring j_name, jstring j_value )
 {
@@ -460,4 +462,4 @@ JAVA_EXPORT_NAME(Settings_nativeChdir) ( JNIEnv*  env, jobject thiz, jstring j_d
     const char *dirname = (*env)->GetStringUTFChars(env, j_dir, &iscopy);
     chdir(dirname);
     (*env)->ReleaseStringUTFChars(env, j_dir, dirname);
-}
+}*/

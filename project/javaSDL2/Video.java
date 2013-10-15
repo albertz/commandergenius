@@ -471,7 +471,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		mWidth = w;
 		mHeight = h;
 		mGl = gl;
-		nativeResize(w, h, Globals.KeepAspectRatio ? 1 : 0);
+		nativeResize(w, h, Globals.KeepAspectRatio ? 1 : 0);		
 	}
 	
 	public void onSurfaceDestroyed() {

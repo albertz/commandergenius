@@ -472,7 +472,7 @@ class Settings
 
 	static void Apply(MainActivity p)
 	{
-		nativeSetVideoDepth(Globals.VideoDepthBpp, Globals.NeedGles2 ? 1 : 0);
+		/*nativeSetVideoDepth(Globals.VideoDepthBpp, Globals.NeedGles2 ? 1 : 0);
 		if(Globals.VideoLinearFilter)
 			nativeSetVideoLinearFilter();
 		if( Globals.CompatibilityHacksVideo )
@@ -552,7 +552,7 @@ class Settings
 		nativeSetMultitouchGestureSensitivity(Globals.MultitouchGestureSensitivity);
 		if( Globals.TouchscreenCalibration[2] > Globals.TouchscreenCalibration[0] )
 			nativeSetTouchscreenCalibration(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1],
-				Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
+				Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);*/
 
 		String lang = new String(Locale.getDefault().getLanguage());
 		if( Locale.getDefault().getCountry().length() > 0 )
