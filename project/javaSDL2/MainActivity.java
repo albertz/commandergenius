@@ -88,8 +88,10 @@ public class MainActivity extends SDLActivity
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
-		super.onCreate(savedInstanceState);
+		Settings.Load(this);
+		Settings.Apply(this);
 
+		super.onCreate(savedInstanceState);
 
 //		setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -108,15 +110,15 @@ public class MainActivity extends SDLActivity
 
 */
 		Log.i("SDL", "libSDL: Creating startup screen");
-		_layout = new LinearLayout(this);
+		/*_layout = new LinearLayout(this);
 		_layout.setOrientation(LinearLayout.VERTICAL);
 		_layout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 		_layout2 = new LinearLayout(this);
-		_layout2.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+		_layout2.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));*/
 
 		final Semaphore loadedLibraries = new Semaphore(0);
 
-		if( Globals.StartupMenuButtonTimeout > 0 )
+		/*if( Globals.StartupMenuButtonTimeout > 0 )
 		{
 			_btn = new Button(this);
 			_btn.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -164,9 +166,9 @@ public class MainActivity extends SDLActivity
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.RIGHT));
 		}
 		
-		setContentView(_videoLayout);
+		setContentView(_videoLayout);*/
 
-		class Callback implements Runnable
+		/*class Callback implements Runnable
 		{
 			MainActivity p;
 			Callback( MainActivity _p ) { p = _p; }
@@ -215,9 +217,11 @@ public class MainActivity extends SDLActivity
 					Log.i("SDL", "libSDL: Timeout reached in startup screen, process with downloader");
 					p.startDownloader();
 				}
+
+				
 			}
 		};
-		(new Thread(new Callback(this))).start();
+		(new Thread(new Callback(this))).start();	*/		
 	}
 	public void setUpStatusLabel()
 	{
@@ -258,8 +262,6 @@ public class MainActivity extends SDLActivity
 
 	public void initSDL()
 	{
-		Settings.Apply(this);
-		super.nativeInit();
 		/*(new Thread(new Runnable()
 		{
 			public void run()
@@ -279,7 +281,7 @@ public class MainActivity extends SDLActivity
 						break;
 					}
 					*/
-/*					if( _isPaused )
+					/*if( _isPaused )
 					{
 						Log.i("SDL", "libSDL: Application paused, cancelling SDL initialization until it will be brought to foreground");
 						return;
@@ -314,6 +316,23 @@ public class MainActivity extends SDLActivity
 		_videoLayout = new FrameLayout(this);
 		SetLayerType.get().setLayerType(_videoLayout);
 		setContentView(_videoLayout);
+
+	        // So we can call stuff from static callbacks
+        	/*mSingleton = this;
+
+	        // Set up the surface
+        	mEGLSurface = EGL10.EGL_NO_SURFACE;
+	        mSurface = new SDLSurface(getApplication());
+	        mEGLContext = EGL10.EGL_NO_CONTEXT;
+
+	        mLayout = new AbsoluteLayout(this);
+	        mLayout.addView(mSurface);
+
+        	setContentView(mLayout);*/
+
+
+
+
 		//mGLView = new DemoGLSurfaceView(this);
 		//SetLayerType.get().setLayerType(mGLView);
 		//_videoLayout.addView(mGLView);
@@ -349,8 +368,9 @@ public class MainActivity extends SDLActivity
 
 	@Override
 	protected void onResume() {
-		super.onResume();
-		if( mGLView != null )
+		Settings.Apply(this);
+		super.onResume();		
+		/*if( mGLView != null )
 		{
 			mGLView.onResume();
 			DimSystemStatusBar.get().dim(_videoLayout);
@@ -370,7 +390,7 @@ public class MainActivity extends SDLActivity
 		}
 		//if( _ad.getView() != null )
 		//	_ad.getView().onResume();
-		_isPaused = false;
+		_isPaused = false;*/
 	}
 
 	@Override

@@ -5,6 +5,7 @@
 
 /* Include the SDL main definition header */
 #include "SDL_main.h"
+#include <android/log.h>
 
 /*******************************************************************************
                  Functions called by JNI
@@ -26,11 +27,13 @@ extern "C" void Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass c
     /* This interface could expand with ABI negotiation, calbacks, etc. */
     SDL_Android_Init(env, cls);
 
+
     /* Run the application code! */
     int status;
     char *argv[2];
     argv[0] = strdup("SDL_app");
     argv[1] = NULL;
+    __android_log_print(ANDROID_LOG_INFO, "libSDL", "Calling SDL_main(\"%s\")", argv[0]);
     status = SDL_main(1, argv);
 
     /* Do not issue an exit or the whole application will terminate instead of just the SDL thread */
@@ -40,3 +43,4 @@ extern "C" void Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass c
 #endif /* __ANDROID__ */
 
 /* vi: set ts=4 sw=4 expandtab: */
+
