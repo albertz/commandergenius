@@ -592,7 +592,7 @@ class Settings
 	static byte [] loadRaw(Activity p, int res)
 	{
 		byte [] buf = new byte[65536 * 2];
-		byte [] a = new byte[65536 * 4 * 10]; // We need 2363516 bytes for the Sun theme
+		byte [] a = new byte[1048576 * 5]; // We need 5Mb buffer for Keen theme, and this Java code is inefficient
 		int written = 0;
 		try{
 			InputStream is = new GZIPInputStream(p.getResources().openRawResource(res));
