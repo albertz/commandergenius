@@ -1,27 +1,11 @@
 #include <jni.h>
 #include <android/log.h>
-//#include <GLES/gl.h>
-//#include <GLES/glext.h>
 #include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
 #include <math.h>
 #include <string.h> // for memset()
 
-/*#include "SDL_config.h"
-#include "SDL_version.h"
-
-#include "SDL_video.h"
-#include "SDL_mouse.h"
-#include "SDL_mutex.h"
-#include "SDL_thread.h"
-#include "SDL_android.h"
-#include "../SDL_sysvideo.h"
-#include "../SDL_pixels_c.h"
-#include "../../events/SDL_events_c.h"
-
-#include "../SDL_sysvideo.h"
-#include "SDL_androidvideo.h"*/
 #include "jniwrapperstuff.h"
 
 

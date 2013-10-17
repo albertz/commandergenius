@@ -1057,7 +1057,7 @@ public class MainActivity extends SDLActivity
 
 					out.flush();
 					out.close();
-					//Settings.nativeChmod(path, 0755); -> TODO: DOes not work yet.
+					Settings.nativeChmod(path, 0755);
 
 
 					//String chmod[] = { "/system/bin/chmod", "0755", path };
@@ -1074,7 +1074,7 @@ public class MainActivity extends SDLActivity
 
 	public static void LoadApplicationLibrary(final Context context)
 	{
-		//Settings.nativeChdir(Globals.DataDir);
+		Settings.nativeChdir(Globals.DataDir);
 		for(String l : Globals.AppMainLibraries)
 		{
 			try
