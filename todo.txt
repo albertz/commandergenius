@@ -24,10 +24,6 @@ TODO, which will get actually done
 
 - TeeWorlds: fix Ouya bugs (whole-screen shrink, remove controls from settings), submit to Ouya store.
 
-- UQM: On-screen buttons are re-appearing when using gamepad and switching between game screens.
-
-- UQM: Arrow keys do not steer the ship.
-
 - OpenArena: move 3-rd person camera to the side, above shoulder.
 
 - OpenArena: chat text input should be faster.
