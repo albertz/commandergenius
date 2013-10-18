@@ -26,8 +26,6 @@ TODO, which will get actually done
 
 - UQM: On-screen buttons are re-appearing when using gamepad and switching between game screens.
 
-- UQM: Redesign gamepad controls.
-
 - UQM: Arrow keys do not steer the ship.
 
 - OpenArena: move 3-rd person camera to the side, above shoulder.
