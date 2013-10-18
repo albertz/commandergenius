@@ -53,7 +53,7 @@ class AudioThread
 		mParent = parent;
 		mAudio = null;
 		mAudioBuffer = null;
-		//nativeAudioInitJavaCallbacks();
+		nativeAudioInitJavaCallbacks();
 	}
 	
 	public int fillBuffer()
