@@ -85,6 +85,12 @@ import android.util.Log;
 
 public class MainActivity extends SDLActivity 
 { 
+
+    // Load the .so
+    static {
+        System.loadLibrary("sdl_native_helpers");
+    }
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -153,10 +159,10 @@ public class MainActivity extends SDLActivity
 			img.setImageResource(R.drawable.publisherlogo);
 		}
 		img.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-		_layout.addView(img);
+		_layout.addView(img);*/
 		
 		//_videoLayout = new FrameLayout(this);
-		_videoLayout.addView(_layout);*/
+		//_videoLayout.addView(_layout);
 
 		/*_ad = new Advertisement(this);
 		if( _ad.getView() != null )
@@ -1138,8 +1144,8 @@ public class MainActivity extends SDLActivity
 
 	private TextView _tv = null;
 	private Button _btn = null;
-	//private LinearLayout _layout = null;
-	//private LinearLayout _layout2 = null;
+	private LinearLayout _layout = null;
+	private LinearLayout _layout2 = null;
 	private Advertisement _ad = null;
 
 	private FrameLayout _videoLayout = null;
