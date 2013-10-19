@@ -91,14 +91,12 @@ public class MainActivity extends SDLActivity
 		Settings.Load(this);
 		Settings.Apply(this);
 
-		super.onCreate(savedInstanceState);
-
 //		setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 		instance = this;
 
 		// fullscreen mode
-/*		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -107,8 +105,9 @@ public class MainActivity extends SDLActivity
 					WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 
+		super.onCreate(savedInstanceState);
 
-*/
+
 		Log.i("SDL", "libSDL: Creating startup screen");
 		/*_layout = new LinearLayout(this);
 		_layout.setOrientation(LinearLayout.VERTICAL);
@@ -351,7 +350,7 @@ public class MainActivity extends SDLActivity
 
 	@Override
 	protected void onPause() {
-		if( downloader != null )
+		/*if( downloader != null )
 		{
 			synchronized( downloader )
 			{
@@ -360,7 +359,7 @@ public class MainActivity extends SDLActivity
 		}
 		_isPaused = true;
 		if( mGLView != null )
-			mGLView.onPause();
+			mGLView.onPause();*/
 		//if( _ad.getView() != null )
 		//	_ad.getView().onPause();
 		super.onPause();
@@ -376,7 +375,6 @@ public class MainActivity extends SDLActivity
 			DimSystemStatusBar.get().dim(_videoLayout);
 			DimSystemStatusBar.get().dim(mGLView);
 		}
-		else
 		if( downloader != null )
 		{
 			synchronized( downloader )
@@ -397,10 +395,10 @@ public class MainActivity extends SDLActivity
 	public void onWindowFocusChanged (boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
 		Log.i("SDL", "libSDL: onWindowFocusChanged: " + hasFocus + " - sending onPause/onResume");
-		if (hasFocus == false)
+		/*if (hasFocus == false)
 			onPause();
 		else
-			onResume();
+			onResume();*/
 		/*
 		if (hasFocus == false) {
 			synchronized(textInput) {
@@ -419,7 +417,7 @@ public class MainActivity extends SDLActivity
 	@Override
 	protected void onDestroy()
 	{
-		if( downloader != null )
+		/*if( downloader != null )
 		{
 			synchronized( downloader )
 			{
@@ -427,12 +425,12 @@ public class MainActivity extends SDLActivity
 			}
 		}
 		if( mGLView != null )
-			mGLView.exitApp();
+			mGLView.exitApp();*/
 		super.onDestroy();
-		try{
+/*		try{
 			Thread.sleep(2000); // The event is sent asynchronously, allow app to save it's state, and call exit() itself.
 		} catch (InterruptedException e) {}
-		System.exit(0);
+		System.exit(0);*/
 	}
 
 	public void showScreenKeyboardWithoutTextInputField()
@@ -694,14 +692,14 @@ public class MainActivity extends SDLActivity
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event)
 	{
-		if(_screenKeyboard != null)
+		/*if(_screenKeyboard != null)
 			_screenKeyboard.onKeyDown(keyCode, event);
 		else
 		if( mGLView != null )
 		{
 			if( mGLView.nativeKey( keyCode, 1 ) == 0 )
 				return super.onKeyDown(keyCode, event);
-		}
+		}*/
 		/*
 		else
 		if( keyCode == KeyEvent.KEYCODE_BACK && downloader != null )
@@ -712,11 +710,11 @@ public class MainActivity extends SDLActivity
 				onStop();
 		}
 		*/
-		else
+		/*else
 		if( keyListener != null )
 		{
 			keyListener.onKeyEvent(keyCode);
-		}
+		}*/
 		return true;
 	}
 	
@@ -739,7 +737,7 @@ public class MainActivity extends SDLActivity
 		return true;
 	}
 
-	@Override
+	/*@Override
 	public boolean dispatchTouchEvent(final MotionEvent ev)
 	{
 		//Log.i("SDL", "dispatchTouchEvent: " + ev.getAction() + " coords " + ev.getX() + ":" + ev.getY() );
@@ -764,7 +762,7 @@ public class MainActivity extends SDLActivity
 		if( touchListener != null )
 			touchListener.onTouchEvent(ev);
 		return true;
-	}
+	}*/
 	
 	@Override
 	public boolean dispatchGenericMotionEvent (MotionEvent ev)
@@ -910,7 +908,7 @@ public class MainActivity extends SDLActivity
 					if( entry != null )
 						Log.i("SDL", "Extracting lib " + entry.getName());
 					*/
-					if( entry == null )
+					/*if( entry == null )
 					{
 						Log.i("SDL", "Extracting libs finished");
 						break;
