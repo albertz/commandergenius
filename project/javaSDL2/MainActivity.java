@@ -116,7 +116,6 @@ public class MainActivity extends SDLActivity
 
 		super.onCreate(savedInstanceState);
 
-
 		Log.i("SDL", "libSDL: Creating startup screen");
 		_layout = new LinearLayout(this);		_layout.setOrientation(LinearLayout.VERTICAL);
 		_layout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
@@ -165,17 +164,20 @@ public class MainActivity extends SDLActivity
 		
 		//_videoLayout = new FrameLayout(this);
 		//_videoLayout.addView(_layout);
+		mLayout.addView(_layout);
 
-		/*_ad = new Advertisement(this);
+	        setContentView(mLayout);
+
+		_ad = new Advertisement(this);
 		if( _ad.getView() != null )
 		{
-			_videoLayout.addView(_ad.getView());
+			mLayout.addView(_ad.getView());
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.RIGHT));
 		}
 		
-		setContentView(_videoLayout);*/
+//		setContentView(_videoLayout);
 
-		/*class Callback implements Runnable
+		class Callback implements Runnable
 		{
 			MainActivity p;
 			Callback( MainActivity _p ) { p = _p; }
@@ -228,14 +230,14 @@ public class MainActivity extends SDLActivity
 				
 			}
 		};
-		(new Thread(new Callback(this))).start();	*/		
+		(new Thread(new Callback(this))).start();
 	}
 	public void setUpStatusLabel()
 	{
 		MainActivity Parent = this; // Too lazy to rename
 		if( Parent._btn != null )
 		{
-			//Parent._layout2.removeView(Parent._btn);
+			Parent._layout2.removeView(Parent._btn);
 			Parent._btn = null;
 		}
 		if( Parent._tv == null )
@@ -244,7 +246,7 @@ public class MainActivity extends SDLActivity
 			Parent._tv.setMaxLines(2); // To show some long texts on smaller devices
 			Parent._tv.setMinLines(2); // Otherwise the background picture is getting resized at random, which does not look good
 			Parent._tv.setText(R.string.init);
-			//Parent._layout2.addView(Parent._tv);
+			Parent._layout2.addView(Parent._tv);
 		}
 	}
 
@@ -269,7 +271,7 @@ public class MainActivity extends SDLActivity
 
 	public void initSDL()
 	{
-		/*(new Thread(new Runnable()
+		(new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -279,7 +281,7 @@ public class MainActivity extends SDLActivity
 					Log.i("SDL", "libSDL: Waiting for screen orientation to change - the device is probably in the lockscreen mode");
 					try {
 						Thread.sleep(500);
-					} catch( Exception e ) {}*/
+					} catch( Exception e ) {}
 					/*
 					tries--;
 					if( tries <= 0 )
@@ -288,7 +290,7 @@ public class MainActivity extends SDLActivity
 						break;
 					}
 					*/
-					/*if( _isPaused )
+					if( _isPaused )
 					{
 						Log.i("SDL", "libSDL: Application paused, cancelling SDL initialization until it will be brought to foreground");
 						return;
@@ -302,7 +304,7 @@ public class MainActivity extends SDLActivity
 					}
 				});
 			}
-		})).start();*/
+		})).start();
 	}
 
 	private void initSDLInternal()
@@ -312,47 +314,34 @@ public class MainActivity extends SDLActivity
 		Log.i("SDL", "libSDL: Initializing video and SDL application");
 		
 		sdlInited = true;
-		//_videoLayout.removeView(_layout);
+
+		mLayout.removeView(_layout);
+
 		if( _ad.getView() != null )
-			_videoLayout.removeView(_ad.getView());
-		//_layout = null;
-		//_layout2 = null;
+			mLayout.removeView(_ad.getView());
+		_layout = null;
+		_layout2 = null;
 		_btn = null;
 		_tv = null;
 		_inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-		_videoLayout = new FrameLayout(this);
+		/*_videoLayout = new FrameLayout(this);
 		SetLayerType.get().setLayerType(_videoLayout);
-		setContentView(_videoLayout);
-
-	        // So we can call stuff from static callbacks
-        	/*mSingleton = this;
-
-	        // Set up the surface
-        	mEGLSurface = EGL10.EGL_NO_SURFACE;
-	        mSurface = new SDLSurface(getApplication());
-	        mEGLContext = EGL10.EGL_NO_CONTEXT;
-
-	        mLayout = new AbsoluteLayout(this);
-	        mLayout.addView(mSurface);
-
-        	setContentView(mLayout);*/
+		setContentView(_videoLayout);*/
 
 
-
-
-		//mGLView = new DemoGLSurfaceView(this);
-		//SetLayerType.get().setLayerType(mGLView);
-		//_videoLayout.addView(mGLView);
+		/*mGLView = new DemoGLSurfaceView(this);
+		SetLayerType.get().setLayerType(mGLView);
+		mLayout.addView(mGLView);*/
 		//mGLView.setFocusableInTouchMode(true);
 		//mGLView.setFocusable(true);
 		//mGLView.requestFocus();
-		if( _ad.getView() != null )
+		/*if( _ad.getView() != null )
 		{
 			_videoLayout.addView(_ad.getView());
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT));
-		}
+		}*/
 		// Receive keyboard events
-		DimSystemStatusBar.get().dim(_videoLayout);
+		/*DimSystemStatusBar.get().dim(_videoLayout);*/
 		//DimSystemStatusBar.get().dim(mGLView);
 	}
 
@@ -534,7 +523,7 @@ public class MainActivity extends SDLActivity
 		_screenKeyboard.setTextColor(Color.WHITE); // Just to be sure about gamma
 		if( isRunningOnOUYA() )
 			_screenKeyboard.setPadding(100, 100, 100, 100); // Bad bad HDMI TVs all have cropped borders
-		_videoLayout.addView(_screenKeyboard);
+		//_videoLayout.addView(_screenKeyboard);
 		//_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
 		_screenKeyboard.setInputType(InputType.TYPE_CLASS_TEXT);
 		_screenKeyboard.setFocusableInTouchMode(true);
@@ -580,7 +569,7 @@ public class MainActivity extends SDLActivity
 		}
 		DemoRenderer.nativeTextInputFinished();
 		_inputManager.hideSoftInputFromWindow(_screenKeyboard.getWindowToken(), 0);
-		_videoLayout.removeView(_screenKeyboard);
+		mLayout.removeView(_screenKeyboard);
 		_screenKeyboard = null;
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
@@ -738,7 +727,7 @@ public class MainActivity extends SDLActivity
 				return super.onKeyUp(keyCode, event);
 			if( keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU )
 			{
-				DimSystemStatusBar.get().dim(_videoLayout);
+				//DimSystemStatusBar.get().dim(_videoLayout);
 				DimSystemStatusBar.get().dim(mGLView);
 			}
 		}
@@ -1136,7 +1125,7 @@ public class MainActivity extends SDLActivity
 		return getOrient.getWidth() >= getOrient.getHeight();
 	}
 
-	public FrameLayout getVideoLayout() { return _videoLayout; }
+	public ViewGroup getVideoLayout() { return mLayout; }
 
 	static int NOTIFY_ID = 12367098; // Random ID
 
@@ -1150,7 +1139,7 @@ public class MainActivity extends SDLActivity
 	private LinearLayout _layout2 = null;
 	private Advertisement _ad = null;
 
-	private FrameLayout _videoLayout = null;
+	//private FrameLayout _videoLayout = null;
 	private EditText _screenKeyboard = null;
 	private String _screenKeyboardHintMessage = null;
 	private boolean sdlInited = false;
