@@ -155,10 +155,10 @@ public class MainActivity extends SDLActivity
 		img.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 		_layout.addView(img);
 		
-		_videoLayout = new FrameLayout(this);
-		_videoLayout.addView(_layout);
+		//_videoLayout = new FrameLayout(this);
+		_videoLayout.addView(_layout);*/
 
-		_ad = new Advertisement(this);
+		/*_ad = new Advertisement(this);
 		if( _ad.getView() != null )
 		{
 			_videoLayout.addView(_ad.getView());
