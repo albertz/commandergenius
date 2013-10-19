@@ -89,6 +89,9 @@ public class MainActivity extends SDLActivity
     // Load the .so
     static {
         System.loadLibrary("sdl_native_helpers");
+        System.loadLibrary("sdl2_image");
+        System.loadLibrary("application");
+        System.loadLibrary("sdl_main");
     }
 
 	@Override
@@ -115,15 +118,14 @@ public class MainActivity extends SDLActivity
 
 
 		Log.i("SDL", "libSDL: Creating startup screen");
-		/*_layout = new LinearLayout(this);
-		_layout.setOrientation(LinearLayout.VERTICAL);
+		_layout = new LinearLayout(this);		_layout.setOrientation(LinearLayout.VERTICAL);
 		_layout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 		_layout2 = new LinearLayout(this);
-		_layout2.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));*/
+		_layout2.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
 		final Semaphore loadedLibraries = new Semaphore(0);
 
-		/*if( Globals.StartupMenuButtonTimeout > 0 )
+		if( Globals.StartupMenuButtonTimeout > 0 )
 		{
 			_btn = new Button(this);
 			_btn.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -159,7 +161,7 @@ public class MainActivity extends SDLActivity
 			img.setImageResource(R.drawable.publisherlogo);
 		}
 		img.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-		_layout.addView(img);*/
+		_layout.addView(img);
 		
 		//_videoLayout = new FrameLayout(this);
 		//_videoLayout.addView(_layout);
