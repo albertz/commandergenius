@@ -91,7 +91,7 @@ public class MainActivity extends SDLActivity
 		Settings.Load(this);
 		Settings.Apply(this);
 
-//		setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 		instance = this;
 
@@ -227,7 +227,7 @@ public class MainActivity extends SDLActivity
 		MainActivity Parent = this; // Too lazy to rename
 		if( Parent._btn != null )
 		{
-			Parent._layout2.removeView(Parent._btn);
+			//Parent._layout2.removeView(Parent._btn);
 			Parent._btn = null;
 		}
 		if( Parent._tv == null )
@@ -236,7 +236,7 @@ public class MainActivity extends SDLActivity
 			Parent._tv.setMaxLines(2); // To show some long texts on smaller devices
 			Parent._tv.setMinLines(2); // Otherwise the background picture is getting resized at random, which does not look good
 			Parent._tv.setText(R.string.init);
-			Parent._layout2.addView(Parent._tv);
+			//Parent._layout2.addView(Parent._tv);
 		}
 	}
 
@@ -304,11 +304,11 @@ public class MainActivity extends SDLActivity
 		Log.i("SDL", "libSDL: Initializing video and SDL application");
 		
 		sdlInited = true;
-		_videoLayout.removeView(_layout);
+		//_videoLayout.removeView(_layout);
 		if( _ad.getView() != null )
 			_videoLayout.removeView(_ad.getView());
-		_layout = null;
-		_layout2 = null;
+		//_layout = null;
+		//_layout2 = null;
 		_btn = null;
 		_tv = null;
 		_inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -1138,8 +1138,8 @@ public class MainActivity extends SDLActivity
 
 	private TextView _tv = null;
 	private Button _btn = null;
-	private LinearLayout _layout = null;
-	private LinearLayout _layout2 = null;
+	//private LinearLayout _layout = null;
+	//private LinearLayout _layout2 = null;
 	private Advertisement _ad = null;
 
 	private FrameLayout _videoLayout = null;
