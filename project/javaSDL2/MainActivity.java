@@ -329,9 +329,9 @@ public class MainActivity extends SDLActivity
 		setContentView(_videoLayout);*/
 
 
-		/*mGLView = new DemoGLSurfaceView(this);
+		mGLView = new DemoGLSurfaceView(this);
 		SetLayerType.get().setLayerType(mGLView);
-		mLayout.addView(mGLView);*/
+		mLayout.addView(mGLView);
 		//mGLView.setFocusableInTouchMode(true);
 		//mGLView.setFocusable(true);
 		//mGLView.requestFocus();
@@ -474,7 +474,7 @@ public class MainActivity extends SDLActivity
 					if (sendBackspace && event.getAction() == KeyEvent.ACTION_UP)
 					{
 						synchronized(textInput) {
-							DemoRenderer.nativeTextInput( 8, 0 ); // Send backspace to native code
+							//DemoRenderer.nativeTextInput( 8, 0 ); // Send backspace to native code
 						}
 					}
 					// EditText deletes two characters at a time, here's a hacky fix
@@ -562,12 +562,12 @@ public class MainActivity extends SDLActivity
 		synchronized(textInput)
 		{
 			String text = _screenKeyboard.getText().toString();
-			for(int i = 0; i < text.length(); i++)
+			/*for(int i = 0; i < text.length(); i++)
 			{
 				DemoRenderer.nativeTextInput( (int)text.charAt(i), (int)text.codePointAt(i) );
-			}
+			}*/
 		}
-		DemoRenderer.nativeTextInputFinished();
+		//DemoRenderer.nativeTextInputFinished();
 		_inputManager.hideSoftInputFromWindow(_screenKeyboard.getWindowToken(), 0);
 		mLayout.removeView(_screenKeyboard);
 		_screenKeyboard = null;
@@ -689,14 +689,14 @@ public class MainActivity extends SDLActivity
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event)
 	{
-		/*if(_screenKeyboard != null)
+		if(_screenKeyboard != null)
 			_screenKeyboard.onKeyDown(keyCode, event);
 		else
 		if( mGLView != null )
 		{
 			if( mGLView.nativeKey( keyCode, 1 ) == 0 )
 				return super.onKeyDown(keyCode, event);
-		}*/
+		}
 		/*
 		else
 		if( keyCode == KeyEvent.KEYCODE_BACK && downloader != null )
@@ -707,11 +707,11 @@ public class MainActivity extends SDLActivity
 				onStop();
 		}
 		*/
-		/*else
+		else
 		if( keyListener != null )
 		{
 			keyListener.onKeyEvent(keyCode);
-		}*/
+		}
 		return true;
 	}
 	

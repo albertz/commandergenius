@@ -9,6 +9,9 @@
 #include "jniwrapperstuff.h"
 
 
+// System specific functions 
+
+
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeSetEnv) ( JNIEnv*  env, jobject thiz, jstring j_name, jstring j_value )
 {

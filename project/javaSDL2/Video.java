@@ -454,8 +454,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		Log.i("SDL", "libSDL: DemoRenderer.onSurfaceCreated(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
 		mGlSurfaceCreated = true;
 		mGl = gl;
-		if( ! mPaused && ! mFirstTimeStart )
-			nativeGlContextRecreated();
+		/*if( ! mPaused && ! mFirstTimeStart )
+			nativeGlContextRecreated();*/
 		mFirstTimeStart = false;
 	}
 
@@ -471,14 +471,14 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		mWidth = w;
 		mHeight = h;
 		mGl = gl;
-		nativeResize(w, h, Globals.KeepAspectRatio ? 1 : 0);		
+		//nativeResize(w, h, Globals.KeepAspectRatio ? 1 : 0);		
 	}
 	
 	public void onSurfaceDestroyed() {
 		Log.i("SDL", "libSDL: DemoRenderer.onSurfaceDestroyed(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
 		mGlSurfaceCreated = false;
 		mGlContextLost = true;
-		nativeGlContextLost();
+		//nativeGlContextLost();
 	};
 
 	public void onDrawFrame(GL10 gl) {
@@ -487,7 +487,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		DrawLogo(mGl);
 		SwapBuffers();
 
-		nativeInitJavaCallbacks();
+		//nativeInitJavaCallbacks();
 		
 		// Make main thread priority lower so audio thread won't get underrun
 		// Thread.currentThread().setPriority((Thread.currentThread().getPriority() + Thread.MIN_PRIORITY)/2);
@@ -503,10 +503,10 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		if(Globals.AudioBufferConfig >= 2)
 			Thread.currentThread().setPriority( (Thread.NORM_PRIORITY + Thread.MIN_PRIORITY) / 2 ); // Lower than normal
 		 // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
-		nativeInit( Globals.DataDir,
+		/*nativeInit( Globals.DataDir,
 					Globals.CommandLine,
 					( (Globals.SwVideoMode && Globals.MultiThreadedVideo) || Globals.CompatibilityHacksVideo ) ? 1 : 0,
-					android.os.Debug.isDebuggerConnected() ? 1 : 0 );
+					android.os.Debug.isDebuggerConnected() ? 1 : 0 );*/
 		System.exit(0); // The main() returns here - I don't bother with deinit stuff, just terminate process
 	}
 
@@ -618,7 +618,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 	public void exitApp()
 	{
-		 nativeDone();
+		 //nativeDone();
 	}
 
 	public void getAdvertisementParams(int params[])
@@ -702,15 +702,15 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	}
 
 
-	private native void nativeInitJavaCallbacks();
-	private native void nativeInit(String CurrentPath, String CommandLine, int multiThreadedVideo, int isDebuggerConnected);
-	private native void nativeResize(int w, int h, int keepAspectRatio);
-	private native void nativeDone();
-	private native void nativeGlContextLost();
-	public native void nativeGlContextRecreated();
-	public native void nativeGlContextLostAsyncEvent();
-	public static native void nativeTextInput( int ascii, int unicode );
-	public static native void nativeTextInputFinished();
+	//private native void nativeInitJavaCallbacks();
+	//private native void nativeInit(String CurrentPath, String CommandLine, int multiThreadedVideo, int isDebuggerConnected);
+	//private native void nativeResize(int w, int h, int keepAspectRatio);
+	//private native void nativeDone();
+	//private native void nativeGlContextLost();
+	//public native void nativeGlContextRecreated();
+	//public native void nativeGlContextLostAsyncEvent();
+	//public static native void nativeTextInput( int ascii, int unicode );
+	//public static native void nativeTextInputFinished();
 
 	private MainActivity context = null;
 	public AccelerometerReader accelerometer = null;
@@ -788,7 +788,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		if(mRenderer.mPaused)
 			return;
 		mRenderer.mPaused = true;
-		mRenderer.nativeGlContextLostAsyncEvent();
+		//mRenderer.nativeGlContextLostAsyncEvent();
 		if( mRenderer.accelerometer != null ) // For some reason it crashes here often - are we getting this event before initialization?
 			mRenderer.accelerometer.stop();
 		super.onPause();
@@ -805,8 +805,8 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		mRenderer.mPaused = false;
 		super.onResume();
 		Log.i("SDL", "libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused);
-		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused || Globals.NonBlockingSwapBuffers )
-			mRenderer.nativeGlContextRecreated();
+		/*if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused || Globals.NonBlockingSwapBuffers )
+			mRenderer.nativeGlContextRecreated();*/
 		if( mRenderer.accelerometer != null && mRenderer.accelerometer.openedBySDL ) // For some reason it crashes here often - are we getting this event before initialization?
 			mRenderer.accelerometer.start();
 	};
