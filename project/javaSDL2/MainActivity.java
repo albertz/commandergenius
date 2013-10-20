@@ -329,9 +329,9 @@ public class MainActivity extends SDLActivity
 		setContentView(_videoLayout);*/
 
 
-		mGLView = new DemoGLSurfaceView(this);
+		/*mGLView = new DemoGLSurfaceView(this);
 		SetLayerType.get().setLayerType(mGLView);
-		mLayout.addView(mGLView);
+		mLayout.addView(mGLView);*/
 		//mGLView.setFocusableInTouchMode(true);
 		//mGLView.setFocusable(true);
 		//mGLView.requestFocus();
