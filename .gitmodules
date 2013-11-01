@@ -34,3 +34,6 @@
 [submodule "project/jni/application/c-dogs/src"]
 	path = project/jni/application/c-dogs/src
 	url = git@github.com:cxong/cdogs-sdl.git
+[submodule "project/jni/application/xserver/xserver"]
+	path = project/jni/application/xserver/xserver
+	url = git@github.com:pelya/xserver.git
