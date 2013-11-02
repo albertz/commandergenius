@@ -3,13 +3,19 @@
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
+PACKAGE_NAME=`grep AppFullName AndroidAppSettings.cfg | sed 's/.*=//'`
+
 ../setEnvironment-armeabi-v7a.sh sh -c '\
 $CC $CFLAGS -c main.c -o main.o' || exit 1
 
+
+
+[ -e xserver/android ] || git submodule update --init xserver || exit 1
 cd xserver
 [ -e configure ] || autoreconf --force -v --install || exit 1
 cd android
 
+env PACKAGE_NAME=$PACKAGE_NAME \
 ./build.sh || exit 1
 
 ../../../setEnvironment-armeabi-v7a.sh sh -c '\
