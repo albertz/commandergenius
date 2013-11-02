@@ -1152,15 +1152,13 @@ abstract class DimSystemStatusBar
 		{
 			private static final DimSystemStatusBarHoneycomb sInstance = new DimSystemStatusBarHoneycomb();
 		}
-	    public void dim(final View view)
-	    {
-	         /*
-	         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-	            // ICS has the same constant redefined with a different name.
-	            hiddenStatusCode = android.view.View.SYSTEM_UI_FLAG_LOW_PROFILE;
-	         }
-	         */
-	         view.setSystemUiVisibility(android.view.View.STATUS_BAR_HIDDEN);
+		public void dim(final View view)
+		{
+			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT)
+				// Immersive mode, I already hear curses when system bar reappears mid-game from the slightest swipe at the bottom of the screen
+				view.setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+			else
+				view.setSystemUiVisibility(android.view.View.STATUS_BAR_HIDDEN);
 	   }
 	}
 	private static class DimSystemStatusBarDummy extends DimSystemStatusBar

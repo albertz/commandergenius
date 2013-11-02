@@ -1069,7 +1069,9 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 				y = y * SDL_ANDROID_sRealWindowHeight / SDL_ANDROID_sFakeWindowHeight;
 				SDL_ANDROID_DrawMouseCursor( x, y, 0, 1.0f );
 			}
-			if( SDL_ANDROID_ShowScreenUnderFinger != ZOOM_NONE )
+			if( SDL_ANDROID_ShowScreenUnderFinger != ZOOM_NONE &&
+				SDL_ANDROID_ShowScreenUnderFingerRectSrc.w > 0 &&
+				SDL_ANDROID_ShowScreenUnderFingerRectSrc.h > 0 )
 			{
 				int x, y;
 				SDL_GetMouseState(&x, &y);
