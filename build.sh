@@ -87,18 +87,19 @@ cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j
 	{	if $build_release ; then \
 			ant release || exit 1 ; \
 			jarsigner -verbose -keystore ~/.android/debug.keystore -storepass android -sigalg MD5withRSA -digestalg SHA1 bin/MainActivity-release-unsigned.apk androiddebugkey || exit 1 ; \
-			zipalign 4 bin/MainActivity-release-unsigned.apk bin/MainActivity-debug.apk ; \
+			zipalign 4 bin/MainActivity-release-unsigned.apk bin/MainActivity-debug.apk || exit 1 ; \
 		else \
-			ant debug ; \
+			ant debug || exit 1 ; \
 		fi ; } && \
 	{	if $sign_apk; then cd .. && ./sign.sh && cd project ; else true ; fi ; } && \
-	$install_apk && [ -n "`adb devices | tail -n +2`" ] && \
-	{	cd bin && adb install -r MainActivity-debug.apk | grep 'Failure' && \
-		adb uninstall `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'` && adb install -r MainActivity-debug.apk ; true ; } && \
-	$run_apk && { \
-		ActivityName="`grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'`/.MainActivity" ; \
-		RUN_APK="adb shell am start -n $ActivityName" ; \
-		echo "Running $ActivityName on the USB-connected device:" ; \
-		echo "$RUN_APK" ; \
-		eval $RUN_APK ; \
-	}
+	{	$install_apk && [ -n "`adb devices | tail -n +2`" ] && \
+		{	cd bin && adb install -r MainActivity-debug.apk | grep 'Failure' && \
+			adb uninstall `grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'` && adb install -r MainActivity-debug.apk ; } ; \
+		true ; } && \
+	{	$run_apk && { \
+			ActivityName="`grep AppFullName ../../AndroidAppSettings.cfg | sed 's/.*=//'`/.MainActivity" ; \
+			RUN_APK="adb shell am start -n $ActivityName" ; \
+			echo "Running $ActivityName on the USB-connected device:" ; \
+			echo "$RUN_APK" ; \
+			eval $RUN_APK ; } ; \
+		true ; } || exit 1
