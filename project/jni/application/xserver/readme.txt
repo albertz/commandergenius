@@ -1,5 +1,5 @@
 
-You will to install some packages to your Debian/Ubuntu first:
+You will need to install some packages to your Debian/Ubuntu first:
 
 sudo apt-get install bison libpixman-1-dev
 libxfont-dev libxkbfile-dev libpciaccess-dev \
