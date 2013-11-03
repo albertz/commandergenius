@@ -15,7 +15,7 @@ cd xserver
 [ -e configure ] || autoreconf --force -v --install || exit 1
 cd android
 
-env PACKAGE_NAME=$PACKAGE_NAME \
+env TARGET_DIR=/data/data/$PACKAGE_NAME/files \
 ./build.sh || exit 1
 
 ../../../setEnvironment-armeabi-v7a.sh sh -c '\

@@ -1,12 +1,12 @@
 
 You will to install some packages to your Debian/Ubuntu first:
 
-sudo apt-get install libpixman-1-dev libxfont-dev \
-libxkbfile-dev libpciaccess-dev xutils-dev xcb-proto \
-python-xcbgen xsltproc x11proto-bigreqs-dev \
-x11proto-composite-dev x11proto-core-dev \
-x11proto-damage-dev x11proto-dmx-dev \
-x11proto-dri2-dev x11proto-fixes-dev \
+sudo apt-get install bison libpixman-1-dev
+libxfont-dev libxkbfile-dev libpciaccess-dev \
+xutils-dev xcb-proto python-xcbgen xsltproc \
+x11proto-bigreqs-dev x11proto-composite-dev \
+x11proto-core-dev x11proto-damage-dev \
+x11proto-dmx-dev x11proto-dri2-dev x11proto-fixes-dev \
 x11proto-fonts-dev x11proto-gl-dev \
 x11proto-input-dev x11proto-kb-dev \
 x11proto-print-dev x11proto-randr-dev \
