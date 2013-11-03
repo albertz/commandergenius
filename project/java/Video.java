@@ -162,8 +162,8 @@ abstract class DifferentTouchInput
 				action = Mouse.SDL_FINGER_MOVE;
 			if ( action >= 0 )
 				DemoGLSurfaceView.nativeMotionEvent( (int)event.getX(), (int)event.getY(), action, 0, 
-												(int)(event.getPressure() * 1000.0),
-												(int)(event.getSize() * 1000.0) );
+												(int)(event.getPressure() * 1024.0f),
+												(int)(event.getSize() * 1024.0f) );
 		}
 	}
 	private static class MultiTouchInput extends DifferentTouchInput
@@ -226,8 +226,8 @@ abstract class DifferentTouchInput
 					touchEvents[id].down = true;
 					touchEvents[id].x = (int)event.getX(i);
 					touchEvents[id].y = (int)event.getY(i);
-					touchEvents[id].pressure = (int)(event.getPressure(i) * 1000.0);
-					touchEvents[id].size = (int)(event.getSize(i) * 1000.0);
+					touchEvents[id].pressure = (int)(event.getPressure(i) * 1024.0f);
+					touchEvents[id].size = (int)(event.getSize(i) * 1024.0f);
 					DemoGLSurfaceView.nativeMotionEvent( touchEvents[id].x, touchEvents[id].y, action, id, touchEvents[id].pressure, touchEvents[id].size );
 				}
 			}
@@ -283,8 +283,8 @@ abstract class DifferentTouchInput
 						}
 						touchEvents[id].x = (int)event.getX(ii);
 						touchEvents[id].y = (int)event.getY(ii);
-						touchEvents[id].pressure = (int)(event.getPressure(ii) * 1000.0);
-						touchEvents[id].size = (int)(event.getSize(ii) * 1000.0);
+						touchEvents[id].pressure = (int)(event.getPressure(ii) * 1024.0f);
+						touchEvents[id].size = (int)(event.getSize(ii) * 1024.0f);
 						DemoGLSurfaceView.nativeMotionEvent( touchEvents[id].x, touchEvents[id].y, action, id, touchEvents[id].pressure, touchEvents[id].size );
 					}
 				}
