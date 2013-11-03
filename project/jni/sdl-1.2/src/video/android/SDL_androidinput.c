@@ -692,42 +692,6 @@ void ProcessDeferredMouseTap()
 	}
 }
 
-JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeTouchpad) ( JNIEnv*  env, jobject thiz, jint x, jint y, jint down, jint multitouch)
-{
-	if( !SDL_ANDROID_isMouseUsed )
-		return;
-	if( ! down )
-	{
-		SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_RIGHT );
-		SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
-		SDL_ANDROID_moveMouseWithKbX = -1;
-		SDL_ANDROID_moveMouseWithKbY = -1;
-		SDL_ANDROID_moveMouseWithKbAccelUpdateNeeded = 0;
-	}
-	else
-	{
-		// x and y from 0 to 65535
-		if( SDL_ANDROID_moveMouseWithKbX < 0 )
-		{
-			SDL_ANDROID_moveMouseWithKbX = SDL_ANDROID_currentMouseX;
-			SDL_ANDROID_moveMouseWithKbY = SDL_ANDROID_currentMouseY;
-		}
-		SDL_ANDROID_moveMouseWithKbSpeedX = (x - 32767) / 8192;
-		SDL_ANDROID_moveMouseWithKbSpeedY = (y - 32767) / 8192;
-		//moveMouseWithKbX += moveMouseWithKbSpeedX;
-		//moveMouseWithKbY += moveMouseWithKbSpeedY;
-		SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY);
-		SDL_ANDROID_moveMouseWithKbAccelUpdateNeeded = 1;
-
-		if( multitouch )
-			SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_RIGHT );
-		else
-		if( abs(x - 32767) < 8192 && abs(y - 32767) < 8192 )
-			SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
-	}
-}
-
 void SDL_ANDROID_WarpMouse(int x, int y)
 {
 	if(!relativeMovement)
