@@ -844,36 +844,36 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             /*
              * Get an EGL instance
              */
-            mEgl = (EGL10) EGLContext.getEGL();
+            //mEgl = (EGL10) EGLContext.getEGL();
 
             /*
              * Get to the default display.
              */
-            mEglDisplay = mEgl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+            //mEglDisplay = mEgl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
 
             /*
              * We can now initialize EGL for that display
              */
-            int[] version = new int[2];
+            /*int[] version = new int[2];
             mEgl.eglInitialize(mEglDisplay, version);
             mEglConfig = mEGLConfigChooser.chooseConfig(mEgl, mEglDisplay);
             if( mEglConfig == null )
-                Log.e("SDL", "GLSurfaceView_SDL::EglHelper::start(): mEglConfig is NULL");
+                Log.e("SDL", "GLSurfaceView_SDL::EglHelper::start(): mEglConfig is NULL");*/
 
             /*
             * Create an OpenGL ES context. This must be done only once, an
             * OpenGL context is a somewhat heavy object.
             */
-            final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+            /*final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
             final int[] gles2_attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE };
 
             mEglContext = mEgl.eglCreateContext(mEglDisplay, mEglConfig,
                     EGL10.EGL_NO_CONTEXT, mEGLConfigChooser.isGles2Required() ? gles2_attrib_list : null );
 
             if( mEglContext == null || mEglContext == EGL10.EGL_NO_CONTEXT )
-                Log.e("SDL", "GLSurfaceView_SDL::EglHelper::start(): mEglContext is EGL_NO_CONTEXT, error: " + mEgl.eglGetError());
+                Log.e("SDL", "GLSurfaceView_SDL::EglHelper::start(): mEglContext is EGL_NO_CONTEXT, error: " + mEgl.eglGetError());*/
 
-            mEglSurface = null;
+            //mEglSurface = null;
         }
 
         /*
@@ -886,16 +886,16 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
              *  The window size has changed, so we need to create a new
              *  surface.
              */
-            if (mEglSurface != null) {
+            /*if (mEglSurface != null) {*/
 
                 /*
                  * Unbind and destroy the old EGL surface, if
                  * there is one.
                  */
-                mEgl.eglMakeCurrent(mEglDisplay, EGL10.EGL_NO_SURFACE,
+                /*mEgl.eglMakeCurrent(mEglDisplay, EGL10.EGL_NO_SURFACE,
                         EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
                 mEgl.eglDestroySurface(mEglDisplay, mEglSurface);
-            }
+            }*/
 
             /*
              * Create an EGL surface we can render into.
@@ -908,23 +908,24 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             attribList[2] = mEgl.EGL_NONE;
             attribList[3] = mEgl.EGL_NONE;
             */
-            mEglSurface = mEgl.eglCreateWindowSurface(mEglDisplay,
-                    mEglConfig, holder, null);
+            /*mEglSurface = mEgl.eglCreateWindowSurface(mEglDisplay,
+                    mEglConfig, holder, null);*/
 
             /*
              * Before we can issue GL commands, we need to make sure
              * the context is current and bound to a surface.
              */
-            mEgl.eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface,
-                    mEglContext);
+            /*mEgl.eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface,
+                    mEglContext);*/
 
 
-            GL gl = mEglContext.getGL();
+            /*GL gl = mEglContext.getGL();
             if (mGLWrapper != null) {
                 gl = mGLWrapper.wrap(gl);
-            }
+            }*/
 
-            return gl;
+            //return gl;
+	    return null;
         }
 
         /**
@@ -932,7 +933,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
          * @return false if the context has been lost.
          */
         public boolean swap() {
-            mEgl.eglSwapBuffers(mEglDisplay, mEglSurface);
+            //mEgl.eglSwapBuffers(mEglDisplay, mEglSurface);
 
             /*
              * Always check for EGL_CONTEXT_LOST, which means the context
@@ -940,17 +941,18 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
              * the device went to sleep). We need to sleep until we
              * get a new surface.
              */
-            return mEgl.eglGetError() != EGL11.EGL_CONTEXT_LOST;
+            //return mEgl.eglGetError() != EGL11.EGL_CONTEXT_LOST;
+	    return true;
         }
 
         public void finish() {
             Log.v("SDL", "GLSurfaceView_SDL::EglHelper::finish(): destroying GL context");
-            if (mEglSurface != null) {
+            /*if (mEglSurface != null) {
                 mEgl.eglMakeCurrent(mEglDisplay, EGL10.EGL_NO_SURFACE,
                         EGL10.EGL_NO_SURFACE,
                         EGL10.EGL_NO_CONTEXT);
-                mEgl.eglDestroySurface(mEglDisplay, mEglSurface);
-                mEglSurface = null;
+                //mEgl.eglDestroySurface(mEglDisplay, mEglSurface);
+                //mEglSurface = null;
             }
             if (mEglContext != null) {
                 mEgl.eglDestroyContext(mEglDisplay, mEglContext);
@@ -959,14 +961,14 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             if (mEglDisplay != null) {
                 mEgl.eglTerminate(mEglDisplay);
                 mEglDisplay = null;
-            }
+            }*/
         }
 
-        EGL10 mEgl;
+        /*EGL10 mEgl;
         EGLDisplay mEglDisplay;
         EGLSurface mEglSurface;
         EGLConfig mEglConfig;
-        EGLContext mEglContext;
+        EGLContext mEglContext;*/
     }
 
     /**
@@ -1081,7 +1083,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                     tellRendererSurfaceChanged = true;
                 }
                 if (tellRendererSurfaceCreated) {
-                    mRenderer.onSurfaceCreated(mGL, mEglHelper.mEglConfig);
+                    //mRenderer.onSurfaceCreated(mGL, mEglHelper.mEglConfig);
                     tellRendererSurfaceCreated = false;
                 }
                 if (tellRendererSurfaceChanged) {

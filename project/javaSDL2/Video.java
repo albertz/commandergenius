@@ -507,7 +507,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 					Globals.CommandLine,
 					( (Globals.SwVideoMode && Globals.MultiThreadedVideo) || Globals.CompatibilityHacksVideo ) ? 1 : 0,
 					android.os.Debug.isDebuggerConnected() ? 1 : 0 );*/
-		System.exit(0); // The main() returns here - I don't bother with deinit stuff, just terminate process
+		//System.exit(0); // The main() returns here - I don't bother with deinit stuff, just terminate process
 	}
 
 	public int swapBuffers() // Called from native code
@@ -539,12 +539,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 				this.notify();
 			}
 		}
-		if( context.isScreenKeyboardShown() )
+		/*if( context.isScreenKeyboardShown() )
 		{
 			try {
 				Thread.sleep(50); // Give some time to the keyboard input thread
 			} catch(Exception e) { };
-		}
+		}*/
 		return 1;
 	}
 
@@ -589,7 +589,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 			public MainActivity parent;
 			public void run()
 			{
-				parent.hideScreenKeyboard();
+				//parent.hideScreenKeyboard();
 			}
 		}
 		Callback cb = new Callback();
@@ -599,12 +599,13 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 	public int isScreenKeyboardShown() // Called from native code
 	{
-		return context.isScreenKeyboardShown() ? 1 : 0;
+		//return context.isScreenKeyboardShown() ? 1 : 0;
+		return 0;
 	}
 
 	public void setScreenKeyboardHintMessage(String s)
 	{
-		context.setScreenKeyboardHintMessage(s);
+		//context.setScreenKeyboardHintMessage(s);
 	}
 
 	public void startAccelerometerGyroscope(int started)
@@ -623,19 +624,19 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 	public void getAdvertisementParams(int params[])
 	{
-		context.getAdvertisementParams(params);
+		//context.getAdvertisementParams(params);
 	}
 	public void setAdvertisementVisible(int visible)
 	{
-		context.setAdvertisementVisible(visible);
+		//context.setAdvertisementVisible(visible);
 	}
 	public void setAdvertisementPosition(int left, int top)
 	{
-		context.setAdvertisementPosition(left, top);
+		//context.setAdvertisementPosition(left, top);
 	}
 	public void requestNewAdvertisement()
 	{
-		context.requestNewAdvertisement();
+		//context.requestNewAdvertisement();
 	}
 
 	private int PowerOf2(int i)
@@ -719,7 +720,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	private EGL10 mEgl = null;
 	private EGLDisplay mEglDisplay = null;
 	private EGLSurface mEglSurface = null;
-	private EGLContext mEglContext = null;
+	//private EGLContext mEglContext = null;
 	private boolean mGlContextLost = false;
 	public boolean mGlSurfaceCreated = false;
 	public boolean mPaused = false;

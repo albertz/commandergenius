@@ -323,7 +323,7 @@ public class MainActivity extends SDLActivity
 		_layout2 = null;
 		_btn = null;
 		_tv = null;
-		_inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		//_inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 		/*_videoLayout = new FrameLayout(this);
 		SetLayerType.get().setLayerType(_videoLayout);
 		setContentView(_videoLayout);*/
@@ -432,9 +432,9 @@ public class MainActivity extends SDLActivity
 
 	public void showScreenKeyboardWithoutTextInputField()
 	{
-		_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-		_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
-		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+		//_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+		//_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
+		//getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 	}
 
 	public void showScreenKeyboard(final String oldText, boolean sendBackspace)
@@ -466,7 +466,7 @@ public class MainActivity extends SDLActivity
 					keyCode == KeyEvent.KEYCODE_BUTTON_3 ||
 					keyCode == KeyEvent.KEYCODE_BUTTON_4 ))
 				{
-					_parent.hideScreenKeyboard();
+					//_parent.hideScreenKeyboard();
 					return true;
 				}
 				if (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR)
@@ -554,19 +554,19 @@ public class MainActivity extends SDLActivity
 			}, 500 );
 	};
 
-	public void hideScreenKeyboard()
+	/*public void hideScreenKeyboard()
 	{
 		if(_screenKeyboard == null)
 			return;
 
 		synchronized(textInput)
 		{
-			String text = _screenKeyboard.getText().toString();
+			String text = _screenKeyboard.getText().toString();*/
 			/*for(int i = 0; i < text.length(); i++)
 			{
 				DemoRenderer.nativeTextInput( (int)text.charAt(i), (int)text.codePointAt(i) );
 			}*/
-		}
+		/*}
 		//DemoRenderer.nativeTextInputFinished();
 		_inputManager.hideSoftInputFromWindow(_screenKeyboard.getWindowToken(), 0);
 		mLayout.removeView(_screenKeyboard);
@@ -574,9 +574,9 @@ public class MainActivity extends SDLActivity
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
 		mGLView.requestFocus();
-	};
+	};*/
 
-	public boolean isScreenKeyboardShown()
+	/*public boolean isScreenKeyboardShown()
 	{
 		return _screenKeyboard != null;
 	};
@@ -670,8 +670,8 @@ public class MainActivity extends SDLActivity
 			params[3] = _ad.getView().getMeasuredWidth();
 			params[4] = _ad.getView().getMeasuredHeight();
 		}
-	}
-	public void requestNewAdvertisement()
+	}*/
+	/*public void requestNewAdvertisement()
 	{
 		if( _ad.getView() != null )
 		{
@@ -684,9 +684,9 @@ public class MainActivity extends SDLActivity
 			}
 			runOnUiThread(new Callback());
 		}
-	}
+	}*/
 
-	@Override
+	/*@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event)
 	{
 		if(_screenKeyboard != null)
@@ -696,7 +696,7 @@ public class MainActivity extends SDLActivity
 		{
 			if( mGLView.nativeKey( keyCode, 1 ) == 0 )
 				return super.onKeyDown(keyCode, event);
-		}
+		}*/
 		/*
 		else
 		if( keyCode == KeyEvent.KEYCODE_BACK && downloader != null )
@@ -707,15 +707,15 @@ public class MainActivity extends SDLActivity
 				onStop();
 		}
 		*/
-		else
+		/*else
 		if( keyListener != null )
 		{
 			keyListener.onKeyEvent(keyCode);
 		}
-		return true;
-	}
+		return true;*/
+	//}
 	
-	@Override
+	/*@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event)
 	{
 		if(_screenKeyboard != null)
@@ -732,13 +732,13 @@ public class MainActivity extends SDLActivity
 			}
 		}
 		return true;
-	}
+	}*/
 
 	/*@Override
 	public boolean dispatchTouchEvent(final MotionEvent ev)
-	{
+	{*/
 		//Log.i("SDL", "dispatchTouchEvent: " + ev.getAction() + " coords " + ev.getX() + ":" + ev.getY() );
-		if(_screenKeyboard != null)
+		/*if(_screenKeyboard != null)
 			_screenKeyboard.dispatchTouchEvent(ev);
 		else
 		if( _ad.getView() != null && // User clicked the advertisement, ignore when user moved finger from game screen to advertisement or touches screen with several fingers
@@ -756,14 +756,15 @@ public class MainActivity extends SDLActivity
 		if( _btn != null )
 			return _btn.dispatchTouchEvent(ev);
 		else
-		if( touchListener != null )
-			touchListener.onTouchEvent(ev);
+		/*if( touchListener != null )
+			touchListener.onTouchEvent(ev);*/
+/*
 		return true;
 	}*/
 	
-	@Override
+/*	@Override
 	public boolean dispatchGenericMotionEvent (MotionEvent ev)
-	{
+	{*/
 		//Log.i("SDL", "dispatchGenericMotionEvent: " + ev.getAction() + " coords " + ev.getX() + ":" + ev.getY() );
 		// This code fails to run for Android 1.6, so there will be no generic motion event for Andorid screen keyboard
 		/*
@@ -771,10 +772,10 @@ public class MainActivity extends SDLActivity
 			_screenKeyboard.dispatchGenericMotionEvent(ev);
 		else
 		*/
-		if(mGLView != null)
+		/*if(mGLView != null)
 			mGLView.onGenericMotionEvent(ev);
-		return true;
-	}
+		return true;*/
+//	}
 
 	@Override
 	public void onConfigurationChanged(Configuration newConfig)
@@ -1129,7 +1130,7 @@ public class MainActivity extends SDLActivity
 
 	static int NOTIFY_ID = 12367098; // Random ID
 
-	private static DemoGLSurfaceView mGLView = null;
+//	private static DemoGLSurfaceView mGLView = null;
 	private static AudioThread mAudioThread = null;
 	private static DataDownloader downloader = null;
 
