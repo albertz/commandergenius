@@ -10,17 +10,32 @@ static int unpack_files();
 
 int main( int argc, char* argv[] )
 {
-	char screenres[64] = "640x480x24";
+	char screenres[128] = "640x480x24";
+	char clientcmd[PATH_MAX*2] = "xhost +";
+	char * cmd = "";
 	char* args[] = {
 		"XSDL",
 		":1111",
 		"-nolock",
+		"-noreset",
 		"-screen",
-		screenres
+		screenres,
+		"-exec",
+		clientcmd
 	};
 	char * envp[] = { NULL };
 	
-	sprintf( screenres, "%sx%sx%d", getenv("DISPLAY_RESOLUTION_WIDTH"), getenv("DISPLAY_RESOLUTION_HEIGHT"), 24 );
+	sprintf( screenres, "%s/%sx%s/%sx%d",
+		getenv("DISPLAY_RESOLUTION_WIDTH"),
+		getenv("DISPLAY_WIDTH_MM"),
+		getenv("DISPLAY_RESOLUTION_HEIGHT"),
+		getenv("DISPLAY_HEIGHT_MM"),
+		24 );
+
+	if( argc >= 2 )
+		cmd = argv[2];
+	sprintf( clientcmd, "%s/usr/bin/xhost + ; %s",
+		getenv("SECURE_STORAGE_DIR"), cmd );
 
 	if( !unpack_files() )
 	{
@@ -28,7 +43,7 @@ int main( int argc, char* argv[] )
 		return 1;
 	}
 	
-	return android_main( 5, args, envp );
+	return android_main( 8, args, envp );
 }
 
 int unpack_files()
