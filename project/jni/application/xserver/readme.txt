@@ -18,3 +18,14 @@ x11proto-xf86dga-dev x11proto-xf86dri-dev \
 x11proto-xf86vidmode-dev x11proto-xinerama-dev \
 libxmuu-dev libxt-dev libsm-dev libice-dev \
 libxrender-dev libxrandr-dev curl
+
+Then run commands:
+
+git clone git@github.com:pelya/commandergenius.git sdl-android
+cd sdl-android
+git submodule update --init project/jni/application/xserver/xserver
+rm project/jni/application/src
+ln -s xserver project/jni/application/src
+./changeAppSettings.sh -a
+android update project -p project
+./build.sh
