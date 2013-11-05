@@ -2,6 +2,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <linux/sockios.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <arpa/inet.h>
 #include <pthread.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
@@ -15,7 +22,7 @@ static int unpackProgressMbTotal = 1;
 static int unpackFinished = 0;
 
 static void renderString(const char *c, int x, int y);
-static void renderStringColor(const char *c, int x, int y, int r, int g, int b);
+static void renderStringColor(const char *c, int x, int y, int r, int g, int b, SDL_Surface * surf);
 
 static void * unpackFilesThread(void * unused);
 static void showErrorMessage(const char *msg);
@@ -141,7 +148,7 @@ void XSDL_unpackFiles()
 	}
 }
 
-void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH)
+static void showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH)
 {
 	int x, y, i, ii;
 	SDL_Event event;
@@ -238,6 +245,64 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	*displayH = *displayH * (dpiScale / fontsVal[dpi]);
 }
 
+void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH)
+{
+	int sd, addr, ifc_num, i;
+    struct ifconf ifc;
+    struct ifreq ifr[20];
+    SDL_Surface * surf;
+    int y = 40;
+
+	showConfigMenu(resolutionW, displayW, resolutionH, displayH);
+
+	surf = SDL_CreateRGBSurface(SDL_SWSURFACE, VID_X, VID_Y, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
+	SDL_FillRect(surf, NULL, 0xffffff);
+
+	renderStringColor("Launch these commands on your Linux PC:", VID_X/2, 15, 0, 0, 0, surf);
+
+    sd = socket(PF_INET, SOCK_DGRAM, 0);
+    if (sd > 0)
+    {
+        ifc.ifc_len = sizeof(ifr);
+        ifc.ifc_ifcu.ifcu_buf = (caddr_t)ifr;
+
+        if (ioctl(sd, SIOCGIFCONF, &ifc) == 0)
+        {
+            ifc_num = ifc.ifc_len / sizeof(struct ifreq);
+            __android_log_print(ANDROID_LOG_INFO, "XSDL", "%d network interfaces found", ifc_num);
+
+            for (i = 0; i < ifc_num; ++i)
+            {
+                int addr = 0;
+                char saddr[32];
+                char msg[128];
+                if (ifr[i].ifr_addr.sa_family != AF_INET)
+                    continue;
+
+                if (ioctl(sd, SIOCGIFADDR, &ifr[i]) == 0)
+                    addr = ((struct sockaddr_in *)(&ifr[i].ifr_addr))->sin_addr.s_addr;
+                if (addr == 0)
+                    continue;
+                sprintf (saddr, "%d.%d.%d.%d", (addr & 0xFF), (addr >> 8 & 0xFF), (addr >> 16 & 0xFF), (addr >> 24 & 0xFF));
+                __android_log_print(ANDROID_LOG_INFO, "XSDL", "interface: %s address: %s\n", ifr[i].ifr_name, saddr);
+                if (strcmp(saddr, "127.0.0.1") == 0)
+                    continue;
+                sprintf (msg, "env DISPLAY=%s:1111 metacity &", saddr);
+                renderStringColor(msg, VID_X/2, y, 0, 0, 0, surf);
+                y += 15;
+                sprintf (msg, "env DISPLAY=%s:1111 gimp", saddr);
+                renderStringColor(msg, VID_X/2, y, 0, 0, 0, surf);
+                y += 20;
+            }
+        }
+
+        close(sd);
+    }
+
+	SDL_SaveBMP(surf, "help.bmp");
+	SDL_FreeSurface(surf);
+}
+
 void showErrorMessage(const char *msg)
 {
 	SDL_Event event;
@@ -264,7 +329,7 @@ void XSDL_initSDL()
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_SetVideoMode(VID_X, VID_Y, 24, SDL_SWSURFACE);
 	TTF_Init();
-	sFont = TTF_OpenFont("DroidSansMono.ttf", 10);
+	sFont = TTF_OpenFont("DroidSansMono.ttf", 12);
 	if (!sFont)
 	{
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error: cannot open font file, please reinstall the app");
@@ -280,7 +345,7 @@ void XSDL_deinitSDL()
 	// Do NOT call SDL_Quit(), it crashes!
 }
 
-void renderStringColor(const char *c, int x, int y, int r, int g, int b)
+void renderStringColor(const char *c, int x, int y, int r, int g, int b, SDL_Surface * surf)
 {
 	SDL_Color fColor = {r, g, b};
 	SDL_Rect fontRect = {0, 0, 0, 0};
@@ -289,12 +354,12 @@ void renderStringColor(const char *c, int x, int y, int r, int g, int b)
 	fontRect.h = fontSurface->h;
 	fontRect.x = x - fontRect.w / 2;
 	fontRect.y = y - fontRect.h / 2;
-	SDL_BlitSurface(fontSurface, NULL, SDL_GetVideoSurface(), &fontRect);
+	SDL_BlitSurface(fontSurface, NULL, surf, &fontRect);
 	SDL_FreeSurface(fontSurface);
 }
 
 void renderString(const char *c, int x, int y)
 {
-	renderStringColor(c, x, y, 255, 255, 255);
+	renderStringColor(c, x, y, 255, 255, 255, SDL_GetVideoSurface());
 }
 

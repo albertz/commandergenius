@@ -11,7 +11,7 @@ extern int android_main( int argc, char *argv[], char *envp[] );
 int main( int argc, char* argv[] )
 {
 	char screenres[128] = "640x480x24";
-	char clientcmd[PATH_MAX*2] = "xhost +";
+	char clientcmd[PATH_MAX*3] = "xhost +";
 	char * cmd = "";
 	char* args[] = {
 		"XSDL",
@@ -44,8 +44,8 @@ int main( int argc, char* argv[] )
 
 	if( argc >= 2 )
 		cmd = argv[2];
-	sprintf( clientcmd, "%s/usr/bin/xhost + ; %s",
-		getenv("SECURE_STORAGE_DIR"), cmd );
+	sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -fullscreen help.bmp ; %s",
+		getenv("SECURE_STORAGE_DIR"), getenv("SECURE_STORAGE_DIR"), cmd );
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL video resolution %s", screenres);
 
