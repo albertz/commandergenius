@@ -6,9 +6,7 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 PACKAGE_NAME=`grep AppFullName AndroidAppSettings.cfg | sed 's/.*=//'`
 
 ../setEnvironment-armeabi-v7a.sh sh -c '\
-$CC $CFLAGS -c main.c -o main.o' || exit 1
-
-
+$CC $CFLAGS -c main.c gfx.c' || exit 1
 
 [ -e xserver/android ] || git submodule update --init xserver || exit 1
 cd xserver
@@ -19,8 +17,9 @@ env TARGET_DIR=/data/data/$PACKAGE_NAME/files \
 ./build.sh || exit 1
 
 ../../../setEnvironment-armeabi-v7a.sh sh -c '\
-$CC $LDFLAGS -o ../../libapplication-armeabi-v7a.so -L. \
+$CC $CFLAGS $LDFLAGS -o ../../libapplication-armeabi-v7a.so -L. \
 ../../main.o \
+../../gfx.o \
 hw/kdrive/sdl/sdl.o \
 dix/.libs/libmain.a \
 dix/.libs/libdix.a \
@@ -44,7 +43,9 @@ xkb/.libs/libxkbstubs.a \
 composite/.libs/libcomposite.a \
 os/.libs/libos.a \
 hw/kdrive/linux/.libs/liblinux.a \
--lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lfreetype -lts' \
+-lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lts -lfreetype' \
 || exit 1
+
+#-lfreetype is inside -lsdl_ttf
 
 exit 0

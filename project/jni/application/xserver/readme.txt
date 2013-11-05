@@ -1,7 +1,7 @@
 
 You will need to install some packages to your Debian/Ubuntu first:
 
-sudo apt-get install bison libpixman-1-dev
+sudo apt-get install bison libpixman-1-dev \
 libxfont-dev libxkbfile-dev libpciaccess-dev \
 xutils-dev xcb-proto python-xcbgen xsltproc \
 x11proto-bigreqs-dev x11proto-composite-dev \
