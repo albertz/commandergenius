@@ -848,6 +848,9 @@ echo >> AndroidAppSettings.cfg
 echo "# Show SDL mouse cursor, for applications that do not draw cursor at all (y) or (n)" >> AndroidAppSettings.cfg
 echo ShowMouseCursor=$ShowMouseCursor >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Generate more touch events, by default SDL generates one event per one video frame, this is useful for drawing apps (y) or (n)" >> AndroidAppSettings.cfg
+echo GenerateSubframeTouchEvents=$GenerateSubframeTouchEvents >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Force relative (laptop) mouse movement mode, useful when both on-screen keyboard and mouse are needed (y) or (n)" >> AndroidAppSettings.cfg
 echo ForceRelativeMouseMode=$ForceRelativeMouseMode >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
@@ -1122,6 +1125,12 @@ else
 	ShowMouseCursor=false
 fi
 
+if [ "$GenerateSubframeTouchEvents" = "y" ] ; then
+	GenerateSubframeTouchEvents=true
+else
+	GenerateSubframeTouchEvents=false
+fi
+
 if [ "$AppNeedsArrowKeys" = "y" ] ; then
 	AppNeedsArrowKeys=true
 else
@@ -1329,6 +1338,7 @@ $SEDI "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesM
 $SEDI "s/public static boolean AppNeedsTwoButtonMouse = .*;/public static boolean AppNeedsTwoButtonMouse = $AppNeedsTwoButtonMouse;/" project/src/Globals.java
 $SEDI "s/public static boolean ForceRelativeMouseMode = .*;/public static boolean ForceRelativeMouseMode = $ForceRelativeMouseMode;/" project/src/Globals.java
 $SEDI "s/public static boolean ShowMouseCursor = .*;/public static boolean ShowMouseCursor = $ShowMouseCursor;/" project/src/Globals.java
+$SEDI "s/public static boolean GenerateSubframeTouchEvents = .*;/public static boolean GenerateSubframeTouchEvents = $GenerateSubframeTouchEvents;/" project/src/Globals.java
 $SEDI "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" project/src/Globals.java
 $SEDI "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" project/src/Globals.java

@@ -17,4 +17,4 @@ x11proto-xext-dev x11proto-xf86bigfont-dev \
 x11proto-xf86dga-dev x11proto-xf86dri-dev \
 x11proto-xf86vidmode-dev x11proto-xinerama-dev \
 libxmuu-dev libxt-dev libsm-dev libice-dev \
-libxrender-dev libxrandr-dev
+libxrender-dev libxrandr-dev curl

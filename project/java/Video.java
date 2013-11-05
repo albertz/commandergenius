@@ -112,6 +112,8 @@ abstract class DifferentTouchInput
 			Log.i("SDL", "Device model: " + android.os.Build.MODEL);
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH )
 			{
+				if ( Globals.GenerateSubframeTouchEvents )
+					return IcsTouchInputWithHistory.Holder.sInstance;
 				if( DetectCrappyDragonRiseDatexGamepad() )
 					return CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance;
 				return IcsTouchInput.Holder.sInstance;
@@ -375,6 +377,32 @@ abstract class DifferentTouchInput
 				return;
 			}
 			super.processGenericEvent(event);
+		}
+	}
+	private static class IcsTouchInputWithHistory extends IcsTouchInput
+	{
+		private static class Holder
+		{
+			private static final IcsTouchInputWithHistory sInstance = new IcsTouchInputWithHistory();
+		}
+		public void process(final MotionEvent event)
+		{
+			int ptr = 0; // Process only one touch event, because that's typically a pen/mouse
+			for( ptr = 0; ptr < TOUCH_EVENTS_MAX; ptr++ )
+			{
+				if( touchEvents[ptr].down )
+					break;
+			}
+			if( ptr >= TOUCH_EVENTS_MAX )
+				ptr = 0;
+			//Log.i("SDL", "Got motion event, getHistorySize " + (int)(event.getHistorySize()) + " ptr " + ptr);
+
+			for( int i = 0; i < event.getHistorySize(); i++ )
+			{
+				DemoGLSurfaceView.nativeMotionEvent( (int)event.getHistoricalX(i), (int)event.getHistoricalY(i),
+					Mouse.SDL_FINGER_MOVE, ptr, (int)( event.getHistoricalPressure(i) * 1024.0f ), (int)( event.getHistoricalSize(i) * 1024.0f ) );
+			}
+			super.process(event); // Push mouse coordinate first
 		}
 	}
 	private static class CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad extends IcsTouchInput
