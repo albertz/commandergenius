@@ -148,7 +148,7 @@ void XSDL_unpackFiles()
 	}
 }
 
-static void showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH)
+void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH)
 {
 	int x, y, i, ii;
 	SDL_Event event;
@@ -168,12 +168,14 @@ static void showConfigMenu(int * resolutionW, int * displayW, int * resolutionH,
 	const char * fontsStr[] = {
 		"x2.5", "x2", "x1.7", "x1.5",
 		"x1.3", "x1", "x0.9", "x0.8",
-		"x0.7", "x0.6", "x0.5", "x0.4"
+		"x0.7", "x0.6", "x0.5", "x0.4",
+		"x0.3", "x0.2", "x0.15", "x0.1"
 	};
 	const float fontsVal[] = {
 		2.5f, 2.0f, 1.7f, 1.5f,
 		1.3f, 1.0f, 0.9f, 0.8f,
-		0.7f, 0.6f, 0.5f, 0.4f
+		0.7f, 0.6f, 0.5f, 0.4f,
+		0.3f, 0.2f, 0.15f, 0.1f
 	};
 
 	sprintf(native, "%dx%d native", resVal[0][0], resVal[0][1]);
@@ -224,7 +226,7 @@ static void showConfigMenu(int * resolutionW, int * displayW, int * resolutionH,
 				case SDL_MOUSEBUTTONUP:
 				{
 					SDL_GetMouseState(&x, &y);
-					i = (y / (VID_Y/3));
+					i = (y / (VID_Y/4));
 					ii = (x / (VID_X/4));
 					dpi = i * 4 + ii;
 				}
@@ -232,10 +234,10 @@ static void showConfigMenu(int * resolutionW, int * displayW, int * resolutionH,
 			}
 		}
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
-		renderString("Select font scale", VID_X/2, VID_Y/3);
-		for(i = 0; i < 3; i++)
+		renderString("Select font scale", VID_X/2, VID_Y/2);
+		for(i = 0; i < 4; i++)
 		for(ii = 0; ii < 4; ii++)
-			renderString(fontsStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/6 + (i*VID_Y/3));
+			renderString(fontsStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/8 + (i*VID_Y/4));
 		SDL_GetMouseState(&x, &y);
 		renderString("X", x, y);
 		SDL_Delay(200);
@@ -245,15 +247,13 @@ static void showConfigMenu(int * resolutionW, int * displayW, int * resolutionH,
 	*displayH = *displayH * (dpiScale / fontsVal[dpi]);
 }
 
-void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH)
+void XSDL_generateHelp(const char * port)
 {
 	int sd, addr, ifc_num, i;
     struct ifconf ifc;
     struct ifreq ifr[20];
     SDL_Surface * surf;
     int y = 40;
-
-	showConfigMenu(resolutionW, displayW, resolutionH, displayH);
 
 	surf = SDL_CreateRGBSurface(SDL_SWSURFACE, VID_X, VID_Y, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
 	SDL_FillRect(surf, NULL, 0xffffff);
@@ -287,10 +287,10 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
                 __android_log_print(ANDROID_LOG_INFO, "XSDL", "interface: %s address: %s\n", ifr[i].ifr_name, saddr);
                 if (strcmp(saddr, "127.0.0.1") == 0)
                     continue;
-                sprintf (msg, "env DISPLAY=%s:1111 metacity &", saddr);
+                sprintf (msg, "env DISPLAY=%s%s metacity &", saddr, port);
                 renderStringColor(msg, VID_X/2, y, 0, 0, 0, surf);
                 y += 15;
-                sprintf (msg, "env DISPLAY=%s:1111 gimp", saddr);
+                sprintf (msg, "env DISPLAY=%s%s gimp", saddr, port);
                 renderStringColor(msg, VID_X/2, y, 0, 0, 0, surf);
                 y += 20;
             }

@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <SDL/SDL.h>
 #include <android/log.h>
 
@@ -10,12 +13,14 @@ extern int android_main( int argc, char *argv[], char *envp[] );
 
 int main( int argc, char* argv[] )
 {
+	int i;
 	char screenres[128] = "640x480x24";
 	char clientcmd[PATH_MAX*3] = "xhost +";
+	char port[16] = ":1111";
 	char * cmd = "";
 	char* args[] = {
 		"XSDL",
-		":1111",
+		port,
 		"-nolock",
 		"-noreset",
 		"-screen",
@@ -37,6 +42,26 @@ int main( int argc, char* argv[] )
 	XSDL_unpackFiles();
 
 	XSDL_showConfigMenu(&resolutionW, &displayW, &resolutionH, &displayH);
+
+	int s = socket(AF_INET, SOCK_STREAM, 0);
+	if( s >= 0 )
+	{
+		for(i = 0; i < 1024; i++)
+		{
+			struct sockaddr_in addr;
+			memset(&addr, 0, sizeof(addr));
+			addr.sin_family = AF_INET;
+			addr.sin_addr.s_addr = INADDR_ANY;
+			addr.sin_port = htons(6000 + i);
+
+			if( bind (s, (struct sockaddr *) &addr, sizeof(addr) ) < 0 )
+				continue;
+			sprintf( port, ":%d", i );
+		}
+		close(s);
+	}
+
+	XSDL_generateHelp(port);
 
 	XSDL_deinitSDL();
 
