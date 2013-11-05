@@ -41,11 +41,13 @@ static inline SDL_keysym asciiToKeysym(int ascii, int unicode)
 {
 	SDL_keysym keysym;
 	keysym.scancode = ascii;
+	if ( ascii < SDLK_LAST )
+		keysym.scancode = SDL_android_keysym_to_scancode[ascii];
 	keysym.sym = ascii;
 	keysym.mod = KMOD_NONE;
 	keysym.unicode = 0;
 #if SDL_VERSION_ATLEAST(1,3,0)
-	keysym.sym = SDL_GetScancodeFromKey(ascii);
+	keysym.scancode = SDL_GetScancodeFromKey(ascii);
 #else
 	if ( SDL_TranslateUNICODE )
 #endif

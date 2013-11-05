@@ -490,6 +490,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	SDL_CurrentVideoSurface = current;
 
 	UpdateScreenUnderFingerRect(0,0);
+	SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRect.h = 0;
 
 	/* We're done */
 	return(current);

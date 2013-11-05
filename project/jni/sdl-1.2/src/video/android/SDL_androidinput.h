@@ -239,6 +239,7 @@ extern void SDL_ANDROID_MainThreadPushAppActive(int active);
 
 // Internal input queue stuff
 extern SDLKey SDL_android_keymap[];
+extern unsigned char SDL_android_keysym_to_scancode[SDLK_LAST];
 extern SDL_Joystick *SDL_ANDROID_CurrentJoysticks[];
 extern int SDL_ANDROID_isMouseUsed;
 extern int SDL_ANDROID_currentMouseX, SDL_ANDROID_currentMouseY, SDL_ANDROID_currentMouseButtons;

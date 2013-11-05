@@ -165,6 +165,8 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key)
 	}
 
 	keysym.scancode = key;
+	if ( key < SDLK_LAST )
+		keysym.scancode = SDL_android_keysym_to_scancode[key];
 	keysym.sym = key;
 	keysym.mod = KMOD_NONE;
 	keysym.unicode = 0;
