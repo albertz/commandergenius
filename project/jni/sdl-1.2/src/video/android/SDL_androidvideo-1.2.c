@@ -981,6 +981,7 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 		{
 			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &SDL_ANDROID_ShowScreenUnderFingerRectSrc, &SDL_ANDROID_ShowScreenUnderFingerRect);
 			SDL_Rect frame = SDL_ANDROID_ShowScreenUnderFingerRect;
+			int buttons = SDL_GetMouseState(NULL, NULL);
 			// For some reason this code fails - it just outputs nothing to screen
 			/*
 			SDL_SetRenderDrawColor(0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -995,7 +996,7 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			glLoadIdentity();
 			glOrthof( 0.0f, SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight, 0.0f, 0.0f, 1.0f );
 			glEnableClientState(GL_VERTEX_ARRAY);
-			glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+			glColor4f(0.0f, buttons & SDL_BUTTON_RMASK ? 1.0f : 0.0f, buttons & SDL_BUTTON_LMASK ? 1.0f : 0.0f, 1.0f);
 			GLshort vertices[] = {	frame.x, frame.y,
 									frame.x + frame.w, frame.y,
 									frame.x + frame.w, frame.y + frame.h,
