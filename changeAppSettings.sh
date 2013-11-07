@@ -1372,7 +1372,7 @@ $SEDI "s/public static SettingsMenu.Menu HiddenMenuOptions .*;/public static Set
 [ -n "$FirstStartMenuOptions1" ] && $SEDI "s@public static SettingsMenu.Menu FirstStartMenuOptions .*;@public static SettingsMenu.Menu FirstStartMenuOptions [] = { $FirstStartMenuOptions1 };@" project/src/Globals.java
 $SEDI "s%public static String ReadmeText = .*%public static String ReadmeText = \"$ReadmeText\";%" project/src/Globals.java
 $SEDI "s%public static String CommandLine = .*%public static String CommandLine = \"$AppCmdline\";%" project/src/Globals.java
-$SEDI "s/public static String AdmobPublisherId = .*/public static String AdmobPublisherId = \"$AdmobPublisherId\";/" project/src/Globals.java
+$SEDI "s%public static String AdmobPublisherId = .*%public static String AdmobPublisherId = \"$AdmobPublisherId\";%" project/src/Globals.java
 $SEDI "s/public static String AdmobTestDeviceId = .*/public static String AdmobTestDeviceId = \"$AdmobTestDeviceId\";/" project/src/Globals.java
 $SEDI "s/public static String AdmobBannerSize = .*/public static String AdmobBannerSize = \"$AdmobBannerSize\";/" project/src/Globals.java
 $SEDI "s/public static String AppLibraries.*/public static String AppLibraries[] = { $LibrariesToLoad };/" project/src/Globals.java
