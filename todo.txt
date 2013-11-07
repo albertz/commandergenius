@@ -22,7 +22,7 @@ TODO, which will get actually done
 
 - Fix diagonal movements via analog gamepad with AppUsesJoystick=n.
 
-- TeeWorlds: fix Ouya bugs (whole-screen shrink, remove controls from settings), submit to Ouya store.
+- TeeWorlds: disable unhook, tap will always launch hook. And I don't care about Ouya anymore.
 
 - OpenArena: move 3-rd person camera to the side, above shoulder.
 
