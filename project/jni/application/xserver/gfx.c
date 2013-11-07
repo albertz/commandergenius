@@ -247,7 +247,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	*displayH = *displayH * (dpiScale / fontsVal[dpi]);
 }
 
-void XSDL_generateHelp(const char * port)
+void XSDL_generateBackground(const char * port, int showHelp)
 {
 	int sd, addr, ifc_num, i;
     struct ifconf ifc;
@@ -255,10 +255,19 @@ void XSDL_generateHelp(const char * port)
     SDL_Surface * surf;
     int y = 40;
 
-	surf = SDL_CreateRGBSurface(SDL_SWSURFACE, VID_X, VID_Y, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
-	SDL_FillRect(surf, NULL, 0xffffff);
+	if( !showHelp )
+	{
+		surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 16, 16, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
+		SDL_FillRect(surf, NULL, 0x00003f);
+		SDL_SaveBMP(surf, "background.bmp");
+		SDL_FreeSurface(surf);
+		return;
+	}
 
-	renderStringColor("Launch these commands on your Linux PC:", VID_X/2, 15, 0, 0, 0, surf);
+	surf = SDL_CreateRGBSurface(SDL_SWSURFACE, VID_X, VID_Y, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
+	SDL_FillRect(surf, NULL, 0x00003f);
+
+	renderStringColor("Launch these commands on your Linux PC:", VID_X/2, 15, 255, 255, 255, surf);
 
     sd = socket(PF_INET, SOCK_DGRAM, 0);
     if (sd > 0)
@@ -288,10 +297,10 @@ void XSDL_generateHelp(const char * port)
                 if (strcmp(saddr, "127.0.0.1") == 0)
                     continue;
                 sprintf (msg, "env DISPLAY=%s%s metacity &", saddr, port);
-                renderStringColor(msg, VID_X/2, y, 0, 0, 0, surf);
+                renderStringColor(msg, VID_X/2, y, 255, 255, 255, surf);
                 y += 15;
                 sprintf (msg, "env DISPLAY=%s%s gimp", saddr, port);
-                renderStringColor(msg, VID_X/2, y, 0, 0, 0, surf);
+                renderStringColor(msg, VID_X/2, y, 255, 255, 255, surf);
                 y += 20;
             }
         }
@@ -299,7 +308,7 @@ void XSDL_generateHelp(const char * port)
         close(sd);
     }
 
-	SDL_SaveBMP(surf, "help.bmp");
+	SDL_SaveBMP(surf, "background.bmp");
 	SDL_FreeSurface(surf);
 }
 

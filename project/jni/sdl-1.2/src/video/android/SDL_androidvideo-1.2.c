@@ -964,9 +964,14 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, SDL_CurrentVideoSurface->pixels, SDL_CurrentVideoSurface->pitch);
 		else
 		{
-			int i = 0;
+			int i;
 			for(i = 0; i < numrects; i++)
-				SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rects[i], SDL_CurrentVideoSurface->pixels, SDL_CurrentVideoSurface->pitch);
+			{
+				//printf("SDL_UpdateTexture: rect %d: %04d:%04d:%04d:%04d", i, rects[i].x, rects[i].y, rects[i].w, rects[i].h);
+				SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rects[i],
+					SDL_CurrentVideoSurface->pixels + rects[i].y * SDL_CurrentVideoSurface->pitch + rects[i].x,
+					SDL_CurrentVideoSurface->pitch);
+			}
 		}
 		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_NONE || SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
 		{
@@ -1125,8 +1130,11 @@ static void ANDROID_UpdateRects(_THIS, int numrects, SDL_Rect *rects)
 		return;
 	}
 
-	// ANDROID_FlipHWSurfaceInternal(numrects, rects); // Fails for fheroes2, I'll add a compatibility option later.
+#ifdef SDL_COMPATIBILITY_HACKS_PROPER_USADE_OF_SDL_UPDATERECTS
+	ANDROID_FlipHWSurfaceInternal(numrects, rects); // Fails for fheroes2, I'll add a compatibility option later.
+#else
 	ANDROID_FlipHWSurfaceInternal(0, NULL);
+#endif
 
 	SDL_ANDROID_CallJavaSwapBuffers();
 }

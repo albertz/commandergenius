@@ -839,6 +839,10 @@ echo >> AndroidAppSettings.cfg
 echo "# Save and restore OpenGL state when drawing on-screen keyboard for apps that use SDL_OPENGL" >> AndroidAppSettings.cfg
 echo CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState=$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Application uses SDL_UpdateRects() properly, and does not draw in any region outside those rects." >> AndroidAppSettings.cfg
+echo "# This improves drawing speed, but I know only one application that does that, and it's written by me (y)/(n)" >> AndroidAppSettings.cfg
+echo CompatibilityHacksProperUsageOfSDL_UpdateRects=$CompatibilityHacksProperUsageOfSDL_UpdateRects >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Application uses mouse (y) or (n), this will show mouse emulation dialog to the user" >> AndroidAppSettings.cfg
 echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
@@ -1099,6 +1103,12 @@ if [ "$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState" = "y" ]; the
 	CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState=-DSDL_TOUCHSCREEN_KEYBOARD_SAVE_RESTORE_OPENGL_STATE=1
 else
 	CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState=
+fi
+
+if [ "$CompatibilityHacksProperUsageOfSDL_UpdateRects" = "y" ]; then
+	CompatibilityHacksProperUsageOfSDL_UpdateRects=-DSDL_COMPATIBILITY_HACKS_PROPER_USADE_OF_SDL_UPDATERECTS=1
+else
+	CompatibilityHacksProperUsageOfSDL_UpdateRects=
 fi
 
 if [ "$AppUsesMouse" = "y" ] ; then
@@ -1378,7 +1388,15 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
 	sed "s^APPLICATION_OVERLAPS_SYSTEM_HEADERS :=.*^APPLICATION_OVERLAPS_SYSTEM_HEADERS := $AppOverlapsSystemHeaders^" | \
-	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := $RedefinedKeycodes $RedefinedKeycodesScreenKb $RedefinedKeycodesGamepad $CompatibilityHacksPreventAudioChopping $CompatibilityHacksAppIgnoresAudioBufferSize $CompatibilityHacksSlowCompatibleEventQueue $CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState^" | \
+	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := \
+		$RedefinedKeycodes \
+		$RedefinedKeycodesScreenKb \
+		$RedefinedKeycodesGamepad \
+		$CompatibilityHacksPreventAudioChopping \
+		$CompatibilityHacksAppIgnoresAudioBufferSize \
+		$CompatibilityHacksSlowCompatibleEventQueue \
+		$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState \
+		$CompatibilityHacksProperUsageOfSDL_UpdateRects^" | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
 	sed "s^APPLICATION_BUILD_EXCLUDE :=.*^APPLICATION_BUILD_EXCLUDE := $AppBuildExclude^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \

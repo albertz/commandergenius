@@ -29,6 +29,7 @@ int main( int argc, char* argv[] )
 		clientcmd
 	};
 	char * envp[] = { NULL };
+	int printHelp = 1;
 	
 	int resolutionW = atoi(getenv("DISPLAY_RESOLUTION_WIDTH"));
 	int resolutionH = atoi(getenv("DISPLAY_RESOLUTION_HEIGHT"));
@@ -61,16 +62,26 @@ int main( int argc, char* argv[] )
 		close(s);
 	}
 
-	XSDL_generateHelp(port);
+	if( argc > 1 && strcmp(argv[1], "-nohelp") == 0 )
+	{
+		printHelp = 0;
+		argc--;
+		argv++;
+	}
+
+	XSDL_generateBackground(port, printHelp);
 
 	XSDL_deinitSDL();
 
 	sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, 24 );
 
-	if( argc >= 2 )
-		cmd = argv[2];
-	sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -fullscreen help.bmp ; %s",
-		getenv("SECURE_STORAGE_DIR"), getenv("SECURE_STORAGE_DIR"), cmd );
+	sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -fullscreen background.bmp ;",
+		getenv("SECURE_STORAGE_DIR"), getenv("SECURE_STORAGE_DIR") );
+	for( ; argc > 1; argc--, argv++ )
+	{
+		strcat(clientcmd, " ");
+		strcat(clientcmd, argv[1]);
+	}
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL video resolution %s", screenres);
 

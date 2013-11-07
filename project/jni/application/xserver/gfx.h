@@ -7,6 +7,6 @@ void XSDL_initSDL();
 void XSDL_deinitSDL();
 void XSDL_unpackFiles();
 void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH);
-void XSDL_generateHelp(const char * port);
+void XSDL_generateBackground(const char * port, int showHelp);
 
 #endif
