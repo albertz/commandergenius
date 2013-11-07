@@ -38,7 +38,7 @@ export `grep "AppFullName=" AndroidAppSettings.cfg`
 if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null 2>&1 && \
 		[ "`readlink AndroidAppSettings.cfg`" -ot "project/src/Globals.java" ] && \
 		[ -z "`find project/java/* project/AndroidManifestTemplate.xml -cnewer project/src/Globals.java`" ] ) ; then true ; else
-	./changeAppSettings.sh -a
+	./changeAppSettings.sh -a || exit 1
 	sleep 1
 	touch project/src/Globals.java
 fi

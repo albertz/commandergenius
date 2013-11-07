@@ -1277,6 +1277,9 @@ for F in *.java; do
 	cat $F | sed "s/package .*;/package $AppFullName;/" >> ../src/$F # | sed 's@$@ // THIS FILE IS AUTO-GENERATED@' >>
 done
 
+if [ -e ../jni/application/src/java.diff ]; then patch < ../jni/application/src/java.diff || exit 1 ; fi
+if [ -e ../jni/application/src/java.patch ]; then patch < ../jni/application/src/java.patch || exit 1 ; fi
+
 cd ../..
 
 # In case we use SDL2 let simlink the SDLActivity source file
