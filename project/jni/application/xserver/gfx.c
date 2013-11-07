@@ -253,21 +253,22 @@ void XSDL_generateBackground(const char * port, int showHelp)
     struct ifconf ifc;
     struct ifreq ifr[20];
     SDL_Surface * surf;
-    int y = 40;
+    int y = VID_Y / 3;
 
 	if( !showHelp )
 	{
 		surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 16, 16, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
-		SDL_FillRect(surf, NULL, 0x00003f);
+		SDL_FillRect(surf, NULL, 0x00002f);
 		SDL_SaveBMP(surf, "background.bmp");
 		SDL_FreeSurface(surf);
 		return;
 	}
 
 	surf = SDL_CreateRGBSurface(SDL_SWSURFACE, VID_X, VID_Y, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
-	SDL_FillRect(surf, NULL, 0x00003f);
+	SDL_FillRect(surf, NULL, 0x00002f);
 
-	renderStringColor("Launch these commands on your Linux PC:", VID_X/2, 15, 255, 255, 255, surf);
+	renderStringColor("Launch these commands on your Linux PC:", VID_X/2, y, 255, 255, 255, surf);
+	y += 30;
 
     sd = socket(PF_INET, SOCK_DGRAM, 0);
     if (sd > 0)
