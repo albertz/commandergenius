@@ -112,7 +112,8 @@ static int rightClickTimeout = 0;
 static int mouseInitialX = -1;
 static int mouseInitialY = -1;
 static unsigned int mouseInitialTime = 0;
-static volatile int deferredMouseTap = 0;
+static int deferredMouseTap = 0;
+static unsigned int leftButtonDownTime = 0;
 static int relativeMovement = 0;
 static int relativeMovementSpeed = 2;
 static int relativeMovementAccel = 0;
@@ -533,6 +534,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 				SDL_ANDROID_moveMouseWithKbY = SDL_ANDROID_currentMouseY;
 				SDL_ANDROID_moveMouseWithKbSpeedX = 0;
 				SDL_ANDROID_moveMouseWithKbSpeedY = 0;
+				leftButtonDownTime = SDL_GetTicks();
 				action = MOUSE_MOVE;
 			}
 			else
@@ -572,7 +574,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 				*/
 				// Mouse follows touch instantly, when it's out of the snapping distance from mouse cursor
 				if( abs(SDL_ANDROID_moveMouseWithKbX - x) >= SDL_ANDROID_sFakeWindowWidth / 10 ||
-					abs(SDL_ANDROID_moveMouseWithKbY - y) >= SDL_ANDROID_sFakeWindowHeight / 10 )
+					abs(SDL_ANDROID_moveMouseWithKbY - y) >= SDL_ANDROID_sFakeWindowHeight / 10 ||
+					SDL_GetTicks() - leftButtonDownTime > 600)
 				{
 					SDL_ANDROID_moveMouseWithKbX = -1;
 					SDL_ANDROID_moveMouseWithKbY = -1;
