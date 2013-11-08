@@ -967,9 +967,10 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			int i;
 			for(i = 0; i < numrects; i++)
 			{
-				//printf("SDL_UpdateTexture: rect %d: %04d:%04d:%04d:%04d", i, rects[i].x, rects[i].y, rects[i].w, rects[i].h);
+				//__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_UpdateTexture: rect %d: %04d:%04d:%04d:%04d", i, rects[i].x, rects[i].y, rects[i].w, rects[i].h);
 				SDL_UpdateTexture((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rects[i],
-					SDL_CurrentVideoSurface->pixels + rects[i].y * SDL_CurrentVideoSurface->pitch + rects[i].x,
+					SDL_CurrentVideoSurface->pixels + rects[i].y * SDL_CurrentVideoSurface->pitch +
+					rects[i].x * SDL_CurrentVideoSurface->format->BytesPerPixel,
 					SDL_CurrentVideoSurface->pitch);
 			}
 		}
