@@ -28,6 +28,7 @@ int main( int argc, char* argv[] )
 		"-exec",
 		clientcmd
 	};
+	enum { ARGNUM = 8 };
 	char * envp[] = { NULL };
 	int printHelp = 1;
 	
@@ -90,7 +91,9 @@ int main( int argc, char* argv[] )
 			getenv("SECURE_STORAGE_DIR"), getenv("SECURE_STORAGE_DIR") );
 	}
 
-	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL video resolution %s", screenres);
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL video resolution %s, args:", screenres);
+	for( i = 0; i < ARGNUM; i++ )
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", args[i]);
 
-	return android_main( 8, args, envp );
+	return android_main( ARGNUM, args, envp );
 }

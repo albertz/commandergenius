@@ -4,7 +4,7 @@ echo "Copying app data files from project/jni/application/src/AndroidData to pro
 mkdir -p project/assets
 rm -f project/assets/*
 if [ -d "project/jni/application/src/AndroidData" ] ; then
-	cp project/jni/application/src/AndroidData/* project/assets/
+	cp -L project/jni/application/src/AndroidData/* project/assets/
 	exit 0
 	for F in project/assets/*; do
 		if [ `cat $F | wc -c` -gt 1000000 ] ; then
