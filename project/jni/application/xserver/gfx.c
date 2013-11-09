@@ -119,6 +119,22 @@ void * unpackFilesThread(void * unused)
 
 	remove("data.tar.gz");
 
+	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
+	strcat( fname, "/postinstall.sh" );
+	if( stat( fname, &st ) != 0 )
+	{
+		unpackFinished = 1;
+		return 1;
+	}
+
+	fo = popen(fname, "w");
+	if( !fo )
+	{
+		unpackFinished = 1;
+		return 0;
+	}
+	pclose(fo);
+
 	unpackFinished = 1;
 	return 1;
 }

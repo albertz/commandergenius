@@ -566,6 +566,7 @@ class Settings
 		nativeSetEnv( "DATADIR", Globals.DataDir );
 		nativeSetEnv( "UNSECURE_STORAGE_DIR", Globals.DataDir );
 		nativeSetEnv( "HOME", Globals.DataDir );
+		nativeSetEnv( "SDCARD", Environment.getExternalStorageDirectory().getAbsolutePath() );
 		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
 		Log.d("SDL", "libSDL: Is running on OUYA: " + p.isRunningOnOUYA());
 		if( p.isRunningOnOUYA() )

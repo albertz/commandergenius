@@ -1,7 +1,6 @@
 #!/bin/sh
 
-LOCAL_PATH=`dirname $0`
-LOCAL_PATH=`cd $LOCAL_PATH && pwd`
+CURDIR=`pwd`
 
 PACKAGE_NAME=`grep AppFullName AndroidAppSettings.cfg | sed 's/.*=//'`
 
@@ -12,14 +11,19 @@ $CC $CFLAGS -c main.c gfx.c' || exit 1
 cd xserver
 [ -e configure ] || autoreconf --force -v --install || exit 1
 cd android
+[ -e libfontenc-*/Makefile ] && {
+	grep "/data/data/$PACKAGE_NAME" libfontenc-*/Makefile || \
+	git clean -f -d -x .
+}
 
 env TARGET_DIR=/data/data/$PACKAGE_NAME/files \
 ./build.sh || exit 1
 
+env CURDIR=$CURDIR \
 ../../../setEnvironment-armeabi-v7a.sh sh -c '\
-$CC $CFLAGS $LDFLAGS -o ../../libapplication-armeabi-v7a.so -L. \
-../../main.o \
-../../gfx.o \
+$CC $CFLAGS $LDFLAGS -o $CURDIR/libapplication-armeabi-v7a.so -L. \
+$CURDIR/main.o \
+$CURDIR/gfx.o \
 hw/kdrive/sdl/sdl.o \
 dix/.libs/libmain.a \
 dix/.libs/libdix.a \

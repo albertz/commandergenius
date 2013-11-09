@@ -15,7 +15,7 @@ int main( int argc, char* argv[] )
 {
 	int i;
 	char screenres[128] = "640x480x24";
-	char clientcmd[PATH_MAX*3] = "xhost +";
+	char clientcmd[PATH_MAX*3] = "";
 	char port[16] = ":1111";
 	char * cmd = "";
 	char* args[] = {
@@ -75,12 +75,19 @@ int main( int argc, char* argv[] )
 
 	sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, 24 );
 
-	sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -fillscreen background.bmp ;",
-		getenv("SECURE_STORAGE_DIR"), getenv("SECURE_STORAGE_DIR") );
-	for( ; argc > 1; argc--, argv++ )
+	if( argc > 1 )
 	{
-		strcat(clientcmd, " ");
-		strcat(clientcmd, argv[1]);
+		for( ; argc > 1; argc--, argv++ )
+		{
+			strcat(clientcmd, " ");
+			strcat(clientcmd, argv[1]);
+		}
+		strcat(clientcmd, " 2>&1");
+	}
+	else
+	{
+		sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -fillscreen background.bmp ;",
+			getenv("SECURE_STORAGE_DIR"), getenv("SECURE_STORAGE_DIR") );
 	}
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL video resolution %s", screenres);

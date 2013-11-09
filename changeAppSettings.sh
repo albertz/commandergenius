@@ -1277,8 +1277,8 @@ for F in *.java; do
 	cat $F | sed "s/package .*;/package $AppFullName;/" >> ../src/$F # | sed 's@$@ // THIS FILE IS AUTO-GENERATED@' >>
 done
 
-if [ -e ../jni/application/src/java.diff ]; then patch -d ../src < ../jni/application/src/java.diff || exit 1 ; fi
-if [ -e ../jni/application/src/java.patch ]; then patch -d ../src < ../jni/application/src/java.patch || exit 1 ; fi
+if [ -e ../jni/application/src/java.diff ]; then patch -d ../src --no-backup-if-mismatch < ../jni/application/src/java.diff || exit 1 ; fi
+if [ -e ../jni/application/src/java.patch ]; then patch -d ../src --no-backup-if-mismatch < ../jni/application/src/java.patch || exit 1 ; fi
 
 cd ../..
 
