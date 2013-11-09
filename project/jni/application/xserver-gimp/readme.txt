@@ -34,7 +34,11 @@ To build system image, download repo:
 https://github.com/pelya/cuntubuntu
 
 install dependencies described in it's readme,
-then launch script img-debug-wheezy-armhf-gimp.sh from directory img.
+then launch script
+
+img-gimp-wheezy.sh
+
+from directory img.
 This will create Debian system image under directory
 dist-debug-wheezy-armhf-gimp. Execute commands (<SDL> is path to this repo):
 
