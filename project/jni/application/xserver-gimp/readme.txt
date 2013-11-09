@@ -38,7 +38,7 @@ then launch script img-debug-wheezy-armhf-gimp.sh from directory img.
 This will create Debian system image under directory
 dist-debug-wheezy-armhf-gimp. Execute commands (<SDL> is path to this repo):
 
-sudo cp -a <SDL>/project/jni/application/src/xserver/data/usr/ dist-debug-wheezy-armhf-gimp/usr/
+sudo cp -a <SDL>/project/jni/application/src/xserver/data/usr/ dist-debug-wheezy-armhf-gimp/
 sudo cp -a <SDL>/project/jni/application/src/xserver/android/xhost dist-debug-wheezy-armhf-gimp/usr/bin/
 sudo cp -a <SDL>/project/jni/application/src/xserver/android/xkbcomp dist-debug-wheezy-armhf-gimp/usr/bin/
 sudo cp -a <SDL>/project/jni/application/src/xserver/android/xli dist-debug-wheezy-armhf-gimp/usr/bin/
