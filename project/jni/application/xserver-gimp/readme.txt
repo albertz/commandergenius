@@ -47,6 +47,13 @@ sudo cp -a <SDL>/project/jni/application/src/xserver/android/xhost dist-gimp-whe
 sudo cp -a <SDL>/project/jni/application/src/xserver/android/xkbcomp dist-gimp-wheezy/usr/bin/
 sudo cp -a <SDL>/project/jni/application/src/xserver/android/xli dist-gimp-wheezy/usr/bin/
 
+Edit files dist-gimp-wheezy/etc/dbus-1/system.conf and dist-gimp-wheezy/etc/dbus-1/session.conf:
+remove line from both files:
+
+<include if_selinux_enabled="yes" selinux_root_relative="yes">contexts/dbus_contexts</include>
+
+Re-generate system image
+
 cd dist-gimp-wheezy
 sudo tar cvzf ../dist-gimp-wheezy.tar.gz *
 
