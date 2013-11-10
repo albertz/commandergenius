@@ -40,15 +40,15 @@ img-gimp-wheezy.sh
 
 from directory img.
 This will create Debian system image under directory
-dist-debug-wheezy-armhf-gimp. Execute commands (<SDL> is path to this repo):
+dist-gimp-wheezy. Execute commands (<SDL> is path to this repo):
 
-sudo cp -a <SDL>/project/jni/application/src/xserver/data/usr/ dist-debug-wheezy-armhf-gimp/
-sudo cp -a <SDL>/project/jni/application/src/xserver/android/xhost dist-debug-wheezy-armhf-gimp/usr/bin/
-sudo cp -a <SDL>/project/jni/application/src/xserver/android/xkbcomp dist-debug-wheezy-armhf-gimp/usr/bin/
-sudo cp -a <SDL>/project/jni/application/src/xserver/android/xli dist-debug-wheezy-armhf-gimp/usr/bin/
+sudo cp -a <SDL>/project/jni/application/src/xserver/data/usr/ dist-gimp-wheezy/
+sudo cp -a <SDL>/project/jni/application/src/xserver/android/xhost dist-gimp-wheezy/usr/bin/
+sudo cp -a <SDL>/project/jni/application/src/xserver/android/xkbcomp dist-gimp-wheezy/usr/bin/
+sudo cp -a <SDL>/project/jni/application/src/xserver/android/xli dist-gimp-wheezy/usr/bin/
 
-cd dist-debug-wheezy-armhf-gimp
-sudo tar cvzf ../dist-debug-wheezy-armhf-gimp.tar.gz *
+cd dist-gimp-wheezy
+sudo tar cvzf ../dist-gimp-wheezy.tar.gz *
 
 Upload resulting system image somewhere, and change download URL inside
 AndroidAppSettings.cfg, then recompile .apk file.

@@ -39,12 +39,15 @@ void * unpackFilesThread(void * unused)
 		return 1;
 	}
 
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data");
+
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/busybox" );
 	FILE * ff = fopen("busybox", "rb");
 	FILE * fo = fopen(fname, "wb");
 	if( !ff || !fo )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot copy busybox");
 		unpackFinished = 1;
 		return 0;
 	}
@@ -55,6 +58,7 @@ void * unpackFilesThread(void * unused)
 		int cnt = fread( buf, 1, sizeof(buf), ff );
 		if( cnt < 0 )
 		{
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot copy busybox");
 			unpackFinished = 1;
 			return 1;
 		}
@@ -68,6 +72,7 @@ void * unpackFilesThread(void * unused)
 
 	if( chmod(fname, 0755) != 0 )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot chmod busybox");
 		unpackFinished = 1;
 		return 0;
 	}
@@ -85,6 +90,7 @@ void * unpackFilesThread(void * unused)
 	fo = popen(fname, "w");
 	if( !ff || !fo )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
 		unpackFinished = 1;
 		return 0;
 	}
@@ -96,6 +102,7 @@ void * unpackFilesThread(void * unused)
 		int cnt = fread( buf, 1, sizeof(buf), ff );
 		if( cnt < 0 )
 		{
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
 			unpackFinished = 1;
 			return 1;
 		}
@@ -113,27 +120,42 @@ void * unpackFilesThread(void * unused)
 	fclose(ff);
 	if( pclose(fo) != 0 )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
 		unpackFinished = 1;
 		return 0;
 	}
 
 	remove("data.tar.gz");
 
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Extracting data finished");
+
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/postinstall.sh" );
 	if( stat( fname, &st ) != 0 )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "No postinstall script");
 		unpackFinished = 1;
 		return 1;
 	}
 
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Running postinstall scipt");
+
 	fo = popen(fname, "w");
 	if( !fo )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "ERROR: Cannot launch postinstall scipt");
 		unpackFinished = 1;
 		return 0;
 	}
-	pclose(fo);
+	for(;;)
+	{
+		char buf[1024];
+		if( !fgets(buf, sizeof(buf), fo) )
+			break;
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", buf);
+	}
+
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Postinstall scipt exited with status %d", pclose(fo));
 
 	unpackFinished = 1;
 	return 1;
