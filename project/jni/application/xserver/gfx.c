@@ -140,7 +140,7 @@ void * unpackFilesThread(void * unused)
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Running postinstall scipt");
 
-	fo = popen(fname, "w");
+	fo = popen(fname, "r");
 	if( !fo )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "ERROR: Cannot launch postinstall scipt");
@@ -192,7 +192,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	SDL_Event event;
 	int res = -1, dpi = -1;
 	char native[32] = "0x0";
-	float dpiScale = 1.0f;
+	//float dpiScale = 1.0f;
 
 	const char * resStr[] = {
 		native, "1920x1080", "1280x960", "1280x720",
@@ -248,7 +248,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		SDL_Delay(200);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
-	dpiScale = (float)resVal[res][0] / (float)*resolutionW;
+	//dpiScale = (float)resVal[res][0] / (float)*resolutionW;
 	*resolutionW = resVal[res][0];
 	*resolutionH = resVal[res][1];
 	while ( dpi < 0 )
@@ -281,8 +281,8 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		SDL_Delay(200);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
-	*displayW = *displayW * (dpiScale / fontsVal[dpi]);
-	*displayH = *displayH * (dpiScale / fontsVal[dpi]);
+	*displayW = *displayW / fontsVal[dpi];
+	*displayH = *displayH / fontsVal[dpi];
 }
 
 void XSDL_generateBackground(const char * port, int showHelp)

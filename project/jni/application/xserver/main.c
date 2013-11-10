@@ -1,15 +1,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
+#include <unistd.h>
 #include <sys/types.h>
+#include <pwd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/un.h>
+#include <errno.h>
 #include <SDL/SDL.h>
 #include <android/log.h>
 
 #include "gfx.h"
 
 extern int android_main( int argc, char *argv[], char *envp[] );
+
+static void setupEnv(void);
 
 int main( int argc, char* argv[] )
 {
@@ -38,6 +44,7 @@ int main( int argc, char* argv[] )
 	int displayH = atoi(getenv("DISPLAY_HEIGHT_MM"));
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Actual video resolution %d/%dx%d/%d", resolutionW, displayW, resolutionH, displayH);
+	setupEnv();
 
 	XSDL_initSDL();
 	
@@ -45,22 +52,51 @@ int main( int argc, char* argv[] )
 
 	XSDL_showConfigMenu(&resolutionW, &displayW, &resolutionH, &displayH);
 
-	int s = socket(AF_INET, SOCK_STREAM, 0);
-	if( s >= 0 )
+	for(i = 0; i < 1024; i++)
 	{
-		for(i = 0; i < 1024; i++)
+		int s = socket(AF_INET, SOCK_STREAM, 0);
+		if( s >= 0 )
 		{
 			struct sockaddr_in addr;
+
 			memset(&addr, 0, sizeof(addr));
+
 			addr.sin_family = AF_INET;
 			addr.sin_addr.s_addr = INADDR_ANY;
 			addr.sin_port = htons(6000 + i);
 
-			if( bind (s, (struct sockaddr *) &addr, sizeof(addr) ) < 0 )
+			if( bind (s, (struct sockaddr *) &addr, sizeof(addr) ) != 0 )
+			{
+				__android_log_print(ANDROID_LOG_INFO, "XSDL", "TCP port %d already used, trying next one: %s", 6000 + i, strerror(errno));
+				close(s);
 				continue;
-			sprintf( port, ":%d", i );
+			}
+			close(s);
 		}
-		close(s);
+
+		// Cannot create socket with non-existing path, but Xserver code somehow does that
+		/*
+		s = socket(AF_UNIX, SOCK_STREAM, 0);
+		if( s >= 0 )
+		{
+			struct sockaddr_un addr;
+
+			memset(&addr, 0, sizeof(addr));
+
+			addr.sun_family = AF_UNIX;
+			sprintf(addr.sun_path, "/tmp/.X11-unix/X%d", i);
+			if( bind(s, (struct sockaddr *) &addr, strlen(addr.sun_path) + sizeof(addr.sun_family)) != 0 )
+			{
+				__android_log_print(ANDROID_LOG_INFO, "XSDL", "UNIX path %s already used, trying next one: %s", addr.sun_path, strerror(errno));
+				close(s);
+				continue;
+			}
+			close(s);
+		}
+		*/
+
+		sprintf( port, ":%d", i );
+		break;
 	}
 
 	if( argc > 1 && strcmp(argv[1], "-nohelp") == 0 )
@@ -96,4 +132,22 @@ int main( int argc, char* argv[] )
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", args[i]);
 
 	return android_main( ARGNUM, args, envp );
+}
+
+void setupEnv(void)
+{
+	uid_t uid = geteuid();
+	struct passwd * pwd;
+	char buf[32];
+	errno = 0;
+	pwd = getpwuid(uid);
+	if( !pwd )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot determine user name for ID %d: %s", uid, strerror(errno));
+		return;
+	}
+	sprintf( buf, "%d", uid );
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "User %s ID %s", pwd->pw_name, buf);
+	setenv("USER_ID", buf, 1);
+	setenv("USER", pwd->pw_name, 1);
 }
