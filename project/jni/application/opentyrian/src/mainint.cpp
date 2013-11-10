@@ -2881,7 +2881,8 @@ void JE_pauseGame( void )
 	bool saved_music_disabled = music_disabled, saved_samples_disabled = samples_disabled;
 
 	music_disabled = samples_disabled = true;
-	SDL_ANDROID_PauseAudioPlayback();
+    //SDL_ANDROID_PauseAudioPlayback();
+	SDL_PauseAudio(1);
 #else
 	set_volume(tyrMusicVolume / 2, fxVolume);
 #endif
@@ -2969,7 +2970,8 @@ void JE_pauseGame( void )
 #ifdef ANDROID
 	music_disabled = saved_music_disabled;
 	samples_disabled = saved_samples_disabled;
-	SDL_ANDROID_ResumeAudioPlayback();
+//	SDL_ANDROID_ResumeAudioPlayback();
+	SDL_PauseAudio(0);
 #else
 	set_volume(tyrMusicVolume, fxVolume);
 #endif
