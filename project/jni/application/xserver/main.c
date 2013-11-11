@@ -16,6 +16,7 @@
 extern int android_main( int argc, char *argv[], char *envp[] );
 
 static void setupEnv(void);
+static void showError(void);
 
 int main( int argc, char* argv[] )
 {
@@ -131,6 +132,8 @@ int main( int argc, char* argv[] )
 	for( i = 0; i < ARGNUM; i++ )
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", args[i]);
 
+	// We should never quit. If that happens, then the server did not start - show error.
+	atexit(&showError);
 	return android_main( ARGNUM, args, envp );
 }
 
@@ -150,4 +153,11 @@ void setupEnv(void)
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "User %s ID %s", pwd->pw_name, buf);
 	setenv("USER_ID", buf, 1);
 	setenv("USER", pwd->pw_name, 1);
+}
+
+void showError(void)
+{
+	XSDL_initSDL();
+	XSDL_showServerLaunchErrorMessage();
+	XSDL_deinitSDL();
 }

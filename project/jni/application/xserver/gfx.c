@@ -245,7 +245,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			renderString(resStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/4 + (i*VID_Y/2));
 		SDL_GetMouseState(&x, &y);
 		renderString("X", x, y);
-		SDL_Delay(200);
+		SDL_Delay(150);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
 	//dpiScale = (float)resVal[res][0] / (float)*resolutionW;
@@ -278,7 +278,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			renderString(fontsStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/8 + (i*VID_Y/4));
 		SDL_GetMouseState(&x, &y);
 		renderString("X", x, y);
-		SDL_Delay(200);
+		SDL_Delay(150);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
 	*displayW = *displayW / fontsVal[dpi];
@@ -351,15 +351,34 @@ void XSDL_generateBackground(const char * port, int showHelp)
 	SDL_FreeSurface(surf);
 }
 
+void XSDL_showServerLaunchErrorMessage()
+{
+	showErrorMessage(	"Error: X server failed to launch,\n"
+						"because of stale Unix socket with non-existing path.\n\n"
+						"Power off your device and power it on,\n"
+						"and everything will work again.");
+}
+
 void showErrorMessage(const char *msg)
 {
 	SDL_Event event;
+	const char * s;
+	int y = VID_Y/3;
 	SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
-	renderString(msg, VID_X/2, VID_Y/2);
+	for( s = msg; s && s[0]; s = strchr(s, '\n'), s += (s ? 1 : 0), y += 30 )
+	{
+		const char * s1 = strchr(s, '\n');
+		int len = s1 ? s1 - s : strlen(s);
+		char buf[512];
+		strncpy(buf, s, len);
+		buf[len] = 0;
+		if( len > 0 )
+			renderString(buf, VID_X/2, y);
+	}
 	SDL_Flip(SDL_GetVideoSurface());
 	while (1)
 	{
-		while (SDL_PollEvent(&event))
+		while (SDL_WaitEvent(&event))
 		{
 			switch (event.type)
 			{
