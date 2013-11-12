@@ -3,7 +3,7 @@
 # Srdjan Obucina <obucinac@gmail.com>
 
 LOCAL_PATH:=$(call my-dir)
-#FFMPEG_REBUILD_FROM_SOURCE:=yes
+FFMPEG_REBUILD_FROM_SOURCE:=yes
 
 ifneq ($(FFMPEG_REBUILD_FROM_SOURCE),yes)
 
