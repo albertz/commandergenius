@@ -39,12 +39,15 @@ void * unpackFilesThread(void * unused)
 		return 1;
 	}
 
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data");
+
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/busybox" );
 	FILE * ff = fopen("busybox", "rb");
 	FILE * fo = fopen(fname, "wb");
 	if( !ff || !fo )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot copy busybox");
 		unpackFinished = 1;
 		return 0;
 	}
@@ -55,6 +58,7 @@ void * unpackFilesThread(void * unused)
 		int cnt = fread( buf, 1, sizeof(buf), ff );
 		if( cnt < 0 )
 		{
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot copy busybox");
 			unpackFinished = 1;
 			return 1;
 		}
@@ -68,6 +72,7 @@ void * unpackFilesThread(void * unused)
 
 	if( chmod(fname, 0755) != 0 )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot chmod busybox");
 		unpackFinished = 1;
 		return 0;
 	}
@@ -85,6 +90,7 @@ void * unpackFilesThread(void * unused)
 	fo = popen(fname, "w");
 	if( !ff || !fo )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
 		unpackFinished = 1;
 		return 0;
 	}
@@ -96,6 +102,7 @@ void * unpackFilesThread(void * unused)
 		int cnt = fread( buf, 1, sizeof(buf), ff );
 		if( cnt < 0 )
 		{
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
 			unpackFinished = 1;
 			return 1;
 		}
@@ -113,27 +120,42 @@ void * unpackFilesThread(void * unused)
 	fclose(ff);
 	if( pclose(fo) != 0 )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
 		unpackFinished = 1;
 		return 0;
 	}
 
 	remove("data.tar.gz");
 
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Extracting data finished");
+
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/postinstall.sh" );
 	if( stat( fname, &st ) != 0 )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "No postinstall script");
 		unpackFinished = 1;
 		return 1;
 	}
 
-	fo = popen(fname, "w");
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Running postinstall scipt");
+
+	fo = popen(fname, "r");
 	if( !fo )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "ERROR: Cannot launch postinstall scipt");
 		unpackFinished = 1;
 		return 0;
 	}
-	pclose(fo);
+	for(;;)
+	{
+		char buf[1024];
+		if( !fgets(buf, sizeof(buf), fo) )
+			break;
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", buf);
+	}
+
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Postinstall scipt exited with status %d", pclose(fo));
 
 	unpackFinished = 1;
 	return 1;
@@ -170,7 +192,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	SDL_Event event;
 	int res = -1, dpi = -1;
 	char native[32] = "0x0";
-	float dpiScale = 1.0f;
+	//float dpiScale = 1.0f;
 
 	const char * resStr[] = {
 		native, "1920x1080", "1280x960", "1280x720",
@@ -223,10 +245,10 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			renderString(resStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/4 + (i*VID_Y/2));
 		SDL_GetMouseState(&x, &y);
 		renderString("X", x, y);
-		SDL_Delay(200);
+		SDL_Delay(150);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
-	dpiScale = (float)resVal[res][0] / (float)*resolutionW;
+	//dpiScale = (float)resVal[res][0] / (float)*resolutionW;
 	*resolutionW = resVal[res][0];
 	*resolutionH = resVal[res][1];
 	while ( dpi < 0 )
@@ -256,11 +278,11 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			renderString(fontsStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/8 + (i*VID_Y/4));
 		SDL_GetMouseState(&x, &y);
 		renderString("X", x, y);
-		SDL_Delay(200);
+		SDL_Delay(150);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
-	*displayW = *displayW * (dpiScale / fontsVal[dpi]);
-	*displayH = *displayH * (dpiScale / fontsVal[dpi]);
+	*displayW = *displayW / fontsVal[dpi];
+	*displayH = *displayH / fontsVal[dpi];
 }
 
 void XSDL_generateBackground(const char * port, int showHelp)
@@ -329,15 +351,34 @@ void XSDL_generateBackground(const char * port, int showHelp)
 	SDL_FreeSurface(surf);
 }
 
+void XSDL_showServerLaunchErrorMessage()
+{
+	showErrorMessage(	"Error: X server failed to launch,\n"
+						"because of stale Unix socket with non-existing path.\n\n"
+						"Power off your device and power it on,\n"
+						"and everything will work again.");
+}
+
 void showErrorMessage(const char *msg)
 {
 	SDL_Event event;
+	const char * s;
+	int y = VID_Y/3;
 	SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
-	renderString(msg, VID_X/2, VID_Y/2);
+	for( s = msg; s && s[0]; s = strchr(s, '\n'), s += (s ? 1 : 0), y += 30 )
+	{
+		const char * s1 = strchr(s, '\n');
+		int len = s1 ? s1 - s : strlen(s);
+		char buf[512];
+		strncpy(buf, s, len);
+		buf[len] = 0;
+		if( len > 0 )
+			renderString(buf, VID_X/2, y);
+	}
 	SDL_Flip(SDL_GetVideoSurface());
 	while (1)
 	{
-		while (SDL_PollEvent(&event))
+		while (SDL_WaitEvent(&event))
 		{
 			switch (event.type)
 			{
