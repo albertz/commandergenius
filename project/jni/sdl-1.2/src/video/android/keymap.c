@@ -250,48 +250,48 @@ unsigned char SDL_android_keysym_to_scancode[SDLK_LAST] = {
 	0,
 	0,
 	0,
-	22,
-	23,
+	22, // SDLK_BACKSPACE = 8
+	23, // SDLK_TAB = 9
 	0,
 	0,
 	0,
-	36,
-	0,
-	0,
-	0,
-	0,
-	0,
-	127,
+	36, // SDLK_RETURN
 	0,
 	0,
 	0,
 	0,
 	0,
-	0,
-	0,
-	9,
-	0,
-	0,
-	0,
-	0,
-	65,
+	127, // SDLK_PAUSE
 	0,
 	0,
 	0,
 	0,
 	0,
 	0,
-	48,
+	0,
+	9, // SDLK_ESCAPE = 27
 	0,
 	0,
 	0,
 	0,
-	59,
-	20,
-	60,
-	61,
-	19,
-	10,
+	65, // SDLK_SPACE = 32
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	48, // SDLK_QUOTE = 39
+	0,
+	0,
+	0,
+	0,
+	59, // SDLK_COMMA = 44
+	20, // SDLK_MINUS
+	60, // SDLK_PERIOD
+	61, // SDLK_SLASH
+	19, // SDLK_0 = 48
+	10, // SDLK_1 = 49
 	11,
 	12,
 	13,
@@ -299,13 +299,11 @@ unsigned char SDL_android_keysym_to_scancode[SDLK_LAST] = {
 	15,
 	16,
 	17,
-	18,
+	18, // SDLK_9 = 57
 	0,
-	47,
+	47, // SDLK_SEMICOLON = 59
 	0,
-	21,
-	0,
-	0,
+	21, // SDLK_EQUALS = 61
 	0,
 	0,
 	0,
@@ -314,7 +312,7 @@ unsigned char SDL_android_keysym_to_scancode[SDLK_LAST] = {
 	0,
 	0,
 	0,
-	0,
+	0, // 70
 	0,
 	0,
 	0,
@@ -324,6 +322,7 @@ unsigned char SDL_android_keysym_to_scancode[SDLK_LAST] = {
 	0,
 	0,
 	0,
+	0, // 80
 	0,
 	0,
 	0,
@@ -333,13 +332,14 @@ unsigned char SDL_android_keysym_to_scancode[SDLK_LAST] = {
 	0,
 	0,
 	0,
-	34,
-	51,
-	35,
+	0, // 90
+	34, // SDLK_LEFTBRACKET = 91
+	51, // SDLK_BACKSLASH = 92
+	35, // SDLK_RIGHTBRACKET = 93
 	0,
 	0,
-	49,
-	38,
+	49, // SDLK_BACKQUOTE = 96
+	38, // SDLK_a = 97
 	56,
 	54,
 	40,
@@ -364,12 +364,12 @@ unsigned char SDL_android_keysym_to_scancode[SDLK_LAST] = {
 	25,
 	53,
 	29,
-	52,
+	52, // SDLK_z = 122
 	0,
 	0,
 	0,
 	0,
-	119,
+	119, // SDLK_DELETE = 127
 	0,
 	0,
 	0,
@@ -513,18 +513,18 @@ unsigned char SDL_android_keysym_to_scancode[SDLK_LAST] = {
 	63,
 	82,
 	86,
-	104,
-	0,
-	111,
-	116,
-	114,
-	113,
-	118,
-	110,
-	115,
-	112,
-	117,
-	67,
+	104, // SDLK_KP_ENTER = 271
+	0, // SDLK_KP_EQUALS = 272
+	111, // SDLK_UP = 273
+	116, // SDLK_DOWN = 274
+	114, // SDLK_RIGHT = 275
+	113, // SDLK_LEFT = 276
+	118, // SDLK_INSERT = 277
+	110, // SDLK_HOME = 278
+	115, // SDLK_END = 279
+	112, // SDLK_PAGEUP = 280
+	117, // SDLK_PAGEDOWN = 281
+	67, // SDLK_F1 = 282
 	68,
 	69,
 	70,
@@ -535,33 +535,33 @@ unsigned char SDL_android_keysym_to_scancode[SDLK_LAST] = {
 	75,
 	76,
 	95,
-	96,
+	96, // SDLK_F12 = 293
 	0,
 	0,
 	0,
 	0,
 	0,
 	0,
-	77,
-	66,
-	78,
-	62,
-	50,
-	105,
-	37,
-	108,
-	64,
+	77, // SDLK_NUMLOCK = 300
+	66, // SDLK_CAPSLOCK = 301
+	78, // SDLK_SCROLLOCK = 302
+	62, // SDLK_RSHIFT = 303
+	50, // SDLK_LSHIFT = 304
+	105, // SDLK_RCTRL = 305
+	37, // SDLK_LCTRL = 306
+	108, // SDLK_RALT = 307
+	64, // SDLK_LALT = 308
 	0,
 	0,
-	133,
-	134,
+	133, // SDLK_LSUPER = 311 /**< Left "Windows" key */
+	134, // SDLK_RSUPER = 312 /**< Right "Windows" key */
 	0,
 	0,
 	0,
-	107,
+	107, // SDLK_PRINT = 316
 	0,
 	0,
-	135,
+	135, // SDLK_MENU = 319
 	0,
 	0,
 	0,
