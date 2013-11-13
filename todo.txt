@@ -26,6 +26,8 @@ TODO, which will get actually done
 
 - OpenArena: move 3-rd person camera to the side, above shoulder.
 
+- OpenArena: two new aiming modes - no-swipe aiming, with and without double-tap.
+
 - OpenArena: chat text input should be faster.
 
 - OpenArena: Shift and Ctrl keys on USB keyboard do not work for text input.
