@@ -526,6 +526,9 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 			MainActivity.LoadApplicationLibrary(context);
 
 		Settings.Apply(context);
+		Settings.nativeSetEnv( "DISPLAY_RESOLUTION_WIDTH", String.valueOf(Math.max(mWidth, mHeight)) );
+		Settings.nativeSetEnv( "DISPLAY_RESOLUTION_HEIGHT", String.valueOf(Math.min(mWidth, mHeight)) ); // In Kitkat with immersive mode, getWindowManager().getDefaultDisplay().getMetrics() return inaccurate height
+
 		accelerometer = new AccelerometerReader(context);
 		// Tweak video thread priority, if user selected big audio buffer
 		if(Globals.AudioBufferConfig >= 2)
