@@ -130,7 +130,7 @@ int main( int argc, char* argv[] )
 
 	XSDL_deinitSDL();
 
-	sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, 24 );
+	sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, SDL_GetVideoInfo()->vfmt->BitsPerPixel );
 
 	if( argc > 1 )
 	{

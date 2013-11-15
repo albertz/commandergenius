@@ -394,7 +394,7 @@ void showErrorMessage(const char *msg)
 void XSDL_initSDL()
 {
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_SetVideoMode(VID_X, VID_Y, 24, SDL_SWSURFACE);
+	SDL_SetVideoMode(VID_X, VID_Y, 0, SDL_SWSURFACE);
 	TTF_Init();
 	sFont = TTF_OpenFont("DroidSansMono.ttf", 12);
 	if (!sFont)
