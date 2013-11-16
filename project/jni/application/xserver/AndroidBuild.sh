@@ -58,7 +58,7 @@ xkb/.libs/libxkbstubs.a \
 composite/.libs/libcomposite.a \
 os/.libs/libos.a \
 hw/kdrive/linux/.libs/liblinux.a \
--lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lts -lfreetype' \
+-lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lts -lfreetype -landroid-shmem' \
 || exit 1
 
 #-lfreetype is inside -lsdl_ttf
