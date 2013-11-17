@@ -25,6 +25,23 @@ echo "===== libSDL on Android configuration ====="
 echo
 echo "If you will supply empty string as answer the previous value will be used"
 
+if [ -z "$Debuggable" -o -z "$AUTO" ]; then
+echo
+echo -n "Debuggable Build? (y) or (n): ($Debuggable): "
+read var
+if [ -n "$var" ] ; then
+
+if [ "$var" = "y" ] ; then
+	Debuggable="true"
+else
+	Debuggable="false"	
+fi
+
+	CHANGED=1
+fi
+fi
+
+
 if [ -z "$LibSdlVersion" -o -z "$AUTO" ]; then
 echo
 echo -n "libSDL version to use (1.2, 1.3, or 2.0) ($LibSdlVersion): "
@@ -766,6 +783,9 @@ echo "# The application settings for Android libSDL port" >> AndroidAppSettings.
 echo >> AndroidAppSettings.cfg
 echo AppSettingVersion=$CHANGE_APP_SETTINGS_VERSION >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Debuggable Build? (y) or (n):" >> AndroidAppSettings.cfg
+echo Debuggable=$Debuggable >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# libSDL version to use (1.2 or 1.3, specify 1.3 for SDL2)" >> AndroidAppSettings.cfg
 echo LibSdlVersion=$LibSdlVersion >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
@@ -1292,6 +1312,7 @@ echo Patching project/AndroidManifest.xml
 cat project/AndroidManifestTemplate.xml | \
 	sed "s/package=.*/package=\"$AppFullName\"/" | \
 	sed "s/android:screenOrientation=.*/android:screenOrientation=\"$ScreenOrientation1\"/" | \
+	sed "s/android:debuggable=.*/android:debuggable=\"$Debuggable\"/" | \
 	sed "s^android:versionCode=.*^android:versionCode=\"$AppVersionCode\"^" | \
 	sed "s^android:versionName=.*^android:versionName=\"$AppVersionName\"^" > \
 	project/AndroidManifest.xml
