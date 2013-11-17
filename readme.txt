@@ -361,10 +361,10 @@ while( SDL_PollEvent(&evt) )
 Quick guide to debug native code
 ================================
 
-The debugging of multi-threaded apps is not supported with NDK r4 or r4b, you'll need NDK r5c
-and Android 2.3 emulator or device.
-To debug your application go to "project" dir and launch command
-	ndk-gdb --verbose --start --force
+You need compile your app with debug enabled to be able to debug native code:
+./build.sh debug
+To debug your application - launch it, go to "project" dir and launch command
+	ndk-gdb
 then you can run usual GDB commands, like:
 	cont - continue execution.
 	info threads - list all threads, there will usually be like 11 of them with thread 10 being your main thread.
@@ -395,12 +395,13 @@ I/DEBUG   (   51):          #03  pc 0002ca00  /data/data/de.schwardtnet.alienbla
 I/DEBUG   (   51):          #04  pc 00028b6e  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
 I/DEBUG   (   51):          #05  pc 0002d080  /data/data/de.schwardtnet.alienblaster/lib/libsdl.so
 
-2. Go to project/bin/ndk/local/armeabi dir, find there the library mentioned in stacktrace
+2. Go to project/bin/ndk/local/armeabi or armeabi-v7a dir, find there the library mentioned in stacktrace
 (libsdl.so in our example), copy the address of the first line of stacktrace (0002ca00), and execute command
 
-<your NDK path>/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gdb libsdl.so -ex "list *0x0002ca00" -ex "list *0x00028b6e" -ex "list *0x0002d080"
+<your NDK path>/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86_64/bin/arm-linux-androideabi-gdb libsdl.so -ex "list *0x0002ca00" -ex "list *0x00028b6e" -ex "list *0x0002d080"
 
 It will output the exact line in your source where the application crashed, and some stack trace if available.
+You may also try to use ndk-stack script to do that for you.
 
 If your application does not work for unknown reasons, there may be the case when it exports some symbol
 that clash with exports from system libraries - run checkExports.sh to check this.
