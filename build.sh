@@ -27,6 +27,14 @@ if [ "$#" -gt 0 -a "$1" = "release" ]; then
 	build_release=true
 fi
 
+if [ "$#" -gt 0 -a "$1" = "-h" ]; then
+	echo "Usage: $0 [-s] [-i] [-r] [release]"
+	echo "    -s: sign APK file after building"
+	echo "    -i: install APK file to device after building"
+	echo "    -r: run APK file on device after building"
+	echo "    release: build release package instead of debug"
+fi
+
 [ -e project/local.properties ] || {
 	android update project -p project || exit 1
 	rm -f project/src/Globals.java

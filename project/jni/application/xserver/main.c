@@ -95,6 +95,25 @@ int main( int argc, char* argv[] )
 			close(s);
 		}
 		*/
+		FILE * ff = fopen("/proc/net/unix", "rb");
+		if( ff )
+		{
+			char buf[512], name[512];
+			int found = 0;
+			sprintf(name, "/tmp/.X11-unix/X%d", i);
+			while( fgets(buf, sizeof(buf), ff) )
+			{
+				if( strstr(buf, name) != NULL )
+				{
+					__android_log_print(ANDROID_LOG_INFO, "XSDL", "UNIX path %s already used, trying next one", name);
+					found = 1;
+					break;
+				}
+			}
+			fclose(ff);
+			if( found )
+				continue;
+		}
 
 		sprintf( port, ":%d", i );
 		break;
@@ -111,7 +130,7 @@ int main( int argc, char* argv[] )
 
 	XSDL_deinitSDL();
 
-	sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, 24 );
+	sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, SDL_GetVideoInfo()->vfmt->BitsPerPixel );
 
 	if( argc > 1 )
 	{

@@ -7,10 +7,21 @@ PACKAGE_NAME=`grep AppFullName AndroidAppSettings.cfg | sed 's/.*=//'`
 ../setEnvironment-armeabi-v7a.sh sh -c '\
 $CC $CFLAGS -c main.c gfx.c' || exit 1
 
-[ -e xserver/android ] || git submodule update --init xserver || exit 1
+[ -e xserver/android ] || {
+	CURDIR=`pwd`
+	cd ../../../..
+	git submodule update --init project/jni/application/xserver/xserver || exit 1
+	cd $CURDIR
+} || exit 1
 cd xserver
 [ -e configure ] || autoreconf --force -v --install || exit 1
+[ -e android/android-shmem/LICENSE ] || git submodule update --init android/android-shmem || exit 1
 cd android
+[ -e android-shmem/libancillary/ancillary.h ] || {
+	cd android-shmem
+	git submodule update --init libancillary || exit 1
+	cd ..
+} || exit 1
 [ -e libfontenc-*/Makefile ] && {
 	grep "/data/data/$PACKAGE_NAME" libfontenc-*/Makefile || \
 	git clean -f -d -x .
@@ -47,7 +58,7 @@ xkb/.libs/libxkbstubs.a \
 composite/.libs/libcomposite.a \
 os/.libs/libos.a \
 hw/kdrive/linux/.libs/liblinux.a \
--lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lts -lfreetype' \
+-lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lts -lfreetype -landroid-shmem' \
 || exit 1
 
 #-lfreetype is inside -lsdl_ttf
