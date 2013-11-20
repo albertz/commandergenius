@@ -388,7 +388,8 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		SDL_ANDROID_sWindowHeight = SDL_ANDROID_sRealWindowHeight;
 
 		SDL_ANDROID_ForceClearScreenRectAmount = 0;
-		if( SDL_ANDROID_ScreenKeep43Ratio )
+		if( SDL_ANDROID_ScreenKeep43Ratio &&
+			(float)width / (float)height < (float)SDL_ANDROID_sWindowWidth / (float)SDL_ANDROID_sWindowHeight )
 		{
 			SDL_ANDROID_sWindowWidth = (SDL_ANDROID_sFakeWindowWidth * SDL_ANDROID_sRealWindowHeight) / SDL_ANDROID_sFakeWindowHeight;
 			SDL_ANDROID_TouchscreenCalibrationWidth = SDL_ANDROID_sWindowWidth;
