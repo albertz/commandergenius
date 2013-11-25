@@ -82,7 +82,7 @@ $(OBJS_MINIZIP): out/%.o: %.c
 	$< -o $@"
 
 LINK_BOOST_LIBS:=-L../../boost/lib/arm-linux-androideabi-4.6 \
-	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lgnustl_static
+	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lboost_locale -lgnustl_static
 
 LINK_LIB= \
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
