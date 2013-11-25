@@ -26,7 +26,7 @@
 ----------------------------------------------------------*/
 
 #define	SCREEN_W	640
-#define	SCREEN_H	480
+#define	SCREEN_H	256
 
 
 #define	BALLS	300

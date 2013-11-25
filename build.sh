@@ -4,7 +4,7 @@
 install_apk=false
 run_apk=false
 sign_apk=false
-build_release=false
+build_release=true
 
 if [ "$#" -gt 0 -a "$1" = "-s" ]; then
 	shift
@@ -27,12 +27,19 @@ if [ "$#" -gt 0 -a "$1" = "release" ]; then
 	build_release=true
 fi
 
+if [ "$#" -gt 0 -a "$1" = "debug" ]; then
+	shift
+	build_release=false
+fi
+
 if [ "$#" -gt 0 -a "$1" = "-h" ]; then
 	echo "Usage: $0 [-s] [-i] [-r] [release]"
 	echo "    -s: sign APK file after building"
 	echo "    -i: install APK file to device after building"
 	echo "    -r: run APK file on device after building"
-	echo "    release: build release package instead of debug"
+	echo "    debug: build debug package"
+	echo "    release: build release package (default)"
+	exit 0
 fi
 
 [ -e project/local.properties ] || {
