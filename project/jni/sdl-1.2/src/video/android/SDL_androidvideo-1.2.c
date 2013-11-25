@@ -388,10 +388,16 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		SDL_ANDROID_sWindowHeight = SDL_ANDROID_sRealWindowHeight;
 
 		SDL_ANDROID_ForceClearScreenRectAmount = 0;
-		if( SDL_ANDROID_ScreenKeep43Ratio &&
-			(float)width / (float)height < (float)SDL_ANDROID_sWindowWidth / (float)SDL_ANDROID_sWindowHeight )
+		if( SDL_ANDROID_ScreenKeep43Ratio )
 		{
-			SDL_ANDROID_sWindowWidth = (SDL_ANDROID_sFakeWindowWidth * SDL_ANDROID_sRealWindowHeight) / SDL_ANDROID_sFakeWindowHeight;
+			if( (float)width / (float)height < (float)SDL_ANDROID_sWindowWidth / (float)SDL_ANDROID_sWindowHeight )
+				SDL_ANDROID_sWindowWidth = (SDL_ANDROID_sFakeWindowWidth * SDL_ANDROID_sRealWindowHeight) / SDL_ANDROID_sFakeWindowHeight;
+			else
+				// Force 4:3 ratio, with black borders at the left/right,
+				// this is needede for Uae4all2, which has 640x256 video mode,
+				// and expects those 256 pixels to stretch 2x height like on a TV interlaced display.
+				SDL_ANDROID_sWindowWidth = SDL_ANDROID_sWindowHeight * 4 / 3;
+
 			SDL_ANDROID_TouchscreenCalibrationWidth = SDL_ANDROID_sWindowWidth;
 			SDL_ANDROID_ForceClearScreenRectAmount = 2;
 		}

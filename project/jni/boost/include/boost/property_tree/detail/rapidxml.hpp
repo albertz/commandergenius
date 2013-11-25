@@ -16,10 +16,6 @@
 #include <cstdlib>      // For std::size_t
 #include <new>          // For placement new
 
-#ifdef ANDROID
-#include <android/log.h>
-#endif
-
 // On MSVC, disable "conditional expression is constant" warning (level 4). 
 // This warning is almost impossible to avoid with certain types of templated code
 #ifdef _MSC_VER
@@ -600,14 +596,10 @@ namespace boost { namespace property_tree { namespace detail {namespace rapidxml
                 // Allocate
                 std::size_t alloc_size = sizeof(header) + (2 * BOOST_PROPERTY_TREE_RAPIDXML_ALIGNMENT - 2) + pool_size;     // 2 alignments required in worst case: one for header, one for actual allocation
                 char *raw_memory = allocate_raw(alloc_size);
-
                     
                 // Setup new pool in allocated memory
                 char *pool = align(raw_memory);
-                //header *new_header = reinterpret_cast<header *>(pool);
-		header *new_header = (header *)((void*)pool);
-
-
+                header *new_header = reinterpret_cast<header *>(pool);
                 new_header->previous_begin = m_begin;
                 m_begin = raw_memory;
                 m_ptr = pool + sizeof(header);
