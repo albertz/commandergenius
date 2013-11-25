@@ -56,7 +56,7 @@ OBJS_ERM:=$(patsubst %.cpp, out/%.o, $(SOURCES_ERM))
 
 all: AndroidData/binaries.zip libapplication.so
 
-AndroidData/binaries.zip: libvcmi.so vcmiserver AI/libBattleAI.so AI/libStupidAI.so AI/libVCAI.so # Scripting/libvcmiERM.so AI/libEmptyAI.so
+AndroidData/binaries.zip: libvcmi.so vcmiserver AI/libBattleAI.so AI/libStupidAI.so AI/libVCAI.so libicuuc.so.52 # Scripting/libvcmiERM.so AI/libEmptyAI.so 
 	rm -f $@
 	zip -r $@ $^
 
