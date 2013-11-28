@@ -5,6 +5,8 @@
 LOCAL_PATH:=$(call my-dir)
 #FFMPEG_REBUILD_FROM_SOURCE:=yes
 
+ifeq ($(TARGET_ARCH),arm)
+
 ifneq ($(FFMPEG_REBUILD_FROM_SOURCE),yes)
 
 # FFMPEG compilation is hacky and buggy, so we're using prebuilt libraries by default
@@ -626,5 +628,7 @@ ifeq ($(CONFIG_FFSERVER),yes)
 endif
 #========================================================================
 endif #CONFIG_FFMPEG_COMPILE_TOOLS
-endif
-endif
+
+endif # notdir $(LOCAL_PATH)),ffmpeg
+endif # FFMPEG_REBUILD_FROM_SOURCE),yes
+endif # $(TARGET_ARCH),arm

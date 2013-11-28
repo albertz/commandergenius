@@ -1,18 +1,18 @@
-diff -r -u old/dosbox-0.74/config.sub dosbox-0.74/config.sub
---- old/dosbox-0.74/config.sub	2010-05-10 20:43:54.000000000 +0300
-+++ dosbox-0.74/config.sub	2012-11-21 21:14:48.428064682 +0200
+diff -u -r ../dosbox-0.74/config.sub dosbox-0.74/config.sub
+--- ../dosbox-0.74/config.sub	2010-05-10 20:43:54.000000000 +0300
++++ dosbox-0.74/config.sub	2013-11-28 19:20:33.285066723 +0200
 @@ -1298,7 +1298,7 @@
  	      | -ekkobsd* | -kfreebsd* | -freebsd* | -riscix* | -lynxos* \
  	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
  	      | -ptx* | -coff* | -ecoff* | -winnt* | -domain* | -vsta* \
 -	      | -udi* | -eabi* | -lites* | -ieee* | -go32* | -aux* \
-+	      | -udi* | -eabi* | -androideabi* | -lites* | -ieee* | -go32* | -aux* \
++	      | -udi* | -eabi* | -android* | -lites* | -ieee* | -go32* | -aux* \
  	      | -chorusos* | -chorusrdb* | -cegcc* \
  	      | -cygwin* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
  	      | -mingw32* | -linux-gnu* | -linux-newlib* | -linux-uclibc* \
-diff -r -u old/dosbox-0.74/src/dos/drive_local.cpp dosbox-0.74/src/dos/drive_local.cpp
---- old/dosbox-0.74/src/dos/drive_local.cpp	2010-05-10 20:43:54.000000000 +0300
-+++ dosbox-0.74/src/dos/drive_local.cpp	2012-11-21 21:14:48.428064682 +0200
+diff -u -r ../dosbox-0.74/src/dos/drive_local.cpp dosbox-0.74/src/dos/drive_local.cpp
+--- ../dosbox-0.74/src/dos/drive_local.cpp	2010-05-10 20:43:54.000000000 +0300
++++ dosbox-0.74/src/dos/drive_local.cpp	2013-11-28 19:20:33.285066723 +0200
 @@ -273,7 +273,7 @@
  
  	find_size=(Bit32u) stat_block.st_size;
@@ -40,9 +40,9 @@ diff -r -u old/dosbox-0.74/src/dos/drive_local.cpp dosbox-0.74/src/dos/drive_loc
  		time=DOS_PackTime((Bit16u)ltime->tm_hour,(Bit16u)ltime->tm_min,(Bit16u)ltime->tm_sec);
  		date=DOS_PackDate((Bit16u)(ltime->tm_year+1900),(Bit16u)(ltime->tm_mon+1),(Bit16u)ltime->tm_mday);
  	} else {
-diff -r -u old/dosbox-0.74/src/gui/sdlmain.cpp dosbox-0.74/src/gui/sdlmain.cpp
---- old/dosbox-0.74/src/gui/sdlmain.cpp	2010-05-10 20:43:54.000000000 +0300
-+++ dosbox-0.74/src/gui/sdlmain.cpp	2012-11-21 21:51:37.128044459 +0200
+diff -u -r ../dosbox-0.74/src/gui/sdlmain.cpp dosbox-0.74/src/gui/sdlmain.cpp
+--- ../dosbox-0.74/src/gui/sdlmain.cpp	2010-05-10 20:43:54.000000000 +0300
++++ dosbox-0.74/src/gui/sdlmain.cpp	2013-11-28 19:23:09.782280538 +0200
 @@ -32,6 +32,7 @@
  #include <signal.h>
  #include <process.h>
@@ -68,6 +68,15 @@ diff -r -u old/dosbox-0.74/src/gui/sdlmain.cpp dosbox-0.74/src/gui/sdlmain.cpp
  }
  
  
+@@ -1529,7 +1531,7 @@
+ 	if ( !sdl.inited && SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0 ) textonly = true;
+ 	sdl.inited = true;
+ #endif
+-	printf(message);
++	printf("%s", message);
+ 	if(textonly) return;
+ 	if(!sdl.surface) sdl.surface = SDL_SetVideoMode(640,400,0,0);
+ 	if(!sdl.surface) return;
 @@ -1743,8 +1745,7 @@
  #if SDL_VERSION_ATLEAST(1, 2, 14)
  	putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1"));
@@ -78,3 +87,15 @@ diff -r -u old/dosbox-0.74/src/gui/sdlmain.cpp dosbox-0.74/src/gui/sdlmain.cpp
  		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
  	sdl.inited = true;
  
+diff -u ../dosbox-0.74/src/cpu/core_dyn_x86/risc_x86.h dosbox-0.74/src/cpu/core_dyn_x86/risc_x86.h
+--- ../dosbox-0.74/src/cpu/core_dyn_x86/risc_x86.h	2010-05-10 20:43:54.000000000 +0300
++++ dosbox-0.74/src/cpu/core_dyn_x86/risc_x86.h	2013-11-28 19:54:35.678624476 +0200
+@@ -112,7 +112,7 @@
+ 		pop		ebx
+ 		mov		[retval],eax
+ 	}
+-#elif defined (MACOSX)
++#elif defined (MACOSX) || defined(__ANDROID__)
+ 	register Bit32u tempflags=reg_flags & FMASK_TEST;
+ 	__asm__ volatile (
+ 		"pushl %%ebx						\n"

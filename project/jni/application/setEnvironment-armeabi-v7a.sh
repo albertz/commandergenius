@@ -50,9 +50,10 @@ MISSING_LIB=
 
 CFLAGS="\
 -fpic -ffunction-sections -funwind-tables -fstack-protector \
--no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb \
--fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 -marm -fno-omit-frame-pointer \
--DANDROID -DNDEBUG -O2 -g -finline-functions -Wa,--noexecstack -Wformat -Werror=format-security \
+-no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp \
+-mfpu=vfpv3-d16 -mthumb -O2 -g -DNDEBUG \
+-fomit-frame-pointer -fno-strict-aliasing -finline-limit=300 \
+-DANDROID -Wall -Wno-unused -Wa,--noexecstack -Wformat -Werror=format-security \
 -isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH/include \
@@ -93,7 +94,7 @@ $MISSING_LIB $LDFLAGS"
 
 env PATH=$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \
-CXXFLAGS="$CXXFLAGS $CFLAGS" \
+CXXFLAGS="$CXXFLAGS $CFLAGS -frtti -fexceptions" \
 LDFLAGS="$LDFLAGS" \
 CC="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-gcc" \
 CXX="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-g++" \

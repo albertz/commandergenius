@@ -18,13 +18,19 @@ NDK=`which ndk-build`
 NDK=`dirname $NDK`
 NDK=`readlink -f $NDK`
 
+grep "64.bit" "$NDK/RELEASE.TXT" >/dev/null 2>&1 && MYARCH="${MYARCH}_64"
+
 #echo NDK $NDK
-GCCPREFIX=arm-linux-androideabi
-GCCVER=4.4.3
-PLATFORMVER=android-8
+GCCPREFIX=mipsel-linux-android
+[ -z "$GCCVER" ] && GCCVER=4.6
+[ -z "$PLATFORMVER" ] && PLATFORMVER=android-14
 LOCAL_PATH=`dirname $0`
-LOCAL_PATH=`cd $LOCAL_PATH && pwd`
-#echo LOCAL_PATH $LOCAL_PATH
+if which realpath > /dev/null ; then
+	LOCAL_PATH=`realpath $LOCAL_PATH`
+else
+	LOCAL_PATH=`cd $LOCAL_PATH && pwd`
+fi
+ARCH=mips
 
 APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
 APP_AVAILABLE_STATIC_LIBS=`grep 'APP_AVAILABLE_STATIC_LIBS [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
@@ -42,58 +48,54 @@ done
 MISSING_INCLUDE=
 MISSING_LIB=
 
-#if [ -n "$CRYSTAX_WCHAR" ]; then
-#	MISSING_INCLUDE="$MISSING_INCLUDE -isystem$NDK/sources/crystax/include"
-#	MISSING_LIB="$MISSING_LIB $NDK/sources/crystax/libs/armeabi/libcrystax_static.a"
-#fi
-#if [ -n "$MISSING_LIBCXX_PATH" ]; then
-#	MISSING_INCLUDE="$MISSING_INCLUDE -isystem$NDK/sources/cxx-stl/gnu-libstdc++/include"
-#	MISSING_LIB="$MISSING_LIB -lgnustl_static -lsupc++"
-#fi
-
 CFLAGS="\
--fpic -ffunction-sections -funwind-tables -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  -Wno-psabi \
--march=armv5te -mtune=xscale -msoft-float -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 \
--isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include -Wa,--noexecstack \
--DANDROID \
--DNDEBUG -O2 -g \
--isystem$NDK/sources/cxx-stl/gnu-libstdc++/include \
--isystem$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi/include \
+-fpic -fno-strict-aliasing -finline-functions -ffunction-sections \
+-funwind-tables -fmessage-length=0 -fno-inline-functions-called-once \
+-fgcse-after-reload -frerun-cse-after-loop -frename-registers \
+-no-canonical-prefixes -O2 -g -DNDEBUG -fomit-frame-pointer \
+-funswitch-loops -finline-limit=300 \
+-DANDROID -Wall -Wno-unused -Wa,--noexecstack -Wformat -Werror=format-security \
+-isystem$NDK/platforms/$PLATFORMVER/arch-mips/usr/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include/backward \
 -isystem$LOCAL_PATH/../sdl-1.2/include \
 `echo $APP_MODULES | sed \"s@\([-a-zA-Z0-9_.]\+\)@-isystem$LOCAL_PATH/../\1/include@g\"` \
 $MISSING_INCLUDE $CFLAGS"
 
-SHARED="-shared -Wl,-soname,libapplication.so"
+if [ -z "$SHARED_LIBRARY_NAME" ]; then
+	SHARED_LIBRARY_NAME=libapplication.so
+fi
+UNRESOLVED="-Wl,--no-undefined"
+SHARED="-shared -Wl,-soname,$SHARED_LIBRARY_NAME"
 if [ -n "$BUILD_EXECUTABLE" ]; then
-	SHARED=
+	SHARED="-Wl,--gc-sections -Wl,-z,nocopyreloc"
 fi
 if [ -n "$NO_SHARED_LIBS" ]; then
 	APP_SHARED_LIBS=
 fi
-
+if [ -n "$ALLOW_UNRESOLVED_SYMBOLS" ]; then
+	UNRESOLVED=
+fi
 
 LDFLAGS="\
 $SHARED \
---sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
-`echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/armeabi/lib\1.so@g\"` \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libc.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libm.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libGLESv1_CM.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libdl.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/liblog.so \
-$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib/libz.so \
--L$NDK/sources/cxx-stl/gnu-libstdc++/libs/armeabi \
+--sysroot=$NDK/platforms/$PLATFORMVER/arch-mips \
+-L$LOCAL_PATH/../../obj/local/$ARCH \
+`echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/$ARCH/lib\1.so@g\"` \
+-L$NDK/platforms/$PLATFORMVER/arch-mips/usr/lib \
+-lc -lm -lGLESv1_CM -ldl -llog -lz \
+-L$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH \
 -lgnustl_static \
--L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
--L$LOCAL_PATH/../../obj/local/armeabi -Wl,--no-undefined -Wl,-z,noexecstack \
--Wl,-rpath-link=$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib -lsupc++ \
+-no-canonical-prefixes $UNRESOLVED -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now \
+-lsupc++ \
 $MISSING_LIB $LDFLAGS"
 
 #echo env CFLAGS=\""$CFLAGS"\" LDFLAGS=\""$LDFLAGS"\" "$@"
 
 env PATH=$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \
-CXXFLAGS="$CXXFLAGS $CFLAGS" \
+CXXFLAGS="$CXXFLAGS $CFLAGS -frtti -fexceptions" \
 LDFLAGS="$LDFLAGS" \
 CC="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-gcc" \
 CXX="$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin/$GCCPREFIX-g++" \

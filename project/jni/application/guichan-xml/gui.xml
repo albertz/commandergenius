@@ -1,0 +1,23 @@
+<container name="top" width="640" height="480">
+	<label name="logo_text" caption="Simple example of using XmlGui" />
+	<button x="5" y="20" name="exit" caption="Please click to exit" />
+	<icon name="logo" x="250" y="160" image="darkbitslogo_by_haiko.bmp" />
+	<dropdown name="dp" x="100" y="100">
+		<li>Item 1</li>
+		<li>Item 2</li>
+		<li>Item 3</li>
+	</dropdown>
+	<listbox name="lb" x="200" y="100">
+		<li>Item 1</li>
+		<li>Item 2</li>
+		<li>Item 3</li>
+	</listbox>
+	<textfield name="tf" text="simple text" x="5" y="300" />
+	<scrollarea name="sc" x="300" y="5" width="100" height="100">
+		<textbox name="tb" text="simple textbox
+ddjdjd" />
+	</scrollarea>
+	<window name="wnd" caption="Drag me!" x="100" y="200">
+		<icon name="logo_in_wnd" x="0" y="0" image="darkbitslogo_by_haiko.bmp" />
+	</window>
+</container>
