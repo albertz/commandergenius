@@ -18,5 +18,5 @@ ln -sf libbzip2.so ../../../../obj/local/$1/libbz2.so
 
 env CFLAGS="-fpermissive" \
 ../../setEnvironment-$1.sh sh -c " \
-	make -j4 CFG=$1 VERBOSE=1 OPTIMIZE=1 OSTYPE=linux COLOUR_DEPTH=16 BACKEND=sdl && \
+	make -j4 CFG=$1 VERBOSE=1 OPTIMIZE=1 OSTYPE=linux COLOUR_DEPTH=16 BACKEND=sdl USE_SOFTPOINTER=1 && \
 	cp -f build/$1/sim ../libapplication-$1.so" || exit 1
