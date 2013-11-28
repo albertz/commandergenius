@@ -72,6 +72,8 @@ ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
 # Also I cannot just launch AndroidBuild.sh from makefile because other libraries are not rebuilt and linking will fail
 .PHONY: OVERRIDE_CUSTOM_LIB
 OVERRIDE_CUSTOM_LIB:
+# Prevent ./AndroidBuild.sh to be invoked in parallel for different architectures, it may do things like downloading files which work poorly when launched in parallel
+.NOTPARALLEL: $(LOCAL_PATH)/src/libapplication-armeabi.so $(LOCAL_PATH)/src/libapplication-armeabi-v7a.so $(LOCAL_PATH)/src/libapplication-mips.so $(LOCAL_PATH)/src/libapplication-x86.so
 
 LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 
