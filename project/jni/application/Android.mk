@@ -75,15 +75,25 @@ OVERRIDE_CUSTOM_LIB:
 
 LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 
-obj/local/$(TARGET_ARCH_ABI)/libapplication.so: $(LOCAL_PATH)/src/libapplication-$(TARGET_ARCH_ABI).so
+obj/local/armeabi/libapplication.so: $(LOCAL_PATH)/src/libapplication-armeabi.so
 
-$(LOCAL_PATH)/src/libapplication-$(TARGET_ARCH_ABI).so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
-	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh $(TARGET_ARCH_ABI)
+$(LOCAL_PATH)/src/libapplication-armeabi.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh armeabi arm-linux-androideabi && \
+	{ [ -e libapplication.so ] && ln -s libapplication.so libapplication-armeabi.so || true ; }
 
-# Old code has ARMv5 library compiled as libapplication.so
-ifeq ($(TARGET_ARCH_ABI),armeabi)
-$(LOCAL_PATH)/src/libapplication-$(TARGET_ARCH_ABI).so: $(LOCAL_PATH)/src/libapplication.so
-	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ln -s libapplication.so libapplication-$(TARGET_ARCH_ABI).so
-endif
+obj/local/armeabi-v7a/libapplication.so: $(LOCAL_PATH)/src/libapplication-armeabi-v7a.so
+
+$(LOCAL_PATH)/src/libapplication-armeabi-v7a.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh armeabi-v7a arm-linux-androideabi
+
+obj/local/mips/libapplication.so: $(LOCAL_PATH)/src/libapplication-mips.so
+
+$(LOCAL_PATH)/src/libapplication-mips.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh mips mipsel-linux-android
+
+obj/local/x86/libapplication.so: $(LOCAL_PATH)/src/libapplication-x86.so
+
+$(LOCAL_PATH)/src/libapplication-x86.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh x86 i686-linux-android
 
 endif # $(APPLICATION_CUSTOM_BUILD_SCRIPT)

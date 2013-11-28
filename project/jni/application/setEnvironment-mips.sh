@@ -21,7 +21,7 @@ NDK=`readlink -f $NDK`
 grep "64.bit" "$NDK/RELEASE.TXT" >/dev/null 2>&1 && MYARCH="${MYARCH}_64"
 
 #echo NDK $NDK
-GCCPREFIX=arm-linux-androideabi
+GCCPREFIX=mipsel-linux-android
 [ -z "$GCCVER" ] && GCCVER=4.6
 [ -z "$PLATFORMVER" ] && PLATFORMVER=android-14
 LOCAL_PATH=`dirname $0`
@@ -30,7 +30,7 @@ if which realpath > /dev/null ; then
 else
 	LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 fi
-ARCH=armeabi-v7a
+ARCH=mips
 
 APP_MODULES=`grep 'APP_MODULES [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
 APP_AVAILABLE_STATIC_LIBS=`grep 'APP_AVAILABLE_STATIC_LIBS [:][=]' $LOCAL_PATH/../Settings.mk | sed 's@.*[=]\(.*\)@\1@'`
@@ -49,12 +49,13 @@ MISSING_INCLUDE=
 MISSING_LIB=
 
 CFLAGS="\
--fpic -ffunction-sections -funwind-tables -fstack-protector \
--no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp \
--mfpu=vfpv3-d16 -mthumb -O2 -g -DNDEBUG \
--fomit-frame-pointer -fno-strict-aliasing -finline-limit=300 \
+-fpic -fno-strict-aliasing -finline-functions -ffunction-sections \
+-funwind-tables -fmessage-length=0 -fno-inline-functions-called-once \
+-fgcse-after-reload -frerun-cse-after-loop -frename-registers \
+-no-canonical-prefixes -O2 -g -DNDEBUG -fomit-frame-pointer \
+-funswitch-loops -finline-limit=300 \
 -DANDROID -Wall -Wno-unused -Wa,--noexecstack -Wformat -Werror=format-security \
--isystem$NDK/platforms/$PLATFORMVER/arch-arm/usr/include \
+-isystem$NDK/platforms/$PLATFORMVER/arch-mips/usr/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include/backward \
@@ -79,14 +80,14 @@ fi
 
 LDFLAGS="\
 $SHARED \
---sysroot=$NDK/platforms/$PLATFORMVER/arch-arm \
+--sysroot=$NDK/platforms/$PLATFORMVER/arch-mips \
 -L$LOCAL_PATH/../../obj/local/$ARCH \
 `echo $APP_SHARED_LIBS | sed \"s@\([-a-zA-Z0-9_.]\+\)@$LOCAL_PATH/../../obj/local/$ARCH/lib\1.so@g\"` \
--L$NDK/platforms/$PLATFORMVER/arch-arm/usr/lib \
+-L$NDK/platforms/$PLATFORMVER/arch-mips/usr/lib \
 -lc -lm -lGLESv1_CM -ldl -llog -lz \
 -L$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH \
 -lgnustl_static \
--no-canonical-prefixes -march=armv7-a -Wl,--fix-cortex-a8 $UNRESOLVED -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now \
+-no-canonical-prefixes $UNRESOLVED -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now \
 -lsupc++ \
 $MISSING_LIB $LDFLAGS"
 
