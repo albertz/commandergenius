@@ -56,6 +56,8 @@ LOCAL_CPP_EXTENSION := .cpp
 # Note this "simple" makefile var substitution, you can find even more complex examples in different Android projects
 LOCAL_SRC_FILES := $(foreach F, $(SDL_SRCS), $(addprefix $(dir $(F)),$(notdir $(wildcard $(LOCAL_PATH)/$(F)))))
 
+LOCAL_SHARED_LIBRARIES := sdl_native_helpers # Not really a dependency, needed for CustomBuildScript
+
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog
 
 include $(BUILD_SHARED_LIBRARY)

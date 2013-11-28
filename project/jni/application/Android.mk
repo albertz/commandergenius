@@ -73,7 +73,8 @@ ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
 .PHONY: OVERRIDE_CUSTOM_LIB
 OVERRIDE_CUSTOM_LIB:
 # Prevent ./AndroidBuild.sh to be invoked in parallel for different architectures, it may do things like downloading files which work poorly when launched in parallel
-.NOTPARALLEL: $(LOCAL_PATH)/src/libapplication-armeabi.so $(LOCAL_PATH)/src/libapplication-armeabi-v7a.so $(LOCAL_PATH)/src/libapplication-mips.so $(LOCAL_PATH)/src/libapplication-x86.so
+# For some reason it prevents other sources from building in parallel, so disabled it
+#.NOTPARALLEL: $(LOCAL_PATH)/src/libapplication-armeabi.so $(LOCAL_PATH)/src/libapplication-armeabi-v7a.so $(LOCAL_PATH)/src/libapplication-mips.so $(LOCAL_PATH)/src/libapplication-x86.so
 
 LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
 

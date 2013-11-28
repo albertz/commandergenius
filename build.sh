@@ -30,6 +30,7 @@ fi
 if [ "$#" -gt 0 -a "$1" = "debug" ]; then
 	shift
 	build_release=false
+	export NDK_DEBUG=1
 fi
 
 if [ "$#" -gt 0 -a "$1" = "-h" ]; then
@@ -59,6 +60,8 @@ if ( grep "package $AppFullName;" project/src/Globals.java > /dev/null 2>&1 && \
 fi
 if $build_release ; then
 	sed -i 's/android:debuggable="true"/android:debuggable="false"/g' project/AndroidManifest.xml
+else
+	sed -i 's/android:debuggable="false"/android:debuggable="true"/g' project/AndroidManifest.xml
 fi
 
 MYARCH=linux-x86
