@@ -56,7 +56,7 @@ OBJS_ERM:=$(patsubst %.cpp, out/%.o, $(SOURCES_ERM))
 
 all: AndroidData/binaries.zip libapplication.so
 
-AndroidData/binaries.zip: libvcmi.so vcmiserver AI/libBattleAI.so AI/libStupidAI.so AI/libVCAI.so libicuuc.so.52 # Scripting/libvcmiERM.so AI/libEmptyAI.so 
+AndroidData/binaries.zip: libvcmi.so vcmiserver AI/libBattleAI.so AI/libStupidAI.so AI/libVCAI.so libicuuc.a libicudata.a # Scripting/libvcmiERM.so AI/libEmptyAI.so 
 	rm -f $@
 	zip -r $@ $^
 
@@ -85,7 +85,7 @@ LINK_BOOST_LIBS:=-L../../boost/lib/arm-linux-androideabi-4.6 \
 	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lboost_locale -lgnustl_static
 
 LINK_ICU:=-L../../libiconv-libicu/armeabi-v7a \
-        -licuuc
+        -licuuc -licudata
 
 LINK_LIB= \
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
