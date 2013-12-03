@@ -119,8 +119,8 @@ abstract class DifferentTouchInput
 					return IcsTouchInputWithHistory.Holder.sInstance;
 				if( DetectCrappyDragonRiseDatexGamepad() )
 					return CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance;
-				if( (android.os.Build.BOARD.contains("bird"))
-					return CrappyMtkTabletWithBrokenTouchDrivers.Holder.sInstance
+				if( android.os.Build.BOARD.contains("bird") )
+					return CrappyMtkTabletWithBrokenTouchDrivers.Holder.sInstance;
 				return IcsTouchInput.Holder.sInstance;
 			}
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
