@@ -109,13 +109,18 @@ abstract class DifferentTouchInput
 				multiTouchAvailable2 = true;
 		}
 		try {
+			Log.i("SDL", "Device: " + android.os.Build.DEVICE);
+			Log.i("SDL", "Device name: " + android.os.Build.DISPLAY);
 			Log.i("SDL", "Device model: " + android.os.Build.MODEL);
+			Log.i("SDL", "Device board: " + android.os.Build.BOARD);
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH )
 			{
 				if ( Globals.GenerateSubframeTouchEvents )
 					return IcsTouchInputWithHistory.Holder.sInstance;
 				if( DetectCrappyDragonRiseDatexGamepad() )
 					return CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance;
+				if( android.os.Build.BOARD.contains("bird") )
+					return CrappyMtkTabletWithBrokenTouchDrivers.Holder.sInstance;
 				return IcsTouchInput.Holder.sInstance;
 			}
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
@@ -466,6 +471,23 @@ abstract class DifferentTouchInput
 				}
 			}
 			return false;
+		}
+	}
+	private static class CrappyMtkTabletWithBrokenTouchDrivers extends IcsTouchInput
+	{
+		private static class Holder
+		{
+			private static final CrappyMtkTabletWithBrokenTouchDrivers sInstance = new CrappyMtkTabletWithBrokenTouchDrivers();
+		}
+		public void process(final MotionEvent event)
+		{
+			if( event.getX() != 0.0f && event.getY() != 0.0f ) // Ignore event when it has zero coordinates
+				super.process(event);
+		}
+		public void processGenericEvent(final MotionEvent event)
+		{
+			if( event.getX() != 0.0f && event.getY() != 0.0f ) // Ignore event when it has zero coordinates
+				super.processGenericEvent(event);
 		}
 	}
 }
