@@ -65,7 +65,7 @@ $(OBJS_SERVER) $(OBJS_LIB) $(OBJS_LIB_FILESYSTEM) $(OBJS_LIB_LOGGING) $(OBJS_LIB
  $(OBJS_BATTLEAI) $(OBJS_STUPIDAI) $(OBJS_FUZZYLITE) $(OBJS_VCAI) $(OBJS_CLIENT) $(OBJS_ERM): out/%.o: %.cpp
 	env GCCVER=$(GCC_VERSION) ../setEnvironment-armeabi-v7a.sh sh -c \
 	"$(GCC_PREFIX)-g++ \
-	-c \$$CXXFLAGS -O1 -Ivcmi -std=c++0x -Ivcmi/lib \
+	-c \$$CXXFLAGS -O1 -Ivcmi -I../../shmem -std=c++0x -Ivcmi/lib \
 	-DM_DATA_DIR=\\\".\\\" \
 	-DM_BIN_DIR=\\\"/data/data/eu.vcmi/files\\\" \
 	-DM_LIB_DIR=\\\"/data/data/eu.vcmi/files\\\" \
@@ -82,7 +82,7 @@ $(OBJS_MINIZIP): out/%.o: %.c
 	$< -o $@"
 
 LINK_BOOST_LIBS:=-L../../boost/lib/arm-linux-androideabi-4.6 \
-	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lboost_locale -lgnustl_static
+	-lboost_filesystem -lboost_iostreams -lboost_system -lboost_thread -lboost_program_options -lboost_locale -lgnustl_static -lshmem
 
 LINK_ICU:=-L../../libiconv-libicu/armeabi-v7a \
         -licuuc -licudata
