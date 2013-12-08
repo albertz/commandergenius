@@ -37,3 +37,6 @@
 [submodule "project/jni/application/xserver/xserver"]
 	path = project/jni/application/xserver/xserver
 	url = git@github.com:pelya/xserver.git
+[submodule "android-shmem"]
+	path = project/jni/shmem
+	url = git@github.com:pelya/android-shmem.git
