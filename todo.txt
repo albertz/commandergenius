@@ -20,10 +20,6 @@ Requested features, might never get implemented
 TODO, which will get actually done
 ==================================
 
-- Fix diagonal movements via analog gamepad with AppUsesJoystick=n.
-
-- TeeWorlds: disable unhook, tap will always launch hook. And I don't care about Ouya anymore.
-
 - OpenArena: move 3-rd person camera to the side, above shoulder.
 
 - OpenArena: two new aiming modes - no-swipe aiming, with and without double-tap.
