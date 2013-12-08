@@ -292,6 +292,7 @@ void XSDL_generateBackground(const char * port, int showHelp)
     struct ifreq ifr[20];
     SDL_Surface * surf;
     int y = VID_Y / 3;
+    char msg[128];
 
 	if( !showHelp )
 	{
@@ -323,7 +324,6 @@ void XSDL_generateBackground(const char * port, int showHelp)
             {
                 int addr = 0;
                 char saddr[32];
-                char msg[128];
                 if (ifr[i].ifr_addr.sa_family != AF_INET)
                     continue;
 
@@ -346,6 +346,13 @@ void XSDL_generateBackground(const char * port, int showHelp)
 
         close(sd);
     }
+
+    y += 10;
+    sprintf (msg, "To tunnel X over SSH, forward port %d", atoi(port+1) + 6000);
+    renderStringColor(msg, VID_X/2, y, 255, 255, 255, surf);
+    y += 15;
+    sprintf (msg, "in your SSH client", port + 6000);
+    renderStringColor(msg, VID_X/2, y, 255, 255, 255, surf);
 
 	SDL_SaveBMP(surf, "background.bmp");
 	SDL_FreeSurface(surf);

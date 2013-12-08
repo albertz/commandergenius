@@ -75,26 +75,6 @@ int main( int argc, char* argv[] )
 			close(s);
 		}
 
-		// Cannot create socket with non-existing path, but Xserver code somehow does that
-		/*
-		s = socket(AF_UNIX, SOCK_STREAM, 0);
-		if( s >= 0 )
-		{
-			struct sockaddr_un addr;
-
-			memset(&addr, 0, sizeof(addr));
-
-			addr.sun_family = AF_UNIX;
-			sprintf(addr.sun_path, "/tmp/.X11-unix/X%d", i);
-			if( bind(s, (struct sockaddr *) &addr, strlen(addr.sun_path) + sizeof(addr.sun_family)) != 0 )
-			{
-				__android_log_print(ANDROID_LOG_INFO, "XSDL", "UNIX path %s already used, trying next one: %s", addr.sun_path, strerror(errno));
-				close(s);
-				continue;
-			}
-			close(s);
-		}
-		*/
 		FILE * ff = fopen("/proc/net/unix", "rb");
 		if( ff )
 		{
@@ -117,6 +97,13 @@ int main( int argc, char* argv[] )
 
 		sprintf( port, ":%d", i );
 		break;
+	}
+
+	if( argc > 1 && argv[1][0] == ':')
+	{
+		strcpy(port, argv[1]);
+		argc--;
+		argv++;
 	}
 
 	if( argc > 1 && strcmp(argv[1], "-nohelp") == 0 )
