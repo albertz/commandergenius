@@ -52,6 +52,8 @@
 #include "guichan/graphics.hpp"
 #include "guichan/sdl/sdlgraphics.hpp"
 
+#include <android/log.h>
+
 namespace gcn
 {
     namespace contrib
@@ -68,6 +70,7 @@ namespace gcn
         
             if (mFont == NULL)
             {
+                __android_log_print(ANDROID_LOG_INFO, "GUICHAN", "Cannot open font %s: %s", filename.c_str(), TTF_GetError());
                 throw GCN_EXCEPTION("SDLTrueTypeFont::SDLTrueTypeFont. "+std::string(TTF_GetError()));
             }
         }
