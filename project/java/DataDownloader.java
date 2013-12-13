@@ -499,6 +499,7 @@ class DataDownloader extends Thread
 		{
 			Log.i("SDL", "Reading from zip file '" + url + "'");
 			ZipInputStream zip = new ZipInputStream(stream);
+			String extpath = getOutFilePath("");
 			
 			while(true)
 			{
@@ -577,10 +578,11 @@ class DataDownloader extends Thread
 
 				if( totalLen > 0 )
 					percent = stream.getBytesRead() * 100.0f / totalLen;
+				//Unpacking local zip file into external storage
 				if( System.currentTimeMillis() > updateStatusTime + 1000 )
 				{
 					updateStatusTime = System.currentTimeMillis();
-					Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
+					Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path.replace(extpath, "")) );
 				}
 				
 				try {
@@ -597,7 +599,7 @@ class DataDownloader extends Thread
 						if( System.currentTimeMillis() > updateStatusTime + 1000 )
 						{
 							updateStatusTime = System.currentTimeMillis();
-							Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path) );
+							Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_progress, percent, path.replace(extpath, "")) );
 						}
 					}
 					out.flush();
