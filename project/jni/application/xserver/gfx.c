@@ -192,7 +192,17 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	SDL_Event event;
 	int res = -1, dpi = -1;
 	char native[32] = "0x0";
-	//float dpiScale = 1.0f;
+	int vertical = SDL_ListModes(NULL, 0)[0]->w < SDL_ListModes(NULL, 0)[0]->h;
+
+	if( vertical )
+	{
+		x = *resolutionW;
+		*resolutionW = *resolutionH;
+		*resolutionH = x;
+		x = *displayW;
+		*displayW = *displayH;
+		*displayH = x;
+	}
 
 	const char * resStr[] = {
 		native, "1920x1080", "1280x960", "1280x720",
@@ -231,6 +241,12 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 				case SDL_MOUSEBUTTONUP:
 				{
 					SDL_GetMouseState(&x, &y);
+					if( vertical )
+					{
+						int z = x;
+						x = y;
+						y = z;
+					}
 					i = (y / (VID_Y/2));
 					ii = (x / (VID_X/4));
 					res = i * 4 + ii;
@@ -242,15 +258,27 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		renderString("Select display resolution", VID_X/2, VID_Y/2);
 		for(i = 0; i < 2; i++)
 		for(ii = 0; ii < 4; ii++)
-			renderString(resStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/4 + (i*VID_Y/2));
+		{
+			if( vertical )
+				renderString(resStr[i*4+ii], VID_Y/4 + (i*VID_Y/2), VID_X/8 + (ii*VID_X/4));
+			else
+				renderString(resStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/4 + (i*VID_Y/2));
+		}
 		SDL_GetMouseState(&x, &y);
 		renderString("X", x, y);
 		SDL_Delay(150);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
-	//dpiScale = (float)resVal[res][0] / (float)*resolutionW;
-	*resolutionW = resVal[res][0];
-	*resolutionH = resVal[res][1];
+	if( vertical )
+	{
+		*resolutionH = resVal[res][0];
+		*resolutionW = resVal[res][1];
+	}
+	else
+	{
+		*resolutionW = resVal[res][0];
+		*resolutionH = resVal[res][1];
+	}
 	while ( dpi < 0 )
 	{
 		while (SDL_PollEvent(&event))
@@ -264,6 +292,12 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 				case SDL_MOUSEBUTTONUP:
 				{
 					SDL_GetMouseState(&x, &y);
+					if( vertical )
+					{
+						int z = x;
+						x = y;
+						y = z;
+					}
 					i = (y / (VID_Y/4));
 					ii = (x / (VID_X/4));
 					dpi = i * 4 + ii;
@@ -275,7 +309,12 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		renderString("Select font scale", VID_X/2, VID_Y/2);
 		for(i = 0; i < 4; i++)
 		for(ii = 0; ii < 4; ii++)
-			renderString(fontsStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/8 + (i*VID_Y/4));
+		{
+			if( vertical )
+				renderString(fontsStr[i*4+ii], VID_Y/8 + (i*VID_Y/4), VID_X/8 + (ii*VID_X/4));
+			else
+				renderString(fontsStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/8 + (i*VID_Y/4));
+		}
 		SDL_GetMouseState(&x, &y);
 		renderString("X", x, y);
 		SDL_Delay(150);
@@ -291,7 +330,7 @@ void XSDL_generateBackground(const char * port, int showHelp)
     struct ifconf ifc;
     struct ifreq ifr[20];
     SDL_Surface * surf;
-    int y = VID_Y / 3;
+    int y = VID_Y * 2 / 5;
     char msg[128];
 
 	if( !showHelp )
@@ -303,7 +342,7 @@ void XSDL_generateBackground(const char * port, int showHelp)
 		return;
 	}
 
-	surf = SDL_CreateRGBSurface(SDL_SWSURFACE, VID_X, VID_Y, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
+	surf = SDL_CreateRGBSurface(SDL_SWSURFACE, VID_X, VID_X, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
 	SDL_FillRect(surf, NULL, 0x00002f);
 
 	renderStringColor("Launch these commands on your Linux PC:", VID_X/2, y, 255, 255, 255, surf);
@@ -401,7 +440,13 @@ void showErrorMessage(const char *msg)
 void XSDL_initSDL()
 {
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_SetVideoMode(VID_X, VID_Y, 0, SDL_SWSURFACE);
+
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Current video mode: %d %d", SDL_ListModes(NULL, 0)[0]->w, SDL_ListModes(NULL, 0)[0]->h);
+
+	if( SDL_ListModes(NULL, 0)[0]->w > SDL_ListModes(NULL, 0)[0]->h )
+		SDL_SetVideoMode(VID_X, VID_Y, 0, SDL_SWSURFACE);
+	else
+		SDL_SetVideoMode(VID_Y, VID_X, 0, SDL_SWSURFACE);
 	TTF_Init();
 	sFont = TTF_OpenFont("DroidSansMono.ttf", 12);
 	if (!sFont)
