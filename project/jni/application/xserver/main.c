@@ -22,19 +22,18 @@ int main( int argc, char* argv[] )
 {
 	int i;
 	char screenres[128] = "640x480x24";
-	char clientcmd[PATH_MAX*3] = "";
+	char clientcmd[PATH_MAX] = "";
 	char port[16] = ":1111";
 	char * cmd = "";
-	char* args[] = {
+	char* args[64] = {
 		"XSDL",
 		port,
 		"-nolock",
 		"-noreset",
 		"-screen",
 		screenres,
-		"-exec",
-		clientcmd
 	};
+	int argnum = 6;
 	enum { ARGNUM = 8 };
 	char * envp[] = { NULL };
 	int printHelp = 1;
@@ -99,16 +98,17 @@ int main( int argc, char* argv[] )
 		break;
 	}
 
-	if( argc > 1 && argv[1][0] == ':')
+	while( argc > 1 )
 	{
-		strcpy(port, argv[1]);
-		argc--;
-		argv++;
-	}
-
-	if( argc > 1 && strcmp(argv[1], "-nohelp") == 0 )
-	{
-		printHelp = 0;
+		if( argv[1][0] == ':')
+		{
+			strcpy(port, argv[1]);
+		}
+		else
+		{
+			args[argnum] = argv[0];
+			argnum++;
+		}
 		argc--;
 		argv++;
 	}
@@ -119,28 +119,29 @@ int main( int argc, char* argv[] )
 
 	sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, SDL_GetVideoInfo()->vfmt->BitsPerPixel );
 
-	if( argc > 1 )
+	if( argc > 1 && strcmp(argv[1], "-nohelp") == 0 )
 	{
-		for( ; argc > 1; argc--, argv++ )
-		{
-			strcat(clientcmd, " ");
-			strcat(clientcmd, argv[1]);
-		}
-		strcat(clientcmd, " 2>&1");
+		printHelp = 0;
+		argc--;
+		argv++;
 	}
-	else
+
+	if( printHelp )
 	{
-		sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -fillscreen background.bmp ;",
+		sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -fillscreen background.bmp",
 			getenv("SECURE_STORAGE_DIR"), getenv("SECURE_STORAGE_DIR") );
+		args[argnum] = "-exec";
+		args[argnum+1] = clientcmd;
+		argnum += 2;
 	}
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL video resolution %s, args:", screenres);
-	for( i = 0; i < ARGNUM; i++ )
+	for( i = 0; i < argnum; i++ )
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", args[i]);
 
 	// We should never quit. If that happens, then the server did not start - show error.
 	atexit(&showError);
-	return android_main( ARGNUM, args, envp );
+	return android_main( argnum, args, envp );
 }
 
 void setupEnv(void)
