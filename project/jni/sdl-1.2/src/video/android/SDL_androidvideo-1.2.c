@@ -202,6 +202,8 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 	device->ShowWMCursor = ANDROID_ShowWMCursor;
 	device->ToggleFullScreen = ANDROID_ToggleFullScreen;
 
+	device->handles_any_size = 1; // Any video mode is OK
+
 	glLibraryHandle = dlopen("libGLESv1_CM.so", RTLD_NOW | RTLD_GLOBAL);
 	if(SDL_ANDROID_UseGles2)
 	{
