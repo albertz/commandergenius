@@ -219,10 +219,16 @@ public class MainActivity extends Activity
 		}
 		if( Parent._tv == null )
 		{
+			//Get the display so we can know the screen size
+			Display display = getWindowManager().getDefaultDisplay(); 
+			int width = display.getWidth();
+			int height = display.getHeight();
 			Parent._tv = new TextView(Parent);
 			Parent._tv.setMaxLines(2); // To show some long texts on smaller devices
 			Parent._tv.setMinLines(2); // Otherwise the background picture is getting resized at random, which does not look good
 			Parent._tv.setText(R.string.init);
+			// Padding is a good idea because if the display device is a TV the edges might be cut off
+			Parent._tv.setPadding((int)(width * 0.1), (int)(height * 0.1), (int)(width * 0.1), 0);
 			Parent._layout2.addView(Parent._tv);
 		}
 	}
