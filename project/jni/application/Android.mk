@@ -73,30 +73,38 @@ ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
 .PHONY: OVERRIDE_CUSTOM_LIB
 OVERRIDE_CUSTOM_LIB:
 # Prevent ./AndroidBuild.sh to be invoked in parallel for different architectures, it may do things like downloading files which work poorly when launched in parallel
-# For some reason it prevents other sources from building in parallel, so disabled it
-#.NOTPARALLEL: $(LOCAL_PATH)/src/libapplication-armeabi.so $(LOCAL_PATH)/src/libapplication-armeabi-v7a.so $(LOCAL_PATH)/src/libapplication-mips.so $(LOCAL_PATH)/src/libapplication-x86.so
+# .NOTPARALLEL prevents other sources from building in parallel, so we're using flock shell command here
+# There is flock command on Linux, but it fails to lock a file, and mkdir is more portable
+PARALLEL_LOCK := until mkdir .lock >/dev/null 2>&1; do sleep 1; done
+PARALLEL_UNLOCK := rmdir .lock >/dev/null 2>&1
 
 LOCAL_PATH_SDL_APPLICATION := $(LOCAL_PATH)
+
+$(shell cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_UNLOCK))
 
 obj/local/armeabi/libapplication.so: $(LOCAL_PATH)/src/libapplication-armeabi.so
 
 $(LOCAL_PATH)/src/libapplication-armeabi.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
-	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh armeabi arm-linux-androideabi && \
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
+	./AndroidBuild.sh armeabi arm-linux-androideabi && $(PARALLEL_UNLOCK) && \
 	{ [ -e libapplication.so ] && ln -s libapplication.so libapplication-armeabi.so || true ; }
 
 obj/local/armeabi-v7a/libapplication.so: $(LOCAL_PATH)/src/libapplication-armeabi-v7a.so
 
 $(LOCAL_PATH)/src/libapplication-armeabi-v7a.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
-	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh armeabi-v7a arm-linux-androideabi
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
+	./AndroidBuild.sh armeabi-v7a arm-linux-androideabi && $(PARALLEL_UNLOCK)
 
 obj/local/mips/libapplication.so: $(LOCAL_PATH)/src/libapplication-mips.so
 
 $(LOCAL_PATH)/src/libapplication-mips.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
-	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh mips mipsel-linux-android
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
+	./AndroidBuild.sh mips mipsel-linux-android && $(PARALLEL_UNLOCK)
 
 obj/local/x86/libapplication.so: $(LOCAL_PATH)/src/libapplication-x86.so
 
 $(LOCAL_PATH)/src/libapplication-x86.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
-	cd $(LOCAL_PATH_SDL_APPLICATION)/src && ./AndroidBuild.sh x86 i686-linux-android
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
+	./AndroidBuild.sh x86 i686-linux-android && $(PARALLEL_UNLOCK)
 
 endif # $(APPLICATION_CUSTOM_BUILD_SCRIPT)
