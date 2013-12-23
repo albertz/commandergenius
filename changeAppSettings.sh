@@ -907,6 +907,9 @@ echo >> AndroidAppSettings.cfg
 echo "# Application needs to access SD card. If your data files are bigger than 5 Mb, enable it. (y) / (n)" >> AndroidAppSettings.cfg
 echo AccessSdCard=$AccessSdCard >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Immersive mode - Android will hide on-screen Home/Back keys. Looks bad if you invoke Android keyboard. (y) / (n)" >> AndroidAppSettings.cfg
+echo ImmersiveMode=$ImmersiveMode >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Application implements Android-specific routines to put to background, and will not draw anything to screen" >> AndroidAppSettings.cfg
 echo "# between SDL_ACTIVEEVENT lost / gained notifications - you should check for them" >> AndroidAppSettings.cfg
 echo "# rigth after SDL_Flip(), if (n) then SDL_Flip() will block till app in background (y) or (n)" >> AndroidAppSettings.cfg
@@ -1335,6 +1338,12 @@ if [ "$AccessSdCard" = "n" ]; then
 	$SEDI "/==EXTERNAL_STORAGE==/ d" project/AndroidManifest.xml
 fi
 
+if [ "$AccessSdCard" = "n" ]; then
+	ImmersiveMode=false
+else
+	ImmersiveMode=true
+fi
+
 echo Patching project/src/Globals.java
 $SEDI "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" project/src/Globals.java
 $SEDI "s/public static final boolean Using_SDL_1_3 = .*;/public static final boolean Using_SDL_1_3 = $UsingSdl13;/" project/src/Globals.java
@@ -1372,6 +1381,7 @@ $SEDI "s/public static boolean AppUsesGyroscope = .*;/public static boolean AppU
 $SEDI "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" project/src/Globals.java
 $SEDI "s/public static boolean NonBlockingSwapBuffers = .*;/public static boolean NonBlockingSwapBuffers = $NonBlockingSwapBuffers;/" project/src/Globals.java
 $SEDI "s/public static boolean ResetSdlConfigForThisVersion = .*;/public static boolean ResetSdlConfigForThisVersion = $ResetSdlConfigForThisVersion;/" project/src/Globals.java
+$SEDI "s/public static boolean ImmersiveMode = .*;/public static boolean ImmersiveMode = $ImmersiveMode;/" project/src/Globals.java
 $SEDI "s|public static String DeleteFilesOnUpgrade = .*;|public static String DeleteFilesOnUpgrade = \"$DeleteFilesOnUpgrade\";|" project/src/Globals.java
 $SEDI "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" project/src/Globals.java
 $SEDI "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" project/src/Globals.java

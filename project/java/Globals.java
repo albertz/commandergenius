@@ -61,6 +61,7 @@ class Globals
 	public static boolean AppUsesGyroscope = false;
 	public static boolean AppUsesMultitouch = false;
 	public static boolean NonBlockingSwapBuffers = false;
+	public static boolean ImmersiveMode = true;
 	public static boolean ResetSdlConfigForThisVersion = false;
 	public static String DeleteFilesOnUpgrade = "";
 	public static int AppTouchscreenKeyboardKeysAmount = 4;
