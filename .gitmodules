@@ -40,3 +40,6 @@
 [submodule "android-shmem"]
 	path = project/jni/shmem
 	url = git@github.com:pelya/android-shmem.git
+[submodule "project/jni/application/hid-pc-keyboard/src"]
+	path = project/jni/application/hid-pc-keyboard/src
+	url = git@github.com:pelya/android-keyboard-gadget.git

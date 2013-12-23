@@ -1,6 +1,5 @@
 #!/bin/sh
 
-CHANGE_APP_SETTINGS_VERSION=19
 AUTO=
 CHANGED=
 JAVA_SRC_PATH=project/java
@@ -11,12 +10,19 @@ fi
 if [ "X$1" = "X-v" ]; then
 	AUTO=v
 fi
+if [ "X$1" = "X-u" ]; then
+	CHANGED=1
+	AUTO=a
+fi
+if [ "X$1" = "X-h" ]; then
+	echo "Usage: $0 [-a] [-v] [-u]"
+	echo "       -a: auto-update project files without asking questions"
+	echo "       -v: ask only for new version number"
+	echo "       -u: update AndroidAppSettings.cfg, this may add new config options to it"
+	exit
+fi
 
 . ./AndroidAppSettings.cfg
-
-if [ "$CHANGE_APP_SETTINGS_VERSION" != "$AppSettingVersion" ]; then
-	CHANGED=1
-fi
 
 var=""
 
@@ -764,22 +770,17 @@ if [ -n "$CHANGED" ]; then
 cat /dev/null > AndroidAppSettings.cfg
 echo "# The application settings for Android libSDL port" >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo AppSettingVersion=$CHANGE_APP_SETTINGS_VERSION >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
-echo "# libSDL version to use (1.2 or 1.3, specify 1.3 for SDL2)" >> AndroidAppSettings.cfg
-echo LibSdlVersion=$LibSdlVersion >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
 echo "# Specify application name (e.x. My Application)" >> AndroidAppSettings.cfg
 echo AppName=\"$AppName\" >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Specify reversed site name of application (e.x. com.mysite.myapp)" >> AndroidAppSettings.cfg
 echo AppFullName=$AppFullName >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Specify screen orientation: (v)ertical/(p)ortrait or (h)orizontal/(l)andscape" >> AndroidAppSettings.cfg
-echo ScreenOrientation=$ScreenOrientation >> AndroidAppSettings.cfg
+echo "# Application version code (integer)" >> AndroidAppSettings.cfg
+echo AppVersionCode=$AppVersionCode >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Do not allow device to sleep when the application is in foreground, set this for video players or apps which use accelerometer" >> AndroidAppSettings.cfg
-echo InhibitSuspend=$InhibitSuspend >> AndroidAppSettings.cfg
+echo "# Application user-visible version name (string)" >> AndroidAppSettings.cfg
+echo AppVersionName=\"$AppVersionName\" >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Specify path to download application data in zip archive in the form 'Description|URL|MirrorURL^Description2|URL2|MirrorURL2^...'" >> AndroidAppSettings.cfg
 echo "# If you'll start Description with '!' symbol it will be enabled by default, other downloads should be selected by user from startup config menu" >> AndroidAppSettings.cfg
@@ -788,6 +789,25 @@ echo "# If the URL does not contain 'http://' it is treated as file from 'projec
 echo "# these files are put inside .apk package by build system" >> AndroidAppSettings.cfg
 echo "# Also please avoid 'https://' URLs, many Android devices do not have trust certificates and will fail to connect to SF.net over HTTPS" >> AndroidAppSettings.cfg
 echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# Reset SDL config when updating application to the new version (y) / (n)" >> AndroidAppSettings.cfg
+echo ResetSdlConfigForThisVersion=$ResetSdlConfigForThisVersion >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# Delete application data files when upgrading (specify file/dir paths separated by spaces)" >> AndroidAppSettings.cfg
+echo DeleteFilesOnUpgrade=\"$DeleteFilesOnUpgrade\" >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# Here you may type readme text, which will be shown during startup. Format is:" >> AndroidAppSettings.cfg
+echo "# Text in English, use \\\\\\\\\\\\\\\\n to separate lines (that's four backslashes)^de:Text in Deutsch^ru:Text in Russian^button:Button that will open some URL:http://url-to-open/" >> AndroidAppSettings.cfg
+echo ReadmeText=\'$ReadmeText\' | sed 's/\\\\n/\\\\\\\\n/g' >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# libSDL version to use (1.2/1.3/2.0)" >> AndroidAppSettings.cfg
+echo LibSdlVersion=$LibSdlVersion >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# Specify screen orientation: (v)ertical/(p)ortrait or (h)orizontal/(l)andscape" >> AndroidAppSettings.cfg
+echo ScreenOrientation=$ScreenOrientation >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# Do not allow device to sleep when the application is in foreground, set this for video players or apps which use accelerometer" >> AndroidAppSettings.cfg
+echo InhibitSuspend=$InhibitSuspend >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Video color depth - 16 BPP is the fastest and supported for all modes, 24 bpp is supported only" >> AndroidAppSettings.cfg
 echo "# with SwVideoMode=y, SDL_OPENGL mode supports everything. (16)/(24)/(32)" >> AndroidAppSettings.cfg
@@ -884,6 +904,9 @@ echo "# API is defined in file SDL_android.h: int SDL_ANDROID_OpenAudioRecording
 echo "# This option will add additional permission to Android manifest (y)/(n)" >> AndroidAppSettings.cfg
 echo AppRecordsAudio=$AppRecordsAudio >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Application needs to access SD card. If your data files are bigger than 5 Mb, enable it. (y) / (n)" >> AndroidAppSettings.cfg
+echo AccessSdCard=$AccessSdCard >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Application implements Android-specific routines to put to background, and will not draw anything to screen" >> AndroidAppSettings.cfg
 echo "# between SDL_ACTIVEEVENT lost / gained notifications - you should check for them" >> AndroidAppSettings.cfg
 echo "# rigth after SDL_Flip(), if (n) then SDL_Flip() will block till app in background (y) or (n)" >> AndroidAppSettings.cfg
@@ -940,18 +963,6 @@ echo >> AndroidAppSettings.cfg
 echo "# Minimum amount of RAM application requires, in Mb, SDL will print warning to user if it's lower" >> AndroidAppSettings.cfg
 echo AppMinimumRAM=$AppMinimumRAM >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Application version code (integer)" >> AndroidAppSettings.cfg
-echo AppVersionCode=$AppVersionCode >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
-echo "# Application user-visible version name (string)" >> AndroidAppSettings.cfg
-echo AppVersionName=\"$AppVersionName\" >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
-echo "# Reset SDL config when updating application to the new version (y) / (n)" >> AndroidAppSettings.cfg
-echo ResetSdlConfigForThisVersion=$ResetSdlConfigForThisVersion >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
-echo "# Delete application data files when upgrading (specify file/dir paths separated by spaces)" >> AndroidAppSettings.cfg
-echo DeleteFilesOnUpgrade=\"$DeleteFilesOnUpgrade\" >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
 echo "# Optional shared libraries to compile - removing some of them will save space" >> AndroidAppSettings.cfg
 echo "# MP3 support by libMAD is encumbered by patents and libMAD is GPL-ed" >> AndroidAppSettings.cfg
 grep 'Available' project/jni/SettingsTemplate.mk >> AndroidAppSettings.cfg
@@ -977,10 +988,6 @@ echo AppBuildExclude=\'$AppBuildExclude\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application command line parameters, including app name as 0-th param" >> AndroidAppSettings.cfg
 echo AppCmdline=\'$AppCmdline\' >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
-echo "# Here you may type readme text, which will be shown during startup. Format is:" >> AndroidAppSettings.cfg
-echo "# Text in English, use \\\\\\\\\\\\\\\\n to separate lines^de:Text in Deutsch^ru:Text in Russian, and so on (that's four backslashes, nice isn't it?)" >> AndroidAppSettings.cfg
-echo ReadmeText=\'$ReadmeText\' | sed 's/\\\\n/\\\\\\\\n/g' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Screen size is used by Google Play to prevent an app to be installed on devices with smaller screens" >> AndroidAppSettings.cfg
 echo "# Minimum screen size that application supports: (s)mall / (m)edium / (l)arge" >> AndroidAppSettings.cfg
@@ -1323,6 +1330,10 @@ case "$MinimumScreenSize" in
 		$SEDI "/==SCREEN-SIZE-LARGE==/ d" project/AndroidManifest.xml
 		;;
 esac
+
+if [ "$AccessSdCard" = "n" ]; then
+	$SEDI "/==EXTERNAL_STORAGE==/ d" project/AndroidManifest.xml
+fi
 
 echo Patching project/src/Globals.java
 $SEDI "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" project/src/Globals.java

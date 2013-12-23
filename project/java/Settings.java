@@ -72,6 +72,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorEvent;
 import android.hardware.Sensor;
 import android.widget.Toast;
+import android.content.pm.PackageManager;
 
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
@@ -389,6 +390,11 @@ class Settings
 			if( !Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) )
 			{
 				Log.i("SDL", "libSDL: SD card or external storage is not mounted (state " + Environment.getExternalStorageState() + "), switching to the internal storage.");
+				Globals.DownloadToSdcard = false;
+			}
+			if( p.getPackageManager().checkPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, p.getPackageName()) != PackageManager.PERMISSION_GRANTED )
+			{
+				Log.i("SDL", "libSDL: We don't have permission to write to SD card, switching to the internal storage.");
 				Globals.DownloadToSdcard = false;
 			}
 			Globals.DataDir = Globals.DownloadToSdcard ?
