@@ -84,8 +84,8 @@ typedef SDL_Keysym SDL_keysym;
 #define NUMLOCKCLEAR NUMLOCK
 #define GRAVE BACKQUOTE
 #define APOSTROPHE QUOTE
-#define LGUI LMETA
-#define RGUI RMETA
+#define LGUI LSUPER
+#define RGUI RSUPER
 #define SCROLLLOCK SCROLLOCK
 // Overkill haha
 #define A a

@@ -1,7 +1,0 @@
---- include/SDL_revision.h	2013-10-08 17:44:55.820345791 +0200
-+++ include/SDL_revision.h	2013-10-08 15:37:33.543284000 +0200
-@@ -1,2 +1,2 @@
--#define SDL_REVISION "hg-0:aaaaaaaaaaah"
--#define SDL_REVISION_NUMBER 0
-+#define SDL_REVISION "hg-6305:601b0e251822"
-+#define SDL_REVISION_NUMBER 6305
