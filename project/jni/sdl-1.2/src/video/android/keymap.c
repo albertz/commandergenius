@@ -154,7 +154,7 @@ void SDL_android_init_keymap(SDLKey *SDL_android_keymap)
   keymap[KEYCODE_META_LEFT] = SDL_KEY(LGUI);
   keymap[KEYCODE_META_RIGHT] = SDL_KEY(RGUI);
   keymap[KEYCODE_FUNCTION] = SDL_KEY(RGUI);
-  keymap[KEYCODE_SYSRQ] = SDL_KEY(SYSREQ);
+  keymap[KEYCODE_SYSRQ] = SDL_KEY(PRINT);
   keymap[KEYCODE_BREAK] = SDL_KEY(PAUSE);
   keymap[KEYCODE_MOVE_HOME] = SDL_KEY(HOME);
   keymap[KEYCODE_MOVE_END] = SDL_KEY(END);

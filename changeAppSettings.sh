@@ -1011,7 +1011,7 @@ AppShortName=`echo $AppName | sed 's/ //g'`
 DataPath="$AppFullName"
 AppFullNameUnderscored=`echo $AppFullName | sed 's/[.]/_/g'`
 AppSharedLibrariesPath=/data/data/$AppFullName/lib
-ScreenOrientation1=portrait
+ScreenOrientation1=userPortrait
 HorizontalOrientation=false
 
 UsingSdl13=false
@@ -1025,7 +1025,7 @@ if [ "$LibSdlVersion" = "2.0" ] ; then
 fi
 
 if [ "$ScreenOrientation" = "h" -o "$ScreenOrientation" = "l" ] ; then
-	ScreenOrientation1=landscape
+	ScreenOrientation1=userLandscape
 	HorizontalOrientation=true
 fi
 
