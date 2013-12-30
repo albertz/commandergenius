@@ -1073,8 +1073,13 @@ int SDL_ANDROID_SetScreenKeyboardButtonShown(int buttonId, int shown)
 	if( buttonId < 0 || buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM )
 		return 0;
 
+	//__android_log_print(ANDROID_LOG_INFO, "libsdl", "SDL_ANDROID_SetScreenKeyboardButtonShown: button %d shown %d", buttonId, shown);
 	if( !shown && SDL_ANDROID_GetScreenKeyboardButtonShown(buttonId) )
+	{
+		SDL_Rect pos = { 0, 0, 0, 0 };
 		SDL_ANDROID_GetScreenKeyboardButtonPos(buttonId, &hiddenButtons[buttonId]);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(buttonId, &pos);
+	}
 	if( shown && !SDL_ANDROID_GetScreenKeyboardButtonShown(buttonId) )
 		SDL_ANDROID_SetScreenKeyboardButtonPos(buttonId, &hiddenButtons[buttonId]);
 	return 1;
