@@ -23,3 +23,16 @@ index fb928d4..be53ea8 100644
  
  
  enum LEX_VALUE
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c44844e..3d1170d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -95,7 +95,7 @@ else()
+ 	endif()
+ endif()
+ 
+-set(CDOGS_DATA_DIR "../")
++set(CDOGS_DATA_DIR "./")
+ set(CDOGS_CFG_DIR ".cdogs/")
+ SET(SOURCE_DIRECTORY ".")
+ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ".")

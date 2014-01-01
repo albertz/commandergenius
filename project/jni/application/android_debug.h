@@ -1,6 +1,7 @@
 #ifndef __ANDROID_DEBUG_H__
 #define __ANDROID_DEBUG_H__
 
+#include <stdio.h>
 #include <android/log.h>
 
 #ifdef __cplusplus
