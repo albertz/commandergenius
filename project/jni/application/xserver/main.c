@@ -98,6 +98,13 @@ int main( int argc, char* argv[] )
 		break;
 	}
 
+	if( argc > 1 && strcmp(argv[1], "-nohelp") == 0 )
+	{
+		printHelp = 0;
+		argc--;
+		argv++;
+	}
+
 	while( argc > 1 )
 	{
 		if( argv[1][0] == ':')
@@ -106,7 +113,7 @@ int main( int argc, char* argv[] )
 		}
 		else
 		{
-			args[argnum] = argv[0];
+			args[argnum] = argv[1];
 			argnum++;
 		}
 		argc--;
@@ -118,13 +125,6 @@ int main( int argc, char* argv[] )
 	XSDL_deinitSDL();
 
 	sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, SDL_GetVideoInfo()->vfmt->BitsPerPixel );
-
-	if( argc > 1 && strcmp(argv[1], "-nohelp") == 0 )
-	{
-		printHelp = 0;
-		argc--;
-		argv++;
-	}
 
 	if( printHelp )
 	{

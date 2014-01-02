@@ -23,6 +23,7 @@ static int unpackFinished = 0;
 
 static void renderString(const char *c, int x, int y);
 static void renderStringColor(const char *c, int x, int y, int r, int g, int b, SDL_Surface * surf);
+static void renderStringScaled(const char *c, int size, int x, int y, int r, int g, int b, SDL_Surface * surf);
 
 static void * unpackFilesThread(void * unused);
 static void showErrorMessage(const char *msg);
@@ -214,10 +215,10 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	};
 
 	const char * fontsStr[] = {
-		"x2.5", "x2", "x1.7", "x1.5",
-		"x1.3", "x1", "x0.9", "x0.8",
-		"x0.7", "x0.6", "x0.5", "x0.4",
-		"x0.3", "x0.2", "x0.15", "x0.1"
+		"X2.5", "X2", "X1.7", "X1.5",
+		"X1.3", "X1", "X0.9", "X0.8",
+		"X0.7", "X0.6", "X0.5", "X0.4",
+		"X0.3", "X0.2", "X0.15", "X0.1"
 	};
 	const float fontsVal[] = {
 		2.5f, 2.0f, 1.7f, 1.5f,
@@ -225,6 +226,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		0.7f, 0.6f, 0.5f, 0.4f,
 		0.3f, 0.2f, 0.15f, 0.1f
 	};
+	const float fontPtToMm = 0.3528f;
 
 	sprintf(native, "%dx%d native", resVal[0][0], resVal[0][1]);
 
@@ -310,10 +312,11 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		for(i = 0; i < 4; i++)
 		for(ii = 0; ii < 4; ii++)
 		{
+			int scale = (float)(*displayH) * (float)(*resolutionH) / 3500.0f * fontsVal[i*4+ii];
 			if( vertical )
-				renderString(fontsStr[i*4+ii], VID_Y/8 + (i*VID_Y/4), VID_X/8 + (ii*VID_X/4));
+				renderStringScaled(fontsStr[i*4+ii], scale, VID_Y/8 + (i*VID_Y/4), VID_X/8 + (ii*VID_X/4), 255, 255, 255, SDL_GetVideoSurface());
 			else
-				renderString(fontsStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/8 + (i*VID_Y/4));
+				renderStringScaled(fontsStr[i*4+ii], scale, VID_X/8 + (ii*VID_X/4), VID_Y/8 + (i*VID_Y/4), 255, 255, 255, SDL_GetVideoSurface());
 		}
 		SDL_GetMouseState(&x, &y);
 		renderString("X", x, y);
@@ -482,3 +485,17 @@ void renderString(const char *c, int x, int y)
 	renderStringColor(c, x, y, 255, 255, 255, SDL_GetVideoSurface());
 }
 
+void renderStringScaled(const char *c, int size, int x, int y, int r, int g, int b, SDL_Surface * surf)
+{
+	SDL_Color fColor = {r, g, b};
+	SDL_Rect fontRect = {0, 0, 0, 0};
+	TTF_Font* font = TTF_OpenFont("DroidSansMono.ttf", size);
+	SDL_Surface* fontSurface = TTF_RenderUTF8_Solid(font, c, fColor);
+	TTF_CloseFont(font);
+	fontRect.w = fontSurface->w;
+	fontRect.h = fontSurface->h;
+	fontRect.x = x - fontRect.w / 2;
+	fontRect.y = y - fontRect.h / 2;
+	SDL_BlitSurface(fontSurface, NULL, surf, &fontRect);
+	SDL_FreeSurface(fontSurface);
+}
