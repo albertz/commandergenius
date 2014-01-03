@@ -194,6 +194,8 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	int res = -1, dpi = -1;
 	char native[32] = "0x0";
 	int vertical = SDL_ListModes(NULL, 0)[0]->w < SDL_ListModes(NULL, 0)[0]->h;
+	char cfgpath[PATH_MAX];
+	FILE * cfgfile;
 
 	if( vertical )
 	{
@@ -226,9 +228,63 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		0.7f, 0.6f, 0.5f, 0.4f,
 		0.3f, 0.2f, 0.15f, 0.1f
 	};
-	const float fontPtToMm = 0.3528f;
 
 	sprintf(native, "%dx%d native", resVal[0][0], resVal[0][1]);
+
+	int savedRes = 0;
+	int savedDpi = 8;
+
+	sprintf(cfgpath, "%s/.xsdl.cfg", getenv("SECURE_STORAGE_DIR"));
+	cfgfile = fopen(cfgpath, "r");
+	if( cfgfile )
+	{
+		fscanf(cfgfile, "%d %d", &savedRes, &savedDpi);
+		fclose(cfgfile);
+	}
+
+	int counter = 3000, config = 0;
+	Uint32 curtime = SDL_GetTicks();
+	while ( counter > 0 && !config )
+	{
+		while (SDL_PollEvent(&event))
+		{
+			switch (event.type)
+			{
+				case SDL_KEYDOWN:
+					if (event.key.keysym.sym == SDLK_HELP)
+						counter = 0;
+				break;
+				case SDL_MOUSEBUTTONUP:
+					config = 1;
+				break;
+			}
+		}
+		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
+		y = VID_Y/3;
+		renderString("Tap screen to change resolution and font scale", VID_X/2, y);
+		char buf[100];
+		y += 30;
+		sprintf(buf, "Resolution: %s", resStr[savedRes]);
+		renderString(buf, VID_X/2, y);
+		y += 30;
+		sprintf(buf, "Font scale: %s", fontsStr[savedDpi]);
+		renderString(buf, VID_X/2, y);
+		y += 40;
+		sprintf(buf, "Starting in %d seconds", counter / 1000 + 1);
+		renderString(buf, VID_X/2, y);
+		SDL_Delay(100);
+		SDL_Flip(SDL_GetVideoSurface());
+		counter -= SDL_GetTicks() - curtime;
+		curtime = SDL_GetTicks();
+	}
+
+	if( !config )
+	{
+		res = savedRes;
+		dpi = savedDpi;
+	}
+
+	SDL_Joystick * j0 = SDL_JoystickOpen(0);
 
 	while ( res < 0 )
 	{
@@ -237,12 +293,12 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			switch (event.type)
 			{
 				case SDL_KEYDOWN:
-				if (event.key.keysym.sym == SDLK_UNDO)
-					return;
+					if (event.key.keysym.sym == SDLK_HELP)
+						return;
 				break;
 				case SDL_MOUSEBUTTONUP:
 				{
-					SDL_GetMouseState(&x, &y);
+					//SDL_GetMouseState(&x, &y);
 					if( vertical )
 					{
 						int z = x;
@@ -252,10 +308,17 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 					i = (y / (VID_Y/2));
 					ii = (x / (VID_X/4));
 					res = i * 4 + ii;
+					__android_log_print(ANDROID_LOG_INFO, "XSDL", "Screen coords %d %d res %d\n", x, y, res);
 				}
+				break;
+				case SDL_JOYBALLMOTION:
+					x = event.jball.xrel;
+					y = event.jball.yrel;
 				break;
 			}
 		}
+
+		//__android_log_print(ANDROID_LOG_INFO, "XSDL", "Screen coords %d %d\n", x, y, res);
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
 		renderString("Select display resolution", VID_X/2, VID_Y/2);
 		for(i = 0; i < 2; i++)
@@ -266,9 +329,9 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			else
 				renderString(resStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/4 + (i*VID_Y/2));
 		}
-		SDL_GetMouseState(&x, &y);
-		renderString("X", x, y);
-		SDL_Delay(150);
+		//SDL_GetMouseState(&x, &y);
+		//renderString("X", x, y);
+		SDL_Delay(100);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
 	if( vertical )
@@ -288,12 +351,12 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			switch (event.type)
 			{
 				case SDL_KEYDOWN:
-				if (event.key.keysym.sym == SDLK_UNDO)
-					return;
+					if (event.key.keysym.sym == SDLK_HELP)
+						return;
 				break;
 				case SDL_MOUSEBUTTONUP:
 				{
-					SDL_GetMouseState(&x, &y);
+					//SDL_GetMouseState(&x, &y);
 					if( vertical )
 					{
 						int z = x;
@@ -303,7 +366,12 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 					i = (y / (VID_Y/4));
 					ii = (x / (VID_X/4));
 					dpi = i * 4 + ii;
+					__android_log_print(ANDROID_LOG_INFO, "XSDL", "Screen coords %d %d dpi %d\n", x, y, res);
 				}
+				break;
+				case SDL_JOYBALLMOTION:
+					x = event.jball.xrel;
+					y = event.jball.yrel;
 				break;
 			}
 		}
@@ -318,13 +386,25 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			else
 				renderStringScaled(fontsStr[i*4+ii], scale, VID_X/8 + (ii*VID_X/4), VID_Y/8 + (i*VID_Y/4), 255, 255, 255, SDL_GetVideoSurface());
 		}
-		SDL_GetMouseState(&x, &y);
-		renderString("X", x, y);
-		SDL_Delay(150);
+		//SDL_GetMouseState(&x, &y);
+		//renderString("X", x, y);
+		SDL_Delay(100);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
 	*displayW = *displayW / fontsVal[dpi];
 	*displayH = *displayH / fontsVal[dpi];
+
+	SDL_JoystickClose(j0);
+
+	if( config )
+	{
+		cfgfile = fopen(cfgpath, "w");
+		if( cfgfile )
+		{
+			fprintf(cfgfile, "%d %d\n", res, dpi);
+			fclose(cfgfile);
+		}
+	}
 }
 
 void XSDL_generateBackground(const char * port, int showHelp)
@@ -393,7 +473,7 @@ void XSDL_generateBackground(const char * port, int showHelp)
     sprintf (msg, "To tunnel X over SSH, forward port %d", atoi(port+1) + 6000);
     renderStringColor(msg, VID_X/2, y, 255, 255, 255, surf);
     y += 15;
-    sprintf (msg, "in your SSH client", port + 6000);
+    sprintf (msg, "in your SSH client");
     renderStringColor(msg, VID_X/2, y, 255, 255, 255, surf);
 
 	SDL_SaveBMP(surf, "background.bmp");
@@ -432,7 +512,7 @@ void showErrorMessage(const char *msg)
 			switch (event.type)
 			{
 				case SDL_KEYDOWN:
-				if (event.key.keysym.sym == SDLK_UNDO)
+				if (event.key.keysym.sym == SDLK_HELP)
 					return;
 				break;
 			}
@@ -442,7 +522,7 @@ void showErrorMessage(const char *msg)
 
 void XSDL_initSDL()
 {
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Current video mode: %d %d", SDL_ListModes(NULL, 0)[0]->w, SDL_ListModes(NULL, 0)[0]->h);
 
