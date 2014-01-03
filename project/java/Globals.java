@@ -91,7 +91,7 @@ class Globals
 	public static int TrackballDampening = 0;
 	public static int AudioBufferConfig = 0;
 	public static boolean OptionalDataDownload[] = null;
-	public static int LeftClickMethod = Mouse.LEFT_CLICK_NORMAL;
+	public static int LeftClickMethod = ForceRelativeMouseMode ? Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT : Mouse.LEFT_CLICK_NORMAL;
 	public static int LeftClickKey = KeyEvent.KEYCODE_DPAD_CENTER;
 	public static int LeftClickTimeout = 3;
 	public static int RightClickTimeout = 4;
