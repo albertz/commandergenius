@@ -289,15 +289,16 @@ Android application sleep/resume support
 Application may be put to background at any time, for example if user gets phone call onto the device.
 The application will lose OpenGL context then, and has to re-create it when put to foreground.
 
-The SDL provides function
-SDL_ANDROID_SetApplicationPutToBackgroundCallback( callback_t appPutToBackground, callback_t appRestored );
-where callback_t is function pointer of type "void (*) void".
-The default callbacks will call another Android-specific functions:
-SDL_ANDROID_PauseAudioPlayback() and SDL_ANDROID_ResumeAudioPlayback()
-which will pause and resume audio from HW layer, so appplication does not need to destroy and re-init audio,
-and in general you don't need to redefine those functions, unless you want to play audio in background.
-Also, the usual event SDL_ACTIVEEVENT with flag SDL_APPACTIVE will be sent when that happens,
-and also SDL_VIDEORESIZE event will be sent (the same behavior as in MacOsX SDL implementation).
+The application is not allowed to do any GFX output without OpenGL context (or it will crash),
+that's why SDL_Flip() call will block until we're re-acquired context.
+
+The event SDL_ACTIVEEVENT with flag SDL_APPACTIVE will be sent when that happens,
+also SDL_VIDEORESIZE event will be sent (the same behavior as in MacOsX SDL implementation).
+
+If you're seeing black screen, and the video thread stucks, when your app is restored from background,
+this may happen because you do not call SDL_Flip() when app is put to background.
+If your app does not call SDL_Flip() at least once per second, you have to call it on SDL_APPACTIVE event.
+
 If you're using OpenAL it will be paused automatically when your app goes to background.
 
 If you're using pure SDL 1.2 API (with or without HW acceleration) you don't need to worry about anything -
@@ -321,41 +322,20 @@ or if application gets some notification over network (for example you're runnin
 and want a beep when someone connects to you) - you may unpause audio for some short time,
 that will require another thread to watch the network, because main thread will be blocked inside SDL_Flip().
 
-The application is not allowed to do any GFX output without OpenGL context (or it will crash),
-that's why SDL_Flip() call will block until we're re-acquired context, and the callbacks will be called
-from inside SDL_Flip().
+The SDL provides function
+SDL_ANDROID_SetApplicationPutToBackgroundCallback( callback_t appPutToBackground, callback_t appRestored );
+where callback_t is function pointer of type "void (*) void".
+The default callbacks will call another Android-specific functions:
+SDL_ANDROID_PauseAudioPlayback() and SDL_ANDROID_ResumeAudioPlayback()
+which will pause and resume audio from HW layer, so appplication does not need to destroy and re-init audio,
+and in general you don't need to redefine those functions, unless you want to play audio in background.
+The callbacks will be called from inside SDL_Flip().
+
 The whole idea behind callbacks is that the existing application should not be modified to
 operate correctly - the whole time in background will just look to app as one very long SDL_Flip(),
 so it's good idea to implement some maximum time cap on game frame, so it won't process
 the game to the end level 'till the app is in background, or calculate the difference in time
 between appPutToBackground() and appRestored() and update game time variables.
-
-Alternatively, you may enable option for unblocked SDL_Flip() in ChangeAppSettings script,
-then you'll have to implement special event loop right after each SDL_Flip() call:
-
-SDL_Flip(SDL_GetVideoSurface());
-SDL_Event evt;
-while( SDL_PollEvent(&evt) )
-{
-	if( evt.type == SDL_ACTIVEEVENT && evt.active.gain == 0 && evt.active.state & SDL_APPACTIVE )
-	{
-		// We've lost GL context, we are not allowed to do any GFX output here, or app will crash!
-		while( 1 )
-		{
-			SDL_PollEvent(&evt);
-			if( evt.type == SDL_ACTIVEEVENT && evt.active.gain && evt.active.state & SDL_APPACTIVE )
-			{
-				SDL_Flip(SDL_GetVideoSurface()); // One SDL_Flip() call is required here to restore OpenGL context
-				// Re-load all textures, matrixes and all other GL states if we're in SDL+OpenGL mode
-				// Re-load all images to SDL_Texture if we're using it
-				// Now we can draw
-				break;
-			}
-			// Process network stuff, maybe play some sounds using SDL_ANDROID_PauseAudioPlayback() / SDL_ANDROID_ResumeAudioPlayback()
-			SDL_Delay(300);
-		}
-	}
-}
 
 
 Quick guide to debug native code
