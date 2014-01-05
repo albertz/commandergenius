@@ -47,7 +47,7 @@ sudo cp -a <SDL>/project/jni/application/src/xserver/android/xhost dist-gimp-whe
 sudo cp -a <SDL>/project/jni/application/src/xserver/android/xkbcomp dist-gimp-wheezy/usr/bin/
 sudo cp -a <SDL>/project/jni/application/src/xserver/android/xli dist-gimp-wheezy/usr/bin/
 
-Re-generate system image
+Update system image archive
 
 cd dist-gimp-wheezy
 sudo tar cvzf ../dist-gimp-wheezy.tar.gz *

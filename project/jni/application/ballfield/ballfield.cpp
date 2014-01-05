@@ -674,6 +674,10 @@ int main(int argc, char* argv[])
 						SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 1);
 					if(evt.key.keysym.sym == SDLK_3)
 						SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 0);
+					if(evt.key.keysym.sym == SDLK_4)
+						SDL_ToggleScreenKeyboard(NULL);
+					if(evt.key.keysym.sym == SDLK_5)
+						SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput();
 				}
 			}
 			if(evt.type == SDL_MOUSEBUTTONUP || evt.type == SDL_MOUSEBUTTONDOWN)

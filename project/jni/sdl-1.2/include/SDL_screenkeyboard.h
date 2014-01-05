@@ -121,7 +121,7 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardRedefinedByUser(void);
 /* Set hint message for the QWERTY text input field, it may be multi-line, set NULL to reset hint to default */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardHintMesage(const char * hint);
 
-/* API compatible to SDL2, it's a wrapper to the SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(), it does not block.
+/* API compatible to SDL2, it's a wrapper to the SDL_ANDROID_ToggleScreenKeyboardTextInput(""), it does not block.
    These functions control native Android QWERTY keyboard, not the overlay buttons */
 extern DECLSPEC int SDLCALL SDL_HasScreenKeyboardSupport(void *unused);
 

@@ -414,11 +414,24 @@ public class MainActivity extends Activity
 		System.exit(0);
 	}
 
+	static boolean keyboardWithoutTextInputShown = false;
 	public void showScreenKeyboardWithoutTextInputField()
 	{
-		_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-		_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
-		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+		if( !keyboardWithoutTextInputShown )
+		{
+			keyboardWithoutTextInputShown = true;
+			_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+			_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
+			getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+		}
+		else
+		{
+			keyboardWithoutTextInputShown = false;
+			getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+			_inputManager.hideSoftInputFromWindow(mGLView.getWindowToken(), 0);
+			DimSystemStatusBar.get().dim(_videoLayout);
+			DimSystemStatusBar.get().dim(mGLView);
+		}
 	}
 
 	public void showScreenKeyboard(final String oldText, boolean sendBackspace)
@@ -1167,7 +1180,7 @@ abstract class DimSystemStatusBar
 		{
 			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT && Globals.ImmersiveMode)
 				// Immersive mode, I already hear curses when system bar reappears mid-game from the slightest swipe at the bottom of the screen
-				view.setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+				view.setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN);
 			else
 				view.setSystemUiVisibility(android.view.View.STATUS_BAR_HIDDEN);
 	   }
