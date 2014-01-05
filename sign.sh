@@ -18,7 +18,7 @@ stty -echo
 jarsigner -verbose -keystore $ANDROID_KEYSTORE_FILE -sigalg MD5withRSA -digestalg SHA1 Signed.apk $ANDROID_KEYSTORE_ALIAS || exit 1
 stty echo
 echo
-zipalign 4 Signed.apk SignedAligned.apk
+zipalign 4 Signed.apk MainActivity-debug.apk
 rm -f Signed.apk
 
 #DEBUGINFODIR=`aapt dump badging App.apk | grep "package:" | sed "s/.*name=[']\([^']*\)['].*versionCode=[']\([^']*\)['].*/\1-\2/" | tr " '/" '---'`
@@ -27,8 +27,8 @@ echo Copying debug info to project/debuginfo/$DEBUGINFODIR
 mkdir -p ../debuginfo/$DEBUGINFODIR/armeabi ../debuginfo/$DEBUGINFODIR/armeabi-v7a
 cp -f ../obj/local/armeabi/*.so ../debuginfo/$DEBUGINFODIR/armeabi
 cp -f ../obj/local/armeabi-v7a/*.so ../debuginfo/$DEBUGINFODIR/armeabi-v7a
-cp -f SignedAligned.apk ../debuginfo/$DEBUGINFODIR/$APPNAME-$APPVER.apk
-mv -f SignedAligned.apk ../../$APPNAME-$APPVER.apk
+cp -f MainActivity-debug.apk ../debuginfo/$DEBUGINFODIR/$APPNAME-$APPVER.apk
+cp -f MainActivity-debug.apk ../../$APPNAME-$APPVER.apk
 
 #PKGNAME=`aapt dump badging App.apk | grep "package:" | sed "s/.*name=[']\([^']*\)['].*versionCode=[']\([^']*\)['].*/\1/"`
 #adb install -r App.apk || { adb uninstall $PKGNAME ; adb install -r App.apk ; }
