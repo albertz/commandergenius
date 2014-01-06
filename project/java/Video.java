@@ -838,6 +838,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	@Override
 	public void onPause() {
+		Log.i("SDL", "libSDL: DemoGLSurfaceView.onPause(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused + (mRenderer.mPaused ? " - not doing anything" : ""));
 		if(mRenderer.mPaused)
 			return;
 		mRenderer.mPaused = true;
@@ -853,11 +854,11 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	@Override
 	public void onResume() {
+		Log.i("SDL", "libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused + (!mRenderer.mPaused ? " - not doing anything" : ""));
 		if(!mRenderer.mPaused)
 			return;
 		mRenderer.mPaused = false;
 		super.onResume();
-		Log.i("SDL", "libSDL: DemoGLSurfaceView.onResume(): mRenderer.mGlSurfaceCreated " + mRenderer.mGlSurfaceCreated + " mRenderer.mPaused " + mRenderer.mPaused);
 		if( mRenderer.mGlSurfaceCreated && ! mRenderer.mPaused || Globals.NonBlockingSwapBuffers )
 			mRenderer.nativeGlContextRecreated();
 		if( mRenderer.accelerometer != null && mRenderer.accelerometer.openedBySDL ) // For some reason it crashes here often - are we getting this event before initialization?

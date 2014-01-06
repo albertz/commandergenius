@@ -414,7 +414,6 @@ public class MainActivity extends Activity
 		System.exit(0);
 	}
 
-	static boolean keyboardWithoutTextInputShown = false;
 	public void showScreenKeyboardWithoutTextInputField()
 	{
 		if( !keyboardWithoutTextInputShown )
@@ -553,6 +552,9 @@ public class MainActivity extends Activity
 
 	public void hideScreenKeyboard()
 	{
+		if( keyboardWithoutTextInputShown )
+			showScreenKeyboardWithoutTextInputField();
+
 		if(_screenKeyboard == null)
 			return;
 
@@ -571,6 +573,8 @@ public class MainActivity extends Activity
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
 		mGLView.requestFocus();
+		DimSystemStatusBar.get().dim(_videoLayout);
+		DimSystemStatusBar.get().dim(mGLView);
 	};
 
 	public boolean isScreenKeyboardShown()
@@ -1137,6 +1141,7 @@ public class MainActivity extends Activity
 	private FrameLayout _videoLayout = null;
 	private EditText _screenKeyboard = null;
 	private String _screenKeyboardHintMessage = null;
+	static boolean keyboardWithoutTextInputShown = false;
 	private boolean sdlInited = false;
 
 	public interface TouchEventsListener
