@@ -780,8 +780,8 @@ public class MainActivity extends Activity
 	@Override
 	public void onConfigurationChanged(Configuration newConfig)
 	{
+		super.onConfigurationChanged(newConfig);
 		// Do nothing here
-		//super.onConfigurationChanged(newConfig);
 	}
 	
 	public void setText(final String t)

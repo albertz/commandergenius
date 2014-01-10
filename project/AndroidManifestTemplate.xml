@@ -14,7 +14,7 @@
                   android:alwaysRetainTaskState="true"
                   android:launchMode="singleTask"
                   android:screenOrientation="userLandscape"
-                  android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection"
+                  android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|fontScale|uiMode|screenSize|smallestScreenSize"
                   android:windowSoftInputMode="stateUnspecified|adjustPan"
         >
             <intent-filter>
