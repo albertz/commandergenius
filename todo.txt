@@ -22,19 +22,13 @@ Requested features, might never get implemented
 TODO, which will get actually done
 ==================================
 
-- OpenArena: move 3-rd person camera to the side, above shoulder.
-
-- OpenArena: two new aiming modes - no-swipe aiming, with and without double-tap.
+- OpenArena: Smooth camera rotation in aim under finger mode.
 
 - OpenArena: chat text input should be faster.
 
 - OpenArena: Shift and Ctrl keys on USB keyboard do not work for text input.
 
 - OpenArena: When entering with USB keyboard into chatbox, first 't' disappears.
-
-- OpenArena: Help image with controller buttons for Ouya: https://www.dropbox.com/s/ynrso4n8kpkf3b9/OUYA_Controller_Overlay-01.png
-
-- OpenArena: option to switch analog joysticks on gamepad.
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper.
 
