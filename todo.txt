@@ -24,10 +24,6 @@ Requested features, might never get implemented
 TODO, which will get actually done
 ==================================
 
-- OpenArena: Smooth camera rotation in aim under finger mode.
-
-- OpenArena: fix and enable renderer_oa.
-
 - OpenArena: chat text input should be faster.
 
 - OpenArena: Shift and Ctrl keys on USB keyboard do not work for text input.
