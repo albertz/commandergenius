@@ -32,7 +32,7 @@ void * unpackFilesThread(void * unused)
 {
 	char fname[PATH_MAX*2];
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
-	strcat( fname, "/usr/bin/xkbcomp" );
+	strcat( fname, "/usr/lib/xorg/protocol.txt" );
 	struct stat st;
 	if( stat( fname, &st ) == 0 )
 	{
@@ -42,42 +42,6 @@ void * unpackFilesThread(void * unused)
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data");
 
-	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
-	strcat( fname, "/busybox" );
-	FILE * ff = fopen("busybox", "rb");
-	FILE * fo = fopen(fname, "wb");
-	if( !ff || !fo )
-	{
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot copy busybox");
-		unpackFinished = 1;
-		return (void *)0;
-	}
-
-	for(;;)
-	{
-		char buf[2048];
-		int cnt = fread( buf, 1, sizeof(buf), ff );
-		if( cnt < 0 )
-		{
-			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot copy busybox");
-			unpackFinished = 1;
-			return (void *)1;
-		}
-		fwrite( buf, 1, cnt, fo );
-		if( cnt < sizeof(buf) )
-			break;
-	}
-
-	fclose(ff);
-	fclose(fo);
-
-	if( chmod(fname, 0755) != 0 )
-	{
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot chmod busybox");
-		unpackFinished = 1;
-		return (void *)0;
-	}
-
 	if( stat( "data.tar.gz", &st ) == 0 )
 		unpackProgressMbTotal = st.st_size / 1024 / 1024;
 	else
@@ -85,10 +49,12 @@ void * unpackFilesThread(void * unused)
 
 	unpackProgressMb = 0;
 
-	ff = fopen("data.tar.gz", "rb");
-	strcat(fname, " tar xz -C ");
-	strcat(fname, getenv("SECURE_STORAGE_DIR"));
-	fo = popen(fname, "w");
+	FILE * ff = fopen("data.tar.gz", "rb");
+	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
+	strcat( fname, "/busybox" );
+	strcat( fname, " tar xz -C " );
+	strcat( fname, getenv("SECURE_STORAGE_DIR") );
+	FILE * fo = popen(fname, "w");
 	if( !ff || !fo )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
@@ -173,7 +139,7 @@ void XSDL_unpackFiles()
 		SDL_Delay(400);
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
 		char s[128];
-		sprintf(s, "Unpacking data: %d/%d Mb, %d%%", unpackProgressMb, unpackProgressMbTotal, unpackProgressMb * 100 / unpackProgressMbTotal);
+		sprintf(s, "Unpacking data: %d/%d Mb, %d%%", unpackProgressMb, unpackProgressMbTotal, unpackProgressMb * 100 / (unpackProgressMbTotal > 0 ? unpackProgressMbTotal : 1));
 		renderString(s, VID_X/2, VID_Y/3);
 		renderString("You may put this app to background while it's unpacking", VID_X/2, VID_Y*2/3);
 		SDL_Flip(SDL_GetVideoSurface());
@@ -407,14 +373,17 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	}
 }
 
-void XSDL_generateBackground(const char * port, int showHelp)
+void XSDL_generateBackground(const char * port, int showHelp, int resolutionW, int resolutionH)
 {
 	int sd, addr, ifc_num, i;
     struct ifconf ifc;
     struct ifreq ifr[20];
     SDL_Surface * surf;
-    int y = VID_Y * 2 / 5;
+    int y = resolutionH * 1 / 3;
     char msg[128];
+
+	if (resolutionH > resolutionW)
+		resolutionH = resolutionW;
 
 	if( !showHelp )
 	{
@@ -425,11 +394,11 @@ void XSDL_generateBackground(const char * port, int showHelp)
 		return;
 	}
 
-	surf = SDL_CreateRGBSurface(SDL_SWSURFACE, VID_X, VID_X, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
+	surf = SDL_CreateRGBSurface(SDL_SWSURFACE, resolutionW, resolutionH, 24, 0x0000ff, 0x00ff00, 0xff0000, 0);
 	SDL_FillRect(surf, NULL, 0x00002f);
 
-	renderStringColor("Launch these commands on your Linux PC:", VID_X/2, y, 255, 255, 255, surf);
-	y += 30;
+	renderStringScaled("Launch these commands on your Linux PC:", 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+	y += resolutionH * 30 / VID_Y;
 
     sd = socket(PF_INET, SOCK_DGRAM, 0);
     if (sd > 0)
@@ -458,23 +427,23 @@ void XSDL_generateBackground(const char * port, int showHelp)
                 if (strcmp(saddr, "127.0.0.1") == 0)
                     continue;
                 sprintf (msg, "env DISPLAY=%s%s metacity &", saddr, port);
-                renderStringColor(msg, VID_X/2, y, 255, 255, 255, surf);
-                y += 15;
+                renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+                y += resolutionH * 15 / VID_Y;
                 sprintf (msg, "env DISPLAY=%s%s gimp", saddr, port);
-                renderStringColor(msg, VID_X/2, y, 255, 255, 255, surf);
-                y += 20;
+                renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+                y += resolutionH * 20 / VID_Y;
             }
         }
 
         close(sd);
     }
 
-    y += 10;
+    y += resolutionH * 10 / VID_Y;
     sprintf (msg, "To tunnel X over SSH, forward port %d", atoi(port+1) + 6000);
-    renderStringColor(msg, VID_X/2, y, 255, 255, 255, surf);
-    y += 15;
+    renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+    y += resolutionH * 15 / VID_Y;
     sprintf (msg, "in your SSH client");
-    renderStringColor(msg, VID_X/2, y, 255, 255, 255, surf);
+    renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
 
 	SDL_SaveBMP(surf, "background.bmp");
 	SDL_FreeSurface(surf);
@@ -531,7 +500,7 @@ void XSDL_initSDL()
 	else
 		SDL_SetVideoMode(VID_Y, VID_X, 0, SDL_SWSURFACE);
 	TTF_Init();
-	sFont = TTF_OpenFont("DroidSansMono.ttf", 12);
+	sFont = TTF_OpenFont("DroidSansMono.ttf", 14);
 	if (!sFont)
 	{
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error: cannot open font file, please reinstall the app");

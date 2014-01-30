@@ -120,7 +120,7 @@ int main( int argc, char* argv[] )
 		argv++;
 	}
 
-	XSDL_generateBackground(port, printHelp);
+	XSDL_generateBackground(port, printHelp, resolutionW, resolutionH);
 
 	XSDL_deinitSDL();
 
@@ -128,7 +128,7 @@ int main( int argc, char* argv[] )
 
 	if( printHelp )
 	{
-		sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -fillscreen background.bmp",
+		sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -center background.bmp",
 			getenv("SECURE_STORAGE_DIR"), getenv("SECURE_STORAGE_DIR") );
 		args[argnum] = "-exec";
 		args[argnum+1] = clientcmd;

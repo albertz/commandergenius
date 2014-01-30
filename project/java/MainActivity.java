@@ -958,7 +958,7 @@ public class MainActivity extends Activity
 		}
 
 		// ----- VCMI hack -----
-		String [] binaryZipNames = { "binaries-" + android.os.Build.CPU_ABI + ".zip", "binaries.zip" };
+		String [] binaryZipNames = { "binaries-" + android.os.Build.CPU_ABI + ".zip", "binaries-" + android.os.Build.CPU_ABI2 + ".zip", "binaries.zip" };
 		for(String binaryZip: binaryZipNames)
 		{
 			try {

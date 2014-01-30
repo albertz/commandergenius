@@ -960,17 +960,33 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseWheel) (JNIEnv* env, jobject thiz,
 	// TODO: direction might get inverted
 	for( ; scrollX > 0; scrollX-- )
 	{
-		SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_RIGHT) );
-		SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT) );
+		if( !SDL_ANDROID_isMouseUsed )
+		{
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_RIGHT) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT) );
+		}
+		else
+		{
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_X2 );
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_X2 );
+		}
 	}
 	for( ; scrollX < 0; scrollX++ )
 	{
-		SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_LEFT) );
-		SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT) );
+		if( !SDL_ANDROID_isMouseUsed )
+		{
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_LEFT) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT) );
+		}
+		else
+		{
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_X1 );
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_X1 );
+		}
 	}
 	for( ; scrollY > 0; scrollY-- )
 	{
-		if(!SDL_ANDROID_isMouseUsed)
+		if( !SDL_ANDROID_isMouseUsed )
 		{
 			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_UP) );
 			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP) );
@@ -983,7 +999,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseWheel) (JNIEnv* env, jobject thiz,
 	}
 	for( ; scrollY < 0; scrollY++ )
 	{
-		if(!SDL_ANDROID_isMouseUsed)
+		if( !SDL_ANDROID_isMouseUsed )
 		{
 			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_DOWN) );
 			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN) );

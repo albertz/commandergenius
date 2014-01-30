@@ -4,8 +4,10 @@ CURDIR=`pwd`
 
 PACKAGE_NAME=`grep AppFullName AndroidAppSettings.cfg | sed 's/.*=//'`
 
-../setEnvironment-armeabi-v7a.sh sh -c '\
-$CC $CFLAGS -c main.c gfx.c' || exit 1
+../setEnvironment-$1.sh sh -c '\
+$CC $CFLAGS -c main.c -o main-'"$1.o" || exit 1
+../setEnvironment-$1.sh sh -c '\
+$CC $CFLAGS -c gfx.c -o gfx-'"$1.o" || exit 1
 
 [ -e xserver/android ] || {
 	CURDIR=`pwd`
@@ -22,6 +24,7 @@ cd android
 	git submodule update --init libancillary || exit 1
 	cd ..
 } || exit 1
+cd $1
 [ -e libfontenc-*/Makefile ] && {
 	grep "/data/data/$PACKAGE_NAME" libfontenc-*/Makefile || \
 	git clean -f -d -x .
@@ -31,10 +34,10 @@ env TARGET_DIR=/data/data/$PACKAGE_NAME/files \
 ./build.sh || exit 1
 
 env CURDIR=$CURDIR \
-../../../setEnvironment-armeabi-v7a.sh sh -c '\
-$CC $CFLAGS $LDFLAGS -o $CURDIR/libapplication-armeabi-v7a.so -L. \
-$CURDIR/main.o \
-$CURDIR/gfx.o \
+../../../../setEnvironment-$1.sh sh -c '\
+$CC $CFLAGS $LDFLAGS -o $CURDIR/libapplication-'"$1.so"' -L. \
+$CURDIR/main-'"$1.o"' \
+$CURDIR/gfx-'"$1.o"' \
 hw/kdrive/sdl/sdl.o \
 dix/.libs/libmain.a \
 dix/.libs/libdix.a \
@@ -61,6 +64,13 @@ hw/kdrive/linux/.libs/liblinux.a \
 -lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lts -lfreetype -landroid-shmem' \
 || exit 1
 
-#-lfreetype is inside -lsdl_ttf
+rm -rf $CURDIR/tmp-$1
+mkdir -p $CURDIR/tmp-$1
+cd $CURDIR/tmp-$1
+cp $CURDIR/xserver/data/busybox-$1 ./busybox
+mkdir -p usr/bin
+for f in xhost xkbcomp xli ; do cp $CURDIR/xserver/android/$1/$f ./usr/bin/ ; done
+rm -f ../AndroidData/binaries-$1.zip
+zip -r ../AndroidData/binaries-$1.zip .
 
 exit 0
