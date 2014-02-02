@@ -308,6 +308,7 @@ abstract class DifferentTouchInput
 				touchEvents[0].y = (int)event.getY();
 				touchEvents[0].pressure = 0;
 				touchEvents[0].size = 0;
+				// MotionEvent.AXIS_DISTANCE
 				DemoGLSurfaceView.nativeMotionEvent( touchEvents[0].x, touchEvents[0].y, action, 0, touchEvents[0].pressure, touchEvents[0].size );
 			}
 		}
