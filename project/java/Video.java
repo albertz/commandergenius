@@ -359,7 +359,7 @@ abstract class DifferentTouchInput
 				}
 				buttonState = buttonStateNew;
 			}
-			if( event.getX() != 0.0f || event.getY() != 0.0f ) // Ignore event when it has zero coordinates, this is sent by crappy Mediatek-based tablets
+			if( event.getX() != 0.0f && event.getY() != 0.0f ) // Ignore event when it has zero coordinates, this is sent by crappy Mediatek-based tablets
 				super.process(event); // Push mouse coordinate first
 		}
 		public void processGenericEvent(final MotionEvent event)
@@ -381,7 +381,7 @@ abstract class DifferentTouchInput
 				DemoGLSurfaceView.nativeMouseWheel(scrollX, scrollY);
 				return;
 			}
-			if( event.getX() != 0.0f || event.getY() != 0.0f ) // Ignore event when it has zero coordinates, this is sent by crappy Mediatek-based tablets
+			if( event.getX() != 0.0f && event.getY() != 0.0f ) // Ignore event when it has zero coordinates, this is sent by crappy Mediatek-based tablets
 				super.processGenericEvent(event);
 		}
 	}
