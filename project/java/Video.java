@@ -119,8 +119,6 @@ abstract class DifferentTouchInput
 					return IcsTouchInputWithHistory.Holder.sInstance;
 				if( DetectCrappyDragonRiseDatexGamepad() )
 					return CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance;
-				if( android.os.Build.BOARD.contains("bird") )
-					return CrappyMtkTabletWithBrokenTouchDrivers.Holder.sInstance;
 				return IcsTouchInput.Holder.sInstance;
 			}
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
@@ -361,7 +359,8 @@ abstract class DifferentTouchInput
 				}
 				buttonState = buttonStateNew;
 			}
-			super.process(event); // Push mouse coordinate first
+			if( event.getX() != 0.0f || event.getY() != 0.0f ) // Ignore event when it has zero coordinates, this is sent by crappy Mediatek-based tablets
+				super.process(event); // Push mouse coordinate first
 		}
 		public void processGenericEvent(final MotionEvent event)
 		{
@@ -382,7 +381,8 @@ abstract class DifferentTouchInput
 				DemoGLSurfaceView.nativeMouseWheel(scrollX, scrollY);
 				return;
 			}
-			super.processGenericEvent(event);
+			if( event.getX() != 0.0f || event.getY() != 0.0f ) // Ignore event when it has zero coordinates, this is sent by crappy Mediatek-based tablets
+				super.processGenericEvent(event);
 		}
 	}
 	private static class IcsTouchInputWithHistory extends IcsTouchInput
@@ -472,23 +472,6 @@ abstract class DifferentTouchInput
 				}
 			}
 			return false;
-		}
-	}
-	private static class CrappyMtkTabletWithBrokenTouchDrivers extends IcsTouchInput
-	{
-		private static class Holder
-		{
-			private static final CrappyMtkTabletWithBrokenTouchDrivers sInstance = new CrappyMtkTabletWithBrokenTouchDrivers();
-		}
-		public void process(final MotionEvent event)
-		{
-			if( event.getX() != 0.0f && event.getY() != 0.0f ) // Ignore event when it has zero coordinates
-				super.process(event);
-		}
-		public void processGenericEvent(final MotionEvent event)
-		{
-			if( event.getX() != 0.0f && event.getY() != 0.0f ) // Ignore event when it has zero coordinates
-				super.processGenericEvent(event);
 		}
 	}
 }
