@@ -1,8 +1,6 @@
 Requested features, might never get implemented
 ===============================================
 
-- Use finger hover events for mouse emulation.
-
 - Select between normal mouse input and magnifying glass/relative input automatically, based on screen size.
 
 - Show/hide screen controls with longpress on Text Edit button.
@@ -19,16 +17,9 @@ Requested features, might never get implemented
 - Support of libjnigraphics (it will disable on-screen keyboard, only SW SDL screen surface supported).
   This is not relevant already, as every device around is fast enough with GL.
 
-- Cloud save support.
+- GIMP: x86 architecture support.
 
-TODO, which will get actually done
-==================================
-
-- SDL: support for finger hover events.
-
-- OpenArena: fix gamepad support.
-
-- OpenArena: Text input with console open does not send Enter keypress.
+- UfoAI: huge huge update.
 
 - OpenArena: chat text input should be faster.
 
@@ -36,10 +27,25 @@ TODO, which will get actually done
 
 - OpenArena: When entering with USB keyboard into chatbox, first 't' disappears.
 
+TODO, which will get actually done
+==================================
+
+- OpenArena: navigate game menu with analog joystick.
+
+- SDL: support for finger hover events for mouse emulation.
+
 - XSDL: Android clipboard support.
 
 - GIMP: Ctrl/Alt/Shift toggles in the taskbar.
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper.
 
-- UfoAI: huge huge update.
+- UQM-HD: on-screen buttons reappear while using gamepad.
+
+- UQM-HD: navigate game menu with analog joystick.
+
+- TeeWorlds: infinite loop while trying to enter chat text.
+
+- TeeWorlds: navigate UI with gamepad.
+
+- SDL: cloud save support.
