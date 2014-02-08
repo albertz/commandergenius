@@ -47,6 +47,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.content.res.Resources;
 import android.content.res.AssetManager;
 import android.widget.Toast;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import android.widget.TextView;
@@ -93,7 +94,10 @@ abstract class DifferentTouchInput
 	public abstract void process(final MotionEvent event);
 	public abstract void processGenericEvent(final MotionEvent event);
 
-	public static boolean ExternalMouseDetected = false;
+	public static int ExternalMouseDetected = 0;
+	
+	public static DifferentTouchInput touchInput = getInstance();
+
 
 	public static DifferentTouchInput getInstance()
 	{
@@ -119,7 +123,8 @@ abstract class DifferentTouchInput
 					return IcsTouchInputWithHistory.Holder.sInstance;
 				if( DetectCrappyDragonRiseDatexGamepad() )
 					return CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance;
-				return IcsTouchInput.Holder.sInstance;
+				//return IcsTouchInput.Holder.sInstance;
+				return AutoDetectTouchInput.Holder.sInstance;
 			}
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
 				return GingerbreadTouchInput.Holder.sInstance;
@@ -324,13 +329,12 @@ abstract class DifferentTouchInput
 		}
 		public void process(final MotionEvent event)
 		{
-			boolean hwMouseEvent = (	(event.getSource() & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE ||
-										(event.getSource() & InputDevice.SOURCE_STYLUS) == InputDevice.SOURCE_STYLUS ||
-										(event.getMetaState() & KeyEvent.FLAG_TRACKING) != 0 ); // Hack to recognize Galaxy Note Gingerbread stylus
+			int hwMouseEvent = (event.getSource() & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE ? 2 :
+								(event.getSource() & InputDevice.SOURCE_STYLUS) == InputDevice.SOURCE_STYLUS ? 1 : 0;
 			if( ExternalMouseDetected != hwMouseEvent )
 			{
 				ExternalMouseDetected = hwMouseEvent;
-				DemoGLSurfaceView.nativeHardwareMouseDetected(hwMouseEvent ? 1 : 0);
+				DemoGLSurfaceView.nativeHardwareMouseDetected(hwMouseEvent);
 			}
 			super.process(event);
 		}
@@ -359,8 +363,7 @@ abstract class DifferentTouchInput
 				}
 				buttonState = buttonStateNew;
 			}
-			if( event.getX() != 0.0f && event.getY() != 0.0f ) // Ignore event when it has zero coordinates, this is sent by crappy Mediatek-based tablets
-				super.process(event); // Push mouse coordinate first
+			super.process(event); // Push mouse coordinate first
 		}
 		public void processGenericEvent(final MotionEvent event)
 		{
@@ -381,8 +384,7 @@ abstract class DifferentTouchInput
 				DemoGLSurfaceView.nativeMouseWheel(scrollX, scrollY);
 				return;
 			}
-			if( event.getX() != 0.0f && event.getY() != 0.0f ) // Ignore event when it has zero coordinates, this is sent by crappy Mediatek-based tablets
-				super.processGenericEvent(event);
+			super.processGenericEvent(event);
 		}
 	}
 	private static class IcsTouchInputWithHistory extends IcsTouchInput
@@ -472,6 +474,114 @@ abstract class DifferentTouchInput
 				}
 			}
 			return false;
+		}
+	}
+	private static class CrappyMtkTabletWithBrokenTouchDrivers extends IcsTouchInput
+	{
+		private static class Holder
+		{
+			private static final CrappyMtkTabletWithBrokenTouchDrivers sInstance = new CrappyMtkTabletWithBrokenTouchDrivers();
+		}
+		public void process(final MotionEvent event)
+		{
+			if( (event.getAction() & MotionEvent.ACTION_MASK) != MotionEvent.ACTION_HOVER_MOVE ) // Ignore hover events, they are broken
+				super.process(event);
+		}
+		public void processGenericEvent(final MotionEvent event)
+		{
+			if( (event.getAction() & MotionEvent.ACTION_MASK) != MotionEvent.ACTION_HOVER_MOVE ) // Ignore hover events, they are broken
+				super.processGenericEvent(event);
+		}
+	}
+	private static class AutoDetectTouchInput extends IcsTouchInput
+	{
+		int tapCount = 0;
+		boolean hover = false, fingerHover = false, tap = false;
+		float hoverX = 0.0f, hoverY = 0.0f;
+		long hoverTime = 0;
+		float tapX = 0.0f, tapY = 0.0f;
+		long tapTime = 0;
+		float hoverTouchDistance = 0.0f;
+
+		private static class Holder
+		{
+			private static final AutoDetectTouchInput sInstance = new AutoDetectTouchInput();
+		}
+		public void process(final MotionEvent event)
+		{
+			if( ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP ||
+				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) )
+			{
+				tapCount ++;
+				if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP )
+				{
+					tap = true;
+					tapX = event.getX();
+					tapY = event.getY();
+					tapTime = System.currentTimeMillis();
+					if( hover )
+						Log.i("SDL", "Tap tapX " + event.getX() + " tapY " + event.getX());
+				}
+				else if( hover && System.currentTimeMillis() < hoverTime + 1000 )
+				{
+					hoverTouchDistance += Math.abs(hoverX - event.getX()) + Math.abs(hoverY - event.getY());
+					Log.i("SDL", "Finger down event.getX() " + event.getX() + " hoverX " + hoverX + " event.getY() " + event.getY() + " hoverY " + hoverY + " hoverTouchDistance " + hoverTouchDistance);
+				}
+			}
+			if( tapCount >= 4 )
+			{
+				int displayHeight = 800;
+				try {
+					DisplayMetrics dm = new DisplayMetrics();
+					MainActivity.instance.getWindowManager().getDefaultDisplay().getMetrics(dm);
+					displayHeight = Math.min(dm.widthPixels, dm.heightPixels);
+				} catch (Exception eeeee) {}
+				Log.i("SDL", "AutoDetectTouchInput: hoverTouchDistance " + hoverTouchDistance + " threshold " + displayHeight / 2 + " hover " + hover + " fingerHover " + fingerHover);
+				if( hoverTouchDistance > displayHeight / 2 )
+				{
+					Toast.makeText(MainActivity.instance, "Detected buggy touch panel, enabling workarounds", Toast.LENGTH_SHORT).show();
+					touchInput = CrappyMtkTabletWithBrokenTouchDrivers.Holder.sInstance;
+				}
+				else
+				{
+					if( fingerHover )
+					{
+						Toast.makeText(MainActivity.instance, "Finger hover capability detected", Toast.LENGTH_SHORT).show();
+						// Switch away from relative mouse input
+						if( Globals.RelativeMouseMovement || Globals.LeftClickMethod != Mouse.LEFT_CLICK_NORMAL )
+						{
+							if( Globals.RelativeMouseMovement )
+								Globals.ShowScreenUnderFinger = Mouse.ZOOM_MAGNIFIER;
+							Globals.RelativeMouseMovement = false;
+							Globals.LeftClickMethod = Mouse.LEFT_CLICK_NORMAL;
+						}
+						Settings.applyMouseEmulationOptions();
+					}
+					touchInput = IcsTouchInput.Holder.sInstance;
+				}
+			}
+			super.process(event);
+		}
+		public void processGenericEvent(final MotionEvent event)
+		{
+			super.processGenericEvent(event);
+			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_MOVE ||
+				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_ENTER ||
+				(event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_EXIT )
+			{
+				hover = true;
+				hoverX = event.getX();
+				hoverY = event.getY();
+				hoverTime = System.currentTimeMillis();
+				if( ExternalMouseDetected != 0 && (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_MOVE )
+					fingerHover = true;
+				if( tap && System.currentTimeMillis() < tapTime + 1000 )
+				{
+					tap = false;
+					hoverTouchDistance += Math.abs(tapX - hoverX) + Math.abs(tapY - hoverY);
+					Log.i("SDL", "Hover hoverX " + hoverX + " tapX " + tapX + " hoverY " + hoverX + " tapY " + tapY + " hoverTouchDistance " + hoverTouchDistance);
+				}
+			}
 		}
 	}
 }
@@ -771,7 +881,6 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public DemoGLSurfaceView(MainActivity context) {
 		super(context);
 		mParent = context;
-		touchInput = DifferentTouchInput.getInstance();
 		setEGLConfigChooser(Globals.VideoDepthBpp, Globals.NeedDepthBuffer, Globals.NeedStencilBuffer, Globals.NeedGles2);
 		mRenderer = new DemoRenderer(context);
 		setRenderer(mRenderer);
@@ -780,7 +889,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	@Override
 	public boolean onTouchEvent(final MotionEvent event) 
 	{
-		touchInput.process(event);
+		DifferentTouchInput.touchInput.process(event);
 		if( DemoRenderer.mRatelimitTouchEvents )
 		{
 			limitEventRate(event);
@@ -791,7 +900,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	@Override
 	public boolean onGenericMotionEvent (final MotionEvent event)
 	{
-		touchInput.processGenericEvent(event);
+		DifferentTouchInput.touchInput.processGenericEvent(event);
 		if( DemoRenderer.mRatelimitTouchEvents )
 		{
 			limitEventRate(event);
@@ -868,7 +977,6 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 
 	DemoRenderer mRenderer;
 	MainActivity mParent;
-	DifferentTouchInput touchInput = null;
 
 	public static native void nativeMotionEvent( int x, int y, int action, int pointerId, int pressure, int radius );
 	public static native int nativeKey( int keyCode, int down );

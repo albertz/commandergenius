@@ -30,9 +30,9 @@ Requested features, might never get implemented
 TODO, which will get actually done
 ==================================
 
-- OpenArena: navigate game menu with analog joystick.
+- SDL: option to filter finger hover jitter.
 
-- SDL: support for finger hover events for mouse emulation.
+- OpenArena: Camera angle screwed up after respawn.
 
 - XSDL: Android clipboard support.
 
@@ -49,3 +49,5 @@ TODO, which will get actually done
 - TeeWorlds: navigate UI with gamepad.
 
 - SDL: cloud save support.
+
+- OpenArena: navigate game menu with analog joystick.

@@ -476,23 +476,8 @@ class Settings
 
 	// ===============================================================================================
 
-	static void Apply(MainActivity p)
+	static void applyMouseEmulationOptions()
 	{
-		nativeSetVideoDepth(Globals.VideoDepthBpp, Globals.NeedGles2 ? 1 : 0);
-		if(Globals.VideoLinearFilter)
-			nativeSetVideoLinearFilter();
-		if( Globals.CompatibilityHacksVideo )
-		{
-			Globals.MultiThreadedVideo = true;
-			Globals.SwVideoMode = true;
-			nativeSetCompatibilityHacks();
-		}
-		if( Globals.SwVideoMode )
-			nativeSetVideoForceSoftwareMode();
-		if( Globals.SwVideoMode && Globals.MultiThreadedVideo )
-			nativeSetVideoMultithreaded();
-		if( Globals.PhoneHasTrackball )
-			nativeSetTrackballUsed();
 		if( Globals.AppUsesMouse )
 			nativeSetMouseUsed( Globals.RightClickMethod,
 								Globals.ShowScreenUnderFinger,
@@ -511,6 +496,26 @@ class Settings
 								Globals.RelativeMouseMovementSpeed,
 								Globals.RelativeMouseMovementAccel,
 								Globals.ShowMouseCursor ? 1 : 0 );
+	}
+
+	static void Apply(MainActivity p)
+	{
+		nativeSetVideoDepth(Globals.VideoDepthBpp, Globals.NeedGles2 ? 1 : 0);
+		if(Globals.VideoLinearFilter)
+			nativeSetVideoLinearFilter();
+		if( Globals.CompatibilityHacksVideo )
+		{
+			Globals.MultiThreadedVideo = true;
+			Globals.SwVideoMode = true;
+			nativeSetCompatibilityHacks();
+		}
+		if( Globals.SwVideoMode )
+			nativeSetVideoForceSoftwareMode();
+		if( Globals.SwVideoMode && Globals.MultiThreadedVideo )
+			nativeSetVideoMultithreaded();
+		if( Globals.PhoneHasTrackball )
+			nativeSetTrackballUsed();
+		applyMouseEmulationOptions();
 		nativeSetJoystickUsed(Globals.AppUsesJoystick ? 1 : 0, Globals.AppUsesSecondJoystick ? 1 : 0);
 		if( Globals.AppUsesAccelerometer )
 			nativeSetAccelerometerUsed();
