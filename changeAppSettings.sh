@@ -1338,7 +1338,7 @@ if [ "$AccessSdCard" = "n" ]; then
 	$SEDI "/==EXTERNAL_STORAGE==/ d" project/AndroidManifest.xml
 fi
 
-if [ "$AccessSdCard" = "n" ]; then
+if [ "$ImmersiveMode" = "n" ]; then
 	ImmersiveMode=false
 else
 	ImmersiveMode=true
