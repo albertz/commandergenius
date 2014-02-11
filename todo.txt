@@ -32,17 +32,11 @@ TODO, which will get actually done
 
 - SDL: option to filter finger hover jitter.
 
-- OpenArena: Camera angle screwed up after respawn.
-
 - XSDL: Android clipboard support.
 
 - GIMP: Ctrl/Alt/Shift toggles in the taskbar.
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper.
-
-- UQM-HD: on-screen buttons reappear while using gamepad.
-
-- UQM-HD: navigate game menu with analog joystick.
 
 - TeeWorlds: infinite loop while trying to enter chat text.
 
