@@ -539,14 +539,16 @@ abstract class DifferentTouchInput
 				Log.i("SDL", "AutoDetectTouchInput: hoverTouchDistance " + hoverTouchDistance + " threshold " + displayHeight / 2 + " hover " + hover + " fingerHover " + fingerHover);
 				if( hoverTouchDistance > displayHeight / 2 )
 				{
-					Toast.makeText(MainActivity.instance, "Detected buggy touch panel, enabling workarounds", Toast.LENGTH_SHORT).show();
+					if( Globals.AppUsesMouse )
+						Toast.makeText(MainActivity.instance, "Detected buggy touch panel, enabling workarounds", Toast.LENGTH_SHORT).show();
 					touchInput = CrappyMtkTabletWithBrokenTouchDrivers.Holder.sInstance;
 				}
 				else
 				{
 					if( fingerHover )
 					{
-						Toast.makeText(MainActivity.instance, "Finger hover capability detected", Toast.LENGTH_SHORT).show();
+						if( Globals.AppUsesMouse )
+							Toast.makeText(MainActivity.instance, "Finger hover capability detected", Toast.LENGTH_SHORT).show();
 						// Switch away from relative mouse input
 						if( Globals.RelativeMouseMovement || Globals.LeftClickMethod != Mouse.LEFT_CLICK_NORMAL )
 						{
