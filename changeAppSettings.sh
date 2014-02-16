@@ -907,6 +907,9 @@ echo >> AndroidAppSettings.cfg
 echo "# Application needs to access SD card. If your data files are bigger than 5 Mb, enable it. (y) / (n)" >> AndroidAppSettings.cfg
 echo AccessSdCard=$AccessSdCard >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Application needs Internet access. If you disable it, you'll have to bundle all your data files inside .apk (y) / (n)" >> AndroidAppSettings.cfg
+echo AccessInternet=$AccessInternet >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Immersive mode - Android will hide on-screen Home/Back keys. Looks bad if you invoke Android keyboard. (y) / (n)" >> AndroidAppSettings.cfg
 echo ImmersiveMode=$ImmersiveMode >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
@@ -1336,6 +1339,10 @@ esac
 
 if [ "$AccessSdCard" = "n" ]; then
 	$SEDI "/==EXTERNAL_STORAGE==/ d" project/AndroidManifest.xml
+fi
+
+if [ "$AccessInternet" = "n" ]; then
+	$SEDI "/==INTERNET==/ d" project/AndroidManifest.xml
 fi
 
 if [ "$ImmersiveMode" = "n" ]; then
