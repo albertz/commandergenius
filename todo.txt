@@ -38,11 +38,13 @@ TODO, which will get actually done
 
 - GIMP: Ctrl/Alt/Shift toggles in the taskbar.
 
-- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper.
+- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support.
 
 - TeeWorlds: infinite loop while trying to enter chat text.
 
 - TeeWorlds: navigate UI with gamepad.
+
+- TeeWorlds: Three on-screen joysticks MWAHAHA.
 
 - SDL: cloud save support.
 
