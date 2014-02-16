@@ -713,6 +713,9 @@ public class MainActivity extends Activity
 		{
 			keyListener.onKeyEvent(keyCode);
 		}
+		else
+		if( _btn != null )
+			return _btn.onKeyDown(keyCode, event);
 		return true;
 	}
 	
@@ -732,6 +735,9 @@ public class MainActivity extends Activity
 				DimSystemStatusBar.get().dim(mGLView);
 			}
 		}
+		else
+		if( _btn != null )
+			return _btn.onKeyUp(keyCode, event);
 		return true;
 	}
 
