@@ -158,7 +158,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	int x, y, i, ii;
 	SDL_Event event;
 	int res = -1, dpi = -1;
-	char native[32] = "0x0";
+	char native[32] = "0x0", native78[32], native68[32], native58[32], native48[32];
 	int vertical = SDL_ListModes(NULL, 0)[0]->w < SDL_ListModes(NULL, 0)[0]->h;
 	char cfgpath[PATH_MAX];
 	FILE * cfgfile;
@@ -174,11 +174,17 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	}
 
 	const char * resStr[] = {
-		native, "1920x1080", "1280x960", "1280x720",
+		native, native78, native68, native58,
+		native48, "1280x1024", "1280x960",
 		"1024x768", "800x600", "800x480", "640x480"
 	};
 	const int resVal[][2] = {
-		{*resolutionW, *resolutionH}, {1920,1080}, {1280,960}, {1280,720},
+		{*resolutionW, *resolutionH},
+		{*resolutionW * 7 / 8, *resolutionH * 7 / 8},
+		{*resolutionW * 6 / 8, *resolutionH * 6 / 8},
+		{*resolutionW * 5 / 8, *resolutionH * 5 / 8},
+		{*resolutionW * 4 / 8, *resolutionH * 4 / 8},
+		{1280,1024}, {1280,960},
 		{1024,768}, {800,600}, {800,480}, {640,480}
 	};
 
@@ -195,7 +201,11 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		0.3f, 0.2f, 0.15f, 0.1f
 	};
 
-	sprintf(native, "%dx%d native", resVal[0][0], resVal[0][1]);
+	sprintf(native, "%dx%d", resVal[0][0], resVal[0][1]);
+	sprintf(native78, "%dx%d", resVal[1][0], resVal[1][1]);
+	sprintf(native68, "%dx%d", resVal[2][0], resVal[2][1]);
+	sprintf(native58, "%dx%d", resVal[3][0], resVal[3][1]);
+	sprintf(native48, "%dx%d", resVal[4][0], resVal[4][1]);
 
 	int savedRes = 0;
 	int savedDpi = 8;
@@ -286,14 +296,16 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 
 		//__android_log_print(ANDROID_LOG_INFO, "XSDL", "Screen coords %d %d\n", x, y, res);
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
-		renderString("Select display resolution", VID_X/2, VID_Y/2);
-		for(i = 0; i < 2; i++)
+		renderString("Select display resolution", VID_X/2, VID_Y/3);
+		for(i = 0; i < 3; i++)
 		for(ii = 0; ii < 4; ii++)
 		{
 			if( vertical )
-				renderString(resStr[i*4+ii], VID_Y/4 + (i*VID_Y/2), VID_X/8 + (ii*VID_X/4));
+				renderString(resStr[i*4+ii], VID_Y/6 + (i*VID_Y/3), VID_X/8 + (ii*VID_X/4));
 			else
-				renderString(resStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/4 + (i*VID_Y/2));
+				renderString(resStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/6 + (i*VID_Y/3));
+			if( i == 0 && ii == 0 && !vertical )
+				renderString("native", VID_X/8, VID_Y/6 + VID_Y/12);
 		}
 		//SDL_GetMouseState(&x, &y);
 		//renderString("X", x, y);
