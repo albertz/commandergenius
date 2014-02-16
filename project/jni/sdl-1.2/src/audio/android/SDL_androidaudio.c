@@ -195,7 +195,7 @@ static int ANDROIDAUD_OpenAudio (_THIS, SDL_AudioSpec *spec)
 	if( audioFormat->samples > 32768 ) // Why anyone need so huge audio buffer?
 	{
 		audioFormat->samples = 32768;
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): limiting samples size to ", (int)audioFormat->samples);
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROIDAUD_OpenAudio(): limiting samples size to %d", (int)audioFormat->samples);
 	}
 	
 	SDL_CalculateAudioSpec(audioFormat);
