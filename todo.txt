@@ -36,6 +36,8 @@ TODO, which will get actually done
 
 - XSDL: 1280x800 video mode, and 1/2, 3/4, 5/8 and 7/8 native resolution video modes.
 
+- SDL: Send right mouse click when releasing two fingers, add mouse wheel event when dragging two fingers.
+
 - GIMP: Ctrl/Alt/Shift toggles in the taskbar.
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support.
