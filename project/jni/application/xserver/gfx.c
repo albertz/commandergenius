@@ -175,7 +175,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 
 	const char * resStr[] = {
 		native, native78, native68, native58,
-		native48, "1280x1024", "1280x960",
+		native48, "1280x1024", "1280x960", "1280x720",
 		"1024x768", "800x600", "800x480", "640x480"
 	};
 	const int resVal[][2] = {
@@ -184,7 +184,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		{*resolutionW * 6 / 8, *resolutionH * 6 / 8},
 		{*resolutionW * 5 / 8, *resolutionH * 5 / 8},
 		{*resolutionW * 4 / 8, *resolutionH * 4 / 8},
-		{1280,1024}, {1280,960},
+		{1280,1024}, {1280,960}, {1280,720},
 		{1024,768}, {800,600}, {800,480}, {640,480}
 	};
 

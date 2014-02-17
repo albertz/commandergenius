@@ -68,6 +68,8 @@ rm -rf $CURDIR/tmp-$1
 mkdir -p $CURDIR/tmp-$1
 cd $CURDIR/tmp-$1
 cp $CURDIR/xserver/data/busybox-$1 ./busybox
+cp $CURDIR/ssh ./
+cp $CURDIR/sshpass ./
 mkdir -p usr/bin
 for f in xhost xkbcomp xli ; do cp $CURDIR/xserver/android/$1/$f ./usr/bin/ ; done
 rm -f ../AndroidData/binaries-$1.zip
