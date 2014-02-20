@@ -1063,6 +1063,7 @@ public class MainActivity extends Activity
 					//String chmod[] = { "/system/bin/chmod", "0755", path };
 					//Runtime.getRuntime().exec(chmod).waitFor();
 				}
+				break;
 			}
 			catch ( Exception eee )
 			{
