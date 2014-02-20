@@ -38,6 +38,8 @@ TODO, which will get actually done
 
 - GIMP: Ctrl/Alt/Shift toggles in the taskbar.
 
+- GIMP: File open dialog shows error message when loading preview for JPG file.
+
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support.
 
 - TeeWorlds: infinite loop while trying to enter chat text.
@@ -49,3 +51,4 @@ TODO, which will get actually done
 - SDL: cloud save support.
 
 - OpenArena: navigate game menu with analog joystick.
+
