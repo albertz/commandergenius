@@ -36,6 +36,8 @@ TODO, which will get actually done
 
 - XSDL: 1280x800 video mode, and 1/2, 3/4, 5/8 and 7/8 native resolution video modes.
 
+- XSDL: create a service, so we'll never be killed.
+
 - SDL: Send right mouse click when releasing two fingers, add mouse wheel event when dragging two fingers.
 
 - OpenArena: do not treat commands starting with / as chat text.
