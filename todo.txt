@@ -34,9 +34,15 @@ TODO, which will get actually done
 
 - XSDL: Android clipboard support.
 
+- XSDL: create a service, so we'll never be killed.
+
 - SDL: Send right mouse click when releasing two fingers, add mouse wheel event when dragging two fingers.
 
+- OpenArena: do not treat commands starting with / as chat text.
+
 - GIMP: Ctrl/Alt/Shift toggles in the taskbar.
+
+- GIMP: File open dialog shows error message when loading preview for JPG file.
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support.
 
@@ -49,3 +55,4 @@ TODO, which will get actually done
 - SDL: cloud save support.
 
 - OpenArena: navigate game menu with analog joystick.
+
