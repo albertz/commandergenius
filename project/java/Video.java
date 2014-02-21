@@ -85,8 +85,10 @@ class Mouse
 
 	public static final int ZOOM_NONE = 0;
 	public static final int ZOOM_MAGNIFIER = 1;
-	public static final int ZOOM_SCREEN_TRANSFORM = 2;
-	public static final int ZOOM_FULLSCREEN_MAGNIFIER = 3;
+
+	public static final int MOUSE_HW_INPUT_FINGER = 0;
+	public static final int MOUSE_HW_INPUT_STYLUS = 1;
+	public static final int MOUSE_HW_INPUT_MOUSE = 2;
 }
 
 abstract class DifferentTouchInput
@@ -329,8 +331,8 @@ abstract class DifferentTouchInput
 		}
 		public void process(final MotionEvent event)
 		{
-			int hwMouseEvent = (event.getSource() & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE ? 2 :
-								(event.getSource() & InputDevice.SOURCE_STYLUS) == InputDevice.SOURCE_STYLUS ? 1 : 0;
+			int hwMouseEvent = (event.getSource() & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE ? Mouse.MOUSE_HW_INPUT_MOUSE :
+							(event.getSource() & InputDevice.SOURCE_STYLUS) == InputDevice.SOURCE_STYLUS ? Mouse.MOUSE_HW_INPUT_STYLUS : Mouse.MOUSE_HW_INPUT_FINGER;
 			if( ExternalMouseDetected != hwMouseEvent )
 			{
 				ExternalMouseDetected = hwMouseEvent;

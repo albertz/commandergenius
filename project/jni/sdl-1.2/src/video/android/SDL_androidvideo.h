@@ -28,7 +28,7 @@
 #include "SDL_joystick.h"
 #include "SDL_events.h"
 
-enum ScreenZoom { ZOOM_NONE = 0, ZOOM_MAGNIFIER = 1, ZOOM_SCREEN_TRANSFORM = 2, ZOOM_FULLSCREEN_MAGNIFIER = 3 };
+enum ScreenZoom { ZOOM_NONE = 0, ZOOM_MAGNIFIER = 1 };
 
 extern int SDL_ANDROID_sWindowWidth;
 extern int SDL_ANDROID_sWindowHeight;

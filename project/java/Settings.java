@@ -495,7 +495,8 @@ class Settings
 								Globals.RelativeMouseMovement ? 1 : 0,
 								Globals.RelativeMouseMovementSpeed,
 								Globals.RelativeMouseMovementAccel,
-								Globals.ShowMouseCursor ? 1 : 0 );
+								Globals.ShowMouseCursor ? 1 : 0,
+								Globals.HoverJitterFilter ? 1 : 0);
 	}
 
 	static void Apply(MainActivity p)
@@ -764,7 +765,8 @@ class Settings
 													int leftClickKeycode, int rightClickKeycode,
 													int leftClickTimeout, int rightClickTimeout,
 													int relativeMovement, int relativeMovementSpeed,
-													int relativeMovementAccel, int showMouseCursor);
+													int relativeMovementAccel, int showMouseCursor,
+													int HoverJitterFilter);
 	private static native void nativeSetJoystickUsed(int firstJoystickUsed, int secondJoystickUsed);
 	private static native void nativeSetAccelerometerUsed();
 	private static native void nativeSetMultitouchUsed();

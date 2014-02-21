@@ -121,18 +121,14 @@ class SettingsMenuMouse extends SettingsMenu
 		void run (final MainActivity p)
 		{
 			CharSequence[] items = {
-										p.getResources().getString(R.string.display_size_tiny_touchpad),
-										p.getResources().getString(R.string.display_size_tiny),
 										p.getResources().getString(R.string.display_size_small),
 										p.getResources().getString(R.string.display_size_small_touchpad),
 										p.getResources().getString(R.string.display_size_large),
 									};
-			int _size_tiny_touchpad = 0;
-			int _size_tiny = 1;
-			int _size_small = 2;
-			int _size_small_touchpad = 3;
-			int _size_large = 4;
-			int _more_options = 5;
+			int _size_small = 0;
+			int _size_small_touchpad = 1;
+			int _size_large = 2;
+			int _more_options = 3;
 
 			if( ! Globals.SwVideoMode )
 			{
@@ -143,14 +139,11 @@ class SettingsMenuMouse extends SettingsMenu
 				items = items2;
 				_size_small_touchpad = 0;
 				_size_large = 1;
-				_size_tiny_touchpad = _size_tiny = _size_small = 1000;
-
+				_size_small = 1000;
 			}
 			if( firstStart )
 			{
 				CharSequence[] items2 = {
-											p.getResources().getString(R.string.display_size_tiny_touchpad),
-											p.getResources().getString(R.string.display_size_tiny),
 											p.getResources().getString(R.string.display_size_small),
 											p.getResources().getString(R.string.display_size_small_touchpad),
 											p.getResources().getString(R.string.display_size_large),
@@ -169,8 +162,6 @@ class SettingsMenuMouse extends SettingsMenu
 				}
 			}
 			// Java is so damn worse than C++11
-			final int size_tiny_touchpad = _size_tiny_touchpad;
-			final int size_tiny = _size_tiny;
 			final int size_small = _size_small;
 			final int size_small_touchpad = _size_small_touchpad;
 			final int size_large = _size_large;
@@ -200,18 +191,6 @@ class SettingsMenuMouse extends SettingsMenu
 						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
 						Globals.RelativeMouseMovement = true;
 						Globals.ShowScreenUnderFinger = Mouse.ZOOM_NONE;
-					}
-					if( item == size_tiny )
-					{
-						Globals.LeftClickMethod = Mouse.LEFT_CLICK_NEAR_CURSOR;
-						Globals.RelativeMouseMovement = false;
-						Globals.ShowScreenUnderFinger = Mouse.ZOOM_SCREEN_TRANSFORM;
-					}
-					if( item == size_tiny_touchpad )
-					{
-						Globals.LeftClickMethod = Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
-						Globals.RelativeMouseMovement = true;
-						Globals.ShowScreenUnderFinger = Mouse.ZOOM_FULLSCREEN_MAGNIFIER;
 					}
 					if( item == more_options )
 					{

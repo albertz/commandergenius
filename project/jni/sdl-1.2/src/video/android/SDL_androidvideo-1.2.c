@@ -1018,64 +1018,6 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			glPopMatrix();
 			//glFlush();
 		}
-		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_SCREEN_TRANSFORM )
-		{
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &SDL_ANDROID_ShowScreenUnderFingerRectSrc, &SDL_ANDROID_ShowScreenUnderFingerRect);
-			SDL_Rect edge, edgeSrc;
-			// upper-left
-			edge.x = edge.y = edgeSrc.x = edgeSrc.y = 0;
-			edge.w = SDL_ANDROID_ShowScreenUnderFingerRect.x;
-			edge.h = SDL_ANDROID_ShowScreenUnderFingerRect.y;
-			edgeSrc.w = SDL_ANDROID_ShowScreenUnderFingerRectSrc.x;
-			edgeSrc.h = SDL_ANDROID_ShowScreenUnderFingerRectSrc.y;
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &edgeSrc, &edge);
-			// left
-			edge.y = SDL_ANDROID_ShowScreenUnderFingerRect.y;
-			edgeSrc.y = SDL_ANDROID_ShowScreenUnderFingerRectSrc.y;
-			edge.h = SDL_ANDROID_ShowScreenUnderFingerRect.h;
-			edgeSrc.h = SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &edgeSrc, &edge);
-			// lower-left
-			edge.y = SDL_ANDROID_ShowScreenUnderFingerRect.y + SDL_ANDROID_ShowScreenUnderFingerRect.h;
-			edgeSrc.y = SDL_ANDROID_ShowScreenUnderFingerRectSrc.y + SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
-			edge.h = SDL_ANDROID_sFakeWindowHeight - edge.y;
-			edgeSrc.h = SDL_ANDROID_sFakeWindowHeight - edgeSrc.y;
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &edgeSrc, &edge);
-			// lower
-			edge.x = SDL_ANDROID_ShowScreenUnderFingerRect.x;
-			edgeSrc.x = SDL_ANDROID_ShowScreenUnderFingerRectSrc.x;
-			edge.w = SDL_ANDROID_ShowScreenUnderFingerRect.w;
-			edgeSrc.w = SDL_ANDROID_ShowScreenUnderFingerRectSrc.w;
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &edgeSrc, &edge);
-			// lower-right
-			edge.x = SDL_ANDROID_ShowScreenUnderFingerRect.x + SDL_ANDROID_ShowScreenUnderFingerRect.w;
-			edgeSrc.x = SDL_ANDROID_ShowScreenUnderFingerRectSrc.x + SDL_ANDROID_ShowScreenUnderFingerRectSrc.w;
-			edge.w = SDL_ANDROID_sFakeWindowWidth - edge.x;
-			edgeSrc.w = SDL_ANDROID_sFakeWindowWidth - edgeSrc.x;
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &edgeSrc, &edge);
-			// right
-			edge.y = SDL_ANDROID_ShowScreenUnderFingerRect.y;
-			edgeSrc.y = SDL_ANDROID_ShowScreenUnderFingerRectSrc.y;
-			edge.h = SDL_ANDROID_ShowScreenUnderFingerRect.h;
-			edgeSrc.h = SDL_ANDROID_ShowScreenUnderFingerRectSrc.h;
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &edgeSrc, &edge);
-			// upper-right
-			edge.y = 0;
-			edgeSrc.y = 0;
-			edge.h = SDL_ANDROID_ShowScreenUnderFingerRect.y;
-			edgeSrc.h = SDL_ANDROID_ShowScreenUnderFingerRectSrc.y;
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &edgeSrc, &edge);
-			// upper
-			edge.x = SDL_ANDROID_ShowScreenUnderFingerRect.x;
-			edgeSrc.x = SDL_ANDROID_ShowScreenUnderFingerRectSrc.x;
-			edge.w = SDL_ANDROID_ShowScreenUnderFingerRect.w;
-			edgeSrc.w = SDL_ANDROID_ShowScreenUnderFingerRectSrc.w;
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &edgeSrc, &edge);
-		}
-		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_FULLSCREEN_MAGNIFIER )
-		{
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &SDL_ANDROID_ShowScreenUnderFingerRectSrc, &SDL_ANDROID_ShowScreenUnderFingerRect);
-		}
 
 		if(SDL_ANDROID_ShowMouseCursor)
 		{

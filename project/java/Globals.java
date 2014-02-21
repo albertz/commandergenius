@@ -108,6 +108,7 @@ class Globals
 	public static boolean KeepAspectRatio = KeepAspectRatioDefaultSetting;
 	public static int ClickScreenPressure = 0;
 	public static int ClickScreenTouchspotSize = 0;
+	public static boolean HoverJitterFilter = true;
 	public static int RemapHwKeycode[] = new int[SDL_Keys.JAVA_KEYCODE_LAST];
 	public static int RemapScreenKbKeycode[] = new int[6];
 	public static int ScreenKbControlsLayout[][] = AppUsesSecondJoystick ? // Values for 800x480 resolution
