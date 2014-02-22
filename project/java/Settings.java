@@ -172,6 +172,7 @@ class Settings
 			out.writeFloat(Globals.gyro_zc);
 
 			out.writeBoolean(Globals.OuyaEmulation);
+			out.writeBoolean(Globals.HoverJitterFilter);
 
 			out.close();
 			settingsLoaded = true;
@@ -353,6 +354,7 @@ class Settings
 			Globals.gyro_zc = settingsFile.readFloat();
 
 			Globals.OuyaEmulation = settingsFile.readBoolean();
+			Globals.HoverJitterFilter = settingsFile.readBoolean();
 
 			settingsLoaded = true;
 

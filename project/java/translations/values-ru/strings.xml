@@ -22,7 +22,7 @@
 <string name="controls_trackball">Трекбол</string>
 <string name="controls_accel">Акселерометр</string>
 <string name="controls_touch">Только сенсорный экран</string>
-<string name="controls_question">Какие на телефоне клавиши навигации?</string>
+<string name="controls_question">Какие на телефоне кнопки навигации?</string>
 <string name="controls_additional">Дополнительные элементы управления</string>
 <string name="controls_screenkb">Экранная клавиатура</string>
 <string name="controls_accelnav">Акселерометр</string>
@@ -43,7 +43,7 @@
 <string name="accel_slow">Медленно</string>
 <string name="accel_question">Чувствительность акселерометра</string>
 <string name="rightclick_question">Правая кнопка мыши</string>
-<string name="rightclick_menu">Клавиша меню</string>
+<string name="rightclick_menu">Кнопка меню</string>
 <string name="rightclick_multitouch">Касание экрана вторым пальцем</string>
 <string name="rightclick_pressure">Нажатие на экран с силой</string>
 <string name="pointandclick_question">Расширенные функции</string>
@@ -80,8 +80,8 @@
 <string name="controls_screenkb_trans_4">Непрозрачные</string>
 <string name="mouse_emulation">Эмуляции мыши</string>
 <string name="measurepressure">Калибровка сенсорного давления</string>
-<string name="remap_hwkeys">Переназначение физических клавиш</string>
-<string name="remap_hwkeys_press">Нажмите любую клавишу, кроме HOME и POWER, вы можете использовать клавиши регулировки громкости</string>
+<string name="remap_hwkeys">Переназначение физических кнопок</string>
+<string name="remap_hwkeys_press">Нажмите любую клавишу, кроме HOME и POWER, вы можете использовать кнопки регулировки громкости</string>
 <string name="remap_hwkeys_select">Выберите код кнопки SDL</string>
 <string name="remap_screenkb">Переназначение экранных кнопок</string>
 <string name="remap_screenkb_joystick">Экранный джойстик</string>
@@ -99,7 +99,7 @@
 <string name="calibrate_touchscreen">Калибровка сенсорного экрана</string>
 <string name="calibrate_touchscreen_touch">Дотроньтесь до всех краев экрана, потом нажмите Назад/BACK</string>
 <string name="screenkb_custom_layout">Настройка расположения кнопок</string>
-<string name="screenkb_custom_layout_help">Нажмите клавишу Назад/BACK для завершения. Проведите по пустому месту, чтобы изменить размер кнопки</string>
+<string name="screenkb_custom_layout_help">Нажмите кнопку Назад/BACK для завершения. Проведите по пустому месту, чтобы изменить размер кнопки</string>
 <string name="rightclick_key">Физическая кнопка</string>
 <string name="pointandclick_showcreenunderfinger2">Наэкранная лупа</string>
 <string name="video">Настройки видео</string>
@@ -146,4 +146,7 @@
 <string name="yes">Да</string>
 <string name="no">Нет</string>
 <string name="controls_screenkb_custom">Пользовательские настройки</string>
+<string name="hover_jitter_filter">Фильтровать дрожание при поднесении стилуса/пальца к экрану</string>
+<string name="remap_hwkeys_select_simple">Выберите действие</string>
+<string name="remap_hwkeys_select_more_keys">Показать все коды кнопок</string>
 </resources>

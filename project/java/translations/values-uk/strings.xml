@@ -145,4 +145,7 @@
 <string name="yes">Так</string>
 <string name="no">Ні</string>
 <string name="controls_screenkb_custom">Налаштування користувача</string>
+<string name="hover_jitter_filter">Фільтрувати тремтіння при піднесенні стилуса/пальця до екрану</string>
+<string name="remap_hwkeys_select_simple">Виберіть дію</string>
+<string name="remap_hwkeys_select_more_keys">Показати всі коди кнопок</string>
 </resources>

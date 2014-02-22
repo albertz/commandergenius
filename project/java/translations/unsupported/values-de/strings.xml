@@ -134,4 +134,24 @@
 <string name="display_size_tiny">Uberklein (Xperia Mini)</string>
 <string name="show_more_options">Weitere Optionen</string>
 <string name="controls_screenkb_drawsize">Größe der Schaltfläche Bilder</string>
+<string name="cancel">Cancel</string>
+<string name="controls_screenkb_custom">Custom</string>
+<string name="hover_jitter_filter">Filter jitter for stylus/finger hover</string>
+<string name="remap_hwkeys_select_simple">Select action</string>
+<string name="remap_hwkeys_select_more_keys">Show all keycodes</string>
+<string name="display_size_small_touchpad">Small, touchpad mode</string>
+<string name="display_size_tiny_touchpad">Tiny, touchpad mode</string>
+<string name="hardware_mouse_detected">Hardware mouse detected, disabling mouse emulation</string>
+<string name="not_enough_ram">Not enough RAM</string>
+<string name="not_enough_ram_size">This app needs %1$d Mb RAM, your device has %2$d Mb</string>
+<string name="ignore">Ignore</string>
+<string name="calibrate_gyroscope">Calibrate gyroscope</string>
+<string name="calibrate_gyroscope_text">Put your device on a flat surface</string>
+<string name="calibrate_gyroscope_not_supported">Your device does not have gyroscope</string>
+<string name="reset_config">Reset config to defaults</string>
+<string name="reset_config_ask">Reset all options to default values?</string>
+<string name="cancel_download">Cancel data downloading?</string>
+<string name="cancel_download_resume">You can resume it later, the data will not be downloaded twice.</string>
+<string name="yes">Yes</string>
+<string name="no">No</string>
 </resources>

@@ -414,12 +414,14 @@ class SettingsMenuMouse extends SettingsMenu
 		void run (final MainActivity p)
 		{
 			CharSequence[] items = {
+				p.getResources().getString(R.string.hover_jitter_filter),
 				p.getResources().getString(R.string.pointandclick_joystickmouse),
 				p.getResources().getString(R.string.click_with_dpadcenter),
 				p.getResources().getString(R.string.pointandclick_relative)
 			};
 
-			boolean defaults[] = { 
+			boolean defaults[] = {
+				Globals.HoverJitterFilter,
 				Globals.MoveMouseWithJoystick,
 				Globals.ClickMouseWithDpad,
 				Globals.RelativeMouseMovement
@@ -433,10 +435,12 @@ class SettingsMenuMouse extends SettingsMenu
 				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 				{
 					if( item == 0 )
-						Globals.MoveMouseWithJoystick = isChecked;
+						Globals.HoverJitterFilter = isChecked;
 					if( item == 1 )
-						Globals.ClickMouseWithDpad = isChecked;
+						Globals.MoveMouseWithJoystick = isChecked;
 					if( item == 2 )
+						Globals.ClickMouseWithDpad = isChecked;
+					if( item == 3 )
 						Globals.RelativeMouseMovement = isChecked;
 				}
 			});

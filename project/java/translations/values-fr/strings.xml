@@ -173,4 +173,7 @@
 <string name="no">No</string>
 <string name="screenkb_custom_layout_help">Press BACK when done. Resize buttons by sliding on empty space.</string>
 <string name="controls_screenkb_custom">Custom</string>
+<string name="hover_jitter_filter">Filter jitter for stylus/finger hover</string>
+<string name="remap_hwkeys_select_simple">Select action</string>
+<string name="remap_hwkeys_select_more_keys">Show all keycodes</string>
 </resources>

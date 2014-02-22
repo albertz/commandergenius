@@ -1469,6 +1469,7 @@ done
 rm -rf project/bin/classes
 rm -rf project/bin/res
 
+rm -rf project/res/drawable-xhdpi/ouya_icon.png project/res/drawable/app_icon.png
 if which convert > /dev/null; then
 	mkdir -p project/res/drawable-xhdpi
 	convert project/res/drawable/icon.png -resize '732x412!' project/res/drawable-xhdpi/ouya_icon.png

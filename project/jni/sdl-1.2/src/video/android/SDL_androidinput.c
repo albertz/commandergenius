@@ -126,11 +126,10 @@ int SDL_ANDROID_currentMouseButtons = 0;
 
 static int hardwareMouseDetected = 0;
 enum { MOUSE_HW_BUTTON_LEFT = 1, MOUSE_HW_BUTTON_RIGHT = 2, MOUSE_HW_BUTTON_MIDDLE = 4, MOUSE_HW_BUTTON_BACK = 8, MOUSE_HW_BUTTON_FORWARD = 16, MOUSE_HW_BUTTON_MAX = MOUSE_HW_BUTTON_FORWARD };
-enum { MOUSE_HW_INPUT_FINGER = 0, MOUSE_HW_INPUT_STYLUS = 1, MOUSE_HW_INPUT_MOUSE };
-enum { DEADZONE_HOVER_FINGER = 50, DEADZONE_HOVER_STYLUS = 20 };
+enum { MOUSE_HW_INPUT_FINGER = 0, MOUSE_HW_INPUT_STYLUS = 1, MOUSE_HW_INPUT_MOUSE = 2 };
+enum { DEADZONE_HOVER_FINGER = 16, DEADZONE_HOVER_STYLUS = 32, HOVER_FREEZE_TIME = 300 };
 static int hoverJitterFilter = 1;
-static int hoverMoveX, hoverMoveY, hoverMoveTime, hoverMouseFreeze;
-
+static int hoverX, hoverY, hoverTime = 0, hoverMouseFreeze = 0, hoverDeadzone = 0;
 
 static inline int InsideRect( const SDL_Rect * r, int x, int y )
 {
@@ -227,6 +226,24 @@ static void AssignNewTouchPointers( int action, int pointerId )
 		for( i = 0; i < MAX_MULTITOUCH_POINTERS; i++ )
 		{
 			if( touchPointers[i] & TOUCH_PTR_MOUSE )
+			{
+				firstMousePointerId = i;
+				break;
+			}
+		}
+	}
+}
+
+static void ClearOldTouchPointers( int action, int pointerId )
+{
+	int i;
+	if( action == MOUSE_UP )
+	{
+		touchPointers[pointerId] = TOUCH_PTR_UP;
+		firstMousePointerId = -1;
+		for( i = 0; i < MAX_MULTITOUCH_POINTERS; i++ )
+		{
+			if( touchPointers[i] |= TOUCH_PTR_MOUSE )
 			{
 				firstMousePointerId = i;
 				break;
@@ -391,6 +408,9 @@ static void SendMultitouchEvents( int x, int y, int action, int pointerId, int f
 static void ProcessMouseRelativeMovement( jint *xx, jint *yy, int action )
 {
 	int x = *xx, y = *yy;
+
+	if( !relativeMovement )
+		return;
 
 	if( action == MOUSE_DOWN )
 	{
@@ -612,29 +632,49 @@ static void ProcessMouseMultitouch( int action, int pointerId )
 	}
 }
 
-static void ClearOldTouchPointers( int action, int pointerId )
+static void ProcessMouseHover( jint *xx, jint *yy, int action )
 {
-	int i;
-	if( action == MOUSE_UP )
+	int x = *xx, y = *yy;
+
+	if( relativeMovement || !hoverJitterFilter )
+		return;
+
+	if( action == MOUSE_HOVER )
 	{
-		touchPointers[pointerId] = TOUCH_PTR_UP;
-		firstMousePointerId = -1;
-		for( i = 0; i < MAX_MULTITOUCH_POINTERS; i++ )
+		if( hoverDeadzone )
 		{
-			if( touchPointers[i] |= TOUCH_PTR_MOUSE )
+			if( abs(x - hoverX) < hoverDeadzone && abs(y - hoverY) < hoverDeadzone )
 			{
-				firstMousePointerId = i;
-				break;
+				if( hoverTime == 0 )
+					hoverTime = SDL_GetTicks();
+				else if( !hoverMouseFreeze && SDL_GetTicks() > hoverTime + HOVER_FREEZE_TIME )
+				{
+					hoverMouseFreeze = 1;
+					hoverX = x;
+					hoverY = y;
+				}
+			}
+			else
+			{
+				hoverTime = 0;
+				hoverMouseFreeze = 0;
+				hoverX = x;
+				hoverY = y;
 			}
 		}
+		if( !hoverMouseFreeze )
+			SDL_ANDROID_MainThreadPushMouseMotion(x, y);
 	}
-}
-
-static void SendHoverEvents( int x, int y, int action, int pointerId )
-{
-	if( action == MOUSE_HOVER && !relativeMovement )
+	else if( hoverMouseFreeze && !(abs(x - hoverX) < hoverDeadzone && abs(y - hoverY) < hoverDeadzone) )
 	{
-		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
+		hoverMouseFreeze = 0;
+		hoverTime = 0;
+	}
+
+	if( hoverMouseFreeze )
+	{
+		*xx = hoverX;
+		*yy = hoverY;
 	}
 }
 
@@ -666,10 +706,11 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 	if( !SDL_ANDROID_isMouseUsed )
 		return;
 
+	ProcessMouseHover( &x, &y, action );
+
 	if( pointerId == firstMousePointerId )
 	{
-		if( relativeMovement )
-			ProcessMouseRelativeMovement( &x, &y, action );
+		ProcessMouseRelativeMovement( &x, &y, action );
 		if( action == MOUSE_UP )
 			ProcessMouseUp( x, y );
 		if( action == MOUSE_DOWN )
@@ -680,8 +721,6 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 	ProcessMouseMultitouch( action, pointerId );
 
 	ClearOldTouchPointers( action, pointerId );
-
-	SendHoverEvents( x, y, action, pointerId );
 }
 
 void ProcessDeferredMouseTap()
@@ -932,6 +971,11 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeHardwareMouseDetected) (JNIEnv* env, jo
 			relativeMovement = cfg.relativeMovement;
 			SDL_ANDROID_ShowMouseCursor = cfg.ShowMouseCursor;
 		}
+
+		int hoverDeadzone = (hardwareMouseDetected == MOUSE_HW_INPUT_STYLUS) ?
+							SDL_ANDROID_sFakeWindowHeight / DEADZONE_HOVER_STYLUS :
+							(hardwareMouseDetected == MOUSE_HW_INPUT_FINGER) ?
+							SDL_ANDROID_sFakeWindowHeight / DEADZONE_HOVER_FINGER : 0;
 	}
 }
 

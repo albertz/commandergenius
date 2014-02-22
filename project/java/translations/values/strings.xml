@@ -108,6 +108,7 @@
     <string name="pointandclick_relative">Relative mouse movement (laptop mode)</string>
     <string name="pointandclick_relative_speed">Relative mouse movement speed</string>
     <string name="pointandclick_relative_accel">Relative mouse movement acceleration</string>
+    <string name="hover_jitter_filter">Filter jitter for stylus/finger hover</string>
 
     <string name="none">None</string>
 
