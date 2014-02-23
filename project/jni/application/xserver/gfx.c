@@ -158,7 +158,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	int x, y, i, ii;
 	SDL_Event event;
 	int res = -1, dpi = -1;
-	char native[32] = "0x0", native78[32], native68[32], native58[32], native48[32];
+	char native[32] = "0x0", native56[32], native46[32], native36[32], native26[32];
 	int vertical = SDL_ListModes(NULL, 0)[0]->w < SDL_ListModes(NULL, 0)[0]->h;
 	char cfgpath[PATH_MAX];
 	FILE * cfgfile;
@@ -174,16 +174,16 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	}
 
 	const char * resStr[] = {
-		native, native78, native68, native58,
-		native48, "1280x1024", "1280x960", "1280x720",
+		native, native56, native46, native36,
+		native26, "1280x1024", "1280x960", "1280x720",
 		"1024x768", "800x600", "800x480", "640x480"
 	};
 	const int resVal[][2] = {
 		{*resolutionW, *resolutionH},
-		{*resolutionW * 7 / 8, *resolutionH * 7 / 8},
-		{*resolutionW * 6 / 8, *resolutionH * 6 / 8},
-		{*resolutionW * 5 / 8, *resolutionH * 5 / 8},
-		{*resolutionW * 4 / 8, *resolutionH * 4 / 8},
+		{*resolutionW * 5 / 6, *resolutionH * 5 / 6},
+		{*resolutionW * 4 / 6, *resolutionH * 4 / 6},
+		{*resolutionW * 3 / 6, *resolutionH * 3 / 6},
+		{*resolutionW * 2 / 6, *resolutionH * 2 / 6},
 		{1280,1024}, {1280,960}, {1280,720},
 		{1024,768}, {800,600}, {800,480}, {640,480}
 	};
@@ -202,10 +202,10 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	};
 
 	sprintf(native, "%dx%d", resVal[0][0], resVal[0][1]);
-	sprintf(native78, "%dx%d", resVal[1][0], resVal[1][1]);
-	sprintf(native68, "%dx%d", resVal[2][0], resVal[2][1]);
-	sprintf(native58, "%dx%d", resVal[3][0], resVal[3][1]);
-	sprintf(native48, "%dx%d", resVal[4][0], resVal[4][1]);
+	sprintf(native56, "%dx%d", resVal[1][0], resVal[1][1]);
+	sprintf(native46, "%dx%d", resVal[2][0], resVal[2][1]);
+	sprintf(native36, "%dx%d", resVal[3][0], resVal[3][1]);
+	sprintf(native26, "%dx%d", resVal[4][0], resVal[4][1]);
 
 	int savedRes = 0;
 	int savedDpi = 8;

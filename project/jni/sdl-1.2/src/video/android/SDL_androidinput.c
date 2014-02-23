@@ -127,7 +127,7 @@ int SDL_ANDROID_currentMouseButtons = 0;
 static int hardwareMouseDetected = 0;
 enum { MOUSE_HW_BUTTON_LEFT = 1, MOUSE_HW_BUTTON_RIGHT = 2, MOUSE_HW_BUTTON_MIDDLE = 4, MOUSE_HW_BUTTON_BACK = 8, MOUSE_HW_BUTTON_FORWARD = 16, MOUSE_HW_BUTTON_MAX = MOUSE_HW_BUTTON_FORWARD };
 enum { MOUSE_HW_INPUT_FINGER = 0, MOUSE_HW_INPUT_STYLUS = 1, MOUSE_HW_INPUT_MOUSE = 2 };
-enum { DEADZONE_HOVER_FINGER = 16, DEADZONE_HOVER_STYLUS = 32, HOVER_FREEZE_TIME = 300 };
+enum { DEADZONE_HOVER_FINGER = 32, DEADZONE_HOVER_STYLUS = 64, HOVER_FREEZE_TIME = 300 };
 static int hoverJitterFilter = 1;
 static int hoverX, hoverY, hoverTime = 0, hoverMouseFreeze = 0, hoverDeadzone = 0;
 
@@ -676,6 +676,16 @@ static void ProcessMouseHover( jint *xx, jint *yy, int action )
 		*xx = hoverX;
 		*yy = hoverY;
 	}
+
+#ifdef VIDEO_DEBUG
+	SDL_ANDROID_VideoDebugRect.x = hoverX - hoverDeadzone;
+	SDL_ANDROID_VideoDebugRect.y = hoverY - hoverDeadzone;
+	SDL_ANDROID_VideoDebugRect.w = hoverDeadzone * 2;
+	SDL_ANDROID_VideoDebugRect.h = hoverDeadzone * 2;
+	memset(&SDL_ANDROID_VideoDebugRectColor, 0, sizeof(SDL_ANDROID_VideoDebugRectColor));
+	SDL_ANDROID_VideoDebugRectColor.g = hoverMouseFreeze * 255;
+	SDL_ANDROID_VideoDebugRectColor.r = SDL_ANDROID_VideoDebugRectColor.b = (SDL_GetTicks() - hoverTime) * 255 / HOVER_FREEZE_TIME;
+#endif
 }
 
 JNIEXPORT void JNICALL 
@@ -971,12 +981,16 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeHardwareMouseDetected) (JNIEnv* env, jo
 			relativeMovement = cfg.relativeMovement;
 			SDL_ANDROID_ShowMouseCursor = cfg.ShowMouseCursor;
 		}
-
-		int hoverDeadzone = (hardwareMouseDetected == MOUSE_HW_INPUT_STYLUS) ?
-							SDL_ANDROID_sFakeWindowHeight / DEADZONE_HOVER_STYLUS :
-							(hardwareMouseDetected == MOUSE_HW_INPUT_FINGER) ?
-							SDL_ANDROID_sFakeWindowHeight / DEADZONE_HOVER_FINGER : 0;
 	}
+	SDL_ANDROID_SetHoverDeadzone();
+}
+
+void SDL_ANDROID_SetHoverDeadzone()
+{
+	hoverDeadzone = (hardwareMouseDetected == MOUSE_HW_INPUT_STYLUS) ?
+					SDL_ANDROID_sFakeWindowHeight / DEADZONE_HOVER_STYLUS :
+					(hardwareMouseDetected == MOUSE_HW_INPUT_FINGER) ?
+					SDL_ANDROID_sFakeWindowHeight / DEADZONE_HOVER_FINGER : 0;
 }
 
 JNIEXPORT void JNICALL

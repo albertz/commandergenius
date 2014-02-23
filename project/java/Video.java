@@ -121,8 +121,6 @@ abstract class DifferentTouchInput
 			Log.i("SDL", "Device board: " + android.os.Build.BOARD);
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH )
 			{
-				if ( Globals.GenerateSubframeTouchEvents )
-					return IcsTouchInputWithHistory.Holder.sInstance;
 				if( DetectCrappyDragonRiseDatexGamepad() )
 					return CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance;
 				//return IcsTouchInput.Holder.sInstance;
@@ -331,8 +329,9 @@ abstract class DifferentTouchInput
 		}
 		public void process(final MotionEvent event)
 		{
-			int hwMouseEvent = (event.getSource() & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE ? Mouse.MOUSE_HW_INPUT_MOUSE :
-							(event.getSource() & InputDevice.SOURCE_STYLUS) == InputDevice.SOURCE_STYLUS ? Mouse.MOUSE_HW_INPUT_STYLUS : Mouse.MOUSE_HW_INPUT_FINGER;
+			int hwMouseEvent = ((event.getSource() & InputDevice.SOURCE_STYLUS) == InputDevice.SOURCE_STYLUS) ? Mouse.MOUSE_HW_INPUT_STYLUS :
+								((event.getSource() & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE) ? Mouse.MOUSE_HW_INPUT_MOUSE :
+								Mouse.MOUSE_HW_INPUT_FINGER;
 			if( ExternalMouseDetected != hwMouseEvent )
 			{
 				ExternalMouseDetected = hwMouseEvent;
@@ -561,7 +560,10 @@ abstract class DifferentTouchInput
 						}
 						Settings.applyMouseEmulationOptions();
 					}
-					touchInput = IcsTouchInput.Holder.sInstance;
+					if ( Globals.GenerateSubframeTouchEvents )
+						touchInput = IcsTouchInputWithHistory.Holder.sInstance;
+					else
+						touchInput = IcsTouchInput.Holder.sInstance;
 				}
 			}
 			super.process(event);
@@ -577,7 +579,7 @@ abstract class DifferentTouchInput
 				hoverX = event.getX();
 				hoverY = event.getY();
 				hoverTime = System.currentTimeMillis();
-				if( ExternalMouseDetected != 0 && (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_MOVE )
+				if( ExternalMouseDetected == 0 && (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_MOVE )
 					fingerHover = true;
 				if( tap && System.currentTimeMillis() < tapTime + 1000 )
 				{

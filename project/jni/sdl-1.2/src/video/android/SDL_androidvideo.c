@@ -88,6 +88,8 @@ int SDL_ANDROID_BYTESPERPIXEL = 2;
 int SDL_ANDROID_BITSPERPIXEL = 16;
 int SDL_ANDROID_UseGles2 = 0;
 int SDL_ANDROID_ShowMouseCursor = 0;
+SDL_Rect SDL_ANDROID_VideoDebugRect;
+SDL_Color SDL_ANDROID_VideoDebugRectColor;
 
 static void appPutToBackgroundCallbackDefault(void)
 {

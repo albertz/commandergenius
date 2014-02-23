@@ -48,8 +48,11 @@
 
 #define _THIS	SDL_VideoDevice *this
 
+#ifdef VIDEO_DEBUG
+#define DEBUGOUT(...) __android_log_print(ANDROID_LOG_INFO, "libSDL", __VA_ARGS__)
+#else
 #define DEBUGOUT(...)
-//#define DEBUGOUT(...) __android_log_print(ANDROID_LOG_INFO, "libSDL", __VA_ARGS__)
+#endif
 
 static int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat);
 static SDL_Rect **ANDROID_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags);
@@ -501,6 +504,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 
 	UpdateScreenUnderFingerRect(0,0);
 	SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRect.h = 0;
+	SDL_ANDROID_SetHoverDeadzone();
 
 	/* We're done */
 	return(current);
@@ -1018,7 +1022,25 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			glPopMatrix();
 			//glFlush();
 		}
-
+#ifdef VIDEO_DEBUG
+		if( SDL_ANDROID_VideoDebugRect.w > 0 )
+		{
+			SDL_Rect frame = SDL_ANDROID_VideoDebugRect;
+			glPushMatrix();
+			glLoadIdentity();
+			glOrthof( 0.0f, SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight, 0.0f, 0.0f, 1.0f );
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glColor4f(SDL_ANDROID_VideoDebugRectColor.r / 255.0f, SDL_ANDROID_VideoDebugRectColor.g / 255.0f, SDL_ANDROID_VideoDebugRectColor.b / 255.0f, 1.0f);
+			GLshort vertices[] = {	frame.x, frame.y,
+									frame.x + frame.w, frame.y,
+									frame.x + frame.w, frame.y + frame.h,
+									frame.x, frame.y + frame.h };
+			glVertexPointer(2, GL_SHORT, 0, vertices);
+			glDrawArrays(GL_LINE_LOOP, 0, 4);
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glPopMatrix();
+		}
+#endif
 		if(SDL_ANDROID_ShowMouseCursor)
 		{
 			if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_NONE || SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )

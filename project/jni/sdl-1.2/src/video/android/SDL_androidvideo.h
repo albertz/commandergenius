@@ -28,6 +28,8 @@
 #include "SDL_joystick.h"
 #include "SDL_events.h"
 
+//#define VIDEO_DEBUG 1
+
 enum ScreenZoom { ZOOM_NONE = 0, ZOOM_MAGNIFIER = 1 };
 
 extern int SDL_ANDROID_sWindowWidth;
@@ -76,6 +78,8 @@ extern void SDL_ANDROID_DrawMouseCursor(int x, int y, int size, float alpha);
 extern void SDL_ANDROID_DrawMouseCursorIfNeeded();
 extern void SDL_ANDROID_CallJavaTogglePlainAndroidSoftKeyboardInput();
 extern void SDL_ANDROID_CallJavaStartAccelerometerGyroscope(int start);
+extern SDL_Rect SDL_ANDROID_VideoDebugRect;
+extern SDL_Color SDL_ANDROID_VideoDebugRectColor;
 
 #if SDL_VERSION_ATLEAST(1,3,0)
 extern SDL_Window * ANDROID_CurrentWindow;
@@ -88,6 +92,6 @@ extern int SDL_ANDROID_isJoystickUsed;
 extern int SDL_ANDROID_isSecondJoystickUsed;
 // Events have to be sent only from main thread from PumpEvents(), so we'll buffer them here
 extern void SDL_ANDROID_PumpEvents();
-
+extern void SDL_ANDROID_SetHoverDeadzone();
 
 #endif /* _SDL_androidvideo_h */
