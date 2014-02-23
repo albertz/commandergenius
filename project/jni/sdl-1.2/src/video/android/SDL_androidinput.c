@@ -49,7 +49,7 @@ SDLKey SDL_android_keymap[KEYCODE_LAST+1];
 
 static inline SDL_scancode TranslateKey(int scancode)
 {
-	if ( scancode >= SDL_arraysize(SDL_android_keymap) )
+	if ( scancode >= KEYCODE_LAST + 1 )
 		scancode = KEYCODE_UNKNOWN;
 	return SDL_android_keymap[scancode];
 }
@@ -295,7 +295,7 @@ static void ProcessMultitouchGesture( int x, int y, int action, int pointerId )
 			if( multitouchGestureKeyPressed[i] )
 			{
 				multitouchGestureKeyPressed[i] = 0;
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[i] );
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[i], 0 );
 			}
 		}
 	}
@@ -322,24 +322,24 @@ static void ProcessMultitouchGesture( int x, int y, int action, int pointerId )
 				if( dist - multitouchGestureDist > distMaxDiff )
 				{
 					multitouchGestureKeyPressed[0] = 1;
-					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[0] );
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[0], 0 );
 				}
 				else
 				if( multitouchGestureKeyPressed[0] )
 				{
 					multitouchGestureKeyPressed[0] = 0;
-					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[0] );
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[0], 0 );
 				}
 				if( multitouchGestureDist - dist > distMaxDiff )
 				{
 					multitouchGestureKeyPressed[1] = 1;
-					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[1] );
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[1], 0 );
 				}
 				else
 				if( multitouchGestureKeyPressed[1] )
 				{
 					multitouchGestureKeyPressed[1] = 0;
-					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[1] );
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[1], 0 );
 				}
 
 				int angleDiff = angle - multitouchGestureAngle;
@@ -352,24 +352,24 @@ static void ProcessMultitouchGesture( int x, int y, int action, int pointerId )
 				if( angleDiff < -angleMaxDiff )
 				{
 					multitouchGestureKeyPressed[2] = 1;
-					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[2] );
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[2], 0 );
 				}
 				else
 				if( multitouchGestureKeyPressed[2] )
 				{
 					multitouchGestureKeyPressed[2] = 0;
-					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[2] );
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[2], 0 );
 				}
 				if( angleDiff > angleMaxDiff )
 				{
 					multitouchGestureKeyPressed[3] = 1;
-					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[3] );
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[3], 0 );
 				}
 				else
 				if( multitouchGestureKeyPressed[3] )
 				{
 					multitouchGestureKeyPressed[3] = 0;
-					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[3] );
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[3], 0 );
 				}
 			}
 		}
@@ -400,7 +400,7 @@ static void SendMultitouchEvents( int x, int y, int action, int pointerId, int f
 	{
 		SDL_keysym keysym;
 		if( action != MOUSE_MOVE )
-			SDL_ANDROID_MainThreadPushKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, SDL_ANDROID_GetScreenKeyboardButtonKey(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, SDL_ANDROID_GetScreenKeyboardButtonKey(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0), 0 );
 		return;
 	}
 }
@@ -774,7 +774,7 @@ void SDL_ANDROID_WarpMouse(int x, int y)
 static int processAndroidTrackball(int key, int action);
 
 JNIEXPORT jint JNICALL
-JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint key, jint action )
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint key, jint action, jint unicode )
 {
 #if SDL_VERSION_ATLEAST(1,3,0)
 #else
@@ -796,10 +796,15 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 		return 1;
 	}
 
-	if( TranslateKey(key) == SDLK_NO_REMAP || TranslateKey(key) == SDLK_UNKNOWN )
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL","nativeKey %d translated %d unicode %d", key, TranslateKey(key), unicode);
+
+	if( TranslateKey(key) == SDLK_NO_REMAP || (TranslateKey(key) == SDLK_UNKNOWN && (unicode & 0xFF80) == 0) )
 		return 0;
 
-	SDL_ANDROID_MainThreadPushKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key) );
+	if( TranslateKey(key) != SDLK_UNKNOWN )
+		unicode = 0;
+
+	SDL_ANDROID_MainThreadPushKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key), unicode );
 	return 1;
 }
 
@@ -1032,8 +1037,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseWheel) (JNIEnv* env, jobject thiz,
 	{
 		if( !SDL_ANDROID_isMouseUsed )
 		{
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_RIGHT) );
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_RIGHT), 0 );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT), 0 );
 		}
 		else
 		{
@@ -1045,8 +1050,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseWheel) (JNIEnv* env, jobject thiz,
 	{
 		if( !SDL_ANDROID_isMouseUsed )
 		{
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_LEFT) );
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_LEFT), 0 );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT), 0 );
 		}
 		else
 		{
@@ -1058,8 +1063,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseWheel) (JNIEnv* env, jobject thiz,
 	{
 		if( !SDL_ANDROID_isMouseUsed )
 		{
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_UP) );
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_UP), 0 );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP), 0 );
 		}
 		else
 		{
@@ -1071,8 +1076,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseWheel) (JNIEnv* env, jobject thiz,
 	{
 		if( !SDL_ANDROID_isMouseUsed )
 		{
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_DOWN) );
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(KEYCODE_DPAD_DOWN), 0 );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN), 0 );
 		}
 		else
 		{
@@ -1147,42 +1152,42 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeGamepadAnalogJoystickInput) (JNIEnv* en
 		if( stick1x < -0.5f )
 		{
 			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(LEFT) );
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(LEFT), 0 );
 		}
 		else
 		{
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(LEFT) );
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(LEFT), 0 );
 		}
 		if( stick1x > 0.5f )
 		{
 			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(RIGHT) );
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(RIGHT), 0 );
 		}
 		else
 		{
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(RIGHT) );
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(RIGHT), 0 );
 		}
 		if( stick1y < -0.5f )
 		{
 			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(UP) );
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(UP), 0 );
 		}
 		else
 		{
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(UP) );
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(UP), 0 );
 		}
 		if( stick1y > 0.5f )
 		{
 			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(DOWN) );
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(DOWN), 0 );
 		}
 		else
 		{
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(DOWN) );
+				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(DOWN), 0 );
 		}
 	}
 }
@@ -1206,18 +1211,18 @@ int processAndroidTrackball(int key, int action)
 		if( downPressed )
 		{
 			downPressed = 0;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN), 0 );
 			return 1;
 		}
 		if( !upPressed )
 		{
 			upPressed = 1;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key), 0 );
 		}
 		else
 		{
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key) );
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key), 0 );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key), 0 );
 		}
 		return 1;
 	}
@@ -1227,18 +1232,18 @@ int processAndroidTrackball(int key, int action)
 		if( upPressed )
 		{
 			upPressed = 0;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP), 0 );
 			return 1;
 		}
 		if( !upPressed )
 		{
 			downPressed = 1;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key), 0 );
 		}
 		else
 		{
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key) );
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key), 0 );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key), 0 );
 		}
 		return 1;
 	}
@@ -1248,18 +1253,18 @@ int processAndroidTrackball(int key, int action)
 		if( rightPressed )
 		{
 			rightPressed = 0;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT), 0 );
 			return 1;
 		}
 		if( !leftPressed )
 		{
 			leftPressed = 1;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key), 0 );
 		}
 		else
 		{
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key) );
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key), 0 );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key), 0 );
 		}
 		return 1;
 	}
@@ -1269,18 +1274,18 @@ int processAndroidTrackball(int key, int action)
 		if( leftPressed )
 		{
 			leftPressed = 0;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT), 0 );
 			return 1;
 		}
 		if( !rightPressed )
 		{
 			rightPressed = 1;
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key), 0 );
 		}
 		else
 		{
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key) );
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(key), 0 );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, TranslateKey(key), 0 );
 		}
 		return 1;
 	}
@@ -1295,13 +1300,13 @@ void SDL_ANDROID_processAndroidTrackballDampening()
 	if( SDL_GetTicks() > TrackballDampening + lastTrackballAction  )
 	{
 		if( upPressed )
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_UP), 0 );
 		if( downPressed )
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_DOWN), 0 );
 		if( leftPressed )
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_LEFT), 0 );
 		if( rightPressed )
-			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT) );
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, TranslateKey(KEYCODE_DPAD_RIGHT), 0 );
 		upPressed = 0;
 		downPressed = 0;
 		leftPressed = 0;

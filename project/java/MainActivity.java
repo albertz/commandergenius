@@ -688,6 +688,38 @@ public class MainActivity extends Activity
 	}
 
 	@Override
+	public boolean dispatchKeyEvent(final KeyEvent event)
+	{
+		//Log.i("SDL", "dispatchKeyEvent: action " + event.getAction() + " keycode " + event.getKeyCode() + " unicode " + event.getUnicodeChar() + " getCharacters() " + ((event.getCharacters() != null) ? event.getCharacters() : "none"));
+
+		if( event.getAction() == KeyEvent.ACTION_DOWN )
+			return onKeyDown(event.getKeyCode(), event);
+		if( event.getAction() == KeyEvent.ACTION_UP )
+			return onKeyUp(event.getKeyCode(), event);
+		if( event.getAction() == KeyEvent.ACTION_MULTIPLE && event.getKeyCode() == KeyEvent.KEYCODE_UNKNOWN )
+		{
+			// International text input
+			if( mGLView != null && event.getCharacters() != null )
+			{
+				for(int i = 0; i < event.getCharacters().length(); i++ )
+				{
+					/*
+					if( mGLView.nativeKey( event.getKeyCode(), 1, event.getCharacters().codePointAt(i) ) == 0 )
+						return super.dispatchKeyEvent(event);
+					if( mGLView.nativeKey( event.getKeyCode(), 0, event.getCharacters().codePointAt(i) ) == 0 )
+						return super.dispatchKeyEvent(event);
+					*/
+					mGLView.nativeKey( event.getKeyCode(), 1, event.getCharacters().codePointAt(i) );
+					mGLView.nativeKey( event.getKeyCode(), 0, event.getCharacters().codePointAt(i) );
+				}
+				return true;
+			}
+		}
+		return true;
+		//return super.dispatchKeyEvent(event);
+	}
+
+	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event)
 	{
 		if(_screenKeyboard != null)
@@ -695,7 +727,7 @@ public class MainActivity extends Activity
 		else
 		if( mGLView != null )
 		{
-			if( mGLView.nativeKey( keyCode, 1 ) == 0 )
+			if( mGLView.nativeKey( keyCode, 1, event.getUnicodeChar() ) == 0 )
 				return super.onKeyDown(keyCode, event);
 		}
 		/*
@@ -727,7 +759,7 @@ public class MainActivity extends Activity
 		else
 		if( mGLView != null )
 		{
-			if( mGLView.nativeKey( keyCode, 0 ) == 0 )
+			if( mGLView.nativeKey( keyCode, 0, event.getUnicodeChar() ) == 0 )
 				return super.onKeyUp(keyCode, event);
 			if( keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU )
 			{

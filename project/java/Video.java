@@ -436,22 +436,22 @@ abstract class DifferentTouchInput
 					hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X);
 					if( hatX == 0.0f )
 					{
-						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_LEFT, 0);
-						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_RIGHT, 0);
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_LEFT, 0, 0);
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_RIGHT, 0, 0);
 					}
 					else
-						DemoGLSurfaceView.nativeKey(hatX < 0.0f ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT, 1);
+						DemoGLSurfaceView.nativeKey(hatX < 0.0f ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT, 1, 0);
 				}
 				if( event.getAxisValue(MotionEvent.AXIS_HAT_Y) != hatY )
 				{
 					hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
 					if( hatY == 0.0f )
 					{
-						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_UP, 0);
-						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_DOWN, 0);
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_UP, 0, 0);
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_DOWN, 0, 0);
 					}
 					else
-						DemoGLSurfaceView.nativeKey(hatY < 0.0f ? KeyEvent.KEYCODE_DPAD_UP : KeyEvent.KEYCODE_DPAD_DOWN, 1);
+						DemoGLSurfaceView.nativeKey(hatY < 0.0f ? KeyEvent.KEYCODE_DPAD_UP : KeyEvent.KEYCODE_DPAD_DOWN, 1, 0);
 				}
 				return;
 			}
@@ -964,28 +964,11 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 			mRenderer.accelerometer.start();
 	};
 
-	// This seems like redundant code - it handled in MainActivity.java
-	@Override
-	public boolean onKeyDown(int keyCode, final KeyEvent event) {
-		//Log.i("SDL", "Got key down event, id " + keyCode + " meta " + event.getMetaState() + " event " + event.toString());
-		if( nativeKey( keyCode, 1 ) == 0 )
-				return super.onKeyDown(keyCode, event);
-		return true;
-	}
-	
-	@Override
-	public boolean onKeyUp(int keyCode, final KeyEvent event) {
-		//Log.i("SDL", "Got key up event, id " + keyCode + " meta " + event.getMetaState());
-		if( nativeKey( keyCode, 0 ) == 0 )
-				return super.onKeyUp(keyCode, event);
-		return true;
-	}
-
 	DemoRenderer mRenderer;
 	MainActivity mParent;
 
 	public static native void nativeMotionEvent( int x, int y, int action, int pointerId, int pressure, int radius );
-	public static native int nativeKey( int keyCode, int down );
+	public static native int nativeKey( int keyCode, int down, int unicode );
 	public static native void initJavaCallbacks();
 	public static native void nativeHardwareMouseDetected( int detected );
 	public static native void nativeMouseButtonsPressed( int buttonId, int pressedState );

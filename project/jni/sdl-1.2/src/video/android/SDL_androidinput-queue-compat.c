@@ -245,7 +245,7 @@ extern void SDL_ANDROID_MainThreadPushMouseButton(int pressed, int button)
 	SDL_mutexV(BufferedEventsMutex);
 };
 
-extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key)
+extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key, int unicode)
 {
 	int nextEvent = getNextEventAndLock();
 	if( nextEvent == -1 )

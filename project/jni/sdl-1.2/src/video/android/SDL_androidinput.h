@@ -226,7 +226,7 @@ extern int SDL_ANDROID_isTouchscreenKeyboardUsed;
 // Queue events to main thread
 extern void SDL_ANDROID_MainThreadPushMouseMotion(int x, int y);
 extern void SDL_ANDROID_MainThreadPushMouseButton(int pressed, int button);
-extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key);
+extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key, int unicode);
 extern void SDL_ANDROID_MainThreadPushMultitouchButton(int id, int pressed, int x, int y, int force); // SDL 1.3 only
 extern void SDL_ANDROID_MainThreadPushMultitouchMotion(int id, int x, int y, int force); // SDL 1.3 only
 extern void SDL_ANDROID_MainThreadPushJoystickAxis(int joy, int axis, int value);

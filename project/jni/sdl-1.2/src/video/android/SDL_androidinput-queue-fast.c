@@ -91,7 +91,7 @@ extern void SDL_ANDROID_MainThreadPushMouseButton(int pressed, int button)
 		SDL_ANDROID_currentMouseButtons &= ~(SDL_BUTTON(button));
 }
 
-extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key)
+extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key, int unicode)
 {
 	SDL_keysym keysym;
 
@@ -174,10 +174,16 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key)
 #else
 	if ( SDL_TranslateUNICODE )
 #endif
-		keysym.unicode = key;
+		keysym.unicode = unicode;
+	if( (keysym.unicode & 0xFF80) != 0 )
+		keysym.sym = SDLK_WORLD_0;
+	//else if( keysym.sym < 0x80 )
+	//	keysym.unicode = keysym.sym;
 
 	if( pressed == SDL_RELEASED )
 		keysym.unicode = 0;
+
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL","SDL_SendKeyboardKey sym %d scancode %d unicode %d", keysym.sym, keysym.scancode, keysym.unicode);
 
 	SDL_SendKeyboardKey( pressed, &keysym );
 }
