@@ -1,13 +1,7 @@
 TODO, which will get actually done
 ==================================
 
-- SDL: Send right mouse click when releasing two fingers, add mouse wheel event when dragging two fingers.
-
-- GIMP: Ctrl/Alt/Shift toggles in the taskbar.
-
-- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support.
-
-- TeeWorlds: infinite loop while trying to enter chat text.
+- TeeWorlds: infinite loop while trying to enter chat text with gamepad.
 
 - TeeWorlds: navigate UI with gamepad.
 
@@ -18,3 +12,5 @@ TODO, which will get actually done
 - OpenArena: do not treat commands starting with / as chat text.
 
 - SDL: cloud save support.
+
+- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support.

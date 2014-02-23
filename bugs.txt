@@ -32,6 +32,8 @@ Requested features, might never get implemented, see todo.txt for features that 
 
 - GIMP: File open dialog shows error message when loading preview for JPG file.
 
+- GIMP: Ctrl/Alt/Shift toggles in the taskbar.
+
 - UfoAI: huge huge update.
 
 - OpenArena: chat text input should be faster.
