@@ -100,7 +100,6 @@ abstract class DifferentTouchInput
 	
 	public static DifferentTouchInput touchInput = getInstance();
 
-
 	public static DifferentTouchInput getInstance()
 	{
 		boolean multiTouchAvailable1 = false;
@@ -299,21 +298,6 @@ abstract class DifferentTouchInput
 					}
 				}
 			}
-			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_MOVE ) // Support bluetooth/USB mouse - available since Android 3.1
-			{
-				// TODO: it is possible that multiple pointers return that event, but we're handling only pointer #0
-				if( touchEvents[0].down )
-					action = Mouse.SDL_FINGER_UP;
-				else
-					action = Mouse.SDL_FINGER_HOVER;
-				touchEvents[0].down = false;
-				touchEvents[0].x = (int)event.getX();
-				touchEvents[0].y = (int)event.getY();
-				touchEvents[0].pressure = 0;
-				touchEvents[0].size = 0;
-				// MotionEvent.AXIS_DISTANCE
-				DemoGLSurfaceView.nativeMotionEvent( touchEvents[0].x, touchEvents[0].y, action, 0, touchEvents[0].pressure, touchEvents[0].size );
-			}
 		}
 	}
 	private static class GingerbreadTouchInput extends MultiTouchInput
@@ -338,6 +322,27 @@ abstract class DifferentTouchInput
 				DemoGLSurfaceView.nativeHardwareMouseDetected(hwMouseEvent);
 			}
 			super.process(event);
+			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_MOVE ) // Support bluetooth/USB mouse - available since Android 3.1
+			{
+				int action;
+				// TODO: it is possible that multiple pointers return that event, but we're handling only pointer #0
+				if( touchEvents[0].down )
+					action = Mouse.SDL_FINGER_UP;
+				else
+					action = Mouse.SDL_FINGER_HOVER;
+				touchEvents[0].down = false;
+				touchEvents[0].x = (int)event.getX();
+				touchEvents[0].y = (int)event.getY();
+				touchEvents[0].pressure = 1024;
+				touchEvents[0].size = 0;
+				//if( event.getAxisValue(MotionEvent.AXIS_DISTANCE) != 0.0f )
+				InputDevice device = InputDevice.getDevice(event.getDeviceId());
+				if( device != null && device.getMotionRange(MotionEvent.AXIS_DISTANCE) != null &&
+					device.getMotionRange(MotionEvent.AXIS_DISTANCE).getRange() > 0.0f )
+					touchEvents[0].pressure = (int)((event.getAxisValue(MotionEvent.AXIS_DISTANCE) -
+							device.getMotionRange(MotionEvent.AXIS_DISTANCE).getMin()) * 1024.0f / device.getMotionRange(MotionEvent.AXIS_DISTANCE).getRange());
+				DemoGLSurfaceView.nativeMotionEvent( touchEvents[0].x, touchEvents[0].y, action, 0, touchEvents[0].pressure, touchEvents[0].size );
+			}
 		}
 		public void processGenericEvent(final MotionEvent event)
 		{
