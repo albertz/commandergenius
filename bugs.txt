@@ -8,3 +8,34 @@ Known bugs (see also todo.txt)
 - SDL_FillRect() does not work with SDL 1.2 in HW mode (and probably with SDL 1.3 too).
 
 - 32-bpp color mode does not work with SW video surface, 24-bpp and 32-bpp mode does not work with SDL_HWSURFACE.
+
+Requested features, might never get implemented, see todo.txt for features that are going to be implemented
+===========================================================================================================
+
+- Select between normal mouse input and magnifying glass/relative input automatically, based on screen size.
+
+- Show/hide screen controls with longpress on Text Edit button.
+
+- Floating on-screen joystick - initially invisible, it appears when you touch the screen,
+  centered on your finger, then it slides with your finger if you bump the joystick edge.
+
+- Export phone vibrator to SDL - interface is available in SDL 1.3.
+
+- Control screen brightness with SDL_SetGamma().
+
+- Zoom in-out whole screen in SW mode with some SDL key or gesture, as in AndroidVNC.
+
+- Support of libjnigraphics (it will disable on-screen keyboard, only SW SDL screen surface supported).
+  This is not relevant already, as every device around is fast enough with GL.
+
+- GIMP: x86 architecture support.
+
+- GIMP: File open dialog shows error message when loading preview for JPG file.
+
+- UfoAI: huge huge update.
+
+- OpenArena: chat text input should be faster.
+
+- OpenArena: Shift and Ctrl keys on USB keyboard do not work for text input.
+
+- OpenArena: When entering with USB keyboard into chatbox, first 't' disappears.

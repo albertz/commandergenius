@@ -46,6 +46,7 @@ class Globals
 	public static boolean HorizontalOrientation = true;
 	public static boolean KeepAspectRatioDefaultSetting = false;
 	public static boolean InhibitSuspend = false;
+	public static boolean CreateService = false;
 	public static String ReadmeText = "^You may press \"Home\" now - the data will be downloaded in background".replace("^","\n");
 	public static String CommandLine = "";
 	public static boolean AppUsesMouse = false;

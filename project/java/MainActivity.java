@@ -22,8 +22,10 @@ freely, subject to the following restrictions:
 package net.sourceforge.clonekeenplus;
 
 import android.app.Activity;
+import android.app.Service;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.MotionEvent;
 import android.view.KeyEvent;
 import android.view.Window;
@@ -212,6 +214,11 @@ public class MainActivity extends Activity
 			}
 		};
 		(new Thread(new Callback(this))).start();
+		if( Globals.CreateService )
+		{
+			Intent intent = new Intent(this, DummyService.class);
+			startService(intent);
+		}
 	}
 	
 	public void setUpStatusLabel()
@@ -1273,5 +1280,27 @@ abstract class SetLayerType
 		public void setLayerType(final View view)
 		{
 		}
+	}
+}
+
+class DummyService extends Service
+{
+	public DummyService()
+	{
+		super();
+	}
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId)
+	{
+		return Service.START_STICKY;
+	}
+	@Override
+	public void onDestroy()
+	{
+	}
+	@Override
+	public IBinder onBind(Intent intent)
+	{
+		return null;
 	}
 }

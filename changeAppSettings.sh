@@ -809,6 +809,9 @@ echo >> AndroidAppSettings.cfg
 echo "# Do not allow device to sleep when the application is in foreground, set this for video players or apps which use accelerometer" >> AndroidAppSettings.cfg
 echo InhibitSuspend=$InhibitSuspend >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Create Android service, so the app is less likely to be killed while in background" >> AndroidAppSettings.cfg
+echo CreateService=$CreateService >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Video color depth - 16 BPP is the fastest and supported for all modes, 24 bpp is supported only" >> AndroidAppSettings.cfg
 echo "# with SwVideoMode=y, SDL_OPENGL mode supports everything. (16)/(24)/(32)" >> AndroidAppSettings.cfg
 echo VideoDepthBpp=$VideoDepthBpp >> AndroidAppSettings.cfg
@@ -964,7 +967,7 @@ echo FirstStartMenuOptions=\'$FirstStartMenuOptions\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Enable multi-ABI binary, with hardware FPU support - it will also work on old devices," >> AndroidAppSettings.cfg
 echo "# but .apk size is 2x bigger (y) / (n) / (x86) / (all)" >> AndroidAppSettings.cfg
-echo MultiABI=$MultiABI >> AndroidAppSettings.cfg
+echo MultiABI=\'$MultiABI\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Minimum amount of RAM application requires, in Mb, SDL will print warning to user if it's lower" >> AndroidAppSettings.cfg
 echo AppMinimumRAM=$AppMinimumRAM >> AndroidAppSettings.cfg
@@ -1050,6 +1053,12 @@ if [ "$InhibitSuspend" = "y" ] ; then
 	InhibitSuspend=true
 else
 	InhibitSuspend=false
+fi
+
+if [ "$CreateService" = "y" ] ; then
+	CreateService=true
+else
+	CreateService=false
 fi
 
 if [ "$NeedDepthBuffer" = "y" ] ; then
@@ -1374,6 +1383,7 @@ $SEDI "s/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = .
 $SEDI "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" project/src/Globals.java
 $SEDI "s^public static boolean KeepAspectRatioDefaultSetting = .*^public static boolean KeepAspectRatioDefaultSetting = $SdlVideoResizeKeepAspect;^" project/src/Globals.java
 $SEDI "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" project/src/Globals.java
+$SEDI "s/public static boolean CreateService = .*;/public static boolean CreateService = $CreateService;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" project/src/Globals.java
 $SEDI "s/public static boolean AppNeedsTwoButtonMouse = .*;/public static boolean AppNeedsTwoButtonMouse = $AppNeedsTwoButtonMouse;/" project/src/Globals.java
 $SEDI "s/public static boolean ForceRelativeMouseMode = .*;/public static boolean ForceRelativeMouseMode = $ForceRelativeMouseMode;/" project/src/Globals.java
