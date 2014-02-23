@@ -97,12 +97,15 @@ SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_7)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_8)),
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_9))
 };
-static int multitouchGestureKeyPressed[MAX_MULTITOUCH_GESTURES] = { 0, 0, 0, 0 };
 static int multitouchGestureSensitivity = 0;
 static int multitouchGestureDist = -1;
 static int multitouchGestureAngle = 0;
 static int multitouchGestureX = -1;
 static int multitouchGestureY = -1;
+static int multitouchGestureMiddleX = -1;
+static int multitouchGestureMiddleY = -1;
+static int multitouchGestureHappened = 0;
+enum { MULTITOUCH_MOUSE_WHEEL_DIST = 20 };
 int SDL_ANDROID_TouchscreenCalibrationWidth = 480;
 int SDL_ANDROID_TouchscreenCalibrationHeight = 320;
 int SDL_ANDROID_TouchscreenCalibrationX = 0;
@@ -290,14 +293,8 @@ static void ProcessMultitouchGesture( int x, int y, int action, int pointerId )
 		multitouchGestureX = -1;
 		multitouchGestureY = -1;
 		multitouchGestureDist = -1;
-		for(i = 0; i < MAX_MULTITOUCH_GESTURES; i++)
-		{
-			if( multitouchGestureKeyPressed[i] )
-			{
-				multitouchGestureKeyPressed[i] = 0;
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[i], 0 );
-			}
-		}
+		multitouchGestureMiddleX = -1;
+		multitouchGestureMiddleY = -1;
 	}
 	else if( !hardwareMouseDetected )
 	{
@@ -310,35 +307,32 @@ static void ProcessMultitouchGesture( int x, int y, int action, int pointerId )
 		{
 			int dist = abs( x - multitouchGestureX ) + abs( y - multitouchGestureY );
 			int angle = atan2i( y - multitouchGestureY, x - multitouchGestureX );
+			int middleX = (x + multitouchGestureX) / 2;
+			int middleY = (y + multitouchGestureY) / 2;
 			if( multitouchGestureDist < 0 )
 			{
 				multitouchGestureDist = dist;
 				multitouchGestureAngle = angle;
+				multitouchGestureMiddleX = middleX;
+				multitouchGestureMiddleY = middleY;
 			}
 			else
 			{
 				int distMaxDiff = SDL_ANDROID_sFakeWindowHeight / ( 1 + (1 + multitouchGestureSensitivity) * 2 );
-				int angleMaxDiff = atan2i_PI / 2 / ( 1 + (1 + multitouchGestureSensitivity) * 2 );
+				int angleMaxDiff = atan2i_PI * 2 / 3 / ( 1 + (1 + multitouchGestureSensitivity) * 2 );
+				int wheelThreshold = SDL_ANDROID_sFakeWindowHeight / MULTITOUCH_MOUSE_WHEEL_DIST;
 				if( dist - multitouchGestureDist > distMaxDiff )
 				{
-					multitouchGestureKeyPressed[0] = 1;
+					multitouchGestureHappened = 1;
+					multitouchGestureDist += distMaxDiff;
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[0], 0 );
-				}
-				else
-				if( multitouchGestureKeyPressed[0] )
-				{
-					multitouchGestureKeyPressed[0] = 0;
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[0], 0 );
 				}
 				if( multitouchGestureDist - dist > distMaxDiff )
 				{
-					multitouchGestureKeyPressed[1] = 1;
+					multitouchGestureHappened = 1;
+					multitouchGestureDist -= distMaxDiff;
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[1], 0 );
-				}
-				else
-				if( multitouchGestureKeyPressed[1] )
-				{
-					multitouchGestureKeyPressed[1] = 0;
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[1], 0 );
 				}
 
@@ -351,25 +345,47 @@ static void ProcessMultitouchGesture( int x, int y, int action, int pointerId )
 
 				if( angleDiff < -angleMaxDiff )
 				{
-					multitouchGestureKeyPressed[2] = 1;
+					multitouchGestureHappened = 1;
+					multitouchGestureAngle = angle;
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[2], 0 );
-				}
-				else
-				if( multitouchGestureKeyPressed[2] )
-				{
-					multitouchGestureKeyPressed[2] = 0;
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[2], 0 );
 				}
 				if( angleDiff > angleMaxDiff )
 				{
-					multitouchGestureKeyPressed[3] = 1;
+					multitouchGestureHappened = 1;
+					multitouchGestureAngle = angle;
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[3], 0 );
-				}
-				else
-				if( multitouchGestureKeyPressed[3] )
-				{
-					multitouchGestureKeyPressed[3] = 0;
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[3], 0 );
+				}
+
+				//__android_log_print(ANDROID_LOG_INFO, "libSDL", "middleY %d multitouchGestureMiddleY %d threshold %d", middleY, multitouchGestureMiddleY, wheelThreshold);
+				if( middleX - multitouchGestureMiddleX > wheelThreshold )
+				{
+					multitouchGestureHappened = 1;
+					multitouchGestureMiddleX += wheelThreshold;
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_X1 );
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_X1 );
+				}
+				if( multitouchGestureMiddleX - middleX > wheelThreshold )
+				{
+					multitouchGestureHappened = 1;
+					multitouchGestureMiddleX -= wheelThreshold;
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_X2 );
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_X2 );
+				}
+				if( middleY - multitouchGestureMiddleY > wheelThreshold )
+				{
+					multitouchGestureHappened = 1;
+					multitouchGestureMiddleY += wheelThreshold;
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_WHEELUP );
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_WHEELUP );
+				}
+				if( multitouchGestureMiddleY - middleY > wheelThreshold )
+				{
+					multitouchGestureHappened = 1;
+					multitouchGestureMiddleY -= wheelThreshold;
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_WHEELDOWN );
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_WHEELDOWN );
 				}
 			}
 		}
@@ -627,7 +643,15 @@ static void ProcessMouseMultitouch( int action, int pointerId )
 		else if( rightClickMethod == RIGHT_CLICK_WITH_MULTITOUCH )
 		{
 			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
-			SDL_ANDROID_MainThreadPushMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
+			if( action == MOUSE_UP )
+			{
+				if( !multitouchGestureHappened )
+				{
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_RIGHT );
+					SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_RIGHT );
+				}
+				multitouchGestureHappened = 0;
+			}
 		}
 	}
 }
