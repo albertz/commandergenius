@@ -581,7 +581,7 @@ init(void)
 
   game_map = sysarg_args_map;
 
-  if (sysarg_args_submap == 0) {
+  if (sysarg_args_submap == 0 || sysarg_args_submap == map_maps[game_map].submap) {
     game_submap = map_maps[game_map].submap;
     map_frow = (U8)map_maps[game_map].row;
   }
