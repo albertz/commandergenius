@@ -71,7 +71,7 @@ cp $CURDIR/xserver/data/busybox-$1 ./busybox
 cp $CURDIR/ssh ./
 cp $CURDIR/sshpass ./
 mkdir -p usr/bin
-for f in xhost xkbcomp xli ; do cp $CURDIR/xserver/android/$1/$f ./usr/bin/ ; done
+for f in xhost xkbcomp xli xsel; do cp $CURDIR/xserver/android/$1/$f ./usr/bin/ ; done
 rm -f ../AndroidData/binaries-$1.zip
 zip -r ../AndroidData/binaries-$1.zip .
 
