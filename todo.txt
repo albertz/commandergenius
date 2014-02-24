@@ -13,4 +13,4 @@ TODO, which will get actually done
 
 - SDL: cloud save support.
 
-- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support.
+- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
