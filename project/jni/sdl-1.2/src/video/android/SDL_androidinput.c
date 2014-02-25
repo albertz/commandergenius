@@ -89,7 +89,7 @@ static int TrackballDampening = 0; // in milliseconds
 static Uint32 lastTrackballAction = 0;
 enum { TOUCH_PTR_UP = 0, TOUCH_PTR_MOUSE = 1, TOUCH_PTR_SCREENKB = 2 };
 static int touchPointers[MAX_MULTITOUCH_POINTERS] = {0};
-static int firstMousePointerId = -1;
+static int firstMousePointerId = -1, secondMousePointerId = -1;
 enum { MAX_MULTITOUCH_GESTURES = 4 };
 static int multitouchGestureKeycode[MAX_MULTITOUCH_GESTURES] = {
 SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_6)),
@@ -227,12 +227,17 @@ static void AssignNewTouchPointers( int action, int pointerId )
 	{
 		touchPointers[pointerId] |= TOUCH_PTR_MOUSE;
 		firstMousePointerId = -1;
+		secondMousePointerId = -1;
 		for( i = 0; i < MAX_MULTITOUCH_POINTERS; i++ )
 		{
 			if( touchPointers[i] & TOUCH_PTR_MOUSE )
 			{
-				firstMousePointerId = i;
-				break;
+				if( firstMousePointerId == -1 )
+					firstMousePointerId = i;
+				else if( secondMousePointerId == -1 )
+					secondMousePointerId = i;
+				else
+					break;
 			}
 		}
 	}
@@ -245,12 +250,17 @@ static void ClearOldTouchPointers( int action, int pointerId )
 	{
 		touchPointers[pointerId] = TOUCH_PTR_UP;
 		firstMousePointerId = -1;
+		secondMousePointerId = -1;
 		for( i = 0; i < MAX_MULTITOUCH_POINTERS; i++ )
 		{
 			if( touchPointers[i] |= TOUCH_PTR_MOUSE )
 			{
-				firstMousePointerId = i;
-				break;
+				if( firstMousePointerId == -1 )
+					firstMousePointerId = i;
+				else if( secondMousePointerId == -1 )
+					secondMousePointerId = i;
+				else
+					break;
 			}
 		}
 	}
@@ -638,7 +648,7 @@ static void ProcessMouseMove( int x, int y, int force, int radius )
 
 static void ProcessMouseMultitouch( int action, int pointerId )
 {
-	if( pointerId != firstMousePointerId && (action == MOUSE_DOWN || action == MOUSE_UP) )
+	if( pointerId == secondMousePointerId && (action == MOUSE_DOWN || action == MOUSE_UP) )
 	{
 		if( leftClickMethod == LEFT_CLICK_WITH_MULTITOUCH )
 		{
@@ -663,6 +673,8 @@ static void ProcessMouseMultitouch( int action, int pointerId )
 			}
 		}
 	}
+	if( pointerId != firstMousePointerId && pointerId != secondMousePointerId && (action == MOUSE_DOWN || action == MOUSE_UP) )
+		SDL_ANDROID_MainThreadPushMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_MIDDLE );
 }
 
 static void ProcessMouseHover( jint *xx, jint *yy, int action, int distance )
