@@ -133,6 +133,7 @@ enum { MOUSE_HW_INPUT_FINGER = 0, MOUSE_HW_INPUT_STYLUS = 1, MOUSE_HW_INPUT_MOUS
 enum { DEADZONE_HOVER_FINGER = 32, DEADZONE_HOVER_STYLUS = 64, HOVER_FREEZE_TIME = 300, HOVER_DISTANCE_MAX = 1024 };
 static int hoverJitterFilter = 1;
 static int hoverX, hoverY, hoverTime = 0, hoverMouseFreeze = 0, hoverDeadzone = 0;
+static int rightMouseButtonLongPress = 1;
 
 static inline int InsideRect( const SDL_Rect * r, int x, int y )
 {
@@ -357,6 +358,9 @@ static void ProcessMultitouchGesture( int x, int y, int action, int pointerId )
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, multitouchGestureKeycode[3], 0 );
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, multitouchGestureKeycode[3], 0 );
 				}
+
+				if( rightMouseButtonLongPress )
+					return;
 
 				//__android_log_print(ANDROID_LOG_INFO, "libSDL", "middleY %d multitouchGestureMiddleY %d threshold %d", middleY, multitouchGestureMiddleY, wheelThreshold);
 				if( middleX - multitouchGestureMiddleX > wheelThreshold )
@@ -643,12 +647,17 @@ static void ProcessMouseMultitouch( int action, int pointerId )
 		else if( rightClickMethod == RIGHT_CLICK_WITH_MULTITOUCH )
 		{
 			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
-			if( action == MOUSE_UP )
+			if( rightMouseButtonLongPress )
+				SDL_ANDROID_MainThreadPushMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_RIGHT );
+			else
 			{
-				if( !multitouchGestureHappened )
+				if( action == MOUSE_UP )
 				{
-					SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_RIGHT );
-					SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_RIGHT );
+					if( !multitouchGestureHappened )
+					{
+						SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_RIGHT );
+						SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_RIGHT );
+					}
 				}
 				multitouchGestureHappened = 0;
 			}
@@ -952,7 +961,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 		jint LeftClickKeycode, jint RightClickKeycode,
 		jint LeftClickTimeout, jint RightClickTimeout,
 		jint RelativeMovement, jint RelativeMovementSpeed, jint RelativeMovementAccel,
-		jint ShowMouseCursor, jint HoverJitterFilter)
+		jint ShowMouseCursor, jint HoverJitterFilter, jint RightMouseButtonLongPress)
 {
 	SDL_ANDROID_isMouseUsed = 1;
 	rightClickMethod = RightClickMethod;
@@ -973,6 +982,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 	relativeMovementAccel = RelativeMovementAccel;
 	SDL_ANDROID_ShowMouseCursor = ShowMouseCursor;
 	hoverJitterFilter = HoverJitterFilter;
+	rightMouseButtonLongPress = RightMouseButtonLongPress;
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "relativeMovementSpeed %d relativeMovementAccel %d", relativeMovementSpeed, relativeMovementAccel);
 }
 

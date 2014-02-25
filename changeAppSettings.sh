@@ -806,12 +806,6 @@ echo >> AndroidAppSettings.cfg
 echo "# Specify screen orientation: (v)ertical/(p)ortrait or (h)orizontal/(l)andscape" >> AndroidAppSettings.cfg
 echo ScreenOrientation=$ScreenOrientation >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Do not allow device to sleep when the application is in foreground, set this for video players or apps which use accelerometer" >> AndroidAppSettings.cfg
-echo InhibitSuspend=$InhibitSuspend >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
-echo "# Create Android service, so the app is less likely to be killed while in background" >> AndroidAppSettings.cfg
-echo CreateService=$CreateService >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
 echo "# Video color depth - 16 BPP is the fastest and supported for all modes, 24 bpp is supported only" >> AndroidAppSettings.cfg
 echo "# with SwVideoMode=y, SDL_OPENGL mode supports everything. (16)/(24)/(32)" >> AndroidAppSettings.cfg
 echo VideoDepthBpp=$VideoDepthBpp >> AndroidAppSettings.cfg
@@ -835,6 +829,12 @@ echo SdlVideoResize=$SdlVideoResize >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application resizing will keep 4:3 aspect ratio, with black bars at sides (y)/(n)" >> AndroidAppSettings.cfg
 echo SdlVideoResizeKeepAspect=$SdlVideoResizeKeepAspect >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# Do not allow device to sleep when the application is in foreground, set this for video players or apps which use accelerometer" >> AndroidAppSettings.cfg
+echo InhibitSuspend=$InhibitSuspend >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# Create Android service, so the app is less likely to be killed while in background" >> AndroidAppSettings.cfg
+echo CreateService=$CreateService >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application does not call SDL_Flip() or SDL_UpdateRects() appropriately, or draws from non-main thread -" >> AndroidAppSettings.cfg
 echo "# enabling the compatibility mode will force screen update every 100 milliseconds, which is laggy and inefficient (y) or (n)" >> AndroidAppSettings.cfg
@@ -871,6 +871,10 @@ echo AppUsesMouse=$AppUsesMouse >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application needs two-button mouse, will also enable advanced point-and-click features (y) or (n)" >> AndroidAppSettings.cfg
 echo AppNeedsTwoButtonMouse=$AppNeedsTwoButtonMouse >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# Right mouse button can do long-press/drag&drop action, necessary for some games (y) or (n)" >> AndroidAppSettings.cfg
+echo "# If you disable it, swiping with two fingers will send mouse wheel events" >> AndroidAppSettings.cfg
+echo RightMouseButtonLongPress=$RightMouseButtonLongPress >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Show SDL mouse cursor, for applications that do not draw cursor at all (y) or (n)" >> AndroidAppSettings.cfg
 echo ShowMouseCursor=$ShowMouseCursor >> AndroidAppSettings.cfg
@@ -1145,6 +1149,12 @@ else
 	AppNeedsTwoButtonMouse=false
 fi
 
+if [ "$RightMouseButtonLongPress" = "n" ] ; then
+	RightMouseButtonLongPress=false
+else
+	RightMouseButtonLongPress=true
+fi
+
 if [ "$ForceRelativeMouseMode" = "y" ] ; then
 	ForceRelativeMouseMode=true
 else
@@ -1386,6 +1396,7 @@ $SEDI "s/public static boolean InhibitSuspend = .*;/public static boolean Inhibi
 $SEDI "s/public static boolean CreateService = .*;/public static boolean CreateService = $CreateService;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesMouse = .*;/public static boolean AppUsesMouse = $AppUsesMouse;/" project/src/Globals.java
 $SEDI "s/public static boolean AppNeedsTwoButtonMouse = .*;/public static boolean AppNeedsTwoButtonMouse = $AppNeedsTwoButtonMouse;/" project/src/Globals.java
+$SEDI "s/public static boolean RightMouseButtonLongPress = .*;/public static boolean RightMouseButtonLongPress = $RightMouseButtonLongPress;/" project/src/Globals.java
 $SEDI "s/public static boolean ForceRelativeMouseMode = .*;/public static boolean ForceRelativeMouseMode = $ForceRelativeMouseMode;/" project/src/Globals.java
 $SEDI "s/public static boolean ShowMouseCursor = .*;/public static boolean ShowMouseCursor = $ShowMouseCursor;/" project/src/Globals.java
 $SEDI "s/public static boolean GenerateSubframeTouchEvents = .*;/public static boolean GenerateSubframeTouchEvents = $GenerateSubframeTouchEvents;/" project/src/Globals.java

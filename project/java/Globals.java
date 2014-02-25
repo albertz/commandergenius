@@ -51,6 +51,7 @@ class Globals
 	public static String CommandLine = "";
 	public static boolean AppUsesMouse = false;
 	public static boolean AppNeedsTwoButtonMouse = false;
+	public static boolean RightMouseButtonLongPress = true;
 	public static boolean ForceRelativeMouseMode = false; // If both on-screen keyboard and mouse are needed, this will only set the default setting, user may override it later
 	public static boolean ShowMouseCursor = false;
 	public static boolean GenerateSubframeTouchEvents = false;
