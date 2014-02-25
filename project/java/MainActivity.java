@@ -115,6 +115,7 @@ public class MainActivity extends Activity
 		if( Globals.StartupMenuButtonTimeout > 0 )
 		{
 			_btn = new Button(this);
+			_btn.setEnabled(false);
 			_btn.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 			_btn.setText(getResources().getString(R.string.device_change_cfg));
 			class onClickListener implements View.OnClickListener
@@ -187,6 +188,7 @@ public class MainActivity extends Activity
 							Settings.Load(Parent);
 							loaded.release();
 							loadedLibraries.release();
+							_btn.setEnabled(true);
 						}
 					}
 					Callback2 cb = new Callback2();
