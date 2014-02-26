@@ -188,7 +188,8 @@ public class MainActivity extends Activity
 							Settings.Load(Parent);
 							loaded.release();
 							loadedLibraries.release();
-							_btn.setEnabled(true);
+							if( _btn != null )
+								_btn.setEnabled(true);
 						}
 					}
 					Callback2 cb = new Callback2();
