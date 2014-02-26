@@ -408,7 +408,7 @@ static void ProcessMultitouchGesture( int x, int y, int action, int pointerId )
 
 static void SendMultitouchEvents( int x, int y, int action, int pointerId, int force, int radius )
 {
-	if( isMultitouchUsed )
+	if( isMultitouchUsed && (action == MOUSE_DOWN || action == MOUSE_UP || action == MOUSE_MOVE) ) // Ignore hover events
 	{
 #if SDL_VERSION_ATLEAST(1,3,0)
 		// Use nifty SDL 1.3 multitouch API
@@ -429,7 +429,7 @@ static void SendMultitouchEvents( int x, int y, int action, int pointerId, int f
 	if( !isMultitouchUsed && !SDL_ANDROID_isMouseUsed && !SDL_ANDROID_isTouchscreenKeyboardUsed )
 	{
 		SDL_keysym keysym;
-		if( action != MOUSE_MOVE )
+		if( action == MOUSE_DOWN || action == MOUSE_UP )
 			SDL_ANDROID_MainThreadPushKeyboardKey( action == MOUSE_DOWN ? SDL_PRESSED : SDL_RELEASED, SDL_ANDROID_GetScreenKeyboardButtonKey(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0), 0 );
 		return;
 	}
