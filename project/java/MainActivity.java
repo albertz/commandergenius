@@ -696,6 +696,7 @@ public class MainActivity extends Activity
 		}
 	}
 
+	/*
 	@Override
 	public boolean dispatchKeyEvent(final KeyEvent event)
 	{
@@ -712,12 +713,6 @@ public class MainActivity extends Activity
 			{
 				for(int i = 0; i < event.getCharacters().length(); i++ )
 				{
-					/*
-					if( mGLView.nativeKey( event.getKeyCode(), 1, event.getCharacters().codePointAt(i) ) == 0 )
-						return super.dispatchKeyEvent(event);
-					if( mGLView.nativeKey( event.getKeyCode(), 0, event.getCharacters().codePointAt(i) ) == 0 )
-						return super.dispatchKeyEvent(event);
-					*/
 					mGLView.nativeKey( event.getKeyCode(), 1, event.getCharacters().codePointAt(i) );
 					mGLView.nativeKey( event.getKeyCode(), 0, event.getCharacters().codePointAt(i) );
 				}
@@ -727,6 +722,7 @@ public class MainActivity extends Activity
 		return true;
 		//return super.dispatchKeyEvent(event);
 	}
+	*/
 
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event)
@@ -739,16 +735,6 @@ public class MainActivity extends Activity
 			if( mGLView.nativeKey( keyCode, 1, event.getUnicodeChar() ) == 0 )
 				return super.onKeyDown(keyCode, event);
 		}
-		/*
-		else
-		if( keyCode == KeyEvent.KEYCODE_BACK && downloader != null )
-		{
-			if( downloader.DownloadFailed )
-				System.exit(1);
-			if( !downloader.DownloadComplete )
-				onStop();
-		}
-		*/
 		else
 		if( keyListener != null )
 		{
@@ -780,6 +766,22 @@ public class MainActivity extends Activity
 		if( _btn != null )
 			return _btn.onKeyUp(keyCode, event);
 		return true;
+	}
+
+	@Override
+	public boolean onKeyMultiple(int keyCode, int repeatCount, final KeyEvent event)
+	{
+		// International text input
+		if( mGLView != null && event.getCharacters() != null )
+		{
+			for(int i = 0; i < event.getCharacters().length(); i++ )
+			{
+				mGLView.nativeKey( event.getKeyCode(), 1, event.getCharacters().codePointAt(i) );
+				mGLView.nativeKey( event.getKeyCode(), 0, event.getCharacters().codePointAt(i) );
+			}
+			return true;
+		}
+		return false;
 	}
 
 	@Override
