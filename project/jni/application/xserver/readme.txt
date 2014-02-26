@@ -1,4 +1,3 @@
-
 You will need to install some packages to your Debian/Ubuntu first:
 
 sudo apt-get install bison libpixman-1-dev \
@@ -18,6 +17,10 @@ x11proto-xf86dga-dev x11proto-xf86dri-dev \
 x11proto-xf86vidmode-dev x11proto-xinerama-dev \
 libxmuu-dev libxt-dev libsm-dev libice-dev \
 libxrender-dev libxrandr-dev curl
+
+You will need both xcb-proto and python-xcbgen packages
+to have version 1.10-1, you may download newer packages
+from http://packages.ubuntu.com/ or https://www.debian.org/distrib/packages
 
 Then run commands:
 
