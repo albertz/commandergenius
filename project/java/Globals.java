@@ -67,7 +67,6 @@ class Globals
 	public static boolean ResetSdlConfigForThisVersion = false;
 	public static String DeleteFilesOnUpgrade = "";
 	public static int AppTouchscreenKeyboardKeysAmount = 4;
-	public static int AppTouchscreenKeyboardKeysAmountAutoFire = 1;
 	public static String[] AppTouchscreenKeyboardKeysNames = "Fire Shoot Switch_weapon Jump Run Hide/Seek".split(" ");
 	public static int StartupMenuButtonTimeout = 3000;
 	public static int AppMinimumRAM = 0;

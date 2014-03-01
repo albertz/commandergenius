@@ -130,7 +130,7 @@ int SDL_ANDROID_currentMouseButtons = 0;
 static int hardwareMouseDetected = 0;
 enum { MOUSE_HW_BUTTON_LEFT = 1, MOUSE_HW_BUTTON_RIGHT = 2, MOUSE_HW_BUTTON_MIDDLE = 4, MOUSE_HW_BUTTON_BACK = 8, MOUSE_HW_BUTTON_FORWARD = 16, MOUSE_HW_BUTTON_MAX = MOUSE_HW_BUTTON_FORWARD };
 enum { MOUSE_HW_INPUT_FINGER = 0, MOUSE_HW_INPUT_STYLUS = 1, MOUSE_HW_INPUT_MOUSE = 2 };
-enum { DEADZONE_HOVER_FINGER = 32, DEADZONE_HOVER_STYLUS = 64, HOVER_FREEZE_TIME = 300, HOVER_DISTANCE_MAX = 1024 };
+enum { DEADZONE_HOVER_FINGER = 32, DEADZONE_HOVER_STYLUS = 64, HOVER_FREEZE_TIME = 500, HOVER_DISTANCE_MAX = 1024 };
 static int hoverJitterFilter = 1;
 static int hoverX, hoverY, hoverTime = 0, hoverMouseFreeze = 0, hoverDeadzone = 0;
 static int rightMouseButtonLongPress = 1;
@@ -681,45 +681,53 @@ static void ProcessMouseHover( jint *xx, jint *yy, int action, int distance )
 {
 	int x = *xx, y = *yy;
 
-	if( relativeMovement || !hoverJitterFilter )
+	if( relativeMovement )
 		return;
 
-	if( action == MOUSE_HOVER )
+	if( !hoverJitterFilter )
 	{
-		if( hoverDeadzone )
+		if( action == MOUSE_HOVER )
+			SDL_ANDROID_MainThreadPushMouseMotion(x, y);
+	}
+	else
+	{
+		if( action == MOUSE_HOVER )
 		{
-			if( abs(x - hoverX) < hoverDeadzone && abs(y - hoverY) < hoverDeadzone )
+			if( hoverDeadzone )
 			{
-				if( hoverTime == 0 )
-					hoverTime = SDL_GetTicks();
-				else if( !hoverMouseFreeze && SDL_GetTicks() > hoverTime + HOVER_FREEZE_TIME )
+				if( abs(x - hoverX) < hoverDeadzone && abs(y - hoverY) < hoverDeadzone )
 				{
-					hoverMouseFreeze = 1;
+					if( hoverTime == 0 )
+						hoverTime = SDL_GetTicks();
+					else if( !hoverMouseFreeze && SDL_GetTicks() > hoverTime + HOVER_FREEZE_TIME )
+					{
+						hoverMouseFreeze = 1;
+						hoverX = x;
+						hoverY = y;
+					}
+				}
+				else
+				{
+					hoverTime = 0;
+					hoverMouseFreeze = 0;
 					hoverX = x;
 					hoverY = y;
 				}
 			}
-			else
-			{
-				hoverTime = 0;
-				hoverMouseFreeze = 0;
-				hoverX = x;
-				hoverY = y;
-			}
+			if( !hoverMouseFreeze )
+				SDL_ANDROID_MainThreadPushMouseMotion(x, y);
 		}
-		if( !hoverMouseFreeze )
-			SDL_ANDROID_MainThreadPushMouseMotion(x, y);
-	}
-	else if( hoverMouseFreeze && !(abs(x - hoverX) < hoverDeadzone && abs(y - hoverY) < hoverDeadzone) )
-	{
-		hoverMouseFreeze = 0;
-		hoverTime = 0;
-	}
+		else if( hoverMouseFreeze && !(abs(x - hoverX) < hoverDeadzone && abs(y - hoverY) < hoverDeadzone) )
+		{
+			hoverMouseFreeze = 0;
+			hoverTime = 0;
+		}
 
-	if( hoverMouseFreeze )
-	{
-		*xx = hoverX;
-		*yy = hoverY;
+		if( hoverMouseFreeze )
+		{
+			*xx = hoverX;
+			*yy = hoverY;
+		}
 	}
 
 	if( action == MOUSE_HOVER && distance < HOVER_DISTANCE_MAX / 4 )
@@ -1044,9 +1052,9 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeHardwareMouseDetected) (JNIEnv* env, jo
 void SDL_ANDROID_SetHoverDeadzone()
 {
 	hoverDeadzone = (hardwareMouseDetected == MOUSE_HW_INPUT_STYLUS) ?
-					SDL_ANDROID_sFakeWindowHeight / DEADZONE_HOVER_STYLUS :
+					SDL_ANDROID_sFakeWindowHeight * (70 / (atoi(getenv("DISPLAY_HEIGHT_MM")) > 0 ? atoi(getenv("DISPLAY_HEIGHT_MM")) : 70)) / DEADZONE_HOVER_STYLUS :
 					(hardwareMouseDetected == MOUSE_HW_INPUT_FINGER) ?
-					SDL_ANDROID_sFakeWindowHeight / DEADZONE_HOVER_FINGER : 0;
+					SDL_ANDROID_sFakeWindowHeight * (70 / (atoi(getenv("DISPLAY_HEIGHT_MM")) > 0 ? atoi(getenv("DISPLAY_HEIGHT_MM")) : 70)) / DEADZONE_HOVER_FINGER : 0;
 }
 
 JNIEXPORT void JNICALL

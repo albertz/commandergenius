@@ -541,7 +541,6 @@ class Settings
 				nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize,
 											Globals.TouchscreenKeyboardDrawSize,
 											Globals.TouchscreenKeyboardTheme,
-											Globals.AppTouchscreenKeyboardKeysAmountAutoFire,
 											Globals.TouchscreenKeyboardTransparency );
 				SetupTouchscreenKeyboardGraphics(p);
 				for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
@@ -779,7 +778,7 @@ class Settings
 	private static native void nativeSetCompatibilityHacks();
 	private static native void nativeSetVideoMultithreaded();
 	private static native void nativeSetVideoForceSoftwareMode();
-	private static native void nativeSetupScreenKeyboard(int size, int drawsize, int theme, int nbuttonsAutoFire, int transparency);
+	private static native void nativeSetupScreenKeyboard(int size, int drawsize, int theme, int transparency);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	private static native void nativeInitKeymap();
 	private static native int  nativeGetKeymapKey(int key);

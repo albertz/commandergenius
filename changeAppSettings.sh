@@ -444,16 +444,6 @@ if [ -n "$var" ] ; then
 fi
 fi
 
-if [ -z "$AppTouchscreenKeyboardKeysAmountAutoFire" -o -z "$AUTO" ]; then
-echo
-echo -n "Number of virtual keyboard keys that support autofire (currently 2 is maximum) ($AppTouchscreenKeyboardKeysAmountAutoFire): "
-read var
-if [ -n "$var" ] ; then
-	AppTouchscreenKeyboardKeysAmountAutoFire="$var"
-	CHANGED=1
-fi
-fi
-
 if [ -z "$RedefinedKeysScreenKb" -o -z "$AUTO" ]; then
 if [ -z "$RedefinedKeysScreenKb" ]; then
 	RedefinedKeysScreenKb="$RedefinedKeys"
@@ -936,9 +926,6 @@ echo >> AndroidAppSettings.cfg
 echo "# Number of virtual keyboard keys (currently 6 is maximum)" >> AndroidAppSettings.cfg
 echo AppTouchscreenKeyboardKeysAmount=$AppTouchscreenKeyboardKeysAmount >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Number of virtual keyboard keys that support autofire (currently 2 is maximum)" >> AndroidAppSettings.cfg
-echo AppTouchscreenKeyboardKeysAmountAutoFire=$AppTouchscreenKeyboardKeysAmountAutoFire >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
 echo "# Redefine on-screen keyboard keys to SDL keysyms - 6 keyboard keys + 4 multitouch gestures (zoom in/out and rotate left/right)" >> AndroidAppSettings.cfg
 echo RedefinedKeysScreenKb=\"$RedefinedKeysScreenKb\" >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
@@ -1412,7 +1399,6 @@ $SEDI "s/public static boolean ResetSdlConfigForThisVersion = .*;/public static 
 $SEDI "s/public static boolean ImmersiveMode = .*;/public static boolean ImmersiveMode = $ImmersiveMode;/" project/src/Globals.java
 $SEDI "s|public static String DeleteFilesOnUpgrade = .*;|public static String DeleteFilesOnUpgrade = \"$DeleteFilesOnUpgrade\";|" project/src/Globals.java
 $SEDI "s/public static int AppTouchscreenKeyboardKeysAmount = .*;/public static int AppTouchscreenKeyboardKeysAmount = $AppTouchscreenKeyboardKeysAmount;/" project/src/Globals.java
-$SEDI "s/public static int AppTouchscreenKeyboardKeysAmountAutoFire = .*;/public static int AppTouchscreenKeyboardKeysAmountAutoFire = $AppTouchscreenKeyboardKeysAmountAutoFire;/" project/src/Globals.java
 $SEDI "s@public static String\\[\\] AppTouchscreenKeyboardKeysNames = .*;@public static String[] AppTouchscreenKeyboardKeysNames = \"$RedefinedKeysScreenKbNames\".split(\" \");@" project/src/Globals.java
 $SEDI "s/public static int TouchscreenKeyboardTheme = .*;/public static int TouchscreenKeyboardTheme = $TouchscreenKeysTheme;/" project/src/Globals.java
 $SEDI "s/public static int StartupMenuButtonTimeout = .*;/public static int StartupMenuButtonTimeout = $StartupMenuButtonTimeout;/" project/src/Globals.java

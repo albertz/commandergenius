@@ -87,10 +87,6 @@ extern DECLSPEC
 #endif
                             SDLCALL SDL_ANDROID_GetScreenKeyboardButtonKey(int buttonId);
 
-/* Buttons 0 and 1 may have auto-fire state */
-extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardAutoFireButtonsAmount(int nbuttons);
-extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardAutoFireButtonsAmount(void);
-
 /* Hide all on-screen buttons (not the QWERTY text input) */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardShown(int shown);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardShown(void);
