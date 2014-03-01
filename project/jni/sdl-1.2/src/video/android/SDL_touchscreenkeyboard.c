@@ -69,8 +69,9 @@ SDL_KEY(SDL_KEY_VAL(SDL_ANDROID_SCREENKB_KEYCODE_5)),
 enum { ARROW_LEFT = 1, ARROW_RIGHT = 2, ARROW_UP = 4, ARROW_DOWN = 8 };
 static short oldArrows = 0;
 
-static short pointerInButtonRect[MAX_BUTTONS + MAX_JOYSTICKS];
-static short buttonsGenerateSdlEvents[MAX_BUTTONS + MAX_JOYSTICKS];
+static Sint8 pointerInButtonRect[MAX_BUTTONS + MAX_JOYSTICKS];
+static Sint8 buttonsGenerateSdlEvents[MAX_BUTTONS + MAX_JOYSTICKS];
+static Sint8 buttonsStayPressedAfterTouch[MAX_BUTTONS + MAX_JOYSTICKS];
 
 typedef struct
 {
@@ -410,6 +411,8 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					pointerInButtonRect[i] = pointerId;
 					if( i == BUTTON_TEXT_INPUT )
 						SDL_ANDROID_ToggleScreenKeyboardTextInput(NULL);
+					else if( buttonsStayPressedAfterTouch[i] )
+						SDL_ANDROID_MainThreadPushKeyboardKey( SDL_GetKeyboardState(NULL)[buttonKeysyms[i]] == 0 ? SDL_PRESSED : SDL_RELEASED, buttonKeysyms[i], 0 );
 					else
 						SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, buttonKeysyms[i], 0 );
 				}
@@ -449,7 +452,7 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 			{
 				processed |= 1<<i;
 				pointerInButtonRect[i] = -1;
-				if( i != BUTTON_TEXT_INPUT )
+				if( i != BUTTON_TEXT_INPUT && !buttonsStayPressedAfterTouch[i] )
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, buttonKeysyms[i], 0 );
 			}
 		}
@@ -982,6 +985,19 @@ int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonGenerateTouchEvents(int buttonId,
 		return 0;
 	buttonsGenerateSdlEvents[buttonId] = generateEvents;
 	return 1;
+}
+
+int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonStayPressedAfterTouch(int buttonId, int stayPressed)
+{
+	if( buttonId < 0 || buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM )
+		return 0;
+	buttonsStayPressedAfterTouch[buttonId] = stayPressed;
+	return 1;
+}
+
+int SDLCALL SDL_ANDROID_SetScreenKeyboardTransparency(int alpha)
+{
+	transparency = (float)alpha / 255.0f;
 }
 
 static int ScreenKbRedefinedByUser = 0;

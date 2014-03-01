@@ -130,7 +130,7 @@ int SDL_ANDROID_currentMouseButtons = 0;
 static int hardwareMouseDetected = 0;
 enum { MOUSE_HW_BUTTON_LEFT = 1, MOUSE_HW_BUTTON_RIGHT = 2, MOUSE_HW_BUTTON_MIDDLE = 4, MOUSE_HW_BUTTON_BACK = 8, MOUSE_HW_BUTTON_FORWARD = 16, MOUSE_HW_BUTTON_MAX = MOUSE_HW_BUTTON_FORWARD };
 enum { MOUSE_HW_INPUT_FINGER = 0, MOUSE_HW_INPUT_STYLUS = 1, MOUSE_HW_INPUT_MOUSE = 2 };
-enum { DEADZONE_HOVER_FINGER = 32, DEADZONE_HOVER_STYLUS = 64, HOVER_FREEZE_TIME = 500, HOVER_DISTANCE_MAX = 1024 };
+enum { DEADZONE_HOVER_FINGER = 50, DEADZONE_HOVER_STYLUS = 80, HOVER_FREEZE_TIME = 500, HOVER_DISTANCE_MAX = 1024 };
 static int hoverJitterFilter = 1;
 static int hoverX, hoverY, hoverTime = 0, hoverMouseFreeze = 0, hoverDeadzone = 0;
 static int rightMouseButtonLongPress = 1;

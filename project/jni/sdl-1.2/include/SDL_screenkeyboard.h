@@ -64,7 +64,7 @@ enum {
 
 /* Set on-screen button position, specify zero width to hide the button.
    All coordinates are in the actual screen dimensions, NOT what you are supplying to SDL_SetVideoMode(),
-   use SDL_ListModes()[0] to determine the actual screen boundaries. */
+   use SDL_ListModes(NULL, 0)[0] to determine the actual screen boundaries. */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos);
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos);
 
@@ -98,6 +98,12 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardSize(void);
 
 /* Set a particular button to pass a mouse/multitouch events down to the application, by default all buttons block touch events */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonGenerateTouchEvents(int buttonId, int generateEvents);
+
+/* Configure a button to stay pressed after touch, and un-press after second touch, to emulate Ctrl/Alt/Shift keys  */
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonStayPressedAfterTouch(int buttonId, int stayPressed);
+
+/* Set screen keyboard transparency, 255 or SDL_ALPHA_OPAQUE is non-transparent, 0 or SDL_ALPHA_TRANSPARENT is transparent */
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardTransparency(int alpha);
 
 /* Show Android QWERTY keyboard, and pass entered text back to application as SDL keypress events,
    previousText is UTF-8 encoded, it may be NULL, only 256 first bytes will be used, and this call will not block */

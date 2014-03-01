@@ -28,7 +28,7 @@
 #include "SDL_joystick.h"
 #include "SDL_events.h"
 
-#define VIDEO_DEBUG 1
+//#define VIDEO_DEBUG 1
 
 enum ScreenZoom { ZOOM_NONE = 0, ZOOM_MAGNIFIER = 1 };
 
