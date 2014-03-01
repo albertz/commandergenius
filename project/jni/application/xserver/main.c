@@ -9,6 +9,7 @@
 #include <sys/un.h>
 #include <errno.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_screenkeyboard.h>
 #include <android/log.h>
 
 #include "gfx.h"
@@ -37,6 +38,8 @@ int main( int argc, char* argv[] )
 	enum { ARGNUM = 8 };
 	char * envp[] = { NULL };
 	int printHelp = 1;
+	int screenResOverride = 0;
+	int screenButtons = 0;
 	
 	int resolutionW = atoi(getenv("DISPLAY_RESOLUTION_WIDTH"));
 	int resolutionH = atoi(getenv("DISPLAY_RESOLUTION_HEIGHT"));
@@ -45,6 +48,10 @@ int main( int argc, char* argv[] )
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Actual video resolution %d/%dx%d/%d", resolutionW, displayW, resolutionH, displayH);
 	setupEnv();
+
+	SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, 0);
+	SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, 0);
+	SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, 0);
 
 	XSDL_initSDL();
 	
@@ -98,18 +105,26 @@ int main( int argc, char* argv[] )
 		break;
 	}
 
-	if( argc > 1 && strcmp(argv[1], "-nohelp") == 0 )
-	{
-		printHelp = 0;
-		argc--;
-		argv++;
-	}
-
 	while( argc > 1 )
 	{
 		if( argv[1][0] == ':')
 		{
 			strcpy(port, argv[1]);
+		}
+		else if( strcmp(argv[1], "-nohelp") == 0 )
+		{
+			printHelp = 0;
+		}
+		else if( strcmp(argv[1], "-screen") == 0 )
+		{
+			screenResOverride = 1;
+			argc--;
+			argv++;
+			strcpy(screenres, argv[1]);
+		}
+		else if( strcmp(argv[1], "-screenbuttons") == 0 )
+		{
+			screenButtons = 1;
 		}
 		else
 		{
@@ -124,7 +139,8 @@ int main( int argc, char* argv[] )
 
 	XSDL_deinitSDL();
 
-	sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, SDL_GetVideoInfo()->vfmt->BitsPerPixel );
+	if( !screenResOverride )
+		sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, SDL_GetVideoInfo()->vfmt->BitsPerPixel );
 
 	if( printHelp )
 	{
@@ -133,6 +149,30 @@ int main( int argc, char* argv[] )
 		args[argnum] = "-exec";
 		args[argnum+1] = clientcmd;
 		argnum += 2;
+	}
+
+	if( screenButtons )
+	{
+		SDL_Rect pos;
+		pos.x = 0;
+		pos.h = SDL_ListModes(NULL, 0)[0]->h / 10;
+		pos.y = SDL_ListModes(NULL, 0)[0]->h - pos.h;
+		pos.w = 40 * SDL_ListModes(NULL, 0)[0]->w / resolutionW;
+		SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, 1);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonStayPressedAfterTouch(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, 1);
+		pos.y -= pos.h;
+		SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, 1);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonStayPressedAfterTouch(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, 1);
+		pos.y -= pos.h;
+		SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, 1);
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &pos);
+		SDL_ANDROID_SetScreenKeyboardButtonStayPressedAfterTouch(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, 1);
+		SDL_ANDROID_SetScreenKeyboardTransparency(255); // opaque
 	}
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL video resolution %s, args:", screenres);

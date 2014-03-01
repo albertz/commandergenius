@@ -22,6 +22,10 @@ You will need both xcb-proto and python-xcbgen packages
 to have version 1.10-1, you may download newer packages
 from http://packages.ubuntu.com/ or https://www.debian.org/distrib/packages
 
+Copy images from directory project/jni/application/xserver-gimp/keyboard
+to project/themes/UltimateDroid, go to directory project/themes,
+and run script ./convert.sh
+
 Then run commands:
 
 git clone git@github.com:pelya/commandergenius.git sdl-android
