@@ -307,7 +307,7 @@ static void ProcessMultitouchGesture( int x, int y, int action, int pointerId )
 		multitouchGestureMiddleX = -1;
 		multitouchGestureMiddleY = -1;
 	}
-	else if( !hardwareMouseDetected )
+	else if( !hardwareMouseDetected && !(SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_MMASK) )
 	{
 		if( firstMousePointerId != pointerId )
 		{
