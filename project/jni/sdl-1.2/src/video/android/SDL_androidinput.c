@@ -1403,13 +1403,9 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 	joystick->nballs = 0;
 	if( joystick->index == JOY_TOUCHSCREEN )
 	{
-		joystick->naxes = 4; // Two on-screen joysticks (I'm planning to implement second joystick soon)
-		if(isMultitouchUsed)
-		{
-			joystick->naxes = 6 + MAX_MULTITOUCH_POINTERS; // Three joysticks plus touch pressure/size
-			joystick->nbuttons = MAX_MULTITOUCH_POINTERS;
-			joystick->nballs = MAX_MULTITOUCH_POINTERS;
-		}
+		joystick->naxes = 6 + MAX_MULTITOUCH_POINTERS; // Three joysticks plus touch pressure/size
+		joystick->nbuttons = MAX_MULTITOUCH_POINTERS;
+		joystick->nballs = MAX_MULTITOUCH_POINTERS;
 	}
 	if( joystick->index == JOY_ACCELGYRO )
 	{
