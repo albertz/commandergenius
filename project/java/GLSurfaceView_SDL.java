@@ -1055,12 +1055,14 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                         if( Globals.NonBlockingSwapBuffers )
                             return false;
                     }
-                    while (needToWait()) {
-                        //Log.v("SDL", "GLSurfaceView_SDL::run(): paused");
-                        try {
-                            wait(500);
-                        } catch(Exception e) { }
-                    }
+                }
+                while (needToWait()) {
+                    //Log.v("SDL", "GLSurfaceView_SDL::run(): paused");
+                    try {
+                        wait(500);
+                    } catch(Exception e) { }
+                }
+                synchronized (this) {
                     if (mDone) {
                         return false;
                     }
@@ -1108,16 +1110,21 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 return true; // We're in lockscreen - sleep until user unlocks the device
             }
 
-            if (mDone) {
-                return false;
-            }
+            synchronized (this) {
+                if (mDone) {
+                    return false;
+                }
 
-            if (mPaused || (! mHasSurface)) {
-                return true;
-            }
+                if ( Globals.HorizontalOrientation != (mWidth > mHeight) )
+                    return true; // Wait until screen orientation changes
 
-            if ((mWidth > 0) && (mHeight > 0) && (mRequestRender || (mRenderMode == RENDERMODE_CONTINUOUSLY))) {
-                return false;
+                if (mPaused || (! mHasSurface)) {
+                    return true;
+                }
+
+                if ((mWidth > 0) && (mHeight > 0) && (mRequestRender || (mRenderMode == RENDERMODE_CONTINUOUSLY))) {
+                    return false;
+                }
             }
 
             return true;
@@ -1178,6 +1185,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
         }
 
         public void onWindowResize(int w, int h) {
+            Log.v("SDL", "GLSurfaceView_SDL::onWindowResize(): " + w + "x" + h);
             synchronized (this) {
                 mWidth = w;
                 mHeight = h;
