@@ -589,7 +589,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 
 	// TODO: screenRatio is not used yet
 	enum { STANDARD_PHONE_SCREEN_HEIGHT = 70 }; // And by "standard phone", I mean my own.
-	float screenRatio = atoi(getenv("DISPLAY_HEIGHT_MM")) / STANDARD_PHONE_SCREEN_HEIGHT;
+	float screenRatio = getenv("DISPLAY_HEIGHT_MM") ? atoi(getenv("DISPLAY_HEIGHT_MM")) / STANDARD_PHONE_SCREEN_HEIGHT : 1.0f;
 	if( screenRatio < STANDARD_PHONE_SCREEN_HEIGHT )
 		screenRatio = STANDARD_PHONE_SCREEN_HEIGHT;
 

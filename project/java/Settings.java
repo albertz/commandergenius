@@ -506,6 +506,7 @@ class Settings
 
 	static void Apply(MainActivity p)
 	{
+		setEnvVars();
 		nativeSetVideoDepth(Globals.VideoDepthBpp, Globals.NeedGles2 ? 1 : 0);
 		if(Globals.VideoLinearFilter)
 			nativeSetVideoLinearFilter();
@@ -569,7 +570,10 @@ class Settings
 		if( Globals.TouchscreenCalibration[2] > Globals.TouchscreenCalibration[0] )
 			nativeSetTouchscreenCalibration(Globals.TouchscreenCalibration[0], Globals.TouchscreenCalibration[1],
 				Globals.TouchscreenCalibration[2], Globals.TouchscreenCalibration[3]);
+	}
 
+	static void setEnvVars()
+	{
 		String lang = new String(Locale.getDefault().getLanguage());
 		if( Locale.getDefault().getCountry().length() > 0 )
 			lang = lang + "_" + Locale.getDefault().getCountry();
