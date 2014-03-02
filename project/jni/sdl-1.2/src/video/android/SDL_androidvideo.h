@@ -88,8 +88,7 @@ extern SDL_Window * ANDROID_CurrentWindow;
 // Exports from SDL_androidinput.c - SDL_androidinput.h is too encumbered
 enum { MAX_MULTITOUCH_POINTERS = 16 };
 extern void ANDROID_InitOSKeymap();
-extern int SDL_ANDROID_isJoystickUsed;
-extern int SDL_ANDROID_isSecondJoystickUsed;
+extern int SDL_ANDROID_joysticksAmount;
 // Events have to be sent only from main thread from PumpEvents(), so we'll buffer them here
 extern void SDL_ANDROID_PumpEvents();
 extern void SDL_ANDROID_SetHoverDeadzone();

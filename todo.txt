@@ -1,6 +1,8 @@
 TODO, which will get actually done
 ==================================
 
+- TeeWorlds: after exiting phone lock screen the video is screwed up.
+
 - TeeWorlds: infinite loop while trying to enter chat text with gamepad.
 
 - TeeWorlds: navigate UI with gamepad.

@@ -386,6 +386,13 @@ class SettingsMenuKeyboard extends SettingsMenu
 				defaults = Arrays.copyOf(defaults, defaults.length + 1);
 				defaults[defaults.length - 1] = true;
 			}
+			if( Globals.AppUsesThirdJoystick )
+			{
+				items = Arrays.copyOf(items, items.length + 1);
+				items[items.length - 1] = p.getResources().getString(R.string.remap_screenkb_joystick) + " 3";
+				defaults = Arrays.copyOf(defaults, defaults.length + 1);
+				defaults[defaults.length - 1] = true;
+			}
 
 			for( int i = 0; i < Math.min(6, Globals.AppTouchscreenKeyboardKeysNames.length); i++ )
 				items[i+2] = items[i+2] + " - " + Globals.AppTouchscreenKeyboardKeysNames[i].replace("_", " ");
@@ -633,6 +640,7 @@ class SettingsMenuKeyboard extends SettingsMenu
 				R.drawable.b4,
 				R.drawable.b5,
 				R.drawable.b6,
+				R.drawable.dpad,
 				R.drawable.dpad
 			};
 			int oldX = 0, oldY = 0;
@@ -661,6 +669,7 @@ class SettingsMenuKeyboard extends SettingsMenu
 						R.drawable.sun_b4,
 						R.drawable.sun_b5,
 						R.drawable.sun_b6,
+						R.drawable.sun_dpad,
 						R.drawable.sun_dpad
 					};
 				}
@@ -756,6 +765,8 @@ class SettingsMenuKeyboard extends SettingsMenu
 					buttonText = "Text input";
 				if( i == 8 )
 					buttonText = "Joystick 2";
+				if( i == 9 )
+					buttonText = "Joystick 3";
 				p.setText(p.getResources().getString(R.string.screenkb_custom_layout_help) + "\n" + buttonText);
 			}
 

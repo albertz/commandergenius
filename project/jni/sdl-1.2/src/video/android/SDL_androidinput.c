@@ -80,11 +80,10 @@ int SDL_ANDROID_moveMouseWithKbAccelX = 0, SDL_ANDROID_moveMouseWithKbAccelY = 0
 int SDL_ANDROID_moveMouseWithKbAccelUpdateNeeded = 0;
 static int maxForce = 0;
 static int maxRadius = 0;
-int SDL_ANDROID_isJoystickUsed = 0;
-int SDL_ANDROID_isSecondJoystickUsed = 0;
+int SDL_ANDROID_joysticksAmount = 0;
 static int SDL_ANDROID_isAccelerometerUsed = 0;
 static int isMultitouchUsed = 0;
-SDL_Joystick *SDL_ANDROID_CurrentJoysticks[MAX_MULTITOUCH_POINTERS+1];
+SDL_Joystick *SDL_ANDROID_CurrentJoysticks[JOY_GAMEPAD4+1];
 static int TrackballDampening = 0; // in milliseconds
 static Uint32 lastTrackballAction = 0;
 enum { TOUCH_PTR_UP = 0, TOUCH_PTR_MOUSE = 1, TOUCH_PTR_SCREENKB = 2 };
@@ -192,8 +191,8 @@ static int BumpPointerId( int pointerId )
 {
 	if(pointerId < 0)
 		pointerId = 0;
-	if(pointerId > MAX_MULTITOUCH_POINTERS)
-		pointerId = MAX_MULTITOUCH_POINTERS;
+	if(pointerId >= MAX_MULTITOUCH_POINTERS)
+		pointerId = MAX_MULTITOUCH_POINTERS-1;
 	return pointerId;
 }
 
@@ -924,7 +923,7 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 }
 
 
-JNIEXPORT void JNICALL 
+JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(AccelerometerReader_nativeGyroscope) ( JNIEnv*  env, jobject thiz, jfloat X, jfloat Y, jfloat Z )
 {
 #if SDL_VERSION_ATLEAST(1,3,0)
@@ -1148,10 +1147,9 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMouseWheel) (JNIEnv* env, jobject thiz,
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetJoystickUsed) (JNIEnv* env, jobject thiz, jint first, jint second)
+JAVA_EXPORT_NAME(Settings_nativeSetJoystickUsed) (JNIEnv* env, jobject thiz, jint amount)
 {
-	SDL_ANDROID_isJoystickUsed = first;
-	SDL_ANDROID_isSecondJoystickUsed = second;
+	SDL_ANDROID_joysticksAmount = amount;
 }
 
 JNIEXPORT void JNICALL 
@@ -1408,7 +1406,7 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 		joystick->naxes = 4; // Two on-screen joysticks (I'm planning to implement second joystick soon)
 		if(isMultitouchUsed)
 		{
-			joystick->naxes = 4 + MAX_MULTITOUCH_POINTERS; // Joystick plus accelerometer, plus touch pressure/size
+			joystick->naxes = 6 + MAX_MULTITOUCH_POINTERS; // Three joysticks plus touch pressure/size
 			joystick->nbuttons = MAX_MULTITOUCH_POINTERS;
 			joystick->nballs = MAX_MULTITOUCH_POINTERS;
 		}
@@ -1516,44 +1514,6 @@ JAVA_EXPORT_NAME(Settings_nativeSetKeymapKey) (JNIEnv* env, jobject thiz, jint j
 	if( javakey < 0 || javakey > KEYCODE_LAST )
 		return;
 	SDL_android_keymap[javakey] = key;
-}
-
-JNIEXPORT jint JNICALL
-JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyScreenKb) (JNIEnv* env, jobject thiz, jint keynum)
-{
-	if( keynum < 0 || keynum > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 + 4 )
-		return SDL_KEY(UNKNOWN);
-		
-	if( keynum <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
-		return SDL_ANDROID_GetScreenKeyboardButtonKey(keynum + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0);
-
-	return SDL_KEY(UNKNOWN);
-}
-
-JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetKeymapKeyScreenKb) (JNIEnv* env, jobject thiz, jint keynum, jint key)
-{
-	if( keynum < 0 || keynum > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 + 4 )
-		return;
-		
-	if( keynum <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
-		SDL_ANDROID_SetScreenKeyboardButtonKey(keynum + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, key);
-}
-
-JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyUsed) (JNIEnv*  env, jobject thiz, jint keynum, jint used)
-{
-	SDL_Rect rect = {0, 0, 0, 0};
-	int key = -1;
-	if( keynum == 0 )
-		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD;
-	if( keynum == 1 )
-		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT;
-	if( keynum - 2 >= 0 && keynum - 2 <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
-		key = keynum - 2 + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
-		
-	if( key >= 0 && !used )
-		SDL_ANDROID_SetScreenKeyboardButtonPos(key, &rect);
 }
 
 JNIEXPORT jint JNICALL

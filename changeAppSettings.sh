@@ -887,6 +887,9 @@ echo >> AndroidAppSettings.cfg
 echo "# Application uses second on-screen joystick, as SDL joystick 0 axes 2-3 (y)/(n)" >> AndroidAppSettings.cfg
 echo AppUsesSecondJoystick=$AppUsesSecondJoystick >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Application uses third on-screen joystick, as SDL joystick 0 axes 20-21 (y)/(n)" >> AndroidAppSettings.cfg
+echo AppUsesThirdJoystick=$AppUsesThirdJoystick >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Application uses accelerometer (y) or (n), the accelerometer will be used as joystick 1 axes 0-1 and 5-7" >> AndroidAppSettings.cfg
 echo AppUsesAccelerometer=$AppUsesAccelerometer >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
@@ -1184,6 +1187,12 @@ else
 	AppUsesSecondJoystick=false
 fi
 
+if [ "$AppUsesThirdJoystick" = "y" ] ; then
+	AppUsesThirdJoystick=true
+else
+	AppUsesThirdJoystick=false
+fi
+
 if [ "$AppUsesAccelerometer" = "y" ] ; then
 	AppUsesAccelerometer=true
 else
@@ -1391,6 +1400,7 @@ $SEDI "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean App
 $SEDI "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesSecondJoystick = .*;/public static boolean AppUsesSecondJoystick = $AppUsesSecondJoystick;/" project/src/Globals.java
+$SEDI "s/public static boolean AppUsesThirdJoystick = .*;/public static boolean AppUsesThirdJoystick = $AppUsesThirdJoystick;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesAccelerometer = .*;/public static boolean AppUsesAccelerometer = $AppUsesAccelerometer;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesGyroscope = .*;/public static boolean AppUsesGyroscope = $AppUsesGyroscope;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" project/src/Globals.java

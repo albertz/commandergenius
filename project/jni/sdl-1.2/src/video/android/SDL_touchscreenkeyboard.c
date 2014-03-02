@@ -44,7 +44,7 @@
 
 // TODO: this code is a HUGE MESS
 
-enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_JOYSTICKS = 2, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, BUTTON_ARROWS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD } ; // Max amount of custom buttons
+enum { MAX_BUTTONS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM-1, MAX_JOYSTICKS = 3, MAX_BUTTONS_AUTOFIRE = 2, BUTTON_TEXT_INPUT = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, BUTTON_ARROWS = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD } ; // Max amount of custom buttons
 
 int SDL_ANDROID_isTouchscreenKeyboardUsed = 0;
 static short touchscreenKeyboardTheme = 0;
@@ -245,7 +245,7 @@ static void drawTouchscreenKeyboardLegacy()
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
 						( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
-	if( blendFactor == 0 || SDL_ANDROID_isJoystickUsed )
+	if( blendFactor == 0 || SDL_ANDROID_joysticksAmount >= 1 )
 		drawCharTex( &arrowImages[0], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
 	else
 	{
@@ -258,8 +258,10 @@ static void drawTouchscreenKeyboardLegacy()
 		if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
 			drawCharTex( &arrowImages[4], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
 	}
-	if( SDL_ANDROID_isSecondJoystickUsed )
+	if( SDL_ANDROID_joysticksAmount >= 2 )
 		drawCharTex( &arrowImages[0], NULL, &arrowsDraw[1], 1.0f, 1.0f, 1.0f, transparency );
+	if( SDL_ANDROID_joysticksAmount >= 3 )
+		drawCharTex( &arrowImages[0], NULL, &arrowsDraw[2], 1.0f, 1.0f, 1.0f, transparency );
 
 	for( i = 0; i < MAX_BUTTONS; i++ )
 	{
@@ -275,7 +277,7 @@ static void drawTouchscreenKeyboardSun()
 {
 	int i;
 
-	for( i = 0; i <= SDL_ANDROID_isSecondJoystickUsed; i++ )
+	for( i = 0; i < SDL_ANDROID_joysticksAmount || (i == 0 && arrowsDraw[0].w > 0); i++ )
 	{
 		drawCharTex( &arrowImages[0], NULL, &arrowsDraw[i], 1.0f, 1.0f, 1.0f, transparency );
 		if(pointerInButtonRect[BUTTON_ARROWS+i] != -1)
@@ -357,6 +359,9 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 {
 	int i, j;
 	unsigned processed = 0;
+	int joyAmount = SDL_ANDROID_joysticksAmount;
+	if( joyAmount == 0 && arrows[0].w > 0 )
+		joyAmount = 1;
 	
 	if( !touchscreenKeyboardShown )
 		return 0;
@@ -364,7 +369,7 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 	if( action == MOUSE_DOWN )
 	{
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "touch %03dx%03d ptr %d action %d", x, y, pointerId, action);
-		for( j = 0; j <= SDL_ANDROID_isSecondJoystickUsed; j++ )
+		for( j = 0; j < joyAmount; j++ )
 		{
 			if( InsideRect( &arrows[j], x, y ) )
 			{
@@ -374,7 +379,7 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					pointerInButtonRect[BUTTON_ARROWS+j] = pointerId;
 					joystickTouchPoints[0+j*2] = x;
 					joystickTouchPoints[1+j*2] = y;
-					if( SDL_ANDROID_isJoystickUsed )
+					if( SDL_ANDROID_joysticksAmount > 0 )
 					{
 						int xx = (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w;
 						if( xx == 0 ) // Do not allow (0,0) coordinate, when the user touches the joystick
@@ -423,13 +428,13 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 	if( action == MOUSE_UP )
 	{
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "touch %03dx%03d ptr %d action %d", x, y, pointerId, action);
-		for( j = 0; j <= SDL_ANDROID_isSecondJoystickUsed; j++ )
+		for( j = 0; j < joyAmount; j++ )
 		{
 			if( pointerInButtonRect[BUTTON_ARROWS+j] == pointerId )
 			{
 				processed |= 1<<(BUTTON_ARROWS+j);
 				pointerInButtonRect[BUTTON_ARROWS+j] = -1;
-				if( SDL_ANDROID_isJoystickUsed )
+				if( SDL_ANDROID_joysticksAmount > 0 )
 				{
 					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0+j*2, 0 );
 					SDL_ANDROID_MainThreadPushJoystickAxis(0, 1+j*2, 0 );
@@ -477,7 +482,7 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 		
 		// Process cases when pointer leaves button area
 		// TODO: huge code size, split it or somehow make it more readable
-		for( j = 0; j <= SDL_ANDROID_isSecondJoystickUsed; j++ )
+		for( j = 0; j < joyAmount; j++ )
 		{
 			if( pointerInButtonRect[BUTTON_ARROWS+j] == pointerId )
 			{
@@ -485,7 +490,7 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 				if( ! InsideRect( &arrowsExtended[j], x, y ) )
 				{
 					pointerInButtonRect[BUTTON_ARROWS+j] = -1;
-					if( SDL_ANDROID_isJoystickUsed )
+					if( SDL_ANDROID_joysticksAmount > 0 )
 					{
 						SDL_ANDROID_MainThreadPushJoystickAxis(0, 0+j*2, 0 );
 						SDL_ANDROID_MainThreadPushJoystickAxis(0, 1+j*2, 0 );
@@ -503,7 +508,7 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 				{
 					joystickTouchPoints[0+j*2] = x;
 					joystickTouchPoints[1+j*2] = y;
-					if( SDL_ANDROID_isJoystickUsed )
+					if( SDL_ANDROID_joysticksAmount > 0 )
 					{
 						SDL_ANDROID_MainThreadPushJoystickAxis(0, 0+j*2, (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w );
 						SDL_ANDROID_MainThreadPushJoystickAxis(0, 1+j*2, (y - arrows[j].y - arrows[j].h / 2) * 65534 / arrows[j].h );
@@ -617,6 +622,16 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	arrowsExtended[1].x = arrows[1].x + arrows[1].w / 2 - arrowsExtended[1].w / 2;
 	arrowsExtended[1].y = arrows[1].y + arrows[1].h / 2 - arrowsExtended[1].h / 2;
 
+	arrows[2].w = arrows[1].w;
+	arrows[2].h = arrows[1].h;
+	arrows[2].x = arrows[1].x;
+	arrows[2].y = arrows[1].y - arrows[1].h;
+
+	arrowsExtended[2].w = arrows[2].w * 2;
+	arrowsExtended[2].h = arrows[2].h * 2;
+	arrowsExtended[2].x = arrows[2].x + arrows[2].w / 2 - arrowsExtended[2].w / 2;
+	arrowsExtended[2].y = arrows[2].y + arrows[2].h / 2 - arrowsExtended[2].h / 2;
+
 	// Buttons to the lower-right in 2 rows
 	for(i = 0; i < 3; i++)
 	for(ii = 0; ii < 2; ii++)
@@ -629,7 +644,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		buttons[iii].x = SDL_ANDROID_sRealWindowWidth - buttons[iii].w * (ii + 1);
 		buttons[iii].y = SDL_ANDROID_sRealWindowHeight - buttons[iii].h * (i + 1);
 	}
-	if( SDL_ANDROID_isSecondJoystickUsed )
+	if( SDL_ANDROID_joysticksAmount >= 2 )
 	{
 		// Move all buttons to center, 5-th and 6-th button will be misplaced, but we don't care much about that.
 		ii = SDL_ANDROID_sRealWindowWidth / 2 - buttons[0].w;
@@ -823,13 +838,56 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboardButtons) ( JNIEnv*  env, jobj
 	(*env)->ReleaseByteArrayElements(env, charBufJava, (jbyte *)charBuf, 0);
 }
 
+JNIEXPORT jint JNICALL
+JAVA_EXPORT_NAME(Settings_nativeGetKeymapKeyScreenKb) (JNIEnv* env, jobject thiz, jint keynum)
+{
+	if( keynum < 0 || keynum > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 + 4 )
+		return SDL_KEY(UNKNOWN);
+		
+	if( keynum <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
+		return SDL_ANDROID_GetScreenKeyboardButtonKey(keynum + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0);
+
+	return SDL_KEY(UNKNOWN);
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetKeymapKeyScreenKb) (JNIEnv* env, jobject thiz, jint keynum, jint key)
+{
+	if( keynum < 0 || keynum > SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 + 4 )
+		return;
+		
+	if( keynum <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
+		SDL_ANDROID_SetScreenKeyboardButtonKey(keynum + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, key);
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyUsed) (JNIEnv*  env, jobject thiz, jint keynum, jint used)
+{
+	SDL_Rect rect = {0, 0, 0, 0};
+	int key = -1;
+	if( keynum == 0 )
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD;
+	if( keynum == 1 )
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT;
+	if( keynum - 2 >= 0 && keynum - 2 <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_5 - SDL_ANDROID_SCREENKEYBOARD_BUTTON_0 )
+		key = keynum - 2 + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
+
+	if( keynum == SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD2 )
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD2;
+	if( keynum == SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD3 )
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD3;
+
+	if( key >= 0 && !used )
+		SDL_ANDROID_SetScreenKeyboardButtonPos(key, &rect);
+}
+
 
 int SDL_ANDROID_SetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 {
 	if( buttonId < 0 || buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM || ! pos )
 		return 0;
 	
-	if( buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD && buttonId <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD2 )
+	if( buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD && buttonId <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD3 )
 	{
 		int i = buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD;
 		arrows[i] = *pos;
@@ -853,7 +911,7 @@ int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonImagePos(int buttonId, SDL_Rect *
 	if( buttonId < 0 || buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM || ! pos )
 		return 0;
 
-	if( buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD && buttonId <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD2 )
+	if( buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD && buttonId <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD3 )
 		arrowsDraw[buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD] = *pos;
 	else
 		buttonsDraw[buttonId] = *pos;
@@ -866,7 +924,7 @@ int SDL_ANDROID_GetScreenKeyboardButtonPos(int buttonId, SDL_Rect * pos)
 	if( buttonId < 0 || buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM || ! pos )
 		return 0;
 	
-	if( buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD && buttonId <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD2 )
+	if( buttonId >= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD && buttonId <= SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD3 )
 	{
 		*pos = arrows[buttonId - SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD];
 	}
@@ -1016,6 +1074,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetScreenKbKeyLayout) (JNIEnv* env, jobject thiz
 		key = keynum - 2 + SDL_ANDROID_SCREENKEYBOARD_BUTTON_0;
 	if( keynum == SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD2 ) // This one is consistent by chance
 		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD2;
+	if( keynum == SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD3 ) // This one is consistent by chance
+		key = SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD3;
 
 	if( key >= 0 )
 	{

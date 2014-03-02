@@ -216,6 +216,8 @@ class Settings
 			Globals.ScreenKbControlsShown[i] = ( i - 2 < Globals.AppTouchscreenKeyboardKeysAmount );
 		if( Globals.AppUsesSecondJoystick )
 			Globals.ScreenKbControlsShown[8] = true;
+		if( Globals.AppUsesThirdJoystick )
+			Globals.ScreenKbControlsShown[9] = true;
 		for( int i = 0; i < Globals.RemapMultitouchGestureKeycode.length; i++ )
 		{
 			int sdlKey = nativeGetKeymapKeyMultitouchGesture(i);
@@ -520,7 +522,7 @@ class Settings
 		if( Globals.PhoneHasTrackball )
 			nativeSetTrackballUsed();
 		applyMouseEmulationOptions();
-		nativeSetJoystickUsed(Globals.AppUsesJoystick ? 1 : 0, Globals.AppUsesSecondJoystick ? 1 : 0);
+		nativeSetJoystickUsed( Globals.AppUsesThirdJoystick ? 3 : (Globals.AppUsesSecondJoystick ? 2 : (Globals.AppUsesJoystick ? 1 : 0)) );
 		if( Globals.AppUsesAccelerometer )
 			nativeSetAccelerometerUsed();
 		if( Globals.AppUsesMultitouch )
@@ -769,7 +771,7 @@ class Settings
 													int relativeMovement, int relativeMovementSpeed,
 													int relativeMovementAccel, int showMouseCursor,
 													int HoverJitterFilter, int RightMouseButtonLongPress);
-	private static native void nativeSetJoystickUsed(int firstJoystickUsed, int secondJoystickUsed);
+	private static native void nativeSetJoystickUsed(int amount);
 	private static native void nativeSetAccelerometerUsed();
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
