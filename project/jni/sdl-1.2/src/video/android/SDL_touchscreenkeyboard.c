@@ -586,6 +586,13 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 	int nbuttons1row, nbuttons2row;
 	int _nbuttons = MAX_BUTTONS;
 	SDL_Rect * r;
+
+	// TODO: screenRatio is not used yet
+	enum { STANDARD_PHONE_SCREEN_HEIGHT = 70 }; // And by "standard phone", I mean my own.
+	float screenRatio = atoi(getenv("DISPLAY_HEIGHT_MM")) / STANDARD_PHONE_SCREEN_HEIGHT;
+	if( screenRatio < STANDARD_PHONE_SCREEN_HEIGHT )
+		screenRatio = STANDARD_PHONE_SCREEN_HEIGHT;
+
 	touchscreenKeyboardTheme = theme;
 	// TODO: works for horizontal screen orientation only!
 	buttonsize = size;

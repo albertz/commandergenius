@@ -1,8 +1,6 @@
 TODO, which will get actually done
 ==================================
 
-- TeeWorlds: after exiting phone lock screen the video is screwed up.
-
 - TeeWorlds: infinite loop while trying to enter chat text with gamepad.
 
 - TeeWorlds: navigate UI with gamepad.
@@ -14,5 +12,7 @@ TODO, which will get actually done
 - OpenArena: do not treat commands starting with / as chat text.
 
 - SDL: cloud save support.
+
+- SDL: resize default on-screen buttons for different screen sizes.
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
