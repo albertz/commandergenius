@@ -1398,6 +1398,7 @@ const char *SDL_SYS_JoystickName(int index)
 
 int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 {
+	joystick->naxes = 0;
 	joystick->nbuttons = 0;
 	joystick->nhats = 0;
 	joystick->nballs = 0;
@@ -1412,11 +1413,12 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 		joystick->naxes = 8; // Normalized accelerometer = axes 0-1, gyroscope = axes 2-4, raw accelerometer = axes 5-7
 		SDL_ANDROID_CallJavaStartAccelerometerGyroscope(1);
 	}
-	if( joystick->index >= JOY_GAMEPAD1 || joystick->index <= JOY_GAMEPAD4 )
+	if( joystick->index >= JOY_GAMEPAD1 && joystick->index <= JOY_GAMEPAD4 )
 	{
 		joystick->naxes = 8; // Two analog stick + two trigger buttons + Ouya touchpad
 	}
 	SDL_ANDROID_CurrentJoysticks[joystick->index] = joystick;
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Opened joystick %d axes %d buttons %d balls %d", joystick->index, joystick->naxes, joystick->nbuttons, joystick->nballs);
 	return(0);
 }
 

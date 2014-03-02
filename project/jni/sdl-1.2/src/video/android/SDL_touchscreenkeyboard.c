@@ -384,8 +384,9 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 						int xx = (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w;
 						if( xx == 0 ) // Do not allow (0,0) coordinate, when the user touches the joystick
 							xx = 1;
-						SDL_ANDROID_MainThreadPushJoystickAxis(0, 0+j*2, xx );
-						SDL_ANDROID_MainThreadPushJoystickAxis(0, 1+j*2, (y - arrows[j].y - arrows[j].h / 2) * 65534 / arrows[j].h );
+						int axis = j < 2 ? j*2 : MAX_MULTITOUCH_POINTERS + 4;
+						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis, xx );
+						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis + 1, (y - arrows[j].y - arrows[j].h / 2) * 65534 / arrows[j].h );
 					}
 					else
 					{
@@ -436,8 +437,9 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 				pointerInButtonRect[BUTTON_ARROWS+j] = -1;
 				if( SDL_ANDROID_joysticksAmount > 0 )
 				{
-					SDL_ANDROID_MainThreadPushJoystickAxis(0, 0+j*2, 0 );
-					SDL_ANDROID_MainThreadPushJoystickAxis(0, 1+j*2, 0 );
+					int axis = j < 2 ? j*2 : MAX_MULTITOUCH_POINTERS + 4;
+					SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis, 0 );
+					SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis + 1, 0 );
 				}
 				else
 				{
@@ -492,8 +494,9 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					pointerInButtonRect[BUTTON_ARROWS+j] = -1;
 					if( SDL_ANDROID_joysticksAmount > 0 )
 					{
-						SDL_ANDROID_MainThreadPushJoystickAxis(0, 0+j*2, 0 );
-						SDL_ANDROID_MainThreadPushJoystickAxis(0, 1+j*2, 0 );
+						int axis = j < 2 ? j*2 : MAX_MULTITOUCH_POINTERS + 4;
+						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis, 0 );
+						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis + 1, 0 );
 					}
 					else
 					{
@@ -510,8 +513,9 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					joystickTouchPoints[1+j*2] = y;
 					if( SDL_ANDROID_joysticksAmount > 0 )
 					{
-						SDL_ANDROID_MainThreadPushJoystickAxis(0, 0+j*2, (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w );
-						SDL_ANDROID_MainThreadPushJoystickAxis(0, 1+j*2, (y - arrows[j].y - arrows[j].h / 2) * 65534 / arrows[j].h );
+						int axis = j < 2 ? j*2 : MAX_MULTITOUCH_POINTERS + 4;
+						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis, (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w );
+						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis + 1, (y - arrows[j].y - arrows[j].h / 2) * 65534 / arrows[j].h );
 					}
 					else
 					{
