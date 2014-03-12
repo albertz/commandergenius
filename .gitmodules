@@ -49,3 +49,6 @@
 [submodule "project/jni/iconv/src"]
 	path = project/jni/iconv/src
 	url = git@github.com:pelya/libiconv-libicu-android.git
+[submodule "project/jni/icuuc/src"]
+	path = project/jni/icuuc/src
+	url = git@github.com:pelya/libiconv-libicu-android.git
