@@ -46,3 +46,6 @@
 [submodule "project/jni/application/xserver-gimp/xserver"]
 	path = project/jni/application/xserver-gimp/xserver
 	url = git@github.com:pelya/xserver.git
+[submodule "project/jni/iconv/src"]
+	path = project/jni/iconv/src
+	url = git@github.com:pelya/libiconv-libicu-android.git
