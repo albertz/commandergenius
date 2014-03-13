@@ -6,6 +6,10 @@ LOCAL_MODULE := $(notdir $(LOCAL_PATH))
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 
-LOCAL_SRC_FILES := lib/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
+LOCAL_SRC_FILES := lib/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
 
-include $(PREBUILT_SHARED_LIBRARY)
+# NDK doesn't add the explicit dependency
+obj/local/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a: $(LOCAL_PATH)/$(LOCAL_SRC_FILES)
+	cp -f $< $@
+
+include $(PREBUILT_STATIC_LIBRARY)

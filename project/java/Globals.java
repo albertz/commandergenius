@@ -129,5 +129,7 @@ class Globals
 	public static boolean BrokenLibCMessageShown = false;
 	// Gyroscope calibration
 	public static float gyro_x1, gyro_x2, gyro_xc, gyro_y1, gyro_y2, gyro_yc, gyro_z1, gyro_z2, gyro_zc;
+
 	public static boolean OuyaEmulation = false; // For debugging
+	public static boolean RedirectStdout = false; // For debugging
 }

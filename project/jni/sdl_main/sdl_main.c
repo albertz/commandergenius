@@ -44,6 +44,12 @@ jobject SDL_ANDROID_JniVideoObject()
 	return static_thiz;
 }
 
+void redirectStdout()
+{
+	freopen( "stdout.log", "w", stdout );
+	dup2( fileno(stdout), fileno(stderr) );
+}
+
 #if SDL_VERSION_ATLEAST(1,3,0)
 #else
 extern void SDL_ANDROID_MultiThreadedVideoLoopInit();
@@ -86,6 +92,9 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	chdir(curdir);
 	setenv("HOME", curdir, 1);
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Changing curdir to \"%s\"", curdir);
+
+	if( waitForDebugger )
+		redirectStdout();
 
 	jstr = (*env)->GetStringUTFChars(env, cmdline, NULL);
 
