@@ -30,6 +30,50 @@
  #if defined(ENABLE_NETWORK)
  	if (_debug_socket != INVALID_SOCKET) {
  		char buf2[1024 + 32];
+--- src/fontdetection.cpp	2014-02-25 11:17:24.000000000 +0200
++++ src/fontdetection.cpp	2014-03-13 23:49:24.456780663 +0200
+@@ -626,7 +626,7 @@
+ 	if (split != NULL) *split = '\0';
+ 
+ 	/* First create a pattern to match the wanted language. */
+-	FcPattern *pat = FcNameParse((FcChar8*)lang);
++	FcPattern *pat = FcNameParse((FcChar8*)"" /*lang*/);
+ 	/* We only want to know the filename. */
+ 	FcObjectSet *os = FcObjectSetBuild(FC_FILE, FC_SPACING, FC_SLANT, FC_WEIGHT, NULL);
+ 	/* Get the list of filenames matching the wanted language. */
+@@ -639,6 +639,7 @@
+ 	if (fs != NULL) {
+ 		int best_weight = -1;
+ 		const char *best_font = NULL;
++		int best_missing_glypths = 65536;
+ 
+ 		for (int i = 0; i < fs->nfont; i++) {
+ 			FcPattern *font = fs->fonts[i];
+@@ -664,12 +665,13 @@
+ 
+ 			callback->SetFontNames(settings, (const char*)file);
+ 
+-			bool missing = callback->FindMissingGlyphs(NULL);
+-			DEBUG(freetype, 1, "Font \"%s\" misses%s glyphs", file, missing ? "" : " no");
++			int missing = callback->FindMissingGlyphs(NULL);
++			DEBUG(freetype, 1, "Font \"%s\" misses %d glyphs for lang %s", file, missing, lang);
+ 
+-			if (!missing) {
++			if (missing < best_missing_glypths) {
+ 				best_weight = value;
+ 				best_font   = (const char *)file;
++				best_missing_glypths = missing;
+ 			}
+ 		}
+ 
+@@ -677,6 +679,7 @@
+ 			ret = true;
+ 			callback->SetFontNames(settings, best_font);
+ 			InitFreeType(callback->Monospace());
++			DEBUG(freetype, 1, "Selected font %s for lang %s", best_font, lang);
+ 		}
+ 
+ 		/* Clean up the list of filenames. */
 --- src/music/libtimidity.cpp	2014-02-25 11:17:00.000000000 +0200
 +++ src/music/libtimidity.cpp	2014-03-13 22:51:41.711016587 +0200
 @@ -13,6 +13,7 @@
@@ -235,6 +279,50 @@
  }
  
  const char *SoundDriver_SDL::Start(const char * const *parm)
+--- src/strings.cpp	2014-02-25 11:17:24.000000000 +0200
++++ src/strings.cpp	2014-03-13 23:44:07.197919943 +0200
+@@ -2005,7 +2005,7 @@
+  * @return If glyphs are missing, return \c true, else return \c false.
+  * @post If \c true is returned and str is not NULL, *str points to a string that is found to contain at least one missing glyph.
+  */
+-bool MissingGlyphSearcher::FindMissingGlyphs(const char **str)
++int MissingGlyphSearcher::FindMissingGlyphs(const char **str)
+ {
+ 	InitFreeType(this->Monospace());
+ 	const Sprite *question_mark[FS_END];
+@@ -2015,6 +2015,7 @@
+ 	}
+ 
+ 	this->Reset();
++	int missing = 0;
+ 	for (const char *text = this->NextString(); text != NULL; text = this->NextString()) {
+ 		FontSize size = this->DefaultSize();
+ 		if (str != NULL) *str = text;
+@@ -2025,11 +2026,11 @@
+ 				size = FS_LARGE;
+ 			} else if (!IsInsideMM(c, SCC_SPRITE_START, SCC_SPRITE_END) && IsPrintable(c) && !IsTextDirectionChar(c) && c != '?' && GetGlyph(size, c) == question_mark[size]) {
+ 				/* The character is printable, but not in the normal font. This is the case we were testing for. */
+-				return true;
++				missing++;
+ 			}
+ 		}
+ 	}
+-	return false;
++	return missing;
+ }
+ 
+ /** Helper for searching through the language pack. */
+--- src/strings_func.h	2014-02-25 11:17:24.000000000 +0200
++++ src/strings_func.h	2014-03-13 23:44:13.558298069 +0200
+@@ -235,7 +235,7 @@
+ 	 */
+ 	virtual void SetFontNames(struct FreeTypeSettings *settings, const char *font_name) = 0;
+ 
+-	bool FindMissingGlyphs(const char **str);
++	int FindMissingGlyphs(const char **str);
+ };
+ 
+ void CheckForMissingGlyphs(bool base_font = true, MissingGlyphSearcher *search = NULL);
 --- src/video/sdl_v.cpp	2014-02-25 11:16:44.000000000 +0200
 +++ src/video/sdl_v.cpp	2014-03-13 22:51:42.431059430 +0200
 @@ -25,6 +25,9 @@

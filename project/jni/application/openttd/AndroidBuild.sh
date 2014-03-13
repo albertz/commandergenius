@@ -9,7 +9,7 @@ if [ \! -d openttd-$VER-$1 ] ; then
 	tar xvzf openttd-$VER-source.tar.gz
 	cp -a -f openttd-$VER openttd-$VER-orig
 	mv -f openttd-$VER openttd-$VER-$1
-	patch -p 0 -d openttd-$VER-$1 < openttd-trunk-android.patch && patch -p 0 -d openttd-$VER-$1 < findversion.sh.patch || exit 1
+	patch -p 0 -d openttd-$VER-$1 < openttd-trunk-android.patch || exit 1
 fi
 
 if [ \! -f openttd-$VER-$1/objs/lang/english.lng ] ; then
