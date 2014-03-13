@@ -59,9 +59,9 @@ LOCAL_LDFLAGS += $(APPLICATION_ADDITIONAL_LDFLAGS)
 
 LOCAL_CPP_EXTENSION := .cpp .cxx .cc
 
-SDL_APP_LIB_DEPENDS := $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg
-SDL_APP_LIB_DEPENDS += $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), obj/local/$(TARGET_ARCH_ABI)/lib$(LIB).so)
-SDL_APP_LIB_DEPENDS += $(foreach LIB, $(LOCAL_STATIC_LIBRARIES), obj/local/$(TARGET_ARCH_ABI)/lib$(LIB).a)
+SDL_APP_LIB_DEPENDS-$(TARGET_ARCH_ABI) := $(LOCAL_PATH)/src/AndroidBuild.sh $(LOCAL_PATH)/src/AndroidAppSettings.cfg
+SDL_APP_LIB_DEPENDS-$(TARGET_ARCH_ABI) += $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), obj/local/$(TARGET_ARCH_ABI)/lib$(LIB).so)
+SDL_APP_LIB_DEPENDS-$(TARGET_ARCH_ABI) += $(foreach LIB, $(LOCAL_STATIC_LIBRARIES), obj/local/$(TARGET_ARCH_ABI)/lib$(LIB).a)
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -84,26 +84,26 @@ $(shell cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_UNLOCK))
 
 obj/local/armeabi/libapplication.so: $(LOCAL_PATH)/src/libapplication-armeabi.so
 
-$(LOCAL_PATH)/src/libapplication-armeabi.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
+$(LOCAL_PATH)/src/libapplication-armeabi.so: $(SDL_APP_LIB_DEPENDS-armeabi) OVERRIDE_CUSTOM_LIB
 	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
 	./AndroidBuild.sh armeabi arm-linux-androideabi && $(PARALLEL_UNLOCK) && \
 	{ [ -e libapplication.so ] && ln -s libapplication.so libapplication-armeabi.so || true ; }
 
 obj/local/armeabi-v7a/libapplication.so: $(LOCAL_PATH)/src/libapplication-armeabi-v7a.so
 
-$(LOCAL_PATH)/src/libapplication-armeabi-v7a.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
+$(LOCAL_PATH)/src/libapplication-armeabi-v7a.so: $(SDL_APP_LIB_DEPENDS-armeabi-v7a) OVERRIDE_CUSTOM_LIB
 	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
 	./AndroidBuild.sh armeabi-v7a arm-linux-androideabi && $(PARALLEL_UNLOCK)
 
 obj/local/mips/libapplication.so: $(LOCAL_PATH)/src/libapplication-mips.so
 
-$(LOCAL_PATH)/src/libapplication-mips.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
+$(LOCAL_PATH)/src/libapplication-mips.so: $(SDL_APP_LIB_DEPENDS-mips) OVERRIDE_CUSTOM_LIB
 	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
 	./AndroidBuild.sh mips mipsel-linux-android && $(PARALLEL_UNLOCK)
 
 obj/local/x86/libapplication.so: $(LOCAL_PATH)/src/libapplication-x86.so
 
-$(LOCAL_PATH)/src/libapplication-x86.so: $(SDL_APP_LIB_DEPENDS) OVERRIDE_CUSTOM_LIB
+$(LOCAL_PATH)/src/libapplication-x86.so: $(SDL_APP_LIB_DEPENDS-x86) OVERRIDE_CUSTOM_LIB
 	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
 	./AndroidBuild.sh x86 i686-linux-android && $(PARALLEL_UNLOCK)
 
