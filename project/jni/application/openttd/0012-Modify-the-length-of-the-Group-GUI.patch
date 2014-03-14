@@ -1,0 +1,27 @@
+From 70e27c1f16620f76591f32955a76da59dcde3ec9 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Wed, 24 Apr 2013 18:40:21 +0200
+Subject: [PATCH 012/249] Modify the length of the Group GUI.
+
+Set it to the length of the 'a' character * maximum length of a group name.
+---
+ src/group_gui.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/group_gui.cpp b/src/group_gui.cpp
+index ed3176e..3048f17 100644
+--- a/src/group_gui.cpp
++++ b/src/group_gui.cpp
+@@ -165,7 +165,8 @@ private:
+ 	uint ComputeGroupInfoSize()
+ 	{
+ 		this->column_size[VGC_NAME] = maxdim(GetStringBoundingBox(STR_GROUP_DEFAULT_TRAINS + this->vli.vtype), GetStringBoundingBox(STR_GROUP_ALL_TRAINS + this->vli.vtype));
+-		this->column_size[VGC_NAME].width = max(170u, this->column_size[VGC_NAME].width);
++/* We consider the max average length of characters to be the one of "a" */
++		this->column_size[VGC_NAME].width = max(GetCharacterWidth(FS_NORMAL, 97) * (MAX_LENGTH_GROUP_NAME_CHARS - 4), this->column_size[VGC_NAME].width);
+ 		this->tiny_step_height = this->column_size[VGC_NAME].height;
+ 
+ 		this->column_size[VGC_PROTECT] = GetSpriteSize(SPR_GROUP_REPLACE_PROTECT);
+-- 
+1.8.1.2
+

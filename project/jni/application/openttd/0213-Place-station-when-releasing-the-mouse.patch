@@ -1,0 +1,57 @@
+From 56281b9136b6cd5c6890baf86e369f75550647bc Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Tue, 16 Jul 2013 22:31:44 +0200
+Subject: [PATCH 213/249] Place station when releasing the mouse.
+
+---
+ src/rail_gui.cpp | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
+
+diff --git a/src/rail_gui.cpp b/src/rail_gui.cpp
+index 6b03f7e..7c4b86b 100644
+--- a/src/rail_gui.cpp
++++ b/src/rail_gui.cpp
+@@ -189,15 +189,7 @@ static void PlaceRail_Station(TileIndex tile)
+ 		VpStartPlaceSizing(tile, VPM_X_AND_Y_LIMITED, DDSP_BUILD_STATION);
+ 		VpSetPlaceSizingLimit(_settings_game.station.station_spread);
+ 	} else {
+-		uint32 p1 = _cur_railtype | _railstation.orientation << 4 | _settings_client.gui.station_numtracks << 8 | _settings_client.gui.station_platlength << 16 | _ctrl_pressed << 24;
+-		uint32 p2 = _railstation.station_class | _railstation.station_type << 8 | INVALID_STATION << 16;
+-
+-		int w = _settings_client.gui.station_numtracks;
+-		int h = _settings_client.gui.station_platlength;
+-		if (!_railstation.orientation) Swap(w, h);
+-
+-		CommandContainer cmdcont = { tile, p1, p2, CMD_BUILD_RAIL_STATION | CMD_MSG(STR_ERROR_CAN_T_BUILD_RAILROAD_STATION), CcStation, "" };
+-		ShowSelectStationIfNeeded(cmdcont, TileArea(tile, w, h));
++		VpStartPlaceSizing(tile, VPM_SINGLE_TILE, DDSP_BUILD_STATION);
+ 	}
+ }
+ 
+@@ -701,8 +693,22 @@ struct BuildRailToolbarWindow : Window {
+ 					DoCommandP(end_tile, start_tile, _cur_railtype | (_ctrl_pressed ? 0x10 : 0), CMD_CONVERT_RAIL | CMD_MSG(STR_ERROR_CAN_T_CONVERT_RAIL), CcPlaySound10);
+ 					break;
+ 
+-				case DDSP_REMOVE_STATION:
+ 				case DDSP_BUILD_STATION:
++					if (!_remove_button_clicked && !_settings_client.gui.station_dragdrop) {
++						uint32 p1 = _cur_railtype | _railstation.orientation << 4 | _settings_client.gui.station_numtracks << 8 | _settings_client.gui.station_platlength << 16 | _ctrl_pressed << 24;
++						uint32 p2 = _railstation.station_class | _railstation.station_type << 8 | INVALID_STATION << 16;
++
++						int w = _settings_client.gui.station_numtracks;
++						int h = _settings_client.gui.station_platlength;
++						if (!_railstation.orientation) Swap(w, h);
++
++						CommandContainer cmdcont = { end_tile, p1, p2, CMD_BUILD_RAIL_STATION | CMD_MSG(STR_ERROR_CAN_T_BUILD_RAILROAD_STATION), CcStation, "" };
++						ShowSelectStationIfNeeded(cmdcont, TileArea(end_tile, w, h));
++						break;
++					}
++					/* Fall through. */
++
++				case DDSP_REMOVE_STATION:
+ 					if (this->IsWidgetLowered(WID_RAT_BUILD_STATION)) {
+ 						/* Station */
+ 						if (_remove_button_clicked) {
+-- 
+1.8.1.2
+

@@ -1,0 +1,145 @@
+From b26a95ac71bf3b079e0decb9ed73f6548ed4e30b Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Mon, 31 Dec 2012 11:25:18 +0100
+Subject: [PATCH 018/249] Some small helpers to draw strings and sprites
+ dealing with left-to-right/right-to-left.
+
+---
+ src/gfx.cpp    | 101 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/gfx_func.h |  11 +++++++
+ 2 files changed, 112 insertions(+)
+
+diff --git a/src/gfx.cpp b/src/gfx.cpp
+index 938404c..eabb49c 100644
+--- a/src/gfx.cpp
++++ b/src/gfx.cpp
+@@ -1657,3 +1657,104 @@ void SortResolutions(int count)
+ {
+ 	QSortT(_resolutions, count, &compare_res);
+ }
++
++
++/**
++ * Returns the initial value for a margin, after telling where are the left and right margins and where we want to draw/write (begining/end of line)
++ * @param left is the left margin of the horizontal space we want to draw to
++ * @param right: right margin
++ * @param to_end_line: 0 if working at the begining of the line, 1 if working at the end
++ * @return the margin we asked
++ */
++int InitTempMargin(int left, int right, bool to_end_line)
++{
++	return to_end_line ^ (_current_text_dir == TD_RTL) ? right :left;
++}
++
++/**
++ * Consumes a space in an horizontal margin
++ * @param space: amount of space used
++ * @param here: the margin where to add the space
++ * @param to_end_line: 0 if working at the begining of the line, 1 if working at the end
++ */
++void AddSpace(int space, int &here, bool to_end_line)
++{
++	here += to_end_line ^ (_current_text_dir == TD_RTL) ? -space : space;
++}
++
++/**
++ * After drawing something, update a margin
++ * @param end is where we ended drawing (usually the return value of a DrawString function)
++ * @param margin is the margin we want to update
++ * @param to_end_line: 0 if working at the begining of the line, 1 if working at the end
++ */
++void UpdateMarginEnd(int end, int &margin, bool to_end_line)
++{
++	margin = to_end_line ^ (_current_text_dir == TD_RTL) ? min(end, margin) : max(end, margin);
++}
++
++/**
++ * After drawing something, horizontal margins are updated
++ * @param end: last position drawn
++ * @param left is the left margin of the horizontal space drawn
++ * @param right: right margin
++ * @param to_end_line: 0 if working at the begining of the line, 1 if working at the end
++ */
++void UpdateMarginsEnd(int end, int &left, int &right, bool to_end_line)
++{
++	if (to_end_line ^ (_current_text_dir == TD_RTL)) {
++		right = end;
++	} else {
++		left = end;
++	}
++}
++
++/**
++ * After drawing something of a certain width, update margins
++ * @param width: used space
++ * @param initial left margin
++ * @param initial right margin
++ * @param to_end_line: 0 if working at the begining of the line, 1 if working at the end
++ */
++void UpdateMarginsWidth(int width, int &left, int &right, bool to_end_line)
++{
++	if (to_end_line ^ (_current_text_dir == TD_RTL)) {
++		right -= width;
++	} else {
++		left += width;
++	}
++}
++
++/**
++ * Draws a string in a delimited space; temporal margin gets updated
++ * @param left is the left margin of the horizontal space we want to draw to
++ * @param right: right margin of the horizontal space we want to draw to
++ * @param top: vertical position
++ * @param margin keeps the most extreme limit used of the line (this should be previously initialized with InitTempLimit)
++ * @param string to draw
++ * @param colour for the string
++ * @param alignment of the string (only left or right alignment)
++ * @param underline
++ */
++void DrawString2(int left, int right, int top, int &margin, StringID str, TextColour colour, StringAlignment align, bool underline)
++{
++	int end = DrawString(left, right, top, str, colour, align, underline);
++	UpdateMarginEnd(end, margin, align == SA_RIGHT);
++}
++
++/**
++ * Draws a sprite in a delimited space; temporal margin gets updated
++ * @param width of the sprite
++ * @param left is the left margin of the horizontal space we want to draw to
++ * @param right: right margin of the horizontal space
++ * @param top: vertical position
++ * @param margin keeps the most extreme limit used of the line (this should be previously initialized with InitTempLimit)
++ * @param sprite
++ * @param palette
++ * @param to_end_line: 0 if working at the begining of the line, 1 if working at the end
++ */
++void DrawSprite2(int width, int left, int right, int top, int &margin, SpriteID img, PaletteID pal, bool to_end_line, SubSprite *sub)
++{
++	DrawSprite(img, pal, to_end_line ^ (_current_text_dir == TD_RTL) ? right - width : left, top, sub);
++	margin = to_end_line ^ (_current_text_dir == TD_RTL) ? min(right - width, margin): max(margin, left + width);
++}
+diff --git a/src/gfx_func.h b/src/gfx_func.h
+index 69d2e45..3a59073 100644
+--- a/src/gfx_func.h
++++ b/src/gfx_func.h
+@@ -170,6 +170,17 @@ int GetCharacterHeight(FontSize size);
+ /** Height of characters in the large (#FS_MONO) font. */
+ #define FONT_HEIGHT_MONO  (GetCharacterHeight(FS_MONO))
+ 
++int InitTempMargin(int left, int right, bool to_end_line);
++void AddSpace(int space, int &here, bool to_end_line);
++
++void UpdateMarginEnd(int end, int &margin, bool to_end_line);
++void UpdateMarginWidth(int adding, int &margin, bool to_end_line);
++void UpdateMarginsEnd(int end, int &left, int &right, bool to_end_line);
++void UpdateMarginsWidth(int width, int &left, int &right, bool to_end_line);
++
++void DrawString2(int left, int right, int top, int &margin, StringID str, TextColour colour = TC_FROMSTRING, StringAlignment align = SA_LEFT, bool underline = false);
++void DrawSprite2(int width, int left, int right, int top, int &margin, SpriteID img, PaletteID pal, bool to_end_line = false, SubSprite *sub = NULL);
++
+ extern DrawPixelInfo *_cur_dpi;
+ 
+ TextColour GetContrastColour(uint8 background);
+-- 
+1.8.1.2
+

@@ -1,0 +1,34 @@
+From a6bea6f5e2c2629593dc232b960685e0dc491196 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Mon, 14 Oct 2013 17:58:51 +0000
+Subject: [PATCH 232/249] Set dirty selection tiles when bridge is too long to
+ build.
+
+---
+ src/bridge_gui.cpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/bridge_gui.cpp b/src/bridge_gui.cpp
+index 78e7ff8..9ce304f 100644
+--- a/src/bridge_gui.cpp
++++ b/src/bridge_gui.cpp
+@@ -24,6 +24,7 @@
+ #include "cmd_helper.h"
+ #include "tunnelbridge_map.h"
+ #include "road_gui.h"
++#include "tilehighlight_func.h"
+ 
+ #include "widgets/bridge_widget.h"
+ 
+@@ -429,6 +430,8 @@ void ShowBuildBridgeWindow(TileIndex start, TileIndex end, TransportType transpo
+ 		new BuildBridgeWindow(&_build_bridge_desc, start, end, type, bl);
+ 	} else {
+ 		delete bl;
++		SetSelectionTilesDirty();
++		_thd.Reset();
+ 		ShowErrorMessage(STR_ERROR_CAN_T_BUILD_BRIDGE_HERE, errmsg, WL_INFO, TileX(end) * TILE_SIZE, TileY(end) * TILE_SIZE);
+ 	}
+ }
+-- 
+1.8.1.2
+

@@ -1,0 +1,24 @@
+From a9f29e52e61812d9272e1d6de192e075da82da28 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Mon, 14 Oct 2013 17:49:32 +0000
+Subject: [PATCH 236/249] Reset queued command when changing CTRL state.
+
+---
+ src/toolbar_gui.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/toolbar_gui.cpp b/src/toolbar_gui.cpp
+index 7ef8511..f38cffe 100644
+--- a/src/toolbar_gui.cpp
++++ b/src/toolbar_gui.cpp
+@@ -2261,6 +2261,7 @@ struct TabletToolbar : Window {
+ 				this->ToggleWidgetLoweredState(WID_TT_CTRL);
+ 				HandleCtrlChanged();
+ 				this->SetWidgetDirty(WID_TT_CTRL);
++				EraseQueuedTouchCommand();
+ 				break;
+ 			case WID_TT_MOVE:
+ 				_move_pressed = !_move_pressed;
+-- 
+1.8.1.2
+

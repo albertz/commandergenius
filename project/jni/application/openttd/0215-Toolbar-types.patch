@@ -1,0 +1,115 @@
+From 5974ad304471edf7ec34ebc014f171412120a8ed Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Sat, 29 Jun 2013 19:17:27 +0200
+Subject: [PATCH 215/249] Toolbar types.
+
+---
+ projects/openttd_vs100.vcxproj         |  1 +
+ projects/openttd_vs100.vcxproj.filters |  3 +++
+ projects/openttd_vs80.vcproj           |  4 ++++
+ projects/openttd_vs90.vcproj           |  4 ++++
+ source.list                            |  1 +
+ src/toolbar_type.h                     | 23 +++++++++++++++++++++++
+ 6 files changed, 36 insertions(+)
+ create mode 100644 src/toolbar_type.h
+
+diff --git a/projects/openttd_vs100.vcxproj b/projects/openttd_vs100.vcxproj
+index 354731a..b980c83 100644
+--- a/projects/openttd_vs100.vcxproj
++++ b/projects/openttd_vs100.vcxproj
+@@ -634,6 +634,7 @@
+     <ClInclude Include="..\src\tilehighlight_type.h" />
+     <ClInclude Include="..\src\tilematrix_type.hpp" />
+     <ClInclude Include="..\src\timetable.h" />
++    <ClInclude Include="..\src\toolbar_type.h" />
+     <ClInclude Include="..\src\toolbar_gui.h" />
+     <ClInclude Include="..\src\town.h" />
+     <ClInclude Include="..\src\town_type.h" />
+diff --git a/projects/openttd_vs100.vcxproj.filters b/projects/openttd_vs100.vcxproj.filters
+index e7bb03a..a30700e 100644
+--- a/projects/openttd_vs100.vcxproj.filters
++++ b/projects/openttd_vs100.vcxproj.filters
+@@ -1131,6 +1131,9 @@
+     <ClInclude Include="..\src\timetable.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
++    <ClInclude Include="..\src\toolbar_type.h">
++      <Filter>Header Files</Filter>
++    </ClInclude>
+     <ClInclude Include="..\src\toolbar_gui.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
+diff --git a/projects/openttd_vs80.vcproj b/projects/openttd_vs80.vcproj
+index a194b39..ee68720 100644
+--- a/projects/openttd_vs80.vcproj
++++ b/projects/openttd_vs80.vcproj
+@@ -1811,6 +1811,10 @@
+ 				>
+ 			</File>
+ 			<File
++				RelativePath=".\..\src\toolbar_type.h"
++				>
++			</File>
++			<File
+ 				RelativePath=".\..\src\toolbar_gui.h"
+ 				>
+ 			</File>
+diff --git a/projects/openttd_vs90.vcproj b/projects/openttd_vs90.vcproj
+index bc765a2..4fb7047 100644
+--- a/projects/openttd_vs90.vcproj
++++ b/projects/openttd_vs90.vcproj
+@@ -1808,6 +1808,10 @@
+ 				>
+ 			</File>
+ 			<File
++				RelativePath=".\..\src\toolbar_type.h"
++				>
++			</File>
++			<File
+ 				RelativePath=".\..\src\toolbar_gui.h"
+ 				>
+ 			</File>
+diff --git a/source.list b/source.list
+index 6f74b0b..fa68f60 100644
+--- a/source.list
++++ b/source.list
+@@ -367,6 +367,7 @@ tilehighlight_func.h
+ tilehighlight_type.h
+ tilematrix_type.hpp
+ timetable.h
++toolbar_type.h
+ toolbar_gui.h
+ town.h
+ town_type.h
+diff --git a/src/toolbar_type.h b/src/toolbar_type.h
+new file mode 100644
+index 0000000..cfde179
+--- /dev/null
++++ b/src/toolbar_type.h
+@@ -0,0 +1,23 @@
++/* $Id$ */
++
++/*
++ * This file is part of OpenTTD.
++ * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
++ * OpenTTD is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++ * See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OpenTTD. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++/** @file toolbar_type.h Types related to toolbars. */
++
++#ifndef TOOLBAR_TYPE_H
++#define TOOLBAR_TYPE_H
++
++/** Types of touchscreen modes. */
++enum TouchscreenMode {
++	TSC_NONE = 0,
++	TSC_SIMPLE,
++};
++DECLARE_CYCLE(TouchscreenMode, TSC_NONE, TSC_SIMPLE)
++typedef SimpleTinyEnumT<TouchscreenMode, byte> TouchscreenModeByte;
++
++#endif /* TOOLBAR_TYPE_H */
+-- 
+1.8.1.2
+

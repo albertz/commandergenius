@@ -1,0 +1,72 @@
+From 9a2fe87d754e34b524b187d428109efddded0cbe Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Sat, 10 Aug 2013 15:23:33 +0000
+Subject: [PATCH 195/249] Center sprites on station picker for road stations
+ and rail stations.
+
+---
+ src/rail_gui.cpp | 15 +++++++++------
+ src/road_gui.cpp |  6 +++++-
+ 2 files changed, 14 insertions(+), 7 deletions(-)
+
+diff --git a/src/rail_gui.cpp b/src/rail_gui.cpp
+index a2067c5..004b47f 100644
+--- a/src/rail_gui.cpp
++++ b/src/rail_gui.cpp
+@@ -1088,8 +1088,9 @@ public:
+ 				if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.right - r.left + 1, r.bottom - r.top + 1)) {
+ 					DrawPixelInfo *old_dpi = _cur_dpi;
+ 					_cur_dpi = &tmp_dpi;
+-					if (!DrawStationTile(32, 28, _cur_railtype, AXIS_X, _railstation.station_class, _railstation.station_type)) {
+-						StationPickerDrawSprite(32, 28, STATION_RAIL, _cur_railtype, INVALID_ROADTYPE, 2);
++					int x = Center(TILE_PIXELS, r.right - r.left, 2 * TILE_PIXELS);
++					if (!DrawStationTile(x, 28, _cur_railtype, AXIS_X, _railstation.station_class, _railstation.station_type)) {
++						StationPickerDrawSprite(x, 28, STATION_RAIL, _cur_railtype, INVALID_ROADTYPE, 2);
+ 					}
+ 					_cur_dpi = old_dpi;
+ 				}
+@@ -1100,8 +1101,9 @@ public:
+ 				if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.right - r.left + 1, r.bottom - r.top + 1)) {
+ 					DrawPixelInfo *old_dpi = _cur_dpi;
+ 					_cur_dpi = &tmp_dpi;
+-					if (!DrawStationTile(32, 28, _cur_railtype, AXIS_Y, _railstation.station_class, _railstation.station_type)) {
+-						StationPickerDrawSprite(32, 28, STATION_RAIL, _cur_railtype, INVALID_ROADTYPE, 3);
++					int x = Center(TILE_PIXELS, r.right - r.left, 2 * TILE_PIXELS);
++					if (!DrawStationTile(x, 28, _cur_railtype, AXIS_Y, _railstation.station_class, _railstation.station_type)) {
++						StationPickerDrawSprite(x, 28, STATION_RAIL, _cur_railtype, INVALID_ROADTYPE, 3);
+ 					}
+ 					_cur_dpi = old_dpi;
+ 				}
+@@ -1136,8 +1138,9 @@ public:
+ 				if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.right - r.left + 1, r.bottom - r.top + 1)) {
+ 					DrawPixelInfo *old_dpi = _cur_dpi;
+ 					_cur_dpi = &tmp_dpi;
+-					if (!DrawStationTile(32, 28, _cur_railtype, _railstation.orientation, _railstation.station_class, type)) {
+-						StationPickerDrawSprite(32, 28, STATION_RAIL, _cur_railtype, INVALID_ROADTYPE, 2 + _railstation.orientation);
++					int x = Center(TILE_PIXELS, r.right - r.left, 2 * TILE_PIXELS);
++					if (!DrawStationTile(x, 28, _cur_railtype, _railstation.orientation, _railstation.station_class, type)) {
++						StationPickerDrawSprite(x, 28, STATION_RAIL, _cur_railtype, INVALID_ROADTYPE, 2 + _railstation.orientation);
+ 					}
+ 					_cur_dpi = old_dpi;
+ 				}
+diff --git a/src/road_gui.cpp b/src/road_gui.cpp
+index 03925fc..f35a2c2 100644
+--- a/src/road_gui.cpp
++++ b/src/road_gui.cpp
+@@ -1005,8 +1005,12 @@ struct BuildRoadStationWindow : public PickerWindowBase {
+ 	{
+ 		if (!IsInsideMM(widget, WID_BROS_STATION_NE, WID_BROS_STATION_Y + 1)) return;
+ 
++		int x = Center(r.left + TILE_PIXELS, r.right - r.left, 2 * TILE_PIXELS);
++		/* Height of bus/truck sprite in OpenGFX is TILE_PIXELS + 11. */
++		int y = Center(r.top + WD_FRAMERECT_TOP - WD_MATRIX_BOTTOM + IsWidgetLowered(widget) + 11, r.bottom - r.top, TILE_PIXELS + 11);
++
+ 		StationType st = (this->window_class == WC_BUS_STATION) ? STATION_BUS : STATION_TRUCK;
+-		StationPickerDrawSprite(r.left + TILE_PIXELS, r.bottom - TILE_PIXELS, st, INVALID_RAILTYPE, widget < WID_BROS_STATION_X ? ROADTYPE_ROAD : _cur_roadtype, widget - WID_BROS_STATION_NE);
++		StationPickerDrawSprite(x, y, st, INVALID_RAILTYPE, widget < WID_BROS_STATION_X ? ROADTYPE_ROAD : _cur_roadtype, widget - WID_BROS_STATION_NE);
+ 	}
+ 
+ 	virtual void OnClick(Point pt, int widget, int click_count)
+-- 
+1.8.1.2
+

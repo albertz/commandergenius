@@ -1,0 +1,380 @@
+From 512f1cd75f7af8d2ca769fc4aba330efdae7db73 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Mon, 24 Jun 2013 17:59:37 +0200
+Subject: [PATCH 217/249] Add a window for touchscreen devices.
+
+---
+ src/gfx.cpp                                    |   8 +-
+ src/gfx_func.h                                 |   2 +
+ src/lang/english.txt                           |  12 +++
+ src/script/api/game/game_window.hpp.sq         |   6 ++
+ src/script/api/script_window.hpp               |  15 ++++
+ src/script/api/template/template_window.hpp.sq |   2 +
+ src/settings.cpp                               |   2 +-
+ src/toolbar_gui.cpp                            | 107 +++++++++++++++++++++++++
+ src/toolbar_gui.h                              |   2 +
+ src/video/sdl_v.cpp                            |   7 +-
+ src/widgets/toolbar_widget.h                   |   9 +++
+ src/window.cpp                                 |   1 +
+ src/window_type.h                              |   6 ++
+ 13 files changed, 172 insertions(+), 7 deletions(-)
+
+diff --git a/src/gfx.cpp b/src/gfx.cpp
+index 5c2cdc2..5b647f9 100644
+--- a/src/gfx.cpp
++++ b/src/gfx.cpp
+@@ -31,11 +31,14 @@ bool _fullscreen;
+ CursorVars _cursor;
+ bool _ctrl_pressed;   ///< Is Ctrl pressed?
+ bool _shift_pressed;  ///< Is Shift pressed?
++bool _move_pressed;
++
+ byte _fast_forward;
+ bool _left_button_down;     ///< Is left mouse button pressed?
+ bool _left_button_clicked;  ///< Is left mouse button clicked?
+ bool _right_button_down;    ///< Is right mouse button pressed?
+ bool _right_button_clicked; ///< Is right mouse button clicked?
++
+ DrawPixelInfo _screen;
+ bool _screen_disable_anim = false;   ///< Disable palette animation (important for 32bpp-anim blitter during giant screenshot)
+ bool _exit_game;
+@@ -1249,10 +1252,7 @@ void UndrawMouseCursor()
+ 
+ void DrawMouseCursor()
+ {
+-#if defined(WINCE)
+-	/* Don't ever draw the mouse for WinCE, as we work with a stylus */
+-	return;
+-#endif
++	if (_settings_client.gui.touchscreen_mode != 0) return;
+ 
+ 	/* Don't draw the mouse cursor if the screen is not ready */
+ 	if (_screen.dst_ptr == NULL) return;
+diff --git a/src/gfx_func.h b/src/gfx_func.h
+index 4750b3c..4a87089 100644
+--- a/src/gfx_func.h
++++ b/src/gfx_func.h
+@@ -55,6 +55,8 @@ extern bool _fullscreen;
+ extern CursorVars _cursor;
+ extern bool _ctrl_pressed;   ///< Is Ctrl pressed?
+ extern bool _shift_pressed;  ///< Is Shift pressed?
++extern bool _move_pressed;
++
+ extern byte _fast_forward;
+ 
+ extern bool _left_button_down;
+diff --git a/src/lang/english.txt b/src/lang/english.txt
+index b8bdf72..9ca1c3e 100644
+--- a/src/lang/english.txt
++++ b/src/lang/english.txt
+@@ -2446,6 +2446,18 @@ STR_LANDSCAPING_TOOLTIP_RAISE_A_CORNER_OF_LAND                  :{BLACK}Raise a
+ STR_LANDSCAPING_LEVEL_LAND_TOOLTIP                              :{BLACK}Level an area of land to the height of the first selected corner. Ctrl selects the area diagonally. Shift toggles building/showing cost estimate
+ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Purchase land for future use. Shift toggles building/showing cost estimate
+ 
++# Tablet toolbar
++STR_TABLET_X                                                    :{BLACK}X
++STR_TABLET_TOGGLE_TRANSPARENCY_TOOLTIP                          :{BLACK}Toggle transparency
++STR_TABLET_CLOSE                                                :{BLACK}Supr
++STR_TABLET_CLOSE_TOOLTIP                                        :{BLACK}Close all opened windows (except pinned ones)
++STR_TABLET_SHIFT                                                :{BLACK}Shift
++STR_TABLET_SHIFT_TOOLTIP                                        :{BLACK}Press it for getting an estimated cost of executing an action
++STR_TABLET_CTRL                                                 :{BLACK}Ctrl
++STR_TABLET_CTRL_TOOLTIP                                         :{BLACK}Use it for actions that use the "CTRL" key
++STR_TABLET_MOVE                                                 :{BLACK}Move
++STR_TABLET_MOVE_TOOLTIP                                         :{BLACK}Press it to move around viewports. No action will be executed on viewports while this is active
++
+ # Object construction window
+ STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Object Selection
+ STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Select object to build. Shift toggles building/showing cost estimate
+diff --git a/src/script/api/game/game_window.hpp.sq b/src/script/api/game/game_window.hpp.sq
+index 7a711b9..f06fae3 100644
+--- a/src/script/api/game/game_window.hpp.sq
++++ b/src/script/api/game/game_window.hpp.sq
+@@ -40,6 +40,7 @@ void SQGSWindow_Register(Squirrel *engine)
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_MAIN_WINDOW,                            "WC_MAIN_WINDOW");
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_MAIN_TOOLBAR,                           "WC_MAIN_TOOLBAR");
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_STATUS_BAR,                             "WC_STATUS_BAR");
++	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_TABLET_BAR,                             "WC_TABLET_BAR");
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_BUILD_TOOLBAR,                          "WC_BUILD_TOOLBAR");
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_SCEN_BUILD_TOOLBAR,                     "WC_SCEN_BUILD_TOOLBAR");
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_BUILD_TREES,                            "WC_BUILD_TREES");
+@@ -1246,6 +1247,11 @@ void SQGSWindow_Register(Squirrel *engine)
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TE_MUSIC_SOUND,                        "WID_TE_MUSIC_SOUND");
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TE_HELP,                               "WID_TE_HELP");
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TE_SWITCH_BAR,                         "WID_TE_SWITCH_BAR");
++	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TT_X,                                  "WID_TT_X");
++	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TT_DELETE,                             "WID_TT_DELETE");
++	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TT_SHIFT,                              "WID_TT_SHIFT");
++	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TT_CTRL,                               "WID_TT_CTRL");
++	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TT_MOVE,                               "WID_TT_MOVE");
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TD_SORT_ORDER,                         "WID_TD_SORT_ORDER");
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TD_SORT_CRITERIA,                      "WID_TD_SORT_CRITERIA");
+ 	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_TD_FILTER,                             "WID_TD_FILTER");
+diff --git a/src/script/api/script_window.hpp b/src/script/api/script_window.hpp
+index dce9a97..a5c0684 100644
+--- a/src/script/api/script_window.hpp
++++ b/src/script/api/script_window.hpp
+@@ -143,6 +143,12 @@ public:
+ 		WC_STATUS_BAR                                = ::WC_STATUS_BAR,
+ 
+ 		/**
++		 * Tablet bar; %Window numbers:
++		 *   - 0 = #StatusbarWidgets
++		 */
++		WC_TABLET_BAR                                = ::WC_TABLET_BAR,
++
++		/**
+ 		 * Build toolbar; %Window numbers:
+ 		 *   - #TRANSPORT_RAIL = #RailToolbarWidgets
+ 		 *   - #TRANSPORT_AIR = #AirportToolbarWidgets
+@@ -2496,6 +2502,15 @@ public:
+ 		WID_TE_SWITCH_BAR                            = ::WID_TE_SWITCH_BAR,                            ///< Only available when toolbar has been split to switch between different subsets.
+ 	};
+ 
++	/** Widgets of the TabletToolbar class. */
++	enum ToolbarTabletWidgets {
++		WID_TT_X                                     = ::WID_TT_X,                                     ///< Press X (toggle transparency).
++		WID_TT_DELETE                                = ::WID_TT_DELETE,                                ///< Press DELETE.
++		WID_TT_SHIFT                                 = ::WID_TT_SHIFT,                                 ///< Press SHIFT.
++		WID_TT_CTRL                                  = ::WID_TT_CTRL,                                  ///< Press CTRL.
++		WID_TT_MOVE                                  = ::WID_TT_MOVE,                                  ///< Click for moving around viewports.
++	};
++
+ 	/* automatically generated from ../../widgets/town_widget.h */
+ 	/** Widgets of the #TownDirectoryWindow class. */
+ 	enum TownDirectoryWidgets {
+diff --git a/src/script/api/template/template_window.hpp.sq b/src/script/api/template/template_window.hpp.sq
+index dc99b5d..27aac38 100644
+--- a/src/script/api/template/template_window.hpp.sq
++++ b/src/script/api/template/template_window.hpp.sq
+@@ -229,6 +229,8 @@ namespace SQConvert {
+ 	template <> inline int Return<ScriptWindow::ToolbarNormalWidgets>(HSQUIRRELVM vm, ScriptWindow::ToolbarNormalWidgets res) { sq_pushinteger(vm, (int32)res); return 1; }
+ 	template <> inline ScriptWindow::ToolbarEditorWidgets GetParam(ForceType<ScriptWindow::ToolbarEditorWidgets>, HSQUIRRELVM vm, int index, SQAutoFreePointers *ptr) { SQInteger tmp; sq_getinteger(vm, index, &tmp); return (ScriptWindow::ToolbarEditorWidgets)tmp; }
+ 	template <> inline int Return<ScriptWindow::ToolbarEditorWidgets>(HSQUIRRELVM vm, ScriptWindow::ToolbarEditorWidgets res) { sq_pushinteger(vm, (int32)res); return 1; }
++	template <> inline ScriptWindow::ToolbarTabletWidgets GetParam(ForceType<ScriptWindow::ToolbarTabletWidgets>, HSQUIRRELVM vm, int index, SQAutoFreePointers *ptr) { SQInteger tmp; sq_getinteger(vm, index, &tmp); return (ScriptWindow::ToolbarTabletWidgets)tmp; }
++	template <> inline int Return<ScriptWindow::ToolbarTabletWidgets>(HSQUIRRELVM vm, ScriptWindow::ToolbarTabletWidgets res) { sq_pushinteger(vm, (int32)res); return 1; }
+ 	template <> inline ScriptWindow::TownDirectoryWidgets GetParam(ForceType<ScriptWindow::TownDirectoryWidgets>, HSQUIRRELVM vm, int index, SQAutoFreePointers *ptr) { SQInteger tmp; sq_getinteger(vm, index, &tmp); return (ScriptWindow::TownDirectoryWidgets)tmp; }
+ 	template <> inline int Return<ScriptWindow::TownDirectoryWidgets>(HSQUIRRELVM vm, ScriptWindow::TownDirectoryWidgets res) { sq_pushinteger(vm, (int32)res); return 1; }
+ 	template <> inline ScriptWindow::TownAuthorityWidgets GetParam(ForceType<ScriptWindow::TownAuthorityWidgets>, HSQUIRRELVM vm, int index, SQAutoFreePointers *ptr) { SQInteger tmp; sq_getinteger(vm, index, &tmp); return (ScriptWindow::TownAuthorityWidgets)tmp; }
+diff --git a/src/settings.cpp b/src/settings.cpp
+index fd6992d..7057d67 100644
+--- a/src/settings.cpp
++++ b/src/settings.cpp
+@@ -1092,7 +1092,7 @@ static bool ZoomMinMaxChanged(int32 p1)
+ 
+ static bool TouchscreenModeChanged(int32 p1)
+ {
+-	//ResetTabletWindow();
++	ResetTabletWindow();
+ 	return true;
+ }
+ 
+diff --git a/src/toolbar_gui.cpp b/src/toolbar_gui.cpp
+index 32992d9..93b5a80 100644
+--- a/src/toolbar_gui.cpp
++++ b/src/toolbar_gui.cpp
+@@ -2218,6 +2218,111 @@ static WindowDesc _toolb_scen_desc(
+ 	&ScenarioEditorToolbarWindow::hotkeys
+ );
+ 
++
++/** Tablet toolbar. */
++struct TabletToolbar : Window {
++
++	TabletToolbar(WindowDesc *desc) : Window(desc)
++	{
++		this->InitNested(0);
++		this->flags |= WF_STICKY;
++		ResetObjectToPlace();
++		this->OnInvalidateData(1 << 2); // Disable widgets.
++		if (_current_text_dir == TD_RTL) { this->left = _screen.width - this->width; }
++	}
++
++	~TabletToolbar() {
++		_shift_pressed = false;
++		_move_pressed = false;
++
++		if (_ctrl_pressed) {
++			_ctrl_pressed = false;
++			HandleCtrlChanged();
++		}
++	}
++
++	virtual void OnClick(Point pt, int widget, int click_count)
++	{
++		switch (widget) {
++			case WID_TT_X:
++				extern void ResetRestoreAllTransparency();
++				ResetRestoreAllTransparency();
++				break;
++			case WID_TT_DELETE:
++				DeleteNonVitalWindows();
++				break;
++			case WID_TT_SHIFT:
++				_shift_pressed = !_shift_pressed;
++				this->ToggleWidgetLoweredState(WID_TT_SHIFT);
++				this->SetWidgetDirty(WID_TT_SHIFT);
++				break;
++			case WID_TT_CTRL:
++				_ctrl_pressed = !_ctrl_pressed;
++				this->ToggleWidgetLoweredState(WID_TT_CTRL);
++				HandleCtrlChanged();
++				this->SetWidgetDirty(WID_TT_CTRL);
++				break;
++			case WID_TT_MOVE:
++				_move_pressed = !_move_pressed;
++				this->ToggleWidgetLoweredState(WID_TT_MOVE);
++				this->SetWidgetDirty(WID_TT_MOVE);
++				break;
++			default:
++				NOT_REACHED();
++		}
++	}
++
++	/**
++	 * Some data on this window has become invalid.
++	 * @param data Information about the changed data.
++	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
++	 * @note    bit 2 -> Update tile selection.
++	 *          bit 3 -> Set window dirty.
++	 */
++	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
++	{
++		/* Selection has changed. */
++		if (HasBit(data, 2)) { UpdateTileSelection(); }
++
++		/* This window is dirty. */
++		if (HasBit(data, 3)) { this->SetDirty(); }
++	}
++};
++
++static const NWidgetPart _nested_tablet_simple_widgets[] = {
++	NWidget(NWID_VERTICAL),
++		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_TT_X), SetDataTip(STR_TABLET_X, STR_TABLET_TOGGLE_TRANSPARENCY_TOOLTIP),
++		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_TT_DELETE), SetDataTip(STR_TABLET_CLOSE, STR_TABLET_CLOSE_TOOLTIP),
++		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_TT_SHIFT), SetDataTip(STR_TABLET_SHIFT, STR_TABLET_SHIFT_TOOLTIP),
++		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_TT_CTRL), SetDataTip(STR_TABLET_CTRL, STR_TABLET_CTRL_TOOLTIP),
++		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_TT_MOVE), SetDataTip(STR_TABLET_MOVE, STR_TABLET_MOVE_TOOLTIP),
++		EndContainer(),
++};
++
++static WindowDesc _toolbar_tablet_simple_desc(
++	WDP_AUTO, NULL, 0, 0,
++	WC_TABLET_BAR, WC_NONE,
++	WDF_NO_FOCUS,
++	_nested_tablet_simple_widgets, lengthof(_nested_tablet_simple_widgets)
++);
++
++void ResetTabletWindow()
++{
++	if (_game_mode == GM_MENU) return;
++
++	DeleteWindowByClass(WC_TABLET_BAR);
++
++	switch (_settings_client.gui.touchscreen_mode) {
++		case TSC_NONE:
++			break;
++		case TSC_SIMPLE:
++			new TabletToolbar(&_toolbar_tablet_simple_desc);
++			break;
++		default: NOT_REACHED();
++
++	}
++}
++
+ /** Allocate the toolbar. */
+ void AllocateToolbar()
+ {
+@@ -2229,4 +2334,6 @@ void AllocateToolbar()
+ 	} else {
+ 		new MainToolbarWindow(&_toolb_normal_desc);
+ 	}
++
++	ResetTabletWindow();
+ }
+diff --git a/src/toolbar_gui.h b/src/toolbar_gui.h
+index d3eba5b..acfe0ed 100644
+--- a/src/toolbar_gui.h
++++ b/src/toolbar_gui.h
+@@ -16,4 +16,6 @@ void AllocateToolbar();
+ void ToggleBoundingBoxes();
+ void ToggleDirtyBlocks();
+ 
++void ResetTabletWindow();
++
+ #endif /* TOOLBAR_GUI_H */
+diff --git a/src/video/sdl_v.cpp b/src/video/sdl_v.cpp
+index ba0b076..c961ad4 100644
+--- a/src/video/sdl_v.cpp
++++ b/src/video/sdl_v.cpp
+@@ -23,6 +23,7 @@
+ #include "../core/random_func.hpp"
+ #include "../core/math_func.hpp"
+ #include "../fileio_func.h"
++#include "../settings_type.h"
+ #include "sdl_v.h"
+ #include <SDL.h>
+ 
+@@ -751,8 +752,10 @@ void VideoDriver_SDL::MainLoop()
+ 
+ 			bool old_ctrl_pressed = _ctrl_pressed;
+ 
+-			_ctrl_pressed  = !!(mod & KMOD_CTRL);
+-			_shift_pressed = !!(mod & KMOD_SHIFT);
++			if (_settings_client.gui.touchscreen_mode == TSC_NONE) {
++				_ctrl_pressed  = !!(mod & KMOD_CTRL);
++				_shift_pressed = !!(mod & KMOD_SHIFT);
++			}
+ 
+ 			/* determine which directional keys are down */
+ 			_dirkeys =
+diff --git a/src/widgets/toolbar_widget.h b/src/widgets/toolbar_widget.h
+index 6ede3ad..c7bac73 100644
+--- a/src/widgets/toolbar_widget.h
++++ b/src/widgets/toolbar_widget.h
+@@ -75,4 +75,13 @@ enum ToolbarEditorWidgets {
+ 	WID_TE_SWITCH_BAR  = WID_TN_SWITCH_BAR,  ///< Only available when toolbar has been split to switch between different subsets.
+ };
+ 
++/** Widgets of the TabletToolbar class. */
++enum ToolbarTabletWidgets {
++	WID_TT_X,           ///< Press X (toggle transparency).
++	WID_TT_DELETE,      ///< Press DELETE.
++	WID_TT_SHIFT,       ///< Press SHIFT.
++	WID_TT_CTRL,        ///< Press CTRL.
++	WID_TT_MOVE,        ///< Click for moving around viewports.
++};
++
+ #endif /* WIDGETS_TOOLBAR_WIDGET_H */
+diff --git a/src/window.cpp b/src/window.cpp
+index 60153bc..9b4f416 100644
+--- a/src/window.cpp
++++ b/src/window.cpp
+@@ -1292,6 +1292,7 @@ static uint GetWindowZPriority(const Window *w)
+ 			++z_priority;
+ 
+ 		case WC_NEWS_WINDOW:
++		case WC_TABLET_BAR:
+ 			++z_priority;
+ 
+ 		default:
+diff --git a/src/window_type.h b/src/window_type.h
+index e350ff6..0e4544b 100644
+--- a/src/window_type.h
++++ b/src/window_type.h
+@@ -59,6 +59,12 @@ enum WindowClass {
+ 	WC_STATUS_BAR,
+ 
+ 	/**
++	 * Tablet bar; %Window numbers:
++	 *   - 0 = #StatusbarWidgets
++	 */
++	WC_TABLET_BAR,
++
++	/**
+ 	 * Build toolbar; %Window numbers:
+ 	 *   - #TRANSPORT_RAIL = #RailToolbarWidgets
+ 	 *   - #TRANSPORT_AIR = #AirportToolbarWidgets
+-- 
+1.8.1.2
+

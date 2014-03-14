@@ -1,0 +1,50 @@
+From 44eb7d5368be869a0e8bcaf9251fa2e368427b3c Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Fri, 9 Aug 2013 09:33:00 +0000
+Subject: [PATCH 174/249] Get better sizes for widgets of statusbar.
+
+---
+ src/statusbar_gui.cpp | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/src/statusbar_gui.cpp b/src/statusbar_gui.cpp
+index fe9b2b3..a6123e5 100644
+--- a/src/statusbar_gui.cpp
++++ b/src/statusbar_gui.cpp
+@@ -103,20 +103,30 @@ struct StatusBarWindow : Window {
+ 	{
+ 		Dimension d;
+ 		switch (widget) {
++			/* Left and right should have same sizing. */
+ 			case WID_S_LEFT:
++			case WID_S_RIGHT: {
+ 				SetDParamMaxValue(0, MAX_YEAR * DAYS_IN_YEAR);
+ 				d = GetStringBoundingBox(STR_WHITE_DATE_LONG);
+-				break;
+ 
+-			case WID_S_RIGHT: {
+ 				int64 max_money = UINT32_MAX;
+ 				const Company *c;
+ 				FOR_ALL_COMPANIES(c) max_money = max<int64>(c->money, max_money);
+ 				SetDParam(0, 100LL * max_money);
+-				d = GetStringBoundingBox(STR_COMPANY_MONEY);
++				d = maxdim(d, GetStringBoundingBox(STR_COMPANY_MONEY));
+ 				break;
+ 			}
+ 
++			case WID_S_MIDDLE:
++				d = GetStringBoundingBox(STR_STATUSBAR_AUTOSAVE);
++				d = maxdim(d,    GetStringBoundingBox(STR_STATUSBAR_PAUSED));
++
++				if (Company::IsValidID(_local_company)) {
++					SetDParam(0, _local_company);
++					d = maxdim(d, GetStringBoundingBox(STR_STATUSBAR_COMPANY_NAME));
++				}
++				break;
++
+ 			default:
+ 				return;
+ 		}
+-- 
+1.8.1.2
+

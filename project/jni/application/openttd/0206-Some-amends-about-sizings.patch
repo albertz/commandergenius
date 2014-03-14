@@ -1,0 +1,56 @@
+From 3de38eb550cdb720ac4bc8a648cc19070c0c89f8 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Fri, 27 Sep 2013 20:38:34 +0000
+Subject: [PATCH 206/249] Some amends about sizings.
+
+---
+ src/network/network_gui.cpp | 2 +-
+ src/settings_gui.cpp        | 5 +++--
+ src/widget.cpp              | 2 +-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/src/network/network_gui.cpp b/src/network/network_gui.cpp
+index 6d4c38d..4f41dbb 100644
+--- a/src/network/network_gui.cpp
++++ b/src/network/network_gui.cpp
+@@ -494,7 +494,7 @@ public:
+ 		switch (widget) {
+ 			case WID_NG_CONN_BTN:
+ 				*size = maxdim(GetStringBoundingBox(_lan_internet_types_dropdown[0]), GetStringBoundingBox(_lan_internet_types_dropdown[1]));
+-				size->width += padding.width;
++				size->width += padding.width + GetMinSizing(NWST_STEP, 11U);
+ 				size->height += padding.height;
+ 				break;
+ 
+diff --git a/src/settings_gui.cpp b/src/settings_gui.cpp
+index 74b97bc..45eeb79 100644
+--- a/src/settings_gui.cpp
++++ b/src/settings_gui.cpp
+@@ -1139,8 +1139,9 @@ uint SettingEntry::Draw(GameSettings *settings_ptr, int left, int right, int bas
+ 			break;
+ 		case SEF_SUBTREE_KIND:
+ 			if (cur_row >= first_row) {
+-				DrawSprite((this->d.sub.folded ? SPR_CIRCLE_FOLDED : SPR_CIRCLE_UNFOLDED), PAL_NONE, rtl ? x - 8 : x, y + (SETTING_HEIGHT - 11) / 2);
+-				DrawString(rtl ? left : x + 12, rtl ? x - 12 : right, Center(y, SETTING_HEIGHT), this->d.sub.title);
++				Dimension d = GetSpriteSize(SPR_CIRCLE_UNFOLDED);
++				DrawSprite((this->d.sub.folded ? SPR_CIRCLE_FOLDED : SPR_CIRCLE_UNFOLDED), PAL_NONE, rtl ? x - d.width : x, Center(y, SETTING_HEIGHT, d.height));
++				DrawString(rtl ? left : x + d.width + 2, rtl ? x - (d.width + 2) : right, Center(y, SETTING_HEIGHT), this->d.sub.title);
+ 			}
+ 			cur_row++;
+ 			if (!this->d.sub.folded) {
+diff --git a/src/widget.cpp b/src/widget.cpp
+index b085be3..76dc50d 100644
+--- a/src/widget.cpp
++++ b/src/widget.cpp
+@@ -2346,7 +2346,7 @@ void NWidgetLeaf::SetupSmallestSize(Window *w, bool init_array)
+ 			padding = &extra;
+ 			if (this->index >= 0) w->SetStringParameters(this->index);
+ 			Dimension d2 = GetStringBoundingBox(this->widget_data);
+-			d2.width += extra.width;
++			d2.width += extra.width + GetMinSizing(NWST_STEP, 11U);
+ 			d2.height += extra.height;
+ 			size = maxdim(size, d2);
+ 			break;
+-- 
+1.8.1.2
+

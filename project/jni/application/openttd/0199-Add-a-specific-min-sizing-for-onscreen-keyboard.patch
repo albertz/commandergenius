@@ -1,0 +1,116 @@
+From 6251bbea8a9dab7e4dfa94e9d661edea0a259fd1 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Fri, 2 Aug 2013 18:36:00 +0000
+Subject: [PATCH 199/249] Add a specific min sizing for onscreen keyboard.
+
+---
+ src/osk_gui.cpp   | 16 ++++++++--------
+ src/widget.cpp    |  3 +++
+ src/widget_type.h |  1 +
+ 3 files changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/src/osk_gui.cpp b/src/osk_gui.cpp
+index f172c1c..52d0d2d 100644
+--- a/src/osk_gui.cpp
++++ b/src/osk_gui.cpp
+@@ -103,7 +103,7 @@ struct OskWindow : public Window {
+ 
+ 		widget -= WID_OSK_LETTERS;
+ 		DrawCharCentered(_keyboard[this->shift][widget],
+-			r.left + 8,
++			(r.left + r.right) / 2,
+ 			r.top + 3,
+ 			TC_BLACK);
+ 	}
+@@ -227,7 +227,7 @@ static const int INTER_KEY_SPACE = 2; // Number of pixels between two keys.
+  */
+ static void AddKey(NWidgetHorizontal *hor, int height, int num_half, WidgetType widtype, int widnum, uint16 widdata, int *biggest_index)
+ {
+-	int min_half_key = max<int>(GetMinSizing(NWST_BUTTON) / 2, HALF_KEY_WIDTH);
++	int min_half_key = max<int>(GetMinSizing(NWST_BUTTON), HALF_KEY_WIDTH);
+ 	int key_width = min_half_key + (INTER_KEY_SPACE + min_half_key) * (num_half - 1);
+ 
+ 	if (widtype == NWID_SPACER) {
+@@ -251,7 +251,7 @@ static void AddKey(NWidgetHorizontal *hor, int height, int num_half, WidgetType
+ static NWidgetBase *MakeTopKeys(int *biggest_index)
+ {
+ 	NWidgetHorizontal *hor = new NWidgetHorizontal();
+-	int key_height = FONT_HEIGHT_NORMAL + 2;
++	int key_height = GetMinSizing(NWST_KEYBOARD, FONT_HEIGHT_NORMAL + 2);
+ 
+ 	AddKey(hor, key_height, 6 * 2, WWT_TEXTBTN,    WID_OSK_CANCEL,    STR_BUTTON_CANCEL,  biggest_index);
+ 	AddKey(hor, key_height, 6 * 2, WWT_TEXTBTN,    WID_OSK_OK,        STR_BUTTON_OK,      biggest_index);
+@@ -263,7 +263,7 @@ static NWidgetBase *MakeTopKeys(int *biggest_index)
+ static NWidgetBase *MakeNumberKeys(int *biggest_index)
+ {
+ 	NWidgetHorizontal *hor = new NWidgetHorizontalLTR();
+-	int key_height = FONT_HEIGHT_NORMAL + 6;
++	int key_height = GetMinSizing(NWST_KEYBOARD, FONT_HEIGHT_NORMAL + 6);
+ 
+ 	for (int widnum = WID_OSK_NUMBERS_FIRST; widnum <= WID_OSK_NUMBERS_LAST; widnum++) {
+ 		AddKey(hor, key_height, 2, WWT_PUSHBTN, widnum, 0x0, biggest_index);
+@@ -275,7 +275,7 @@ static NWidgetBase *MakeNumberKeys(int *biggest_index)
+ static NWidgetBase *MakeQwertyKeys(int *biggest_index)
+ {
+ 	NWidgetHorizontal *hor = new NWidgetHorizontalLTR();
+-	int key_height = FONT_HEIGHT_NORMAL + 6;
++	int key_height = GetMinSizing(NWST_KEYBOARD, FONT_HEIGHT_NORMAL + 6);
+ 
+ 	AddKey(hor, key_height, 3, WWT_PUSHIMGBTN, WID_OSK_SPECIAL, SPR_OSK_SPECIAL, biggest_index);
+ 	for (int widnum = WID_OSK_QWERTY_FIRST; widnum <= WID_OSK_QWERTY_LAST; widnum++) {
+@@ -289,7 +289,7 @@ static NWidgetBase *MakeQwertyKeys(int *biggest_index)
+ static NWidgetBase *MakeAsdfgKeys(int *biggest_index)
+ {
+ 	NWidgetHorizontal *hor = new NWidgetHorizontalLTR();
+-	int key_height = FONT_HEIGHT_NORMAL + 6;
++	int key_height = GetMinSizing(NWST_KEYBOARD, FONT_HEIGHT_NORMAL + 6);
+ 
+ 	AddKey(hor, key_height, 4, WWT_IMGBTN, WID_OSK_CAPS, SPR_OSK_CAPS, biggest_index);
+ 	for (int widnum = WID_OSK_ASDFG_FIRST; widnum <= WID_OSK_ASDFG_LAST; widnum++) {
+@@ -302,7 +302,7 @@ static NWidgetBase *MakeAsdfgKeys(int *biggest_index)
+ static NWidgetBase *MakeZxcvbKeys(int *biggest_index)
+ {
+ 	NWidgetHorizontal *hor = new NWidgetHorizontalLTR();
+-	int key_height = FONT_HEIGHT_NORMAL + 6;
++	int key_height = GetMinSizing(NWST_KEYBOARD, FONT_HEIGHT_NORMAL + 6);
+ 
+ 	AddKey(hor, key_height, 3, WWT_IMGBTN, WID_OSK_SHIFT, SPR_OSK_SHIFT, biggest_index);
+ 	for (int widnum = WID_OSK_ZXCVB_FIRST; widnum <= WID_OSK_ZXCVB_LAST; widnum++) {
+@@ -316,7 +316,7 @@ static NWidgetBase *MakeZxcvbKeys(int *biggest_index)
+ static NWidgetBase *MakeSpacebarKeys(int *biggest_index)
+ {
+ 	NWidgetHorizontal *hor = new NWidgetHorizontal();
+-	int key_height = FONT_HEIGHT_NORMAL + 6;
++	int key_height = GetMinSizing(NWST_KEYBOARD, FONT_HEIGHT_NORMAL + 6);
+ 
+ 	AddKey(hor, key_height,  8, NWID_SPACER, 0, 0, biggest_index);
+ 	AddKey(hor, key_height, 13, WWT_PUSHTXTBTN, WID_OSK_SPACE, STR_EMPTY, biggest_index);
+diff --git a/src/widget.cpp b/src/widget.cpp
+index 8d14527..74b0112 100644
+--- a/src/widget.cpp
++++ b/src/widget.cpp
+@@ -2921,6 +2921,9 @@ uint GetMinSizing(NWidSizingType type, uint min_1)
+ 		case NWST_STEP:
+ 			min_sizing = _settings_client.gui.min_step;
+ 			break;
++		case NWST_KEYBOARD:
++			min_sizing = 2 * _settings_client.gui.min_button;
++			break;
+ 		default: NOT_REACHED();
+ 	}
+ 
+diff --git a/src/widget_type.h b/src/widget_type.h
+index 1003096..f2e015c 100644
+--- a/src/widget_type.h
++++ b/src/widget_type.h
+@@ -47,6 +47,7 @@ enum NWidSizingType {
+ 				///< Later, they are automatically set to NWST_BUTTON or NWST_STEP.
+ 	NWST_BUTTON,   ///< Size will be set at least _settings_client.gui.min_button.
+ 	NWST_STEP,     ///< Size will be set at least _settings_client.gui.min_step (scrollbars and dropdowns).
++	NWST_KEYBOARD, ///< Size for keyboard keys.
+ 	NWST_OVERRIDE, ///< Avoid widgets to use automatic minimal sizing.
+ 	NWST_END
+ };
+-- 
+1.8.1.2
+

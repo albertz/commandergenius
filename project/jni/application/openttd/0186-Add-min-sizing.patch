@@ -1,0 +1,973 @@
+From 9d64539b8739d940c2b3c74a07b8e1123b710726 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Sat, 29 Jun 2013 15:12:06 +0200
+Subject: [PATCH 186/249] Add min sizing.
+
+---
+ src/ai/ai_gui.cpp                   |   8 +--
+ src/airport_gui.cpp                 |   9 ++--
+ src/build_vehicle_gui.cpp           |  10 ++--
+ src/company_gui.cpp                 |   3 +-
+ src/filters/filter_window_gui.cpp   |   5 +-
+ src/fios_gui.cpp                    |   2 +-
+ src/genworld_gui.cpp                |   7 +--
+ src/graph_gui.cpp                   |   1 +
+ src/group_details_gui.cpp           |  10 ++--
+ src/group_gui.cpp                   |  21 +++-----
+ src/industry_gui.cpp                |   4 +-
+ src/linkgraph/linkgraph_gui.cpp     |   1 +
+ src/network/network_content_gui.cpp |   2 +-
+ src/network/network_gui.cpp         |  18 +++----
+ src/newgrf_gui.cpp                  |  10 ++--
+ src/settings_gui.cpp                |   2 +-
+ src/settings_type.h                 |   2 +
+ src/signs_gui.cpp                   |   1 +
+ src/station_gui.cpp                 |  15 +++---
+ src/table/misc_settings.ini         |  19 +++++++
+ src/toolbar_gui.cpp                 |   2 +-
+ src/town_gui.cpp                    |  21 ++++----
+ src/vehicle_gui.cpp                 |   4 +-
+ src/widget.cpp                      | 101 ++++++++++++++++++++++++++++++++++--
+ src/widget_type.h                   |  41 +++++++++++++--
+ src/widgets/dropdown_type.h         |   3 +-
+ 26 files changed, 239 insertions(+), 83 deletions(-)
+
+diff --git a/src/ai/ai_gui.cpp b/src/ai/ai_gui.cpp
+index 8bcc414..62fed7d 100644
+--- a/src/ai/ai_gui.cpp
++++ b/src/ai/ai_gui.cpp
+@@ -107,7 +107,7 @@ struct AIListWindow : public Window {
+ 	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+ 	{
+ 		if (widget == WID_AIL_LIST) {
+-			this->line_height = FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
++			this->line_height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM);
+ 
+ 			resize->width = 1;
+ 			resize->height = this->line_height;
+@@ -345,7 +345,7 @@ struct AISettingsWindow : public Window {
+ 	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+ 	{
+ 		if (widget == WID_AIS_BACKGROUND) {
+-			this->line_height = FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
++			this->line_height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM);
+ 
+ 			resize->width = 1;
+ 			resize->height = this->line_height;
+@@ -761,7 +761,7 @@ struct AIConfigWindow : public Window {
+ 				break;
+ 
+ 			case WID_AIC_LIST:
+-				this->line_height = FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
++				this->line_height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM);
+ 				size->height = 8 * this->line_height;
+ 				break;
+ 		}
+@@ -1072,7 +1072,7 @@ struct AIDebugWindow : public Window {
+ 	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+ 	{
+ 		if (widget == WID_AID_LOG_PANEL) {
+-			resize->height = FONT_HEIGHT_NORMAL + WD_PAR_VSEP_NORMAL;
++			resize->height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL + WD_PAR_VSEP_NORMAL);
+ 			size->height = 14 * resize->height + this->top_offset + this->bottom_offset;
+ 		}
+ 	}
+diff --git a/src/airport_gui.cpp b/src/airport_gui.cpp
+index a7476fc..103b826 100644
+--- a/src/airport_gui.cpp
++++ b/src/airport_gui.cpp
+@@ -272,6 +272,7 @@ public:
+ 				d.width += padding.width;
+ 				d.height += padding.height;
+ 				*size = maxdim(*size, d);
++				size->height = GetMinSizing(NWST_STEP, size->height);
+ 				break;
+ 			}
+ 
+@@ -283,7 +284,7 @@ public:
+ 					size->width = max(size->width, GetStringBoundingBox(as->name).width);
+ 				}
+ 
+-				this->line_height = FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
++				this->line_height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM);
+ 				size->height = 5 * this->line_height;
+ 				break;
+ 			}
+@@ -522,7 +541,7 @@
+ 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_STATION_BUILD_AIRPORT_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+ 	EndContainer(),
+ 	NWidget(WWT_PANEL, COLOUR_DARK_GREEN), SetFill(1, 0), SetPIP(2, 0, 2),
+-		NWidget(WWT_LABEL, COLOUR_DARK_GREEN), SetDataTip(STR_STATION_BUILD_AIRPORT_CLASS_LABEL, STR_NULL), SetFill(1, 0),
++		NWidget(WWT_LABEL, COLOUR_DARK_GREEN), SetSizingType(NWST_STEP), SetDataTip(STR_STATION_BUILD_AIRPORT_CLASS_LABEL, STR_NULL), SetFill(1, 0),
+ 		NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_AP_CLASS_DROPDOWN), SetFill(1, 0), SetDataTip(STR_BLACK_STRING, STR_STATION_BUILD_AIRPORT_TOOLTIP),
+ 		NWidget(WWT_EMPTY, COLOUR_DARK_GREEN, WID_AP_AIRPORT_SPRITE), SetFill(1, 0),
+ 		NWidget(NWID_HORIZONTAL),
+@@ -530,9 +549,9 @@
+ 			NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_AP_SCROLLBAR),
+ 		EndContainer(),
+ 		NWidget(NWID_HORIZONTAL),
+-			NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_AP_LAYOUT_DECREASE), SetMinimalSize(12, 0), SetDataTip(AWV_DECREASE, STR_NULL),
++			NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_AP_LAYOUT_DECREASE), SetSizingType(NWST_STEP), SetMinimalSize(12, 0), SetDataTip(AWV_DECREASE, STR_NULL),
+ 			NWidget(WWT_LABEL, COLOUR_GREY, WID_AP_LAYOUT_NUM), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_BLACK_STRING, STR_NULL),
+-			NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_AP_LAYOUT_INCREASE), SetMinimalSize(12, 0), SetDataTip(AWV_INCREASE, STR_NULL),
++			NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_AP_LAYOUT_INCREASE), SetSizingType(NWST_STEP), SetMinimalSize(12, 0), SetDataTip(AWV_INCREASE, STR_NULL),
+ 		EndContainer(),
+ 		NWidget(WWT_EMPTY, COLOUR_DARK_GREEN, WID_AP_EXTRA_TEXT), SetFill(1, 0), SetMinimalSize(150, 0),
+ 	EndContainer(),
+diff --git a/src/build_vehicle_gui.cpp b/src/build_vehicle_gui.cpp
+index fd78d4d..1546393 100644
+--- a/src/build_vehicle_gui.cpp
++++ b/src/build_vehicle_gui.cpp
+@@ -44,7 +44,8 @@
+  */
+ uint GetEngineListHeight(VehicleType type)
+ {
+-	return max<uint>(FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM, GetVehicleImageCellSize(type, EIT_PURCHASE).height);
++	uint size = max<uint>(FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM, GetVehicleImageCellSize(type, EIT_PURCHASE).height);
++	return GetMinSizing(NWST_STEP, size);
+ }
+ 
+ static const NWidgetPart _nested_build_vehicle_widgets[] = {
+@@ -59,12 +60,12 @@ static const NWidgetPart _nested_build_vehicle_widgets[] = {
+ 	NWidget(WWT_PANEL, COLOUR_GREY),
+ 		NWidget(NWID_HORIZONTAL),
+ 			NWidget(NWID_VERTICAL),
+-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_BV_SORT_ASSENDING_DESCENDING), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0),
++				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_BV_SORT_ASSENDING_DESCENDING), SetSizingType(NWST_STEP), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0),
+ 				NWidget(NWID_SPACER), SetFill(1, 1),
+ 			EndContainer(),
+ 			NWidget(NWID_VERTICAL),
+-				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_SORT_DROPDOWN), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_SORT_CRITERIA),
+-				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_CARGO_FILTER_DROPDOWN), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
++				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_SORT_DROPDOWN), SetSizingType(NWST_STEP), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_SORT_CRITERIA),
++				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_CARGO_FILTER_DROPDOWN), SetSizingType(NWST_STEP), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
+ 			EndContainer(),
+ 		EndContainer(),
+ 	EndContainer(),
+@@ -1316,6 +1317,7 @@ struct BuildVehicleWindow : Window {
+ 				Dimension d = GetStringBoundingBox(this->GetWidget<NWidgetCore>(widget)->widget_data);
+ 				d.width += padding.width + WD_SORTBUTTON_ARROW_WIDTH * 2; // Doubled since the string is centred and it also looks better.
+ 				d.height += padding.height;
++				d.height = GetMinSizing(NWST_STEP, d.height);
+ 				*size = maxdim(*size, d);
+ 				break;
+ 			}
+diff --git a/src/company_gui.cpp b/src/company_gui.cpp
+index 1cf38fc..060c796 100644
+--- a/src/company_gui.cpp
++++ b/src/company_gui.cpp
+@@ -35,6 +35,7 @@
+ #include "road_func.h"
+ #include "water.h"
+ #include "station_func.h"
++#include "widget_type.h"
+ 
+ #include "widgets/company_widget.h"
+ 
+@@ -526,7 +527,7 @@ public:
+ 
+ 	uint Height(uint width) const
+ 	{
+-		return max(FONT_HEIGHT_NORMAL, 14);
++		return GetMinSizing(NWST_STEP, max(FONT_HEIGHT_NORMAL, 14));
+ 	}
+ 
+ 	bool Selectable() const
+diff --git a/src/fios_gui.cpp b/src/fios_gui.cpp
+index 08d6415..629f8bb 100644
+--- a/src/fios_gui.cpp
++++ b/src/fios_gui.cpp
+@@ -473,7 +473,7 @@ public:
+ 				break;
+ 
+ 			case WID_SL_DRIVES_DIRECTORIES_LIST:
+-				resize->height = FONT_HEIGHT_NORMAL;
++				resize->height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL);
+ 				size->height = resize->height * 10 + WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM;
+ 				break;
+ 			case WID_SL_SORT_BYNAME:
+diff --git a/src/genworld_gui.cpp b/src/genworld_gui.cpp
+index f1b561e..1cc26bd 100644
+--- a/src/genworld_gui.cpp
++++ b/src/genworld_gui.cpp
+@@ -451,6 +451,7 @@ struct GenerateLandscapeWindow : public Window {
+ 			case WID_GL_MAPSIZE_Y_PULLDOWN:
+ 				SetDParamMaxValue(0, MAX_MAP_SIZE);
+ 				*size = GetStringBoundingBox(STR_JUST_INT);
++				size->width = size->width + GetMinSizing(NWST_BUTTON);
+ 				break;
+ 
+ 			case WID_GL_SNOW_LEVEL_TEXT:
+@@ -508,7 +509,7 @@ struct GenerateLandscapeWindow : public Window {
+ 			}
+ 		}
+ 		size->width += padding.width;
+-		size->height = FONT_HEIGHT_NORMAL + WD_DROPDOWNTEXT_TOP + WD_DROPDOWNTEXT_BOTTOM;
++		size->height = GetMinSizing(NWST_BUTTON, FONT_HEIGHT_NORMAL + WD_DROPDOWNTEXT_TOP + WD_DROPDOWNTEXT_BOTTOM);
+ 	}
+ 
+ 	virtual void DrawWidget(const Rect &r, int widget) const
+diff --git a/src/graph_gui.cpp b/src/graph_gui.cpp
+index 99cff0e..4e8e3ae 100644
+--- a/src/graph_gui.cpp
++++ b/src/graph_gui.cpp
+@@ -114,6 +114,7 @@ static NWidgetBase *MakeNWidgetCompanyLines(int *biggest_index)
+ 
+ 	for (int widnum = WID_GL_FIRST_COMPANY; widnum <= WID_GL_LAST_COMPANY; widnum++) {
+ 		NWidgetBackground *panel = new NWidgetBackground(WWT_PANEL, COLOUR_GREY, widnum);
++		panel->sizing_type = NWST_STEP;
+ 		panel->SetMinimalSize(246, line_height);
+ 		panel->SetFill(1, 0);
+ 		panel->SetDataTip(0x0, STR_GRAPH_KEY_COMPANY_SELECTION_TOOLTIP);
+diff --git a/src/group_gui.cpp b/src/group_gui.cpp
+index ee1a240..537ccac 100644
+--- a/src/group_gui.cpp
++++ b/src/group_gui.cpp
+@@ -66,7 +66,7 @@
+ 		/* right part */
+ 		NWidget(NWID_VERTICAL),
+ 			NWidget(NWID_HORIZONTAL),
+-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GL_SORT_BY_ORDER), SetMinimalSize(81, 12), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER),
++				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GL_SORT_BY_ORDER), SetSizingType(NWST_STEP), SetMinimalSize(81, 12), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER),
+ 				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GL_SORT_BY_DROPDOWN), SetMinimalSize(167, 12), SetDataTip(0x0, STR_TOOLTIP_SORT_CRITERIA),
+ 				NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(12, 12), SetResize(1, 0), EndContainer(),
+ 			EndContainer(),
+@@ -94,7 +94,7 @@ static const NWidgetPart _nested_group_widgets[] = {
+ 				NWidget(WWT_MATRIX, COLOUR_GREY, WID_GL_LIST_VEHICLE), SetMinimalSize(248, 0), SetMatrixDataTip(1, 0, STR_NULL), SetResize(1, 1), SetFill(1, 0), SetScrollbar(WID_GL_LIST_VEHICLE_SCROLLBAR),
+ 				NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_GL_LIST_VEHICLE_SCROLLBAR),
+ 			EndContainer(),
+-			NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(1, 0), SetFill(1, 1), SetResize(1, 0), EndContainer(),
++			NWidget(WWT_PANEL, COLOUR_GREY), SetFill(1, 1), SetResize(1, 0), EndContainer(),
+ 			NWidget(NWID_HORIZONTAL),
+ 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GL_AVAILABLE_VEHICLES), SetMinimalSize(106, 12), SetFill(0, 1),
+ 						SetDataTip(STR_BLACK_STRING, STR_VEHICLE_LIST_AVAILABLE_ENGINES_TOOLTIP),
+@@ -143,7 +143,7 @@ private:
+ 		this->column_size[VGC_NAME] = maxdim(GetStringBoundingBox(STR_GROUP_DEFAULT_TRAINS + this->vli.vtype), GetStringBoundingBox(STR_GROUP_ALL_TRAINS + this->vli.vtype));
+ /* We consider the max average length of characters to be the one of "a" */
+ 		this->column_size[VGC_NAME].width = max(GetCharacterWidth(FS_NORMAL, 97) * (MAX_LENGTH_GROUP_NAME_CHARS - 4), this->column_size[VGC_NAME].width);
+-		this->tiny_step_height = this->column_size[VGC_NAME].height;
++		this->tiny_step_height = max(11U, this->column_size[VGC_NAME].height);
+ 
+ 		this->column_size[VGC_PROTECT] = GetSpriteSize(SPR_GROUP_REPLACE_PROTECT);
+ 		this->tiny_step_height = max(this->tiny_step_height, this->column_size[VGC_PROTECT].height);
+@@ -167,6 +167,7 @@ private:
+ 		this->tiny_step_height = max(this->tiny_step_height, this->column_size[VGC_NUMBER].height);
+ 
+ 		this->tiny_step_height += WD_MATRIX_TOP;
++		this->tiny_step_height = GetMinSizing(NWST_STEP, this->tiny_step_height);
+ 
+ 		return WD_FRAMERECT_LEFT + 8 +
+ 			this->column_size[VGC_NAME].width + 2 +
+@@ -364,14 +365,8 @@ public:
+ 				/* Minimum height is the height of the list widget minus all and default vehicles... */
+ 				size->height =  4 * GetVehicleListHeight(this->vli.vtype, this->tiny_step_height) - 4 * this->tiny_step_height;
+ 
+-				/* ... minus the buttons at the bottom ... */
+-				uint max_icon_height = GetSpriteSize(this->GetWidget<NWidgetCore>(WID_GL_CREATE_GROUP)->widget_data).height;
+-				max_icon_height = max(max_icon_height, GetSpriteSize(this->GetWidget<NWidgetCore>(WID_GL_RENAME_GROUP)->widget_data).height);
+-				max_icon_height = max(max_icon_height, GetSpriteSize(this->GetWidget<NWidgetCore>(WID_GL_DELETE_GROUP)->widget_data).height);
+-				max_icon_height = max(max_icon_height, GetSpriteSize(this->GetWidget<NWidgetCore>(WID_GL_REPLACE_PROTECTION)->widget_data).height);
+-
+ 				/* Get a multiple of tiny_step_height of that amount */
+-				size->height = Ceil(size->height - max_icon_height, tiny_step_height);
++				size->height = Ceil(size->height, tiny_step_height);
+ 				break;
+ 			}
+ 
+diff --git a/src/industry_gui.cpp b/src/industry_gui.cpp
+index de595e3..360ce8a 100644
+--- a/src/industry_gui.cpp
++++ b/src/industry_gui.cpp
+@@ -298,7 +298,7 @@ public:
+ 					if (this->index[i] == INVALID_INDUSTRYTYPE) continue;
+ 					d = maxdim(d, GetStringBoundingBox(GetIndustrySpec(this->index[i])->name));
+ 				}
+-				resize->height = FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
++				resize->height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM);
+ 				d.width += MATRIX_TEXT_OFFSET + padding.width;
+ 				d.height = 5 * resize->height;
+ 				*size = maxdim(*size, d);
+@@ -1309,7 +1309,7 @@ public:
+ 				for (uint i = 0; i < this->industries.Length(); i++) {
+ 					d = maxdim(d, GetStringBoundingBox(this->GetIndustryString(this->industries[i])));
+ 				}
+-				resize->height = d.height;
++				resize->height = d.height = GetMinSizing(NWST_STEP, d.height);
+ 				d.height *= 5;
+ 				d.width += padding.width + WD_FRAMERECT_LEFT + WD_FRAMERECT_RIGHT;
+ 				d.height += padding.height + WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM;
+diff --git a/src/linkgraph/linkgraph_gui.cpp b/src/linkgraph/linkgraph_gui.cpp
+index ae4cdee..9889ad8 100644
+--- a/src/linkgraph/linkgraph_gui.cpp
++++ b/src/linkgraph/linkgraph_gui.cpp
+@@ -344,6 +344,7 @@ NWidgetBase *MakeCargoesLegendLinkGraphGUI(int *biggest_index)
+ 			row = new NWidgetHorizontal(NC_EQUALSIZE);
+ 		}
+ 		NWidgetBackground * wid = new NWidgetBackground(WWT_PANEL, COLOUR_GREY, i + WID_LGL_CARGO_FIRST);
++		wid->sizing_type = NWST_STEP;
+ 		wid->SetMinimalSize(25, FONT_HEIGHT_SMALL);
+ 		wid->SetFill(1, 1);
+ 		wid->SetResize(0, 0);
+diff --git a/src/network/network_content_gui.cpp b/src/network/network_content_gui.cpp
+index 3ed9dfd..77b51bc 100644
+--- a/src/network/network_content_gui.cpp
++++ b/src/network/network_content_gui.cpp
+@@ -524,7 +524,7 @@ public:
+ 			}
+ 
+ 			case WID_NCL_MATRIX:
+-				resize->height = FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
++				resize->height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM);
+ 				size->height = 10 * resize->height;
+ 				break;
+ 		}
+diff --git a/src/network/network_gui.cpp b/src/network/network_gui.cpp
+index 3165f4d..6d4c38d 100644
+--- a/src/network/network_gui.cpp
++++ b/src/network/network_gui.cpp
+@@ -499,12 +499,12 @@ public:
+ 				break;
+ 
+ 			case WID_NG_MATRIX:
+-				resize->height = WD_MATRIX_TOP + FONT_HEIGHT_NORMAL + WD_MATRIX_BOTTOM;
++				resize->height = GetMinSizing(NWST_STEP, WD_MATRIX_TOP + FONT_HEIGHT_NORMAL + WD_MATRIX_BOTTOM);
+ 				size->height = 10 * resize->height;
+ 				break;
+ 
+ 			case WID_NG_LASTJOINED:
+-				size->height = WD_MATRIX_TOP + FONT_HEIGHT_NORMAL + WD_MATRIX_BOTTOM;
++				size->height = GetMinSizing(NWST_STEP, WD_MATRIX_TOP + FONT_HEIGHT_NORMAL + WD_MATRIX_BOTTOM);
+ 				break;
+ 
+ 			case WID_NG_LASTJOINED_SPACER:
+@@ -931,7 +931,7 @@ static const NWidgetPart _nested_network_game_widgets[] = {
+ 				/* LEFT SIDE */
+ 				NWidget(NWID_VERTICAL), SetPIP(0, 7, 0),
+ 					NWidget(NWID_HORIZONTAL), SetPIP(0, 7, 0),
+-						NWidget(WWT_TEXT, COLOUR_LIGHT_BLUE, WID_NG_CONNECTION), SetDataTip(STR_NETWORK_SERVER_LIST_ADVERTISED, STR_NULL),
++						NWidget(WWT_TEXT, COLOUR_LIGHT_BLUE, WID_NG_CONNECTION), SetSizingType(NWST_STEP), SetDataTip(STR_NETWORK_SERVER_LIST_ADVERTISED, STR_NULL),
+ 						NWidget(WWT_DROPDOWN, COLOUR_LIGHT_BLUE, WID_NG_CONN_BTN),
+ 											SetDataTip(STR_BLACK_STRING, STR_NETWORK_SERVER_LIST_ADVERTISED_TOOLTIP),
+ 						NWidget(NWID_SPACER), SetFill(1, 0), SetResize(1, 0),
+@@ -1080,8 +1080,8 @@ struct NetworkStartServerWindow : public Window {
+ 		switch (widget) {
+ 			case WID_NSS_CONNTYPE_BTN:
+ 				*size = maxdim(GetStringBoundingBox(_connection_types_dropdown[0]), GetStringBoundingBox(_connection_types_dropdown[1]));
+-				size->width += padding.width;
+-				size->height += padding.height;
++				size->width = GetMinSizing(NWST_BUTTON, size->width + padding.width);
++				size->height = GetMinSizing(NWST_BUTTON, size->height + padding.height);
+ 				break;
+ 		}
+ 	}
+@@ -1264,15 +1264,15 @@
+ 			NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(10, 6, 10),
+ 				NWidget(NWID_VERTICAL), SetPIP(0, 1, 0),
+ 					NWidget(WWT_TEXT, COLOUR_LIGHT_BLUE, WID_NSS_CONNTYPE_LABEL), SetFill(1, 0), SetDataTip(STR_NETWORK_SERVER_LIST_ADVERTISED, STR_NULL),
+-					NWidget(WWT_DROPDOWN, COLOUR_LIGHT_BLUE, WID_NSS_CONNTYPE_BTN), SetFill(1, 0), SetDataTip(STR_BLACK_STRING, STR_NETWORK_SERVER_LIST_ADVERTISED_TOOLTIP),
++					NWidget(WWT_DROPDOWN, COLOUR_LIGHT_BLUE, WID_NSS_CONNTYPE_BTN), SetSizingType(NWST_BUTTON), SetFill(1, 0), SetDataTip(STR_BLACK_STRING, STR_NETWORK_SERVER_LIST_ADVERTISED_TOOLTIP),
+ 				EndContainer(),
+ 				NWidget(NWID_VERTICAL), SetPIP(0, 1, 0),
+ 					NWidget(WWT_TEXT, COLOUR_LIGHT_BLUE, WID_NSS_LANGUAGE_LABEL), SetFill(1, 0), SetDataTip(STR_NETWORK_START_SERVER_LANGUAGE_SPOKEN, STR_NULL),
+-					NWidget(WWT_DROPDOWN, COLOUR_LIGHT_BLUE, WID_NSS_LANGUAGE_BTN), SetFill(1, 0), SetDataTip(STR_BLACK_STRING, STR_NETWORK_START_SERVER_LANGUAGE_TOOLTIP),
++					NWidget(WWT_DROPDOWN, COLOUR_LIGHT_BLUE, WID_NSS_LANGUAGE_BTN), SetSizingType(NWST_BUTTON), SetFill(1, 0), SetDataTip(STR_BLACK_STRING, STR_NETWORK_START_SERVER_LANGUAGE_TOOLTIP),
+ 				EndContainer(),
+ 				NWidget(NWID_VERTICAL), SetPIP(0, 1, 0),
+ 					NWidget(NWID_SPACER), SetFill(1, 1),
+-					NWidget(WWT_PUSHTXTBTN, COLOUR_WHITE, WID_NSS_SETPWD), SetFill(1, 0), SetDataTip(STR_NETWORK_START_SERVER_SET_PASSWORD, STR_NETWORK_START_SERVER_PASSWORD_TOOLTIP),
++					NWidget(WWT_PUSHTXTBTN, COLOUR_WHITE, WID_NSS_SETPWD), SetSizingType(NWST_BUTTON), SetFill(1, 0), SetDataTip(STR_NETWORK_START_SERVER_SET_PASSWORD, STR_NETWORK_START_SERVER_PASSWORD_TOOLTIP),
+ 				EndContainer(),
+ 			EndContainer(),
+ 
+@@ -1375,7 +1375,7 @@ struct NetworkLobbyWindow : public Window {
+ 				break;
+ 
+ 			case WID_NL_MATRIX:
+-				resize->height = WD_MATRIX_TOP + FONT_HEIGHT_NORMAL + WD_MATRIX_BOTTOM;
++				resize->height = GetMinSizing(NWST_STEP, WD_MATRIX_TOP + FONT_HEIGHT_NORMAL + WD_MATRIX_BOTTOM);
+ 				size->height = 10 * resize->height;
+ 				break;
+ 
+diff --git a/src/newgrf_gui.cpp b/src/newgrf_gui.cpp
+index 47cca02..aedb4fd 100644
+--- a/src/newgrf_gui.cpp
++++ b/src/newgrf_gui.cpp
+@@ -681,14 +681,14 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
+ 			case WID_NS_FILE_LIST:
+ 			{
+ 				Dimension d = maxdim(GetSpriteSize(SPR_SQUARE), GetSpriteSize(SPR_WARNING_SIGN));
+-				resize->height = max(d.height + 2U, FONT_HEIGHT_NORMAL + 2U);
+-				size->height = max(size->height, WD_FRAMERECT_TOP + 6 * resize->height + WD_FRAMERECT_BOTTOM);
++				resize->height = GetMinSizing(NWST_STEP, max(d.height + 2U, FONT_HEIGHT_NORMAL + 2U));
++				size->height = max(size->height, WD_FRAMERECT_TOP + 4 * resize->height + WD_FRAMERECT_BOTTOM);
+ 				break;
+ 			}
+ 
+ 			case WID_NS_AVAIL_LIST:
+-				resize->height = max(12, FONT_HEIGHT_NORMAL + 2);
+-				size->height = max(size->height, WD_FRAMERECT_TOP + 8 * resize->height + WD_FRAMERECT_BOTTOM);
++				resize->height = GetMinSizing(NWST_STEP, max(12, FONT_HEIGHT_NORMAL + 2));
++				size->height = max(size->height, WD_FRAMERECT_TOP + 4 * resize->height + WD_FRAMERECT_BOTTOM);
+ 				break;
+ 
+ 			case WID_NS_NEWGRF_INFO_TITLE: {
+@@ -711,6 +711,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
+ 					}
+ 				}
+ 				d.width += padding.width;
++				d.height = GetMinSizing(NWST_BUTTON, d.height);
+ 				*size = maxdim(d, *size);
+ 				break;
+ 			}
+@@ -721,6 +722,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
+ 				*size = maxdim(d, GetStringBoundingBox(STR_INTRO_ONLINE_CONTENT));
+ 				size->width  += padding.width;
+ 				size->height += padding.height;
++				size->height = GetMinSizing(NWST_BUTTON, size->height);
+ 				break;
+ 			}
+ 		}
+diff --git a/src/settings_gui.cpp b/src/settings_gui.cpp
+index 5067550..afdbb4a 100644
+--- a/src/settings_gui.cpp
++++ b/src/settings_gui.cpp
+@@ -1772,7 +1772,7 @@ struct GameSettingsWindow : Window {
+ 	{
+ 		switch (widget) {
+ 			case WID_GS_OPTIONSPANEL:
+-				resize->height = SETTING_HEIGHT = max(11, FONT_HEIGHT_NORMAL + 1);
++				resize->height = SETTING_HEIGHT = GetMinSizing(NWST_STEP, max(11, FONT_HEIGHT_NORMAL + 1));
+ 				resize->width  = 1;
+ 
+ 				size->height = 5 * resize->height + SETTINGTREE_TOP_OFFSET + SETTINGTREE_BOTTOM_OFFSET;
+diff --git a/src/settings_type.h b/src/settings_type.h
+index f194550..aa0e2a4 100644
+--- a/src/settings_type.h
++++ b/src/settings_type.h
+@@ -77,6 +77,8 @@ struct GUISettings {
+ 	bool   lost_vehicle_warn;                ///< if a vehicle can't find its destination, show a warning
+ 	uint8  order_review_system;              ///< perform order reviews on vehicles
+ 	bool   vehicle_income_warn;              ///< if a vehicle isn't generating income, show a warning
++	uint   min_button;                       ///< min size of most button widgets
++	uint   min_step;                         ///< min size of scrollbar/dropdown elements
+ 	bool   show_finances;                    ///< show finances at end of year
+ 	bool   sg_new_nonstop;                   ///< ttdpatch compatible nonstop handling read from pre v93 savegames
+ 	bool   new_nonstop;                      ///< ttdpatch compatible nonstop handling
+diff --git a/src/signs_gui.cpp b/src/signs_gui.cpp
+index aeac02e..2ec3677 100644
+--- a/src/signs_gui.cpp
++++ b/src/signs_gui.cpp
+@@ -267,6 +267,7 @@ struct SignListWindow : Window, SignList {
+ 				Dimension spr_dim = GetSpriteSize(SPR_COMPANY_ICON);
+ 				this->text_offset = WD_FRAMETEXT_LEFT + spr_dim.width + 2; // 2 pixels space between icon and the sign text.
+ 				resize->height = max<uint>(FONT_HEIGHT_NORMAL, spr_dim.height);
++				resize->height = GetMinSizing(NWST_STEP, resize->height);
+ 				Dimension d = {this->text_offset + WD_FRAMETEXT_RIGHT, WD_FRAMERECT_TOP + 5 * resize->height + WD_FRAMERECT_BOTTOM};
+ 				*size = maxdim(*size, d);
+ 				break;
+diff --git a/src/station_gui.cpp b/src/station_gui.cpp
+index 9080fa8..28f9ea6 100644
+--- a/src/station_gui.cpp
++++ b/src/station_gui.cpp
+@@ -390,7 +390,7 @@ public:
+ 			}
+ 
+ 			case WID_STL_LIST:
+-				resize->height = FONT_HEIGHT_NORMAL;
++				resize->height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL);
+ 				size->height = WD_FRAMERECT_TOP + 5 * resize->height + WD_FRAMERECT_BOTTOM;
+ 				break;
+ 		}
+@@ -414,7 +414,8 @@ public:
+ 
+ 			case WID_STL_LIST: {
+ 				int max = min(this->vscroll->GetPosition() + this->vscroll->GetCapacity(), this->stations.Length());
+-				int y = r.top + WD_FRAMERECT_TOP;
++				uint line_height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL);
++				int y = Center(r.top + WD_FRAMERECT_TOP, line_height);
+ 				for (int i = this->vscroll->GetPosition(); i < max; ++i) { // do until max number of stations of owner
+ 					const Station *st = this->stations[i];
+ 					assert(st->xy != INVALID_TILE);
+@@ -427,9 +428,9 @@ public:
+ 					SetDParam(1, st->facilities);
+ 					int x = DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_STATION_LIST_STATION);
+ 
+-					StationsWndShowStationRating(st, r.left, r.right, x, FONT_HEIGHT_NORMAL + 2, y);
++					StationsWndShowStationRating(st, r.left, r.right, x, line_height + 2, y);
+ 
+-					y += FONT_HEIGHT_NORMAL;
++					y += line_height;
+ 				}
+ 
+ 				if (this->vscroll->GetCount() == 0) { // company has no stations
+@@ -459,7 +460,7 @@ public:
+ 				break;
+ 
+ 			case WID_STL_LIST: {
+-				uint id_v = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_STL_LIST, 0, FONT_HEIGHT_NORMAL);
++				uint id_v = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_STL_LIST, 0, this->resize.step_height);
+ 				if (id_v >= this->stations.Length()) return; // click out of list bound
+ 
+ 				const Station *st = this->stations[id_v];
+@@ -2121,8 +2122,8 @@ struct SelectStationWindow : Window {
+ 			d = maxdim(d, GetStringBoundingBox(T::EXPECTED_FACIL == FACIL_WAYPOINT ? STR_STATION_LIST_WAYPOINT : STR_STATION_LIST_STATION));
+ 		}
+ 
+-		resize->height = d.height;
+-		d.height *= 5;
++		resize->height = GetMinSizing(NWST_STEP, d.height);
++		d.height = 5 * resize->height;
+ 		d.width += WD_FRAMERECT_RIGHT + WD_FRAMERECT_LEFT;
+ 		d.height += WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM;
+ 		*size = d;
+diff --git a/src/table/misc_settings.ini b/src/table/misc_settings.ini
+index 1a2b5ef..0b02e69 100644
+--- a/src/table/misc_settings.ini
++++ b/src/table/misc_settings.ini
+@@ -220,6 +220,25 @@ var      = _freetype.mono.aa
+ def      = false
+ 
+ [SDTG_VAR]
++name     = ""min_button_size""
++type     = SLE_UINT
++var      = _settings_client.gui.min_button
++def      = 0
++min      = 0
++max      = 100
++cat      = SC_EXPERT
++
++[SDTG_VAR]
++name     = ""min_step_size""
++type     = SLE_UINT
++var      = _settings_client.gui.min_step
++def      = 0
++min      = 0
++max      = 100
++cat      = SC_EXPERT
++
++
++[SDTG_VAR]
+ name     = ""sprite_cache_size_px""
+ type     = SLE_UINT
+ var      = _sprite_cache_size
+diff --git a/src/toolbar_gui.cpp b/src/toolbar_gui.cpp
+index 8834497..32992d9 100644
+--- a/src/toolbar_gui.cpp
++++ b/src/toolbar_gui.cpp
+@@ -134,7 +134,7 @@ public:
+ 
+ 	uint Height(uint width) const
+ 	{
+-		return max(this->icon_size.height + 2U, (uint)FONT_HEIGHT_NORMAL);
++		return GetMinSizing(NWST_STEP, max(this->icon_size.height + 2U, (uint)FONT_HEIGHT_NORMAL));
+ 	}
+ 
+ 	void Draw(int left, int right, int top, int bottom, bool sel, int bg_colour) const
+diff --git a/src/town_gui.cpp b/src/town_gui.cpp
+index 3960469..3c541e5 100644
+--- a/src/town_gui.cpp
++++ b/src/town_gui.cpp
+@@ -48,12 +48,12 @@ static const NWidgetPart _nested_town_authority_widgets[] = {
+ 		NWidget(WWT_DEFSIZEBOX, COLOUR_BROWN),
+ 		NWidget(WWT_STICKYBOX, COLOUR_BROWN),
+ 	EndContainer(),
+-	NWidget(WWT_PANEL, COLOUR_BROWN, WID_TA_RATING_INFO), SetMinimalSize(317, 92), SetResize(1, 1), EndContainer(),
++	NWidget(WWT_PANEL, COLOUR_BROWN, WID_TA_RATING_INFO), SetMinimalSize(317, 92), SetResize(1, 1), SetFill(1, 1), EndContainer(),
+ 	NWidget(NWID_HORIZONTAL),
+ 		NWidget(WWT_PANEL, COLOUR_BROWN, WID_TA_COMMAND_LIST), SetMinimalSize(305, 52), SetResize(1, 0), SetDataTip(0x0, STR_LOCAL_AUTHORITY_ACTIONS_TOOLTIP), SetScrollbar(WID_TA_SCROLLBAR), EndContainer(),
+ 		NWidget(NWID_VSCROLLBAR, COLOUR_BROWN, WID_TA_SCROLLBAR),
+ 	EndContainer(),
+-	NWidget(WWT_PANEL, COLOUR_BROWN, WID_TA_ACTION_INFO), SetMinimalSize(317, 52), SetResize(1, 0), EndContainer(),
++	NWidget(WWT_PANEL, COLOUR_BROWN, WID_TA_ACTION_INFO), SetMinimalSize(317, 52), SetResize(1, 1), SetFill(1, 1), EndContainer(),
+ 	NWidget(NWID_HORIZONTAL),
+ 		NWidget(WWT_PUSHTXTBTN, COLOUR_BROWN, WID_TA_EXECUTE),  SetMinimalSize(317, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_LOCAL_AUTHORITY_DO_IT_BUTTON, STR_LOCAL_AUTHORITY_DO_IT_TOOLTIP),
+ 		NWidget(WWT_RESIZEBOX, COLOUR_BROWN),
+@@ -66,6 +66,7 @@ private:
+ 	Town *town;    ///< Town being displayed.
+ 	int sel_index; ///< Currently selected town action, \c 0 to \c TACT_COUNT-1, \c -1 means no action selected.
+ 	Scrollbar *vscroll;
++	uint actions_step;
+ 	uint displayed_actions_on_previous_painting; ///< Actions that were available on the previous call to OnPaint()
+ 
+ 	/**
+@@ -95,7 +96,8 @@ public:
+ 		this->town = Town::Get(window_number);
+ 		this->InitNested(window_number);
+ 		this->vscroll = this->GetScrollbar(WID_TA_SCROLLBAR);
+-		this->vscroll->SetCapacity((this->GetWidget<NWidgetBase>(WID_TA_COMMAND_LIST)->current_y - WD_FRAMERECT_TOP - WD_FRAMERECT_BOTTOM) / FONT_HEIGHT_NORMAL);
++		this->actions_step = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL);
++		this->vscroll->SetCapacity((this->GetWidget<NWidgetBase>(WID_TA_COMMAND_LIST)->current_y - WD_FRAMERECT_TOP - WD_FRAMERECT_BOTTOM) / this->actions_step);
+ 	}
+ 
+ 	virtual void OnPaint()
+@@ -197,12 +199,12 @@
+ 			case WID_TA_COMMAND_LIST: {
+ 				int numact;
+ 				uint buttons = GetMaskOfTownActions(&numact, _local_company, this->town);
+-				int y = Center(r.top, this->resize.step_height);
++				int y = Center(r.top, this->actions_step);
+ 				int pos = this->vscroll->GetPosition();
+ 
+ 				if (--pos < 0) {
+ 					DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_LOCAL_AUTHORITY_ACTIONS_TITLE);
+-					y += this->resize.step_height;
++					y += this->actions_step;
+ 				}
+ 
+ 				for (int i = 0; buttons; i++, buttons >>= 1) {
+@@ -212,7 +214,7 @@ public:
+ 					if ((buttons & 1) && --pos < 0) {
+ 						DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y,
+ 								STR_LOCAL_AUTHORITY_ACTION_SMALL_ADVERTISING_CAMPAIGN + i, this->sel_index == i ? TC_WHITE : TC_ORANGE);
+-						y += this->resize.step_height;
++						y += this->actions_step;
+ 					}
+ 				}
+ 				break;
+@@ -239,7 +241,8 @@ public:
+ 			}
+ 
+ 			case WID_TA_COMMAND_LIST:
+-				size->height = WD_FRAMERECT_TOP + 5 * FONT_HEIGHT_NORMAL + WD_FRAMERECT_BOTTOM;
++				resize->height = GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL);
++				size->height = WD_FRAMERECT_TOP + 5 * resize->height + WD_FRAMERECT_BOTTOM;
+ 				size->width = GetStringBoundingBox(STR_LOCAL_AUTHORITY_ACTIONS_TITLE).width;
+ 				for (uint i = 0; i < TACT_COUNT; i++ ) {
+ 					size->width = max(size->width, GetStringBoundingBox(STR_LOCAL_AUTHORITY_ACTION_SMALL_ADVERTISING_CAMPAIGN + i).width);
+@@ -258,7 +261,7 @@ public:
+ 	{
+ 		switch (widget) {
+ 			case WID_TA_COMMAND_LIST: {
+-				int y = this->GetRowFromWidget(pt.y, WID_TA_COMMAND_LIST, 1, FONT_HEIGHT_NORMAL);
++				int y = this->GetRowFromWidget(pt.y, WID_TA_COMMAND_LIST, 1, this->actions_step);
+ 				if (!IsInsideMM(y, 0, 5)) return;
+ 
+ 				y = GetNthSetBit(GetMaskOfTownActions(NULL, _local_company, this->town), y + this->vscroll->GetPosition() - 1);
+@@ -828,7 +831,7 @@ public:
+ 				}
+ 				Dimension icon_size = GetSpriteSize(SPR_TOWN_RATING_GOOD);
+ 				d.width += icon_size.width + 2;
+-				d.height = max(d.height, icon_size.height);
++				d.height = GetMinSizing(NWST_STEP, max(d.height, icon_size.height));
+ 				resize->height = d.height;
+ 				d.height *= 5;
+ 				d.width += padding.width + WD_FRAMERECT_LEFT + WD_FRAMERECT_RIGHT;
+diff --git a/src/vehicle_gui.cpp b/src/vehicle_gui.cpp
+index 8bff19d..e13a131 100644
+--- a/src/vehicle_gui.cpp
++++ b/src/vehicle_gui.cpp
+@@ -760,7 +760,7 @@ struct RefitWindow : public Window {
+ 	{
+ 		switch (widget) {
+ 			case WID_VR_MATRIX:
+-				resize->height = WD_MATRIX_TOP + FONT_HEIGHT_NORMAL + WD_MATRIX_BOTTOM;
++				resize->height = GetMinSizing(NWST_STEP, WD_MATRIX_TOP + FONT_HEIGHT_NORMAL + WD_MATRIX_BOTTOM);
+ 				size->height = resize->height * 8;
+ 				break;
+ 
+@@ -1524,7 +1524,7 @@ void DrawVehicleImage(const Vehicle *v, int left, int right, int y, int height,
+ uint GetVehicleListHeight(VehicleType type, uint divisor)
+ {
+ 	/* Name + vehicle + profit */
+-	uint base = GetVehicleHeight(type) + 2 * FONT_HEIGHT_SMALL;
++	uint base = GetMinSizing(NWST_STEP, GetVehicleHeight(type) + 2 * FONT_HEIGHT_SMALL);
+ 	/* Drawing of the 4 small orders + profit*/
+ 	if (type >= VEH_SHIP) base = max(base, 5U * FONT_HEIGHT_SMALL);
+ 
+diff --git a/src/widget.cpp b/src/widget.cpp
+index 3253cbb..8d14527 100644
+--- a/src/widget.cpp
++++ b/src/widget.cpp
+@@ -523,7 +523,7 @@ static inline void DrawButtonDropdown(const Rect &r, Colours colour, bool clicke
+ {
+ 	int text_offset = max(0, ((int)(r.bottom - r.top + 1) - FONT_HEIGHT_NORMAL) / 2); // Offset for rendering the text vertically centered
+ 
+-	int dd_width = NWidgetLeaf::dropdown_dimension.width;
++	int dd_width = GetMinSizing(NWST_STEP, NWidgetLeaf::dropdown_dimension.width);
+ 
+ 	if (_current_text_dir == TD_LTR) {
+ 		DrawFrameRect(r.left, r.top, r.right - dd_width, r.bottom, colour, clicked_button ? FR_LOWERED : FR_NONE);
+@@ -746,6 +746,7 @@ NWidgetBase *NWidgetBase::GetWidgetOfType(WidgetType tp)
+  */
+ NWidgetResizeBase::NWidgetResizeBase(WidgetType tp, uint fill_x, uint fill_y) : NWidgetBase(tp)
+ {
++	this->sizing_type = NWST_NONE;
+ 	this->fill_x = fill_x;
+ 	this->fill_y = fill_y;
+ }
+@@ -757,8 +758,23 @@ NWidgetResizeBase::NWidgetResizeBase(WidgetType tp, uint fill_x, uint fill_y) :
+  */
+ void NWidgetResizeBase::SetMinimalSize(uint min_x, uint min_y)
+ {
+-	this->min_x = min_x;
+-	this->min_y = min_y;
++	uint min_size = 0;
++	switch (this->sizing_type) {
++		case NWST_NONE:
++		case NWST_OVERRIDE:
++			min_size = 0;
++			break;
++		case NWST_BUTTON:
++			min_size = _settings_client.gui.min_button;
++			break;
++		case NWST_STEP:
++			min_size = _settings_client.gui.min_step;
++			break;
++		default: NOT_REACHED();
++	}
++
++	this->min_x = max(min_x, min_size);
++	this->min_y = max(min_y, min_size);
+ }
+ 
+ /**
+@@ -810,6 +826,7 @@ void NWidgetResizeBase::AssignSizePosition(SizingType sizing, uint x, uint y, ui
+  */
+ NWidgetCore::NWidgetCore(WidgetType tp, Colours colour, uint fill_x, uint fill_y, uint32 widget_data, StringID tool_tip) : NWidgetResizeBase(tp, fill_x, fill_y)
+ {
++	this->sizing_type = NWST_NONE;
+ 	this->colour = colour;
+ 	this->index = -1;
+ 	this->widget_data = widget_data;
+@@ -1930,6 +1947,7 @@ void Scrollbar::SetCapacityFromWidget(Window *w, int widget, int padding)
+ NWidgetScrollbar::NWidgetScrollbar(WidgetType tp, Colours colour, int index) : NWidgetCore(tp, colour, 1, 1, 0x0, STR_NULL), Scrollbar(tp != NWID_HSCROLLBAR)
+ {
+ 	assert(tp == NWID_HSCROLLBAR || tp == NWID_VSCROLLBAR);
++	this->sizing_type = NWST_STEP;
+ 	this->SetIndex(index);
+ 
+ 	switch (this->type) {
+@@ -2001,7 +2019,9 @@ void NWidgetScrollbar::Draw(const Window *w)
+ 	if (vertical_dimension.width == 0) {
+ 		vertical_dimension = maxdim(GetSpriteSize(SPR_ARROW_UP), GetSpriteSize(SPR_ARROW_DOWN));
+ 		vertical_dimension.width += extra.width;
++		vertical_dimension.width = GetMinSizing(NWST_STEP, vertical_dimension.width);
+ 		vertical_dimension.height += extra.height;
++		vertical_dimension.height = GetMinSizing(NWST_STEP, vertical_dimension.height);
+ 	}
+ 	return vertical_dimension;
+ }
+@@ -2012,7 +2032,9 @@ void NWidgetScrollbar::Draw(const Window *w)
+ 	if (horizontal_dimension.width == 0) {
+ 		horizontal_dimension = maxdim(GetSpriteSize(SPR_ARROW_LEFT), GetSpriteSize(SPR_ARROW_RIGHT));
+ 		horizontal_dimension.width += extra.width;
++		horizontal_dimension.width = GetMinSizing(NWST_STEP, horizontal_dimension.width);
+ 		horizontal_dimension.height += extra.height;
++		horizontal_dimension.height = GetMinSizing(NWST_STEP, horizontal_dimension.height);
+ 	}
+ 	return horizontal_dimension;
+ }
+@@ -2049,8 +2071,40 @@ Dimension NWidgetLeaf::dropdown_dimension  = {0, 0};
+  */
+ NWidgetLeaf::NWidgetLeaf(WidgetType tp, Colours colour, int index, uint16 data, StringID tip) : NWidgetCore(tp, colour, 1, 1, data, tip)
+ {
++	assert(this->sizing_type < NWST_END);
+ 	assert(index >= 0 || tp == WWT_LABEL || tp == WWT_TEXT || tp == WWT_CAPTION || tp == WWT_RESIZEBOX || tp == WWT_SHADEBOX || tp == WWT_DEFSIZEBOX || tp == WWT_DEBUGBOX || tp == WWT_STICKYBOX || tp == WWT_CLOSEBOX);
+ 	if (index >= 0) this->SetIndex(index);
++
++	if (this->sizing_type == NWST_NONE) {
++		switch (tp) {
++			case WWT_PUSHBTN:
++			case WWT_IMGBTN:
++			case WWT_PUSHIMGBTN:
++			case WWT_IMGBTN_2:
++			case WWT_TEXTBTN:
++			case WWT_PUSHTXTBTN:
++			case WWT_TEXTBTN_2:
++			case WWT_PUSHARROWBTN:
++			case WWT_EDITBOX:
++			case WWT_CAPTION:
++			case WWT_STICKYBOX:
++			case WWT_SHADEBOX:
++			case WWT_DEBUGBOX:
++			case WWT_DEFSIZEBOX:
++			case WWT_RESIZEBOX:
++			case WWT_CLOSEBOX:
++				this->sizing_type = NWST_BUTTON;
++				break;
++			case NWID_PUSHBUTTON_DROPDOWN:
++			case NWID_BUTTON_DROPDOWN:
++			case WWT_DROPDOWN:
++				this->sizing_type = NWST_STEP;
++				break;
++			default:
++				this->sizing_type = NWST_OVERRIDE;
++		}
++	}
++
+ 	this->SetMinimalSize(0, 0);
+ 	this->SetResize(0, 0);
+ 
+@@ -2462,11 +2516,12 @@ void NWidgetLeaf::Draw(const Window *w)
+  */
+ bool NWidgetLeaf::ButtonHit(const Point &pt)
+ {
++	uint button_size = GetMinSizing(NWST_STEP, 12);
+ 	if (_current_text_dir == TD_LTR) {
+-		int button_width = this->pos_x + this->current_x - 12;
++		int button_width = this->pos_x + this->current_x - button_size;
+ 		return pt.x < button_width;
+ 	} else {
+-		int button_left = this->pos_x + 12;
++		int button_left = this->pos_x + button_size;
+ 		return pt.x >= button_left;
+ 	}
+ }
+@@ -2559,6 +2614,16 @@ static int MakeNWidget(const NWidgetPart *parts, int count, NWidgetBase **dest,
+ 				break;
+ 			}
+ 
++			case WPT_SIZINGTYPE: {
++				NWidgetResizeBase *nwrb = dynamic_cast<NWidgetResizeBase *>(*dest);
++				if (nwrb != NULL) {
++					assert(parts->u.sizing_type < NWST_END);
++					nwrb->sizing_type = parts->u.sizing_type;
++					nwrb->SetMinimalSize(0, 0);
++				}
++				break;
++			}
++
+ 			case WPT_MINSIZE: {
+ 				NWidgetResizeBase *nwrb = dynamic_cast<NWidgetResizeBase *>(*dest);
+ 				if (nwrb != NULL) {
+@@ -2815,6 +2880,7 @@ NWidgetBase *MakeCompanyButtonRows(int *biggest_index, int widget_first, int wid
+ 		}
+ 
+ 		NWidgetBackground *panel = new NWidgetBackground(WWT_PANEL, COLOUR_GREY, widnum);
++		panel->sizing_type = NWST_STEP;
+ 		panel->SetMinimalSize(sprite_size.width, sprite_size.height);
+ 		panel->SetFill(1, 1);
+ 		panel->SetResize(1, 0);
+@@ -2835,3 +2901,28 @@ NWidgetBase *MakeCompanyButtonRows(int *biggest_index, int widget_first, int wid
+ 	if (hor != NULL) vert->Add(hor);
+ 	return vert;
+ }
++
++/**
++ * Return the minimal automatic size for a widget.
++ * @param type The automatic sizing type to use.
++ * @param min_1 Minimal passed value.
++ * @return At least the passed value, or the minimal size for the associated sizing type.
++ */
++uint GetMinSizing(NWidSizingType type, uint min_1)
++{
++	uint min_sizing;
++	switch (type) {
++		case NWST_NONE:
++		case NWST_OVERRIDE:
++			return min_1;
++		case NWST_BUTTON:
++			min_sizing = _settings_client.gui.min_button;
++			break;
++		case NWST_STEP:
++			min_sizing = _settings_client.gui.min_step;
++			break;
++		default: NOT_REACHED();
++	}
++
++	return max(min_sizing, min_1);
++}
+diff --git a/src/widget_type.h b/src/widget_type.h
+index 6d8b32b..1003096 100644
+--- a/src/widget_type.h
++++ b/src/widget_type.h
+@@ -40,6 +40,17 @@ enum ArrowWidgetValues {
+ 	AWV_RIGHT,    ///< Force the arrow to the right
+ };
+ 
++/** Values for different minimal sizing of widgets. */
++enum NWidSizingType {
++	NWST_NONE,     ///< No sizing type is yet defined.
++				///< Most buttons and scrollbars are initialized with this value.
++				///< Later, they are automatically set to NWST_BUTTON or NWST_STEP.
++	NWST_BUTTON,   ///< Size will be set at least _settings_client.gui.min_button.
++	NWST_STEP,     ///< Size will be set at least _settings_client.gui.min_step (scrollbars and dropdowns).
++	NWST_OVERRIDE, ///< Avoid widgets to use automatic minimal sizing.
++	NWST_END
++};
++
+ /**
+  * Window widget types, nested widget types, and nested widget part types.
+  */
+@@ -85,6 +96,7 @@ enum WidgetType {
+ 
+ 	/* Nested widget part types. */
+ 	WPT_RESIZE,       ///< Widget part for specifying resizing.
++	WPT_SIZINGTYPE,   ///< Widget part for specifying sizing mode.
+ 	WPT_MINSIZE,      ///< Widget part for specifying minimal size.
+ 	WPT_MINTEXTLINES, ///< Widget part for specifying minimal number of lines of text.
+ 	WPT_FILL,         ///< Widget part for specifying fill.
+@@ -160,11 +172,12 @@ public:
+ 	virtual void Draw(const Window *w) = 0;
+ 	virtual void SetDirty(const Window *w) const;
+ 
+-	WidgetType type;      ///< Type of the widget / nested widget.
+-	uint fill_x;          ///< Horizontal fill stepsize (from initial size, \c 0 means not resizable).
+-	uint fill_y;          ///< Vertical fill stepsize (from initial size, \c 0 means not resizable).
+-	uint resize_x;        ///< Horizontal resize step (\c 0 means not resizable).
+-	uint resize_y;        ///< Vertical resize step (\c 0 means not resizable).
++	WidgetType type;            ///< Type of the widget / nested widget.
++	NWidSizingType sizing_type; ///< Type for deciding minimal sizes of the widget.
++	uint fill_x;                ///< Horizontal fill stepsize (from initial size, \c 0 means not resizable).
++	uint fill_y;                ///< Vertical fill stepsize (from initial size, \c 0 means not resizable).
++	uint resize_x;              ///< Horizontal resize step (\c 0 means not resizable).
++	uint resize_y;              ///< Vertical resize step (\c 0 means not resizable).
+ 	/* Size of the widget in the smallest window possible.
+ 	 * Computed by #SetupSmallestSize() followed by #AssignSizePosition().
+ 	 */
+@@ -918,6 +931,7 @@ struct NWidgetPart {
+ 		NWidgetPartTextLines text_lines; ///< Part with text line data.
+ 		NWidgetFunctionType *func_ptr;   ///< Part with a function call.
+ 		NWidContainerFlags cont_flags;   ///< Part with container flags.
++		NWidSizingType sizing_type;      ///< Part with sizing type.
+ 	} u;
+ };
+ 
+@@ -939,6 +953,23 @@ static inline NWidgetPart SetResize(int16 dx, int16 dy)
+ }
+ 
+ /**
++ * Widget part function for setting the automatic minimal size.
++ * @param type How to decide the minimal size of the widget.
++ * @ingroup NestedWidgetParts
++ */
++static inline NWidgetPart SetSizingType(NWidSizingType type)
++{
++	NWidgetPart part;
++
++	part.type = WPT_SIZINGTYPE;
++	part.u.sizing_type = type;
++
++	return part;
++}
++
++uint GetMinSizing(NWidSizingType type, uint min_1 = 0);
++
++/**
+  * Widget part function for setting the minimal size.
+  * @param x Horizontal minimal size.
+  * @param y Vertical minimal size.
+diff --git a/src/widgets/dropdown_type.h b/src/widgets/dropdown_type.h
+index b65d455..4c33011 100644
+--- a/src/widgets/dropdown_type.h
++++ b/src/widgets/dropdown_type.h
+@@ -13,6 +13,7 @@
+ #define WIDGETS_DROPDOWN_TYPE_H
+ 
+ #include "../window_type.h"
++#include "../widget_type.h"
+ #include "../gfx_func.h"
+ #include "../core/smallvec_type.hpp"
+ #include "table/strings.h"
+@@ -30,7 +31,7 @@ public:
+ 	virtual ~DropDownListItem() {}
+ 
+ 	virtual bool Selectable() const { return false; }
+-	virtual uint Height(uint width) const { return FONT_HEIGHT_NORMAL; }
++	virtual uint Height(uint width) const { return GetMinSizing(NWST_STEP, FONT_HEIGHT_NORMAL); }
+ 	virtual uint Width() const { return 0; }
+ 	virtual void Draw(int left, int right, int top, int bottom, bool sel, int bg_colour) const;
+ };
+-- 
+1.8.1.2
+

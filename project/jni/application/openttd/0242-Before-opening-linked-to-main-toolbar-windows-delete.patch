@@ -1,0 +1,130 @@
+From 3d4a72d84722bdd5235d5318158e0555ce58b2f2 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Sat, 19 Oct 2013 19:23:15 +0000
+Subject: [PATCH 242/249] Before opening linked to main toolbar windows, delete
+ linked windows.
+
+---
+ src/airport_gui.cpp   | 2 +-
+ src/dock_gui.cpp      | 3 ++-
+ src/industry_gui.cpp  | 2 +-
+ src/rail_gui.cpp      | 2 +-
+ src/road_gui.cpp      | 3 ++-
+ src/terraform_gui.cpp | 2 ++
+ src/town_gui.cpp      | 1 +
+ 7 files changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/src/airport_gui.cpp b/src/airport_gui.cpp
+index 4f1335b..09f4a95 100644
+--- a/src/airport_gui.cpp
++++ b/src/airport_gui.cpp
+@@ -203,7 +203,7 @@ Window *ShowBuildAirToolbar()
+ {
+ 	if (!Company::IsValidID(_local_company)) return NULL;
+ 
+-	DeleteWindowByClass(WC_BUILD_TOOLBAR);
++	DeleteToolbarLinkedWindows();
+ 	return AllocateWindowDescFront<BuildAirToolbarWindow>(&_air_toolbar_desc, TRANSPORT_AIR);
+ }
+ 
+diff --git a/src/dock_gui.cpp b/src/dock_gui.cpp
+index 3ffded2..499861f 100644
+--- a/src/dock_gui.cpp
++++ b/src/dock_gui.cpp
+@@ -376,7 +376,7 @@ Window *ShowBuildDocksToolbar()
+ {
+ 	if (!Company::IsValidID(_local_company)) return NULL;
+ 
+-	DeleteWindowByClass(WC_BUILD_TOOLBAR);
++	DeleteToolbarLinkedWindows();
+ 	return AllocateWindowDescFront<BuildDocksToolbarWindow>(&_build_docks_toolbar_desc, TRANSPORT_WATER);
+ }
+ 
+@@ -415,6 +415,7 @@ static WindowDesc _build_docks_scen_toolbar_desc(
+  */
+ Window *ShowBuildDocksScenToolbar()
+ {
++	DeleteToolbarLinkedWindows();
+ 	return AllocateWindowDescFront<BuildDocksToolbarWindow>(&_build_docks_scen_toolbar_desc, TRANSPORT_WATER);
+ }
+ 
+diff --git a/src/industry_gui.cpp b/src/industry_gui.cpp
+index b886119..1253f71 100644
+--- a/src/industry_gui.cpp
++++ b/src/industry_gui.cpp
+@@ -647,7 +647,7 @@ public:
+ void ShowBuildIndustryWindow()
+ {
+ 	if (_game_mode != GM_EDITOR && !Company::IsValidID(_local_company)) return;
+-	if (BringWindowToFrontById(WC_BUILD_INDUSTRY, 0)) return;
++	DeleteToolbarLinkedWindows();
+ 	new BuildIndustryWindow();
+ }
+ 
+diff --git a/src/rail_gui.cpp b/src/rail_gui.cpp
+index 4e6a5d4..2cb9a54 100644
+--- a/src/rail_gui.cpp
++++ b/src/rail_gui.cpp
+@@ -882,7 +882,7 @@ Window *ShowBuildRailToolbar(RailType railtype)
+ 	if (!Company::IsValidID(_local_company)) return NULL;
+ 	if (!ValParamRailtype(railtype)) return NULL;
+ 
+-	DeleteWindowByClass(WC_BUILD_TOOLBAR);
++	DeleteToolbarLinkedWindows();
+ 	_cur_railtype = railtype;
+ 	_remove_button_clicked = false;
+ 	return new BuildRailToolbarWindow(&_build_rail_desc, railtype);
+diff --git a/src/road_gui.cpp b/src/road_gui.cpp
+index 353f76b..63c4e85 100644
+--- a/src/road_gui.cpp
++++ b/src/road_gui.cpp
+@@ -801,7 +801,7 @@ Window *ShowBuildRoadToolbar(RoadType roadtype)
+ 	if (!Company::IsValidID(_local_company)) return NULL;
+ 	_cur_roadtype = roadtype;
+ 
+-	DeleteWindowByClass(WC_BUILD_TOOLBAR);
++	DeleteToolbarLinkedWindows();
+ 	return AllocateWindowDescFront<BuildRoadToolbarWindow>(roadtype == ROADTYPE_ROAD ? &_build_road_desc : &_build_tramway_desc, TRANSPORT_ROAD);
+ }
+ 
+@@ -846,6 +846,7 @@ static WindowDesc _build_road_scen_desc(
+  */
+ Window *ShowBuildRoadScenToolbar()
+ {
++	DeleteToolbarLinkedWindows();
+ 	_cur_roadtype = ROADTYPE_ROAD;
+ 	return AllocateWindowDescFront<BuildRoadToolbarWindow>(&_build_road_scen_desc, TRANSPORT_ROAD);
+ }
+diff --git a/src/terraform_gui.cpp b/src/terraform_gui.cpp
+index 8cfee69..2fb78ce 100644
+--- a/src/terraform_gui.cpp
++++ b/src/terraform_gui.cpp
+@@ -370,6 +370,7 @@ Window *ShowTerraformToolbar(Window *link)
+ 	if (!Company::IsValidID(_local_company)) return NULL;
+ 
+ 	if (link == NULL) {
++		DeleteToolbarLinkedWindows();
+ 		return AllocateWindowDescFront<TerraformToolbarWindow>(&_terraform_desc, 0);
+ 	}
+ 
+@@ -759,5 +760,6 @@ static WindowDesc _scen_edit_land_gen_desc(
+  */
+ Window *ShowEditorTerraformToolbar()
+ {
++	DeleteToolbarLinkedWindows();
+ 	return AllocateWindowDescFront<ScenarioEditorLandscapeGenerationWindow>(&_scen_edit_land_gen_desc, 0);
+ }
+diff --git a/src/town_gui.cpp b/src/town_gui.cpp
+index ad51d39..10967d3 100644
+--- a/src/town_gui.cpp
++++ b/src/town_gui.cpp
+@@ -1221,5 +1221,6 @@ static WindowDesc _found_town_desc(
+ void ShowFoundTownWindow()
+ {
+ 	if (_game_mode != GM_EDITOR && !Company::IsValidID(_local_company)) return;
++	DeleteToolbarLinkedWindows();
+ 	AllocateWindowDescFront<FoundTownWindow>(&_found_town_desc, 0);
+ }
+-- 
+1.8.1.2
+

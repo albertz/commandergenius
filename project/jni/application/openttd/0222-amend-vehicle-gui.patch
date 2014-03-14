@@ -1,0 +1,24 @@
+From 5c8d6ef18e85a2ac89b53dc18f2a787bb7a6d3ec Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Thu, 26 Sep 2013 12:11:59 +0000
+Subject: [PATCH 222/249] amend vehicle gui
+
+---
+ src/vehicle_gui.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/vehicle_gui.cpp b/src/vehicle_gui.cpp
+index f2748a8..a5e1b0f 100644
+--- a/src/vehicle_gui.cpp
++++ b/src/vehicle_gui.cpp
+@@ -2057,6 +2057,7 @@ public:
+ 	virtual void OnResize()
+ 	{
+ 		this->vscroll->SetCapacityFromWidget(this, WID_VL_LIST);
++		this->GetWidget<NWidgetCore>(WID_VL_LIST)->widget_data = (this->vscroll->GetCapacity() << MAT_ROW_START) + (1 << MAT_COL_START);
+ 	}
+ 
+ 	/**
+-- 
+1.8.1.2
+

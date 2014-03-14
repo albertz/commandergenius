@@ -1,0 +1,49 @@
+From fd1f3a3f2f615e12b5be1f318b2ddc6d9f854944 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Sat, 5 Oct 2013 17:40:42 +0000
+Subject: [PATCH 007/249] Landscaping dropdown doesn't need trees and place
+ signs entries.
+
+---
+ src/lang/english.txt | 2 --
+ src/toolbar_gui.cpp  | 4 +---
+ 2 files changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/src/lang/english.txt b/src/lang/english.txt
+index 0ebfe96..665b826 100644
+--- a/src/lang/english.txt
++++ b/src/lang/english.txt
+@@ -442,8 +442,6 @@ STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION                          :Airport constru
+ 
+ ############ range for landscaping menu starts
+ STR_LANDSCAPING_MENU_LANDSCAPING                                :Landscaping
+-STR_LANDSCAPING_MENU_PLANT_TREES                                :Plant trees
+-STR_LANDSCAPING_MENU_PLACE_SIGN                                 :Place sign
+ ############ range ends here
+ 
+ ############ range for music menu starts
+diff --git a/src/toolbar_gui.cpp b/src/toolbar_gui.cpp
+index f4cb584..cd7b9f6 100644
+--- a/src/toolbar_gui.cpp
++++ b/src/toolbar_gui.cpp
+@@ -958,7 +958,7 @@ static CallBackFunction MenuClickBuildAir(int index)
+ 
+ static CallBackFunction ToolbarForestClick(Window *w)
+ {
+-	PopupMainToolbMenu(w, WID_TN_LANDSCAPE, STR_LANDSCAPING_MENU_LANDSCAPING, 3);
++	PopupMainToolbMenu(w, WID_TN_LANDSCAPE, STR_LANDSCAPING_MENU_LANDSCAPING, 1);
+ 	return CBF_NONE;
+ }
+ 
+@@ -972,8 +972,6 @@ static CallBackFunction MenuClickForest(int index)
+ {
+ 	switch (index) {
+ 		case 0: ShowTerraformToolbar();  break;
+-		case 1: ShowBuildTreesToolbar(); break;
+-		case 2: return SelectSignTool();
+ 	}
+ 	return CBF_NONE;
+ }
+-- 
+1.8.1.2
+

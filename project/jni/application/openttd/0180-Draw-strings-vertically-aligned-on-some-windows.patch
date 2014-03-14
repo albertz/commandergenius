@@ -1,0 +1,302 @@
+From 9dc15df06c0badd6317b58267763e821a61ca588 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Sat, 29 Jun 2013 11:53:50 +0200
+Subject: [PATCH 180/249] Draw strings vertically aligned on some windows.
+
+---
+ src/airport_gui.cpp                 |  4 +++-
+ src/autoreplace_gui.cpp             |  2 +-
+ src/build_vehicle_gui.cpp           | 13 ++++---------
+ src/filters/filter_window_gui.cpp   |  2 +-
+ src/fios_gui.cpp                    |  2 +-
+ src/group_details_gui.cpp           | 11 +++++------
+ src/industry_gui.cpp                |  2 +-
+ src/misc_gui.cpp                    |  5 +++--
+ src/network/network_chat_gui.cpp    |  2 +-
+ src/network/network_content_gui.cpp | 13 +++++++------
+ src/settings_gui.cpp                |  4 ++--
+ src/station_gui.cpp                 |  2 +-
+ src/statusbar_gui.cpp               |  9 ++++++---
+ src/town_gui.cpp                    |  2 +-
+ src/vehicle_gui.cpp                 |  4 ++--
+ src/widgets/dropdown.cpp            |  2 +-
+ 16 files changed, 40 insertions(+), 39 deletions(-)
+
+diff --git a/src/airport_gui.cpp b/src/airport_gui.cpp
+index ca40f35..a7476fc 100644
+--- a/src/airport_gui.cpp
++++ b/src/airport_gui.cpp
+@@ -335,7 +335,9 @@ public:
+ 					if (!as->IsAvailable()) {
+ 						GfxFillRect(r.left + 1, y + 1, r.right - 1, y + this->line_height - 2, PC_BLACK, FILLRECT_CHECKER);
+ 					}
+-					DrawString(r.left + WD_MATRIX_LEFT, r.right - WD_MATRIX_RIGHT, y + WD_MATRIX_TOP, as->name, ((int)i == _selected_airport_index) ? TC_WHITE : TC_BLACK);
++
++					DrawString(r.left + WD_MATRIX_LEFT, r.right - WD_MATRIX_RIGHT, Center(y, this->line_height), as->name, ((int)i == _selected_airport_index) ? TC_WHITE : TC_BLACK);
++
+ 					y += this->line_height;
+ 				}
+ 				break;
+diff --git a/src/autoreplace_gui.cpp b/src/autoreplace_gui.cpp
+index 5345ff4..94c44c6 100644
+--- a/src/autoreplace_gui.cpp
++++ b/src/autoreplace_gui.cpp
+@@ -362,7 +362,7 @@ public:
+ 					SetDParam(0, STR_REPLACE_NOT_REPLACING_VEHICLE_SELECTED);
+ 				}
+ 
+-				DrawString(r.left + WD_FRAMETEXT_LEFT, r.right - WD_FRAMETEXT_RIGHT, r.top + WD_FRAMERECT_TOP, STR_BLACK_STRING, TC_FROMSTRING, SA_HOR_CENTER);
++				DrawString(r.left + WD_FRAMETEXT_LEFT, r.right - WD_FRAMETEXT_RIGHT, Center(r.top, r.bottom - r.top), STR_BLACK_STRING, TC_FROMSTRING, SA_HOR_CENTER);
+ 				break;
+ 			}
+ 
+diff --git a/src/build_vehicle_gui.cpp b/src/build_vehicle_gui.cpp
+index adb117b..fd78d4d 100644
+--- a/src/build_vehicle_gui.cpp
++++ b/src/build_vehicle_gui.cpp
+@@ -886,7 +886,6 @@ void DrawEngineList(VehicleType type, int l, int r, int y, const GUIEngineList *
+ 	int sprite_width = sprite_left + sprite_right;
+ 
+ 	int sprite_x        = rtl ? r - sprite_right - 1 : l + sprite_left + 1;
+-	int sprite_y_offset = sprite_y_offsets[type] + step_size / 2;
+ 
+ 	Dimension replace_icon = {0, 0};
+ 	int count_width = 0;
+@@ -902,10 +901,6 @@ void DrawEngineList(VehicleType type, int l, int r, int y, const GUIEngineList *
+ 	int count_left = l;
+ 	int count_right = rtl ? text_left : r - WD_FRAMERECT_RIGHT - replace_icon.width - 8;
+ 
+-	int normal_text_y_offset = (step_size - FONT_HEIGHT_NORMAL) / 2;
+-	int small_text_y_offset  = step_size - FONT_HEIGHT_SMALL - WD_FRAMERECT_BOTTOM - 1;
+-	int replace_icon_y_offset = (step_size - replace_icon.height) / 2 - 1;
+-
+ 	for (; min < max; min++, y += step_size) {
+ 		const EngineID engine = (*eng_list)[min];
+ 		Engine *e = Engine::Get(engine);
+@@ -929,13 +924,13 @@ void DrawEngineList(VehicleType type, int l, int r, int y, const GUIEngineList *
+ 		const uint num_engines = GetGroupNumEngines(_local_company, selected_group, engine);
+ 
+ 		SetDParam(0, engine);
+-		DrawString(text_left, text_right, y + normal_text_y_offset, STR_ENGINE_NAME, engine == selected_id ? TC_WHITE : TC_BLACK);
+-		DrawVehicleEngine(l, r, sprite_x, y + sprite_y_offset, engine, (show_count && num_engines == 0) ? PALETTE_CRASH : GetEnginePalette(engine, _local_company), EIT_PURCHASE);
++		DrawString(text_left, text_right, Center(y, step_size), STR_ENGINE_NAME, text_colour);
++		DrawVehicleEngine(l, r, sprite_x, Center(y, step_size, sprite_y_offsets[type]), engine, palette_crash ? PALETTE_CRASH : GetEnginePalette(engine, _local_company), EIT_PURCHASE);
+ 		if (show_count) {
+ 			SetDParam(0, num_engines);
+-			DrawString(count_left, count_right, y + small_text_y_offset, STR_TINY_BLACK_COMA, TC_FROMSTRING, SA_RIGHT | SA_FORCE);
+-			if (EngineHasReplacementForCompany(Company::Get(_local_company), engine, selected_group)) DrawSprite(SPR_GROUP_REPLACE_ACTIVE, num_engines == 0 ? PALETTE_CRASH : PAL_NONE, replace_icon_left, y + replace_icon_y_offset);
++			DrawString(count_left, count_right, Center(y, step_size, FONT_HEIGHT_SMALL), STR_TINY_BLACK_COMA, TC_FROMSTRING, SA_RIGHT | SA_FORCE);
++			if (EngineHasReplacementForCompany(Company::Get(_local_company), engine, selected_group)) DrawSprite(SPR_GROUP_REPLACE_ACTIVE, num_engines == 0 ? PALETTE_CRASH : PAL_NONE, replace_icon_left, Center(y, step_size, replace_icon.height));
+ 		}
+ 	}
+ }
+ 
+diff --git a/src/industry_gui.cpp b/src/industry_gui.cpp
+index 4f15860..de595e3 100644
+--- a/src/industry_gui.cpp
++++ b/src/industry_gui.cpp
+@@ -1266,7 +1266,7 @@ public:
+ 
+ 			case WID_ID_INDUSTRY_LIST: {
+ 				int n = 0;
+-				int y = r.top + WD_FRAMERECT_TOP;
++				int y = Center(r.top, this->resize.step_height);
+ 				if (this->industries.Length() == 0) {
+ 					DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_INDUSTRY_DIRECTORY_NONE);
+ 					break;
+diff --git a/src/misc_gui.cpp b/src/misc_gui.cpp
+index 2e54b4f..05ab96d 100644
+--- a/src/misc_gui.cpp
++++ b/src/misc_gui.cpp
+@@ -778,11 +778,12 @@ void QueryString::DrawEditBox(const Window *w, int wid) const
+ 	/* If we have a marked area, draw a background highlight. */
+ 	if (tb->marklength != 0) GfxFillRect(delta + tb->markxoffs, 0, delta + tb->markxoffs + tb->marklength - 1, bottom - top, PC_GREY);
+ 
+-	DrawString(delta, tb->pixels, 0, tb->buf, TC_YELLOW);
++	DrawString(delta, tb->pixels, Center(0, bottom - top), tb->buf, TC_YELLOW);
++
+ 	bool focussed = w->IsWidgetGloballyFocused(wid) || IsOSKOpenedFor(w, wid);
+ 	if (focussed && tb->caret) {
+ 		int caret_width = GetStringBoundingBox("_").width;
+-		DrawString(tb->caretxoffs + delta, tb->caretxoffs + delta + caret_width, 0, "_", TC_WHITE);
++		DrawString(tb->caretxoffs + delta, tb->caretxoffs + delta + caret_width, Center(0, bottom - top), "_", TC_WHITE);
+ 	}
+ 
+ 	_cur_dpi = old_dpi;
+diff --git a/src/network/network_chat_gui.cpp b/src/network/network_chat_gui.cpp
+index 5fa311b..92cd39d 100644
+--- a/src/network/network_chat_gui.cpp
++++ b/src/network/network_chat_gui.cpp
+@@ -478,7 +478,7 @@ struct NetworkChatWindow : public Window {
+ 		if (this->dtype == DESTTYPE_CLIENT) {
+ 			SetDParamStr(0, NetworkClientInfo::GetByClientID((ClientID)this->dest)->client_name);
+ 		}
+-		DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, r.top + WD_FRAMERECT_TOP, this->dest_string, TC_BLACK, SA_RIGHT);
++		DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, Center(r.top, r.bottom - r.top), this->dest_string, TC_BLACK, SA_RIGHT);
+ 	}
+ 
+ 	virtual void OnClick(Point pt, int widget, int click_count)
+diff --git a/src/network/network_content_gui.cpp b/src/network/network_content_gui.cpp
+index 643628a..3ed9dfd 100644
+--- a/src/network/network_content_gui.cpp
++++ b/src/network/network_content_gui.cpp
+@@ -535,7 +535,7 @@ public:
+ 	{
+ 		switch (widget) {
+ 			case WID_NCL_FILTER_CAPT:
+-				DrawString(r.left, r.right, r.top, STR_CONTENT_FILTER_TITLE, TC_FROMSTRING, SA_RIGHT);
++				DrawString(r.left, r.right, Center(r.top, r.bottom - r.top), STR_CONTENT_FILTER_TITLE, TC_FROMSTRING, SA_RIGHT);
+ 				break;
+ 
+ 			case WID_NCL_DETAILS:
+@@ -577,13 +577,13 @@ public:
+ 
+ 
+ 		/* Fill the matrix with the information */
+-		int sprite_y_offset = WD_MATRIX_TOP + (FONT_HEIGHT_NORMAL - 10) / 2;
++		Dimension sprite_dim = GetSpriteSize(SPR_BOX_EMPTY);
+ 		uint y = r.top;
+ 		int cnt = 0;
+ 		for (ConstContentIterator iter = this->content.Get(this->vscroll->GetPosition()); iter != this->content.End() && cnt < this->vscroll->GetCapacity(); iter++, cnt++) {
+ 			const ContentInfo *ci = *iter;
+ 
+-			if (ci == this->selected) GfxFillRect(r.left + 1, y + 1, r.right - 1, y + this->resize.step_height - 1, PC_GREY);
++			if (ci == this->selected) GfxFillRect(r.left + 1, y + WD_FRAMERECT_TOP, r.right - 1, y + this->resize.step_height - WD_FRAMERECT_BOTTOM, PC_GREY);
+ 
+ 			SpriteID sprite;
+ 			SpriteID pal = PAL_NONE;
+@@ -595,12 +595,13 @@ public:
+ 				case ContentInfo::DOES_NOT_EXIST: sprite = SPR_BLOT; pal = PALETTE_TO_RED;   break;
+ 				default: NOT_REACHED();
+ 			}
+-			DrawSprite(sprite, pal, nwi_checkbox->pos_x + (pal == PAL_NONE ? 2 : 3), y + sprite_y_offset + (pal == PAL_NONE ? 1 : 0));
++
++			DrawSprite(sprite, pal, Center(nwi_checkbox->pos_x + (pal == PAL_NONE ? 2 : 3), nwi_checkbox->current_x, sprite_dim.width), Center(y, this->resize.step_height, sprite_dim.height + (pal == PAL_NONE ? 0 : -2)));
+ 
+ 			StringID str = STR_CONTENT_TYPE_BASE_GRAPHICS + ci->type - CONTENT_TYPE_BASE_GRAPHICS;
+-			DrawString(nwi_type->pos_x, nwi_type->pos_x + nwi_type->current_x - 1, y + WD_MATRIX_TOP, str, TC_BLACK, SA_HOR_CENTER);
++			DrawString(nwi_type->pos_x, nwi_type->pos_x + nwi_type->current_x - 1, Center(y, this->resize.step_height), str, TC_BLACK, SA_HOR_CENTER);
+ 
+-			DrawString(nwi_name->pos_x + WD_FRAMERECT_LEFT, nwi_name->pos_x + nwi_name->current_x - WD_FRAMERECT_RIGHT, y + WD_MATRIX_TOP, ci->name, TC_BLACK);
++			DrawString(nwi_name->pos_x + WD_FRAMERECT_LEFT, nwi_name->pos_x + nwi_name->current_x - WD_FRAMERECT_RIGHT, Center(y,this->resize.step_height), ci->name, TC_BLACK);
+ 			y += this->resize.step_height;
+ 		}
+ 	}
+diff --git a/src/settings_gui.cpp b/src/settings_gui.cpp
+index 838e5fa..5067550 100644
+--- a/src/settings_gui.cpp
++++ b/src/settings_gui.cpp
+@@ -1140,7 +1140,7 @@ uint SettingEntry::Draw(GameSettings *settings_ptr, int left, int right, int bas
+ 		case SEF_SUBTREE_KIND:
+ 			if (cur_row >= first_row) {
+ 				DrawSprite((this->d.sub.folded ? SPR_CIRCLE_FOLDED : SPR_CIRCLE_UNFOLDED), PAL_NONE, rtl ? x - 8 : x, y + (SETTING_HEIGHT - 11) / 2);
+-				DrawString(rtl ? left : x + 12, rtl ? x - 12 : right, y, this->d.sub.title);
++				DrawString(rtl ? left : x + 12, rtl ? x - 12 : right, Center(y, SETTING_HEIGHT), this->d.sub.title);
+ 			}
+ 			cur_row++;
+ 			if (!this->d.sub.folded) {
+@@ -1232,7 +1232,7 @@ void SettingEntry::DrawSetting(GameSettings *settings_ptr, int left, int right,
+ 				editable && value != (sdb->flags & SGF_0ISDISABLED ? 0 : sdb->min), editable && (uint32)value != sdb->max);
+ 	}
+ 	this->SetValueDParams(1, value);
+-	DrawString(text_left, text_right, y, sdb->str, highlight ? TC_WHITE : TC_LIGHT_BLUE);
++	DrawString(text_left, text_right, Center(y, SETTING_HEIGHT), sdb->str, highlight ? TC_WHITE : TC_LIGHT_BLUE);
+ }
+ 
+ 
+diff --git a/src/station_gui.cpp b/src/station_gui.cpp
+index c011f7c..9080fa8 100644
+--- a/src/station_gui.cpp
++++ b/src/station_gui.cpp
+@@ -2132,7 +2132,7 @@ struct SelectStationWindow : Window {
+ 	{
+ 		if (widget != WID_JS_PANEL) return;
+ 
+-		uint y = r.top + WD_FRAMERECT_TOP;
++		uint y = Center(r.top, this->resize.step_height);
+ 		if (this->vscroll->GetPosition() == 0) {
+ 			DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, T::EXPECTED_FACIL == FACIL_WAYPOINT ? STR_JOIN_WAYPOINT_CREATE_SPLITTED_WAYPOINT : STR_JOIN_STATION_CREATE_SPLITTED_STATION);
+ 			y += this->resize.step_height;
+diff --git a/src/statusbar_gui.cpp b/src/statusbar_gui.cpp
+index a6123e5..c06976f 100644
+--- a/src/statusbar_gui.cpp
++++ b/src/statusbar_gui.cpp
+@@ -67,7 +67,7 @@ static bool DrawScrollingStatusText(const NewsItem *ni, int scroll_pos, int left
+ 
+ 	DrawPixelInfo *old_dpi = _cur_dpi;
+ 	_cur_dpi = &tmp_dpi;
+-	DrawString(pos, INT16_MAX, 0, buffer, TC_LIGHT_BLUE, SA_LEFT | SA_FORCE);
++	DrawString(pos, INT16_MAX, Center(0, bottom - top), buffer, TC_LIGHT_BLUE, SA_LEFT | SA_FORCE);
+ 	_cur_dpi = old_dpi;
+ 
+ 	return (_current_text_dir == TD_RTL) ? (pos < right - left) : (pos + width > 0);
+@@ -182,13 +182,16 @@ struct StatusBarWindow : Window {
+ 						str = STR_STATUSBAR_COMPANY_NAME;
+ 					}
+ 				}
++				break;
+ 		}
+ 
+-		if (str != INVALID_STRING_ID) DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, r.top + WD_FRAMERECT_TOP, str, TC_FROMSTRING, SA_HOR_CENTER);
++		int center_top = Center(r.top + WD_FRAMERECT_TOP, r.bottom - r.top);
++		if (str != INVALID_STRING_ID) DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, center_top, str, TC_FROMSTRING, SA_HOR_CENTER);
+ 
+ 		if (widget == WID_S_MIDDLE && this->reminder_timeout > 0) {
+ 			Dimension icon_size = GetSpriteSize(SPR_UNREAD_NEWS);
+-			DrawSprite(SPR_UNREAD_NEWS, PAL_NONE, r.right - WD_FRAMERECT_RIGHT - icon_size.width, r.top + WD_FRAMERECT_TOP + (int)(FONT_HEIGHT_NORMAL - icon_size.height) / 2);
++			center_top = Center(r.top + WD_FRAMERECT_TOP, r.bottom - r.top,  icon_size.height);
++			DrawSprite(SPR_UNREAD_NEWS, PAL_NONE, r.right - WD_FRAMERECT_RIGHT - icon_size.width, center_top);
+ 		}
+ 	}
+ 
+diff --git a/src/town_gui.cpp b/src/town_gui.cpp
+index b00be1a..3960469 100644
+--- a/src/town_gui.cpp
++++ b/src/town_gui.cpp
+@@ -198,7 +198,7 @@ public:
+ 			case WID_TA_COMMAND_LIST: {
+ 				int numact;
+ 				uint buttons = GetMaskOfTownActions(&numact, _local_company, this->town);
+-				int y = r.top + WD_FRAMERECT_TOP;
++				int y = Center(r.top, this->resize.step_height);
+ 				int pos = this->vscroll->GetPosition();
+ 
+ 				if (--pos < 0) {
+diff --git a/src/vehicle_gui.cpp b/src/vehicle_gui.cpp
+index bf95b64..785b88c 100644
+--- a/src/vehicle_gui.cpp
++++ b/src/vehicle_gui.cpp
+@@ -430,7 +430,7 @@ typedef SmallVector<RefitOption, 32> SubtypeList; ///< List of refit subtypes as
+  */
+ static void DrawVehicleRefitWindow(const SubtypeList list[NUM_CARGO], const int sel[2], uint pos, uint rows, uint delta, const Rect &r)
+ {
+-	uint y = r.top + WD_MATRIX_TOP;
++	uint y = Center(r.top, delta);
+ 	uint current = 0;
+ 
+ 	bool rtl = _current_text_dir == TD_RTL;
+@@ -3036,7 +3036,7 @@ public:
+ 		int image = ((v->vehstatus & VS_STOPPED) != 0) ? SPR_FLAG_VEH_STOPPED : SPR_FLAG_VEH_RUNNING;
+ 		int lowered = this->IsWidgetLowered(WID_VV_START_STOP) ? 1 : 0;
+ 		DrawSprite(image, PAL_NONE, image_left + lowered, r.top + WD_IMGBTN_TOP + lowered);
+-		DrawString(text_left + lowered, text_right + lowered, r.top + WD_FRAMERECT_TOP + lowered, str, TC_FROMSTRING, SA_HOR_CENTER);
++		DrawString(text_left + lowered, text_right + lowered, Center(r.top + lowered, r.bottom - r.top), str, TC_FROMSTRING, SA_HOR_CENTER);
+ 	}
+ 
+ 	virtual void OnClick(Point pt, int widget, int click_count)
+diff --git a/src/widgets/dropdown.cpp b/src/widgets/dropdown.cpp
+index fa5753d..6603dd5 100644
+--- a/src/widgets/dropdown.cpp
++++ b/src/widgets/dropdown.cpp
+@@ -38,7 +38,7 @@ uint DropDownListStringItem::Width() const
+ 
+ void DropDownListStringItem::Draw(int left, int right, int top, int bottom, bool sel, int bg_colour) const
+ {
+-	DrawString(left + WD_FRAMERECT_LEFT, right - WD_FRAMERECT_RIGHT, top, this->String(), sel ? TC_WHITE : TC_BLACK);
++	DrawString(left + WD_FRAMERECT_LEFT, right - WD_FRAMERECT_RIGHT, Center(top, bottom - top), this->String(), sel ? TC_WHITE : TC_BLACK);
+ }
+ 
+ /**
+-- 
+1.8.1.2
+

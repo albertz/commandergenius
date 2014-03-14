@@ -1,0 +1,34 @@
+From c967a3b02c96e35f1354bde0ed7b129b821d2e5e Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Thu, 26 Sep 2013 11:50:35 +0000
+Subject: [PATCH 197/249] Center vehicle status icon.
+
+---
+ src/vehicle_gui.cpp | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/vehicle_gui.cpp b/src/vehicle_gui.cpp
+index 2e8c995..80198f0 100644
+--- a/src/vehicle_gui.cpp
++++ b/src/vehicle_gui.cpp
+@@ -3031,13 +3031,14 @@ public:
+ 
+ 		/* Draw the flag plus orders. */
+ 		bool rtl = (_current_text_dir == TD_RTL);
+-		uint text_offset = max(GetSpriteSize(SPR_FLAG_VEH_STOPPED).width, GetSpriteSize(SPR_FLAG_VEH_RUNNING).width) + WD_IMGBTN_LEFT + WD_IMGBTN_RIGHT;
++		int image = ((v->vehstatus & VS_STOPPED) != 0) ? SPR_FLAG_VEH_STOPPED : SPR_FLAG_VEH_RUNNING;
++		Dimension d = GetSpriteSize(image);
++		uint text_offset = d.width + WD_IMGBTN_LEFT + WD_IMGBTN_RIGHT;
+ 		int text_left = r.left + (rtl ? (uint)WD_FRAMERECT_LEFT : text_offset);
+ 		int text_right = r.right - (rtl ? text_offset : (uint)WD_FRAMERECT_RIGHT);
+ 		int image_left = (rtl ? text_right + 1 : r.left) + WD_IMGBTN_LEFT;
+-		int image = ((v->vehstatus & VS_STOPPED) != 0) ? SPR_FLAG_VEH_STOPPED : SPR_FLAG_VEH_RUNNING;
+ 		int lowered = this->IsWidgetLowered(WID_VV_START_STOP) ? 1 : 0;
+-		DrawSprite(image, PAL_NONE, image_left + lowered, r.top + WD_IMGBTN_TOP + lowered);
++		DrawSprite(image, PAL_NONE, image_left + lowered, Center(r.top + WD_IMGBTN_TOP + lowered, r.bottom - r.top, d.height));
+ 		DrawString(text_left + lowered, text_right + lowered, Center(r.top + lowered, r.bottom - r.top), str, TC_FROMSTRING, SA_HOR_CENTER);
+ 	}
+ 
+-- 
+1.8.1.2
+

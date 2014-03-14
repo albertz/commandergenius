@@ -1,0 +1,81 @@
+From d80cad8f13164deed44a14119ab7f565a0ce846f Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Tue, 18 Jun 2013 08:34:56 +0200
+Subject: [PATCH 211/249] Add new viewport methods.
+
+---
+ src/viewport.cpp    | 14 ++++++++++++--
+ src/viewport_type.h |  4 ++++
+ 2 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/src/viewport.cpp b/src/viewport.cpp
+index df686ab..07f02af 100644
+--- a/src/viewport.cpp
++++ b/src/viewport.cpp
+@@ -2313,7 +2313,9 @@ void VpStartPlaceSizing(TileIndex tile, ViewportPlaceMethod method, ViewportDrag
+ 	}
+ 
+ 	HighLightStyle others = _thd.place_mode & ~(HT_DRAG_MASK | HT_DIR_MASK);
+-	if ((_thd.place_mode & HT_DRAG_MASK) == HT_RECT) {
++	if (method == VPM_SINGLE_TILE) {
++		/* Nothing to do. */
++	} else if ((_thd.place_mode & HT_DRAG_MASK) == HT_RECT) {
+ 		_thd.place_mode = HT_SPECIAL | others;
+ 		_thd.next_drawstyle = HT_RECT | others;
+ 	} else if (_thd.place_mode & (HT_RAIL | HT_LINE)) {
+@@ -2792,6 +2794,11 @@ void VpSelectTilesWithMethod(int x, int y, ViewportPlaceMethod method)
+ 	int limit = 0;
+ 
+ 	switch (method) {
++		case VPM_SINGLE_TILE:
++			_thd.selstart.x = x;
++			_thd.selstart.y = y;
++			break;
++
+ 		case VPM_X_OR_Y: // drag in X or Y direction
+ 			if (abs(sy - y) < abs(sx - x)) {
+ 				y = sy;
+@@ -2950,7 +2957,9 @@ EventState VpHandlePlaceSizingDrag()
+ 	 * keep the selected tool, but reset it to the original mode. */
+ 	_special_mouse_mode = WSM_NONE;
+ 	HighLightStyle others = _thd.place_mode & ~(HT_DRAG_MASK | HT_DIR_MASK);
+-	if ((_thd.next_drawstyle & HT_DRAG_MASK) == HT_RECT) {
++	if (_thd.select_method == VPM_SINGLE_TILE) {
++		goto place_mouseup;
++	} else if ((_thd.next_drawstyle & HT_DRAG_MASK) == HT_RECT) {
+ 		_thd.place_mode = HT_RECT | others;
+ 	} else if (_thd.select_method & VPM_SIGNALDIRS) {
+ 		_thd.place_mode = HT_RECT | others;
+@@ -2961,6 +2970,7 @@ EventState VpHandlePlaceSizingDrag()
+ 	}
+ 	SetTileSelectSize(1, 1);
+ 
++place_mouseup:
+ 	w->OnPlaceMouseUp(_thd.select_method, _thd.select_proc, _thd.selend, TileVirtXY(_thd.selstart.x, _thd.selstart.y), TileVirtXY(_thd.selend.x, _thd.selend.y));
+ 
+ 	return ES_HANDLED;
+diff --git a/src/viewport_type.h b/src/viewport_type.h
+index 800c8b4..3566c41 100644
+--- a/src/viewport_type.h
++++ b/src/viewport_type.h
+@@ -84,6 +84,7 @@ enum ViewportPlaceMethod {
+ 	VPM_FIX_VERTICAL    =    6, ///< drag only in vertical direction
+ 	VPM_X_LIMITED       =    7, ///< Drag only in X axis with limited size
+ 	VPM_Y_LIMITED       =    8, ///< Drag only in Y axis with limited size
++	VPM_SINGLE_TILE     =    9, ///< Drag around the screen, selecting only the end tile
+ 	VPM_RAILDIRS        = 0x40, ///< all rail directions
+ 	VPM_SIGNALDIRS      = 0x80, ///< similar to VMP_RAILDIRS, but with different cursor
+ };
+@@ -120,6 +121,9 @@ enum ViewportDragDropSelectionProcess {
+ 	DDSP_BUILD_TRUCKSTOP,      ///< Road stop placement (trucks)
+ 	DDSP_REMOVE_BUSSTOP,       ///< Road stop removal (buses)
+ 	DDSP_REMOVE_TRUCKSTOP,     ///< Road stop removal (trucks)
++
++	/* Single tile dragging */
++	DDSP_SINGLE_TILE,          ///< Single tile actions (build industry, town, etc.)
+ };
+ 
+ #endif /* VIEWPORT_TYPE_H */
+-- 
+1.8.1.2
+

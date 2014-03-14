@@ -1,0 +1,132 @@
+From 6a611be077b4f635285f08c1be4d20f4ba47ce13 Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Fri, 2 Aug 2013 18:33:46 +0000
+Subject: [PATCH 188/249] Add min sizings to some construction buttons.
+
+---
+ src/dock_gui.cpp |  4 ++--
+ src/rail_gui.cpp | 16 ++++++++--------
+ src/road_gui.cpp | 20 ++++++++++----------
+ 3 files changed, 20 insertions(+), 20 deletions(-)
+
+diff --git a/src/dock_gui.cpp b/src/dock_gui.cpp
+index 03c661d..89e9250 100644
+--- a/src/dock_gui.cpp
++++ b/src/dock_gui.cpp
+@@ -531,10 +531,10 @@ static const NWidgetPart _nested_build_docks_depot_widgets[] = {
+ 		NWidget(NWID_SPACER), SetMinimalSize(0, 3),
+ 		NWidget(NWID_HORIZONTAL_LTR),
+ 			NWidget(NWID_SPACER), SetMinimalSize(3, 0),
+-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BDD_X), SetMinimalSize(98, 66), SetDataTip(0x0, STR_DEPOT_BUILD_SHIP_ORIENTATION_TOOLTIP),
++			NWidget(WWT_PANEL, COLOUR_GREY, WID_BDD_X), SetSizingType(NWST_BUTTON), SetMinimalSize(98, 66), SetDataTip(0x0, STR_DEPOT_BUILD_SHIP_ORIENTATION_TOOLTIP),
+ 			EndContainer(),
+ 			NWidget(NWID_SPACER), SetMinimalSize(2, 0),
+-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BDD_Y), SetMinimalSize(98, 66), SetDataTip(0x0, STR_DEPOT_BUILD_SHIP_ORIENTATION_TOOLTIP),
++			NWidget(WWT_PANEL, COLOUR_GREY, WID_BDD_Y), SetSizingType(NWST_BUTTON), SetMinimalSize(98, 66), SetDataTip(0x0, STR_DEPOT_BUILD_SHIP_ORIENTATION_TOOLTIP),
+ 			EndContainer(),
+ 			NWidget(NWID_SPACER), SetMinimalSize(3, 0),
+ 		EndContainer(),
+diff --git a/src/rail_gui.cpp b/src/rail_gui.cpp
+index cbd4400..08018eb 100644
+--- a/src/rail_gui.cpp
++++ b/src/rail_gui.cpp
+@@ -1364,9 +1364,9 @@ static const NWidgetPart _nested_station_builder_widgets[] = {
+ 				NWidget(WWT_LABEL, COLOUR_DARK_GREEN), SetMinimalSize(144, 11), SetDataTip(STR_STATION_BUILD_ORIENTATION, STR_NULL), SetPadding(1, 2, 0, 2),
+ 				NWidget(NWID_HORIZONTAL),
+ 					NWidget(NWID_SPACER), SetMinimalSize(7, 0), SetFill(1, 0),
+-					NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAS_PLATFORM_DIR_X), SetMinimalSize(66, 60), SetFill(0, 0), SetDataTip(0x0, STR_STATION_BUILD_RAILROAD_ORIENTATION_TOOLTIP), EndContainer(),
++					NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAS_PLATFORM_DIR_X), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 60), SetFill(0, 0), SetDataTip(0x0, STR_STATION_BUILD_RAILROAD_ORIENTATION_TOOLTIP), EndContainer(),
+ 					NWidget(NWID_SPACER), SetMinimalSize(2, 0), SetFill(1, 0),
+-					NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAS_PLATFORM_DIR_Y), SetMinimalSize(66, 60), SetFill(0, 0), SetDataTip(0x0, STR_STATION_BUILD_RAILROAD_ORIENTATION_TOOLTIP), EndContainer(),
++					NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAS_PLATFORM_DIR_Y), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 60), SetFill(0, 0), SetDataTip(0x0, STR_STATION_BUILD_RAILROAD_ORIENTATION_TOOLTIP), EndContainer(),
+ 					NWidget(NWID_SPACER), SetMinimalSize(7, 0), SetFill(1, 0),
+ 				EndContainer(),
+ 				NWidget(WWT_LABEL, COLOUR_DARK_GREEN, WID_BRAS_SHOW_NEWST_TYPE), SetMinimalSize(144, 11), SetDataTip(STR_ORANGE_STRING, STR_NULL), SetPadding(1, 2, 4, 2),
+@@ -1638,8 +1638,8 @@ static const NWidgetPart _nested_signal_builder_widgets[] = {
+ 				NWidget(WWT_LABEL, COLOUR_DARK_GREEN, WID_BS_DRAG_SIGNALS_DENSITY_LABEL), SetDataTip(STR_ORANGE_INT, STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_TOOLTIP), SetFill(1, 1),
+ 				NWidget(NWID_HORIZONTAL), SetPIP(2, 0, 2),
+ 					NWidget(NWID_SPACER), SetFill(1, 0),
+-					NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_BS_DRAG_SIGNALS_DENSITY_DECREASE), SetMinimalSize(9, 12), SetDataTip(AWV_DECREASE, STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_DECREASE_TOOLTIP),
+-					NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_BS_DRAG_SIGNALS_DENSITY_INCREASE), SetMinimalSize(9, 12), SetDataTip(AWV_INCREASE, STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_INCREASE_TOOLTIP),
++					NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_BS_DRAG_SIGNALS_DENSITY_DECREASE), SetSizingType(NWST_STEP), SetMinimalSize(9, 12), SetDataTip(AWV_DECREASE, STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_DECREASE_TOOLTIP),
++					NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_BS_DRAG_SIGNALS_DENSITY_INCREASE), SetSizingType(NWST_STEP), SetMinimalSize(9, 12), SetDataTip(AWV_INCREASE, STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_INCREASE_TOOLTIP),
+ 					NWidget(NWID_SPACER), SetFill(1, 0),
+ 				EndContainer(),
+ 				NWidget(NWID_SPACER), SetMinimalSize(0, 2), SetFill(1, 0),
+@@ -1706,18 +1706,18 @@ static const NWidgetPart _nested_build_depot_widgets[] = {
+ 		NWidget(NWID_HORIZONTAL_LTR),
+ 			NWidget(NWID_SPACER), SetMinimalSize(3, 0), SetFill(1, 0),
+ 			NWidget(NWID_VERTICAL),
+-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAD_DEPOT_NW), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP),
++				NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAD_DEPOT_NW), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP),
+ 				EndContainer(),
+ 				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
+-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAD_DEPOT_SW), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP),
++				NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAD_DEPOT_SW), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP),
+ 				EndContainer(),
+ 			EndContainer(),
+ 			NWidget(NWID_SPACER), SetMinimalSize(2, 0),
+ 			NWidget(NWID_VERTICAL),
+-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAD_DEPOT_NE), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP),
++				NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAD_DEPOT_NE), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP),
+ 				EndContainer(),
+ 				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
+-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAD_DEPOT_SE), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP),
++				NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAD_DEPOT_SE), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP),
+ 				EndContainer(),
+ 			EndContainer(),
+ 			NWidget(NWID_SPACER), SetMinimalSize(3, 0), SetFill(1, 0),
+diff --git a/src/road_gui.cpp b/src/road_gui.cpp
+index e8d9409..58ac2da 100644
+--- a/src/road_gui.cpp
++++ b/src/road_gui.cpp
+@@ -897,18 +897,18 @@ static const NWidgetPart _nested_build_road_depot_widgets[] = {
+ 		NWidget(NWID_HORIZONTAL_LTR),
+ 			NWidget(NWID_SPACER), SetMinimalSize(3, 0), SetFill(1, 0),
+ 			NWidget(NWID_VERTICAL),
+-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_NW), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
++				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_NW), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
+ 				EndContainer(),
+ 				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
+-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_SW), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
++				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_SW), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
+ 				EndContainer(),
+ 			EndContainer(),
+ 			NWidget(NWID_SPACER), SetMinimalSize(2, 0),
+ 			NWidget(NWID_VERTICAL),
+-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_NE), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
++				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_NE), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
+ 				EndContainer(),
+ 				NWidget(NWID_SPACER), SetMinimalSize(0, 2),
+-				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_SE), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
++				NWidget(WWT_PANEL, COLOUR_GREY, WID_BROD_DEPOT_SE), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), SetDataTip(0x0, STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP),
+ 				EndContainer(),
+ 			EndContainer(),
+ 			NWidget(NWID_SPACER), SetMinimalSize(3, 0), SetFill(1, 0),
+@@ -1043,17 +1043,17 @@ static const NWidgetPart _nested_rv_station_picker_widgets[] = {
+ 		NWidget(NWID_SPACER), SetMinimalSize(0, 3),
+ 		NWidget(NWID_HORIZONTAL), SetPIP(0, 2, 0),
+ 			NWidget(NWID_SPACER), SetFill(1, 0),
+-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_NW), SetMinimalSize(66, 50), EndContainer(),
+-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_NE), SetMinimalSize(66, 50), EndContainer(),
+-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_X),  SetMinimalSize(66, 50), EndContainer(),
++			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_NW), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), EndContainer(),
++			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_NE), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), EndContainer(),
++			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_X),  SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), EndContainer(),
+ 			NWidget(NWID_SPACER), SetFill(1, 0),
+ 		EndContainer(),
+ 		NWidget(NWID_SPACER), SetMinimalSize(0, 2),
+ 		NWidget(NWID_HORIZONTAL), SetPIP(0, 2, 0),
+ 			NWidget(NWID_SPACER), SetFill(1, 0),
+-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_SW), SetMinimalSize(66, 50), EndContainer(),
+-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_SE), SetMinimalSize(66, 50), EndContainer(),
+-			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_Y),  SetMinimalSize(66, 50), EndContainer(),
++			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_SW), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), EndContainer(),
++			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_SE), SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), EndContainer(),
++			NWidget(WWT_PANEL, COLOUR_GREY, WID_BROS_STATION_Y),  SetSizingType(NWST_BUTTON), SetMinimalSize(66, 50), EndContainer(),
+ 			NWidget(NWID_SPACER), SetFill(1, 0),
+ 		EndContainer(),
+ 		NWidget(NWID_SPACER), SetMinimalSize(0, 1),
+-- 
+1.8.1.2
+

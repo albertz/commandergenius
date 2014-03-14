@@ -1,0 +1,39 @@
+From 8346d064a4f744de4d7600109278b094b586014a Mon Sep 17 00:00:00 2001
+From: Juanjo <juanjo.ng.83@gmail.com>
+Date: Mon, 24 Jun 2013 17:35:48 +0200
+Subject: [PATCH 210/249] Allow calling init presizing mode from outside
+ viewport.cpp.
+
+---
+ src/tilehighlight_func.h | 1 +
+ src/viewport.cpp         | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/tilehighlight_func.h b/src/tilehighlight_func.h
+index 3edef50..af44c4d 100644
+--- a/src/tilehighlight_func.h
++++ b/src/tilehighlight_func.h
+@@ -25,6 +25,7 @@ void ResetObjectToPlace();
+ 
+ void VpSelectTilesWithMethod(int x, int y, ViewportPlaceMethod method);
+ void VpStartPlaceSizing(TileIndex tile, ViewportPlaceMethod method, ViewportDragDropSelectionProcess process);
++void VpStartPreSizing();
+ void VpSetPresizeRange(TileIndex from, TileIndex to);
+ void VpSetPlaceSizingLimit(int limit);
+ 
+diff --git a/src/viewport.cpp b/src/viewport.cpp
+index a5ed41c..df686ab 100644
+--- a/src/viewport.cpp
++++ b/src/viewport.cpp
+@@ -2350,7 +2350,7 @@ void VpSetPresizeRange(TileIndex from, TileIndex to)
+ 	if (distance > 1) ShowMeasurementTooltips(STR_MEASURE_LENGTH, 1, &distance, TCC_HOVER);
+ }
+ 
+-static void VpStartPreSizing()
++void VpStartPreSizing()
+ {
+ 	_thd.selend.x = -1;
+ 	_special_mouse_mode = WSM_PRESIZE;
+-- 
+1.8.1.2
+
