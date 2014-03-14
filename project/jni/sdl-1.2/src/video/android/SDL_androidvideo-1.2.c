@@ -274,17 +274,17 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	}
 	/* Modes sorted largest to smallest */
 	SDL_modelist[0]->w = SDL_ANDROID_sWindowWidth; SDL_modelist[0]->h = SDL_ANDROID_sWindowHeight;
-	SDL_modelist[1]->w = 800; SDL_modelist[1]->h = 600; // Widely used on PC
-	SDL_modelist[2]->w = 640; SDL_modelist[2]->h = 480; // Widely used on PC
-	SDL_modelist[3]->w = 640; SDL_modelist[3]->h = 400; // Widely used on PC
-	SDL_modelist[4]->w = 320; SDL_modelist[4]->h = 240; // For older games
-	SDL_modelist[5]->w = 320; SDL_modelist[5]->h = 200; // For even older games
-	SDL_modelist[6]->w = 256; SDL_modelist[6]->h = 224; // For REminiscence
-	SDL_modelist[7]->w = SDL_ANDROID_sWindowWidth * 2 / 3; SDL_modelist[7]->h = SDL_ANDROID_sWindowHeight * 2 / 3;
-	SDL_modelist[8]->w = SDL_ANDROID_sWindowWidth / 2; SDL_modelist[8]->h = SDL_ANDROID_sWindowHeight / 2;
-	SDL_modelist[9]->w = 480; SDL_modelist[9]->h = 320; // Virtual wide-screen mode
-	SDL_modelist[10]->w = 800; SDL_modelist[10]->h = 480; // Virtual wide-screen mode
-	SDL_modelist[11]->w = 544; SDL_modelist[11]->h = 332; // I have no idea where this videomode is used
+	SDL_modelist[1]->w = SDL_ANDROID_sWindowWidth * 5 / 6; SDL_modelist[1]->h = SDL_ANDROID_sWindowHeight * 5 / 6;
+	SDL_modelist[2]->w = SDL_ANDROID_sWindowWidth * 4 / 6; SDL_modelist[2]->h = SDL_ANDROID_sWindowHeight * 4 / 6;
+	SDL_modelist[3]->w = SDL_ANDROID_sWindowWidth * 3 / 6; SDL_modelist[3]->h = SDL_ANDROID_sWindowHeight * 3 / 6;
+	SDL_modelist[4]->w = SDL_ANDROID_sWindowWidth * 2 / 6; SDL_modelist[4]->h = SDL_ANDROID_sWindowHeight * 2 / 6;
+	SDL_modelist[5]->w = 800; SDL_modelist[5]->h = 600; // Widely used on PC
+	SDL_modelist[6]->w = 640; SDL_modelist[6]->h = 480; // Widely used on PC
+	SDL_modelist[7]->w = 640; SDL_modelist[7]->h = 400; // Widely used on PC
+	SDL_modelist[8]->w = 320; SDL_modelist[8]->h = 240; // For older games
+	SDL_modelist[9]->w = 320; SDL_modelist[9]->h = 200; // For even older games
+	SDL_modelist[10]->w = 480; SDL_modelist[10]->h = 320; // Virtual wide-screen mode
+	SDL_modelist[11]->w = 800; SDL_modelist[11]->h = 480; // Virtual wide-screen mode
 	SDL_modelist[12]->w = 640; SDL_modelist[12]->h = 350; // For PrefClub app
 	SDL_modelist[13]->w = 320; SDL_modelist[13]->h = 256; // For UAE4ALL2
 	SDL_modelist[14]->w = 640; SDL_modelist[14]->h = 200; // For UAE4ALL2
