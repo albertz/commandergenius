@@ -31,16 +31,7 @@
  	if (_debug_socket != INVALID_SOCKET) {
  		char buf2[1024 + 32];
 --- src/fontdetection.cpp	2014-02-25 11:17:24.000000000 +0200
-+++ src/fontdetection.cpp	2014-03-13 23:49:24.456780663 +0200
-@@ -626,7 +626,7 @@
- 	if (split != NULL) *split = '\0';
- 
- 	/* First create a pattern to match the wanted language. */
--	FcPattern *pat = FcNameParse((FcChar8*)lang);
-+	FcPattern *pat = FcNameParse((FcChar8*)"" /*lang*/);
- 	/* We only want to know the filename. */
- 	FcObjectSet *os = FcObjectSetBuild(FC_FILE, FC_SPACING, FC_SLANT, FC_WEIGHT, NULL);
- 	/* Get the list of filenames matching the wanted language. */
++++ src/fontdetection.cpp	2014-03-14 15:18:47.947366408 +0200
 @@ -639,6 +639,7 @@
  	if (fs != NULL) {
  		int best_weight = -1;
