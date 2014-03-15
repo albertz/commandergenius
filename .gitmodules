@@ -52,3 +52,7 @@
 [submodule "project/jni/icuuc/src"]
 	path = project/jni/icuuc/src
 	url = git@github.com:pelya/libiconv-libicu-android.git
+[submodule "project/jni/application/openttd/src"]
+	path = project/jni/application/openttd/src
+	url = git@github.com:pelya/openttd-android.git
+	branch = master
