@@ -203,6 +203,15 @@ sysarg_init(int argc, char **argv)
 		if (++i == argc) sysarg_fail("missing data");
 		sysarg_args_data = argv[i];
 	}
+	else if (!strcmp(argv[i], "-cheat")) {
+#ifdef ENABLE_CHEATS
+		game_cheat1 = 1;     /* unlimited ammo */
+		game_cheat2 = 1;     /* never die */
+		game_lives = 6;
+		game_bombs = 6;
+		game_bullets = 6;
+#endif
+	}
 
     else {
       sysarg_fail("invalid argument(s)");

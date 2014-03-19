@@ -111,6 +111,8 @@ screen_getname(void)
   case 2:  /* wait for key pressed */
 
 #ifdef __ANDROID__
+    /* It deadlocks for some reason */
+    /*
     name[0] = 0;
     SDL_ANDROID_SetScreenKeyboardHintMesage("Please enter your name");
     SDL_ANDROID_GetScreenKeyboardTextInput(name, 10);
@@ -124,9 +126,10 @@ screen_getname(void)
     x = 5;
     y = 4;
     seq = 3;
+    */
 #endif
 
-    if (control_status & CONTROL_FIRE || KEY_BULLET)
+    if (control_status & CONTROL_FIRE || KEY_BULLET || KEY_BOMB || KEY_STICK)
       seq = 3;
     if (control_status & CONTROL_UP) {
       if (y > 0) {
@@ -147,21 +150,31 @@ screen_getname(void)
       seq = 5;
     }
     if (control_status & CONTROL_LEFT) {
+      pointer_show(FALSE);
       if (x > 0) {
-	pointer_show(FALSE);
 	x--;
-	pointer_show(TRUE);
-	tm = sys_gettime();
+      } else {
+	if (y > 0) {
+	  x = 5;
+	  y--;
+	}
       }
+      pointer_show(TRUE);
+      tm = sys_gettime();
       seq = 6;
     }
     if (control_status & CONTROL_RIGHT) {
+      pointer_show(FALSE);
       if (x < 5) {
-	pointer_show(FALSE);
 	x++;
-	pointer_show(TRUE);
-	tm = sys_gettime();
+      } else {
+	if (y < 4) {
+	  x = 0;
+	  y++;
+	}
       }
+      pointer_show(TRUE);
+      tm = sys_gettime();
       seq = 7;
     }
     if (seq == 2)
@@ -169,7 +182,7 @@ screen_getname(void)
     break;
 
   case 3:  /* wait for FIRE released */
-    if (!(control_status & CONTROL_FIRE || KEY_BULLET)) {
+    if (!(control_status & CONTROL_FIRE || KEY_BULLET || KEY_BOMB || KEY_STICK)) {
       if (x == 5 && y == 4) {  /* end */
 	i = 0;
 	while (game_score < game_hscores[i].score)

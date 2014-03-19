@@ -626,6 +626,7 @@ play0(void)
   }
 
   if (control_last == CONTROL_EXIT) {  /* request to exit the game */
+  	map_saveProgress();
     game_state = EXIT;
     return;
   }
@@ -751,6 +752,7 @@ loaddata()
 	WAV_ENTITY[6] = syssnd_load("sounds/ent6.wav");
 	WAV_ENTITY[7] = syssnd_load("sounds/ent7.wav");
 	WAV_ENTITY[8] = syssnd_load("sounds/ent8.wav");
+	WAV_ENTITY[9] = syssnd_load("sounds/ent9.wav");
 #endif
 }
 
