@@ -6,7 +6,7 @@ VER=1.4.0-beta5
 
 [ -d openttd-$VER-$1 ] || mkdir -p openttd-$VER-$1/bin/baseset
 
-[ -e openttd-$VER-$1/objs/lang/english.lng -o "$1" '!=' armeabi-v7a ] || {
+[ -e openttd-$VER-$1/objs/lang/english.lng ] || {
 	sh -c "cd openttd-$VER-$1 && ../src/configure --without-freetype --without-png --without-zlib --without-lzo2 --without-lzma --endian=LE && make lang && make -C objs/release endian_target.h depend && make -C objs/setting" || exit 1
 	rm -f openttd-$VER-$1/Makefile
 } || exit 1
