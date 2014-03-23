@@ -13,6 +13,6 @@ TODO, which will get actually done
 
 - SDL: resize default on-screen buttons for different screen sizes.
 
-- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
+- SDL: control mouse with gyroscope.
 
-- OpenTTD: decrease font size to default.
+- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
