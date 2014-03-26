@@ -31,6 +31,7 @@ static void showErrorMessage(const char *msg);
 void * unpackFilesThread(void * unused)
 {
 	char fname[PATH_MAX*2];
+	char buf[1024 * 4];
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/usr/lib/xorg/protocol.txt" );
 	struct stat st;
@@ -49,24 +50,26 @@ void * unpackFilesThread(void * unused)
 
 	unpackProgressMb = 0;
 
-	FILE * ff = fopen("data.tar.gz", "rb");
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/busybox" );
 	strcat( fname, " tar xz -C " );
 	strcat( fname, getenv("SECURE_STORAGE_DIR") );
 	FILE * fo = popen(fname, "w");
+	FILE * ff = fopen("data.tar.gz", "rb");
 	if( !ff || !fo )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
 		unpackFinished = 1;
 		return (void *)0;
 	}
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "POPEN OK");
 
 	int unpackProgressKb = 0;
 	for(;;)
 	{
-		char buf[1024 * 8];
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %d", unpackProgressKb);
 		int cnt = fread( buf, 1, sizeof(buf), ff );
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %d READ %d", unpackProgressKb, cnt);
 		if( cnt < 0 )
 		{
 			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
@@ -76,25 +79,26 @@ void * unpackFilesThread(void * unused)
 		fwrite( buf, 1, cnt, fo );
 		if( cnt < sizeof(buf) )
 			break;
-		unpackProgressKb += 8;
+		unpackProgressKb += 4;
 		if( unpackProgressKb >= 1024 )
 		{
 			unpackProgressKb = 0;
 			unpackProgressMb++;
 		}
 	}
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %d DONE", unpackProgressKb);
 
 	fclose(ff);
-	if( pclose(fo) != 0 )
+	if( pclose(fo) != 0 ) // Returns error on Android 2.3 emulator!
 	{
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
-		unpackFinished = 1;
-		return (void *)0;
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data - pclose() returned error");
+		//unpackFinished = 1;
+		//return (void *)0;
 	}
 
-	remove("data.tar.gz");
-
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Extracting data finished");
+
+	remove("data.tar.gz");
 
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/postinstall.sh" );
