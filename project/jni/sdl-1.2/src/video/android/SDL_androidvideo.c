@@ -237,6 +237,11 @@ extern SDL_Surface *SDL_GetVideoSurface(void);
 
 void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf, int outBufLen)
 {
+	// Clear mouse button state, to avoid repeated clicks on the text field in some apps
+	SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
+	SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_RIGHT );
+	SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_MIDDLE );
+
 	SDL_ANDROID_TextInputFinished = 0;
 	SDL_ANDROID_IsScreenKeyboardShownFlag = 1;
 	if( !outBuf )
