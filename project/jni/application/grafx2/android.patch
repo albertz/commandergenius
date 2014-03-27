@@ -1,0 +1,111 @@
+Index: src/text.c
+===================================================================
+--- src/text.c	(revision 2067)
++++ src/text.c	(working copy)
+@@ -419,9 +419,9 @@
+   
+   // Text rendering: creates a 8bit surface with its dedicated palette
+   if (antialias)
+-    text_surface=TTF_RenderText_Shaded(font, str, fg_color, bg_color );
++    text_surface=TTF_RenderUTF8_Shaded(font, str, fg_color, bg_color );
+   else
+-    text_surface=TTF_RenderText_Solid(font, str, fg_color);
++    text_surface=TTF_RenderUTF8_Solid(font, str, fg_color);
+   if (!text_surface)
+   {
+     TTF_CloseFont(font);
+Index: src/mountlist.c
+===================================================================
+--- src/mountlist.c	(revision 2067)
++++ src/mountlist.c	(working copy)
+@@ -41,7 +41,7 @@
+     #define MOUNTED_GETFSSTAT 1 
+     #define HAVE_SYS_MOUNT_H 1
+     #include <sys/types.h>
+-#elif defined(__SKYOS__)
++#elif defined(__SKYOS__)||defined(__ANDROID__)
+     #warning "Your platform is missing some specific code here ! please check and fix :)"
+ #else
+     #define MOUNTED_GETMNTENT1
+Index: src/io.c
+===================================================================
+--- src/io.c	(revision 2067)
++++ src/io.c	(working copy)
+@@ -455,7 +455,7 @@
+ 
+ byte Create_lock_file(const char *file_directory)
+ {
+-  #if defined (__amigaos__)||(__AROS__)
++  #if defined (__amigaos__)||(__AROS__)||(__ANDROID__)
+     #warning "Missing code for your platform, please check and correct!"
+   #else
+   char lock_filename[MAX_PATH_CHARACTERS];
+Index: src/setup.c
+===================================================================
+--- src/setup.c	(revision 2067)
++++ src/setup.c	(working copy)
+@@ -93,6 +93,8 @@
+   // Append trailing slash
+   strcat(program_dir,PATH_SEPARATOR);
+   // Linux: argv[0] unreliable
++  #elif defined(__ANDROID__)
++  strcpy(program_dir, "./");
+   #elif defined(__linux__)
+   if (argv0[0]!='/')
+   {
+@@ -122,7 +124,7 @@
+   #if defined(__macosx__)
+     strcat(data_dir,"Contents/Resources/");
+   // On GP2X, executable is not in bin/
+-  #elif defined (__GP2X__) || defined (__gp2x__) || defined (__WIZ__) || defined (__CAANOO__)
++  #elif defined (__GP2X__) || defined (__gp2x__) || defined (__WIZ__) || defined (__CAANOO__) || defined(__ANDROID__)
+     strcat(data_dir,"share/grafx2/");
+   //on tos the same directory
+   #elif defined (__MINT__)
+Index: src/sdlscreen.c
+===================================================================
+--- src/sdlscreen.c	(revision 2067)
++++ src/sdlscreen.c	(working copy)
+@@ -54,6 +54,8 @@
+     #define UPDATE_METHOD     UPDATE_METHOD_FULL_PAGE
+   #elif defined(__MINT__)
+     #define UPDATE_METHOD     UPDATE_METHOD_CUMULATED
++  #elif defined(__ANDROID__)
++    #define UPDATE_METHOD     UPDATE_METHOD_FULL_PAGE
+   #else
+     #define UPDATE_METHOD     UPDATE_METHOD_CUMULATED
+   #endif
+Index: src/readline.c
+===================================================================
+--- src/readline.c	(revision 2067)
++++ src/readline.c	(working copy)
+@@ -50,6 +50,9 @@
+ #include <proto/iffparse.h>
+ #include <datatypes/textclass.h>
+ #endif
++#if defined(__ANDROID__)
++#include <SDL_screenkeyboard.h>
++#endif
+ 
+ // Virtual keyboard is ON by default on these platforms:
+ #if defined(__GP2X__) || defined(__WIZ__) || defined(__CAANOO__)
+@@ -400,6 +403,10 @@
+     //  Nothing. The caller should have initialized a valid hexa number.
+   }
+   
++#if defined(__ANDROID__)
++	SDL_ANDROID_GetScreenKeyboardTextInput(str, max_size);
++	input_key = SDLK_RETURN;
++#else
+   // Virtual keyboards
+   if (Config.Use_virtual_keyboard==1 ||
+     (VIRT_KEY_DEFAULT_ON && Config.Use_virtual_keyboard==0))
+@@ -757,7 +764,7 @@
+     Mouse_K=old_mouse_k;
+     Input_sticky_control=0;
+   }
+-  
++#endif // defined(__ANDROID__)  
+   // Effacement de la chaîne
+   Block(window_x+(x_pos*Menu_factor_X),window_y+(y_pos*Menu_factor_Y),
+         visible_size*(Menu_factor_X<<3),(Menu_factor_Y<<3),BACKGROUND_COLOR);
