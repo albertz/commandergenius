@@ -593,7 +593,7 @@ public class MainActivity extends Activity
 					DimSystemStatusBar.get().dim(_videoLayout);
 					DimSystemStatusBar.get().dim(mGLView);
 				}
-			}, 1000 );
+			}, 500 );
 	};
 
 	public boolean isScreenKeyboardShown()
