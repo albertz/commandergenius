@@ -896,6 +896,8 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeTextInput) ( JNIEnv*  env, jobject thiz, jin
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoRenderer_nativeTextInputFinished) ( JNIEnv*  env, jobject thiz )
 {
+	if (textInputBufferPos == 0 && textInputBuffer) // No text input - clear buffer
+		textInputBuffer[0] = 0;
 	textInputBuffer = NULL;
 	SDL_ANDROID_TextInputFinished = 1;
 }
