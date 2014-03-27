@@ -23,7 +23,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS := -std=gnu89 -fvisibility=hidden ## -fomit-frame-pointer -ftrapv
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
-LOCAL_LDLIBS := z
+# LOCAL_LDLIBS := z
 
 LOCAL_MODULE := png
 
