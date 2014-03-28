@@ -1,3 +1,151 @@
+Index: src/filesel.c
+===================================================================
+--- src/filesel.c	(revision 2067)
++++ src/filesel.c	(working copy)
+@@ -360,6 +360,7 @@
+   char * filter = "*"; // Extension demandée
+   struct stat Infos_enreg;
+   char * current_path;
++  char curdir[PATH_MAX];
+ #if defined (__MINT__)
+   char path[1024]={0};
+   char path2[1024]={0};
+@@ -389,7 +390,7 @@
+   strcat(path2,PATH_SEPARATOR);
+   current_directory=opendir(path2);
+ #else  
+-  current_path=getcwd(NULL,0);
++  current_path=getcwd(curdir,sizeof(curdir));
+   current_directory=opendir(current_path);
+ #endif
+   while ((entry=readdir(current_directory)))
+@@ -499,7 +500,7 @@
+ #if defined (__MINT__)  
+ 
+ #else
+-  free(current_path);
++
+ #endif
+   current_path = NULL;
+ 
+@@ -1489,7 +1490,7 @@
+   #else
+   {
+     chdir(context->File_directory);
+-    getcwd(Selector->Directory,256);
++    getcwd(Selector->Directory,MAX_PATH_CHARACTERS);
+   }
+   #endif
+   
+Index: src/loadsave.c
+===================================================================
+--- src/loadsave.c	(revision 2067)
++++ src/loadsave.c	(working copy)
+@@ -620,7 +620,7 @@
+         break;
+     }
+   }
+-  
++  //printf("File format: %s\n", (format ? format->Label : "null"));
+   if (File_error)
+   {
+     context->Format = DEFAULT_FILEFORMAT;
+@@ -1065,7 +1065,7 @@
+ 
+   Get_full_filename(filename, context->File_name, context->File_directory);
+   File_error=0;
+-  
++  //printf("IMG_Load: %s\n", filename);
+   surface = IMG_Load(filename);
+   
+   if (!surface)
+@@ -1130,7 +1130,7 @@
+ {
+   SDL_Surface * bmp=NULL;
+   T_IO_Context context;
+-  
++  //printf("Loading gfx file %s\n", full_name);
+   Init_context_surface(&context, full_name, "");
+   Load_image(&context);
+   
+Index: src/struct.h
+===================================================================
+--- src/struct.h	(revision 2067)
++++ src/struct.h	(working copy)
+@@ -173,7 +173,7 @@
+ /// Data for one item (file, directory) in a fileselector.
+ typedef struct T_Fileselector_item
+ {
+-  char Full_name[256]; ///< Filesystem value.
++  char Full_name[MAX_PATH_CHARACTERS]; ///< Filesystem value.
+   byte Type;           ///< Type of item: 0 = File, 1 = Directory, 2 = Drive
+   byte Icon;           ///< One of ::ICON_TYPES, ICON_NONE for none.
+ 
+@@ -545,7 +545,7 @@
+   byte Format_filter; ///< 0 for "*.*", or a value of enum ::FILE_FORMATS
+   short Position; ///< Index of the first file/entry to display in list
+   short Offset; ///< Position of the "highlight" bar in the file list
+-  char  Directory[256]; ///< Directory currently browsed
++  char  Directory[MAX_PATH_CHARACTERS]; ///< Directory currently browsed
+ } T_Selector_settings;
+ 
+ #endif
+Index: src/const.h
+===================================================================
+--- src/const.h	(revision 2067)
++++ src/const.h	(working copy)
+@@ -28,6 +28,8 @@
+ #ifndef _CONST_H_
+ #define _CONST_H_
+ 
++#include <sys/limits.h>
++
+ #ifndef M_2PI
+ #define M_2PI 6.28318530717958647692528676656 ///< Hmm, pie...
+ #endif
+@@ -36,7 +38,7 @@
+ #define VERSION2                  0     ///< Version number for gfx2.cfg (2/4)
+ #define BETA1                     98    ///< Version number for gfx2.cfg (3/4)
+ #define BETA2                     0     ///< Version number for gfx2.cfg (4/4)
+-#define MAX_VIDEO_MODES           100   ///< Maximum number of video modes Grafx2 can propose.
++#define MAX_VIDEO_MODES           200   ///< Maximum number of video modes Grafx2 can propose.
+ #define NB_ZOOM_FACTORS           15    ///< Number of zoom levels available in the magnifier.
+ #define MENU_WIDTH                254   ///< Width of the menu (not counting the palette)
+ #define MENU_HEIGHT               44    ///< Height of the menu.
+@@ -61,7 +63,7 @@
+ #define COMMENT_SIZE              32    ///< Max number of characters for a comment in PKM or PNG file.
+ #define NB_MAX_PAGES_UNDO         99    ///< Max number of undo pages
+ #define DEFAULT_ZOOM_FACTOR        4    ///< Initial zoom factor for the magnifier.
+-#define MAX_PATH_CHARACTERS      260    ///< Number of characters for a file+complete path. Adapt to your OS...
++#define MAX_PATH_CHARACTERS PATH_MAX    ///< Number of characters for a file+complete path. Adapt to your OS...
+ #define NB_BOOKMARKS               4    ///< Number of bookmark buttons in Save/Load screen.
+ // Character to show a right arrow, used when editing long strings. It's present in ::Gfx->System_font 
+ #define RIGHT_TRIANGLE_CHARACTER  16
+Index: src/init.c
+===================================================================
+--- src/init.c	(revision 2067)
++++ src/init.c	(working copy)
+@@ -681,6 +681,7 @@
+   strcpy(filename,Data_directory);
+   strcat(filename,SKINS_SUBDIRECTORY PATH_SEPARATOR);
+   strcat(filename,skin_file);
++  //printf("Load_graphics: filename %s Data_directory %s", filename, Data_directory);
+   
+   gui=Load_surface(filename, gradients);
+   if (!gui)
+Index: src/sdlscreen.c
+===================================================================
+--- src/sdlscreen.c	(revision 2067)
++++ src/sdlscreen.c	(working copy)
+@@ -54,6 +54,8 @@
+     #define UPDATE_METHOD     UPDATE_METHOD_FULL_PAGE
+   #elif defined(__MINT__)
+     #define UPDATE_METHOD     UPDATE_METHOD_CUMULATED
++  #elif defined(__ANDROID__)
++    #define UPDATE_METHOD     UPDATE_METHOD_FULL_PAGE
+   #else
+     #define UPDATE_METHOD     UPDATE_METHOD_CUMULATED
+   #endif
 Index: src/text.c
 ===================================================================
 --- src/text.c	(revision 2067)
@@ -14,6 +162,33 @@ Index: src/text.c
    if (!text_surface)
    {
      TTF_CloseFont(font);
+Index: src/global.h
+===================================================================
+--- src/global.h	(revision 2067)
++++ src/global.h	(working copy)
+@@ -29,6 +29,7 @@
+ #ifndef _GLOBAL_H_
+ #define _GLOBAL_H_
+ 
++#include <sys/limits.h>
+ #include <SDL.h>
+ #include "struct.h"
+ 
+@@ -721,11 +722,11 @@
+ /// Boolean, set to true to exit the program.
+ GFX2_GLOBAL byte Quitting;
+ /// Name of the directory that was current when the program was run.
+-GFX2_GLOBAL char Initial_directory[256];
++GFX2_GLOBAL char Initial_directory[PATH_MAX];
+ /// Name of the directory that holds the program's (read-only) data: skins, icon, etc.
+-GFX2_GLOBAL char Data_directory[256];
++GFX2_GLOBAL char Data_directory[PATH_MAX];
+ /// Name of the directory where grafx2 reads and writes configuration (gfx2.ini, gfx2.cfg)
+-GFX2_GLOBAL char Config_directory[256];
++GFX2_GLOBAL char Config_directory[PATH_MAX];
+ /// Current foreground color for drawing.
+ GFX2_GLOBAL byte Fore_color;
+ /// Current background color for drawing.
 Index: src/readline.c
 ===================================================================
 --- src/readline.c	(revision 2067)
@@ -48,53 +223,6 @@ Index: src/readline.c
    // Effacement de la chaîne
    Block(window_x+(x_pos*Menu_factor_X),window_y+(y_pos*Menu_factor_Y),
          visible_size*(Menu_factor_X<<3),(Menu_factor_Y<<3),BACKGROUND_COLOR);
-Index: src/io.c
-===================================================================
---- src/io.c	(revision 2067)
-+++ src/io.c	(working copy)
-@@ -455,7 +455,7 @@
- 
- byte Create_lock_file(const char *file_directory)
- {
--  #if defined (__amigaos__)||(__AROS__)
-+  #if defined (__amigaos__)||(__AROS__)||(__ANDROID__)
-     #warning "Missing code for your platform, please check and correct!"
-   #else
-   char lock_filename[MAX_PATH_CHARACTERS];
-Index: src/sdlscreen.c
-===================================================================
---- src/sdlscreen.c	(revision 2067)
-+++ src/sdlscreen.c	(working copy)
-@@ -54,6 +54,8 @@
-     #define UPDATE_METHOD     UPDATE_METHOD_FULL_PAGE
-   #elif defined(__MINT__)
-     #define UPDATE_METHOD     UPDATE_METHOD_CUMULATED
-+  #elif defined(__ANDROID__)
-+    #define UPDATE_METHOD     UPDATE_METHOD_FULL_PAGE
-   #else
-     #define UPDATE_METHOD     UPDATE_METHOD_CUMULATED
-   #endif
-Index: src/filesel.c
-===================================================================
---- src/filesel.c	(revision 2067)
-+++ src/filesel.c	(working copy)
-@@ -360,6 +360,7 @@
-   char * filter = "*"; // Extension demandée
-   struct stat Infos_enreg;
-   char * current_path;
-+  char curdir[PATH_MAX];
- #if defined (__MINT__)
-   char path[1024]={0};
-   char path2[1024]={0};
-@@ -389,7 +390,7 @@
-   strcat(path2,PATH_SEPARATOR);
-   current_directory=opendir(path2);
- #else  
--  current_path=getcwd(NULL,0);
-+  current_path=getcwd(curdir,sizeof(curdir));
-   current_directory=opendir(current_path);
- #endif
-   while ((entry=readdir(current_directory)))
 Index: src/mountlist.c
 ===================================================================
 --- src/mountlist.c	(revision 2067)
@@ -112,16 +240,25 @@ Index: src/setup.c
 ===================================================================
 --- src/setup.c	(revision 2067)
 +++ src/setup.c	(working copy)
-@@ -93,6 +93,8 @@
+@@ -93,6 +93,9 @@
    // Append trailing slash
    strcat(program_dir,PATH_SEPARATOR);
    // Linux: argv[0] unreliable
 +  #elif defined(__ANDROID__)
-+  strcpy(program_dir, "./");
++  getcwd(program_dir, MAX_PATH_CHARACTERS);
++  strcat(program_dir, "/");
    #elif defined(__linux__)
    if (argv0[0]!='/')
    {
-@@ -122,7 +124,7 @@
+@@ -109,6 +112,7 @@
+   #else
+     Extract_path(program_dir, argv0);
+   #endif
++  //printf("Set_program_directory: %s\n", program_dir);
+ }
+ 
+ // Determine which directory contains the read-only data.
+@@ -122,7 +126,7 @@
    #if defined(__macosx__)
      strcat(data_dir,"Contents/Resources/");
    // On GP2X, executable is not in bin/
@@ -130,3 +267,37 @@ Index: src/setup.c
      strcat(data_dir,"share/grafx2/");
    //on tos the same directory
    #elif defined (__MINT__)
+@@ -133,6 +137,7 @@
+   #else
+     strcat(data_dir,"../share/grafx2/");
+   #endif
++  //printf("Set_data_directory: %s\n", data_dir);
+ }
+ 
+ // Determine which directory should store the user's configuration.
+Index: src/fileformats.c
+===================================================================
+--- src/fileformats.c	(revision 2067)
++++ src/fileformats.c	(working copy)
+@@ -3082,6 +3082,8 @@
+ 
+     fclose(file);
+   }
++  else
++    File_error=1;
+ }
+ 
+ 
+Index: src/io.c
+===================================================================
+--- src/io.c	(revision 2067)
++++ src/io.c	(working copy)
+@@ -455,7 +455,7 @@
+ 
+ byte Create_lock_file(const char *file_directory)
+ {
+-  #if defined (__amigaos__)||(__AROS__)
++  #if defined (__amigaos__)||(__AROS__)||(__ANDROID__)
+     #warning "Missing code for your platform, please check and correct!"
+   #else
+   char lock_filename[MAX_PATH_CHARACTERS];
