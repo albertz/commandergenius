@@ -25,8 +25,8 @@ rm -f Signed.apk
 #DEBUGINFODIR=`aapt dump badging App.apk | grep "package:" | sed "s/.*name=[']\([^']*\)['].*versionCode=[']\([^']*\)['].*/\1-\2/" | tr " '/" '---'`
 DEBUGINFODIR=$APPNAME-$APPVER
 echo Copying debug info to project/debuginfo/$DEBUGINFODIR
-mkdir -p ../debuginfo/$DEBUGINFODIR/armeabi ../debuginfo/$DEBUGINFODIR/armeabi-v7a
-cp -f ../obj/local/armeabi/*.so ../debuginfo/$DEBUGINFODIR/armeabi
+mkdir -p ../debuginfo/$DEBUGINFODIR/x86 ../debuginfo/$DEBUGINFODIR/armeabi-v7a
+cp -f ../obj/local/x86/*.so ../debuginfo/$DEBUGINFODIR/x86
 cp -f ../obj/local/armeabi-v7a/*.so ../debuginfo/$DEBUGINFODIR/armeabi-v7a
 cp -f MainActivity-debug.apk ../debuginfo/$DEBUGINFODIR/$APPNAME-$APPVER.apk
 cp -f MainActivity-debug.apk ../../$APPNAME-$APPVER.apk
