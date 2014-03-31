@@ -106,9 +106,23 @@ void * unpackFilesThread(void * unused)
 	strcat( fname, "/postinstall.sh" );
 	if( stat( fname, &st ) != 0 )
 	{
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "No postinstall script");
-		unpackFinished = 1;
-		return (void *)1;
+		strcpy( fname2, getenv("UNSECURE_STORAGE_DIR") );
+		strcat( fname2, "/postinstall.sh" );
+		if( stat( fname2, &st ) != 0 )
+		{
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "No postinstall script");
+			unpackFinished = 1;
+			return (void *)1;
+		}
+		else
+		{
+			strcpy( fname2, "cat " );
+			strcat( fname2, getenv("UNSECURE_STORAGE_DIR") );
+			strcat( fname2, "/postinstall.sh > " );
+			strcat( fname2, fname );
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Copying postinstall scipt from SD card: %s", fname2);
+			system( fname2 );
+		}
 	}
 
 	unpackProgressRunningScript = 1;
