@@ -56,3 +56,6 @@
 	path = project/jni/application/openttd/src
 	url = git@github.com:pelya/openttd-android.git
 	branch = master
+[submodule "project/jni/application/xserver-debian/xserver"]
+	path = project/jni/application/xserver-debian/xserver
+	url = git@github.com:pelya/xserver.git

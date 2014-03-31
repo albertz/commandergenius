@@ -19,6 +19,7 @@
 static TTF_Font* sFont;
 static int unpackProgressMb;
 static int unpackProgressMbTotal = 1;
+static int unpackProgressRunningScript = 0;
 static int unpackFinished = 0;
 
 static void renderString(const char *c, int x, int y);
@@ -31,6 +32,7 @@ static void showErrorMessage(const char *msg);
 void * unpackFilesThread(void * unused)
 {
 	char fname[PATH_MAX*2];
+	char fname2[PATH_MAX*2];
 	char buf[1024 * 4];
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/usr/lib/xorg/protocol.txt" );
@@ -67,9 +69,9 @@ void * unpackFilesThread(void * unused)
 	int unpackProgressKb = 0;
 	for(;;)
 	{
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %d", unpackProgressKb);
+		//__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %d", unpackProgressKb);
 		int cnt = fread( buf, 1, sizeof(buf), ff );
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %d READ %d", unpackProgressKb, cnt);
+		//__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %d READ %d", unpackProgressKb, cnt);
 		if( cnt < 0 )
 		{
 			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
@@ -86,7 +88,7 @@ void * unpackFilesThread(void * unused)
 			unpackProgressMb++;
 		}
 	}
-	__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %d DONE", unpackProgressKb);
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %dKb DONE", unpackProgressKb);
 
 	fclose(ff);
 	if( pclose(fo) != 0 ) // Returns error on Android 2.3 emulator!
@@ -108,6 +110,13 @@ void * unpackFilesThread(void * unused)
 		unpackFinished = 1;
 		return (void *)1;
 	}
+
+	unpackProgressRunningScript = 1;
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Setting executable permissions on postinstall scipt");
+
+	strcpy( fname2, "chmod 755 " );
+	strcat( fname2, fname );
+	system( fname2 );
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Running postinstall scipt");
 
@@ -144,7 +153,7 @@ void XSDL_unpackFiles()
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
 		char s[128];
 		sprintf(s, "Unpacking data: %d/%d Mb, %d%%", unpackProgressMb, unpackProgressMbTotal, unpackProgressMb * 100 / (unpackProgressMbTotal > 0 ? unpackProgressMbTotal : 1));
-		renderString(s, VID_X/2, VID_Y/3);
+		renderString(unpackProgressRunningScript ? "Running postinstall script..." : s, VID_X/2, VID_Y/3);
 		renderString("You may put this app to background while it's unpacking", VID_X/2, VID_Y*2/3);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
