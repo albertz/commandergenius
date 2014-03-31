@@ -207,7 +207,7 @@ class DataDownloader extends Thread
 				( Globals.OptionalDataDownload.length > i && Globals.OptionalDataDownload[i] ) ||
 				( Globals.OptionalDataDownload.length <= i && downloadFiles[i].indexOf("!") == 0 ) )
 			{
-				if( ! DownloadDataFile(downloadFiles[i], DOWNLOAD_FLAG_FILENAME + String.valueOf(i) + ".flag", count+1, total, i) )
+				if( ! DownloadDataFile(downloadFiles[i].replace("<ARCH>", android.os.Build.CPU_ABI), DOWNLOAD_FLAG_FILENAME + String.valueOf(i) + ".flag", count+1, total, i) )
 				{
 					DownloadFailed = true;
 					return;
