@@ -22,17 +22,13 @@ You will need both xcb-proto and python-xcbgen packages
 to have version 1.10-1, you may download newer packages
 from http://packages.ubuntu.com/ or https://www.debian.org/distrib/packages
 
-Copy images from directory project/jni/application/xserver-gimp/keyboard
-to project/themes/UltimateDroid, go to directory project/themes,
-and run script ./convert.sh
-
 Then run commands:
 
 git clone git@github.com:pelya/commandergenius.git sdl-android
 cd sdl-android
-git submodule update --init project/jni/application/xserver/xserver
+git submodule update --init --recursive project/jni/application/xserver-debian/xserver
 rm project/jni/application/src
-ln -s xserver-gimp project/jni/application/src
+ln -s xserver-debian project/jni/application/src
 ./changeAppSettings.sh -a
 android update project -p project
 ./build.sh
@@ -41,24 +37,12 @@ To build system image, download repo:
 
 https://github.com/pelya/cuntubuntu
 
-install dependencies described in it's readme,
-then launch script
+Install dependencies described in it's readme,
+then go to directory img and launch script
 
-img-gimp-wheezy.sh
+./img-debug-wheezy-proot.sh
 
-from directory img.
-This will create Debian system image under directory
-dist-gimp-wheezy. Execute commands (<SDL> is path to this repo):
-
-sudo cp -a <SDL>/project/jni/application/src/xserver/data/usr/ dist-gimp-wheezy/
-sudo cp -a <SDL>/project/jni/application/src/xserver/android/xhost dist-gimp-wheezy/usr/bin/
-sudo cp -a <SDL>/project/jni/application/src/xserver/android/xkbcomp dist-gimp-wheezy/usr/bin/
-sudo cp -a <SDL>/project/jni/application/src/xserver/android/xli dist-gimp-wheezy/usr/bin/
-
-Update system image archive
-
-cd dist-gimp-wheezy
-sudo tar cvzf ../dist-gimp-wheezy.tar.gz *
+This will create Debian system image.
 
 Upload resulting system image somewhere, and change download URL inside
 AndroidAppSettings.cfg, then recompile .apk file.
