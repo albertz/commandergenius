@@ -10,13 +10,9 @@ Also this port is developed very slowly, although the same is true for an offici
 Installation
 ============
 
-This project should be compiled with Android 4.2 SDK (API level 17) and NDK r8, r7c, r6 or r5c,
-google for them and install them as described in their docs.
+Install latest Android SDK and NDK from http://developer.android.com/index.html
 You'll need to install Java Ant too.
-The application will run on Android OS 1.6 and above, but will use features from Android 4.2 if available.
-Also it's compatible with NDK r4b and all versions of CrystaX NDK starting from r4b.
-CrystaX NDK adds support for wide chars, and required if you want to use Boost libraries.
-http://www.crystax.net/android/ndk.php
+The application will run on Android OS 1.6 and above, but will use features from Android 4.4 if available.
 The most supported environment for this port is Linux, MacOs should be okay too.
 If you're developing under Windows you'd better install Portable Ubuntu, to get proper Linux environment
 running inside Windows, then install Linux toolchain on it.
