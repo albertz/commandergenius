@@ -16,3 +16,9 @@ TODO, which will get actually done
 - SDL: control mouse with gyroscope.
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
+
+- OpenTTD: resize in-game NewGRF window.
+
+- OpenTTD: scroll map by touching edges.
+
+- OpenTTD: fix game version mismatch.
