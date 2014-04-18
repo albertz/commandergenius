@@ -207,10 +207,10 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	};
 	const int resVal[][2] = {
 		{*resolutionW, *resolutionH},
-		{*resolutionW * 5 / 6, *resolutionH * 5 / 6},
-		{*resolutionW * 4 / 6, *resolutionH * 4 / 6},
-		{*resolutionW * 3 / 6, *resolutionH * 3 / 6},
-		{*resolutionW * 2 / 6, *resolutionH * 2 / 6},
+		{(*resolutionW * 5 / 6) & ~0x3, (*resolutionH * 5 / 6) & ~0x3},
+		{(*resolutionW * 4 / 6) & ~0x3, (*resolutionH * 4 / 6) & ~0x3},
+		{(*resolutionW * 3 / 6) & ~0x3, (*resolutionH * 3 / 6) & ~0x3},
+		{(*resolutionW * 2 / 6) & ~0x3, (*resolutionH * 2 / 6) & ~0x3},
 		{1280,1024}, {1280,960}, {1280,720},
 		{1024,768}, {800,600}, {800,480}, {640,480}
 	};
