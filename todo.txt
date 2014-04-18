@@ -17,8 +17,4 @@ TODO, which will get actually done
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
 
-- OpenTTD: resize in-game NewGRF window.
-
-- OpenTTD: scroll map by touching edges.
-
-- OpenTTD: fix game version mismatch.
+- GIMP: x86 architecture support.

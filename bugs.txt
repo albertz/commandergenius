@@ -28,14 +28,6 @@ Requested features, might never get implemented, see todo.txt for features that 
 - Support of libjnigraphics (it will disable on-screen keyboard, only SW SDL screen surface supported).
   This is not relevant already, as every device around is fast enough with GL.
 
-- GIMP: x86 architecture support.
-
-- GIMP: File open dialog shows error message when loading preview for JPG file.
-
-- GIMP: Ctrl/Alt/Shift toggles in the taskbar.
-
-- UfoAI: huge huge update.
-
 - OpenArena: chat text input should be faster.
 
 - OpenArena: Shift and Ctrl keys on USB keyboard do not work for text input.
