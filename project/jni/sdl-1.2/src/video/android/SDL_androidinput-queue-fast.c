@@ -71,10 +71,10 @@ extern void SDL_ANDROID_PumpEvents()
 
 extern void SDL_ANDROID_MainThreadPushMouseMotion(int x, int y)
 {
-	SDL_SendMouseMotion( ANDROID_CurrentWindow, 0, x, y );
-
 	SDL_ANDROID_currentMouseX = x;
 	SDL_ANDROID_currentMouseY = y;
+
+	SDL_SendMouseMotion( ANDROID_CurrentWindow, 0, x, y );
 }
 
 extern void SDL_ANDROID_MainThreadPushMouseButton(int pressed, int button)

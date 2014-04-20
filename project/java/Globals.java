@@ -77,7 +77,7 @@ class Globals
 	public static String AdmobTestDeviceId = "";
 	public static String AdmobBannerSize = "";
 
-	// Phone-specific config, modified by user in "Change phone config" startup dialog, TODO: move this to settings
+	// Phone-specific config, modified by user in "Change phone config" startup dialog
 	public static boolean DownloadToSdcard = true;
 	public static boolean PhoneHasTrackball = false;
 	public static boolean PhoneHasArrowKeys = false;
@@ -102,6 +102,8 @@ class Globals
 	public static boolean MoveMouseWithJoystick = false;
 	public static int MoveMouseWithJoystickSpeed = 0;
 	public static int MoveMouseWithJoystickAccel = 0;
+	public static boolean MoveMouseWithGyroscope = true;
+	public static int MoveMouseWithGyroscopeSpeed = 2;
 	public static boolean ClickMouseWithDpad = false;
 	public static boolean RelativeMouseMovement = ForceRelativeMouseMode; // Laptop touchpad mode
 	public static int RelativeMouseMovementSpeed = 2;

@@ -409,27 +409,29 @@ class SettingsMenuMouse extends SettingsMenu
 	{
 		String title(final MainActivity p)
 		{
-			return p.getResources().getString(R.string.pointandclick_question);
+			return p.getResources().getString(R.string.mouse_question);
 		}
 		void run (final MainActivity p)
 		{
 			CharSequence[] items = {
-				p.getResources().getString(R.string.hover_jitter_filter),
-				p.getResources().getString(R.string.pointandclick_joystickmouse),
+				p.getResources().getString(R.string.mouse_hover_jitter_filter),
+				p.getResources().getString(R.string.mouse_joystickmouse),
 				p.getResources().getString(R.string.click_with_dpadcenter),
-				p.getResources().getString(R.string.pointandclick_relative)
+				p.getResources().getString(R.string.mouse_relative),
+				p.getResources().getString(R.string.mouse_gyroscope_mouse),
 			};
 
 			boolean defaults[] = {
 				Globals.HoverJitterFilter,
 				Globals.MoveMouseWithJoystick,
 				Globals.ClickMouseWithDpad,
-				Globals.RelativeMouseMovement
+				Globals.RelativeMouseMovement,
+				Globals.MoveMouseWithGyroscope,
 			};
 
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(p.getResources().getString(R.string.pointandclick_question));
+			builder.setTitle(p.getResources().getString(R.string.mouse_question));
 			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener()
 			{
 				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
@@ -442,6 +444,8 @@ class SettingsMenuMouse extends SettingsMenu
 						Globals.ClickMouseWithDpad = isChecked;
 					if( item == 3 )
 						Globals.RelativeMouseMovement = isChecked;
+					if( item == 4 )
+						Globals.MoveMouseWithGyroscope = isChecked;
 				}
 			});
 			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
@@ -449,10 +453,45 @@ class SettingsMenuMouse extends SettingsMenu
 				public void onClick(DialogInterface dialog, int item) 
 				{
 					dialog.dismiss();
-					if( Globals.RelativeMouseMovement )
-						showRelativeMouseMovementConfig(p);
-					else
-						goBack(p);
+					showGyroscopeMouseMovementConfig(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
+		}
+
+		static void showGyroscopeMouseMovementConfig(final MainActivity p)
+		{
+			if( !Globals.MoveMouseWithGyroscope )
+			{
+				showRelativeMouseMovementConfig(p);
+				return;
+			}
+
+			final CharSequence[] items = {	p.getResources().getString(R.string.accel_veryslow),
+											p.getResources().getString(R.string.accel_slow),
+											p.getResources().getString(R.string.accel_medium),
+											p.getResources().getString(R.string.accel_fast),
+											p.getResources().getString(R.string.accel_veryfast) };
+
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(R.string.mouse_gyroscope_mouse_sensitivity);
+			builder.setSingleChoiceItems(items, Globals.MoveMouseWithGyroscopeSpeed, new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int item)
+				{
+					Globals.MoveMouseWithGyroscopeSpeed = item;
+
+					dialog.dismiss();
+					showRelativeMouseMovementConfig(p);
 				}
 			});
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
@@ -469,6 +508,12 @@ class SettingsMenuMouse extends SettingsMenu
 
 		static void showRelativeMouseMovementConfig(final MainActivity p)
 		{
+			if( !Globals.RelativeMouseMovement )
+			{
+				goBack(p);
+				return;
+			}
+
 			final CharSequence[] items = {	p.getResources().getString(R.string.accel_veryslow),
 											p.getResources().getString(R.string.accel_slow),
 											p.getResources().getString(R.string.accel_medium),
@@ -476,10 +521,10 @@ class SettingsMenuMouse extends SettingsMenu
 											p.getResources().getString(R.string.accel_veryfast) };
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(R.string.pointandclick_relative_speed);
+			builder.setTitle(R.string.mouse_relative_speed);
 			builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementSpeed, new DialogInterface.OnClickListener()
 			{
-				public void onClick(DialogInterface dialog, int item) 
+				public void onClick(DialogInterface dialog, int item)
 				{
 					Globals.RelativeMouseMovementSpeed = item;
 
@@ -507,7 +552,7 @@ class SettingsMenuMouse extends SettingsMenu
 											p.getResources().getString(R.string.accel_fast) };
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(R.string.pointandclick_relative_accel);
+			builder.setTitle(R.string.mouse_relative_accel);
 			builder.setSingleChoiceItems(items, Globals.RelativeMouseMovementAccel, new DialogInterface.OnClickListener()
 			{
 				public void onClick(DialogInterface dialog, int item) 
@@ -535,7 +580,7 @@ class SettingsMenuMouse extends SettingsMenu
 	{
 		String title(final MainActivity p)
 		{
-			return p.getResources().getString(R.string.pointandclick_joystickmousespeed);
+			return p.getResources().getString(R.string.mouse_joystickmousespeed);
 		}
 		boolean enabled()
 		{
@@ -548,7 +593,7 @@ class SettingsMenuMouse extends SettingsMenu
 											p.getResources().getString(R.string.accel_fast) };
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(R.string.pointandclick_joystickmousespeed);
+			builder.setTitle(R.string.mouse_joystickmousespeed);
 			builder.setSingleChoiceItems(items, Globals.MoveMouseWithJoystickSpeed, new DialogInterface.OnClickListener() 
 			{
 				public void onClick(DialogInterface dialog, int item) 
@@ -579,7 +624,7 @@ class SettingsMenuMouse extends SettingsMenu
 											p.getResources().getString(R.string.accel_fast) };
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(R.string.pointandclick_joystickmouseaccel);
+			builder.setTitle(R.string.mouse_joystickmouseaccel);
 			builder.setSingleChoiceItems(items, Globals.MoveMouseWithJoystickAccel, new DialogInterface.OnClickListener() 
 			{
 				public void onClick(DialogInterface dialog, int item) 

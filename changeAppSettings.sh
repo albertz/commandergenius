@@ -896,6 +896,9 @@ echo >> AndroidAppSettings.cfg
 echo "# Application uses gyroscope (y) or (n), the gyroscope will be used as joystick 1 axes 2-4" >> AndroidAppSettings.cfg
 echo AppUsesGyroscope=$AppUsesGyroscope >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Use gyroscope to move mouse cursor (y) or (n), it eats battery, and can be disabled in settings, do not use with AppUsesGyroscope setting" >> AndroidAppSettings.cfg
+echo MoveMouseWithGyroscope=$MoveMouseWithGyroscope >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Application uses multitouch (y) or (n), multitouch events are passed as SDL_JOYBALLMOTION events for the joystick 0" >> AndroidAppSettings.cfg
 echo AppUsesMultitouch=$AppUsesMultitouch >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
@@ -1205,6 +1208,12 @@ else
 	AppUsesGyroscope=false
 fi
 
+if [ "$MoveMouseWithGyroscope" = "y" ] ; then
+	MoveMouseWithGyroscope=true
+else
+	MoveMouseWithGyroscope=false
+fi
+
 if [ "$AppUsesMultitouch" = "y" ] ; then
 	AppUsesMultitouch=true
 else
@@ -1403,6 +1412,7 @@ $SEDI "s/public static boolean AppUsesSecondJoystick = .*;/public static boolean
 $SEDI "s/public static boolean AppUsesThirdJoystick = .*;/public static boolean AppUsesThirdJoystick = $AppUsesThirdJoystick;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesAccelerometer = .*;/public static boolean AppUsesAccelerometer = $AppUsesAccelerometer;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesGyroscope = .*;/public static boolean AppUsesGyroscope = $AppUsesGyroscope;/" project/src/Globals.java
+$SEDI "s/public static boolean MoveMouseWithGyroscope = .*;/public static boolean MoveMouseWithGyroscope = $MoveMouseWithGyroscope;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesMultitouch = .*;/public static boolean AppUsesMultitouch = $AppUsesMultitouch;/" project/src/Globals.java
 $SEDI "s/public static boolean NonBlockingSwapBuffers = .*;/public static boolean NonBlockingSwapBuffers = $NonBlockingSwapBuffers;/" project/src/Globals.java
 $SEDI "s/public static boolean ResetSdlConfigForThisVersion = .*;/public static boolean ResetSdlConfigForThisVersion = $ResetSdlConfigForThisVersion;/" project/src/Globals.java

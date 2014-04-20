@@ -133,6 +133,10 @@ enum { DEADZONE_HOVER_FINGER = 50, DEADZONE_HOVER_STYLUS = 80, HOVER_FREEZE_TIME
 static int hoverJitterFilter = 1;
 static int hoverX, hoverY, hoverTime = 0, hoverMouseFreeze = 0, hoverDeadzone = 0;
 static int rightMouseButtonLongPress = 1;
+static int moveMouseWithGyroscope = 0;
+static float moveMouseWithGyroscopeSpeed = 1.0f;
+static int moveMouseWithGyroscopeX = 0;
+static int moveMouseWithGyroscopeY = 0;
 
 static inline int InsideRect( const SDL_Rect * r, int x, int y )
 {
@@ -501,7 +505,7 @@ static void ProcessMouseUp( int x, int y )
 		abs(mouseInitialY - y) < SDL_ANDROID_sFakeWindowHeight / 16 &&
 		SDL_GetTicks() - mouseInitialTime < 700 )
 	{
-		SDL_ANDROID_MainThreadPushMouseMotion(mouseInitialX, mouseInitialY);
+		SDL_ANDROID_MainThreadPushMouseMotion( mouseInitialX, mouseInitialY );
 		SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
 		deferredMouseTap = 2;
 		mouseInitialX = -1;
@@ -527,6 +531,11 @@ static void ProcessMouseUp( int x, int y )
 	SDL_ANDROID_moveMouseWithKbY = -1;
 	SDL_ANDROID_moveMouseWithKbSpeedX = 0;
 	SDL_ANDROID_moveMouseWithKbSpeedY = 0;
+	if( !deferredMouseTap )
+	{
+		moveMouseWithGyroscopeX = 0;
+		moveMouseWithGyroscopeY = 0;
+	}
 }
 
 static int ProcessMouseDown( int x, int y )
@@ -745,7 +754,38 @@ static void ProcessMouseHover( jint *xx, jint *yy, int action, int distance )
 #endif
 }
 
-JNIEXPORT void JNICALL 
+static void AdjustMouseWithGyroscope( jint *xx, jint *yy )
+{
+	if( !moveMouseWithGyroscope || relativeMovement ||
+		SDL_ANDROID_moveMouseWithKbX >= 0 || hardwareMouseDetected == MOUSE_HW_INPUT_MOUSE )
+		return;
+
+	static int oldX = 0, oldY = 0, count = 0;
+	count += abs(*xx - oldX) + abs(*yy - oldY);
+	oldX = *xx;
+	oldY = *yy;
+
+	*xx += moveMouseWithGyroscopeX;
+	*yy += moveMouseWithGyroscopeY;
+
+	// Decrease the adjustment values slowly, when we move mouse
+	int decrease = count / 10;
+	count %= 10;
+
+#define SIGN(x) ((x > 0) - (x < 0)) // -1, 0, or 1, depending on the value sign
+
+	int signX = SIGN(moveMouseWithGyroscopeX);
+	moveMouseWithGyroscopeX -= signX * decrease;
+	if( signX != SIGN(moveMouseWithGyroscopeX) )
+		moveMouseWithGyroscopeX = 0;
+
+	int signY = SIGN(moveMouseWithGyroscopeY);
+	moveMouseWithGyroscopeY -= signY * decrease;
+	if( signY != SIGN(moveMouseWithGyroscopeY) )
+		moveMouseWithGyroscopeY = 0;
+}
+
+JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  thiz, jint x, jint y, jint action, jint pointerId, jint force, jint radius )
 {
 	int i;
@@ -773,6 +813,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 	if( !SDL_ANDROID_isMouseUsed )
 		return;
 
+	AdjustMouseWithGyroscope( &x, &y );
+
 	ProcessMouseHover( &x, &y, action, force );
 
 	if( pointerId == firstMousePointerId )
@@ -790,7 +832,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 	ClearOldTouchPointers( action, pointerId );
 }
 
-void ProcessDeferredMouseTap()
+static void ProcessDeferredMouseTap()
 {
 	if( deferredMouseTap > 0 )
 	{
@@ -807,10 +849,42 @@ void ProcessDeferredMouseTap()
 			if( SDL_ANDROID_currentMouseX + 1 < SDL_ANDROID_sFakeWindowWidth )
 				SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_currentMouseX + 1, SDL_ANDROID_currentMouseY);
 			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
+			moveMouseWithGyroscopeX = 0;
+			moveMouseWithGyroscopeY = 0;
 		}
 		else if( SDL_ANDROID_currentMouseX > 0 ) // Force application to redraw, and call SDL_Flip()
 			SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_currentMouseX - 1, SDL_ANDROID_currentMouseY);
 	}
+}
+
+static void ProcessMoveMouseWithGyroscope(float gx, float gy, float gz)
+{
+	if( hardwareMouseDetected == MOUSE_HW_INPUT_MOUSE ) // We don't need all that stuff with a proper precise input device
+		return;
+
+	gx += gz; // Ignore Z?
+	gx *= moveMouseWithGyroscopeSpeed;
+	gy *= moveMouseWithGyroscopeSpeed;
+
+	// TODO: mutex here?
+	// If race condition happens, mouse will jump at random across the screen. Nothing serious.
+
+	if( SDL_ANDROID_moveMouseWithKbX >= 0 )
+	{
+		SDL_ANDROID_moveMouseWithKbX += gx;
+		SDL_ANDROID_moveMouseWithKbY += gy;
+		SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY);
+		return;
+	}
+
+	if( relativeMovement )
+	{
+		SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_currentMouseX + gx, SDL_ANDROID_currentMouseY + gy);
+		return;
+	}
+
+	moveMouseWithGyroscopeX += gx;
+	moveMouseWithGyroscopeY += gy;
 }
 
 void SDL_ANDROID_WarpMouse(int x, int y)
@@ -933,6 +1007,13 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeGyroscope) ( JNIEnv*  env, jobject th
 	if( !SDL_CurrentVideoSurface )
 		return;
 #endif
+
+	if( moveMouseWithGyroscope )
+	{
+		ProcessMoveMouseWithGyroscope(X, Y, Z);
+		return;
+	}
+
 	X *= 0.25f;
 	Y *= 0.25f;
 	Z *= 0.25f;
@@ -982,7 +1063,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 		jint LeftClickKeycode, jint RightClickKeycode,
 		jint LeftClickTimeout, jint RightClickTimeout,
 		jint RelativeMovement, jint RelativeMovementSpeed, jint RelativeMovementAccel,
-		jint ShowMouseCursor, jint HoverJitterFilter, jint RightMouseButtonLongPress)
+		jint ShowMouseCursor, jint HoverJitterFilter, jint RightMouseButtonLongPress,
+		jint MoveMouseWithGyroscope, jint MoveMouseWithGyroscopeSpeed)
 {
 	SDL_ANDROID_isMouseUsed = 1;
 	rightClickMethod = RightClickMethod;
@@ -1004,6 +1086,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 	SDL_ANDROID_ShowMouseCursor = ShowMouseCursor;
 	hoverJitterFilter = HoverJitterFilter;
 	rightMouseButtonLongPress = RightMouseButtonLongPress;
+	moveMouseWithGyroscope = MoveMouseWithGyroscope;
+	moveMouseWithGyroscopeSpeed = 0.0625f * MoveMouseWithGyroscopeSpeed * MoveMouseWithGyroscopeSpeed + 0.375 * MoveMouseWithGyroscopeSpeed + 1.0f; // Scale value from 0.5 to 2, with 1 at the middle
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "relativeMovementSpeed %d relativeMovementAccel %d", relativeMovementSpeed, relativeMovementAccel);
 }
 

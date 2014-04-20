@@ -98,17 +98,19 @@
     <string name="leftclick_timeout_time_4">1.5 sec</string>
     <string name="click_with_dpadcenter">Left mouse click with trackball / joystick center</string>
 
-    <string name="pointandclick_question">Advanced features</string>
-    <string name="pointandclick_keepaspectratio">Keep 4:3 screen aspect ratio</string>
-    <string name="pointandclick_showcreenunderfinger">Show screen under finger in separate window</string>
-    <string name="pointandclick_showcreenunderfinger2">On-screen magnifying glass</string>
-    <string name="pointandclick_joystickmouse">Move mouse with joystick or trackball</string>
-    <string name="pointandclick_joystickmousespeed">Move mouse with joystick speed</string>
-    <string name="pointandclick_joystickmouseaccel">Move mouse with joystick acceleration</string>
-    <string name="pointandclick_relative">Relative mouse movement (laptop mode)</string>
-    <string name="pointandclick_relative_speed">Relative mouse movement speed</string>
-    <string name="pointandclick_relative_accel">Relative mouse movement acceleration</string>
-    <string name="hover_jitter_filter">Filter jitter for stylus/finger hover</string>
+    <string name="mouse_question">Advanced features</string>
+    <string name="mouse_keepaspectratio">Keep 4:3 screen aspect ratio</string>
+    <string name="mouse_showcreenunderfinger">Show screen under finger in separate window</string>
+    <string name="mouse_showcreenunderfinger2">On-screen magnifying glass</string>
+    <string name="mouse_joystickmouse">Move mouse with joystick or trackball</string>
+    <string name="mouse_joystickmousespeed">Move mouse with joystick speed</string>
+    <string name="mouse_joystickmouseaccel">Move mouse with joystick acceleration</string>
+    <string name="mouse_relative">Relative mouse movement (laptop mode)</string>
+    <string name="mouse_relative_speed">Relative mouse movement speed</string>
+    <string name="mouse_relative_accel">Relative mouse movement acceleration</string>
+    <string name="mouse_hover_jitter_filter">Filter jitter for stylus/finger hover</string>
+    <string name="mouse_gyroscope_mouse">Control mouse with gyroscope</string>
+    <string name="mouse_gyroscope_mouse_sensitivity">Gyroscope sensitivity</string>
 
     <string name="none">None</string>
 

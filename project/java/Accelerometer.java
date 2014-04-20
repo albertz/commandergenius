@@ -67,7 +67,8 @@ class AccelerometerReader implements SensorEventListener
 			Log.i("SDL", "libSDL: starting accelerometer");
 			_manager.registerListener(this, _manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
 		}
-		if( Globals.AppUsesGyroscope && _manager != null && _manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null )
+		if( (Globals.AppUsesGyroscope || Globals.MoveMouseWithGyroscope) &&
+			_manager != null && _manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null )
 		{
 			Log.i("SDL", "libSDL: starting gyroscope");
 			_manager.registerListener(gyro, _manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
@@ -81,6 +82,7 @@ class AccelerometerReader implements SensorEventListener
 		else
 			nativeAccelerometer(event.values[0], event.values[1], event.values[2]); // TODO: not tested!
 	}
+
 	public void onAccuracyChanged(Sensor s, int a)
 	{
 	}

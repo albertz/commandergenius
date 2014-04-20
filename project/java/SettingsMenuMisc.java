@@ -344,7 +344,7 @@ class SettingsMenuMisc extends SettingsMenu
 		{
 			debugMenuShowCount++;
 			CharSequence[] items = {
-				p.getResources().getString(R.string.pointandclick_keepaspectratio),
+				p.getResources().getString(R.string.mouse_keepaspectratio),
 				p.getResources().getString(R.string.video_smooth)
 			};
 			boolean defaults[] = { 
@@ -355,7 +355,7 @@ class SettingsMenuMisc extends SettingsMenu
 			if(Globals.SwVideoMode && !Globals.CompatibilityHacksVideo)
 			{
 				CharSequence[] items2 = {
-					p.getResources().getString(R.string.pointandclick_keepaspectratio),
+					p.getResources().getString(R.string.mouse_keepaspectratio),
 					p.getResources().getString(R.string.video_smooth),
 					p.getResources().getString(R.string.video_separatethread),
 				};
@@ -371,7 +371,7 @@ class SettingsMenuMisc extends SettingsMenu
 			if(Globals.Using_SDL_1_3)
 			{
 				CharSequence[] items2 = {
-					p.getResources().getString(R.string.pointandclick_keepaspectratio),
+					p.getResources().getString(R.string.mouse_keepaspectratio),
 				};
 				boolean defaults2[] = { 
 					Globals.KeepAspectRatio,
@@ -570,9 +570,9 @@ class SettingsMenuMisc extends SettingsMenu
 		}
 		void run (final MainActivity p)
 		{
-			if( !Globals.AppUsesGyroscope || !AccelerometerReader.gyro.available(p) )
+			if( !(Globals.AppUsesGyroscope || Globals.MoveMouseWithGyroscope) || !AccelerometerReader.gyro.available(p) )
 			{
-				if( Globals.AppUsesGyroscope )
+				if( Globals.AppUsesGyroscope || Globals.MoveMouseWithGyroscope )
 				{
 					Toast toast = Toast.makeText(p, p.getResources().getString(R.string.calibrate_gyroscope_not_supported), Toast.LENGTH_LONG);
 					toast.show();
@@ -640,9 +640,9 @@ class SettingsMenuMisc extends SettingsMenu
 				{
 					for(int count = 1; count < 10; count++)
 					{
-						p.setText("" + count + "0% ...");
+						p.setText("" + count * 10 + "% ...");
 						try {
-							Thread.sleep(500);
+							Thread.sleep(200);
 						} catch( Exception e ) {}
 					}
 					finishCalibration(p);
@@ -752,4 +752,3 @@ class SettingsMenuMisc extends SettingsMenu
 		}
 	}
 }
-
