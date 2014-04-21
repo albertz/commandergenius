@@ -89,7 +89,7 @@ class AccelerometerReader implements SensorEventListener
 
 	static class GyroscopeListener implements SensorEventListener
 	{
-		public float x1, x2, xc, y1, y2, yc, z1, z2, zc;
+		public float x1 = 0.0f, x2 = 0.0f, xc = 0.0f, y1 = 0.0f, y2 = 0.0f, yc = 0.0f, z1 = 0.0f, z2 = 0.0f, zc = 0.0f;
 		public GyroscopeListener()
 		{
 		}

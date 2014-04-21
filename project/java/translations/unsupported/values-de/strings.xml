@@ -136,7 +136,7 @@
 <string name="controls_screenkb_drawsize">Größe der Schaltfläche Bilder</string>
 <string name="cancel">Cancel</string>
 <string name="controls_screenkb_custom">Custom</string>
-<string name="hover_jitter_filter">Filter jitter for stylus/finger hover</string>
+<string name="mouse_hover_jitter_filter">Filter jitter for stylus/finger hover</string>
 <string name="remap_hwkeys_select_simple">Select action</string>
 <string name="remap_hwkeys_select_more_keys">Show all keycodes</string>
 <string name="display_size_small_touchpad">Small, touchpad mode</string>

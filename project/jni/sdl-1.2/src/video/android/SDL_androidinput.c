@@ -134,7 +134,7 @@ static int hoverJitterFilter = 1;
 static int hoverX, hoverY, hoverTime = 0, hoverMouseFreeze = 0, hoverDeadzone = 0;
 static int rightMouseButtonLongPress = 1;
 static int moveMouseWithGyroscope = 0;
-static float moveMouseWithGyroscopeSpeed = 1.0f;
+static float moveMouseWithGyroscopeSpeed = 2.0f;
 static int moveMouseWithGyroscopeX = 0;
 static int moveMouseWithGyroscopeY = 0;
 
@@ -863,8 +863,22 @@ static void ProcessMoveMouseWithGyroscope(float gx, float gy, float gz)
 		return;
 
 	gx += gz; // Ignore Z?
-	gx *= moveMouseWithGyroscopeSpeed;
-	gy *= moveMouseWithGyroscopeSpeed;
+	gx *= -moveMouseWithGyroscopeSpeed;
+	gy *= moveMouseWithGyroscopeSpeed; // Screen has Y coordinate inverted
+
+	//gx *= 10; // debug
+	//gy *= 10; // debug
+
+	static float subpixelX = 0.0f, subpixelY = 0.0f;
+
+	gx += subpixelX;
+	gy += subpixelY;
+	float t = truncf(gx);
+	subpixelX = gx - t;
+	gx = t;
+	t = truncf(gy);
+	subpixelY = gy - t;
+	gy = t;
 
 	// TODO: mutex here?
 	// If race condition happens, mouse will jump at random across the screen. Nothing serious.
@@ -1087,8 +1101,9 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 	hoverJitterFilter = HoverJitterFilter;
 	rightMouseButtonLongPress = RightMouseButtonLongPress;
 	moveMouseWithGyroscope = MoveMouseWithGyroscope;
-	moveMouseWithGyroscopeSpeed = 0.0625f * MoveMouseWithGyroscopeSpeed * MoveMouseWithGyroscopeSpeed + 0.375 * MoveMouseWithGyroscopeSpeed + 1.0f; // Scale value from 0.5 to 2, with 1 at the middle
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "relativeMovementSpeed %d relativeMovementAccel %d", relativeMovementSpeed, relativeMovementAccel);
+	moveMouseWithGyroscopeSpeed = 0.0625f * MoveMouseWithGyroscopeSpeed * MoveMouseWithGyroscopeSpeed + 0.125f * MoveMouseWithGyroscopeSpeed + 0.5f; // Scale value from 0.5 to 2, with 1 at the middle
+	moveMouseWithGyroscopeSpeed *= 2.0f;
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "moveMouseWithGyroscopeSpeed %d = %f", MoveMouseWithGyroscopeSpeed, moveMouseWithGyroscopeSpeed);
 }
 
 JNIEXPORT void JNICALL 
@@ -1497,7 +1512,8 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 	if( joystick->index == JOY_ACCELGYRO )
 	{
 		joystick->naxes = 8; // Normalized accelerometer = axes 0-1, gyroscope = axes 2-4, raw accelerometer = axes 5-7
-		SDL_ANDROID_CallJavaStartAccelerometerGyroscope(1);
+		if( !moveMouseWithGyroscope )
+			SDL_ANDROID_CallJavaStartAccelerometerGyroscope(1);
 	}
 	if( joystick->index >= JOY_GAMEPAD1 && joystick->index <= JOY_GAMEPAD4 )
 	{
@@ -1517,7 +1533,7 @@ void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
 void SDL_SYS_JoystickClose(SDL_Joystick *joystick)
 {
 	SDL_ANDROID_CurrentJoysticks[joystick->index] = NULL;
-	if( joystick->index == JOY_ACCELGYRO )
+	if( joystick->index == JOY_ACCELGYRO && !moveMouseWithGyroscope )
 		SDL_ANDROID_CallJavaStartAccelerometerGyroscope(0);
 	return;
 }

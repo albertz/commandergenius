@@ -146,7 +146,7 @@
 <string name="yes">Да</string>
 <string name="no">Нет</string>
 <string name="controls_screenkb_custom">Пользовательские настройки</string>
-<string name="hover_jitter_filter">Фильтровать дрожание при поднесении стилуса/пальца к экрану</string>
+<string name="mouse_hover_jitter_filter">Фильтровать дрожание при поднесении стилуса/пальца к экрану</string>
 <string name="remap_hwkeys_select_simple">Выберите действие</string>
 <string name="remap_hwkeys_select_more_keys">Показать все коды кнопок</string>
 </resources>

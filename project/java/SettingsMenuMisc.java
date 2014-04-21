@@ -566,7 +566,7 @@ class SettingsMenuMisc extends SettingsMenu
 		}
 		boolean enabled()
 		{
-			return Globals.AppUsesGyroscope;
+			return Globals.AppUsesGyroscope || Globals.MoveMouseWithGyroscope;
 		}
 		void run (final MainActivity p)
 		{
@@ -664,12 +664,12 @@ class SettingsMenuMisc extends SettingsMenu
 			AccelerometerReader.gyro.xc += x;
 			AccelerometerReader.gyro.yc += y;
 			AccelerometerReader.gyro.zc += z;
-			AccelerometerReader.gyro.x1 = Math.min(AccelerometerReader.gyro.x1, x * 1.1f); // Small safety bound coefficient
-			AccelerometerReader.gyro.x2 = Math.max(AccelerometerReader.gyro.x2, x * 1.1f);
-			AccelerometerReader.gyro.y1 = Math.min(AccelerometerReader.gyro.y1, y * 1.1f);
-			AccelerometerReader.gyro.y2 = Math.max(AccelerometerReader.gyro.y2, y * 1.1f);
-			AccelerometerReader.gyro.z1 = Math.min(AccelerometerReader.gyro.z1, z * 1.1f);
-			AccelerometerReader.gyro.z2 = Math.max(AccelerometerReader.gyro.z2, z * 1.1f);
+			AccelerometerReader.gyro.x1 = Math.min(AccelerometerReader.gyro.x1, x * 1.02f); // Small safety bound coefficient
+			AccelerometerReader.gyro.x2 = Math.max(AccelerometerReader.gyro.x2, x * 1.02f);
+			AccelerometerReader.gyro.y1 = Math.min(AccelerometerReader.gyro.y1, y * 1.02f);
+			AccelerometerReader.gyro.y2 = Math.max(AccelerometerReader.gyro.y2, y * 1.02f);
+			AccelerometerReader.gyro.z1 = Math.min(AccelerometerReader.gyro.z1, z * 1.02f);
+			AccelerometerReader.gyro.z2 = Math.max(AccelerometerReader.gyro.z2, z * 1.02f);
 			final Matrix m = new Matrix();
 			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
 			RectF dst = new RectF(	x * 5000 + p.getVideoLayout().getWidth()/2 - 50, y * 5000 + p.getVideoLayout().getHeight()/2 - 50,
@@ -694,6 +694,10 @@ class SettingsMenuMisc extends SettingsMenu
 				AccelerometerReader.gyro.xc /= (float)numEvents;
 				AccelerometerReader.gyro.yc /= (float)numEvents;
 				AccelerometerReader.gyro.zc /= (float)numEvents;
+				Log.i("SDL", "libSDL: gyroscope calibration: " +
+						AccelerometerReader.gyro.x1 + " < " + AccelerometerReader.gyro.xc + " > " + AccelerometerReader.gyro.x2 +  " : " +
+						AccelerometerReader.gyro.y1 + " < " + AccelerometerReader.gyro.yc + " > " + AccelerometerReader.gyro.y2 +  " : " +
+						AccelerometerReader.gyro.z1 + " < " + AccelerometerReader.gyro.zc + " > " + AccelerometerReader.gyro.z2);
 			}
 			p.runOnUiThread(new Runnable()
 			{

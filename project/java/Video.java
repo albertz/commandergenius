@@ -657,6 +657,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		Settings.nativeSetEnv( "DISPLAY_RESOLUTION_HEIGHT", String.valueOf(Math.min(mWidth, mHeight)) ); // In Kitkat with immersive mode, getWindowManager().getDefaultDisplay().getMetrics() return inaccurate height
 
 		accelerometer = new AccelerometerReader(context);
+		if( Globals.MoveMouseWithGyroscope )
+			startAccelerometerGyroscope(1);
 		// Tweak video thread priority, if user selected big audio buffer
 		if(Globals.AudioBufferConfig >= 2)
 			Thread.currentThread().setPriority( (Thread.NORM_PRIORITY + Thread.MIN_PRIORITY) / 2 ); // Lower than normal
@@ -760,12 +762,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		return context.isScreenKeyboardShown() ? 1 : 0;
 	}
 
-	public void setScreenKeyboardHintMessage(String s)
+	public void setScreenKeyboardHintMessage(String s) // Called from native code
 	{
 		context.setScreenKeyboardHintMessage(s);
 	}
 
-	public void startAccelerometerGyroscope(int started)
+	public void startAccelerometerGyroscope(int started) // Called from native code
 	{
 		accelerometer.openedBySDL = (started != 0);
 		if( accelerometer.openedBySDL && !mPaused )

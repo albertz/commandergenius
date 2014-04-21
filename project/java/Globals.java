@@ -102,7 +102,7 @@ class Globals
 	public static boolean MoveMouseWithJoystick = false;
 	public static int MoveMouseWithJoystickSpeed = 0;
 	public static int MoveMouseWithJoystickAccel = 0;
-	public static boolean MoveMouseWithGyroscope = true;
+	public static boolean MoveMouseWithGyroscope = false;
 	public static int MoveMouseWithGyroscopeSpeed = 2;
 	public static boolean ClickMouseWithDpad = false;
 	public static boolean RelativeMouseMovement = ForceRelativeMouseMode; // Laptop touchpad mode
@@ -129,8 +129,6 @@ class Globals
 	public static boolean VideoLinearFilter = true;
 	public static boolean MultiThreadedVideo = false;
 	public static boolean BrokenLibCMessageShown = false;
-	// Gyroscope calibration
-	public static float gyro_x1, gyro_x2, gyro_xc, gyro_y1, gyro_y2, gyro_yc, gyro_z1, gyro_z2, gyro_zc;
 
 	public static boolean OuyaEmulation = false; // For debugging
 	public static boolean RedirectStdout = false; // For debugging

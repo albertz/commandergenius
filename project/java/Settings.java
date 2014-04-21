@@ -161,18 +161,20 @@ class Settings
 			out.writeBoolean(Globals.BrokenLibCMessageShown);
 			out.writeInt(Globals.TouchscreenKeyboardDrawSize);
 			out.writeInt(p.getApplicationVersion());
-			out.writeFloat(Globals.gyro_x1);
-			out.writeFloat(Globals.gyro_x2);
-			out.writeFloat(Globals.gyro_xc);
-			out.writeFloat(Globals.gyro_y1);
-			out.writeFloat(Globals.gyro_y2);
-			out.writeFloat(Globals.gyro_yc);
-			out.writeFloat(Globals.gyro_z1);
-			out.writeFloat(Globals.gyro_z2);
-			out.writeFloat(Globals.gyro_zc);
+			out.writeFloat(AccelerometerReader.gyro.x1);
+			out.writeFloat(AccelerometerReader.gyro.x2);
+			out.writeFloat(AccelerometerReader.gyro.xc);
+			out.writeFloat(AccelerometerReader.gyro.y1);
+			out.writeFloat(AccelerometerReader.gyro.y2);
+			out.writeFloat(AccelerometerReader.gyro.yc);
+			out.writeFloat(AccelerometerReader.gyro.z1);
+			out.writeFloat(AccelerometerReader.gyro.z2);
+			out.writeFloat(AccelerometerReader.gyro.zc);
 
 			out.writeBoolean(Globals.OuyaEmulation);
 			out.writeBoolean(Globals.HoverJitterFilter);
+			out.writeBoolean(Globals.MoveMouseWithGyroscope);
+			out.writeInt(Globals.MoveMouseWithGyroscopeSpeed);
 
 			out.close();
 			settingsLoaded = true;
@@ -345,18 +347,20 @@ class Settings
 			Globals.BrokenLibCMessageShown = settingsFile.readBoolean();
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			int cfgVersion = settingsFile.readInt();
-			Globals.gyro_x1 = settingsFile.readFloat();
-			Globals.gyro_x2 = settingsFile.readFloat();
-			Globals.gyro_xc = settingsFile.readFloat();
-			Globals.gyro_y1 = settingsFile.readFloat();
-			Globals.gyro_y2 = settingsFile.readFloat();
-			Globals.gyro_yc = settingsFile.readFloat();
-			Globals.gyro_z1 = settingsFile.readFloat();
-			Globals.gyro_z2 = settingsFile.readFloat();
-			Globals.gyro_zc = settingsFile.readFloat();
+			AccelerometerReader.gyro.x1 = settingsFile.readFloat();
+			AccelerometerReader.gyro.x2 = settingsFile.readFloat();
+			AccelerometerReader.gyro.xc = settingsFile.readFloat();
+			AccelerometerReader.gyro.y1 = settingsFile.readFloat();
+			AccelerometerReader.gyro.y2 = settingsFile.readFloat();
+			AccelerometerReader.gyro.yc = settingsFile.readFloat();
+			AccelerometerReader.gyro.z1 = settingsFile.readFloat();
+			AccelerometerReader.gyro.z2 = settingsFile.readFloat();
+			AccelerometerReader.gyro.zc = settingsFile.readFloat();
 
 			Globals.OuyaEmulation = settingsFile.readBoolean();
 			Globals.HoverJitterFilter = settingsFile.readBoolean();
+			Globals.MoveMouseWithGyroscope = settingsFile.readBoolean();
+			Globals.MoveMouseWithGyroscopeSpeed = settingsFile.readInt();
 
 			settingsLoaded = true;
 
