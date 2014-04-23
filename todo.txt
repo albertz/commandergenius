@@ -19,7 +19,11 @@ TODO, which will get actually done
 
 - GIMP: x86 architecture support.
 
+- GIMP: locales support.
+
 - OpenTTD: logarithmic music volume, restore volume on new track.
+
+- OpenTTD: no sounds with music on.
 
 - OpenTTD: Fix multiplayer lobby dialog.
 
