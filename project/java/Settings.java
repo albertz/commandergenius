@@ -175,6 +175,7 @@ class Settings
 			out.writeBoolean(Globals.HoverJitterFilter);
 			out.writeBoolean(Globals.MoveMouseWithGyroscope);
 			out.writeInt(Globals.MoveMouseWithGyroscopeSpeed);
+			out.writeBoolean(Globals.FingerHover);
 
 			out.close();
 			settingsLoaded = true;
@@ -361,6 +362,7 @@ class Settings
 			Globals.HoverJitterFilter = settingsFile.readBoolean();
 			Globals.MoveMouseWithGyroscope = settingsFile.readBoolean();
 			Globals.MoveMouseWithGyroscopeSpeed = settingsFile.readInt();
+			Globals.FingerHover = settingsFile.readBoolean();
 
 			settingsLoaded = true;
 

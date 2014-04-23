@@ -556,7 +556,7 @@ abstract class DifferentTouchInput
 						if( Globals.AppUsesMouse )
 							Toast.makeText(MainActivity.instance, "Finger hover capability detected", Toast.LENGTH_SHORT).show();
 						// Switch away from relative mouse input
-						if( Globals.RelativeMouseMovement || Globals.LeftClickMethod != Mouse.LEFT_CLICK_NORMAL )
+						if( Globals.FingerHover && (Globals.RelativeMouseMovement || Globals.LeftClickMethod != Mouse.LEFT_CLICK_NORMAL) )
 						{
 							if( Globals.RelativeMouseMovement )
 								Globals.ShowScreenUnderFinger = Mouse.ZOOM_MAGNIFIER;

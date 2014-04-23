@@ -109,10 +109,11 @@ class Globals
 	public static int RelativeMouseMovementSpeed = 2;
 	public static int RelativeMouseMovementAccel = 0;
 	public static int ShowScreenUnderFinger = Mouse.ZOOM_NONE;
-	public static boolean KeepAspectRatio = KeepAspectRatioDefaultSetting;
 	public static int ClickScreenPressure = 0;
 	public static int ClickScreenTouchspotSize = 0;
+	public static boolean FingerHover = true;
 	public static boolean HoverJitterFilter = true;
+	public static boolean KeepAspectRatio = KeepAspectRatioDefaultSetting;
 	public static int RemapHwKeycode[] = new int[SDL_Keys.JAVA_KEYCODE_LAST];
 	public static int RemapScreenKbKeycode[] = new int[6];
 	public static int ScreenKbControlsLayout[][] =	AppUsesThirdJoystick ? // Values for 800x480 resolution

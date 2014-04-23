@@ -419,6 +419,7 @@ class SettingsMenuMouse extends SettingsMenu
 				p.getResources().getString(R.string.click_with_dpadcenter),
 				p.getResources().getString(R.string.mouse_relative),
 				p.getResources().getString(R.string.mouse_gyroscope_mouse),
+				p.getResources().getString(R.string.mouse_finger_hover),
 			};
 
 			boolean defaults[] = {
@@ -427,6 +428,7 @@ class SettingsMenuMouse extends SettingsMenu
 				Globals.ClickMouseWithDpad,
 				Globals.RelativeMouseMovement,
 				Globals.MoveMouseWithGyroscope,
+				Globals.FingerHover,
 			};
 
 			
@@ -446,6 +448,8 @@ class SettingsMenuMouse extends SettingsMenu
 						Globals.RelativeMouseMovement = isChecked;
 					if( item == 4 )
 						Globals.MoveMouseWithGyroscope = isChecked;
+					if( item == 5 )
+						Globals.FingerHover = isChecked;
 				}
 			});
 			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()

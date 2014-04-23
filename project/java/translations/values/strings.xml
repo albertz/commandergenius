@@ -111,6 +111,7 @@
     <string name="mouse_hover_jitter_filter">Filter jitter for stylus/finger hover</string>
     <string name="mouse_gyroscope_mouse">Control mouse with gyroscope</string>
     <string name="mouse_gyroscope_mouse_sensitivity">Gyroscope sensitivity</string>
+    <string name="mouse_finger_hover">Finger hover</string>
 
     <string name="none">None</string>
 
