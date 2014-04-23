@@ -129,7 +129,7 @@ int SDL_ANDROID_currentMouseButtons = 0;
 static int hardwareMouseDetected = 0;
 enum { MOUSE_HW_BUTTON_LEFT = 1, MOUSE_HW_BUTTON_RIGHT = 2, MOUSE_HW_BUTTON_MIDDLE = 4, MOUSE_HW_BUTTON_BACK = 8, MOUSE_HW_BUTTON_FORWARD = 16, MOUSE_HW_BUTTON_MAX = MOUSE_HW_BUTTON_FORWARD };
 enum { MOUSE_HW_INPUT_FINGER = 0, MOUSE_HW_INPUT_STYLUS = 1, MOUSE_HW_INPUT_MOUSE = 2 };
-enum { DEADZONE_HOVER_FINGER = 50, DEADZONE_HOVER_STYLUS = 80, HOVER_FREEZE_TIME = 500, HOVER_DISTANCE_MAX = 1024 };
+enum { DEADZONE_HOVER_FINGER = 50, DEADZONE_HOVER_STYLUS = 80, HOVER_FREEZE_TIME = 500, HOVER_DISTANCE_MAX = 1024, HOVER_REDRAW_SCREEN = 1024 * 10 };
 static int hoverJitterFilter = 1;
 static int hoverX, hoverY, hoverTime = 0, hoverMouseFreeze = 0, hoverDeadzone = 0;
 static int rightMouseButtonLongPress = 1;
@@ -738,10 +738,16 @@ static void ProcessMouseHover( jint *xx, jint *yy, int action, int distance )
 		}
 	}
 
-	if( action == MOUSE_HOVER && distance < HOVER_DISTANCE_MAX / 4 )
+	if( action == MOUSE_HOVER && distance < HOVER_DISTANCE_MAX * 3 / 4 )
 		UpdateScreenUnderFingerRect(*xx, *yy);
 	else
 		SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRect.h = 0; // This is reset later by ProcessMouseMove()
+
+	if( distance == HOVER_REDRAW_SCREEN && *xx > 0 ) // Force screen redraw, to remove magnifier window when hovering finger leaves the screen
+	{
+		(*xx)--;
+		SDL_ANDROID_MainThreadPushMouseMotion(*xx, *yy);
+	}
 
 #ifdef VIDEO_DEBUG
 	SDL_ANDROID_VideoDebugRect.x = hoverX - hoverDeadzone;

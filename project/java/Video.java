@@ -89,6 +89,10 @@ class Mouse
 	public static final int MOUSE_HW_INPUT_FINGER = 0;
 	public static final int MOUSE_HW_INPUT_STYLUS = 1;
 	public static final int MOUSE_HW_INPUT_MOUSE = 2;
+
+	public static final int MAX_HOVER_DISTANCE = 1024;
+	public static final int HOVER_REDRAW_SCREEN = 1024 * 10;
+	public static final float MAX_PRESSURE = 1024.0f;
 }
 
 abstract class DifferentTouchInput
@@ -171,8 +175,8 @@ abstract class DifferentTouchInput
 				action = Mouse.SDL_FINGER_MOVE;
 			if ( action >= 0 )
 				DemoGLSurfaceView.nativeMotionEvent( (int)event.getX(), (int)event.getY(), action, 0, 
-												(int)(event.getPressure() * 1024.0f),
-												(int)(event.getSize() * 1024.0f) );
+												(int)(event.getPressure() * Mouse.MAX_PRESSURE),
+												(int)(event.getSize() * Mouse.MAX_PRESSURE) );
 		}
 	}
 	private static class MultiTouchInput extends DifferentTouchInput
@@ -235,8 +239,8 @@ abstract class DifferentTouchInput
 					touchEvents[id].down = true;
 					touchEvents[id].x = (int)event.getX(i);
 					touchEvents[id].y = (int)event.getY(i);
-					touchEvents[id].pressure = (int)(event.getPressure(i) * 1024.0f);
-					touchEvents[id].size = (int)(event.getSize(i) * 1024.0f);
+					touchEvents[id].pressure = (int)(event.getPressure(i) * Mouse.MAX_PRESSURE);
+					touchEvents[id].size = (int)(event.getSize(i) * Mouse.MAX_PRESSURE);
 					DemoGLSurfaceView.nativeMotionEvent( touchEvents[id].x, touchEvents[id].y, action, id, touchEvents[id].pressure, touchEvents[id].size );
 				}
 			}
@@ -292,8 +296,8 @@ abstract class DifferentTouchInput
 						}
 						touchEvents[id].x = (int)event.getX(ii);
 						touchEvents[id].y = (int)event.getY(ii);
-						touchEvents[id].pressure = (int)(event.getPressure(ii) * 1024.0f);
-						touchEvents[id].size = (int)(event.getSize(ii) * 1024.0f);
+						touchEvents[id].pressure = (int)(event.getPressure(ii) * Mouse.MAX_PRESSURE);
+						touchEvents[id].size = (int)(event.getSize(ii) * Mouse.MAX_PRESSURE);
 						DemoGLSurfaceView.nativeMotionEvent( touchEvents[id].x, touchEvents[id].y, action, id, touchEvents[id].pressure, touchEvents[id].size );
 					}
 				}
@@ -333,15 +337,21 @@ abstract class DifferentTouchInput
 				touchEvents[0].down = false;
 				touchEvents[0].x = (int)event.getX();
 				touchEvents[0].y = (int)event.getY();
-				touchEvents[0].pressure = 1024;
+				touchEvents[0].pressure = Mouse.MAX_HOVER_DISTANCE;
 				touchEvents[0].size = 0;
 				//if( event.getAxisValue(MotionEvent.AXIS_DISTANCE) != 0.0f )
 				InputDevice device = InputDevice.getDevice(event.getDeviceId());
 				if( device != null && device.getMotionRange(MotionEvent.AXIS_DISTANCE) != null &&
 					device.getMotionRange(MotionEvent.AXIS_DISTANCE).getRange() > 0.0f )
 					touchEvents[0].pressure = (int)((event.getAxisValue(MotionEvent.AXIS_DISTANCE) -
-							device.getMotionRange(MotionEvent.AXIS_DISTANCE).getMin()) * 1024.0f / device.getMotionRange(MotionEvent.AXIS_DISTANCE).getRange());
+							device.getMotionRange(MotionEvent.AXIS_DISTANCE).getMin()) * Mouse.MAX_PRESSURE / device.getMotionRange(MotionEvent.AXIS_DISTANCE).getRange());
 				DemoGLSurfaceView.nativeMotionEvent( touchEvents[0].x, touchEvents[0].y, action, 0, touchEvents[0].pressure, touchEvents[0].size );
+			}
+			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_EXIT ) // Update screen for finger hover
+			{
+				touchEvents[0].pressure = Mouse.HOVER_REDRAW_SCREEN;
+				touchEvents[0].size = 0;
+				DemoGLSurfaceView.nativeMotionEvent( touchEvents[0].x, touchEvents[0].y, Mouse.SDL_FINGER_HOVER, 0, touchEvents[0].pressure, touchEvents[0].size );
 			}
 		}
 		public void processGenericEvent(final MotionEvent event)
@@ -414,7 +424,7 @@ abstract class DifferentTouchInput
 			for( int i = 0; i < event.getHistorySize(); i++ )
 			{
 				DemoGLSurfaceView.nativeMotionEvent( (int)event.getHistoricalX(i), (int)event.getHistoricalY(i),
-					Mouse.SDL_FINGER_MOVE, ptr, (int)( event.getHistoricalPressure(i) * 1024.0f ), (int)( event.getHistoricalSize(i) * 1024.0f ) );
+					Mouse.SDL_FINGER_MOVE, ptr, (int)( event.getHistoricalPressure(i) * Mouse.MAX_PRESSURE ), (int)( event.getHistoricalSize(i) * Mouse.MAX_PRESSURE ) );
 			}
 			super.process(event); // Push mouse coordinate first
 		}
@@ -490,12 +500,14 @@ abstract class DifferentTouchInput
 		}
 		public void process(final MotionEvent event)
 		{
-			if( (event.getAction() & MotionEvent.ACTION_MASK) != MotionEvent.ACTION_HOVER_MOVE ) // Ignore hover events, they are broken
+			if( (event.getAction() & MotionEvent.ACTION_MASK) != MotionEvent.ACTION_HOVER_MOVE &&
+				(event.getAction() & MotionEvent.ACTION_MASK) != MotionEvent.ACTION_HOVER_EXIT ) // Ignore hover events, they are broken
 				super.process(event);
 		}
 		public void processGenericEvent(final MotionEvent event)
 		{
-			if( (event.getAction() & MotionEvent.ACTION_MASK) != MotionEvent.ACTION_HOVER_MOVE ) // Ignore hover events, they are broken
+			if( (event.getAction() & MotionEvent.ACTION_MASK) != MotionEvent.ACTION_HOVER_MOVE &&
+				(event.getAction() & MotionEvent.ACTION_MASK) != MotionEvent.ACTION_HOVER_EXIT ) // Ignore hover events, they are broken
 				super.processGenericEvent(event);
 		}
 	}
