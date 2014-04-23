@@ -134,7 +134,7 @@ static int hoverJitterFilter = 1;
 static int hoverX, hoverY, hoverTime = 0, hoverMouseFreeze = 0, hoverDeadzone = 0;
 static int rightMouseButtonLongPress = 1;
 static int moveMouseWithGyroscope = 0;
-static float moveMouseWithGyroscopeSpeed = 2.0f;
+static float moveMouseWithGyroscopeSpeed = 5.0f;
 static int moveMouseWithGyroscopeX = 0;
 static int moveMouseWithGyroscopeY = 0;
 
@@ -903,8 +903,14 @@ static void ProcessMoveMouseWithGyroscope(float gx, float gy, float gz)
 		return;
 	}
 
+	// Mouse coords before gyroscope was applied
+	int actualTouchX = SDL_ANDROID_currentMouseX - moveMouseWithGyroscopeX;
+	int actualTouchY = SDL_ANDROID_currentMouseY - moveMouseWithGyroscopeY;
+
 	moveMouseWithGyroscopeX += gx;
 	moveMouseWithGyroscopeY += gy;
+
+	SDL_ANDROID_MainThreadPushMouseMotion(actualTouchX + moveMouseWithGyroscopeX, actualTouchY + moveMouseWithGyroscopeY);
 }
 
 void SDL_ANDROID_WarpMouse(int x, int y)
@@ -1108,7 +1114,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 	rightMouseButtonLongPress = RightMouseButtonLongPress;
 	moveMouseWithGyroscope = MoveMouseWithGyroscope;
 	moveMouseWithGyroscopeSpeed = 0.0625f * MoveMouseWithGyroscopeSpeed * MoveMouseWithGyroscopeSpeed + 0.125f * MoveMouseWithGyroscopeSpeed + 0.5f; // Scale value from 0.5 to 2, with 1 at the middle
-	moveMouseWithGyroscopeSpeed *= 2.0f;
+	moveMouseWithGyroscopeSpeed *= 5.0f;
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "moveMouseWithGyroscopeSpeed %d = %f", MoveMouseWithGyroscopeSpeed, moveMouseWithGyroscopeSpeed);
 }
 
