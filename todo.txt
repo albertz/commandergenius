@@ -19,6 +19,8 @@ TODO, which will get actually done
 
 - GIMP: locales support.
 
+- GIMP: dark theme.
+
 - OpenTTD: logarithmic music volume, restore volume on new track.
 
 - OpenTTD: no sounds with music on.
@@ -26,5 +28,7 @@ TODO, which will get actually done
 - OpenTTD: Fix multiplayer lobby dialog.
 
 - OpenTTD: Two-finger scrolling.
+
+- OpenTTD: auto-switch to full toolbar if enough space.
 
 - Debian Noroot: Audio support.
