@@ -264,17 +264,19 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		}
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
 		y = VID_Y/3;
-		renderString("Tap screen to change resolution and font scale", VID_X/2, y);
+		renderString("Tap the screen to change", vertical ? VID_Y / 2 : VID_X/2, y);
+		y += 30;
+		renderString("display resolution and font scale (DPI)", vertical ? VID_Y / 2 : VID_X/2, y);
 		char buf[100];
 		y += 30;
 		sprintf(buf, "Resolution: %s", resStr[savedRes]);
-		renderString(buf, VID_X/2, y);
+		renderString(buf, vertical ? VID_Y / 2 : VID_X/2, y);
 		y += 30;
 		sprintf(buf, "Font scale: %s", fontsStr[savedDpi]);
-		renderString(buf, VID_X/2, y);
+		renderString(buf, vertical ? VID_Y / 2 : VID_X/2, y);
 		y += 40;
 		sprintf(buf, "Starting in %d seconds", counter / 1000 + 1);
-		renderString(buf, VID_X/2, y);
+		renderString(buf, vertical ? VID_Y / 2 : VID_X/2, y);
 		SDL_Delay(100);
 		SDL_Flip(SDL_GetVideoSurface());
 		counter -= SDL_GetTicks() - curtime;
@@ -323,7 +325,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 
 		//__android_log_print(ANDROID_LOG_INFO, "XSDL", "Screen coords %d %d\n", x, y, res);
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
-		renderString("Select display resolution", VID_X/2, VID_Y/3);
+		renderString("Select display resolution", vertical ? VID_Y / 2 : VID_X/2, VID_Y/3);
 		for(i = 0; i < 3; i++)
 		for(ii = 0; ii < 4; ii++)
 		{
@@ -339,16 +341,8 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		SDL_Delay(100);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
-	if( vertical )
-	{
-		*resolutionH = resVal[res][0];
-		*resolutionW = resVal[res][1];
-	}
-	else
-	{
-		*resolutionW = resVal[res][0];
-		*resolutionH = resVal[res][1];
-	}
+	*resolutionW = resVal[res][0];
+	*resolutionH = resVal[res][1];
 	while ( dpi < 0 )
 	{
 		while (SDL_PollEvent(&event))
@@ -381,13 +375,13 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			}
 		}
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
-		renderString("Select font scale", VID_X/2, VID_Y/2);
+		renderString("Select font scale (DPI)", vertical ? VID_Y / 2 : VID_X/2, VID_Y/2);
 		for(i = 0; i < 4; i++)
 		for(ii = 0; ii < 4; ii++)
 		{
 			int scale = (float)(*displayH) * (float)(*resolutionH) / 3500.0f * fontsVal[i*4+ii];
 			if( vertical )
-				renderStringScaled(fontsStr[i*4+ii], scale, VID_Y/8 + (i*VID_Y/4), VID_X/8 + (ii*VID_X/4), 255, 255, 255, SDL_GetVideoSurface());
+				renderStringScaled(fontsStr[i*4+ii], scale < VID_Y/12 ? scale : VID_Y/12, VID_Y/8 + (i*VID_Y/4), VID_X/8 + (ii*VID_X/4), 255, 255, 255, SDL_GetVideoSurface());
 			else
 				renderStringScaled(fontsStr[i*4+ii], scale, VID_X/8 + (ii*VID_X/4), VID_Y/8 + (i*VID_Y/4), 255, 255, 255, SDL_GetVideoSurface());
 		}

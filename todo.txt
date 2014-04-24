@@ -13,8 +13,6 @@ TODO, which will get actually done
 
 - SDL: resize default on-screen buttons for different screen sizes.
 
-- SDL: control mouse with gyroscope.
-
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
 
 - GIMP: x86 architecture support.
@@ -26,5 +24,7 @@ TODO, which will get actually done
 - OpenTTD: no sounds with music on.
 
 - OpenTTD: Fix multiplayer lobby dialog.
+
+- OpenTTD: Two-finger scrolling.
 
 - Debian Noroot: Audio support.

@@ -96,11 +96,20 @@ class AccelerometerReader implements SensorEventListener
 		public void onSensorChanged(SensorEvent event)
 		{
 			// TODO: vertical orientation
-			//if( Globals.HorizontalOrientation )
-			if( event.values[0] < x1 || event.values[0] > x2 ||
-				event.values[1] < y1 || event.values[1] > y2 ||
-				event.values[2] < z1 || event.values[2] > z2 )
-				nativeGyroscope(event.values[0] - xc, event.values[1] - yc, event.values[2] - zc);
+			if( Globals.HorizontalOrientation )
+			{
+				if( event.values[0] < x1 || event.values[0] > x2 ||
+					event.values[1] < y1 || event.values[1] > y2 ||
+					event.values[2] < z1 || event.values[2] > z2 )
+					nativeGyroscope(event.values[0] - xc, event.values[1] - yc, event.values[2] - zc);
+			}
+			else
+			{
+				if( event.values[0] < x1 || event.values[0] > x2 ||
+					event.values[1] < y1 || event.values[1] > y2 ||
+					event.values[2] < z1 || event.values[2] > z2 )
+					nativeGyroscope(-(event.values[1] - yc), event.values[0] - xc, event.values[2] - zc);
+			}
 		}
 		public void onAccuracyChanged(Sensor s, int a)
 		{
