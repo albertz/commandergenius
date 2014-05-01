@@ -17,10 +17,9 @@
 #include "gfx.h"
 
 static TTF_Font* sFont;
-static int unpackProgressMb;
-static int unpackProgressMbTotal = 1;
-static int unpackProgressRunningScript = 0;
+
 static int unpackFinished = 0;
+static char unpackLog[4][256];
 
 static void renderString(const char *c, int x, int y);
 static void renderStringColor(const char *c, int x, int y, int r, int g, int b, SDL_Surface * surf);
@@ -31,26 +30,39 @@ static void showErrorMessage(const char *msg);
 
 void * unpackFilesThread(void * unused)
 {
+	int unpackProgressMb;
+	int unpackProgressMbTotal = 1;
 	char fname[PATH_MAX*2];
 	char fname2[PATH_MAX*2];
 	char buf[1024 * 4];
+	struct stat st;
+
+	/*
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/usr/lib/xorg/protocol.txt" );
-	struct stat st;
 	if( stat( fname, &st ) == 0 )
 	{
 		unpackFinished = 1;
 		return (void *)1;
 	}
-
-	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data");
+	*/
 
 	if( stat( "data.tar.gz", &st ) == 0 )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data");
 		unpackProgressMbTotal = st.st_size / 1024 / 1024;
+		if( unpackProgressMbTotal <= 0 )
+			unpackProgressMbTotal = 1;
+	}
 	else
-		unpackProgressMbTotal = 1;
+	{
+		unpackFinished = 1;
+		return (void *)1;
+	}
 
 	unpackProgressMb = 0;
+	
+	sprintf(unpackLog[0], "Unpacking data...");
 
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/busybox" );
@@ -61,6 +73,7 @@ void * unpackFilesThread(void * unused)
 	if( !ff || !fo )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
+		sprintf(unpackLog[0], "Error extracting data");
 		unpackFinished = 1;
 		return (void *)0;
 	}
@@ -75,6 +88,7 @@ void * unpackFilesThread(void * unused)
 		if( cnt < 0 )
 		{
 			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
+			sprintf(unpackLog[0], "Error extracting data");
 			unpackFinished = 1;
 			return (void *)1;
 		}
@@ -86,6 +100,7 @@ void * unpackFilesThread(void * unused)
 		{
 			unpackProgressKb = 0;
 			unpackProgressMb++;
+			sprintf(unpackLog[0], "Unpacking data: %d/%d Mb, %d%%", unpackProgressMb, unpackProgressMbTotal, unpackProgressMb * 100 / (unpackProgressMbTotal > 0 ? unpackProgressMbTotal : 1));
 		}
 	}
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %dKb DONE", unpackProgressKb);
@@ -101,6 +116,8 @@ void * unpackFilesThread(void * unused)
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Extracting data finished");
 
 	remove("data.tar.gz");
+
+	sprintf(unpackLog[0], "Running postinstall script...");
 
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/postinstall.sh" );
@@ -125,7 +142,6 @@ void * unpackFilesThread(void * unused)
 		}
 	}
 
-	unpackProgressRunningScript = 1;
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Setting executable permissions on postinstall scipt");
 
 	strcpy( fname2, "chmod 755 " );
@@ -143,14 +159,17 @@ void * unpackFilesThread(void * unused)
 	}
 	for(;;)
 	{
-		char buf[1024];
 		if( !fgets(buf, sizeof(buf), fo) )
 			break;
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", buf);
+		strncpy(unpackLog[3], unpackLog[2], sizeof(unpackLog[1]) - 4);
+		strncpy(unpackLog[2], unpackLog[1], sizeof(unpackLog[1]) - 4);
+		strncpy(unpackLog[1], buf, sizeof(unpackLog[1]) - 4);
 	}
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Postinstall scipt exited with status %d", pclose(fo));
-
+	sprintf(unpackLog[0], "Running postinstall script finished");
+	
 	unpackFinished = 1;
 	return (void *)1;
 }
@@ -159,16 +178,18 @@ void XSDL_unpackFiles()
 {
 	pthread_t thread_id;
 	void * status;
+	memset(unpackLog, 0, sizeof(unpackLog));
 	pthread_create(&thread_id, NULL, &unpackFilesThread, NULL);
 
 	while (!unpackFinished)
 	{
 		SDL_Delay(400);
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
-		char s[128];
-		sprintf(s, "Unpacking data: %d/%d Mb, %d%%", unpackProgressMb, unpackProgressMbTotal, unpackProgressMb * 100 / (unpackProgressMbTotal > 0 ? unpackProgressMbTotal : 1));
-		renderString(unpackProgressRunningScript ? "Running postinstall script..." : s, VID_X/2, VID_Y/3);
-		renderString("You may put this app to background while it's unpacking", VID_X/2, VID_Y*2/3);
+		renderString(unpackLog[0], VID_X/2, VID_Y*2/8);
+		renderString(unpackLog[1], VID_X/2, VID_Y*3/8);
+		renderString(unpackLog[2], VID_X/2, VID_Y*4/8);
+		renderString(unpackLog[3], VID_X/2, VID_Y*5/8);
+		renderString("You may put this app to background while it's unpacking", VID_X/2, VID_Y*7/8);
 		SDL_Flip(SDL_GetVideoSurface());
 	}
 
@@ -182,7 +203,7 @@ void XSDL_unpackFiles()
 
 void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH)
 {
-	int x, y, i, ii;
+	int x = 0, y = 0, i, ii;
 	SDL_Event event;
 	int res = -1, dpi = -1;
 	char native[32] = "0x0", native56[32], native46[32], native36[32], native26[32];
@@ -551,6 +572,8 @@ void XSDL_deinitSDL()
 
 void renderStringColor(const char *c, int x, int y, int r, int g, int b, SDL_Surface * surf)
 {
+	if (!c || !c[0])
+		return;
 	SDL_Color fColor = {r, g, b};
 	SDL_Rect fontRect = {0, 0, 0, 0};
 	SDL_Surface* fontSurface = TTF_RenderUTF8_Solid(sFont, c, fColor);
@@ -569,6 +592,8 @@ void renderString(const char *c, int x, int y)
 
 void renderStringScaled(const char *c, int size, int x, int y, int r, int g, int b, SDL_Surface * surf)
 {
+	if (!c || !c[0])
+		return;
 	SDL_Color fColor = {r, g, b};
 	SDL_Rect fontRect = {0, 0, 0, 0};
 	TTF_Font* font = TTF_OpenFont("DroidSansMono.ttf", size);
