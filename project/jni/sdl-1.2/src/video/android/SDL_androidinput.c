@@ -515,9 +515,12 @@ static void ProcessMouseUp( int x, int y )
 	{
 		SDL_ANDROID_MainThreadPushMouseMotion( mouseInitialX, mouseInitialY );
 		SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
-		deferredMouseTap = 2;
 		mouseInitialX = -1;
 		mouseInitialY = -1;
+		deferredMouseTap = 1;
+		mouseClickTimeout = 200;
+		if( mouseClickTimeoutInitialized )
+			sem_post(&mouseClickTimeoutSemaphore);
 	}
 	else
 	{
@@ -575,7 +578,7 @@ static int ProcessMouseDown( int x, int y )
 		mouseInitialY = y;
 		mouseInitialTime = SDL_GetTicks();
 		mouseClickTimeout = (rightClickMethod == RIGHT_CLICK_WITH_TIMEOUT) ? rightClickTimeout + 10 : leftClickTimeout + 10;
-		if(mouseClickTimeoutInitialized)
+		if( mouseClickTimeoutInitialized )
 			sem_post(&mouseClickTimeoutSemaphore);
 	}
 	if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
@@ -857,24 +860,10 @@ static void ProcessDeferredMouseTap()
 {
 	if( deferredMouseTap > 0 )
 	{
-		deferredMouseTap--;
-		if( deferredMouseTap <= 0 )
-		{
-#if SDL_VERSION_ATLEAST(1,3,0)
-			SDL_Window * window = SDL_GetFocusWindow();
-			if( !window )
-				return;
-#define SDL_ANDROID_sFakeWindowWidth window->w
-#define SDL_ANDROID_sFakeWindowHeight window->h
-#endif
-			if( SDL_ANDROID_currentMouseX + 1 < SDL_ANDROID_sFakeWindowWidth )
-				SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_currentMouseX + 1, SDL_ANDROID_currentMouseY);
-			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
-			moveMouseWithGyroscopeX = 0;
-			moveMouseWithGyroscopeY = 0;
-		}
-		else if( SDL_ANDROID_currentMouseX > 0 ) // Force application to redraw, and call SDL_Flip()
-			SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_currentMouseX - 1, SDL_ANDROID_currentMouseY);
+		deferredMouseTap = 0;
+		SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
+		moveMouseWithGyroscopeX = 0;
+		moveMouseWithGyroscopeY = 0;
 	}
 }
 
@@ -1132,6 +1121,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 	moveMouseWithGyroscopeSpeed *= 5.0f;
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "moveMouseWithGyroscopeSpeed %d = %f", MoveMouseWithGyroscopeSpeed, moveMouseWithGyroscopeSpeed);
 	if( !mouseClickTimeoutInitialized && (
+		leftClickMethod == LEFT_CLICK_WITH_TAP ||
 		leftClickMethod == LEFT_CLICK_WITH_TIMEOUT ||
 		leftClickMethod == LEFT_CLICK_WITH_TAP_OR_TIMEOUT ||
 		rightClickMethod == RIGHT_CLICK_WITH_TIMEOUT ) )
@@ -1737,6 +1727,7 @@ void *mouseClickTimeoutThread (void * unused)
 		{
 			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "mouseClickTimeoutThread: move %d %d", SDL_ANDROID_currentMouseX, SDL_ANDROID_currentMouseY);
 			ProcessMouseMove_Timeouts(SDL_ANDROID_currentMouseX, SDL_ANDROID_currentMouseY);
+			ProcessDeferredMouseTap();
 		}
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "mouseClickTimeoutThread: tick");
 	}
