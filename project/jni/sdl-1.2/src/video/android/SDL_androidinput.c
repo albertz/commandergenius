@@ -142,8 +142,9 @@ static int moveMouseWithGyroscopeY = 0;
 
 static pthread_t mouseClickTimeoutThreadId = 0;
 static sem_t mouseClickTimeoutSemaphore;
-static int mouseClickTimeout = 100000;
 static void *mouseClickTimeoutThread (void *);
+static int mouseClickTimeout = 100000;
+static int mouseClickTimeoutInitialized = 0;
 
 static inline int InsideRect( const SDL_Rect * r, int x, int y )
 {
@@ -573,6 +574,9 @@ static int ProcessMouseDown( int x, int y )
 		mouseInitialX = x;
 		mouseInitialY = y;
 		mouseInitialTime = SDL_GetTicks();
+		mouseClickTimeout = (rightClickMethod == RIGHT_CLICK_WITH_TIMEOUT) ? rightClickTimeout + 10 : leftClickTimeout + 10;
+		if(mouseClickTimeoutInitialized)
+			sem_post(&mouseClickTimeoutSemaphore);
 	}
 	if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
 		UpdateScreenUnderFingerRect(x, y);
@@ -1126,12 +1130,13 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 	moveMouseWithGyroscope = MoveMouseWithGyroscope;
 	moveMouseWithGyroscopeSpeed = 0.0625f * MoveMouseWithGyroscopeSpeed * MoveMouseWithGyroscopeSpeed + 0.125f * MoveMouseWithGyroscopeSpeed + 0.5f; // Scale value from 0.5 to 2, with 1 at the middle
 	moveMouseWithGyroscopeSpeed *= 5.0f;
-	__android_log_print(ANDROID_LOG_INFO, "libSDL", "moveMouseWithGyroscopeSpeed %d = %f", MoveMouseWithGyroscopeSpeed, moveMouseWithGyroscopeSpeed);
-	if( mouseClickTimeoutThreadId == 0 && (
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "moveMouseWithGyroscopeSpeed %d = %f", MoveMouseWithGyroscopeSpeed, moveMouseWithGyroscopeSpeed);
+	if( !mouseClickTimeoutInitialized && (
 		leftClickMethod == LEFT_CLICK_WITH_TIMEOUT ||
 		leftClickMethod == LEFT_CLICK_WITH_TAP_OR_TIMEOUT ||
 		rightClickMethod == RIGHT_CLICK_WITH_TIMEOUT ) )
 	{
+		mouseClickTimeoutInitialized = 1;
 		sem_init(&mouseClickTimeoutSemaphore, 0, 0);
 		pthread_attr_t attr;
 		pthread_attr_init(&attr);
@@ -1717,7 +1722,7 @@ void SDL_ANDROID_SetGamepadKeymap(int A, int B, int X, int Y, int L1, int R1, in
 void *mouseClickTimeoutThread (void * unused)
 {
 	struct timespec ts;
-	while(1)
+	while( 1 )
 	{
 		clock_gettime(CLOCK_REALTIME, &ts);
 		ts.tv_sec += mouseClickTimeout / 1000;
@@ -1727,8 +1732,13 @@ void *mouseClickTimeoutThread (void * unused)
 			ts.tv_sec++;
 			ts.tv_nsec %= 1000000000;
 		}
-		sem_timedwait(&mouseClickTimeoutSemaphore, &ts);
-		ProcessMouseMove_Timeouts(SDL_ANDROID_currentMouseX, SDL_ANDROID_currentMouseY);
+		mouseClickTimeout = 100000;
+		if( sem_timedwait(&mouseClickTimeoutSemaphore, &ts) != 0 ) // Only call when timeout occurs
+		{
+			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "mouseClickTimeoutThread: move %d %d", SDL_ANDROID_currentMouseX, SDL_ANDROID_currentMouseY);
+			ProcessMouseMove_Timeouts(SDL_ANDROID_currentMouseX, SDL_ANDROID_currentMouseY);
+		}
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "mouseClickTimeoutThread: tick");
 	}
 	return NULL;
 }
