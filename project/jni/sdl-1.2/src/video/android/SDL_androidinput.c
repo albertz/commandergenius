@@ -26,6 +26,8 @@
 #include <stdint.h>
 #include <math.h>
 #include <string.h> // for memset()
+#include <pthread.h>
+#include <semaphore.h>
 
 #include "SDL_config.h"
 
@@ -137,6 +139,11 @@ static int moveMouseWithGyroscope = 0;
 static float moveMouseWithGyroscopeSpeed = 5.0f;
 static int moveMouseWithGyroscopeX = 0;
 static int moveMouseWithGyroscopeY = 0;
+
+static pthread_t mouseClickTimeoutThreadId = 0;
+static sem_t mouseClickTimeoutSemaphore;
+static int mouseClickTimeout = 100000;
+static void *mouseClickTimeoutThread (void *);
 
 static inline int InsideRect( const SDL_Rect * r, int x, int y )
 {
@@ -572,51 +579,8 @@ static int ProcessMouseDown( int x, int y )
 	return action;
 }
 
-static void ProcessMouseMove( int x, int y, int force, int radius )
+static void ProcessMouseMove_Timeouts( int x, int y )
 {
-	if( SDL_ANDROID_moveMouseWithKbX >= 0 )
-	{
-		// Mouse lazily follows magnifying glass, not very intuitive for drag&drop
-		/*
-		if( abs(moveMouseWithKbX - x) > SDL_ANDROID_sFakeWindowWidth / 12 )
-			moveMouseWithKbSpeedX += moveMouseWithKbX > x ? -1 : 1;
-		else
-			moveMouseWithKbSpeedX = moveMouseWithKbSpeedX * 2 / 3;
-		if( abs(moveMouseWithKbY - y) > SDL_ANDROID_sFakeWindowHeight / 12 )
-			moveMouseWithKbSpeedY += moveMouseWithKbY > y ? -1 : 1;
-		else
-			moveMouseWithKbSpeedY = moveMouseWithKbSpeedY * 2 / 3;
-
-		moveMouseWithKbX += moveMouseWithKbSpeedX;
-		moveMouseWithKbY += moveMouseWithKbSpeedY;
-		*/
-		// Mouse follows touch instantly, when it's out of the snapping distance from mouse cursor
-		if( abs(SDL_ANDROID_moveMouseWithKbX - x) >= SDL_ANDROID_sFakeWindowWidth / 10 ||
-			abs(SDL_ANDROID_moveMouseWithKbY - y) >= SDL_ANDROID_sFakeWindowHeight / 10 ||
-			SDL_GetTicks() - leftButtonDownTime > 600)
-		{
-			SDL_ANDROID_moveMouseWithKbX = -1;
-			SDL_ANDROID_moveMouseWithKbY = -1;
-			SDL_ANDROID_moveMouseWithKbSpeedX = 0;
-			SDL_ANDROID_moveMouseWithKbSpeedY = 0;
-			SDL_ANDROID_MainThreadPushMouseMotion(x, y);
-		}
-		else
-			SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY);
-	}
-	else
-	{
-		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
-	}
-
-	if( rightClickMethod == RIGHT_CLICK_WITH_PRESSURE || leftClickMethod == LEFT_CLICK_WITH_PRESSURE )
-	{
-		int button = (leftClickMethod == LEFT_CLICK_WITH_PRESSURE) ? SDL_BUTTON_LEFT : SDL_BUTTON_RIGHT;
-		int buttonState = ( force > maxForce || radius > maxRadius );
-		if( button == SDL_BUTTON_RIGHT )
-			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
-		SDL_ANDROID_MainThreadPushMouseButton( buttonState ? SDL_PRESSED : SDL_RELEASED, button );
-	}
 	if( mouseInitialX >= 0 && mouseInitialY >= 0 && (
 		leftClickMethod == LEFT_CLICK_WITH_TIMEOUT || leftClickMethod == LEFT_CLICK_WITH_TAP ||
 		leftClickMethod == LEFT_CLICK_WITH_TAP_OR_TIMEOUT || rightClickMethod == RIGHT_CLICK_WITH_TIMEOUT ) )
@@ -652,6 +616,53 @@ static void ProcessMouseMove( int x, int y, int force, int radius )
 	}
 	if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
 		UpdateScreenUnderFingerRect(x, y);
+}
+
+static void ProcessMouseMove( int x, int y, int force, int radius )
+{
+	if( SDL_ANDROID_moveMouseWithKbX >= 0 )
+	{
+		// Mouse lazily follows magnifying glass, not very intuitive for drag&drop
+		/*
+		if( abs(moveMouseWithKbX - x) > SDL_ANDROID_sFakeWindowWidth / 12 )
+			moveMouseWithKbSpeedX += moveMouseWithKbX > x ? -1 : 1;
+		else
+			moveMouseWithKbSpeedX = moveMouseWithKbSpeedX * 2 / 3;
+		if( abs(moveMouseWithKbY - y) > SDL_ANDROID_sFakeWindowHeight / 12 )
+			moveMouseWithKbSpeedY += moveMouseWithKbY > y ? -1 : 1;
+		else
+			moveMouseWithKbSpeedY = moveMouseWithKbSpeedY * 2 / 3;
+
+		moveMouseWithKbX += moveMouseWithKbSpeedX;
+		moveMouseWithKbY += moveMouseWithKbSpeedY;
+		*/
+		// Mouse follows touch instantly, when it's out of the snapping distance from mouse cursor
+		if( abs(SDL_ANDROID_moveMouseWithKbX - x) >= SDL_ANDROID_sFakeWindowWidth / 10 ||
+			abs(SDL_ANDROID_moveMouseWithKbY - y) >= SDL_ANDROID_sFakeWindowHeight / 10 ) // || SDL_GetTicks() - leftButtonDownTime > 600
+		{
+			SDL_ANDROID_moveMouseWithKbX = -1;
+			SDL_ANDROID_moveMouseWithKbY = -1;
+			SDL_ANDROID_moveMouseWithKbSpeedX = 0;
+			SDL_ANDROID_moveMouseWithKbSpeedY = 0;
+			SDL_ANDROID_MainThreadPushMouseMotion(x, y);
+		}
+		else
+			SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY);
+	}
+	else
+	{
+		SDL_ANDROID_MainThreadPushMouseMotion(x, y);
+	}
+
+	if( rightClickMethod == RIGHT_CLICK_WITH_PRESSURE || leftClickMethod == LEFT_CLICK_WITH_PRESSURE )
+	{
+		int button = (leftClickMethod == LEFT_CLICK_WITH_PRESSURE) ? SDL_BUTTON_LEFT : SDL_BUTTON_RIGHT;
+		int buttonState = ( force > maxForce || radius > maxRadius );
+		if( button == SDL_BUTTON_RIGHT )
+			SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
+		SDL_ANDROID_MainThreadPushMouseButton( buttonState ? SDL_PRESSED : SDL_RELEASED, button );
+	}
+	ProcessMouseMove_Timeouts(x, y);
 }
 
 static void ProcessMouseMultitouch( int action, int pointerId )
@@ -1116,6 +1127,18 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 	moveMouseWithGyroscopeSpeed = 0.0625f * MoveMouseWithGyroscopeSpeed * MoveMouseWithGyroscopeSpeed + 0.125f * MoveMouseWithGyroscopeSpeed + 0.5f; // Scale value from 0.5 to 2, with 1 at the middle
 	moveMouseWithGyroscopeSpeed *= 5.0f;
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "moveMouseWithGyroscopeSpeed %d = %f", MoveMouseWithGyroscopeSpeed, moveMouseWithGyroscopeSpeed);
+	if( mouseClickTimeoutThreadId == 0 && (
+		leftClickMethod == LEFT_CLICK_WITH_TIMEOUT ||
+		leftClickMethod == LEFT_CLICK_WITH_TAP_OR_TIMEOUT ||
+		rightClickMethod == RIGHT_CLICK_WITH_TIMEOUT ) )
+	{
+		sem_init(&mouseClickTimeoutSemaphore, 0, 0);
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		pthread_create(&mouseClickTimeoutThreadId, &attr, mouseClickTimeoutThread, NULL);
+		pthread_attr_destroy(&attr);
+	}
 }
 
 JNIEXPORT void JNICALL 
@@ -1689,4 +1712,23 @@ void SDL_ANDROID_SetGamepadKeymap(int A, int B, int X, int Y, int L1, int R1, in
 	if (R2) SDL_android_keymap[KEYCODE_BUTTON_R2] = R2;
 	if (LThumb) SDL_android_keymap[KEYCODE_BUTTON_THUMBL] = LThumb;
 	if (RThumb) SDL_android_keymap[KEYCODE_BUTTON_THUMBR] = RThumb;
+}
+
+void *mouseClickTimeoutThread (void * unused)
+{
+	struct timespec ts;
+	while(1)
+	{
+		clock_gettime(CLOCK_REALTIME, &ts);
+		ts.tv_sec += mouseClickTimeout / 1000;
+		ts.tv_nsec += (mouseClickTimeout % 1000) * 1000000;
+		if( ts.tv_nsec >= 1000000000 )
+		{
+			ts.tv_sec++;
+			ts.tv_nsec %= 1000000000;
+		}
+		sem_timedwait(&mouseClickTimeoutSemaphore, &ts);
+		ProcessMouseMove_Timeouts(SDL_ANDROID_currentMouseX, SDL_ANDROID_currentMouseY);
+	}
+	return NULL;
 }
