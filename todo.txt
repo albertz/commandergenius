@@ -15,12 +15,6 @@ TODO, which will get actually done
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
 
-- GIMP: x86 architecture support.
-
-- GIMP: locales support.
-
-- GIMP: dark theme.
-
 - OpenTTD: logarithmic music volume, restore volume on new track.
 
 - OpenTTD: no sounds with music on.
