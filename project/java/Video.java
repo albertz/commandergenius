@@ -326,6 +326,8 @@ abstract class DifferentTouchInput
 				DemoGLSurfaceView.nativeHardwareMouseDetected(hwMouseEvent);
 			}
 			super.process(event);
+			if( !Globals.FingerHover && ExternalMouseDetected == Mouse.MOUSE_HW_INPUT_FINGER )
+				return; // Finger hover disabled in settings
 			if( (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_HOVER_MOVE ) // Support bluetooth/USB mouse - available since Android 3.1
 			{
 				int action;
