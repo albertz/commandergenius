@@ -32,7 +32,7 @@ void * unpackFilesThread(void * unused)
 {
 	int unpackProgressMb;
 	int unpackProgressMbTotal = 1;
-	char fname[PATH_MAX*2];
+	char fname[PATH_MAX*3];
 	char fname2[PATH_MAX*2];
 	char buf[1024 * 4];
 	struct stat st;
@@ -80,15 +80,19 @@ void * unpackFilesThread(void * unused)
 		strcat( fname, getenv("SECURE_STORAGE_DIR") );
 		strcat( fname, "/../cache" );
 
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "%s", fname);
+
 		system( fname );
 
 		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 		strcat( fname, "/busybox" );
 		strcat( fname, " cp -a " );
-		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, getenv("SECURE_STORAGE_DIR") );
 		strcat( fname, "/busybox " );
 		strcat( fname, getenv("SECURE_STORAGE_DIR") );
 		strcat( fname, "/../cache/busybox" );
+
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "%s", fname);
 
 		system( fname );
 
@@ -98,20 +102,26 @@ void * unpackFilesThread(void * unused)
 		strcat( fname, getenv("SECURE_STORAGE_DIR") );
 		strcat( fname, "/*" );
 
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "%s", fname);
+
 		system( fname );
 
 		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 		strcat( fname, "/../cache/busybox" );
 		strcat( fname, " setsid " );
-		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
-		strcat( fname, "/../cache/busybox ash -c 'sleep 2 ; /system/bin/am start -n " );
-		strcpy( fname, getenv("ANDROID_PACKAGE_NAME") );
+		strcat( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/../cache/busybox" );
+		strcat( fname, " nohup " );
+		strcat( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/../cache/busybox" );
+		strcat( fname, " ash -c 'sleep 2 ; /system/bin/am start --user 0 -n " );
+		strcat( fname, getenv("ANDROID_PACKAGE_NAME") );
 		strcat( fname, "/.MainActivity'" );
 
 		sprintf(unpackLog[0], "Restarting the app...");
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Restarting the app: %s", fname);
 
-		system( fname );
+		popen( fname, "r" );
 
 		exit(0);
 	}
