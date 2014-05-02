@@ -49,10 +49,10 @@ void * unpackFilesThread(void * unused)
 
 	if( stat( "data.tar.gz", &st ) == 0 )
 	{
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data");
 		unpackProgressMbTotal = st.st_size / 1024 / 1024;
 		if( unpackProgressMbTotal <= 0 )
 			unpackProgressMbTotal = 1;
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data: total size %d Mb", unpackProgressMbTotal);
 	}
 	else
 	{
@@ -62,7 +62,62 @@ void * unpackFilesThread(void * unused)
 
 	unpackProgressMb = 0;
 	
+
+	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
+	strcat( fname, "/postinstall.sh" );
+
+	strcpy( fname2, getenv("SECURE_STORAGE_DIR") );
+	strcat( fname2, "/usr/lib/xorg/protocol.txt" );
+
+	if( stat( fname, &st ) == 0 || stat( fname2, &st ) == 0 )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Deleting old installation...");
+		sprintf(unpackLog[0], "Deleting old installation...");
+
+		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/busybox" );
+		strcat( fname, " mkdir -p " );
+		strcat( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/../cache" );
+
+		system( fname );
+
+		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/busybox" );
+		strcat( fname, " cp -a " );
+		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/busybox " );
+		strcat( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/../cache/busybox" );
+
+		system( fname );
+
+		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/../cache/busybox" );
+		strcat( fname, " rm -rf " );
+		strcat( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/*" );
+
+		system( fname );
+
+		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/../cache/busybox" );
+		strcat( fname, " setsid " );
+		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
+		strcat( fname, "/../cache/busybox ash -c 'sleep 2 ; /system/bin/am start -n " );
+		strcpy( fname, getenv("ANDROID_PACKAGE_NAME") );
+		strcat( fname, "/.MainActivity'" );
+
+		sprintf(unpackLog[0], "Restarting the app...");
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Restarting the app: %s", fname);
+
+		system( fname );
+
+		exit(0);
+	}
+
 	sprintf(unpackLog[0], "Unpacking data...");
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data...");
 
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/busybox" );
@@ -103,7 +158,7 @@ void * unpackFilesThread(void * unused)
 			sprintf(unpackLog[0], "Unpacking data: %d/%d Mb, %d%%", unpackProgressMb, unpackProgressMbTotal, unpackProgressMb * 100 / (unpackProgressMbTotal > 0 ? unpackProgressMbTotal : 1));
 		}
 	}
-	__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %dKb DONE", unpackProgressKb);
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "FREAD %d Mb DONE", unpackProgressMb);
 
 	fclose(ff);
 	if( pclose(fo) != 0 ) // Returns error on Android 2.3 emulator!
