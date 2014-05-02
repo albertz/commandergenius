@@ -73,6 +73,7 @@ import android.hardware.SensorEvent;
 import android.hardware.Sensor;
 import android.widget.Toast;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
@@ -596,6 +597,9 @@ class Settings
 		nativeSetEnv( "HOME", Globals.DataDir );
 		nativeSetEnv( "SDCARD", Environment.getExternalStorageDirectory().getAbsolutePath() );
 		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
+		nativeSetEnv( "ANDROID_PACKAGE_NAME", p.getPackageName() );
+		if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO )
+			nativeSetEnv( "ANDROID_PACKAGE_PATH", p.getPackageCodePath() );
 		Log.d("SDL", "libSDL: Is running on OUYA: " + p.isRunningOnOUYA());
 		if( p.isRunningOnOUYA() )
 			nativeSetEnv( "OUYA", "1" );
