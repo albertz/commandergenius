@@ -1,0 +1,49 @@
+Index: dsi/hi_score.c
+===================================================================
+--- dsi/hi_score.c	(revision 218)
++++ dsi/hi_score.c	(working copy)
+@@ -193,7 +193,7 @@
+ 		key = SDL_GetKeyState(NULL);
+ 		if (key[SDLK_b] == SDL_PRESSED)
+ 			leave_state = RUN_INTRO;
+-		else if (key[SDLK_s] == SDL_PRESSED)
++		else if (key[SDLK_SPACE] == SDL_PRESSED)
+ 			leave_state = RUN_GAME;
+ 		WaitFrame();
+ 	}
+Index: dsi/main.c
+===================================================================
+--- dsi/main.c	(revision 218)
++++ dsi/main.c	(working copy)
+@@ -186,7 +186,7 @@
+ 	}
+ 
+ 	//Open the audio device
+-	if ( Mix_OpenAudio(11025, AUDIO_U8, 1, 512) < 0 )
++	if ( Mix_OpenAudio(11025, AUDIO_S16, 1, 1024) < 0 )
+ 	{
+ 		fprintf(stderr,
+ 		"Warning: Couldn't set 11025 Hz 8-bit audio\n- Reason: %s\n",
+Index: dsi/intro.c
+===================================================================
+--- dsi/intro.c	(revision 218)
++++ dsi/intro.c	(working copy)
+@@ -75,7 +75,7 @@
+ 				leave_state = RUN_QUIT;
+ 		}
+ 		key = SDL_GetKeyState(NULL);
+-		if (key[SDLK_s] == SDL_PRESSED)
++		if (key[SDLK_SPACE] == SDL_PRESSED)
+ 			leave_state = RUN_GAME;
+ 		else if (key[SDLK_v] == SDL_PRESSED)
+ 			leave_state = RUN_SCORE;
+Index: dsi/sprite.c
+===================================================================
+--- dsi/sprite.c	(revision 218)
++++ dsi/sprite.c	(working copy)
+@@ -119,4 +119,5 @@
+ 		SDL_Delay(next_tick-this_tick);
+ 	}
+ 	next_tick = this_tick + (1000/FRAMES_PER_SEC);
++	UpdateScreen(); // If we don't update screen on Android, we will not receive any input events
+ }
