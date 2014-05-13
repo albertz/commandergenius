@@ -26,3 +26,5 @@ TODO, which will get actually done
 - OpenTTD: auto-switch to full toolbar if enough space.
 
 - Debian Noroot: Audio support.
+
+- UQM: use gyroscope to steer the ship, search button for starmap.
