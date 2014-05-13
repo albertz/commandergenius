@@ -70,6 +70,7 @@ static jmethodID JavaHideScreenKeyboard = NULL;
 static jmethodID JavaIsScreenKeyboardShown = NULL;
 static jmethodID JavaSetScreenKeyboardHintMessage = NULL;
 static jmethodID JavaStartAccelerometerGyroscope = NULL;
+static jmethodID JavaGetClipboardText = NULL;
 static jmethodID JavaGetAdvertisementParams = NULL;
 static jmethodID JavaSetAdvertisementVisible = NULL;
 static jmethodID JavaSetAdvertisementPosition = NULL;
@@ -335,6 +336,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaIsScreenKeyboardShown = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "isScreenKeyboardShown", "()I");
 	JavaSetScreenKeyboardHintMessage = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setScreenKeyboardHintMessage", "(Ljava/lang/String;)V");
 	JavaStartAccelerometerGyroscope = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "startAccelerometerGyroscope", "(I)V");
+	JavaGetClipboardText = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "getClipboardText", "()Ljava/lang/String;");
 
 	JavaGetAdvertisementParams = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "getAdvertisementParams", "([I)V");
 	JavaSetAdvertisementVisible = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setAdvertisementVisible", "(I)V");
@@ -400,6 +402,25 @@ JAVA_EXPORT_NAME(Settings_nativeSetVideoDepth) (JNIEnv* env, jobject thiz, jint 
 	SDL_ANDROID_BITSPERPIXEL = bpp;
 	SDL_ANDROID_BYTESPERPIXEL = SDL_ANDROID_BITSPERPIXEL / 8;
 	SDL_ANDROID_UseGles2 = UseGles2;
+}
+
+void SDLCALL SDL_ANDROID_GetClipboardText(char * buf, int len)
+{
+	buf[0] = 0;
+	(*JavaEnv)->PushLocalFrame( JavaEnv, 1 );
+	jstring s = (jstring) (*JavaEnv)->CallObjectMethod( JavaEnv, JavaRenderer, JavaGetClipboardText );
+	if( s )
+	{
+		const char *c = (*JavaEnv)->GetStringUTFChars( JavaEnv, s, NULL );
+		if( c )
+		{
+			strncpy(buf, c, len);
+			buf[len-1] = 0;
+			(*JavaEnv)->ReleaseStringUTFChars( JavaEnv, s, c );
+		}
+		(*JavaEnv)->DeleteLocalRef( JavaEnv, s );
+	}
+	(*JavaEnv)->PopLocalFrame( JavaEnv, NULL );
 }
 
 int SDLCALL SDL_ANDROID_GetAdvertisementParams(int * visible, SDL_Rect * position)

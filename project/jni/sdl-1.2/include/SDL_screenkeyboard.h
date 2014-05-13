@@ -141,6 +141,9 @@ extern DECLSPEC int SDLCALL SDL_IsScreenKeyboardShown(void *unused);
    On OUYA: O = A, U = X, Y = Y, A = B */
 extern DECLSPEC void SDLCALL SDL_ANDROID_SetGamepadKeymap(int A, int B, int X, int Y, int L1, int R1, int L2, int R2, int LThumb, int RThumb);
 
+/* Copy contents of Android clipboard into supplied buffer */
+extern DECLSPEC void SDLCALL SDL_ANDROID_GetClipboardText(char * buf, int len);
+
 #ifdef __cplusplus
 }
 #endif

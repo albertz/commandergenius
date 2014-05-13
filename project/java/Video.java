@@ -32,33 +32,32 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
 
-import android.app.Activity;
-import android.content.Context;
+import java.io.File;
+import java.util.concurrent.locks.ReentrantLock;
+import java.lang.reflect.Method;
+import java.util.LinkedList;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 import android.os.Bundle;
+import android.os.Build;
+import android.os.Environment;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.content.Context;
+import android.content.res.Resources;
+import android.content.res.AssetManager;
+import android.app.Activity;
 import android.view.MotionEvent;
 import android.view.KeyEvent;
 import android.view.InputDevice;
 import android.view.Window;
 import android.view.WindowManager;
-import android.os.Environment;
-import java.io.File;
+import android.widget.TextView;
+import android.widget.Toast;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.content.res.Resources;
-import android.content.res.AssetManager;
-import android.widget.Toast;
-import android.util.DisplayMetrics;
-import android.util.Log;
-
-import android.widget.TextView;
-import java.lang.Thread;
-import java.util.concurrent.locks.ReentrantLock;
-import android.os.Build;
-import java.lang.reflect.Method;
-import java.util.LinkedList;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import android.text.ClipboardManager;
 
 
 class Mouse
@@ -617,6 +616,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public DemoRenderer(MainActivity _context)
 	{
 		context = _context;
+		clipboard = (android.text.ClipboardManager) context.getSystemService(context.CLIPBOARD_SERVICE);
 	}
 	
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -790,6 +790,18 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 			accelerometer.stop();
 	}
 
+	public String getClipboardText() // Called from native code
+	{
+		String ret = "";
+		try {
+			if( clipboard != null && clipboard.getText() != null )
+				ret = clipboard.getText().toString();
+		} catch (Exception e) {
+			Log.i("SDL", "getClipboardText() exception: " + e.toString());
+		}
+		return ret;
+	}
+
 	public void exitApp()
 	{
 		 nativeDone();
@@ -900,6 +912,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	private boolean mFirstTimeStart = true;
 	public int mWidth = 0;
 	public int mHeight = 0;
+	private ClipboardManager clipboard = null;
 
 	public static final boolean mRatelimitTouchEvents = true; //(Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO);
 }
