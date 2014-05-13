@@ -54,6 +54,10 @@ done
 
 FirstStartMenuOptionsDefault='new SettingsMenuMisc.ShowReadme(), (AppUsesMouse \&\& \! ForceRelativeMouseMode \? new SettingsMenuMouse.DisplaySizeConfig(true) : new SettingsMenu.DummyMenu()), new SettingsMenuMisc.OptionalDownloadConfig(true), new SettingsMenuMisc.GyroscopeCalibration()'
 
+if [ -z "$CompatibilityHacksForceScreenUpdate" ]; then
+	CompatibilityHacksForceScreenUpdate=$CompatibilityHacks
+fi
+
 if [ -z "$AppVersionCode" -o "-$AUTO" != "-a" ]; then
 echo
 echo -n "Application version code (integer) ($AppVersionCode): "
@@ -166,7 +170,7 @@ echo CreateService=$CreateService >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application does not call SDL_Flip() or SDL_UpdateRects() appropriately, or draws from non-main thread -" >> AndroidAppSettings.cfg
 echo "# enabling the compatibility mode will force screen update every 100 milliseconds, which is laggy and inefficient (y) or (n)" >> AndroidAppSettings.cfg
-echo CompatibilityHacks=$CompatibilityHacks >> AndroidAppSettings.cfg
+echo CompatibilityHacksForceScreenUpdate=$CompatibilityHacksForceScreenUpdate >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application initializes SDL audio/video inside static constructors (which is bad, you won't be able to run ndk-gdb) (y)/(n)" >> AndroidAppSettings.cfg
 echo CompatibilityHacksStaticInit=$CompatibilityHacksStaticInit >> AndroidAppSettings.cfg
@@ -420,10 +424,10 @@ else
 	SwVideoMode=false
 fi
 
-if [ "$CompatibilityHacks" = "y" ] ; then
-	CompatibilityHacks=true
+if [ "$CompatibilityHacksForceScreenUpdate" = "y" ] ; then
+	CompatibilityHacksForceScreenUpdate=true
 else
-	CompatibilityHacks=false
+	CompatibilityHacksForceScreenUpdate=false
 fi
 
 if [ "$CompatibilityHacksStaticInit" = "y" ] ; then
@@ -730,7 +734,7 @@ $SEDI "s/public static int VideoDepthBpp = .*;/public static int VideoDepthBpp =
 $SEDI "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" project/src/Globals.java
 $SEDI "s/public static boolean NeedStencilBuffer = .*;/public static boolean NeedStencilBuffer = $NeedStencilBuffer;/" project/src/Globals.java
 $SEDI "s/public static boolean NeedGles2 = .*;/public static boolean NeedGles2 = $NeedGles2;/" project/src/Globals.java
-$SEDI "s/public static boolean CompatibilityHacksVideo = .*;/public static boolean CompatibilityHacksVideo = $CompatibilityHacks;/" project/src/Globals.java
+$SEDI "s/public static boolean CompatibilityHacksVideo = .*;/public static boolean CompatibilityHacksVideo = $CompatibilityHacksForceScreenUpdate;/" project/src/Globals.java
 $SEDI "s/public static boolean CompatibilityHacksStaticInit = .*;/public static boolean CompatibilityHacksStaticInit = $CompatibilityHacksStaticInit;/" project/src/Globals.java
 $SEDI "s/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = .*;/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = $CompatibilityHacksTextInputEmulatesHwKeyboard;/" project/src/Globals.java
 $SEDI "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" project/src/Globals.java
