@@ -25,6 +25,8 @@ TODO, which will get actually done
 
 - OpenTTD: auto-switch to full toolbar if enough space.
 
+- OpenTTD: 'build waypoint' button tries to build a train station.
+
 - Debian Noroot: Audio support.
 
 - UQM: use gyroscope to steer the ship, search button for starmap.
