@@ -30,7 +30,7 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.view.View;
 
-import com.google.ads.*; // Copy GoogleAdMobAdsSdk.jar to the directory project/libs
+import com.google.android.gms.ads.*; // Copy google-play-services.jar from Google SDK to the directory project/libs, and update it's version number in AndroidManifest.xml
 
 class Advertisement
 {
@@ -41,22 +41,33 @@ class Advertisement
 	{
 		parent = p;
 		AdSize adSize = AdSize.BANNER;
+
 		if( Globals.AdmobBannerSize.equals("BANNER") )
 			adSize = AdSize.BANNER;
-		else if( Globals.AdmobBannerSize.equals("IAB_BANNER") )
-			adSize = AdSize.IAB_BANNER;
-		else if( Globals.AdmobBannerSize.equals("IAB_LEADERBOARD") )
-			adSize = AdSize.IAB_LEADERBOARD;
-		else if( Globals.AdmobBannerSize.equals("IAB_MRECT") )
-			adSize = AdSize.IAB_MRECT;
-		else if( Globals.AdmobBannerSize.equals("IAB_WIDE_SKYSCRAPER") )
-			adSize = AdSize.IAB_WIDE_SKYSCRAPER;
+		else if( Globals.AdmobBannerSize.equals("LEADERBOARD") )
+			adSize = AdSize.LEADERBOARD;
+		else if( Globals.AdmobBannerSize.equals("FULL_BANNER") )
+			adSize = AdSize.FULL_BANNER;
+		else if( Globals.AdmobBannerSize.equals("MEDIUM_RECTANGLE") )
+			adSize = AdSize.MEDIUM_RECTANGLE;
 		else if( Globals.AdmobBannerSize.equals("SMART_BANNER") )
 			adSize = AdSize.SMART_BANNER;
-		ad = new AdView(parent, adSize, Globals.AdmobPublisherId);
-		AdRequest adRequest = new AdRequest();
-		adRequest.addTestDevice(AdRequest.TEST_EMULATOR); // Copy GoogleAdMobAdsSdk.jar to the directory project/libs
-		adRequest.addTestDevice(Globals.AdmobTestDeviceId);
+		else if( Globals.AdmobBannerSize.equals("WIDE_SKYSCRAPER") )
+			adSize = AdSize.WIDE_SKYSCRAPER;
+		else
+		{
+			String[] size = Globals.AdmobBannerSize.split(":");
+			int width = size[0].equals("FULL_WIDTH") ? AdSize.FULL_WIDTH : Integer.parseInt(size[0]);
+			int height = size[1].equals("AUTO_HEIGHT") ? AdSize.AUTO_HEIGHT : Integer.parseInt(size[1]);
+			adSize = new AdSize(width, height);
+		}
+		ad = new AdView(parent);
+		ad.setAdSize(adSize);
+		ad.setAdUnitId(Globals.AdmobPublisherId);
+		AdRequest adRequest = new AdRequest.Builder().
+			addTestDevice(AdRequest.DEVICE_ID_EMULATOR).
+			addTestDevice(Globals.AdmobTestDeviceId).
+			build();
 		ad.loadAd(adRequest);
 	}
 
@@ -67,9 +78,10 @@ class Advertisement
 
 	public void requestNewAd()
 	{
-		AdRequest adRequest = new AdRequest();
-		adRequest.addTestDevice(AdRequest.TEST_EMULATOR); // Copy GoogleAdMobAdsSdk.jar to the directory project/libs
-		adRequest.addTestDevice(Globals.AdmobTestDeviceId);
+		AdRequest adRequest = new AdRequest.Builder().
+			addTestDevice(AdRequest.DEVICE_ID_EMULATOR).
+			addTestDevice(Globals.AdmobTestDeviceId).
+			build();
 		ad.loadAd(adRequest);
 	}
 }

@@ -426,6 +426,7 @@ void SDLCALL SDL_ANDROID_GetClipboardText(char * buf, int len)
 int SDLCALL SDL_ANDROID_GetAdvertisementParams(int * visible, SDL_Rect * position)
 {
 	jint arr[5];
+	(*JavaEnv)->PushLocalFrame( JavaEnv, 1 );
 	jintArray elemArr = (*JavaEnv)->NewIntArray(JavaEnv, 5);
 	if (elemArr == NULL)
 		return 0;
@@ -433,6 +434,7 @@ int SDLCALL SDL_ANDROID_GetAdvertisementParams(int * visible, SDL_Rect * positio
 	(*JavaEnv)->CallVoidMethod(JavaEnv, JavaRenderer, JavaGetAdvertisementParams, elemArr);
 	(*JavaEnv)->GetIntArrayRegion(JavaEnv, elemArr, 0, 5, arr);
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, elemArr);
+	(*JavaEnv)->PopLocalFrame( JavaEnv, NULL );
 	if(visible)
 		*visible = arr[0];
 	if(position)

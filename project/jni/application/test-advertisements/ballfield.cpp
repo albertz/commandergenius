@@ -534,9 +534,7 @@ int main(int argc, char* argv[])
 	int touchPointers[MAX_POINTERS][5];
 	
 	memset(touchPointers, 0, sizeof(touchPointers));
-	SDL_Joystick * joysticks[MAX_POINTERS+1];
-	for(i=0; i<MAX_POINTERS; i++)
-		joysticks[i] = SDL_JoystickOpen(i);
+	SDL_JoystickOpen(0);
 
 	while(1)
 	{
@@ -595,6 +593,7 @@ int main(int argc, char* argv[])
 			SDL_FillRect(screen, &r, 0xaaaaaa);
 			print_num(screen, font, r.x, r.y, i+1);
 		}
+
 		int adX, adY;
 		int mx, my;
 		int b = SDL_GetMouseState(&mx, &my);
@@ -616,11 +615,16 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
+			int visible = 0;
 			if(adSize.w == 0 || adSize.h == 0)
-				SDL_ANDROID_GetAdvertisementParams(NULL, &adSize);
-			adX = abs(x_offs / 100) % (physicalW - adSize.w);
-			adY = abs(y_offs / 80) % (physicalH - adSize.h);
-			SDL_ANDROID_SetAdvertisementPosition(adX, adY);
+				SDL_ANDROID_GetAdvertisementParams(&visible, &adSize);
+			//printf("ad visible %d adSize: %dx%d:%dx%d", visible, adSize.x, adSize.y, adSize.w, adSize.h);
+			if(adSize.w > 0 && adSize.h > 0)
+			{
+				adX = abs(x_offs / 100) % (physicalW - adSize.w);
+				adY = abs(y_offs / 80) % (physicalH - adSize.h);
+				SDL_ANDROID_SetAdvertisementPosition(adX, adY);
+			}
 		}
 		SDL_Rect adRect;
 		adRect.x = adX * SCREEN_W / physicalW;
