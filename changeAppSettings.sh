@@ -45,7 +45,6 @@ if [ "$AppUsesJoystick" != "y" ]; then
 	AppUsesSecondJoystick=n
 fi
 
-
 MenuOptionsAvailable=
 for FF in Menu MenuMisc MenuMouse MenuKeyboard ; do
 	MenuOptionsAvailable1=`grep 'extends Menu' $JAVA_SRC_PATH/Settings$FF.java | sed "s/.* class \(.*\) extends .*/Settings$FF.\1/" | tr '\n' ' '`
@@ -57,6 +56,15 @@ FirstStartMenuOptionsDefault='new SettingsMenuMisc.ShowReadme(), (AppUsesMouse \
 if [ -z "$CompatibilityHacksForceScreenUpdate" ]; then
 	CompatibilityHacksForceScreenUpdate=$CompatibilityHacks
 fi
+
+if [ -z "$CompatibilityHacksForceScreenUpdateMouseClick" ]; then
+	CompatibilityHacksForceScreenUpdateMouseClick=y
+fi
+
+if [ -z "$TouchscreenKeysTheme" ]; then
+	TouchscreenKeysTheme=2
+fi
+
 
 if [ -z "$AppVersionCode" -o "-$AUTO" != "-a" ]; then
 echo
@@ -171,6 +179,10 @@ echo >> AndroidAppSettings.cfg
 echo "# Application does not call SDL_Flip() or SDL_UpdateRects() appropriately, or draws from non-main thread -" >> AndroidAppSettings.cfg
 echo "# enabling the compatibility mode will force screen update every 100 milliseconds, which is laggy and inefficient (y) or (n)" >> AndroidAppSettings.cfg
 echo CompatibilityHacksForceScreenUpdate=$CompatibilityHacksForceScreenUpdate >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# Application does not call SDL_Flip() or SDL_UpdateRects() after mouse click (ScummVM and all Amiga emulators do that) -" >> AndroidAppSettings.cfg
+echo "# force screen update by moving mouse cursor a little after each click (y) or (n)" >> AndroidAppSettings.cfg
+echo CompatibilityHacksForceScreenUpdateMouseClick=$CompatibilityHacksForceScreenUpdateMouseClick >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application initializes SDL audio/video inside static constructors (which is bad, you won't be able to run ndk-gdb) (y)/(n)" >> AndroidAppSettings.cfg
 echo CompatibilityHacksStaticInit=$CompatibilityHacksStaticInit >> AndroidAppSettings.cfg
@@ -347,7 +359,7 @@ echo >> AndroidAppSettings.cfg
 echo "# Your AdMob test device ID, to receive a test ad" >> AndroidAppSettings.cfg
 echo AdmobTestDeviceId=$AdmobTestDeviceId >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Your AdMob banner size (BANNER/IAB_BANNER/IAB_LEADERBOARD/IAB_MRECT/IAB_WIDE_SKYSCRAPER/SMART_BANNER)" >> AndroidAppSettings.cfg
+echo "# Your AdMob banner size (BANNER/FULL_BANNER/LEADERBOARD/MEDIUM_RECTANGLE/SMART_BANNER/WIDE_SKYSCRAPER/FULL_WIDTH:Height/Width:AUTO_HEIGHT/Width:Height)" >> AndroidAppSettings.cfg
 echo AdmobBannerSize=$AdmobBannerSize >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 fi
@@ -428,6 +440,12 @@ if [ "$CompatibilityHacksForceScreenUpdate" = "y" ] ; then
 	CompatibilityHacksForceScreenUpdate=true
 else
 	CompatibilityHacksForceScreenUpdate=false
+fi
+
+if [ "$CompatibilityHacksForceScreenUpdateMouseClick" = "y" ] ; then
+	CompatibilityHacksForceScreenUpdateMouseClick=true
+else
+	CompatibilityHacksForceScreenUpdateMouseClick=false
 fi
 
 if [ "$CompatibilityHacksStaticInit" = "y" ] ; then
@@ -737,6 +755,7 @@ $SEDI "s/public static boolean NeedGles2 = .*;/public static boolean NeedGles2 =
 $SEDI "s/public static boolean CompatibilityHacksVideo = .*;/public static boolean CompatibilityHacksVideo = $CompatibilityHacksForceScreenUpdate;/" project/src/Globals.java
 $SEDI "s/public static boolean CompatibilityHacksStaticInit = .*;/public static boolean CompatibilityHacksStaticInit = $CompatibilityHacksStaticInit;/" project/src/Globals.java
 $SEDI "s/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = .*;/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = $CompatibilityHacksTextInputEmulatesHwKeyboard;/" project/src/Globals.java
+$SEDI "s/public static boolean CompatibilityHacksForceScreenUpdateMouseClick = .*;/public static boolean CompatibilityHacksForceScreenUpdateMouseClick = $CompatibilityHacksForceScreenUpdateMouseClick;/" project/src/Globals.java
 $SEDI "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" project/src/Globals.java
 $SEDI "s^public static boolean KeepAspectRatioDefaultSetting = .*^public static boolean KeepAspectRatioDefaultSetting = $SdlVideoResizeKeepAspect;^" project/src/Globals.java
 $SEDI "s/public static boolean InhibitSuspend = .*;/public static boolean InhibitSuspend = $InhibitSuspend;/" project/src/Globals.java

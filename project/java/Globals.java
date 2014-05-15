@@ -41,6 +41,7 @@ class Globals
 	public static boolean NeedStencilBuffer = false;
 	public static boolean NeedGles2 = false;
 	public static boolean CompatibilityHacksVideo = false;
+	public static boolean CompatibilityHacksForceScreenUpdateMouseClick = true;
 	public static boolean CompatibilityHacksStaticInit = false;
 	public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = false;
 	public static boolean HorizontalOrientation = true;

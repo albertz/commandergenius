@@ -139,6 +139,7 @@ static int moveMouseWithGyroscope = 0;
 static float moveMouseWithGyroscopeSpeed = 5.0f;
 static int moveMouseWithGyroscopeX = 0;
 static int moveMouseWithGyroscopeY = 0;
+static int forceScreenUpdateMouseClick = 1;
 
 static pthread_t mouseClickTimeoutThreadId = 0;
 static sem_t mouseClickTimeoutSemaphore;
@@ -515,6 +516,8 @@ static void ProcessMouseUp( int x, int y )
 	{
 		SDL_ANDROID_MainThreadPushMouseMotion( mouseInitialX, mouseInitialY );
 		SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
+		if( forceScreenUpdateMouseClick && mouseInitialX > 0 )
+			SDL_ANDROID_MainThreadPushMouseMotion( mouseInitialX - 1, mouseInitialY );
 		mouseInitialX = -1;
 		mouseInitialY = -1;
 		deferredMouseTap = 1;
@@ -862,6 +865,8 @@ static void ProcessDeferredMouseTap()
 	{
 		deferredMouseTap = 0;
 		SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
+		if( forceScreenUpdateMouseClick && SDL_ANDROID_currentMouseX + 1 < SDL_ANDROID_sFakeWindowWidth )
+			SDL_ANDROID_MainThreadPushMouseMotion( SDL_ANDROID_currentMouseX + 1, SDL_ANDROID_currentMouseY );
 		moveMouseWithGyroscopeX = 0;
 		moveMouseWithGyroscopeY = 0;
 	}
@@ -1094,7 +1099,8 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 		jint LeftClickTimeout, jint RightClickTimeout,
 		jint RelativeMovement, jint RelativeMovementSpeed, jint RelativeMovementAccel,
 		jint ShowMouseCursor, jint HoverJitterFilter, jint RightMouseButtonLongPress,
-		jint MoveMouseWithGyroscope, jint MoveMouseWithGyroscopeSpeed)
+		jint MoveMouseWithGyroscope, jint MoveMouseWithGyroscopeSpeed,
+		jint ForceScreenUpdateMouseClick)
 {
 	SDL_ANDROID_isMouseUsed = 1;
 	rightClickMethod = RightClickMethod;
@@ -1119,6 +1125,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 	moveMouseWithGyroscope = MoveMouseWithGyroscope;
 	moveMouseWithGyroscopeSpeed = 0.0625f * MoveMouseWithGyroscopeSpeed * MoveMouseWithGyroscopeSpeed + 0.125f * MoveMouseWithGyroscopeSpeed + 0.5f; // Scale value from 0.5 to 2, with 1 at the middle
 	moveMouseWithGyroscopeSpeed *= 5.0f;
+	forceScreenUpdateMouseClick = ForceScreenUpdateMouseClick;
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "moveMouseWithGyroscopeSpeed %d = %f", MoveMouseWithGyroscopeSpeed, moveMouseWithGyroscopeSpeed);
 	if( !mouseClickTimeoutInitialized && (
 		leftClickMethod == LEFT_CLICK_WITH_TAP ||
