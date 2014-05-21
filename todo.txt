@@ -27,6 +27,8 @@ TODO, which will get actually done
 
 - OpenTTD: 'build waypoint' button tries to build a train station.
 
-- Debian Noroot: Audio support.
+- Debian noroot: Audio support.
 
 - UQM: use gyroscope to steer the ship, search button for starmap.
+
+- USB Keyboard: modify /dev/hidg* permissions autmatically, using su.
