@@ -23,9 +23,9 @@ TODO, which will get actually done
 
 - OpenTTD: Two-finger scrolling.
 
-- OpenTTD: auto-switch to full toolbar if enough space.
-
 - OpenTTD: 'build waypoint' button tries to build a train station.
+
+- OpenTTD: Add 'cheat' command to console.
 
 - Debian noroot: Audio support.
 
