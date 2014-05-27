@@ -19,13 +19,9 @@ TODO, which will get actually done
 
 - OpenTTD: no sounds with music on.
 
-- OpenTTD: Fix multiplayer lobby dialog.
-
 - OpenTTD: Two-finger scrolling.
 
 - OpenTTD: 'build waypoint' button tries to build a train station.
-
-- OpenTTD: Add 'cheat' command to console.
 
 - OpenTTD: Split top toolbar into left/right toolbars.
 
