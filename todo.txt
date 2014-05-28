@@ -21,6 +21,10 @@ TODO, which will get actually done
 
 - OpenTTD: Split top toolbar into left/right toolbars.
 
+- OpenTTD: Option to hide mouse cursor.
+
+- OpenTTD: Construct airport window is too tall.
+
 - Debian noroot: Audio support.
 
 - UQM: use gyroscope to steer the ship, search button for starmap.
