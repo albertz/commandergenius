@@ -15,10 +15,6 @@ TODO, which will get actually done
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
 
-- OpenTTD: logarithmic music volume, restore volume on new track.
-
-- OpenTTD: no sounds with music on.
-
 - OpenTTD: Two-finger scrolling.
 
 - OpenTTD: 'build waypoint' button tries to build a train station.
@@ -30,3 +26,5 @@ TODO, which will get actually done
 - UQM: use gyroscope to steer the ship, search button for starmap.
 
 - USB Keyboard: modify /dev/hidg* permissions autmatically, using su.
+
+- XSDL: add downloadable raster fonts, add path to fonts to Debian/Gimp.
