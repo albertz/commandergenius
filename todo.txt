@@ -17,13 +17,11 @@ TODO, which will get actually done
 
 - OpenTTD: Two-finger scrolling.
 
-- OpenTTD: 'build waypoint' button tries to build a train station.
-
 - OpenTTD: Split top toolbar into left/right toolbars.
 
 - OpenTTD: Option to hide mouse cursor.
 
-- OpenTTD: Construct airport window is too tall.
+- OpenTTD: Show info about facility on mouse up instead of mouse down.
 
 - Debian noroot: Audio support.
 
