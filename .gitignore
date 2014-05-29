@@ -1,6 +1,7 @@
 project/local.properties
 project/bin
 project/gen
+project/lib
 project/libs
 project/assets
 project/obj

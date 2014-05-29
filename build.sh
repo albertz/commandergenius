@@ -5,6 +5,7 @@ install_apk=false
 run_apk=false
 sign_apk=false
 build_release=true
+quick_rebuild=false
 
 if [ "$#" -gt 0 -a "$1" = "-s" ]; then
 	shift
@@ -22,6 +23,11 @@ if [ "$#" -gt 0 -a "$1" = "-r" ]; then
 	run_apk=true
 fi
 
+if [ "$#" -gt 0 -a "$1" = "-q" ]; then
+	shift
+	quick_rebuild=true
+fi
+
 if [ "$#" -gt 0 -a "$1" = "release" ]; then
 	shift
 	build_release=true
@@ -34,10 +40,11 @@ if [ "$#" -gt 0 -a "$1" = "debug" ]; then
 fi
 
 if [ "$#" -gt 0 -a "$1" = "-h" ]; then
-	echo "Usage: $0 [-s] [-i] [-r] [release]"
+	echo "Usage: $0 [-s] [-i] [-r] [-q] [debug|release]"
 	echo "    -s: sign APK file after building"
 	echo "    -i: install APK file to device after building"
 	echo "    -r: run APK file on device after building"
+	echo "    -q: quick-rebuild C code, without rebuilding Java files"
 	echo "    debug: build debug package"
 	echo "    release: build release package (default)"
 	exit 0
@@ -78,7 +85,7 @@ if uname -s | grep -i "windows" > /dev/null ; then
 fi
 grep "64.bit" "`which ndk-build | sed 's@/ndk-build@@'`/RELEASE.TXT" >/dev/null 2>&1 && MYARCH="${MYARCH}_64"
 
-rm -r -f project/bin/* # New Android SDK introduced some lame-ass optimizations to the build system which we should take care about
+$quick_rebuild || rm -r -f project/bin/* # New Android SDK introduced some lame-ass optimizations to the build system which we should take care about
 [ -x project/jni/application/src/AndroidPreBuild.sh ] && {
 	cd project/jni/application/src
 	./AndroidPreBuild.sh || { echo "AndroidPreBuild.sh returned with error" ; exit 1 ; }
@@ -127,11 +134,21 @@ cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j
 		|| true ; } && \
 	cd .. && ./copyAssets.sh && cd project && \
 	{	if $build_release ; then \
-			ant release || exit 1 ; \
+			$quick_rebuild && { \
+				ln -s -f libs lib ; \
+				zip -u -r bin/MainActivity-release-unsigned.apk lib assets || exit 1 ; \
+			} || ant release || exit 1 ; \
 			jarsigner -verbose -keystore ~/.android/debug.keystore -storepass android -sigalg MD5withRSA -digestalg SHA1 bin/MainActivity-release-unsigned.apk androiddebugkey || exit 1 ; \
+			rm -f bin/MainActivity-debug.apk ; \
 			zipalign 4 bin/MainActivity-release-unsigned.apk bin/MainActivity-debug.apk || exit 1 ; \
 		else \
-			ant debug || exit 1 ; \
+			$quick_rebuild && { \
+				ln -s -f libs lib ; \
+				zip -u -r bin/MainActivity-debug-unaligned.apk lib assets || exit 1 ; \
+				jarsigner -verbose -keystore ~/.android/debug.keystore -storepass android -sigalg MD5withRSA -digestalg SHA1 bin/MainActivity-debug-unaligned.apk androiddebugkey || exit 1 ; \
+				rm -f bin/MainActivity-debug.apk ; \
+				zipalign 4 bin/MainActivity-debug-unaligned.apk bin/MainActivity-debug.apk || exit 1 ; \
+			} || ant debug || exit 1 ; \
 		fi ; } && \
 	{	if $sign_apk; then cd .. && ./sign.sh && cd project ; else true ; fi ; } && \
 	{	$install_apk && [ -n "`adb devices | tail -n +2`" ] && \

@@ -209,6 +209,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
         SurfaceHolder holder = getHolder();
         holder.addCallback(this);
         holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+        mKeyguardManager = ((KeyguardManager)getContext().getSystemService(Context.KEYGUARD_SERVICE));
     }
 
     /**
@@ -1106,7 +1107,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
         }
 
         private boolean needToWait() {
-            if (((KeyguardManager)getContext().getSystemService(Context.KEYGUARD_SERVICE)).inKeyguardRestrictedInputMode()) {
+            if (mKeyguardManager.inKeyguardRestrictedInputMode()) {
                 return true; // We're in lockscreen - sleep until user unlocks the device
             }
 
@@ -1281,4 +1282,5 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
     private EGLConfigChooser mEGLConfigChooser;
     private GLWrapper mGLWrapper;
     private int mDebugFlags;
+    private KeyguardManager mKeyguardManager;
 }
