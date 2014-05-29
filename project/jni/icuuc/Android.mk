@@ -2,6 +2,8 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
+ifeq ($(filter armeabi-v7a-hard, $(APP_ABI)),) # Pre-compiled lib disabled for armhf ABI
+
 LOCAL_MODULE := $(notdir $(LOCAL_PATH))
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
@@ -13,3 +15,5 @@ obj/local/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a: $(LOCAL_PATH)/$(LOCAL_SRC_FIL
 	cp -f $< $@
 
 include $(PREBUILT_STATIC_LIBRARY)
+
+endif

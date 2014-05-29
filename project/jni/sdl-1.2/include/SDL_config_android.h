@@ -162,7 +162,7 @@
 #define HAVE_SYSCONF 1
 #undef HAVE_SYSCTLBYNAME
 #undef SDL_ALTIVEC_BLITTERS
-#define SDL_ASSEMBLY_ROUTINES 1 // There is no assembly code for Arm CPU yet
+/* #define SDL_ASSEMBLY_ROUTINES 1 */ // There is no assembly code for ARM CPU yet, and it fails when compiling for armhf
 #define HAVE_GCC_ATOMICS 1
 
 #endif /* _SDL_config_minimal_h */

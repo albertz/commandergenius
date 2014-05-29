@@ -6,6 +6,7 @@ LOCAL_PATH:=$(call my-dir)
 #FFMPEG_REBUILD_FROM_SOURCE:=yes
 
 ifeq ($(TARGET_ARCH),arm)
+ifeq ($(filter armeabi-v7a-hard, $(APP_ABI)),) # Pre-compiled lib disabled for armhf ABI
 
 ifneq ($(FFMPEG_REBUILD_FROM_SOURCE),yes)
 
@@ -631,4 +632,5 @@ endif #CONFIG_FFMPEG_COMPILE_TOOLS
 
 endif # notdir $(LOCAL_PATH)),ffmpeg
 endif # FFMPEG_REBUILD_FROM_SOURCE),yes
+endif # $(filter armeabi-v7a-hard, $(APP_ABI))
 endif # $(TARGET_ARCH),arm

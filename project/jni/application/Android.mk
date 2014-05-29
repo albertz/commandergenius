@@ -95,6 +95,12 @@ $(LOCAL_PATH)/src/libapplication-armeabi-v7a.so: $(SDL_APP_LIB_DEPENDS-armeabi-v
 	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
 	./AndroidBuild.sh armeabi-v7a arm-linux-androideabi && $(PARALLEL_UNLOCK)
 
+obj/local/armeabi-v7a-hard/libapplication.so: $(LOCAL_PATH)/src/libapplication-armeabi-v7a-hard.so
+
+$(LOCAL_PATH)/src/libapplication-armeabi-v7a-hard.so: $(SDL_APP_LIB_DEPENDS-armeabi-v7a-hard) OVERRIDE_CUSTOM_LIB
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
+	./AndroidBuild.sh armeabi-v7a-hard arm-linux-androideabi && $(PARALLEL_UNLOCK)
+
 obj/local/mips/libapplication.so: $(LOCAL_PATH)/src/libapplication-mips.so
 
 $(LOCAL_PATH)/src/libapplication-mips.so: $(SDL_APP_LIB_DEPENDS-mips) OVERRIDE_CUSTOM_LIB
