@@ -32,7 +32,7 @@
 
 #if SDL_ASSEMBLY_ROUTINES
 #  if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
-#    define MMX_ASMBLIT 1
+/*#    define MMX_ASMBLIT 1 */  /* Does not compile on GCC 4.8 */
 #    define GCC_ASMBLIT 1
 #  elif defined(_MSC_VER) && defined(_M_IX86)
 #    if (_MSC_VER <= 1200)  

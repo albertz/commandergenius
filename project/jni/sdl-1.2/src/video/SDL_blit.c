@@ -29,7 +29,7 @@
 #include <android/log.h>
 
 #if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)) && SDL_ASSEMBLY_ROUTINES
-#define MMX_ASMBLIT
+/* #define MMX_ASMBLIT */ /* Does not compile on GCC 4.8 */
 #if (__GNUC__ > 2)  /* SSE instructions aren't in GCC 2. */
 #define SSE_ASMBLIT
 #endif
@@ -125,6 +125,7 @@ static __inline__ void SDL_memcpyMMX(Uint8 *to, const Uint8 *from, int len)
 	if (len&7)
 		SDL_memcpy(to, from, len&7);
 }
+#endif
 
 #ifdef SSE_ASMBLIT
 static __inline__ void SDL_memcpySSE(Uint8 *to, const Uint8 *from, int len)
@@ -150,7 +151,6 @@ static __inline__ void SDL_memcpySSE(Uint8 *to, const Uint8 *from, int len)
 	if (len&7)
 		SDL_memcpy(to, from, len&7);
 }
-#endif
 #endif
 
 static void SDL_BlitCopy(SDL_BlitInfo *info)

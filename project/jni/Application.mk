@@ -13,4 +13,6 @@ ifneq ($(filter armeabi-v7a-hard, $(APP_ABI)),)
 APP_CFLAGS := -flto
 APP_CXXFLAGS := -flto
 APP_LDFLAGS := -flto
+# Latest GCC got better LTO support
+NDK_TOOLCHAIN_VERSION := 4.8
 endif

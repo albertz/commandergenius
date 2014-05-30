@@ -316,8 +316,8 @@ echo "# Available menu items:" >> AndroidAppSettings.cfg
 echo "# $MenuOptionsAvailable" >> AndroidAppSettings.cfg
 echo FirstStartMenuOptions=\'$FirstStartMenuOptions\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Enable multi-ABI binary, with hardware FPU support - it will also work on old devices," >> AndroidAppSettings.cfg
-echo "# but .apk size is 2x bigger (y) / (n) / (x86) / (all)" >> AndroidAppSettings.cfg
+echo "# Specify architectures to compile, 'all' or 'y' to compile for all architectures." >> AndroidAppSettings.cfg
+echo "# Available architectures: armeabi armeabi-v7a armeabi-v7a-hard x86 mips" >> AndroidAppSettings.cfg
 echo MultiABI=\'$MultiABI\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Minimum amount of RAM application requires, in Mb, SDL will print warning to user if it's lower" >> AndroidAppSettings.cfg
@@ -611,11 +611,11 @@ for KEY in $RedefinedKeysGamepad; do
 done
 
 if [ "$MultiABI" = "y" ] ; then
-	MultiABI="armeabi armeabi-v7a"
+	MultiABI="all"
 elif [ "$MultiABI" = "n" ] ; then
 	MultiABI="armeabi"
 else
-	MultiABI="$MultiABI" # Eh okay
+	MultiABI="$MultiABI"
 fi
 
 LibrariesToLoad="\\\"sdl_native_helpers\\\", \\\"sdl-$LibSdlVersion\\\""

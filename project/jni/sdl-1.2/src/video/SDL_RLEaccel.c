@@ -92,7 +92,7 @@
 #include "SDL_RLEaccel_c.h"
 
 #if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)) && SDL_ASSEMBLY_ROUTINES
-#define MMX_ASMBLIT
+/* #define MMX_ASMBLIT */ /* Does not compile on GCC 4.8 */
 #endif
 
 #ifdef MMX_ASMBLIT
