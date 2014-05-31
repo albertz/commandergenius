@@ -15,13 +15,9 @@ TODO, which will get actually done
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
 
-- OpenTTD: Two-finger scrolling.
-
 - OpenTTD: Split top toolbar into left/right toolbars.
 
 - OpenTTD: Option to hide mouse cursor.
-
-- OpenTTD: Show info about facility on mouse up instead of mouse down.
 
 - Debian noroot: Audio support.
 
