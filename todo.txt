@@ -17,7 +17,7 @@ TODO, which will get actually done
 
 - OpenTTD: Split top toolbar into left/right toolbars.
 
-- OpenTTD: Option to hide mouse cursor.
+- OpenTTD: After closing window, mouse click is passed down to map.
 
 - Debian noroot: Audio support.
 
