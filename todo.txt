@@ -9,6 +9,8 @@ TODO, which will get actually done
 
 - OpenArena: do not treat commands starting with / as chat text.
 
+- OpenArena: camera points up to the sky after respawn on oacmp1dm5.
+
 - SDL: cloud save support.
 
 - SDL: resize default on-screen buttons for different screen sizes.
@@ -18,6 +20,14 @@ TODO, which will get actually done
 - OpenTTD: Split top toolbar into left/right toolbars.
 
 - OpenTTD: After closing window, mouse click is passed down to map.
+
+- OpenTTD: Status bar not shown.
+
+- OpenTTD: Cannot open multipole windows.
+
+- OpenTTD: Help button does not work.
+
+- OpenTTD: Cannot open dropdown lists from toolbar.
 
 - Debian noroot: Audio support.
 
