@@ -17,18 +17,6 @@ TODO, which will get actually done
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
 
-- OpenTTD: Split top toolbar into left/right toolbars.
-
-- OpenTTD: After closing window, mouse click is passed down to map.
-
-- OpenTTD: Status bar not shown.
-
-- OpenTTD: Cannot open multipole windows.
-
-- OpenTTD: Help button does not work.
-
-- OpenTTD: Cannot open dropdown lists from toolbar.
-
 - Debian noroot: Audio support.
 
 - UQM: use gyroscope to steer the ship, search button for starmap.
