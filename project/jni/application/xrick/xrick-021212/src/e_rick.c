@@ -193,7 +193,7 @@ e_rick_action2(void)
 		return;
 	}
 	/* fall */
-	offsy += 0x0080;
+	offsy += (offsy > 0) ? 0x0040 : 0x0080;
 	if (offsy > 0x0800) {
 		offsy = 0x0800;
 		ylow = 0;
