@@ -19,6 +19,16 @@ TODO, which will get actually done
 
 - Debian noroot: Audio support.
 
+- OpenTTD: 16bpp blitter with palette animation support.
+
+- OpenTTD: screen navigation buttons bug out OpentTD on Moto G.
+
+- OpenTTD: Auto-switch to full vertical toolbar if enough space.
+
+- OpenTTD: draw behind vertical toolbar.
+
+- OpenTTD: stylus/finger hover does not highlight building area anymore.
+
 - UQM: use gyroscope to steer the ship, search button for starmap.
 
 - XSDL: add downloadable raster fonts, add path to fonts to Debian/Gimp.
