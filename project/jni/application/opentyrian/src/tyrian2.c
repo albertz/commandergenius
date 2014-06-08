@@ -52,7 +52,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+
 #include <android/log.h>
+#include "SDL_screenkeyboard.h"
 
 inline static void blit_enemy( SDL_Surface *surface, unsigned int i, signed int x_offset, signed int y_offset, signed int sprite_offset );
 
@@ -3358,6 +3360,11 @@ bool JE_titleScreen( JE_boolean animate )
 	const JE_byte menu_top = 96, menu_spacing = 14;
 #endif
 
+#ifdef ANDROID
+	// Show text input button in main menu, to make entering cheats possible
+	SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, 1);
+#endif
+
 	unsigned int arcade_code_i[SA_ENGAGE] = { 0 };
 
 	JE_word waitForDemo;
@@ -3764,6 +3771,11 @@ bool JE_titleScreen( JE_boolean animate )
 trentWinsGame:
 		fade_black(15);
 	}
+
+#ifdef ANDROID
+	// Hide text input button for other parts of the game
+	SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT, 0);
+#endif
 
 	return quit;
 }
