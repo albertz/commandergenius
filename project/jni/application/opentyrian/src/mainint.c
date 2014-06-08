@@ -2399,9 +2399,6 @@ void JE_operation( JE_byte slot )
 		wait_noinput(false, true, false);
 
 		JE_barShade(VGAScreen, 65, 55, 255, 155);
-#ifdef ANDROID
-		SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput();
-#endif
 		bool quit = false;
 		while (!quit)
 		{
@@ -2513,9 +2510,6 @@ void JE_operation( JE_byte slot )
 					case SDLK_RETURN:
 					case SDLK_SPACE:
 						quit = true;
-#ifdef ANDROID
-						SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput();
-#endif
 						JE_saveGame(slot, stemp);
 						JE_playSampleNum(S_SELECT);
 						break;
