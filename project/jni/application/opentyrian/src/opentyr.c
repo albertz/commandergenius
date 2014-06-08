@@ -74,12 +74,16 @@ const char *opentyrian_menu_items[] =
 };
 
 #ifndef ANDROID
-const int menu_item_scaler   = 2;
-const int menu_item_jukebox  = 3;
+enum {
+	menu_item_scaler   = 2,
+	menu_item_jukebox  = 3
+};
 #else
-const int menu_item_scaler   = 1;
-const int menu_item_jukebox  = 2;
-const int menu_item_destruct = 3;
+enum {
+	menu_item_scaler   = 1,
+	menu_item_jukebox  = 2,
+	menu_item_destruct = 3
+};
 #endif
 
 /* zero-terminated strncpy */

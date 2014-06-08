@@ -720,16 +720,16 @@ void JE_destructGame( void )
 	load_destruct_config();
 
 	//malloc things that have customizable sizes
-	shotRec  = (destruct_shot_s *)malloc(sizeof(struct destruct_shot_s)  * config.max_shots);
-	exploRec = (destruct_explo_s *)malloc(sizeof(struct destruct_explo_s) * config.max_explosions);
-	world.mapWalls = (destruct_wall_s *)malloc(sizeof(struct destruct_wall_s) * config.max_walls);
+	shotRec  = malloc(sizeof(struct destruct_shot_s)  * config.max_shots);
+	exploRec = malloc(sizeof(struct destruct_explo_s) * config.max_explosions);
+	world.mapWalls = malloc(sizeof(struct destruct_wall_s) * config.max_walls);
 
 	//Malloc enough structures to cover all of this session's possible needs.
 	for(i = 0; i < 10; i++) {
 		config.max_installations = MAX(config.max_installations, basetypes[i][0]);
 	}
-	player[PLAYER_LEFT ].unit = (destruct_unit_s *)malloc(sizeof(struct destruct_unit_s) * config.max_installations);
-	player[PLAYER_RIGHT].unit = (destruct_unit_s *)malloc(sizeof(struct destruct_unit_s) * config.max_installations);
+	player[PLAYER_LEFT ].unit = malloc(sizeof(struct destruct_unit_s) * config.max_installations);
+	player[PLAYER_RIGHT].unit = malloc(sizeof(struct destruct_unit_s) * config.max_installations);
 
 	destructTempScreen = game_screen;
 	world.VGAScreen = VGAScreen;
@@ -836,7 +836,7 @@ enum de_mode_t JE_modeSelect( void )
 	mode = MODE_5CARDWAR;
 
 	// Draw the menu and fade us in
-	DrawModeSelectMenu((de_mode_t)mode);
+	DrawModeSelectMenu(mode);
 
 	JE_showVGA();
 	fade_palette(colors, 15, 0, 255);
@@ -845,7 +845,7 @@ enum de_mode_t JE_modeSelect( void )
 	while(1)
 	{
 		/* Re-draw the menu every iteration */
-		DrawModeSelectMenu((de_mode_t)mode);
+		DrawModeSelectMenu(mode);
 		JE_showVGA();
 
 		/* Grab keys */
@@ -898,7 +898,7 @@ enum de_mode_t JE_modeSelect( void )
 	fade_black(15);
 	memcpy(VGAScreen->pixels, VGAScreen2->pixels, VGAScreen->h * VGAScreen->pitch);
 	JE_showVGA();
-	return((de_mode_t)mode);
+	return(mode);
 }
 
 void JE_generateTerrain( void )
@@ -1039,7 +1039,7 @@ void DE_generateUnits( unsigned int * baseWorld )
 			}
 
 			player[i].unit[j].unitY = JE_placementPosition(player[i].unit[j].unitX - 1, 14, baseWorld);
-			player[i].unit[j].unitType = (de_unit_t)basetypes[baseLookup[i][world.destructMode]][(mt_rand() % 10) + 1];
+			player[i].unit[j].unitType = basetypes[baseLookup[i][world.destructMode]][(mt_rand() % 10) + 1];
 
 			/* Sats are special cases since they are useless.  They don't count
 			 * as active units and we can't have a team of all sats */
@@ -1071,7 +1071,7 @@ void DE_generateUnits( unsigned int * baseWorld )
 			player[i].unit[j].isYInAir = false;
 			player[i].unit[j].angle = 0;
 			player[i].unit[j].power = (player[i].unit[j].unitType == UNIT_LASER) ? 6 : 3;
-			player[i].unit[j].shotType = (de_shot_t)defaultWeapon[player[i].unit[j].unitType];
+			player[i].unit[j].shotType = defaultWeapon[player[i].unit[j].unitType];
 			player[i].unit[j].health = baseDamage[player[i].unit[j].unitType];
 			player[i].unit[j].ani_frame = 0;
 		}
@@ -1357,7 +1357,7 @@ void JE_makeExplosion( unsigned int tempPosX, unsigned int tempPosY, enum de_sho
 
 		exploRec[i].explomax  = tempExploSize;
 		exploRec[i].explofill = exploDensity[shottype];
-		exploRec[i].exploType = (de_expl_t)shotDirt[shottype];
+		exploRec[i].exploType = shotDirt[shottype];
 	}
 	else
 	{
@@ -1574,9 +1574,9 @@ void DE_ResetAI( void )
 			ptr->power = (ptr->unitType == UNIT_LASER) ? 6 : 4;
 
 			if (world.mapFlags & MAP_WALLS)
-				ptr->shotType = (de_shot_t)defaultCpuWeaponB[ptr->unitType];
+				ptr->shotType = defaultCpuWeaponB[ptr->unitType];
 			else
-				ptr->shotType = (de_shot_t)defaultCpuWeapon[ptr->unitType];
+				ptr->shotType = defaultCpuWeapon[ptr->unitType];
 		}
 	}
 }
@@ -1750,7 +1750,7 @@ void DE_RunTickGravity( void )
 			}
 
 		/* Draw the unit. */
-		DE_GravityDrawUnit((de_player_t)i, unit);
+		DE_GravityDrawUnit(i, unit);
 		}
 	}
 }
@@ -1945,7 +1945,7 @@ void DE_TestExplosionCollision( unsigned int PosX, unsigned int PosY)
 				unit->health--;
 				if (unit->health <= 0)
 				{
-					DE_DestroyUnit((de_player_t)i, unit);
+					DE_DestroyUnit(i, unit);
 				}
 			}
 		}
@@ -2041,7 +2041,7 @@ void DE_RunTickShots( void )
 				 && tempPosY < unit->unitY && tempPosY > unit->unitY - 13)
 				{
 					shotRec[i].isAvailable = true;
-					JE_makeExplosion(tempPosX, tempPosY, (de_shot_t)shotRec[i].shottype);
+					JE_makeExplosion(tempPosX, tempPosY, shotRec[i].shottype);
 				}
 			}
 		}
@@ -2074,7 +2074,7 @@ void DE_RunTickShots( void )
 					/* Blow up the wall and remove the shot. */
 					world.mapWalls[j].wallExist = false;
 					shotRec[i].isAvailable = true;
-					JE_makeExplosion(tempPosX, tempPosY, (de_shot_t)shotRec[i].shottype);
+					JE_makeExplosion(tempPosX, tempPosY, shotRec[i].shottype);
 					continue;
 				}
 				else
@@ -2104,7 +2104,7 @@ void DE_RunTickShots( void )
 		if((((Uint8 *)destructTempScreen->pixels)[tempPosX + tempPosY * destructTempScreen->pitch]) == PIXEL_DIRT)
 		{
 			shotRec[i].isAvailable = true;
-			JE_makeExplosion(tempPosX, tempPosY, (de_shot_t)shotRec[i].shottype);
+			JE_makeExplosion(tempPosX, tempPosY, shotRec[i].shottype);
 			continue;
 		}
 	}
@@ -2580,12 +2580,12 @@ void DE_ProcessInput( void )
 					break;
 
 				case EXPL_MAGNET:
-					DE_RunMagnet((de_player_t)player_index, curUnit);
+					DE_RunMagnet(player_index, curUnit);
 					break;
 
 				case EXPL_DIRT:
 				case EXPL_NORMAL:
-					DE_MakeShot((de_player_t)player_index, curUnit, direction);
+					DE_MakeShot(player_index, curUnit, direction);
 					break;
 
 				default:
@@ -2599,7 +2599,7 @@ void DE_CycleWeaponUp( struct destruct_unit_s * unit )
 {
 	do
 	{
-		unit->shotType = (de_shot_t)((int)unit->shotType + 1);
+		unit->shotType = ((int)unit->shotType + 1);
 		if (unit->shotType > SHOT_LAST)
 		{
 			unit->shotType = SHOT_FIRST;
@@ -2610,7 +2610,7 @@ void DE_CycleWeaponDown( struct destruct_unit_s * unit )
 {
 	do
 	{
-		unit->shotType = (de_shot_t)((int)unit->shotType - 1);
+		unit->shotType = ((int)unit->shotType - 1);
 		if (unit->shotType < SHOT_FIRST)
 		{
 			unit->shotType = SHOT_LAST;
