@@ -120,7 +120,6 @@ void JE_paramCheck( int argc, char *argv[] )
 			break;
 			
 		case 'n':
-			{
 			isNetworkGame = true;
 			
 			intptr_t temp = (intptr_t)strchr(option.arg, ':');
@@ -137,19 +136,18 @@ void JE_paramCheck( int argc, char *argv[] )
 					exit(EXIT_FAILURE);
 				}
 				
-				network_opponent_host = (char *)malloc(temp + 1);
+				network_opponent_host = malloc(temp + 1);
 				strnztcpy(network_opponent_host, option.arg, temp);
 			}
 			else
 			{
-				network_opponent_host = (char *)malloc(strlen(option.arg) + 1);
+				network_opponent_host = malloc(strlen(option.arg) + 1);
 				strcpy(network_opponent_host, option.arg);
-			}
 			}
 			break;
 			
 		case 256: // --net-player-name
-			network_player_name = (char *)malloc(strlen(option.arg) + 1);
+			network_player_name = malloc(strlen(option.arg) + 1);
 			strcpy(network_player_name, option.arg);
 			break;
 			

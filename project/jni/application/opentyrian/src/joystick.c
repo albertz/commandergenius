@@ -272,7 +272,7 @@ void init_joysticks( void )
 	SDL_JoystickEventState(SDL_IGNORE);
 	
 	joysticks = SDL_NumJoysticks();
-	joystick = (Joystick *)malloc(joysticks * sizeof(*joystick));
+	joystick = malloc(joysticks * sizeof(*joystick));
 	
 	for (int j = 0; j < joysticks; j++)
 	{
@@ -539,17 +539,17 @@ bool detect_joystick_assignment( int j, Joystick_assignment *assignment )
 	// get initial joystick state to compare against to see if anything was pressed
 	
 	const int axes = SDL_JoystickNumAxes(joystick[j].handle);
-	Sint16 *axis = (Sint16 *)malloc(axes * sizeof(*axis));
+	Sint16 *axis = malloc(axes * sizeof(*axis));
 	for (int i = 0; i < axes; i++)
 		axis[i] = SDL_JoystickGetAxis(joystick[j].handle, i);
 	
 	const int buttons = SDL_JoystickNumButtons(joystick[j].handle);
-	Uint8 *button = (Uint8 *)malloc(buttons * sizeof(*button));
+	Uint8 *button = malloc(buttons * sizeof(*button));
 	for (int i = 0; i < buttons; i++)
 		button[i] = SDL_JoystickGetButton(joystick[j].handle, i);
 	
 	const int hats = SDL_JoystickNumHats(joystick[j].handle);
-	Uint8 *hat = (Uint8 *)malloc(hats * sizeof(*hat));
+	Uint8 *hat = malloc(hats * sizeof(*hat));
 	for (int i = 0; i < hats; i++)
 		hat[i] = SDL_JoystickGetHat(joystick[j].handle, i);
 	

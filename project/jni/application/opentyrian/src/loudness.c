@@ -200,7 +200,7 @@ void load_music( void )
 		
 		efread(&song_count, sizeof(song_count), 1, music_file);
 		
-		song_offset = (Uint32*)malloc((song_count + 1) * sizeof(song_offset));
+		song_offset = malloc((song_count + 1) * sizeof(song_offset));
 		
 		efread(song_offset, 4, song_count, music_file);
 		song_offset[song_count] = ftell_eof(music_file);
@@ -271,7 +271,7 @@ void JE_multiSamplePlay(JE_byte *buffer, JE_word size, JE_byte chan, JE_byte vol
 	free(channel_buffer[chan]);
 	
 	channel_len[chan] = size * BYTES_PER_SAMPLE * SAMPLE_SCALING;
-	channel_buffer[chan] = (OPLSAMPLE*)malloc(channel_len[chan]);
+	channel_buffer[chan] = malloc(channel_len[chan]);
 	channel_pos[chan] = channel_buffer[chan];
 	channel_vol[chan] = vol + 1;
 

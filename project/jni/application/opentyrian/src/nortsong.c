@@ -124,7 +124,7 @@ void JE_loadSndFile( const char *effects_sndfile, const char *voices_sndfile )
 		fseek(fi, sndPos[0][z], SEEK_SET);
 		fxSize[z] = (sndPos[0][z+1] - sndPos[0][z]); /* Store sample sizes */
 		free(digiFx[z]);
-		digiFx[z] = (JE_byte*)malloc(fxSize[z]);
+		digiFx[z] = malloc(fxSize[z]);
 		efread(digiFx[z], 1, fxSize[z], fi); /* JE: Load sample to buffer */
 	}
 
@@ -151,7 +151,7 @@ void JE_loadSndFile( const char *effects_sndfile, const char *voices_sndfile )
 		templ = (sndPos[1][y+1] - sndPos[1][y]) - 100; /* SYN: I'm not entirely sure what's going on here. */
 		if (templ < 1) templ = 1;
 		fxSize[z + y] = templ; /* Store sample sizes */
-		digiFx[z + y] = (JE_byte*)malloc(fxSize[z + y]);
+		digiFx[z + y] = malloc(fxSize[z + y]);
 		efread(digiFx[z + y], 1, fxSize[z + y], fi); /* JE: Load sample to buffer */
 	}
 

@@ -179,8 +179,8 @@ inline bool diff(unsigned int w1, unsigned int w2)
 
 void hq2x_32( SDL_Surface *src_surface, SDL_Surface *dst_surface )
 {
-	Uint8 *src = (Uint8 *)src_surface->pixels, *src_temp,
-	      *dst = (Uint8 *)dst_surface->pixels, *dst_temp;
+	Uint8 *src = src_surface->pixels, *src_temp,
+	      *dst = dst_surface->pixels, *dst_temp;
 	int src_pitch = src_surface->pitch,
 	    dst_pitch = dst_surface->pitch;
 	const int dst_Bpp = 4;         // dst_surface->format->BytesPerPixel
@@ -2972,8 +2972,8 @@ void hq2x_32( SDL_Surface *src_surface, SDL_Surface *dst_surface )
 
 void hq3x_32( SDL_Surface *src_surface, SDL_Surface *dst_surface )
 {
-	Uint8 *src = (Uint8 *)src_surface->pixels, *src_temp,
-	      *dst = (Uint8 *)dst_surface->pixels, *dst_temp;
+	Uint8 *src = src_surface->pixels, *src_temp,
+	      *dst = dst_surface->pixels, *dst_temp;
 	int src_pitch = src_surface->pitch,
 	    dst_pitch = dst_surface->pitch;
 	const int dst_Bpp = 4;         // dst_surface->format->BytesPerPixel
@@ -6825,8 +6825,8 @@ void hq3x_32( SDL_Surface *src_surface, SDL_Surface *dst_surface )
 
 void hq4x_32( SDL_Surface *src_surface, SDL_Surface *dst_surface )
 {
-	Uint8 *src = (Uint8 *)src_surface->pixels, *src_temp,
-	      *dst = (Uint8 *)dst_surface->pixels, *dst_temp;
+	Uint8 *src = src_surface->pixels, *src_temp,
+	      *dst = dst_surface->pixels, *dst_temp;
 	int src_pitch = src_surface->pitch,
 	    dst_pitch = dst_surface->pitch;
 	const int dst_Bpp = 4;         // dst_surface->format->BytesPerPixel

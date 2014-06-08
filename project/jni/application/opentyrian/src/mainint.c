@@ -459,7 +459,6 @@ ulong JE_getCost( JE_byte itemType, JE_word itemNum )
 		break;
 	case 3:
 	case 4:
-		{
 		cost = weaponPort[itemNum].cost;
 
 		const uint port = itemType - 3,
@@ -467,7 +466,6 @@ ulong JE_getCost( JE_byte itemType, JE_word itemNum )
 
 		downgradeCost = weapon_upgrade_cost(cost, item_power);
 		upgradeCost = weapon_upgrade_cost(cost, item_power + 1);
-		}
 		break;
 	case 5:
 		cost = shields[itemNum].cost;
@@ -591,19 +589,19 @@ void JE_loadScreen( void )
 					{
 						free(tempstr);
 					}
-					tempstr = (char *)malloc(7);
+					tempstr = malloc(7);
 					mal_str = true;
 					strcpy(tempstr, "-----"); /* Unused save slot */
 				} else {
 					tempstr = saveFiles[x - 1].levelName;
-					tempstr2 = (char *)malloc(5 + strlen(miscTextB[2-1]));
+					tempstr2 = malloc(5 + strlen(miscTextB[2-1]));
 					sprintf(tempstr2, "%s %d", miscTextB[2-1], saveFiles[x - 1].episode);
 					JE_textShade(VGAScreen, 250, tempY, tempstr2, 5, (temp2 % 16) - 8, FULL_SHADE);
 					free(tempstr2);
 				}
 
 				len = strlen(miscTextB[3-1]) + 2 + strlen(tempstr);
-				tempstr2 = (char *)malloc(len);
+				tempstr2 = malloc(len);
 				sprintf(tempstr2, "%s %s", miscTextB[3 - 1], tempstr);
 				JE_textShade(VGAScreen, 120, tempY, tempstr2, 5, (temp2 % 16) - 8, FULL_SHADE);
 				free(tempstr2);
@@ -717,8 +715,7 @@ JE_longint JE_getValue( JE_byte itemType, JE_word itemNum )
 		value = ships[itemNum].cost;
 		break;
 	case 3:
-	case 4:
-		{
+	case 4:;
 		const long base_value = weaponPort[itemNum].cost;
 
 		// if two-player, use first player's front and second player's rear weapon
@@ -728,7 +725,6 @@ JE_longint JE_getValue( JE_byte itemType, JE_word itemNum )
 		value = base_value;
 		for (unsigned int i = 1; i <= item_power; ++i)
 			value += weapon_upgrade_cost(base_value, i);
-		}
 		break;
 	case 5:
 		value = shields[itemNum].cost;

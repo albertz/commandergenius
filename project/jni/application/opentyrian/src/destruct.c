@@ -406,14 +406,13 @@ static struct destruct_explo_s  * exploRec;
 enum de_unit_t string_to_unit_enum(const char * str) {
 
 	// A config helper function.  Probably not useful anywhere else.
-	//enum de_unit_t i;
-	int i;
+	enum de_unit_t i;
 	static const char * unit_names[] =
 	{ "UNIT_TANK", "UNIT_NUKE", "UNIT_DIRT", "UNIT_SATELLITE",
       "UNIT_MAGNET", "UNIT_LASER", "UNIT_JUMPER", "UNIT_HELI" };
 
 	for (i = UNIT_FIRST; i < MAX_UNITS; i++) {
-		if(strcmp(unit_names[i], str) == 0) { return((enum de_unit_t)i); }
+		if(strcmp(unit_names[i], str) == 0) { return(i); }
 	}
 
     return(UNIT_NONE);
@@ -599,7 +598,7 @@ void load_destruct_config( void ) {
 
 #ifndef ANDROID
 	unsigned int j, k;
-	int i;//enum de_player_t i;
+	enum de_player_t i;
 	enum de_unit_t temp;
 	char buffer[40];
 	const char * key_names[] = { "left", "right", "up", "down", "change", "fire", "cyup", "cydn" };

@@ -46,7 +46,7 @@ bool input_grab_enabled = true,
 #else
 bool input_grab_enabled = false,
 #endif
-       input_grabbed = false;
+     input_grabbed = false;
 
 
 void flush_events_buffer( void )

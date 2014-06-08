@@ -59,7 +59,7 @@ void load_sprites( unsigned int table, FILE *f )
 		efread(&cur_sprite->height, sizeof(Uint16), 1, f);
 		efread(&cur_sprite->size,   sizeof(Uint16), 1, f);
 		
-		cur_sprite->data = (Uint8 *)malloc(cur_sprite->size);
+		cur_sprite->data = malloc(cur_sprite->size);
 		
 		efread(cur_sprite->data, sizeof(Uint8), cur_sprite->size, f);
 	}
@@ -481,7 +481,7 @@ void JE_loadCompShapesB( Sprite2_array *sprite2s, FILE *f )
 {
 	free_sprite2s(sprite2s);
 	
-	sprite2s->data = (Uint8 *)malloc(sizeof(Uint8) * sprite2s->size);
+	sprite2s->data = malloc(sizeof(Uint8) * sprite2s->size);
 	efread(sprite2s->data, sizeof(Uint8), sprite2s->size, f);
 }
 

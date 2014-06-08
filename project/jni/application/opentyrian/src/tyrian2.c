@@ -82,9 +82,9 @@ void JE_starShowVGA( void )
 	if (!playerEndLevel && !skipStarShowVGA)
 	{
 
-		s = (Uint8 *)VGAScreenSeg->pixels;
+		s = VGAScreenSeg->pixels;
 
-		src = (JE_byte *)game_screen->pixels;
+		src = game_screen->pixels;
 		src += 24;
 
 		if (smoothScroll != 0 /*&& thisPlayerNum != 2*/)
@@ -380,10 +380,8 @@ enemy_still_exists:
 							}
 							break;
 						case 251:; /* Suck-O-Magnet */
-							{
 							const int attractivity = 4 - (abs(player[0].x - tempX) + abs(player[0].y - tempY)) / 100;
 							player[0].x_velocity += (player[0].x > tempX) ? -attractivity : attractivity;
-							}
 							break;
 						case 253: /* Left ShortRange Magnet */
 							if (abs(player[0].x + 25 - 14 - tempX) < 24 && abs(player[0].y - tempY) < 28)
@@ -2946,8 +2944,8 @@ new_game:
 							{
 								if (!newkey)
 								{
-									vga = (Uint8 *)VGAScreen->pixels;
-									vga2 = (Uint8 *)VGAScreen2->pixels;
+									vga = VGAScreen->pixels;
+									vga2 = VGAScreen2->pixels;
 									pic = pic_buffer + (199 - z) * 320;
 
 									setjasondelay(1); /* attempting to emulate JE_waitRetrace();*/
@@ -2997,8 +2995,8 @@ new_game:
 							{
 								if (!newkey)
 								{
-									vga = (Uint8 *)VGAScreen->pixels;
-									vga2 = (Uint8 *)VGAScreen2->pixels;
+									vga = VGAScreen->pixels;
+									vga2 = VGAScreen2->pixels;
 									pic = pic_buffer;
 
 									setjasondelay(1); /* attempting to emulate JE_waitRetrace();*/
@@ -3049,8 +3047,8 @@ new_game:
 							{
 								if (!newkey)
 								{
-									vga = (Uint8 *)VGAScreen->pixels;
-									vga2 = (Uint8 *)VGAScreen2->pixels;
+									vga = VGAScreen->pixels;
+									vga2 = VGAScreen2->pixels;
 									pic = pic_buffer;
 
 									setjasondelay(1); /* attempting to emulate JE_waitRetrace();*/
@@ -5091,8 +5089,7 @@ void JE_eventSystem( void )
 		}
 		break;
 
-	case 75:
-		{
+	case 75:;
 		bool temp_no_clue = false; // TODO: figure out what this is doing
 
 		for (temp = 0; temp < 100; temp++)
@@ -5125,7 +5122,7 @@ void JE_eventSystem( void )
 				eventLoc += eventRec[eventLoc-1].eventdat4 - 1;
 			}
 		}
-		}
+
 		break;
 
 	case 76:
@@ -5198,8 +5195,8 @@ void JE_whoa( void )
 	 * way to get vgascreen as one of the temp buffers), but it's only called
 	 * once so don't worry about it. */
 
-	TempScreen1  = (Uint8 *)game_screen->pixels;
-	TempScreen2  = (Uint8 *)VGAScreen2->pixels;
+	TempScreen1  = game_screen->pixels;
+	TempScreen2  = VGAScreen2->pixels;
 
 	screenSize   = VGAScreenSeg->h * VGAScreenSeg->pitch;
 	topBorder    = VGAScreenSeg->pitch * 4; /* Seems an arbitrary number of lines */

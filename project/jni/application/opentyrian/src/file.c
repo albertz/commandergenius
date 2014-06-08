@@ -63,7 +63,7 @@ const char *data_dir( void )
 // prepend directory and fopen
 FILE *dir_fopen( const char *dir, const char *file, const char *mode )
 {
-	char *path = (char *)malloc(strlen(dir) + 1 + strlen(file) + 1);
+	char *path = malloc(strlen(dir) + 1 + strlen(file) + 1);
 	sprintf(path, "%s/%s", dir, file);
 	
 	FILE *f = fopen(path, mode);
