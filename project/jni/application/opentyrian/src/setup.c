@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -58,7 +58,7 @@ void JE_textMenuWait( JE_word *waitTime, JE_boolean doGamma )
 			lastkey_sym = SDLK_RETURN;
 		}
 		
-		if (has_mouse && input_grabbed)
+		if (has_mouse && input_grab_enabled)
 		{
 #ifdef MENU_SELECT_BY_MOUSE_MOVE
 			/* Whacky hack which changes menu selecton based on
@@ -101,4 +101,3 @@ void JE_textMenuWait( JE_word *waitTime, JE_boolean doGamma )
 	} while (!(inputDetected || *waitTime == 1 || haltGame));
 }
 
-// kate: tab-width 4; vim: set noet:

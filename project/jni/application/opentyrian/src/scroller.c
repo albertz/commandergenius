@@ -1,5 +1,5 @@
 /*
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -32,6 +32,8 @@
 #include "vga256d.h"
 #include "video.h"
 
+#include <string.h>
+
 const struct about_text_type about_text[] =
 {
 	{0x30, "----- ~OpenTyrian~ -----"},
@@ -54,9 +56,9 @@ const struct about_text_type about_text[] =
 	{0x0e, "the game and reporting bugs."},
 	{0x00, ""},
 	{0x00, ""},
-	{0x05, "Thanks to ~MAME~ and ~DOSBox~"},
-	{0x05, "for the FM emulator and"},
-	{0x05, "~AdPlug~ for the Loudness code."},
+	{0x05, "Thanks to ~DOSBox~ for the"},
+	{0x05, "FM-Synthesis emulator and"},
+	{0x05, "~AdPlug~ for the Loudness player."},
 	{0x00, ""},
 	{0x00, ""},
 	{0x32, "And special thanks to ~Jason Emery~"},
@@ -154,7 +156,7 @@ void scroller_sine( const struct about_text_type text[] )
 			for (int i = 0; i < MAX_COINS/2; i++)
 			{
 				struct coin_type *coin = &coins[i];
-				blit_sprite2(VGAScreen, coin->x, coin->y, eShapes5, coin_defs[coin->type].shape_num + coin->cur_frame);
+				blit_sprite2(VGAScreen, coin->x, coin->y, eShapes[4], coin_defs[coin->type].shape_num + coin->cur_frame);
 			}
 		}
 
@@ -210,7 +212,7 @@ void scroller_sine( const struct about_text_type text[] )
 			for (int i = MAX_COINS/2; i < MAX_COINS; i++)
 			{
 				struct coin_type *coin = &coins[i];
-				blit_sprite2(VGAScreen, coin->x, coin->y, eShapes5, coin_defs[coin->type].shape_num + coin->cur_frame);
+				blit_sprite2(VGAScreen, coin->x, coin->y, eShapes[4], coin_defs[coin->type].shape_num + coin->cur_frame);
 			}
 		}
 
@@ -289,7 +291,7 @@ void scroller_sine( const struct about_text_type text[] )
 				}
 				beer[i].y += beer[i].vy;
 
-				blit_sprite2x2(VGAScreen, beer[i].x, beer[i].y, eShapes5, BEER_SHAPE);
+				blit_sprite2x2(VGAScreen, beer[i].x, beer[i].y, eShapes[4], BEER_SHAPE);
 			}
 		}
 
@@ -310,4 +312,3 @@ void scroller_sine( const struct about_text_type text[] )
 	fade_black(10);
 }
 
-// kate: tab-width 4; vim: set noet:

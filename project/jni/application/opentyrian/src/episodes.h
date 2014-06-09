@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -28,6 +28,11 @@
 
 #define FIRST_LEVEL 1
 #define EPISODE_MAX 5
+#ifdef TYRIAN2000
+#define EPISODE_AVAILABLE 5
+#else
+#define EPISODE_AVAILABLE 4
+#endif
 
 typedef struct
 {
@@ -46,7 +51,7 @@ typedef struct
 	JE_byte     sound;
 	JE_byte     trail;
 	JE_byte     shipblastfilter;
-} JE_WeaponType[WEAP_NUM + 1]; /* [0..weapnum] */
+} JE_WeaponType;
 
 typedef struct
 {
@@ -147,7 +152,7 @@ typedef struct
 } JE_EnemyDatType[ENEMY_NUM + 1]; /* [0..enemynum] */
 
 extern JE_WeaponPortType weaponPort;
-extern JE_WeaponType weapons;
+extern JE_WeaponType weapons[WEAP_NUM + 1]; /* [0..weapnum] */
 extern JE_PowerType powerSys;
 extern JE_ShipType ships;
 extern JE_OptionType options[OPTION_NUM + 1]; /* [0..optionnum] */
@@ -170,4 +175,3 @@ void JE_scanForEpisodes( void );
 
 #endif /* EPISODES_H */
 
-// kate: tab-width 4; vim: set noet:

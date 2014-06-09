@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -65,7 +65,8 @@ void JE_paramCheck( int argc, char *argv[] )
 		
 		{ 0, 0, NULL, false}
 	};
-	Option option = { 0, NULL, 0 };
+	
+	Option option;
 	
 	for (; ; )
 	{
@@ -263,4 +264,3 @@ void JE_paramCheck( int argc, char *argv[] )
 	}
 }
 
-// kate: tab-width 4; vim: set noet:

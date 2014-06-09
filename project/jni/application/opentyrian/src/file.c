@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -21,6 +21,8 @@
 
 #include "SDL.h"
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
 
 const char *custom_data_dir = ".";
 
@@ -76,11 +78,9 @@ FILE *dir_fopen( const char *dir, const char *file, const char *mode )
 // warn when dir_fopen fails
 FILE *dir_fopen_warn(  const char *dir, const char *file, const char *mode )
 {
-	errno = 0;
-	
 	FILE *f = dir_fopen(dir, file, mode);
 	
-	if (!f)
+	if (f == NULL)
 		fprintf(stderr, "warning: failed to open '%s': %s\n", file, strerror(errno));
 	
 	return f;
@@ -89,14 +89,12 @@ FILE *dir_fopen_warn(  const char *dir, const char *file, const char *mode )
 // die when dir_fopen fails
 FILE *dir_fopen_die( const char *dir, const char *file, const char *mode )
 {
-	errno = 0;
-	
 	FILE *f = dir_fopen(dir, file, mode);
 	
 	if (f == NULL)
 	{
 		fprintf(stderr, "error: failed to open '%s': %s\n", file, strerror(errno));
-		fprintf(stderr, "error: One or more of the required Tyrian 2.1 data files could not be found.\n"
+		fprintf(stderr, "error: One or more of the required Tyrian " TYRIAN_VERSION " data files could not be found.\n"
 		                "       Please read the README file.\n");
 		exit(1);
 	}
@@ -188,5 +186,3 @@ size_t efwrite( void *buffer, size_t size, size_t num, FILE *stream )
 	return f;
 }
 #endif
-
-// kate: tab-width 4; vim: set noet:

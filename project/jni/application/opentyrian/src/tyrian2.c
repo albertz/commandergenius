@@ -1,5 +1,5 @@
 /*
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -41,6 +41,7 @@
 #include "pcxmast.h"
 #include "picload.h"
 #include "setup.h"
+#include "shots.h"
 #include "sprite.h"
 #include "tyrian2.h"
 #include "vga256d.h"
@@ -158,6 +159,12 @@ void JE_starShowVGA( void )
 
 inline static void blit_enemy( SDL_Surface *surface, unsigned int i, signed int x_offset, signed int y_offset, signed int sprite_offset )
 {
+	if (enemy[i].sprite2s == NULL)
+	{
+		fprintf(stderr, "warning: enemy %d sprite missing\n", i);
+		return;
+	}
+	
 	const int x = enemy[i].ex + x_offset + tempMapXOfs,
 	          y = enemy[i].ey + y_offset;
 	const unsigned int index = enemy[i].egr[enemy[i].enemycycle - 1] + sprite_offset;
@@ -444,66 +451,64 @@ enemy_still_exists:
 									soundQueue[temp] = weapons[temp3].sound;
 								}
 
-								tempPos = weapons[temp3].max;
-
 								if (enemy[i].aniactive == 2)
 									enemy[i].aniactive = 1;
 
-								if (++enemy[i].eshotmultipos[j-1] > tempPos)
+								if (++enemy[i].eshotmultipos[j-1] > weapons[temp3].max)
 									enemy[i].eshotmultipos[j-1] = 1;
 
-								tempPos = enemy[i].eshotmultipos[j-1];
+								int tempPos = enemy[i].eshotmultipos[j-1] - 1;
 
 								if (j == 1)
 									temp2 = 4;
 
-								enemyShot[b].sx = tempX + weapons[temp3].bx[tempPos-1] + tempMapXOfs;
-								enemyShot[b].sy = tempY + weapons[temp3].by[tempPos-1];
-								enemyShot[b].sdmg = weapons[temp3].attack[tempPos-1];
+								enemyShot[b].sx = tempX + weapons[temp3].bx[tempPos] + tempMapXOfs;
+								enemyShot[b].sy = tempY + weapons[temp3].by[tempPos];
+								enemyShot[b].sdmg = weapons[temp3].attack[tempPos];
 								enemyShot[b].tx = weapons[temp3].tx;
 								enemyShot[b].ty = weapons[temp3].ty;
-								enemyShot[b].duration = weapons[temp3].del[tempPos-1];
+								enemyShot[b].duration = weapons[temp3].del[tempPos];
 								enemyShot[b].animate = 0;
 								enemyShot[b].animax = weapons[temp3].weapani;
 
-								enemyShot[b].sgr = weapons[temp3].sg[tempPos-1];
+								enemyShot[b].sgr = weapons[temp3].sg[tempPos];
 								switch (j)
 								{
 								case 1:
 									enemyShot[b].syc = weapons[temp3].acceleration;
 									enemyShot[b].sxc = weapons[temp3].accelerationx;
 
-									enemyShot[b].sxm = weapons[temp3].sx[tempPos-1];
-									enemyShot[b].sym = weapons[temp3].sy[tempPos-1];
+									enemyShot[b].sxm = weapons[temp3].sx[tempPos];
+									enemyShot[b].sym = weapons[temp3].sy[tempPos];
 									break;
 								case 3:
 									enemyShot[b].sxc = -weapons[temp3].acceleration;
 									enemyShot[b].syc = weapons[temp3].accelerationx;
 
-									enemyShot[b].sxm = -weapons[temp3].sy[tempPos-1];
-									enemyShot[b].sym = -weapons[temp3].sx[tempPos-1];
+									enemyShot[b].sxm = -weapons[temp3].sy[tempPos];
+									enemyShot[b].sym = -weapons[temp3].sx[tempPos];
 									break;
 								case 2:
 									enemyShot[b].sxc = weapons[temp3].acceleration;
 									enemyShot[b].syc = -weapons[temp3].acceleration;
 
-									enemyShot[b].sxm = weapons[temp3].sy[tempPos-1];
-									enemyShot[b].sym = -weapons[temp3].sx[tempPos-1];
+									enemyShot[b].sxm = weapons[temp3].sy[tempPos];
+									enemyShot[b].sym = -weapons[temp3].sx[tempPos];
 									break;
 								}
 
 								if (weapons[temp3].aim > 0)
 								{
-									temp4 = weapons[temp3].aim;
+									int aim = weapons[temp3].aim;
 
 									/*DIF*/
 									if (difficultyLevel > 2)
 									{
-										temp4 += difficultyLevel - 2;
+										aim += difficultyLevel - 2;
 									}
 
-									tempX2 = player[0].x;
-									tempY2 = player[0].y;
+									JE_word target_x = player[0].x;
+									JE_word target_y = player[0].y;
 
 									if (twoPlayerMode)
 									{
@@ -517,23 +522,20 @@ enemy_still_exists:
 
 										if (temp == 1)
 										{
-											tempX2 = player[1].x - 25;
-											tempY2 = player[1].y;
+											target_x = player[1].x - 25;
+											target_y = player[1].y;
 										}
 									}
 
-									tempI = (tempX2 + 25) - tempX - tempMapXOfs - 4;
-									if (tempI == 0)
-										tempI++;
-									tempI2 = tempY2 - tempY;
-									if (tempI2 == 0)
-										tempI2++;
-									if (abs(tempI) > abs(tempI2))
-										tempI3 = abs(tempI);
-									else
-										tempI3 = abs(tempI2);
-									enemyShot[b].sxm = roundf(((float)tempI / tempI3) * temp4);
-									enemyShot[b].sym = roundf(((float)tempI2 / tempI3) * temp4);
+									int relative_x = (target_x + 25) - tempX - tempMapXOfs - 4;
+									if (relative_x == 0)
+										relative_x = 1;
+									int relative_y = target_y - tempY;
+									if (relative_y == 0)
+										relative_y = 1;
+									const int longest_side = MAX(abs(relative_x), abs(relative_y));
+									enemyShot[b].sxm = roundf((float)relative_x / longest_side * aim);
+									enemyShot[b].sym = roundf((float)relative_y / longest_side * aim);
 								}
 							}
 							break;
@@ -565,38 +567,35 @@ enemy_still_exists:
 						goto draw_enemy_end;
 
 					tempW = enemy[i].launchtype;
-					JE_newEnemy(enemyOffset == 50 ? 75 : enemyOffset - 25);
+					b = JE_newEnemy(enemyOffset == 50 ? 75 : enemyOffset - 25, tempW, 0);
 
 					/*Launch Enemy Placement*/
 					if (b > 0)
 					{
-						tempI = tempX;
-						tempI2 = tempY + enemyDat[enemy[b-1].enemytype].startyc;
-						if (enemy[b-1].size == 0)
+						struct JE_SingleEnemyType* e = &enemy[b-1];
+
+						e->ex = tempX;
+						e->ey = tempY + enemyDat[e->enemytype].startyc;
+						if (e->size == 0)
+							e->ey -= 7;
+
+						if (e->launchtype > 0 && e->launchfreq == 0)
 						{
-							tempI -= 0;
-							tempI2 -= 7;
-						}
-						if (enemy[b-1].launchtype > 0 && enemy[b-1].launchfreq == 0)
-						{
-							if (enemy[b-1].launchtype > 90)
+							if (e->launchtype > 90)
 							{
-								tempI += mt_rand() % ((enemy[b-1].launchtype - 90) * 4) - (enemy[b-1].launchtype - 90) * 2;
+								e->ex += mt_rand() % ((e->launchtype - 90) * 4) - (e->launchtype - 90) * 2;
 							}
 							else
 							{
-								tempI4 = (player[0].x + 25) - tempX - tempMapXOfs - 4;
-								if (tempI4 == 0)
-									tempI4++;
+								int target_x = (player[0].x + 25) - tempX - tempMapXOfs - 4;
+								if (target_x == 0)
+									target_x = 1;
 								int tempI5 = player[0].y - tempY;
 								if (tempI5 == 0)
-									tempI5++;
-								if (abs(tempI4) > abs(tempI5))
-									tempI3 = abs(tempI4);
-								else
-									tempI3 = abs(tempI5);
-								enemy[b-1].exc = roundf(((float)tempI4 / tempI3) * enemy[b-1].launchtype);
-								enemy[b-1].eyc = roundf(((float)tempI5 / tempI3) * enemy[b-1].launchtype);
+									tempI5 = 1;
+								const int longest_side = MAX(abs(target_x), abs(tempI5));
+								e->exc = roundf(((float)target_x / longest_side) * e->launchtype);
+								e->eyc = roundf(((float)tempI5 / longest_side) * e->launchtype);
 							}
 						}
 
@@ -608,11 +607,8 @@ enemy_still_exists:
 						if (enemy[i].launchspecial == 1
 						    && enemy[i].linknum < 100)
 						{
-							enemy[b-1].linknum = enemy[i].linknum;
+							e->linknum = enemy[i].linknum;
 						}
-
-						enemy[b-1].ex = tempI;
-						enemy[b-1].ey = tempI2;
 					}
 				}
 			}
@@ -626,10 +622,6 @@ draw_enemy_end:
 
 void JE_main( void )
 {
-	int i;
-
-	Uint8 *s; /* screen pointer, 8-bit specific */
-
 	char buffer[256];
 
 	int lastEnemyOnScreen;
@@ -657,10 +649,10 @@ start_level:
 
 	JE_clearKeyboard();
 
-	free_sprite2s(&eShapes1);
-	free_sprite2s(&eShapes2);
-	free_sprite2s(&eShapes3);
-	free_sprite2s(&eShapes4);
+	free_sprite2s(&eShapes[0]);
+	free_sprite2s(&eShapes[1]);
+	free_sprite2s(&eShapes[2]);
+	free_sprite2s(&eShapes[3]);
 
 	/* Normal speed */
 	if (fastPlay != 0)
@@ -743,7 +735,7 @@ start_level_first:
 		player[i].is_alive = true;
 
 	oldDifficultyLevel = difficultyLevel;
-	if (episodeNum == 4)
+	if (episodeNum == EPISODE_AVAILABLE)
 		difficultyLevel--;
 	if (difficultyLevel < 1)
 		difficultyLevel = 1;
@@ -808,11 +800,10 @@ start_level_first:
 	backPos2 = 0;
 	backPos3 = 0;
 	power = 0;
-	starY = VGAScreen->pitch;
+	starfield_speed = 1;
 
 	/* Setup player ship graphics */
 	JE_getShipInfo();
-	tempI = (((player[0].x - mouseX) / 2) * 2) * 168; // is this used for anything?
 
 	for (uint i = 0; i < COUNTOF(player); ++i)
 	{
@@ -866,8 +857,6 @@ start_level_first:
 
 	forceEvents = false;  /*Force events to continue if background movement = 0*/
 
-	uniqueEnemy = false;  /*Look in MakeEnemy under shape bank*/
-
 	superEnemy254Jump = 0;   /*When Enemy with PL 254 dies*/
 
 	/* Filter Status */
@@ -920,13 +909,15 @@ start_level_first:
 
 	newkey = false;
 
+#ifdef WITH_NETWORK
 	if (isNetworkGame)
 	{
 		JE_clearSpecialRequests();
 		mt_srand(32402394);
 	}
+#endif
 
-	JE_setupStars();
+	initialize_starfield();
 
 	JE_setNewGameSpeed();
 
@@ -1306,42 +1297,9 @@ level_loop:
 		}
 	}
 
-	/*---------------------------STARS--------------------------*/
-	/* DRAWSTARS */
 	if (starActive || astralDuration > 0)
 	{
-		s = (Uint8 *)VGAScreen->pixels;
-
-		for (i = MAX_STARS; i--; )
-		{
-			starDat[i].sLoc += starDat[i].sMov + starY;
-			if (starDat[i].sLoc < 177 * VGAScreen->pitch)
-			{
-				if (*(s + starDat[i].sLoc) == 0)
-				{
-					*(s + starDat[i].sLoc) = starDat[i].sC;
-				}
-				if (starDat[i].sC - 4 >= 9 * 16)
-				{
-					if (*(s + starDat[i].sLoc + 1) == 0)
-					{
-						*(s + starDat[i].sLoc + 1) = starDat[i].sC - 4;
-					}
-					if (starDat[i].sLoc > 0 && *(s + starDat[i].sLoc - 1) == 0)
-					{
-						*(s + starDat[i].sLoc - 1) = starDat[i].sC - 4;
-					}
-					if (*(s + starDat[i].sLoc + VGAScreen->pitch) == 0)
-					{
-						*(s + starDat[i].sLoc + VGAScreen->pitch) = starDat[i].sC - 4;
-					}
-					if (starDat[i].sLoc >= VGAScreen->pitch && *(s + starDat[i].sLoc - VGAScreen->pitch) == 0)
-					{
-						*(s + starDat[i].sLoc - VGAScreen->pitch) = starDat[i].sC - 4;
-					}
-				}
-			}
-		}
+		update_and_draw_starfield(VGAScreen, starfield_speed);
 	}
 
 	if (processorType > 1 && smoothies[5-1])
@@ -1435,7 +1393,7 @@ level_loop:
 		tempW = levelEnemy[mt_rand() % levelEnemyMax];
 		if (tempW == 2)
 			soundQueue[3] = S_WEAPON_7;
-		JE_newEnemy(0);
+		b = JE_newEnemy(0, tempW, 0);
 	}
 
 	if (processorType > 1 && smoothies[3-1])
@@ -1483,140 +1441,14 @@ level_loop:
 		{
 			bool is_special = false;
 			int tempShotX = 0, tempShotY = 0;
-
-			shotAvail[z]--;
-			if (z != MAX_PWEAPON - 1)
+			JE_byte chain;
+			JE_byte playerNum;
+			JE_word tempX2, tempY2;
+			JE_integer damage;
+			
+			if (!player_shot_move_and_draw(z, &is_special, &tempShotX, &tempShotY, &damage, &temp2, &chain, &playerNum, &tempX2, &tempY2))
 			{
-
-				playerShotData[z].shotXM += playerShotData[z].shotXC;
-				playerShotData[z].shotX += playerShotData[z].shotXM;
-				tempI4 = playerShotData[z].shotXM;
-
-				if (playerShotData[z].shotXM > 100)
-				{
-					if (playerShotData[z].shotXM == 101)
-					{
-						playerShotData[z].shotX -= 101;
-						playerShotData[z].shotX += player[playerShotData[z].playerNumber-1].delta_x_shot_move;
-						playerShotData[z].shotY += player[playerShotData[z].playerNumber-1].delta_y_shot_move;
-					}
-					else
-					{
-						playerShotData[z].shotX -= 120;
-						playerShotData[z].shotX += player[playerShotData[z].playerNumber-1].delta_x_shot_move;
-					}
-				}
-
-				playerShotData[z].shotYM += playerShotData[z].shotYC;
-				playerShotData[z].shotY += playerShotData[z].shotYM;
-
-				if (playerShotData[z].shotYM > 100)
-				{
-					playerShotData[z].shotY -= 120;
-					playerShotData[z].shotY += player[playerShotData[z].playerNumber-1].delta_y_shot_move;
-				}
-
-				if (playerShotData[z].shotComplicated != 0)
-				{
-					playerShotData[z].shotDevX += playerShotData[z].shotDirX;
-					playerShotData[z].shotX += playerShotData[z].shotDevX;
-
-					if (abs(playerShotData[z].shotDevX) == playerShotData[z].shotCirSizeX)
-						playerShotData[z].shotDirX = -playerShotData[z].shotDirX;
-
-					playerShotData[z].shotDevY += playerShotData[z].shotDirY;
-					playerShotData[z].shotY += playerShotData[z].shotDevY;
-
-					if (abs(playerShotData[z].shotDevY) == playerShotData[z].shotCirSizeY)
-						playerShotData[z].shotDirY = -playerShotData[z].shotDirY;
-
-					/*Double Speed Circle Shots - add a second copy of above loop*/
-				}
-
-				tempShotX = playerShotData[z].shotX;
-				tempShotY = playerShotData[z].shotY;
-
-				if (playerShotData[z].shotX < -34 || playerShotData[z].shotX > 290 ||
-				    playerShotData[z].shotY < -15 || playerShotData[z].shotY > 190)
-				{
-					shotAvail[z] = 0;
-					goto draw_player_shot_loop_end;
-				}
-
-				if (playerShotData[z].shotTrail != 255)
-				{
-					if (playerShotData[z].shotTrail == 98)
-						JE_setupExplosion(playerShotData[z].shotX - playerShotData[z].shotXM, playerShotData[z].shotY - playerShotData[z].shotYM, 0, playerShotData[z].shotTrail, false, false);
-					else
-						JE_setupExplosion(playerShotData[z].shotX, playerShotData[z].shotY, 0, playerShotData[z].shotTrail, false, false);
-				}
-
-				if (playerShotData[z].aimAtEnemy != 0)
-				{
-					if (--playerShotData[z].aimDelay == 0)
-					{
-						playerShotData[z].aimDelay = playerShotData[z].aimDelayMax;
-
-						if (enemyAvail[playerShotData[z].aimAtEnemy] != 1)
-						{
-							if (playerShotData[z].shotX < enemy[playerShotData[z].aimAtEnemy].ex)
-								playerShotData[z].shotXM++;
-							else
-								playerShotData[z].shotXM--;
-
-							if (playerShotData[z].shotY < enemy[playerShotData[z].aimAtEnemy].ey)
-								playerShotData[z].shotYM++;
-							else
-								playerShotData[z].shotYM--;
-						}
-						else
-						{
-							if (playerShotData[z].shotXM > 0)
-								playerShotData[z].shotXM++;
-							else
-								playerShotData[z].shotXM--;
-						}
-					}
-				}
-
-				tempW = playerShotData[z].shotGr + playerShotData[z].shotAni;
-				if (++playerShotData[z].shotAni == playerShotData[z].shotAniMax)
-					playerShotData[z].shotAni = 0;
-
-				tempI2 = playerShotData[z].shotDmg;
-				temp2 = playerShotData[z].shotBlastFilter;
-				chain = playerShotData[z].chainReaction;
-				playerNum = playerShotData[z].playerNumber;
-
-				is_special = tempW > 60000;
-
-				if (is_special)
-				{
-					blit_sprite_blend(VGAScreen, tempShotX+1, tempShotY, OPTION_SHAPES, tempW - 60001);
-
-					tempX2 = sprite(OPTION_SHAPES, tempW - 60001)->width / 2;
-					tempY2 = sprite(OPTION_SHAPES, tempW - 60001)->height / 2;
-				}
-				else
-				{
-					if (tempW > 1000)
-					{
-						JE_doSP(tempShotX+1 + 6, tempShotY + 6, 5, 3, (tempW / 1000) << 4);
-						tempW = tempW % 1000;
-					}
-					if (tempW > 500)
-					{
-						if (background2 && tempShotY + shadowYDist < 190 && tempI4 < 100)
-							blit_sprite2_darken(VGAScreen, tempShotX+1, tempShotY + shadowYDist, shapesW2, tempW - 500);
-						blit_sprite2(VGAScreen, tempShotX+1, tempShotY, shapesW2, tempW - 500);
-					}
-					else
-					{
-						if (background2 && tempShotY + shadowYDist < 190 && tempI4 < 100)
-							blit_sprite2_darken(VGAScreen, tempShotX+1, tempShotY + shadowYDist, shapesC1, tempW);
-						blit_sprite2(VGAScreen, tempShotX+1, tempShotY, shapesC1, tempW);
-					}
-				}
+				goto draw_player_shot_loop_end;
 			}
 
 			for (b = 0; b < 100; b++)
@@ -1631,7 +1463,7 @@ level_loop:
 						collided = abs(enemy[b].ex + enemy[b].mapoffset - (player[0].x + 7)) < temp;
 						temp2 = 9;
 						chain = 0;
-						tempI2 = 10;
+						damage = 10;
 					}
 					else if (is_special)
 					{
@@ -1655,30 +1487,30 @@ level_loop:
 						if (chain > 0)
 						{
 							shotMultiPos[SHOT_MISC] = 0;
-							JE_initPlayerShot(0, SHOT_MISC, tempShotX, tempShotY, mouseX, mouseY, chain, playerNum);
+							b = player_shot_create(0, SHOT_MISC, tempShotX, tempShotY, mouseX, mouseY, chain, playerNum);
 							shotAvail[z] = 0;
 							goto draw_player_shot_loop_end;
 						}
 
 						infiniteShot = false;
 
-						if (tempI2 == 99)
+						if (damage == 99)
 						{
-							tempI2 = 0;
+							damage = 0;
 							doIced = 40;
 							enemy[b].iced = 40;
 						}
 						else
 						{
 							doIced = 0;
-							if (tempI2 >= 250)
+							if (damage >= 250)
 							{
-								tempI2 = tempI2 - 250;
+								damage = damage - 250;
 								infiniteShot = true;
 							}
 						}
 
-						tempI = enemy[b].armorleft;
+						int armorleft = enemy[b].armorleft;
 
 						temp = enemy[b].linknum;
 						if (temp == 0)
@@ -1706,24 +1538,24 @@ level_loop:
 							}
 						}
 
-						if (tempI > tempI2)
+						if (armorleft > damage)
 						{
 							if (z != MAX_PWEAPON - 1)
 							{
 								if (enemy[b].armorleft != 255)
 								{
-									enemy[b].armorleft -= tempI2;
+									enemy[b].armorleft -= damage;
 									JE_setupExplosion(tempShotX, tempShotY, 0, 0, false, false);
 								}
 								else
 								{
-									JE_doSP(tempShotX + 6, tempShotY + 6, tempI2 / 2 + 3, tempI2 / 4 + 2, temp2);
+									JE_doSP(tempShotX + 6, tempShotY + 6, damage / 2 + 3, damage / 4 + 2, temp2);
 								}
 							}
 
 							soundQueue[5] = S_ENEMY_HIT;
 
-							if ((tempI - tempI2 <= enemy[b].edlevel) &&
+							if ((armorleft - damage <= enemy[b].edlevel) &&
 							    ((!enemy[b].edamaged) ^ (enemy[b].edani < 0)))
 							{
 
@@ -1731,16 +1563,16 @@ level_loop:
 								{
 									if (enemyAvail[temp3] != 1)
 									{
-										temp4 = enemy[temp3].linknum;
+										int linknum = enemy[temp3].linknum;
 										if (
 										     (temp3 == b) ||
 										     (
 										       (temp != 255) &&
 										       (
-										         ((enemy[temp3].edlevel > 0) && (temp4 == temp)) ||
+										         ((enemy[temp3].edlevel > 0) && (linknum == temp)) ||
 										         (
-										           (enemyContinualDamage && (temp - 100 == temp4)) ||
-										           ((temp4 > 40) && (temp4 / 20 == temp / 20) && (temp4 <= temp))
+										           (enemyContinualDamage && (temp - 100 == linknum)) ||
+										           ((linknum > 40) && (linknum / 20 == temp / 20) && (linknum <= temp))
 										         )
 										       )
 										     )
@@ -1806,10 +1638,13 @@ level_loop:
 									    || ((temp3 > 40) && (temp3 / 20 == temp / 20) && (temp3 <= temp)))))
 									{
 
-										tempI3 = enemy[temp2].ex + enemy[temp2].mapoffset;
+										int enemy_screen_x = enemy[temp2].ex + enemy[temp2].mapoffset;
 
 										if (enemy[temp2].special)
-											globalFlags[enemy[temp2].flagnum] = enemy[temp2].setto;
+										{
+											assert((unsigned int) enemy[temp2].flagnum-1 < COUNTOF(globalFlags));
+											globalFlags[enemy[temp2].flagnum-1] = enemy[temp2].setto;
+										}
 
 										if ((enemy[temp2].enemydie > 0) &&
 										    !((superArcadeMode != SA_NONE) &&
@@ -1817,12 +1652,12 @@ level_loop:
 										{
 											int temp_b = b;
 											tempW = enemy[temp2].enemydie;
-											tempW2 = temp2 - (temp2 % 25);
+											int enemy_offset = temp2 - (temp2 % 25);
 											if (enemyDat[tempW].value > 30000)
 											{
-												tempW2 = 0;
+												enemy_offset = 0;
 											}
-											JE_newEnemy(tempW2);
+											b = JE_newEnemy(enemy_offset, tempW, 0);
 											if (b != 0) {
 												if ((superArcadeMode != SA_NONE) && (enemy[b-1].evalue > 30000))
 												{
@@ -1875,12 +1710,12 @@ level_loop:
 
 										if (enemyDat[enemy[temp2].enemytype].esize == 1)
 										{
-											JE_setupExplosionLarge(enemy[temp2].enemyground, enemy[temp2].explonum, tempI3, enemy[temp2].ey);
+											JE_setupExplosionLarge(enemy[temp2].enemyground, enemy[temp2].explonum, enemy_screen_x, enemy[temp2].ey);
 											soundQueue[6] = S_EXPLOSION_9;
 										}
 										else
 										{
-											JE_setupExplosion(tempI3, enemy[temp2].ey, 0, 1, false, false);
+											JE_setupExplosion(enemy_screen_x, enemy[temp2].ey, 0, 1, false, false);
 											soundQueue[6] = S_SELECT; // S_EXPLOSION_8
 										}
 									}
@@ -1890,21 +1725,20 @@ level_loop:
 
 						if (infiniteShot)
 						{
-							tempI2 += 250;
+							damage += 250;
 						}
 						else if (z != MAX_PWEAPON - 1)
 						{
-							if (tempI2 <= tempI)
+							if (damage <= armorleft)
 							{
 								shotAvail[z] = 0;
 								goto draw_player_shot_loop_end;
 							}
 							else
 							{
-								playerShotData[z].shotDmg -= tempI;
+								playerShotData[z].shotDmg -= armorleft;
 							}
 						}
-
 					}
 				}
 			}
@@ -2157,7 +1991,7 @@ draw_player_shot_loop_end:
 	if ((player[0].is_alive && player[0].armor < 6) ||
 	    (twoPlayerMode && !galagaMode && player[1].is_alive && player[1].armor < 6))
 	{
-		tempW2 = (player[0].is_alive && player[0].armor < 6) ? player[0].armor : player[1].armor;
+		int armor_amount = (player[0].is_alive && player[0].armor < 6) ? player[0].armor : player[1].armor;
 
 		if (armorShipDelay > 0)
 		{
@@ -2166,7 +2000,7 @@ draw_player_shot_loop_end:
 		else
 		{
 			tempW = 560;
-			JE_newEnemy(50);
+			b = JE_newEnemy(50, tempW, 0);
 			if (b > 0)
 			{
 				enemy[b-1].enemydie = 560 + (mt_rand() % 3) + 1;
@@ -2180,7 +2014,7 @@ draw_player_shot_loop_end:
 		    (twoPlayerMode && player[1].is_alive && player[1].armor < 6 && (!isNetworkGame || thisPlayerNum == 2)))
 		{
 
-			tempW = tempW2 * 4 + 8;
+			tempW = armor_amount * 4 + 8;
 			if (warningSoundDelay > tempW)
 				warningSoundDelay = tempW;
 
@@ -2195,10 +2029,10 @@ draw_player_shot_loop_end:
 			}
 
 			warningCol += warningColChange;
-			if (warningCol > 113 + (14 - (tempW2 * 2)))
+			if (warningCol > 113 + (14 - (armor_amount * 2)))
 			{
 				warningColChange = -warningColChange;
-				warningCol = 113 + (14 - (tempW2 * 2));
+				warningCol = 113 + (14 - (armor_amount * 2));
 			}
 			else if (warningCol < 113)
 			{
@@ -2416,6 +2250,7 @@ draw_player_shot_loop_end:
 	}
 
 	/*Network Update*/
+#ifdef WITH_NETWORK
 	if (isNetworkGame)
 	{
 		if (!reallyEndLevel)
@@ -2461,10 +2296,10 @@ draw_player_shot_loop_end:
 				}
 				if (requests & 8) // nortship
 				{
-					player[0].items.ship = 12;
-					player[0].items.special = 13;
-					player[0].items.weapon[FRONT_WEAPON].id = 36;
-					player[0].items.weapon[REAR_WEAPON].id = 37;
+					player[0].items.ship = 12;                     // Nort Ship
+					player[0].items.special = 13;                  // Astral Zone
+					player[0].items.weapon[FRONT_WEAPON].id = 36;  // NortShip Super Pulse
+					player[0].items.weapon[REAR_WEAPON].id = 37;   // NortShip Spreader
 					shipGr = 1;
 				}
 
@@ -2483,6 +2318,7 @@ draw_player_shot_loop_end:
 
 		JE_clearSpecialRequests();
 	}
+#endif
 
 	/** Test **/
 	JE_drawSP();
@@ -3171,6 +3007,18 @@ new_game:
 						temp = atoi(strnztcpy(buffer, s + 3, 3));
 						play_song(temp - 1);
 						break;
+						
+#ifdef TYRIAN2000
+					case 'T':
+						/* TODO: Timed Battle ]T[ 43 44 45 46 47 */
+						printf("]T[ 43 44 45 46 47 handle timed battle!");
+						break;
+
+					case 'q':
+						/* TODO: Timed Battle end */
+						printf("handle timed battle end flag!");
+						break;
+#endif
 					}
 				}
 
@@ -3352,13 +3200,14 @@ new_game:
 bool JE_titleScreen( JE_boolean animate )
 {
 	bool quit = false;
-#ifdef ANDROID
-	const JE_shortint menunum = 5; // Quit not possible, Android manages life cycle!
-	const JE_byte menu_top = 96, menu_spacing = 16;
+
+#ifdef TYRIAN2000
+	const int menunum = 6;
 #else
-	const JE_shortint menunum = 6;
-	const JE_byte menu_top = 96, menu_spacing = 14;
+	const int menunum = 7;
 #endif
+
+	const int menu_top = 96, menu_spacing = 14;
 
 #ifdef ANDROID
 	// Show text input button in main menu, to make entering cheats possible
@@ -3368,7 +3217,7 @@ bool JE_titleScreen( JE_boolean animate )
 	unsigned int arcade_code_i[SA_ENGAGE] = { 0 };
 
 	JE_word waitForDemo;
-	JE_shortint menu = 0;
+	int menu = 0;
 	JE_boolean redraw = true,
 	           fadeIn = false;
 
@@ -3383,6 +3232,7 @@ bool JE_titleScreen( JE_boolean animate )
 	gameLoaded = false;
 	jumpSection = false;
 
+#ifdef WITH_NETWORK
 	if (isNetworkGame)
 	{
 		JE_loadPic(VGAScreen, 2, false);
@@ -3449,7 +3299,7 @@ bool JE_titleScreen( JE_boolean animate )
 		for (uint i = 0; i < COUNTOF(player); ++i)
 			player[i].cash = 0;
 
-		player[0].items.ship = 11;
+		player[0].items.ship = 11;  // Silver Ship
 
 		while (!network_is_sync())
 		{
@@ -3461,6 +3311,7 @@ bool JE_titleScreen( JE_boolean animate )
 		}
 	}
 	else
+#endif
 	{
 		do
 		{
@@ -3700,9 +3551,11 @@ bool JE_titleScreen( JE_boolean animate )
 					{
 					case 0: /* New game */
 						fade_black(10);
-						if (select_gameplay() && select_episode() && select_difficulty())
+						
+						if (select_gameplay())
 						{
-							gameLoaded = true;
+							if (select_episode() && select_difficulty())
+								gameLoaded = true;
 
 							initialDifficulty = difficultyLevel;
 
@@ -3710,15 +3563,17 @@ bool JE_titleScreen( JE_boolean animate )
 							{
 								player[0].cash = 0;
 
-								player[0].items.ship = 8;
+								player[0].items.ship = 8;  // Stalker
 							}
 							else if (twoPlayerMode)
 							{
 								for (uint i = 0; i < COUNTOF(player); ++i)
 									player[i].cash = 0;
-
-								player[0].items.ship = 11;
+								
+								player[0].items.ship = 11;  // Silver Ship
+								
 								difficultyLevel++;
+								
 								inputDevice[0] = 1;
 								inputDevice[1] = 2;
 							}
@@ -3728,9 +3583,11 @@ bool JE_titleScreen( JE_boolean animate )
 							}
 							else
 							{
-								ulong initial_cash[] = { 10000, 15000, 20000, 30000 };
+								// allows player to smuggle arcade/super-arcade ships into full game
+								
+								ulong initial_cash[] = { 10000, 15000, 20000, 30000, 35000 };
 
-								assert(episodeNum >= 1 && episodeNum <= 4);
+								assert(episodeNum >= 1 && episodeNum <= EPISODE_AVAILABLE);
 								player[0].cash = initial_cash[episodeNum-1];
 							}
 						}
@@ -3752,12 +3609,18 @@ bool JE_titleScreen( JE_boolean animate )
 						opentyrian_menu();
 						fadeIn = true;
 						break;
+#ifdef TYRIAN2000
+					case 5: /* Quit */
+						quit = true;
+						break;
+#else
 					case 5: /* Demo */
 						play_demo = true;
 						break;
 					case 6: /* Quit */
 						quit = true;
 						break;
+#endif
 					}
 					redraw = true;
 					break;
@@ -3889,73 +3752,53 @@ void JE_displayText( void )
 	levelWarningDisplay = false;
 }
 
-void JE_newEnemy( int enemyOffset )
+Sint16 JE_newEnemy( int enemyOffset, Uint16 eDatI, Sint16 uniqueShapeTableI )
 {
-	b = 0; // stupid global
-
-	for (int i = enemyOffset; i < enemyOffset + 25; i++)
+	for (int i = enemyOffset; i < enemyOffset + 25; ++i)
 	{
 		if (enemyAvail[i] == 1)
 		{
-			b = i+1;
-			enemyAvail[b-1] = JE_makeEnemy(&enemy[b-1]);
-			break;
+			enemyAvail[i] = JE_makeEnemy(&enemy[i], eDatI, uniqueShapeTableI);
+			return i + 1;
 		}
 	}
+	
+	return 0;
 }
 
-uint JE_makeEnemy( struct JE_SingleEnemyType *enemy ) // tempW, uniqueEnemy, tempI2, b
+uint JE_makeEnemy( struct JE_SingleEnemyType *enemy, Uint16 eDatI, Sint16 uniqueShapeTableI )
 {
-	uint a;
+	uint avail;
 
-	JE_byte temp;
-	int t = 0;
+	JE_byte shapeTableI;
 
-	if (superArcadeMode != SA_NONE && tempW == 534)
-		tempW = 533;
+	if (superArcadeMode != SA_NONE && eDatI == 534)
+		eDatI = 533;
 
 	enemyShapeTables[5-1] = 21;   /*Coins&Gems*/
 	enemyShapeTables[6-1] = 26;   /*Two-Player Stuff*/
 
-	if (uniqueEnemy)
+	if (uniqueShapeTableI > 0)
 	{
-		temp = tempI2;
-		uniqueEnemy = false;
+		shapeTableI = uniqueShapeTableI;
 	}
 	else
 	{
-		temp = enemyDat[tempW].shapebank;
+		shapeTableI = enemyDat[eDatI].shapebank;
 	}
-
+	
+	Sprite2_array *sprite2s = NULL;
 	for (uint i = 0; i < 6; ++i)
-	{
-		if (temp == enemyShapeTables[i])
-		{
-			switch (i)
-			{
-			case 0:
-				enemy->sprite2s = &eShapes1;
-				break;
-			case 1:
-				enemy->sprite2s = &eShapes2;
-				break;
-			case 2:
-				enemy->sprite2s = &eShapes3;
-				break;
-			case 3:
-				enemy->sprite2s = &eShapes4;
-				break;
-			case 4:
-				enemy->sprite2s = &eShapes5;
-				break;
-			case 5:
-				enemy->sprite2s = &eShapes6;
-				break;
-			}
-		}
-	}
+		if (shapeTableI == enemyShapeTables[i])
+			sprite2s = &eShapes[i];
+	
+	if (sprite2s != NULL)
+		enemy->sprite2s = sprite2s;
+	else
+		// maintain buggy Tyrian behavior (use shape table value from previous enemy that occupied this index in the enemy array)
+		fprintf(stderr, "warning: ignoring sprite from unloaded shape table %d\n", shapeTableI);
 
-	enemy->enemydatofs = &enemyDat[tempW];
+	enemy->enemydatofs = &enemyDat[eDatI];
 
 	enemy->mapoffset = 0;
 
@@ -3964,17 +3807,16 @@ uint JE_makeEnemy( struct JE_SingleEnemyType *enemy ) // tempW, uniqueEnemy, tem
 		enemy->eshotmultipos[i] = 0;
 	}
 
-	temp4 = enemyDat[tempW].explosiontype;
-	enemy->enemyground = ((temp4 & 0x01) == 0);
-	enemy->explonum = temp4 / 2;
+	enemy->enemyground = (enemyDat[eDatI].explosiontype & 1) == 0;
+	enemy->explonum = enemyDat[eDatI].explosiontype >> 1;
 
-	enemy->launchfreq = enemyDat[tempW].elaunchfreq;
-	enemy->launchwait = enemyDat[tempW].elaunchfreq;
-	enemy->launchtype = enemyDat[tempW].elaunchtype % 1000;
-	enemy->launchspecial = enemyDat[tempW].elaunchtype / 1000;
+	enemy->launchfreq = enemyDat[eDatI].elaunchfreq;
+	enemy->launchwait = enemyDat[eDatI].elaunchfreq;
+	enemy->launchtype = enemyDat[eDatI].elaunchtype % 1000;
+	enemy->launchspecial = enemyDat[eDatI].elaunchtype / 1000;
 
-	enemy->xaccel = enemyDat[tempW].xaccel;
-	enemy->yaccel = enemyDat[tempW].yaccel;
+	enemy->xaccel = enemyDat[eDatI].xaccel;
+	enemy->yaccel = enemyDat[eDatI].yaccel;
 
 	enemy->xminbounce = -10000;
 	enemy->xmaxbounce = 10000;
@@ -3984,13 +3826,13 @@ uint JE_makeEnemy( struct JE_SingleEnemyType *enemy ) // tempW, uniqueEnemy, tem
 
 	for (uint i = 0; i < 3; ++i)
 	{
-		enemy->tur[i] = enemyDat[tempW].tur[i];
+		enemy->tur[i] = enemyDat[eDatI].tur[i];
 	}
 
-	enemy->ani = enemyDat[tempW].ani;
+	enemy->ani = enemyDat[eDatI].ani;
 	enemy->animin = 1;
 
-	switch (enemyDat[tempW].animate)
+	switch (enemyDat[eDatI].animate)
 	{
 	case 0:
 		enemy->enemycycle = 1;
@@ -4012,20 +3854,20 @@ uint JE_makeEnemy( struct JE_SingleEnemyType *enemy ) // tempW, uniqueEnemy, tem
 		break;
 	}
 
-	if (enemyDat[tempW].startxc != 0)
-		enemy->ex = enemyDat[tempW].startx + (mt_rand() % (enemyDat[tempW].startxc * 2)) - enemyDat[tempW].startxc + 1;
+	if (enemyDat[eDatI].startxc != 0)
+		enemy->ex = enemyDat[eDatI].startx + (mt_rand() % (enemyDat[eDatI].startxc * 2)) - enemyDat[eDatI].startxc + 1;
 	else
-		enemy->ex = enemyDat[tempW].startx + 1;
+		enemy->ex = enemyDat[eDatI].startx + 1;
 
-	if (enemyDat[tempW].startyc != 0)
-		enemy->ey = enemyDat[tempW].starty + (mt_rand() % (enemyDat[tempW].startyc * 2)) - enemyDat[tempW].startyc + 1;
+	if (enemyDat[eDatI].startyc != 0)
+		enemy->ey = enemyDat[eDatI].starty + (mt_rand() % (enemyDat[eDatI].startyc * 2)) - enemyDat[eDatI].startyc + 1;
 	else
-		enemy->ey = enemyDat[tempW].starty + 1;
+		enemy->ey = enemyDat[eDatI].starty + 1;
 
-	enemy->exc = enemyDat[tempW].xmove;
-	enemy->eyc = enemyDat[tempW].ymove;
-	enemy->excc = enemyDat[tempW].xcaccel;
-	enemy->eycc = enemyDat[tempW].ycaccel;
+	enemy->exc = enemyDat[eDatI].xmove;
+	enemy->eyc = enemyDat[eDatI].ymove;
+	enemy->excc = enemyDat[eDatI].xcaccel;
+	enemy->eycc = enemyDat[eDatI].ycaccel;
 	enemy->exccw = abs(enemy->excc);
 	enemy->exccwmax = enemy->exccw;
 	enemy->eyccw = abs(enemy->eycc);
@@ -4035,24 +3877,24 @@ uint JE_makeEnemy( struct JE_SingleEnemyType *enemy ) // tempW, uniqueEnemy, tem
 	enemy->special = false;
 	enemy->iced = 0;
 
-	if (enemyDat[tempW].xrev == 0)
+	if (enemyDat[eDatI].xrev == 0)
 		enemy->exrev = 100;
-	else if (enemyDat[tempW].xrev == -99)
+	else if (enemyDat[eDatI].xrev == -99)
 		enemy->exrev = 0;
 	else
-		enemy->exrev = enemyDat[tempW].xrev;
+		enemy->exrev = enemyDat[eDatI].xrev;
 
-	if (enemyDat[tempW].yrev == 0)
+	if (enemyDat[eDatI].yrev == 0)
 		enemy->eyrev = 100;
-	else if (enemyDat[tempW].yrev == -99)
+	else if (enemyDat[eDatI].yrev == -99)
 		enemy->eyrev = 0;
 	else
-		enemy->eyrev = enemyDat[tempW].yrev;
+		enemy->eyrev = enemyDat[eDatI].yrev;
 
 	enemy->exca = (enemy->xaccel > 0) ? 1 : -1;
 	enemy->eyca = (enemy->yaccel > 0) ? 1 : -1;
 
-	enemy->enemytype = tempW;
+	enemy->enemytype = eDatI;
 
 	for (uint i = 0; i < 3; ++i)
 	{
@@ -4064,125 +3906,126 @@ uint JE_makeEnemy( struct JE_SingleEnemyType *enemy ) // tempW, uniqueEnemy, tem
 			enemy->eshotwait[i] = 255;
 	}
 	for (uint i = 0; i < 20; ++i)
-		enemy->egr[i] = enemyDat[tempW].egraphic[i];
-	enemy->size = enemyDat[tempW].esize;
+		enemy->egr[i] = enemyDat[eDatI].egraphic[i];
+	enemy->size = enemyDat[eDatI].esize;
 	enemy->linknum = 0;
-	enemy->edamaged = enemyDat[tempW].dani < 0;
-	enemy->enemydie = enemyDat[tempW].eenemydie;
+	enemy->edamaged = enemyDat[eDatI].dani < 0;
+	enemy->enemydie = enemyDat[eDatI].eenemydie;
 
-	enemy->freq[1-1] = enemyDat[tempW].freq[1-1];
-	enemy->freq[2-1] = enemyDat[tempW].freq[2-1];
-	enemy->freq[3-1] = enemyDat[tempW].freq[3-1];
+	enemy->freq[1-1] = enemyDat[eDatI].freq[1-1];
+	enemy->freq[2-1] = enemyDat[eDatI].freq[2-1];
+	enemy->freq[3-1] = enemyDat[eDatI].freq[3-1];
 
-	enemy->edani   = enemyDat[tempW].dani;
-	enemy->edgr    = enemyDat[tempW].dgr;
-	enemy->edlevel = enemyDat[tempW].dlevel;
+	enemy->edani   = enemyDat[eDatI].dani;
+	enemy->edgr    = enemyDat[eDatI].dgr;
+	enemy->edlevel = enemyDat[eDatI].dlevel;
 
 	enemy->fixedmovey = 0;
 
 	enemy->filter = 0x00;
 
-	if (enemyDat[tempW].value > 1 && enemyDat[tempW].value < 10000)
+	int tempValue = 0;
+	if (enemyDat[eDatI].value > 1 && enemyDat[eDatI].value < 10000)
 	{
 		switch (difficultyLevel)
 		{
 		case -1:
 		case 0:
-			t = enemyDat[tempW].value * 0.75f;
+			tempValue = enemyDat[eDatI].value * 0.75f;
 			break;
 		case 1:
 		case 2:
-			t = enemyDat[tempW].value;
+			tempValue = enemyDat[eDatI].value;
 			break;
 		case 3:
-			t = enemyDat[tempW].value * 1.125f;
+			tempValue = enemyDat[eDatI].value * 1.125f;
 			break;
 		case 4:
-			t = enemyDat[tempW].value * 1.5f;
+			tempValue = enemyDat[eDatI].value * 1.5f;
 			break;
 		case 5:
-			t = enemyDat[tempW].value * 2;
+			tempValue = enemyDat[eDatI].value * 2;
 			break;
 		case 6:
-			t = enemyDat[tempW].value * 2.5f;
+			tempValue = enemyDat[eDatI].value * 2.5f;
 			break;
 		case 7:
 		case 8:
-			t = enemyDat[tempW].value * 4;
+			tempValue = enemyDat[eDatI].value * 4;
 			break;
 		case 9:
 		case 10:
-			t = enemyDat[tempW].value * 8;
+			tempValue = enemyDat[eDatI].value * 8;
 			break;
 		}
-		if (t > 10000)
-			t = 10000;
-		enemy->evalue = t;
+		if (tempValue > 10000)
+			tempValue = 10000;
+		enemy->evalue = tempValue;
 	}
 	else
 	{
-		enemy->evalue = enemyDat[tempW].value;
+		enemy->evalue = enemyDat[eDatI].value;
 	}
 
-	t = 1;
-	if (enemyDat[tempW].armor > 0)
+	int tempArmor = 1;
+	if (enemyDat[eDatI].armor > 0)
 	{
-		if (enemyDat[tempW].armor != 255)
+		if (enemyDat[eDatI].armor != 255)
 		{
 			switch (difficultyLevel)
 			{
 			case -1:
 			case 0:
-				t = enemyDat[tempW].armor * 0.5f + 1;
+				tempArmor = enemyDat[eDatI].armor * 0.5f + 1;
 				break;
 			case 1:
-				t = enemyDat[tempW].armor * 0.75f + 1;
+				tempArmor = enemyDat[eDatI].armor * 0.75f + 1;
 				break;
 			case 2:
-				t = enemyDat[tempW].armor;
+				tempArmor = enemyDat[eDatI].armor;
 				break;
 			case 3:
-				t = enemyDat[tempW].armor * 1.2f;
+				tempArmor = enemyDat[eDatI].armor * 1.2f;
 				break;
 			case 4:
-				t = enemyDat[tempW].armor * 1.5f;
+				tempArmor = enemyDat[eDatI].armor * 1.5f;
 				break;
 			case 5:
-				t = enemyDat[tempW].armor * 1.8f;
+				tempArmor = enemyDat[eDatI].armor * 1.8f;
 				break;
 			case 6:
-				t = enemyDat[tempW].armor * 2;
+				tempArmor = enemyDat[eDatI].armor * 2;
 				break;
 			case 7:
-				t = enemyDat[tempW].armor * 3;
+				tempArmor = enemyDat[eDatI].armor * 3;
 				break;
 			case 8:
-				t = enemyDat[tempW].armor * 4;
+				tempArmor = enemyDat[eDatI].armor * 4;
 				break;
 			case 9:
 			case 10:
-				t = enemyDat[tempW].armor * 8;
+				tempArmor = enemyDat[eDatI].armor * 8;
 				break;
 			}
 
-			if (t > 254)
+			if (tempArmor > 254)
 			{
-				t = 254;
+				tempArmor = 254;
 			}
 		}
 		else
 		{
-			t = 255;
+			tempArmor = 255;
 		}
 
-		enemy->armorleft = t;
+		enemy->armorleft = tempArmor;
 
-		a = 0;
+		avail = 0;
 		enemy->scoreitem = false;
 	}
 	else
 	{
-		a = 2;
+		avail = 2;
 		enemy->armorleft = 255;
 		if (enemy->evalue != 0)
 			enemy->scoreitem = true;
@@ -4193,11 +4036,11 @@ uint JE_makeEnemy( struct JE_SingleEnemyType *enemy ) // tempW, uniqueEnemy, tem
 		totalEnemy++;  /*Destruction ratio*/
 	}
 
-	/*The returning A value indicates what to set ENEMYAVAIL to */
-	return a;
+	/* indicates what to set ENEMYAVAIL to */
+	return avail;
 }
 
-void JE_createNewEventEnemy( JE_byte enemyTypeOfs, JE_word enemyOffset )
+void JE_createNewEventEnemy( JE_byte enemyTypeOfs, JE_word enemyOffset, Sint16 uniqueShapeTableI )
 {
 	int i;
 
@@ -4219,7 +4062,7 @@ void JE_createNewEventEnemy( JE_byte enemyTypeOfs, JE_word enemyOffset )
 
 	tempW = eventRec[eventLoc-1].eventdat + enemyTypeOfs;
 
-	enemyAvail[b-1] = JE_makeEnemy(&enemy[b-1]);
+	enemyAvail[b-1] = JE_makeEnemy(&enemy[b-1], tempW, uniqueShapeTableI);
 
 	if (eventRec[eventLoc-1].eventdat2 != -99)
 	{
@@ -4290,24 +4133,30 @@ void JE_eventJump( JE_word jump )
 	eventLoc = tempW - 1;
 }
 
-JE_boolean JE_searchFor/*enemy*/( JE_byte PLType )
+bool JE_searchFor/*enemy*/( JE_byte PLType, JE_byte* out_index )
 {
-	JE_boolean tempb = false;
-	JE_byte temp;
+	int found_id = -1;
 
-	for (temp = 0; temp < 100; temp++)
+	for (int i = 0; i < 100; i++)
 	{
-		if (enemyAvail[temp] == 0 && enemy[temp].linknum == PLType)
+		if (enemyAvail[i] == 0 && enemy[i].linknum == PLType)
 		{
-			temp5 = temp + 1;
+			found_id = i;
 			if (galagaMode)
 			{
-				enemy[temp].evalue += enemy[temp].evalue;
+				enemy[i].evalue += enemy[i].evalue;
 			}
-			tempb = true;
 		}
 	}
-	return tempb;
+
+	if (found_id != -1) {
+		if (out_index) {
+			*out_index = found_id;
+		}
+		return true;
+	} else {
+		return false;
+	}
 }
 
 void JE_eventSystem( void )
@@ -4315,7 +4164,7 @@ void JE_eventSystem( void )
 	switch (eventRec[eventLoc-1].eventtype)
 	{
 	case 1:
-		starY = eventRec[eventLoc-1].eventdat * VGAScreen->pitch;
+		starfield_speed = eventRec[eventLoc-1].eventdat;
 		break;
 
 	case 2:
@@ -4365,68 +4214,40 @@ void JE_eventSystem( void )
 		}
 		break;
 
-	case 5:
-		if (enemyShapeTables[1-1] != eventRec[eventLoc-1].eventdat)
+	case 5:  // load enemy shape banks
 		{
-			if (eventRec[eventLoc-1].eventdat > 0)
+			Uint8 newEnemyShapeTables[] =
 			{
-				JE_loadCompShapes(&eShapes1, shapeFile[eventRec[eventLoc-1].eventdat -1]);      /* Enemy Bank 1 */
-				enemyShapeTables[1-1] = eventRec[eventLoc-1].eventdat;
-			}
-			else
+				eventRec[eventLoc-1].eventdat > 0 ? eventRec[eventLoc-1].eventdat : 0,
+				eventRec[eventLoc-1].eventdat2 > 0 ? eventRec[eventLoc-1].eventdat2 : 0,
+				eventRec[eventLoc-1].eventdat3 > 0 ? eventRec[eventLoc-1].eventdat3 : 0,
+				eventRec[eventLoc-1].eventdat4 > 0 ? eventRec[eventLoc-1].eventdat4 : 0,
+			};
+			
+			for (unsigned int i = 0; i < COUNTOF(newEnemyShapeTables); ++i)
 			{
-				free_sprite2s(&eShapes1);
-				enemyShapeTables[1-1] = 0;
-			}
-		}
-		if (enemyShapeTables[2-1] != eventRec[eventLoc-1].eventdat2)
-		{
-			if (eventRec[eventLoc-1].eventdat2 > 0)
-			{
-				JE_loadCompShapes(&eShapes2, shapeFile[eventRec[eventLoc-1].eventdat2-1]);      /* Enemy Bank 2 */
-				enemyShapeTables[2-1] = eventRec[eventLoc-1].eventdat2;
-			}
-			else
-			{
-				free_sprite2s(&eShapes2);
-				enemyShapeTables[2-1] = 0;
-			}
-		}
-		if (enemyShapeTables[3-1] != (unsigned char)eventRec[eventLoc-1].eventdat3)
-		{
-			if (eventRec[eventLoc-1].eventdat3 > 0)
-			{
-				JE_loadCompShapes(&eShapes3, shapeFile[eventRec[eventLoc-1].eventdat3-1]);      /* Enemy Bank 3 */
-				enemyShapeTables[3-1] = eventRec[eventLoc-1].eventdat3;
-			}
-			else
-			{
-				free_sprite2s(&eShapes3);
-				enemyShapeTables[3-1] = 0;
-			}
-		}
-		if (enemyShapeTables[4-1] != eventRec[eventLoc-1].eventdat4)
-		{
-			if (eventRec[eventLoc-1].eventdat4 > 0)
-			{
-				JE_loadCompShapes(&eShapes4, shapeFile[eventRec[eventLoc-1].eventdat4-1]);      /* Enemy Bank 4 */
-				enemyShapeTables[4-1] = eventRec[eventLoc-1].eventdat4;
-				enemyShapeTables[5-1] = 21;
-			}
-			else
-			{
-				free_sprite2s(&eShapes4);
-				enemyShapeTables[4-1] = 0;
+				if (enemyShapeTables[i] != newEnemyShapeTables[i])
+				{
+					if (newEnemyShapeTables[i] > 0)
+					{
+						assert(newEnemyShapeTables[i] <= COUNTOF(shapeFile));
+						JE_loadCompShapes(&eShapes[i], shapeFile[newEnemyShapeTables[i] - 1]);
+					}
+					else
+						free_sprite2s(&eShapes[i]);
+
+					enemyShapeTables[i] = newEnemyShapeTables[i];
+				}
 			}
 		}
 		break;
 
 	case 6: /* Ground Enemy */
-		JE_createNewEventEnemy(0, 25);
+		JE_createNewEventEnemy(0, 25, 0);
 		break;
 
 	case 7: /* Top Enemy */
-		JE_createNewEventEnemy(0, 50);
+		JE_createNewEventEnemy(0, 50, 0);
 		break;
 
 	case 8:
@@ -4438,7 +4259,7 @@ void JE_eventSystem( void )
 		break;
 
 	case 10: /* Ground Enemy 2 */
-		JE_createNewEventEnemy(0, 75);
+		JE_createNewEventEnemy(0, 75, 0);
 		break;
 
 	case 11:
@@ -4473,12 +4294,12 @@ void JE_eventSystem( void )
 				break;
 			}
 			eventRec[eventLoc-1].eventdat6 = 0;   /* We use EVENTDAT6 for the background */
-			JE_createNewEventEnemy(0, temp);
-			JE_createNewEventEnemy(1, temp);
+			JE_createNewEventEnemy(0, temp, 0);
+			JE_createNewEventEnemy(1, temp, 0);
 			enemy[b-1].ex += 24;
-			JE_createNewEventEnemy(2, temp);
+			JE_createNewEventEnemy(2, temp, 0);
 			enemy[b-1].ey -= 28;
-			JE_createNewEventEnemy(3, temp);
+			JE_createNewEventEnemy(3, temp, 0);
 			enemy[b-1].ex += 24;
 			enemy[b-1].ey -= 28;
 			break;
@@ -4492,7 +4313,7 @@ void JE_eventSystem( void )
 		break;
 
 	case 15: /* Sky Enemy */
-		JE_createNewEventEnemy(0, 0);
+		JE_createNewEventEnemy(0, 0, 0);
 		break;
 
 	case 16:
@@ -4508,7 +4329,7 @@ void JE_eventSystem( void )
 		break;
 
 	case 17: /* Ground Bottom */
-		JE_createNewEventEnemy(0, 25);
+		JE_createNewEventEnemy(0, 25, 0);
 		if (b > 0)
 		{
 			enemy[b-1].ey = 190 + eventRec[eventLoc-1].eventdat5;
@@ -4516,7 +4337,7 @@ void JE_eventSystem( void )
 		break;
 
 	case 18: /* Sky Enemy on Bottom */
-		JE_createNewEventEnemy(0, 0);
+		JE_createNewEventEnemy(0, 0, 0);
 		if (b > 0)
 		{
 			enemy[b-1].ey = 190 + eventRec[eventLoc-1].eventdat5;
@@ -4524,11 +4345,15 @@ void JE_eventSystem( void )
 		break;
 
 	case 19: /* Enemy Global Move */
+	{
+		int initial_i = 0, max_i = 0;
+		bool all_enemies = false;
+
 		if (eventRec[eventLoc-1].eventdat3 > 79 && eventRec[eventLoc-1].eventdat3 < 90)
 		{
-			temp2 = 1;
-			temp3 = 100;
-			temp4 = 0;
+			initial_i = 0;
+			max_i = 100;
+			all_enemies = false;
 			eventRec[eventLoc-1].eventdat4 = newPL[eventRec[eventLoc-1].eventdat3 - 80];
 		}
 		else
@@ -4536,54 +4361,55 @@ void JE_eventSystem( void )
 			switch (eventRec[eventLoc-1].eventdat3)
 			{
 			case 0:
-				temp2 = 1;
-				temp3 = 100;
-				temp4 = 0;
+				initial_i = 0;
+				max_i = 100;
+				all_enemies = false;
 				break;
 			case 2:
-				temp2 = 1;
-				temp3 = 25;
-				temp4 = 1;
+				initial_i = 0;
+				max_i = 25;
+				all_enemies = true;
 				break;
 			case 1:
-				temp2 = 26;
-				temp3 = 50;
-				temp4 = 1;
+				initial_i = 25;
+				max_i = 50;
+				all_enemies = true;
 				break;
 			case 3:
-				temp2 = 51;
-				temp3 = 75;
-				temp4 = 1;
+				initial_i = 50;
+				max_i = 75;
+				all_enemies = true;
 				break;
 			case 99:
-				temp2 = 1;
-				temp3 = 100;
-				temp4 = 1;
+				initial_i = 0;
+				max_i = 100;
+				all_enemies = true;
 				break;
 			}
 		}
 
-		for (temp = temp2-1; temp < temp3; temp++)
+		for (int i = initial_i; i < max_i; i++)
 		{
-			if (temp4 == 1 || enemy[temp].linknum == eventRec[eventLoc-1].eventdat4)
+			if (all_enemies || enemy[i].linknum == eventRec[eventLoc-1].eventdat4)
 			{
 				if (eventRec[eventLoc-1].eventdat != -99)
-					enemy[temp].exc = eventRec[eventLoc-1].eventdat;
+					enemy[i].exc = eventRec[eventLoc-1].eventdat;
 
 				if (eventRec[eventLoc-1].eventdat2 != -99)
-					enemy[temp].eyc = eventRec[eventLoc-1].eventdat2;
+					enemy[i].eyc = eventRec[eventLoc-1].eventdat2;
 
 				if (eventRec[eventLoc-1].eventdat6 != 0)
-					enemy[temp].fixedmovey = eventRec[eventLoc-1].eventdat6;
+					enemy[i].fixedmovey = eventRec[eventLoc-1].eventdat6;
 
 				if (eventRec[eventLoc-1].eventdat6 == -99)
-					enemy[temp].fixedmovey = 0;
+					enemy[i].fixedmovey = 0;
 
 				if (eventRec[eventLoc-1].eventdat5 > 0)
-					enemy[temp].enemycycle = eventRec[eventLoc-1].eventdat5;
+					enemy[i].enemycycle = eventRec[eventLoc-1].eventdat5;
 			}
 		}
 		break;
+	}
 
 	case 20: /* Enemy Global Accel */
 		if (eventRec[eventLoc-1].eventdat3 > 79 && eventRec[eventLoc-1].eventdat3 < 90)
@@ -4640,7 +4466,7 @@ void JE_eventSystem( void )
 		break;
 
 	case 23: /* Sky Enemy on Bottom */
-		JE_createNewEventEnemy(0, 50);
+		JE_createNewEventEnemy(0, 50, 0);
 		if (b > 0)
 			enemy[b-1].ey = 180 + eventRec[eventLoc-1].eventdat5;
 		break;
@@ -4756,7 +4582,7 @@ void JE_eventSystem( void )
 		break;
 
 	case 32:  // create enemy
-		JE_createNewEventEnemy(0, 50);
+		JE_createNewEventEnemy(0, 50, 0);
 		if (b > 0)
 			enemy[b-1].ey = 190;
 		break;
@@ -4817,15 +4643,15 @@ void JE_eventSystem( void )
 
 	case 38:
 		curLoc = eventRec[eventLoc-1].eventdat;
-		tempW2 = 1;
+		int new_event_loc = 1;
 		for (tempW = 0; tempW < maxEvent; tempW++)
 		{
 			if (eventRec[tempW].eventtime <= curLoc)
 			{
-				tempW2 = tempW+1 - 1;
+				new_event_loc = tempW+1 - 1;
 			}
 		}
-		eventLoc = tempW2;
+		eventLoc = new_event_loc;
 		break;
 
 	case 39: /* Enemy Global Linknum Change */
@@ -4926,7 +4752,6 @@ void JE_eventSystem( void )
 		eventRec[eventLoc-1].eventdat3 = 0;
 		tempDat3 = eventRec[eventLoc-1].eventdat6;
 		eventRec[eventLoc-1].eventdat6 = 0;
-		tempI2 = tempDat;
 		enemyDat[0].armor = tempDat3;
 		enemyDat[0].egraphic[1-1] = tempDat2;
 		switch (eventRec[eventLoc-1].eventtype - 48)
@@ -4944,9 +4769,7 @@ void JE_eventSystem( void )
 			temp = 75;
 			break;
 		}
-		uniqueEnemy = true;
-		JE_createNewEventEnemy(0, temp);
-		uniqueEnemy = false;
+		JE_createNewEventEnemy(0, temp, tempDat);
 		eventRec[eventLoc-1].eventdat = tempDat2;
 		eventRec[eventLoc-1].eventdat3 = tempDat;
 		eventRec[eventLoc-1].eventdat6 = tempDat3;
@@ -4977,7 +4800,7 @@ void JE_eventSystem( void )
 		break;
 
 	case 56: /* Ground2 Bottom */
-		JE_createNewEventEnemy(0, 75);
+		JE_createNewEventEnemy(0, 75, 0);
 		if (b > 0)
 			enemy[b-1].ey = 190;
 		break;
@@ -4999,7 +4822,7 @@ void JE_eventSystem( void )
 		break;
 
 	case 61:  // if specific flag set to specific value, skip events
-		if (globalFlags[eventRec[eventLoc-1].eventdat] == eventRec[eventLoc-1].eventdat2)
+		if (globalFlags[eventRec[eventLoc-1].eventdat-1] == eventRec[eventLoc-1].eventdat2)
 			eventLoc += eventRec[eventLoc-1].eventdat3;
 		break;
 
@@ -5053,14 +4876,14 @@ void JE_eventSystem( void )
 			bool found = false;
 
 			for (temp = 1; temp <= 19; temp++)
-				found |= JE_searchFor(temp);
+				found = found || JE_searchFor(temp, NULL);
 
 			if (!found)
 				JE_eventJump(eventRec[eventLoc-1].eventdat);
 		}
-		else if (!JE_searchFor(eventRec[eventLoc-1].eventdat2)
-		         && (eventRec[eventLoc-1].eventdat3 == 0 || !JE_searchFor(eventRec[eventLoc-1].eventdat3))
-		         && (eventRec[eventLoc-1].eventdat4 == 0 || !JE_searchFor(eventRec[eventLoc-1].eventdat4)))
+		else if (!JE_searchFor(eventRec[eventLoc-1].eventdat2, NULL)
+		         && (eventRec[eventLoc-1].eventdat3 == 0 || !JE_searchFor(eventRec[eventLoc-1].eventdat3, NULL))
+		         && (eventRec[eventLoc-1].eventdat4 == 0 || !JE_searchFor(eventRec[eventLoc-1].eventdat4, NULL)))
 		{
 			JE_eventJump(eventRec[eventLoc-1].eventdat);
 		}
@@ -5117,11 +4940,12 @@ void JE_eventSystem( void )
 
 		if (temp_no_clue)
 		{
+			JE_byte enemy_i;
 			do
 			{
 				temp = (mt_rand() % (eventRec[eventLoc-1].eventdat2 + 1 - eventRec[eventLoc-1].eventdat)) + eventRec[eventLoc-1].eventdat;
 			}
-			while (!(JE_searchFor(temp) && enemy[temp5-1].eyc == 0));
+			while (!(JE_searchFor(temp, &enemy_i) && enemy[enemy_i].eyc == 0));
 
 			newPL[eventRec[eventLoc-1].eventdat3 - 80] = temp;
 		}
@@ -5187,7 +5011,7 @@ void JE_eventSystem( void )
 		break;
 
 	default:
-		fprintf(stderr, "warning: event %d: unhandled event\n", eventRec[eventLoc-1].eventtype);
+		fprintf(stderr, "warning: ignoring unknown event %d\n", eventRec[eventLoc-1].eventtype);
 		break;
 	}
 
@@ -5325,4 +5149,3 @@ void draw_boss_bar( void )
 	}
 }
 
-// kate: tab-width 4; vim: set noet:

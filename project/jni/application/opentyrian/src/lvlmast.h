@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -21,9 +21,19 @@
 
 #include "opentyr.h"
 
-
 #define EVENT_MAXIMUM 2500
 
+#ifdef TYRIAN2000
+#define WEAP_NUM    818
+#define PORT_NUM    60
+#define ARMOR_NUM   4
+#define POWER_NUM   6
+#define ENGINE_NUM  6
+#define OPTION_NUM  37
+#define SHIP_NUM    18
+#define SHIELD_NUM  11
+#define SPECIAL_NUM 46
+#else
 #define WEAP_NUM    780
 #define PORT_NUM    42
 #define ARMOR_NUM   4
@@ -33,6 +43,7 @@
 #define SHIP_NUM    13
 #define SHIELD_NUM  10
 #define SPECIAL_NUM 46
+#endif
 
 #define ENEMY_NUM   850
 
@@ -46,4 +57,3 @@ extern const JE_char shapeFile[34]; /* [1..34] */
 
 #endif /* LVLMAST_H */
 
-// kate: tab-width 4; vim: set noet:

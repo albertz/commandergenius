@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -50,6 +50,12 @@ typedef bool   JE_boolean;
 typedef char   JE_char;
 typedef float  JE_real;
 
+#ifdef TYRIAN2000
+#define TYRIAN_VERSION "2000"
+#else
+#define TYRIAN_VERSION "2.1"
+#endif
+
 char *strnztcpy( char *to, const char *from, size_t count );
 
 extern const char *opentyrian_str, *opentyrian_version;
@@ -58,4 +64,3 @@ void opentyrian_menu( void );
 
 #endif /* OPENTYR_H */
 
-// kate: tab-width 4; vim: set noet:

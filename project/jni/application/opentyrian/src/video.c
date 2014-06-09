@@ -1,5 +1,5 @@
 /*
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -24,6 +24,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 bool fullscreen_enabled = false;
 
@@ -56,6 +57,7 @@ void init_video( void )
 	    !init_any_scaler(fullscreen_enabled) &&      // try any scaler in desired fullscreen state
 	    !init_any_scaler(!fullscreen_enabled))       // try any scaler in other fullscreen state
 	{
+		fprintf(stderr, "error: failed to initialize any supported video mode\n");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -105,7 +107,7 @@ bool init_scaler( unsigned int new_scaler, bool fullscreen )
 	
 	if (surface == NULL)
 	{
-		fprintf(stderr, "error: failed to initialize video mode %dx%dx%d: %s\n", w, h, bpp, SDL_GetError());
+		fprintf(stderr, "error: failed to initialize %s video mode %dx%dx%d: %s\n", fullscreen ? "fullscreen" : "windowed", w, h, bpp, SDL_GetError());
 		return false;
 	}
 	
@@ -113,7 +115,7 @@ bool init_scaler( unsigned int new_scaler, bool fullscreen )
 	h = surface->h;
 	bpp = surface->format->BitsPerPixel;
 	
-	printf("initialized video: %dx%dx%d\n", w, h, bpp);
+	printf("initialized video: %dx%dx%d %s\n", w, h, bpp, fullscreen ? "fullscreen" : "windowed");
 	
 	scaler = new_scaler;
 	fullscreen_enabled = fullscreen;
@@ -140,11 +142,20 @@ bool init_scaler( unsigned int new_scaler, bool fullscreen )
 		return false;
 	}
 	
-	input_grab();
+	input_grab(input_grab_enabled);
 	
 	JE_showVGA();
 	
 	return true;
+}
+
+bool can_init_any_scaler( bool fullscreen )
+{
+	for (int i = scalers_count - 1; i >= 0; --i)
+		if (can_init_scaler(i, fullscreen) != 0)
+			return true;
+	
+	return false;
 }
 
 bool init_any_scaler( bool fullscreen )
@@ -184,4 +195,3 @@ void scale_and_flip( SDL_Surface *src_surface )
 	SDL_Flip(dst_surface);
 }
 
-// kate: tab-width 4; vim: set noet:

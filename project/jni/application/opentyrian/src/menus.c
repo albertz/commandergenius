@@ -1,5 +1,5 @@
 /*
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -29,10 +29,10 @@
 #include "sprite.h"
 #include "video.h"
 
-char episode_name[6][31], difficulty_name[7][21], gameplay_name[5][26];
+char episode_name[6][31], difficulty_name[7][21], gameplay_name[GAMEPLAY_NAME_COUNT][26];
 
 bool
-select_menuitem_by_touch(JE_byte menu_top, JE_byte menu_spacing, JE_shortint menu_item_count, JE_shortint *current_item)
+select_menuitem_by_touch(int menu_top, int menu_spacing, int menu_item_count, int *current_item)
 {
 	if (!mousedown)
 		return false;
@@ -56,16 +56,16 @@ bool select_gameplay( void )
 	JE_loadPic(VGAScreen, 2, false);
 	JE_dString(VGAScreen, JE_fontCenter(gameplay_name[0], FONT_SHAPES), 20, gameplay_name[0], FONT_SHAPES);
 
-	const JE_byte menu_top = 30, menu_spacing = 24;
-	JE_shortint gameplay = 1,
-	    gameplay_max = 4;
+	int menu_top = 30, menu_spacing = 24;
+	int gameplay = 1,
+	    gameplay_max = GAMEPLAY_NAME_COUNT - 1;
 
 	bool fade_in = true;
 	for (; ; )
 	{
 		for (int i = 1; i <= gameplay_max; i++)
 		{
-			JE_outTextAdjust(VGAScreen, JE_fontCenter(gameplay_name[i], SMALL_FONT_SHAPES), i * menu_spacing + menu_top, gameplay_name[i], 15, - 4 + (i == gameplay ? 2 : 0) - (i == 4 ? 4 : 0), SMALL_FONT_SHAPES, true);
+			JE_outTextAdjust(VGAScreen, JE_fontCenter(gameplay_name[i], SMALL_FONT_SHAPES), i * menu_spacing + menu_top, gameplay_name[i], 15, -4 + (i == gameplay ? 2 : 0) - (i == (GAMEPLAY_NAME_COUNT - 1) ? 4 : 0), SMALL_FONT_SHAPES, true);
 		}
 		JE_showVGA();
 
@@ -87,8 +87,7 @@ bool select_gameplay( void )
 			{
 			case SDLK_UP:
 			case SDLK_LCTRL:
-				gameplay--;
-				if (gameplay < 1)
+				if (--gameplay < 1)
 				{
 					gameplay = gameplay_max;
 				}
@@ -96,8 +95,7 @@ bool select_gameplay( void )
 				break;
 			case SDLK_DOWN:
 			case SDLK_LALT:
-				gameplay++;
-				if (gameplay > gameplay_max)
+				if (++gameplay > gameplay_max)
 				{
 					gameplay = 1;
 				}
@@ -106,7 +104,7 @@ bool select_gameplay( void )
 
 			case SDLK_RETURN:
 			case SDLK_SPACE:
-				if (gameplay == 4)
+				if (gameplay == GAMEPLAY_NAME_COUNT - 1)
 				{
 					JE_playSampleNum(S_SPRING);
 					/* TODO: NETWORK */
@@ -117,7 +115,7 @@ bool select_gameplay( void )
 				fade_black(10);
 
 				onePlayerAction = (gameplay == 2);
-				twoPlayerMode = (gameplay == 3);
+				twoPlayerMode = (gameplay == GAMEPLAY_NAME_COUNT - 2);
 				return true;
 
 			case SDLK_ESCAPE:
@@ -139,9 +137,8 @@ bool select_episode( void )
 	JE_loadPic(VGAScreen, 2, false);
 	JE_dString(VGAScreen, JE_fontCenter(episode_name[0], FONT_SHAPES), 20, episode_name[0], FONT_SHAPES);
 
-	const JE_byte menu_top = 20, menu_spacing = 30;
-	JE_shortint episode = 1,
-	    episode_max = EPISODE_MAX - 1;
+	const int menu_top = 20, menu_spacing = 30;
+	int episode = 1, episode_max = EPISODE_AVAILABLE;
 
 	bool fade_in = true;
 	for (; ; )
@@ -220,9 +217,9 @@ bool select_difficulty( void )
 	JE_loadPic(VGAScreen, 2, false);
 	JE_dString(VGAScreen, JE_fontCenter(difficulty_name[0], FONT_SHAPES), 20, difficulty_name[0], FONT_SHAPES);
 
-	const JE_byte menu_top = 30, menu_spacing = 24;
+	const int menu_top = 30, menu_spacing = 24;
 	difficultyLevel = 2;
-	JE_shortint difficulty_max = 3;
+	int difficulty_max = 3;
 
 	bool fade_in = true;
 	for (; ; )
@@ -242,8 +239,12 @@ bool select_difficulty( void )
 		JE_word temp = 0;
 		JE_textMenuWait(&temp, false);
 
-		if (select_menuitem_by_touch(menu_top, menu_spacing, difficulty_max, &difficultyLevel))
+		int difficultyLevel_ = difficultyLevel; // Need to pass an int, difficultyLevel is short int
+		if (select_menuitem_by_touch(menu_top, menu_spacing, difficulty_max, &difficultyLevel_))
+		{
+			difficultyLevel = difficultyLevel_;
 			continue;
+		}
 
 		if (SDL_GetModState() & KMOD_SHIFT)
 		{
@@ -307,4 +308,3 @@ bool select_difficulty( void )
 	}
 }
 
-// kate: tab-width 4; vim: set noet:

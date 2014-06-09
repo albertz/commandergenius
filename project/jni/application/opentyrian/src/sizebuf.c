@@ -1,5 +1,5 @@
 /*
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -39,6 +39,8 @@
 #include <assert.h>
 
 #include "SDL_endian.h"
+#include <stdio.h>
+#include <string.h>
 
 /* Construct buffer with the passed array and size */
 void SZ_Init(sizebuf_t * sz, Uint8 * buf, unsigned int size)

@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -25,6 +25,7 @@
 #include "video_scale.h"
 
 #include "SDL.h"
+#include <stdio.h>
 
 
 JE_boolean ESCPressed;
@@ -38,15 +39,13 @@ Uint16 lastmouse_x, lastmouse_y;
 JE_boolean mouse_pressed[3] = {false, false, false};
 Uint16 mouse_x, mouse_y;
 
-int numkeys;
-Uint8 *keysactive;
+Uint8 keysactive[SDLK_LAST];
 
 #ifdef NDEBUG
-bool input_grab_enabled = true,
+bool input_grab_enabled = true;
 #else
-bool input_grab_enabled = false,
+bool input_grab_enabled = false;
 #endif
-     input_grabbed = false;
 
 
 void flush_events_buffer( void )
@@ -65,8 +64,10 @@ void wait_input( JE_boolean keyboard, JE_boolean mouse, JE_boolean joystick )
 		push_joysticks_as_keyboard();
 		service_SDL_events(false);
 		
+#ifdef WITH_NETWORK
 		if (isNetworkGame)
 			network_check();
+#endif
 	}
 }
 
@@ -79,14 +80,15 @@ void wait_noinput( JE_boolean keyboard, JE_boolean mouse, JE_boolean joystick )
 		poll_joysticks();
 		service_SDL_events(false);
 		
+#ifdef WITH_NETWORK
 		if (isNetworkGame)
 			network_check();
+#endif
 	}
 }
 
 void init_keyboard( void )
 {
-	keysactive = SDL_GetKeyState(&numkeys);
 #ifndef ANDROID
 	SDL_EnableKeyRepeat(500, 60);
 #endif
@@ -97,17 +99,17 @@ void init_keyboard( void )
 	SDL_EnableUNICODE(1);
 }
 
-void input_grab( void )
+void input_grab( bool enable )
 {
 #if defined(TARGET_GP2X) || defined(TARGET_DINGUX) || defined(ANDROID)
-	input_grabbed = true;
-#else
-	input_grabbed = input_grab_enabled || fullscreen_enabled;
+	enable = true;
 #endif
 	
-	SDL_ShowCursor(input_grabbed ? SDL_DISABLE : SDL_ENABLE);
+	input_grab_enabled = enable || fullscreen_enabled;
+	
+	SDL_ShowCursor(input_grab_enabled ? SDL_DISABLE : SDL_ENABLE);
 #ifdef NDEBUG
-	SDL_WM_GrabInput(input_grabbed ? SDL_GRAB_ON : SDL_GRAB_OFF);
+	SDL_WM_GrabInput(input_grab_enabled ? SDL_GRAB_ON : SDL_GRAB_OFF);
 #endif
 }
 
@@ -121,7 +123,7 @@ JE_word JE_mousePosition( JE_word *mouseX, JE_word *mouseY )
 
 void set_mouse_position( int x, int y )
 {
-	if (input_grabbed)
+	if (input_grab_enabled)
 	{
 		SDL_WarpMouse(x * scalers[scaler].width / vga_width, y * scalers[scaler].height / vga_height);
 		mouse_x = x;
@@ -144,6 +146,11 @@ void service_SDL_events( JE_boolean clear_new )
 	{
 		switch (ev.type)
 		{
+			case SDL_ACTIVEEVENT:
+				if (ev.active.state == SDL_APPINPUTFOCUS && !ev.active.gain)
+					input_grab(false);
+				break;
+			
 			case SDL_MOUSEMOTION:
 				mouse_x = ev.motion.x * vga_width / scalers[scaler].width;
 				mouse_y = ev.motion.y * vga_height / scalers[scaler].height;
@@ -170,8 +177,7 @@ void service_SDL_events( JE_boolean clear_new )
 					/* <ctrl><f10> toggle input grab */
 					if (ev.key.keysym.sym == SDLK_F10)
 					{
-						input_grab_enabled = !input_grab_enabled;
-						input_grab();
+						input_grab(!input_grab_enabled);
 						break;
 					}
 				}
@@ -193,18 +199,19 @@ void service_SDL_events( JE_boolean clear_new )
 					/* <alt><tab> disable input grab and fullscreen */
 					if (ev.key.keysym.sym == SDLK_TAB)
 					{
-						input_grab_enabled = false;
-						input_grab();
-						
 						if (!init_scaler(scaler, false) &&             // try windowed
 						    !init_any_scaler(false) &&                 // try any scaler windowed
 						    !init_scaler(scaler, fullscreen_enabled))  // revert on fail
 						{
 							exit(EXIT_FAILURE);
 						}
+						
+						input_grab(false);
 						break;
 					}
 				}
+
+				keysactive[ev.key.keysym.sym] = 1;
 				
 				newkey = true;
 				lastkey_sym = ev.key.keysym.sym;
@@ -213,15 +220,16 @@ void service_SDL_events( JE_boolean clear_new )
 				keydown = true;
 				return;
 			case SDL_KEYUP:
+				keysactive[ev.key.keysym.sym] = 0;
 				keydown = false;
 				return;
 			case SDL_MOUSEBUTTONDOWN:
-				if (!input_grabbed)
+				if (!input_grab_enabled)
 				{
-					input_grab_enabled = !input_grab_enabled;
-					input_grab();
+					input_grab(true);
 					break;
 				}
+				// intentional fall-though
 			case SDL_MOUSEBUTTONUP:
 				if (ev.type == SDL_MOUSEBUTTONDOWN)
 				{
@@ -258,4 +266,3 @@ void JE_clearKeyboard( void )
 	// /!\ Doesn't seems important. I think. D:
 }
 
-// kate: tab-width 4; vim: set noet:

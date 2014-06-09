@@ -2,7 +2,7 @@
 #define HG_REVISION_H
 
 #ifndef HG_REV
-#define HG_REV "8e4c1be1b53f default"
+#define HG_REV "0a06d5af473c default"
 #endif
 
 #endif // HG_REVISION_H

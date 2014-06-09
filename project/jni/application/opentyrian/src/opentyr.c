@@ -1,5 +1,5 @@
 /*
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -52,39 +52,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
-#ifdef ANDROID
-#include <android/log.h>
-#endif
 
 const char *opentyrian_str = "OpenTyrian",
-           *opentyrian_version = "Classic (" HG_REV ")";
-const char *opentyrian_menu_items[] =
-{
-	"About OpenTyrian",
-#ifndef ANDROID
-	"Toggle Fullscreen",
-#endif
-	"Scaler: None",
-	"Jukebox",
-#ifdef ANDROID
-	"Play Destruct",
-#endif
-	"Return to Main Menu"
-};
-
-#ifndef ANDROID
-enum {
-	menu_item_scaler   = 2,
-	menu_item_jukebox  = 3
-};
-#else
-enum {
-	menu_item_scaler   = 1,
-	menu_item_jukebox  = 2,
-	menu_item_destruct = 3
-};
-#endif
+           *opentyrian_version = HG_REV;
 
 /* zero-terminated strncpy */
 char *strnztcpy( char *to, const char *from, size_t count )
@@ -95,13 +67,39 @@ char *strnztcpy( char *to, const char *from, size_t count )
 
 void opentyrian_menu( void )
 {
-	const JE_byte menu_top = 36, menu_spacing = 20;
-	JE_shortint sel = 0;
-	const int maxSel = COUNTOF(opentyrian_menu_items) - 1;
-	bool quit = false, fade_in = true;
+	typedef enum
+	{
+		MENU_ABOUT = 0,
+		MENU_FULLSCREEN,
+		MENU_SCALER,
+		// MENU_DESTRUCT,
+		MENU_JUKEBOX,
+		MENU_RETURN,
+		MenuOptions_MAX
+	} MenuOptions;
+
+	static const char *menu_items[] =
+	{
+		"About OpenTyrian",
+		"Toggle Fullscreen",
+		"Scaler: None",
+		// "Play Destruct",
+		"Jukebox",
+		"Return to Main Menu",
+	};
+	bool menu_items_disabled[] =
+	{
+		false,
+		!can_init_any_scaler(false) || !can_init_any_scaler(true),
+		false,
+		// false,
+		false,
+		false,
+	};
 	
-	uint temp_scaler = scaler;
-	
+	assert(COUNTOF(menu_items) == MenuOptions_MAX);
+	assert(COUNTOF(menu_items_disabled) == MenuOptions_MAX);
+
 	fade_black(10);
 	JE_loadPic(VGAScreen, 13, false);
 
@@ -113,25 +111,29 @@ void opentyrian_menu( void )
 
 	play_song(36); // A Field for Mag
 
+	MenuOptions sel = 0;
+	int menu_top = 32, menu_spacing = 16;
+
+	uint temp_scaler = scaler;
+
+	bool fade_in = true, quit = false;
 	do
 	{
 		memcpy(VGAScreen->pixels, VGAScreen2->pixels, VGAScreen->pitch * VGAScreen->h);
 
-		for (int i = 0; i <= maxSel; i++)
+		for (MenuOptions i = 0; i < MenuOptions_MAX; i++)
 		{
-			const char *text = opentyrian_menu_items[i];
+			const char *text = menu_items[i];
 			char buffer[100];
 
-			if (i == menu_item_scaler) /* Scaler */
+			if (i == MENU_SCALER)
 			{
 				snprintf(buffer, sizeof(buffer), "Scaler: %s", scalers[temp_scaler].name);
 				text = buffer;
 			}
 
-			// Destruct is not adapted for touch input, so we show it only if keyboard is used:
-			if (i == menu_item_destruct && (mousedown || lastkey_sym == SDLK_ESCAPE))
-				continue;
-			draw_font_hv_shadow(VGAScreen, VGAScreen->w / 2, (i != maxSel) ? i * menu_spacing + menu_top : 118, text, normal_font, centered, 15, (i != sel) ? -4 : -2, false, 2);
+			int y = i != MENU_RETURN ? i * 16 + 32 : 118;
+			draw_font_hv(VGAScreen, VGAScreen->w / 2, y, text, normal_font, centered, 15, menu_items_disabled[i] ? -8 : i != sel ? -4 : -2);
 		}
 
 		JE_showVGA();
@@ -146,132 +148,139 @@ void opentyrian_menu( void )
 		tempW = 0;
 		JE_textMenuWait(&tempW, false);
 
-		if (select_menuitem_by_touch(menu_top, menu_spacing, maxSel, &sel))
+		int sel_ = sel; // We need to pass int there, and sel is enum (yes that's also int, but compiler gives warning)
+		if (select_menuitem_by_touch(menu_top, menu_spacing, MenuOptions_MAX, &sel_))
+		{
+			sel = sel_;
 			continue;
+		}
 
 		if (newkey)
 		{
 			switch (lastkey_sym)
 			{
-				case SDLK_UP:
-				case SDLK_LCTRL:
-					sel--;
-					if (sel < 0)
-					{
-						sel = maxSel;
-					}
-					JE_playSampleNum(S_CURSOR);
-					break;
-				case SDLK_DOWN:
-				case SDLK_LALT:
-					sel++;
-					if (sel > maxSel)
-					{
+			case SDLK_UP:
+			case SDLK_LCTRL:
+				do
+				{
+					if (sel-- == 0)
+						sel = MenuOptions_MAX - 1;
+				}
+				while (menu_items_disabled[sel]);
+				
+				JE_playSampleNum(S_CURSOR);
+				break;
+			case SDLK_DOWN:
+			case SDLK_LALT:
+				do
+				{
+					if (++sel >= MenuOptions_MAX)
 						sel = 0;
+				}
+				while (menu_items_disabled[sel]);
+				
+				JE_playSampleNum(S_CURSOR);
+				break;
+				
+			case SDLK_LEFT:
+				if (sel == MENU_SCALER)
+				{
+					do
+					{
+						if (temp_scaler == 0)
+							temp_scaler = scalers_count;
+						temp_scaler--;
 					}
+					while (!can_init_scaler(temp_scaler, fullscreen_enabled));
+					
 					JE_playSampleNum(S_CURSOR);
-					break;
-				case SDLK_LEFT:
-					if (sel == menu_item_scaler)
+				}
+				break;
+			case SDLK_RIGHT:
+				if (sel == MENU_SCALER)
+				{
+					do
 					{
-						do
+						temp_scaler++;
+						if (temp_scaler == scalers_count)
+							temp_scaler = 0;
+					}
+					while (!can_init_scaler(temp_scaler, fullscreen_enabled));
+					
+					JE_playSampleNum(S_CURSOR);
+				}
+				break;
+				
+			case SDLK_RETURN:
+			case SDLK_SPACE:
+				switch (sel)
+				{
+				case MENU_ABOUT:
+					JE_playSampleNum(S_SELECT);
+
+					scroller_sine(about_text);
+
+					memcpy(VGAScreen->pixels, VGAScreen2->pixels, VGAScreen->pitch * VGAScreen->h);
+					JE_showVGA();
+					fade_in = true;
+					break;
+					
+				case MENU_FULLSCREEN:
+					JE_playSampleNum(S_SELECT);
+
+					if (!init_scaler(scaler, !fullscreen_enabled) && // try new fullscreen state
+						!init_any_scaler(!fullscreen_enabled) &&     // try any scaler in new fullscreen state
+						!init_scaler(scaler, fullscreen_enabled))    // revert on fail
+					{
+						exit(EXIT_FAILURE);
+					}
+					set_palette(colors, 0, 255); // for switching between 8 bpp scalers
+					break;
+					
+				case MENU_SCALER:
+					JE_playSampleNum(S_SELECT);
+
+					if (scaler != temp_scaler)
+					{
+						if (!init_scaler(temp_scaler, fullscreen_enabled) &&   // try new scaler
+							!init_scaler(temp_scaler, !fullscreen_enabled) &&  // try other fullscreen state
+							!init_scaler(scaler, fullscreen_enabled))          // revert on fail
 						{
-							if (temp_scaler == 0)
-								temp_scaler = scalers_count;
-							temp_scaler--;
+							exit(EXIT_FAILURE);
 						}
-						while (!can_init_scaler(temp_scaler, fullscreen_enabled));
-						JE_playSampleNum(S_CURSOR);
+						set_palette(colors, 0, 255); // for switching between 8 bpp scalers
 					}
 					break;
-				case SDLK_RIGHT:
-#ifdef ANDROID
-				case SDLK_RETURN:
-#endif
-					if (sel == menu_item_scaler)
-					{
-						do
-						{
-							temp_scaler++;
-							if (temp_scaler == scalers_count)
-								temp_scaler = 0;
-						}
-						while (!can_init_scaler(temp_scaler, fullscreen_enabled));
-						JE_playSampleNum(S_CURSOR);
-					}
-#ifndef ANDROID
+					
+				case MENU_JUKEBOX:
+					JE_playSampleNum(S_SELECT);
+
+					fade_black(10);
+					jukebox();
+
+					memcpy(VGAScreen->pixels, VGAScreen2->pixels, VGAScreen->pitch * VGAScreen->h);
+					JE_showVGA();
+					fade_in = true;
 					break;
-				case SDLK_RETURN:
-#endif
-				case SDLK_SPACE:
-					switch (sel)
-					{
-						case 0: /* About */
-							JE_playSampleNum(S_SELECT);
-
-							scroller_sine(about_text);
-
-							memcpy(VGAScreen->pixels, VGAScreen2->pixels, VGAScreen->pitch * VGAScreen->h);
-							JE_showVGA();
-							fade_in = true;
-							break;
-#ifndef ANDROID
-						case 1: /* Fullscreen */
-							JE_playSampleNum(S_SELECT);
-
-							if (!init_scaler(scaler, !fullscreen_enabled) && // try new fullscreen state
-							    !init_any_scaler(!fullscreen_enabled) &&     // try any scaler in new fullscreen state
-							    !init_scaler(scaler, fullscreen_enabled))    // revert on fail
-							{
-								exit(EXIT_FAILURE);
-							}
-							set_palette(colors, 0, 255); // for switching between 8 bpp scalers
-							break;
-#endif
-						case menu_item_scaler: /* Scaler */
-							JE_playSampleNum(S_SELECT);
-
-							if (scaler != temp_scaler)
-							{
-								if (!init_scaler(temp_scaler, fullscreen_enabled) &&   // try new scaler
-								    !init_scaler(temp_scaler, !fullscreen_enabled) &&  // try other fullscreen state
-								    !init_scaler(scaler, fullscreen_enabled))          // revert on fail
-								{
-									exit(EXIT_FAILURE);
-								}
-								set_palette(colors, 0, 255); // for switching between 8 bpp scalers
-							}
-							break;
-						case menu_item_jukebox: /* Jukebox */
-							JE_playSampleNum(S_SELECT);
-
-							fade_black(10);
-							jukebox();
-
-							memcpy(VGAScreen->pixels, VGAScreen2->pixels, VGAScreen->pitch * VGAScreen->h);
-							JE_showVGA();
-							fade_in = true;
-							break;
-#ifdef ANDROID
-						case menu_item_destruct: /* Destruct */
-							JE_playSampleNum(S_SELECT);
-							loadDestruct = true;
-							fade_black(10);
-							quit = true;
-							break;
-#endif
-						default: /* Return to main menu */
-							quit = true;
-							JE_playSampleNum(S_SPRING);
-							break;
-					}
-					break;
-				case SDLK_ESCAPE:
+					
+				case MENU_RETURN:
 					quit = true;
 					JE_playSampleNum(S_SPRING);
 					break;
-				default:
+					
+				case MenuOptions_MAX:
+					assert(false);
 					break;
+				}
+				break;
+				
+			case SDLK_ESCAPE:
+				quit = true;
+				JE_playSampleNum(S_SPRING);
+				break;
+				
+			default:
+				break;
 			}
 		}
 	} while (!quit);
@@ -279,15 +288,11 @@ void opentyrian_menu( void )
 
 int main( int argc, char *argv[] )
 {
-	#ifdef ANDROID
-	__android_log_print(ANDROID_LOG_INFO, "OpenTyrian", "SDL_main() called" );
-	#endif
-
 	mt_srand(time(NULL));
 
 	printf("\nWelcome to... >> %s %s <<\n\n", opentyrian_str, opentyrian_version);
 
-	printf("Copyright (C) 2007-2009 The OpenTyrian Development Team\n\n");
+	printf("Copyright (C) 2007-2013 The OpenTyrian Development Team\n\n");
 
 	printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
 	printf("This is free software, and you are welcome to redistribute it\n");
@@ -361,10 +366,15 @@ int main( int argc, char *argv[] )
 
 	if (isNetworkGame)
 	{
+#ifdef WITH_NETWORK
 		if (network_init())
 		{
 			network_tyrian_halt(3, false);
 		}
+#else
+		fprintf(stderr, "OpenTyrian was compiled without networking support.");
+		JE_tyrianHalt(5);
+#endif
 	}
 
 #ifdef NDEBUG
@@ -396,4 +406,3 @@ int main( int argc, char *argv[] )
 	return 0;
 }
 
-// kate: tab-width 4; vim: set noet:

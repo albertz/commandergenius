@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -17,7 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 #include "file.h"
-#include "fm_synth.h"
 #include "lds_play.h"
 #include "loudness.h"
 #include "nortsong.h"
@@ -61,7 +60,7 @@ bool init_audio( void )
 	ask.freq = freq;
 	ask.format = (BYTES_PER_SAMPLE == 2) ? AUDIO_S16SYS : AUDIO_S8;
 	ask.channels = 1;
-	ask.samples = 512;
+	ask.samples = 2048;
 	ask.callback = audio_cb;
 	
 	printf("\trequested %d Hz, %d channels, %d samples\n", ask.freq, ask.channels, ask.samples);
@@ -186,8 +185,6 @@ void deinit_audio( void )
 		channel_len[i] = 0;
 	}
 	
-	opl_deinit();
-	
 	lds_free();
 }
 
@@ -200,7 +197,7 @@ void load_music( void )
 		
 		efread(&song_count, sizeof(song_count), 1, music_file);
 		
-		song_offset = malloc((song_count + 1) * sizeof(song_offset));
+		song_offset = malloc((song_count + 1) * sizeof(*song_offset));
 		
 		efread(song_offset, 4, song_count, music_file);
 		song_offset[song_count] = ftell_eof(music_file);
@@ -252,7 +249,7 @@ void stop_song( void )
 
 void fade_song( void )
 {
-	printf("TODO: %s\n", __FUNCTION__);
+	/* STUB: we have no implementation of this to port */
 }
 
 void set_volume( unsigned int music, unsigned int sample )
@@ -290,4 +287,3 @@ void JE_multiSamplePlay(JE_byte *buffer, JE_word size, JE_byte chan, JE_byte vol
 	SDL_UnlockAudio();
 }
 
-// kate: tab-width 4; vim: set noet:

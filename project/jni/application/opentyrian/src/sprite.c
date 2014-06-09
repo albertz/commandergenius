@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -22,10 +22,11 @@
 #include "video.h"
 
 #include <assert.h>
+#include <ctype.h>
 
 Sprite_array sprite_table[SPRITE_TABLES_MAX];
 
-Sprite2_array eShapes1, eShapes2, eShapes3, eShapes4, eShapes5, eShapes6;
+Sprite2_array eShapes[6];
 Sprite2_array shapesC1, shapes6, shapes9, shapesW2;
 
 void load_sprites_file( unsigned int table, const char *filename )
@@ -47,6 +48,8 @@ void load_sprites( unsigned int table, FILE *f )
 	efread(&temp, sizeof(Uint16), 1, f);
 	
 	sprite_table[table].count = temp;
+	
+	assert(sprite_table[table].count <= SPRITES_PER_TABLE_MAX);
 	
 	for (unsigned int i = 0; i < sprite_table[table].count; ++i)
 	{
@@ -665,7 +668,11 @@ void blit_sprite2x2_darken( SDL_Surface *surface, int x, int y, Sprite2_array sp
 
 void JE_loadMainShapeTables( const char *shpfile )
 {
+#ifdef TYRIAN2000
+	const int SHP_NUM = 13;
+#else
 	const int SHP_NUM = 12;
+#endif
 	
 	FILE *f = dir_fopen_die(data_dir(), shpfile, "rb");
 	
@@ -673,14 +680,14 @@ void JE_loadMainShapeTables( const char *shpfile )
 	JE_longint shpPos[SHP_NUM + 1]; // +1 for storing file length
 	
 	efread(&shpNumb, sizeof(JE_word), 1, f);
-	assert(shpNumb + 1u <= COUNTOF(shpPos));
+	assert(shpNumb + 1u == COUNTOF(shpPos));
 	
-	for (int i = 0; i < shpNumb; i++)
-	{
+	for (unsigned int i = 0; i < shpNumb; ++i)
 		efread(&shpPos[i], sizeof(JE_longint), 1, f);
-	}
+	
 	fseek(f, 0, SEEK_END);
-	shpPos[shpNumb] = ftell(f);
+	for (unsigned int i = shpNumb; i < COUNTOF(shpPos); ++i)
+		shpPos[i] = ftell(f);
 	
 	int i;
 	// fonts, interface, option sprites
@@ -701,13 +708,13 @@ void JE_loadMainShapeTables( const char *shpfile )
 	i++;
 	
 	// power-up sprites
-	eShapes6.size = shpPos[i + 1] - shpPos[i];
-	JE_loadCompShapesB(&eShapes6, f);
+	eShapes[5].size = shpPos[i + 1] - shpPos[i];
+	JE_loadCompShapesB(&eShapes[5], f);
 	i++;
 	
 	// coins, datacubes, etc sprites
-	eShapes5.size = shpPos[i + 1] - shpPos[i];
-	JE_loadCompShapesB(&eShapes5, f);
+	eShapes[4].size = shpPos[i + 1] - shpPos[i];
+	JE_loadCompShapesB(&eShapes[4], f);
 	i++;
 	
 	// more player shot sprites
@@ -724,9 +731,7 @@ void free_main_shape_tables( void )
 	
 	free_sprite2s(&shapesC1);
 	free_sprite2s(&shapes9);
-	free_sprite2s(&eShapes6);
-	free_sprite2s(&eShapes5);
+	free_sprite2s(&eShapes[5]);
+	free_sprite2s(&eShapes[4]);
 	free_sprite2s(&shapesW2);
 }
-
-// kate: tab-width 4; vim: set noet:

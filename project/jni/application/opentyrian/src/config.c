@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -138,13 +138,7 @@ const JE_EditorItemAvailType initialItemAvail =
 JE_boolean smoothies[9] = /* [1..9] */
 { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-
 JE_byte starShowVGASpecialCode;
-
-/* Stars */
-StarDatType starDat[MAX_STARS]; /* [1..Maxstars] */
-JE_word starY;
-
 
 /* CubeData */
 JE_word lastCubeMax, cubeMax;
@@ -326,19 +320,6 @@ bool save_opentyrian_config( void )
 	return true;
 }
 
-
-void JE_setupStars( void )
-{
-	int z;
-
-	for (z = MAX_STARS; z--; )
-	{
-		starDat[z].sLoc = (mt_rand() % 320) + (mt_rand() % 200) * VGAScreen->pitch;
-		starDat[z].sMov = ((mt_rand() % 3) + 2) * VGAScreen->pitch;
-		starDat[z].sC = (mt_rand() % 16) + (9 * 16);
-	}
-}
-
 static void playeritems_to_pitems( JE_PItemsType pItems, PlayerItems *items, JE_byte initial_episode_num )
 {
 	pItems[0]  = items->weapon[FRONT_WEAPON].id;
@@ -403,7 +384,7 @@ void JE_saveGame( JE_byte slot, const char *name )
 		temp = episodeNum - 1;
 		if (temp < 1)
 		{
-			temp = 4; /* JE: {Episodemax is 4 for completion purposes} */
+			temp = EPISODE_AVAILABLE; /* JE: {Episodemax is 4 for completion purposes} */
 		}
 		saveFiles[slot-1].episode = temp;
 	}
@@ -430,8 +411,6 @@ void JE_saveGame( JE_byte slot, const char *name )
 
 void JE_loadGame( JE_byte slot )
 {
-	JE_byte temp5;
-
 	superTyrian = false;
 	onePlayerAction = false;
 	twoPlayerMode = false;
@@ -489,22 +468,22 @@ void JE_loadGame( JE_byte slot )
 		player[twoPlayerMode ? port : 0].items.weapon[port].power = saveFiles[slot-1].power[port];
 	}
 	
-	temp5 = saveFiles[slot-1].episode;
+	int episode = saveFiles[slot-1].episode;
 
 	memcpy(&levelName, &saveFiles[slot-1].levelName, sizeof(levelName));
 
 	if (strcmp(levelName, "Completed") == 0)
 	{
-		if (temp5 == 4)
+		if (episode == EPISODE_AVAILABLE)
 		{
-			temp5 = 1;
-		} else if (temp5 < 4) {
-			temp5++;
+			episode = 1;
+		} else if (episode < EPISODE_AVAILABLE) {
+			episode++;
 		}
-		/* Increment 1-3 to 2-4.  Episode 4 goes to 1.  Episode 5 stands still. */
+		/* Increment episode.  Episode EPISODE_AVAILABLE goes to 1. */
 	}
 
-	JE_initEpisode(temp5);
+	JE_initEpisode(episode);
 	saveLevel = mainLevel;
 	memcpy(&lastLevelName, &levelName, sizeof(levelName));
 }
@@ -1050,4 +1029,3 @@ void JE_saveConfiguration( void )
 #endif
 }
 
-// kate: tab-width 4; vim: set noet:

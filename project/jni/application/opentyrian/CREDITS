@@ -1,8 +1,8 @@
-OpenTyrian Classic Development Team
+The OpenTyrian Development Team
 ================================================================================
 
 Carl W. Reinke <mindless2112\100gmail\056com>  (Mindless)
-Yuri K. Schlesner <yuriks.br@gmail.com>  (yuriks)
+Yuri K. Schlesner <yuriks@yuriks.net>  (yuriks)
 Casey A. McCann <syntaxglitch@gmail.com>  (syntaxglitch)
 
 == Contributors ================================================================
@@ -24,8 +24,9 @@ Jan "heftig" Steffens  clean-up patches
 Jason Emery
  * Tyrian source code
 
-MAME and DOSBox
- * FM emulator code
+DOSBox
+ * FM Sythesis emulator code
 
 AdPlug
- * Loudness player
+ * Loudness player code
+
