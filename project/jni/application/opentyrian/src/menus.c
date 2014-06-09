@@ -60,6 +60,7 @@ bool select_gameplay( void )
 	int gameplay = 1,
 	    gameplay_max = GAMEPLAY_NAME_COUNT - 1;
 
+	wait_noinput(true, true, false);
 	bool fade_in = true;
 	for (; ; )
 	{
@@ -140,6 +141,7 @@ bool select_episode( void )
 	const int menu_top = 20, menu_spacing = 30;
 	int episode = 1, episode_max = EPISODE_AVAILABLE;
 
+	wait_noinput(true, true, false);
 	bool fade_in = true;
 	for (; ; )
 	{
@@ -221,6 +223,7 @@ bool select_difficulty( void )
 	difficultyLevel = 2;
 	int difficulty_max = 3;
 
+	wait_noinput(true, true, false);
 	bool fade_in = true;
 	for (; ; )
 	{

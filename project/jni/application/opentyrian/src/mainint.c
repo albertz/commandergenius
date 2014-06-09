@@ -487,7 +487,7 @@ ulong JE_getCost( JE_byte itemType, JE_word itemNum )
 void JE_loadScreen( void )
 {
 	JE_boolean quit;
-	JE_byte sel, screen, min = 0, max = 0;
+	int sel, screen, min = 0, max = 0;
 	char *tempstr;
 	char *tempstr2;
 	JE_boolean mal_str = false;
@@ -508,6 +508,9 @@ void JE_loadScreen( void )
 	quit = false;
 
 	memcpy(VGAScreen2->pixels, VGAScreen->pixels, VGAScreen2->pitch * VGAScreen2->h);
+
+	wait_noinput(true, true, false);
+	int menu_top = 30, menu_spacing = 13;
 
 	do
 	{
@@ -628,6 +631,12 @@ void JE_loadScreen( void )
 		tempW = 0;
 		JE_textMenuWait(&tempW, false);
 
+		sel -= min; // Should start from zero
+		if (select_menuitem_by_touch(menu_top, menu_spacing, max - min, &sel)) {
+			sel += min;
+			continue;
+		}
+		sel += min;
 
 		if (newkey)
 		{
