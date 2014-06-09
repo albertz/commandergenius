@@ -16,7 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+
+#include <SDL_video.h>
+#include <SDL_image.h>
 #include <SDL_screenkeyboard.h>
+#include <android/log.h>
+
 #include "config.h"
 #include "episodes.h"
 #include "fonthand.h"
@@ -55,7 +60,7 @@ select_menuitem_by_touch(int menu_top, int menu_spacing, int menu_item_count, in
 	return true;
 }
 
-void android_setup_screen_keys()
+void android_setup_screen_keys( void )
 {
 	int W = SDL_ListModes(NULL, 0)[0]->w;
 	int H = SDL_ListModes(NULL, 0)[0]->h;
@@ -88,7 +93,7 @@ void android_setup_screen_keys()
 	SDL_ANDROID_SetScreenKeyboardTransparency(SDL_ALPHA_TRANSPARENT);
 }
 
-void android_cleanup_screen_keys()
+void android_cleanup_screen_keys( void )
 {
 	if (!screen_button_pos_destruct_initialized)
 	{
@@ -109,7 +114,7 @@ void android_cleanup_screen_keys()
 	SDL_ANDROID_SetScreenKeyboardTransparency(192); // Text input button should not be totally transparent
 }
 
-void android_setup_screen_keys_destruct()
+void android_setup_screen_keys_destruct( void )
 {
 	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_0]);
 	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_1]);
@@ -118,6 +123,67 @@ void android_setup_screen_keys_destruct()
 	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, &screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD]);
 
 	SDL_ANDROID_SetScreenKeyboardTransparency(192); // Text input button should not be totally transparent
+}
+
+void android_show_tutorial( void )
+{
+	static const char *tutorial_flag_file = "tutorial-shown.flag";
+	FILE *shown = fopen(tutorial_flag_file, "r");
+	__android_log_print(ANDROID_LOG_INFO, "Tyrian", "android_show_tutorial: %s: %s", tutorial_flag_file, shown ? "already shown" : "not shown");
+
+	if (shown)
+	{
+		fclose(shown);
+		return;
+	}
+
+	__android_log_print(ANDROID_LOG_INFO, "Tyrian", "android_show_tutorial: creating %s", tutorial_flag_file);
+	shown = fopen(tutorial_flag_file, "w");
+	if (!shown)
+		return;
+	fprintf(shown, "Tutorial was shown - remove this file to show it again\n");
+	fclose(shown);
+
+	static const char *tutorial_files[] = { "tutorial1.png", "tutorial2.png" };
+	for (int f = 0; f < 2; f++)
+	{
+		SDL_Surface *img = IMG_Load(tutorial_files[f]);
+		__android_log_print(ANDROID_LOG_INFO, "Tyrian", "android_show_tutorial: %s: %p", tutorial_files[f], img);
+		if (!img)
+			return;
+		
+		SDL_Surface *img2 = SDL_ConvertSurface(img, SDL_GetVideoSurface()->format, SDL_SWSURFACE);
+		SDL_FreeSurface(img);
+		img = img2;
+
+		for (int i = 7; i <= 255; i += 8)
+		{
+			SDL_FillRect(SDL_GetVideoSurface(), NULL, SDL_MapRGB(SDL_GetVideoSurface()->format, 0, 0, 0));
+			SDL_SetAlpha(img, SDL_SRCALPHA, i);
+			SDL_BlitSurface(img, NULL, SDL_GetVideoSurface(), NULL);
+			__android_log_print(ANDROID_LOG_INFO, "Tyrian", "android_show_tutorial: blitting with alpha %d", i);
+			SDL_Flip(SDL_GetVideoSurface());
+			SDL_Delay(60);
+			service_SDL_events(false);
+		}
+		while (!mousedown)
+		{
+			service_SDL_events(false);
+			SDL_Flip(SDL_GetVideoSurface());
+			SDL_Delay(40);
+		}
+		for (int i = 255; i > 8; i -= 8)
+		{
+			SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
+			SDL_SetAlpha(img, SDL_SRCALPHA, i);
+			SDL_BlitSurface(img, NULL, SDL_GetVideoSurface(), NULL);
+			__android_log_print(ANDROID_LOG_INFO, "Tyrian", "android_show_tutorial: blitting with alpha %d", i);
+			SDL_Flip(SDL_GetVideoSurface());
+			SDL_Delay(60);
+			service_SDL_events(false);
+		}
+		SDL_FreeSurface(img);
+	}
 }
 
 bool select_gameplay( void )

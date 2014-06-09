@@ -734,6 +734,8 @@ start_level_first:
 
 	android_setup_screen_keys();
 
+	android_show_tutorial();
+
 	fade_song();
 
 	for (uint i = 0; i < COUNTOF(player); ++i)
@@ -3442,7 +3444,6 @@ bool JE_titleScreen( JE_boolean animate )
 					arcade_code_i[i]++;
 				else if(lastkey_char != '\0')
 					arcade_code_i[i] = 0;
-				//__android_log_print(ANDROID_LOG_INFO, "Tyrian", "Got key: %d = '%c' = '%c', code[%d] = '%s', matched %d", (int)lastkey_char, lastkey_char, toupper(lastkey_char), i, specialName[i], arcade_code_i[i]);
 
 				if (arcade_code_i[i] > 0 && arcade_code_i[i] == strlen(specialName[i]))
 				{
