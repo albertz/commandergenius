@@ -33,5 +33,9 @@ bool select_episode( void );
 bool select_difficulty( void );
 bool select_menuitem_by_touch(int menu_top, int menu_spacing, int menu_item_count, int *current_item);
 
+void android_setup_screen_keys();
+void android_cleanup_screen_keys();
+void android_setup_screen_keys_destruct();
+
 #endif /* MENUS_H */
 

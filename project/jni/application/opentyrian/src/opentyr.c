@@ -316,6 +316,7 @@ int main( int argc, char *argv[] )
 	init_keyboard();
 	init_joysticks();
 	printf("assuming mouse detected\n"); // SDL can't tell us if there isn't one
+	android_cleanup_screen_keys();
 
 	if (xmas && (!dir_file_exists(data_dir(), "tyrianc.shp") || !dir_file_exists(data_dir(), "voicesc.snd")))
 	{
@@ -392,7 +393,9 @@ int main( int argc, char *argv[] )
 
 		if (loadDestruct)
 		{
+			android_setup_screen_keys_destruct();
 			JE_destructGame();
+			android_cleanup_screen_keys();
 			loadDestruct = false;
 		}
 		else

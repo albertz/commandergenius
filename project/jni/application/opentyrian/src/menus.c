@@ -16,6 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+#include <SDL_screenkeyboard.h>
 #include "config.h"
 #include "episodes.h"
 #include "fonthand.h"
@@ -30,6 +31,9 @@
 #include "video.h"
 
 char episode_name[6][31], difficulty_name[7][21], gameplay_name[GAMEPLAY_NAME_COUNT][26];
+
+SDL_Rect screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM];
+bool screen_button_pos_destruct_initialized;
 
 bool
 select_menuitem_by_touch(int menu_top, int menu_spacing, int menu_item_count, int *current_item)
@@ -49,6 +53,71 @@ select_menuitem_by_touch(int menu_top, int menu_spacing, int menu_item_count, in
 		*current_item = new_item;
 	}
 	return true;
+}
+
+void android_setup_screen_keys()
+{
+	int W = SDL_ListModes(NULL, 0)[0]->w;
+	int H = SDL_ListModes(NULL, 0)[0]->h;
+	SDL_Rect r;
+
+	// Rear gun mode button
+	r.x = 558 * W / 640;
+	r.y = 46 * H / 400;
+	r.w = 82 * W / 640;
+	r.h = 58 * H / 400;
+	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &r);
+	SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &r);
+
+	// Left sidekick button
+	r.x = 558 * W / 640;
+	r.y = 104 * H / 400;
+	r.w = 82 * W / 640;
+	r.h = 58 * H / 400;
+	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &r);
+	SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &r);
+
+	// Right sidekick button
+	r.x = 558 * W / 640;
+	r.y = 162 * H / 400;
+	r.w = 82 * W / 640;
+	r.h = 58 * H / 400;
+	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &r);
+	SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &r);
+
+	SDL_ANDROID_SetScreenKeyboardTransparency(SDL_ALPHA_TRANSPARENT);
+}
+
+void android_cleanup_screen_keys()
+{
+	if (!screen_button_pos_destruct_initialized)
+	{
+		screen_button_pos_destruct_initialized = true;
+		for (int i = 0; i < SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM; i++)
+		{
+			SDL_ANDROID_GetScreenKeyboardButtonPos(i, &screen_button_pos_destruct[i]);
+		}
+	}
+
+	SDL_Rect r = {0, 0, 0, 0}; // Hide all buttons
+	for (int i = 0; i < SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM; i++)
+	{
+		if (i != SDL_ANDROID_SCREENKEYBOARD_BUTTON_TEXT)
+			SDL_ANDROID_SetScreenKeyboardButtonPos(i, &r);
+	}
+
+	SDL_ANDROID_SetScreenKeyboardTransparency(192); // Text input button should not be totally transparent
+}
+
+void android_setup_screen_keys_destruct()
+{
+	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_0]);
+	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_1]);
+	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_2]);
+	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_3]);
+	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, &screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD]);
+
+	SDL_ANDROID_SetScreenKeyboardTransparency(192); // Text input button should not be totally transparent
 }
 
 bool select_gameplay( void )
@@ -310,4 +379,3 @@ bool select_difficulty( void )
 		}
 	}
 }
-

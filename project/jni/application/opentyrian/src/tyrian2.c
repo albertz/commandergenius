@@ -724,10 +724,15 @@ start_level_first:
 	extraGame = false;
 
 	doNotSaveBackup = false;
+
+	android_cleanup_screen_keys();
+
 	JE_loadMap();
 
 	if (mainLevel == 0)  // if quit itemscreen
 		return;          // back to titlescreen
+
+	android_setup_screen_keys();
 
 	fade_song();
 
