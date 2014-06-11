@@ -11,13 +11,17 @@ TODO, which will get actually done
 
 - OpenArena: camera points up to the sky after respawn on oacmp1dm5.
 
-- SDL: cloud save support.
-
-- SDL: resize default on-screen buttons for different screen sizes.
+- UQM: use gyroscope to steer the ship, search button for starmap.
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
 
-- Debian noroot: Audio support.
+- SDL: cloud save support.
+
+- SDL: move mouse to the center of the screen after changing video mode.
+
+- SDL: make sub-frame touch events as an user-configurable option.
+
+- SDL: control mouse with right analog gamepad stick.
 
 - OpenTTD: 16bpp blitter with palette animation support.
 
@@ -29,6 +33,10 @@ TODO, which will get actually done
 
 - OpenTTD: stylus/finger hover does not highlight building area anymore.
 
-- UQM: use gyroscope to steer the ship, search button for starmap.
+- Debian noroot: audio support.
+
+- Debian noroot: add Java dirs to PATH, add support for update scripts.
 
 - XSDL: add downloadable raster fonts, add path to fonts to Debian/Gimp.
+
+- Gimp: update - add Java dirs to PATH and use new mouse name in Gimp config.
