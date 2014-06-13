@@ -33,6 +33,8 @@ TODO, which will get actually done
 
 - OpenTTD: stylus/finger hover does not highlight building area anymore.
 
+- OpenTTD: volume too loud and distorted.
+
 - Debian noroot: audio support.
 
 - Debian noroot: add Java dirs to PATH, add support for update scripts.
