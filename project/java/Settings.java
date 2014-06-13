@@ -409,7 +409,7 @@ class Settings
 				Globals.DownloadToSdcard = false;
 			}
 			Globals.DataDir = Globals.DownloadToSdcard ?
-								SdcardAppPath.getPath(p) :
+								SdcardAppPath.getBestPath(p) :
 								p.getFilesDir().getAbsolutePath();
 			if( Globals.DownloadToSdcard )
 			{
@@ -419,6 +419,12 @@ class Settings
 					for( String s: fileList )
 						if( s.toUpperCase().startsWith(DataDownloader.DOWNLOAD_FLAG_FILENAME.toUpperCase()) )
 							Globals.DataDir = SdcardAppPath.deprecatedPath(p);
+				// Also check for pre-Kitkat files location
+				fileList = new File(SdcardAppPath.getPath(p)).list();
+				if( fileList != null )
+					for( String s: fileList )
+						if( s.toUpperCase().startsWith(DataDownloader.DOWNLOAD_FLAG_FILENAME.toUpperCase()) )
+							Globals.DataDir = SdcardAppPath.getPath(p);
 			}
 		}
 
@@ -680,12 +686,18 @@ class Settings
 	{
 		private static SdcardAppPath get()
 		{
-			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.FROYO)
+			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT)
+				return Kitkat.Holder.sInstance;
+			else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.FROYO)
 				return Froyo.Holder.sInstance;
 			else
 				return Dummy.Holder.sInstance;
 		}
 		public abstract String path(final Context p);
+		public String bestPath(final Context p)
+		{
+			return path(p);
+		};
 		public static String deprecatedPath(final Context p)
 		{
 			return Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + p.getPackageName();
@@ -694,6 +706,13 @@ class Settings
 		{
 			try {
 				return get().path(p);
+			} catch(Exception e) { }
+			return Dummy.Holder.sInstance.path(p);
+		}
+		public static String getBestPath(final Context p)
+		{
+			try {
+				return get().bestPath(p);
 			} catch(Exception e) { }
 			return Dummy.Holder.sInstance.path(p);
 		}
@@ -708,6 +727,32 @@ class Settings
 			{
 				return p.getExternalFilesDir(null).getAbsolutePath();
 			}
+		}
+		private static class Kitkat extends Froyo
+		{
+			private static class Holder
+			{
+				private static final Kitkat sInstance = new Kitkat();
+			}
+			public String bestPath(final Context p)
+			{
+				File[] paths = p.getExternalFilesDirs(null);
+				String ret = path(p);
+				long maxSize = -1;
+				for( File path: paths )
+				{
+					if( path == null )
+						continue;
+					StatFs stat = new StatFs(path.getPath());
+					long size = (long)stat.getAvailableBlocks() * stat.getBlockSize() / 1024 / 1024;
+					if( size > maxSize )
+					{
+						maxSize = size;
+						ret = path.getPath();
+					}
+				}
+				return ret;
+			};
 		}
 		private static class Dummy extends SdcardAppPath
 		{
