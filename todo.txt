@@ -17,11 +17,11 @@ TODO, which will get actually done
 
 - SDL: cloud save support.
 
-- SDL: move mouse to the center of the screen after changing video mode.
-
 - SDL: make sub-frame touch events as an user-configurable option.
 
 - SDL: control mouse with right analog gamepad stick.
+
+- SDL: user-configurable option to set screen orientation.
 
 - OpenTTD: 16bpp blitter with palette animation support.
 

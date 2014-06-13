@@ -33,6 +33,7 @@
 #include "SDL_video-1.3.h"
 #include "SDL_surface.h"
 #include "SDL_androidvideo.h"
+#include "SDL_androidinput.h"
 
 #include <jni.h>
 #include <android/log.h>
@@ -505,6 +506,8 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 	UpdateScreenUnderFingerRect(0,0);
 	SDL_ANDROID_ShowScreenUnderFingerRect.w = SDL_ANDROID_ShowScreenUnderFingerRect.h = 0;
 	SDL_ANDROID_SetHoverDeadzone();
+	SDL_ANDROID_currentMouseX = SDL_ANDROID_sFakeWindowWidth / 2;
+	SDL_ANDROID_currentMouseY = SDL_ANDROID_sFakeWindowHeight / 2;
 
 	/* We're done */
 	return(current);
