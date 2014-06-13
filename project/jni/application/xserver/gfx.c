@@ -28,7 +28,7 @@ static void renderStringScaled(const char *c, int size, int x, int y, int r, int
 static void * unpackFilesThread(void * unused);
 static void showErrorMessage(const char *msg);
 
-void * unpackFilesThread(void * unused)
+static int unpackFiles(const char *archive, const char *script, const char *deleteOldDataMarkerFile)
 {
 	int unpackProgressMb;
 	int unpackProgressMbTotal = 1;
@@ -37,17 +37,7 @@ void * unpackFilesThread(void * unused)
 	char buf[1024 * 4];
 	struct stat st;
 
-	/*
-	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
-	strcat( fname, "/usr/lib/xorg/protocol.txt" );
-	if( stat( fname, &st ) == 0 )
-	{
-		unpackFinished = 1;
-		return (void *)1;
-	}
-	*/
-
-	if( stat( "data.tar.gz", &st ) == 0 )
+	if( stat( archive, &st ) == 0 )
 	{
 		unpackProgressMbTotal = st.st_size / 1024 / 1024;
 		if( unpackProgressMbTotal <= 0 )
@@ -55,21 +45,20 @@ void * unpackFilesThread(void * unused)
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data: total size %d Mb", unpackProgressMbTotal);
 	}
 	else
-	{
-		unpackFinished = 1;
-		return (void *)1;
-	}
+		return 1;
 
 	unpackProgressMb = 0;
 	
 
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
-	strcat( fname, "/postinstall.sh" );
+	strcat( fname, "/" );
+	strcat( fname, script );
 
 	strcpy( fname2, getenv("SECURE_STORAGE_DIR") );
-	strcat( fname2, "/usr/lib/xorg/protocol.txt" );
+	strcat( fname2, "/" );
+	strcat( fname2, deleteOldDataMarkerFile );
 
-	if( stat( fname, &st ) == 0 || stat( fname2, &st ) == 0 )
+	if( strlen(deleteOldDataMarkerFile) > 0 && stat( fname, &st ) == 0 && stat( fname2, &st ) == 0 )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Deleting old installation...");
 		sprintf(unpackLog[0], "Deleting old installation...");
@@ -126,21 +115,20 @@ void * unpackFilesThread(void * unused)
 		exit(0);
 	}
 
-	sprintf(unpackLog[0], "Unpacking data...");
-	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data...");
+	sprintf(unpackLog[0], "Unpacking data: %s", archive);
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data: %s", archive);
 
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/busybox" );
 	strcat( fname, " tar xz -C " );
 	strcat( fname, getenv("SECURE_STORAGE_DIR") );
 	FILE * fo = popen(fname, "w");
-	FILE * ff = fopen("data.tar.gz", "rb");
+	FILE * ff = fopen(archive, "rb");
 	if( !ff || !fo )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
 		sprintf(unpackLog[0], "Error extracting data");
-		unpackFinished = 1;
-		return (void *)0;
+		return 0;
 	}
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "POPEN OK");
 
@@ -154,8 +142,7 @@ void * unpackFilesThread(void * unused)
 		{
 			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data");
 			sprintf(unpackLog[0], "Error extracting data");
-			unpackFinished = 1;
-			return (void *)1;
+			return 1;
 		}
 		fwrite( buf, 1, cnt, fo );
 		if( cnt < sizeof(buf) )
@@ -173,54 +160,61 @@ void * unpackFilesThread(void * unused)
 	fclose(ff);
 	if( pclose(fo) != 0 ) // Returns error on Android 2.3 emulator!
 	{
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data - pclose() returned error");
-		//unpackFinished = 1;
-		//return (void *)0;
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error extracting data - pclose() returned error, ignoring that error");
+		//return 0;
 	}
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Extracting data finished");
 
-	remove("data.tar.gz");
+	remove(archive);
 
-	sprintf(unpackLog[0], "Running postinstall script...");
+	if( strlen(script) == 0 )
+	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "No postinstall script");
+		return 1;
+	}
+
+	sprintf(unpackLog[0], "Running postinstall script: %s", script);
 
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
-	strcat( fname, "/postinstall.sh" );
+	strcat( fname, "/" );
+	strcat( fname, script );
 	if( stat( fname, &st ) != 0 )
 	{
 		strcpy( fname2, getenv("UNSECURE_STORAGE_DIR") );
-		strcat( fname2, "/postinstall.sh" );
+		strcat( fname2, "/" );
+		strcat( fname2, script );
 		if( stat( fname2, &st ) != 0 )
 		{
-			__android_log_print(ANDROID_LOG_INFO, "XSDL", "No postinstall script");
-			unpackFinished = 1;
-			return (void *)1;
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Cannot find postinstall script");
+			return 1;
 		}
 		else
 		{
 			strcpy( fname2, "cat " );
 			strcat( fname2, getenv("UNSECURE_STORAGE_DIR") );
-			strcat( fname2, "/postinstall.sh > " );
+			strcat( fname2, "/" );
+			strcat( fname2, script );
+			strcat( fname2, " > " );
 			strcat( fname2, fname );
 			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Copying postinstall scipt from SD card: %s", fname2);
 			system( fname2 );
 		}
 	}
 
-	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Setting executable permissions on postinstall scipt");
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Setting executable permissions on postinstall script");
 
 	strcpy( fname2, "chmod 755 " );
 	strcat( fname2, fname );
 	system( fname2 );
 
-	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Running postinstall scipt");
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Running postinstall scipt: %s", script);
 
 	fo = popen(fname, "r");
 	if( !fo )
 	{
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "ERROR: Cannot launch postinstall scipt");
-		unpackFinished = 1;
-		return (void *)0;
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "ERROR: Cannot launch postinstall script");
+		return 0;
 	}
 	for(;;)
 	{
@@ -232,9 +226,35 @@ void * unpackFilesThread(void * unused)
 		strncpy(unpackLog[1], buf, sizeof(unpackLog[1]) - 4);
 	}
 
-	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Postinstall scipt exited with status %d", pclose(fo));
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Postinstall script exited with status %d", pclose(fo));
 	sprintf(unpackLog[0], "Running postinstall script finished");
 	
+	return 1;
+}
+
+static void * unpackFilesThread(void * unused)
+{
+	const char *unpack[][3] =
+	{
+		{"data.tar.gz", "postinstall.sh", "usr/lib/xorg/protocol.txt" },
+		{"xfonts.tar.gz", "", "" },
+		{"update1.tar.gz", "update1.sh", "" },
+		{"update2.tar.gz", "update2.sh", "" },
+		{"update3.tar.gz", "update3.sh", "" },
+		{NULL, NULL, NULL}
+	};
+	int i;
+
+	for( i = 0; unpack[i][0] != NULL; i++ )
+	{
+		int status = unpackFiles(unpack[i][0], unpack[i][1], unpack[i][2]);
+		if( status == 0 && i == 0 ) // Only the first archive is mandatory
+		{
+			unpackFinished = 1;
+			return (void *)0;
+		}
+	}
+
 	unpackFinished = 1;
 	return (void *)1;
 }
@@ -286,7 +306,8 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		*displayH = x;
 	}
 
-	const char * resStr[] = {
+	const char * resStr[] =
+	{
 		native, native56, native46, native36,
 		native26, "1280x1024", "1280x960", "1280x720",
 		"1024x768", "800x600", "800x480", "640x480"
