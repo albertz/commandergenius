@@ -11,4 +11,6 @@ tar -c -z --exclude-vcs --exclude="*.o" --exclude="*.d" --exclude="*.dep" \
 `find  project/jni/application -maxdepth 1 -type f -o -type l` \
 project/jni/application/src \
 project/jni/application/`readlink project/jni/application/src` \
-project/AndroidManifest.xml project/src "$@"
+project/AndroidManifest.xml project/src \
+project/obj/local/armeabi-v7a/*.so project/obj/local/x86/*.so \
+"$@"
