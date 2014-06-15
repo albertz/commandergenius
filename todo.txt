@@ -21,6 +21,8 @@ TODO, which will get actually done
 
 - SDL: user-configurable option to set screen orientation.
 
+- OpenTTD: Scenario editor all menus are out of screen.
+
 - OpenTTD: 16bpp blitter with palette animation support.
 
 - OpenTTD: screen navigation buttons bug out OpentTD on Moto G.
@@ -31,7 +33,11 @@ TODO, which will get actually done
 
 - OpenTTD: stylus/finger hover does not highlight building area anymore.
 
-- OpenTTD: volume too loud and distorted.
+- OpenTTD: volume too loud and sound is distorted.
+
+- OpenTTD: Cheats menu closes itself randomly.
+
+- OpenTTD: Vechile replace screen "OK/replace" button is out of the screen.
 
 - Debian noroot: audio support.
 
