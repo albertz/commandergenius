@@ -62,35 +62,43 @@ select_menuitem_by_touch(int menu_top, int menu_spacing, int menu_item_count, in
 
 void android_setup_screen_keys( void )
 {
-	int W = SDL_ListModes(NULL, 0)[0]->w;
-	int H = SDL_ListModes(NULL, 0)[0]->h;
-	SDL_Rect r;
+	if (touchscreenControlMode == TOUCHSCREEN_CONTROL_FINGER)
+	{
+		int W = SDL_ListModes(NULL, 0)[0]->w;
+		int H = SDL_ListModes(NULL, 0)[0]->h;
+		SDL_Rect r;
 
-	// Rear gun mode button
-	r.x = 558 * W / 640;
-	r.y = 46 * H / 400;
-	r.w = 82 * W / 640;
-	r.h = 58 * H / 400;
-	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &r);
-	SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &r);
+		// Rear gun mode button
+		r.x = 558 * W / 640;
+		r.y = 46 * H / 400;
+		r.w = 82 * W / 640;
+		r.h = 58 * H / 400;
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &r);
+		SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, &r);
 
-	// Left sidekick button
-	r.x = 558 * W / 640;
-	r.y = 104 * H / 400;
-	r.w = 82 * W / 640;
-	r.h = 58 * H / 400;
-	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &r);
-	SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &r);
+		// Left sidekick button
+		r.x = 558 * W / 640;
+		r.y = 104 * H / 400;
+		r.w = 82 * W / 640;
+		r.h = 58 * H / 400;
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &r);
+		SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &r);
 
-	// Right sidekick button
-	r.x = 558 * W / 640;
-	r.y = 162 * H / 400;
-	r.w = 82 * W / 640;
-	r.h = 58 * H / 400;
-	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &r);
-	SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &r);
+		// Right sidekick button
+		r.x = 558 * W / 640;
+		r.y = 162 * H / 400;
+		r.w = 82 * W / 640;
+		r.h = 58 * H / 400;
+		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &r);
+		SDL_ANDROID_SetScreenKeyboardButtonImagePos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, &r);
 
-	SDL_ANDROID_SetScreenKeyboardTransparency(SDL_ALPHA_TRANSPARENT);
+		SDL_ANDROID_SetScreenKeyboardTransparency(SDL_ALPHA_TRANSPARENT);
+	}
+	else
+	{
+		/* Setup joystick with buttons */
+		android_setup_screen_keys_destruct();
+	}
 }
 
 void android_cleanup_screen_keys( void )
@@ -122,7 +130,7 @@ void android_setup_screen_keys_destruct( void )
 	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_3, &screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_3]);
 	SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, &screen_button_pos_destruct[SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD]);
 
-	SDL_ANDROID_SetScreenKeyboardTransparency(192); // Text input button should not be totally transparent
+	SDL_ANDROID_SetScreenKeyboardTransparency(192);
 }
 
 void android_show_tutorial( void )

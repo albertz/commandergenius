@@ -129,17 +129,8 @@ extern JE_byte processorType;
 extern JE_SaveFilesType saveFiles;
 extern JE_SaveGameTemp saveTemp;
 extern JE_word editorLevel;
-typedef enum { AUTOFIRE_TOUCHSCREEN, AUTOFIRE_BUTTON, AUTOFIRE_BUTTON_TOUCH, AUTOFIRE_NONE, AUTOFIRE_LAST } AutoFireMode_t;
-extern AutoFireMode_t autoFireMode;
-typedef enum { 
-	TOUCHSCREEN_SHIP_ABOVE_FINGER, 
-	TOUCHSCREEN_SHIP_TO_THE_LEFT, 
-	TOUCHSCREEN_SHIP_BELOW_FINGER, 
-	TOUCHSCREEN_FIRE_ONLY, 
-	TOUCHSCREEN_NONE, 
-	TOUCHSCREEN_LAST } TouchscreenMode_t;
-extern TouchscreenMode_t touchscreenMode;
-
+typedef enum { TOUCHSCREEN_CONTROL_FINGER, TOUCHSCREEN_CONTROL_JOYSTICK, TOUCHSCREEN_CONTROL_BOTH, TOUCHSCREEN_CONTROL_LAST } TouchscreenControlMode_t;
+extern TouchscreenControlMode_t touchscreenControlMode;
 
 void JE_initProcessorType( void );
 void JE_setNewGameSpeed( void );

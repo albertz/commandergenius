@@ -15,8 +15,6 @@ TODO, which will get actually done
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
 
-- SDL: cloud save support.
-
 - SDL: make sub-frame touch events as an user-configurable option.
 
 - SDL: control mouse with right analog gamepad stick.

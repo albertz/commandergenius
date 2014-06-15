@@ -324,7 +324,7 @@ void JE_itemScreen( void )
 			else
 			{
 				min = 2;
-				max = 13;
+				max = 12;
 			}
 
 			for (int x = min; x <= max; x++)
@@ -380,7 +380,7 @@ void JE_itemScreen( void )
 		/* keyboard settings menu */
 		if (curMenu == 5)
 		{
-			for (int x = 2; x <= 13; x++)
+			for (int x = 2; x <= 12; x++)
 			{
 				if (x == curSel[curMenu])
 				{
@@ -395,15 +395,9 @@ void JE_itemScreen( void )
 
 				if( x == 12 )
 				{
-					char *AutoFireNames[] = { "Touchscreen", "Fire button",  "Touch and Button", "None" };
-					JE_textShade(VGAScreen, 166, 38 + (x - 2)*12, "Auto-Fire", temp2 / 16, temp2 % 16 - 8, DARKEN);
-					JE_textShade(VGAScreen, 230, 38 + (x - 2)*12, AutoFireNames[autoFireMode], temp2 / 16, temp2 % 16 - 8, DARKEN);
-				}
-				else if( x == 13 )
-				{
-					char *TouchscreenNames[] = { "Ship above finger", "Ship to the left", "Ship below finger", "Fire only", "None" };
-					JE_textShade(VGAScreen, 166, 38 + (x - 2)*12, "Touchscreen", temp2 / 16, temp2 % 16 - 8, DARKEN);
-					JE_textShade(VGAScreen, 230, 38 + (x - 2)*12, TouchscreenNames[touchscreenMode], temp2 / 16, temp2 % 16 - 8, DARKEN);
+					char *touchscreenControlNames[] = { "Ship follows touch", "Joystick + buttons",  "Both" };
+					JE_textShade(VGAScreen, 166, 38 + (x - 2)*12, "Touch mode", temp2 / 16, temp2 % 16 - 8, DARKEN);
+					JE_textShade(VGAScreen, 230, 38 + (x - 2)*12, touchscreenControlNames[touchscreenControlMode], temp2 / 16, temp2 % 16 - 8, DARKEN);
 				}
 				else
 					JE_textShade(VGAScreen, 166, 38 + (x - 2)*12, menuInt[curMenu + 1][x-1], temp2 / 16, temp2 % 16 - 8, DARKEN);
@@ -415,7 +409,7 @@ void JE_itemScreen( void )
 				}
 			}
 
-			menuChoices[5] = 13;
+			menuChoices[5] = 12;
 		}
 
 		/* Joystick settings menu */
@@ -2665,18 +2659,11 @@ void JE_menuFunction( JE_byte select )
 		break;
 
 	case 5: /* keyboard settings */
-		if (curSelect == 12) /* Auto-Fire mode */
+		if (curSelect == 12) /* Touchscreen mode */
 		{
-			autoFireMode = (AutoFireMode_t)(autoFireMode + 1);
-			if(autoFireMode >= AUTOFIRE_LAST)
-				autoFireMode = AUTOFIRE_TOUCHSCREEN;
-			JE_saveConfiguration();
-		}
-		else if (curSelect == 13) /* Touchscreen mode */
-		{
-			touchscreenMode = (TouchscreenMode_t)(touchscreenMode + 1);
-			if(touchscreenMode >= TOUCHSCREEN_LAST)
-				touchscreenMode = TOUCHSCREEN_SHIP_ABOVE_FINGER;
+			touchscreenControlMode = touchscreenControlMode + 1;
+			if(touchscreenControlMode >= TOUCHSCREEN_CONTROL_LAST)
+				touchscreenControlMode = TOUCHSCREEN_CONTROL_FINGER;
 			JE_saveConfiguration();
 		}
 		else if (curSelect == 10) /* reset to defaults */

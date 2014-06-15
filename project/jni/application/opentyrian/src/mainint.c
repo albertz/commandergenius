@@ -3133,8 +3133,7 @@ redo:
 	{
 		*mouseX_ = this_player->x;
 		*mouseY_ = this_player->y;
-		if(autoFireMode != AUTOFIRE_BUTTON && autoFireMode != AUTOFIRE_BUTTON_TOUCH)
-			button[1-1] = false;
+		button[1-1] = false;
 		button[2-1] = false;
 		button[3-1] = false;
 		button[4-1] = false;
@@ -3223,51 +3222,26 @@ redo:
 					/* Move ship above user finger */
 					int shifted_mouse_x = mouse_x + 15;
 					int shifted_mouse_y = mouse_y;
-					if( touchscreenMode == TOUCHSCREEN_SHIP_ABOVE_FINGER )
-					{
-						if( shifted_mouse_y > 160 )
-							shifted_mouse_y += shifted_mouse_y - 160;
-						shifted_mouse_y -= 45;
-					}
-					if( touchscreenMode == TOUCHSCREEN_SHIP_TO_THE_LEFT )
-					{
-						shifted_mouse_x -= 30;
-					}
+					/* Ship above finger */
+					if( shifted_mouse_y > 160 )
+						shifted_mouse_y += shifted_mouse_y - 160;
+					shifted_mouse_y -= 45;
 					
 					if (keysactive[keySettings[0]] ||
-						(has_mouse && mouse_pressed[0] && (shifted_mouse_y < this_player->y && touchscreenMode < TOUCHSCREEN_FIRE_ONLY)))
+						(has_mouse && mouse_pressed[0] && (shifted_mouse_y < this_player->y && touchscreenControlMode != TOUCHSCREEN_CONTROL_JOYSTICK)))
 						this_player->y -= CURRENT_KEY_SPEED;
 					if (keysactive[keySettings[1]] ||
-						(has_mouse && mouse_pressed[0] && (shifted_mouse_y > this_player->y && touchscreenMode < TOUCHSCREEN_FIRE_ONLY)))
+						(has_mouse && mouse_pressed[0] && (shifted_mouse_y > this_player->y && touchscreenControlMode != TOUCHSCREEN_CONTROL_JOYSTICK)))
 						this_player->y += CURRENT_KEY_SPEED;
 
 					if (keysactive[keySettings[2]] ||
-						(has_mouse && mouse_pressed[0] && (shifted_mouse_x < this_player->x && touchscreenMode < TOUCHSCREEN_FIRE_ONLY)))
+						(has_mouse && mouse_pressed[0] && (shifted_mouse_x < this_player->x && touchscreenControlMode != TOUCHSCREEN_CONTROL_JOYSTICK)))
 						this_player->x -= CURRENT_KEY_SPEED;
 					if (keysactive[keySettings[3]] ||
-						(has_mouse && mouse_pressed[0] && (shifted_mouse_x > this_player->x && touchscreenMode < TOUCHSCREEN_FIRE_ONLY)))
+						(has_mouse && mouse_pressed[0] && (shifted_mouse_x > this_player->x && touchscreenControlMode != TOUCHSCREEN_CONTROL_JOYSTICK)))
 						this_player->x += CURRENT_KEY_SPEED;
 
-					if( autoFireMode == AUTOFIRE_BUTTON || autoFireMode == AUTOFIRE_BUTTON_TOUCH )
-					{
-						if(newkey && keydown && lastkey_sym == keySettings[4])
-							button[0] = ! button[0];
-						else if (autoFireMode == AUTOFIRE_BUTTON_TOUCH)
-						{
-							static int prevState = 0;
-							if( mouse_pressed[0] && prevState != button[0] )
-							{
-								button[0] = ! button[0];
-								prevState = button[0];
-							}
-							else if( ! mouse_pressed[0] )
-								prevState = ! button[0];
-						}
-					}
-					else
-					{
-						button[0] = button[0] || keysactive[keySettings[4]] || ( mouse_pressed[0] && ( touchscreenMode != TOUCHSCREEN_NONE ) );
-					}
+					button[0] = button[0] || keysactive[keySettings[4]] || (mouse_pressed[0] && touchscreenControlMode != TOUCHSCREEN_CONTROL_JOYSTICK);
 
 					button[3] = button[3] || keysactive[keySettings[5]];
 					button[1] = button[1] || keysactive[keySettings[6]];
