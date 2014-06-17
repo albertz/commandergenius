@@ -39,6 +39,8 @@ TODO, which will get actually done
 
 - OpenTTD: Vechile replace screen "OK/replace" button is out of the screen.
 
+- OpenTTD: "Open website" button in online resource menu is broken.
+
 - Debian noroot: audio support.
 
 - Debian noroot: add Java dirs to PATH, add support for update scripts.
