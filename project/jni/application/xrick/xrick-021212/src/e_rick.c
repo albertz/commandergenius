@@ -193,7 +193,7 @@ e_rick_action2(void)
 		return;
 	}
 	/* fall */
-	offsy += (offsy > 0) ? 0x0040 : 0x0080;
+	offsy += 0x0080;
 	if (offsy > 0x0800) {
 		offsy = 0x0800;
 		ylow = 0;
@@ -230,7 +230,7 @@ e_rick_action2(void)
 	u_envtest(x, E_RICK_ENT.y, E_RICK_STTST(E_RICK_STCRAWL), &env0, &env1);
 
 	/* save x-position if it is possible to move */
-	if (!(env1 & (MAP_EFLG_SOLID|MAP_EFLG_SPAD|MAP_EFLG_WAYUP))) {
+	if (!(env1 & (MAP_EFLG_SOLID|MAP_EFLG_SPAD/*|MAP_EFLG_WAYUP*/))) {
 		E_RICK_ENT.x = x;
 		if (env1 & MAP_EFLG_LETHAL) e_rick_gozombie();
 	}
