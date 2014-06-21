@@ -1,3 +1,5 @@
+/* The license of this source code is public domain */
+
 #ifndef _JAVA_KEY_CODES_H_
 #define _JAVA_KEY_CODES_H_
 

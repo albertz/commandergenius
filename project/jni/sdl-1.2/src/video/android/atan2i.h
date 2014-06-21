@@ -1,3 +1,5 @@
+/* The license of this source code is public domain */
+
 #ifndef __ATAN2I_H__
 #define __ATAN2I_H__
 #include <math.h>
