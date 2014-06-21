@@ -6,8 +6,6 @@ if [ -e dspaceinvadors ] ; then
 else
 	echo "Downloading sources..."
 	svn checkout svn://svn.code.sf.net/p/dspaceinvadors/code/ dspaceinvadors || exit 1
-	echo "Patching..."
-	patch -p0 -d dspaceinvadors < android.diff || exit 1
 fi
 
 if [ -e dspaceinvadors/config.h ] ; then

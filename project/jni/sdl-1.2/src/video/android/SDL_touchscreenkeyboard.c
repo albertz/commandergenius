@@ -364,6 +364,11 @@ static inline int ArrowKeysPressed(int x, int y)
 	int ret = 0, dx, dy;
 	dx = x - arrows[0].x - arrows[0].w / 2;
 	dy = y - arrows[0].y - arrows[0].h / 2;
+
+	// Small deadzone at the center
+	if( abs(dx) < arrows[0].w / 20 && abs(dy) < arrows[0].h / 20 )
+		return ret;
+
 	// Single arrow key pressed
 	if( abs(dy / 2) >= abs(dx) )
 	{
@@ -422,8 +427,8 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					if( SDL_ANDROID_joysticksAmount > 0 )
 					{
 						int xx = (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w;
-						if( xx == 0 ) // Do not allow (0,0) coordinate, when the user touches the joystick
-							xx = 1;
+						if( xx == 0 ) // Do not allow (0,0) coordinate, when the user touches the joystick - this indicates 'finger up' in OpenArena
+							xx = 1;   // Yeah, maybe I should not include app-specific hacks into the library
 						int axis = j < 2 ? j*2 : MAX_MULTITOUCH_POINTERS + 4;
 						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis, xx );
 						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis + 1, (y - arrows[j].y - arrows[j].h / 2) * 65534 / arrows[j].h );
@@ -467,7 +472,7 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 
 		if( floatingScreenJoystick && !processed && pointerInButtonRect[BUTTON_ARROWS] == -1 )
 		{
-			// Center joystick under finger, do not send any events yet
+			// Center joystick under finger
 			SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 1);
 			arrows[0].x = x - arrows[0].w / 2;
 			arrows[0].y = y - arrows[0].h / 2;
@@ -476,6 +481,11 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 			pointerInButtonRect[BUTTON_ARROWS] = pointerId;
 			joystickTouchPoints[0] = x;
 			joystickTouchPoints[1] = y;
+			if( SDL_ANDROID_joysticksAmount > 0 )
+			{
+				SDL_ANDROID_MainThreadPushJoystickAxis( 0, 0, 1 ); // Non-zero joystick coordinate
+				SDL_ANDROID_MainThreadPushJoystickAxis( 0, 1, 0 );
+			}
 		}
 	}
 	else
@@ -547,9 +557,8 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 				if( floatingScreenJoystick && j == 0 && ! InsideRect( &arrows[j], x, y ) )
 				{
 					int xx = 0, yy = 0;
-					// Move joystick back under finger
+					// A finger moved outside the joystick - move the joystick back under the finger
 					LineAndRectangleIntersection(x - (arrows[0].x + arrows[0].w / 2), y - (arrows[0].y + arrows[0].h / 2), arrows[0].w, arrows[0].h, &xx, &yy);
-					//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Touch %4d:%4d dpad %4d:%4d:%4d:%4d move by %4d:%4d", x, y, pointerId, action);
 					arrows[0].x += xx;
 					arrows[0].y += yy;
 					arrowsDraw[0] = arrowsExtended[0] = arrows[0];
@@ -579,7 +588,10 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					if( SDL_ANDROID_joysticksAmount > 0 )
 					{
 						int axis = j < 2 ? j*2 : MAX_MULTITOUCH_POINTERS + 4;
-						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis, (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w );
+						int xx = (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w;
+						if( xx == 0 ) // Do not allow (0,0) coordinate, when the user touches the joystick - this indicates 'finger up' in OpenArena
+							xx = 1;   // Yeah, maybe I should not include app-specific hacks into the library
+						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis, xx );
 						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis + 1, (y - arrows[j].y - arrows[j].h / 2) * 65534 / arrows[j].h );
 					}
 					else
