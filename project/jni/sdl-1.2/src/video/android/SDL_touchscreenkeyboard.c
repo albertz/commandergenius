@@ -88,12 +88,46 @@ enum { MOUSE_POINTER_W = 32, MOUSE_POINTER_H = 32, MOUSE_POINTER_X = 5, MOUSE_PO
 
 static int sunTheme = 0;
 static int joystickTouchPoints[MAX_JOYSTICKS*2];
+static int floatingScreenJoystick = 0;
 
 static void R_DumpOpenGlState(void);
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
 	return ( x >= r->x && x <= r->x + r->w ) && ( y >= r->y && y <= r->y + r->h );
+}
+
+// Find the intersection of a line and a rectangle,
+// where on of the line points and the center of rectangle
+// are both at the coordinate [0,0].
+// It returns the remaining line segment outside of the rectangle.
+// Do not check for border condition, we check that the line point
+// is outside of the rectangle in another function.
+static inline void LineAndRectangleIntersection(
+		int lx, int ly, // Line point, that is outside of rectangle
+		int rw, int rh, // Rectangle dimensions
+		int *x, int *y)
+{
+	if( abs(lx) * rh > abs(ly) * rw )
+	{
+		rw /= 2;
+		// Intersection at the left side
+		if( lx < -rw )
+			*x = lx + rw; // lx is negative
+		else //if( lx > rw ) // At the right side
+			*x = lx - rw; // lx is positive
+		*y = *x * ly / lx;
+	}
+	else
+	{
+		rh /= 2;
+		// At the top
+		if( ly < -rh )
+			*y = ly + rh; // ly is negative
+		else //if( ly > rh ) // At the right side
+			*y = ly - rh; // ly is positive
+		*x = *y * lx / ly;
+	}
 }
 
 static struct ScreenKbGlState_t
@@ -360,7 +394,7 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 	int i, j;
 	unsigned processed = 0;
 	int joyAmount = SDL_ANDROID_joysticksAmount;
-	if( joyAmount == 0 && arrows[0].w > 0 )
+	if( joyAmount == 0 && (arrows[0].w > 0 || floatingScreenJoystick) )
 		joyAmount = 1;
 	
 	if( !touchscreenKeyboardShown )
@@ -424,6 +458,19 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 				}
 			}
 		}
+
+		if( floatingScreenJoystick && !processed && pointerInButtonRect[BUTTON_ARROWS] == -1 )
+		{
+			// Center joystick under finger, do not send any events yet
+			SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 1);
+			arrows[0].x = x - arrows[0].w / 2;
+			arrows[0].y = y - arrows[0].h / 2;
+			arrowsDraw[0] = arrowsExtended[0] = arrows[0];
+			processed |= 1<<BUTTON_ARROWS;
+			pointerInButtonRect[BUTTON_ARROWS] = pointerId;
+			joystickTouchPoints[0] = x;
+			joystickTouchPoints[1] = y;
+		}
 	}
 	else
 	if( action == MOUSE_UP )
@@ -449,6 +496,8 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(RIGHT), 0 );
 					oldArrows = 0;
 				}
+				if( floatingScreenJoystick && j == 0 )
+					SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 0);
 			}
 		}
 		for( i = 0; i < MAX_BUTTONS; i++ )
@@ -489,6 +538,16 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 			if( pointerInButtonRect[BUTTON_ARROWS+j] == pointerId )
 			{
 				processed |= 1<<(BUTTON_ARROWS+j);
+				if( floatingScreenJoystick && j == 0 && ! InsideRect( &arrows[j], x, y ) )
+				{
+					int xx = 0, yy = 0;
+					// Move joystick back under finger
+					LineAndRectangleIntersection(x - (arrows[0].x + arrows[0].w / 2), y - (arrows[0].y + arrows[0].h / 2), arrows[0].w, arrows[0].h, &xx, &yy);
+					//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Touch %4d:%4d dpad %4d:%4d:%4d:%4d move by %4d:%4d", x, y, pointerId, action);
+					arrows[0].x += xx;
+					arrows[0].y += yy;
+					arrowsDraw[0] = arrowsExtended[0] = arrows[0];
+				}
 				if( ! InsideRect( &arrowsExtended[j], x, y ) )
 				{
 					pointerInButtonRect[BUTTON_ARROWS+j] = -1;
@@ -584,7 +643,8 @@ void shrinkButtonRect(SDL_Rect s, SDL_Rect * d)
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thiz, jint size, jint drawsize, jint theme, jint _transparency )
+JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv* env, jobject thiz,
+		jint size, jint drawsize, jint theme, jint _transparency, jint _floatingScreenJoystick )
 {
 	int i, ii;
 	int nbuttons1row, nbuttons2row;
@@ -675,6 +735,13 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		shrinkButtonRect(buttons[i], &buttonsDraw[i]);
 	for( i = 0; i < SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM; i++ )
 		SDL_ANDROID_GetScreenKeyboardButtonPos(i, &hiddenButtons[i]);
+
+	floatingScreenJoystick = _floatingScreenJoystick;
+	if( floatingScreenJoystick )
+	{
+		arrowsExtended[0] = arrows[0] = arrowsDraw[0];
+		SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 0);
+	}
 };
 
 JNIEXPORT void JNICALL

@@ -89,6 +89,7 @@ class Globals
 	public static int TouchscreenKeyboardDrawSize = 1;
 	public static int TouchscreenKeyboardTheme = 2;
 	public static int TouchscreenKeyboardTransparency = 2;
+	public static boolean FloatingScreenJoystick = false;
 	public static int AccelerometerSensitivity = 2;
 	public static int AccelerometerCenterPos = 2;
 	public static int TrackballDampening = 0;
@@ -130,7 +131,6 @@ class Globals
 	public static String DataDir = new String("");
 	public static boolean VideoLinearFilter = true;
 	public static boolean MultiThreadedVideo = false;
-	public static boolean BrokenLibCMessageShown = false;
 
 	public static boolean OuyaEmulation = false; // For debugging
 	public static boolean RedirectStdout = false; // For debugging
