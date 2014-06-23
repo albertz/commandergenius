@@ -9,24 +9,47 @@ TODO, which will get actually done
 
 - OpenArena: do not treat commands starting with / as chat text.
 
-- SDL: cloud save support.
-
-- SDL: resize default on-screen buttons for different screen sizes.
-
-- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
-
-- OpenTTD: Two-finger scrolling.
-
-- OpenTTD: Split top toolbar into left/right toolbars.
-
-- OpenTTD: Option to hide mouse cursor.
-
-- OpenTTD: Show info about facility on mouse up instead of mouse down.
-
-- Debian noroot: Audio support.
+- OpenArena: camera points up to the sky after respawn on oacmp1dm5.
 
 - UQM: use gyroscope to steer the ship, search button for starmap.
 
-- USB Keyboard: modify /dev/hidg* permissions autmatically, using su.
+- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
+
+- SDL: make sub-frame touch events as an user-configurable option.
+
+- SDL: control mouse with right analog gamepad stick.
+
+- SDL: user-configurable option to set screen orientation and BPP.
+
+- SDL: floating on-screen joystick - initially invisible, it appears when you touch the screen,
+  centered on your finger, then it slides with your finger if you bump the joystick edge.
+
+- SDL: option to disable immersive mode.
+
+- OpenTTD: All menus in the scenario editor are out of the screen.
+
+- OpenTTD: 16bpp blitter with palette animation support.
+
+- OpenTTD: screen navigation buttons bug on Moto G.
+
+- OpenTTD: Auto-switch to full vertical toolbar if enough space.
+
+- OpenTTD: draw behind vertical toolbar.
+
+- OpenTTD: stylus/finger hover does not highlight building area anymore.
+
+- OpenTTD: volume too loud and sound is distorted.
+
+- OpenTTD: Cheats menu closes itself randomly.
+
+- OpenTTD: Vechile replace screen "OK/replace" button is out of the screen.
+
+- OpenTTD: "Open website" button in online resource menu is broken.
+
+- Debian noroot: audio support.
+
+- Debian noroot: add Java dirs to PATH, add support for update scripts.
 
 - XSDL: add downloadable raster fonts, add path to fonts to Debian/Gimp.
+
+- Gimp: update - add Java dirs to PATH and use new mouse name in Gimp config.

@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -27,8 +27,6 @@
 
 
 #define SAVE_FILES_NUM (11 * 2)
-
-#define MAX_STARS 100
 
 /* These are necessary because the size of the structure has changed from the original, but we
    need to know the original sizes in order to find things in TYRIAN.SAV */
@@ -74,13 +72,6 @@ typedef struct
 typedef JE_SaveFileType JE_SaveFilesType[SAVE_FILES_NUM]; /* [1..savefilesnum] */
 typedef JE_byte JE_SaveGameTemp[SAVE_FILES_SIZE + 4 + 100]; /* [1..sizeof(savefilestype) + 4 + 100] */
 
-typedef struct
-{
-	JE_byte sC;
-	JE_word sLoc;
-	JE_word sMov;
-} StarDatType;
-
 extern const JE_byte cryptKey[10];
 extern const JE_KeySettingType defaultKeySettings;
 extern const char defaultHighScoreNames[34][23];
@@ -88,8 +79,6 @@ extern const char defaultTeamNames[22][25];
 extern const JE_EditorItemAvailType initialItemAvail;
 extern JE_boolean smoothies[9];
 extern JE_byte starShowVGASpecialCode;
-extern StarDatType starDat[MAX_STARS];
-extern JE_word starY;
 extern JE_word lastCubeMax, cubeMax;
 extern JE_word cubeList[4];
 extern JE_boolean gameHasRepeated;
@@ -140,25 +129,14 @@ extern JE_byte processorType;
 extern JE_SaveFilesType saveFiles;
 extern JE_SaveGameTemp saveTemp;
 extern JE_word editorLevel;
-enum AutoFireMode_t { AUTOFIRE_TOUCHSCREEN, AUTOFIRE_BUTTON, AUTOFIRE_BUTTON_TOUCH, AUTOFIRE_NONE, AUTOFIRE_LAST };
-extern AutoFireMode_t autoFireMode;
-enum TouchscreenMode_t { 
-	TOUCHSCREEN_SHIP_ABOVE_FINGER, 
-	TOUCHSCREEN_SHIP_TO_THE_LEFT, 
-	TOUCHSCREEN_SHIP_BELOW_FINGER, 
-	TOUCHSCREEN_FIRE_ONLY, 
-	TOUCHSCREEN_NONE, 
-	TOUCHSCREEN_LAST };
-extern TouchscreenMode_t touchscreenMode;
-
+typedef enum { TOUCHSCREEN_CONTROL_FINGER, TOUCHSCREEN_CONTROL_JOYSTICK, TOUCHSCREEN_CONTROL_BOTH, TOUCHSCREEN_CONTROL_LAST } TouchscreenControlMode_t;
+extern TouchscreenControlMode_t touchscreenControlMode;
 
 void JE_initProcessorType( void );
 void JE_setNewGameSpeed( void );
 const char *get_user_directory( void );
 void JE_loadConfiguration( void );
 void JE_saveConfiguration( void );
-
-void JE_setupStars( void );
 
 void JE_saveGame( JE_byte slot, const char *name );
 void JE_loadGame( JE_byte slot );
@@ -171,4 +149,3 @@ void save_json( cJSON *root, const char *filename );
 
 #endif /* CONFIG_H */
 
-// kate: tab-width 4; vim: set noet:

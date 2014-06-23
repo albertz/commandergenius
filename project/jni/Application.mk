@@ -9,10 +9,10 @@ APP_PIE := false # This feature makes executables incompatible to Android API 15
 
 # Global compiler flags
 ifneq ($(filter armeabi-v7a-hard, $(APP_ABI)),)
-# Link-time optimization enabled for optimization junkies. -O9001 etc
-APP_CFLAGS := -flto
-APP_CXXFLAGS := -flto
-APP_LDFLAGS := -flto
+# Link-time optimization enabled for optimization junkies. -O999 etc
+#APP_CFLAGS := -flto
+#APP_CXXFLAGS := -flto
+#APP_LDFLAGS := -flto
 # Latest GCC got better LTO support
-NDK_TOOLCHAIN_VERSION := 4.8
+#NDK_TOOLCHAIN_VERSION := 4.8
 endif

@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -22,7 +22,9 @@
 #include "opentyr.h"
 
 #include "SDL.h"
-#include "SDL_net.h"
+#ifdef WITH_NETWORK
+#	include "SDL_net.h"
+#endif
 
 
 #define PACKET_ACKNOWLEDGE   0x00    // 
@@ -50,28 +52,26 @@ extern char *network_opponent_host;
 extern Uint16 network_player_port, network_opponent_port;
 extern char *network_player_name, *network_opponent_name;
 
+#ifdef WITH_NETWORK
 extern UDPpacket *packet_out_temp;
 extern UDPpacket *packet_in[], *packet_out[],
                  *packet_state_in[], *packet_state_out[];
+#endif
 
 extern uint thisPlayerNum;
 extern JE_boolean haltGame;
 extern JE_boolean moveOk;
 extern JE_boolean pauseRequest, skipLevelRequest, helpRequest, nortShipRequest;
 extern JE_boolean yourInGameMenuRequest, inGameMenuRequest;
-extern JE_boolean portConfigChange, portConfigDone;
 
-
+#ifdef WITH_NETWORK
 void network_prepare( Uint16 type );
 bool network_send( int len );
-bool network_send_no_ack( int len );
 
 int network_check( void );
-int network_acknowledge( Uint16 sync );
 bool network_update( void );
 
 bool network_is_sync( void );
-bool network_is_alive( void );
 
 void network_state_prepare( void );
 int network_state_send( void );
@@ -84,17 +84,18 @@ void network_tyrian_halt( unsigned int err, bool attempt_sync );
 
 int network_init( void );
 
-void packet_copy( UDPpacket *dst, UDPpacket *src );
-void packets_shift_up( UDPpacket **packet, int max_packets );
-void packets_shift_down( UDPpacket **packet, int max_packets );
-
 void JE_clearSpecialRequests( void );
 
 #define NETWORK_KEEP_ALIVE() \
 		if (isNetworkGame) \
 			network_check();
 
+#else
+
+#define NETWORK_KEEP_ALIVE()
+
+#endif
+
 
 #endif /* NETWORK_H */
 
-// kate: tab-width 4; vim: set noet:

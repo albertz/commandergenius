@@ -1,5 +1,5 @@
 /*
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -22,7 +22,7 @@
 #include "helptext.h"
 #include "opentyr.h"
 
-typedef JE_byte JE_MenuChoiceType[MAX_MENU];
+typedef JE_byte JE_MenuChoiceType[MENU_MAX];
 
 JE_longint JE_cashLeft( void );
 void JE_itemScreen( void );
@@ -56,4 +56,3 @@ void JE_weaponViewFrame( void );
 
 #endif // GAME_MENU_H
 
-// kate: tab-width 4; vim: set noet:

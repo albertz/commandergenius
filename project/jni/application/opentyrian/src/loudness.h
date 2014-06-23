@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -19,8 +19,8 @@
 #ifndef LOUDNESS_H
 #define LOUDNESS_H
 
-#include "fmopl.h"
 #include "opentyr.h"
+#include "opl.h"
 
 #include "SDL.h"
 
@@ -33,8 +33,8 @@
 #endif
 
 #define SAMPLE_SCALING OUTPUT_QUALITY
-#define SAMPLE_TYPE OPLSAMPLE
-#define BYTES_PER_SAMPLE (OPL_SAMPLE_BITS / 8)
+#define SAMPLE_TYPE Bit16s
+#define BYTES_PER_SAMPLE 2
 
 extern float music_volume, sample_volume;
 
@@ -57,4 +57,3 @@ void JE_multiSamplePlay(JE_byte *buffer, JE_word size, JE_byte chan, JE_byte vol
 
 #endif /* LOUDNESS_H */
 
-// kate: tab-width 4; vim: set noet:

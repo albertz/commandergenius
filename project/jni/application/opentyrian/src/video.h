@@ -1,5 +1,5 @@
 /*
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -36,12 +36,14 @@ void init_video( void );
 
 int can_init_scaler( unsigned int new_scaler, bool fullscreen );
 bool init_scaler( unsigned int new_scaler, bool fullscreen );
+bool can_init_any_scaler( bool fullscreen );
 bool init_any_scaler( bool fullscreen );
+
 void deinit_video( void );
+
 void JE_clr256( SDL_Surface * );
 void JE_showVGA( void );
 void scale_and_flip( SDL_Surface * );
 
 #endif /* VIDEO_H */
 
-// kate: tab-width 4; vim: set noet:

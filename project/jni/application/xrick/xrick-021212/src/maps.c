@@ -230,8 +230,10 @@ void map_restoreProgress(void)
 		return;
 	fscanf(ff, "%d %d", &map, &submap);
 	fclose(ff);
-	sysarg_args_map = map;
-	sysarg_args_submap = submap;
+	if (!sysarg_args_submap_commandline_override) {
+		sysarg_args_map = map;
+		sysarg_args_submap = submap;
+	}
 }
 
 

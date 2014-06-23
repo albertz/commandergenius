@@ -1,5 +1,5 @@
 /*
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -23,6 +23,7 @@
 
 #include "SDL.h"
 #include <assert.h>
+#include <stdio.h>
 
 #define FONT_SHAPES       0
 #define SMALL_FONT_SHAPES 1
@@ -34,7 +35,11 @@
 #define EXTRA_SHAPES      7 /*Used for Ending pics*/
 
 #define SPRITE_TABLES_MAX        8
+#ifdef TYRIAN2000
+#define SPRITES_PER_TABLE_MAX  152
+#else
 #define SPRITES_PER_TABLE_MAX  151
+#endif
 
 typedef struct
 {
@@ -91,7 +96,7 @@ typedef struct
 }
 Sprite2_array;
 
-extern Sprite2_array eShapes1, eShapes2, eShapes3, eShapes4, eShapes5, eShapes6;
+extern Sprite2_array eShapes[6];
 extern Sprite2_array shapesC1, shapes6, shapes9, shapesW2;
 
 void JE_loadCompShapes( Sprite2_array *, JE_char s );
@@ -112,4 +117,3 @@ void free_main_shape_tables( void );
 
 #endif // SPRITE_H
 
-// kate: tab-width 4; vim: set noet:

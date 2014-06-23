@@ -1,24 +1,30 @@
 /*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+Simple DirectMedia Layer
+Copyright (C) 2009-2014 Sergii Pylypenko
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required. 
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
 */
+/*
+This source code is distibuted under ZLIB license, however when compiling with SDL 1.2,
+which is licensed under LGPL, the resulting library, and all it's source code,
+falls under "stronger" LGPL terms, so is this file.
+If you compile this code with SDL 1.3 or newer, or use in some other way, the license stays ZLIB.
+*/
+
 #include <jni.h>
 #include <android/log.h>
 #include <sys/time.h>
@@ -88,12 +94,46 @@ enum { MOUSE_POINTER_W = 32, MOUSE_POINTER_H = 32, MOUSE_POINTER_X = 5, MOUSE_PO
 
 static int sunTheme = 0;
 static int joystickTouchPoints[MAX_JOYSTICKS*2];
+static int floatingScreenJoystick = 0;
 
 static void R_DumpOpenGlState(void);
 
 static inline int InsideRect(const SDL_Rect * r, int x, int y)
 {
 	return ( x >= r->x && x <= r->x + r->w ) && ( y >= r->y && y <= r->y + r->h );
+}
+
+// Find the intersection of a line and a rectangle,
+// where on of the line points and the center of rectangle
+// are both at the coordinate [0,0].
+// It returns the remaining line segment outside of the rectangle.
+// Do not check for border condition, we check that the line point
+// is outside of the rectangle in another function.
+static inline void LineAndRectangleIntersection(
+		int lx, int ly, // Line point, that is outside of rectangle
+		int rw, int rh, // Rectangle dimensions
+		int *x, int *y)
+{
+	if( abs(lx) * rh > abs(ly) * rw )
+	{
+		rw /= 2;
+		// Intersection at the left side
+		if( lx < -rw )
+			*x = lx + rw; // lx is negative
+		else //if( lx > rw ) // At the right side
+			*x = lx - rw; // lx is positive
+		*y = *x * ly / lx;
+	}
+	else
+	{
+		rh /= 2;
+		// At the top
+		if( ly < -rh )
+			*y = ly + rh; // ly is negative
+		else //if( ly > rh ) // At the right side
+			*y = ly - rh; // ly is positive
+		*x = *y * lx / ly;
+	}
 }
 
 static struct ScreenKbGlState_t
@@ -324,6 +364,11 @@ static inline int ArrowKeysPressed(int x, int y)
 	int ret = 0, dx, dy;
 	dx = x - arrows[0].x - arrows[0].w / 2;
 	dy = y - arrows[0].y - arrows[0].h / 2;
+
+	// Small deadzone at the center
+	if( abs(dx) < arrows[0].w / 20 && abs(dy) < arrows[0].h / 20 )
+		return ret;
+
 	// Single arrow key pressed
 	if( abs(dy / 2) >= abs(dx) )
 	{
@@ -360,7 +405,7 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 	int i, j;
 	unsigned processed = 0;
 	int joyAmount = SDL_ANDROID_joysticksAmount;
-	if( joyAmount == 0 && arrows[0].w > 0 )
+	if( joyAmount == 0 && (arrows[0].w > 0 || floatingScreenJoystick) )
 		joyAmount = 1;
 	
 	if( !touchscreenKeyboardShown )
@@ -382,8 +427,8 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					if( SDL_ANDROID_joysticksAmount > 0 )
 					{
 						int xx = (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w;
-						if( xx == 0 ) // Do not allow (0,0) coordinate, when the user touches the joystick
-							xx = 1;
+						if( xx == 0 ) // Do not allow (0,0) coordinate, when the user touches the joystick - this indicates 'finger up' in OpenArena
+							xx = 1;   // Yeah, maybe I should not include app-specific hacks into the library
 						int axis = j < 2 ? j*2 : MAX_MULTITOUCH_POINTERS + 4;
 						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis, xx );
 						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis + 1, (y - arrows[j].y - arrows[j].h / 2) * 65534 / arrows[j].h );
@@ -424,6 +469,24 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 				}
 			}
 		}
+
+		if( floatingScreenJoystick && !processed && pointerInButtonRect[BUTTON_ARROWS] == -1 )
+		{
+			// Center joystick under finger
+			SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 1);
+			arrows[0].x = x - arrows[0].w / 2;
+			arrows[0].y = y - arrows[0].h / 2;
+			arrowsDraw[0] = arrowsExtended[0] = arrows[0];
+			processed |= 1<<BUTTON_ARROWS;
+			pointerInButtonRect[BUTTON_ARROWS] = pointerId;
+			joystickTouchPoints[0] = x;
+			joystickTouchPoints[1] = y;
+			if( SDL_ANDROID_joysticksAmount > 0 )
+			{
+				SDL_ANDROID_MainThreadPushJoystickAxis( 0, 0, 1 ); // Non-zero joystick coordinate
+				SDL_ANDROID_MainThreadPushJoystickAxis( 0, 1, 0 );
+			}
+		}
 	}
 	else
 	if( action == MOUSE_UP )
@@ -449,6 +512,8 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(RIGHT), 0 );
 					oldArrows = 0;
 				}
+				if( floatingScreenJoystick && j == 0 )
+					SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 0);
 			}
 		}
 		for( i = 0; i < MAX_BUTTONS; i++ )
@@ -489,6 +554,15 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 			if( pointerInButtonRect[BUTTON_ARROWS+j] == pointerId )
 			{
 				processed |= 1<<(BUTTON_ARROWS+j);
+				if( floatingScreenJoystick && j == 0 && ! InsideRect( &arrows[j], x, y ) )
+				{
+					int xx = 0, yy = 0;
+					// A finger moved outside the joystick - move the joystick back under the finger
+					LineAndRectangleIntersection(x - (arrows[0].x + arrows[0].w / 2), y - (arrows[0].y + arrows[0].h / 2), arrows[0].w, arrows[0].h, &xx, &yy);
+					arrows[0].x += xx;
+					arrows[0].y += yy;
+					arrowsDraw[0] = arrowsExtended[0] = arrows[0];
+				}
 				if( ! InsideRect( &arrowsExtended[j], x, y ) )
 				{
 					pointerInButtonRect[BUTTON_ARROWS+j] = -1;
@@ -514,7 +588,10 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					if( SDL_ANDROID_joysticksAmount > 0 )
 					{
 						int axis = j < 2 ? j*2 : MAX_MULTITOUCH_POINTERS + 4;
-						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis, (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w );
+						int xx = (x - arrows[j].x - arrows[j].w / 2) * 65534 / arrows[j].w;
+						if( xx == 0 ) // Do not allow (0,0) coordinate, when the user touches the joystick - this indicates 'finger up' in OpenArena
+							xx = 1;   // Yeah, maybe I should not include app-specific hacks into the library
+						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis, xx );
 						SDL_ANDROID_MainThreadPushJoystickAxis( 0, axis + 1, (y - arrows[j].y - arrows[j].h / 2) * 65534 / arrows[j].h );
 					}
 					else
@@ -584,7 +661,8 @@ void shrinkButtonRect(SDL_Rect s, SDL_Rect * d)
 }
 
 JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thiz, jint size, jint drawsize, jint theme, jint _transparency )
+JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv* env, jobject thiz,
+		jint size, jint drawsize, jint theme, jint _transparency, jint _floatingScreenJoystick )
 {
 	int i, ii;
 	int nbuttons1row, nbuttons2row;
@@ -675,6 +753,13 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv*  env, jobject thi
 		shrinkButtonRect(buttons[i], &buttonsDraw[i]);
 	for( i = 0; i < SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM; i++ )
 		SDL_ANDROID_GetScreenKeyboardButtonPos(i, &hiddenButtons[i]);
+
+	floatingScreenJoystick = _floatingScreenJoystick;
+	if( floatingScreenJoystick )
+	{
+		arrowsExtended[0] = arrows[0] = arrowsDraw[0];
+		SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 0);
+	}
 };
 
 JNIEXPORT void JNICALL

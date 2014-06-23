@@ -1,3 +1,5 @@
+/* The license of this source code is public domain */
+
 #include "SDL_config.h"
 
 #include "SDL_version.h"

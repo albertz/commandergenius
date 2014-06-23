@@ -44,6 +44,7 @@ static sdlcodes_t sdlcodes[SDLK_LAST] = {
 int sysarg_args_period = 0;
 int sysarg_args_map = 0;
 int sysarg_args_submap = 0;
+int sysarg_args_submap_commandline_override = 0;
 int sysarg_args_fullscreen = 0;
 int sysarg_args_zoom = 0;
 int sysarg_args_nosound = 0;
@@ -186,6 +187,7 @@ sysarg_init(int argc, char **argv)
       sysarg_args_submap = atoi(argv[i]) - 1;
       if (sysarg_args_submap < 0 || sysarg_args_submap >= MAP_NBR_SUBMAPS)
 	sysarg_fail("invalid submap number");
+      sysarg_args_submap_commandline_override = 1;
     }
 #ifdef ENABLE_SOUND
     else if (!strcmp(argv[i], "-vol")) {

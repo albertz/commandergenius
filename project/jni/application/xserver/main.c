@@ -26,16 +26,18 @@ int main( int argc, char* argv[] )
 	char clientcmd[PATH_MAX] = "";
 	char port[16] = ":1111";
 	char * cmd = "";
+	char fontpath[PATH_MAX] = "";
 	char* args[64] = {
 		"XSDL",
 		port,
 		"-nolock",
 		"-noreset",
+		"-fp",
+		fontpath,
 		"-screen",
 		screenres,
 	};
-	int argnum = 6;
-	enum { ARGNUM = 8 };
+	int argnum = 8;
 	char * envp[] = { NULL };
 	int printHelp = 1;
 	int screenResOverride = 0;
@@ -134,6 +136,17 @@ int main( int argc, char* argv[] )
 		argc--;
 		argv++;
 	}
+
+	sprintf(fontpath,	"%s/img/usr/share/fonts/X11/misc,"
+						"%s/img/usr/share/fonts/X11/Type1,"
+						"%s/img/usr/share/fonts/X11/100dpi,"
+						"%s/img/usr/share/fonts/X11/75dpi,"
+						"%s/img/usr/share/fonts/X11/cyrillic",
+						getenv("SECURE_STORAGE_DIR"),
+						getenv("SECURE_STORAGE_DIR"),
+						getenv("SECURE_STORAGE_DIR"),
+						getenv("SECURE_STORAGE_DIR"),
+						getenv("SECURE_STORAGE_DIR") );
 
 	XSDL_generateBackground(port, printHelp, resolutionW, resolutionH);
 

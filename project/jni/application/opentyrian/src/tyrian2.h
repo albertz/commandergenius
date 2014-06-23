@@ -1,5 +1,5 @@
 /* 
- * OpenTyrian Classic: A modern cross-platform port of Tyrian
+ * OpenTyrian: A modern cross-platform port of Tyrian
  * Copyright (C) 2007-2009  The OpenTyrian Development Team
  *
  * This program is free software; you can redistribute it and/or
@@ -39,11 +39,11 @@ extern boss_bar_t boss_bar[2];
 extern char tempStr[31];
 extern JE_byte itemAvail[9][10], itemAvailMax[9];
 
-void JE_createNewEventEnemy( JE_byte enemytypeofs, JE_word enemyoffset );
+void JE_createNewEventEnemy( JE_byte enemytypeofs, JE_word enemyoffset, Sint16 uniqueShapeTableI );
 
 void JE_doNetwork( void );
 
-uint JE_makeEnemy( struct JE_SingleEnemyType *enemy );
+uint JE_makeEnemy( struct JE_SingleEnemyType *enemy, Uint16 eDatI, Sint16 uniqueShapeTableI );
 
 void JE_eventJump( JE_word jump );
 
@@ -51,7 +51,7 @@ void JE_whoa( void );
 
 void JE_barX ( JE_word x1, JE_word y1, JE_word x2, JE_word y2, JE_byte col );
 
-void JE_newEnemy( int enemyOffset );
+Sint16 JE_newEnemy( int enemyOffset, Uint16 eDatI, Sint16 uniqueShapeTableI );
 void JE_drawEnemy( int enemyOffset );
 void JE_starShowVGA( void );
 
@@ -61,11 +61,10 @@ bool JE_titleScreen( JE_boolean animate );
 void JE_readTextSync( void );
 void JE_displayText( void );
 
-JE_boolean JE_searchFor( JE_byte PLType );
+bool JE_searchFor( JE_byte PLType, JE_byte* out_index );
 void JE_eventSystem( void );
 
 void draw_boss_bar( void );
 
 #endif /* TYRIAN2_H */
 
-// kate: tab-width 4; vim: set noet:

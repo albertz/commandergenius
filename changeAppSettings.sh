@@ -229,13 +229,18 @@ echo >> AndroidAppSettings.cfg
 echo "# Force relative (laptop) mouse movement mode, useful when both on-screen keyboard and mouse are needed (y) or (n)" >> AndroidAppSettings.cfg
 echo ForceRelativeMouseMode=$ForceRelativeMouseMode >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Application needs arrow keys (y) or (n), will show on-screen dpad/joystick (y) or (n)" >> AndroidAppSettings.cfg
+echo "# Show on-screen dpad/joystick, that will act as arrow keys (y) or (n)" >> AndroidAppSettings.cfg
 echo AppNeedsArrowKeys=$AppNeedsArrowKeys >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# On-screen dpad/joystick will appear under finger when it touches the screen (y) or (n)" >> AndroidAppSettings.cfg
+echo "# Joystick always follows finger, so moving mouse requires touching the screen with other finger" >> AndroidAppSettings.cfg
+echo FloatingScreenJoystick=$FloatingScreenJoystick >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application needs text input (y) or (n), enables button for text input on screen" >> AndroidAppSettings.cfg
 echo AppNeedsTextInput=$AppNeedsTextInput >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application uses joystick (y) or (n), the on-screen DPAD will be used as joystick 0 axes 0-1" >> AndroidAppSettings.cfg
+echo "# This will disable AppNeedsArrowKeys option" >> AndroidAppSettings.cfg
 echo AppUsesJoystick=$AppUsesJoystick >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application uses second on-screen joystick, as SDL joystick 0 axes 2-3 (y)/(n)" >> AndroidAppSettings.cfg
@@ -532,6 +537,12 @@ else
 	AppNeedsArrowKeys=false
 fi
 
+if [ "$FloatingScreenJoystick" = "y" ] ; then
+	FloatingScreenJoystick=true
+else
+	FloatingScreenJoystick=false
+fi
+
 if [ "$AppNeedsTextInput" = "y" ] ; then
 	AppNeedsTextInput=true
 else
@@ -767,6 +778,7 @@ $SEDI "s/public static boolean ForceRelativeMouseMode = .*;/public static boolea
 $SEDI "s/public static boolean ShowMouseCursor = .*;/public static boolean ShowMouseCursor = $ShowMouseCursor;/" project/src/Globals.java
 $SEDI "s/public static boolean GenerateSubframeTouchEvents = .*;/public static boolean GenerateSubframeTouchEvents = $GenerateSubframeTouchEvents;/" project/src/Globals.java
 $SEDI "s/public static boolean AppNeedsArrowKeys = .*;/public static boolean AppNeedsArrowKeys = $AppNeedsArrowKeys;/" project/src/Globals.java
+$SEDI "s/public static boolean FloatingScreenJoystick = .*;/public static boolean FloatingScreenJoystick = $FloatingScreenJoystick;/" project/src/Globals.java
 $SEDI "s/public static boolean AppNeedsTextInput = .*;/public static boolean AppNeedsTextInput = $AppNeedsTextInput;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesJoystick = .*;/public static boolean AppUsesJoystick = $AppUsesJoystick;/" project/src/Globals.java
 $SEDI "s/public static boolean AppUsesSecondJoystick = .*;/public static boolean AppUsesSecondJoystick = $AppUsesSecondJoystick;/" project/src/Globals.java
