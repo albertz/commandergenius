@@ -1,3 +1,5 @@
+/* The license of this source code is public domain */
+
 #ifndef _UNICODE_STUFF_H_
 #define _UNICODE_STUFF_H_
 

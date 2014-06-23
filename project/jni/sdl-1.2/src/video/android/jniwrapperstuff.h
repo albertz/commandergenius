@@ -1,3 +1,4 @@
+/* The license of this source code is public domain */
 
 /* JNI-C++ wrapper stuff */
 #ifndef _JNI_WRAPPER_STUFF_H_

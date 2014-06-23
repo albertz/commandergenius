@@ -1,7 +1,7 @@
 /*
 Simple DirectMedia Layer
-Java source code (C) 2009-2012 Sergii Pylypenko
-  
+Java source code (C) 2009-2014 Sergii Pylypenko
+
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
 arising from the use of this software.
@@ -9,7 +9,7 @@ arising from the use of this software.
 Permission is granted to anyone to use this software for any purpose,
 including commercial applications, and to alter it and redistribute it
 freely, subject to the following restrictions:
-  
+
 1. The origin of this software must not be misrepresented; you must not
    claim that you wrote the original software. If you use this software
    in a product, an acknowledgment in the product documentation would be
@@ -159,7 +159,7 @@ class Settings
 			out.writeInt(Globals.OptionalDataDownload.length);
 			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
 				out.writeBoolean(Globals.OptionalDataDownload[i]);
-			out.writeBoolean(Globals.BrokenLibCMessageShown);
+			out.writeBoolean(false); // Unused
 			out.writeInt(Globals.TouchscreenKeyboardDrawSize);
 			out.writeInt(p.getApplicationVersion());
 			out.writeFloat(AccelerometerReader.gyro.x1);
@@ -177,6 +177,7 @@ class Settings
 			out.writeBoolean(Globals.MoveMouseWithGyroscope);
 			out.writeInt(Globals.MoveMouseWithGyroscopeSpeed);
 			out.writeBoolean(Globals.FingerHover);
+			out.writeBoolean(Globals.FloatingScreenJoystick);
 
 			out.close();
 			settingsLoaded = true;
@@ -346,7 +347,7 @@ class Settings
 			Globals.OptionalDataDownload = new boolean[settingsFile.readInt()];
 			for(int i = 0; i < Globals.OptionalDataDownload.length; i++)
 				Globals.OptionalDataDownload[i] = settingsFile.readBoolean();
-			Globals.BrokenLibCMessageShown = settingsFile.readBoolean();
+			settingsFile.readBoolean(); // Unused
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			int cfgVersion = settingsFile.readInt();
 			AccelerometerReader.gyro.x1 = settingsFile.readFloat();
@@ -364,6 +365,7 @@ class Settings
 			Globals.MoveMouseWithGyroscope = settingsFile.readBoolean();
 			Globals.MoveMouseWithGyroscopeSpeed = settingsFile.readInt();
 			Globals.FingerHover = settingsFile.readBoolean();
+			Globals.FloatingScreenJoystick = settingsFile.readBoolean();
 
 			settingsLoaded = true;
 
@@ -560,7 +562,8 @@ class Settings
 				nativeSetupScreenKeyboard(	Globals.TouchscreenKeyboardSize,
 											Globals.TouchscreenKeyboardDrawSize,
 											Globals.TouchscreenKeyboardTheme,
-											Globals.TouchscreenKeyboardTransparency );
+											Globals.TouchscreenKeyboardTransparency,
+											Globals.FloatingScreenJoystick ? 1 : 0 );
 				SetupTouchscreenKeyboardGraphics(p);
 				for( int i = 0; i < Globals.RemapScreenKbKeycode.length; i++ )
 					nativeSetKeymapKeyScreenKb(i, SDL_Keys.values[Globals.RemapScreenKbKeycode[i]]);
@@ -844,7 +847,7 @@ class Settings
 	private static native void nativeSetCompatibilityHacks();
 	private static native void nativeSetVideoMultithreaded();
 	private static native void nativeSetVideoForceSoftwareMode();
-	private static native void nativeSetupScreenKeyboard(int size, int drawsize, int theme, int transparency);
+	private static native void nativeSetupScreenKeyboard(int size, int drawsize, int theme, int transparency, int floatingScreenJoystick);
 	private static native void nativeSetupScreenKeyboardButtons(byte[] img);
 	private static native void nativeInitKeymap();
 	private static native int  nativeGetKeymapKey(int key);
@@ -861,4 +864,3 @@ class Settings
 	public static native int   nativeChmod(final String name, int mode);
 	public static native void  nativeChdir(final String dir);
 }
-
