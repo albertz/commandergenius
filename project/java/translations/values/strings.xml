@@ -112,6 +112,7 @@
     <string name="mouse_gyroscope_mouse">Control mouse with gyroscope</string>
     <string name="mouse_gyroscope_mouse_sensitivity">Gyroscope sensitivity</string>
     <string name="mouse_finger_hover">Finger hover</string>
+    <string name="mouse_subframe_touch_events">Multiple touch events per video frame</string>
 
     <string name="none">None</string>
 
@@ -151,7 +152,10 @@
 
     <string name="video">Video settings</string>
     <string name="video_smooth">Linear video filtering</string>
-    <string name="video_separatethread">Separate thread for video, will increase FPS on some devices</string>
+    <string name="video_separatethread">Separate thread for video, it can increase FPS, it also can crash the app</string>
+    <string name="video_orientation_vertical">Portrait/vertical screen orientation</string>
+    <string name="video_bpp_24">24 bpp screen color depth</string>
+    <string name="video_immersive">Hide system navigation buttons / immersive mode</string>
 
     <string name="text_edit_click_here">Tap to start typing, press Back when done</string>
 

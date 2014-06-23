@@ -345,11 +345,17 @@ class SettingsMenuMisc extends SettingsMenu
 			debugMenuShowCount++;
 			CharSequence[] items = {
 				p.getResources().getString(R.string.mouse_keepaspectratio),
-				p.getResources().getString(R.string.video_smooth)
+				p.getResources().getString(R.string.video_smooth),
+				p.getResources().getString(R.string.video_immersive),
+				p.getResources().getString(R.string.video_orientation_vertical),
+				p.getResources().getString(R.string.video_bpp_24),
 			};
-			boolean defaults[] = { 
+			boolean defaults[] = {
 				Globals.KeepAspectRatio,
-				Globals.VideoLinearFilter
+				Globals.VideoLinearFilter,
+				Globals.ImmersiveMode,
+				!Globals.HorizontalOrientation,
+				Globals.VideoDepthBpp == 24,
 			};
 
 			if(Globals.SwVideoMode && !Globals.CompatibilityHacksVideo)
@@ -357,12 +363,18 @@ class SettingsMenuMisc extends SettingsMenu
 				CharSequence[] items2 = {
 					p.getResources().getString(R.string.mouse_keepaspectratio),
 					p.getResources().getString(R.string.video_smooth),
+					p.getResources().getString(R.string.video_immersive),
+					p.getResources().getString(R.string.video_orientation_vertical),
+					p.getResources().getString(R.string.video_bpp_24),
 					p.getResources().getString(R.string.video_separatethread),
 				};
 				boolean defaults2[] = { 
 					Globals.KeepAspectRatio,
 					Globals.VideoLinearFilter,
-					Globals.MultiThreadedVideo
+					Globals.ImmersiveMode,
+					!Globals.HorizontalOrientation,
+					Globals.VideoDepthBpp == 24,
+					Globals.MultiThreadedVideo,
 				};
 				items = items2;
 				defaults = defaults2;
@@ -391,6 +403,12 @@ class SettingsMenuMisc extends SettingsMenu
 					if( item == 1 )
 						Globals.VideoLinearFilter = isChecked;
 					if( item == 2 )
+						Globals.ImmersiveMode = isChecked;
+					if( item == 3 )
+						Globals.HorizontalOrientation = !isChecked;
+					if( item == 4 )
+						Globals.VideoDepthBpp = (isChecked ? 24 : 16);
+					if( item == 5 )
 						Globals.MultiThreadedVideo = isChecked;
 				}
 			});

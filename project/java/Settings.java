@@ -178,6 +178,10 @@ class Settings
 			out.writeInt(Globals.MoveMouseWithGyroscopeSpeed);
 			out.writeBoolean(Globals.FingerHover);
 			out.writeBoolean(Globals.FloatingScreenJoystick);
+			out.writeBoolean(Globals.GenerateSubframeTouchEvents);
+			out.writeInt(Globals.VideoDepthBpp);
+			out.writeBoolean(Globals.HorizontalOrientation);
+			out.writeBoolean(Globals.ImmersiveMode);
 
 			out.close();
 			settingsLoaded = true;
@@ -366,6 +370,10 @@ class Settings
 			Globals.MoveMouseWithGyroscopeSpeed = settingsFile.readInt();
 			Globals.FingerHover = settingsFile.readBoolean();
 			Globals.FloatingScreenJoystick = settingsFile.readBoolean();
+			Globals.GenerateSubframeTouchEvents = settingsFile.readBoolean();
+			Globals.VideoDepthBpp = settingsFile.readInt();
+			Globals.HorizontalOrientation = settingsFile.readBoolean();
+			Globals.ImmersiveMode = settingsFile.readBoolean();
 
 			settingsLoaded = true;
 

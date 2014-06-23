@@ -87,12 +87,7 @@ public class MainActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 
-		//if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2 )
-		//	setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
-		if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
-			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-		else
-			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		setScreenOrientation();
 
 		instance = this;
 		// fullscreen mode
@@ -127,6 +122,7 @@ public class MainActivity extends Activity
 						setUpStatusLabel();
 						Log.i("SDL", "libSDL: User clicked change phone config button");
 						loadedLibraries.acquireUninterruptibly();
+						setScreenOrientation();
 						SettingsMenu.showConfig(p, false);
 					}
 			};
@@ -269,6 +265,7 @@ public class MainActivity extends Activity
 
 	public void initSDL()
 	{
+		setScreenOrientation();
 		(new Thread(new Runnable()
 		{
 			public void run()
@@ -312,6 +309,7 @@ public class MainActivity extends Activity
 		Log.i("SDL", "libSDL: Initializing video and SDL application");
 		
 		sdlInited = true;
+		DimSystemStatusBar.get().dim(_videoLayout);
 		_videoLayout.removeView(_layout);
 		if( _ad.getView() != null )
 			_videoLayout.removeView(_ad.getView());
@@ -334,7 +332,6 @@ public class MainActivity extends Activity
 			_videoLayout.addView(_ad.getView());
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT));
 		}
-		// Receive keyboard events
 		DimSystemStatusBar.get().dim(_videoLayout);
 		DimSystemStatusBar.get().dim(mGLView);
 	}
@@ -1182,6 +1179,14 @@ public class MainActivity extends Activity
 	{
 		Display getOrient = getWindowManager().getDefaultDisplay();
 		return getOrient.getWidth() >= getOrient.getHeight();
+	}
+
+	void setScreenOrientation()
+	{
+		if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
+			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+		else
+			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 	}
 
 	public FrameLayout getVideoLayout() { return _videoLayout; }
