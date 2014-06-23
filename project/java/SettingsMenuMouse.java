@@ -409,7 +409,7 @@ class SettingsMenuMouse extends SettingsMenu
 	{
 		String title(final MainActivity p)
 		{
-			return p.getResources().getString(R.string.mouse_question);
+			return p.getResources().getString(R.string.advanced);
 		}
 		void run (final MainActivity p)
 		{
@@ -433,7 +433,7 @@ class SettingsMenuMouse extends SettingsMenu
 
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(p.getResources().getString(R.string.mouse_question));
+			builder.setTitle(p.getResources().getString(R.string.advanced));
 			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener()
 			{
 				public void onClick(DialogInterface dialog, int item, boolean isChecked) 

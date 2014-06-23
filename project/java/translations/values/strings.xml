@@ -98,7 +98,7 @@
     <string name="leftclick_timeout_time_4">1.5 sec</string>
     <string name="click_with_dpadcenter">Left mouse click with trackball / joystick center</string>
 
-    <string name="mouse_question">Advanced features</string>
+    <string name="advanced">Advanced features</string>
     <string name="mouse_keepaspectratio">Keep 4:3 screen aspect ratio</string>
     <string name="mouse_showcreenunderfinger">Show screen under finger in separate window</string>
     <string name="mouse_showcreenunderfinger2">On-screen magnifying glass</string>
@@ -144,6 +144,7 @@
 
     <string name="screenkb_custom_layout">Customize on-screen keyboard layout</string>
     <string name="screenkb_custom_layout_help">Press BACK when done. Resize buttons by sliding on empty space.</string>
+    <string name="screenkb_floating_joystick">Floating joystick</string>
 
     <string name="calibrate_touchscreen">Calibrate touchscreen</string>
     <string name="calibrate_touchscreen_touch">Touch all edges of the screen, press BACK when done</string>

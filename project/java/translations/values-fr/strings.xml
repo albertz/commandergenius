@@ -98,7 +98,7 @@
 <string name="leftclick_timeout_time_4">1,5 sec</string>
 <string name="click_with_dpadcenter">Cliquez gauche de la souris avec le Trackball / centre du joystick </string>
 
-<string name="mouse_question">Fonctionnalités avancées</string>
+<string name="advanced">Fonctionnalités avancées</string>
 <string name="mouse_keepaspectratio">Gardez le format 4:3 écran</string>
 <string name="mouse_showcreenunderfinger">Afficher l\'écran sous le doigt dans une fenêtre séparée</string>
 <string name="mouse_showcreenunderfinger2">Loupe à l\'écran</string>

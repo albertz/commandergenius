@@ -62,7 +62,7 @@
 <string name="rightclick_menu">Valikkonäppäin</string>
 <string name="rightclick_multitouch">Kosketusnäyttö on toinen sormi</string>
 <string name="rightclick_pressure">Kosketusnäyttö voimalla</string>
-<string name="mouse_question">Lisäominaisuudet</string>
+<string name="advanced">Lisäominaisuudet</string>
 <string name="mouse_keepaspectratio">Pidä 04:03 kuvasuhde</string>
 <string name="mouse_showcreenunderfinger">Näytä näytön alle sormi erillisessä ikkunassa</string>
 <string name="measurepressure_touchplease">Ole hyvä ja liu\u0026#39;uttamalla sormea näytöllä kaksi sekuntia</string>
