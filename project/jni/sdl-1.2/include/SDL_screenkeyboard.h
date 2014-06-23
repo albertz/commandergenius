@@ -103,6 +103,10 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonGenerateTouchEven
 /* Configure a button to stay pressed after touch, and un-press after second touch, to emulate Ctrl/Alt/Shift keys  */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardButtonStayPressedAfterTouch(int buttonId, int stayPressed);
 
+/* Enable or disable floating joystick, the joystick is hidden after you disable floating joystick,
+   you should set it's coordinates with SDL_ANDROID_SetScreenKeyboardButtonPos(). */
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardFloatingJoystick(int enabled);
+
 /* Set screen keyboard transparency, 255 or SDL_ALPHA_OPAQUE is non-transparent, 0 or SDL_ALPHA_TRANSPARENT is transparent */
 extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardTransparency(int alpha);
 

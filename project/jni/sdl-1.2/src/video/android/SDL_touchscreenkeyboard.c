@@ -1191,6 +1191,14 @@ int SDL_ANDROID_SetScreenKeyboardHintMesage(const char * hint)
 	return 1;
 }
 
+extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardFloatingJoystick(int enabled)
+{
+	floatingScreenJoystick = enabled;
+	SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 0);
+	return 1;
+}
+
+
 /**
  * @brief Dumps OpenGL state for debugging - typically every capability set with glEnable().
  */

@@ -594,6 +594,9 @@ int main(int argc, char* argv[])
 			fps = (float)fps_count * 1000.0 / (tick - fps_start);
 			fps_count = 0;
 			fps_start = tick;
+			static int fj = false;
+			fj=!fj;
+			SDL_ANDROID_SetScreenKeyboardFloatingJoystick(fj);
 		}
 
 		print_num(screen, font, screen->w-37, screen->h-12, fps);
