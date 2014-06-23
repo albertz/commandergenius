@@ -49,6 +49,8 @@ TODO, which will get actually done
 
 - OpenTTD: "Open website" button in online resource menu is broken.
 
+- OpenTTD: Frameskip when fast-forward button pressed.
+
 - Debian noroot: audio support.
 
 - Debian noroot: add Java dirs to PATH, add support for update scripts.
