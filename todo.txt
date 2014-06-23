@@ -21,6 +21,9 @@ TODO, which will get actually done
 
 - SDL: user-configurable option to set screen orientation.
 
+- Floating on-screen joystick - initially invisible, it appears when you touch the screen,
+  centered on your finger, then it slides with your finger if you bump the joystick edge.
+
 - OpenTTD: All menus in the scenario editor are out of the screen.
 
 - OpenTTD: 16bpp blitter with palette animation support.
