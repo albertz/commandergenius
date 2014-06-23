@@ -26,9 +26,6 @@ TODO, which will get actually done
 
 - SDL: option to disable immersive mode.
 
-- Floating on-screen joystick - initially invisible, it appears when you touch the screen,
-  centered on your finger, then it slides with your finger if you bump the joystick edge.
-
 - OpenTTD: All menus in the scenario editor are out of the screen.
 
 - OpenTTD: 16bpp blitter with palette animation support.
@@ -54,6 +51,8 @@ TODO, which will get actually done
 - Debian noroot: audio support.
 
 - Debian noroot: add Java dirs to PATH, add support for update scripts.
+
+- Debian noroot: add paths to external SD cards to the proot.
 
 - XSDL: add downloadable raster fonts, add path to fonts to Debian/Gimp.
 
