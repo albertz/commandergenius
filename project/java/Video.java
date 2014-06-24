@@ -960,7 +960,12 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 				try
 				{
 					mRenderer.wait(300L); // And sometimes the app decides not to render at all, so this timeout should not be big.
-				} catch (InterruptedException e) { }
+				}
+				catch (InterruptedException e)
+				{
+					Log.v("SDL", "DemoGLSurfaceView::limitEventRate(): Who dared to interrupt my slumber?");
+					Thread.interrupted();
+				}
 			}
 		}
 	}

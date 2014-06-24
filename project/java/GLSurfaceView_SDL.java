@@ -1059,14 +1059,21 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
                 }
                 while (needToWait()) {
                     //Log.v("SDL", "GLSurfaceView_SDL::run(): paused");
-                    try {
-                        wait(500);
-                    } catch(Exception e) { }
+                    synchronized(this) {
+                        try
+                        {
+                            wait(500);
+                        }
+                        catch(InterruptedException e)
+                        {
+                            Log.v("SDL", "GLSurfaceView_SDL::GLThread::SwapBuffers(): Who dared to interrupt my slumber?");
+                            Thread.interrupted(); // Clear the flag
+                        }
+                    }
                 }
                 synchronized (this) {
-                    if (mDone) {
+                    if (mDone)
                         return false;
-                    }
                     // changed = mSizeChanged;
                     w = mWidth;
                     h = mHeight;
@@ -1198,6 +1205,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
         public void requestExitAndWait() {
             // don't call this from GLThread thread or it is a guaranteed
             // deadlock!
+            Log.v("SDL", "GLSurfaceView_SDL::requestExitAndWait()");
             synchronized(this) {
                 mDone = true;
                 notify();
@@ -1205,7 +1213,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
             try {
                 join();
             } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
+                //Thread.currentThread().interrupt();
             }
         }
 
