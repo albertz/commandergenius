@@ -830,6 +830,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 		return;
 #endif
 
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Motion event: %4d %4d action %d ptr %d, force %d radius %d", x, y, action, pointerId, force, radius);
+
 	pointerId = BumpPointerId( pointerId );
 
 	if( ProcessTouchscreenKeyboard( x, y, action, pointerId ) )

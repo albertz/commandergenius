@@ -380,7 +380,7 @@ abstract class DifferentTouchInput
 				}
 				buttonState = buttonStateNew;
 			}
-			super.process(event); // Push mouse coordinate first
+			super.process(event);
 		}
 		public void processGenericEvent(final MotionEvent event)
 		{
@@ -427,7 +427,7 @@ abstract class DifferentTouchInput
 				DemoGLSurfaceView.nativeMotionEvent( (int)event.getHistoricalX(i), (int)event.getHistoricalY(i),
 					Mouse.SDL_FINGER_MOVE, ptr, (int)( event.getHistoricalPressure(i) * Mouse.MAX_PRESSURE ), (int)( event.getHistoricalSize(i) * Mouse.MAX_PRESSURE ) );
 			}
-			super.process(event); // Push mouse coordinate first
+			super.process(event);
 		}
 	}
 	private static class CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad extends IcsTouchInput
