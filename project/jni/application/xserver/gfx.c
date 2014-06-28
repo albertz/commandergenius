@@ -236,11 +236,11 @@ static void * unpackFilesThread(void * unused)
 {
 	const char *unpack[][3] =
 	{
-		{"data.tar.gz", "postinstall.sh", "usr/lib/xorg/protocol.txt" },
-		{"xfonts.tar.gz", "", "" },
-		{"update1.tar.gz", "update1.sh", "" },
-		{"update2.tar.gz", "update2.sh", "" },
-		{"update3.tar.gz", "update3.sh", "" },
+		{ "data.tar.gz", "postinstall.sh", "usr/lib/xorg/protocol.txt" },
+		{ "xfonts.tar.gz", "", "" },
+		{ "update1.tar.gz", "update1.sh", "" },
+		{ "update2.tar.gz", "update2.sh", "" },
+		{ "update3.tar.gz", "update3.sh", "" },
 		{NULL, NULL, NULL}
 	};
 	int i;
