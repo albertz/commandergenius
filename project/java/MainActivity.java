@@ -79,6 +79,8 @@ import android.content.pm.ActivityInfo;
 import android.view.Display;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Surface;
+
 
 public class MainActivity extends Activity
 {
@@ -231,7 +233,7 @@ public class MainActivity extends Activity
 		if( Parent._tv == null )
 		{
 			//Get the display so we can know the screen size
-			Display display = getWindowManager().getDefaultDisplay(); 
+			Display display = getWindowManager().getDefaultDisplay();
 			int width = display.getWidth();
 			int height = display.getHeight();
 			Parent._tv = new TextView(Parent);
@@ -266,6 +268,8 @@ public class MainActivity extends Activity
 	public void initSDL()
 	{
 		setScreenOrientation();
+		updateScreenOrientation();
+		Log.i("SDL", "onConfigurationChanged(): screen orientation: inverted " + AccelerometerReader.gyro.invertedOrientation);
 		(new Thread(new Runnable()
 		{
 			public void run()
@@ -836,10 +840,20 @@ public class MainActivity extends Activity
 	@Override
 	public void onConfigurationChanged(Configuration newConfig)
 	{
+		// This function is actually never called
 		super.onConfigurationChanged(newConfig);
-		// Do nothing here
+		updateScreenOrientation();
 	}
-	
+
+	public void updateScreenOrientation()
+	{
+		int rotation = Surface.ROTATION_0;
+		if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.FROYO )
+			rotation = getWindowManager().getDefaultDisplay().getRotation();
+		AccelerometerReader.gyro.invertedOrientation = ( rotation == Surface.ROTATION_180 || rotation == Surface.ROTATION_270 );
+		//Log.d("SDL", "updateScreenOrientation(): screen orientation: " + rotation + " inverted " + AccelerometerReader.gyro.invertedOrientation);
+	}
+
 	public void setText(final String t)
 	{
 		class Callback implements Runnable
