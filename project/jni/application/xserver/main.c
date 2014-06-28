@@ -168,7 +168,7 @@ int main( int argc, char* argv[] )
 	{
 		SDL_Rect pos;
 		pos.x = 0;
-		pos.h = SDL_ListModes(NULL, 0)[0]->h / 10;
+		pos.h = SDL_ListModes(NULL, 0)[0]->h / 20;
 		pos.y = SDL_ListModes(NULL, 0)[0]->h - pos.h;
 		pos.w = 40 * SDL_ListModes(NULL, 0)[0]->w / resolutionW;
 		SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, 1);
