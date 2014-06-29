@@ -110,9 +110,9 @@ class AccelerometerReader implements SensorEventListener
 				else
 				{
 					if( invertedOrientation )
-						nativeGyroscope(event.values[1] - yc, -(event.values[0] - xc), event.values[2] - zc);
-					else
 						nativeGyroscope(-(event.values[1] - yc), event.values[0] - xc, event.values[2] - zc);
+					else
+						nativeGyroscope(event.values[1] - yc, -(event.values[0] - xc), event.values[2] - zc);
 				}
 			}
 		}
