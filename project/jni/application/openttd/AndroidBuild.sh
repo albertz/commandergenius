@@ -2,7 +2,7 @@
 
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
-VER=1.4.0-beta5
+VER=build
 
 [ -d openttd-$VER-$1 ] || mkdir -p openttd-$VER-$1/bin/baseset
 
