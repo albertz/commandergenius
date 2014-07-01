@@ -45,4 +45,4 @@ TODO, which will get actually done
 
 - Debian noroot: audio support.
 
-- Debian noroot: add Java dirs to PATH, add support for update scripts.
+- Debian noroot: add Java dirs to PATH, add support for update scripts, make desktop icons text readable.
