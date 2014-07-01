@@ -17,6 +17,8 @@ TODO, which will get actually done
 
 - SDL: control mouse with right analog gamepad stick.
 
+- SDL: sometimes the screen stays black after restoring from background.
+
 - OpenTTD: All menus in the scenario editor are out of the screen.
 
 - OpenTTD: 16bpp blitter with palette animation support.
@@ -39,10 +41,8 @@ TODO, which will get actually done
 
 - OpenTTD: Frameskip when fast-forward button pressed.
 
+- OpenTTD: Face selection dialog is too tall.
+
 - Debian noroot: audio support.
 
 - Debian noroot: add Java dirs to PATH, add support for update scripts.
-
-- Debian noroot: add paths to external SD cards to the proot.
-
-- Gimp: update - add Java dirs to PATH and use new mouse name in Gimp config.
