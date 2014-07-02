@@ -164,7 +164,7 @@ int main( int argc, char* argv[] )
 
 	SDL_ANDROID_SetScreenKeyboardShown(1);
 
-	if( screenButtons )
+	if( screenButtons && !SDL_ANDROID_GetScreenKeyboardRedefinedByUser() )
 	{
 		SDL_Rect pos;
 		pos.x = 0;
