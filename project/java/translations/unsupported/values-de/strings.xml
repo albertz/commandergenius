@@ -62,7 +62,7 @@
 <string name="rightclick_menu">Menütaste</string>
 <string name="rightclick_multitouch">Touch-Screen mit dem zweiten Finger</string>
 <string name="rightclick_pressure">Touchscreen mit Kraft</string>
-<string name="mouse_question">Erweiterte Funktionen</string>
+<string name="advanced">Erweiterte Funktionen</string>
 <string name="mouse_keepaspectratio">Halten 4:3-Bildschirm Seitenverhältnis</string>
 <string name="mouse_showcreenunderfinger">Show-Bildschirm unter dem Finger in einem separaten Fenster</string>
 <string name="measurepressure_touchplease">Bitte schieben Sie den Finger über den Bildschirm für zwei Sekunden</string>

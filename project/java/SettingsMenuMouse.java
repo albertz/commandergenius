@@ -409,7 +409,7 @@ class SettingsMenuMouse extends SettingsMenu
 	{
 		String title(final MainActivity p)
 		{
-			return p.getResources().getString(R.string.mouse_question);
+			return p.getResources().getString(R.string.advanced);
 		}
 		void run (final MainActivity p)
 		{
@@ -420,6 +420,7 @@ class SettingsMenuMouse extends SettingsMenu
 				p.getResources().getString(R.string.mouse_relative),
 				p.getResources().getString(R.string.mouse_gyroscope_mouse),
 				p.getResources().getString(R.string.mouse_finger_hover),
+				p.getResources().getString(R.string.mouse_subframe_touch_events),
 			};
 
 			boolean defaults[] = {
@@ -429,11 +430,11 @@ class SettingsMenuMouse extends SettingsMenu
 				Globals.RelativeMouseMovement,
 				Globals.MoveMouseWithGyroscope,
 				Globals.FingerHover,
+				Globals.GenerateSubframeTouchEvents,
 			};
 
-			
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(p.getResources().getString(R.string.mouse_question));
+			builder.setTitle(p.getResources().getString(R.string.advanced));
 			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener()
 			{
 				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
@@ -450,6 +451,8 @@ class SettingsMenuMouse extends SettingsMenu
 						Globals.MoveMouseWithGyroscope = isChecked;
 					if( item == 5 )
 						Globals.FingerHover = isChecked;
+					if( item == 6 )
+						Globals.GenerateSubframeTouchEvents = isChecked;
 				}
 			});
 			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()

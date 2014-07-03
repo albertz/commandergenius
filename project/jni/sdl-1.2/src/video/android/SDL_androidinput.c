@@ -830,6 +830,8 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeMotionEvent) ( JNIEnv*  env, jobject  t
 		return;
 #endif
 
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Motion event: %4d %4d action %d ptr %d, force %d radius %d", x, y, action, pointerId, force, radius);
+
 	pointerId = BumpPointerId( pointerId );
 
 	if( ProcessTouchscreenKeyboard( x, y, action, pointerId ) )
@@ -883,12 +885,9 @@ static void ProcessMoveMouseWithGyroscope(float gx, float gy, float gz)
 	if( hardwareMouseDetected == MOUSE_HW_INPUT_MOUSE ) // We don't need all that stuff with a proper precise input device
 		return;
 
-	gx += gz; // Ignore Z?
-	gx *= -moveMouseWithGyroscopeSpeed;
-	gy *= moveMouseWithGyroscopeSpeed; // Screen has Y coordinate inverted
-
-	//gx *= 10; // debug
-	//gy *= 10; // debug
+	//gx += gz; // Ignore Z
+	gx *= moveMouseWithGyroscopeSpeed;
+	gy *= -moveMouseWithGyroscopeSpeed; // Screen has Y coordinate inverted
 
 	static float subpixelX = 0.0f, subpixelY = 0.0f;
 

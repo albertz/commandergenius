@@ -15,16 +15,9 @@ TODO, which will get actually done
 
 - SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
 
-- SDL: make sub-frame touch events as an user-configurable option.
-
 - SDL: control mouse with right analog gamepad stick.
 
-- SDL: user-configurable option to set screen orientation and BPP.
-
-- SDL: floating on-screen joystick - initially invisible, it appears when you touch the screen,
-  centered on your finger, then it slides with your finger if you bump the joystick edge.
-
-- SDL: option to disable immersive mode.
+- SDL: sometimes the screen stays black after restoring from background.
 
 - OpenTTD: All menus in the scenario editor are out of the screen.
 
@@ -46,10 +39,8 @@ TODO, which will get actually done
 
 - OpenTTD: "Open website" button in online resource menu is broken.
 
+- OpenTTD: Frameskip when fast-forward button pressed.
+
+- OpenTTD: Face selection dialog is too tall.
+
 - Debian noroot: audio support.
-
-- Debian noroot: add Java dirs to PATH, add support for update scripts.
-
-- XSDL: add downloadable raster fonts, add path to fonts to Debian/Gimp.
-
-- Gimp: update - add Java dirs to PATH and use new mouse name in Gimp config.

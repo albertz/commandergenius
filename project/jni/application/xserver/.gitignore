@@ -1,1 +1,3 @@
 *.o
+AndroidData/binaries-*
+tmp-*

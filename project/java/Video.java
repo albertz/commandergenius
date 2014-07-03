@@ -380,7 +380,7 @@ abstract class DifferentTouchInput
 				}
 				buttonState = buttonStateNew;
 			}
-			super.process(event); // Push mouse coordinate first
+			super.process(event);
 		}
 		public void processGenericEvent(final MotionEvent event)
 		{
@@ -427,7 +427,7 @@ abstract class DifferentTouchInput
 				DemoGLSurfaceView.nativeMotionEvent( (int)event.getHistoricalX(i), (int)event.getHistoricalY(i),
 					Mouse.SDL_FINGER_MOVE, ptr, (int)( event.getHistoricalPressure(i) * Mouse.MAX_PRESSURE ), (int)( event.getHistoricalSize(i) * Mouse.MAX_PRESSURE ) );
 			}
-			super.process(event); // Push mouse coordinate first
+			super.process(event);
 		}
 	}
 	private static class CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad extends IcsTouchInput
@@ -719,6 +719,16 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 				Thread.sleep(50); // Give some time to the keyboard input thread
 			} catch(Exception e) { };
 		}
+
+		// We will not receive onConfigurationChanged() inside MainActivity with SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+		// so we need to create a hacky frame counter to update screen orientation, because this call takes up some time
+		mOrientationFrameHackyCounter++;
+		if( mOrientationFrameHackyCounter > 100 )
+		{
+			mOrientationFrameHackyCounter = 0;
+			context.updateScreenOrientation();
+		}
+
 		return 1;
 	}
 
@@ -913,6 +923,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public int mWidth = 0;
 	public int mHeight = 0;
 	private ClipboardManager clipboard = null;
+	int mOrientationFrameHackyCounter = 0;
 
 	public static final boolean mRatelimitTouchEvents = true; //(Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO);
 }
@@ -960,7 +971,12 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 				try
 				{
 					mRenderer.wait(300L); // And sometimes the app decides not to render at all, so this timeout should not be big.
-				} catch (InterruptedException e) { }
+				}
+				catch (InterruptedException e)
+				{
+					Log.v("SDL", "DemoGLSurfaceView::limitEventRate(): Who dared to interrupt my slumber?");
+					Thread.interrupted();
+				}
 			}
 		}
 	}

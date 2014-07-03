@@ -79,6 +79,8 @@ import android.content.pm.ActivityInfo;
 import android.view.Display;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Surface;
+
 
 public class MainActivity extends Activity
 {
@@ -87,12 +89,7 @@ public class MainActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 
-		//if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2 )
-		//	setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
-		if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
-			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-		else
-			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		setScreenOrientation();
 
 		instance = this;
 		// fullscreen mode
@@ -127,6 +124,7 @@ public class MainActivity extends Activity
 						setUpStatusLabel();
 						Log.i("SDL", "libSDL: User clicked change phone config button");
 						loadedLibraries.acquireUninterruptibly();
+						setScreenOrientation();
 						SettingsMenu.showConfig(p, false);
 					}
 			};
@@ -235,7 +233,7 @@ public class MainActivity extends Activity
 		if( Parent._tv == null )
 		{
 			//Get the display so we can know the screen size
-			Display display = getWindowManager().getDefaultDisplay(); 
+			Display display = getWindowManager().getDefaultDisplay();
 			int width = display.getWidth();
 			int height = display.getHeight();
 			Parent._tv = new TextView(Parent);
@@ -269,6 +267,9 @@ public class MainActivity extends Activity
 
 	public void initSDL()
 	{
+		setScreenOrientation();
+		updateScreenOrientation();
+		Log.i("SDL", "onConfigurationChanged(): screen orientation: inverted " + AccelerometerReader.gyro.invertedOrientation);
 		(new Thread(new Runnable()
 		{
 			public void run()
@@ -312,6 +313,7 @@ public class MainActivity extends Activity
 		Log.i("SDL", "libSDL: Initializing video and SDL application");
 		
 		sdlInited = true;
+		DimSystemStatusBar.get().dim(_videoLayout);
 		_videoLayout.removeView(_layout);
 		if( _ad.getView() != null )
 			_videoLayout.removeView(_ad.getView());
@@ -334,7 +336,6 @@ public class MainActivity extends Activity
 			_videoLayout.addView(_ad.getView());
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT));
 		}
-		// Receive keyboard events
 		DimSystemStatusBar.get().dim(_videoLayout);
 		DimSystemStatusBar.get().dim(mGLView);
 	}
@@ -839,10 +840,20 @@ public class MainActivity extends Activity
 	@Override
 	public void onConfigurationChanged(Configuration newConfig)
 	{
+		// This function is actually never called
 		super.onConfigurationChanged(newConfig);
-		// Do nothing here
+		updateScreenOrientation();
 	}
-	
+
+	public void updateScreenOrientation()
+	{
+		int rotation = Surface.ROTATION_0;
+		if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.FROYO )
+			rotation = getWindowManager().getDefaultDisplay().getRotation();
+		AccelerometerReader.gyro.invertedOrientation = ( rotation == Surface.ROTATION_180 || rotation == Surface.ROTATION_270 );
+		//Log.d("SDL", "updateScreenOrientation(): screen orientation: " + rotation + " inverted " + AccelerometerReader.gyro.invertedOrientation);
+	}
+
 	public void setText(final String t)
 	{
 		class Callback implements Runnable
@@ -1182,6 +1193,14 @@ public class MainActivity extends Activity
 	{
 		Display getOrient = getWindowManager().getDefaultDisplay();
 		return getOrient.getWidth() >= getOrient.getHeight();
+	}
+
+	void setScreenOrientation()
+	{
+		if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
+			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+		else
+			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 	}
 
 	public FrameLayout getVideoLayout() { return _videoLayout; }

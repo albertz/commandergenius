@@ -48,7 +48,6 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 		return 1;
 
 	unpackProgressMb = 0;
-	
 
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/" );
@@ -197,7 +196,7 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 			strcat( fname2, script );
 			strcat( fname2, " > " );
 			strcat( fname2, fname );
-			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Copying postinstall scipt from SD card: %s", fname2);
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Copying postinstall script from SD card: %s", fname2);
 			system( fname2 );
 		}
 	}
@@ -220,6 +219,8 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 	{
 		if( !fgets(buf, sizeof(buf), fo) )
 			break;
+		if( strchr(buf, '\n') != NULL )
+			strchr(buf, '\n')[0] = 0;
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", buf);
 		strncpy(unpackLog[3], unpackLog[2], sizeof(unpackLog[1]) - 4);
 		strncpy(unpackLog[2], unpackLog[1], sizeof(unpackLog[1]) - 4);
@@ -228,7 +229,7 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Postinstall script exited with status %d", pclose(fo));
 	sprintf(unpackLog[0], "Running postinstall script finished");
-	
+
 	return 1;
 }
 
@@ -236,11 +237,11 @@ static void * unpackFilesThread(void * unused)
 {
 	const char *unpack[][3] =
 	{
-		{"data.tar.gz", "postinstall.sh", "usr/lib/xorg/protocol.txt" },
-		{"xfonts.tar.gz", "", "" },
-		{"update1.tar.gz", "update1.sh", "" },
-		{"update2.tar.gz", "update2.sh", "" },
-		{"update3.tar.gz", "update3.sh", "" },
+		{ "data.tar.gz", "postinstall.sh", "usr/lib/xorg/protocol.txt" },
+		{ "xfonts.tar.gz", "", "" },
+		{ "update1.tar.gz", "update1.sh", "" },
+		{ "update2.tar.gz", "update2.sh", "" },
+		{ "update3.tar.gz", "update3.sh", "" },
 		{NULL, NULL, NULL}
 	};
 	int i;

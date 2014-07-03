@@ -90,25 +90,30 @@ class AccelerometerReader implements SensorEventListener
 	static class GyroscopeListener implements SensorEventListener
 	{
 		public float x1 = 0.0f, x2 = 0.0f, xc = 0.0f, y1 = 0.0f, y2 = 0.0f, yc = 0.0f, z1 = 0.0f, z2 = 0.0f, zc = 0.0f;
+		public boolean invertedOrientation = false;
 		public GyroscopeListener()
 		{
 		}
 		public void onSensorChanged(SensorEvent event)
 		{
-			// TODO: vertical orientation
-			if( Globals.HorizontalOrientation )
+			if( event.values[0] < x1 || event.values[0] > x2 ||
+				event.values[1] < y1 || event.values[1] > y2 ||
+				event.values[2] < z1 || event.values[2] > z2 )
 			{
-				if( event.values[0] < x1 || event.values[0] > x2 ||
-					event.values[1] < y1 || event.values[1] > y2 ||
-					event.values[2] < z1 || event.values[2] > z2 )
-					nativeGyroscope(event.values[0] - xc, event.values[1] - yc, event.values[2] - zc);
-			}
-			else
-			{
-				if( event.values[0] < x1 || event.values[0] > x2 ||
-					event.values[1] < y1 || event.values[1] > y2 ||
-					event.values[2] < z1 || event.values[2] > z2 )
-					nativeGyroscope(-(event.values[1] - yc), event.values[0] - xc, event.values[2] - zc);
+				if( Globals.HorizontalOrientation )
+				{
+					if( invertedOrientation )
+						nativeGyroscope(-(event.values[0] - xc), -(event.values[1] - yc), event.values[2] - zc);
+					else
+						nativeGyroscope(event.values[0] - xc, event.values[1] - yc, event.values[2] - zc);
+				}
+				else
+				{
+					if( invertedOrientation )
+						nativeGyroscope(-(event.values[1] - yc), event.values[0] - xc, event.values[2] - zc);
+					else
+						nativeGyroscope(event.values[1] - yc, -(event.values[0] - xc), event.values[2] - zc);
+				}
 			}
 		}
 		public void onAccuracyChanged(Sensor s, int a)

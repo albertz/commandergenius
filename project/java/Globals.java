@@ -35,7 +35,6 @@ class Globals
 	public static final boolean Using_SDL_1_3 = false;
 	public static final boolean Using_SDL_2_0 = false;
 	public static String[] DataDownloadUrl = { "Data files are 2 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-data.zip/download", "High-quality GFX and music - 40 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-hqp.zip/download" };
-	public static int VideoDepthBpp = 16;
 	public static boolean SwVideoMode = false;
 	public static boolean NeedDepthBuffer = false;
 	public static boolean NeedStencilBuffer = false;
@@ -44,7 +43,6 @@ class Globals
 	public static boolean CompatibilityHacksForceScreenUpdateMouseClick = true;
 	public static boolean CompatibilityHacksStaticInit = false;
 	public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = false;
-	public static boolean HorizontalOrientation = true;
 	public static boolean KeepAspectRatioDefaultSetting = false;
 	public static boolean InhibitSuspend = false;
 	public static boolean CreateService = false;
@@ -55,7 +53,6 @@ class Globals
 	public static boolean RightMouseButtonLongPress = true;
 	public static boolean ForceRelativeMouseMode = false; // If both on-screen keyboard and mouse are needed, this will only set the default setting, user may override it later
 	public static boolean ShowMouseCursor = false;
-	public static boolean GenerateSubframeTouchEvents = false;
 	public static boolean AppNeedsArrowKeys = true;
 	public static boolean AppNeedsTextInput = true;
 	public static boolean AppUsesJoystick = false;
@@ -65,7 +62,6 @@ class Globals
 	public static boolean AppUsesGyroscope = false;
 	public static boolean AppUsesMultitouch = false;
 	public static boolean NonBlockingSwapBuffers = false;
-	public static boolean ImmersiveMode = true;
 	public static boolean ResetSdlConfigForThisVersion = false;
 	public static String DeleteFilesOnUpgrade = "";
 	public static int AppTouchscreenKeyboardKeysAmount = 4;
@@ -79,6 +75,9 @@ class Globals
 	public static String AdmobBannerSize = "";
 
 	// Phone-specific config, modified by user in "Change phone config" startup dialog
+	public static int VideoDepthBpp = 16;
+	public static boolean HorizontalOrientation = true;
+	public static boolean ImmersiveMode = true;
 	public static boolean DownloadToSdcard = true;
 	public static boolean PhoneHasTrackball = false;
 	public static boolean PhoneHasArrowKeys = false;
@@ -115,6 +114,7 @@ class Globals
 	public static int ClickScreenTouchspotSize = 0;
 	public static boolean FingerHover = true;
 	public static boolean HoverJitterFilter = true;
+	public static boolean GenerateSubframeTouchEvents = false;
 	public static boolean KeepAspectRatio = KeepAspectRatioDefaultSetting;
 	public static int RemapHwKeycode[] = new int[SDL_Keys.JAVA_KEYCODE_LAST];
 	public static int RemapScreenKbKeycode[] = new int[6];

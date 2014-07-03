@@ -51,12 +51,10 @@ int main( int argc, char* argv[] )
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Actual video resolution %d/%dx%d/%d", resolutionW, displayW, resolutionH, displayH);
 	setupEnv();
 
-	SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, 0);
-	SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, 0);
-	SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, 0);
+	SDL_ANDROID_SetScreenKeyboardShown(0);
 
 	XSDL_initSDL();
-	
+
 	XSDL_unpackFiles();
 
 	XSDL_showConfigMenu(&resolutionW, &displayW, &resolutionH, &displayH);
@@ -164,11 +162,13 @@ int main( int argc, char* argv[] )
 		argnum += 2;
 	}
 
-	if( screenButtons )
+	SDL_ANDROID_SetScreenKeyboardShown(1);
+
+	if( screenButtons && !SDL_ANDROID_GetScreenKeyboardRedefinedByUser() )
 	{
 		SDL_Rect pos;
 		pos.x = 0;
-		pos.h = SDL_ListModes(NULL, 0)[0]->h / 10;
+		pos.h = SDL_ListModes(NULL, 0)[0]->h / 20;
 		pos.y = SDL_ListModes(NULL, 0)[0]->h - pos.h;
 		pos.w = 40 * SDL_ListModes(NULL, 0)[0]->w / resolutionW;
 		SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, 1);

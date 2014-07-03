@@ -46,7 +46,7 @@
 <string name="rightclick_menu">Кнопка меню</string>
 <string name="rightclick_multitouch">Касание экрана вторым пальцем</string>
 <string name="rightclick_pressure">Нажатие на экран с силой</string>
-<string name="mouse_question">Расширенные функции</string>
+<string name="advanced">Расширенные функции</string>
 <string name="mouse_keepaspectratio">Сохранять соотношение сторон 4:3 на экране</string>
 <string name="mouse_showcreenunderfinger">Экранная лупа</string>
 <string name="measurepressure_touchplease">Пожалуйста, проведите пальцем по экрану в течение двух секунд</string>

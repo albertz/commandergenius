@@ -96,6 +96,7 @@ class SettingsMenuKeyboard extends SettingsMenu
 				new ScreenKeyboardTransparencyConfig(),
 				new RemapScreenKbConfig(),
 				new CustomizeScreenKbLayout(),
+				new ScreenKeyboardAdvanced(),
 				new OkButton(),
 			};
 			showMenuOptionsList(p, options);
@@ -848,6 +849,54 @@ class SettingsMenuKeyboard extends SettingsMenu
 					goBack(p);
 				}
 			}
+		}
+	}
+
+	static class ScreenKeyboardAdvanced extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.advanced);
+		}
+		//boolean enabled() { return true; };
+		void run (final MainActivity p)
+		{
+			CharSequence[] items = {
+				p.getResources().getString(R.string.screenkb_floating_joystick),
+			};
+
+			boolean defaults[] = { 
+				Globals.FloatingScreenJoystick,
+			};
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.advanced));
+			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
+				{
+					if( item == 0 )
+						Globals.FloatingScreenJoystick = isChecked;
+				}
+			});
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
 		}
 	}
 }
