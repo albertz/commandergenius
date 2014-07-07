@@ -73,6 +73,7 @@ class Globals
 	public static String AdmobPublisherId = "";
 	public static String AdmobTestDeviceId = "";
 	public static String AdmobBannerSize = "";
+	public static String GooglePlayGameServicesId = "";
 
 	// Phone-specific config, modified by user in "Change phone config" startup dialog
 	public static int VideoDepthBpp = 16;

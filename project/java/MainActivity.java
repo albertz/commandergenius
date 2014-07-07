@@ -220,6 +220,7 @@ public class MainActivity extends Activity
 			Intent intent = new Intent(this, DummyService.class);
 			startService(intent);
 		}
+		_cloudSave = new CloudSave(this);
 	}
 	
 	public void setUpStatusLabel()
@@ -423,6 +424,24 @@ public class MainActivity extends Activity
 			Thread.sleep(2000); // The event is sent asynchronously, allow app to save it's state, and call exit() itself.
 		} catch (InterruptedException e) {}
 		System.exit(0);
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		_cloudSave.onStart();
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStart();
+		_cloudSave.onStop();
+	}
+
+	@Override
+	public void onActivityResult(int request, int response, Intent data) {
+		super.onActivityResult(request, response, data);
+		_cloudSave.onActivityResult(request, response, data);
 	}
 
 	public void showScreenKeyboardWithoutTextInputField()
@@ -1216,6 +1235,7 @@ public class MainActivity extends Activity
 	private LinearLayout _layout = null;
 	private LinearLayout _layout2 = null;
 	private Advertisement _ad = null;
+	public CloudSave _cloudSave = null;
 
 	private FrameLayout _videoLayout = null;
 	private EditText _screenKeyboard = null;

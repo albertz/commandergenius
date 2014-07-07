@@ -148,4 +148,16 @@
 <string name="mouse_hover_jitter_filter">Фільтрувати тремтіння при піднесенні стилуса/пальця до екрану</string>
 <string name="remap_hwkeys_select_simple">Виберіть дію</string>
 <string name="remap_hwkeys_select_more_keys">Показати всі коди кнопок</string>
+<string name="mouse_gyroscope_mouse">Control mouse with gyroscope</string>
+<string name="mouse_gyroscope_mouse_sensitivity">Gyroscope sensitivity</string>
+<string name="mouse_finger_hover">Finger hover</string>
+<string name="mouse_subframe_touch_events">Multiple touch events per video frame</string>
+<string name="screenkb_floating_joystick">Floating joystick</string>
+<string name="video_orientation_vertical">Portrait/vertical screen orientation</string>
+<string name="video_bpp_24">24 bpp screen color depth</string>
+<string name="video_immersive">Hide system navigation buttons / immersive mode</string>
+<string name="gamehelper_sign_in_failed">Failed to sign in. Please check your network connection and try again.</string>
+<string name="gamehelper_app_misconfigured">The application is incorrectly configured. Check that the package name and signing certificate match the client ID created in Developer Console. Also, if the application is not yet published, check that the account you are trying to sign in with is listed as a tester account. See logs for more information.</string>
+<string name="gamehelper_license_failed">License check failed.</string>
+<string name="gamehelper_unknown_error">Unknown error.</string>
 </resources>
