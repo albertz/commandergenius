@@ -27,9 +27,6 @@ public class CloudSave implements GameHelper.GameHelperListener {
 	// The game helper object. This class is mainly a wrapper around this object.
 	protected GameHelper mHelper;
 
-	// Requested clients. By default, that's just the games client.
-	public int mRequestedClients = GameHelper.CLIENT_SNAPSHOT;
-
 	MainActivity parent;
 
 	/** Constructs a BaseGameActivity with default client (GamesClient). */
@@ -37,28 +34,12 @@ public class CloudSave implements GameHelper.GameHelperListener {
 	{
 		Log.i("SDL", "CloudSave: initializing");
 		parent = p;
-		setRequestedClients(GameHelper.CLIENT_SNAPSHOT);
-		getGameHelper().setup(this);
-	}
-
-	/**
-	 * Sets the requested clients. The preferred way to set the requested clients is
-	 * via the constructor, but this method is available if for some reason your code
-	 * cannot do this in the constructor. This must be called before onCreate or getGameHelper()
-	 * in order to have any effect. If called after onCreate()/getGameHelper(), this method
-	 * is a no-op.
-	 *
-	 * @param requestedClients A combination of the flags CLIENT_GAMES, CLIENT_PLUS
-	 *		   and CLIENT_APPSTATE, or CLIENT_ALL to request all available clients.
-	 */
-	public void setRequestedClients(int requestedClients) {
-		mRequestedClients = requestedClients;
+		mHelper = new GameHelper(parent, GameHelper.CLIENT_SNAPSHOT);
+		mHelper.setMaxAutoSignInAttempts(0);
+		mHelper.setup(this);
 	}
 
 	public GameHelper getGameHelper() {
-		if (mHelper == null) {
-			mHelper = new GameHelper(parent, mRequestedClients);
-		}
 		return mHelper;
 	}
 
