@@ -702,6 +702,20 @@ BNX_INT16 gameSession( BNX_GAME *game )
 				}
 			}
 		}
+		else if ( inpKeySave() )
+		{
+			if ( game->mode != cModeMultiplayer && game->ingame == BNX_TRUE )
+			{
+				saveGame( &Game );
+			}
+		}
+		else if ( inpKeyLoad() )
+		{
+			if ( game->mode != cModeMultiplayer && game->ingame == BNX_TRUE )
+			{
+				loadGame( &Game );
+			}
+		}
 
 		if ( game->ingame == BNX_TRUE )
 		{
@@ -1237,6 +1251,7 @@ BNX_BOOL saveGame( BNX_GAME *game )
 	sysFPut16( game->level_count, file );
 
 	fclose( file );
+	SDL_ANDROID_CloudSave( sysGetFullFileName( csSaveGameName ) );
 
 	return BNX_TRUE;
 }
@@ -1246,6 +1261,8 @@ BNX_BOOL loadGame( BNX_GAME *game )
 	FILE		*file;
 	BNX_INT32	i;
 	BNX_INT32	j;
+
+	SDL_ANDROID_CloudLoad( sysGetFullFileName( csSaveGameName ) );
 
 	if ( sysGetFileLen( sysGetFullFileName( csSaveGameName ) ) != cSaveFileSize )
 		return BNX_FALSE;

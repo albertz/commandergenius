@@ -467,6 +467,21 @@ int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void)
 	return 1;
 }
 
+int SDLCALL SDL_ANDROID_CloudSave(const char * filename, const char * description, const char * imageFile)
+{
+	return 0;
+}
+
+int SDLCALL SDL_ANDROID_CloudLoad(const char *filename)
+{
+	return 0;
+}
+
+int SDLCALL SDL_ANDROID_CloudLoadDialog(char *filename, int len, const char *dialogTitle)
+{
+	return 0;
+}
+
 // Dummy callback for SDL2 to satisfy linker
 extern void SDL_Android_Init(JNIEnv* env, jclass cls);
 void SDL_Android_Init(JNIEnv* env, jclass cls)

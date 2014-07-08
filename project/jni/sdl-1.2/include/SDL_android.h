@@ -93,6 +93,29 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_OpenAudioRecording(SDL_AudioSpec *spec);
 /* Close audio recording device, SDL_Init(SDL_INIT_AUDIO) has to be done before calling this function. */
 extern DECLSPEC void SDLCALL SDL_ANDROID_CloseAudioRecording(void);
 
+/*
+Save the file to the cloud, filename must be already present on disk.
+This function will block, until user signs in to the cloud account, and presses Save button.
+Description and imageFile may be NULL.
+Returns 1 if save succeeded, 0 if user aborted sign-in, or there was no network available.
+*/
+extern DECLSPEC int SDLCALL SDL_ANDROID_CloudSave(const char * filename, const char * description, const char * imageFile);
+
+/*
+Load the specified file from the cloud.
+This function will block, until user signs in to the cloud account.
+Returns 1 if load succeeded, 0 if user aborted sign-in, or there was no network available.
+*/
+extern DECLSPEC int SDLCALL SDL_ANDROID_CloudLoad(const char *filename);
+
+/*
+Show the file loading dialog, to allow user to pick up a file from the cloud.
+This function will block, until user signs in to the cloud account, and selects a file.
+The resulting filename is written to the filename buffer, which must be 512 bytes or more.
+dialogTitle may be NULL.
+Returns 1 if load succeeded, 0 if user aborted sign-in, or there was no network available.
+*/
+extern DECLSPEC int SDLCALL SDL_ANDROID_CloudLoadDialog(char *filename, int len, const char *dialogTitle);
 
 #ifdef __cplusplus
 }

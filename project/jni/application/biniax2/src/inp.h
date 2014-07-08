@@ -58,6 +58,8 @@ typedef struct BNX_INP
 	BNX_BOOL	keyC;
 	BNX_BOOL	keyQuit;
 	BNX_BOOL	keyDel;
+	BNX_BOOL	keySave;
+	BNX_BOOL	keyLoad;
 
 	BNX_BOOL	mousePress;
 	BNX_INT16	mouseX;
@@ -93,6 +95,8 @@ BNX_BOOL inpKeyA();
 BNX_BOOL inpKeyB();
 BNX_BOOL inpKeyC();
 BNX_BOOL inpKeyDel();
+BNX_BOOL inpKeySave();
+BNX_BOOL inpKeyLoad();
 BNX_BOOL inpExit();
 
 char inpGetChar();

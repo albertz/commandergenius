@@ -291,6 +291,11 @@ void gfxRenderGame( BNX_GAME *game )
 			/* RENDER CLEARS LEFT */
 			sprintf( text, "   %02d", game->clears );
 			gfxPrintText( cGfxClearsTX, cGfxClearsTY, text );
+
+			sprintf( text, "SAVE" );
+			gfxPrintText( _BNX_BOXES[ cGfxIndSave ].x1, _BNX_BOXES[ cGfxIndSave ].y1, text );
+			sprintf( text, "LOAD" );
+			gfxPrintText( _BNX_BOXES[ cGfxIndLoad ].x1, _BNX_BOXES[ cGfxIndLoad ].y1, text );
 		}
 		else if ( game->mode == cModeRealtime )
 		{
@@ -308,6 +313,11 @@ void gfxRenderGame( BNX_GAME *game )
 			/* RENDER CLEARS LEFT */
 			sprintf( text, "   %02d", game->clears );
 			gfxPrintText( cGfxClearsAX, cGfxClearsAY, text );
+
+			sprintf( text, "SAVE" );
+			gfxPrintText( _BNX_BOXES[ cGfxIndSave ].x1, _BNX_BOXES[ cGfxIndSave ].y1, text );
+			sprintf( text, "LOAD" );
+			gfxPrintText( _BNX_BOXES[ cGfxIndLoad ].x1, _BNX_BOXES[ cGfxIndLoad ].y1, text );
 		}
 
 		/* PARTICLES */
@@ -362,8 +372,8 @@ void gfxRenderGame( BNX_GAME *game )
 					break;
 			}
 		}
+		gfxPrintText( _BNX_BOXES[ cGfxIndEscape ].x1, _BNX_BOXES[ cGfxIndEscape ].y1, "EXIT" );
 	}
-
 
 	prevIngame = game->ingame;
 	prevClears = game->clears;
@@ -499,6 +509,8 @@ void gfxRenderHelp( BNX_INT16 *line )
 		y += cGfxHelpDY;
 	}
 	*line = l;
+
+	gfxPrintText( _BNX_BOXES[ cGfxIndEscape ].x1, _BNX_BOXES[ cGfxIndEscape ].y1, "EXIT" );
 }
 
 void gfxRenderHof( BNX_HALL *hof, BNX_INT16 hofview )
@@ -567,6 +579,8 @@ void gfxRenderHof( BNX_HALL *hof, BNX_INT16 hofview )
 		count = 0;
 	}
 	count ++;
+
+	gfxPrintText( _BNX_BOXES[ cGfxIndEscape ].x1, _BNX_BOXES[ cGfxIndEscape ].y1, "EXIT" );
 
 	gfxUpdateParticles();
 	gfxRenderParticles();
@@ -918,6 +932,14 @@ void gfxGetVirtualKey( BNX_GAME *game, BNX_INP *inp )
 		else  if ( gfxInBox( inp->mouseX, inp->mouseY, &(_BNX_BOXES[ cGfxIndEscape ]) ) == BNX_TRUE )
 		{
 			inp->keyB = BNX_TRUE;
+		}
+		else if ( gfxInBox( inp->mouseX, inp->mouseY, &(_BNX_BOXES[ cGfxIndSave ]) ) == BNX_TRUE )
+		{
+			inp->keySave = BNX_TRUE;
+		}
+		else if ( gfxInBox( inp->mouseX, inp->mouseY, &(_BNX_BOXES[ cGfxIndLoad ]) ) == BNX_TRUE )
+		{
+			inp->keyLoad = BNX_TRUE;
 		}
 		/* Try to detect Ingame Space press */
 		else

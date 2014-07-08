@@ -67,7 +67,8 @@ GRAPHICS CONSTANTS
 
 #define cGfxScoreX		30
 #define cGfxScoreY		54
-#define cGfxBestX		330
+#define cGfxBestX		230
+#define cGfxBestY		54
 #define cGfxBestY		54
 #define cGfxScore1X		30
 #define cGfxScore1Y		28
@@ -154,6 +155,8 @@ enum {
 	cGfxIndEscape,
 	cGfxIndSpaceR,
 	cGfxIndSpaceT,
+	cGfxIndSave,
+	cGfxIndLoad,
 	cGfxIndMax,
 };
 typedef struct BNX_BOX
@@ -165,10 +168,12 @@ typedef struct BNX_BOX
 } BNX_BOX;
 
 static BNX_BOX _BNX_BOXES[ cGfxIndMax ] = {
-	{ 18, 128, 656, 588 },
-	{ 715, 0, 800, 40 },
+	{ 18,  128, 656, 588 },
+	{ 730, 0,   800, 60  },
 	{ 680, 310, 780, 380 },
-	{ 680, 515, 780, 580 }
+	{ 680, 515, 780, 580 },
+	{ 430, cGfxScoreY, 530, cGfxScoreY + 50 },
+	{ 530, cGfxScoreY, 630, cGfxScoreY + 50 },
 };
 
 static BNX_BOX _BNX_MENU_BOXES[ cMaxOptions ] = {

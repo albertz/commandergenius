@@ -53,6 +53,8 @@ BNX_BOOL inpInit()
 	_Inp.keyB		= BNX_FALSE;
 	_Inp.keyQuit	= BNX_FALSE;
 	_Inp.keyDel		= BNX_FALSE;
+ 	_Inp.keySave	= BNX_FALSE;
+	_Inp.keyLoad	= BNX_FALSE;
 
 	_Inp.mousePress	= BNX_FALSE;
 	_Inp.mouseX		= 0;
@@ -304,6 +306,28 @@ BNX_BOOL inpKeyDel()
 	if ( _Inp.keyDel == BNX_TRUE )
 	{
 		_Inp.keyDel = BNX_FALSE;
+		return BNX_TRUE;
+	}
+
+	return BNX_FALSE;
+}
+
+BNX_BOOL inpKeySave()
+{
+	if ( _Inp.keySave == BNX_TRUE )
+	{
+		_Inp.keySave = BNX_FALSE;
+		return BNX_TRUE;
+	}
+
+	return BNX_FALSE;
+}
+
+BNX_BOOL inpKeyLoad()
+{
+	if ( _Inp.keyLoad == BNX_TRUE )
+	{
+		_Inp.keyLoad = BNX_FALSE;
 		return BNX_TRUE;
 	}
 

@@ -29,7 +29,8 @@ public class CloudSave implements GameHelper.GameHelperListener {
 
 	MainActivity parent;
 
-	/** Constructs a BaseGameActivity with default client (GamesClient). */
+	// ===== Public API =====
+
 	public CloudSave(MainActivity p)
 	{
 		Log.i("SDL", "CloudSave: initializing");
@@ -50,6 +51,32 @@ public class CloudSave implements GameHelper.GameHelperListener {
 	public void onStop() {
 		mHelper.onStop();
 	}
+
+	public boolean save(String filename, String description, String imageFile)
+	{
+		return false;
+	}
+
+	public boolean load (String filename)
+	{
+		return false;
+	}
+
+	public class loadDialogResult
+	{
+		public boolean status = false;
+		public String filename = "";
+	}
+
+	public loadDialogResult loadDialog(String filename, String dialogTitle)
+	{
+		loadDialogResult res = new loadDialogResult();
+		res.status = false;
+		res.filename = "";
+		return res;
+	}
+
+	// ===== Private API =====
 
 	public void onActivityResult(int request, int response, Intent data) {
 		mHelper.onActivityResult(request, response, data);
