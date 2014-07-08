@@ -22,56 +22,23 @@ import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 
-/**
- * Example base class for games. This implementation takes care of setting up
- * the API client object and managing its lifecycle. Subclasses only need to
- * override the @link{#onSignInSucceeded} and @link{#onSignInFailed} abstract
- * methods. To initiate the sign-in flow when the user clicks the sign-in
- * button, subclasses should call @link{#beginUserInitiatedSignIn}. By default,
- * this class only instantiates the GoogleApiClient object. If the PlusClient or
- * AppStateClient objects are also wanted, call the BaseGameActivity(int)
- * constructor and specify the requested clients. For example, to request
- * PlusClient and GamesClient, use BaseGameActivity(CLIENT_GAMES | CLIENT_PLUS).
- * To request all available clients, use BaseGameActivity(CLIENT_ALL).
- * Alternatively, you can also specify the requested clients via
- * @link{#setRequestedClients}, but you must do so before @link{#onCreate}
- * gets called, otherwise the call will have no effect.
- *
- * @author Bruno Oliveira (Google)
- */
 public class CloudSave implements GameHelper.GameHelperListener {
 
 	// The game helper object. This class is mainly a wrapper around this object.
 	protected GameHelper mHelper;
 
-	// We expose these constants here because we don't want users of this class
-	// to have to know about GameHelper at all.
-	public static final int CLIENT_GAMES = GameHelper.CLIENT_GAMES;
-	public static final int CLIENT_APPSTATE = GameHelper.CLIENT_APPSTATE;
-	public static final int CLIENT_PLUS = GameHelper.CLIENT_PLUS;
-	public static final int CLIENT_ALL = GameHelper.CLIENT_ALL;
-
 	// Requested clients. By default, that's just the games client.
-	public int mRequestedClients = CLIENT_GAMES;
-
-	private final static String TAG = "BaseGameActivity";
-	public boolean mDebugLog = false;
+	public int mRequestedClients = GameHelper.CLIENT_SNAPSHOT;
 
 	MainActivity parent;
 
 	/** Constructs a BaseGameActivity with default client (GamesClient). */
 	public CloudSave(MainActivity p)
 	{
+		Log.i("SDL", "CloudSave: initializing");
 		parent = p;
-		setRequestedClients(CLIENT_GAMES);
+		setRequestedClients(GameHelper.CLIENT_SNAPSHOT);
 		getGameHelper().setup(this);
-		/*
-		// Add the Drive API and scope to the builder:
-		GoogleApiClient.Builder builder = helper.getApiClientBuilder();
-		GoogleApiClient.Builder builder = new GoogleApiClient.Builder(parent, this, this);
-		builder.addScope(Drive.SCOPE_APPFOLDER);
-		builder.addApi(Drive.API);
-		*/
 	}
 
 	/**
@@ -91,7 +58,6 @@ public class CloudSave implements GameHelper.GameHelperListener {
 	public GameHelper getGameHelper() {
 		if (mHelper == null) {
 			mHelper = new GameHelper(parent, mRequestedClients);
-			mHelper.enableDebugLog(mDebugLog);
 		}
 		return mHelper;
 	}
@@ -109,11 +75,11 @@ public class CloudSave implements GameHelper.GameHelperListener {
 	}
 
 	public void onSignInSucceeded() {
-		// TODO
+		Log.i("SDL", "CloudSave: onSignInSucceeded()");
 	}
 
 	public void onSignInFailed() {
-		// TODO
+		Log.i("SDL", "CloudSave: onSignInFailed()");
 	}
 
 	public GoogleApiClient getApiClient() {
@@ -141,14 +107,7 @@ public class CloudSave implements GameHelper.GameHelperListener {
 	}
 
 	public void enableDebugLog(boolean enabled) {
-		mDebugLog = true;
-		if (mHelper != null) {
-			mHelper.enableDebugLog(enabled);
-		}
-	}
-
-	public void enableDebugLog(boolean enabled, String tag) {
-		enableDebugLog(enabled);
+		mHelper.enableDebugLog(enabled);
 	}
 
 	public String getInvitationId() {
