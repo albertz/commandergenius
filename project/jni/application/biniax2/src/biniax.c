@@ -1252,7 +1252,7 @@ BNX_BOOL saveGame( BNX_GAME *game )
 
 	fclose( file );
 	SDL_SaveBMP(SDL_GetVideoSurface(), "screenshot.bmp");
-	SDL_ANDROID_CloudSave( sysGetFullFileName( csSaveGameName ), "", "Biniax2", "savegame", "screenshot.bmp", game->moves );
+	SDL_ANDROID_CloudSave( sysGetFullFileName( csSaveGameName ), "", "Biniax2", "savegame", "screenshot.bmp", (uint64_t)0 );
 
 	return BNX_TRUE;
 }

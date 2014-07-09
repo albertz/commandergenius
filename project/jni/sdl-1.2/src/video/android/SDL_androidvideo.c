@@ -475,8 +475,9 @@ int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void)
 }
 
 int SDLCALL SDL_ANDROID_CloudSave(const char *filename, const char *saveId, const char *dialogTitle,
-									const char *description, const char *screenshotFile, long long playedTimeMs)
+									const char *description, const char *screenshotFile, uint64_t playedTimeMs)
 {
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_CloudSave: played time %llu", playedTimeMs);
 	if( !filename )
 		return 0;
 	if( !saveId )
@@ -493,7 +494,7 @@ int SDLCALL SDL_ANDROID_CloudSave(const char *filename, const char *saveId, cons
 	jstring s3 = (*JavaEnv)->NewStringUTF(JavaEnv, dialogTitle);
 	jstring s4 = (*JavaEnv)->NewStringUTF(JavaEnv, description);
 	jstring s5 = (*JavaEnv)->NewStringUTF(JavaEnv, screenshotFile);
-	int result = (*JavaEnv)->CallBooleanMethod( JavaEnv, JavaRenderer, JavaRequestCloudSave, s1, s2, s3, s4, s5, &playedTimeMs );
+	int result = (*JavaEnv)->CallBooleanMethod( JavaEnv, JavaRenderer, JavaRequestCloudSave, s1, s2, s3, s4, s5, (jlong)playedTimeMs );
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, s5);
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, s4);
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, s3);

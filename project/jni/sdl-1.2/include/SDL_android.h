@@ -105,7 +105,7 @@ Use SDL_SaveBMP(SDL_GetVideoSurface(), "screenshot.bmp") to create the screensho
 Returns 1 if save succeeded, 0 if user aborted sign-in, or there was no network available.
 */
 extern DECLSPEC int SDLCALL SDL_ANDROID_CloudSave(const char *filename, const char *saveId, const char *dialogTitle,
-													const char *description, const char *screenshotFile, long long playedTimeMs);
+													const char *description, const char *screenshotFile, uint64_t playedTimeMs);
 
 /*
 Load the specified file from the cloud.
