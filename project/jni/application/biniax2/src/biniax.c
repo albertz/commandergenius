@@ -218,7 +218,7 @@ int main( int argc, char *argv[] )
 					}
 					break;
 				case cDoSave :
-					saveGame( &Game );
+					//saveGame( &Game );
 					enterState = cStateMainMenu;
 					break;
 				case cDoRestart :
@@ -1252,7 +1252,7 @@ BNX_BOOL saveGame( BNX_GAME *game )
 
 	fclose( file );
 	SDL_SaveBMP(SDL_GetVideoSurface(), "screenshot.bmp");
-	SDL_ANDROID_CloudSave( sysGetFullFileName( csSaveGameName ), "save", "Biniax2", "savegame", "screenshot.bmp", game->moves );
+	SDL_ANDROID_CloudSave( sysGetFullFileName( csSaveGameName ), "", "Biniax2", "savegame", "screenshot.bmp", game->moves );
 
 	return BNX_TRUE;
 }
@@ -1263,7 +1263,7 @@ BNX_BOOL loadGame( BNX_GAME *game )
 	BNX_INT32	i;
 	BNX_INT32	j;
 
-	SDL_ANDROID_CloudLoad( sysGetFullFileName( csSaveGameName ), "save", "Biniax2" );
+	SDL_ANDROID_CloudLoad( sysGetFullFileName( csSaveGameName ), "", "Biniax2" );
 
 	if ( sysGetFileLen( sysGetFullFileName( csSaveGameName ) ) != cSaveFileSize )
 		return BNX_FALSE;

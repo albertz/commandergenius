@@ -493,7 +493,7 @@ int SDLCALL SDL_ANDROID_CloudSave(const char *filename, const char *saveId, cons
 	jstring s3 = (*JavaEnv)->NewStringUTF(JavaEnv, dialogTitle);
 	jstring s4 = (*JavaEnv)->NewStringUTF(JavaEnv, description);
 	jstring s5 = (*JavaEnv)->NewStringUTF(JavaEnv, screenshotFile);
-	int result = (*JavaEnv)->CallBooleanMethod( JavaEnv, JavaRenderer, JavaRequestCloudSave, s1, s2, s3, s4, s5, playedTimeMs );
+	int result = (*JavaEnv)->CallBooleanMethod( JavaEnv, JavaRenderer, JavaRequestCloudSave, s1, s2, s3, s4, s5, &playedTimeMs );
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, s5);
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, s4);
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, s3);

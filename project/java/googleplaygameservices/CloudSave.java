@@ -23,6 +23,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
 
 import java.io.*;
+import java.util.concurrent.Semaphore;
+import java.util.Random;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -45,12 +47,15 @@ public class CloudSave implements GameHelper.GameHelperListener {
 
 	MainActivity parent;
 
+	Semaphore semaphore;
+
 	// ===== Public API =====
 
 	public CloudSave(MainActivity p)
 	{
 		Log.i("SDL", "CloudSave: initializing");
 		parent = p;
+		semaphore = new Semaphore(0);
 		mHelper = new GameHelper(parent, GameHelper.CLIENT_SNAPSHOT);
 		mHelper.setMaxAutoSignInAttempts(0);
 		mHelper.setup(this);
@@ -66,9 +71,29 @@ public class CloudSave implements GameHelper.GameHelperListener {
 		mHelper.onStop();
 	}
 
-	public void onActivityResult(int request, int response, Intent data)
+	SnapshotMetadata crapshotMetadata = null;
+	boolean createNewSave = false;
+	public void onActivityResult(int request, int response, Intent intent)
 	{
-		mHelper.onActivityResult(request, response, data);
+		Log.d("SDL", "CloudSave: onActivityResult() response " + response + " intent " + (intent != null));
+		try
+		{
+			if (intent != null && intent.hasExtra(Snapshots.EXTRA_SNAPSHOT_NEW))
+			{
+				createNewSave = true;
+			}
+			if (intent != null && intent.hasExtra(Snapshots.EXTRA_SNAPSHOT_METADATA))
+			{
+				crapshotMetadata = (SnapshotMetadata)
+					intent.getParcelableExtra(Snapshots.EXTRA_SNAPSHOT_METADATA);
+			}
+		}
+		catch (Exception e)
+		{
+			Log.w("SDL", "CloudSave: onActivityResult(): error: " + e.toString());
+		}
+		//mHelper.onActivityResult(request, response, data);
+		semaphore.release();
 	}
 
 	public synchronized boolean save(String filename, String saveId, String dialogTitle, String description, String imageFile, long playedTimeMs)
@@ -87,8 +112,27 @@ public class CloudSave implements GameHelper.GameHelperListener {
 		{
 			if( saveId == null || saveId.length() == 0 )
 			{
-				Log.i("SDL", "CloudSave: save: user dialog is not supported yet");
-				return false;
+				// Show dialog to the user
+				// Specifying Snapshots.DISPLAY_LIMIT_NONE will cause the dialog to hide "New game" button for some reason
+				final Intent snapshotIntent = Games.Snapshots.getSelectSnapshotIntent(getApiClient(), dialogTitle, true, true, 1000);
+				semaphore.drainPermits();
+				crapshotMetadata = null;
+				createNewSave = false;
+				parent.runOnUiThread(new Runnable()
+				{
+					public void run()
+					{
+						parent.startActivityForResult(snapshotIntent, 0);
+					}
+				});
+				semaphore.acquireUninterruptibly();
+				Log.d("SDL", "CloudSave: save: user selected: " + (crapshotMetadata == null ? "null" : crapshotMetadata.getUniqueName()) + " new " + createNewSave);
+				if( createNewSave )
+					saveId = "" + System.currentTimeMillis() + "-" + new Random().nextInt(100000);
+				else if( crapshotMetadata != null )
+					saveId = crapshotMetadata.getUniqueName();
+				else
+					return false;
 			}
 
 			Snapshots.OpenSnapshotResult result = Games.Snapshots.open(getApiClient(), saveId, true).await();
@@ -141,8 +185,23 @@ public class CloudSave implements GameHelper.GameHelperListener {
 		{
 			if( saveId == null || saveId.length() == 0 )
 			{
-				Log.i("SDL", "CloudSave: load: user dialog is not supported yet");
-				return false;
+				// Show dialog to the user
+				final Intent snapshotIntent = Games.Snapshots.getSelectSnapshotIntent(getApiClient(), dialogTitle, false, true, 1000);
+				semaphore.drainPermits();
+				crapshotMetadata = null;
+				createNewSave = false;
+				parent.runOnUiThread(new Runnable()
+				{
+					public void run()
+					{
+						parent.startActivityForResult(snapshotIntent, 0);
+					}
+				});
+				semaphore.acquireUninterruptibly();
+				Log.d("SDL", "CloudSave: load: user selected: " + (crapshotMetadata == null ? "null" : crapshotMetadata.getUniqueName()) + " new " + createNewSave);
+				if( crapshotMetadata == null )
+					return false;
+				saveId = crapshotMetadata.getUniqueName();
 			}
 
 			Snapshots.OpenSnapshotResult result = Games.Snapshots.open(getApiClient(), saveId, false).await();
@@ -175,12 +234,9 @@ public class CloudSave implements GameHelper.GameHelperListener {
 			signInSucceeded = false;
 			signInFailed = false;
 			Log.i("SDL", "CloudSave: beginUserInitiatedSignIn()");
+			semaphore.drainPermits();
 			beginUserInitiatedSignIn();
-			Log.i("SDL", "CloudSave: beginUserInitiatedSignIn() exit");
-			while (!signInSucceeded && !signInFailed)
-			{
-				try { Thread.sleep(300); } catch( Exception e ) {}
-			}
+			semaphore.acquireUninterruptibly();
 			return signInSucceeded;
 		}
 		return true;
@@ -190,11 +246,13 @@ public class CloudSave implements GameHelper.GameHelperListener {
 	public void onSignInSucceeded() {
 		Log.i("SDL", "CloudSave: onSignInSucceeded()");
 		signInSucceeded = true;
+		semaphore.release();
 	}
 
 	public void onSignInFailed() {
 		Log.i("SDL", "CloudSave: onSignInFailed()");
 		signInFailed = true;
+		semaphore.release();
 	}
 
 	public Snapshot processSnapshotOpenResult(Snapshots.OpenSnapshotResult result, int retryCount)
