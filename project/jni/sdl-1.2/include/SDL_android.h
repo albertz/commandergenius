@@ -96,26 +96,27 @@ extern DECLSPEC void SDLCALL SDL_ANDROID_CloseAudioRecording(void);
 /*
 Save the file to the cloud, filename must be already present on disk.
 This function will block, until user signs in to the cloud account, and presses Save button.
-Description and imageFile may be NULL.
+If saveId is NULL or empty, user will select the savegame from the dialog, if it's not empty -
+do not show any dialog to the user, except foir sign-in, and write the savegame with specified ID.
+dialogTitle may be NULL.
+description and screenshotFile may be NULL. playedTimeMs is used for conflict resolution -
+savegame with longer play time will get priority.
+Use SDL_SaveBMP(SDL_GetVideoSurface(), "screenshot.bmp") to create the screenshot.
 Returns 1 if save succeeded, 0 if user aborted sign-in, or there was no network available.
 */
-extern DECLSPEC int SDLCALL SDL_ANDROID_CloudSave(const char * filename, const char * description, const char * imageFile);
+extern DECLSPEC int SDLCALL SDL_ANDROID_CloudSave(const char *filename, const char *saveId, const char *dialogTitle,
+													const char *description, const char *screenshotFile, long long playedTimeMs);
 
 /*
 Load the specified file from the cloud.
-This function will block, until user signs in to the cloud account.
-Returns 1 if load succeeded, 0 if user aborted sign-in, or there was no network available.
-*/
-extern DECLSPEC int SDLCALL SDL_ANDROID_CloudLoad(const char *filename);
-
-/*
-Show the file loading dialog, to allow user to pick up a file from the cloud.
-This function will block, until user signs in to the cloud account, and selects a file.
-The resulting filename is written to the filename buffer, which must be 512 bytes or more.
+This function will block, until user signs in to the cloud account, and selects a savegame.
+The resulting savegame is written to the passed filename.
+If saveId is NULL or empty, user will select the savegame from the dialog, if it's not empty -
+do not show any dialog to the user, except foir sign-in, and read the savegame with specified ID.
 dialogTitle may be NULL.
 Returns 1 if load succeeded, 0 if user aborted sign-in, or there was no network available.
 */
-extern DECLSPEC int SDLCALL SDL_ANDROID_CloudLoadDialog(char *filename, int len, const char *dialogTitle);
+extern DECLSPEC int SDLCALL SDL_ANDROID_CloudLoad(const char *filename, const char *saveId, const char *dialogTitle);
 
 #ifdef __cplusplus
 }

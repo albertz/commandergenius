@@ -80,6 +80,8 @@ import android.view.Display;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Surface;
+import android.app.ProgressDialog;
+
 
 
 public class MainActivity extends Activity
@@ -106,6 +108,8 @@ public class MainActivity extends Activity
 		_layout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 		_layout2 = new LinearLayout(this);
 		_layout2.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+		loadingDialog = new ProgressDialog(this);
+		loadingDialog.setMessage(getString(R.string.accessing_network));
 
 		final Semaphore loadedLibraries = new Semaphore(0);
 
@@ -220,7 +224,7 @@ public class MainActivity extends Activity
 			Intent intent = new Intent(this, DummyService.class);
 			startService(intent);
 		}
-		_cloudSave = new CloudSave(this);
+		cloudSave = new CloudSave(this);
 	}
 	
 	public void setUpStatusLabel()
@@ -429,19 +433,19 @@ public class MainActivity extends Activity
 	@Override
 	protected void onStart() {
 		super.onStart();
-		_cloudSave.onStart();
+		cloudSave.onStart();
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStart();
-		_cloudSave.onStop();
+		cloudSave.onStop();
 	}
 
 	@Override
 	public void onActivityResult(int request, int response, Intent data) {
 		super.onActivityResult(request, response, data);
-		_cloudSave.onActivityResult(request, response, data);
+		cloudSave.onActivityResult(request, response, data);
 	}
 
 	public void showScreenKeyboardWithoutTextInputField()
@@ -1235,7 +1239,8 @@ public class MainActivity extends Activity
 	private LinearLayout _layout = null;
 	private LinearLayout _layout2 = null;
 	private Advertisement _ad = null;
-	public CloudSave _cloudSave = null;
+	public CloudSave cloudSave = null;
+	public ProgressDialog loadingDialog = null;
 
 	private FrameLayout _videoLayout = null;
 	private EditText _screenKeyboard = null;

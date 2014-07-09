@@ -2,6 +2,8 @@
 
 grep '<string name=' values/strings.xml | while read str; do
 
+	if echo "$str" | grep 'translatable="false"' ; then continue; fi
+	
 	var=`echo $str | sed 's/<string name=["]\([^"]*\).*/\1/'`
 	text=`echo $str | sed 's/<string name=["][^"]*["]>\([^<]*\).*/\1/'`
 	if [ "$var" = "app_name" ]; then

@@ -1251,7 +1251,8 @@ BNX_BOOL saveGame( BNX_GAME *game )
 	sysFPut16( game->level_count, file );
 
 	fclose( file );
-	SDL_ANDROID_CloudSave( sysGetFullFileName( csSaveGameName ) );
+	SDL_SaveBMP(SDL_GetVideoSurface(), "screenshot.bmp");
+	SDL_ANDROID_CloudSave( sysGetFullFileName( csSaveGameName ), "save", "Biniax2", "savegame", "screenshot.bmp", game->moves );
 
 	return BNX_TRUE;
 }
@@ -1262,7 +1263,7 @@ BNX_BOOL loadGame( BNX_GAME *game )
 	BNX_INT32	i;
 	BNX_INT32	j;
 
-	SDL_ANDROID_CloudLoad( sysGetFullFileName( csSaveGameName ) );
+	SDL_ANDROID_CloudLoad( sysGetFullFileName( csSaveGameName ), "save", "Biniax2" );
 
 	if ( sysGetFileLen( sysGetFullFileName( csSaveGameName ) ) != cSaveFileSize )
 		return BNX_FALSE;

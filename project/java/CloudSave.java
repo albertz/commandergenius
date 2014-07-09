@@ -39,4 +39,14 @@ class CloudSave
 
 	public void onActivityResult(int request, int response, Intent data) {
 	}
+
+	public boolean save(String filename, String saveId, String dialogTitle, String description, String imageFile, long playedTimeMs)
+	{
+		return false;
+	}
+
+	public boolean load(String filename, String saveId, String dialogTitle)
+	{
+		return false;
+	}
 }

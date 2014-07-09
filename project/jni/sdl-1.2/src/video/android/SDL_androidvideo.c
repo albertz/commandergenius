@@ -80,6 +80,8 @@ static jmethodID JavaGetAdvertisementParams = NULL;
 static jmethodID JavaSetAdvertisementVisible = NULL;
 static jmethodID JavaSetAdvertisementPosition = NULL;
 static jmethodID JavaRequestNewAdvertisement = NULL;
+static jmethodID JavaRequestCloudSave = NULL;
+static jmethodID JavaRequestCloudLoad = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
@@ -347,6 +349,11 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaSetAdvertisementVisible = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setAdvertisementVisible", "(I)V");
 	JavaSetAdvertisementPosition = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setAdvertisementPosition", "(II)V");
 	JavaRequestNewAdvertisement = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "requestNewAdvertisement", "()V");
+
+	JavaRequestCloudSave = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "cloudSave",
+													"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)Z");
+	JavaRequestCloudLoad = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "cloudLoad",
+													"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
 	
 	ANDROID_InitOSKeymap();
 }
@@ -467,20 +474,55 @@ int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void)
 	return 1;
 }
 
-int SDLCALL SDL_ANDROID_CloudSave(const char * filename, const char * description, const char * imageFile)
+int SDLCALL SDL_ANDROID_CloudSave(const char *filename, const char *saveId, const char *dialogTitle,
+									const char *description, const char *screenshotFile, long long playedTimeMs)
 {
-	return 0;
+	if( !filename )
+		return 0;
+	if( !saveId )
+		saveId = "";
+	if( !dialogTitle )
+		dialogTitle = "";
+	if( !description )
+		description = "";
+	if( !screenshotFile )
+		screenshotFile = "";
+	(*JavaEnv)->PushLocalFrame(JavaEnv, 5);
+	jstring s1 = (*JavaEnv)->NewStringUTF(JavaEnv, filename);
+	jstring s2 = (*JavaEnv)->NewStringUTF(JavaEnv, saveId);
+	jstring s3 = (*JavaEnv)->NewStringUTF(JavaEnv, dialogTitle);
+	jstring s4 = (*JavaEnv)->NewStringUTF(JavaEnv, description);
+	jstring s5 = (*JavaEnv)->NewStringUTF(JavaEnv, screenshotFile);
+	int result = (*JavaEnv)->CallBooleanMethod( JavaEnv, JavaRenderer, JavaRequestCloudSave, s1, s2, s3, s4, s5, playedTimeMs );
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s5);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s4);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s3);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s2);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s1);
+	(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
+	return result;
 }
 
-int SDLCALL SDL_ANDROID_CloudLoad(const char *filename)
+int SDLCALL SDL_ANDROID_CloudLoad(const char *filename, const char *saveId, const char *dialogTitle)
 {
-	return 0;
+	if( !filename )
+		return 0;
+	if( !saveId )
+		saveId = "";
+	if( !dialogTitle )
+		dialogTitle = "";
+	(*JavaEnv)->PushLocalFrame(JavaEnv, 3);
+	jstring s1 = (*JavaEnv)->NewStringUTF(JavaEnv, filename);
+	jstring s2 = (*JavaEnv)->NewStringUTF(JavaEnv, saveId);
+	jstring s3 = (*JavaEnv)->NewStringUTF(JavaEnv, dialogTitle);
+	int result = (*JavaEnv)->CallBooleanMethod( JavaEnv, JavaRenderer, JavaRequestCloudLoad, s1, s2, s3 );
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s3);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s2);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s1);
+	(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
+	return result;
 }
 
-int SDLCALL SDL_ANDROID_CloudLoadDialog(char *filename, int len, const char *dialogTitle)
-{
-	return 0;
-}
 
 // Dummy callback for SDL2 to satisfy linker
 extern void SDL_Android_Init(JNIEnv* env, jclass cls);

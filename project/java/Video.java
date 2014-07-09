@@ -834,6 +834,52 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		context.requestNewAdvertisement();
 	}
 
+	public boolean cloudSave(String filename, String saveId, String dialogTitle, String description, String imageFile, long playedTimeMs)
+	{
+		context.runOnUiThread(new Runnable()
+		{
+			public void run()
+			{
+				context.loadingDialog.show();
+			}
+		});
+
+		boolean ret = context.cloudSave.save(filename, saveId, dialogTitle, description, imageFile, playedTimeMs);
+
+		context.runOnUiThread(new Runnable()
+		{
+			public void run()
+			{
+				context.loadingDialog.dismiss();
+			}
+		});
+
+		return ret;
+	}
+
+	public boolean cloudLoad(String filename, String saveId, String dialogTitle)
+	{
+		context.runOnUiThread(new Runnable()
+		{
+			public void run()
+			{
+				context.loadingDialog.show();
+			}
+		});
+
+		boolean ret = context.cloudSave.load(filename, saveId, dialogTitle);
+
+		context.runOnUiThread(new Runnable()
+		{
+			public void run()
+			{
+				context.loadingDialog.dismiss();
+			}
+		});
+
+		return ret;
+	}
+
 	private int PowerOf2(int i)
 	{
 		int value = 1;
