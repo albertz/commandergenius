@@ -77,11 +77,12 @@ import android.os.SystemClock;
 import java.util.concurrent.Semaphore;
 import android.content.pm.ActivityInfo;
 import android.view.Display;
+import android.util.DisplayMetrics;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Surface;
 import android.app.ProgressDialog;
-
+import android.app.KeyguardManager;
 
 
 public class MainActivity extends Activity
@@ -274,36 +275,42 @@ public class MainActivity extends Activity
 	{
 		setScreenOrientation();
 		updateScreenOrientation();
-		Log.i("SDL", "onConfigurationChanged(): screen orientation: inverted " + AccelerometerReader.gyro.invertedOrientation);
+		DimSystemStatusBar.get().dim(_videoLayout);
 		(new Thread(new Runnable()
 		{
 			public void run()
 			{
-				//int tries = 30;
-				while( isCurrentOrientationHorizontal() != Globals.HorizontalOrientation )
+				while( isCurrentOrientationHorizontal() != Globals.HorizontalOrientation ||
+						((KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE)).inKeyguardRestrictedInputMode() )
 				{
-					Log.i("SDL", "libSDL: Waiting for screen orientation to change - the device is probably in the lockscreen mode");
+					Log.i("SDL", "libSDL: Waiting for screen orientation to change, and for disabling lockscreen mode");
 					try {
 						Thread.sleep(500);
 					} catch( Exception e ) {}
-					/*
-					tries--;
-					if( tries <= 0 )
-					{
-						Log.i("SDL", "libSDL: Giving up waiting for screen orientation change");
-						break;
-					}
-					*/
 					if( _isPaused )
 					{
 						Log.i("SDL", "libSDL: Application paused, cancelling SDL initialization until it will be brought to foreground");
 						return;
 					}
+					DimSystemStatusBar.get().dim(_videoLayout);
 				}
 				runOnUiThread(new Runnable()
 				{
 					public void run()
 					{
+						// Hide navigation buttons, and sleep a bit so OS will process the event.
+						// Do not check the display size in a loop - we may have several displays of different sizes,
+						// so app may stuck in infinite loop
+						DisplayMetrics dm = new DisplayMetrics();
+						getWindowManager().getDefaultDisplay().getMetrics(dm);
+						if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT && Globals.ImmersiveMode &&
+							(_videoLayout.getHeight() != dm.widthPixels || _videoLayout.getWidth() != dm.heightPixels) )
+						{
+							DimSystemStatusBar.get().dim(_videoLayout);
+							try {
+								Thread.sleep(300);
+							} catch( Exception e ) {}
+						}
 						initSDLInternal();
 					}
 				});
