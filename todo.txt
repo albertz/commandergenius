@@ -9,7 +9,9 @@ TODO, which will get actually done
 
 - OpenArena: do not treat commands starting with / as chat text.
 
-- OpenArena: camera points up to the sky after respawn on oacmp1dm5.
+- OpenArena: camera points up to the sky after respawn.
+
+- OpenArena: zooming is broken with floating crosshair.
 
 - UQM: use gyroscope to steer the ship, search button for starmap.
 
