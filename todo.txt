@@ -24,3 +24,5 @@ TODO, which will get actually done
 - Debian noroot: audio support - implement PulseAudio server.
 
 - Debian noroot: Android printer support - implement CUPS using /var/run/cups/cups.sock.
+
+- OpenTTD: cloud save support.
