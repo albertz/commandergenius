@@ -21,30 +21,6 @@ TODO, which will get actually done
 
 - SDL: sometimes the screen stays black after restoring from background.
 
-- OpenTTD: All menus in the scenario editor are out of the screen.
-
-- OpenTTD: 16bpp blitter with palette animation support.
-
-- OpenTTD: screen navigation buttons bug on Moto G.
-
-- OpenTTD: Auto-switch to full vertical toolbar if enough space.
-
-- OpenTTD: draw behind vertical toolbar.
-
-- OpenTTD: stylus/finger hover does not highlight building area anymore.
-
-- OpenTTD: volume too loud and sound is distorted.
-
-- OpenTTD: Cheats menu closes itself randomly.
-
-- OpenTTD: Vechile replace screen "OK/replace" button is out of the screen.
-
-- OpenTTD: "Open website" button in online resource menu is broken.
-
-- OpenTTD: Frameskip when fast-forward button pressed.
-
-- OpenTTD: Face selection dialog is too tall.
-
 - Debian noroot: audio support - implement PulseAudio server.
 
 - Debian noroot: Android printer support - implement CUPS using /var/run/cups/cups.sock.
