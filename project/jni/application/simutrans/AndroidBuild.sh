@@ -3,10 +3,11 @@
 if [ -e simutrans ]; then
 	echo Already downloaded
 else
-	svn co --username anon --password '' svn://tron.homeunix.org/simutrans/simutrans/trunk simutrans || exit 1
-	cd simutrans/simutrans || exit 1
+	svn checkout https://github.com/aburch/simutrans/trunk simutrans || exit 1
+	patch -p0 < simutrans.patch || exit 1
+	cd simutrans || exit 1
 	./get_lang_files.sh || exit 1
-	cd ../..
+	cd ..
 fi
 
 mkdir -p AndroidData
