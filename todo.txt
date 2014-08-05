@@ -23,6 +23,8 @@ TODO, which will get actually done
 
 - Debian noroot: audio support - implement PulseAudio server.
 
-- Debian noroot: Android printer support - implement CUPS using /var/run/cups/cups.sock.
-
 - OpenTTD: cloud save support.
+
+- OpenTTD: Town window too tall.
+
+- OpenTTD: Togglable legend area for map window.
