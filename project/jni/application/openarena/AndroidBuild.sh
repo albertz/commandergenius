@@ -3,7 +3,7 @@
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
-if [ "$1" = "armeabi" ]; then (
+if [ "$1" = "armeabi-v7a" ]; then (
 	mkdir -p AndroidData
 	[ -e libapplication.so ] || ln -s libapplication-armeabi.so libapplication.so
 	make -j8 -C vm BUILD_MISSIONPACK=0 || exit 1
