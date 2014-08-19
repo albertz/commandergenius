@@ -60,6 +60,8 @@ import android.text.SpannedString;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
+import org.tukaani.xz.XZInputStream;
+
 
 class CountingInputStream extends BufferedInputStream
 {
@@ -498,7 +500,20 @@ class DataDownloader extends Thread
 		else
 		{
 			Log.i("SDL", "Reading from zip file '" + url + "'");
-			ZipInputStream zip = new ZipInputStream(stream);
+			ZipInputStream zip;
+			if (url.endsWith(".zip.xz") || url.endsWith(".zip.xz/download"))
+				try
+				{
+					zip = new ZipInputStream(new XZInputStream(stream));
+				}
+				catch (Exception eeeee)
+				{
+					Log.i("SDL", "Opening file '" + url + "' failed - cannot open XZ input stream: " + eeeee.toString());
+					return false;
+				}
+			else
+				zip = new ZipInputStream(stream);
+
 			String extpath = getOutFilePath("");
 			
 			while(true)
