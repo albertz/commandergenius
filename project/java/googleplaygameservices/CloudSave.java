@@ -134,7 +134,8 @@ public class CloudSave implements GameHelper.GameHelperListener {
 				else
 					return false;
 			}
-
+			saveId = saveId.replaceAll("[^a-zA-Z0-9\\-._~]", "-");
+			Log.d("SDL", "CloudSave: urlescaping saveId: " + saveId);
 			Snapshots.OpenSnapshotResult result = Games.Snapshots.open(getApiClient(), saveId, true).await();
 			Snapshot crapshot = processSnapshotOpenResult(result, 0);
 			if( crapshot == null )
@@ -220,6 +221,10 @@ public class CloudSave implements GameHelper.GameHelperListener {
 			Log.i("SDL", "CloudSave: load failed: " + e.toString());
 		}
 		return false;
+	}
+
+	public boolean isSignedIn() {
+		return mHelper.isSignedIn();
 	}
 
 	// ===== Private API =====
@@ -337,10 +342,6 @@ public class CloudSave implements GameHelper.GameHelperListener {
 
 	public GoogleApiClient getApiClient() {
 		return mHelper.getApiClient();
-	}
-
-	public boolean isSignedIn() {
-		return mHelper.isSignedIn();
 	}
 
 	public void beginUserInitiatedSignIn() {

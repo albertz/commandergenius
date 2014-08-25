@@ -49,4 +49,9 @@ class CloudSave
 	{
 		return false;
 	}
+
+	public boolean isSignedIn()
+	{
+		return false;
+	}
 }

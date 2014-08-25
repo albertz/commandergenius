@@ -866,7 +866,7 @@ else
 	grep 'android.library.reference.1' project/local.properties > /dev/null || {
 		# Ant is way too smart, and adds current project path in front of the ${sdk.dir}
 		echo 'android.library.reference.1=../../../../../../../../../../../../../../${sdk.dir}/extras/google/google_play_services/libproject/google-play-services_lib' >> project/local.properties
-		echo 'proguard.config=proguard.cfg' >> project/local.properties
+		echo 'proguard.config=proguard.cfg;proguard-local.cfg' >> project/local.properties
 		ln -s -f $SDK_DIR/extras/android/compatibility/v4/android-support-v4.jar project/libs
 	}
 	[ -e $SDK_DIR/extras/google/google_play_services/libproject/google-play-services_lib/build.xml ] || \

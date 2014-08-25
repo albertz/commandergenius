@@ -834,8 +834,21 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		context.requestNewAdvertisement();
 	}
 
-	public boolean cloudSave(String filename, String saveId, String dialogTitle, String description, String imageFile, long playedTimeMs)
+	public boolean cloudSave(final String filename, final String saveId, final String dialogTitle, final String description, final String imageFile, final long playedTimeMs)
 	{
+		if (context.cloudSave.isSignedIn() && saveId.length() > 0)
+		{
+			// Do not show progress dialog, run in a parallel thread, so main thread will not be blocked
+			new Thread(new Runnable()
+			{
+				public void run()
+				{
+					context.cloudSave.save(filename, saveId, dialogTitle, description, imageFile, playedTimeMs);
+				}
+			}).start();
+			return true;
+		}
+
 		context.runOnUiThread(new Runnable()
 		{
 			public void run()
