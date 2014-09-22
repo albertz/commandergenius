@@ -27,8 +27,6 @@ Requested features, might never get implemented, see todo.txt for features that 
 
 - Resize default on-screen buttons for different screen sizes.
 
-- Cloud save support.
-
 - OpenArena: chat text input should be faster.
 
 - OpenArena: Shift and Ctrl keys on USB keyboard do not work for text input.
