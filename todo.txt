@@ -30,3 +30,5 @@ TODO, which will get actually done
 - OpenTTD: Town window too tall.
 
 - OpenTTD: Togglable legend area for map window.
+
+- Nvidia Shield D-Pad does not send any events (probably acts as 3-rd joystick).
