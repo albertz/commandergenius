@@ -32,3 +32,5 @@ TODO, which will get actually done
 - OpenTTD: Togglable legend area for map window.
 
 - Nvidia Shield D-Pad does not send any events (probably acts as 3-rd joystick).
+
+- USB Keyboard: touchpad-style mouse input.
