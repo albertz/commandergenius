@@ -25,6 +25,10 @@ TODO, which will get actually done
 
 - Debian noroot: audio support - implement PulseAudio server.
 
+- Debian noroot: support multiple external storage locations.
+
+- Debian noroot: support Android intent x11://localhost:6000 - http://www.openintents.org/node/905 .
+
 - OpenTTD: cloud save support.
 
 - OpenTTD: Town window too tall.
