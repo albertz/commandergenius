@@ -854,6 +854,9 @@ cd ../../..
 if [ "$GooglePlayGameServicesId" = "n" -o -z "$GooglePlayGameServicesId" ] ; then
 	$SEDI "/==GOOGLEPLAYGAMESERVICES==/ d" project/AndroidManifest.xml
 	GooglePlayGameServicesId=""
+	grep 'google-play-services' project/local.properties > /dev/null && {
+		$SEDI 's/.*google-play-services.*//g' project/local.properties
+	}
 else
 	for F in $JAVA_SRC_PATH/googleplaygameservices/*.java; do
 		OUT=`echo $F | sed 's@.*/@@'` # basename tool is not available everywhere
@@ -863,7 +866,7 @@ else
 	done
 	$SEDI "s/==GOOGLEPLAYGAMESERVICES_APP_ID==/$GooglePlayGameServicesId/g" project/res/values/strings.xml
 	SDK_DIR=`grep '^sdk.dir' project/local.properties | sed 's/.*=//'`
-	grep 'android.library.reference.1' project/local.properties > /dev/null || {
+	grep 'google-play-services' project/local.properties > /dev/null || {
 		# Ant is way too smart, and adds current project path in front of the ${sdk.dir}
 		echo 'android.library.reference.1=../../../../../../../../../../../../../../${sdk.dir}/extras/google/google_play_services/libproject/google-play-services_lib' >> project/local.properties
 		echo 'proguard.config=proguard.cfg;proguard-local.cfg' >> project/local.properties
