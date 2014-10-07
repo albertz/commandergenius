@@ -23,10 +23,6 @@ TODO, which will get actually done
 
 - SDL: sometimes the screen stays black after restoring from background.
 
-- Debian noroot: audio support - implement PulseAudio server.
-
-- Debian noroot: support multiple external storage locations.
-
 - XSDL: support Android intent x11://localhost:6000 - http://www.openintents.org/node/905
 
 - Nvidia Shield D-Pad does not send any events (probably acts as 3-rd joystick).

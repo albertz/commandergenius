@@ -612,6 +612,7 @@ class Settings
 		nativeSetEnv( "SECURE_STORAGE_DIR", p.getFilesDir().getAbsolutePath() );
 		nativeSetEnv( "DATADIR", Globals.DataDir );
 		nativeSetEnv( "UNSECURE_STORAGE_DIR", Globals.DataDir );
+		SdcardAppPath.setEnv(p);
 		nativeSetEnv( "HOME", Globals.DataDir );
 		nativeSetEnv( "SDCARD", Environment.getExternalStorageDirectory().getAbsolutePath() );
 		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
@@ -705,6 +706,14 @@ class Settings
 				return Dummy.Holder.sInstance;
 		}
 		public abstract String path(final Context p);
+		private void setEnvInternal(final Context p)
+		{
+			nativeSetEnv( "UNSECURE_STORAGE_DIR_0", Globals.DataDir );
+		}
+		public static void setEnv(final Context p)
+		{
+			get().setEnvInternal(p);
+		}
 		public String bestPath(final Context p)
 		{
 			return path(p);
@@ -759,11 +768,25 @@ class Settings
 					if( size > maxSize )
 					{
 						maxSize = size;
-						ret = path.getPath();
+						ret = path.getAbsolutePath();
 					}
 				}
 				return ret;
 			};
+			public void setEnvInternal(final Context p)
+			{
+				File[] paths = p.getExternalFilesDirs(null);
+				int index = 0;
+				for( File path: paths )
+				{
+					if( path == null )
+						continue;
+					if( !path.exists() )
+						path.mkdirs();
+					nativeSetEnv( "UNSECURE_STORAGE_DIR_" + index, path.getAbsolutePath() );
+					index++;
+				}
+			}
 		}
 		private static class Dummy extends SdcardAppPath
 		{
