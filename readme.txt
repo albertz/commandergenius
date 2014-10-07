@@ -279,6 +279,16 @@ There is helper script project/jni/application/setEnvironment.sh which will set 
 for configure script and makefile, see AndroidBuild.sh in project/jni/application/scummvm dir for reference.
 
 
+How to compile your own application using GCC 4.7 or newer
+==========================================================
+
+By default, your application will be build with GCC 4.6. To use a newer version of GCC, e.g. GCC 4.8, set-up
+your project like described but execute following commands before running any of the commandergenius scripts
+to configure or build your project:
+export GCCVER=4.8
+export NDK_TOOLCHAIN_VERSION=${GCCVER}
+
+
 Android application sleep/resume support
 ========================================
 

@@ -54,6 +54,9 @@ fi
 	android update project -p project || exit 1
 	rm -f project/src/Globals.java
 }
+
+[ -z "$GCCVER" ] && GCCVER=4.6
+
 # Set here your own NDK path if needed
 # export PATH=$PATH:~/src/endless_space/android-ndk-r7
 NDKBUILDPATH=$PATH
@@ -98,7 +101,7 @@ cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j
 		rm obj/local/armeabi/libapplication.so && \
 		cp jni/application/src/libapplication-armeabi.so obj/local/armeabi/libapplication.so && \
 		cp jni/application/src/libapplication-armeabi.so libs/armeabi/libapplication.so && \
-		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-4.6/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi/libapplication.so \
+		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-${GCCVER}/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi/libapplication.so \
 		|| true ; } && \
 	{	grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
 		grep "MultiABI=" ../AndroidAppSettings.cfg | grep "y\\|all\\|armeabi-v7a" > /dev/null && \
@@ -106,7 +109,7 @@ cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j
 		rm obj/local/armeabi-v7a/libapplication.so && \
 		cp jni/application/src/libapplication-armeabi-v7a.so obj/local/armeabi-v7a/libapplication.so && \
 		cp jni/application/src/libapplication-armeabi-v7a.so libs/armeabi-v7a/libapplication.so && \
-		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-4.6/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi-v7a/libapplication.so \
+		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-${GCCVER}/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi-v7a/libapplication.so \
 		|| true ; } && \
 	{	grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
 		grep "MultiABI=" ../AndroidAppSettings.cfg | grep "armeabi-v7a-hard" > /dev/null && \
@@ -114,7 +117,7 @@ cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j
 		rm obj/local/armeabi-v7a-hard/libapplication.so && \
 		cp jni/application/src/libapplication-armeabi-v7a-hard.so obj/local/armeabi-v7a-hard/libapplication.so && \
 		cp jni/application/src/libapplication-armeabi-v7a-hard.so libs/armeabi-v7a/libapplication.so && \
-		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-4.6/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi-v7a/libapplication.so \
+		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-${GCCVER}/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi-v7a/libapplication.so \
 		|| true ; } && \
 	{	grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
 		grep "MultiABI=" ../AndroidAppSettings.cfg | grep "all\\|mips" > /dev/null && \
@@ -122,7 +125,7 @@ cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j
 		rm obj/local/mips/libapplication.so && \
 		cp jni/application/src/libapplication-mips.so obj/local/mips/libapplication.so && \
 		cp jni/application/src/libapplication-mips.so libs/mips/libapplication.so && \
-		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/mipsel-linux-android-4.6/prebuilt/$MYARCH/bin/mipsel-linux-android-strip --strip-unneeded libs/mips/libapplication.so \
+		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/mipsel-linux-android-${GCCVER}/prebuilt/$MYARCH/bin/mipsel-linux-android-strip --strip-unneeded libs/mips/libapplication.so \
 		|| true ; } && \
 	{	grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
 		grep "MultiABI=" ../AndroidAppSettings.cfg | grep "all\\|x86" > /dev/null && \
@@ -130,7 +133,7 @@ cd project && env PATH=$NDKBUILDPATH BUILD_NUM_CPUS=$NCPU nice -n19 ndk-build -j
 		rm obj/local/x86/libapplication.so && \
 		cp jni/application/src/libapplication-x86.so obj/local/x86/libapplication.so && \
 		cp jni/application/src/libapplication-x86.so libs/x86/libapplication.so && \
-		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/x86-4.6/prebuilt/$MYARCH/bin/i686-linux-android-strip --strip-unneeded libs/x86/libapplication.so \
+		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/x86-${GCCVER}/prebuilt/$MYARCH/bin/i686-linux-android-strip --strip-unneeded libs/x86/libapplication.so \
 		|| true ; } && \
 	cd .. && ./copyAssets.sh && cd project && \
 	{	if $build_release ; then \
