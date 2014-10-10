@@ -709,7 +709,10 @@ static void ProcessMouseMultitouch( int action, int pointerId )
 		}
 	}
 	if( pointerId != firstMousePointerId && pointerId != secondMousePointerId && (action == MOUSE_DOWN || action == MOUSE_UP) )
+	{
 		SDL_ANDROID_MainThreadPushMouseButton( (action == MOUSE_DOWN) ? SDL_PRESSED : SDL_RELEASED, SDL_BUTTON_MIDDLE );
+		multitouchGestureHappened = 1; // Prevent firing left mouse button when lifting two fingers
+	}
 }
 
 static void ProcessMouseHover( jint *xx, jint *yy, int action, int distance )
