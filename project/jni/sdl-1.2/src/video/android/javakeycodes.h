@@ -211,6 +211,15 @@ KEYCODE_BUTTON_14       = 201,
 KEYCODE_BUTTON_15       = 202,
 KEYCODE_BUTTON_16       = 203,
 
+// Press mouse buttons with keyboard events
+KEYCODE_MOUSE_LEFT      = 248,
+KEYCODE_MOUSE_MIDDLE    = 249,
+KEYCODE_MOUSE_RIGHT     = 250,
+KEYCODE_MOUSE_WHEEL_UP  = 251,
+KEYCODE_MOUSE_WHEEL_DOWN= 252,
+KEYCODE_MOUSE_X1        = 253,
+KEYCODE_MOUSE_X2        = 254,
+
 KEYCODE_LAST            = 255 // Android 2.3 added several new gaming keys, Android 3.1 added even more - plz keep in sync with Keycodes.java
 };
 

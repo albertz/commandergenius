@@ -170,6 +170,12 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key,
 		return;
 	}
 
+	if ( key >= SDLK_MOUSE_LEFT && key <= SDLK_MOUSE_X2 )
+	{
+		SDL_ANDROID_MainThreadPushMouseButton(pressed, key - SDLK_MOUSE_LEFT + SDL_BUTTON_LEFT);
+		return;
+	}
+
 	keysym.scancode = key;
 	if ( key < SDLK_LAST )
 		keysym.scancode = SDL_android_keysym_to_scancode[key];
