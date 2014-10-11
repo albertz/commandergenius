@@ -599,7 +599,11 @@ namespace boost { namespace property_tree { namespace detail {namespace rapidxml
                     
                 // Setup new pool in allocated memory
                 char *pool = align(raw_memory);
-                header *new_header = reinterpret_cast<header *>(pool);
+		
+		header *new_header;		
+		memcpy( (void*) new_header, (void*)pool,sizeof(header*));
+		
+                //header *new_header = reinterpret_cast<header *>(pool);
                 new_header->previous_begin = m_begin;
                 m_begin = raw_memory;
                 m_ptr = pool + sizeof(header);

@@ -36,8 +36,14 @@ template<class T> struct addressof_impl
 {
     static inline T * f( T & v, long )
     {
-        return reinterpret_cast<T*>(
-            &const_cast<char&>(reinterpret_cast<const volatile char &>(v)));
+	T* address;
+	
+        memcpy( (void*) address, (void*)&v,sizeof(T*));
+      
+        /*return reinterpret_cast<T*>(
+            &const_cast<char&>( reinterpret_cast<const volatile char &>(v) )
+				   );*/
+	return address;
     }
 
     static inline T * f( T * v, int )
