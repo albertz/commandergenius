@@ -601,7 +601,7 @@ namespace boost { namespace property_tree { namespace detail {namespace rapidxml
                 char *pool = align(raw_memory);
 		
 		header *new_header;		
-		memcpy( (void*) new_header, (void*)pool,sizeof(header*));
+		memcpy( (void*) (&new_header), (void*) (&pool), sizeof(header*));
 		
                 //header *new_header = reinterpret_cast<header *>(pool);
                 new_header->previous_begin = m_begin;
