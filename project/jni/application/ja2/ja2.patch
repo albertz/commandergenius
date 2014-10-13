@@ -240,8 +240,21 @@ index 263f9b1..57d377c 100644
  #define PATH_SEPARATOR      '/'
  #define PATH_SEPARATOR_STR  "/"
  #endif
+diff --git a/sgp/PlatformSDL.h b/sgp/PlatformSDL.h
+index 7d69ce0..246d80c 100644
+--- a/sgp/PlatformSDL.h
++++ b/sgp/PlatformSDL.h
+@@ -15,7 +15,7 @@
+  *    http://developer.apple.com/library/mac/#technotes/tn2133/_index.html
+  *
+  */
+-#ifdef __APPLE__
++#if defined(__APPLE__) || defined(__ANDROID__)
+   #define EXPENSIVE_SDL_UPDATE_RECT    (1)
+ #else
+   #define EXPENSIVE_SDL_UPDATE_RECT    (0)
 diff --git a/sgp/SGP.cc b/sgp/SGP.cc
-index d156d73..66d7cf0 100644
+index d156d73..95c4097 100644
 --- a/sgp/SGP.cc
 +++ b/sgp/SGP.cc
 @@ -13,6 +13,9 @@
@@ -273,7 +286,7 @@ index d156d73..66d7cf0 100644
  
  #if defined BROKEN_SWPRINTF
  	if (setlocale(LC_CTYPE, "UTF-8") == NULL)
-@@ -398,7 +401,7 @@ try
+@@ -398,7 +398,7 @@ try
    if(extraDataDir.empty())
    {
      // use location of the exe file
@@ -282,7 +295,7 @@ index d156d73..66d7cf0 100644
    }
  
    std::string externalizedDataPath = FileMan::joinPaths(extraDataDir, "externalized");
-@@ -775,7 +779,7 @@ static void WriteDefaultConfigFile(const char* ConfigFile)
+@@ -775,7 +775,7 @@ static void WriteDefaultConfigFile(const char* ConfigFile)
  #ifdef _WIN32
      fprintf(IniFile, "data_dir = C:\\Program Files\\Jagged Alliance 2");
  #else

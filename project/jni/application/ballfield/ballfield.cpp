@@ -13,6 +13,7 @@
 #include <string.h>
 #include <math.h>
 #include <android/log.h>
+#include <wchar.h>
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
@@ -554,6 +555,19 @@ int main(int argc, char* argv[])
 	memset(gamepads, 0, sizeof(gamepads));
 
 	__android_log_print(ANDROID_LOG_INFO, "Ballfield", "sizeof(int) %d long %d long long %d size_t %d", sizeof(int), sizeof(long), sizeof(long long), sizeof(size_t));
+	wchar_t ss[256];
+	const wchar_t *ss2 = L"String 2 ЕНГ ---";
+	swprintf(ss, 256, L"String ЙЦУК --- %ls", ss2);
+	char ss3[512] = "";
+	char ss4[512] = "";
+	for(i = 0; i < wcslen(ss); i++)
+	{
+		char tmp[16];
+		sprintf(tmp, "%04X ", (int)ss[i]);
+		strcat(ss3, tmp);
+		sprintf(ss4, "%ls", ss);
+	}
+	__android_log_print(ANDROID_LOG_VERBOSE, "Ballfield", "swprintf: len %d data %s: %s", wcslen(ss), ss3, ss4);
 
 	__android_log_print(ANDROID_LOG_VERBOSE, "Ballfield", "On-screen buttons:");
 	for(i = 0; i < SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM; i++)
