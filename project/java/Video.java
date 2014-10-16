@@ -362,6 +362,7 @@ abstract class DifferentTouchInput
 	}
 	private static class IcsTouchInput extends GingerbreadTouchInput
 	{
+		float hatX = 0.0f, hatY = 0.0f;
 		private static class Holder
 		{
 			private static final IcsTouchInput sInstance = new IcsTouchInput();
@@ -391,6 +392,29 @@ abstract class DifferentTouchInput
 					event.getAxisValue(MotionEvent.AXIS_X), event.getAxisValue(MotionEvent.AXIS_Y),
 					event.getAxisValue(MotionEvent.AXIS_Z), event.getAxisValue(MotionEvent.AXIS_RZ),
 					event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_LTRIGGER) );
+				// event.getAxisValue(AXIS_HAT_X) and event.getAxisValue(AXIS_HAT_Y) are joystick arrow keys, on Nvidia Shield and some other joysticks
+				if( event.getAxisValue(MotionEvent.AXIS_HAT_X) != hatX )
+				{
+					hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X);
+					if( hatX == 0.0f )
+					{
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_LEFT, 0, 0);
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_RIGHT, 0, 0);
+					}
+					else
+						DemoGLSurfaceView.nativeKey(hatX < 0.0f ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT, 1, 0);
+				}
+				if( event.getAxisValue(MotionEvent.AXIS_HAT_Y) != hatY )
+				{
+					hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
+					if( hatY == 0.0f )
+					{
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_UP, 0, 0);
+						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_DOWN, 0, 0);
+					}
+					else
+						DemoGLSurfaceView.nativeKey(hatY < 0.0f ? KeyEvent.KEYCODE_DPAD_UP : KeyEvent.KEYCODE_DPAD_DOWN, 1, 0);
+				}
 				return;
 			}
 			// Process mousewheel
@@ -436,41 +460,8 @@ abstract class DifferentTouchInput
 		{
 			private static final CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad sInstance = new CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad();
 		}
-		float hatX = 0.0f, hatY = 0.0f;
 		public void processGenericEvent(final MotionEvent event)
 		{
-			// Joysticks are supported since Honeycomb, but I don't care about it, because very little devices have it
-			if( (event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) == InputDevice.SOURCE_CLASS_JOYSTICK )
-			{
-				// event.getAxisValue(AXIS_HAT_X) and event.getAxisValue(AXIS_HAT_Y) are joystick arrow keys, they also send keyboard events
-				DemoGLSurfaceView.nativeGamepadAnalogJoystickInput(
-					event.getAxisValue(MotionEvent.AXIS_X), event.getAxisValue(MotionEvent.AXIS_Y),
-					event.getAxisValue(MotionEvent.AXIS_RX), event.getAxisValue(MotionEvent.AXIS_RZ),
-					0, 0);
-				if( event.getAxisValue(MotionEvent.AXIS_HAT_X) != hatX )
-				{
-					hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X);
-					if( hatX == 0.0f )
-					{
-						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_LEFT, 0, 0);
-						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_RIGHT, 0, 0);
-					}
-					else
-						DemoGLSurfaceView.nativeKey(hatX < 0.0f ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT, 1, 0);
-				}
-				if( event.getAxisValue(MotionEvent.AXIS_HAT_Y) != hatY )
-				{
-					hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
-					if( hatY == 0.0f )
-					{
-						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_UP, 0, 0);
-						DemoGLSurfaceView.nativeKey(KeyEvent.KEYCODE_DPAD_DOWN, 0, 0);
-					}
-					else
-						DemoGLSurfaceView.nativeKey(hatY < 0.0f ? KeyEvent.KEYCODE_DPAD_UP : KeyEvent.KEYCODE_DPAD_DOWN, 1, 0);
-				}
-				return;
-			}
 			super.processGenericEvent(event);
 		}
 		public boolean detect()
