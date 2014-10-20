@@ -16,3 +16,4 @@ project/res/drawable/app_icon.png
 project/proguard-project.txt
 project/proguard-local.cfg
 project/themes/converter
+project/jni/android-support

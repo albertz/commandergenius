@@ -912,6 +912,9 @@ fi
 
 ./copyAssets.sh || exit 1
 
+rm -rf project/jni/android-support
+ln -s "`which ndk-build | sed 's@/ndk-build@@'`/sources/android/support" project/jni/android-support
+
 if uname -s | grep -i "darwin" > /dev/null ; then
 	find project/src -name "*.killme.tmp" -delete
 fi

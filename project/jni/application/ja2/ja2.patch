@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index a21c6b5..8a65a69 100644
+index a21c6b5..d6a8e9d 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -55,7 +55,7 @@ endif
@@ -21,6 +21,15 @@ index a21c6b5..8a65a69 100644
  CFLAGS += -I _build/lib-rapidjson
  CFLAGS += -I _build/lib-slog
  CFLAGS += -I _build/lib-smacker/libsmacker
+@@ -154,7 +155,7 @@ CCFLAGS += -Wmissing-prototypes
+ 
+ CXXFLAGS += $(CFLAGS)
+ 
+-LDFLAGS += -lm
++LDFLAGS += -lm -landroid_support
+ 
+ ifeq "$(WITH_LPTHREAD)" "1"
+ LDFLAGS += -lpthread
 @@ -522,15 +523,15 @@ SRCS += _build/lib-MicroIni/src/MicroIni/Line.cpp
  SRCS += _build/lib-MicroIni/src/MicroIni/Section.cpp
  SRCS += _build/lib-MicroIni/src/MicroIni/Value.cpp
@@ -240,8 +249,21 @@ index 263f9b1..57d377c 100644
  #define PATH_SEPARATOR      '/'
  #define PATH_SEPARATOR_STR  "/"
  #endif
+diff --git a/sgp/PlatformSDL.h b/sgp/PlatformSDL.h
+index 7d69ce0..246d80c 100644
+--- a/sgp/PlatformSDL.h
++++ b/sgp/PlatformSDL.h
+@@ -15,7 +15,7 @@
+  *    http://developer.apple.com/library/mac/#technotes/tn2133/_index.html
+  *
+  */
+-#ifdef __APPLE__
++#if defined(__APPLE__) || defined(__ANDROID__)
+   #define EXPENSIVE_SDL_UPDATE_RECT    (1)
+ #else
+   #define EXPENSIVE_SDL_UPDATE_RECT    (0)
 diff --git a/sgp/SGP.cc b/sgp/SGP.cc
-index d156d73..66d7cf0 100644
+index d156d73..e34ecd8 100644
 --- a/sgp/SGP.cc
 +++ b/sgp/SGP.cc
 @@ -13,6 +13,9 @@
@@ -254,7 +276,17 @@ index d156d73..66d7cf0 100644
  
  #include "Button_System.h"
  #include "Debug.h"
-@@ -49,9 +52,6 @@
+@@ -32,6 +35,9 @@
+ #include "Video.h"
+ #include "VSurface.h"
+ #include <SDL.h>
++#ifdef __ANDROID__
++#include <SDL_screenkeyboard.h>
++#endif
+ #include "UILayout.h"
+ #include "GameRes.h"
+ #include "Logger.h"
+@@ -49,9 +55,6 @@
  #include "slog/slog.h"
  #define TAG "SGP"
  
@@ -264,7 +296,15 @@ index d156d73..66d7cf0 100644
  
  #if defined _WIN32
  #	define WIN32_LEAN_AND_MEAN
-@@ -318,7 +318,7 @@ static BOOLEAN ParseParameters(int argc, char* const argv[],
+@@ -273,6 +276,7 @@ static void MainLoop(int msPerGameCycle)
+ 
+ static int Failure(char const* const msg, bool showInfoIcon=false)
+ {
++	__android_log_print(ANDROID_LOG_FATAL, "JA2", "%s", msg);
+ 	fprintf(stderr, "%s\n", msg);
+ #if defined _WIN32
+ 	MessageBox(0, msg, APPLICATION_NAME, MB_OK | (showInfoIcon ? MB_ICONINFORMATION : MB_ICONERROR) | MB_TASKMODAL);
+@@ -318,7 +322,7 @@ static BOOLEAN ParseParameters(int argc, char* const argv[],
  int main(int argc, char* argv[])
  try
  {
@@ -273,7 +313,23 @@ index d156d73..66d7cf0 100644
  
  #if defined BROKEN_SWPRINTF
  	if (setlocale(LC_CTYPE, "UTF-8") == NULL)
-@@ -398,7 +401,7 @@ try
+@@ -365,6 +369,15 @@ try
+ 	SDL_Init(SDL_INIT_VIDEO);
+ 	SDL_EnableUNICODE(SDL_ENABLE);
+ 
++#ifdef __ANDROID__
++	SDL_Rect r = {	64 * SDL_ListModes(NULL, 0)[0]->w / 1280,
++					492 * SDL_ListModes(NULL, 0)[0]->h / 800,
++					(199 - 64) * SDL_ListModes(NULL, 0)[0]->w / 1280,
++					(627 - 492) * SDL_ListModes(NULL, 0)[0]->h / 800};
++	if (!SDL_ANDROID_GetScreenKeyboardRedefinedByUser())
++		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &r);
++#endif
++
+ #ifdef __APPLE__
+   // Enable 3-button mouse support if the user haven't instructed
+   // otherwise
+@@ -398,7 +411,7 @@ try
    if(extraDataDir.empty())
    {
      // use location of the exe file
@@ -282,7 +338,7 @@ index d156d73..66d7cf0 100644
    }
  
    std::string externalizedDataPath = FileMan::joinPaths(extraDataDir, "externalized");
-@@ -775,7 +779,7 @@ static void WriteDefaultConfigFile(const char* ConfigFile)
+@@ -775,7 +788,7 @@ static void WriteDefaultConfigFile(const char* ConfigFile)
  #ifdef _WIN32
      fprintf(IniFile, "data_dir = C:\\Program Files\\Jagged Alliance 2");
  #else

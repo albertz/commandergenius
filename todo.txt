@@ -30,3 +30,5 @@ TODO, which will get actually done
 - USB Keyboard: touchpad mode, configurable mouse speed, show keyboard LEDs, show error when root is not installed.
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
+
+- GemRB: update.
