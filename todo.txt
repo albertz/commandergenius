@@ -25,8 +25,6 @@ TODO, which will get actually done
 
 - XSDL: support Android intent x11://localhost:6000 - http://www.openintents.org/node/905
 
-- Nvidia Shield D-Pad does not send any events (probably acts as 3-rd joystick).
-
 - USB Keyboard: touchpad mode, configurable mouse speed, show keyboard LEDs, show error when root is not installed.
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
