@@ -445,6 +445,7 @@ int main(int argc, char* argv[])
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
 	SDL_EnableUNICODE(1);
+	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 	SDL_Joystick * joysticks[6];
 	for( i = 0; i < 6; i++ )
 		joysticks[i] = SDL_JoystickOpen(i);
@@ -746,6 +747,14 @@ int main(int argc, char* argv[])
 		x_speed = 500.0 * sin(t * 0.37);
 		y_speed = 500.0 * sin(t * 0.53);
 		z_speed = 400.0 * sin(t * 0.21);
+		if( SDL_GetKeyState(NULL)[SDLK_LEFT] )
+			x_speed -= 100000 * dt;
+		if( SDL_GetKeyState(NULL)[SDLK_RIGHT] )
+			x_speed += 100000 * dt;
+		if( SDL_GetKeyState(NULL)[SDLK_UP] )
+			y_speed -= 100000 * dt;
+		if( SDL_GetKeyState(NULL)[SDLK_DOWN] )
+			y_speed += 100000 * dt;
 
 		ballfield_move(balls, x_speed, y_speed, z_speed);
 		x_offs -= x_speed;
