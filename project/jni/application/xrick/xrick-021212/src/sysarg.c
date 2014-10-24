@@ -158,7 +158,7 @@ sysarg_init(int argc, char **argv)
     else if (!strcmp(argv[i], "-speed")) {
       if (++i == argc) sysarg_fail("missing speed value");
       sysarg_args_period = atoi(argv[i]) - 1;
-      if (sysarg_args_period < 0 || sysarg_args_period > 99)
+      if (sysarg_args_period < 0 || sysarg_args_period > 250)
 	sysarg_fail("invalid speed value");
     }
 
