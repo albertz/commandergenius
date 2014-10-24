@@ -61,8 +61,12 @@
 
 #define HAVE_STDIO_H 1
 
-
+#ifdef __LP64__
+#define SIZEOF_VOIDP 8
+#else
 #define SIZEOF_VOIDP 4
+#endif
+
 #define SDL_HAS_64BIT_TYPE 1
 
 /* FireSlash found that SDL native memcpy crashes sometimes, these defines fix it (and they are faster) */
