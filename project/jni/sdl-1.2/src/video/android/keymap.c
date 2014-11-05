@@ -241,6 +241,14 @@ void SDL_android_init_keymap(SDLKey *SDL_android_keymap)
   keymap[KEYCODE_BUTTON_14] = SDL_KEY(N);
   keymap[KEYCODE_BUTTON_15] = SDL_KEY(O);
   keymap[KEYCODE_BUTTON_16] = SDL_KEY(P);
+
+  keymap[KEYCODE_MOUSE_LEFT] = SDL_KEY(MOUSE_LEFT);
+  keymap[KEYCODE_MOUSE_MIDDLE] = SDL_KEY(MOUSE_MIDDLE);
+  keymap[KEYCODE_MOUSE_RIGHT] = SDL_KEY(MOUSE_RIGHT);
+  keymap[KEYCODE_MOUSE_WHEEL_UP] = SDL_KEY(MOUSE_WHEEL_UP);
+  keymap[KEYCODE_MOUSE_WHEEL_DOWN] = SDL_KEY(MOUSE_WHEEL_DOWN);
+  keymap[KEYCODE_MOUSE_X1] = SDL_KEY(MOUSE_X1);
+  keymap[KEYCODE_MOUSE_X2] = SDL_KEY(MOUSE_X2);
 }
 
 unsigned char SDL_android_keysym_to_scancode[SDLK_LAST] = {

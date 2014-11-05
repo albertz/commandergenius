@@ -88,7 +88,6 @@ extern void SDL_ANDROID_PumpEvents()
 {
 	static int oldMouseButtons = 0;
 	SDL_Event ev;
-	SDL_ANDROID_processAndroidTrackballDampening();
 	SDL_ANDROID_processMoveMouseWithKeyboard();
 #if SDL_VERSION_ATLEAST(1,3,0)
 	SDL_Window * window = SDL_GetFocusWindow();

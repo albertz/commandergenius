@@ -20,7 +20,7 @@ NDK=`readlink -f $NDK`
 
 #echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
-GCCVER=4.6
+[ -z "$GCCVER" ] && GCCVER=4.6
 PLATFORMVER=android-8
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then

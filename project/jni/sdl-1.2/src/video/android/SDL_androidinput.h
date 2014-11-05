@@ -59,8 +59,21 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 
 /* JNI-C++ wrapper stuff */
 
-// Special key to signal that key should be handled by Java internally, such as Volume Up/Down keys
-#define SDLK_NO_REMAP 512
+enum
+{
+	// Mouse buttons can be mapped to on-screen keys
+	SDLK_MOUSE_LEFT = 500,
+	SDLK_MOUSE_MIDDLE = 501,
+	SDLK_MOUSE_RIGHT = 502,
+	SDLK_MOUSE_WHEEL_UP = 503,
+	SDLK_MOUSE_WHEEL_DOWN = 504,
+	SDLK_MOUSE_X1 = 505,
+	SDLK_MOUSE_X2 = 506,
+
+	// Special key to signal that key should be handled by Java internally, such as Volume Up/Down keys
+	SDLK_NO_REMAP = 512,
+};
+
 #define SDL_SCANCODE_NO_REMAP SDLK_NO_REMAP
 
 #if SDL_VERSION_ATLEAST(1,3,0)

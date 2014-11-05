@@ -71,7 +71,6 @@ extern void SDL_ANDROID_PumpEvents()
 {
 	joystickEventsCount = 0;
 
-	SDL_ANDROID_processAndroidTrackballDampening();
 	SDL_ANDROID_processMoveMouseWithKeyboard();
 };
 
@@ -167,6 +166,12 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key,
 		SDL_ANDROID_moveMouseWithKbY += SDL_ANDROID_moveMouseWithKbSpeedY;
 
 		SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY);
+		return;
+	}
+
+	if ( key >= SDLK_MOUSE_LEFT && key <= SDLK_MOUSE_X2 )
+	{
+		SDL_ANDROID_MainThreadPushMouseButton(pressed, key - SDLK_MOUSE_LEFT + SDL_BUTTON_LEFT);
 		return;
 	}
 

@@ -92,13 +92,13 @@ class Settings
 			out.writeInt(SETTINGS_FILE_VERSION);
 			out.writeBoolean(Globals.DownloadToSdcard);
 			out.writeBoolean(Globals.PhoneHasArrowKeys);
-			out.writeBoolean(Globals.PhoneHasTrackball);
+			out.writeBoolean(false);
 			out.writeBoolean(Globals.UseAccelerometerAsArrowKeys);
 			out.writeBoolean(Globals.UseTouchscreenKeyboard);
 			out.writeInt(Globals.TouchscreenKeyboardSize);
 			out.writeInt(Globals.AccelerometerSensitivity);
 			out.writeInt(Globals.AccelerometerCenterPos);
-			out.writeInt(Globals.TrackballDampening);
+			out.writeInt(0);
 			out.writeInt(Globals.AudioBufferConfig);
 			out.writeInt(Globals.TouchscreenKeyboardTheme);
 			out.writeInt(Globals.RightClickMethod);
@@ -274,13 +274,13 @@ class Settings
 				throw new IOException();
 			Globals.DownloadToSdcard = settingsFile.readBoolean();
 			Globals.PhoneHasArrowKeys = settingsFile.readBoolean();
-			Globals.PhoneHasTrackball = settingsFile.readBoolean();
+			settingsFile.readBoolean();
 			Globals.UseAccelerometerAsArrowKeys = settingsFile.readBoolean();
 			Globals.UseTouchscreenKeyboard = settingsFile.readBoolean();
 			Globals.TouchscreenKeyboardSize = settingsFile.readInt();
 			Globals.AccelerometerSensitivity = settingsFile.readInt();
 			Globals.AccelerometerCenterPos = settingsFile.readInt();
-			Globals.TrackballDampening = settingsFile.readInt();
+			settingsFile.readInt();
 			Globals.AudioBufferConfig = settingsFile.readInt();
 			Globals.TouchscreenKeyboardTheme = settingsFile.readInt();
 			Globals.RightClickMethod = settingsFile.readInt();
@@ -546,8 +546,6 @@ class Settings
 			nativeSetVideoForceSoftwareMode();
 		if( Globals.SwVideoMode && Globals.MultiThreadedVideo )
 			nativeSetVideoMultithreaded();
-		if( Globals.PhoneHasTrackball )
-			nativeSetTrackballUsed();
 		applyMouseEmulationOptions();
 		nativeSetJoystickUsed( Globals.AppUsesThirdJoystick ? 3 : (Globals.AppUsesSecondJoystick ? 2 : (Globals.AppUsesJoystick ? 1 : 0)) );
 		if( Globals.AppUsesAccelerometer )
@@ -555,7 +553,6 @@ class Settings
 		if( Globals.AppUsesMultitouch )
 			nativeSetMultitouchUsed();
 		nativeSetAccelerometerSettings(Globals.AccelerometerSensitivity, Globals.AccelerometerCenterPos);
-		nativeSetTrackballDampening(Globals.TrackballDampening);
 		if( Globals.UseTouchscreenKeyboard )
 		{
 			boolean screenKbReallyUsed = false;
@@ -612,6 +609,7 @@ class Settings
 		nativeSetEnv( "SECURE_STORAGE_DIR", p.getFilesDir().getAbsolutePath() );
 		nativeSetEnv( "DATADIR", Globals.DataDir );
 		nativeSetEnv( "UNSECURE_STORAGE_DIR", Globals.DataDir );
+		SdcardAppPath.setEnv(p);
 		nativeSetEnv( "HOME", Globals.DataDir );
 		nativeSetEnv( "SDCARD", Environment.getExternalStorageDirectory().getAbsolutePath() );
 		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
@@ -705,6 +703,14 @@ class Settings
 				return Dummy.Holder.sInstance;
 		}
 		public abstract String path(final Context p);
+		private void setEnvInternal(final Context p)
+		{
+			nativeSetEnv( "UNSECURE_STORAGE_DIR_0", Globals.DataDir );
+		}
+		public static void setEnv(final Context p)
+		{
+			get().setEnvInternal(p);
+		}
 		public String bestPath(final Context p)
 		{
 			return path(p);
@@ -759,11 +765,25 @@ class Settings
 					if( size > maxSize )
 					{
 						maxSize = size;
-						ret = path.getPath();
+						ret = path.getAbsolutePath();
 					}
 				}
 				return ret;
 			};
+			public void setEnvInternal(final Context p)
+			{
+				File[] paths = p.getExternalFilesDirs(null);
+				int index = 0;
+				for( File path: paths )
+				{
+					if( path == null )
+						continue;
+					if( !path.exists() )
+						path.mkdirs();
+					nativeSetEnv( "UNSECURE_STORAGE_DIR_" + index, path.getAbsolutePath() );
+					index++;
+				}
+			}
 		}
 		private static class Dummy extends SdcardAppPath
 		{
@@ -833,8 +853,6 @@ class Settings
 		return true;
 	}
 	
-	private static native void nativeSetTrackballUsed();
-	private static native void nativeSetTrackballDampening(int value);
 	private static native void nativeSetAccelerometerSettings(int sensitivity, int centerPos);
 	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickMethod, 
 													int MoveMouseWithJoystick, int ClickMouseWithDpad, int MaxForce, int MaxRadius,

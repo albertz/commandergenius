@@ -1,0 +1,349 @@
+diff --git a/Makefile b/Makefile
+index a21c6b5..d6a8e9d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -55,7 +55,7 @@ endif
+ endif
+ 
+ CFLAGS += $(CFLAGS_SDL)
+-LDFLAGS += $(LDFLAGS_SDL)
++LDFLAGS += $(LDFLAGS_SDL) -lboost_filesystem -lboost_system
+ 
+ ############################################################
+ # MinGW settings for building on Windows and for
+@@ -98,7 +98,8 @@ CFLAGS += -I Build/Utils
+ CFLAGS += -I sgp
+ CFLAGS += -I src
+ CFLAGS += -I _build/lib-MicroIni/include
+-CFLAGS += -I _build/lib-boost
++#CFLAGS += -I _build/lib-boost
++CFLAGS += -I ../../../boost/include
+ CFLAGS += -I _build/lib-rapidjson
+ CFLAGS += -I _build/lib-slog
+ CFLAGS += -I _build/lib-smacker/libsmacker
+@@ -154,7 +155,7 @@ CCFLAGS += -Wmissing-prototypes
+ 
+ CXXFLAGS += $(CFLAGS)
+ 
+-LDFLAGS += -lm
++LDFLAGS += -lm -landroid_support
+ 
+ ifeq "$(WITH_LPTHREAD)" "1"
+ LDFLAGS += -lpthread
+@@ -522,15 +523,15 @@ SRCS += _build/lib-MicroIni/src/MicroIni/Line.cpp
+ SRCS += _build/lib-MicroIni/src/MicroIni/Section.cpp
+ SRCS += _build/lib-MicroIni/src/MicroIni/Value.cpp
+ 
+-SRCS += _build/lib-boost/libs/system/src/error_code.cpp
+-SRCS += _build/lib-boost/libs/filesystem/src/codecvt_error_category.cpp
+-SRCS += _build/lib-boost/libs/filesystem/src/operations.cpp
+-SRCS += _build/lib-boost/libs/filesystem/src/path.cpp
+-SRCS += _build/lib-boost/libs/filesystem/src/path_traits.cpp
+-SRCS += _build/lib-boost/libs/filesystem/src/portability.cpp
+-SRCS += _build/lib-boost/libs/filesystem/src/unique_path.cpp
+-SRCS += _build/lib-boost/libs/filesystem/src/utf8_codecvt_facet.cpp
+-SRCS += _build/lib-boost/libs/filesystem/src/windows_file_codecvt.cpp
++#SRCS += _build/lib-boost/libs/system/src/error_code.cpp
++#SRCS += _build/lib-boost/libs/filesystem/src/codecvt_error_category.cpp
++#SRCS += _build/lib-boost/libs/filesystem/src/operations.cpp
++#SRCS += _build/lib-boost/libs/filesystem/src/path.cpp
++#SRCS += _build/lib-boost/libs/filesystem/src/path_traits.cpp
++#SRCS += _build/lib-boost/libs/filesystem/src/portability.cpp
++#SRCS += _build/lib-boost/libs/filesystem/src/unique_path.cpp
++#SRCS += _build/lib-boost/libs/filesystem/src/utf8_codecvt_facet.cpp
++#SRCS += _build/lib-boost/libs/filesystem/src/windows_file_codecvt.cpp
+ 
+ SRCS += _build/lib-slog/slog/slog.c
+ 
+diff --git a/_build/lib-slog/slog/slog.c b/_build/lib-slog/slog/slog.c
+index 87ceb53..3799dbc 100644
+--- a/_build/lib-slog/slog/slog.c
++++ b/_build/lib-slog/slog/slog.c
+@@ -30,6 +30,7 @@
+ #include <stdarg.h>
+ #include <stdio.h>
+ #include <time.h>
++#include <android/log.h>
+ 
+ #if defined(_MSC_VER)
+   /* Visual Studio */
+@@ -152,6 +153,8 @@ void SLOG_LogMessage(SLOGLevel level, const char *tag, const char *format, ...)
+ 
+     buf[size] = 0;
+ 
++    __android_log_print(ANDROID_LOG_INFO, "JA2", "%s", buf);
++
+     if(logToConsole)
+     {
+       write(s_consoleFD, buf, size);
+diff --git a/ja2config.h b/ja2config.h
+index cb3f1f9..d2659ec 100644
+--- a/ja2config.h
++++ b/ja2config.h
+@@ -1,3 +1,3 @@
+ /* location of externalized data, mods, unittests files, etc */
+ /* when empty - the same directory as ja2 binary */
+-#define EXTRA_DATA_DIR ""
++#define EXTRA_DATA_DIR "."
+diff --git a/sgp/Debug.cc b/sgp/Debug.cc
+index 3ce95c3..c9c00f1 100644
+--- a/sgp/Debug.cc
++++ b/sgp/Debug.cc
+@@ -1,4 +1,5 @@
+ #include "Debug.h"
++#include "Logger.h"
+ 
+ #if defined ( SGP_DEBUG ) || defined ( FORCE_ASSERTS_ON )
+ 
+@@ -38,8 +39,9 @@ BOOLEAN InitializeDebugManager(void)
+ 
+ void DebugMsg(TopicID uiTopicId, DebugLevel uiDebugLevel, const char* strMessage)
+ {
+-	fprintf(stderr, "%s\n", strMessage);
++	printf("%s\n", strMessage);
+ 
++/*
+ //add _NO_DEBUG_TXT to your SGP preprocessor definitions to avoid this f**king huge file from
+ //slowly growing behind the scenes!!!!
+ #ifndef _NO_DEBUG_TXT
+@@ -50,6 +52,7 @@ void DebugMsg(TopicID uiTopicId, DebugLevel uiDebugLevel, const char* strMessage
+ 		fclose(OutFile);
+ 	}
+ #endif
++*/
+ }
+ 
+ 
+@@ -67,9 +70,8 @@ static void _DebugRecordToDebugger(BOOLEAN gfState)
+ 
+ void _DebugMessage(const char* pString, UINT32 uiLineNum, const char* pSourceFile)
+ {
+-	char ubOutputString[512];
+-	sprintf(ubOutputString, "{ %ld } %s [Line %d in %s]\n", GetClock(), pString, uiLineNum, pSourceFile);
+-
++	printf("{ %ld } %s [Line %d in %s]\n", GetClock(), pString, uiLineNum, pSourceFile);
++/*
+ 	if (gfRecordToDebugger)
+ 	{
+ 		fputs(ubOutputString, stderr);
+@@ -86,17 +88,17 @@ void _DebugMessage(const char* pString, UINT32 uiLineNum, const char* pSourceFil
+ 		}
+ 	}
+ #endif
++*/
+ }
+ 
+ 
+ void _FailMessage(const char *pString, UINT32 uiLineNum, const char *pSourceFile)
+ {
+-	char ubOutputString[512];
+ 	if (pString != NULL)
+-		sprintf(ubOutputString, "{ %ld } Assertion Failure [Line %d in %s]: %s\n", GetClock(), uiLineNum, pSourceFile, pString);
++		printf("{ %ld } Assertion Failure [Line %d in %s]: %s\n", GetClock(), uiLineNum, pSourceFile, pString);
+ 	else
+-		sprintf(ubOutputString, "{ %ld } Assertion Failure [Line %d in %s]\n", GetClock(), uiLineNum, pSourceFile);
+-
++		printf("{ %ld } Assertion Failure [Line %d in %s]\n", GetClock(), uiLineNum, pSourceFile);
++/*
+ 	//Output to debugger
+ 	if (gfRecordToDebugger)
+ 		fputs(ubOutputString, stderr);
+@@ -113,7 +115,7 @@ void _FailMessage(const char *pString, UINT32 uiLineNum, const char *pSourceFile
+ 		}
+ 	}
+ #endif
+-
++*/
+ 	SDL_Quit();
+ 	abort();
+ }
+diff --git a/sgp/Debug.h b/sgp/Debug.h
+index 05717f9..6285a33 100644
+--- a/sgp/Debug.h
++++ b/sgp/Debug.h
+@@ -9,6 +9,7 @@
+ #define DEBUG_PRINT_GAME_CYCLE_TIME             (0)             /**< Flag telling to print how much time every game cycle takes. */
+ 
+ 
++#define SGP_DEBUG 1
+ #if defined ( SGP_DEBUG ) || defined ( FORCE_ASSERTS_ON )
+ 
+ // If DEBUG_ is defined, we need to initialize all the debug macros. Otherwise all the
+diff --git a/sgp/FileMan.cc b/sgp/FileMan.cc
+index 38d8b36..a5de49f 100644
+--- a/sgp/FileMan.cc
++++ b/sgp/FileMan.cc
+@@ -104,6 +104,7 @@ std::string FileMan::findConfigFolderAndSwitchIntoIt()
+ 	}
+ #else
+ 	const char* home = getenv("HOME");
++	return home; // Do not create extra dirs on Android
+ 	if (home == NULL)
+ 	{
+ 		const struct passwd* const passwd = getpwuid(getuid());
+@@ -152,6 +153,7 @@ std::string FileMan::findConfigFolderAndSwitchIntoIt()
+ int FileMan::openFileCaseInsensitive(const std::string &folderPath, const char *filename, int mode)
+ {
+   std::string path = FileMan::joinPaths(folderPath, filename);
++  SLOGD(TAG, "%s: open file %s\n", __func__, path.c_str());
+   int d = open(path.c_str(), mode);
+   if (d < 0)
+   {
+diff --git a/sgp/FileMan.h b/sgp/FileMan.h
+index a7f96cb..6d7a64f 100644
+--- a/sgp/FileMan.h
++++ b/sgp/FileMan.h
+@@ -11,7 +11,7 @@
+ #	define WIN32_LEAN_AND_MEAN
+ #	include <windows.h>
+ #else
+-#	include <glob.h>
++//#	include <glob.h>
+ #endif
+ 
+ /* Delete the file at path. Returns true iff deleting the file succeeded or
+diff --git a/sgp/LibraryDataBase.cc b/sgp/LibraryDataBase.cc
+index 2205166..039a202 100644
+--- a/sgp/LibraryDataBase.cc
++++ b/sgp/LibraryDataBase.cc
+@@ -1,5 +1,8 @@
+ #include <cstdlib>
+ #include <stdexcept>
++#ifdef WITH_UNITTESTS
++#include "gtest/gtest.h"
++#endif
+ 
+ #include "Types.h"
+ #include "FileMan.h"
+diff --git a/sgp/Logger.h b/sgp/Logger.h
+index 771e515..d7995d3 100644
+--- a/sgp/Logger.h
++++ b/sgp/Logger.h
+@@ -6,6 +6,7 @@
+  * General logging
+  ***********************************************************/
+ 
++#include "../../../android_debug.h"
+ /** Available log levels. */
+ enum
+ {
+@@ -16,7 +17,7 @@ enum
+ };
+ 
+ /** Current log level. */
+-#define LOG_LEVEL       (LOGLEVEL_INFO)
++#define LOG_LEVEL       (LOGLEVEL_DEBUG)
+ 
+ #if LOG_LEVEL >= LOGLEVEL_ERROR
+ #define LOG_ERROR                       printf
+diff --git a/sgp/Platform.h b/sgp/Platform.h
+index 263f9b1..57d377c 100644
+--- a/sgp/Platform.h
++++ b/sgp/Platform.h
+@@ -12,7 +12,7 @@
+ #define PATH_SEPARATOR      '\\'
+ #define PATH_SEPARATOR_STR  "\\"
+ #else
+-#define CASE_SENSITIVE_FS   1
++#define CASE_SENSITIVE_FS   0 // SD card on Android is case-insensitive
+ #define PATH_SEPARATOR      '/'
+ #define PATH_SEPARATOR_STR  "/"
+ #endif
+diff --git a/sgp/PlatformSDL.h b/sgp/PlatformSDL.h
+index 7d69ce0..246d80c 100644
+--- a/sgp/PlatformSDL.h
++++ b/sgp/PlatformSDL.h
+@@ -15,7 +15,7 @@
+  *    http://developer.apple.com/library/mac/#technotes/tn2133/_index.html
+  *
+  */
+-#ifdef __APPLE__
++#if defined(__APPLE__) || defined(__ANDROID__)
+   #define EXPENSIVE_SDL_UPDATE_RECT    (1)
+ #else
+   #define EXPENSIVE_SDL_UPDATE_RECT    (0)
+diff --git a/sgp/SGP.cc b/sgp/SGP.cc
+index d156d73..e34ecd8 100644
+--- a/sgp/SGP.cc
++++ b/sgp/SGP.cc
+@@ -13,6 +13,9 @@
+ 
+ #include <exception>
+ #include <new>
++#ifdef WITH_UNITTESTS
++#include "gtest/gtest.h"
++#endif
+ 
+ #include "Button_System.h"
+ #include "Debug.h"
+@@ -32,6 +35,9 @@
+ #include "Video.h"
+ #include "VSurface.h"
+ #include <SDL.h>
++#ifdef __ANDROID__
++#include <SDL_screenkeyboard.h>
++#endif
+ #include "UILayout.h"
+ #include "GameRes.h"
+ #include "Logger.h"
+@@ -49,9 +55,6 @@
+ #include "slog/slog.h"
+ #define TAG "SGP"
+ 
+-#ifdef WITH_UNITTESTS
+-#include "gtest/gtest.h"
+-#endif
+ 
+ #if defined _WIN32
+ #	define WIN32_LEAN_AND_MEAN
+@@ -273,6 +276,7 @@ static void MainLoop(int msPerGameCycle)
+ 
+ static int Failure(char const* const msg, bool showInfoIcon=false)
+ {
++	__android_log_print(ANDROID_LOG_FATAL, "JA2", "%s", msg);
+ 	fprintf(stderr, "%s\n", msg);
+ #if defined _WIN32
+ 	MessageBox(0, msg, APPLICATION_NAME, MB_OK | (showInfoIcon ? MB_ICONINFORMATION : MB_ICONERROR) | MB_TASKMODAL);
+@@ -318,7 +322,7 @@ static BOOLEAN ParseParameters(int argc, char* const argv[],
+ int main(int argc, char* argv[])
+ try
+ {
+-  std::string exeFolder = FileMan::getParentPath(argv[0], true);
++  //std::string exeFolder = FileMan::getParentPath(argv[0], true);
+ 
+ #if defined BROKEN_SWPRINTF
+ 	if (setlocale(LC_CTYPE, "UTF-8") == NULL)
+@@ -365,6 +369,15 @@ try
+ 	SDL_Init(SDL_INIT_VIDEO);
+ 	SDL_EnableUNICODE(SDL_ENABLE);
+ 
++#ifdef __ANDROID__
++	SDL_Rect r = {	64 * SDL_ListModes(NULL, 0)[0]->w / 1280,
++					492 * SDL_ListModes(NULL, 0)[0]->h / 800,
++					(199 - 64) * SDL_ListModes(NULL, 0)[0]->w / 1280,
++					(627 - 492) * SDL_ListModes(NULL, 0)[0]->h / 800};
++	if (!SDL_ANDROID_GetScreenKeyboardRedefinedByUser())
++		SDL_ANDROID_SetScreenKeyboardButtonPos(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, &r);
++#endif
++
+ #ifdef __APPLE__
+   // Enable 3-button mouse support if the user haven't instructed
+   // otherwise
+@@ -398,7 +411,7 @@ try
+   if(extraDataDir.empty())
+   {
+     // use location of the exe file
+-    extraDataDir = exeFolder;
++    //extraDataDir = exeFolder;
+   }
+ 
+   std::string externalizedDataPath = FileMan::joinPaths(extraDataDir, "externalized");
+@@ -775,7 +788,7 @@ static void WriteDefaultConfigFile(const char* ConfigFile)
+ #ifdef _WIN32
+     fprintf(IniFile, "data_dir = C:\\Program Files\\Jagged Alliance 2");
+ #else
+-    fprintf(IniFile, "data_dir = /some/place/where/the/data/is");
++    fprintf(IniFile, "data_dir = .");
+ #endif
+ 		fclose(IniFile);
+ 		fprintf(stderr, "Please edit \"%s\" to point to the binary data.\n", ConfigFile);

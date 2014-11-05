@@ -31,7 +31,7 @@
 // GNU libc offers the helpful header <endian.h> which defines
 // __BYTE_ORDER
 
-#if defined (__GLIBC__) || defined(ANDROID)
+#if defined (__GLIBC__) || defined(ANDROID) || defined(__ANDROID__)
 # include <endian.h>
 # if (__BYTE_ORDER == __LITTLE_ENDIAN)
 #  define BOOST_LITTLE_ENDIAN

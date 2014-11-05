@@ -13,6 +13,7 @@
 #include <string.h>
 #include <math.h>
 #include <android/log.h>
+#include <wchar.h>
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
@@ -444,6 +445,7 @@ int main(int argc, char* argv[])
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
 	SDL_EnableUNICODE(1);
+	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 	SDL_Joystick * joysticks[6];
 	for( i = 0; i < 6; i++ )
 		joysticks[i] = SDL_JoystickOpen(i);
@@ -554,6 +556,19 @@ int main(int argc, char* argv[])
 	memset(gamepads, 0, sizeof(gamepads));
 
 	__android_log_print(ANDROID_LOG_INFO, "Ballfield", "sizeof(int) %d long %d long long %d size_t %d", sizeof(int), sizeof(long), sizeof(long long), sizeof(size_t));
+	wchar_t ss[256];
+	const wchar_t *ss2 = L"String 2 ЕНГ ---";
+	swprintf(ss, 256, L"String ЙЦУК --- %ls", ss2);
+	char ss3[512] = "";
+	char ss4[512] = "";
+	for(i = 0; i < wcslen(ss); i++)
+	{
+		char tmp[16];
+		sprintf(tmp, "%04X ", (int)ss[i]);
+		strcat(ss3, tmp);
+		sprintf(ss4, "%ls", ss);
+	}
+	__android_log_print(ANDROID_LOG_VERBOSE, "Ballfield", "swprintf: len %d data %s: %s", wcslen(ss), ss3, ss4);
 
 	__android_log_print(ANDROID_LOG_VERBOSE, "Ballfield", "On-screen buttons:");
 	for(i = 0; i < SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM; i++)
@@ -732,6 +747,14 @@ int main(int argc, char* argv[])
 		x_speed = 500.0 * sin(t * 0.37);
 		y_speed = 500.0 * sin(t * 0.53);
 		z_speed = 400.0 * sin(t * 0.21);
+		if( SDL_GetKeyState(NULL)[SDLK_LEFT] )
+			x_speed -= 100000 * dt;
+		if( SDL_GetKeyState(NULL)[SDLK_RIGHT] )
+			x_speed += 100000 * dt;
+		if( SDL_GetKeyState(NULL)[SDLK_UP] )
+			y_speed -= 100000 * dt;
+		if( SDL_GetKeyState(NULL)[SDLK_DOWN] )
+			y_speed += 100000 * dt;
 
 		ballfield_move(balls, x_speed, y_speed, z_speed);
 		x_offs -= x_speed;

@@ -242,6 +242,12 @@ static void * unpackFilesThread(void * unused)
 		{ "update1.tar.gz", "update1.sh", "" },
 		{ "update2.tar.gz", "update2.sh", "" },
 		{ "update3.tar.gz", "update3.sh", "" },
+		{ "update4.tar.gz", "update4.sh", "" },
+		{ "update5.tar.gz", "update5.sh", "" },
+		{ "update6.tar.gz", "update6.sh", "" },
+		{ "update7.tar.gz", "update7.sh", "" },
+		{ "update8.tar.gz", "update8.sh", "" },
+		{ "update9.tar.gz", "update9.sh", "" },
 		{NULL, NULL, NULL}
 	};
 	int i;

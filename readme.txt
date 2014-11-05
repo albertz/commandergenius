@@ -11,7 +11,9 @@ Installation
 ============
 
 Install latest Android SDK and NDK from http://developer.android.com/index.html
-You'll need to install Java Ant too.
+You'll need to install Java Ant too. Since for building apk files some java classes are needed as well,
+it is recommended to install OpenJDK and its development files. (On RPM based distros 
+usually called java-x.x.x-openjdk and java-x.x.x-openjdk-devel)
 The application will run on Android OS 1.6 and above, but will use features from Android 4.4 if available.
 The most supported environment for this port is Linux, MacOs should be okay too.
 If you're developing under Windows you'd better install Portable Ubuntu, to get proper Linux environment
@@ -277,6 +279,16 @@ AndroidBuild.sh and put it under project/jni/application/src dir. The AndroidBui
 generate file project/jni/application/src/libapplication.so, which will be copied into .apk file by build system.
 There is helper script project/jni/application/setEnvironment.sh which will set CFLAGS and LDFLAGS
 for configure script and makefile, see AndroidBuild.sh in project/jni/application/scummvm dir for reference.
+
+
+How to compile your own application using GCC 4.7 or newer
+==========================================================
+
+By default, your application will be build with GCC 4.6. To use a newer version of GCC, e.g. GCC 4.8, set-up
+your project like described but execute following commands before running any of the commandergenius scripts
+to configure or build your project:
+export GCCVER=4.8
+export NDK_TOOLCHAIN_VERSION=${GCCVER}
 
 
 Android application sleep/resume support

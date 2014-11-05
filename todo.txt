@@ -23,14 +23,10 @@ TODO, which will get actually done
 
 - SDL: sometimes the screen stays black after restoring from background.
 
-- Debian noroot: audio support - implement PulseAudio server.
+- XSDL: support Android intent x11://localhost:6000 - http://www.openintents.org/node/905
 
-- OpenTTD: cloud save support.
+- USB Keyboard: touchpad mode, configurable mouse speed, show keyboard LEDs, show error when root is not installed.
 
-- OpenTTD: Town window too tall.
+- S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
 
-- OpenTTD: Togglable legend area for map window.
-
-- Nvidia Shield D-Pad does not send any events (probably acts as 3-rd joystick).
-
-- USB Keyboard: touchpad-style mouse input.
+- GemRB: update.
