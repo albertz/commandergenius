@@ -32,6 +32,8 @@ import javax.microedition.khronos.egl.EGLSurface;
 import javax.microedition.khronos.opengles.GL;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.opengl.EGL14; // Android 4.2 or newer
+
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -919,6 +921,9 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 			mEgl.eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface,
 					mEglContext);
 
+			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+				EGL14.eglSwapInterval(mEglDisplay, 1);
+			}
 
 			GL gl = mEglContext.getGL();
 			if (mGLWrapper != null) {
