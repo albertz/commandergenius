@@ -30,3 +30,15 @@ TODO, which will get actually done
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
 
 - GemRB: update.
+
+- OpenTTD: select from menu with two taps, not tap and hold.
+
+- OpenTTD: two-finger continuous scrolling.
+
+- OpenTTD: two-finger tap de-selects current tool and closes build station window.
+
+- OpenTTD: hide all windows when performing an action on the map, like laying tracks or creating station or selecting destination.
+
+- OpenTTD: fix playing time in Google Play cloud saves.
+
+- OpenTTD: tutorial.
