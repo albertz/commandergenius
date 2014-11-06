@@ -5,7 +5,7 @@
 
 namespace widgets
 {
-    gcn::ImageFont* font;
+    gcn::Font* font;
     gcn::Container* top;
     gcn::Label* label;
     gcn::Icon* icon;
@@ -80,7 +80,8 @@ namespace widgets
         globals::gui->setTop(top);
 
         // Now we load the font used in this example.
-        font = new gcn::ImageFont("fixedfont.bmp", " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+        //font = new gcn::ImageFont("fixedfont.bmp", " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+        font = new gcn::contrib::SDLTrueTypeFont("Roboto-Bold.ttf", 10);
         // Widgets may have a global font so we don't need to pass the
         // font object to every created widget. The global font is static.
         gcn::Widget::setGlobalFont(font);
@@ -94,9 +95,9 @@ namespace widgets
 
         button = new gcn::Button("Button");
 
-        textField = new gcn::TextField("Text field");
+        textField = new gcn::TextField("Text field АбВгЁ");
 
-        textBox = new gcn::TextBox("Multiline\nText box");
+        textBox = new gcn::TextBox("Multiline\nText box\nАбВгЁ");
         textBoxScrollArea = new gcn::ScrollArea(textBox);
         textBoxScrollArea->setWidth(200);
         textBoxScrollArea->setHeight(100);
@@ -109,14 +110,14 @@ namespace widgets
         checkBox1 = new gcn::CheckBox("Checkbox 1");
         checkBox2 = new gcn::CheckBox("Checkbox 2");
 
-        radioButton1 = new gcn::RadioButton("RadioButton 1", "radiogroup", true);
-        radioButton2 = new gcn::RadioButton("RadioButton 2", "radiogroup");
-        radioButton3 = new gcn::RadioButton("RadioButton 3", "radiogroup");
+        radioButton1 = new gcn::RadioButton("RadioButton 1 АбВгЁ", "radiogroup", true);
+        radioButton2 = new gcn::RadioButton("RadioButton 2 АбВгЁ", "radiogroup");
+        radioButton3 = new gcn::RadioButton("RadioButton 3 АбВгЁ", "radiogroup");
 
         slider = new gcn::Slider(0, 10);
         slider->setSize(100, 10);
 
-        window = new gcn::Window("I am a window  Drag me");
+        window = new gcn::Window("I am a window  Drag me АбВгЁ");
         window->setBaseColor(gcn::Color(255, 150, 200, 190));
 
         darkbitsImage = gcn::Image::load("darkbitslogo_by_haiko.bmp");
@@ -126,10 +127,10 @@ namespace widgets
 
         tabbedArea = new gcn::TabbedArea();
         tabbedArea->setSize(200, 100);
-        tabOneButton = new gcn::Button("A button in tab 1");
-        tabbedArea->addTab("Tab 1", tabOneButton);
-        tabTwoCheckBox = new gcn::CheckBox("A check box in tab 2");
-        tabbedArea->addTab("Tab 2", tabTwoCheckBox);
+        tabOneButton = new gcn::Button("A button in tab 1 АбВгЁ");
+        tabbedArea->addTab("Tab 1 АбВгЁ", tabOneButton);
+        tabTwoCheckBox = new gcn::CheckBox("A check box in tab 2 АбВгЁ");
+        tabbedArea->addTab("Tab 2 АбВгЁ", tabTwoCheckBox);
 
         // Now it's time to add the widgets to the top container
         // so they will be conected to the GUI.

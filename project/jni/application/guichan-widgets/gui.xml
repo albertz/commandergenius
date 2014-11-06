@@ -1,6 +1,6 @@
 <container name="top" width="640" height="480">
-	<label name="logo_text" caption="Simple example of using XmlGui" />
-	<button x="5" y="20" name="exit" caption="Please click to exit" />
+	<label name="logo_text" caption="Simple example of using XmlGui АбВгЁ" />
+	<button x="5" y="20" name="exit" caption="Please click to exit АбВгЁ" />
 	<icon name="logo" x="250" y="160" image="darkbitslogo_by_haiko.bmp" />
 	<dropdown name="dp" x="100" y="100">
 		<li>Item 1</li>
