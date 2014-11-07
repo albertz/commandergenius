@@ -321,12 +321,15 @@ echo "# Available menu items:" >> AndroidAppSettings.cfg
 echo "# $MenuOptionsAvailable" >> AndroidAppSettings.cfg
 echo FirstStartMenuOptions=\'$FirstStartMenuOptions\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Minimum amount of RAM application requires, in Mb, SDL will print warning to user if it's lower" >> AndroidAppSettings.cfg
+echo AppMinimumRAM=$AppMinimumRAM >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# GCC version, 4.6 (default) or 4.8, CLANG is not supported yet" >> AndroidAppSettings.cfg
+echo NDK_TOOLCHAIN_VERSION=$NDK_TOOLCHAIN_VERSION >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Specify architectures to compile, 'all' or 'y' to compile for all architectures." >> AndroidAppSettings.cfg
 echo "# Available architectures: armeabi armeabi-v7a armeabi-v7a-hard x86 mips" >> AndroidAppSettings.cfg
 echo MultiABI=\'$MultiABI\' >> AndroidAppSettings.cfg
-echo >> AndroidAppSettings.cfg
-echo "# Minimum amount of RAM application requires, in Mb, SDL will print warning to user if it's lower" >> AndroidAppSettings.cfg
-echo AppMinimumRAM=$AppMinimumRAM >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Optional shared libraries to compile - removing some of them will save space" >> AndroidAppSettings.cfg
 echo "# MP3 support by libMAD is encumbered by patents and libMAD is GPL-ed" >> AndroidAppSettings.cfg
@@ -837,7 +840,8 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
 	sed "s^APPLICATION_BUILD_EXCLUDE :=.*^APPLICATION_BUILD_EXCLUDE := $AppBuildExclude^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \
-	sed "s^SDL_VERSION :=.*^SDL_VERSION := $LibSdlVersion^"  >> \
+	sed "s^SDL_VERSION :=.*^SDL_VERSION := $LibSdlVersion^" | \
+	sed "s^NDK_TOOLCHAIN_VERSION :=.*^NDK_TOOLCHAIN_VERSION := $NDK_TOOLCHAIN_VERSION^" >> \
 	project/jni/Settings.mk
 
 echo Patching strings.xml
