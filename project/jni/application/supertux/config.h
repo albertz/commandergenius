@@ -9,7 +9,11 @@
 #define INSTALL_SUBDIR_BIN "games"
 #define INSTALL_SUBDIR_SHARE "share/games/supertux2"
 
-#define SIZEOF_VOID_P 4
+#ifdef __LP64__
+#define SIZEOF_VOIDP 8
+#else
+#define SIZEOF_VOIDP 4
+#endif
 #if SIZEOF_VOID_P == 8
 #define _SQ64
 #endif

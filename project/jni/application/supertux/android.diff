@@ -1,27 +1,214 @@
-diff --git a/src/control/joystickkeyboardcontroller.cpp b/src/control/joystickkeyboardcontroller.cpp
-index 6c9e9c0..dbb8a9e 100644
---- a/src/control/joystickkeyboardcontroller.cpp
-+++ b/src/control/joystickkeyboardcontroller.cpp
-@@ -70,7 +70,7 @@ JoystickKeyboardController::JoystickKeyboardController() :
-   keymap[SDLK_END]      = Controller::PEEK_DOWN;
+diff --git a/src/control/game_controller_manager.cpp b/src/control/game_controller_manager.cpp
+index 6680c04..401eacc 100644
+--- a/src/control/game_controller_manager.cpp
++++ b/src/control/game_controller_manager.cpp
+@@ -13,7 +13,6 @@
+ //
+ //  You should have received a copy of the GNU General Public License
+ //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-
+ #include "control/game_controller_manager.hpp"
  
-   jump_with_up_joy = false;
--  jump_with_up_kbd = false;
-+  jump_with_up_kbd = true;
+ #include <algorithm>
+diff --git a/src/control/input_manager.cpp b/src/control/input_manager.cpp
+index ce612d4..2be2fd5 100644
+--- a/src/control/input_manager.cpp
++++ b/src/control/input_manager.cpp
+@@ -19,8 +19,8 @@
  
-   updateAvailableJoysticks();
+ #include <iostream>
+ 
+-#include "control/game_controller_manager.hpp"
+-#include "control/joystick_manager.hpp"
++//#include "control/game_controller_manager.hpp"
++//#include "control/joystick_manager.hpp"
+ #include "control/keyboard_manager.hpp"
+ #include "gui/menu_manager.hpp"
+ #include "lisp/list_iterator.hpp"
+@@ -33,9 +33,9 @@ InputManager::InputManager(KeyboardConfig& keyboard_config,
+                            JoystickConfig& joystick_config) :
+   controller(new Controller),
+   m_use_game_controller(true),
+-  keyboard_manager(new KeyboardManager(this, keyboard_config)),
+-  joystick_manager(new JoystickManager(this, joystick_config)),
+-  game_controller_manager(new GameControllerManager(this))
++  keyboard_manager(new KeyboardManager(this, keyboard_config))
++  //joystick_manager(new JoystickManager(this, joystick_config)),
++  //game_controller_manager(new GameControllerManager(this))
+ {
+ }
+ 
+@@ -71,15 +71,16 @@ void
+ InputManager::process_event(const SDL_Event& event)
+ {
+   switch(event.type) {
+-    case SDL_TEXTINPUT:
+-      keyboard_manager->process_text_input_event(event.text);
+-      break;
++    //case SDL_TEXTINPUT:
++    //  keyboard_manager->process_text_input_event(event.text);
++    //  break;
+ 
+     case SDL_KEYUP:
+     case SDL_KEYDOWN:
+       keyboard_manager->process_key_event(event.key);
+       break;
+ 
++#if 0
+     case SDL_JOYAXISMOTION:
+       if (!m_use_game_controller) joystick_manager->process_axis_event(event.jaxis);
+       break;
+@@ -126,7 +127,7 @@ InputManager::process_event(const SDL_Event& event)
+     case SDL_CONTROLLERDEVICEREMAPPED:
+       log_debug << "SDL_CONTROLLERDEVICEREMAPPED" << std::endl;
+       break;
+-
++#endif
+     default:
+       break;
+   }
+diff --git a/src/control/input_manager.hpp b/src/control/input_manager.hpp
+index d047e53..a87decd 100644
+--- a/src/control/input_manager.hpp
++++ b/src/control/input_manager.hpp
+@@ -68,8 +68,8 @@ private:
+ public:
+   bool m_use_game_controller;
+   std::unique_ptr<KeyboardManager> keyboard_manager;
+-  std::unique_ptr<JoystickManager> joystick_manager;
+-  std::unique_ptr<GameControllerManager> game_controller_manager;
++  //std::unique_ptr<JoystickManager> joystick_manager;
++  //std::unique_ptr<GameControllerManager> game_controller_manager;
+ 
+ private:
+   InputManager(const InputManager&);
+diff --git a/src/control/keyboard_config.hpp b/src/control/keyboard_config.hpp
+index e848067..fe1b785 100644
+--- a/src/control/keyboard_config.hpp
++++ b/src/control/keyboard_config.hpp
+@@ -25,6 +25,8 @@
+ 
+ #include "util/writer.hpp"
+ 
++typedef SDLKey SDL_Keycode;
++
+ class KeyboardConfig
+ {
+ public:
+diff --git a/src/control/keyboard_manager.cpp b/src/control/keyboard_manager.cpp
+index ca4e461..dd1908c 100644
+--- a/src/control/keyboard_manager.cpp
++++ b/src/control/keyboard_manager.cpp
+@@ -18,7 +18,7 @@
+ #include "control/keyboard_manager.hpp"
+ 
+ #include "control/controller.hpp"
+-#include "control/joystick_manager.hpp"
++//#include "control/joystick_manager.hpp"
+ #include "control/keyboard_config.hpp"
+ #include "gui/menu_manager.hpp"
+ #include "lisp/list_iterator.hpp"
+@@ -81,6 +81,7 @@ KeyboardManager::process_key_event(const SDL_KeyboardEvent& event)
+   }
+ }
+ 
++#if 0
+ void
+ KeyboardManager::process_text_input_event(const SDL_TextInputEvent& event)
+ {
+@@ -91,6 +92,7 @@ KeyboardManager::process_text_input_event(const SDL_TextInputEvent& event)
+     }
+   }
+ }
++#endif
+ 
+ void
+ KeyboardManager::process_console_key_event(const SDL_KeyboardEvent& event)
+@@ -156,6 +158,7 @@ KeyboardManager::process_menu_key_event(const SDL_KeyboardEvent& event)
+     return;
+   }
+ 
++#if 0
+   if (m_parent->joystick_manager->wait_for_joystick >= 0)
+   {
+     if (event.keysym.sym == SDLK_ESCAPE)
+@@ -166,6 +169,7 @@ KeyboardManager::process_menu_key_event(const SDL_KeyboardEvent& event)
+     }
+     return;
+   }
++#endif
+ 
+   Controller::Control control;
+   /* we use default keys when the menu is open (to avoid problems when
+diff --git a/src/control/keyboard_manager.hpp b/src/control/keyboard_manager.hpp
+index 07885f9..aae6da9 100644
+--- a/src/control/keyboard_manager.hpp
++++ b/src/control/keyboard_manager.hpp
+@@ -41,7 +41,7 @@ public:
+   ~KeyboardManager();
+ 
+   void process_key_event(const SDL_KeyboardEvent& event);
+-  void process_text_input_event(const SDL_TextInputEvent& event);
++  //void process_text_input_event(const SDL_TextInputEvent& event);
+   void process_console_key_event(const SDL_KeyboardEvent& event);
+   void process_menu_key_event(const SDL_KeyboardEvent& event);
+ 
+diff --git a/src/gui/dialog.cpp b/src/gui/dialog.cpp
+index e536c9c..55602c0 100644
+--- a/src/gui/dialog.cpp
++++ b/src/gui/dialog.cpp
+@@ -14,6 +14,8 @@
+ //  You should have received a copy of the GNU General Public License
+ //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
++#include <math.h>
++
+ #include "gui/dialog.hpp"
+ 
+ #include "control/controller.hpp"
+diff --git a/src/gui/menu.cpp b/src/gui/menu.cpp
+index fd253e9..adc20ce 100644
+--- a/src/gui/menu.cpp
++++ b/src/gui/menu.cpp
+@@ -625,7 +625,9 @@ Menu::get_item_by_id(int id)
+     }
+   }
+ 
+-  throw std::runtime_error("MenuItem not found: " + std::to_string(id));
++  char c[32];
++  sprintf(c, "%d", id);
++  throw std::runtime_error(std::string("MenuItem not found: ") + c);
+ }
+ 
+ const MenuItem&
+diff --git a/src/physfs/physfs_sdl.cpp b/src/physfs/physfs_sdl.cpp
+index 277f993..356dae0 100644
+--- a/src/physfs/physfs_sdl.cpp
++++ b/src/physfs/physfs_sdl.cpp
+@@ -24,7 +24,7 @@
+ 
+ #include "util/log.hpp"
+ 
+-static Sint64 funcSeek(struct SDL_RWops* context, Sint64 offset, int whence)
++static int funcSeek(struct SDL_RWops* context, int offset, int whence)
+ {
+   PHYSFS_file* file = (PHYSFS_file*) context->hidden.unknown.data1;
+   int res;
+@@ -51,7 +51,7 @@ static Sint64 funcSeek(struct SDL_RWops* context, Sint64 offset, int whence)
+   return (int) PHYSFS_tell(file);
+ }
+ 
+-static size_t  funcRead(struct SDL_RWops* context, void* ptr, size_t  size, size_t  maxnum)
++static int funcRead(struct SDL_RWops* context, void* ptr, int size, int maxnum)
+ {
+   PHYSFS_file* file = (PHYSFS_file*) context->hidden.unknown.data1;
  
 diff --git a/src/supertux/gameconfig.cpp b/src/supertux/gameconfig.cpp
-index 235198c..6126b25 100644
+index c7d7778..9949e92 100644
 --- a/src/supertux/gameconfig.cpp
 +++ b/src/supertux/gameconfig.cpp
-@@ -27,11 +27,11 @@
- 
- Config::Config() :
-   profile(1),
--  fullscreen_size(800, 600),
-+  fullscreen_size(SDL_GetVideoInfo()->current_w, SDL_GetVideoInfo()->current_h),
-   window_size(800, 600),
+@@ -34,7 +34,7 @@ Config::Config() :
+   window_size(1280, 800),
    aspect_size(0, 0), // auto detect
    magnification(0.0f),
 -  use_fullscreen(false),
@@ -30,54 +217,216 @@ index 235198c..6126b25 100644
    try_vsync(true),
    show_fps(false),
 diff --git a/src/supertux/main.cpp b/src/supertux/main.cpp
-index d89420f..2c80b2b 100644
+index 1cfba9c..e51a91a 100644
 --- a/src/supertux/main.cpp
 +++ b/src/supertux/main.cpp
-@@ -20,7 +20,7 @@
- #include <SDL_image.h>
- #include <physfs.h>
- #include <iostream>
--#include <binreloc.h>
-+//#include <binreloc.h>
- #include <tinygettext/log.hpp>
- #include <boost/format.hpp>
- extern "C" {
-@@ -163,6 +163,7 @@ Main::init_physfs(const char* argv0)
-       sourcedir = true;
+@@ -143,36 +143,9 @@ public:
+ 
+   void find_datadir()
+   {
+-    std::string datadir;
+-    if (m_forced_datadir)
++    if (!PHYSFS_addToSearchPath("data.zip", 1))
+     {
+-      datadir = *m_forced_datadir;
+-    }
+-    else if (const char* env_datadir = getenv("SUPERTUX2_DATA_DIR"))
+-    {
+-      datadir = env_datadir;
+-    }
+-    else
+-    {
+-      // check if we run from source dir
+-      char* basepath_c = SDL_GetBasePath();
+-      std::string basepath = basepath_c;
+-      SDL_free(basepath_c);
+-
+-      datadir = FileSystem::join(basepath, "data");
+-      std::string testfname = FileSystem::join(datadir, "credits.txt");
+-      if (!FileSystem::exists(testfname))
+-      {
+-        // if the game is not run from the source directory, try to find
+-        // the global install location
+-        datadir = datadir.substr(0, datadir.rfind(INSTALL_SUBDIR_BIN));
+-        datadir = FileSystem::join(datadir, INSTALL_SUBDIR_SHARE);
+-      }
+-    }
+-
+-    if (!PHYSFS_addToSearchPath(datadir.c_str(), 1))
+-    {
+-      log_warning << "Couldn't add '" << datadir << "' to physfs searchpath: " << PHYSFS_getLastError() << std::endl;
++      log_warning << "Couldn't add data.zip to physfs searchpath: " << PHYSFS_getLastError() << std::endl;
      }
    }
-+  PHYSFS_addToSearchPath("data", 1);
  
- #ifdef MACOSX
+@@ -238,7 +211,7 @@ class SDLSubsystem
+ public:
+   SDLSubsystem()
    {
+-    if(SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0)
++    if(SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
+     {
+       std::stringstream msg;
+       msg << "Couldn't initialize SDL: " << SDL_GetError();
+@@ -257,7 +230,7 @@ public:
+ void
+ Main::init_video()
+ {
+-  SDL_SetWindowTitle(VideoSystem::current()->get_renderer().get_window(), PACKAGE_NAME " " PACKAGE_VERSION);
++  //SDL_SetWindowTitle(VideoSystem::current()->get_renderer().get_window(), PACKAGE_NAME " " PACKAGE_VERSION);
+ 
+   const char* icon_fname = "images/engine/icons/supertux-256x256.png";
+   SDL_Surface* icon = IMG_Load_RW(get_physfs_SDLRWops(icon_fname), true);
+@@ -267,7 +240,7 @@ Main::init_video()
+   }
+   else
+   {
+-    SDL_SetWindowIcon(VideoSystem::current()->get_renderer().get_window(), icon);
++    SDL_WM_SetIcon(icon, NULL);
+     SDL_FreeSurface(icon);
+   }
+   SDL_ShowCursor(0);
+diff --git a/src/supertux/menu/joystick_menu.cpp b/src/supertux/menu/joystick_menu.cpp
+index bd11c9a..a2970bf 100644
+--- a/src/supertux/menu/joystick_menu.cpp
++++ b/src/supertux/menu/joystick_menu.cpp
+@@ -54,6 +54,7 @@ JoystickMenu::recreate_menu()
+              !m_input_manager.use_game_controller())
+     ->set_help(_("Use manual configuration instead of SDL2's automatic GameController support"));
+ 
++#if 0
+   if (m_input_manager.use_game_controller())
+   {
+     m_joysticks_available = false;
+@@ -84,13 +85,14 @@ JoystickMenu::recreate_menu()
+       add_toggle(MNID_JUMP_WITH_UP, _("Jump with Up"), g_config->joystick_config.jump_with_up_joy);
+     }
+     else
++#endif
+     {
+       m_joysticks_available = false;
+ 
+       add_inactive(-1, _("No Joysticks found"));
+       add_entry(MNID_SCAN_JOYSTICKS, _("Scan for Joysticks"));
+     }
+-  }
++  //}
+ 
+   add_hl();
+   add_back(_("Back"));
+@@ -118,7 +120,7 @@ JoystickMenu::menu_action(MenuItem* item)
+   if (0 <= item->id && item->id < Controller::CONTROLCOUNT)
+   {
+     item->change_input(_("Press Button"));
+-    m_input_manager.joystick_manager->bind_next_event_to(static_cast<Controller::Control>(item->id));
++    //m_input_manager.joystick_manager->bind_next_event_to(static_cast<Controller::Control>(item->id));
+   }
+   else if (item->id == MNID_JUMP_WITH_UP)
+   {
+diff --git a/src/supertux/menu/keyboard_menu.cpp b/src/supertux/menu/keyboard_menu.cpp
+index 9b25f8c..2c05d16 100644
+--- a/src/supertux/menu/keyboard_menu.cpp
++++ b/src/supertux/menu/keyboard_menu.cpp
+@@ -82,9 +82,9 @@ KeyboardMenu::get_key_name(SDL_Keycode key)
+       return _("Right Alt");
+     case SDLK_LALT:
+       return _("Left Alt");
+-    case SDLK_RGUI:
++    case SDLK_RMETA:
+       return _("Right Command");
+-    case SDLK_LGUI:
++    case SDLK_LMETA:
+       return _("Left Command");
+     default:
+       return SDL_GetKeyName(static_cast<SDL_Keycode>(key));
+diff --git a/src/supertux/menu/keyboard_menu.hpp b/src/supertux/menu/keyboard_menu.hpp
+index 3230f34..5eedfd8 100644
+--- a/src/supertux/menu/keyboard_menu.hpp
++++ b/src/supertux/menu/keyboard_menu.hpp
+@@ -21,6 +21,8 @@
+ #include "control/input_manager.hpp"
+ #include "gui/menu_item.hpp"
+ 
++typedef SDLKey SDL_Keycode;
++
+ class KeyboardMenu : public Menu
+ {
+ private:
+diff --git a/src/supertux/menu/options_menu.cpp b/src/supertux/menu/options_menu.cpp
+index 8e1ce9d..183c5f0 100644
+--- a/src/supertux/menu/options_menu.cpp
++++ b/src/supertux/menu/options_menu.cpp
+@@ -103,25 +103,15 @@ OptionsMenu::OptionsMenu(bool complete)
+     }
+   }
+ 
+-  int display_mode_count = SDL_GetNumDisplayModes(0);
+   std::string last_display_mode;
+-  for(int i = 0; i < display_mode_count; ++i)
++  for(int i = 0; SDL_ListModes(NULL, 0)[i]; ++i)
+   {
+-    SDL_DisplayMode mode;
+-    int ret = SDL_GetDisplayMode(0, i, &mode);
+-    if (ret != 0)
+-    {
+-      log_warning << "failed to get display mode: " << SDL_GetError() << std::endl;
+-    }
+-    else
+-    {
+       std::ostringstream out;
+-      out << mode.w << "x" << mode.h << "@" << mode.refresh_rate;
++      out << SDL_ListModes(NULL, 0)[i]->w << "x" << SDL_ListModes(NULL, 0)[i]->h << "@60";
+       if(last_display_mode == out.str())
+         continue;
+       last_display_mode = out.str();
+       fullscreen_res->list.push_back(out.str());
+-    }
+   }
+   fullscreen_res->list.push_back("Desktop");
+ 
 diff --git a/src/supertux/screen_manager.cpp b/src/supertux/screen_manager.cpp
-index ffd9599..c19c74f 100644
+index 580d875..3197a75 100644
 --- a/src/supertux/screen_manager.cpp
 +++ b/src/supertux/screen_manager.cpp
-@@ -187,7 +187,7 @@ ScreenManager::update_gamelogic(float elapsed_time)
+@@ -189,7 +189,7 @@ ScreenManager::update_gamelogic(float elapsed_time)
  }
  
  void
 -ScreenManager::process_events()
 +ScreenManager::process_events(DrawingContext &context)
  {
-   g_jk_controller->update();
-   Uint8* keystate = SDL_GetKeyState(NULL);
-@@ -206,8 +206,12 @@ ScreenManager::process_events()
+   InputManager::current()->update();
+   SDL_Event event;
+@@ -205,15 +205,10 @@ ScreenManager::process_events()
+         quit();
          break;
-               
-       case SDL_VIDEORESIZE:
-+        #ifdef ANDROID
-+        context.init_renderer(); // This should re-init GL context and re-upload all textures
-+        #else
-         Renderer::instance()->resize(event.resize.w, event.resize.h);
-         MenuManager::recalc_pos();
-+        #endif
+ 
+-      case SDL_WINDOWEVENT:
+-        switch(event.window.event)
+-        {
+-          case SDL_WINDOWEVENT_RESIZED:
+-            VideoSystem::current()->resize(event.window.data1,
+-                                           event.window.data2);
++      case SDL_VIDEORESIZE:
++            VideoSystem::current()->resize(event.resize.w,
++                                           event.resize.h);
+             m_menu_manager->on_window_resize();
+-            break;
+-        }
          break;
-             
+ 
        case SDL_KEYDOWN:
-@@ -318,7 +322,7 @@ ScreenManager::run(DrawingContext &context)
-       timestep *= speed;
+@@ -227,7 +222,7 @@ ScreenManager::process_events()
+           VideoSystem::current()->apply_config();
+           m_menu_manager->on_window_resize();
+         }
+-        else if (event.key.keysym.sym == SDLK_PRINTSCREEN ||
++        else if (event.key.keysym.sym == SDLK_PRINT ||
+                  event.key.keysym.sym == SDLK_F12)
+         {
+           take_screenshot();
+@@ -362,7 +357,7 @@ ScreenManager::run(DrawingContext &context)
+       timestep *= m_speed;
        game_time += timestep;
  
 -      process_events();
@@ -86,10 +435,10 @@ index ffd9599..c19c74f 100644
        frames += 1;
      }
 diff --git a/src/supertux/screen_manager.hpp b/src/supertux/screen_manager.hpp
-index d885443..c436f72 100644
+index 59599c8..dd45acb 100644
 --- a/src/supertux/screen_manager.hpp
 +++ b/src/supertux/screen_manager.hpp
-@@ -59,7 +59,7 @@ private:
+@@ -64,7 +64,7 @@ private:
    void draw_fps(DrawingContext& context, float fps);
    void draw(DrawingContext& context);
    void update_gamelogic(float elapsed_time);
@@ -99,10 +448,10 @@ index d885443..c436f72 100644
  
  private:
 diff --git a/src/util/log.cpp b/src/util/log.cpp
-index 6ce6f73..e12edf7 100644
+index de4fb3d..3bc026e 100644
 --- a/src/util/log.cpp
 +++ b/src/util/log.cpp
-@@ -18,12 +18,81 @@
+@@ -18,18 +18,83 @@
  #include "util/log.hpp"
  
  #include <iostream>
@@ -178,68 +527,323 @@ index 6ce6f73..e12edf7 100644
 +
 +static std::ostream android_logcat(new _android_debugbuf());
 +
+ LogLevel g_log_level = LOG_WARNING;
+ 
  static std::ostream& get_logging_instance (void)
  {
+-  if (ConsoleBuffer::current())
+-    return (ConsoleBuffer::output);
+-  else
+-    return (std::cerr);
 +  return android_logcat;
-   if (Console::instance != NULL)
-     return (Console::output);
-   else
+ }
+ 
+ static std::ostream& log_generic_f (const char *prefix, const char* file, int line)
 diff --git a/src/video/gl/gl_lightmap.cpp b/src/video/gl/gl_lightmap.cpp
-index f8a6735..9638b64 100644
+index b5251e0..921d820 100644
 --- a/src/video/gl/gl_lightmap.cpp
 +++ b/src/video/gl/gl_lightmap.cpp
-@@ -60,7 +60,7 @@ GLLightmap::GLLightmap() :
+@@ -67,7 +67,7 @@ GLLightmap::GLLightmap() :
  
-   lightmap_uv_right = static_cast<float>(lightmap_width) / static_cast<float>(width);
-   lightmap_uv_bottom = static_cast<float>(lightmap_height) / static_cast<float>(height);
--  texture_manager->register_texture(lightmap.get());
-+  //texture_manager->register_texture(lightmap.get());
+   m_lightmap_uv_right = static_cast<float>(m_lightmap_width) / static_cast<float>(width);
+   m_lightmap_uv_bottom = static_cast<float>(m_lightmap_height) / static_cast<float>(height);
+-  TextureManager::current()->register_texture(m_lightmap.get());
++  //TextureManager::current()->register_texture(m_lightmap.get());
  }
  
  GLLightmap::~GLLightmap()
+diff --git a/src/video/gl/gl_painter.cpp b/src/video/gl/gl_painter.cpp
+index ecb3cb1..4129bdc 100644
+--- a/src/video/gl/gl_painter.cpp
++++ b/src/video/gl/gl_painter.cpp
+@@ -14,6 +14,9 @@
+ //  You should have received a copy of the GNU General Public License
+ //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
++#include <math.h>
++#include <SDL_video.h>
++
+ #include "video/gl/gl_painter.hpp"
+ 
+ #include "video/drawing_request.hpp"
+diff --git a/src/video/gl/gl_painter.hpp b/src/video/gl/gl_painter.hpp
+index bb3dd75..d1d9f57 100644
+--- a/src/video/gl/gl_painter.hpp
++++ b/src/video/gl/gl_painter.hpp
+@@ -17,6 +17,7 @@
+ #ifndef HEADER_SUPERTUX_VIDEO_GL_GL_PAINTER_HPP
+ #define HEADER_SUPERTUX_VIDEO_GL_GL_PAINTER_HPP
+ 
++#ifndef GL_VERSION_ES_CM_1_0
+ #ifdef USE_GLBINDING
+ #include <glbinding/gl/gl.h>
+ using namespace gl;
+@@ -25,6 +26,10 @@ using namespace gl;
+ 
+ #include "SDL_opengl.h"
+ #endif
++#else
++#include <GLES/gl.h>
++#include <GLES/glext.h>
++#endif
+ 
+ struct DrawingRequest;
+ 
 diff --git a/src/video/gl/gl_renderer.cpp b/src/video/gl/gl_renderer.cpp
-index 0e66433..abf65b8 100644
+index 8f4a18ee..d745f4e 100644
 --- a/src/video/gl/gl_renderer.cpp
 +++ b/src/video/gl/gl_renderer.cpp
-@@ -123,8 +123,8 @@ GLRenderer::draw_surface(const DrawingRequest& request)
-     glBindTexture(GL_TEXTURE_2D, th);
+@@ -43,33 +43,13 @@
+ #endif
+ 
+ GLRenderer::GLRenderer() :
+-  m_window(),
+-  m_glcontext(),
++  //m_window(),
++  //m_glcontext(),
+   m_viewport(),
+   m_desktop_size(0, 0),
+   m_fullscreen_active(false)
+ {
+-  SDL_DisplayMode mode;
+-  SDL_GetCurrentDisplayMode(0, &mode);
+-  m_desktop_size = Size(mode.w, mode.h);
+-
+-  if(g_config->try_vsync) {
+-    /* we want vsync for smooth scrolling */
+-    if (SDL_GL_SetSwapInterval(-1) != 0)
+-    {
+-      log_info << "no support for late swap tearing vsync: " << SDL_GetError() << std::endl;
+-      if (SDL_GL_SetSwapInterval(1))
+-      {
+-        log_info << "no support for vsync: " << SDL_GetError() << std::endl;
+-      }
+-    }
+-  }
+-
+-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+-
+-  SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   5);
+-  SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+-  SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  5);
++  m_desktop_size = Size(SDL_GetVideoInfo()->current_w, SDL_GetVideoInfo()->current_h);
+ 
+   apply_video_mode();
+ 
+@@ -107,15 +87,6 @@ GLRenderer::GLRenderer() :
+ 
+ #endif
+ 
+-  // setup opengl state and transform
+-  glDisable(GL_DEPTH_TEST);
+-  glDisable(GL_CULL_FACE);
+-  glEnable(GL_TEXTURE_2D);
+-  glEnable(GL_BLEND);
+-  glEnableClientState(GL_VERTEX_ARRAY);
+-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+-
+   // Init the projection matrix, viewport and stuff
+   apply_config();
+ 
+@@ -136,8 +107,8 @@ GLRenderer::GLRenderer() :
+ 
+ GLRenderer::~GLRenderer()
+ {
+-  SDL_GL_DeleteContext(m_glcontext);
+-  SDL_DestroyWindow(m_window);
++  //SDL_GL_DeleteContext(m_glcontext);
++  //SDL_DestroyWindow(m_window);
+ }
+ 
+ void
+@@ -213,7 +184,7 @@ void
+ GLRenderer::flip()
+ {
+   assert_gl("drawing");
+-  SDL_GL_SwapWindow(m_window);
++  SDL_GL_SwapBuffers();
+ }
+ 
+ void
+@@ -229,9 +200,17 @@ GLRenderer::apply_config()
+ {
+   apply_video_mode();
+ 
+-  Size target_size = g_config->use_fullscreen ?
+-    ((g_config->fullscreen_size == Size(0, 0)) ? m_desktop_size : g_config->fullscreen_size) :
+-    g_config->window_size;
++  // setup opengl state and transform
++  glDisable(GL_DEPTH_TEST);
++  glDisable(GL_CULL_FACE);
++  glEnable(GL_TEXTURE_2D);
++  glEnable(GL_BLEND);
++  glEnableClientState(GL_VERTEX_ARRAY);
++  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
++  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
++
++
++  Size target_size = m_desktop_size;
+ 
+   float pixel_aspect_ratio = 1.0f;
+   if (g_config->aspect_size != Size(0, 0))
+@@ -264,9 +243,9 @@ GLRenderer::apply_config()
+   {
+     // Clear both buffers so that we get a clean black border without junk
+     glClear(GL_COLOR_BUFFER_BIT);
+-    SDL_GL_SwapWindow(m_window);
++    SDL_GL_SwapBuffers();
+     glClear(GL_COLOR_BUFFER_BIT);
+-    SDL_GL_SwapWindow(m_window);
++    SDL_GL_SwapBuffers();
    }
-   intern_draw(request.pos.x, request.pos.y,
--              request.pos.x + surface->get_width(),
--              request.pos.y + surface->get_height(),
-+              request.pos.x + (float)surface->get_width() * 1.02f, // There are seams between textures because of floating-point rounding, so we're adding small offset to prevent that
-+              request.pos.y + (float)surface->get_height() * 1.02f,
-               surface_data->get_uv_left(),
-               surface_data->get_uv_top(),
-               surface_data->get_uv_right(),
-@@ -159,8 +159,8 @@ GLRenderer::draw_surface_part(const DrawingRequest& request)
-     glBindTexture(GL_TEXTURE_2D, th);
-   }
-   intern_draw(request.pos.x, request.pos.y,
--              request.pos.x + surfacepartrequest->size.x,
--              request.pos.y + surfacepartrequest->size.y,
-+              request.pos.x + surfacepartrequest->size.x + 0.001f,
-+              request.pos.y + surfacepartrequest->size.y + 0.001f,
-               uv_left,
-               uv_top,
-               uv_right,
+ 
+   glViewport(m_viewport.x, m_viewport.y, m_viewport.w, m_viewport.h);
+@@ -285,102 +264,9 @@ GLRenderer::apply_config()
+ void
+ GLRenderer::apply_video_mode()
+ {
+-  if (m_window)
+-  {
+-    if (!g_config->use_fullscreen)
+-    {
+-      SDL_SetWindowFullscreen(m_window, 0);
+-    }
+-    else
+-    {
+-      if (g_config->fullscreen_size.width == 0 &&
+-          g_config->fullscreen_size.height == 0)
+-      {
+-        if (SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN_DESKTOP) != 0)
+-        {
+-          log_warning << "failed to switch to desktop fullscreen mode: "
+-                      << SDL_GetError() << std::endl;
+-        }
+-        else
+-        {
+-          log_info << "switched to desktop fullscreen mode" << std::endl;
+-        }
+-      }
+-      else
+-      {
+-        SDL_DisplayMode mode;
+-        mode.format = SDL_PIXELFORMAT_RGB888;
+-        mode.w = g_config->fullscreen_size.width;
+-        mode.h = g_config->fullscreen_size.height;
+-        mode.refresh_rate = g_config->fullscreen_refresh_rate;
+-        mode.driverdata = 0;
+-
+-        if (SDL_SetWindowDisplayMode(m_window, &mode) != 0)
+-        {
+-          log_warning << "failed to set display mode: "
+-                      << mode.w << "x" << mode.h << "@" << mode.refresh_rate << ": "
+-                      << SDL_GetError() << std::endl;
+-        }
+-        else
+-        {
+-          if (SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN) != 0)
+-          {
+-            log_warning << "failed to switch to fullscreen mode: "
+-                        << mode.w << "x" << mode.h << "@" << mode.refresh_rate << ": "
+-                        << SDL_GetError() << std::endl;
+-          }
+-          else
+-          {
+-            log_info << "switched to fullscreen mode: "
+-                     << mode.w << "x" << mode.h << "@" << mode.refresh_rate << std::endl;
+-          }
+-        }
+-      }
+-    }
+-  }
+-  else
+-  {
+-    int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+-    Size size;
+-    if (g_config->use_fullscreen)
+-    {
+-      if (g_config->fullscreen_size == Size(0, 0))
+-      {
+-        flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+-        size = m_desktop_size;
+-      }
+-      else
+-      {
+-        flags |= SDL_WINDOW_FULLSCREEN;
+-        size.width  = g_config->fullscreen_size.width;
+-        size.height = g_config->fullscreen_size.height;
+-      }
+-    }
+-    else
+-    {
+-      size = g_config->window_size;
+-    }
+-
+-    m_window = SDL_CreateWindow("SuperTux",
+-                              SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+-                              size.width, size.height,
+-                              flags);
+-    if (!m_window)
+-    {
+-      std::ostringstream msg;
+-      msg << "Couldn't set video mode " << size.width << "x" << size.height << ": " << SDL_GetError();
+-      throw std::runtime_error(msg.str());
+-    }
+-    else
+-    {
+-      m_glcontext = SDL_GL_CreateContext(m_window);
+-
+-      SCREEN_WIDTH = size.width;
+-      SCREEN_HEIGHT = size.height;
+-
+-      m_fullscreen_active = g_config->use_fullscreen;
+-    }
+-  }
++  //SCREEN_WIDTH = SDL_GetVideoInfo()->current_w;
++  //SCREEN_HEIGHT = SDL_GetVideoInfo()->current_h;
++  SDL_SetVideoMode(m_desktop_size.width, m_desktop_size.height, 24, SDL_OPENGL | SDL_DOUBLEBUF | SDL_FULLSCREEN);
+ }
+ 
+ void
+@@ -433,9 +319,9 @@ GLRenderer::to_logical(int physical_x, int physical_y)
+ void
+ GLRenderer::set_gamma(float gamma)
+ {
+-  Uint16 ramp[256];
+-  SDL_CalculateGammaRamp(gamma, ramp);
+-  SDL_SetWindowGammaRamp(m_window, ramp, ramp, ramp);
++  //Uint16 ramp[256];
++  //SDL_CalculateGammaRamp(gamma, ramp);
++  //SDL_SetWindowGammaRamp(m_window, ramp, ramp, ramp);
+ }
+ 
+ /* EOF */
 diff --git a/src/video/gl/gl_renderer.hpp b/src/video/gl/gl_renderer.hpp
-index d5d9995..4fdacf8 100644
+index 5da04a8..b73eb9d 100644
 --- a/src/video/gl/gl_renderer.hpp
 +++ b/src/video/gl/gl_renderer.hpp
-@@ -63,8 +63,8 @@ inline void intern_draw(float left, float top, float right, float bottom,
-     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-   } else {
-     // rotated blit
--    float center_x = (left + right) / 2;
--    float center_y = (top + bottom) / 2;
-+    float center_x = (left + right) / 2.0f;
-+    float center_y = (top + bottom) / 2.0f;
+@@ -27,8 +27,8 @@
+ class GLRenderer : public Renderer
+ {
+ private:
+-  SDL_Window* m_window;
+-  SDL_GLContext m_glcontext;
++  //SDL_Window* m_window;
++  //SDL_GLContext m_glcontext;
+   SDL_Rect m_viewport;
+   Size m_desktop_size;
+   bool m_fullscreen_active;
+@@ -51,7 +51,7 @@ public:
+   Vector to_logical(int physical_x, int physical_y) override;
+   void set_gamma(float gamma) override;
  
-     float sa = sinf(angle/180.0f*M_PI);
-     float ca = cosf(angle/180.0f*M_PI);
+-  SDL_Window* get_window() const { return m_window; }
++  //SDL_Window* get_window() const { return m_window; }
+ 
+ private:
+   void apply_video_mode();
 diff --git a/src/video/gl/gl_texture.cpp b/src/video/gl/gl_texture.cpp
-index 9e2b70d..a5081e3 100644
+index 443fa01..6715d40 100644
 --- a/src/video/gl/gl_texture.cpp
 +++ b/src/video/gl/gl_texture.cpp
 @@ -16,6 +16,8 @@
@@ -249,160 +853,134 @@ index 9e2b70d..a5081e3 100644
 +#include "video/texture_manager.hpp"
 +#include "util/log.hpp"
  
- namespace {
- 
-@@ -39,7 +41,8 @@ GLTexture::GLTexture(unsigned int width, unsigned int height) :
-   texture_width(),
-   texture_height(),
-   image_width(),
--  image_height()
-+  image_height(),
-+  pixels(NULL)
+ #ifdef USE_GLBINDING
+   #include <glbinding/ContextInfo.h>
+@@ -45,7 +47,8 @@ GLTexture::GLTexture(unsigned int width, unsigned int height) :
+   m_texture_width(),
+   m_texture_height(),
+   m_image_width(),
+-  m_image_height()
++  m_image_height(),
++  m_pixels(NULL)
  {
  #ifdef GL_VERSION_ES_CM_1_0
    assert(is_power_of_2(width));
-@@ -64,6 +67,8 @@ GLTexture::GLTexture(unsigned int width, unsigned int height) :
-     glDeleteTextures(1, &handle);
+@@ -70,6 +73,7 @@ GLTexture::GLTexture(unsigned int width, unsigned int height) :
+     glDeleteTextures(1, &m_handle);
      throw;
    }
-+  if (texture_manager)
-+    texture_manager->register_texture(this);
++  VideoSystem::current()->get_texture_manager().register_texture(this);
  }
  
  GLTexture::GLTexture(SDL_Surface* image) :
-@@ -71,7 +76,8 @@ GLTexture::GLTexture(SDL_Surface* image) :
-   texture_width(),
-   texture_height(),
-   image_width(),
--  image_height()
-+  image_height(),
-+  pixels(NULL)
+@@ -77,7 +81,8 @@ GLTexture::GLTexture(SDL_Surface* image) :
+   m_texture_width(),
+   m_texture_height(),
+   m_image_width(),
+-  m_image_height()
++  m_image_height(),
++  m_pixels(NULL)
  {
  #ifdef GL_VERSION_ES_CM_1_0
-   texture_width = next_power_of_two(image->w);
-@@ -108,11 +114,49 @@ GLTexture::GLTexture(SDL_Surface* image) :
+   m_texture_width = next_power_of_two(image->w);
+@@ -121,66 +126,51 @@ GLTexture::GLTexture(SDL_Surface* image) :
+     throw std::runtime_error("Couldn't create texture: out of memory");
+   }
  
-   SDL_SetAlpha(image, 0, 0);
+-  SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
    SDL_BlitSurface(image, 0, convert, 0);
-+  pixels = convert;
  
++  m_pixels = convert;
++
 +  reupload();
-+  if (texture_manager)
-+    texture_manager->register_texture(this);
-+}
++  VideoSystem::current()->get_texture_manager().register_texture(this);
 +
-+GLTexture::~GLTexture()
-+{
-+  if (texture_manager)
-+    texture_manager->remove_texture(this);
-+  if(pixels)
-+    SDL_FreeSurface(pixels);
-+  glDeleteTextures(1, &handle);
-+}
-+
-+void
-+GLTexture::set_texture_params()
-+{
-+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-+
-+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-+
-+  assert_gl("set texture params");
++  assert_gl("creating texture");
 +}
 +
 +void GLTexture::reupload()
 +{
    assert_gl("before creating texture");
-   glGenTextures(1, &handle);
+   glGenTextures(1, &m_handle);
  
--  try {
-+  //log_info << "GL texture: reupload: this " << this << " pixels " << pixels << " GL handle " << handle << std::endl;
-+  SDL_Surface* convert = pixels;
-+  if( !convert )
-+  {
-+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_width,
-+                 texture_height, 0, GL_RGBA,
-+                 GL_UNSIGNED_BYTE, NULL);
-+    return;
-+  }
-+/*
+   try {
      GLenum sdl_format;
-     if(convert->format->BytesPerPixel == 3)
-       sdl_format = GL_RGB;
-@@ -122,7 +166,7 @@ GLTexture::GLTexture(SDL_Surface* image) :
-       sdl_format = GL_RGBA;
-       assert(false);
-     }
--
-+*/
-     glBindTexture(GL_TEXTURE_2D, handle);
-     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
- #ifdef GL_UNPACK_ROW_LENGTH
-@@ -141,14 +185,16 @@ GLTexture::GLTexture(SDL_Surface* image) :
-     if (true)
-     { // no not use mipmaps
-       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_width,
--                 texture_height, 0, sdl_format,
-+                 texture_height, 0, GL_RGBA,
-                  GL_UNSIGNED_BYTE, convert->pixels);
-     }
-     else
-     { // build mipmaps
-+#ifndef GL_VERSION_ES_CM_1_0
-       gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, texture_width,
-                         texture_height, sdl_format,
-                         GL_UNSIGNED_BYTE, convert->pixels);
-+#endif
-     }
+-    if(convert->format->BytesPerPixel == 3)
+-      sdl_format = GL_RGB;
+-    else if(convert->format->BytesPerPixel == 4)
+-      sdl_format = GL_RGBA;
+-    else {
+-      sdl_format = GL_RGBA;
+-      assert(false);
+-    }
++    sdl_format = GL_RGBA;
  
-     if(SDL_MUSTLOCK(convert))
-@@ -159,29 +205,8 @@ GLTexture::GLTexture(SDL_Surface* image) :
-     assert_gl("creating texture");
+     glBindTexture(GL_TEXTURE_2D, m_handle);
+     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+ #if defined(GL_UNPACK_ROW_LENGTH) || defined(USE_GLBINDING)
+-    glPixelStorei(GL_UNPACK_ROW_LENGTH, convert->pitch/convert->format->BytesPerPixel);
++    //glPixelStorei(GL_UNPACK_ROW_LENGTH, convert->pitch/convert->format->BytesPerPixel);
+ #else
+     /* OpenGL ES doesn't support UNPACK_ROW_LENGTH, let's hope SDL didn't add
+      * padding bytes, otherwise we need some extra code here... */
+-    assert(convert->pitch == m_texture_width * convert->format->BytesPerPixel);
++    //assert(convert->pitch == m_texture_width * convert->format->BytesPerPixel);
+ #endif
+ 
+-    if(SDL_MUSTLOCK(convert))
+-    {
+-      SDL_LockSurface(convert);
+-    }
+-
+     glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(GL_RGBA),
+                  m_texture_width, m_texture_height, 0, sdl_format,
+-                 GL_UNSIGNED_BYTE, convert->pixels);
+-
+-    // no not use mipmaps
+-    if(false)
+-    {
+-      glGenerateMipmap(GL_TEXTURE_2D);
+-    }
+-
+-    if(SDL_MUSTLOCK(convert))
+-    {
+-      SDL_UnlockSurface(convert);
+-    }
+-
+-    assert_gl("creating texture");
++                 GL_UNSIGNED_BYTE, m_pixels ? m_pixels->pixels : NULL);
  
      set_texture_params();
--  } catch(...) {
--    glDeleteTextures(1, &handle);
+   } catch(...) {
+     glDeleteTextures(1, &m_handle);
 -    SDL_FreeSurface(convert);
--    throw;
--  }
+     throw;
+   }
 -  SDL_FreeSurface(convert);
--}
- 
--GLTexture::~GLTexture()
--{
--  glDeleteTextures(1, &handle);
--}
--
--void
--GLTexture::set_texture_params()
--{
--  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
--  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
--
--  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
--  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
--
--  assert_gl("set texture params");
-+  set_texture_params();
  }
  
- /* EOF */
+ GLTexture::~GLTexture()
+ {
++  VideoSystem::current()->get_texture_manager().remove_texture(this);
++  if (m_pixels)
++    SDL_FreeSurface(m_pixels);
+   glDeleteTextures(1, &m_handle);
+ }
+ 
 diff --git a/src/video/gl/gl_texture.hpp b/src/video/gl/gl_texture.hpp
-index 4b24d48..699053a 100644
+index 7cb634f..787d702 100644
 --- a/src/video/gl/gl_texture.hpp
 +++ b/src/video/gl/gl_texture.hpp
 @@ -32,6 +32,7 @@ protected:
-   unsigned int texture_height;
-   unsigned int image_width;
-   unsigned int image_height;
-+  SDL_Surface* pixels;
+   unsigned int m_texture_height;
+   unsigned int m_image_width;
+   unsigned int m_image_height;
++  SDL_Surface* m_pixels;
  
  public:
    GLTexture(unsigned int width, unsigned int height);
 @@ -76,6 +77,8 @@ public:
-     image_height = height;
+     m_image_height = height;
    }
  
 +  void reupload();
@@ -410,11 +988,39 @@ index 4b24d48..699053a 100644
  private:
    void set_texture_params();
  };
+diff --git a/src/video/gl/gl_video_system.cpp b/src/video/gl/gl_video_system.cpp
+index 87b0ab7..e69a0da 100644
+--- a/src/video/gl/gl_video_system.cpp
++++ b/src/video/gl/gl_video_system.cpp
+@@ -41,6 +41,11 @@ GLVideoSystem::get_lightmap()
+   return *m_lightmap;
+ }
+ 
++TextureManager& GLVideoSystem::get_texture_manager()
++{
++  return *m_texture_manager;
++}
++
+ TexturePtr
+ GLVideoSystem::new_texture(SDL_Surface* image)
+ {
+diff --git a/src/video/gl/gl_video_system.hpp b/src/video/gl/gl_video_system.hpp
+index 488d880..700f0a2 100644
+--- a/src/video/gl/gl_video_system.hpp
++++ b/src/video/gl/gl_video_system.hpp
+@@ -36,6 +36,7 @@ public:
+ 
+   Renderer& get_renderer() override;
+   Lightmap& get_lightmap() override;
++  TextureManager& get_texture_manager() override;
+   TexturePtr new_texture(SDL_Surface* image) override;
+   SurfaceData* new_surface_data(const Surface& surface) override;
+   void free_surface_data(SurfaceData* surface_data) override;
 diff --git a/src/video/glutil.hpp b/src/video/glutil.hpp
-index e51240d..2330b0a 100644
+index 4ead32d..d791bb1 100644
 --- a/src/video/glutil.hpp
 +++ b/src/video/glutil.hpp
-@@ -76,7 +76,7 @@ static inline void check_gl_error(const char* message)
+@@ -86,7 +86,7 @@ static inline void check_gl_error(const char* message)
          msg << "Unknown error (code " << error << ")";
      }
  
@@ -423,37 +1029,24 @@ index e51240d..2330b0a 100644
    }
  }
  
-diff --git a/src/video/sdl/sdl_texture.cpp b/src/video/sdl/sdl_texture.cpp
-index b58f7cc..422bec8 100644
---- a/src/video/sdl/sdl_texture.cpp
-+++ b/src/video/sdl/sdl_texture.cpp
-@@ -679,5 +679,9 @@ SDLTexture::get_transform(const Color &color, DrawingEffect effect)
-   return cache[effect][color];
- }
+diff --git a/src/video/renderer.hpp b/src/video/renderer.hpp
+index b9d4ec3..2532c65 100644
+--- a/src/video/renderer.hpp
++++ b/src/video/renderer.hpp
+@@ -56,7 +56,7 @@ public:
+   virtual void apply_config() = 0;
+   virtual Vector to_logical(int physical_x, int physical_y) = 0;
+   virtual void set_gamma(float gamma) = 0;
+-  virtual SDL_Window* get_window() const = 0;
++  //virtual SDL_Window* get_window() const = 0;
+ };
  
-+void SDLTexture::reupload()
-+{
-+}
-+
- /* vim: set sw=2 sts=2 et : */
- /* EOF */
-diff --git a/src/video/sdl/sdl_texture.hpp b/src/video/sdl/sdl_texture.hpp
-index 97c38cb..61ceedb 100644
---- a/src/video/sdl/sdl_texture.hpp
-+++ b/src/video/sdl/sdl_texture.hpp
-@@ -136,6 +136,7 @@ public:
-     {
-     return height;
-     }*/
-+  void reupload();
- 
- private:
-   SDLTexture(const SDLTexture&);
+ #endif
 diff --git a/src/video/texture.hpp b/src/video/texture.hpp
-index e814547..710a488 100644
+index 76964a9..86dc631 100644
 --- a/src/video/texture.hpp
 +++ b/src/video/texture.hpp
-@@ -63,6 +63,7 @@ public:
+@@ -65,6 +65,7 @@ public:
    virtual unsigned int get_texture_height() const = 0;
    virtual unsigned int get_image_width() const = 0;
    virtual unsigned int get_image_height() const = 0;
@@ -462,19 +1055,19 @@ index e814547..710a488 100644
  private:
    Texture(const Texture&);
 diff --git a/src/video/texture_manager.cpp b/src/video/texture_manager.cpp
-index 0c77a5a..378853b 100644
+index e544909..aac5fa9 100644
 --- a/src/video/texture_manager.cpp
 +++ b/src/video/texture_manager.cpp
-@@ -228,6 +228,7 @@ TextureManager::create_dummy_texture()
+@@ -240,6 +240,7 @@ TextureManager::create_dummy_texture()
  void
  TextureManager::save_textures()
  {
 +#if 0
- #ifdef GL_PACK_ROW_LENGTH
+ #if defined(GL_PACK_ROW_LENGTH) || defined(USE_GLBINDING)
    /* all this stuff is not support by OpenGL ES */
    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-@@ -245,11 +246,13 @@ TextureManager::save_textures()
-       i != image_textures.end(); ++i) {
+@@ -261,11 +262,13 @@ TextureManager::save_textures()
+   {
      save_texture(dynamic_cast<GLTexture*>(i->second.lock().get()));
    }
 +#endif
@@ -487,9 +1080,11 @@ index 0c77a5a..378853b 100644
    SavedTexture saved_texture;
    saved_texture.texture = texture;
    glBindTexture(GL_TEXTURE_2D, texture->get_handle());
-@@ -284,11 +287,13 @@ TextureManager::save_texture(GLTexture* texture)
-   texture->set_handle(0);
+@@ -298,13 +301,14 @@ TextureManager::save_texture(GLTexture* texture)
  
+   glDeleteTextures(1, &(texture->get_handle()));
+   texture->set_handle(0);
+-
    assert_gl("retrieving texture for save");
 +#endif
  }
@@ -498,19 +1093,106 @@ index 0c77a5a..378853b 100644
  TextureManager::reload_textures()
  {
 +#if 0
- #ifdef GL_UNPACK_ROW_LENGTH
+ #if defined(GL_UNPACK_ROW_LENGTH) || defined(USE_GLBINDING)
    /* OpenGL ES doesn't support these */
    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-@@ -329,6 +334,12 @@ TextureManager::reload_textures()
+@@ -345,6 +349,16 @@ TextureManager::reload_textures()
    }
  
-   saved_textures.clear();
+   m_saved_textures.clear();
 +#endif
-+  for(Textures::iterator i = textures.begin(); i != textures.end(); ++i) {
++  for(Textures::iterator i = m_textures.begin(); i != m_textures.end(); ++i) {
 +    //log_info << "Texture manager: reuploading texture " << *i << std::endl;
-+
 +    (*i)->reupload();
++  }
++  for(ImageTextures::iterator i = m_image_textures.begin();
++      i != m_image_textures.end(); ++i)
++  {
++    dynamic_cast<GLTexture*>(i->second.lock().get())->reupload();
 +  }
  }
  #endif
  
+diff --git a/src/video/util.hpp b/src/video/util.hpp
+index 46be85c..72f7cb8 100644
+--- a/src/video/util.hpp
++++ b/src/video/util.hpp
+@@ -17,7 +17,7 @@
+ #ifndef HEADER_SUPERTUX_VIDEO_UTIL_HPP
+ #define HEADER_SUPERTUX_VIDEO_UTIL_HPP
+ 
+-#include "SDL_rect.h"
++#include "SDL_video.h"
+ 
+ class Size;
+ class Vector;
+diff --git a/src/video/video_system.cpp b/src/video/video_system.cpp
+index dd736d0..726c81a 100644
+--- a/src/video/video_system.cpp
++++ b/src/video/video_system.cpp
+@@ -19,7 +19,7 @@
+ #include <config.h>
+ 
+ #include "util/log.hpp"
+-#include "video/sdl/sdl_video_system.hpp"
++//#include "video/sdl/sdl_video_system.hpp"
+ 
+ #ifdef HAVE_OPENGL
+ #include "video/gl/gl_video_system.hpp"
+@@ -31,33 +31,15 @@ VideoSystem::create(VideoSystem::Enum video_system)
+   switch(video_system)
+   {
+     case AUTO_VIDEO:
+-#ifdef HAVE_OPENGL
+-      try
+-      {
+-        return std::unique_ptr<VideoSystem>(new GLVideoSystem);
+-      }
+-      catch(std::exception& err)
+-      {
+-        log_warning << "Error creating GLVideoSystem, using SDL fallback: "  << err.what() << std::endl;
+-        return std::unique_ptr<VideoSystem>(new SDLVideoSystem);
+-      }
+-#else
+-      log_info << "new SDL renderer\n";
+-      return std::unique_ptr<VideoSystem>(new SDLVideoSystem);
+-#endif
+-
+     case OPENGL:
++    case PURE_SDL:
+ #ifdef HAVE_OPENGL
+       return std::unique_ptr<VideoSystem>(new GLVideoSystem);
+ #else
+-      log_warning << "OpenGL requested, but missing using SDL fallback" << std::endl;
+-      return std::unique_ptr<VideoSystem>(new SDLVideoSystem);
++      //log_warning << "OpenGL requested, but missing using SDL fallback" << std::endl;
++      //return std::unique_ptr<VideoSystem>(new SDLVideoSystem);
+ #endif
+ 
+-    case PURE_SDL:
+-      log_info << "new SDL renderer\n";
+-      return std::unique_ptr<VideoSystem>(new SDLVideoSystem);
+-
+     default:
+       assert(!"invalid video system in config");
+       return {};
+diff --git a/src/video/video_system.hpp b/src/video/video_system.hpp
+index 729f6ef..ea999bd 100644
+--- a/src/video/video_system.hpp
++++ b/src/video/video_system.hpp
+@@ -27,6 +27,7 @@ class Renderer;
+ class Lightmap;
+ class Surface;
+ class SurfaceData;
++class TextureManager;
+ 
+ class VideoSystem : public Currenton<VideoSystem>
+ {
+@@ -49,6 +50,7 @@ public:
+ 
+   virtual Renderer& get_renderer() = 0;
+   virtual Lightmap& get_lightmap() = 0;
++  virtual TextureManager& get_texture_manager() = 0;
+   virtual TexturePtr new_texture(SDL_Surface *image) = 0;
+   virtual SurfaceData* new_surface_data(const Surface &surface) = 0;
+   virtual void free_surface_data(SurfaceData* surface_data) = 0;
