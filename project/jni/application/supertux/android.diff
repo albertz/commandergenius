@@ -217,9 +217,18 @@ index c7d7778..9949e92 100644
    try_vsync(true),
    show_fps(false),
 diff --git a/src/supertux/main.cpp b/src/supertux/main.cpp
-index 1cfba9c..e51a91a 100644
+index 1cfba9c..76a0ed9 100644
 --- a/src/supertux/main.cpp
 +++ b/src/supertux/main.cpp
+@@ -128,7 +128,7 @@ public:
+     if (!PHYSFS_init(argv0))
+     {
+       std::stringstream msg;
+-      msg << "Couldn't initialize physfs: " << PHYSFS_getLastError();
++      msg << "Couldn't initialize physfs: " << PHYSFS_getLastError() << " argv0: " << argv0;
+       throw std::runtime_error(msg.str());
+     }
+     else
 @@ -143,36 +143,9 @@ public:
  
    void find_datadir()
@@ -540,20 +549,19 @@ index de4fb3d..3bc026e 100644
  
  static std::ostream& log_generic_f (const char *prefix, const char* file, int line)
 diff --git a/src/video/gl/gl_lightmap.cpp b/src/video/gl/gl_lightmap.cpp
-index b5251e0..921d820 100644
+index b5251e0..6248380 100644
 --- a/src/video/gl/gl_lightmap.cpp
 +++ b/src/video/gl/gl_lightmap.cpp
-@@ -67,7 +67,7 @@ GLLightmap::GLLightmap() :
+@@ -67,7 +67,6 @@ GLLightmap::GLLightmap() :
  
    m_lightmap_uv_right = static_cast<float>(m_lightmap_width) / static_cast<float>(width);
    m_lightmap_uv_bottom = static_cast<float>(m_lightmap_height) / static_cast<float>(height);
 -  TextureManager::current()->register_texture(m_lightmap.get());
-+  //TextureManager::current()->register_texture(m_lightmap.get());
  }
  
  GLLightmap::~GLLightmap()
 diff --git a/src/video/gl/gl_painter.cpp b/src/video/gl/gl_painter.cpp
-index ecb3cb1..4129bdc 100644
+index ecb3cb1..705b465 100644
 --- a/src/video/gl/gl_painter.cpp
 +++ b/src/video/gl/gl_painter.cpp
 @@ -14,6 +14,9 @@
@@ -566,6 +574,17 @@ index ecb3cb1..4129bdc 100644
  #include "video/gl/gl_painter.hpp"
  
  #include "video/drawing_request.hpp"
+@@ -125,8 +128,8 @@ GLPainter::draw_surface(const DrawingRequest& request)
+     glBindTexture(GL_TEXTURE_2D, th);
+   }
+   intern_draw(request.pos.x, request.pos.y,
+-              request.pos.x + surface->get_width(),
+-              request.pos.y + surface->get_height(),
++              request.pos.x + surface->get_width() * 1.001f, // Avoid seams between background textures
++              request.pos.y + surface->get_height() * 1.001f,
+               surface_data->get_uv_left(),
+               surface_data->get_uv_top(),
+               surface_data->get_uv_right(),
 diff --git a/src/video/gl/gl_painter.hpp b/src/video/gl/gl_painter.hpp
 index bb3dd75..d1d9f57 100644
 --- a/src/video/gl/gl_painter.hpp
@@ -590,10 +609,10 @@ index bb3dd75..d1d9f57 100644
  struct DrawingRequest;
  
 diff --git a/src/video/gl/gl_renderer.cpp b/src/video/gl/gl_renderer.cpp
-index 8f4a18ee..d745f4e 100644
+index 8f4a18ee..459624d 100644
 --- a/src/video/gl/gl_renderer.cpp
 +++ b/src/video/gl/gl_renderer.cpp
-@@ -43,33 +43,13 @@
+@@ -43,35 +43,13 @@
  #endif
  
  GLRenderer::GLRenderer() :
@@ -626,11 +645,13 @@ index 8f4a18ee..d745f4e 100644
 -  SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   5);
 -  SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
 -  SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  5);
+-
+-  apply_video_mode();
 +  m_desktop_size = Size(SDL_GetVideoInfo()->current_w, SDL_GetVideoInfo()->current_h);
  
-   apply_video_mode();
+ #ifdef USE_GLBINDING
  
-@@ -107,15 +87,6 @@ GLRenderer::GLRenderer() :
+@@ -107,15 +85,6 @@ GLRenderer::GLRenderer() :
  
  #endif
  
@@ -646,7 +667,7 @@ index 8f4a18ee..d745f4e 100644
    // Init the projection matrix, viewport and stuff
    apply_config();
  
-@@ -136,8 +107,8 @@ GLRenderer::GLRenderer() :
+@@ -136,8 +105,8 @@ GLRenderer::GLRenderer() :
  
  GLRenderer::~GLRenderer()
  {
@@ -657,7 +678,7 @@ index 8f4a18ee..d745f4e 100644
  }
  
  void
-@@ -213,7 +184,7 @@ void
+@@ -213,7 +182,7 @@ void
  GLRenderer::flip()
  {
    assert_gl("drawing");
@@ -666,7 +687,7 @@ index 8f4a18ee..d745f4e 100644
  }
  
  void
-@@ -229,9 +200,17 @@ GLRenderer::apply_config()
+@@ -229,9 +198,17 @@ GLRenderer::apply_config()
  {
    apply_video_mode();
  
@@ -687,7 +708,7 @@ index 8f4a18ee..d745f4e 100644
  
    float pixel_aspect_ratio = 1.0f;
    if (g_config->aspect_size != Size(0, 0))
-@@ -264,9 +243,9 @@ GLRenderer::apply_config()
+@@ -264,9 +241,9 @@ GLRenderer::apply_config()
    {
      // Clear both buffers so that we get a clean black border without junk
      glClear(GL_COLOR_BUFFER_BIT);
@@ -699,7 +720,7 @@ index 8f4a18ee..d745f4e 100644
    }
  
    glViewport(m_viewport.x, m_viewport.y, m_viewport.w, m_viewport.h);
-@@ -285,102 +264,9 @@ GLRenderer::apply_config()
+@@ -285,102 +262,9 @@ GLRenderer::apply_config()
  void
  GLRenderer::apply_video_mode()
  {
@@ -805,7 +826,7 @@ index 8f4a18ee..d745f4e 100644
  }
  
  void
-@@ -433,9 +319,9 @@ GLRenderer::to_logical(int physical_x, int physical_y)
+@@ -433,9 +317,9 @@ GLRenderer::to_logical(int physical_x, int physical_y)
  void
  GLRenderer::set_gamma(float gamma)
  {
@@ -843,7 +864,7 @@ index 5da04a8..b73eb9d 100644
  private:
    void apply_video_mode();
 diff --git a/src/video/gl/gl_texture.cpp b/src/video/gl/gl_texture.cpp
-index 443fa01..6715d40 100644
+index 443fa01..3820ca7 100644
 --- a/src/video/gl/gl_texture.cpp
 +++ b/src/video/gl/gl_texture.cpp
 @@ -16,6 +16,8 @@
@@ -865,15 +886,29 @@ index 443fa01..6715d40 100644
  {
  #ifdef GL_VERSION_ES_CM_1_0
    assert(is_power_of_2(width));
-@@ -70,6 +73,7 @@ GLTexture::GLTexture(unsigned int width, unsigned int height) :
-     glDeleteTextures(1, &m_handle);
-     throw;
-   }
-+  VideoSystem::current()->get_texture_manager().register_texture(this);
+@@ -57,19 +60,9 @@ GLTexture::GLTexture(unsigned int width, unsigned int height) :
+   m_image_height = height;
+ 
+   assert_gl("before creating texture");
+-  glGenTextures(1, &m_handle);
+-
+-  try {
+-    glBindTexture(GL_TEXTURE_2D, m_handle);
+-
+-    glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(GL_RGBA), m_texture_width,
+-				 m_texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+ 
+-    set_texture_params();
+-  } catch(...) {
+-    glDeleteTextures(1, &m_handle);
+-    throw;
+-  }
++  reupload();
++  TextureManager::current()->register_texture(this);
  }
  
  GLTexture::GLTexture(SDL_Surface* image) :
-@@ -77,7 +81,8 @@ GLTexture::GLTexture(SDL_Surface* image) :
+@@ -77,7 +70,8 @@ GLTexture::GLTexture(SDL_Surface* image) :
    m_texture_width(),
    m_texture_height(),
    m_image_width(),
@@ -883,7 +918,21 @@ index 443fa01..6715d40 100644
  {
  #ifdef GL_VERSION_ES_CM_1_0
    m_texture_width = next_power_of_two(image->w);
-@@ -121,66 +126,51 @@ GLTexture::GLTexture(SDL_Surface* image) :
+@@ -109,11 +103,11 @@ GLTexture::GLTexture(SDL_Surface* image) :
+ 
+ #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+   SDL_Surface* convert = SDL_CreateRGBSurface(0,
+-                                              m_texture_width, m_texture_height, 32,
++                                              m_image_width, m_image_height, 32,
+                                               0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
+ #else
+   SDL_Surface* convert = SDL_CreateRGBSurface(0,
+-                                              m_texture_width, m_texture_height, 32,
++                                              m_image_width, m_image_height, 32,
+                                               0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+ #endif
+ 
+@@ -121,66 +115,55 @@ GLTexture::GLTexture(SDL_Surface* image) :
      throw std::runtime_error("Couldn't create texture: out of memory");
    }
  
@@ -893,7 +942,7 @@ index 443fa01..6715d40 100644
 +  m_pixels = convert;
 +
 +  reupload();
-+  VideoSystem::current()->get_texture_manager().register_texture(this);
++  TextureManager::current()->register_texture(this);
 +
 +  assert_gl("creating texture");
 +}
@@ -932,7 +981,8 @@ index 443fa01..6715d40 100644
 -      SDL_LockSurface(convert);
 -    }
 -
-     glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(GL_RGBA),
+-    glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(GL_RGBA),
++    glTexImage2D(GL_TEXTURE_2D, 0, sdl_format,
                   m_texture_width, m_texture_height, 0, sdl_format,
 -                 GL_UNSIGNED_BYTE, convert->pixels);
 -
@@ -946,9 +996,12 @@ index 443fa01..6715d40 100644
 -    {
 -      SDL_UnlockSurface(convert);
 -    }
--
++                 GL_UNSIGNED_BYTE, NULL);
+ 
 -    assert_gl("creating texture");
-+                 GL_UNSIGNED_BYTE, m_pixels ? m_pixels->pixels : NULL);
++    if (m_pixels)
++      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_image_width, m_image_height,
++                      sdl_format, GL_UNSIGNED_BYTE, m_pixels->pixels);
  
      set_texture_params();
    } catch(...) {
@@ -961,7 +1014,7 @@ index 443fa01..6715d40 100644
  
  GLTexture::~GLTexture()
  {
-+  VideoSystem::current()->get_texture_manager().remove_texture(this);
++  TextureManager::current()->remove_texture(this);
 +  if (m_pixels)
 +    SDL_FreeSurface(m_pixels);
    glDeleteTextures(1, &m_handle);
@@ -989,33 +1042,17 @@ index 7cb634f..787d702 100644
    void set_texture_params();
  };
 diff --git a/src/video/gl/gl_video_system.cpp b/src/video/gl/gl_video_system.cpp
-index 87b0ab7..e69a0da 100644
+index 87b0ab7..328a58c 100644
 --- a/src/video/gl/gl_video_system.cpp
 +++ b/src/video/gl/gl_video_system.cpp
-@@ -41,6 +41,11 @@ GLVideoSystem::get_lightmap()
-   return *m_lightmap;
+@@ -69,6 +69,7 @@ void
+ GLVideoSystem::resize(int w, int h)
+ {
+   m_renderer->resize(w, h);
++  TextureManager::current()->reload_textures();
+   m_lightmap.reset(new GLLightmap);
  }
  
-+TextureManager& GLVideoSystem::get_texture_manager()
-+{
-+  return *m_texture_manager;
-+}
-+
- TexturePtr
- GLVideoSystem::new_texture(SDL_Surface* image)
- {
-diff --git a/src/video/gl/gl_video_system.hpp b/src/video/gl/gl_video_system.hpp
-index 488d880..700f0a2 100644
---- a/src/video/gl/gl_video_system.hpp
-+++ b/src/video/gl/gl_video_system.hpp
-@@ -36,6 +36,7 @@ public:
- 
-   Renderer& get_renderer() override;
-   Lightmap& get_lightmap() override;
-+  TextureManager& get_texture_manager() override;
-   TexturePtr new_texture(SDL_Surface* image) override;
-   SurfaceData* new_surface_data(const Surface& surface) override;
-   void free_surface_data(SurfaceData* surface_data) override;
 diff --git a/src/video/glutil.hpp b/src/video/glutil.hpp
 index 4ead32d..d791bb1 100644
 --- a/src/video/glutil.hpp
@@ -1176,23 +1213,3 @@ index dd736d0..726c81a 100644
      default:
        assert(!"invalid video system in config");
        return {};
-diff --git a/src/video/video_system.hpp b/src/video/video_system.hpp
-index 729f6ef..ea999bd 100644
---- a/src/video/video_system.hpp
-+++ b/src/video/video_system.hpp
-@@ -27,6 +27,7 @@ class Renderer;
- class Lightmap;
- class Surface;
- class SurfaceData;
-+class TextureManager;
- 
- class VideoSystem : public Currenton<VideoSystem>
- {
-@@ -49,6 +50,7 @@ public:
- 
-   virtual Renderer& get_renderer() = 0;
-   virtual Lightmap& get_lightmap() = 0;
-+  virtual TextureManager& get_texture_manager() = 0;
-   virtual TexturePtr new_texture(SDL_Surface *image) = 0;
-   virtual SurfaceData* new_surface_data(const Surface &surface) = 0;
-   virtual void free_surface_data(SurfaceData* surface_data) = 0;
