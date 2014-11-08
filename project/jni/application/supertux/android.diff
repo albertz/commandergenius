@@ -1,3 +1,18 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 9a9dde2..c7e2aad 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -186,7 +186,9 @@ ENDIF(MSVC)
+ 
+ FILE(GLOB SUPERTUX_SOURCES_C RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} external/obstack/*.c external/findlocale/findlocale.c)
+ 
+-FILE(GLOB SUPERTUX_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/main.cpp src/*/*.cpp src/supertux/menu/*.cpp src/video/sdl/*.cpp)
++FILE(GLOB SUPERTUX_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/main.cpp src/*/*.cpp src/supertux/menu/*.cpp)
++
++LIST(REMOVE_ITEM SUPERTUX_SOURCES_CXX src/control//game_controller_manager.cpp src/control//joystick_manager.cpp)
+ 
+ FILE(GLOB TINYGETTEXT_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} external/tinygettext/src/*.cpp)
+ SET_SOURCE_FILES_PROPERTIES(${TINYGETTEXT_SOURCES_CXX} PROPERTIES COMPILE_DEFINITIONS HAVE_SDL)
 diff --git a/src/control/game_controller_manager.cpp b/src/control/game_controller_manager.cpp
 index 6680c04..401eacc 100644
 --- a/src/control/game_controller_manager.cpp
@@ -457,18 +472,21 @@ index 59599c8..dd45acb 100644
  
  private:
 diff --git a/src/util/log.cpp b/src/util/log.cpp
-index de4fb3d..3bc026e 100644
+index de4fb3d..2236626 100644
 --- a/src/util/log.cpp
 +++ b/src/util/log.cpp
-@@ -18,18 +18,83 @@
+@@ -18,18 +18,94 @@
  #include "util/log.hpp"
  
  #include <iostream>
++#ifdef ANDROID
 +#include <android/log.h>
++#endif
  
  #include "math/rectf.hpp"
  #include "supertux/console.hpp"
  
++#ifdef ANDROID
 +class _android_debugbuf: public std::streambuf
 +{
 + public:
@@ -535,16 +553,20 @@ index de4fb3d..3bc026e 100644
 +};
 +
 +static std::ostream android_logcat(new _android_debugbuf());
++#endif
 +
  LogLevel g_log_level = LOG_WARNING;
  
  static std::ostream& get_logging_instance (void)
  {
--  if (ConsoleBuffer::current())
--    return (ConsoleBuffer::output);
--  else
--    return (std::cerr);
++#ifdef ANDROID
 +  return android_logcat;
++#else
+   if (ConsoleBuffer::current())
+     return (ConsoleBuffer::output);
+   else
+     return (std::cerr);
++#endif
  }
  
  static std::ostream& log_generic_f (const char *prefix, const char* file, int line)
@@ -561,7 +583,7 @@ index b5251e0..6248380 100644
  
  GLLightmap::~GLLightmap()
 diff --git a/src/video/gl/gl_painter.cpp b/src/video/gl/gl_painter.cpp
-index ecb3cb1..705b465 100644
+index ecb3cb1..a6ec13e 100644
 --- a/src/video/gl/gl_painter.cpp
 +++ b/src/video/gl/gl_painter.cpp
 @@ -14,6 +14,9 @@
@@ -585,11 +607,21 @@ index ecb3cb1..705b465 100644
                surface_data->get_uv_left(),
                surface_data->get_uv_top(),
                surface_data->get_uv_right(),
+@@ -371,4 +374,9 @@ GLPainter::draw_inverse_ellipse(const DrawingRequest& request)
+   glColor4f(1, 1, 1, 1);
+ }
+ 
++void GLPainter::reset_last_texture()
++{
++  s_last_texture = 0;
++}
++
+ /* EOF */
 diff --git a/src/video/gl/gl_painter.hpp b/src/video/gl/gl_painter.hpp
-index bb3dd75..d1d9f57 100644
+index bb3dd75..54e2c41 100644
 --- a/src/video/gl/gl_painter.hpp
 +++ b/src/video/gl/gl_painter.hpp
-@@ -17,6 +17,7 @@
+@@ -17,13 +17,18 @@
  #ifndef HEADER_SUPERTUX_VIDEO_GL_GL_PAINTER_HPP
  #define HEADER_SUPERTUX_VIDEO_GL_GL_PAINTER_HPP
  
@@ -597,19 +629,28 @@ index bb3dd75..d1d9f57 100644
  #ifdef USE_GLBINDING
  #include <glbinding/gl/gl.h>
  using namespace gl;
-@@ -25,6 +26,10 @@ using namespace gl;
+ #else
+ #include <GL/glew.h>
  
- #include "SDL_opengl.h"
- #endif
+-#include "SDL_opengl.h"
++//#include "SDL_opengl.h"
++#endif
 +#else
 +#include <GLES/gl.h>
 +#include <GLES/glext.h>
-+#endif
+ #endif
  
  struct DrawingRequest;
+@@ -41,6 +46,7 @@ public:
+   static void draw_gradient(const DrawingRequest& request);
+   static void draw_filled_rect(const DrawingRequest& request);
+   static void draw_inverse_ellipse(const DrawingRequest& request);
++  static void reset_last_texture();
  
+ private:
+   GLPainter(const GLPainter&) = delete;
 diff --git a/src/video/gl/gl_renderer.cpp b/src/video/gl/gl_renderer.cpp
-index 8f4a18ee..459624d 100644
+index 8f4a18ee..470bdd4 100644
 --- a/src/video/gl/gl_renderer.cpp
 +++ b/src/video/gl/gl_renderer.cpp
 @@ -43,35 +43,13 @@
@@ -678,16 +719,23 @@ index 8f4a18ee..459624d 100644
  }
  
  void
-@@ -213,7 +182,7 @@ void
+@@ -213,7 +182,14 @@ void
  GLRenderer::flip()
  {
    assert_gl("drawing");
 -  SDL_GL_SwapWindow(m_window);
 +  SDL_GL_SwapBuffers();
++  GLPainter::reset_last_texture();
++  glEnable(GL_TEXTURE_2D);
++  glEnable(GL_BLEND);
++  glEnableClientState(GL_VERTEX_ARRAY);
++  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
++  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
++  glColor4f(1, 1, 1, 1);
  }
  
  void
-@@ -229,9 +198,17 @@ GLRenderer::apply_config()
+@@ -229,9 +205,17 @@ GLRenderer::apply_config()
  {
    apply_video_mode();
  
@@ -708,7 +756,7 @@ index 8f4a18ee..459624d 100644
  
    float pixel_aspect_ratio = 1.0f;
    if (g_config->aspect_size != Size(0, 0))
-@@ -264,9 +241,9 @@ GLRenderer::apply_config()
+@@ -264,9 +248,9 @@ GLRenderer::apply_config()
    {
      // Clear both buffers so that we get a clean black border without junk
      glClear(GL_COLOR_BUFFER_BIT);
@@ -720,7 +768,7 @@ index 8f4a18ee..459624d 100644
    }
  
    glViewport(m_viewport.x, m_viewport.y, m_viewport.w, m_viewport.h);
-@@ -285,102 +262,9 @@ GLRenderer::apply_config()
+@@ -285,102 +269,9 @@ GLRenderer::apply_config()
  void
  GLRenderer::apply_video_mode()
  {
@@ -826,7 +874,7 @@ index 8f4a18ee..459624d 100644
  }
  
  void
-@@ -433,9 +317,9 @@ GLRenderer::to_logical(int physical_x, int physical_y)
+@@ -433,9 +324,9 @@ GLRenderer::to_logical(int physical_x, int physical_y)
  void
  GLRenderer::set_gamma(float gamma)
  {
@@ -864,7 +912,7 @@ index 5da04a8..b73eb9d 100644
  private:
    void apply_video_mode();
 diff --git a/src/video/gl/gl_texture.cpp b/src/video/gl/gl_texture.cpp
-index 443fa01..3820ca7 100644
+index 443fa01..20fede8 100644
 --- a/src/video/gl/gl_texture.cpp
 +++ b/src/video/gl/gl_texture.cpp
 @@ -16,6 +16,8 @@
@@ -932,13 +980,18 @@ index 443fa01..3820ca7 100644
                                                0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
  #endif
  
-@@ -121,66 +115,55 @@ GLTexture::GLTexture(SDL_Surface* image) :
+@@ -121,66 +115,60 @@ GLTexture::GLTexture(SDL_Surface* image) :
      throw std::runtime_error("Couldn't create texture: out of memory");
    }
  
 -  SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
++  SDL_FillRect(convert, NULL, 0x00000000);
++  //SDL_SetColorKey(image, 0, 0); // Some images use colorkey transparency
++  SDL_SetAlpha(image, 0, SDL_ALPHA_OPAQUE);
    SDL_BlitSurface(image, 0, convert, 0);
- 
++  //SDL_Rect r = {m_image_width / 2, m_image_height / 2, 4, 4};
++  //SDL_FillRect(convert, &r, 0xff000000);
++
 +  m_pixels = convert;
 +
 +  reupload();
@@ -946,7 +999,7 @@ index 443fa01..3820ca7 100644
 +
 +  assert_gl("creating texture");
 +}
-+
+ 
 +void GLTexture::reupload()
 +{
    assert_gl("before creating texture");
@@ -1092,10 +1145,28 @@ index 76964a9..86dc631 100644
  private:
    Texture(const Texture&);
 diff --git a/src/video/texture_manager.cpp b/src/video/texture_manager.cpp
-index e544909..aac5fa9 100644
+index e544909..aac5c63 100644
 --- a/src/video/texture_manager.cpp
 +++ b/src/video/texture_manager.cpp
-@@ -240,6 +240,7 @@ TextureManager::create_dummy_texture()
+@@ -164,12 +164,14 @@ TextureManager::create_image_texture_raw(const std::string& filename, const Rect
+     throw std::runtime_error("SDL_CreateRGBSurfaceFrom() call failed");
+   }
+ 
+-#ifdef OLD_SDL
+   if (image->format->palette)
+   { // copy the image palette to subimage if present
+-    SDL_SetSurfacePalette(subimage.get(), image->format->palette->colors);
++    SDL_SetColors(subimage.get(), image->format->palette->colors, 0, image->format->palette->ncolors);
++  }
++  if (image->flags & SDL_SRCCOLORKEY)
++  { // Some images use colorkey transparency
++    SDL_SetColorKey(subimage.get(), SDL_SRCCOLORKEY, image->format->colorkey);
+   }
+-#endif
+ 
+   return VideoSystem::current()->new_texture(subimage.get());
+ }
+@@ -240,6 +242,7 @@ TextureManager::create_dummy_texture()
  void
  TextureManager::save_textures()
  {
@@ -1103,7 +1174,7 @@ index e544909..aac5fa9 100644
  #if defined(GL_PACK_ROW_LENGTH) || defined(USE_GLBINDING)
    /* all this stuff is not support by OpenGL ES */
    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-@@ -261,11 +262,13 @@ TextureManager::save_textures()
+@@ -261,11 +264,13 @@ TextureManager::save_textures()
    {
      save_texture(dynamic_cast<GLTexture*>(i->second.lock().get()));
    }
@@ -1117,7 +1188,7 @@ index e544909..aac5fa9 100644
    SavedTexture saved_texture;
    saved_texture.texture = texture;
    glBindTexture(GL_TEXTURE_2D, texture->get_handle());
-@@ -298,13 +301,14 @@ TextureManager::save_texture(GLTexture* texture)
+@@ -298,13 +303,14 @@ TextureManager::save_texture(GLTexture* texture)
  
    glDeleteTextures(1, &(texture->get_handle()));
    texture->set_handle(0);
@@ -1133,7 +1204,7 @@ index e544909..aac5fa9 100644
  #if defined(GL_UNPACK_ROW_LENGTH) || defined(USE_GLBINDING)
    /* OpenGL ES doesn't support these */
    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-@@ -345,6 +349,16 @@ TextureManager::reload_textures()
+@@ -345,6 +351,16 @@ TextureManager::reload_textures()
    }
  
    m_saved_textures.clear();
