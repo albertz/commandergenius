@@ -127,7 +127,7 @@ echo "# If you'll start Description with '!' symbol it will be enabled by defaul
 echo "# If the URL in in the form ':dir/file.dat:http://URL/' it will be downloaded as binary BLOB to the application dir and not unzipped" >> AndroidAppSettings.cfg
 echo "# If the URL does not contain 'http://' it is treated as file from 'project/jni/application/src/AndroidData' dir -" >> AndroidAppSettings.cfg
 echo "# these files are put inside .apk package by build system" >> AndroidAppSettings.cfg
-echo "# Also please avoid 'https://' URLs, many Android devices do not have trust certificates and will fail to connect to SF.net over HTTPS" >> AndroidAppSettings.cfg
+echo "# You can specify Google Play expansion files in the form 'obb:main.12345' or 'obb:patch.12345' where 12345 is the app version, first associated with the file" >> AndroidAppSettings.cfg
 echo AppDataDownloadUrl=\"$AppDataDownloadUrl\" >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Reset SDL config when updating application to the new version (y) / (n)" >> AndroidAppSettings.cfg
