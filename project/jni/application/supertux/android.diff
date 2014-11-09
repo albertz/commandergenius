@@ -312,7 +312,7 @@ index fd253e9..adc20ce 100644
  
  const MenuItem&
 diff --git a/src/object/player.cpp b/src/object/player.cpp
-index c2bfb0e..897fa20 100644
+index c2bfb0e..f7ddd22 100644
 --- a/src/object/player.cpp
 +++ b/src/object/player.cpp
 @@ -148,6 +148,7 @@ Player::Player(PlayerStatus* _player_status, const std::string& name_) :
@@ -396,14 +396,14 @@ index c2bfb0e..897fa20 100644
 +  // Show where Tux will land after using jump helper
 +  if (jump_helper_draw && Sector::current() && Sector::current()->camera) {
 +    float px = jump_helper_x + (get_bbox().p2.x - get_bbox().p1.x) / 2 - jumparrow.get()->get_width() / 2;
-+    float py = get_bbox().p1.y;
++    float py = get_bbox().p2.y - jumparrow.get()->get_height();
 +    context.draw_surface(jumparrow, Vector(px, py), LAYER_HUD - 1);
 +  }
 +
    std::string sa_prefix = "";
    std::string sa_postfix = "";
  
-@@ -1582,4 +1601,50 @@ Player::handle_input_climbing()
+@@ -1582,4 +1601,65 @@ Player::handle_input_climbing()
    physic.set_acceleration(0, 0);
  }
  
@@ -430,17 +430,32 @@ index c2bfb0e..897fa20 100644
 +      jump_helper_move_right = true;
 +    else
 +      jump_helper_move_left = true;
-+    jump_helper_jump = true;
 +  }
 +
 +  if (jump_helper)
 +  {
 +    float friction = WALK_ACCELERATION_X * (on_ice ? ICE_FRICTION_MULTIPLIER : NORMAL_FRICTION_MULTIPLIER);
 +    float frictionDistance = physic.get_velocity_x() * physic.get_velocity_x() / friction / 2.0f;
++    if (!jump_helper_jump)
++    { // Start running before jump for long jumps
++      float gravity = Sector::current()->get_gravity();
++      float jumpSpeed = fabs(physic.get_velocity_x()) > MAX_WALK_XM ? 580 : 520;
++      float jumpTime = jumpSpeed / gravity * 2.0f;
++      float maxRunSpeed = speedlimit > 0 ? speedlimit : MAX_RUN_XM;
++      float actualJumpDistance = fabs(physic.get_velocity_x()) * jumpTime / 100.0f;
++      float maxJumpDistance = maxRunSpeed * jumpTime / 100.0f;
++      // Check if we can jump that far at current speed, compensate a bit for velocity we'll gain in the air
++      // Empirical coefficients, we should use WALK_ACCELERATION_X / RUN_ACCELERATION_X here
++      if (fabs(jump_helper_x - get_pos().x) <= actualJumpDistance * 0.4f + maxJumpDistance * 0.6f)
++        jump_helper_jump = true;
++      // Check if we can jump that far without running first
++      if (fabs(jump_helper_x - get_pos().x) <= maxJumpDistance * 0.75f)
++        jump_helper_jump = true;
++    }
 +    if (controller->mouse_pressed() // Cancel a jump if user presses any button
-+        || controller->hold(Controller::JUMP) || controller->hold(Controller::ACTION)
-+        || controller->hold(Controller::DOWN) || controller->hold(Controller::UP)
-+        || controller->hold(Controller::LEFT) || controller->hold(Controller::RIGHT)
++        || controller->pressed(Controller::JUMP) || controller->pressed(Controller::ACTION)
++        || controller->pressed(Controller::DOWN) || controller->pressed(Controller::UP)
++        || controller->pressed(Controller::LEFT) || controller->pressed(Controller::RIGHT)
 +        || (jump_helper_x >= get_pos().x - frictionDistance && jump_helper_move_left) // Reached destination - finish the jump
 +        || (jump_helper_x <= get_pos().x + frictionDistance && jump_helper_move_right))
 +    {
@@ -936,7 +951,7 @@ index bb3dd75..54e2c41 100644
  private:
    GLPainter(const GLPainter&) = delete;
 diff --git a/src/video/gl/gl_renderer.cpp b/src/video/gl/gl_renderer.cpp
-index 8f4a18ee..470bdd4 100644
+index 8f4a18ee..072e99e 100644
 --- a/src/video/gl/gl_renderer.cpp
 +++ b/src/video/gl/gl_renderer.cpp
 @@ -43,35 +43,13 @@
@@ -1054,7 +1069,7 @@ index 8f4a18ee..470bdd4 100644
    }
  
    glViewport(m_viewport.x, m_viewport.y, m_viewport.w, m_viewport.h);
-@@ -285,102 +269,9 @@ GLRenderer::apply_config()
+@@ -285,102 +269,15 @@ GLRenderer::apply_config()
  void
  GLRenderer::apply_video_mode()
  {
@@ -1156,11 +1171,17 @@ index 8f4a18ee..470bdd4 100644
 -  }
 +  //SCREEN_WIDTH = SDL_GetVideoInfo()->current_w;
 +  //SCREEN_HEIGHT = SDL_GetVideoInfo()->current_h;
++#ifdef ANDROID
 +  SDL_SetVideoMode(m_desktop_size.width, m_desktop_size.height, 24, SDL_OPENGL | SDL_DOUBLEBUF | SDL_FULLSCREEN);
++#else
++  m_desktop_size.width = 1280;
++  m_desktop_size.height = 800;
++  SDL_SetVideoMode(m_desktop_size.width, m_desktop_size.height, 24, SDL_OPENGL | SDL_DOUBLEBUF);
++#endif
  }
  
  void
-@@ -433,9 +324,9 @@ GLRenderer::to_logical(int physical_x, int physical_y)
+@@ -433,9 +330,9 @@ GLRenderer::to_logical(int physical_x, int physical_y)
  void
  GLRenderer::set_gamma(float gamma)
  {
