@@ -319,15 +319,17 @@ class DataDownloader extends Thread
 			Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.connecting_to, url) );
 			if( url.indexOf("obb:") == 0 ) // APK expansion file provided by Google Play
 			{
-				FileInExpansion = true;
 				url = url.substring("obb:".length());
 				url = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/obb/" +
 						Parent.getPackageName() + "/" + url + "." + Parent.getPackageName() + ".obb";
-				Log.i("SDL", "Fetching file from OBB: " + url);
 				InputStream stream1 = null;
 				try {
 					stream1 = new FileInputStream(url);
+					stream1.read();
 					stream1.close();
+					Log.i("SDL", "Fetching file from expansion: " + url);
+					FileInExpansion = true;
+					break;
 				} catch( Exception e ) {
 					Log.i("SDL", "Failed to open file: " + url);
 					downloadUrlIndex++;
@@ -369,7 +371,6 @@ class DataDownloader extends Thread
 					response = client.execute(request);
 				} catch (IOException e) {
 					Log.i("SDL", "Failed to connect to " + url);
-					downloadUrlIndex++;
 				};
 				if( response != null )
 				{
@@ -379,21 +380,25 @@ class DataDownloader extends Thread
 						responseError = response;
 						response = null;
 						downloadUrlIndex++;
+						continue;
 					}
-					else
-						break;
+					break;
+				}
+				else
+				{
+					downloadUrlIndex++;
+					continue;
 				}
 			}
 		}
 		
 		if( FileInExpansion )
 		{
+			Log.i("SDL", "Count file size: '" + url);
 			try {
+				totalLen = new File(url).length();
 				stream = new CountingInputStream(new FileInputStream(url), 8192);
-				while( stream.skip(65536) > 0 ) { };
-				totalLen = stream.getBytesRead();
-				stream.close();
-				stream = new CountingInputStream(new FileInputStream(url), 8192);
+				Log.i("SDL", "Count file size: '" + url + " = " + totalLen);
 			} catch( IOException e ) {
 				Log.i("SDL", "Unpacking from filesystem '" + url + "' - error: " + e.toString());
 				Status.setText( res.getString(R.string.error_dl_from, url) );
@@ -470,8 +475,6 @@ class DataDownloader extends Thread
 			out.write(downloadUrls[downloadUrlIndex].getBytes("UTF-8"));
 			out.flush();
 			out.close();
-		} catch( FileNotFoundException e ) {
-		} catch( SecurityException e ) {
 		} catch( java.io.IOException e ) {
 			Status.setText( res.getString(R.string.error_write, path) + ": " + e.getMessage() );
 			return false;
@@ -483,10 +486,12 @@ class DataDownloader extends Thread
 			if( FileInExpansion )
 			{
 				Writer writer = new OutputStreamWriter(new FileOutputStream(url), "UTF-8");
-				writer.write("Extracted and cleared\n");
+				writer.write("Extracted and truncated\n");
 				writer.close();
+				Log.i("SDL", "Truncated file from expansion: " + url);
 			}
 		} catch( java.io.IOException e ) {
+			Log.i("SDL", "Error truncating file from expansion: " + url);
 		};
 
 		return true;
