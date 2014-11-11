@@ -55,12 +55,10 @@ import java.io.InputStream;
 
 import android.content.Context;
 import android.content.res.Resources;
-import java.lang.String;
+import java.util.Arrays;
 import android.text.SpannedString;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-
-import org.tukaani.xz.XZInputStream;
 
 
 class CountingInputStream extends BufferedInputStream
@@ -587,6 +585,8 @@ class DataDownloader extends Thread
 			if (url.endsWith(".zip.xz") || url.endsWith(".zip.xz/download"))
 				try
 				{
+					if (!Arrays.asList(Globals.AppLibraries).contains("lzma"))
+						throw new IOException("LZMA support not compiled in - add lzma to CompiledLibraries inside AndroidAppSettings.cfg");
 					zip = new ZipInputStream(new XZInputStream(stream));
 				}
 				catch (Exception eeeee)

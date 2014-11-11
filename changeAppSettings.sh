@@ -891,6 +891,8 @@ rm -rf project/$OUT/local/*/objs*/sdl-*/src/*/android
 rm -rf project/$OUT/local/*/objs*/sdl-*/src/video/SDL_video.o
 rm -rf project/$OUT/local/*/objs*/sdl-*/SDL_renderer_gles.o
 rm -rf project/$OUT/local/*/objs*/sdl_*
+rm -rf project/obj/local/*/objs*/lzma/src/XZInputStream.o
+rm -rf project/obj/local/*/objs*/liblzma.so
 # Do not rebuild several huge libraries that do not depend on SDL version
 for LIB in freetype intl jpeg png lua mad tremor xerces xml2 curl lua mikmod \
 			boost boost_signals boost_thread boost_filesystem boost_date_time boost_system boost_regex boost_iostreams boost_program_options \
