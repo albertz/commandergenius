@@ -318,6 +318,9 @@ extern LZMA_API(lzma_ret) lzma_block_header_encode(
  * The size of the Block Header must have already been decoded with
  * lzma_block_header_size_decode() macro and stored to block->header_size.
  *
+ * The integrity check type from Stream Header must have been stored
+ * to block->check.
+ *
  * block->filters must have been allocated, but they don't need to be
  * initialized (possible existing filter options are not freed).
  *
@@ -483,6 +486,7 @@ extern LZMA_API(size_t) lzma_block_buffer_bound(size_t uncompressed_size)
  *
  * \return      - LZMA_OK: Encoding was successful.
  *              - LZMA_BUF_ERROR: Not enough output buffer space.
+ *              - LZMA_UNSUPPORTED_CHECK
  *              - LZMA_OPTIONS_ERROR
  *              - LZMA_MEM_ERROR
  *              - LZMA_DATA_ERROR
