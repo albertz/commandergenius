@@ -37,6 +37,6 @@ TODO, which will get actually done
 
 - OpenTTD: hide all windows when performing an action on the map, like laying tracks or creating station or selecting destination.
 
-- OpenTTD: fix playing time in Google Play cloud saves.
+- OpenTTD: railroad semaphore dialog buttons too big.
 
 - OpenTTD: tutorial.
