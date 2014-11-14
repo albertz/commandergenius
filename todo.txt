@@ -31,12 +31,12 @@ TODO, which will get actually done
 
 - GemRB: update.
 
-- OpenTTD: select from menu with two taps, not tap and hold.
-
-- OpenTTD: two-finger tap de-selects current tool and closes build station window.
+- OpenTTD: position all 'build station' windows in the top-left corner.
 
 - OpenTTD: hide all windows when performing an action on the map, like laying tracks or creating station or selecting destination.
 
 - OpenTTD: railroad semaphore dialog buttons too big.
+
+- OpenTTD: select from menu with two taps, not tap and hold.
 
 - OpenTTD: tutorial.
