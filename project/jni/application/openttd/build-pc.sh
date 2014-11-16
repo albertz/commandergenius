@@ -7,7 +7,11 @@ mkdir -p openttd-pc openttd-pc/baseset
 cd openttd-pc
 [ -e bin/baseset ] || cp -a ../src/bin .
 
+export CFLAGS=-O0
+export CXXFLAGS=-O0
+
 [ -e Makefile ] || ../src/configure --enable-debug || exit 1
-make -j8 || exit 1
+make -j8 VERBOSE=1 || exit 1
 cd bin
-gdb -ex run ./openttd
+#gdb -ex run --args ./openttd
+./openttd -d 1 -r 854x480 -g opntitle.sav
