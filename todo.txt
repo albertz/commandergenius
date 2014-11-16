@@ -17,8 +17,6 @@ TODO, which will get actually done
 
 - UQM: use gyroscope to steer the ship, search button for starmap.
 
-- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
-
 - SDL: control mouse with right analog gamepad stick.
 
 - SDL: sometimes the screen stays black after restoring from background.
