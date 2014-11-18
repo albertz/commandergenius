@@ -7,6 +7,18 @@ TODO, which will get actually done
 
 - TeeWorlds: control movement with gyroscope.
 
+- TeeWorlds: voting is broken.
+
+- TeeWorlds: can't fully delete the mod filter.
+
+- TeeWorlds: sending smilies (likely Unicode emoji) crashes the client.
+
+- TeeWorlds: client timeouts from server whne app is in the background.
+
+- TeeWorlds: implement rcon.
+
+- TeeWorlds: show chat backlog in text input field.
+
 - OpenArena: navigate game menu with analog joystick.
 
 - OpenArena: do not treat commands starting with / as chat text.
