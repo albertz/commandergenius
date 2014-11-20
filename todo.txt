@@ -46,3 +46,5 @@ TODO, which will get actually done
 - GemRB: update.
 
 - OpenTTD: tutorial.
+
+- Add glshim library: https://github.com/lunixbochs/glshim
