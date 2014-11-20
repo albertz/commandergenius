@@ -453,9 +453,9 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			else
 				renderString(resStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/6 + (i*VID_Y/3));
 			if( i == 0 && ii == 0 && !vertical )
-				renderString("native", VID_X/8, VID_Y/6 + VID_Y/12);
+				renderString("native", VID_X/8, VID_Y/6 - VID_Y/12);
 			if( i == 2 && ii == 3 && !vertical )
-				renderString("custom", VID_X/8 + (ii*VID_X/4), VID_Y/6 + VID_Y/12 + (i*VID_Y/3));
+				renderString("custom", VID_X/8 + (ii*VID_X/4), VID_Y/6 - VID_Y/12 + (i*VID_Y/3));
 		}
 		//SDL_GetMouseState(&x, &y);
 		//renderString("X", x, y);
@@ -463,9 +463,52 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		SDL_Flip(SDL_GetVideoSurface());
 		if (res == MODE_CUSTOM)
 		{
-			SDL_ANDROID_SetScreenKeyboardHintMesage("WIDTHxHEIGHT");
-			SDL_ANDROID_GetScreenKeyboardTextInput(custom, sizeof(custom) - 1);
-			sscanf(custom, "%dx%d", &customX, &customY);
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Selected custom display resolution");
+			SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput();
+			customX = 0;
+			customY = 0;
+			custom[0] = 0;
+			while (customX == 0 || customY == 0)
+			{
+				while (SDL_PollEvent(&event))
+				{
+					if (event.type == SDL_KEYDOWN)
+					{
+						switch (event.key.keysym.sym)
+						{
+							case SDLK_HELP:
+								return;
+							case SDLK_RETURN:
+								if (customX == 0)
+									customX = atoi(custom);
+								else
+									customY = atoi(custom);
+								custom[0] = 0;
+								break;
+							case SDLK_BACKSPACE:
+								if (strlen(custom) > 0)
+									custom[strlen(custom) - 1] = 0;
+								break;
+							case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+								custom[strlen(custom) + 1] = 0;
+								custom[strlen(custom)] = event.key.keysym.sym;
+								break;
+							default:
+								break;
+						}
+					}
+				}
+				SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
+				if (customX == 0)
+					renderString("Enter width:", VID_X/8, VID_Y/6);
+				else
+					renderString("Enter height:", VID_X/8, VID_Y/6);
+				renderString("Press Enter when done", VID_X*3/4, VID_Y/6);
+				renderString(custom, VID_X/8 + VID_X/4, VID_Y/6);
+				SDL_Delay(100);
+				SDL_Flip(SDL_GetVideoSurface());
+			}
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Selected custom display resolution: %s = %d %d", custom, customX, customY);
 		}
 	}
 	*resolutionW = resVal[res][0];
