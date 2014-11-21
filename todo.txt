@@ -47,6 +47,9 @@ TODO, which will get actually done
 
 - OpenTTD: tutorial.
 
+- OpenTTD: horizintal toobar popup menu out of screen.
+
+- OpenTTD: tap anywhere to close popup menu.
+
 - Add glshim library: https://github.com/lunixbochs/glshim
 
-- OpenTTD: horizintal toobar popup menu out of screen.
