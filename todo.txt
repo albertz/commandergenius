@@ -37,9 +37,9 @@ TODO, which will get actually done
 
 - XSDL: support Android intent x11://localhost:6000 - http://www.openintents.org/node/905
 
-- USB Keyboard: configurable mouse speed, show keyboard LEDs, redefine unknown keys, fix Lollipop SELinux bug.
+- XSDL: screen follows mouse when on-screen keyboard is shown.
 
-- Debian: fix Lollipop -fPIC.
+- USB Keyboard: configurable mouse speed, show keyboard LEDs, redefine unknown keys, fix Lollipop SELinux bug.
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
 
