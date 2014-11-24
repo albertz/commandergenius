@@ -881,6 +881,8 @@ else
 		android update project -p $SDK_DIR/extras/google/google_play_services/libproject/google-play-services_lib
 fi
 
+if [ -e project/jni/application/src/project.patch ]; then patch -p1 --no-backup-if-mismatch < project/jni/application/src/project.patch || exit 1 ; fi
+
 echo Cleaning up dependencies
 rm -rf project/libs/*/* project/gen
 for OUT in obj; do
