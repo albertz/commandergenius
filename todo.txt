@@ -47,5 +47,7 @@ TODO, which will get actually done
 
 - OpenTTD: tap anywhere to close popup menu.
 
+- OpenTTD: Ctrl key does not work when using physical keyboard.
+
 - Add glshim library: https://github.com/lunixbochs/glshim
 
