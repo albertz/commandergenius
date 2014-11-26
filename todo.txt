@@ -35,6 +35,8 @@ TODO, which will get actually done
 
 - XSDL: screen follows mouse when on-screen keyboard is shown.
 
+- XSDL: copy text from Android clipboard when it changes.
+
 - USB Keyboard: configurable mouse speed, show keyboard LEDs, redefine unknown keys, fix Lollipop SELinux bug.
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
