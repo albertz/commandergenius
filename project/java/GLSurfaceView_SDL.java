@@ -921,11 +921,6 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 			mEgl.eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface,
 					mEglContext);
 
-			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-				// TODO: mixing different EGL APIs, they call the same C API underneath
-				EGL14.eglSwapInterval(EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY), 1);
-			}
-
 			GL gl = mEglContext.getGL();
 			if (mGLWrapper != null) {
 				gl = mGLWrapper.wrap(gl);
