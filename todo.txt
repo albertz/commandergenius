@@ -53,3 +53,4 @@ TODO, which will get actually done
 
 - Add glshim library: https://github.com/lunixbochs/glshim
 
+- Recompile and reupload Debian, Gimp, OpenTTD, SuperTux, USB Keyboard, and XSDL, due to video init bug in SDL.
