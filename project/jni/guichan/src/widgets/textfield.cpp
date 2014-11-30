@@ -52,6 +52,10 @@
 #include "guichan/key.hpp"
 #include "guichan/mouseinput.hpp"
 
+#ifdef ANDROID
+#include <SDL_screenkeyboard.h>
+#endif
+
 namespace gcn
 {
     TextField::TextField()
@@ -147,6 +151,9 @@ namespace gcn
 
     void TextField::mousePressed(MouseEvent& mouseEvent)
     {
+#ifdef ANDROID
+        SDL_ANDROID_ToggleScreenKeyboardTextInput(getText().c_str());
+#endif
         if (mouseEvent.getButton() == MouseEvent::LEFT)
         {
             mCaretPosition = getFont()->getStringIndexAt(mText, mouseEvent.getX() + mXScroll);
