@@ -15,7 +15,7 @@ x11proto-video-dev x11proto-xcmisc-dev \
 x11proto-xext-dev x11proto-xf86bigfont-dev \
 x11proto-xf86dga-dev x11proto-xf86dri-dev \
 x11proto-xf86vidmode-dev x11proto-xinerama-dev \
-libxmuu-dev libxt-dev libsm-dev libice-dev \
+libxmuu-dev libxt-dev libsm-dev libice-dev libudev-dev \
 libxrender-dev libxrandr-dev curl autoconf automake libtool
 
 You will need both xcb-proto and python-xcbgen packages
