@@ -113,7 +113,11 @@
 #define PACKAGE_VERSION ""
 
 /* The size of a `void*', as computed by sizeof. */
+#ifdef __LP64__
+#define SIZEOF_VOIDP 8
+#else
 #define SIZEOF_VOIDP 4
+#endif
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1

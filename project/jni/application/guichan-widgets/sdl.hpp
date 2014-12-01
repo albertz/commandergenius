@@ -5,6 +5,7 @@
 
 #include <guichan.hpp>
 #include <guichan/sdl.hpp>
+#include <guichan/contrib/sdl/sdltruetypefont.hpp>
 
 namespace sdl
 {
@@ -34,6 +35,7 @@ namespace sdl
         SDL_EnableUNICODE(1);
         // We also want to enable key repeat.
         SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+        TTF_Init();
 
         // Now it's time to initialise the Guichan SDL back end.
 

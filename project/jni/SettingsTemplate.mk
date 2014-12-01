@@ -46,3 +46,9 @@ SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCO
 
 SDL_VERSION := 1.2
 
+# Link-time optimization enabled for optimization junkies. -O999 etc
+#APP_CFLAGS := -flto
+#APP_CXXFLAGS := -flto
+#APP_LDFLAGS := -flto
+# Latest GCC got better LTO support
+NDK_TOOLCHAIN_VERSION := 4.6

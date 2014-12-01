@@ -73,7 +73,6 @@ extern int SDL_ANDROID_IsScreenKeyboardShownFlag;
 extern int SDL_ANDROID_drawTouchscreenKeyboard();
 extern void SDL_ANDROID_VideoContextLost();
 extern void SDL_ANDROID_VideoContextRecreated();
-extern void SDL_ANDROID_processAndroidTrackballDampening();
 extern void SDL_ANDROID_processMoveMouseWithKeyboard();
 extern int SDL_ANDROID_InsideVideoThread();
 extern void SDL_ANDROID_initFakeStdout();

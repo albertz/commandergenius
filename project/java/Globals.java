@@ -80,7 +80,6 @@ class Globals
 	public static boolean HorizontalOrientation = true;
 	public static boolean ImmersiveMode = true;
 	public static boolean DownloadToSdcard = true;
-	public static boolean PhoneHasTrackball = false;
 	public static boolean PhoneHasArrowKeys = false;
 	public static boolean UseAccelerometerAsArrowKeys = false;
 	public static boolean UseTouchscreenKeyboard = true;
@@ -92,7 +91,6 @@ class Globals
 	public static boolean FloatingScreenJoystick = false;
 	public static int AccelerometerSensitivity = 2;
 	public static int AccelerometerCenterPos = 2;
-	public static int TrackballDampening = 0;
 	public static int AudioBufferConfig = 0;
 	public static boolean OptionalDataDownload[] = null;
 	public static int LeftClickMethod = ForceRelativeMouseMode ? Mouse.LEFT_CLICK_WITH_TAP_OR_TIMEOUT : Mouse.LEFT_CLICK_NORMAL;

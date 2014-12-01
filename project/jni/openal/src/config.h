@@ -42,7 +42,13 @@
 #define HAVE___INT64
 
 /* Define to the size of a long int type */
+#ifdef __LP64__
+#define SIZEOF_LONG 8
+#define SIZEOF_VOIDP 8
+#else
 #define SIZEOF_LONG 4
+#define SIZEOF_VOIDP 4
+#endif
 
 /* Define to the size of a long long int type */
 #define SIZEOF_LONG_LONG 8
@@ -51,7 +57,6 @@
 #define SIZEOF_UINT 4
 
 /* Define to the size of a void pointer type */
-#define SIZEOF_VOIDP 4
 
 /* Define if we have GCC's destructor attribute */
 #define HAVE_GCC_DESTRUCTOR 1

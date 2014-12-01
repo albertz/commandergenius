@@ -7,6 +7,16 @@ TODO, which will get actually done
 
 - TeeWorlds: control movement with gyroscope.
 
+- TeeWorlds: voting is broken.
+
+- TeeWorlds: can't fully delete the mod filter.
+
+- TeeWorlds: sending smilies (likely Unicode emoji) crashes the client.
+
+- TeeWorlds: client timeouts from server whne app is in the background.
+
+- TeeWorlds: implement rcon.
+
 - OpenArena: navigate game menu with analog joystick.
 
 - OpenArena: do not treat commands starting with / as chat text.
@@ -17,18 +27,28 @@ TODO, which will get actually done
 
 - UQM: use gyroscope to steer the ship, search button for starmap.
 
-- SuperTux: Update, enable OpenGL renderer, add touchscreen jump helper, add gamepad support, fix zoom in settings.
-
 - SDL: control mouse with right analog gamepad stick.
 
 - SDL: sometimes the screen stays black after restoring from background.
 
 - XSDL: support Android intent x11://localhost:6000 - http://www.openintents.org/node/905
 
-- Nvidia Shield D-Pad does not send any events (probably acts as 3-rd joystick).
+- XSDL: screen follows mouse when on-screen keyboard is shown.
 
-- USB Keyboard: touchpad mode, configurable mouse speed, show keyboard LEDs, show error when root is not installed.
+- XSDL: copy text from Android clipboard when it changes.
+
+- USB Keyboard: configurable mouse speed, show keyboard LEDs, redefine unknown keys, fix Lollipop SELinux bug.
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
 
 - GemRB: update.
+
+- OpenTTD: tutorial.
+
+- OpenTTD: horizintal toobar popup menu out of screen.
+
+- OpenTTD: tap anywhere to close popup menu.
+
+- OpenTTD: Ctrl key does not work when using physical keyboard.
+
+- Add glshim library: https://github.com/lunixbochs/glshim

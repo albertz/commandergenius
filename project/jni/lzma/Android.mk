@@ -7,8 +7,7 @@ LOCAL_MODULE := lzma
 APP_SUBDIRS := $(patsubst $(LOCAL_PATH)/%, %, $(shell find $(LOCAL_PATH)/src -type d))
 
 LOCAL_C_INCLUDES := $(foreach D, $(APP_SUBDIRS), $(LOCAL_PATH)/$(D)) $(LOCAL_PATH)/include
-LOCAL_CFLAGS := -O3 -DHAVE_CONFIG_H -DTUKLIB_SYMBOL_PREFIX=lzma_ -std=c99 # Enable "restrict" keyword
-
+LOCAL_CFLAGS := -O3 -DHAVE_CONFIG_H -DTUKLIB_SYMBOL_PREFIX=lzma_ -std=c99 -DSDL_JAVA_PACKAGE_PATH=$(SDL_JAVA_PACKAGE_PATH)
 
 LOCAL_CPP_EXTENSION := .cpp
 

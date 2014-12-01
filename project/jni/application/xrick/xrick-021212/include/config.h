@@ -22,7 +22,9 @@
 #undef GFXPC
 
 /* joystick support */
+#ifdef __ANDROID__
 #define ENABLE_JOYSTICK
+#endif
 
 /* sound support */
 #define ENABLE_SOUND

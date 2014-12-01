@@ -123,8 +123,6 @@ abstract class DifferentTouchInput
 			Log.i("SDL", "Device board: " + android.os.Build.BOARD);
 			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH )
 			{
-				if( DetectCrappyDragonRiseDatexGamepad() )
-					return CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance;
 				//return IcsTouchInput.Holder.sInstance;
 				return AutoDetectTouchInput.Holder.sInstance;
 			}
@@ -144,12 +142,6 @@ abstract class DifferentTouchInput
 				return SingleTouchInput.Holder.sInstance;
 			}
 		}
-	}
-	private static boolean DetectCrappyDragonRiseDatexGamepad()
-	{
-		if( CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance == null )
-			return false;
-		return CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad.Holder.sInstance.detect();
 	}
 
 	private static class SingleTouchInput extends DifferentTouchInput
@@ -388,10 +380,6 @@ abstract class DifferentTouchInput
 			// Joysticks are supported since Honeycomb, but I don't care about it, because very little devices have it
 			if( (event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) == InputDevice.SOURCE_CLASS_JOYSTICK )
 			{
-				DemoGLSurfaceView.nativeGamepadAnalogJoystickInput(
-					event.getAxisValue(MotionEvent.AXIS_X), event.getAxisValue(MotionEvent.AXIS_Y),
-					event.getAxisValue(MotionEvent.AXIS_Z), event.getAxisValue(MotionEvent.AXIS_RZ),
-					event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_LTRIGGER) );
 				// event.getAxisValue(AXIS_HAT_X) and event.getAxisValue(AXIS_HAT_Y) are joystick arrow keys, on Nvidia Shield and some other joysticks
 				if( event.getAxisValue(MotionEvent.AXIS_HAT_X) != hatX )
 				{
@@ -415,6 +403,11 @@ abstract class DifferentTouchInput
 					else
 						DemoGLSurfaceView.nativeKey(hatY < 0.0f ? KeyEvent.KEYCODE_DPAD_UP : KeyEvent.KEYCODE_DPAD_DOWN, 1, 0);
 				}
+				DemoGLSurfaceView.nativeGamepadAnalogJoystickInput(
+					event.getAxisValue(MotionEvent.AXIS_X), event.getAxisValue(MotionEvent.AXIS_Y),
+					event.getAxisValue(MotionEvent.AXIS_Z), event.getAxisValue(MotionEvent.AXIS_RZ),
+					event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_LTRIGGER),
+					(hatX == 0.0f && hatY == 0.0f) ? 0 : 1 );
 				return;
 			}
 			// Process mousewheel
@@ -452,36 +445,6 @@ abstract class DifferentTouchInput
 					Mouse.SDL_FINGER_MOVE, ptr, (int)( event.getHistoricalPressure(i) * Mouse.MAX_PRESSURE ), (int)( event.getHistoricalSize(i) * Mouse.MAX_PRESSURE ) );
 			}
 			super.process(event);
-		}
-	}
-	private static class CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad extends IcsTouchInput
-	{
-		private static class Holder
-		{
-			private static final CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad sInstance = new CrappyDragonRiseDatexGamepadInputWhichNeedsItsOwnHandlerBecauseImTooCheapAndStupidToBuyProperGamepad();
-		}
-		public void processGenericEvent(final MotionEvent event)
-		{
-			super.processGenericEvent(event);
-		}
-		public boolean detect()
-		{
-			int[] devIds = InputDevice.getDeviceIds();
-			for( int id : devIds )
-			{
-				InputDevice device = InputDevice.getDevice(id);
-				if( device == null )
-					continue;
-				System.out.println("libSDL: input device ID " + id + " type " + device.getSources()  + " name " + device.getName() );
-				if( (device.getSources() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD &&
-					(device.getSources() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK && 
-					device.getName().indexOf("DragonRise Inc") == 0 )
-				{
-					System.out.println("libSDL: Detected crappy DragonRise gamepad, enabling special hack for it. Please press button labeled 'Analog', otherwise it won't work, because it's cheap and crappy");
-					return true;
-				}
-			}
-			return false;
 		}
 	}
 	private static class CrappyMtkTabletWithBrokenTouchDrivers extends IcsTouchInput
@@ -1073,7 +1036,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public static native void nativeHardwareMouseDetected( int detected );
 	public static native void nativeMouseButtonsPressed( int buttonId, int pressedState );
 	public static native void nativeMouseWheel( int scrollX, int scrollY );
-	public static native void nativeGamepadAnalogJoystickInput( float stick1x,  float stick1y, float stick2x, float stick2y, float rtrigger, float ltrigger );
+	public static native void nativeGamepadAnalogJoystickInput( float stick1x, float stick1y, float stick2x, float stick2y, float rtrigger, float ltrigger, int usingHat );
 }
 
 

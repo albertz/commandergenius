@@ -92,13 +92,13 @@ class Settings
 			out.writeInt(SETTINGS_FILE_VERSION);
 			out.writeBoolean(Globals.DownloadToSdcard);
 			out.writeBoolean(Globals.PhoneHasArrowKeys);
-			out.writeBoolean(Globals.PhoneHasTrackball);
+			out.writeBoolean(false);
 			out.writeBoolean(Globals.UseAccelerometerAsArrowKeys);
 			out.writeBoolean(Globals.UseTouchscreenKeyboard);
 			out.writeInt(Globals.TouchscreenKeyboardSize);
 			out.writeInt(Globals.AccelerometerSensitivity);
 			out.writeInt(Globals.AccelerometerCenterPos);
-			out.writeInt(Globals.TrackballDampening);
+			out.writeInt(0);
 			out.writeInt(Globals.AudioBufferConfig);
 			out.writeInt(Globals.TouchscreenKeyboardTheme);
 			out.writeInt(Globals.RightClickMethod);
@@ -274,13 +274,13 @@ class Settings
 				throw new IOException();
 			Globals.DownloadToSdcard = settingsFile.readBoolean();
 			Globals.PhoneHasArrowKeys = settingsFile.readBoolean();
-			Globals.PhoneHasTrackball = settingsFile.readBoolean();
+			settingsFile.readBoolean();
 			Globals.UseAccelerometerAsArrowKeys = settingsFile.readBoolean();
 			Globals.UseTouchscreenKeyboard = settingsFile.readBoolean();
 			Globals.TouchscreenKeyboardSize = settingsFile.readInt();
 			Globals.AccelerometerSensitivity = settingsFile.readInt();
 			Globals.AccelerometerCenterPos = settingsFile.readInt();
-			Globals.TrackballDampening = settingsFile.readInt();
+			settingsFile.readInt();
 			Globals.AudioBufferConfig = settingsFile.readInt();
 			Globals.TouchscreenKeyboardTheme = settingsFile.readInt();
 			Globals.RightClickMethod = settingsFile.readInt();
@@ -546,8 +546,6 @@ class Settings
 			nativeSetVideoForceSoftwareMode();
 		if( Globals.SwVideoMode && Globals.MultiThreadedVideo )
 			nativeSetVideoMultithreaded();
-		if( Globals.PhoneHasTrackball )
-			nativeSetTrackballUsed();
 		applyMouseEmulationOptions();
 		nativeSetJoystickUsed( Globals.AppUsesThirdJoystick ? 3 : (Globals.AppUsesSecondJoystick ? 2 : (Globals.AppUsesJoystick ? 1 : 0)) );
 		if( Globals.AppUsesAccelerometer )
@@ -555,7 +553,6 @@ class Settings
 		if( Globals.AppUsesMultitouch )
 			nativeSetMultitouchUsed();
 		nativeSetAccelerometerSettings(Globals.AccelerometerSensitivity, Globals.AccelerometerCenterPos);
-		nativeSetTrackballDampening(Globals.TrackballDampening);
 		if( Globals.UseTouchscreenKeyboard )
 		{
 			boolean screenKbReallyUsed = false;
@@ -856,8 +853,6 @@ class Settings
 		return true;
 	}
 	
-	private static native void nativeSetTrackballUsed();
-	private static native void nativeSetTrackballDampening(int value);
 	private static native void nativeSetAccelerometerSettings(int sensitivity, int centerPos);
 	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickMethod, 
 													int MoveMouseWithJoystick, int ClickMouseWithDpad, int MaxForce, int MaxRadius,

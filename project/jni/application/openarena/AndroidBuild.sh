@@ -5,7 +5,6 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 if [ "$1" = "armeabi-v7a" ]; then (
 	mkdir -p AndroidData
-	[ -e libapplication.so ] || ln -s libapplication-armeabi.so libapplication.so
 	make -j8 -C vm BUILD_MISSIONPACK=0 || exit 1
 	cd vm/build/release-linux-`uname -m`/baseq3
 	#rm -f ../../../../AndroidData/binaries.zip ../../../../AndroidData/pak7-android.pk3

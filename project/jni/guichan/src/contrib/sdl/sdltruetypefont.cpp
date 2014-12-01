@@ -121,11 +121,11 @@ namespace gcn
             SDL_Surface *textSurface;
             if (mAntiAlias)
             {
-                textSurface = TTF_RenderText_Blended(mFont, text.c_str(), sdlCol);
+                textSurface = TTF_RenderUTF8_Blended(mFont, text.c_str(), sdlCol);
             }
             else
             {
-                textSurface = TTF_RenderText_Solid(mFont, text.c_str(), sdlCol);
+                textSurface = TTF_RenderUTF8_Solid(mFont, text.c_str(), sdlCol);
             }
         
             SDL_Rect dst, src;

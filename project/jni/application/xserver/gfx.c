@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
+#include <SDL/SDL_screenkeyboard.h>
 #include <android/log.h>
 
 #include "gfx.h"
@@ -298,7 +299,10 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	int x = 0, y = 0, i, ii;
 	SDL_Event event;
 	int res = -1, dpi = -1;
+	int customX = 1000, customY = 1000;
+	enum { MODE_CUSTOM = 11 };
 	char native[32] = "0x0", native56[32], native46[32], native36[32], native26[32];
+	char custom[32] = "1000x1000";
 	int vertical = SDL_ListModes(NULL, 0)[0]->w < SDL_ListModes(NULL, 0)[0]->h;
 	char cfgpath[PATH_MAX];
 	FILE * cfgfile;
@@ -317,7 +321,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	{
 		native, native56, native46, native36,
 		native26, "1280x1024", "1280x960", "1280x720",
-		"1024x768", "800x600", "800x480", "640x480"
+		"1024x768", "800x600", "800x480", custom
 	};
 	const int resVal[][2] = {
 		{*resolutionW, *resolutionH},
@@ -326,7 +330,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		{(*resolutionW * 3 / 6) & ~0x3, (*resolutionH * 3 / 6) & ~0x3},
 		{(*resolutionW * 2 / 6) & ~0x3, (*resolutionH * 2 / 6) & ~0x3},
 		{1280,1024}, {1280,960}, {1280,720},
-		{1024,768}, {800,600}, {800,480}, {640,480}
+		{1024,768}, {800,600}, {800,480}, {customX,customY}
 	};
 
 	const char * fontsStr[] = {
@@ -355,9 +359,10 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	cfgfile = fopen(cfgpath, "r");
 	if( cfgfile )
 	{
-		fscanf(cfgfile, "%d %d", &savedRes, &savedDpi);
+		fscanf(cfgfile, "%d %d %d %d", &savedRes, &savedDpi, &customX, &customY);
 		fclose(cfgfile);
 	}
+	sprintf(custom, "%dx%d", customX, customY);
 
 	int counter = 3000, config = 0;
 	Uint32 curtime = SDL_GetTicks();
@@ -424,7 +429,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 						x = y;
 						y = z;
 					}
-					i = (y / (VID_Y/2));
+					i = (y / (VID_Y/3));
 					ii = (x / (VID_X/4));
 					res = i * 4 + ii;
 					__android_log_print(ANDROID_LOG_INFO, "XSDL", "Screen coords %d %d res %d\n", x, y, res);
@@ -448,15 +453,71 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			else
 				renderString(resStr[i*4+ii], VID_X/8 + (ii*VID_X/4), VID_Y/6 + (i*VID_Y/3));
 			if( i == 0 && ii == 0 && !vertical )
-				renderString("native", VID_X/8, VID_Y/6 + VID_Y/12);
+				renderString("native", VID_X/8, VID_Y/6 - VID_Y/12);
+			if( i == 2 && ii == 3 && !vertical )
+				renderString("custom", VID_X/8 + (ii*VID_X/4), VID_Y/6 - VID_Y/12 + (i*VID_Y/3));
 		}
 		//SDL_GetMouseState(&x, &y);
 		//renderString("X", x, y);
 		SDL_Delay(100);
 		SDL_Flip(SDL_GetVideoSurface());
+		if (res == MODE_CUSTOM)
+		{
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Selected custom display resolution");
+			SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput();
+			customX = 0;
+			customY = 0;
+			custom[0] = 0;
+			while (customX == 0 || customY == 0)
+			{
+				while (SDL_PollEvent(&event))
+				{
+					if (event.type == SDL_KEYDOWN)
+					{
+						switch (event.key.keysym.sym)
+						{
+							case SDLK_HELP:
+								return;
+							case SDLK_RETURN:
+								if (customX == 0)
+									customX = atoi(custom);
+								else
+									customY = atoi(custom);
+								custom[0] = 0;
+								break;
+							case SDLK_BACKSPACE:
+								if (strlen(custom) > 0)
+									custom[strlen(custom) - 1] = 0;
+								break;
+							case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+								custom[strlen(custom) + 1] = 0;
+								custom[strlen(custom)] = event.key.keysym.sym;
+								break;
+							default:
+								break;
+						}
+					}
+				}
+				SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
+				if (customX == 0)
+					renderString("Enter width:", VID_X/8, VID_Y/6);
+				else
+					renderString("Enter height:", VID_X/8, VID_Y/6);
+				renderString("Press Enter when done", VID_X*3/4, VID_Y/6);
+				renderString(custom, VID_X/8 + VID_X/4, VID_Y/6);
+				SDL_Delay(100);
+				SDL_Flip(SDL_GetVideoSurface());
+			}
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "Selected custom display resolution: %s = %d %d", custom, customX, customY);
+		}
 	}
 	*resolutionW = resVal[res][0];
 	*resolutionH = resVal[res][1];
+	if (res == MODE_CUSTOM)
+	{
+		*resolutionW = customX;
+		*resolutionH = customY;
+	}
 	while ( dpi < 0 )
 	{
 		while (SDL_PollEvent(&event))
@@ -514,7 +575,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		cfgfile = fopen(cfgpath, "w");
 		if( cfgfile )
 		{
-			fprintf(cfgfile, "%d %d\n", res, dpi);
+			fprintf(cfgfile, "%d %d %d %d\n", res, dpi, customX, customY);
 			fclose(cfgfile);
 		}
 	}
@@ -598,10 +659,10 @@ void XSDL_generateBackground(const char * port, int showHelp, int resolutionW, i
 
 void XSDL_showServerLaunchErrorMessage()
 {
-	showErrorMessage(	"Error: X server failed to launch,\n"
-						"because of stale Unix socket with non-existing path.\n\n"
-						"Power off your device and power it on,\n"
-						"and everything will work again.");
+	showErrorMessage(	"Error: X server failed to launch.\n\n"
+						"This may happen because of SELinux,\n"
+						"or because installation was corrupted.\n"
+						"Either way, this app will not work, which is sad.");
 }
 
 void showErrorMessage(const char *msg)

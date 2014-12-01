@@ -55,12 +55,10 @@ import java.io.InputStream;
 
 import android.content.Context;
 import android.content.res.Resources;
-import java.lang.String;
+import java.util.Arrays;
 import android.text.SpannedString;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-
-import org.tukaani.xz.XZInputStream;
 
 
 class CountingInputStream extends BufferedInputStream
@@ -284,22 +282,28 @@ class DataDownloader extends Thread
 		catch( FileNotFoundException e ) {}
 		catch( IOException e ) {};
 
-		HttpResponse response = null, responseError = null;
 		HttpGet request;
+		HttpResponse response = null, responseError = null;
 		long totalLen = 0;
+		long partialDownloadLen = 0;
 		CountingInputStream stream;
-		byte[] buf = new byte[16384];
 		boolean DoNotUnzip = false;
 		boolean FileInAssets = false;
+		boolean FileInExpansion = false;
 		String url = "";
-		long partialDownloadLen = 0;
 
 		int downloadUrlIndex = 1;
 		while( downloadUrlIndex < downloadUrls.length )
 		{
 			Log.i("SDL", "Processing download " + downloadUrls[downloadUrlIndex]);
-			url = new String(downloadUrls[downloadUrlIndex]);
+
 			DoNotUnzip = false;
+			FileInAssets = false;
+			FileInExpansion = false;
+			partialDownloadLen = 0;
+			totalLen = 0;
+
+			url = new String(downloadUrls[downloadUrlIndex]);
 			if(url.indexOf(":") == 0)
 			{
 				path = getOutFilePath(url.substring( 1, url.indexOf(":", 1) ));
@@ -311,7 +315,26 @@ class DataDownloader extends Thread
 					partialDownloadLen = partialDownload.length();
 			}
 			Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.connecting_to, url) );
-			if( url.indexOf("http://") == -1 && url.indexOf("https://") == -1 ) // File inside assets
+			if( url.indexOf("obb:") == 0 ) // APK expansion file provided by Google Play
+			{
+				url = url.substring("obb:".length());
+				url = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/obb/" +
+						Parent.getPackageName() + "/" + url + "." + Parent.getPackageName() + ".obb";
+				InputStream stream1 = null;
+				try {
+					stream1 = new FileInputStream(url);
+					stream1.read();
+					stream1.close();
+					Log.i("SDL", "Fetching file from expansion: " + url);
+					FileInExpansion = true;
+					break;
+				} catch( Exception e ) {
+					Log.i("SDL", "Failed to open file: " + url);
+					downloadUrlIndex++;
+					continue;
+				}
+			}
+			else if( url.indexOf("http://") == -1 && url.indexOf("https://") == -1 ) // File inside assets
 			{
 				InputStream stream1 = null;
 				try {
@@ -346,7 +369,6 @@ class DataDownloader extends Thread
 					response = client.execute(request);
 				} catch (IOException e) {
 					Log.i("SDL", "Failed to connect to " + url);
-					downloadUrlIndex++;
 				};
 				if( response != null )
 				{
@@ -356,13 +378,32 @@ class DataDownloader extends Thread
 						responseError = response;
 						response = null;
 						downloadUrlIndex++;
+						continue;
 					}
-					else
-						break;
+					break;
+				}
+				else
+				{
+					downloadUrlIndex++;
+					continue;
 				}
 			}
 		}
-		if( FileInAssets )
+		
+		if( FileInExpansion )
+		{
+			Log.i("SDL", "Count file size: '" + url);
+			try {
+				totalLen = new File(url).length();
+				stream = new CountingInputStream(new FileInputStream(url), 8192);
+				Log.i("SDL", "Count file size: '" + url + " = " + totalLen);
+			} catch( IOException e ) {
+				Log.i("SDL", "Unpacking from filesystem '" + url + "' - error: " + e.toString());
+				Status.setText( res.getString(R.string.error_dl_from, url) );
+				return false;
+			}
+		}
+		else if( FileInAssets )
 		{
 			int multipartCounter = 0;
 			InputStream multipart = null;
@@ -393,7 +434,7 @@ class DataDownloader extends Thread
 				try {
 					stream = new CountingInputStream(Parent.getAssets().open(url), 8192);
 					while( stream.skip(65536) > 0 ) { };
-					totalLen += stream.getBytesRead();
+					totalLen = stream.getBytesRead();
 					stream.close();
 					stream = new CountingInputStream(Parent.getAssets().open(url), 8192);
 				} catch( IOException e ) {
@@ -421,9 +462,49 @@ class DataDownloader extends Thread
 				return false;
 			}
 		}
-		
+
+		if( !copyUnpackFileStream(stream, path, url, DoNotUnzip, FileInAssets, FileInExpansion, totalLen, partialDownloadLen, response, downloadCount, downloadTotal) )
+			return false;
+
+		OutputStream out = null;
+		path = getOutFilePath(DownloadFlagFileName);
+		try {
+			out = new FileOutputStream( path );
+			out.write(downloadUrls[downloadUrlIndex].getBytes("UTF-8"));
+			out.flush();
+			out.close();
+		} catch( java.io.IOException e ) {
+			Status.setText( res.getString(R.string.error_write, path) + ": " + e.getMessage() );
+			return false;
+		};
+		Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_finished) );
+
+		try {
+			stream.close();
+			if( FileInExpansion )
+			{
+				Writer writer = new OutputStreamWriter(new FileOutputStream(url), "UTF-8");
+				writer.write("Extracted and truncated\n");
+				writer.close();
+				Log.i("SDL", "Truncated file from expansion: " + url);
+			}
+		} catch( java.io.IOException e ) {
+			Log.i("SDL", "Error truncating file from expansion: " + url);
+		};
+
+		return true;
+	};
+
+	// Moved part of code to a separate method, because Android imposes a stupid limit on Java method size
+	private boolean copyUnpackFileStream(	CountingInputStream stream, String path, String url,
+											boolean DoNotUnzip, boolean FileInAssets, boolean FileInExpansion,
+											long totalLen, long partialDownloadLen, HttpResponse response,
+											int downloadCount, int downloadTotal)
+	{
 		long updateStatusTime = 0;
-		
+		byte[] buf = new byte[16384];
+		Resources res = Parent.getResources();
+
 		if(DoNotUnzip)
 		{
 			Log.i("SDL", "Saving file '" + path + "'");
@@ -504,6 +585,8 @@ class DataDownloader extends Thread
 			if (url.endsWith(".zip.xz") || url.endsWith(".zip.xz/download"))
 				try
 				{
+					if (!Arrays.asList(Globals.AppLibraries).contains("lzma"))
+						throw new IOException("LZMA support not compiled in - add lzma to CompiledLibraries inside AndroidAppSettings.cfg");
 					zip = new ZipInputStream(new XZInputStream(stream));
 				}
 				catch (Exception eeeee)
@@ -651,30 +734,9 @@ class DataDownloader extends Thread
 				Log.i("SDL", "Saving file '" + path + "' done");
 			}
 		};
-
-		OutputStream out = null;
-		path = getOutFilePath(DownloadFlagFileName);
-		try {
-			out = new FileOutputStream( path );
-			out.write(downloadUrls[downloadUrlIndex].getBytes("UTF-8"));
-			out.flush();
-			out.close();
-		} catch( FileNotFoundException e ) {
-		} catch( SecurityException e ) {
-		} catch( java.io.IOException e ) {
-			Status.setText( res.getString(R.string.error_write, path) + ": " + e.getMessage() );
-			return false;
-		};
-		Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.dl_finished) );
-
-		try {
-			stream.close();
-		} catch( java.io.IOException e ) {
-		};
-
 		return true;
-	};
-	
+	}
+
 	private void initParent()
 	{
 		class Callback implements Runnable

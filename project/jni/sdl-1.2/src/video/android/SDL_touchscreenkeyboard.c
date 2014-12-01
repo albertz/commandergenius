@@ -690,7 +690,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv* env, jobject thiz
 	}
 	
 	// Arrows to the lower-left part of screen
-	arrows[0].w = SDL_ANDROID_sRealWindowWidth / (size + 2) * 2 / 3;
+	arrows[0].w = SDL_ANDROID_sRealWindowWidth / (size + 3) * 2 / 2;
 	arrows[0].h = arrows[0].w;
 	// Move to the screen edge
 	arrows[0].x = 0;
@@ -727,7 +727,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetupScreenKeyboard) ( JNIEnv* env, jobject thiz
 	{
 		// Custom button ordering
 		int iii = ii + i*2;
-		buttons[iii].w = SDL_ANDROID_sRealWindowWidth / (size + 2) / 3;
+		buttons[iii].w = SDL_ANDROID_sRealWindowWidth / (size + 3) / 2;
 		buttons[iii].h = buttons[iii].w;
 		// Move to the screen edge
 		buttons[iii].x = SDL_ANDROID_sRealWindowWidth - buttons[iii].w * (ii + 1);

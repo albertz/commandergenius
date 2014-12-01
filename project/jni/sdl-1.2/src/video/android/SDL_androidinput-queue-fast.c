@@ -71,7 +71,6 @@ extern void SDL_ANDROID_PumpEvents()
 {
 	joystickEventsCount = 0;
 
-	SDL_ANDROID_processAndroidTrackballDampening();
 	SDL_ANDROID_processMoveMouseWithKeyboard();
 };
 
