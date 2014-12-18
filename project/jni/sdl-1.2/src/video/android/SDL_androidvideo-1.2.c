@@ -1211,6 +1211,7 @@ void SDL_ANDROID_VideoContextRecreated()
 				ANDROID_UnlockHWSurface(NULL, HwSurfaceList[i]); // Re-fill texture with graphics
 			}
 		}
+		SDL_ANDROID_CallJavaSwapBuffers(); // Swap buffers once to force screen redraw
 	}
 };
 

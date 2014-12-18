@@ -1004,10 +1004,10 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 		if(mRenderer.mPaused)
 			return;
 		mRenderer.mPaused = true;
+		super.onPause();
 		mRenderer.nativeGlContextLostAsyncEvent();
 		if( mRenderer.accelerometer != null ) // For some reason it crashes here often - are we getting this event before initialization?
 			mRenderer.accelerometer.stop();
-		super.onPause();
 	};
 	
 	public boolean isPaused() {

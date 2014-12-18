@@ -29,8 +29,6 @@ TODO, which will get actually done
 
 - SDL: control mouse with right analog gamepad stick.
 
-- SDL: sometimes the screen stays black after restoring from background.
-
 - XSDL: support Android intent x11://localhost:6000 - http://www.openintents.org/node/905
 
 - XSDL: screen follows mouse when on-screen keyboard is shown.
