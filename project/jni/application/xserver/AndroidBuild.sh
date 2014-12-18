@@ -26,11 +26,12 @@ cd android
 } || exit 1
 cd $1
 [ -e libfontenc-*/Makefile ] && {
-	grep "/data/data/$PACKAGE_NAME" libfontenc-*/Makefile || \
+	grep "/proc/self/cwd" libfontenc-*/Makefile || \
 	git clean -f -d -x .
 }
 
-env TARGET_DIR=/data/data/$PACKAGE_NAME/files \
+# Megahack: set /proc/self/cwd as the X.org data dir, and chdir() to the correct directory when runngin X.org
+env TARGET_DIR=/proc/self/cwd \
 ./build.sh || exit 1
 
 env CURDIR=$CURDIR \

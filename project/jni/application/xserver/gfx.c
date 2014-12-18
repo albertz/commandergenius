@@ -699,6 +699,7 @@ void showErrorMessage(const char *msg)
 
 void XSDL_initSDL()
 {
+	char fontpath[PATH_MAX];
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Current video mode: %d %d", SDL_ListModes(NULL, 0)[0]->w, SDL_ListModes(NULL, 0)[0]->h);
@@ -708,7 +709,9 @@ void XSDL_initSDL()
 	else
 		SDL_SetVideoMode(VID_Y, VID_X, 0, SDL_SWSURFACE);
 	TTF_Init();
-	sFont = TTF_OpenFont("DroidSansMono.ttf", 14);
+	strcpy( fontpath, getenv("UNSECURE_STORAGE_DIR") );
+	strcat( fontpath, "/DroidSansMono.ttf" );
+	sFont = TTF_OpenFont(fontpath, 14);
 	if (!sFont)
 	{
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Error: cannot open font file, please reinstall the app");

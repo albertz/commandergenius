@@ -146,7 +146,7 @@ int main( int argc, char* argv[] )
 						getenv("SECURE_STORAGE_DIR"),
 						getenv("SECURE_STORAGE_DIR") );
 
-	XSDL_generateBackground(port, printHelp, resolutionW, resolutionH);
+	XSDL_generateBackground( port, printHelp, resolutionW, resolutionH );
 
 	XSDL_deinitSDL();
 
@@ -155,14 +155,14 @@ int main( int argc, char* argv[] )
 
 	if( printHelp )
 	{
-		sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -center background.bmp",
-			getenv("SECURE_STORAGE_DIR"), getenv("SECURE_STORAGE_DIR") );
+		sprintf( clientcmd, "%s/usr/bin/xhost + ; %s/usr/bin/xli -onroot -center %s/background.bmp",
+			getenv("SECURE_STORAGE_DIR"), getenv("SECURE_STORAGE_DIR"), getenv("UNSECURE_STORAGE_DIR") );
 		args[argnum] = "-exec";
 		args[argnum+1] = clientcmd;
 		argnum += 2;
 	}
 
-	SDL_ANDROID_SetScreenKeyboardShown(1);
+	SDL_ANDROID_SetScreenKeyboardShown( 1 );
 
 	if( screenButtons && !SDL_ANDROID_GetScreenKeyboardRedefinedByUser() )
 	{
@@ -193,7 +193,9 @@ int main( int argc, char* argv[] )
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", args[i]);
 
 	// We should never quit. If that happens, then the server did not start - show error.
-	atexit(&showError);
+	atexit( &showError );
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL chdir to: %s", getenv("SECURE_STORAGE_DIR"));
+	chdir( getenv("SECURE_STORAGE_DIR") ); // Megahack: change /proc/self/cwd to the X.org data dir, and use /proc/self/cwd path in libX11
 	return android_main( argnum, args, envp );
 }
 
