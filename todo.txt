@@ -49,4 +49,6 @@ TODO, which will get actually done
 
 - OpenTTD: Ctrl key does not work when using physical keyboard.
 
+- OpenTTD: 24bpp color mode + 32bpp blitter in SDL menu.
+
 - Add glshim library: https://github.com/lunixbochs/glshim
