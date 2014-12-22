@@ -83,6 +83,8 @@ import android.util.Log;
 import android.view.Surface;
 import android.app.ProgressDialog;
 import android.app.KeyguardManager;
+import android.view.ViewTreeObserver;
+import android.graphics.Rect;
 
 
 public class MainActivity extends Activity
@@ -350,6 +352,24 @@ public class MainActivity extends Activity
 		}
 		DimSystemStatusBar.get().dim(_videoLayout);
 		DimSystemStatusBar.get().dim(mGLView);
+
+		if( Globals.ScreenFollowsMouse )
+		{
+			Rect r = new Rect();
+			_videoLayout.getWindowVisibleDisplayFrame(r);
+			mGLView.nativeScreenVisibleRect(r.left, r.top, r.right, r.bottom);
+			_videoLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
+			{
+				public void onGlobalLayout()
+				{
+					Rect r = new Rect();
+					_videoLayout.getWindowVisibleDisplayFrame(r);
+					int heightDiff = _videoLayout.getRootView().getHeight() - _videoLayout.getHeight(); // Take system bar into consideration
+					mGLView.nativeScreenVisibleRect(r.left, r.top + heightDiff, r.width(), r.height());
+					Log.v("SDL", "Main window visible region changed: " + r.left + ":" + r.top + ":" + r.width() + ":" + r.height() );
+				}
+			});
+		}
 	}
 
 	@Override

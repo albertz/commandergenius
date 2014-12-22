@@ -83,6 +83,7 @@ extern void SDL_ANDROID_DrawMouseCursor(int x, int y, int size, float alpha);
 extern void SDL_ANDROID_DrawMouseCursorIfNeeded();
 extern void SDL_ANDROID_CallJavaTogglePlainAndroidSoftKeyboardInput();
 extern void SDL_ANDROID_CallJavaStartAccelerometerGyroscope(int start);
+extern SDL_Rect SDL_ANDROID_ScreenVisibleRect;
 extern SDL_Rect SDL_ANDROID_VideoDebugRect;
 extern SDL_Color SDL_ANDROID_VideoDebugRectColor;
 

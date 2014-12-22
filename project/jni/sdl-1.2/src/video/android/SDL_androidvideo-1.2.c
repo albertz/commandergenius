@@ -978,7 +978,7 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_FlipHWSurface()");
 	if( SDL_CurrentVideoSurface->hwdata && SDL_CurrentVideoSurface->pixels && ! ( SDL_CurrentVideoSurface->flags & SDL_HWSURFACE ) )
 	{
-		SDL_Rect rect;
+		SDL_Rect rect, dstrect;
 		rect.x = 0;
 		rect.y = 0;
 		rect.w = SDL_CurrentVideoSurface->w;
@@ -997,14 +997,38 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 					SDL_CurrentVideoSurface->pitch);
 			}
 		}
-		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_NONE || SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
+
+		if( SDL_ANDROID_ScreenVisibleRect.h <= 0 ||  )
+			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &dstrect);
+		else
 		{
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &rect);
+			int x, y;
+			SDL_GetMouseState(&x, &y);
+			rect.w = SDL_ANDROID_ScreenVisibleRect.w * SDL_ANDROID_sFakeWindowWidth / SDL_ANDROID_sRealWindowWidth;
+			rect.h = SDL_ANDROID_ScreenVisibleRect.h * SDL_ANDROID_sFakeWindowHeight / SDL_ANDROID_sRealWindowHeight;
+			rect.x = x - rect.w / 2;
+			if( rect.x < 0 )
+				rect.x = 0;
+			if( rect.x + rect.w > SDL_ANDROID_sFakeWindowWidth )
+				rect.x = SDL_ANDROID_sFakeWindowWidth - rect.w;
+			rect.y = y - rect.h / 2;
+			if( rect.y < 0 )
+				rect.y = 0;
+			if( rect.y + rect.h > SDL_ANDROID_sFakeWindowHeight )
+				rect.y = SDL_ANDROID_sFakeWindowHeight - rect.h;
+			dstrect.w = rect.w;
+			dstrect.h = rect.h;
+			dstrect.x = SDL_ANDROID_ScreenVisibleRect.x * SDL_ANDROID_sFakeWindowWidth / SDL_ANDROID_sRealWindowWidth;
+			dstrect.y = SDL_ANDROID_ScreenVisibleRect.y * SDL_ANDROID_sFakeWindowHeight / SDL_ANDROID_sRealWindowHeight;
+			//__android_log_print(ANDROID_LOG_INFO, "SDL", "SDL_Flip: %04d:%04d:%04d:%04d -> %04d:%04d:%04d:%04d vis %04d:%04d:%04d:%04d", rect.x, rect.y, rect.w, rect.h, dstrect.x, dstrect.y, dstrect.w, dstrect.h, SDL_ANDROID_ScreenVisibleRect.x, SDL_ANDROID_ScreenVisibleRect.y, SDL_ANDROID_ScreenVisibleRect.w, SDL_ANDROID_ScreenVisibleRect.h);
+			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &dstrect);
 		}
+
 		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER && SDL_ANDROID_ShowScreenUnderFingerRect.w > 0 )
 		{
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &SDL_ANDROID_ShowScreenUnderFingerRectSrc, &SDL_ANDROID_ShowScreenUnderFingerRect);
-			SDL_Rect frame = SDL_ANDROID_ShowScreenUnderFingerRect;
+			rect = SDL_ANDROID_ShowScreenUnderFingerRectSrc;
+			dstrect = SDL_ANDROID_ShowScreenUnderFingerRect;
+			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &dstrect);
 			int buttons = SDL_GetMouseState(NULL, NULL);
 			// For some reason this code fails - it just outputs nothing to screen
 			/*
@@ -1021,10 +1045,10 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			glOrthof( 0.0f, SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight, 0.0f, 0.0f, 1.0f );
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glColor4f(0.0f, buttons & SDL_BUTTON_RMASK ? 1.0f : 0.0f, buttons & SDL_BUTTON_LMASK ? 1.0f : 0.0f, 1.0f);
-			GLshort vertices[] = {	frame.x, frame.y,
-									frame.x + frame.w, frame.y,
-									frame.x + frame.w, frame.y + frame.h,
-									frame.x, frame.y + frame.h };
+			GLshort vertices[] = {	dstrect.x, dstrect.y,
+									dstrect.x + dstrect.w, dstrect.y,
+									dstrect.x + dstrect.w, dstrect.y + dstrect.h,
+									dstrect.x, dstrect.y + dstrect.h };
 			glVertexPointer(2, GL_SHORT, 0, vertices);
 			glDrawArrays(GL_LINE_LOOP, 0, 4);
 			glDisableClientState(GL_VERTEX_ARRAY);

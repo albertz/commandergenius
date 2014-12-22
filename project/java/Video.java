@@ -1031,12 +1031,10 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	MainActivity mParent;
 
 	public static native void nativeMotionEvent( int x, int y, int action, int pointerId, int pressure, int radius );
-	public static native int nativeKey( int keyCode, int down, int unicode );
-	public static native void initJavaCallbacks();
+	public static native int  nativeKey( int keyCode, int down, int unicode );
 	public static native void nativeHardwareMouseDetected( int detected );
 	public static native void nativeMouseButtonsPressed( int buttonId, int pressedState );
 	public static native void nativeMouseWheel( int scrollX, int scrollY );
 	public static native void nativeGamepadAnalogJoystickInput( float stick1x, float stick1y, float stick2x, float stick2y, float rtrigger, float ltrigger, int usingHat );
+	public static native void nativeScreenVisibleRect( int x, int y, int w, int h );
 }
-
-
