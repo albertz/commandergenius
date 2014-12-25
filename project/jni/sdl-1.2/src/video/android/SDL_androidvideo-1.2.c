@@ -998,7 +998,7 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			}
 		}
 
-		if( SDL_ANDROID_ScreenVisibleRect.h <= 0 ||  )
+		if( SDL_ANDROID_ScreenVisibleRect.h <= 0 )
 			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &dstrect);
 		else
 		{

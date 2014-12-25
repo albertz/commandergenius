@@ -15,7 +15,7 @@
 				  android:alwaysRetainTaskState="true"
 				  android:launchMode="singleTask"
 				  android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|fontScale|uiMode|screenSize|smallestScreenSize"
-				  android:windowSoftInputMode="stateUnspecified|adjustPan"
+				  android:windowSoftInputMode="stateUnspecified"
 		>
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
