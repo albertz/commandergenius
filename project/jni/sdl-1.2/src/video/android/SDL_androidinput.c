@@ -35,6 +35,7 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 #include <pthread.h>
 #include <semaphore.h>
 
+#include "SDL.h"
 #include "SDL_config.h"
 
 #include "SDL_version.h"
@@ -130,6 +131,8 @@ static unsigned int relativeMovementTime = 0;
 int SDL_ANDROID_currentMouseX = 0;
 int SDL_ANDROID_currentMouseY = 0;
 int SDL_ANDROID_currentMouseButtons = 0;
+int screenFollowsMouse = 0;
+int SDL_ANDROID_SystemBarAndKeyboardShown;
 
 static int hardwareMouseDetected = 0;
 enum { MOUSE_HW_BUTTON_LEFT = 1, MOUSE_HW_BUTTON_RIGHT = 2, MOUSE_HW_BUTTON_MIDDLE = 4, MOUSE_HW_BUTTON_BACK = 8, MOUSE_HW_BUTTON_FORWARD = 16, MOUSE_HW_BUTTON_MAX = MOUSE_HW_BUTTON_FORWARD };
@@ -1094,7 +1097,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 		jint RelativeMovement, jint RelativeMovementSpeed, jint RelativeMovementAccel,
 		jint ShowMouseCursor, jint HoverJitterFilter, jint RightMouseButtonLongPress,
 		jint MoveMouseWithGyroscope, jint MoveMouseWithGyroscopeSpeed,
-		jint ForceScreenUpdateMouseClick)
+		jint ForceScreenUpdateMouseClick, jint ScreenFollowsMouse)
 {
 	SDL_ANDROID_isMouseUsed = 1;
 	rightClickMethod = RightClickMethod;
@@ -1120,6 +1123,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 	moveMouseWithGyroscopeSpeed = 0.0625f * MoveMouseWithGyroscopeSpeed * MoveMouseWithGyroscopeSpeed + 0.125f * MoveMouseWithGyroscopeSpeed + 0.5f; // Scale value from 0.5 to 2, with 1 at the middle
 	moveMouseWithGyroscopeSpeed *= 5.0f;
 	forceScreenUpdateMouseClick = ForceScreenUpdateMouseClick;
+	screenFollowsMouse = ScreenFollowsMouse;
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "moveMouseWithGyroscopeSpeed %d = %f", MoveMouseWithGyroscopeSpeed, moveMouseWithGyroscopeSpeed);
 	if( !mouseClickTimeoutInitialized && (
 		leftClickMethod == LEFT_CLICK_WITH_TAP ||
@@ -1137,47 +1141,76 @@ JAVA_EXPORT_NAME(Settings_nativeSetMouseUsed) (JNIEnv* env, jobject thiz,
 	}
 }
 
-JNIEXPORT void JNICALL 
-JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeHardwareMouseDetected) (JNIEnv* env, jobject thiz, int detected)
+typedef struct
 {
-	if( !SDL_ANDROID_isMouseUsed )
-		return;
-
-	static struct {
 		int leftClickMethod;
 		int ShowScreenUnderFinger;
 		int leftClickTimeout;
 		int relativeMovement;
 		int ShowMouseCursor;
-	} cfg = { 0 };
+} MouseSettings_t;
 
-	if( hardwareMouseDetected != detected )
+static void saveMouseSettings(MouseSettings_t *cfg)
+{
+	cfg->leftClickMethod = leftClickMethod;
+	cfg->ShowScreenUnderFinger = SDL_ANDROID_ShowScreenUnderFinger;
+	cfg->leftClickTimeout = leftClickTimeout;
+	cfg->relativeMovement = relativeMovement;
+	cfg->ShowMouseCursor = SDL_ANDROID_ShowMouseCursor;
+}
+
+static void restoreMouseSettings(MouseSettings_t *cfg)
+{
+	leftClickMethod = cfg->leftClickMethod;
+	SDL_ANDROID_ShowScreenUnderFinger = cfg->ShowScreenUnderFinger;
+	leftClickTimeout = cfg->leftClickTimeout;
+	relativeMovement = cfg->relativeMovement;
+	SDL_ANDROID_ShowMouseCursor = cfg->ShowMouseCursor;
+}
+
+static void processHardwareMouseDetected (int detected, int ScreenSizeCallback)
+{
+	static MouseSettings_t cfg;
+	static int initialized = 0;
+
+	if( !SDL_ANDROID_isMouseUsed )
+		return;
+
+	if( !initialized )
 	{
-		hardwareMouseDetected = detected;
-		if(detected)
+		initialized = 1;
+		saveMouseSettings(&cfg);
+	}
+
+	if( hardwareMouseDetected != detected || ScreenSizeCallback )
+	{
+		if( !ScreenSizeCallback )
 		{
-			cfg.leftClickMethod = leftClickMethod;
-			cfg.ShowScreenUnderFinger = SDL_ANDROID_ShowScreenUnderFinger;
-			cfg.leftClickTimeout = leftClickTimeout;
-			cfg.relativeMovement = relativeMovement;
-			cfg.ShowMouseCursor = SDL_ANDROID_ShowMouseCursor;
-			
+			hardwareMouseDetected = detected;
+			if( SDL_ANDROID_SystemBarAndKeyboardShown )
+				return; // Do not enable hardware mouse mode when the keyboard is shown
+		}
+
+		if( detected )
+		{
+			saveMouseSettings(&cfg);
+
 			leftClickMethod = LEFT_CLICK_NORMAL;
-			SDL_ANDROID_ShowScreenUnderFinger = 0;
+			SDL_ANDROID_ShowScreenUnderFinger = ZOOM_NONE;
 			leftClickTimeout = 0;
 			relativeMovement = 0;
 			SDL_ANDROID_ShowMouseCursor = 0;
 		}
 		else
-		{
-			leftClickMethod = cfg.leftClickMethod;
-			SDL_ANDROID_ShowScreenUnderFinger = cfg.ShowScreenUnderFinger;
-			leftClickTimeout = cfg.leftClickTimeout;
-			relativeMovement = cfg.relativeMovement;
-			SDL_ANDROID_ShowMouseCursor = cfg.ShowMouseCursor;
-		}
+			restoreMouseSettings(&cfg);
 	}
 	SDL_ANDROID_SetHoverDeadzone();
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeHardwareMouseDetected) (JNIEnv* env, jobject thiz, int detected)
+{
+	processHardwareMouseDetected(detected, 0);
 }
 
 void SDL_ANDROID_SetHoverDeadzone()
@@ -1551,7 +1584,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetTouchscreenCalibration) (JNIEnv* env, jobject
 	SDL_ANDROID_TouchscreenCalibrationHeight = y2 - y1;
 }
 
-JNIEXPORT void JNICALL 
+JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(Settings_nativeInitKeymap) ( JNIEnv*  env, jobject thiz )
 {
 	SDL_android_init_keymap(SDL_android_keymap);
@@ -1606,4 +1639,49 @@ void *mouseClickTimeoutThread (void * unused)
 		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "mouseClickTimeoutThread: tick");
 	}
 	return NULL;
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeScreenVisibleRect) (JNIEnv* env, jobject thiz, jint x, jint y, jint w, jint h )
+{
+	SDL_ANDROID_ScreenVisibleRect.x = x;
+	SDL_ANDROID_ScreenVisibleRect.y = y;
+	SDL_ANDROID_ScreenVisibleRect.w = w;
+	SDL_ANDROID_ScreenVisibleRect.h = h;
+
+	if( SDL_WasInit(SDL_INIT_VIDEO) )
+	{
+		// Move mouse by 1 pixel to force screen update
+		SDL_GetMouseState( &x, &y );
+		SDL_ANDROID_MainThreadPushMouseMotion(x > 0 ? x-1 : 0, y);
+	}
+	else
+		return;
+
+	if( screenFollowsMouse )
+	{
+		static MouseSettings_t cfg;
+		//int systemBarActive = SDL_ANDROID_ScreenVisibleRect.h < SDL_ANDROID_sRealWindowHeight;
+		int keyboardActive = SDL_ANDROID_ScreenVisibleRect.h < SDL_ANDROID_sRealWindowHeight * 9 / 10;
+
+		if( keyboardActive && !SDL_ANDROID_SystemBarAndKeyboardShown )
+		{
+			SDL_ANDROID_SystemBarAndKeyboardShown = 1;
+			processHardwareMouseDetected(0, 1); // Disable direct mouse input mode, set relative mouse mode
+
+			saveMouseSettings(&cfg);
+
+			leftClickMethod = LEFT_CLICK_WITH_TAP_OR_TIMEOUT;
+			SDL_ANDROID_ShowScreenUnderFinger = ZOOM_NONE;
+			leftClickTimeout = getClickTimeout(3);
+			relativeMovement = 1;
+		}
+		else if( !keyboardActive && SDL_ANDROID_SystemBarAndKeyboardShown )
+		{
+			SDL_ANDROID_SystemBarAndKeyboardShown = 0;
+			restoreMouseSettings(&cfg);
+			if( hardwareMouseDetected ) // Restore direct mouse input mode if needed
+				processHardwareMouseDetected(1, 1);
+		}
+	}
 }

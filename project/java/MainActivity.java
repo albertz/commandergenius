@@ -353,23 +353,21 @@ public class MainActivity extends Activity
 		DimSystemStatusBar.get().dim(_videoLayout);
 		DimSystemStatusBar.get().dim(mGLView);
 
-		if( Globals.ScreenFollowsMouse )
+		Rect r = new Rect();
+		_videoLayout.getWindowVisibleDisplayFrame(r);
+		mGLView.nativeScreenVisibleRect(r.left, r.top, r.right, r.bottom);
+		_videoLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
 		{
-			Rect r = new Rect();
-			_videoLayout.getWindowVisibleDisplayFrame(r);
-			mGLView.nativeScreenVisibleRect(r.left, r.top, r.right, r.bottom);
-			_videoLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
+			public void onGlobalLayout()
 			{
-				public void onGlobalLayout()
-				{
-					Rect r = new Rect();
-					_videoLayout.getWindowVisibleDisplayFrame(r);
-					int heightDiff = _videoLayout.getRootView().getHeight() - _videoLayout.getHeight(); // Take system bar into consideration
-					mGLView.nativeScreenVisibleRect(r.left, r.top + heightDiff, r.width(), r.height());
-					Log.v("SDL", "Main window visible region changed: " + r.left + ":" + r.top + ":" + r.width() + ":" + r.height() );
-				}
-			});
-		}
+				Rect r = new Rect();
+				_videoLayout.getWindowVisibleDisplayFrame(r);
+				int heightDiff = _videoLayout.getRootView().getHeight() - _videoLayout.getHeight(); // Take system bar into consideration
+				int widthDiff = _videoLayout.getRootView().getWidth() - _videoLayout.getWidth(); // Nexus 5 has system bar at the right side
+				mGLView.nativeScreenVisibleRect(r.left + widthDiff, r.top + heightDiff, r.width(), r.height());
+				Log.v("SDL", "Main window visible region changed: " + r.left + ":" + r.top + ":" + r.width() + ":" + r.height() );
+			}
+		});
 	}
 
 	@Override

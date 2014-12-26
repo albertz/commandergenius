@@ -269,5 +269,6 @@ extern int SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY;
 extern int SDL_ANDROID_moveMouseWithKbSpeedX, SDL_ANDROID_moveMouseWithKbSpeedY;
 extern int SDL_ANDROID_moveMouseWithKbAccelX, SDL_ANDROID_moveMouseWithKbAccelY;
 extern int SDL_ANDROID_moveMouseWithKbAccelUpdateNeeded;
+extern int SDL_ANDROID_SystemBarAndKeyboardShown;
 
 #endif

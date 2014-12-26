@@ -978,7 +978,7 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_FlipHWSurface()");
 	if( SDL_CurrentVideoSurface->hwdata && SDL_CurrentVideoSurface->pixels && ! ( SDL_CurrentVideoSurface->flags & SDL_HWSURFACE ) )
 	{
-		SDL_Rect rect, dstrect;
+		SDL_Rect rect;
 		rect.x = 0;
 		rect.y = 0;
 		rect.w = SDL_CurrentVideoSurface->w;
@@ -998,12 +998,13 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			}
 		}
 
-		if( SDL_ANDROID_ScreenVisibleRect.h <= 0 )
-			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &dstrect);
+		if( !SDL_ANDROID_SystemBarAndKeyboardShown )
+			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &rect);
 		else
 		{
 			int x, y;
-			SDL_GetMouseState(&x, &y);
+			SDL_Rect dstrect;
+			SDL_GetMouseState(&x, &y); // Follow mouse pointer location
 			rect.w = SDL_ANDROID_ScreenVisibleRect.w * SDL_ANDROID_sFakeWindowWidth / SDL_ANDROID_sRealWindowWidth;
 			rect.h = SDL_ANDROID_ScreenVisibleRect.h * SDL_ANDROID_sFakeWindowHeight / SDL_ANDROID_sRealWindowHeight;
 			rect.x = x - rect.w / 2;
@@ -1024,21 +1025,12 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &dstrect);
 		}
 
-		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER && SDL_ANDROID_ShowScreenUnderFingerRect.w > 0 )
+		if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
 		{
+			SDL_Rect dstrect = SDL_ANDROID_ShowScreenUnderFingerRect;
 			rect = SDL_ANDROID_ShowScreenUnderFingerRectSrc;
-			dstrect = SDL_ANDROID_ShowScreenUnderFingerRect;
 			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &dstrect);
 			int buttons = SDL_GetMouseState(NULL, NULL);
-			// For some reason this code fails - it just outputs nothing to screen
-			/*
-			SDL_SetRenderDrawColor(0, 0, 0, SDL_ALPHA_OPAQUE);
-			SDL_RenderFillRect(&SDL_ANDROID_ShowScreenUnderFingerRect);
-			SDL_SetRenderDrawColor(255, 255, 255, SDL_ALPHA_OPAQUE);
-			SDL_RenderDrawRect(&SDL_ANDROID_ShowScreenUnderFingerRectSrc);
-			SDL_SetRenderDrawColor(0, 0, 0, SDL_ALPHA_OPAQUE);
-			SDL_RenderDrawRect(&frame);
-			*/
 			// Do it old-fashioned way with direct GL calls
 			glPushMatrix();
 			glLoadIdentity();
@@ -1053,7 +1045,6 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			glDrawArrays(GL_LINE_LOOP, 0, 4);
 			glDisableClientState(GL_VERTEX_ARRAY);
 			glPopMatrix();
-			//glFlush();
 		}
 #ifdef VIDEO_DEBUG
 		if( SDL_ANDROID_VideoDebugRect.w > 0 )

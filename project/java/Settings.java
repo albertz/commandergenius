@@ -527,7 +527,8 @@ class Settings
 								Globals.RightMouseButtonLongPress ? 1 : 0,
 								Globals.MoveMouseWithGyroscope ? 1 : 0,
 								Globals.MoveMouseWithGyroscopeSpeed,
-								Globals.CompatibilityHacksForceScreenUpdateMouseClick ? 1 : 0 );
+								Globals.CompatibilityHacksForceScreenUpdateMouseClick ? 1 : 0,
+								Globals.ScreenFollowsMouse ? 1 : 0 );
 	}
 
 	static void Apply(MainActivity p)
@@ -863,7 +864,7 @@ class Settings
 													int relativeMovementAccel, int showMouseCursor,
 													int HoverJitterFilter, int RightMouseButtonLongPress,
 													int MoveMouseWithGyroscope, int MoveMouseWithGyroscopeSpeed,
-													int ForceScreenUpdateMouseClick);
+													int ForceScreenUpdateMouseClick, int ScreenFollowsMouse);
 	private static native void nativeSetJoystickUsed(int amount);
 	private static native void nativeSetAccelerometerUsed();
 	private static native void nativeSetMultitouchUsed();

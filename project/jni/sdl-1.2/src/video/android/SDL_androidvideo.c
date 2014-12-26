@@ -38,7 +38,6 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 #include "SDL_config.h"
 #include "SDL_version.h"
 
-#include "SDL.h"
 #include "SDL_video.h"
 #include "SDL_mouse.h"
 #include "SDL_mutex.h"
@@ -435,22 +434,6 @@ void SDLCALL SDL_ANDROID_GetClipboardText(char * buf, int len)
 		(*JavaEnv)->DeleteLocalRef( JavaEnv, s );
 	}
 	(*JavaEnv)->PopLocalFrame( JavaEnv, NULL );
-}
-
-JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeScreenVisibleRect) (JNIEnv* env, jobject thiz, jint x, jint y, jint w, jint h )
-{
-	SDL_ANDROID_ScreenVisibleRect.x = x;
-	SDL_ANDROID_ScreenVisibleRect.y = y;
-	SDL_ANDROID_ScreenVisibleRect.w = w;
-	SDL_ANDROID_ScreenVisibleRect.h = h;
-
-	if( SDL_WasInit(SDL_INIT_VIDEO) )
-	{
-		// Move mouse by 1 pixel to force screen update
-		SDL_GetMouseState( &x, &y );
-		SDL_ANDROID_MainThreadPushMouseMotion(x > 0 ? x-1 : 0, y);
-	}
 }
 
 int SDLCALL SDL_ANDROID_GetAdvertisementParams(int * visible, SDL_Rect * position)
