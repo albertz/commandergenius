@@ -182,6 +182,7 @@ class Settings
 			out.writeInt(Globals.VideoDepthBpp);
 			out.writeBoolean(Globals.HorizontalOrientation);
 			out.writeBoolean(Globals.ImmersiveMode);
+			out.writeBoolean(Globals.AutoDetectOrientation);
 
 			out.close();
 			settingsLoaded = true;
@@ -374,6 +375,7 @@ class Settings
 			Globals.VideoDepthBpp = settingsFile.readInt();
 			Globals.HorizontalOrientation = settingsFile.readBoolean();
 			Globals.ImmersiveMode = settingsFile.readBoolean();
+			Globals.AutoDetectOrientation = settingsFile.readBoolean();
 
 			settingsLoaded = true;
 
@@ -439,6 +441,7 @@ class Settings
 		}
 
 		Log.i("SDL", "libSDL: Settings.Load(): loading settings failed, running config dialog");
+		p.setScreenOrientation();
 		p.setUpStatusLabel();
 		if( checkRamSize(p) )
 			SettingsMenu.showConfig(p, true);

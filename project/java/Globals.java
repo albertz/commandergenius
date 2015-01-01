@@ -79,6 +79,7 @@ class Globals
 	// Phone-specific config, modified by user in "Change phone config" startup dialog
 	public static int VideoDepthBpp = 16;
 	public static boolean HorizontalOrientation = true;
+	public static boolean AutoDetectOrientation = false;
 	public static boolean ImmersiveMode = true;
 	public static boolean DownloadToSdcard = true;
 	public static boolean PhoneHasArrowKeys = false;

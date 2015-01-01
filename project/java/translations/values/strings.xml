@@ -154,6 +154,7 @@
     <string name="video_smooth">Linear video filtering</string>
     <string name="video_separatethread">Separate thread for video, it can increase FPS, it also can crash the app</string>
     <string name="video_orientation_vertical">Portrait/vertical screen orientation</string>
+    <string name="video_orientation_autodetect">Auto-detect screen orientation</string>
     <string name="video_bpp_24">24 bpp screen color depth</string>
     <string name="video_immersive">Hide system navigation buttons / immersive mode</string>
 

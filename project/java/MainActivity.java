@@ -94,8 +94,6 @@ public class MainActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 
-		setScreenOrientation();
-
 		instance = this;
 		// fullscreen mode
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -191,6 +189,7 @@ public class MainActivity extends Activity
 						public void run()
 						{
 							Settings.Load(Parent);
+							setScreenOrientation();
 							loaded.release();
 							loadedLibraries.release();
 							if( _btn != null )
@@ -282,10 +281,12 @@ public class MainActivity extends Activity
 		{
 			public void run()
 			{
+				if( Globals.AutoDetectOrientation )
+					Globals.HorizontalOrientation = isCurrentOrientationHorizontal();
 				while( isCurrentOrientationHorizontal() != Globals.HorizontalOrientation ||
 						((KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE)).inKeyguardRestrictedInputMode() )
 				{
-					Log.i("SDL", "libSDL: Waiting for screen orientation to change, and for disabling lockscreen mode");
+					Log.d("SDL", "libSDL: Waiting for screen orientation to change to " + (Globals.HorizontalOrientation ? "landscape" : "portrait") + ", and for disabling lockscreen mode");
 					try {
 						Thread.sleep(500);
 					} catch( Exception e ) {}
@@ -885,12 +886,24 @@ public class MainActivity extends Activity
 		return true;
 	}
 
+	//private Configuration oldConfig = null;
 	@Override
 	public void onConfigurationChanged(Configuration newConfig)
 	{
-		// This function is actually never called
 		super.onConfigurationChanged(newConfig);
 		updateScreenOrientation();
+		/*
+		if (oldConfig != null)
+		{
+			int diff = newConfig.diff(oldConfig);
+			Log.i("SDL", "onConfigurationChanged(): " + " diff " + diff +
+					((diff & ActivityInfo.CONFIG_ORIENTATION) == ActivityInfo.CONFIG_ORIENTATION ? " orientation" : "") +
+					((diff & ActivityInfo.CONFIG_SCREEN_SIZE) == ActivityInfo.CONFIG_SCREEN_SIZE ? " screen size" : "") +
+					((diff & ActivityInfo.CONFIG_SMALLEST_SCREEN_SIZE) == ActivityInfo.CONFIG_SMALLEST_SCREEN_SIZE ? " smallest screen size" : "") +
+					" " + newConfig.toString());
+		}
+		oldConfig = new Configuration(newConfig);
+		*/
 	}
 
 	public void updateScreenOrientation()
@@ -941,6 +954,14 @@ public class MainActivity extends Activity
 	{
 		NotificationManager NotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		NotificationManager.cancel(NOTIFY_ID);
+	}
+
+	@Override
+	public void onNewIntent(Intent i)
+	{
+		Log.i("SDL", "onNewIntent(): " + i.toString());
+		super.onNewIntent(i);
+		setIntent(i);
 	}
 	
 	public void LoadLibraries()
@@ -1239,12 +1260,27 @@ public class MainActivity extends Activity
 
 	public boolean isCurrentOrientationHorizontal()
 	{
+		if (Globals.AutoDetectOrientation)
+		{
+			// Less reliable way to detect orientation, but works with multiwindow
+			View topView = getWindow().peekDecorView();
+			if (topView != null)
+			{
+				//Log.d("SDL", "isCurrentOrientationHorizontal(): decorview: " + topView.getWidth() + "x" + topView.getHeight());
+				return topView.getWidth() >= topView.getHeight();
+			}
+		}
 		Display getOrient = getWindowManager().getDefaultDisplay();
 		return getOrient.getWidth() >= getOrient.getHeight();
 	}
 
 	void setScreenOrientation()
 	{
+		if( Globals.AutoDetectOrientation )
+		{
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+			return;
+		}
 		if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )
 			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 		else

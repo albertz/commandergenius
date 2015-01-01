@@ -347,6 +347,7 @@ class SettingsMenuMisc extends SettingsMenu
 				p.getResources().getString(R.string.mouse_keepaspectratio),
 				p.getResources().getString(R.string.video_smooth),
 				p.getResources().getString(R.string.video_immersive),
+				p.getResources().getString(R.string.video_orientation_autodetect),
 				p.getResources().getString(R.string.video_orientation_vertical),
 				p.getResources().getString(R.string.video_bpp_24),
 			};
@@ -354,6 +355,7 @@ class SettingsMenuMisc extends SettingsMenu
 				Globals.KeepAspectRatio,
 				Globals.VideoLinearFilter,
 				Globals.ImmersiveMode,
+				Globals.AutoDetectOrientation,
 				!Globals.HorizontalOrientation,
 				Globals.VideoDepthBpp == 24,
 			};
@@ -364,6 +366,7 @@ class SettingsMenuMisc extends SettingsMenu
 					p.getResources().getString(R.string.mouse_keepaspectratio),
 					p.getResources().getString(R.string.video_smooth),
 					p.getResources().getString(R.string.video_immersive),
+					p.getResources().getString(R.string.video_orientation_autodetect),
 					p.getResources().getString(R.string.video_orientation_vertical),
 					p.getResources().getString(R.string.video_bpp_24),
 					p.getResources().getString(R.string.video_separatethread),
@@ -372,6 +375,7 @@ class SettingsMenuMisc extends SettingsMenu
 					Globals.KeepAspectRatio,
 					Globals.VideoLinearFilter,
 					Globals.ImmersiveMode,
+					Globals.AutoDetectOrientation,
 					!Globals.HorizontalOrientation,
 					Globals.VideoDepthBpp == 24,
 					Globals.MultiThreadedVideo,
@@ -405,10 +409,12 @@ class SettingsMenuMisc extends SettingsMenu
 					if( item == 2 )
 						Globals.ImmersiveMode = isChecked;
 					if( item == 3 )
-						Globals.HorizontalOrientation = !isChecked;
+						Globals.AutoDetectOrientation = isChecked;
 					if( item == 4 )
-						Globals.VideoDepthBpp = (isChecked ? 24 : 16);
+						Globals.HorizontalOrientation = !isChecked;
 					if( item == 5 )
+						Globals.VideoDepthBpp = (isChecked ? 24 : 16);
+					if( item == 6 )
 						Globals.MultiThreadedVideo = isChecked;
 				}
 			});

@@ -59,6 +59,10 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.content.ClipboardManager;
 import android.content.ClipboardManager.OnPrimaryClipChangedListener;
+import android.app.PendingIntent;
+import android.app.AlarmManager;
+import android.content.Intent;
+import android.view.View;
 
 
 class Mouse
@@ -581,7 +585,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		});
 	}
 	
-	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+	public void onSurfaceCreated(GL10 gl, EGLConfig config)
+	{
 		Log.i("SDL", "libSDL: DemoRenderer.onSurfaceCreated(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
 		mGlSurfaceCreated = true;
 		mGl = gl;
@@ -590,7 +595,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		mFirstTimeStart = false;
 	}
 
-	public void onSurfaceChanged(GL10 gl, int w, int h) {
+	public void onSurfaceChanged(GL10 gl, int w, int h)
+	{
 		Log.i("SDL", "libSDL: DemoRenderer.onSurfaceChanged(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart + " w " + w + " h " + h);
 		if( w < h && Globals.HorizontalOrientation )
 		{
@@ -599,21 +605,53 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 			w = h;
 			h = x;
 		}
-		mWidth = w;
-		mHeight = h;
+		mWidth = w - w % 2;
+		mHeight = h - h % 2;
 		mGl = gl;
-		nativeResize(w, h, Globals.KeepAspectRatio ? 1 : 0);
+		nativeResize(mWidth, mHeight, Globals.KeepAspectRatio ? 1 : 0);
 	}
-	
-	public void onSurfaceDestroyed() {
+
+	public void onWindowResize(final int w, final int h)
+	{
+		Log.d("SDL", "libSDL: DemoRenderer.onWindowResize(): " + w + "x" + h);
+		new Thread(new Runnable()
+		{
+			public void run()
+			{
+				// Samsung multiwindow will swap screen dimensionswhen unlocking the lockscreen, sleep a while so we won't use these temporary values
+				try{
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {}
+				int ww = w;
+				int hh = h;
+				View topView = context.getWindow().peekDecorView();
+				if (topView != null)
+				{
+					ww = topView.getWidth() - topView.getWidth() % 2;
+					hh = topView.getHeight() - topView.getHeight() % 2;
+				}
+				if(mWidth != 0 && mHeight != 0 && (mWidth != ww || mHeight != hh))
+				{
+					Log.w("SDL", "libSDL: DemoRenderer.onWindowResize(): screen size changed from " + mWidth + "x" + mHeight + " to " + ww + "x" + hh + " - restarting application");
+					PendingIntent intent = PendingIntent.getActivity(context, 0, new Intent(context.getIntent()), context.getIntent().getFlags());
+					AlarmManager mgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+					mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, intent);
+					System.exit(0);
+				}
+			}
+		}).start();
+	}
+
+	public void onSurfaceDestroyed()
+	{
 		Log.i("SDL", "libSDL: DemoRenderer.onSurfaceDestroyed(): paused " + mPaused + " mFirstTimeStart " + mFirstTimeStart );
 		mGlSurfaceCreated = false;
 		mGlContextLost = true;
 		nativeGlContextLost();
 	};
 
-	public void onDrawFrame(GL10 gl) {
-
+	public void onDrawFrame(GL10 gl)
+	{
 		mGl = gl;
 		DrawLogo(mGl);
 		SwapBuffers();

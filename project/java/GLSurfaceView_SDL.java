@@ -573,6 +573,9 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 		 */
 		public abstract void onSurfaceChanged(GL10 gl, int width, int height);
 
+		/** Called when screen size changes */
+		public abstract void onWindowResize(int width, int height);
+
 		/**
 		 * Called to draw the current frame.
 		 * <p>
@@ -1199,6 +1202,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 				mWidth = w;
 				mHeight = h;
 				mSizeChanged = true;
+				mRenderer.onWindowResize(w, h);
 				notify();
 			}
 		}
