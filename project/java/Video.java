@@ -63,6 +63,7 @@ import android.app.PendingIntent;
 import android.app.AlarmManager;
 import android.content.Intent;
 import android.view.View;
+import android.view.Display;
 
 
 class Mouse
@@ -622,15 +623,15 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 				try{
 					Thread.sleep(2000);
 				} catch (InterruptedException e) {}
-				int ww = w;
-				int hh = h;
+				int ww = w - w % 2;
+				int hh = h - h % 2;
 				View topView = context.getWindow().peekDecorView();
 				if (topView != null)
 				{
 					ww = topView.getWidth() - topView.getWidth() % 2;
 					hh = topView.getHeight() - topView.getHeight() % 2;
 				}
-				if(mWidth != 0 && mHeight != 0 && (mWidth != ww || mHeight != hh))
+				if (mWidth != 0 && mHeight != 0 && (mWidth != ww || mHeight != hh))
 				{
 					Log.w("SDL", "libSDL: DemoRenderer.onWindowResize(): screen size changed from " + mWidth + "x" + mHeight + " to " + ww + "x" + hh + " - restarting application");
 					Intent intent = new Intent(context, RestartMainActivity.class);
@@ -640,6 +641,16 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {}
 					System.exit(0);
+				}
+				if (mWidth == 0 && mHeight == 0)
+				{
+					Display getOrient = context.getWindowManager().getDefaultDisplay();
+					if ((ww > hh) != (getOrient.getWidth() > getOrient.getHeight()))
+					{
+						Log.i("SDL", "Multiwindow detected - app window size " + ww + "x" + hh + " but display dimensions are " + getOrient.getWidth() + "x" + getOrient.getHeight());
+						Globals.AutoDetectOrientation = true;
+						Globals.HorizontalOrientation = (ww > hh);
+					}
 				}
 			}
 		}).start();
