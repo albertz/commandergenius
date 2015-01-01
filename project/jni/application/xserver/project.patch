@@ -1,0 +1,15 @@
+--- a/project/AndroidManifest.xml	2015-01-01 23:59:34.805231773 +0200
++++ a/project/AndroidManifest.xml	2015-01-01 23:59:45.189378809 +0200
+@@ -23,6 +23,12 @@
+ 				<category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" /> <!-- Samsung's multiwindow -->
+ 				<action android:name="com.sec.android.airview.HOVER" /> <!-- Stupid Samsung requires their own intent for finger-hover events -->
+ 			</intent-filter>
++			<intent-filter>
++				<action android:name="android.intent.action.VIEW" />
++				<action android:name="android.content.Intent.ACTION_VIEW" />
++				<category android:name="android.intent.category.DEFAULT" />
++				<data android:scheme="x11" />
++			</intent-filter>
+ 		</activity>
+ 		<meta-data android:name="com.sec.android.support.multiwindow" android:value="true" /> <!-- Samsung's multiwindow -->
+ 		<activity android:name=".RestartMainActivity"

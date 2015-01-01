@@ -1,0 +1,21 @@
+diff --git a/project/java/Video.java b/project/java/Video.java
+index eb25252..a327c6b 100644
+--- a/project/java/Video.java
++++ b/project/java/Video.java
+@@ -691,6 +691,16 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
+ 		if(Globals.AudioBufferConfig >= 2)
+ 			Thread.currentThread().setPriority( (Thread.NORM_PRIORITY + Thread.MIN_PRIORITY) / 2 ); // Lower than normal
+ 		 // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
++		if (context.getIntent().getScheme() != null && context.getIntent().getScheme().equals("x11"))
++		{
++			int port = context.getIntent().getData().getPort();
++			if (port >= 0)
++			{
++				if (port >= 6000)
++					port -= 6000;
++				Globals.CommandLine = Globals.CommandLine + " :" + port;
++			}
++		}
+ 		nativeInit( Globals.DataDir,
+ 					Globals.CommandLine,
+ 					( (Globals.SwVideoMode && Globals.MultiThreadedVideo) || Globals.CompatibilityHacksVideo ) ? 1 : 0,
