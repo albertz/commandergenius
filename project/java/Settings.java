@@ -498,9 +498,9 @@ class Settings
 		} catch( FileNotFoundException e ) {
 		} catch ( IOException e ) { }
 		new File( p.getFilesDir() + "/" + SettingsFileName ).delete();
-		PendingIntent intent = PendingIntent.getActivity(p, 0, new Intent(p.getIntent()), p.getIntent().getFlags());
-		AlarmManager mgr = (AlarmManager) p.getSystemService(Context.ALARM_SERVICE);
-		mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, intent);
+
+		Intent intent = new Intent(context, RestartMainActivity.class);
+		context.startActivity(intent);
 		System.exit(0);
 	}
 

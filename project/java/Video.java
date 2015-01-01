@@ -620,7 +620,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 			{
 				// Samsung multiwindow will swap screen dimensionswhen unlocking the lockscreen, sleep a while so we won't use these temporary values
 				try{
-					Thread.sleep(3000);
+					Thread.sleep(2000);
 				} catch (InterruptedException e) {}
 				int ww = w;
 				int hh = h;
@@ -633,9 +633,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 				if(mWidth != 0 && mHeight != 0 && (mWidth != ww || mHeight != hh))
 				{
 					Log.w("SDL", "libSDL: DemoRenderer.onWindowResize(): screen size changed from " + mWidth + "x" + mHeight + " to " + ww + "x" + hh + " - restarting application");
-					PendingIntent intent = PendingIntent.getActivity(context, 0, new Intent(context.getIntent()), context.getIntent().getFlags());
-					AlarmManager mgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-					mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, intent);
+					Intent intent = new Intent(context, RestartMainActivity.class);
+					intent.putExtra(RestartMainActivity.ACTIVITY_AUTODETECT_SCREEN_ORIENTATION, true);
+					context.startActivity(intent);
+					try{
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {}
 					System.exit(0);
 				}
 			}

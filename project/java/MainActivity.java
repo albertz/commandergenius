@@ -1276,6 +1276,8 @@ public class MainActivity extends Activity
 
 	void setScreenOrientation()
 	{
+		if( !Globals.AutoDetectOrientation && getIntent().getBooleanExtra(RestartMainActivity.ACTIVITY_AUTODETECT_SCREEN_ORIENTATION, false) )
+			Globals.AutoDetectOrientation = true;
 		if( Globals.AutoDetectOrientation )
 		{
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);

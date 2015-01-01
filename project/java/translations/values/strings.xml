@@ -197,4 +197,6 @@
 
     <string name="google_play_game_services_app_id" translatable="false">==GOOGLEPLAYGAMESERVICES_APP_ID==</string>
 
+    <string name="restarting_please_wait">Restarting, please wait.</string>
+
 </resources>
