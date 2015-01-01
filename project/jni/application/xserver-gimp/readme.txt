@@ -16,7 +16,8 @@ x11proto-xext-dev x11proto-xf86bigfont-dev \
 x11proto-xf86dga-dev x11proto-xf86dri-dev \
 x11proto-xf86vidmode-dev x11proto-xinerama-dev \
 libxmuu-dev libxt-dev libsm-dev libice-dev \
-libxrender-dev libxrandr-dev curl autoconf automake libtool
+libxrender-dev libxrandr-dev curl autoconf automake libtool \
+pkg-config libjpeg-dev libpng-dev
 
 You will need both xcb-proto and python-xcbgen packages
 to have version 1.10-1, you may download newer packages
@@ -62,3 +63,67 @@ sudo tar cvzf ../dist-gimp-wheezy.tar.gz *
 
 Upload resulting system image somewhere, and change download URL inside
 AndroidAppSettings.cfg, then recompile .apk file.
+
+New releases of Gimp contain statically linked xkbcomp, xli and xhost executables
+for XSDL, because NDK r10c toolchain for some reason builds xkbcomp, which crashes
+on Toshiba AT-330 with Android 4.0.3. To create these executables, you will need
+to create Debian x86 and armhf chroot installations, like this:
+
+sudo apt-get install qemu-user-static
+
+sudo qemu-debootstrap --arch=i386 --verbose \
+        --components=main,universe,restricted,multiverse \
+        --include=fakeroot,libc-bin,locales-all,build-essential,sudo \
+        wheezy wheezy-x86 http://ftp.ua.debian.org/debian/
+
+sudo qemu-debootstrap --arch=armhf --verbose \
+        --components=main,universe,restricted,multiverse \
+        --include=fakeroot,libc-bin,locales-all,build-essential,sudo \
+        wheezy wheezy-armhf http://ftp.ua.debian.org/debian/
+
+sudo qemu-debootstrap --arch=mipsel --verbose \
+        --components=main,universe,restricted,multiverse \
+        --include=fakeroot,libc-bin,locales-all,build-essential,sudo \
+        wheezy wheezy-mipsel http://ftp.ua.debian.org/debian/
+
+Put this into /etc/apt/sources.list in each chroot, then do sudo apt-get update:
+
+deb http://http.debian.net/debian/ wheezy contrib main non-free
+deb-src http://http.debian.net/debian/ wheezy main contrib
+
+deb http://security.debian.org/ wheezy/updates contrib main non-free
+deb-src http://security.debian.org/ wheezy/updates main contrib
+
+deb http://http.debian.net/debian/ wheezy-updates contrib main non-free
+deb-src http://http.debian.net/debian/ wheezy-updates main contrib
+
+deb http://http.debian.net/debian/ wheezy-backports contrib main non-free
+deb-src http://http.debian.net/debian/ wheezy-backports contrib main
+
+Go to each of these chroots using chroot or schroot command, install all packages
+mentioned in the previous section, then download and compile static executables:
+
+wget http://cgit.freedesktop.org/xorg/app/xhost/snapshot/xhost-1.0.6.tar.gz
+wget http://cgit.freedesktop.org/xorg/app/xkbcomp/snapshot/xkbcomp-1.2.4.tar.gz
+apt-get source xli
+wget https://github.com/kfish/xsel/archive/master.tar.gz
+
+xhost:
+./autogen.sh
+env XHOST_LIBS="-static -lX11 -lxcb -lXau -lXdmcp -lXmuu -lpthread" ./configure
+make V=1
+
+xkbcomp:
+./autogen.sh
+env XKBCOMP_LIBS="-static -lxkbfile -lX11 -lxcb -lXau -lXdmcp -lXmuu -lpthread" ./configure
+make V=1
+
+xli:
+cat debian/patches/series | while read F ; do patch -p1 < debian/patches/$F ; done
+xmkmf
+env EXTRA_LIBRARIES="-static -lxcb -lXau -lXdmcp -lXmuu -lpthread -ldl" make -e
+
+xsel:
+./autogen.sh
+env LIBS="-static -lX11 -lxcb -lXau -lXdmcp -lXmuu -lpthread" ./configure
+make V=1

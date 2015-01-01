@@ -203,7 +203,7 @@ void setupEnv(void)
 {
 	uid_t uid = geteuid();
 	struct passwd * pwd;
-	char buf[32];
+	char buf[PATH_MAX];
 	errno = 0;
 	pwd = getpwuid(uid);
 	if( !pwd )
@@ -215,6 +215,13 @@ void setupEnv(void)
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "User %s ID %s", pwd->pw_name, buf);
 	setenv("USER_ID", buf, 1);
 	setenv("USER", pwd->pw_name, 1);
+	sprintf( buf, "%s/usr/share/X11/XErrorDB", getenv("SECURE_STORAGE_DIR") );
+	setenv("XERRORDB", buf, 1);
+	sprintf( buf, "%s/usr/lib/X11/XKeysymDB", getenv("SECURE_STORAGE_DIR") );
+	setenv("XKEYSYMDB", buf, 1);
+	sprintf( buf, "%s/usr/share/X11/locale", getenv("SECURE_STORAGE_DIR") );
+	setenv("XLOCALEDIR", buf, 1);
+	sprintf( buf, "%s/usr/share/X11/locale", getenv("SECURE_STORAGE_DIR") );
 }
 
 void showError(void)
