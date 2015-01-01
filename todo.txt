@@ -31,8 +31,6 @@ TODO, which will get actually done
 
 - XSDL: support Android intent x11://localhost:6000 - http://www.openintents.org/node/905
 
-- XSDL: copy text from Android clipboard when it changes.
-
 - USB Keyboard: configurable mouse speed, show keyboard LEDs, redefine unknown keys, fix Lollipop SELinux bug.
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
