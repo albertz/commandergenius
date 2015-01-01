@@ -111,7 +111,9 @@ public class RestartMainActivity extends Activity
 		_tv.setMaxLines(2);
 		_tv.setMinLines(2);
 		_tv.setText(R.string.restarting_please_wait);
+		_tv.setTextSize(30f);
 		_tv.setPadding((int)(width * 0.1), (int)(height * 0.1), (int)(width * 0.1), 0);
+		_layout.addView(_tv);
 
 		_videoLayout = new FrameLayout(this);
 		_videoLayout.addView(_layout);

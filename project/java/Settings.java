@@ -74,6 +74,7 @@ import android.hardware.Sensor;
 import android.widget.Toast;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.content.Intent;
 
 
 // TODO: too much code here, split into multiple files, possibly auto-generated menus?
@@ -499,8 +500,8 @@ class Settings
 		} catch ( IOException e ) { }
 		new File( p.getFilesDir() + "/" + SettingsFileName ).delete();
 
-		Intent intent = new Intent(context, RestartMainActivity.class);
-		context.startActivity(intent);
+		Intent intent = new Intent(p, RestartMainActivity.class);
+		p.startActivity(intent);
 		System.exit(0);
 	}
 
