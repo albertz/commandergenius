@@ -43,6 +43,7 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 #include "SDL_mutex.h"
 #include "SDL_thread.h"
 #include "SDL_android.h"
+#include "SDL_syswm.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
@@ -76,6 +77,7 @@ static jmethodID JavaIsScreenKeyboardShown = NULL;
 static jmethodID JavaSetScreenKeyboardHintMessage = NULL;
 static jmethodID JavaStartAccelerometerGyroscope = NULL;
 static jmethodID JavaGetClipboardText = NULL;
+static jmethodID JavaSetClipboardText = NULL;
 static jmethodID JavaGetAdvertisementParams = NULL;
 static jmethodID JavaSetAdvertisementVisible = NULL;
 static jmethodID JavaSetAdvertisementPosition = NULL;
@@ -345,6 +347,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaSetScreenKeyboardHintMessage = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setScreenKeyboardHintMessage", "(Ljava/lang/String;)V");
 	JavaStartAccelerometerGyroscope = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "startAccelerometerGyroscope", "(I)V");
 	JavaGetClipboardText = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "getClipboardText", "()Ljava/lang/String;");
+	JavaSetClipboardText = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setClipboardText", "(Ljava/lang/String;)V");
 
 	JavaGetAdvertisementParams = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "getAdvertisementParams", "([I)V");
 	JavaSetAdvertisementVisible = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setAdvertisementVisible", "(I)V");
@@ -419,7 +422,25 @@ JAVA_EXPORT_NAME(Settings_nativeSetVideoDepth) (JNIEnv* env, jobject thiz, jint 
 
 void SDLCALL SDL_ANDROID_GetClipboardText(char * buf, int len)
 {
-	buf[0] = 0;
+	char *c = SDL_GetClipboardText();
+	strncpy(buf, c, len);
+	buf[len-1] = 0;
+	SDL_free(c);
+}
+
+int SDLCALL SDL_SetClipboardText(const char *text)
+{
+	(*JavaEnv)->PushLocalFrame(JavaEnv, 1);
+	jstring s = (*JavaEnv)->NewStringUTF(JavaEnv, text);
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetClipboardText, s );
+	if( s )
+		(*JavaEnv)->DeleteLocalRef( JavaEnv, s );
+	(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
+}
+
+char * SDLCALL SDL_GetClipboardText(void)
+{
+	char *buf = NULL;
 	(*JavaEnv)->PushLocalFrame( JavaEnv, 1 );
 	jstring s = (jstring) (*JavaEnv)->CallObjectMethod( JavaEnv, JavaRenderer, JavaGetClipboardText );
 	if( s )
@@ -427,13 +448,39 @@ void SDLCALL SDL_ANDROID_GetClipboardText(char * buf, int len)
 		const char *c = (*JavaEnv)->GetStringUTFChars( JavaEnv, s, NULL );
 		if( c )
 		{
-			strncpy(buf, c, len);
-			buf[len-1] = 0;
+			int len = strlen(c);
+			buf = SDL_malloc(len + 1);
+			memcpy(buf, c, len + 1);
 			(*JavaEnv)->ReleaseStringUTFChars( JavaEnv, s, c );
 		}
 		(*JavaEnv)->DeleteLocalRef( JavaEnv, s );
 	}
 	(*JavaEnv)->PopLocalFrame( JavaEnv, NULL );
+	if (buf == NULL)
+	{
+		buf = SDL_malloc(1);
+		buf[0] = 0;
+	}
+	return buf;
+}
+
+int SDLCALL SDL_HasClipboardText(void)
+{
+	char *c = SDL_GetClipboardText();
+	int ret = c[0] != 0;
+	SDL_free(c);
+	return ret;
+}
+
+JAVA_EXPORT_NAME(DemoRenderer_nativeClipboardChanged) ( JNIEnv* env, jobject thiz )
+{
+	if ( SDL_ProcessEvents[SDL_SYSWMEVENT] == SDL_ENABLE )
+	{
+		SDL_SysWMmsg wmmsg;
+		SDL_VERSION(&wmmsg.version);
+		wmmsg.type = SDL_SYSWM_ANDROID_CLIPBOARD_CHANGED;
+		SDL_PrivateSysWMEvent(&wmmsg);
+	}
 }
 
 int SDLCALL SDL_ANDROID_GetAdvertisementParams(int * visible, SDL_Rect * position)

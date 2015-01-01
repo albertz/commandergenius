@@ -148,6 +148,30 @@ extern DECLSPEC void SDLCALL SDL_ANDROID_SetGamepadKeymap(int A, int B, int X, i
 /* Copy contents of Android clipboard into supplied buffer */
 extern DECLSPEC void SDLCALL SDL_ANDROID_GetClipboardText(char * buf, int len);
 
+/* Copy of SDL2 API */
+
+/**
+ * \brief Put UTF-8 text into the clipboard
+ *
+ * \sa SDL_GetClipboardText()
+ */
+
+extern DECLSPEC int SDLCALL SDL_SetClipboardText(const char *text);
+
+/**
+ * \brief Get UTF-8 text from the clipboard, which must be freed with SDL_free()
+ *
+ * \sa SDL_SetClipboardText()
+ */
+extern DECLSPEC char * SDLCALL SDL_GetClipboardText(void);
+
+/**
+ * \brief Returns a flag indicating whether the clipboard exists and contains a text string that is non-empty
+ *
+ * \sa SDL_GetClipboardText()
+ */
+extern DECLSPEC int SDLCALL SDL_HasClipboardText(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -37,6 +37,7 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 
 #include "SDL.h"
 #include "SDL_config.h"
+#include "SDL_syswm.h"
 
 #include "SDL_version.h"
 #include "SDL_mutex.h"
@@ -1654,6 +1655,14 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeScreenVisibleRect) (JNIEnv* env, jobjec
 		// Move mouse by 1 pixel to force screen update
 		SDL_GetMouseState( &x, &y );
 		SDL_ANDROID_MainThreadPushMouseMotion(x > 0 ? x-1 : 0, y);
+		if ( SDL_ProcessEvents[SDL_SYSWMEVENT] == SDL_ENABLE )
+		{
+			struct SDL_SysWMmsg wmmsg;
+			SDL_VERSION(&wmmsg.version);
+			wmmsg.type = SDL_SYSWM_ANDROID_SCREEN_VISIBLE_RECT;
+			wmmsg.event.screenVisibleRect = (SDL_Rect) {x, y, w, h};
+			SDL_PrivateSysWMEvent(&wmmsg);
+		}
 	}
 	else
 		return;

@@ -181,9 +181,32 @@ typedef struct SDL_SysWMinfo {
 	int data;
 } SDL_SysWMinfo;
 
-#else
+#elif defined(SDL_VIDEO_DRIVER_ANDROID)
+
+#include "SDL_video.h"
+
+typedef enum {
+	SDL_SYSWM_ANDROID_CLIPBOARD_CHANGED, /* Call SDL_GetClipboardText() after receiving this event */
+	SDL_SYSWM_ANDROID_SCREEN_VISIBLE_RECT,
+} SDL_SYSWM_TYPE;
 
 /** The generic custom event structure */
+struct SDL_SysWMmsg {
+	SDL_version version;
+	SDL_SYSWM_TYPE type;
+	union {
+		SDL_Rect screenVisibleRect; /* These are physical screen dimensions, as returned by SDL_ListModes(NULL, 0)[0], not values from SDL_SetVideoMode() */
+	} event;
+};
+
+/** The generic custom window manager information structure */
+typedef struct SDL_SysWMinfo {
+	SDL_version version;
+	int data;
+} SDL_SysWMinfo;
+
+#else
+
 struct SDL_SysWMmsg {
 	SDL_version version;
 	int data;

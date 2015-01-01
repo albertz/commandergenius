@@ -57,7 +57,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.text.ClipboardManager;
+import android.content.ClipboardManager;
+import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 
 
 class Mouse
@@ -570,7 +571,14 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public DemoRenderer(MainActivity _context)
 	{
 		context = _context;
-		clipboard = (android.text.ClipboardManager) context.getSystemService(context.CLIPBOARD_SERVICE);
+		clipboard = (ClipboardManager) context.getSystemService(context.CLIPBOARD_SERVICE);
+		clipboard.addPrimaryClipChangedListener(new OnPrimaryClipChangedListener()
+		{
+			public void onPrimaryClipChanged()
+			{
+				nativeClipboardChanged();
+			}
+		});
 	}
 	
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -766,6 +774,16 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		return ret;
 	}
 
+	public void setClipboardText(final String s) // Called from native code
+	{
+		try {
+			if( clipboard != null )
+				clipboard.setText(s);
+		} catch (Exception e) {
+			Log.i("SDL", "setClipboardText() exception: " + e.toString());
+		}
+	}
+
 	public void exitApp()
 	{
 		 nativeDone();
@@ -920,6 +938,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public native void nativeGlContextLostAsyncEvent();
 	public static native void nativeTextInput( int ascii, int unicode );
 	public static native void nativeTextInputFinished();
+	public static native void nativeClipboardChanged();
 
 	private MainActivity context = null;
 	public AccelerometerReader accelerometer = null;
