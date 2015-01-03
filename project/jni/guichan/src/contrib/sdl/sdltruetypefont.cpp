@@ -83,6 +83,11 @@ namespace gcn
         int SDLTrueTypeFont::getWidth(const std::string& text) const
         {
             int w, h;
+            if (text.size() == 0)
+            {
+                __android_log_print(ANDROID_LOG_INFO, "GUICHAN", "SDLTrueTypeFont::getWidth(): empty text string");
+                return 0;
+            }
             TTF_SizeText(mFont, text.c_str(), &w, &h);
         
             return w;
@@ -95,8 +100,9 @@ namespace gcn
     
         void SDLTrueTypeFont::drawString(gcn::Graphics* graphics, const std::string& text, const int x, const int y)
         {
-            if (text == "")
+            if (text.size() == 0 || getWidth(text) == 0)
             {
+                __android_log_print(ANDROID_LOG_INFO, "GUICHAN", "SDLTrueTypeFont::drawString(): empty text string: '%s'", text.c_str());
                 return;
             }
         
@@ -104,6 +110,7 @@ namespace gcn
 
             if (sdlGraphics == NULL)
             {
+                __android_log_print(ANDROID_LOG_INFO, "GUICHAN", "SDLTrueTypeFont::drawString(): Graphics object not an SDL graphics object!");
                 throw GCN_EXCEPTION("SDLTrueTypeFont::drawString. Graphics object not an SDL graphics object!");
                 return;
             }

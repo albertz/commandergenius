@@ -62,3 +62,6 @@
 [submodule "project/jni/application/uae4all2"]
 	path = project/jni/application/uae4all2
 	url = git@github.com:lubomyr/uae4all2.git
+[submodule "project/jni/application/basiliskii/basiliskii"]
+	path = project/jni/application/basiliskii/basiliskii
+	url = git@github.com:pelya/BasiliskII-android.git
