@@ -631,7 +631,9 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 					ww = topView.getWidth() - topView.getWidth() % 2;
 					hh = topView.getHeight() - topView.getHeight() % 2;
 				}
-				if (mWidth != 0 && mHeight != 0 && (mWidth != ww || mHeight != hh))
+				if (mWidth != 0 && mHeight != 0 && (
+					Math.abs(mWidth - ww) > mWidth / 10 ||
+					Math.abs(mHeight - hh) > mHeight / 10))
 				{
 					Log.w("SDL", "libSDL: DemoRenderer.onWindowResize(): screen size changed from " + mWidth + "x" + mHeight + " to " + ww + "x" + hh + " - restarting application");
 					Intent intent = new Intent(context, RestartMainActivity.class);
