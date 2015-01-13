@@ -29,8 +29,6 @@ TODO, which will get actually done
 
 - SDL: control mouse with right analog gamepad stick.
 
-- SDL: implement framebuffer objects for software rendering, for improving speed.
-
 - USB Keyboard: configurable mouse speed, show keyboard LEDs, redefine unknown keys, fix Lollipop SELinux bug.
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
