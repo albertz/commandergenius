@@ -1096,8 +1096,9 @@ public class MainActivity extends Activity
 			}
 		}
 
-		// ----- VCMI hack -----
 		String [] binaryZipNames = { "binaries-" + android.os.Build.CPU_ABI + ".zip", "binaries-" + android.os.Build.CPU_ABI2 + ".zip", "binaries.zip" };
+		if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP )
+			binaryZipNames = new String[] { "binaries-" + android.os.Build.CPU_ABI + "-pie.zip", "binaries-" + android.os.Build.CPU_ABI2 + "-pie.zip", "binaries-" + android.os.Build.CPU_ABI + ".zip", "binaries-" + android.os.Build.CPU_ABI2 + ".zip", "binaries.zip" };
 		for(String binaryZip: binaryZipNames)
 		{
 			try {
@@ -1203,7 +1204,6 @@ public class MainActivity extends Activity
 				//Log.i("SDL", "libSDL: Error: " + eee.toString());
 			}
 		}
-		// ----- VCMI hack -----
 	};
 
 	public static void LoadApplicationLibrary(final Context context)

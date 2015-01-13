@@ -72,12 +72,16 @@ cp $CURDIR/xserver/data/busybox-$1 ./busybox
 cp $CURDIR/ssh ./
 cp $CURDIR/sshpass ./
 mkdir -p usr/bin
-# Executables linked with NDK, which crash on some devices.
-for f in xhost xkbcomp xli xsel; do cp $CURDIR/xserver/android/$1/$f ./usr/bin/ ; done
+# Executables linked with NDK, which crash on Lollipop.
+for f in xhost xkbcomp xli xsel; do cp $CURDIR/xserver/android/$1/$f ./usr/bin/$f ; done
 # Statically-linked prebuilt executables, generated using Debian chroot.
 # There are no executables for old ARMv5, so we'll use NDK executables instead for that arch.
-for f in xhost xkbcomp xli xsel; do cp $CURDIR/xserver/data/$f-$1 ./usr/bin/$f ; done
+#for f in xhost xkbcomp xli xsel; do cp $CURDIR/xserver/data/$f-$1 ./usr/bin/$f ; done
 rm -f ../AndroidData/binaries-$1.zip
 zip -r ../AndroidData/binaries-$1.zip .
+# Executables linked with NDK with -pie, which crash on pre-Lollipop.
+for f in xhost xkbcomp xli xsel; do rm ./usr/bin/$f ; cp $CURDIR/xserver/android/$1/pie/$f ./usr/bin/$f ; done
+rm -f ../AndroidData/binaries-$1-pie.zip
+zip -r ../AndroidData/binaries-$1-pie.zip .
 
 exit 0
