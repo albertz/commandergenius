@@ -1235,6 +1235,8 @@ public class MainActivity extends Activity
 				}
 			}
 		}
+		Log.v("SDL", "libSDL: loaded all libraries");
+		ApplicationLibraryLoaded = true;
 	}
 
 	public int getApplicationVersion()
@@ -1310,6 +1312,7 @@ public class MainActivity extends Activity
 	private String _screenKeyboardHintMessage = null;
 	static boolean keyboardWithoutTextInputShown = false;
 	private boolean sdlInited = false;
+	public static boolean ApplicationLibraryLoaded = false;
 
 	public interface TouchEventsListener
 	{

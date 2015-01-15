@@ -675,8 +675,10 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		
 		mGlContextLost = false;
 
-		if(Globals.CompatibilityHacksStaticInit)
+		if( Globals.CompatibilityHacksStaticInit )
 			MainActivity.LoadApplicationLibrary(context);
+		while( !MainActivity.ApplicationLibraryLoaded )
+			try { Thread.sleep(200); } catch (InterruptedException eeee) {}
 
 		Settings.Apply(context);
 		Settings.nativeSetEnv( "DISPLAY_RESOLUTION_WIDTH", String.valueOf(Math.max(mWidth, mHeight)) );
@@ -686,7 +688,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		if( Globals.MoveMouseWithGyroscope )
 			startAccelerometerGyroscope(1);
 		// Tweak video thread priority, if user selected big audio buffer
-		if(Globals.AudioBufferConfig >= 2)
+		if( Globals.AudioBufferConfig >= 2 )
 			Thread.currentThread().setPriority( (Thread.NORM_PRIORITY + Thread.MIN_PRIORITY) / 2 ); // Lower than normal
 		 // Calls main() and never returns, hehe - we'll call eglSwapBuffers() from native code
 		nativeInit( Globals.DataDir,
