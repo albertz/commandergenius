@@ -57,8 +57,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.content.ClipboardManager;
-import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 import android.app.PendingIntent;
 import android.app.AlarmManager;
 import android.content.Intent;
@@ -570,16 +568,14 @@ abstract class DifferentTouchInput
 	}
 }
 
-
 class DemoRenderer extends GLSurfaceView_SDL.Renderer
 {
 	public DemoRenderer(MainActivity _context)
 	{
 		context = _context;
-		clipboard = (ClipboardManager) context.getSystemService(context.CLIPBOARD_SERVICE);
-		clipboard.addPrimaryClipChangedListener(new OnPrimaryClipChangedListener()
+		Clipboard.get().setListener(context, new Runnable()
 		{
-			public void onPrimaryClipChanged()
+			public void run()
 			{
 				nativeClipboardChanged();
 			}
@@ -818,24 +814,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 	public String getClipboardText() // Called from native code
 	{
-		String ret = "";
-		try {
-			if( clipboard != null && clipboard.getText() != null )
-				ret = clipboard.getText().toString();
-		} catch (Exception e) {
-			Log.i("SDL", "getClipboardText() exception: " + e.toString());
-		}
-		return ret;
+		return Clipboard.get().get(context);
 	}
 
 	public void setClipboardText(final String s) // Called from native code
 	{
-		try {
-			if( clipboard != null )
-				clipboard.setText(s);
-		} catch (Exception e) {
-			Log.i("SDL", "setClipboardText() exception: " + e.toString());
-		}
+		Clipboard.get().set(context, s);
 	}
 
 	public void exitApp()
@@ -1008,7 +992,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	private boolean mFirstTimeStart = true;
 	public int mWidth = 0;
 	public int mHeight = 0;
-	private ClipboardManager clipboard = null;
 	int mOrientationFrameHackyCounter = 0;
 
 	public static final boolean mRatelimitTouchEvents = true; //(Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO);
