@@ -29,7 +29,7 @@ TODO, which will get actually done
 
 - SDL: control mouse with right analog gamepad stick.
 
-- USB Keyboard: configurable mouse speed, show keyboard LEDs, redefine unknown keys, fix Lollipop SELinux bug.
+- USB Keyboard: show keyboard LEDs, redefine unknown keys, add VLC server.
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
 
