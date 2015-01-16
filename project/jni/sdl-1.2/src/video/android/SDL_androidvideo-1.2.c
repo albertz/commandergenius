@@ -449,6 +449,8 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		SDL_ANDROID_ForceClearScreenRect[3].h = window.y;
 
 		SDL_SelectVideoDisplay(0);
+		if (SDL_VideoWindow)
+			SDL_DestroyWindow(SDL_VideoWindow);
 		SDL_VideoWindow = SDL_CreateWindow("", window.x, window.y, window.w, window.h, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL);
 
 		SDL_memset(&mode, 0, sizeof(mode));
@@ -524,6 +526,7 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 */
 void ANDROID_VideoQuit(_THIS)
 {
+	// TODO: this function crashes SDL
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Calling VideoQuit()");
 	if( !SDL_ANDROID_InsideVideoThread() )
 	{
@@ -1172,8 +1175,11 @@ void SDL_ANDROID_VideoContextLost()
 	}
 };
 
+extern DECLSPEC int SDL_ANDROID_ScreenKeyboardUpdateToNewVideoMode(int oldx, int oldy, int newx, int newy);
+
 void SDL_ANDROID_VideoContextRecreated()
 {
+	int i;
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Sending SDL_VIDEORESIZE event %dx%d", SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight);
 	//SDL_PrivateResize(SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight);
 	if ( SDL_ProcessEvents[SDL_VIDEORESIZE] == SDL_ENABLE ) {
@@ -1186,9 +1192,15 @@ void SDL_ANDROID_VideoContextRecreated()
 		}
 	}
 
+	SDL_ANDROID_ScreenKeyboardUpdateToNewVideoMode(SDL_modelist[0]->w, SDL_modelist[0]->h, SDL_ANDROID_sWindowWidth, SDL_ANDROID_sWindowHeight);
+
+	SDL_modelist[0]->w = SDL_ANDROID_sWindowWidth;
+	SDL_modelist[0]->h = SDL_ANDROID_sWindowHeight;
+
 	if( ! sdl_opengl )
 	{
-		int i;
+		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Setting display dimensions to %dx%d", SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
+		SDL_PrivateAndroidSetDesktopMode(SDL_VideoWindow, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
 		SDL_SelectRenderer(SDL_VideoWindow); // Re-apply glOrtho() and blend modes
 		// Re-apply our custom 4:3 screen aspect ratio
 		glViewport(0, 0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);

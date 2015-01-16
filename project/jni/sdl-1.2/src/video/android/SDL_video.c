@@ -1193,6 +1193,8 @@ SDL_GetWindowData(SDL_Window * window)
     return window->userdata;
 }
 
+#endif
+
 void
 SDL_SetWindowPosition(SDL_Window * window, int x, int y)
 {
@@ -1207,7 +1209,9 @@ SDL_SetWindowPosition(SDL_Window * window, int x, int y)
     if (_this->SetWindowPosition) {
         _this->SetWindowPosition(_this, window);
     }
+#if SDL_VERSION_ATLEAST(1,3,0)
     SDL_SendWindowEvent(window, SDL_WINDOWEVENT_MOVED, x, y);
+#endif
 }
 
 void
@@ -1234,7 +1238,9 @@ SDL_SetWindowSize(SDL_Window * window, int w, int h)
     if (_this->SetWindowSize) {
         _this->SetWindowSize(_this, window);
     }
+#if SDL_VERSION_ATLEAST(1,3,0)
     SDL_OnWindowResized(window);
+#endif
 }
 
 void
@@ -1256,6 +1262,8 @@ SDL_GetWindowSize(SDL_Window * window, int *w, int *h)
         }
     }
 }
+
+#if SDL_VERSION_ATLEAST(1,3,0)
 
 void
 SDL_ShowWindow(SDL_Window * window)
@@ -3685,5 +3693,11 @@ SDL_SetTextInputRect(SDL_Rect *rect)
     }
 }
 #endif
+
+void SDL_PrivateAndroidSetDesktopMode(SDL_Window * window, int w, int h)
+{
+    window->display->desktop_mode.w = w;
+    window->display->desktop_mode.h = h;
+}
 
 /* vi: set ts=4 sw=4 expandtab: */

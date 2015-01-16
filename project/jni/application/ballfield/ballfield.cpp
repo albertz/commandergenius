@@ -688,7 +688,10 @@ int main(int argc, char* argv[])
 					if(evt.key.keysym.sym == SDLK_1)
 						SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, 0);
 					if(evt.key.keysym.sym == SDLK_2)
+					{
 						SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 1);
+						screen = SDL_SetVideoMode(SCREEN_W, SDL_GetVideoSurface()->h + 1, bpp, flags);
+					}
 					if(evt.key.keysym.sym == SDLK_3)
 						SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 0);
 					if(evt.key.keysym.sym == SDLK_4)

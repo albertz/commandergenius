@@ -615,7 +615,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		{
 			public void run()
 			{
-				// Samsung multiwindow will swap screen dimensionswhen unlocking the lockscreen, sleep a while so we won't use these temporary values
+				// Samsung multiwindow will swap screen dimensions when unlocking the lockscreen, sleep a while so we won't use these temporary values
 				try{
 					Thread.sleep(2000);
 				} catch (InterruptedException e) {}
@@ -627,29 +627,33 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 					ww = topView.getWidth() - topView.getWidth() % 2;
 					hh = topView.getHeight() - topView.getHeight() % 2;
 				}
-				if (mWidth != 0 && mHeight != 0 && (
-					Math.abs(mWidth - ww) > mWidth / 10 ||
-					Math.abs(mHeight - hh) > mHeight / 10))
+
+				Display display = context.getWindowManager().getDefaultDisplay();
+
+				if (mWidth != 0 && mHeight != 0 && (mWidth != ww || mHeight != hh))
 				{
-					Log.w("SDL", "libSDL: DemoRenderer.onWindowResize(): screen size changed from " + mWidth + "x" + mHeight + " to " + ww + "x" + hh + " - restarting application");
-					Intent intent = new Intent(context, RestartMainActivity.class);
-					intent.putExtra(RestartMainActivity.ACTIVITY_AUTODETECT_SCREEN_ORIENTATION, true);
-					context.startActivity(intent);
-					try{
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {}
-					System.exit(0);
+					Log.w("SDL", "libSDL: DemoRenderer.onWindowResize(): screen size changed from " + mWidth + "x" + mHeight + " to " + ww + "x" + hh);
+					if (Globals.SwVideoMode &&
+						(Math.abs(display.getWidth() - ww) > display.getWidth() / 10 ||
+						Math.abs(display.getHeight() - hh) > display.getHeight() / 10))
+					{
+						Log.i("SDL", "Multiwindow detected - enabling screen orientation autodetection");
+						Globals.AutoDetectOrientation = true;
+						context.setScreenOrientation();
+						DemoRenderer.super.ResetVideoSurface();
+						DemoRenderer.super.onWindowResize(ww, hh);
+					}
 				}
 				if (mWidth == 0 && mHeight == 0)
 				{
-					Display getOrient = context.getWindowManager().getDefaultDisplay();
-					if ((ww > hh) != (getOrient.getWidth() > getOrient.getHeight()))
+					if ((ww > hh) != (display.getWidth() > display.getHeight()))
 					{
-						Log.i("SDL", "Multiwindow detected - app window size " + ww + "x" + hh + " but display dimensions are " + getOrient.getWidth() + "x" + getOrient.getHeight());
+						Log.i("SDL", "Multiwindow detected - app window size " + ww + "x" + hh + " but display dimensions are " + display.getWidth() + "x" + display.getHeight());
 						Globals.AutoDetectOrientation = true;
-						Globals.HorizontalOrientation = (ww > hh);
 					}
 				}
+				if (Globals.AutoDetectOrientation && (ww > hh) != (mWidth > mHeight))
+					Globals.HorizontalOrientation = (ww > hh);
 			}
 		}).start();
 	}
@@ -665,7 +669,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public void onDrawFrame(GL10 gl)
 	{
 		mGl = gl;
-		DrawLogo(mGl);
 		SwapBuffers();
 
 		nativeInitJavaCallbacks();
@@ -715,7 +718,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		if(mGlContextLost) {
 			mGlContextLost = false;
 			Settings.SetupTouchscreenKeyboardGraphics(context); // Reload on-screen buttons graphics
-			DrawLogo(mGl);
 			super.SwapBuffers();
 		}
 
@@ -912,62 +914,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 			value <<= 1;
 		return value;
 	}
-	public void DrawLogo(GL10 gl)
-	{
-		/*
-		// TODO: this not quite works, as it seems
-		BitmapDrawable bmp = null;
-		try
-		{
-			bmp = new BitmapDrawable(context.getAssets().open("logo.png"));
-		}
-		catch(Exception e)
-		{
-			bmp = new BitmapDrawable(context.getResources().openRawResource(R.drawable.publisherlogo));
-		}
-		int width = bmp.getBitmap().getWidth();
-		int height = bmp.getBitmap().getHeight();
-		ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * width * height);
-		//byteBuffer.order(ByteOrder.BIG_ENDIAN);
-		bmp.getBitmap().copyPixelsToBuffer(byteBuffer);
-		byteBuffer.position(0);
-
-		gl.glViewport(0, 0, mWidth, mHeight);
-		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT);
-		gl.glColor4x(0x10000, 0x10000, 0x10000, 0x10000);
-		gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
-		gl.glEnable(GL10.GL_TEXTURE_2D);
-		int textureName = -1;
-		int mTextureNameWorkspace[] = new int[1];
-		int mCropWorkspace[] = new int[4];
-		gl.glGenTextures(1, mTextureNameWorkspace, 0);
-		textureName = mTextureNameWorkspace[0];
-		gl.glBindTexture(GL10.GL_TEXTURE_2D, textureName);
-		gl.glActiveTexture(textureName);
-		gl.glClientActiveTexture(textureName);
-		gl.glTexImage2D(GL10.GL_TEXTURE_2D, 0, GL10.GL_RGBA,
-				PowerOf2(width), PowerOf2(height), 0,
-				GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, null);
-		gl.glTexSubImage2D(GL10.GL_TEXTURE_2D, 0, 0, 0,
-				width, height,
-				GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, byteBuffer);
-		mCropWorkspace[0] = 0; // u
-		mCropWorkspace[1] = height; // v
-		mCropWorkspace[2] = width;
-		mCropWorkspace[3] = -height;
-		((GL11) gl).glTexParameteriv(GL10.GL_TEXTURE_2D,
-				GL11Ext.GL_TEXTURE_CROP_RECT_OES, mCropWorkspace, 0);
-		((GL11Ext) gl).glDrawTexiOES(0, -mHeight, 0, mWidth, mHeight);
-		gl.glActiveTexture(0);
-		gl.glClientActiveTexture(0);
-		gl.glBindTexture(GL10.GL_TEXTURE_2D, 0);
-		gl.glDeleteTextures(1, mTextureNameWorkspace, 0);
-
-		gl.glFlush();
-		*/
-	}
-
 
 	private native void nativeInitJavaCallbacks();
 	private native void nativeInit(String CurrentPath, String CommandLine, int multiThreadedVideo, int isDebuggerConnected);

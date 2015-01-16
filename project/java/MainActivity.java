@@ -1282,7 +1282,10 @@ public class MainActivity extends Activity
 			Globals.AutoDetectOrientation = true;
 		if( Globals.AutoDetectOrientation )
 		{
-			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2 )
+				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
+			else
+				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
 			return;
 		}
 		if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD )

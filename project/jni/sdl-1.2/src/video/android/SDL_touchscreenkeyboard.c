@@ -1198,6 +1198,20 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_SetScreenKeyboardFloatingJoystick(int en
 	return 1;
 }
 
+extern DECLSPEC int SDL_ANDROID_ScreenKeyboardUpdateToNewVideoMode(int oldx, int oldy, int newx, int newy)
+{
+	int i;
+	for( i = 0; i < SDL_ANDROID_SCREENKEYBOARD_BUTTON_NUM; i++ )
+	{
+		SDL_Rect pos, pos2;
+		SDL_ANDROID_GetScreenKeyboardButtonPos(i, &pos);
+		pos2.x = pos.x * newx / oldx;
+		pos2.y = pos.y * newy / oldy;
+		pos2.w = (pos.x + pos.w) * newx / oldx - pos2.x;
+		pos2.h = (pos.y + pos.h) * newy / oldy - pos2.y;
+		SDL_ANDROID_SetScreenKeyboardButtonPos(i, &pos2);
+	}
+}
 
 /**
  * @brief Dumps OpenGL state for debugging - typically every capability set with glEnable().

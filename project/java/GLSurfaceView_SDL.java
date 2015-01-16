@@ -517,6 +517,8 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 	 */
 	public static interface SwapBuffersCallback {
 		public boolean SwapBuffers();
+		public void ResetVideoSurface();
+		public void onWindowResize(int width, int height);
 	}
 
 	public static abstract class Renderer {
@@ -574,7 +576,11 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 		public abstract void onSurfaceChanged(GL10 gl, int width, int height);
 
 		/** Called when screen size changes */
-		public abstract void onWindowResize(int width, int height);
+		public void onWindowResize(int width, int height)
+		{
+			if( mSwapBuffersCallback != null )
+				mSwapBuffersCallback.onWindowResize(width, height);
+		}
 
 		/**
 		 * Called to draw the current frame.
@@ -597,6 +603,11 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 			if( mSwapBuffersCallback != null )
 				return mSwapBuffersCallback.SwapBuffers();
 			return false;
+		}
+
+		public void ResetVideoSurface() {
+			if( mSwapBuffersCallback != null )
+				mSwapBuffersCallback.ResetVideoSurface();
 		}
 		
 		public void setSwapBuffersCallback( SwapBuffersCallback c ) {
@@ -1029,30 +1040,21 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 				sEglSemaphore.release();
 		}
 
+		/* You need to call SwapBuffers() after this function */
+		public void ResetVideoSurface() {
+			mResetVideoSurface = true;
+		}
+
 		public boolean SwapBuffers() {
 
 			boolean tellRendererSurfaceCreated = false;
 			boolean tellRendererSurfaceChanged = false;
 
-			/*
-			 * This is our main activity thread's loop, we go until
-			 * asked to quit.
-			 */
-
-				/*
-				 *	Update the asynchronous state (window size)
-				 */
-			  while(true) { // Loop until we're re-created GL context and successfully called swap()
+			while(true) { // Loop until we're re-created GL context and successfully called swap()
 
 				int w, h;
 				boolean changed = false;
 				synchronized (this) {
-					/*
-					Runnable r;
-					while ((r = getEvent()) != null) {
-						r.run();
-					}
-					*/
 					if (mPaused) {
 						mRenderer.onSurfaceDestroyed();
 						mEglHelper.finish();
@@ -1106,15 +1108,16 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 					 * Once we're done with GL, we need to call swapBuffers()
 					 * to instruct the system to display the rendered frame
 					 */
-				if( mEglHelper.swap() )
+				if( !mResetVideoSurface && mEglHelper.swap() )
 					return true;
 				// We've lost GL context - recreate it
+				mResetVideoSurface = false;
 				mRenderer.onSurfaceDestroyed();
 				mEglHelper.finish();
 				mNeedStart = true;
 				if( Globals.NonBlockingSwapBuffers )
 					return false;
-			  }
+			}
 		}
 
 		private boolean needToWait() {
@@ -1254,6 +1257,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 		private EglHelper mEglHelper;
 		private GL10 mGL = null;
 		private boolean mNeedStart = false;
+		private boolean mResetVideoSurface = false;
 	}
 
 	static class LogWriter extends Writer {

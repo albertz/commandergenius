@@ -1421,6 +1421,9 @@ extern DECLSPEC void SDLCALL SDL_GL_SwapWindow(SDL_Window * window);
  */
 extern DECLSPEC void SDLCALL SDL_GL_DeleteContext(SDL_GLContext context);
 
+/** Private function exported to SDL 1.2 */
+void SDL_PrivateAndroidSetDesktopMode(SDL_Window * window, int w, int h);
+
 /*@}*//*OpenGL support functions*/
 
 

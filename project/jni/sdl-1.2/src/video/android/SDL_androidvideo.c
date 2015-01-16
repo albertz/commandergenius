@@ -177,17 +177,14 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 JNIEXPORT void JNICALL 
 JAVA_EXPORT_NAME(DemoRenderer_nativeResize) ( JNIEnv*  env, jobject  thiz, jint w, jint h, jint keepRatio )
 {
-	if( SDL_ANDROID_sRealWindowWidth == 0 )
-	{
-		SDL_ANDROID_sRealWindowWidth = w;
-		SDL_ANDROID_sRealWindowHeight = h;
-		SDL_ANDROID_sWindowWidth = w;
-		SDL_ANDROID_sWindowHeight = h;
-		SDL_ANDROID_TouchscreenCalibrationWidth = SDL_ANDROID_sWindowWidth;
-		SDL_ANDROID_TouchscreenCalibrationHeight = SDL_ANDROID_sWindowHeight;
-		SDL_ANDROID_ScreenKeep43Ratio = keepRatio;
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Physical screen resolution is %dx%d", w, h );
-	}
+	SDL_ANDROID_sRealWindowWidth = w;
+	SDL_ANDROID_sRealWindowHeight = h;
+	SDL_ANDROID_sWindowWidth = w;
+	SDL_ANDROID_sWindowHeight = h;
+	SDL_ANDROID_TouchscreenCalibrationWidth = SDL_ANDROID_sWindowWidth;
+	SDL_ANDROID_TouchscreenCalibrationHeight = SDL_ANDROID_sWindowHeight;
+	SDL_ANDROID_ScreenKeep43Ratio = keepRatio;
+	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Physical screen resolution is %dx%d", w, h );
 }
 
 JNIEXPORT void JNICALL 
