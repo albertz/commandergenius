@@ -86,7 +86,7 @@ typedef struct
     GLfloat h;
 } GLTexture_t;
 
-static GLTexture_t arrowImages[5];
+static GLTexture_t arrowImages[9];
 static GLTexture_t buttonAutoFireImages[MAX_BUTTONS_AUTOFIRE*2]; // These are not used anymore
 static GLTexture_t buttonImages[MAX_BUTTONS*2];
 static GLTexture_t mousePointer;
@@ -281,23 +281,48 @@ static void drawTouchscreenKeyboardLegacy()
 	int i;
 	float blendFactor;
 
-	blendFactor =		( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 1 : 0 ) +
-						( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
-						( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
-						( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
-	if( blendFactor == 0 || SDL_ANDROID_joysticksAmount >= 1 )
-		drawCharTex( &arrowImages[0], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
-	else
+	if( arrowImages[8].id == 0 ) // No diagonal arrow images
 	{
-		if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
-			drawCharTex( &arrowImages[1], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
-		if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
-			drawCharTex( &arrowImages[2], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
-		if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
-			drawCharTex( &arrowImages[3], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
-		if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
-			drawCharTex( &arrowImages[4], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
+		blendFactor =		( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 1 : 0 ) +
+							( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
+							( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
+							( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
+		if( blendFactor == 0 || SDL_ANDROID_joysticksAmount >= 1 )
+			drawCharTex( &arrowImages[0], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
+		else
+		{
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
+				drawCharTex( &arrowImages[1], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
+				drawCharTex( &arrowImages[2], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
+				drawCharTex( &arrowImages[3], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
+			if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
+				drawCharTex( &arrowImages[4], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
+		}
 	}
+	else  // Diagonal arrow images present
+	{
+		if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] && SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
+			drawCharTex( &arrowImages[5], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
+		else if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] && SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
+			drawCharTex( &arrowImages[6], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
+		else if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] && SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
+			drawCharTex( &arrowImages[7], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
+		else if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] && SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
+			drawCharTex( &arrowImages[8], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
+		else if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
+			drawCharTex( &arrowImages[1], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
+		else if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
+			drawCharTex( &arrowImages[2], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
+		else if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
+			drawCharTex( &arrowImages[3], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
+		else if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
+			drawCharTex( &arrowImages[4], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
+		else
+			drawCharTex( &arrowImages[0], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
+	}
+
 	if( SDL_ANDROID_joysticksAmount >= 2 )
 		drawCharTex( &arrowImages[0], NULL, &arrowsDraw[1], 1.0f, 1.0f, 1.0f, transparency );
 	if( SDL_ANDROID_joysticksAmount >= 3 )
@@ -851,15 +876,15 @@ static int setupScreenKeyboardButtonLegacy( int buttonID, Uint8 * charBuf )
 
 	if( buttonID < 5 )
 		data = &(arrowImages[buttonID]);
-	else
-	if( buttonID < 9 )
+	else if( buttonID < 9 )
 		data = &(buttonAutoFireImages[buttonID-5]);
-	else
+	else if( buttonID < 23 )
 		data = &(buttonImages[buttonID-9]);
-
-	if( buttonID == 23 )
+	else if( buttonID == 23 )
 		data = &mousePointer;
-	else if( buttonID > 22 ) // Error, array too big
+	else if( buttonID < 28 )
+		data = &(arrowImages[buttonID - 24 + 5]); // Diagonal arrows
+	else // Error, array too big
 		return 12; // Return value bigger than zero to iterate it
 
 	return setupScreenKeyboardButtonTexture(data, charBuf);
@@ -900,19 +925,19 @@ static int setupScreenKeyboardButtonSun( int buttonID, Uint8 * charBuf )
 
 static int setupScreenKeyboardButton( int buttonID, Uint8 * charBuf, int count )
 {
-	if(count == 24)
+	if( count == 24 || count == 28)
 	{
 		sunTheme = 0;
 		return setupScreenKeyboardButtonLegacy(buttonID, charBuf);
 	}
-	else if(count == 10)
+	else if( count == 10 )
 	{
 		sunTheme = 1;
 		return setupScreenKeyboardButtonSun(buttonID, charBuf);
 	}
 	else
 	{
-		__android_log_print(ANDROID_LOG_FATAL, "libSDL", "On-screen keyboard buton img count = %d, should be 10 or 24", count);
+		__android_log_print(ANDROID_LOG_FATAL, "libSDL", "On-screen keyboard buton img count = %d, should be 10 or 24 or 28", count);
 		return 12; // Return value bigger than zero to iterate it
 	}
 }

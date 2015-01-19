@@ -674,25 +674,19 @@ class Settings
 		{
 			if(Globals.TouchscreenKeyboardTheme < 0)
 				Globals.TouchscreenKeyboardTheme = 0;
-			if(Globals.TouchscreenKeyboardTheme > 3)
-				Globals.TouchscreenKeyboardTheme = 3;
+			if(Globals.TouchscreenKeyboardTheme > 4)
+				Globals.TouchscreenKeyboardTheme = 4;
 
 			if( Globals.TouchscreenKeyboardTheme == 0 )
-			{
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.ultimatedroid));
-			}
 			if( Globals.TouchscreenKeyboardTheme == 1 )
-			{
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.simpletheme));
-			}
 			if( Globals.TouchscreenKeyboardTheme == 2 )
-			{
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.sun));
-			}
 			if( Globals.TouchscreenKeyboardTheme == 3 )
-			{
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.keen));
-			}
+			if( Globals.TouchscreenKeyboardTheme == 4 )
+				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.retro));
 		}
 	}
 

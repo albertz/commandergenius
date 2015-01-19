@@ -301,10 +301,11 @@ echo "# Names for on-screen keyboard keys, such as Fire, Jump, Run etc, separate
 echo RedefinedKeysScreenKbNames=\"$RedefinedKeysScreenKbNames\" >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# On-screen keys theme" >> AndroidAppSettings.cfg
-echo "# 0 = Ultimate Droid by Sean Stieber (green, with gamepad joystick)" >> AndroidAppSettings.cfg
-echo "# 1 = Simple Theme by Beholder (white, with gamepad joystick)" >> AndroidAppSettings.cfg
+echo "# 0 = Ultimate Droid by Sean Stieber (green, with cross joystick)" >> AndroidAppSettings.cfg
+echo "# 1 = Simple Theme by Beholder (white, with cross joystick)" >> AndroidAppSettings.cfg
 echo "# 2 = Sun by Sirea (yellow, with round joystick)" >> AndroidAppSettings.cfg
 echo "# 3 = Keen by Gerstrong (multicolor, with round joystick)" >> AndroidAppSettings.cfg
+echo "# 4 = Retro by Santiago Radeff (red/white, with cross joystick)" >> AndroidAppSettings.cfg
 echo TouchscreenKeysTheme=$TouchscreenKeysTheme >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Redefine gamepad keys to SDL keysyms, button order is:" >> AndroidAppSettings.cfg
