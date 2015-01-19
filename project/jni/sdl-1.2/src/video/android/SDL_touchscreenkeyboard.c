@@ -283,22 +283,24 @@ static void drawTouchscreenKeyboardLegacy()
 
 	if( arrowImages[8].id == 0 ) // No diagonal arrow images
 	{
-		blendFactor =		( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 1 : 0 ) +
-							( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 1 : 0 ) +
-							( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 1 : 0 ) +
-							( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 1 : 0 );
+		blendFactor =		( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] ? 4 : 0 ) +
+							( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] ? 4 : 0 ) +
+							( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] ? 4 : 0 ) +
+							( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] ? 4 : 0 );
+		if (blendFactor >= 8)
+			blendFactor = 7;
 		if( blendFactor == 0 || SDL_ANDROID_joysticksAmount >= 1 )
 			drawCharTex( &arrowImages[0], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency );
 		else
 		{
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
-				drawCharTex( &arrowImages[1], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
+				drawCharTex( &arrowImages[1], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency * 4 / blendFactor );
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
-				drawCharTex( &arrowImages[2], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
+				drawCharTex( &arrowImages[2], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency * 4 / blendFactor );
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
-				drawCharTex( &arrowImages[3], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
+				drawCharTex( &arrowImages[3], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency * 4 / blendFactor );
 			if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
-				drawCharTex( &arrowImages[4], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency / blendFactor );
+				drawCharTex( &arrowImages[4], NULL, &arrowsDraw[0], 1.0f, 1.0f, 1.0f, transparency * 4 / blendFactor );
 		}
 	}
 	else  // Diagonal arrow images present
