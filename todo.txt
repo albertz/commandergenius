@@ -45,4 +45,6 @@ TODO, which will get actually done
 
 - OpenTTD: 24bpp color mode + 32bpp blitter in SDL menu.
 
+- OpenTTD: better support for hardware right mouse button.
+
 - Add glshim library: https://github.com/lunixbochs/glshim
