@@ -33,8 +33,6 @@ TODO, which will get actually done
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
 
-- GemRB: update.
-
 - OpenTTD: tutorial.
 
 - OpenTTD: horizintal toobar popup menu out of screen.
