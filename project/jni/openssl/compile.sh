@@ -12,10 +12,9 @@ echo APP_MODULES := libcrypto_static libssl_static > openssl/jni/Application.mk
 echo APP_ABI := $ARCH_LIST >> openssl/jni/Application.mk
 ndk-build -j8 -C openssl BUILD_HOST_SHARED_LIBRARY=jni/Apps.mk BUILD_HOST_STATIC_LIBRARY=jni/Apps.mk || exit 1
 for ARCH in $ARCH_LIST; do
-	mkdir -p openssl/$ARCH/lib
-	ln -s -f ../jni/include openssl/$ARCH/include
-	cp -f openssl/obj/local/$ARCH/libcrypto_static.a libcrypto-$ARCH.a || exit 1
-	cp -f openssl/obj/local/$ARCH/libssl_static.a libssl-$ARCH.a || exit 1
+	mkdir -p lib-$(ARCH)
+	cp -f openssl/obj/local/$ARCH/libcrypto_static.a lib-$(ARCH)/libcrypto.a || exit 1
+	cp -f openssl/obj/local/$ARCH/libssl_static.a lib-$(ARCH)/libssl.a || exit 1
 done
 rm -rf include
 mv openssl/jni/include ./
