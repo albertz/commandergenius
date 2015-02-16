@@ -703,7 +703,7 @@ done
 
 if [ -e ../jni/application/src/java.diff ]; then patch -d ../src --no-backup-if-mismatch < ../jni/application/src/java.diff || exit 1 ; fi
 if [ -e ../jni/application/src/java.patch ]; then patch -d ../src --no-backup-if-mismatch < ../jni/application/src/java.patch || exit 1 ; fi
-if ls ../jni/application/src/*.java > /dev/null 2>&1; cp -f ../jni/application/src/*.java ../src ; fi
+if ls ../jni/application/src/*.java > /dev/null 2>&1; then cp -f ../jni/application/src/*.java ../src ; fi
 
 cd ../..
 
