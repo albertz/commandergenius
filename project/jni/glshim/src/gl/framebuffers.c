@@ -1,4 +1,5 @@
 #include "framebuffers.h"
+
 #ifndef ANDROID
 #include <execinfo.h>
 #endif
@@ -55,6 +56,7 @@ void glGenFramebuffers(GLsizei n, GLuint *ids) {
 
 void glDeleteFramebuffers(GLsizei n, GLuint *framebuffers) {
 //printf("glDeleteFramebuffers(%i, %p), framebuffers[0]=%u\n", n, framebuffers, framebuffers[0]);
+    if (state.gl_batch) flush();
     LOAD_GLES_OES(glDeleteFramebuffers);
     
     errorGL();
@@ -63,6 +65,7 @@ void glDeleteFramebuffers(GLsizei n, GLuint *framebuffers) {
 
 GLboolean glIsFramebuffer(GLuint framebuffer) {
 //printf("glIsFramebuffer(%u)\n", framebuffer);
+    if (state.gl_batch) flush();
     LOAD_GLES_OES(glIsFramebuffer);
     
     errorGL();
@@ -72,22 +75,28 @@ GLboolean glIsFramebuffer(GLuint framebuffer) {
 GLenum fb_status;
 
 GLenum glCheckFramebufferStatus(GLenum target) {
-    //LOAD_GLES_OES(glCheckFramebufferStatus);
-    
-    //errorGL();
-    //GLenum result = gles_glCheckFramebufferStatus(target);
+    if (state.gl_batch) flush();
+//#define BEFORE 1
+#ifdef BEFORE
     GLenum result = fb_status;
     noerrorShim();
+#else
+    LOAD_GLES_OES(glCheckFramebufferStatus);
+    
+    errorGL();
+    GLenum result = gles_glCheckFramebufferStatus(target);
+#endif
+#undef BEFORE
 //printf("glCheckFramebufferStatus(0x%04X)=0x%04X\n", target, result);
     return result;
 }
 
 void glBindFramebuffer(GLenum target, GLuint framebuffer) {
 //printf("glBindFramebuffer(0x%04X, %u), list=%s\n", target, framebuffer, state.list.active?"active":"none");
-	PUSH_IF_COMPILING(glBindFramebuffer);
+	//PUSH_IF_COMPILING(glBindFramebuffer);
+    if (state.gl_batch) flush();
     LOAD_GLES_OES(glBindFramebuffer);
     LOAD_GLES_OES(glCheckFramebufferStatus);
-// fixme lubomyr
     LOAD_GLES(glGetError);
     
     if (target == GL_FRAMEBUFFER) {
@@ -124,6 +133,7 @@ void glBindFramebuffer(GLenum target, GLuint framebuffer) {
 }
 
 void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) {
+    if (state.gl_batch) flush();
     LOAD_GLES_OES(glFramebufferTexture2D);
     LOAD_GLES(glTexImage2D);
     LOAD_GLES(glBindTexture);
@@ -202,6 +212,7 @@ void glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbu
 }
 
 void glDeleteRenderbuffers(GLsizei n, GLuint *renderbuffers) {
+    if (state.gl_batch) flush();
     LOAD_GLES_OES(glDeleteRenderbuffers);
     
     // check if we delete a depthstencil
@@ -275,7 +286,7 @@ void glRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum int
 }
 
 void glBindRenderbuffer(GLenum target, GLuint renderbuffer) {
-	PUSH_IF_COMPILING(glBindRenderbuffer);
+    if (state.gl_batch) flush();
     LOAD_GLES_OES(glBindRenderbuffer);
 //printf("glBindRenderbuffer(0x%04X, %u)\n", target, renderbuffer);
     
@@ -287,6 +298,7 @@ void glBindRenderbuffer(GLenum target, GLuint renderbuffer) {
 
 GLboolean glIsRenderbuffer(GLuint renderbuffer) {
 //printf("glIsRenderbuffer(%u)\n", renderbuffer);
+    if (state.gl_batch) flush();
     LOAD_GLES_OES(glIsRenderbuffer);
     
     errorGL();

@@ -40,7 +40,7 @@ LOCAL_SRC_FILES := \
 	src/gl/math/eval.c \
 	src/glx/streaming.c
 
-LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DGL_EXPORTS -D_THREAD_SAFE=1 -DBCMHOST
+LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DBCMHOST
 
 LOCAL_LDLIBS := -ldl -llog -lEGL 
 

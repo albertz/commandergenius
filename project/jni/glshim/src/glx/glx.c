@@ -1,6 +1,4 @@
-#ifndef ANDROID
 #include <execinfo.h>
-#endif
 #include <fcntl.h>
 #include <linux/fb.h>
 #include <signal.h>
@@ -233,7 +231,8 @@ static void scan_env() {
     if (! first)
         return;
     /* Check for some corruption inside state.... */
-    if ((state.texture.active < 0) || (state.texture.active > MAX_TEX)) {
+    if ((state.texture.active < 0) || (state.texture.active > MAX_TEX) || 
+        (state.pointers.vertex.buffer!= 0) || (state.buffers.vertex != 0)) {
         printf("LIBGL: Warning, memory corruption detected at init, trying to compensate\n");
         initialize_glshim();
     }
@@ -572,7 +571,10 @@ void glXSwapBuffers(Display *display,
     static int frames = 0;
     
     LOAD_EGL(eglSwapBuffers);
-
+    if (gl_batch){
+        flush();
+    }
+    
     if (g_vsync && fbdev >= 0) {
         // TODO: can I just return if I don't meet vsync over multiple frames?
         // this will just block otherwise.
@@ -586,6 +588,7 @@ void glXSwapBuffers(Display *display,
         blitMainFBO();
         // blit the main_fbo before swap
     }
+
     egl_eglSwapBuffers(eglDisplay, eglSurface);
     CheckEGLErrors();
 
