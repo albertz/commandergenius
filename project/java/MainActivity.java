@@ -1327,7 +1327,7 @@ public class MainActivity extends Activity
 	public CloudSave cloudSave = null;
 	public ProgressDialog loadingDialog = null;
 
-	private FrameLayout _videoLayout = null;
+	FrameLayout _videoLayout = null;
 	private EditText _screenKeyboard = null;
 	private String _screenKeyboardHintMessage = null;
 	static boolean keyboardWithoutTextInputShown = false;

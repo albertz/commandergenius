@@ -350,7 +350,7 @@ Quick guide to debug native code
 ================================
 
 You need compile your app with debug enabled to be able to debug native code:
-./build.sh debug
+	./build.sh debug
 To debug your application - launch it, go to "project" dir and launch command
 	ndk-gdb
 then you can run usual GDB commands, like:
@@ -363,6 +363,10 @@ then you can run usual GDB commands, like:
 You can also debug by adding extensive logs to your app:
 	__android_log_print(ANDROID_LOG_INFO, "My App", "We somehow reached execution point #224");
 and then watching "adb logcat" output.
+
+Android does not print app stdout/stderr streams to logcat, so printf() will not work,
+but you can redefine printf() and fprintf(stderr) in your app to write to Android log by adding this to AppCflags:
+	-include jni/application/android_debug.h
 
 If your application crashed, you should use following steps:
 
