@@ -177,6 +177,15 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
 
 //printf("glTexImage2D on target=0x%04X with unpack_row_length(%i), size(%i,%i) and skip(%i,%i), format(internal)=%04x(%04x), type=%04x, data=%08x, level=%i (mipmap_need=%i, mipmap_auto=%i) => texture=%u (streamed=%i)\n", target, state.texture.unpack_row_length, width, height, state.texture.unpack_skip_pixels, state.texture.unpack_skip_rows, format, internalformat, type, data, level, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->mipmap_need:0, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->mipmap_auto:0, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->texture:0, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->streamed:0);
 
+    // proxy case
+    if (target == GL_PROXY_TEXTURE_2D) {
+        proxy_width = ((width<<level)>2048)?0:width;
+        proxy_height = ((height<<level)>2048)?0:height;
+        return;
+    }
+    //PUSH_IF_COMPILING(glTexImage2D);
+    if (state.gl_batch) flush();
+
     GLvoid *datab = (GLvoid*)data;
     
 	if (state.buffers.unpack)
@@ -185,13 +194,6 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
     GLvoid *pixels = (GLvoid *)datab;
     border = 0;	//TODO: something?
     noerrorShim();
-    // proxy case
-    if (target == GL_PROXY_TEXTURE_2D) {
-        proxy_width = ((width<<level)>2048)?0:width;
-        proxy_height = ((height<<level)>2048)?0:height;
-        return;
-    }
-    PUSH_IF_COMPILING(glTexImage2D);
 
     if (!tested_env) {
         char *env_mipmap = getenv("LIBGL_MIPMAP");
@@ -228,6 +230,14 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
         if (env_shrink && strcmp(env_shrink, "4") == 0) {
             texshrink = 4;
             printf("LIBGL: Texture shink, mode 4 selected (only > 256 /2, >=1024 /4 )\n");
+        }
+        if (env_shrink && strcmp(env_shrink, "5") == 0) {
+            texshrink = 5;
+            printf("LIBGL: Texture shink, mode 5 selected (every > 256 is downscaled to 256 )\n");
+        }
+        if (env_shrink && strcmp(env_shrink, "6") == 0) {
+            texshrink = 6;
+            printf("LIBGL: Texture shink, mode 6 selected (only > 128 /2, >=512 is downscaled to 256 )\n");
         }
         char *env_dump = getenv("LIBGL_TEXDUMP");
         if (env_dump && strcmp(env_dump, "1") == 0) {
@@ -314,7 +324,7 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
         }
         if (bound && (texshrink==4)) {
             if (((width > 256) && (height > 8)) || ((height > 256) && (width > 8))) {
-                if ((texshrink==4) && ((width>=1024) || (height>=1024))) {
+                if ((width>=1024) || (height>=1024)) {
                     GLvoid *out = pixels;
                     pixel_quarterscale(pixels, &out, width, height, format, type);
                     if (out != pixels && pixels!=datab)
@@ -323,6 +333,43 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
                     width /= 4;
                     height /= 4;
                     bound->shrink = 2;
+                } else {
+                    GLvoid *out = pixels;
+                    pixel_halfscale(pixels, &out, width, height, format, type);
+                    if (out != pixels && pixels!=datab)
+                        free(pixels);
+                    pixels = out;
+                    width /= 2;
+                    height /= 2;
+                    bound->shrink = 1;
+                }
+            }
+        }
+        if (bound && (texshrink==5)) {
+            while (((width > 256) && (height > 8)) || ((height > 256) && (width > 8))) {
+                GLvoid *out = pixels;
+                pixel_halfscale(pixels, &out, width, height, format, type);
+                if (out != pixels && pixels!=datab)
+                    free(pixels);
+                pixels = out;
+                width /= 2;
+                height /= 2;
+                bound->shrink++;
+            }
+        }
+        if (bound && (texshrink==6)) {
+            if (((width > 128) && (height > 8)) || ((height > 128) && (width > 8))) {
+                if ((width>=512) || (height>=512)) {
+                    while (((width > 256) && (height > 8)) || ((height > 256) && (width > 8))) {
+                        GLvoid *out = pixels;
+                        pixel_halfscale(pixels, &out, width, height, format, type);
+                        if (out != pixels && pixels!=datab)
+                            free(pixels);
+                        pixels = out;
+                        width /= 2;
+                        height /= 2;
+                        bound->shrink++;
+                    }
                 } else {
                     GLvoid *out = pixels;
                     pixel_halfscale(pixels, &out, width, height, format, type);
@@ -455,11 +502,14 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
 void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                      GLsizei width, GLsizei height, GLenum format, GLenum type,
                      const GLvoid *data) {
+
+	//PUSH_IF_COMPILING(glTexSubImage2D);
+    if (state.gl_batch) flush();
+
     GLvoid *datab = (GLvoid*)data;
 	if (state.buffers.unpack)
 		datab += (uintptr_t)state.buffers.pack->data;
     GLvoid *pixels = (GLvoid*)datab;
-	PUSH_IF_COMPILING(glTexSubImage2D);
 
     LOAD_GLES(glTexSubImage2D);
     LOAD_GLES(glTexParameteri);
@@ -683,7 +733,7 @@ GLboolean glIsTexture(	GLuint texture) {
 
 void glBindTexture(GLenum target, GLuint texture) {
 	noerrorShim();
-    if ((target!=GL_PROXY_TEXTURE_2D) && (state.list.compiling && state.list.active)) {
+    if ((target!=GL_PROXY_TEXTURE_2D) && ((state.list.compiling || state.gl_batch) && state.list.active)) {
         // check if already a texture binded, if yes, create a new list
         NewStage(state.list.active, STAGE_BINDTEX);
         rlBindTexture(state.list.active, target, texture);
@@ -835,6 +885,7 @@ void glTexParameterf(GLenum target, GLenum pname, GLfloat param) {
 }
 
 void glDeleteTextures(GLsizei n, const GLuint *textures) {
+    if (state.gl_batch) flush();
 	noerrorShim();
     LOAD_GLES(glDeleteTextures);
     khash_t(tex) *list = state.texture.list;
@@ -874,6 +925,7 @@ void glDeleteTextures(GLsizei n, const GLuint *textures) {
 void glGenTextures(GLsizei n, GLuint * textures) {
     if (n<=0) 
 		return;
+    if (state.gl_batch) flush();
     LOAD_GLES(glGenTextures);
     gles_glGenTextures(n, textures);
     errorGL();
@@ -923,6 +975,7 @@ GLboolean glAreTexturesResident(GLsizei n, const GLuint *textures, GLboolean *re
 
 void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params) {
 	// simplification: not taking "target" into account here
+    if (state.gl_batch) flush();
 	*params = 0;
 	noerrorShim();
 	gltexture_t* bound = state.texture.bound[state.texture.active];
@@ -976,6 +1029,7 @@ void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *p
 extern GLuint current_fb;   // from framebuffers.c
 
 void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid * img) {
+    if (state.gl_batch) flush();
 	if (state.texture.bound[state.texture.active]==NULL)
 		return;		// no texture bounded...
 	if (level != 0) {
@@ -1050,9 +1104,14 @@ void glClientActiveTexture( GLenum texture ) {
 
 void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data) {
 //printf("glReadPixels(%i, %i, %i, %i, 0x%04X, 0x%04X, 0x%p)\n", x, y, width, height, format, type, data);
+    GLuint old_glbatch = state.gl_batch;
+    if (state.gl_batch) {
+        flush();
+        state.gl_batch = 0;
+    }
     if (state.list.compiling && state.list.active) {
 		errorShim(GL_INVALID_OPERATION);
-	return;	// never in list
+        return;	// never in list
 	}
     LOAD_GLES(glReadPixels);
     errorGL();
@@ -1062,28 +1121,31 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format
 		
 	readfboBegin();
     if (format == GL_RGBA && format == GL_UNSIGNED_BYTE) {
-	// easy passthru
-	gles_glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, dst);
-	readfboEnd();
-	return;
+        // easy passthru
+        gles_glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, dst);
+        readfboEnd();
+        state.gl_batch = old_glbatch;
+        return;
     }
     // grab data in GL_RGBA format
     GLvoid *pixels = malloc(width*height*4);
     gles_glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     if (! pixel_convert(pixels, &dst, width, height,
 					    GL_RGBA, GL_UNSIGNED_BYTE, format, type, 0)) {
-	printf("libGL ReadPixels error: (GL_RGBA, UNSIGNED_BYTE -> %#4x, %#4x )\n",
-		format, type);
+        printf("libGL ReadPixels error: (GL_RGBA, UNSIGNED_BYTE -> %#4x, %#4x )\n",
+            format, type);
     }
     free(pixels);
     readfboEnd();
+    state.gl_batch = old_glbatch;
     return;
 }
 
 void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                 GLint x, GLint y, GLsizei width, GLsizei height) {
 //printf("glCopyTexSubImage2D(%i, %i, %i, %i, %i, %i, %i, %i), bounded texture=%u format/type=0x%04X, 0x%04X\n", target, level, xoffset, yoffset, x, y, width, height, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->texture:0, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->format:0, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->type:0);
- PUSH_IF_COMPILING(glCopyTexSubImage2D);
+// PUSH_IF_COMPILING(glCopyTexSubImage2D);
+if (state.gl_batch) flush();
  
  LOAD_GLES(glCopyTexSubImage2D);
  errorGL();
@@ -1128,7 +1190,13 @@ void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
 void glCopyTexImage2D(GLenum target,  GLint level,  GLenum internalformat,  GLint x,  GLint y,  
 								GLsizei width,  GLsizei height,  GLint border) {
 //printf("glCopyTexImage2D(0x%04X, %i, 0x%04X, %i, %i, %i, %i, %i), current_fb=%u\n", target, level, internalformat, x, y, width, height, border, current_fb);
-     PUSH_IF_COMPILING(glCopyTexImage2D);
+     //PUSH_IF_COMPILING(glCopyTexImage2D);
+     GLuint old_glbatch = state.gl_batch;
+     if (state.gl_batch) {
+         flush();
+         state.gl_batch = 0;
+     }
+
      errorGL();
 
      // "Unmap" if buffer mapped...
@@ -1145,6 +1213,8 @@ void glCopyTexImage2D(GLenum target,  GLint level,  GLenum internalformat,  GLin
      // "Remap" if buffer mapped...
      state.buffers.pack = pack;
      state.buffers.unpack = unpack;
+     
+     state.gl_batch = old_glbatch;
 }
 
 
@@ -1215,6 +1285,8 @@ void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
         proxy_height = (height>2048)?0:height;
         return;
     }
+    if (state.gl_batch) flush();
+
     if (state.texture.bound[state.texture.active]==NULL) {
 		errorShim(GL_INVALID_OPERATION);
 	    return;		// no texture bounded...
@@ -1291,6 +1363,8 @@ void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
 							   GLsizei width, GLsizei height, GLenum format, 
 							   GLsizei imageSize, const GLvoid *data) 
 {
+    if (state.gl_batch) flush();
+
 	if (state.texture.bound[state.texture.active]==NULL) {
 		errorShim(GL_INVALID_OPERATION);
 		return;		// no texture bounded...
@@ -1349,6 +1423,8 @@ void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
 }
 
 void glGetCompressedTexImage(GLenum target, GLint lod, GLvoid *img) {
+    if (state.gl_batch) flush();
+
     printf("LIBGL: Stub GetCompressedTexImage\n");
     
     errorShim(GL_INVALID_OPERATION);
