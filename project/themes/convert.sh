@@ -103,7 +103,7 @@ gzip -9 < ../res/raw/simpletheme.raw > ../res/raw/simpletheme.raw.gz
 mv -f ../res/raw/simpletheme.raw.gz ../res/raw/simpletheme.raw
 
 
-# Abstract Sun Icon Set by Sirea (Martina Šmejkalová)
+# Abstract Sun Icon Set by Sirea (Martina ?mejkalov�)
 for f in Sun/*.png; do
 	newname=`echo $f | sed 's@.*/@@' | tr '[A-Z]' '[a-z]'`.raw
 	./converter $f ../res/raw/$newname 32
@@ -140,6 +140,85 @@ rm ../res/raw/sun*.png.raw
 gzip -9 < ../res/raw/sun.raw > ../res/raw/sun.raw.gz
 mv -f ../res/raw/sun.raw.gz ../res/raw/sun.raw
 
+# dualshock Icon Set from RetroArch
+for f in dualshock/*.png; do
+	newname=`echo $f | sed 's@.*/@@' | tr '[A-Z]' '[a-z]'`.raw
+	./converter $f ../res/raw/$newname 32
+done
+
+rm -f ../res/raw/dualshock.raw
+printf '\000\000\000\014' > ../res/raw/dualshock.raw # size, 012 = 10
+
+for F in \
+thumbstick-background \
+\
+a \
+a \
+b \
+b \
+\
+x \
+y \
+l1 \
+r1 \
+\
+mouse_pointer \
+\
+rgui \
+thumbstick-pad \
+; do
+	if [ \! -e ../res/raw/$F.png.raw ]; then
+		echo Cannot find ../res/raw/$F.png.raw - check if all files are in place
+		exit 1
+	fi
+	
+	cat ../res/raw/$F.png.raw >> ../res/raw/dualshock.raw
+done
+
+rm ../res/raw/*.png.raw
+
+gzip -9 < ../res/raw/dualshock.raw > ../res/raw/dualshock.raw.gz
+mv -f ../res/raw/dualshock.raw.gz ../res/raw/dualshock.raw
+
+# n64 Icon Set from RetroArch
+for f in n64/*.png; do
+	newname=`echo $f | sed 's@.*/@@' | tr '[A-Z]' '[a-z]'`.raw
+	./converter $f ../res/raw/$newname 32
+done
+
+rm -f ../res/raw/n64.raw
+printf '\000\000\000\014' > ../res/raw/n64.raw # size, 012 = 10
+
+for F in \
+thumbstick-background \
+\
+a \
+a \
+b \
+b \
+\
+x \
+y \
+l \
+r \
+\
+mouse_pointer \
+\
+rgui \
+thumbstick-pad \
+; do
+	if [ \! -e ../res/raw/$F.png.raw ]; then
+		echo Cannot find ../res/raw/$F.png.raw - check if all files are in place
+		exit 1
+	fi
+	
+	cat ../res/raw/$F.png.raw >> ../res/raw/n64.raw
+done
+
+rm ../res/raw/*.png.raw
+
+gzip -9 < ../res/raw/n64.raw > ../res/raw/n64.raw.gz
+mv -f ../res/raw/n64.raw.gz ../res/raw/n64.raw
 
 # Keen Icon Set by Gerstrong (Gerhard Stein)
 for f in Keen/*.png; do
@@ -244,5 +323,167 @@ done
 
 gzip -9 < ../res/raw/retro.raw > ../res/raw/retro.raw.gz
 mv -f ../res/raw/retro.raw.gz ../res/raw/retro.raw
+
+rm ../res/raw/*.png.raw
+
+# GBA Icon Set from RetroArch
+for f in gba/*.png; do
+	newname=`echo $f | sed 's@.*/@@' | tr '[A-Z]' '[a-z]'`.raw
+	./converter $f ../res/raw/$newname 16
+done
+
+rm -f ../res/raw/gba.raw
+printf '\000\000\000\030' > ../res/raw/gba.raw # size, 030 = 24
+
+for F in \
+dpad \
+dpad_left \
+dpad_right \
+dpad_up \
+dpad_down \
+\
+a_auto_cc \
+a_auto \
+b_auto_cc \
+b_auto \
+\
+a \
+a_cc \
+b \
+b_cc \
+x \
+x_cc \
+y \
+y_cc \
+l \
+l_cc \
+r \
+r_cc \
+rgui \
+rgui \
+mouse_pointer \
+\
+dpad_UpLeft \
+dpad_UpRight \
+dpad_DownLeft \
+dpad_DownRight \
+\
+; do
+	if [ \! -e ../res/raw/$F.png.raw ]; then
+		echo Cannot find ../res/raw/$F.png.raw - check if all files are in place
+		exit 1
+	fi
+	
+	cat ../res/raw/$F.png.raw >> ../res/raw/gba.raw
+done
+
+gzip -9 < ../res/raw/gba.raw > ../res/raw/gba.raw.gz
+mv -f ../res/raw/gba.raw.gz ../res/raw/gba.raw
+
+rm ../res/raw/*.png.raw
+
+# PSX Icon Set from RetroArch
+for f in psx/*.png; do
+	newname=`echo $f | sed 's@.*/@@' | tr '[A-Z]' '[a-z]'`.raw
+	./converter $f ../res/raw/$newname 16
+done
+
+rm -f ../res/raw/psx.raw
+printf '\000\000\000\030' > ../res/raw/psx.raw # size, 030 = 24
+
+for F in \
+dpad \
+dpad_left \
+dpad_right \
+dpad_up \
+dpad_down \
+\
+a_auto_cc \
+a_auto \
+b_auto_cc \
+b_auto \
+\
+a \
+a_cc \
+b \
+b_cc \
+x \
+x_cc \
+y \
+y_cc \
+l1 \
+l1_cc \
+r1 \
+r1_cc \
+rgui \
+rgui \
+mouse_pointer \
+; do
+	if [ \! -e ../res/raw/$F.png.raw ]; then
+		echo Cannot find ../res/raw/$F.png.raw - check if all files are in place
+		exit 1
+	fi
+	
+	cat ../res/raw/$F.png.raw >> ../res/raw/psx.raw
+done
+
+gzip -9 < ../res/raw/psx.raw > ../res/raw/psx.raw.gz
+mv -f ../res/raw/psx.raw.gz ../res/raw/psx.raw
+
+rm ../res/raw/*.png.raw
+
+# SNES Icon Set from RetroArch
+for f in snes/*.png; do
+	newname=`echo $f | sed 's@.*/@@' | tr '[A-Z]' '[a-z]'`.raw
+	./converter $f ../res/raw/$newname 16
+done
+
+rm -f ../res/raw/snes.raw
+printf '\000\000\000\030' > ../res/raw/snes.raw # size, 030 = 24
+
+for F in \
+dpad \
+dpad_left \
+dpad_right \
+dpad_up \
+dpad_down \
+\
+a_auto_cc \
+a_auto \
+b_auto_cc \
+b_auto \
+\
+a \
+a_cc \
+b \
+b_cc \
+x \
+x_cc \
+y \
+y_cc \
+l1 \
+l1_cc \
+r1 \
+r1_cc \
+rgui \
+rgui \
+mouse_pointer \
+\
+dpad_UpLeft \
+dpad_UpRight \
+dpad_DownLeft \
+dpad_DownRight \
+\
+; do
+	if [ \! -e ../res/raw/$F.png.raw ]; then
+		echo Cannot find ../res/raw/$F.png.raw - check if all files are in place
+		exit 1
+	fi
+	
+	cat ../res/raw/$F.png.raw >> ../res/raw/snes.raw
+done
+
+gzip -9 < ../res/raw/snes.raw > ../res/raw/snes.raw.gz
+mv -f ../res/raw/snes.raw.gz ../res/raw/snes.raw
 
 rm ../res/raw/*.png.raw

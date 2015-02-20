@@ -674,8 +674,8 @@ class Settings
 		{
 			if(Globals.TouchscreenKeyboardTheme < 0)
 				Globals.TouchscreenKeyboardTheme = 0;
-			if(Globals.TouchscreenKeyboardTheme > 4)
-				Globals.TouchscreenKeyboardTheme = 4;
+			if(Globals.TouchscreenKeyboardTheme > 9)
+				Globals.TouchscreenKeyboardTheme = 9;
 
 			if( Globals.TouchscreenKeyboardTheme == 0 )
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.ultimatedroid));
@@ -687,6 +687,16 @@ class Settings
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.keen));
 			if( Globals.TouchscreenKeyboardTheme == 4 )
 				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.retro));
+			if( Globals.TouchscreenKeyboardTheme == 5 )
+				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.gba));
+			if( Globals.TouchscreenKeyboardTheme == 6 )
+				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.psx));
+			if( Globals.TouchscreenKeyboardTheme == 7 )
+				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.snes));
+			if( Globals.TouchscreenKeyboardTheme == 8 )
+				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.dualshock));
+			if( Globals.TouchscreenKeyboardTheme == 9 )
+				nativeSetupScreenKeyboardButtons(loadRaw(p, R.raw.n64));
 		}
 	}
 
