@@ -907,7 +907,11 @@ static int setupScreenKeyboardButtonSun( int buttonID, Uint8 * charBuf )
 		data = &(buttonImages[4+(buttonID-5)*2]);
 	if( buttonID == 9 )
 		data = &mousePointer;
-	else if( buttonID > 9 ) // Error, array too big
+	if( buttonID == 10 )
+		data = &(arrowImages[10]);
+	if( buttonID == 11 )
+		data = &(arrowImages[11]);
+	else if( buttonID > 11 ) // Error, array too big
 		return 12; // Return value bigger than zero to iterate it
 
 	ret = setupScreenKeyboardButtonTexture(data, charBuf);
@@ -934,7 +938,7 @@ static int setupScreenKeyboardButton( int buttonID, Uint8 * charBuf, int count )
 		sunTheme = 0;
 		return setupScreenKeyboardButtonLegacy(buttonID, charBuf);
 	}
-	else if( count == 10 )
+	else if( count == 10 || count == 12)
 	{
 		sunTheme = 1;
 		return setupScreenKeyboardButtonSun(buttonID, charBuf);

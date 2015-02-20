@@ -195,7 +195,12 @@ class SettingsMenuKeyboard extends SettingsMenu
 				p.getResources().getString(R.string.controls_screenkb_by, "Simple Theme", "Beholder"),
 				p.getResources().getString(R.string.controls_screenkb_by, "Sun", "Sirea"),
 				p.getResources().getString(R.string.controls_screenkb_by, "Keen", "Gerstrong"),
-				p.getResources().getString(R.string.controls_screenkb_by, "Retro", "Santiago Radeff")
+				p.getResources().getString(R.string.controls_screenkb_by, "Retro", "Santiago Radeff"),
+				p.getResources().getString(R.string.controls_screenkb_by, "Gba", "from RetroArch"),
+				p.getResources().getString(R.string.controls_screenkb_by, "Psx", "from RetroArch"),
+				p.getResources().getString(R.string.controls_screenkb_by, "Snes", "from RetroArch"),
+				p.getResources().getString(R.string.controls_screenkb_by, "DualShock", "from RetroArch"),
+				p.getResources().getString(R.string.controls_screenkb_by, "N64", "from RetroArch")
 				};
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
