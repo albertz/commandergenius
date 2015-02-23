@@ -641,16 +641,14 @@ public class MainActivity extends Activity
 		mGLView.setFocusable(true);
 		mGLView.requestFocus();
 		DimSystemStatusBar.get().dim(_videoLayout);
-		//DimSystemStatusBar.get().dim(mGLView);
 
 		_videoLayout.postDelayed( new Runnable()
+		{
+			public void run()
 			{
-				public void run()
-				{
-					DimSystemStatusBar.get().dim(_videoLayout);
-					//DimSystemStatusBar.get().dim(mGLView);
-				}
-			}, 500 );
+				DimSystemStatusBar.get().dim(_videoLayout);
+			}
+		}, 500 );
 	};
 
 	public boolean isScreenKeyboardShown()

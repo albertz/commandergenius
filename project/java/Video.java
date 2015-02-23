@@ -614,14 +614,11 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		Log.d("SDL", "libSDL: DemoRenderer.onWindowResize(): " + w + "x" + h);
 		mLastPendingResize ++;
 		final int resizeThreadIndex = mLastPendingResize;
-		new Thread(new Runnable()
+		context.mGLView.postDelayed(new Runnable()
 		{
 			public void run()
 			{
 				// Samsung multiwindow will swap screen dimensions when unlocking the lockscreen, sleep a while so we won't use these temporary values
-				try{
-					Thread.sleep(2000);
-				} catch (InterruptedException e) {}
 				if (resizeThreadIndex != mLastPendingResize)
 					return; // Avoid running this function multiple times in a row
 				int ww = w - w % 2;
@@ -648,26 +645,11 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 						DemoRenderer.super.ResetVideoSurface();
 						DemoRenderer.super.onWindowResize(ww, hh);
 					}
-					else if (mWidth < ww && mHeight <= hh || mWidth <= ww && mHeight < hh)
+					else
 					{
 						Log.i("SDL", "System button bar hidden - re-init video to avoid black bar at the top");
-						context.runOnUiThread(new Runnable()
-						{
-							public void run()
-							{
-								if (!context.mGLView.isPaused())
-								{
-									context.onPause();
-									context.mGLView.postDelayed(new Runnable()
-									{
-										public void run()
-										{
-											context.onResume();
-										}
-									}, 1000);
-								}
-							}
-						});
+						DemoRenderer.super.ResetVideoSurface();
+						DemoRenderer.super.onWindowResize(ww, hh);
 					}
 				}
 				if (mWidth == 0 && mHeight == 0)
@@ -681,7 +663,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 				if (Globals.AutoDetectOrientation && (ww > hh) != (mWidth > mHeight))
 					Globals.HorizontalOrientation = (ww > hh);
 			}
-		}).start();
+		}, 2000);
 	}
 
 	public void onSurfaceDestroyed()
