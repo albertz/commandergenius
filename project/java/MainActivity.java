@@ -297,34 +297,23 @@ public class MainActivity extends Activity
 					}
 					DimSystemStatusBar.get().dim(_videoLayout);
 				}
-				// Hackish way to set immersive mode, it seems to need some delay before we can create surfaces
 				runOnUiThread(new Runnable()
 				{
 					public void run()
 					{
-						initSDLVideoLayout();
-					}
-				});
-				try {
-					Thread.sleep(100);
-				} catch( Exception ee ) {}
-				runOnUiThread(new Runnable()
-				{
-					public void run()
-					{
-						DimSystemStatusBar.get().dim(_videoLayout);
-					}
-				});
-				if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT && Globals.ImmersiveMode )
-				{
-					try {
-						Thread.sleep(200);
-					} catch( Exception eee ) {}
-				}
-				runOnUiThread(new Runnable()
-				{
-					public void run()
-					{
+						// Hide navigation buttons, and sleep a bit so OS will process the event.
+						// Do not check the display size in a loop - we may have several displays of different sizes,
+						// so app may stuck in infinite loop
+						DisplayMetrics dm = new DisplayMetrics();
+						getWindowManager().getDefaultDisplay().getMetrics(dm);
+						if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT && Globals.ImmersiveMode &&
+							(_videoLayout.getHeight() != dm.widthPixels || _videoLayout.getWidth() != dm.heightPixels) )
+						{
+							DimSystemStatusBar.get().dim(_videoLayout);
+							try {
+								Thread.sleep(300);
+							} catch( Exception e ) {}
+						}
 						initSDLInternal();
 					}
 				});
@@ -332,10 +321,13 @@ public class MainActivity extends Activity
 		})).start();
 	}
 
-	private void initSDLVideoLayout()
+	private void initSDLInternal()
 	{
 		if(sdlInited)
 			return;
+		Log.i("SDL", "libSDL: Initializing video and SDL application");
+		
+		sdlInited = true;
 		DimSystemStatusBar.get().dim(_videoLayout);
 		_videoLayout.removeView(_layout);
 		if( _ad.getView() != null )
@@ -348,15 +340,6 @@ public class MainActivity extends Activity
 		_videoLayout = new FrameLayout(this);
 		SetLayerType.get().setLayerType(_videoLayout);
 		setContentView(_videoLayout);
-		DimSystemStatusBar.get().dim(_videoLayout);
-	}
-	private void initSDLInternal()
-	{
-		if(sdlInited)
-			return;
-		Log.i("SDL", "libSDL: Initializing video and SDL application");
-		
-		sdlInited = true;
 		mGLView = new DemoGLSurfaceView(this);
 		SetLayerType.get().setLayerType(mGLView);
 		_videoLayout.addView(mGLView);
