@@ -608,9 +608,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		nativeResize(mWidth, mHeight, Globals.KeepAspectRatio ? 1 : 0);
 	}
 
+	int mLastPendingResize = 0;
 	public void onWindowResize(final int w, final int h)
 	{
 		Log.d("SDL", "libSDL: DemoRenderer.onWindowResize(): " + w + "x" + h);
+		mLastPendingResize ++;
+		final int resizeThreadIndex = mLastPendingResize;
 		new Thread(new Runnable()
 		{
 			public void run()
@@ -619,6 +622,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 				try{
 					Thread.sleep(2000);
 				} catch (InterruptedException e) {}
+				if (resizeThreadIndex != mLastPendingResize)
+					return; // Avoid running this function multiple times in a row
 				int ww = w - w % 2;
 				int hh = h - h % 2;
 				View topView = context.getWindow().peekDecorView();
@@ -632,7 +637,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 				if (mWidth != 0 && mHeight != 0 && (mWidth != ww || mHeight != hh))
 				{
-					Log.w("SDL", "libSDL: DemoRenderer.onWindowResize(): screen size changed from " + mWidth + "x" + mHeight + " to " + ww + "x" + hh);
+					Log.i("SDL", "libSDL: DemoRenderer.onWindowResize(): screen size changed from " + mWidth + "x" + mHeight + " to " + ww + "x" + hh);
 					if (Globals.SwVideoMode &&
 						(Math.abs(display.getWidth() - ww) > display.getWidth() / 10 ||
 						Math.abs(display.getHeight() - hh) > display.getHeight() / 10))
@@ -642,6 +647,27 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 						context.setScreenOrientation();
 						DemoRenderer.super.ResetVideoSurface();
 						DemoRenderer.super.onWindowResize(ww, hh);
+					}
+					else if (mWidth < ww && mHeight <= hh || mWidth <= ww && mHeight < hh)
+					{
+						Log.i("SDL", "System button bar hidden - re-init video to avoid black bar at the top");
+						context.runOnUiThread(new Runnable()
+						{
+							public void run()
+							{
+								if (!context.mGLView.isPaused())
+								{
+									context.onPause();
+									context.mGLView.postDelayed(new Runnable()
+									{
+										public void run()
+										{
+											context.onResume();
+										}
+									}, 1000);
+								}
+							}
+						});
 					}
 				}
 				if (mWidth == 0 && mHeight == 0)

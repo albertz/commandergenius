@@ -382,8 +382,8 @@ public class MainActivity extends Activity
 				_videoLayout.getWindowVisibleDisplayFrame(r);
 				int heightDiff = _videoLayout.getRootView().getHeight() - _videoLayout.getHeight(); // Take system bar into consideration
 				int widthDiff = _videoLayout.getRootView().getWidth() - _videoLayout.getWidth(); // Nexus 5 has system bar at the right side
-				mGLView.nativeScreenVisibleRect(r.left + widthDiff, r.top + heightDiff, r.width(), r.height());
 				Log.v("SDL", "Main window visible region changed: " + r.left + ":" + r.top + ":" + r.width() + ":" + r.height() );
+				mGLView.nativeScreenVisibleRect(r.left + widthDiff, r.top + heightDiff, r.width(), r.height());
 			}
 		});
 	}
@@ -410,9 +410,9 @@ public class MainActivity extends Activity
 		super.onResume();
 		if( mGLView != null )
 		{
-			mGLView.onResume();
 			DimSystemStatusBar.get().dim(_videoLayout);
 			DimSystemStatusBar.get().dim(mGLView);
+			mGLView.onResume();
 		}
 		else
 		if( downloader != null )
@@ -439,14 +439,6 @@ public class MainActivity extends Activity
 			onPause();
 		else
 			onResume();
-		/*
-		if (hasFocus == false) {
-			synchronized(textInput) {
-				// Send 'SDLK_PAUSE' (to enter pause mode) to native code:
-				DemoRenderer.nativeTextInput( 19, 19 );
-			}
-		}
-		*/
 	}
 	
 	public boolean isPaused()
@@ -1315,7 +1307,7 @@ public class MainActivity extends Activity
 
 	static int NOTIFY_ID = 12367098; // Random ID
 
-	private static DemoGLSurfaceView mGLView = null;
+	DemoGLSurfaceView mGLView = null;
 	private static AudioThread mAudioThread = null;
 	private static DataDownloader downloader = null;
 
