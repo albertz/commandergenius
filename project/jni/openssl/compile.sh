@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ARCH_LIST="armeabi armeabi-v7a x86 mips"
+ARCH_LIST="armeabi armeabi-v7a arm64-v8a x86 mips"
 
 mkdir -p openssl
 git clone --depth=1 -b kitkat-release https://android.googlesource.com/platform/external/openssl openssl/jni || exit 1
