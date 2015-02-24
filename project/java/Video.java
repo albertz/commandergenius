@@ -608,17 +608,19 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		nativeResize(mWidth, mHeight, Globals.KeepAspectRatio ? 1 : 0);
 	}
 
+	int mLastPendingResize = 0;
 	public void onWindowResize(final int w, final int h)
 	{
 		Log.d("SDL", "libSDL: DemoRenderer.onWindowResize(): " + w + "x" + h);
-		new Thread(new Runnable()
+		mLastPendingResize ++;
+		final int resizeThreadIndex = mLastPendingResize;
+		context.mGLView.postDelayed(new Runnable()
 		{
 			public void run()
 			{
 				// Samsung multiwindow will swap screen dimensions when unlocking the lockscreen, sleep a while so we won't use these temporary values
-				try{
-					Thread.sleep(2000);
-				} catch (InterruptedException e) {}
+				if (resizeThreadIndex != mLastPendingResize)
+					return; // Avoid running this function multiple times in a row
 				int ww = w - w % 2;
 				int hh = h - h % 2;
 				View topView = context.getWindow().peekDecorView();
@@ -632,7 +634,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 				if (mWidth != 0 && mHeight != 0 && (mWidth != ww || mHeight != hh))
 				{
-					Log.w("SDL", "libSDL: DemoRenderer.onWindowResize(): screen size changed from " + mWidth + "x" + mHeight + " to " + ww + "x" + hh);
+					Log.i("SDL", "libSDL: DemoRenderer.onWindowResize(): screen size changed from " + mWidth + "x" + mHeight + " to " + ww + "x" + hh);
 					if (Globals.SwVideoMode &&
 						(Math.abs(display.getWidth() - ww) > display.getWidth() / 10 ||
 						Math.abs(display.getHeight() - hh) > display.getHeight() / 10))
@@ -640,6 +642,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 						Log.i("SDL", "Multiwindow detected - enabling screen orientation autodetection");
 						Globals.AutoDetectOrientation = true;
 						context.setScreenOrientation();
+						DemoRenderer.super.ResetVideoSurface();
+						DemoRenderer.super.onWindowResize(ww, hh);
+					}
+					else
+					{
+						Log.i("SDL", "System button bar hidden - re-init video to avoid black bar at the top");
 						DemoRenderer.super.ResetVideoSurface();
 						DemoRenderer.super.onWindowResize(ww, hh);
 					}
@@ -655,7 +663,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 				if (Globals.AutoDetectOrientation && (ww > hh) != (mWidth > mHeight))
 					Globals.HorizontalOrientation = (ww > hh);
 			}
-		}).start();
+		}, 2000);
 	}
 
 	public void onSurfaceDestroyed()

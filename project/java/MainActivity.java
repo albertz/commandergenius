@@ -297,34 +297,23 @@ public class MainActivity extends Activity
 					}
 					DimSystemStatusBar.get().dim(_videoLayout);
 				}
-				// Hackish way to set immersive mode, it seems to need some delay before we can create surfaces
 				runOnUiThread(new Runnable()
 				{
 					public void run()
 					{
-						initSDLVideoLayout();
-					}
-				});
-				try {
-					Thread.sleep(100);
-				} catch( Exception ee ) {}
-				runOnUiThread(new Runnable()
-				{
-					public void run()
-					{
-						DimSystemStatusBar.get().dim(_videoLayout);
-					}
-				});
-				if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT && Globals.ImmersiveMode )
-				{
-					try {
-						Thread.sleep(200);
-					} catch( Exception eee ) {}
-				}
-				runOnUiThread(new Runnable()
-				{
-					public void run()
-					{
+						// Hide navigation buttons, and sleep a bit so OS will process the event.
+						// Do not check the display size in a loop - we may have several displays of different sizes,
+						// so app may stuck in infinite loop
+						DisplayMetrics dm = new DisplayMetrics();
+						getWindowManager().getDefaultDisplay().getMetrics(dm);
+						if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT && Globals.ImmersiveMode &&
+							(_videoLayout.getHeight() != dm.widthPixels || _videoLayout.getWidth() != dm.heightPixels) )
+						{
+							DimSystemStatusBar.get().dim(_videoLayout);
+							try {
+								Thread.sleep(300);
+							} catch( Exception e ) {}
+						}
 						initSDLInternal();
 					}
 				});
@@ -332,10 +321,13 @@ public class MainActivity extends Activity
 		})).start();
 	}
 
-	private void initSDLVideoLayout()
+	private void initSDLInternal()
 	{
 		if(sdlInited)
 			return;
+		Log.i("SDL", "libSDL: Initializing video and SDL application");
+		
+		sdlInited = true;
 		DimSystemStatusBar.get().dim(_videoLayout);
 		_videoLayout.removeView(_layout);
 		if( _ad.getView() != null )
@@ -348,15 +340,6 @@ public class MainActivity extends Activity
 		_videoLayout = new FrameLayout(this);
 		SetLayerType.get().setLayerType(_videoLayout);
 		setContentView(_videoLayout);
-		DimSystemStatusBar.get().dim(_videoLayout);
-	}
-	private void initSDLInternal()
-	{
-		if(sdlInited)
-			return;
-		Log.i("SDL", "libSDL: Initializing video and SDL application");
-		
-		sdlInited = true;
 		mGLView = new DemoGLSurfaceView(this);
 		SetLayerType.get().setLayerType(mGLView);
 		_videoLayout.addView(mGLView);
@@ -369,7 +352,7 @@ public class MainActivity extends Activity
 			_ad.getView().setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT));
 		}
 		DimSystemStatusBar.get().dim(_videoLayout);
-		DimSystemStatusBar.get().dim(mGLView);
+		//DimSystemStatusBar.get().dim(mGLView);
 
 		Rect r = new Rect();
 		_videoLayout.getWindowVisibleDisplayFrame(r);
@@ -378,12 +361,27 @@ public class MainActivity extends Activity
 		{
 			public void onGlobalLayout()
 			{
-				Rect r = new Rect();
+				final Rect r = new Rect();
 				_videoLayout.getWindowVisibleDisplayFrame(r);
-				int heightDiff = _videoLayout.getRootView().getHeight() - _videoLayout.getHeight(); // Take system bar into consideration
-				int widthDiff = _videoLayout.getRootView().getWidth() - _videoLayout.getWidth(); // Nexus 5 has system bar at the right side
-				mGLView.nativeScreenVisibleRect(r.left + widthDiff, r.top + heightDiff, r.width(), r.height());
+				final int heightDiff = _videoLayout.getRootView().getHeight() - _videoLayout.getHeight(); // Take system bar into consideration
+				final int widthDiff = _videoLayout.getRootView().getWidth() - _videoLayout.getWidth(); // Nexus 5 has system bar at the right side
 				Log.v("SDL", "Main window visible region changed: " + r.left + ":" + r.top + ":" + r.width() + ":" + r.height() );
+				_videoLayout.postDelayed( new Runnable()
+				{
+					public void run()
+					{
+						DimSystemStatusBar.get().dim(_videoLayout);
+						mGLView.nativeScreenVisibleRect(r.left + widthDiff, r.top + heightDiff, r.width(), r.height());
+					}
+				}, 300 );
+				_videoLayout.postDelayed( new Runnable()
+				{
+					public void run()
+					{
+						DimSystemStatusBar.get().dim(_videoLayout);
+						mGLView.nativeScreenVisibleRect(r.left + widthDiff, r.top + heightDiff, r.width(), r.height());
+					}
+				}, 600 );
 			}
 		});
 	}
@@ -410,9 +408,9 @@ public class MainActivity extends Activity
 		super.onResume();
 		if( mGLView != null )
 		{
-			mGLView.onResume();
 			DimSystemStatusBar.get().dim(_videoLayout);
-			DimSystemStatusBar.get().dim(mGLView);
+			//DimSystemStatusBar.get().dim(mGLView);
+			mGLView.onResume();
 		}
 		else
 		if( downloader != null )
@@ -439,14 +437,6 @@ public class MainActivity extends Activity
 			onPause();
 		else
 			onResume();
-		/*
-		if (hasFocus == false) {
-			synchronized(textInput) {
-				// Send 'SDLK_PAUSE' (to enter pause mode) to native code:
-				DemoRenderer.nativeTextInput( 19, 19 );
-			}
-		}
-		*/
 	}
 	
 	public boolean isPaused()
@@ -506,7 +496,7 @@ public class MainActivity extends Activity
 			getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 			_inputManager.hideSoftInputFromWindow(mGLView.getWindowToken(), 0);
 			DimSystemStatusBar.get().dim(_videoLayout);
-			DimSystemStatusBar.get().dim(mGLView);
+			//DimSystemStatusBar.get().dim(mGLView);
 		}
 	}
 
@@ -651,16 +641,14 @@ public class MainActivity extends Activity
 		mGLView.setFocusable(true);
 		mGLView.requestFocus();
 		DimSystemStatusBar.get().dim(_videoLayout);
-		DimSystemStatusBar.get().dim(mGLView);
 
 		_videoLayout.postDelayed( new Runnable()
+		{
+			public void run()
 			{
-				public void run()
-				{
-					DimSystemStatusBar.get().dim(_videoLayout);
-					DimSystemStatusBar.get().dim(mGLView);
-				}
-			}, 500 );
+				DimSystemStatusBar.get().dim(_videoLayout);
+			}
+		}, 500 );
 	};
 
 	public boolean isScreenKeyboardShown()
@@ -773,34 +761,6 @@ public class MainActivity extends Activity
 		}
 	}
 
-	/*
-	@Override
-	public boolean dispatchKeyEvent(final KeyEvent event)
-	{
-		//Log.i("SDL", "dispatchKeyEvent: action " + event.getAction() + " keycode " + event.getKeyCode() + " unicode " + event.getUnicodeChar() + " getCharacters() " + ((event.getCharacters() != null) ? event.getCharacters() : "none"));
-
-		if( event.getAction() == KeyEvent.ACTION_DOWN )
-			return onKeyDown(event.getKeyCode(), event);
-		if( event.getAction() == KeyEvent.ACTION_UP )
-			return onKeyUp(event.getKeyCode(), event);
-		if( event.getAction() == KeyEvent.ACTION_MULTIPLE && event.getKeyCode() == KeyEvent.KEYCODE_UNKNOWN )
-		{
-			// International text input
-			if( mGLView != null && event.getCharacters() != null )
-			{
-				for(int i = 0; i < event.getCharacters().length(); i++ )
-				{
-					mGLView.nativeKey( event.getKeyCode(), 1, event.getCharacters().codePointAt(i) );
-					mGLView.nativeKey( event.getKeyCode(), 0, event.getCharacters().codePointAt(i) );
-				}
-				return true;
-			}
-		}
-		return true;
-		//return super.dispatchKeyEvent(event);
-	}
-	*/
-
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event)
 	{
@@ -836,7 +796,7 @@ public class MainActivity extends Activity
 			if( keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU )
 			{
 				DimSystemStatusBar.get().dim(_videoLayout);
-				DimSystemStatusBar.get().dim(mGLView);
+				//DimSystemStatusBar.get().dim(mGLView);
 			}
 		}
 		else
@@ -1315,7 +1275,7 @@ public class MainActivity extends Activity
 
 	static int NOTIFY_ID = 12367098; // Random ID
 
-	private static DemoGLSurfaceView mGLView = null;
+	DemoGLSurfaceView mGLView = null;
 	private static AudioThread mAudioThread = null;
 	private static DataDownloader downloader = null;
 
