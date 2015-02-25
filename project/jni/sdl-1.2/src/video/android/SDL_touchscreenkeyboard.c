@@ -92,7 +92,7 @@ static GLTexture_t buttonImages[MAX_BUTTONS*2];
 static GLTexture_t mousePointer;
 enum { MOUSE_POINTER_W = 32, MOUSE_POINTER_H = 32, MOUSE_POINTER_X = 5, MOUSE_POINTER_Y = 7 }; // X and Y are offsets of the pointer tip
 
-static int sunTheme = 0;
+static int themeType = 0;
 static int joystickTouchPoints[MAX_JOYSTICKS*2];
 static int floatingScreenJoystick = 0;
 
@@ -371,6 +371,45 @@ static void drawTouchscreenKeyboardSun()
 	}
 }
 
+static void drawTouchscreenKeyboardDualShock()
+{
+	int i;
+
+	for( i = 0; i < SDL_ANDROID_joysticksAmount || (i == 0 && arrowsDraw[0].w > 0); i++ )
+	{
+		drawCharTex( &arrowImages[0], NULL, &arrowsDraw[i], 1.0f, 1.0f, 1.0f, transparency );
+		if(pointerInButtonRect[BUTTON_ARROWS+i] != -1)
+		{
+			SDL_Rect touch = arrowsDraw[i];
+			touch.w /= 1.5;
+			touch.h /= 1.5;
+			touch.x = joystickTouchPoints[0+i*2] - touch.w / 2;
+			touch.y = joystickTouchPoints[1+i*2] - touch.h / 2;
+			drawCharTex( &arrowImages[6], NULL, &touch, 1.0f, 1.0f, 1.0f, transparency );
+		}
+		else
+		{
+			SDL_Rect touch = arrowsDraw[i];
+			touch.w /= 1.5;
+			touch.h /= 1.5;
+			touch.x = arrowsDraw[i].x + touch.w / 4;
+			touch.y = arrowsDraw[i].y + touch.h / 4;
+			drawCharTex( &arrowImages[6], NULL, &touch, 1.0f, 1.0f, 1.0f, transparency );
+		}
+		  
+	}
+
+	for( i = 0; i < MAX_BUTTONS; i++ )
+	{
+		int pressed = SDL_GetKeyboardState(NULL)[buttonKeysyms[i]];
+		if( ! buttons[i].h || ! buttons[i].w )
+			continue;
+
+		drawCharTexFlip( &buttonImages[ pressed ? (i * 2 + 1) : (i * 2) ],
+						NULL, &buttonsDraw[i], (i >= 2 && pressed), 0, 1.0f, 1.0f, 1.0f, transparency );
+	}
+}
+
 int SDL_ANDROID_drawTouchscreenKeyboard()
 {
 	if( !SDL_ANDROID_isTouchscreenKeyboardUsed || !touchscreenKeyboardShown )
@@ -378,8 +417,10 @@ int SDL_ANDROID_drawTouchscreenKeyboard()
 
 	beginDrawingTex();
 
-	if(sunTheme)
+	if(themeType==1)
 		drawTouchscreenKeyboardSun();
+	else if(themeType==2)
+		drawTouchscreenKeyboardDualShock();
 	else
 		drawTouchscreenKeyboardLegacy();
 
@@ -931,17 +972,59 @@ static int setupScreenKeyboardButtonSun( int buttonID, Uint8 * charBuf )
 	return ret;
 }
 
+static int setupScreenKeyboardButtonDualShock( int buttonID, Uint8 * charBuf )
+{
+	GLTexture_t * data = NULL;
+	int i, ret;
+
+	if( buttonID == 0 )
+		data = &(arrowImages[0]);
+	if( buttonID >= 1 && buttonID <= 4 )
+		data = &(buttonImages[buttonID-1]);
+	if( buttonID >= 5 && buttonID <= 8 )
+		data = &(buttonImages[4+(buttonID-5)*2]);
+	if( buttonID == 9 )
+		data = &mousePointer;
+	if( buttonID == 10 )
+		data = &(arrowImages[5]);
+	if( buttonID == 11 )
+		data = &(arrowImages[6]);
+	else if( buttonID > 11 ) // Error, array too big
+		return 12; // Return value bigger than zero to iterate it
+
+	ret = setupScreenKeyboardButtonTexture(data, charBuf);
+
+	for( i = 1; i <=4; i++ )
+		arrowImages[i] = arrowImages[0];
+	
+	for( i = 2; i < MAX_BUTTONS; i++ )
+		buttonImages[i * 2 + 1] = buttonImages[i * 2];
+
+	for( i = 0; i < MAX_BUTTONS_AUTOFIRE*2; i++ )
+		buttonAutoFireImages[i] = arrowImages[0];
+
+	buttonImages[BUTTON_TEXT_INPUT*2] = arrowImages[5];
+	buttonImages[BUTTON_TEXT_INPUT*2+1] = arrowImages[5];
+
+	return ret;
+}
+
 static int setupScreenKeyboardButton( int buttonID, Uint8 * charBuf, int count )
 {
 	if( count == 24 || count == 28)
 	{
-		sunTheme = 0;
+		themeType = 0;
 		return setupScreenKeyboardButtonLegacy(buttonID, charBuf);
 	}
-	else if( count == 10 || count == 12)
+	else if( count == 10)
 	{
-		sunTheme = 1;
+		themeType = 1;
 		return setupScreenKeyboardButtonSun(buttonID, charBuf);
+	}
+	else if( count == 12)
+	{
+		themeType = 2;
+		return setupScreenKeyboardButtonDualShock(buttonID, charBuf);
 	}
 	else
 	{
