@@ -5,6 +5,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := $(notdir $(LOCAL_PATH))
 
 ifneq (openssl,$(LOCAL_MODULE))
+ifneq ($(filter arm mips x86, $(TARGET_ARCH)),)
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_SRC_FILES := lib-$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
@@ -16,4 +17,5 @@ obj/local/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a: $(LOCAL_PATH)/$(LOCAL_SRC_FIL
 
 include $(PREBUILT_STATIC_LIBRARY)
 
+endif
 endif
