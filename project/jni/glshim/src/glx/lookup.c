@@ -1,6 +1,5 @@
 #ifdef ANDROID
 #include "../gl/gl.h"
-#include <android/log.h>
 #else
 #include "glx.h"
 #endif
@@ -445,11 +444,8 @@ void *glXGetProcAddressARB(const char *name) {
     STUB(glIndexPointerEXT);
     STUB(glIndexPointer);
 
-#ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "glshim","glXGetProcAddress: %s not found.\n", name);
-#else    
     printf("glXGetProcAddress: %s not found.\n", name);
-#endif
+
     return NULL;
 }
 

@@ -41,7 +41,7 @@ LOCAL_SRC_FILES := \
 	src/glx/lookup.c \
 	src/glx/streaming.c
 
-LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DBCMHOST
+LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DBCMHOST -include include/android_debug.h
 
 LOCAL_LDLIBS := -ldl -llog -lEGL 
 
