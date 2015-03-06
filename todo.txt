@@ -29,6 +29,8 @@ TODO, which will get actually done
 
 - SDL: control mouse with right analog gamepad stick.
 
+- SDL: CompatibilityHacksForceScreenUpdate=y does not redraw screen when invoking from background.
+
 - USB Keyboard: redefine unknown keys, add VLC server.
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
