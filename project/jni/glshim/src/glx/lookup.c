@@ -1,4 +1,10 @@
+#ifdef ANDROID
+#include "../gl/gl.h"
+#else
 #include "glx.h"
+#endif
+
+
 
 #define MAP(func_name, func) \
     if (strcmp(name, func_name) == 0) return (void *)func;
@@ -31,6 +37,7 @@ void *glXGetProcAddressARB(const char *name) {
     #include "glesfuncs.inc"
 #endif
 
+#ifndef ANDROID
     // glX calls
     EX(glXChooseVisual);
     EX(glXCopyContext);
@@ -66,7 +73,8 @@ void *glXGetProcAddressARB(const char *name) {
     EX(glXGetVisualFromFBConfig);
     EX(glXCreateWindow);
     EX(glXDestroyWindow);
-
+#endif
+    
     // GL_ARB_vertex_buffer_object
     ARB(glBindBuffer);
     ARB(glBufferData);
@@ -437,6 +445,7 @@ void *glXGetProcAddressARB(const char *name) {
     STUB(glIndexPointer);
 
     printf("glXGetProcAddress: %s not found.\n", name);
+
     return NULL;
 }
 

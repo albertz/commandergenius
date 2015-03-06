@@ -38,9 +38,10 @@ LOCAL_SRC_FILES := \
 	src/gl/wrap/glesext.c \
 	src/gl/wrap/glstub.c \
 	src/gl/math/eval.c \
+	src/glx/lookup.c \
 	src/glx/streaming.c
 
-LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DBCMHOST
+LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DBCMHOST -include include/android_debug.h
 
 LOCAL_LDLIBS := -ldl -llog -lEGL 
 
