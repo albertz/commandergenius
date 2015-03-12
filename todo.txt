@@ -37,14 +37,4 @@ TODO, which will get actually done
 
 - OpenTTD: tutorial.
 
-- OpenTTD: horizintal toobar popup menu out of screen.
-
-- OpenTTD: tap anywhere to close popup menu.
-
-- OpenTTD: Ctrl key does not work when using physical keyboard.
-
 - OpenTTD: 24bpp color mode + 32bpp blitter in SDL menu.
-
-- OpenTTD: better support for hardware right mouse button.
-
-- Add glshim library: https://github.com/lunixbochs/glshim

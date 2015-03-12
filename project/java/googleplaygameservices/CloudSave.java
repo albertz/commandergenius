@@ -141,7 +141,7 @@ public class CloudSave implements GameHelper.GameHelperListener {
 			if( crapshot == null )
 				return false;
 
-			crapshot.writeBytes(readFile(filename));
+			crapshot.getSnapshotContents().writeBytes(readFile(filename));
 
 			Bitmap bmp = BitmapFactory.decodeFile(imageFile);
 			while( bmp != null && bmp.getByteCount() > Games.Snapshots.getMaxCoverImageSize(getApiClient()) )
@@ -212,7 +212,7 @@ public class CloudSave implements GameHelper.GameHelperListener {
 				return false;
 			}
 
-			boolean written = writeFile(filename, result.getSnapshot().readFully());
+			boolean written = writeFile(filename, result.getSnapshot().getSnapshotContents().readFully());
 			Log.i("SDL", "CloudSave: load: status: " + written);
 			return written;
 		}
