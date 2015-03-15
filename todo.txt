@@ -35,6 +35,4 @@ TODO, which will get actually done
 
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
 
-- OpenTTD: tutorial.
-
 - OpenTTD: 24bpp color mode + 32bpp blitter in SDL menu.
