@@ -62,6 +62,7 @@ import android.app.AlarmManager;
 import android.content.Intent;
 import android.view.View;
 import android.view.Display;
+import android.net.Uri;
 
 
 class Mouse
@@ -913,6 +914,11 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		});
 
 		return ret;
+	}
+	
+	public void openExternalWebBrowser(String url)
+	{
+		context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
 	}
 
 	private int PowerOf2(int i)

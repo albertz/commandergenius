@@ -118,6 +118,9 @@ Returns 1 if load succeeded, 0 if user aborted sign-in, or there was no network 
 */
 extern DECLSPEC int SDLCALL SDL_ANDROID_CloudLoad(const char *filename, const char *saveId, const char *dialogTitle);
 
+/* Open an Android web browser, or Chrome, or Youtube for video links */
+extern DECLSPEC void SDLCALL SDL_ANDROID_OpenExternalWebBrowser(const char *url);
+
 #ifdef __cplusplus
 }
 #endif

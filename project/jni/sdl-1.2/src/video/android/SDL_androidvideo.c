@@ -84,6 +84,7 @@ static jmethodID JavaSetAdvertisementPosition = NULL;
 static jmethodID JavaRequestNewAdvertisement = NULL;
 static jmethodID JavaRequestCloudSave = NULL;
 static jmethodID JavaRequestCloudLoad = NULL;
+static jmethodID JavaRequestOpenExternalWebBrowser = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
@@ -355,6 +356,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 													"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)Z");
 	JavaRequestCloudLoad = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "cloudLoad",
 													"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
+	JavaRequestOpenExternalWebBrowser = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "openExternalWebBrowser", "(Ljava/lang/String;)V");
 	
 	ANDROID_InitOSKeymap();
 }
@@ -569,6 +571,14 @@ int SDLCALL SDL_ANDROID_CloudLoad(const char *filename, const char *saveId, cons
 	return result;
 }
 
+void SDLCALL SDL_ANDROID_OpenExternalWebBrowser(const char *url)
+{
+	(*JavaEnv)->PushLocalFrame(JavaEnv, 1);
+	jstring s1 = (*JavaEnv)->NewStringUTF(JavaEnv, url);
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestOpenExternalWebBrowser, s1 );
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s1);
+	(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
+}
 
 // Dummy callback for SDL2 to satisfy linker
 extern void SDL_Android_Init(JNIEnv* env, jclass cls);
