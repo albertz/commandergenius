@@ -647,7 +647,7 @@ class SettingsMenuMisc extends SettingsMenu
 			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
 			img.setImageMatrix(m);
 			p.getVideoLayout().addView(img);
-			numEvents = 0;
+			numEvents = -10;
 			AccelerometerReader.gyro.x1 = 100;
 			AccelerometerReader.gyro.x2 = -100;
 			AccelerometerReader.gyro.xc = 0;
@@ -666,7 +666,7 @@ class SettingsMenuMisc extends SettingsMenu
 					{
 						p.setText("" + count * 10 + "% ...");
 						try {
-							Thread.sleep(200);
+							Thread.sleep(300);
 						} catch( Exception e ) {}
 					}
 					finishCalibration(p);
@@ -685,6 +685,8 @@ class SettingsMenuMisc extends SettingsMenu
 		void gyroscopeEvent(float x, float y, float z)
 		{
 			numEvents++;
+			if (numEvents <= 0)
+				return; // Skip few initial measurements, they may be incorrect
 			AccelerometerReader.gyro.xc += x;
 			AccelerometerReader.gyro.yc += y;
 			AccelerometerReader.gyro.zc += z;
@@ -713,7 +715,7 @@ class SettingsMenuMisc extends SettingsMenu
 			try {
 				Thread.sleep(200); // Just in case we have pending events
 			} catch( Exception e ) {}
-			if( numEvents > 5 )
+			if( numEvents > 10 )
 			{
 				AccelerometerReader.gyro.xc /= (float)numEvents;
 				AccelerometerReader.gyro.yc /= (float)numEvents;
