@@ -27,7 +27,7 @@ TODO, which will get actually done
 
 - UQM: use gyroscope to steer the ship, search button for starmap.
 
-- SDL: control mouse with right analog gamepad stick.
+- SDL: control mouse with right analog gamepad stick - mouse cursor can go off-screen, screen borders are not checked.
 
 - SDL: CompatibilityHacksForceScreenUpdate=y does not redraw screen when invoking from background.
 
