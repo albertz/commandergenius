@@ -258,6 +258,7 @@ extern void SDL_ANDROID_MainThreadPushAppActive(int active);
 
 // Internal input queue stuff
 extern SDLKey SDL_android_keymap[];
+extern int SDL_android_KeysymFromUnicodeShiftNeeded(int unicode);
 extern unsigned char SDL_android_keysym_to_scancode[SDLK_LAST];
 extern SDL_Joystick *SDL_ANDROID_CurrentJoysticks[];
 extern int SDL_ANDROID_isMouseUsed;

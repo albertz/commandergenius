@@ -949,6 +949,7 @@ void SDL_ANDROID_WarpMouse(int x, int y)
 JNIEXPORT jint JNICALL
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint key, jint action, jint unicode )
 {
+	SDL_scancode keycode;
 #if SDL_VERSION_ATLEAST(1,3,0)
 #else
 	if( !SDL_CurrentVideoSurface )
@@ -966,15 +967,29 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeKey) ( JNIEnv*  env, jobject thiz, jint
 		return 1;
 	}
 
-	//__android_log_print(ANDROID_LOG_INFO, "libSDL","nativeKey %d action %d translated %d unicode %d", key, action, TranslateKey(key), unicode);
+	keycode = TranslateKey(key);
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL","nativeKey %d action %d translated %d unicode %d", key, action, keycode, unicode);
 
-	if( TranslateKey(key) == SDLK_NO_REMAP || (TranslateKey(key) == SDLK_UNKNOWN && (unicode & 0xFF80) == 0) )
+	if( keycode == SDLK_NO_REMAP || (keycode == SDLK_UNKNOWN && unicode == 0) )
 		return 0;
 
-	if( TranslateKey(key) != SDLK_UNKNOWN )
+	if( keycode == SDLK_UNKNOWN && (unicode & 0xFF80) == 0 )
+	{
+		int shiftRequired = checkShiftRequired(&unicode);
+		keycode = unicode;
+		if (shiftRequired)
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDLK_LSHIFT, 0 );
+		SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, keycode, 0 );
+		if (shiftRequired)
+			SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDLK_LSHIFT, 0 );
+		action = 0; // Android won't send 'key released' action for keys that do not have keysym, so we simulate it below
+		unicode = 0;
+	}
+
+	if( keycode != SDLK_UNKNOWN )
 		unicode = 0;
 
-	SDL_ANDROID_MainThreadPushKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, TranslateKey(key), unicode );
+	SDL_ANDROID_MainThreadPushKeyboardKey( action ? SDL_PRESSED : SDL_RELEASED, keycode, unicode );
 	return 1;
 }
 

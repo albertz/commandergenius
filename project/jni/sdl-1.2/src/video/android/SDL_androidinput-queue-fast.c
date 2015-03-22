@@ -188,8 +188,6 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key,
 		keysym.unicode = unicode;
 	if( (keysym.unicode & 0xFF80) != 0 )
 		keysym.sym = SDLK_WORLD_0;
-	//else if( keysym.sym < 0x80 )
-	//	keysym.unicode = keysym.sym;
 
 	if( pressed == SDL_RELEASED )
 		keysym.unicode = 0;
