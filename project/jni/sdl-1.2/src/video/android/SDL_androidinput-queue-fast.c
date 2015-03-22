@@ -104,8 +104,9 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key,
 		key == SDL_KEY(UP) || key == SDL_KEY(DOWN) ||
 		key == SDL_KEY(LEFT) || key == SDL_KEY(RIGHT) ) )
 	{
-		if( SDL_ANDROID_moveMouseWithKbX < 0 )
+		if( !SDL_ANDROID_moveMouseWithKbActive )
 		{
+			SDL_ANDROID_moveMouseWithKbActive = 1;
 			SDL_ANDROID_moveMouseWithKbX = SDL_ANDROID_currentMouseX;
 			SDL_ANDROID_moveMouseWithKbY = SDL_ANDROID_currentMouseY;
 		}
@@ -164,6 +165,15 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key,
 
 		SDL_ANDROID_moveMouseWithKbX += SDL_ANDROID_moveMouseWithKbSpeedX;
 		SDL_ANDROID_moveMouseWithKbY += SDL_ANDROID_moveMouseWithKbSpeedY;
+
+		if (SDL_ANDROID_moveMouseWithKbX < 0)
+			SDL_ANDROID_moveMouseWithKbX = 0;
+		if (SDL_ANDROID_moveMouseWithKbY < 0)
+			SDL_ANDROID_moveMouseWithKbY = 0;
+		if (SDL_ANDROID_moveMouseWithKbX >= SDL_ANDROID_sFakeWindowWidth)
+			SDL_ANDROID_moveMouseWithKbX = SDL_ANDROID_sFakeWindowWidth - 1;
+		if (SDL_ANDROID_moveMouseWithKbY >= SDL_ANDROID_sFakeWindowHeight)
+			SDL_ANDROID_moveMouseWithKbY = SDL_ANDROID_sFakeWindowHeight - 1;
 
 		SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY);
 		return;

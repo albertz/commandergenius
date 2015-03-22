@@ -102,7 +102,7 @@ class Globals
 	public static int RightClickMethod = AppNeedsTwoButtonMouse ? Mouse.RIGHT_CLICK_WITH_MULTITOUCH : Mouse.RIGHT_CLICK_NONE;
 	public static int RightClickKey = KeyEvent.KEYCODE_MENU;
 	public static boolean MoveMouseWithJoystick = false;
-	public static int MoveMouseWithJoystickSpeed = 0;
+	public static int MoveMouseWithJoystickSpeed = 1;
 	public static int MoveMouseWithJoystickAccel = 0;
 	public static boolean MoveMouseWithGyroscope = false;
 	public static int MoveMouseWithGyroscopeSpeed = 2;

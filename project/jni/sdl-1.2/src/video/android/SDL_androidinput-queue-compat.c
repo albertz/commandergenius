@@ -262,8 +262,9 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key,
 		key == SDL_KEY(UP) || key == SDL_KEY(DOWN) ||
 		key == SDL_KEY(LEFT) || key == SDL_KEY(RIGHT) ) )
 	{
-		if( SDL_ANDROID_moveMouseWithKbX < 0 )
+		if( !SDL_ANDROID_moveMouseWithKbActive )
 		{
+			SDL_ANDROID_moveMouseWithKbActive = 1;
 			SDL_ANDROID_moveMouseWithKbX = SDL_ANDROID_currentMouseX;
 			SDL_ANDROID_moveMouseWithKbY = SDL_ANDROID_currentMouseY;
 		}

@@ -266,6 +266,7 @@ extern int SDL_ANDROID_currentMouseX, SDL_ANDROID_currentMouseY, SDL_ANDROID_cur
 extern int SDL_ANDROID_moveMouseWithArrowKeys;
 extern int SDL_ANDROID_moveMouseWithKbSpeed;
 extern int SDL_ANDROID_moveMouseWithKbAccel;
+extern int SDL_ANDROID_moveMouseWithKbActive;
 extern int SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY;
 extern int SDL_ANDROID_moveMouseWithKbSpeedX, SDL_ANDROID_moveMouseWithKbSpeedY;
 extern int SDL_ANDROID_moveMouseWithKbAccelX, SDL_ANDROID_moveMouseWithKbAccelY;

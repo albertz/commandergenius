@@ -83,7 +83,8 @@ static int clickMouseWithDpadCenter = 0;
 int SDL_ANDROID_moveMouseWithArrowKeys = 0;
 int SDL_ANDROID_moveMouseWithKbSpeed = 0;
 int SDL_ANDROID_moveMouseWithKbAccel = 0;
-int SDL_ANDROID_moveMouseWithKbX = -1, SDL_ANDROID_moveMouseWithKbY = -1;
+int SDL_ANDROID_moveMouseWithKbActive = 0;
+int SDL_ANDROID_moveMouseWithKbX = 0, SDL_ANDROID_moveMouseWithKbY = 0;
 int SDL_ANDROID_moveMouseWithKbSpeedX = 0, SDL_ANDROID_moveMouseWithKbSpeedY = 0;
 int SDL_ANDROID_moveMouseWithKbAccelX = 0, SDL_ANDROID_moveMouseWithKbAccelY = 0;
 int SDL_ANDROID_moveMouseWithKbAccelUpdateNeeded = 0;
@@ -543,13 +544,14 @@ static void ProcessMouseUp( int x, int y )
 	if( SDL_ANDROID_ShowScreenUnderFinger == ZOOM_MAGNIFIER )
 	{
 		// Move mouse by 1 pixel so it will force screen update and mouse-under-finger window will be removed
-		if( SDL_ANDROID_moveMouseWithKbX >= 0 )
+		if( SDL_ANDROID_moveMouseWithKbActive )
 			SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_moveMouseWithKbX > 0 ? SDL_ANDROID_moveMouseWithKbX-1 : 0, SDL_ANDROID_moveMouseWithKbY);
 		else
 			SDL_ANDROID_MainThreadPushMouseMotion(x > 0 ? x-1 : 0, y);
 	}
-	SDL_ANDROID_moveMouseWithKbX = -1;
-	SDL_ANDROID_moveMouseWithKbY = -1;
+	SDL_ANDROID_moveMouseWithKbActive = 0;
+	SDL_ANDROID_moveMouseWithKbX = 0;
+	SDL_ANDROID_moveMouseWithKbY = 0;
 	SDL_ANDROID_moveMouseWithKbSpeedX = 0;
 	SDL_ANDROID_moveMouseWithKbSpeedY = 0;
 	if( !deferredMouseTap )
@@ -562,7 +564,7 @@ static void ProcessMouseUp( int x, int y )
 static int ProcessMouseDown( int x, int y )
 {
 	int action = MOUSE_DOWN;
-	if( (SDL_ANDROID_moveMouseWithKbX >= 0 || leftClickMethod == LEFT_CLICK_NEAR_CURSOR) &&
+	if( (SDL_ANDROID_moveMouseWithKbActive || leftClickMethod == LEFT_CLICK_NEAR_CURSOR) &&
 		abs(SDL_ANDROID_currentMouseX - x) < SDL_ANDROID_sFakeWindowWidth / 10 && abs(SDL_ANDROID_currentMouseY - y) < SDL_ANDROID_sFakeWindowHeight / 10 )
 	{
 		SDL_ANDROID_MainThreadPushMouseButton( SDL_PRESSED, SDL_BUTTON_LEFT );
@@ -637,7 +639,7 @@ static void ProcessMouseMove_Timeouts( int x, int y )
 
 static void ProcessMouseMove( int x, int y, int force, int radius )
 {
-	if( SDL_ANDROID_moveMouseWithKbX >= 0 )
+	if( SDL_ANDROID_moveMouseWithKbActive )
 	{
 		// Mouse lazily follows magnifying glass, not very intuitive for drag&drop
 		/*
@@ -657,8 +659,9 @@ static void ProcessMouseMove( int x, int y, int force, int radius )
 		if( abs(SDL_ANDROID_moveMouseWithKbX - x) >= SDL_ANDROID_sFakeWindowWidth / 10 ||
 			abs(SDL_ANDROID_moveMouseWithKbY - y) >= SDL_ANDROID_sFakeWindowHeight / 10 ) // || SDL_GetTicks() - leftButtonDownTime > 600
 		{
-			SDL_ANDROID_moveMouseWithKbX = -1;
-			SDL_ANDROID_moveMouseWithKbY = -1;
+			SDL_ANDROID_moveMouseWithKbActive = 0;
+			SDL_ANDROID_moveMouseWithKbX = 0;
+			SDL_ANDROID_moveMouseWithKbY = 0;
 			SDL_ANDROID_moveMouseWithKbSpeedX = 0;
 			SDL_ANDROID_moveMouseWithKbSpeedY = 0;
 			SDL_ANDROID_MainThreadPushMouseMotion(x, y);
@@ -794,7 +797,7 @@ static void ProcessMouseHover( jint *xx, jint *yy, int action, int distance )
 static void AdjustMouseWithGyroscope( jint *xx, jint *yy )
 {
 	if( !moveMouseWithGyroscope || relativeMovement ||
-		SDL_ANDROID_moveMouseWithKbX >= 0 || hardwareMouseDetected == MOUSE_HW_INPUT_MOUSE )
+		SDL_ANDROID_moveMouseWithKbActive || hardwareMouseDetected == MOUSE_HW_INPUT_MOUSE )
 		return;
 
 	static int oldX = 0, oldY = 0, count = 0;
@@ -907,10 +910,18 @@ static void ProcessMoveMouseWithGyroscope(float gx, float gy, float gz)
 	// TODO: mutex here?
 	// If race condition happens, mouse will jump at random across the screen. Nothing serious.
 
-	if( SDL_ANDROID_moveMouseWithKbX >= 0 )
+	if( SDL_ANDROID_moveMouseWithKbActive )
 	{
 		SDL_ANDROID_moveMouseWithKbX += gx;
 		SDL_ANDROID_moveMouseWithKbY += gy;
+		if (SDL_ANDROID_moveMouseWithKbX < 0)
+			SDL_ANDROID_moveMouseWithKbX = 0;
+		if (SDL_ANDROID_moveMouseWithKbY < 0)
+			SDL_ANDROID_moveMouseWithKbY = 0;
+		if (SDL_ANDROID_moveMouseWithKbX >= SDL_ANDROID_sFakeWindowWidth)
+			SDL_ANDROID_moveMouseWithKbX = SDL_ANDROID_sFakeWindowWidth - 1;
+		if (SDL_ANDROID_moveMouseWithKbY >= SDL_ANDROID_sFakeWindowHeight)
+			SDL_ANDROID_moveMouseWithKbY = SDL_ANDROID_sFakeWindowHeight - 1;
 		SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY);
 		return;
 	}
@@ -1367,7 +1378,7 @@ JAVA_EXPORT_NAME(Settings_nativeSetAccelerometerSettings) ( JNIEnv*  env, jobjec
 
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeGamepadAnalogJoystickInput) (JNIEnv* env, jobject thiz,
-	jfloat stick1x, jfloat stick1y, jfloat stick2x, jfloat stick2y, jfloat rtrigger, jfloat ltrigger,
+	jfloat stick1x, jfloat stick1y, jfloat stick2x, jfloat stick2y, jfloat ltrigger, jfloat rtrigger,
 	jint usingHat)
 {
 	if( SDL_ANDROID_CurrentJoysticks[JOY_GAMEPAD1] )
@@ -1379,48 +1390,62 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeGamepadAnalogJoystickInput) (JNIEnv* en
 		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 4, NORMALIZE_FLOAT_32767(ltrigger));
 		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_GAMEPAD1, 5, NORMALIZE_FLOAT_32767(rtrigger));
 	}
-	else if( !usingHat )
+	else
 	{
-		// Translate to up/down/left/right
-		if( stick1x < -0.5f )
+		if( !usingHat )
 		{
-			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(LEFT), 0 );
+			// Translate to up/down/left/right
+			if( stick1x < -0.5f )
+			{
+				if( !SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(LEFT), 0 );
+			}
+			else
+			{
+				if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(LEFT), 0 );
+			}
+			if( stick1x > 0.5f )
+			{
+				if( !SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(RIGHT), 0 );
+			}
+			else
+			{
+				if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(RIGHT), 0 );
+			}
+			if( stick1y < -0.5f )
+			{
+				if( !SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(UP), 0 );
+			}
+			else
+			{
+				if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(UP), 0 );
+			}
+			if( stick1y > 0.5f )
+			{
+				if( !SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(DOWN), 0 );
+			}
+			else
+			{
+				if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
+					SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(DOWN), 0 );
+			}
+		}
+		if( fabsf(stick2x) > 0.2 || fabsf(stick2y) > 0.2 )
+		{
+			// Move mouse with right stick
+			SDL_ANDROID_moveMouseWithKbAccelUpdateNeeded |= 4;
+			SDL_ANDROID_moveMouseWithKbSpeedX = stick2x * 3 * SDL_ANDROID_moveMouseWithKbSpeed;
+			SDL_ANDROID_moveMouseWithKbSpeedY = stick2y * 3 * SDL_ANDROID_moveMouseWithKbSpeed;
 		}
 		else
 		{
-			if( SDL_GetKeyboardState(NULL)[SDL_KEY(LEFT)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(LEFT), 0 );
-		}
-		if( stick1x > 0.5f )
-		{
-			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(RIGHT), 0 );
-		}
-		else
-		{
-			if( SDL_GetKeyboardState(NULL)[SDL_KEY(RIGHT)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(RIGHT), 0 );
-		}
-		if( stick1y < -0.5f )
-		{
-			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(UP), 0 );
-		}
-		else
-		{
-			if( SDL_GetKeyboardState(NULL)[SDL_KEY(UP)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(UP), 0 );
-		}
-		if( stick1y > 0.5f )
-		{
-			if( !SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_PRESSED, SDL_KEY(DOWN), 0 );
-		}
-		else
-		{
-			if( SDL_GetKeyboardState(NULL)[SDL_KEY(DOWN)] )
-				SDL_ANDROID_MainThreadPushKeyboardKey( SDL_RELEASED, SDL_KEY(DOWN), 0 );
+			SDL_ANDROID_moveMouseWithKbAccelUpdateNeeded &= ~4;
 		}
 	}
 }
@@ -1518,6 +1543,16 @@ void SDL_ANDROID_processMoveMouseWithKeyboard()
 
 	SDL_ANDROID_moveMouseWithKbX += SDL_ANDROID_moveMouseWithKbSpeedX;
 	SDL_ANDROID_moveMouseWithKbY += SDL_ANDROID_moveMouseWithKbSpeedY;
+
+	if (SDL_ANDROID_moveMouseWithKbX < 0)
+		SDL_ANDROID_moveMouseWithKbX = 0;
+	if (SDL_ANDROID_moveMouseWithKbY < 0)
+		SDL_ANDROID_moveMouseWithKbY = 0;
+	if (SDL_ANDROID_moveMouseWithKbX >= SDL_ANDROID_sFakeWindowWidth)
+		SDL_ANDROID_moveMouseWithKbX = SDL_ANDROID_sFakeWindowWidth - 1;
+	if (SDL_ANDROID_moveMouseWithKbY >= SDL_ANDROID_sFakeWindowHeight)
+		SDL_ANDROID_moveMouseWithKbY = SDL_ANDROID_sFakeWindowHeight - 1;
+
 	SDL_ANDROID_MainThreadPushMouseMotion(SDL_ANDROID_moveMouseWithKbX, SDL_ANDROID_moveMouseWithKbY);
 };
 
