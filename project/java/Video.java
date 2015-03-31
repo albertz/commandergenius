@@ -916,9 +916,19 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		return ret;
 	}
 	
-	public void openExternalWebBrowser(String url)
+	public void openExternalApp(String pkgName, String activity, String url)
 	{
-		context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+		Intent i = new Intent();
+		if (url != null)
+		{
+			i.setAction(Intent.ACTION_VIEW);
+			i.setData(Uri.parse(url));
+		}
+		if (pkgName != null && activity != null)
+		{
+			i.setClassName(pkgName, activity);
+		}
+		context.startActivity(i);
 	}
 
 	private int PowerOf2(int i)

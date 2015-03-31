@@ -619,6 +619,9 @@ class Settings
 		nativeSetEnv( "SDCARD", Environment.getExternalStorageDirectory().getAbsolutePath() );
 		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
 		nativeSetEnv( "ANDROID_PACKAGE_NAME", p.getPackageName() );
+		try {
+			nativeSetEnv( "ANDROID_APP_NAME", p.getString(p.getApplicationInfo().labelRes) );
+		} catch (Exception eeeeee) {}
 		if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO )
 			nativeSetEnv( "ANDROID_PACKAGE_PATH", p.getPackageCodePath() );
 		Log.d("SDL", "libSDL: Is running on OUYA: " + p.isRunningOnOUYA());

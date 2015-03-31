@@ -13,6 +13,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_screenkeyboard.h>
+#include <SDL/SDL_android.h>
 #include <android/log.h>
 
 #include "gfx.h"
@@ -20,6 +21,8 @@
 static TTF_Font* sFont;
 
 static int unpackFinished = 0;
+enum { UPGRADE_WARNING_NONE, UPGRADE_WARNING_ASK, UPGRADE_WARNING_PROCEED, UPGRADE_WARNING_CANCEL };
+static int upgradeWarning = UPGRADE_WARNING_NONE;
 static char unpackLog[4][256];
 
 static void renderString(const char *c, int x, int y);
@@ -37,6 +40,8 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 	char fname2[PATH_MAX*2];
 	char buf[1024 * 4];
 	struct stat st;
+	const char *tarExtractCommand = "tar xz -C";
+	char tarxz[PATH_MAX];
 
 	if( stat( archive, &st ) == 0 )
 	{
@@ -46,7 +51,25 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data: total size %d Mb", unpackProgressMbTotal);
 	}
 	else
-		return 1;
+	{
+		if (strstr(archive, ".tar.gz") == archive + strlen(archive) - strlen(".tar.gz"))
+		{
+			strcpy(tarxz, archive);
+			strstr(tarxz, ".tar.gz")[5] = 'x'; // .tar.gz -> .tar.xz
+			if( stat( tarxz, &st ) == 0 )
+			{
+				__android_log_print(ANDROID_LOG_INFO, "XSDL", "Found .tar.xz archive: %s", tarxz);
+				archive = tarxz;
+				tarExtractCommand = "tar xJ -C";
+				unpackProgressMbTotal = st.st_size / 1024 / 1024;
+				if( unpackProgressMbTotal <= 0 )
+					unpackProgressMbTotal = 1;
+				__android_log_print(ANDROID_LOG_INFO, "XSDL", "Unpacking data: total size %d Mb", unpackProgressMbTotal);
+			}
+			else
+				return 1;
+		}
+	}
 
 	unpackProgressMb = 0;
 
@@ -60,6 +83,12 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 
 	if( strlen(deleteOldDataMarkerFile) > 0 && stat( fname, &st ) == 0 && stat( fname2, &st ) == 0 )
 	{
+		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Upgrade detected, showing warning dialog");
+		upgradeWarning = UPGRADE_WARNING_ASK;
+		while( upgradeWarning == UPGRADE_WARNING_ASK )
+			SDL_Delay(200);
+		if( upgradeWarning == UPGRADE_WARNING_CANCEL )
+			return 1;
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Deleting old installation...");
 		sprintf(unpackLog[0], "Deleting old installation...");
 
@@ -95,22 +124,11 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 
 		system( fname );
 
-		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
-		strcat( fname, "/../cache/busybox" );
-		strcat( fname, " setsid " );
-		strcat( fname, getenv("SECURE_STORAGE_DIR") );
-		strcat( fname, "/../cache/busybox" );
-		strcat( fname, " nohup " );
-		strcat( fname, getenv("SECURE_STORAGE_DIR") );
-		strcat( fname, "/../cache/busybox" );
-		strcat( fname, " ash -c 'sleep 2 ; /system/bin/am start --user 0 -n " );
-		strcat( fname, getenv("ANDROID_PACKAGE_NAME") );
-		strcat( fname, "/.MainActivity'" );
-
 		sprintf(unpackLog[0], "Restarting the app...");
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Restarting the app: %s", fname);
 
-		popen( fname, "r" );
+		SDL_ANDROID_OpenExternalApp(getenv("ANDROID_PACKAGE_NAME"), ".RestartMainActivity", NULL);
+		sleep(1);
 
 		exit(0);
 	}
@@ -120,7 +138,9 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 
 	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname, "/busybox" );
-	strcat( fname, " tar xz -C " );
+	strcat( fname, " " );
+	strcat( fname, tarExtractCommand );
+	strcat( fname, " " );
 	strcat( fname, getenv("SECURE_STORAGE_DIR") );
 	FILE * fo = popen(fname, "w");
 	FILE * ff = fopen(archive, "rb");
@@ -273,6 +293,9 @@ void XSDL_unpackFiles()
 	void * status;
 	memset(unpackLog, 0, sizeof(unpackLog));
 	pthread_create(&thread_id, NULL, &unpackFilesThread, NULL);
+	int progress = 0;
+	enum {PROGRESS_WHEEL_NUM = 8};
+	const char *progressWheel[PROGRESS_WHEEL_NUM] = { ";,,,,,,,", ",;,,,,,,", ",,;,,,,,", ",,,;,,,,", ",,,,;,,,", ",,,,,;,,", ",,,,,,;,", ",,,,,,,;" };
 
 	while (!unpackFinished)
 	{
@@ -282,8 +305,43 @@ void XSDL_unpackFiles()
 		renderString(unpackLog[1], VID_X/2, VID_Y*3/8);
 		renderString(unpackLog[2], VID_X/2, VID_Y*4/8);
 		renderString(unpackLog[3], VID_X/2, VID_Y*5/8);
+		progress++;
+		renderString(progressWheel[progress % PROGRESS_WHEEL_NUM], VID_X/2, VID_Y*6/8);
 		renderString("You may put this app to background while it's unpacking", VID_X/2, VID_Y*7/8);
 		SDL_Flip(SDL_GetVideoSurface());
+		int x, y;
+		while( upgradeWarning == UPGRADE_WARNING_ASK )
+		{
+			char s[PATH_MAX];
+			sprintf(s, "New update available for %s", getenv("ANDROID_APP_NAME"));
+			renderString(s, VID_X/2, VID_Y*2/8);
+			sprintf(s, "Please move all your %s files to SD card", getenv("ANDROID_APP_NAME"));
+			renderString(s, VID_X/2, VID_Y*3/8);
+			renderString("or they will be deleted during upgrade", VID_X/2, VID_Y*4/8);
+			renderString("Install now", VID_X/4, VID_Y*6/8);
+			renderString("Install later", VID_X*3/4, VID_Y*6/8);
+			SDL_Flip(SDL_GetVideoSurface());
+			SDL_Event event;
+			while (SDL_PollEvent(&event))
+			{
+				switch (event.type)
+				{
+					case SDL_KEYDOWN:
+						if (event.key.keysym.sym == SDLK_HELP)
+							upgradeWarning = UPGRADE_WARNING_CANCEL;
+					break;
+					case SDL_MOUSEBUTTONUP:
+						if( y > VID_Y*5/8 && y < VID_Y*7/8 )
+							upgradeWarning = (x > VID_X/2) ? UPGRADE_WARNING_CANCEL : UPGRADE_WARNING_PROCEED;
+					break;
+					case SDL_JOYBALLMOTION:
+						x = event.jball.xrel;
+						y = event.jball.yrel;
+					break;
+				}
+			}
+			SDL_Delay(200);
+		}
 	}
 
 	pthread_join(thread_id, &status);
