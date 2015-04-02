@@ -42,6 +42,7 @@ int main( int argc, char* argv[] )
 	int printHelp = 1;
 	int screenResOverride = 0;
 	int screenButtons = 0;
+	int warnDiskSpaceMb = 0;
 	
 	int resolutionW = atoi(getenv("DISPLAY_RESOLUTION_WIDTH"));
 	int resolutionH = atoi(getenv("DISPLAY_RESOLUTION_HEIGHT"));
@@ -54,10 +55,6 @@ int main( int argc, char* argv[] )
 	SDL_ANDROID_SetScreenKeyboardShown(0);
 
 	XSDL_initSDL();
-
-	XSDL_unpackFiles();
-
-	XSDL_showConfigMenu(&resolutionW, &displayW, &resolutionH, &displayH);
 
 	for(i = 0; i < 1024; i++)
 	{
@@ -126,6 +123,12 @@ int main( int argc, char* argv[] )
 		{
 			screenButtons = 1;
 		}
+		else if( strcmp(argv[1], "-warndiskspacemb") == 0 && argc > 2 )
+		{
+			warnDiskSpaceMb = atoi(argv[2]);
+			argc--;
+			argv++;
+		}
 		else
 		{
 			args[argnum] = argv[1];
@@ -146,12 +149,17 @@ int main( int argc, char* argv[] )
 						getenv("SECURE_STORAGE_DIR"),
 						getenv("SECURE_STORAGE_DIR") );
 
+	XSDL_unpackFiles(warnDiskSpaceMb);
+
+	if( !screenResOverride )
+	{
+		XSDL_showConfigMenu(&resolutionW, &displayW, &resolutionH, &displayH);
+		sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, SDL_GetVideoInfo()->vfmt->BitsPerPixel );
+	}
+
 	XSDL_generateBackground( port, printHelp, resolutionW, resolutionH );
 
 	XSDL_deinitSDL();
-
-	if( !screenResOverride )
-		sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, SDL_GetVideoInfo()->vfmt->BitsPerPixel );
 
 	if( printHelp )
 	{

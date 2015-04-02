@@ -129,6 +129,7 @@ public class RestartMainActivity extends Activity
 				} catch (InterruptedException e) {}
 				Intent intent = new Intent(RestartMainActivity.this, MainActivity.class);
 				intent.putExtra(ACTIVITY_AUTODETECT_SCREEN_ORIENTATION, getIntent().getBooleanExtra(ACTIVITY_AUTODETECT_SCREEN_ORIENTATION, false));
+				intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 				RestartMainActivity.this.startActivity(intent);
 				try{
 					Thread.sleep(1000);

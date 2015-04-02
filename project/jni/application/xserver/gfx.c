@@ -10,6 +10,7 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <sys/vfs.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_screenkeyboard.h>
@@ -22,8 +23,10 @@ static TTF_Font* sFont;
 
 static int unpackFinished = 0;
 enum { UPGRADE_WARNING_NONE, UPGRADE_WARNING_ASK, UPGRADE_WARNING_PROCEED, UPGRADE_WARNING_CANCEL };
+// Mutex here would be nice, but I'm lazy and don't care
 static int upgradeWarning = UPGRADE_WARNING_NONE;
 static char unpackLog[4][256];
+static int freeSpaceRequiredMb = 0;
 
 static void renderString(const char *c, int x, int y);
 static void renderStringColor(const char *c, int x, int y, int r, int g, int b, SDL_Surface * surf);
@@ -32,7 +35,7 @@ static void renderStringScaled(const char *c, int size, int x, int y, int r, int
 static void * unpackFilesThread(void * unused);
 static void showErrorMessage(const char *msg);
 
-static int unpackFiles(const char *archive, const char *script, const char *deleteOldDataMarkerFile)
+static int unpackFiles(const char *archive, const char *script, const char *deleteOldDataMarkerFile, const char *pathsToDelete)
 {
 	int unpackProgressMb;
 	int unpackProgressMbTotal = 1;
@@ -73,15 +76,11 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 
 	unpackProgressMb = 0;
 
-	strcpy( fname, getenv("SECURE_STORAGE_DIR") );
-	strcat( fname, "/" );
-	strcat( fname, script );
-
 	strcpy( fname2, getenv("SECURE_STORAGE_DIR") );
 	strcat( fname2, "/" );
 	strcat( fname2, deleteOldDataMarkerFile );
 
-	if( strlen(deleteOldDataMarkerFile) > 0 && stat( fname, &st ) == 0 && stat( fname2, &st ) == 0 )
+	if( strlen(deleteOldDataMarkerFile) > 0 && stat( fname2, &st ) == 0 )
 	{
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Upgrade detected, showing warning dialog");
 		upgradeWarning = UPGRADE_WARNING_ASK;
@@ -94,43 +93,35 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 
 		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
 		strcat( fname, "/busybox" );
-		strcat( fname, " mkdir -p " );
+		strcat( fname, " sh -c 'cd " );
 		strcat( fname, getenv("SECURE_STORAGE_DIR") );
-		strcat( fname, "/../cache" );
+		strcat( fname, " ; rm -rf " );
+		strcat( fname, pathsToDelete );
+		strcat( fname, "'" );
 
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "%s", fname);
 
 		system( fname );
+	}
 
-		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
-		strcat( fname, "/busybox" );
-		strcat( fname, " cp -a " );
-		strcat( fname, getenv("SECURE_STORAGE_DIR") );
-		strcat( fname, "/busybox " );
-		strcat( fname, getenv("SECURE_STORAGE_DIR") );
-		strcat( fname, "/../cache/busybox" );
-
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "%s", fname);
-
-		system( fname );
-
-		strcpy( fname, getenv("SECURE_STORAGE_DIR") );
-		strcat( fname, "/../cache/busybox" );
-		strcat( fname, " rm -rf " );
-		strcat( fname, getenv("SECURE_STORAGE_DIR") );
-		strcat( fname, "/*" );
-
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "%s", fname);
-
-		system( fname );
-
-		sprintf(unpackLog[0], "Restarting the app...");
-		__android_log_print(ANDROID_LOG_INFO, "XSDL", "Restarting the app: %s", fname);
-
-		SDL_ANDROID_OpenExternalApp(getenv("ANDROID_PACKAGE_NAME"), ".RestartMainActivity", NULL);
-		sleep(1);
-
-		exit(0);
+	for (;;)
+	{
+		struct statfs freeSpace;
+		memset(&freeSpace, 0, sizeof(freeSpace));
+		if( statfs(getenv("SECURE_STORAGE_DIR"), &freeSpace) == 0 )
+		{
+			if( (uint64_t)freeSpace.f_bsize * (uint64_t)freeSpace.f_bavail < (uint64_t)freeSpaceRequiredMb * 1024 * 1024 )
+			{
+				sprintf(unpackLog[0], "Error: not enough free space on internal storage");
+				sprintf(unpackLog[1], "Available %llu Mb, required %d Mb", (uint64_t)freeSpace.f_bsize * freeSpace.f_bavail / 1024 / 1024, freeSpaceRequiredMb);
+				sprintf(unpackLog[2], "Please uninstall large apps to free more space on internal storage");
+				sleep(1);
+				continue;
+			}
+		}
+		sprintf(unpackLog[1], " ");
+		sprintf(unpackLog[2], " ");
+		break;
 	}
 
 	sprintf(unpackLog[0], "Unpacking data: %s", archive);
@@ -243,9 +234,10 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 		if( strchr(buf, '\n') != NULL )
 			strchr(buf, '\n')[0] = 0;
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", buf);
-		strncpy(unpackLog[3], unpackLog[2], sizeof(unpackLog[1]) - 4);
-		strncpy(unpackLog[2], unpackLog[1], sizeof(unpackLog[1]) - 4);
-		strncpy(unpackLog[1], buf, sizeof(unpackLog[1]) - 4);
+		strncpy(unpackLog[3], unpackLog[2], sizeof(unpackLog[0]) - 4);
+		strncpy(unpackLog[2], unpackLog[1], sizeof(unpackLog[0]) - 4);
+		strncpy(unpackLog[1], unpackLog[0], sizeof(unpackLog[0]) - 4);
+		strncpy(unpackLog[0], buf, sizeof(unpackLog[0]) - 4);
 	}
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "Postinstall script exited with status %d", pclose(fo));
@@ -256,26 +248,26 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 
 static void * unpackFilesThread(void * unused)
 {
-	const char *unpack[][3] =
+	const char *unpack[][4] =
 	{
-		{ "data.tar.gz", "postinstall.sh", "usr/lib/xorg/protocol.txt" },
-		{ "xfonts.tar.gz", "", "" },
-		{ "update1.tar.gz", "update1.sh", "" },
-		{ "update2.tar.gz", "update2.sh", "" },
-		{ "update3.tar.gz", "update3.sh", "" },
-		{ "update4.tar.gz", "update4.sh", "" },
-		{ "update5.tar.gz", "update5.sh", "" },
-		{ "update6.tar.gz", "update6.sh", "" },
-		{ "update7.tar.gz", "update7.sh", "" },
-		{ "update8.tar.gz", "update8.sh", "" },
-		{ "update9.tar.gz", "update9.sh", "" },
-		{NULL, NULL, NULL}
+		{ "data.tar.gz", "postinstall.sh", "usr/lib/xorg/protocol.txt", "img img-* postinstall.sh update*.sh" },
+		{ "xfonts.tar.gz", "", "", "" },
+		{ "update1.tar.gz", "update1.sh", "", "" },
+		{ "update2.tar.gz", "update2.sh", "", "" },
+		{ "update3.tar.gz", "update3.sh", "", "" },
+		{ "update4.tar.gz", "update4.sh", "", "" },
+		{ "update5.tar.gz", "update5.sh", "", "" },
+		{ "update6.tar.gz", "update6.sh", "", "" },
+		{ "update7.tar.gz", "update7.sh", "", "" },
+		{ "update8.tar.gz", "update8.sh", "", "" },
+		{ "update9.tar.gz", "update9.sh", "", "" },
+		{NULL, NULL, NULL, NULL}
 	};
 	int i;
 
 	for( i = 0; unpack[i][0] != NULL; i++ )
 	{
-		int status = unpackFiles(unpack[i][0], unpack[i][1], unpack[i][2]);
+		int status = unpackFiles(unpack[i][0], unpack[i][1], unpack[i][2], unpack[i][3]);
 		if( status == 0 && i == 0 ) // Only the first archive is mandatory
 		{
 			unpackFinished = 1;
@@ -287,19 +279,55 @@ static void * unpackFilesThread(void * unused)
 	return (void *)1;
 }
 
-void XSDL_unpackFiles()
+void XSDL_unpackFiles(int _freeSpaceRequiredMb)
 {
 	pthread_t thread_id;
 	void * status;
 	memset(unpackLog, 0, sizeof(unpackLog));
+	freeSpaceRequiredMb = _freeSpaceRequiredMb;
 	pthread_create(&thread_id, NULL, &unpackFilesThread, NULL);
 	int progress = 0;
-	enum {PROGRESS_WHEEL_NUM = 8};
-	const char *progressWheel[PROGRESS_WHEEL_NUM] = { ";,,,,,,,", ",;,,,,,,", ",,;,,,,,", ",,,;,,,,", ",,,,;,,,", ",,,,,;,,", ",,,,,,;,", ",,,,,,,;" };
-
+	enum {PROGRESS_WHEEL_NUM = 14};
+	const char *progressWheel[PROGRESS_WHEEL_NUM] =
+	{
+		"[<=>=======]",
+		"[=<=>======]",
+		"[==<=>=====]",
+		"[===<=>====]",
+		"[====<=>===]",
+		"[=====<=>==]",
+		"[======<=>=]",
+		"[=======<=>]",
+		"[======<=>=]",
+		"[=====<=>==]",
+		"[====<=>===]",
+		"[===<=>====]",
+		"[==<=>=====]",
+		"[=<=>======]",
+	};
+	/*
+	const char *progressWheel[PROGRESS_WHEEL_NUM] =
+	{
+		"°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´",
+		"´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚",
+		"˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´",
+		"´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°",
+		"°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤",
+		"¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø",
+		"ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,",
+		",ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸",
+		"¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳",
+		"˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸",
+		"¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,",
+		",¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø",
+		"ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤",
+		"¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°¤ø,¸˳¸,ø¤°´˚´°",
+	};
+	*/
+	SDL_Joystick * j0 = SDL_JoystickOpen(0);
 	while (!unpackFinished)
 	{
-		SDL_Delay(400);
+		SDL_Delay(300);
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
 		renderString(unpackLog[0], VID_X/2, VID_Y*2/8);
 		renderString(unpackLog[1], VID_X/2, VID_Y*3/8);
@@ -309,18 +337,31 @@ void XSDL_unpackFiles()
 		renderString(progressWheel[progress % PROGRESS_WHEEL_NUM], VID_X/2, VID_Y*6/8);
 		renderString("You may put this app to background while it's unpacking", VID_X/2, VID_Y*7/8);
 		SDL_Flip(SDL_GetVideoSurface());
-		int x, y;
+		int x = 0, y = 0;
 		while( upgradeWarning == UPGRADE_WARNING_ASK )
 		{
+			SDL_Delay(100);
+			SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
 			char s[PATH_MAX];
 			sprintf(s, "New update available for %s", getenv("ANDROID_APP_NAME"));
 			renderString(s, VID_X/2, VID_Y*2/8);
 			sprintf(s, "Please move all your %s files to SD card", getenv("ANDROID_APP_NAME"));
 			renderString(s, VID_X/2, VID_Y*3/8);
 			renderString("or they will be deleted during upgrade", VID_X/2, VID_Y*4/8);
-			renderString("Install now", VID_X/4, VID_Y*6/8);
-			renderString("Install later", VID_X*3/4, VID_Y*6/8);
-			SDL_Flip(SDL_GetVideoSurface());
+
+			renderString("――――――――――――――――――――",  VID_X/4, VID_Y*11/16);
+			renderString("|                   |", VID_X/4, VID_Y*45/64);
+			renderString("|                   |", VID_X/4, VID_Y*48/64);
+			renderString("|                   |", VID_X/4, VID_Y*101/128);
+			renderString("――――――――――――――――――――",  VID_X/4, VID_Y*13/16);
+			renderString("Install now",           VID_X/4, VID_Y*6/8);
+
+			renderString("――――――――――――――――――――",  VID_X*3/4, VID_Y*11/16);
+			renderString("|                   |", VID_X*3/4, VID_Y*45/64);
+			renderString("|                   |", VID_X*3/4, VID_Y*48/64);
+			renderString("|                   |", VID_X*3/4, VID_Y*101/128);
+			renderString("――――――――――――――――――――",  VID_X*3/4, VID_Y*13/16);
+			renderString("Install later",         VID_X*3/4, VID_Y*6/8);
 			SDL_Event event;
 			while (SDL_PollEvent(&event))
 			{
@@ -340,7 +381,7 @@ void XSDL_unpackFiles()
 					break;
 				}
 			}
-			SDL_Delay(200);
+			SDL_Flip(SDL_GetVideoSurface());
 		}
 	}
 
@@ -350,6 +391,7 @@ void XSDL_unpackFiles()
 		showErrorMessage("Cannot unpack data files, please reinstall the app");
 		exit(1);
 	}
+	SDL_JoystickClose(j0);
 }
 
 void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH)

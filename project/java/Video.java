@@ -918,17 +918,21 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	
 	public void openExternalApp(String pkgName, String activity, String url)
 	{
-		Intent i = new Intent();
-		if (url != null)
-		{
-			i.setAction(Intent.ACTION_VIEW);
-			i.setData(Uri.parse(url));
+		try {
+			Intent i = new Intent();
+			if (url != null && url.length() > 0)
+			{
+				i.setAction(Intent.ACTION_VIEW);
+				i.setData(Uri.parse(url));
+			}
+			if (pkgName != null && activity != null && pkgName.length() > 0 && activity.length() > 0)
+			{
+				i.setClassName(pkgName, activity);
+			}
+			context.startActivity(i);
+		} catch (Exception e) {
+			Log.i("SDL", "libSDL: cannot start external app: " + e.toString());
 		}
-		if (pkgName != null && activity != null)
-		{
-			i.setClassName(pkgName, activity);
-		}
-		context.startActivity(i);
 	}
 
 	private int PowerOf2(int i)

@@ -574,16 +574,13 @@ int SDLCALL SDL_ANDROID_CloudLoad(const char *filename, const char *saveId, cons
 void SDLCALL SDL_ANDROID_OpenExternalApp(const char *package, const char *activity, const char *data)
 {
 	(*JavaEnv)->PushLocalFrame(JavaEnv, 3);
-	jstring s1 = package ? (*JavaEnv)->NewStringUTF(JavaEnv, package) : NULL;
-	jstring s2 = activity ? (*JavaEnv)->NewStringUTF(JavaEnv, activity) : NULL;
-	jstring s3 = data ? (*JavaEnv)->NewStringUTF(JavaEnv, data) : NULL;
+	jstring s1 = package ? (*JavaEnv)->NewStringUTF(JavaEnv, package) : (*JavaEnv)->NewStringUTF(JavaEnv, "");
+	jstring s2 = activity ? (*JavaEnv)->NewStringUTF(JavaEnv, activity) : (*JavaEnv)->NewStringUTF(JavaEnv, "");
+	jstring s3 = data ? (*JavaEnv)->NewStringUTF(JavaEnv, data) : (*JavaEnv)->NewStringUTF(JavaEnv, "");
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestOpenExternalApp, s1, s2, s3 );
-	if (s3)
-		(*JavaEnv)->DeleteLocalRef(JavaEnv, s3);
-	if (s2)
-		(*JavaEnv)->DeleteLocalRef(JavaEnv, s2);
-	if (s1)
-		(*JavaEnv)->DeleteLocalRef(JavaEnv, s1);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s3);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s2);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s1);
 	(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
 }
 
