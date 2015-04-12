@@ -39,6 +39,8 @@ TODO, which will get actually done
 
 - OpenTTD: text input freezes OpenTTD and servers kick it.
 
+- OpenTTD: multiplayer chat GUI is broken.
+
 - GIMP & Debian: update proot, update proot tmpdir patch to use env var PROOT_TMPDIR.
 
 - GIMP & Debian: update XSDL, update system images, set R9X as default XFWM4 theme, recompile Inkscape to remove /dev/zero hack.
