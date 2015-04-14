@@ -41,6 +41,8 @@ TODO, which will get actually done
 
 - OpenTTD: multiplayer chat GUI is broken.
 
+- OpenTTD: 16bpp blitter uses 8bpp graphics, when 32bpp is available.
+
 - GIMP & Debian: update proot, update proot tmpdir patch to use env var PROOT_TMPDIR.
 
 - GIMP & Debian: update XSDL, update system images, set R9X as default XFWM4 theme, recompile Inkscape to remove /dev/zero hack.
