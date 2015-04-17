@@ -17,6 +17,8 @@ TODO, which will get actually done
 
 - TeeWorlds: implement rcon.
 
+- TeeWorlds: implement running local server (vanilla, no options).
+
 - OpenArena: navigate game menu with analog joystick.
 
 - OpenArena: do not treat commands starting with / as chat text.
