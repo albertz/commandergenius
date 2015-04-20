@@ -47,6 +47,10 @@ TODO, which will get actually done
 
 - OpenTTD: Cannot resize most dialogs.
 
+- OpenTTD: Arrow for sorting tables has incorrect position.
+
+- OpenTTD: Buy Vehicle window has only 4 items even when resized.
+
 - Debian: update, make it refresh DNS servers automatically.
 
 - XSDL: enable Ctrl/Alt/Shift and move them when mouse cursor is nearby.
