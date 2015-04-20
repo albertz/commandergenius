@@ -47,6 +47,6 @@ TODO, which will get actually done
 
 - OpenTTD: Cannot resize most dialogs.
 
-- Debian: update.
+- Debian: update, make it refresh DNS servers automatically.
 
 - XSDL: enable Ctrl/Alt/Shift and move them when mouse cursor is nearby.
