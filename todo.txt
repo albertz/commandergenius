@@ -54,3 +54,5 @@ TODO, which will get actually done
 - Debian: update, make it refresh DNS servers automatically.
 
 - XSDL: enable Ctrl/Alt/Shift and move them when mouse cursor is nearby.
+
+- SDL: add option for non-fullscreen non-immersive mode.
