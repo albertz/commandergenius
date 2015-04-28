@@ -51,6 +51,10 @@ TODO, which will get actually done
 
 - OpenTTD: Buy Vehicle window has only 4 items even when resized.
 
+- OpenTTD: Upgrade Vehicle dialog broken.
+
+- OpenTTD: Cannot resize 'Buy vehicle' window.
+
 - Debian: update, make it refresh DNS servers automatically.
 
 - XSDL: enable Ctrl/Alt/Shift and move them when mouse cursor is nearby.

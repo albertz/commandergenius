@@ -13,5 +13,5 @@ export CXXFLAGS=-O0
 [ -e Makefile ] || ../src/configure --enable-debug || exit 1
 make -j8 VERBOSE=1 || exit 1
 cd bin
-#gdb -ex run --args ./openttd
+#gdb -ex run --args \
 ./openttd -d 2 -r 854x480 -g opntitle.sav
