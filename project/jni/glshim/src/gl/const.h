@@ -139,6 +139,7 @@
 #define GL_UNSIGNED_INT_2_10_10_10_REV 0x8368
 #define GL_RGB8                        0x8051
 #define GL_RGB5                        0x8050
+#define GL_RGBA8                       0x8058
 
 // types
 #define GL_BYTE                 0x1400
@@ -267,6 +268,10 @@
 #define GL_DST_COLOR             0x0306
 #define GL_ONE_MINUS_DST_COLOR   0x0307
 #define GL_SRC_ALPHA_SATURATE    0x0308
+#define GL_CONSTANT_COLOR        0x8001
+#define GL_ONE_MINUS_CONSTANT_COLOR       0x8002
+#define GL_CONSTANT_ALPHA        0x8003
+#define GL_ONE_MINUS_CONSTANT_ALPHA       0x8004
 
 // glGet
 #define GL_AUX_BUFFERS           0x0C00
@@ -525,3 +530,4 @@
 #define GL_TEXTURE_INTENSITY_TYPE         0x8C15
 #define GL_DEPTH_COMPONENT24              0x81A6
 #define GL_DEPTH_COMPONENT16              0x81A5
+#define GL_MAX_DRAW_BUFFERS_ARB           0x8824

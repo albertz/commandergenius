@@ -1,5 +1,6 @@
 #ifdef ANDROID
 #include "../gl/gl.h"
+#include "glx.h"
 #else
 #include "glx.h"
 #endif
@@ -57,8 +58,10 @@ void *glXGetProcAddressARB(const char *name) {
     EX(glXQueryServerString);
     EX(glXSwapBuffers);
     EX(glXSwapIntervalEXT);
+#endif //ANDROID
     EX(glXSwapIntervalMESA);
     EX(glXSwapIntervalSGI);
+#ifndef ANDROID
     EX(glXUseXFont);
     EX(glXWaitGL);
     EX(glXWaitX);
@@ -69,11 +72,21 @@ void *glXGetProcAddressARB(const char *name) {
     EX(glXGetClientString);
     EX(glXGetFBConfigs);
     EX(glXChooseFBConfig);
+    EX(glXChooseFBConfigSGIX);
     EX(glXGetFBConfigAttrib);
+    EX(glXQueryContext);
     EX(glXGetVisualFromFBConfig);
     EX(glXCreateWindow);
     EX(glXDestroyWindow);
-#endif
+    
+    STUB(glXCreatePbuffer); // to do, using Renderbuffers....
+    STUB(glXDestroyPbuffer);
+    STUB(glXCreatePixmap);
+    STUB(glXDestroyPixmap);
+    STUB(glXGetCurrentReadDrawable);
+    STUB(glXGetSelectedEvent);
+    STUB(glXSelectEvent);
+#endif //ANDROID
     
     // GL_ARB_vertex_buffer_object
     ARB(glBindBuffer);
@@ -95,7 +108,9 @@ void *glXGetProcAddressARB(const char *name) {
     // GL_ARB_frameBuffer_ext
     EX(glFramebufferTexture1D);
     EX(glFramebufferTexture3D);
+    EX(glFramebufferTextureLayer);
     EX(glRenderbufferStorageMultisample);
+    EX(glBlitFramebuffer);
     EXT(glGenFramebuffers);
     EXT(glDeleteFramebuffers);
     EXT(glIsFramebuffer);
@@ -114,6 +129,8 @@ void *glXGetProcAddressARB(const char *name) {
     EXT(glGenerateMipmap);
     EXT(glGetFramebufferAttachmentParameteriv);
     EXT(glGetRenderbufferParameteriv);
+    EXT(glFramebufferTextureLayer);
+    EXT(glBlitFramebuffer);
     ARB(glGenFramebuffers);
     ARB(glDeleteFramebuffers);
     ARB(glIsFramebuffer);
@@ -132,6 +149,9 @@ void *glXGetProcAddressARB(const char *name) {
     ARB(glGenerateMipmap);
     ARB(glGetFramebufferAttachmentParameteriv);
     ARB(glGetRenderbufferParameteriv);
+    ARB(glFramebufferTextureLayer);
+    ARB(glBlitFramebuffer);
+    STUB(glDrawBuffersARB);
     
         /*
     MAP_EGL(glGenFramebuffersARB, glGenFramebuffersOES);
@@ -435,7 +455,7 @@ void *glXGetProcAddressARB(const char *name) {
     STUB(glPixelMapfv);
     STUB(glPixelMapuiv);
     STUB(glPixelMapusv);
-    STUB(glPixelStoref);
+    EX(glPixelStoref);
     STUB(glPrioritizeTextures);
     STUB(glSelectBuffer);
     

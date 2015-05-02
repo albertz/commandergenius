@@ -35,8 +35,8 @@
 #pragma message disable nosimpint
 #endif
 #endif
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
+//#include <X11/Xlib.h>
+//#include <X11/Xutil.h>
 #ifdef __VMS
 # ifdef __cplusplus
 #pragma message enable nosimpint
