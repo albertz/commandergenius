@@ -39,21 +39,7 @@ TODO, which will get actually done
 
 - OpenTTD: 24bpp color mode + 32bpp blitter in SDL menu.
 
-- OpenTTD: text input freezes OpenTTD and servers kick it.
-
 - OpenTTD: multiplayer chat GUI is broken.
-
-- OpenTTD: Changing GUI zoom level resets button size.
-
-- OpenTTD: Cannot resize most dialogs.
-
-- OpenTTD: Arrow for sorting tables has incorrect position.
-
-- OpenTTD: Buy Vehicle window has only 4 items even when resized.
-
-- OpenTTD: Upgrade Vehicle dialog broken.
-
-- OpenTTD: Cannot resize 'Buy vehicle' window.
 
 - Debian: update, make it refresh DNS servers automatically.
 
