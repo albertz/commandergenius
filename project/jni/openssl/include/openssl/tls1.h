@@ -159,17 +159,19 @@ extern "C" {
 
 #define TLS1_ALLOW_EXPERIMENTAL_CIPHERSUITES	0
 
-#define TLS1_2_VERSION			0x0303
-#define TLS1_2_VERSION_MAJOR		0x03
-#define TLS1_2_VERSION_MINOR		0x03
-
+#define TLS1_VERSION			0x0301
 #define TLS1_1_VERSION			0x0302
+#define TLS1_2_VERSION			0x0303
+#define TLS_MAX_VERSION			TLS1_2_VERSION
+
+#define TLS1_VERSION_MAJOR		0x03
+#define TLS1_VERSION_MINOR		0x01
+
 #define TLS1_1_VERSION_MAJOR		0x03
 #define TLS1_1_VERSION_MINOR		0x02
 
-#define TLS1_VERSION			0x0301
-#define TLS1_VERSION_MAJOR		0x03
-#define TLS1_VERSION_MINOR		0x01
+#define TLS1_2_VERSION_MAJOR		0x03
+#define TLS1_2_VERSION_MINOR		0x03
 
 #define TLS1_get_version(s) \
 		((s->version >> 8) == TLS1_VERSION_MAJOR ? s->version : 0)
@@ -187,6 +189,7 @@ extern "C" {
 #define TLS1_AD_PROTOCOL_VERSION	70	/* fatal */
 #define TLS1_AD_INSUFFICIENT_SECURITY	71	/* fatal */
 #define TLS1_AD_INTERNAL_ERROR		80	/* fatal */
+#define TLS1_AD_INAPPROPRIATE_FALLBACK	86	/* fatal */
 #define TLS1_AD_USER_CANCELLED		90
 #define TLS1_AD_NO_RENEGOTIATION	100
 /* codes 110-114 are from RFC3546 */
@@ -230,6 +233,12 @@ extern "C" {
 /* ExtensionType value from RFC5620 */
 #define TLSEXT_TYPE_heartbeat	15
 
+/* ExtensionType value for TLS padding extension.
+ * http://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
+ * http://tools.ietf.org/html/draft-agl-tls-padding-03
+ */
+#define TLSEXT_TYPE_padding	21
+
 /* ExtensionType value from draft-ietf-tls-applayerprotoneg-00 */
 #define TLSEXT_TYPE_application_layer_protocol_negotiation 16
 
@@ -253,6 +262,7 @@ extern "C" {
 
 /* This is not an IANA defined extension number */
 #define TLSEXT_TYPE_channel_id			30031
+#define TLSEXT_TYPE_channel_id_new		30032
 
 /* NameType value from RFC 3546 */
 #define TLSEXT_NAMETYPE_host_name 0
@@ -525,6 +535,12 @@ SSL_CTX_callback_ctrl(ssl,SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB,(void (*)(void))cb)
 #define TLS1_CK_ECDH_RSA_WITH_AES_128_GCM_SHA256        0x0300C031
 #define TLS1_CK_ECDH_RSA_WITH_AES_256_GCM_SHA384        0x0300C032
 
+/* ECDHE PSK ciphersuites from RFC5489
+ * SHA-2 cipher suites are omitted because they cannot be used safely with
+ * SSLv3. */
+#define TLS1_CK_ECDHE_PSK_WITH_AES_128_CBC_SHA          0x0300C035
+#define TLS1_CK_ECDHE_PSK_WITH_AES_256_CBC_SHA          0x0300C036
+
 /* XXX
  * Inconsistency alert:
  * The OpenSSL names of ciphers with ephemeral DH here include the string
@@ -675,6 +691,10 @@ SSL_CTX_callback_ctrl(ssl,SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB,(void (*)(void))cb)
 #define TLS1_TXT_ECDHE_RSA_WITH_AES_256_GCM_SHA384      "ECDHE-RSA-AES256-GCM-SHA384"
 #define TLS1_TXT_ECDH_RSA_WITH_AES_128_GCM_SHA256       "ECDH-RSA-AES128-GCM-SHA256"
 #define TLS1_TXT_ECDH_RSA_WITH_AES_256_GCM_SHA384       "ECDH-RSA-AES256-GCM-SHA384"
+
+/* ECDHE PSK ciphersuites from RFC5489 */
+#define TLS1_TXT_ECDHE_PSK_WITH_AES_128_CBC_SHA         "ECDHE-PSK-AES128-CBC-SHA"
+#define TLS1_TXT_ECDHE_PSK_WITH_AES_256_CBC_SHA         "ECDHE-PSK-AES256-CBC-SHA"
 
 #define TLS_CT_RSA_SIGN			1
 #define TLS_CT_DSS_SIGN			2

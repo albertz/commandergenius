@@ -128,8 +128,13 @@
 extern "C" {
 #endif
 
-/* Signalling cipher suite value: from draft-ietf-tls-renegotiation-03.txt */
+/* Signalling cipher suite value from RFC 5746
+ * (TLS_EMPTY_RENEGOTIATION_INFO_SCSV) */
 #define SSL3_CK_SCSV				0x030000FF
+
+/* Signalling cipher suite value from draft-ietf-tls-downgrade-scsv-00
+ * (TLS_FALLBACK_SCSV) */
+#define SSL3_CK_FALLBACK_SCSV			0x03005600
 
 #define SSL3_CK_RSA_NULL_MD5			0x03000001
 #define SSL3_CK_RSA_NULL_SHA			0x03000002
@@ -388,6 +393,7 @@ typedef struct ssl3_buffer_st
 #define TLS1_FLAGS_TLS_PADDING_BUG		0x0008
 #define TLS1_FLAGS_SKIP_CERT_VERIFY		0x0010
 #define TLS1_FLAGS_KEEP_HANDSHAKE		0x0020
+#define SSL3_FLAGS_CCS_OK			0x0080
  
 /* SSL3_FLAGS_SGC_RESTART_DONE is set when we
  * restart a handshake because of MS SGC and so prevents us
@@ -418,8 +424,8 @@ typedef struct ssl3_state_st
 	unsigned char client_random[SSL3_RANDOM_SIZE];
 
 	/* flags for countermeasure against known-IV weakness */
-	int need_empty_fragments;
-	int empty_fragment_done;
+	int need_record_splitting;
+	int record_split_done;
 
 	/* The value of 'extra' when the buffers were initialized */
 	int init_extra;
@@ -540,11 +546,25 @@ typedef struct ssl3_state_st
 	int next_proto_neg_seen;
 #endif
 
+#ifndef OPENSSL_NO_TLSEXT
+#ifndef OPENSSL_NO_EC
+	/* This is set to true if we believe that this is a version of Safari
+	 * running on OS X 10.6 or newer. We wish to know this because Safari
+	 * on 10.8 .. 10.8.3 has broken ECDHE-ECDSA support. */
+	char is_probably_safari;
+#endif /* !OPENSSL_NO_EC */
+#endif /* !OPENSSL_NO_TLSEXT */
+
 	/* In a client, this means that the server supported Channel ID and that
 	 * a Channel ID was sent. In a server it means that we echoed support
 	 * for Channel IDs and that tlsext_channel_id will be valid after the
 	 * handshake. */
 	char tlsext_channel_id_valid;
+	/* tlsext_channel_id_new means that the updated Channel ID extension
+	 * was negotiated. This is a temporary hack in the code to support both
+	 * forms of Channel ID extension while we transition to the new format,
+	 * which fixed a security issue. */
+	char tlsext_channel_id_new;
 	/* For a server:
 	 *     If |tlsext_channel_id_valid| is true, then this contains the
 	 *     verified Channel ID from the client: a P256 point, (x,y), where
@@ -665,11 +685,11 @@ typedef struct ssl3_state_st
 #define SSL3_ST_SR_CERT_VRFY_B		(0x1A1|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_CHANGE_A		(0x1B0|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_CHANGE_B		(0x1B1|SSL_ST_ACCEPT)
-#define SSL3_ST_SR_POST_CLIENT_CERT	(0x1BF|SSL_ST_ACCEPT)
 #ifndef OPENSSL_NO_NEXTPROTONEG
 #define SSL3_ST_SR_NEXT_PROTO_A		(0x210|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_NEXT_PROTO_B		(0x211|SSL_ST_ACCEPT)
 #endif
+#define SSL3_ST_SR_POST_CLIENT_CERT	(0x1BF|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_CHANNEL_ID_A		(0x220|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_CHANNEL_ID_B		(0x221|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_FINISHED_A		(0x1C0|SSL_ST_ACCEPT)
