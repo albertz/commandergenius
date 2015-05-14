@@ -625,7 +625,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 				int ww = w - w % 2;
 				int hh = h - h % 2;
 				View topView = context.getWindow().peekDecorView();
-				if (topView != null)
+				if (topView != null && Globals.ImmersiveMode)
 				{
 					ww = topView.getWidth() - topView.getWidth() % 2;
 					hh = topView.getHeight() - topView.getHeight() % 2;

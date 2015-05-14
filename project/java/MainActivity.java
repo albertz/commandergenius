@@ -1337,7 +1337,7 @@ abstract class DimSystemStatusBar
 				// Immersive mode, I already hear curses when system bar reappears mid-game from the slightest swipe at the bottom of the screen
 				view.setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN);
 			else
-				view.setSystemUiVisibility(android.view.View.STATUS_BAR_HIDDEN);
+				view.setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_LOW_PROFILE);
 	   }
 	}
 	private static class DimSystemStatusBarDummy extends DimSystemStatusBar
