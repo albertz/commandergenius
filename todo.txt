@@ -33,8 +33,6 @@ TODO, which will get actually done
 
 - SDL: implement SDL_GL_LoadLibrary() / SDL_GL_GetProcAddress() / SDL_GL_SetAttribute() / SDL_GL_GetAttribute().
 
-- USB Keyboard: redefine unknown keys, add VLC server.
-
 - S Planner Killer: options to restore calendar settiongs, and to kill lock-screen widget.
 
 - OpenTTD: 24bpp color mode + 32bpp blitter in SDL menu.
@@ -46,3 +44,5 @@ TODO, which will get actually done
 - XSDL: enable Ctrl/Alt/Shift and move them when mouse cursor is nearby.
 
 - SDL: add option for non-fullscreen non-immersive mode.
+
+- SDL: immersive mode is broken in Android 5.1.1.
