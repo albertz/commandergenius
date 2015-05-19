@@ -44,5 +44,3 @@ TODO, which will get actually done
 - XSDL: enable Ctrl/Alt/Shift and move them when mouse cursor is nearby.
 
 - SDL: add option for non-fullscreen non-immersive mode.
-
-- SDL: immersive mode is broken in Android 5.1.1.
