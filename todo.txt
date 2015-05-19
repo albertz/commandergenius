@@ -39,6 +39,10 @@ TODO, which will get actually done
 
 - OpenTTD: multiplayer chat GUI is broken.
 
+- OpenTTD: New game GUI is still too big.
+
+- OpenTTD: Entering Korean text as savegame name crashes OpenTTD.
+
 - Debian: update, make it refresh DNS servers automatically.
 
 - XSDL: enable Ctrl/Alt/Shift and move them when mouse cursor is nearby.
