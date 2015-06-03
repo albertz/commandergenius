@@ -1,18 +1,3 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 9a9dde2..c7e2aad 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -186,7 +186,9 @@ ENDIF(MSVC)
- 
- FILE(GLOB SUPERTUX_SOURCES_C RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} external/obstack/*.c external/findlocale/findlocale.c)
- 
--FILE(GLOB SUPERTUX_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/main.cpp src/*/*.cpp src/supertux/menu/*.cpp src/video/sdl/*.cpp)
-+FILE(GLOB SUPERTUX_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/main.cpp src/*/*.cpp src/supertux/menu/*.cpp)
-+
-+LIST(REMOVE_ITEM SUPERTUX_SOURCES_CXX src/control//game_controller_manager.cpp src/control//joystick_manager.cpp)
- 
- FILE(GLOB TINYGETTEXT_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} external/tinygettext/src/*.cpp)
- SET_SOURCE_FILES_PROPERTIES(${TINYGETTEXT_SOURCES_CXX} PROPERTIES COMPILE_DEFINITIONS HAVE_SDL)
 diff --git a/configure b/configure
 index b728243..75a4bb4 100755
 --- a/configure
@@ -116,7 +101,7 @@ index 6680c04..401eacc 100644
  
  #include <algorithm>
 diff --git a/src/control/input_manager.cpp b/src/control/input_manager.cpp
-index ce612d4..2ab1d85 100644
+index 588e4b7..57884d1 100644
 --- a/src/control/input_manager.cpp
 +++ b/src/control/input_manager.cpp
 @@ -19,8 +19,8 @@
@@ -182,7 +167,7 @@ index ce612d4..2ab1d85 100644
        break;
    }
 diff --git a/src/control/input_manager.hpp b/src/control/input_manager.hpp
-index d047e53..a87decd 100644
+index c8e0df6..5dd6c60 100644
 --- a/src/control/input_manager.hpp
 +++ b/src/control/input_manager.hpp
 @@ -68,8 +68,8 @@ private:
@@ -210,7 +195,7 @@ index e848067..fe1b785 100644
  {
  public:
 diff --git a/src/control/keyboard_manager.cpp b/src/control/keyboard_manager.cpp
-index ca4e461..cf67877 100644
+index 19b6492..b49734e 100644
 --- a/src/control/keyboard_manager.cpp
 +++ b/src/control/keyboard_manager.cpp
 @@ -18,7 +18,7 @@
@@ -254,7 +239,7 @@ index ca4e461..cf67877 100644
  
    Controller::Control control;
    /* we use default keys when the menu is open (to avoid problems when
-@@ -209,4 +213,18 @@ KeyboardManager::bind_next_event_to(Controller::Control id)
+@@ -213,4 +217,18 @@ KeyboardManager::bind_next_event_to(Controller::Control id)
    wait_for_key = id;
  }
  
@@ -293,7 +278,7 @@ index 07885f9..ae02e33 100644
  
  private:
 diff --git a/src/gui/dialog.cpp b/src/gui/dialog.cpp
-index e536c9c..55602c0 100644
+index 57d74e4..66bf674 100644
 --- a/src/gui/dialog.cpp
 +++ b/src/gui/dialog.cpp
 @@ -14,6 +14,8 @@
@@ -304,9 +289,9 @@ index e536c9c..55602c0 100644
 +
  #include "gui/dialog.hpp"
  
- #include "control/controller.hpp"
+ #include <algorithm>
 diff --git a/src/gui/menu.cpp b/src/gui/menu.cpp
-index fd253e9..adc20ce 100644
+index 7d3b52f..a043fb3 100644
 --- a/src/gui/menu.cpp
 +++ b/src/gui/menu.cpp
 @@ -625,7 +625,9 @@ Menu::get_item_by_id(int id)
@@ -321,10 +306,10 @@ index fd253e9..adc20ce 100644
  
  const MenuItem&
 diff --git a/src/object/player.cpp b/src/object/player.cpp
-index c2bfb0e..f7ddd22 100644
+index d48d410..d2cb99c 100644
 --- a/src/object/player.cpp
 +++ b/src/object/player.cpp
-@@ -148,6 +148,7 @@ Player::Player(PlayerStatus* _player_status, const std::string& name_) :
+@@ -160,6 +160,7 @@ Player::Player(PlayerStatus* _player_status, const std::string& name_) :
    grabbed_object(NULL),
    sprite(),
    airarrow(),
@@ -332,7 +317,7 @@ index c2bfb0e..f7ddd22 100644
    floor_normal(),
    ghost_mode(false),
    edit_mode(false),
-@@ -164,6 +165,7 @@ Player::Player(PlayerStatus* _player_status, const std::string& name_) :
+@@ -176,6 +177,7 @@ Player::Player(PlayerStatus* _player_status, const std::string& name_) :
    // constructor
    sprite = SpriteManager::current()->create("images/creatures/tux/tux.sprite");
    airarrow = Surface::create("images/engine/hud/airarrow.png");
@@ -340,7 +325,7 @@ index c2bfb0e..f7ddd22 100644
    idle_timer.start(IDLE_TIME[0]/1000.0f);
  
    SoundManager::current()->preload("sounds/bigjump.wav");
-@@ -223,6 +225,12 @@ Player::init()
+@@ -240,6 +242,12 @@ Player::init()
  
    climbing = 0;
  
@@ -353,7 +338,7 @@ index c2bfb0e..f7ddd22 100644
    physic.reset();
  }
  
-@@ -494,12 +502,14 @@ Player::handle_horizontal_input()
+@@ -526,12 +534,14 @@ Player::handle_horizontal_input()
  
    float dirsign = 0;
    if(!duck || physic.get_velocity_y() != 0) {
@@ -371,7 +356,7 @@ index c2bfb0e..f7ddd22 100644
        old_dir = dir;
        dir = RIGHT;
        dirsign = 1;
-@@ -691,7 +701,7 @@ Player::handle_vertical_input()
+@@ -724,7 +734,7 @@ Player::handle_vertical_input()
  {
    // Press jump key
    if(controller->pressed(Controller::JUMP)) jump_button_timer.start(JUMP_GRACE_TIME);
@@ -380,25 +365,25 @@ index c2bfb0e..f7ddd22 100644
      jump_button_timer.stop();
      if (duck) {
        // when running, only jump a little bit; else do a backflip
-@@ -711,7 +721,7 @@ Player::handle_vertical_input()
-     }
-   }
+@@ -764,7 +774,7 @@ Player::handle_vertical_input()
+ 
+ 
    // Let go of jump key
 -  else if(!controller->hold(Controller::JUMP)) {
 +  else if(!(controller->hold(Controller::JUMP) || jump_helper_jump)) {
      if (!backflipping && jumping && physic.get_velocity_y() < 0) {
        jumping = false;
        early_jump_apex();
-@@ -789,6 +799,8 @@ Player::handle_input()
+@@ -846,6 +856,8 @@ Player::handle_input()
    /* Handle vertical movement: */
-   handle_vertical_input();
+   if (!stone) handle_vertical_input();
  
 +  handle_jump_helper();
 +
    /* Shoot! */
    if (controller->pressed(Controller::ACTION) && (player_status->bonus == FIRE_BONUS || player_status->bonus == ICE_BONUS)) {
-     if(Sector::current()->add_bullet(
-@@ -1068,6 +1080,13 @@ Player::draw(DrawingContext& context)
+     if((player_status->bonus == FIRE_BONUS &&
+@@ -1190,6 +1202,13 @@ Player::draw(DrawingContext& context)
      context.draw_surface(airarrow, Vector(px, py), LAYER_HUD - 1);
    }
  
@@ -412,7 +397,7 @@ index c2bfb0e..f7ddd22 100644
    std::string sa_prefix = "";
    std::string sa_postfix = "";
  
-@@ -1582,4 +1601,65 @@ Player::handle_input_climbing()
+@@ -1766,4 +1785,65 @@ Player::handle_input_climbing()
    physic.set_acceleration(0, 0);
  }
  
@@ -479,10 +464,10 @@ index c2bfb0e..f7ddd22 100644
 +
  /* EOF */
 diff --git a/src/object/player.hpp b/src/object/player.hpp
-index 3dda1fd..7e57676 100644
+index 4d178aa..bf42dd5 100644
 --- a/src/object/player.hpp
 +++ b/src/object/player.hpp
-@@ -244,6 +244,7 @@ private:
+@@ -246,6 +246,7 @@ private:
  
    void handle_horizontal_input();
    void handle_vertical_input();
@@ -490,7 +475,7 @@ index 3dda1fd..7e57676 100644
  
    void activate();
    void deactivate();
-@@ -314,6 +315,15 @@ public:
+@@ -322,6 +323,15 @@ public:
  
    SurfacePtr airarrow; /**< arrow indicating Tux' position when he's above the camera */
  
@@ -529,7 +514,7 @@ index 277f993..356dae0 100644
    PHYSFS_file* file = (PHYSFS_file*) context->hidden.unknown.data1;
  
 diff --git a/src/supertux/gameconfig.cpp b/src/supertux/gameconfig.cpp
-index c7d7778..9949e92 100644
+index 8c2635e..fa862a3 100644
 --- a/src/supertux/gameconfig.cpp
 +++ b/src/supertux/gameconfig.cpp
 @@ -34,7 +34,7 @@ Config::Config() :
@@ -542,7 +527,7 @@ index c7d7778..9949e92 100644
    try_vsync(true),
    show_fps(false),
 diff --git a/src/supertux/main.cpp b/src/supertux/main.cpp
-index 1cfba9c..f453266 100644
+index c5ca4e8..00010c1 100644
 --- a/src/supertux/main.cpp
 +++ b/src/supertux/main.cpp
 @@ -20,6 +20,9 @@
@@ -554,8 +539,8 @@ index 1cfba9c..f453266 100644
 +#include <unistd.h>
  #include <boost/format.hpp>
  #include <boost/optional.hpp>
- #include <iostream>
-@@ -128,7 +131,7 @@ public:
+ #include <array>
+@@ -129,7 +132,7 @@ public:
      if (!PHYSFS_init(argv0))
      {
        std::stringstream msg;
@@ -564,7 +549,7 @@ index 1cfba9c..f453266 100644
        throw std::runtime_error(msg.str());
      }
      else
-@@ -143,36 +146,9 @@ public:
+@@ -144,50 +147,9 @@ public:
  
    void find_datadir()
    {
@@ -585,9 +570,23 @@ index 1cfba9c..f453266 100644
 -      std::string basepath = basepath_c;
 -      SDL_free(basepath_c);
 -
--      datadir = FileSystem::join(basepath, "data");
--      std::string testfname = FileSystem::join(datadir, "credits.txt");
--      if (!FileSystem::exists(testfname))
+-      // If we are on windows, the data directory is one directory above the binary
+-#ifdef WIN32
+-      const std::array<std::string, 2> subdirs = { "data", "../data" };
+-#else
+-      const std::array<std::string, 1> subdirs = { "data" };
+-#endif
+-      bool found = false;
+-      for (const std::string &subdir : subdirs)
+-      {
+-        datadir = FileSystem::join(basepath, subdir);
+-        if (FileSystem::exists(FileSystem::join(datadir, "credits.txt")))
+-        {
+-          found = true;
+-          break;
+-        }
+-      }
+-      if (!found)
 -      {
 -        // if the game is not run from the source directory, try to find
 -        // the global install location
@@ -603,7 +602,7 @@ index 1cfba9c..f453266 100644
      }
    }
  
-@@ -238,7 +214,7 @@ class SDLSubsystem
+@@ -253,7 +215,7 @@ class SDLSubsystem
  public:
    SDLSubsystem()
    {
@@ -612,7 +611,7 @@ index 1cfba9c..f453266 100644
      {
        std::stringstream msg;
        msg << "Couldn't initialize SDL: " << SDL_GetError();
-@@ -257,7 +233,7 @@ public:
+@@ -272,7 +234,7 @@ public:
  void
  Main::init_video()
  {
@@ -621,7 +620,7 @@ index 1cfba9c..f453266 100644
  
    const char* icon_fname = "images/engine/icons/supertux-256x256.png";
    SDL_Surface* icon = IMG_Load_RW(get_physfs_SDLRWops(icon_fname), true);
-@@ -267,7 +243,7 @@ Main::init_video()
+@@ -282,7 +244,7 @@ Main::init_video()
    }
    else
    {
@@ -630,7 +629,7 @@ index 1cfba9c..f453266 100644
      SDL_FreeSurface(icon);
    }
    SDL_ShowCursor(0);
-@@ -383,6 +359,14 @@ Main::run(int argc, char** argv)
+@@ -398,6 +360,14 @@ Main::run(int argc, char** argv)
    {
      CommandLineArguments args;
  
@@ -646,7 +645,7 @@ index 1cfba9c..f453266 100644
      {
        args.parse_args(argc, argv);
 diff --git a/src/supertux/menu/joystick_menu.cpp b/src/supertux/menu/joystick_menu.cpp
-index bd11c9a..a2970bf 100644
+index adde0c5..b9eeef3 100644
 --- a/src/supertux/menu/joystick_menu.cpp
 +++ b/src/supertux/menu/joystick_menu.cpp
 @@ -54,6 +54,7 @@ JoystickMenu::recreate_menu()
@@ -712,10 +711,10 @@ index 3230f34..5eedfd8 100644
  {
  private:
 diff --git a/src/supertux/menu/options_menu.cpp b/src/supertux/menu/options_menu.cpp
-index 8e1ce9d..183c5f0 100644
+index f9e4821..b8d3fc0 100644
 --- a/src/supertux/menu/options_menu.cpp
 +++ b/src/supertux/menu/options_menu.cpp
-@@ -103,25 +103,15 @@ OptionsMenu::OptionsMenu(bool complete)
+@@ -104,25 +104,15 @@ OptionsMenu::OptionsMenu(bool complete)
      }
    }
  
@@ -744,10 +743,10 @@ index 8e1ce9d..183c5f0 100644
    fullscreen_res->list.push_back("Desktop");
  
 diff --git a/src/supertux/screen_manager.cpp b/src/supertux/screen_manager.cpp
-index 580d875..3197a75 100644
+index 85d9f63..15304de 100644
 --- a/src/supertux/screen_manager.cpp
 +++ b/src/supertux/screen_manager.cpp
-@@ -189,7 +189,7 @@ ScreenManager::update_gamelogic(float elapsed_time)
+@@ -195,7 +195,7 @@ ScreenManager::update_gamelogic(float elapsed_time)
  }
  
  void
@@ -756,7 +755,7 @@ index 580d875..3197a75 100644
  {
    InputManager::current()->update();
    SDL_Event event;
-@@ -205,15 +205,10 @@ ScreenManager::process_events()
+@@ -211,24 +211,10 @@ ScreenManager::process_events()
          quit();
          break;
  
@@ -766,16 +765,25 @@ index 580d875..3197a75 100644
 -          case SDL_WINDOWEVENT_RESIZED:
 -            VideoSystem::current()->resize(event.window.data1,
 -                                           event.window.data2);
+-            m_menu_manager->on_window_resize();
+-            break;
+ 
+-          case SDL_WINDOWEVENT_FOCUS_LOST:
+-            if(GameSession::current() != NULL &&
+-               GameSession::current()->is_active())
+-            {
+-              GameSession::current()->toggle_pause();
+-            }
+-            break;
+-        }
+-        break;
 +      case SDL_VIDEORESIZE:
 +            VideoSystem::current()->resize(event.resize.w,
 +                                           event.resize.h);
-             m_menu_manager->on_window_resize();
--            break;
--        }
-         break;
  
        case SDL_KEYDOWN:
-@@ -227,7 +222,7 @@ ScreenManager::process_events()
+         if (event.key.keysym.sym == SDLK_F10)
+@@ -241,7 +227,7 @@ ScreenManager::process_events()
            VideoSystem::current()->apply_config();
            m_menu_manager->on_window_resize();
          }
@@ -784,7 +792,7 @@ index 580d875..3197a75 100644
                   event.key.keysym.sym == SDLK_F12)
          {
            take_screenshot();
-@@ -362,7 +357,7 @@ ScreenManager::run(DrawingContext &context)
+@@ -376,7 +362,7 @@ ScreenManager::run(DrawingContext &context)
        timestep *= m_speed;
        game_time += timestep;
  
@@ -794,7 +802,7 @@ index 580d875..3197a75 100644
        frames += 1;
      }
 diff --git a/src/supertux/screen_manager.hpp b/src/supertux/screen_manager.hpp
-index 59599c8..dd45acb 100644
+index 20259bf..d3cee66 100644
 --- a/src/supertux/screen_manager.hpp
 +++ b/src/supertux/screen_manager.hpp
 @@ -64,7 +64,7 @@ private:
@@ -807,7 +815,7 @@ index 59599c8..dd45acb 100644
  
  private:
 diff --git a/src/util/log.cpp b/src/util/log.cpp
-index de4fb3d..2236626 100644
+index 255a427..b788a5e 100644
 --- a/src/util/log.cpp
 +++ b/src/util/log.cpp
 @@ -18,18 +18,94 @@
@@ -892,21 +900,21 @@ index de4fb3d..2236626 100644
 +
  LogLevel g_log_level = LOG_WARNING;
  
- static std::ostream& get_logging_instance (void)
+ static std::ostream& get_logging_instance (bool use_console_buffer = true)
  {
 +#ifdef ANDROID
 +  return android_logcat;
 +#else
-   if (ConsoleBuffer::current())
+   if (ConsoleBuffer::current() && use_console_buffer)
      return (ConsoleBuffer::output);
    else
      return (std::cerr);
 +#endif
  }
  
- static std::ostream& log_generic_f (const char *prefix, const char* file, int line)
+ static std::ostream& log_generic_f (const char *prefix, const char* file, int line, bool use_console_buffer = true)
 diff --git a/src/video/gl/gl_lightmap.cpp b/src/video/gl/gl_lightmap.cpp
-index b5251e0..6248380 100644
+index 97cf70a..3b39497 100644
 --- a/src/video/gl/gl_lightmap.cpp
 +++ b/src/video/gl/gl_lightmap.cpp
 @@ -67,7 +67,6 @@ GLLightmap::GLLightmap() :
@@ -918,7 +926,7 @@ index b5251e0..6248380 100644
  
  GLLightmap::~GLLightmap()
 diff --git a/src/video/gl/gl_painter.cpp b/src/video/gl/gl_painter.cpp
-index ecb3cb1..3493ee1 100644
+index 12ee0a5..a1a3f8d 100644
 --- a/src/video/gl/gl_painter.cpp
 +++ b/src/video/gl/gl_painter.cpp
 @@ -14,6 +14,9 @@
@@ -930,8 +938,8 @@ index ecb3cb1..3493ee1 100644
 +
  #include "video/gl/gl_painter.hpp"
  
- #include "video/drawing_request.hpp"
-@@ -21,6 +24,8 @@
+ #include <algorithm>
+@@ -23,6 +26,8 @@
  #include "video/gl/gl_texture.hpp"
  
  GLuint GLPainter::s_last_texture = static_cast<GLuint>(-1);
@@ -940,7 +948,7 @@ index ecb3cb1..3493ee1 100644
  
  namespace {
  
-@@ -38,7 +43,13 @@ inline void intern_draw(float left, float top, float right, float bottom,
+@@ -40,7 +45,13 @@ inline void intern_draw(float left, float top, float right, float bottom,
    if(effect & VERTICAL_FLIP)
      std::swap(uv_top, uv_bottom);
  
@@ -955,7 +963,7 @@ index ecb3cb1..3493ee1 100644
    glColor4f(color.red, color.green, color.blue, color.alpha * alpha);
  
    // unrotated blit
-@@ -95,7 +106,8 @@ inline void intern_draw(float left, float top, float right, float bottom,
+@@ -97,7 +108,8 @@ inline void intern_draw(float left, float top, float right, float bottom,
  
    // FIXME: find a better way to restore the blend mode
    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -965,7 +973,7 @@ index ecb3cb1..3493ee1 100644
  }
  
  } // namespace
-@@ -125,8 +137,8 @@ GLPainter::draw_surface(const DrawingRequest& request)
+@@ -127,8 +139,8 @@ GLPainter::draw_surface(const DrawingRequest& request)
      glBindTexture(GL_TEXTURE_2D, th);
    }
    intern_draw(request.pos.x, request.pos.y,
@@ -976,7 +984,7 @@ index ecb3cb1..3493ee1 100644
                surface_data->get_uv_left(),
                surface_data->get_uv_top(),
                surface_data->get_uv_right(),
-@@ -371,4 +383,11 @@ GLPainter::draw_inverse_ellipse(const DrawingRequest& request)
+@@ -387,4 +399,11 @@ GLPainter::draw_inverse_ellipse(const DrawingRequest& request)
    glColor4f(1, 1, 1, 1);
  }
  
@@ -1559,10 +1567,20 @@ index 76964a9..86dc631 100644
  private:
    Texture(const Texture&);
 diff --git a/src/video/texture_manager.cpp b/src/video/texture_manager.cpp
-index e544909..aac5c63 100644
+index dc38be9..a41f83a 100644
 --- a/src/video/texture_manager.cpp
 +++ b/src/video/texture_manager.cpp
-@@ -164,12 +164,14 @@ TextureManager::create_image_texture_raw(const std::string& filename, const Rect
+@@ -152,7 +152,8 @@ TextureManager::create_image_texture_raw(const std::string& filename, const Rect
+   SDL_PixelFormat* format = image->format;
+   if(format->Rmask == 0 && format->Gmask == 0 && format->Bmask == 0 && format->Amask == 0) {
+     log_debug << "Wrong surface format for image " << filename << ". Compensating." << std::endl;
+-    image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_RGBA8888, 0);
++    //image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_RGBA8888, 0);
++    image = SDL_ConvertSurface(image, SDL_GetVideoSurface()->format, 0);
+   }
+ 
+   SDLSurfacePtr subimage(SDL_CreateRGBSurfaceFrom(static_cast<uint8_t*>(image->pixels) +
+@@ -170,12 +171,14 @@ TextureManager::create_image_texture_raw(const std::string& filename, const Rect
      throw std::runtime_error("SDL_CreateRGBSurfaceFrom() call failed");
    }
  
@@ -1580,7 +1598,7 @@ index e544909..aac5c63 100644
  
    return VideoSystem::current()->new_texture(subimage.get());
  }
-@@ -240,6 +242,7 @@ TextureManager::create_dummy_texture()
+@@ -246,6 +249,7 @@ TextureManager::create_dummy_texture()
  void
  TextureManager::save_textures()
  {
@@ -1588,9 +1606,9 @@ index e544909..aac5c63 100644
  #if defined(GL_PACK_ROW_LENGTH) || defined(USE_GLBINDING)
    /* all this stuff is not support by OpenGL ES */
    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-@@ -261,11 +264,13 @@ TextureManager::save_textures()
-   {
-     save_texture(dynamic_cast<GLTexture*>(i->second.lock().get()));
+@@ -271,11 +275,13 @@ TextureManager::save_textures()
+ 
+     save_texture(texture);
    }
 +#endif
  }
@@ -1602,7 +1620,7 @@ index e544909..aac5c63 100644
    SavedTexture saved_texture;
    saved_texture.texture = texture;
    glBindTexture(GL_TEXTURE_2D, texture->get_handle());
-@@ -298,13 +303,14 @@ TextureManager::save_texture(GLTexture* texture)
+@@ -308,13 +314,14 @@ TextureManager::save_texture(GLTexture* texture)
  
    glDeleteTextures(1, &(texture->get_handle()));
    texture->set_handle(0);
@@ -1618,7 +1636,7 @@ index e544909..aac5c63 100644
  #if defined(GL_UNPACK_ROW_LENGTH) || defined(USE_GLBINDING)
    /* OpenGL ES doesn't support these */
    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-@@ -345,6 +351,16 @@ TextureManager::reload_textures()
+@@ -355,6 +362,16 @@ TextureManager::reload_textures()
    }
  
    m_saved_textures.clear();
