@@ -5,7 +5,7 @@
 /* #undef BUILDING_LIBCURL */
 
 /* Location of default ca bundle */
-#define CURL_CA_BUNDLE "/etc/ssl/certs/ca-certificates.crt"
+#define CURL_CA_BUNDLE "ca-certificates.crt"
 
 /* Location of default ca path */
 /* #undef CURL_CA_PATH */
