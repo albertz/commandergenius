@@ -70,12 +70,14 @@ CURL_HEADERS := \
 	types.h
 
 LOCAL_SRC_FILES := $(addprefix lib/,$(CSOURCES))
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/include/curl $(LOCAL_PATH)/lib
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/include/curl $(LOCAL_PATH)/lib $(LOCAL_PATH)/../openssl/include
 LOCAL_CFLAGS += $(common_CFLAGS)
 
 LOCAL_MODULE:= libcurl
 
 LOCAL_SHARED_LIBRARIES :=
+
+LOCAL_STATIC_LIBRARIES := ssl crypto
 
 LOCAL_LDLIBS := -lz
 
