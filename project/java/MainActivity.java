@@ -501,7 +501,7 @@ public class MainActivity extends Activity
 		}
 	}
 
-	public void showScreenKeyboard(final String oldText, boolean sendBackspace)
+	public void showScreenKeyboard(final String oldText)
 	{
 		if(Globals.CompatibilityHacksTextInputEmulatesHwKeyboard)
 		{
@@ -513,8 +513,7 @@ public class MainActivity extends Activity
 		class simpleKeyListener implements OnKeyListener
 		{
 			MainActivity _parent;
-			boolean sendBackspace;
-			simpleKeyListener(MainActivity parent, boolean sendBackspace) { _parent = parent; this.sendBackspace = sendBackspace; };
+			simpleKeyListener(MainActivity parent) { _parent = parent; };
 			public boolean onKey(View v, int keyCode, KeyEvent event)
 			{
 				if ((event.getAction() == KeyEvent.ACTION_UP) && (
@@ -533,14 +532,9 @@ public class MainActivity extends Activity
 					_parent.hideScreenKeyboard();
 					return true;
 				}
+				/*
 				if (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_CLEAR)
 				{
-					if (sendBackspace && event.getAction() == KeyEvent.ACTION_UP)
-					{
-						synchronized(textInput) {
-							DemoRenderer.nativeTextInput( 8, 0 ); // Send backspace to native code
-						}
-					}
 					// EditText deletes two characters at a time, here's a hacky fix
 					if (event.getAction() == KeyEvent.ACTION_DOWN && (event.getFlags() | KeyEvent.FLAG_SOFT_KEYBOARD) != 0)
 					{
@@ -561,6 +555,7 @@ public class MainActivity extends Activity
 						return true;
 					}
 				}
+				*/
 				//Log.i("SDL", "Key " + keyCode + " flags " + event.getFlags() + " action " + event.getAction());
 				return false;
 			}
@@ -582,7 +577,7 @@ public class MainActivity extends Activity
 		_screenKeyboard.setHint(hint != null ? hint : getString(R.string.text_edit_click_here));
 		_screenKeyboard.setText(oldText);
 		_screenKeyboard.setSelection(_screenKeyboard.getText().length());
-		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this, sendBackspace));
+		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this));
 		_screenKeyboard.setBackgroundColor(Color.BLACK); // Full opaque - do not show semi-transparent edit box, it's confusing
 		_screenKeyboard.setTextColor(Color.WHITE); // Just to be sure about gamma
 		if( isRunningOnOUYA() )
@@ -821,14 +816,30 @@ public class MainActivity extends Activity
 	@Override
 	public boolean onKeyMultiple(int keyCode, int repeatCount, final KeyEvent event)
 	{
-		// International text input
-		if( mGLView != null && event.getCharacters() != null )
+		if( _screenKeyboard != null )
 		{
+			_screenKeyboard.onKeyMultiple(keyCode, repeatCount, event);
+			return true;
+		}
+		else if( mGLView != null && event.getCharacters() != null )
+		{
+			// International text input
 			for(int i = 0; i < event.getCharacters().length(); i++ )
 			{
 				mGLView.nativeKey( event.getKeyCode(), 1, event.getCharacters().codePointAt(i) );
 				mGLView.nativeKey( event.getKeyCode(), 0, event.getCharacters().codePointAt(i) );
 			}
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean onKeyLongPress (int keyCode, KeyEvent event)
+	{
+		if( _screenKeyboard != null )
+		{
+			_screenKeyboard.onKeyLongPress(keyCode, event);
 			return true;
 		}
 		return false;

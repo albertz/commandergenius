@@ -772,22 +772,20 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		context.runOnUiThread(cb);
 	}
 
-	public void showScreenKeyboard(final String oldText, int sendBackspace) // Called from native code
+	public void showScreenKeyboard(final String oldText, int unused) // Called from native code
 	{
 		class Callback implements Runnable
 		{
 			public MainActivity parent;
 			public String oldText;
-			public boolean sendBackspace;
 			public void run()
 			{
-				parent.showScreenKeyboard(oldText, sendBackspace);
+				parent.showScreenKeyboard(oldText);
 			}
 		}
 		Callback cb = new Callback();
 		cb.parent = context;
 		cb.oldText = oldText;
-		cb.sendBackspace = (sendBackspace != 0);
 		context.runOnUiThread(cb);
 	}
 

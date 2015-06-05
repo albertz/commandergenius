@@ -88,7 +88,6 @@ static jmethodID JavaRequestOpenExternalApp = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
-static int showScreenKeyboardSendBackspace = 0;
 int SDL_ANDROID_IsScreenKeyboardShownFlag = 0;
 int SDL_ANDROID_TextInputFinished = 0;
 int SDL_ANDROID_VideoLinearFilter = 0;
@@ -166,7 +165,7 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 		(*JavaEnv)->PushLocalFrame(JavaEnv, 1);
 		jstring s = (*JavaEnv)->NewStringUTF(JavaEnv, showScreenKeyboardOldText);
 		showScreenKeyboardDeferred = 0;
-		(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard, s, showScreenKeyboardSendBackspace );
+		(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaShowScreenKeyboard, s, 0 );
 		(*JavaEnv)->DeleteLocalRef( JavaEnv, s );
 		(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
 	}
@@ -257,7 +256,6 @@ void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf,
 	{
 		showScreenKeyboardDeferred = 1;
 		showScreenKeyboardOldText = oldText;
-		showScreenKeyboardSendBackspace = 1;
 		// Move mouse by 1 pixel to force screen update
 		int x, y;
 		SDL_GetMouseState( &x, &y );
@@ -274,7 +272,6 @@ void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf,
 			// Dirty hack: we may call (*JavaEnv)->CallVoidMethod(...) only from video thread
 			showScreenKeyboardDeferred = 1;
 			showScreenKeyboardOldText = oldText;
-			showScreenKeyboardSendBackspace = 0;
 			SDL_Flip(SDL_GetVideoSurface());
 #endif
 		}
