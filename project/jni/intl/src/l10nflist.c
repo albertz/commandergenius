@@ -58,7 +58,7 @@
 # endif
 #else
 # ifndef HAVE_STPCPY
-static char *stpcpy (char *dest, const char *src);
+char *stpcpy (char *dest, const char *src);
 # endif
 #endif
 
@@ -390,11 +390,11 @@ _nl_normalize_codeset (const char *codeset, size_t name_len)
    function is available, though.  Also allow the symbol HAVE_STPCPY
    to be defined.  */
 #if !_LIBC && !HAVE_STPCPY
-static char *
+char *
 stpcpy (char *dest, const char *src)
 {
   while ((*dest++ = *src++) != '\0')
-    /* Do nothing. */ ;
+    // Do nothing. ;
   return dest - 1;
 }
 #endif
