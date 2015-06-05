@@ -85,6 +85,7 @@ import android.app.ProgressDialog;
 import android.app.KeyguardManager;
 import android.view.ViewTreeObserver;
 import android.graphics.Rect;
+import android.view.InputDevice;
 
 
 public class MainActivity extends Activity
@@ -764,7 +765,13 @@ public class MainActivity extends Activity
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event)
 	{
-		if(_screenKeyboard != null)
+		if( keyCode == KeyEvent.KEYCODE_BACK && event.getSource() == InputDevice.SOURCE_MOUSE )
+		{
+			// Stupid Samsung remaps right mouse button to BACK key
+			DemoGLSurfaceView.nativeMouseButtonsPressed(2, 1);
+			return true;
+		}
+		if( _screenKeyboard != null )
 			_screenKeyboard.onKeyDown(keyCode, event);
 		else
 		if( mGLView != null )
@@ -786,7 +793,13 @@ public class MainActivity extends Activity
 	@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event)
 	{
-		if(_screenKeyboard != null)
+		if( keyCode == KeyEvent.KEYCODE_BACK && event.getSource() == InputDevice.SOURCE_MOUSE )
+		{
+			// Stupid Samsung remaps right mouse button to BACK key
+			DemoGLSurfaceView.nativeMouseButtonsPressed(2, 0);
+			return true;
+		}
+		if( _screenKeyboard != null )
 			_screenKeyboard.onKeyUp(keyCode, event);
 		else
 		if( mGLView != null )
