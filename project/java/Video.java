@@ -759,17 +759,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 	public void showScreenKeyboardWithoutTextInputField() // Called from native code
 	{
-		class Callback implements Runnable
-		{
-			public MainActivity parent;
-			public void run()
-			{
-				parent.showScreenKeyboardWithoutTextInputField();
-			}
-		}
-		Callback cb = new Callback();
-		cb.parent = context;
-		context.runOnUiThread(cb);
+		context.showScreenKeyboardWithoutTextInputField();
 	}
 
 	public void showScreenKeyboard(final String oldText, int unused) // Called from native code
@@ -1067,4 +1057,5 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public static native void nativeMouseWheel( int scrollX, int scrollY );
 	public static native void nativeGamepadAnalogJoystickInput( float stick1x, float stick1y, float stick2x, float stick2y, float ltrigger, float rtrigger, int usingHat );
 	public static native void nativeScreenVisibleRect( int x, int y, int w, int h );
+	public static native void nativeScreenKeyboardShown( int shown );
 }

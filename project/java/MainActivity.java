@@ -487,18 +487,31 @@ public class MainActivity extends Activity
 		if( !keyboardWithoutTextInputShown )
 		{
 			keyboardWithoutTextInputShown = true;
-			_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-			_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
-			getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+			runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+					_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
+					getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+				}
+			});
 		}
 		else
 		{
 			keyboardWithoutTextInputShown = false;
-			getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-			_inputManager.hideSoftInputFromWindow(mGLView.getWindowToken(), 0);
-			DimSystemStatusBar.get().dim(_videoLayout);
-			//DimSystemStatusBar.get().dim(mGLView);
+			runOnUiThread(new Runnable()
+			{
+				public void run()
+				{
+					getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+					_inputManager.hideSoftInputFromWindow(mGLView.getWindowToken(), 0);
+					DimSystemStatusBar.get().dim(_videoLayout);
+					//DimSystemStatusBar.get().dim(mGLView);
+				}
+			});
 		}
+		mGLView.nativeScreenKeyboardShown( keyboardWithoutTextInputShown ? 1 : 0 );
 	}
 
 	public void showScreenKeyboard(final String oldText)
