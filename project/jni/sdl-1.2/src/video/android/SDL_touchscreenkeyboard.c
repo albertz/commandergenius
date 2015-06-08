@@ -268,7 +268,7 @@ static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect *
 		cropRect[3] = -cropRect[3];
 	}
 	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
-	glDrawTexiOES(dest->x, SDL_ANDROID_sRealWindowHeight - dest->y - dest->h, 0, dest->w, dest->h);
+	glDrawTexiOES(dest->x + SDL_ANDROID_ScreenVisibleRect.x, SDL_ANDROID_sRealWindowHeight - dest->y - dest->h - SDL_ANDROID_ScreenVisibleRect.y, 0, dest->w, dest->h);
 }
 
 static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, float r, float g, float b, float a)
