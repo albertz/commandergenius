@@ -33,6 +33,8 @@ TODO, which will get actually done
 
 - SDL: implement SDL_GL_LoadLibrary() / SDL_GL_GetProcAddress() / SDL_GL_SetAttribute() / SDL_GL_GetAttribute().
 
+- SDL: CompatibilityHacksForceScreenUpdate=y does not redraw screen after putting to background and restoring.
+
 - USB Keyboard: options for camera feed size and for redefining remote menu hotkey.
 
 - OpenTTD: 24bpp color mode + 32bpp blitter in SDL menu.
