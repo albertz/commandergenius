@@ -27,8 +27,6 @@ TODO, which will get actually done
 
 - OpenArena: zooming is broken with floating crosshair.
 
-- UQM: use gyroscope to steer the ship, search button for starmap.
-
 - SDL: CompatibilityHacksForceScreenUpdate=y does not redraw screen when invoking from background.
 
 - SDL: implement SDL_GL_LoadLibrary() / SDL_GL_GetProcAddress() / SDL_GL_SetAttribute() / SDL_GL_GetAttribute().
@@ -41,7 +39,7 @@ TODO, which will get actually done
 
 - OpenTTD: multiplayer chat GUI is broken.
 
-- OpenTTD: Entering Korean text as savegame name crashes OpenTTD.
+- OpenTTD: Refit window too big.
 
 - Debian: update, make it refresh DNS servers automatically.
 
