@@ -56,7 +56,7 @@ fi
 }
 
 NDK_TOOLCHAIN_VERSION=$GCCVER
-[ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.6
+[ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.8
 
 # Set here your own NDK path if needed
 # export PATH=$PATH:~/src/endless_space/android-ndk-r7
