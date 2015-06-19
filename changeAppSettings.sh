@@ -886,11 +886,19 @@ else
 	grep 'google-play-services' project/local.properties > /dev/null || {
 		# Ant is way too smart, and adds current project path in front of the ${sdk.dir}
 		echo 'android.library.reference.1=../../../../../../../../../../../../../../${sdk.dir}/extras/google/google_play_services/libproject/google-play-services_lib' >> project/local.properties
+		echo 'android.library.reference.2=../../../../../../../../../../../../../../${sdk.dir}/extras/android/compatibility/v7/mediarouter' >> project/local.properties
+		echo 'android.library.reference.3=../../../../../../../../../../../../../../${sdk.dir}/extras/android/compatibility/v7/appcompat' >> project/local.properties
 		echo 'proguard.config=proguard.cfg;proguard-local.cfg' >> project/local.properties
 		ln -s -f $SDK_DIR/extras/android/compatibility/v4/android-support-v4.jar project/libs
 	}
 	[ -e $SDK_DIR/extras/google/google_play_services/libproject/google-play-services_lib/build.xml ] || \
 		android update project -t android-22 -p $SDK_DIR/extras/google/google_play_services/libproject/google-play-services_lib
+	[ -e $SDK_DIR/extras/android/compatibility/v7/mediarouter/build.xml ] || { \
+		android update project -t android-22 -p $SDK_DIR/extras/android/compatibility/v7/mediarouter
+		echo 'android.library.reference.1=../../../../../../../../../../../../../../${sdk.dir}/extras/android/compatibility/v7/appcompat' >> $SDK_DIR/extras/android/compatibility/v7/mediarouter/local.properties
+	}
+	[ -e $SDK_DIR/extras/android/compatibility/v7/appcompat/build.xml ] || \
+		android update project -t android-22 -p $SDK_DIR/extras/android/compatibility/v7/appcompat
 fi
 
 if [ -e project/jni/application/src/project.patch ]; then patch -p1 --no-backup-if-mismatch < project/jni/application/src/project.patch || exit 1 ; fi
