@@ -81,6 +81,7 @@ rm -f ../AndroidData/binaries-$1.zip
 zip -r ../AndroidData/binaries-$1.zip .
 # Executables linked with NDK with -pie, which crash on pre-Lollipop.
 for f in xhost xkbcomp xli xsel; do rm ./usr/bin/$f ; cp $CURDIR/xserver/android/$1/pie/$f ./usr/bin/$f ; done
+cp $CURDIR/xserver/data/busybox-$1-pie ./busybox
 rm -f ../AndroidData/binaries-$1-pie.zip
 zip -r ../AndroidData/binaries-$1-pie.zip .
 

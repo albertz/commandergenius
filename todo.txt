@@ -45,6 +45,6 @@ TODO, which will get actually done
 
 - SDL: add option for non-fullscreen non-immersive mode.
 
-- Debian and Gimp: fails to launch on Galaxy S6 and Note 4 with Android 5.0.2, Snapdragon variants.
+- Debian and Gimp: fails to launch on Galaxy S6 and Note 4 with Android 5.0.2, fixed busybox provided in XSDL.
 
 - UQM HD: add fonts from http://mosc-portal.bursa.ru/showthread.php?t=206 and switch back to joystick controls, set 4:3 aspect ratio as default.
