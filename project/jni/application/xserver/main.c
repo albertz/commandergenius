@@ -10,21 +10,23 @@
 #include <errno.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_screenkeyboard.h>
+#include <SDL/SDL_android.h>
 #include <android/log.h>
 
 #include "gfx.h"
 
 extern int android_main( int argc, char *argv[], char *envp[] );
 
-static void setupEnv(void);
+static void retryLaunchWithDifferentPort(void);
 static void showError(void);
+static void setupEnv(void);
+static char port[16] = ":0";
 
 int main( int argc, char* argv[] )
 {
 	int i;
 	char screenres[128] = "640x480x24";
 	char clientcmd[PATH_MAX] = "";
-	char port[16] = ":1111";
 	char * cmd = "";
 	char fontpath[PATH_MAX] = "";
 	char* args[64] = {
@@ -32,12 +34,15 @@ int main( int argc, char* argv[] )
 		port,
 		"-nolock",
 		"-noreset",
+		"-nopn",
+		"-nolisten",
+		"unix",
 		"-fp",
 		fontpath,
 		"-screen",
 		screenres,
 	};
-	int argnum = 8;
+	int argnum = 11;
 	char * envp[] = { NULL };
 	int printHelp = 1;
 	int screenResOverride = 0;
@@ -55,52 +60,6 @@ int main( int argc, char* argv[] )
 	SDL_ANDROID_SetScreenKeyboardShown(0);
 
 	XSDL_initSDL();
-
-	for(i = 0; i < 1024; i++)
-	{
-		int s = socket(AF_INET, SOCK_STREAM, 0);
-		if( s >= 0 )
-		{
-			struct sockaddr_in addr;
-
-			memset(&addr, 0, sizeof(addr));
-
-			addr.sin_family = AF_INET;
-			addr.sin_addr.s_addr = INADDR_ANY;
-			addr.sin_port = htons(6000 + i);
-
-			if( bind (s, (struct sockaddr *) &addr, sizeof(addr) ) != 0 )
-			{
-				__android_log_print(ANDROID_LOG_INFO, "XSDL", "TCP port %d already used, trying next one: %s", 6000 + i, strerror(errno));
-				close(s);
-				continue;
-			}
-			close(s);
-		}
-
-		FILE * ff = fopen("/proc/net/unix", "rb");
-		if( ff )
-		{
-			char buf[512], name[512];
-			int found = 0;
-			sprintf(name, "/tmp/.X11-unix/X%d", i);
-			while( fgets(buf, sizeof(buf), ff) )
-			{
-				if( strstr(buf, name) != NULL )
-				{
-					__android_log_print(ANDROID_LOG_INFO, "XSDL", "UNIX path %s already used, trying next one", name);
-					found = 1;
-					break;
-				}
-			}
-			fclose(ff);
-			if( found )
-				continue;
-		}
-
-		sprintf( port, ":%d", i );
-		break;
-	}
 
 	while( argc > 1 )
 	{
@@ -137,6 +96,9 @@ int main( int argc, char* argv[] )
 		argc--;
 		argv++;
 	}
+
+	if (getenv("SDL_RESTART_PARAMS") && getenv("SDL_RESTART_PARAMS")[0])
+		strcpy(port, getenv("SDL_RESTART_PARAMS"));
 
 	sprintf(fontpath,	"%s/img/usr/share/fonts/X11/misc,"
 						"%s/img/usr/share/fonts/X11/Type1,"
@@ -188,11 +150,15 @@ int main( int argc, char* argv[] )
 	for( i = 0; i < argnum; i++ )
 		__android_log_print(ANDROID_LOG_INFO, "XSDL", "> %s", args[i]);
 
-	// We should never quit. If that happens, then the server did not start - show error.
-	atexit( &showError );
+	// We should never quit. If that happens, then the server did not start - try with different port number.
+	atexit( &retryLaunchWithDifferentPort );
+
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL chdir to: %s", getenv("SECURE_STORAGE_DIR"));
 	chdir( getenv("SECURE_STORAGE_DIR") ); // Megahack: change /proc/self/cwd to the X.org data dir, and use /proc/self/cwd path in libX11
-	return android_main( argnum, args, envp );
+
+	android_main( argnum, args, envp ); // Should never exit on success, if we want to terminate we kill ourselves
+
+	return 0;
 }
 
 void setupEnv(void)
@@ -220,9 +186,18 @@ void setupEnv(void)
 	sprintf( buf, "%s/usr/share/X11/locale", getenv("SECURE_STORAGE_DIR") );
 }
 
-void showError(void)
+void retryLaunchWithDifferentPort(void)
 {
-	XSDL_initSDL();
-	XSDL_showServerLaunchErrorMessage();
-	XSDL_deinitSDL();
+	int portNum = atoi(port + 1);
+	if (portNum > 10)
+	{
+		// Server was ultimately unable to start - show error and exit
+		XSDL_initSDL();
+		XSDL_showServerLaunchErrorMessage();
+		XSDL_deinitSDL();
+		return;
+	}
+	sprintf(port, ":%d", portNum + 1);
+	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL launch failed, retrying with new display number %s", port);
+	SDL_ANDROID_RestartMyself(port);
 }
