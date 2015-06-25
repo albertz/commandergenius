@@ -85,6 +85,7 @@ static jmethodID JavaRequestNewAdvertisement = NULL;
 static jmethodID JavaRequestCloudSave = NULL;
 static jmethodID JavaRequestCloudLoad = NULL;
 static jmethodID JavaRequestOpenExternalApp = NULL;
+static jmethodID JavaRequestRestartMyself = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
@@ -349,6 +350,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaRequestCloudLoad = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "cloudLoad",
 													"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
 	JavaRequestOpenExternalApp = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "openExternalApp", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+	JavaRequestRestartMyself = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "restartMyself", "(Ljava/lang/String;)V");
 	
 	ANDROID_InitOSKeymap();
 }
@@ -572,6 +574,15 @@ void SDLCALL SDL_ANDROID_OpenExternalApp(const char *package, const char *activi
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestOpenExternalApp, s1, s2, s3 );
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, s3);
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, s2);
+	(*JavaEnv)->DeleteLocalRef(JavaEnv, s1);
+	(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
+}
+
+void SDLCALL SDL_ANDROID_RestartMyself(const char *restartParams)
+{
+	(*JavaEnv)->PushLocalFrame(JavaEnv, 1);
+	jstring s1 = restartParams ? (*JavaEnv)->NewStringUTF(JavaEnv, restartParams) : (*JavaEnv)->NewStringUTF(JavaEnv, "");
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestRestartMyself, s1 );
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, s1);
 	(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
 }

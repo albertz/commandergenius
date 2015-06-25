@@ -129,6 +129,8 @@ public class RestartMainActivity extends Activity
 				} catch (InterruptedException e) {}
 				Intent intent = new Intent(RestartMainActivity.this, MainActivity.class);
 				intent.putExtra(ACTIVITY_AUTODETECT_SCREEN_ORIENTATION, getIntent().getBooleanExtra(ACTIVITY_AUTODETECT_SCREEN_ORIENTATION, false));
+				String restartParams = getIntent().getStringExtra(SDL_RESTART_PARAMS);
+				intent.putExtra(SDL_RESTART_PARAMS, restartParams == null ? "" : restartParams);
 				intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 				RestartMainActivity.this.startActivity(intent);
 				try{
@@ -144,4 +146,5 @@ public class RestartMainActivity extends Activity
 	private FrameLayout _videoLayout = null;
 
 	public static final String ACTIVITY_AUTODETECT_SCREEN_ORIENTATION = "libsdl.org.ACTIVITY_AUTODETECT_SCREEN_ORIENTATION";
+	public static final String SDL_RESTART_PARAMS = "SDL_RESTART_PARAMS";
 }

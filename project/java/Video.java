@@ -923,6 +923,14 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		}
 	}
 
+	public void restartMyself(String restartParams)
+	{
+		Intent intent = new Intent(context, RestartMainActivity.class);
+		intent.putExtra(RestartMainActivity.SDL_RESTART_PARAMS, restartParams);
+		context.startActivity(intent);
+		System.exit(0);
+	}
+
 	private int PowerOf2(int i)
 	{
 		int value = 1;

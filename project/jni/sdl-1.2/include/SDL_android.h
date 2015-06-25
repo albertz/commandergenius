@@ -123,6 +123,9 @@ extern DECLSPEC void SDLCALL SDL_ANDROID_OpenExternalApp(const char *package, co
 /* Open an Android web browser, or Chrome, or Youtube for video links. Just a wrapper for SDL_ANDROID_OpenExternalApp(NULL, NULL, url) */
 extern DECLSPEC void SDLCALL SDL_ANDROID_OpenExternalWebBrowser(const char *url);
 
+/* Restart current app, you can pass a string to the new app instance, which can be retrieved with getenv("SDL_RESTART_PARAMS") */
+extern DECLSPEC void SDLCALL SDL_ANDROID_RestartMyself(const char *restartParams);
+
 #ifdef __cplusplus
 }
 #endif

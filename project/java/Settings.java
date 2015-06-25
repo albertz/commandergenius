@@ -627,6 +627,8 @@ class Settings
 		Log.d("SDL", "libSDL: Is running on OUYA: " + p.isRunningOnOUYA());
 		if( p.isRunningOnOUYA() )
 			nativeSetEnv( "OUYA", "1" );
+		if (p.getIntent().getStringExtra(RestartMainActivity.SDL_RESTART_PARAMS) != null)
+			nativeSetEnv( RestartMainActivity.SDL_RESTART_PARAMS, p.getIntent().getStringExtra(RestartMainActivity.SDL_RESTART_PARAMS) );
 		try {
 			DisplayMetrics dm = new DisplayMetrics();
 			p.getWindowManager().getDefaultDisplay().getMetrics(dm);
