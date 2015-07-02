@@ -9,6 +9,8 @@ $CC $CFLAGS -c main.c -o main-'"$1.o" || exit 1
 ../setEnvironment-$1.sh sh -c '\
 $CC $CFLAGS -c gfx.c -o gfx-'"$1.o" || exit 1
 
+[ -e ../../../lib ] || ln -s libs ../../../lib
+
 [ -e xserver/android ] || {
 	CURDIR=`pwd`
 	cd ../../../..
