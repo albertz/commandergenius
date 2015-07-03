@@ -86,7 +86,7 @@ $SHARED \
 -lc -lm -lGLESv1_CM -ldl -llog -lz \
 -L$NDK/sources/cxx-stl/gnu-libstdc++/$NDK_TOOLCHAIN_VERSION/libs/$ARCH \
 -lgnustl_static \
--no-canonical-prefixes -Wl, $UNRESOLVED -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now \
+-no-canonical-prefixes $UNRESOLVED -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now \
 -lsupc++ \
 $MISSING_LIB $LDFLAGS"
 
