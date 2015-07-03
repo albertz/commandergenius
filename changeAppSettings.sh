@@ -867,6 +867,8 @@ for F in */strings.xml; do
 done
 cd ../../..
 
+mkdir -p project/libs
+
 if [ "$GooglePlayGameServicesId" = "n" -o -z "$GooglePlayGameServicesId" ] ; then
 	$SEDI "/==GOOGLEPLAYGAMESERVICES==/ d" project/AndroidManifest.xml
 	GooglePlayGameServicesId=""
