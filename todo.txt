@@ -33,7 +33,7 @@ TODO, which will get actually done
 
 - SDL: CompatibilityHacksForceScreenUpdate=y does not redraw screen after putting to background and restoring.
 
-- USB Keyboard: options for camera feed size and for redefining remote menu hotkey.
+- USB Keyboard: options for camera feed size and for redefining remote menu hotkey, control mouse with gyroscope.
 
 - OpenTTD: 24bpp color mode + 32bpp blitter in SDL menu.
 
