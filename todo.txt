@@ -27,6 +27,8 @@ TODO, which will get actually done
 
 - OpenArena: zooming is broken with floating crosshair.
 
+- OpenArena: switch weapon button does not work.
+
 - SDL: CompatibilityHacksForceScreenUpdate=y does not redraw screen when invoking from background.
 
 - SDL: implement SDL_GL_LoadLibrary() / SDL_GL_GetProcAddress() / SDL_GL_SetAttribute() / SDL_GL_GetAttribute().
