@@ -51,6 +51,6 @@ for ARCH in armeabi-v7a x86; do
 	cd ..
 done
 
-cp -f server-config.txt ../AndroidData/
+cp -f server-config.txt logo.png ../AndroidData/
 
 exit 0
