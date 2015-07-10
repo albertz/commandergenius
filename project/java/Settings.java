@@ -619,6 +619,7 @@ class Settings
 		nativeSetEnv( "SDCARD", Environment.getExternalStorageDirectory().getAbsolutePath() );
 		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
 		nativeSetEnv( "ANDROID_PACKAGE_NAME", p.getPackageName() );
+		nativeSetEnv( "ANDROID_MY_OWN_APP_FILE", p.getPackageResourcePath() );
 		try {
 			nativeSetEnv( "ANDROID_APP_NAME", p.getString(p.getApplicationInfo().labelRes) );
 		} catch (Exception eeeeee) {}
