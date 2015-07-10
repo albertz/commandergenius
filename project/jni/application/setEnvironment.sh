@@ -68,7 +68,7 @@ fi
 UNRESOLVED="-Wl,--no-undefined"
 SHARED="-shared -Wl,-soname,$SHARED_LIBRARY_NAME"
 if [ -n "$BUILD_EXECUTABLE" ]; then
-	SHARED="-Wl,--gc-sections -Wl,-z,nocopyreloc"
+	SHARED="-Wl,--gc-sections -Wl,-z,nocopyreloc -pie"
 fi
 if [ -n "$NO_SHARED_LIBS" ]; then
 	APP_SHARED_LIBS=
