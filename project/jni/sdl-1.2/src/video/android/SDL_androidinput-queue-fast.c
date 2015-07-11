@@ -201,6 +201,8 @@ extern void SDL_ANDROID_MainThreadPushKeyboardKey(int pressed, SDL_scancode key,
 
 	if( pressed == SDL_RELEASED )
 		keysym.unicode = 0;
+	else if( keysym.sym < 0x80 )
+		keysym.unicode = keysym.sym;
 
 	//__android_log_print(ANDROID_LOG_INFO, "libSDL","SDL_SendKeyboardKey sym %d scancode %d unicode %d", keysym.sym, keysym.scancode, keysym.unicode);
 
