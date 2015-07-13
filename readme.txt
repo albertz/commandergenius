@@ -260,7 +260,8 @@ scaled from -32767 to 32767, denoting the device tilt angles from the horizontal
 Raw accelerometer events are sent with event.jaxis.axis from 5 to 7, with Earth gravity having a value 9800.
 You will need to set AppUsesAccelerometer=y in AndroidAppSettings.cfg, and call SDL_JoystickOpen(1) in your code.
 Gyroscope events are sent as SDL_JOYAXISMOTION, with event.jaxis.which == 1 and event.jaxis.axis from 2 to 4,
-with value 32767 equal to 0.25 rad/s. You will need to set AppUsesGyroscope=y in AndroidAppSettings.cfg to use it.
+with value 32767 equal to 0.25 rad/s. Multiple events will be sent at once, if the device is rapidly rotated.
+You will need to set AppUsesGyroscope=y in AndroidAppSettings.cfg to use it, and call SDL_JoystickOpen(1).
 Gyroscope hardware is much more precise and less noisy than accelerometer, it is present on newer devices
 starting from Galaxy S II, but older devices do no have it - it is emulated with accelerometer + compass.
 SDL also supports gamepad - you can plug PS3/Xbox gamepad to almost any tablet, some devices have built-in gamepad.
