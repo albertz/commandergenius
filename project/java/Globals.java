@@ -61,6 +61,7 @@ class Globals
 	public static boolean AppUsesThirdJoystick = false;
 	public static boolean AppUsesAccelerometer = false;
 	public static boolean AppUsesGyroscope = false;
+	public static boolean AppUsesOrientationSensor = false;
 	public static boolean AppUsesMultitouch = false;
 	public static boolean NonBlockingSwapBuffers = false;
 	public static boolean ResetSdlConfigForThisVersion = false;

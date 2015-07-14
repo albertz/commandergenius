@@ -1063,7 +1063,6 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeAccelerometer) ( JNIEnv*  env, jobjec
 	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 7, fminf(32767.0f, fmaxf(-32767.0f, accPosZ*1000.0f)));
 }
 
-
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(AccelerometerReader_nativeGyroscope) ( JNIEnv*  env, jobject thiz, jfloat X, jfloat Y, jfloat Z )
 {
@@ -1097,6 +1096,22 @@ JAVA_EXPORT_NAME(AccelerometerReader_nativeGyroscope) ( JNIEnv*  env, jobject th
 		SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 4, NORMALIZE_FLOAT_32767(dz));
 		//if( fabs(dx) >= 1.0f || fabs(dy) >= 1.0f || fabs(dz) >= 1.0f ) __android_log_print(ANDROID_LOG_INFO, "libSDL", "nativeGyroscope(): sending several events, this eats CPU!");
 	}
+}
+
+JNIEXPORT void JNICALL
+JAVA_EXPORT_NAME(AccelerometerReader_nativeOrientation) ( JNIEnv*  env, jobject thiz, jfloat X, jfloat Y, jfloat Z )
+{
+#if SDL_VERSION_ATLEAST(1,3,0)
+#else
+	if( !SDL_CurrentVideoSurface )
+		return;
+#endif
+
+	//__android_log_print(ANDROID_LOG_INFO, "libSDL", "Orientation %f %f %f", X, Y, Z);
+
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 8, NORMALIZE_FLOAT_32767(X));
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 9, NORMALIZE_FLOAT_32767(Y));
+	SDL_ANDROID_MainThreadPushJoystickAxis(JOY_ACCELGYRO, 10, NORMALIZE_FLOAT_32767(Z));
 }
 
 static int getClickTimeout(int v)
@@ -1489,7 +1504,7 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 	}
 	if( joystick->index == JOY_ACCELGYRO )
 	{
-		joystick->naxes = 8; // Normalized accelerometer = axes 0-1, gyroscope = axes 2-4, raw accelerometer = axes 5-7
+		joystick->naxes = 11; // Normalized accelerometer = axes 0-1, gyroscope = axes 2-4, raw accelerometer = axes 5-7, orientation = axes 8-10
 		if( !moveMouseWithGyroscope )
 			SDL_ANDROID_CallJavaStartAccelerometerGyroscope(1);
 	}

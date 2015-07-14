@@ -35,6 +35,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.util.Log;
 import android.widget.TextView;
+import android.os.Build;
 
 
 class AccelerometerReader implements SensorEventListener
@@ -43,6 +44,7 @@ class AccelerometerReader implements SensorEventListener
 	private SensorManager _manager = null;
 	public boolean openedBySDL = false;
 	public static final GyroscopeListener gyro = new GyroscopeListener();
+	public static final OrientationListener orientation = new OrientationListener();
 
 	public AccelerometerReader(Activity context)
 	{
@@ -53,9 +55,10 @@ class AccelerometerReader implements SensorEventListener
 	{
 		if( _manager != null )
 		{
-			Log.i("SDL", "libSDL: stopping accelerometer/gyroscope");
+			Log.i("SDL", "libSDL: stopping accelerometer/gyroscope/orientation");
 			_manager.unregisterListener(this);
 			_manager.unregisterListener(gyro);
+			_manager.unregisterListener(orientation);
 		}
 	}
 
@@ -72,6 +75,14 @@ class AccelerometerReader implements SensorEventListener
 		{
 			Log.i("SDL", "libSDL: starting gyroscope");
 			_manager.registerListener(gyro, _manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
+		}
+		if( (Globals.AppUsesOrientationSensor) && _manager != null &&
+			_manager.getDefaultSensor(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 ? Sensor.TYPE_GAME_ROTATION_VECTOR : Sensor.TYPE_ROTATION_VECTOR) != null )
+		{
+			Log.i("SDL", "libSDL: starting orientation sensor");
+			_manager.registerListener(orientation, _manager.getDefaultSensor(
+				Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 ? Sensor.TYPE_GAME_ROTATION_VECTOR : Sensor.TYPE_ROTATION_VECTOR),
+				SensorManager.SENSOR_DELAY_GAME);
 		}
 	}
 
@@ -129,7 +140,10 @@ class AccelerometerReader implements SensorEventListener
 			SensorManager manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 			if ( manager == null && manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) == null )
 				return;
-			manager.registerListener(l, manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
+			manager.registerListener(gyro, manager.getDefaultSensor(
+				Globals.AppUsesOrientationSensor ? Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 ?
+				Sensor.TYPE_GAME_ROTATION_VECTOR : Sensor.TYPE_ROTATION_VECTOR : Sensor.TYPE_GYROSCOPE),
+				SensorManager.SENSOR_DELAY_GAME);
 		}
 		public void unregisterListener(Activity context,SensorEventListener l)
 		{
@@ -140,6 +154,21 @@ class AccelerometerReader implements SensorEventListener
 		}
 	}
 
+	static class OrientationListener implements SensorEventListener
+	{
+		public OrientationListener()
+		{
+		}
+		public void onSensorChanged(SensorEvent event)
+		{
+			nativeOrientation(event.values[0], event.values[1], event.values[2]);
+		}
+		public void onAccuracyChanged(Sensor s, int a)
+		{
+		}
+	}
+
 	private static native void nativeAccelerometer(float accX, float accY, float accZ);
 	private static native void nativeGyroscope(float X, float Y, float Z);
+	private static native void nativeOrientation(float X, float Y, float Z);
 }
