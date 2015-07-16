@@ -7,18 +7,12 @@
 [submodule "project/jni/application/commandergenius/commandergenius"]
 	path = project/jni/application/commandergenius/commandergenius
 	url = git@github.com:gerstrong/Commander-Genius.git
-[submodule "project/jni/application/gemrb-sdl-1.3/gemrb"]
-	path = project/jni/application/gemrb-sdl-1.3/gemrb
-	url = git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb
 [submodule "project/jni/application/frogatto"]
 	path = project/jni/application/frogatto
 	url = git@github.com:frogatto/frogatto.git
 [submodule "project/jni/application/ufoai/ufoai"]
 	path = project/jni/application/ufoai/ufoai
 	url = git://ufoai.git.sourceforge.net/gitroot/ufoai/ufoai
-[submodule "project/jni/application/gemrb/gemrb"]
-	path = project/jni/application/gemrb/gemrb
-	url = git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb
 [submodule "project/jni/application/openarena/engine"]
 	path = project/jni/application/openarena/engine
 	url = git@github.com:pelya/openarena-engine.git
