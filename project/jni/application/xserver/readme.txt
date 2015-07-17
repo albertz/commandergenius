@@ -1,99 +1,77 @@
-You will need to install some packages to your Debian/Ubuntu first:
+You will need to install some packages to your Debian/Ubuntu first.
 
-sudo apt-get install bison libpixman-1-dev \
-libxfont-dev libxkbfile-dev libpciaccess-dev \
-xutils-dev xcb-proto python-xcbgen xsltproc \
-x11proto-bigreqs-dev x11proto-composite-dev \
-x11proto-core-dev x11proto-damage-dev \
-x11proto-dmx-dev x11proto-dri2-dev x11proto-fixes-dev \
-x11proto-fonts-dev x11proto-gl-dev \
-x11proto-input-dev x11proto-kb-dev \
-x11proto-print-dev x11proto-randr-dev \
-x11proto-record-dev x11proto-render-dev \
-x11proto-resource-dev x11proto-scrnsaver-dev \
-x11proto-video-dev x11proto-xcmisc-dev \
-x11proto-xext-dev x11proto-xf86bigfont-dev \
-x11proto-xf86dga-dev x11proto-xf86dri-dev \
-x11proto-xf86vidmode-dev x11proto-xinerama-dev \
-libxmuu-dev libxt-dev libsm-dev libice-dev \
-libxrender-dev libxrandr-dev curl autoconf automake libtool \
-pkg-config libjpeg-dev libpng-dev
+You will need both xcb-proto and python-xcbgen packages to have version 1.10-1,
+so you need to build on at least Debian Jessie or newer distribution.
 
-You will need both xcb-proto and python-xcbgen packages
-to have version 1.10-1, you may download newer packages
-from http://packages.ubuntu.com/ or https://www.debian.org/distrib/packages
+Install following packages, assuming fresh Debian Jessie installation for x86_64 architecture:
 
-Then run commands:
+sudo dpkg --add-architecture i386
+sudo apt-get update
+sudo apt-get install bison libpixman-1-dev libxfont-dev libxkbfile-dev libpciaccess-dev xutils-dev \
+xcb-proto python-xcbgen xsltproc x11proto-bigreqs-dev x11proto-composite-dev x11proto-core-dev \
+x11proto-damage-dev x11proto-dmx-dev x11proto-dri2-dev x11proto-fixes-dev x11proto-fonts-dev \
+x11proto-gl-dev x11proto-input-dev x11proto-kb-dev x11proto-print-dev x11proto-randr-dev \
+x11proto-record-dev x11proto-render-dev x11proto-resource-dev x11proto-scrnsaver-dev \
+x11proto-video-dev x11proto-xcmisc-dev x11proto-xext-dev x11proto-xf86bigfont-dev \
+x11proto-xf86dga-dev x11proto-xf86dri-dev x11proto-xf86vidmode-dev x11proto-xinerama-dev \
+libxmuu-dev libxt-dev libsm-dev libice-dev libxrender-dev libxrandr-dev xfonts-utils \
+curl autoconf automake libtool pkg-config libjpeg-dev libpng-dev git mc locales \
+openjdk-7-jdk ant make zip libstdc++6:i386 libgcc1:i386 zlib1g:i386 libncurses5:i386
+
+Install Android NDK r10e and Android SDK with Android 5.1 framework, they must be in your $PATH.
+
+Download SDL repo, select xserver project, and build it:
 
 git clone git@github.com:pelya/commandergenius.git sdl-android
 cd sdl-android
-git submodule update --init project/jni/application/xserver/xserver
-rm project/jni/application/src
+git submodule update --init --recursive
+rm -f project/jni/application/src
 ln -s xserver project/jni/application/src
-./changeAppSettings.sh -a
-android update project -p project
 ./build.sh
 
-New releases of XSDL contain statically linked xkbcomp, xli and xhost executables
-for XSDL, because NDK r10c toolchain for some reason builds xkbcomp, which crashes
-on Toshiba AT-330 with Android 4.0.3. To create these executables, you will need
-to create Debian x86 and armhf chroot installations, like this:
+That's all.
 
-sudo apt-get install qemu-user-static
+Following instructions are to set up a fresh compilation environment inside a chroot,
+use them only if you fail to build on your current setup.
 
-sudo qemu-debootstrap --arch=i386 --verbose \
-        --components=main,universe,restricted,multiverse \
-        --include=fakeroot,libc-bin,locales-all,build-essential,sudo \
-        wheezy wheezy-x86 http://ftp.ua.debian.org/debian/
+Install debootstrap and schroot onto your host Debian or Ubuntu:
 
-sudo qemu-debootstrap --arch=armhf --verbose \
-        --components=main,universe,restricted,multiverse \
-        --include=fakeroot,libc-bin,locales-all,build-essential,sudo \
-        wheezy wheezy-armhf http://ftp.ua.debian.org/debian/
+sudo apt-get install schroot debootstrap
 
-sudo qemu-debootstrap --arch=mipsel --verbose \
-        --components=main,universe,restricted,multiverse \
-        --include=fakeroot,libc-bin,locales-all,build-essential,sudo \
-        wheezy wheezy-mipsel http://ftp.ua.debian.org/debian/
+sudo debootstrap --arch=amd64 --components=sudo jessie jessie-x64 http://ftp.de.debian.org/debian/
 
-Put this into /etc/apt/sources.list in each chroot, then do sudo apt-get update:
+Configure schroot to log into it - add file /etc/schroot/chroot.d/jessie-x64.conf with following content:
 
-deb http://http.debian.net/debian/ wheezy contrib main non-free
-deb-src http://http.debian.net/debian/ wheezy main contrib
+[jessie-x64]
+description=Debian Jessie x64
+type=directory
+directory=/path/to/jessie-x64
+users=your-user-ID
+groups=your-user-ID
+root-groups=root
+aliases=x64
 
-deb http://security.debian.org/ wheezy/updates contrib main non-free
-deb-src http://security.debian.org/ wheezy/updates main contrib
+Log into it with command
 
-deb http://http.debian.net/debian/ wheezy-updates contrib main non-free
-deb-src http://http.debian.net/debian/ wheezy-updates main contrib
+schroot -c jessie-x64
 
-deb http://http.debian.net/debian/ wheezy-backports contrib main non-free
-deb-src http://http.debian.net/debian/ wheezy-backports contrib main
+Configure apt sources in the resulting Jessie installation - edit file /etc/apt/sources.list to look like this:
 
-Go to each of these chroots using chroot or schroot command, install all packages
-mentioned in the previous section, then download and compile static executables:
+deb http://ftp.de.debian.org/debian/ jessie contrib main non-free
+deb-src http://ftp.de.debian.org/debian/ jessie main contrib
+deb http://security.debian.org/ jessie/updates contrib main non-free
+deb-src http://security.debian.org/ jessie/updates main contrib
+deb http://ftp.de.debian.org/debian/ jessie-updates contrib main non-free
+deb-src http://ftp.de.debian.org/debian/ jessie-updates main contrib
+deb http://ftp.de.debian.org/debian/ jessie-backports contrib main non-free
+deb-src http://ftp.de.debian.org/debian/ jessie-backports contrib main
 
-wget http://cgit.freedesktop.org/xorg/app/xhost/snapshot/xhost-1.0.6.tar.gz
-wget http://cgit.freedesktop.org/xorg/app/xkbcomp/snapshot/xkbcomp-1.2.4.tar.gz
-apt-get source xli
-wget https://github.com/kfish/xsel/archive/master.tar.gz
+Install necessary Debian packages, as described above.
+Configure locales with command:
 
-xhost:
-./autogen.sh
-env XHOST_LIBS="-static -lX11 -lxcb -lXau -lXdmcp -lXmuu -lpthread" ./configure
-make V=1
+sudo dpkg-reconfigure locales
 
-xkbcomp:
-./autogen.sh
-env XKBCOMP_LIBS="-static -lxkbfile -lX11 -lxcb -lXau -lXdmcp -lXmuu -lpthread" ./configure
-make V=1
-
-xli:
-cat debian/patches/series | while read F ; do patch -p1 < debian/patches/$F ; done
-xmkmf
-env EXTRA_LIBRARIES="-static -lxcb -lXau -lXdmcp -lXmuu -lpthread -ldl" make -e
-
-xsel:
-./autogen.sh
-env LIBS="-static -lX11 -lxcb -lXau -lXdmcp -lXmuu -lpthread" ./configure ; make
-make V=1
+Select en_US.UTF-8, we don't need any weird non-English languages here.
+Exit chroot and log into it again.
+Install Android NDK r10e and Android SDK with Android 5.1 framework, they must be in your $PATH.
+Then download SDL repo, select xserver project, and build it, as described above.
