@@ -6,6 +6,7 @@ if [ -e dspaceinvadors ] ; then
 else
 	echo "Downloading sources..."
 	svn checkout svn://svn.code.sf.net/p/dspaceinvadors/code/ dspaceinvadors || exit 1
+	ln -sf dspaceinvadors/alien.png icon.png
 fi
 
 if [ -e dspaceinvadors/config.h ] ; then
