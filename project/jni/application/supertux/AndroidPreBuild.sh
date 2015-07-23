@@ -5,4 +5,5 @@ if [ -e supertux/patched.successfully ]; then
 else
 	# Google Code fails to send shallow repository, so we're checking out everything
 	git clone https://github.com/SuperTux/supertux.git && patch -p1 -d supertux < android.diff && touch supertux/patched.successfully || exit 1
+	ln -sf supertux/data/images/engine/icons/supertux-256x256.png icon.png
 fi
