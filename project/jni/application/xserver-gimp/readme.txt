@@ -1,11 +1,11 @@
 To build system image, download repo:
 
-https://github.com/pelya/cuntubuntu
+https://github.com/pelya/debian-noroot
 
 install dependencies described in it's readme,
 then launch commands:
 
-cd cuntubuntu/img
+cd debian-noroot/img
 ./img-gimp-jessie-armhf.sh
 ./img-gimp-jessie-x86.sh
 ./img-gimp-jessie--prepare-obb.sh
