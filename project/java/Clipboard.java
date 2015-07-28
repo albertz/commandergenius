@@ -90,7 +90,6 @@ public abstract class Clipboard
 		}
 		public void setListener(final Context context, final Runnable listener)
 		{
-			Log.i("SDL", "Cannot set clipboard listener on Android 2.3 or older");
 			ClipboardManager clipboard = (ClipboardManager) context.getSystemService(context.CLIPBOARD_SERVICE);
 			clipboard.addPrimaryClipChangedListener(new OnPrimaryClipChangedListener()
 			{

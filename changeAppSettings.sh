@@ -190,6 +190,13 @@ echo >> AndroidAppSettings.cfg
 echo "# On-screen Android soft text input emulates hardware keyboard, this will only work with Hackers Keyboard app (y)/(n)" >> AndroidAppSettings.cfg
 echo CompatibilityHacksTextInputEmulatesHwKeyboard=$CompatibilityHacksTextInputEmulatesHwKeyboard >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Built-in text input keyboards with custom layouts for emulators, requires CompatibilityHacksTextInputEmulatesHwKeyboard=y" >> AndroidAppSettings.cfg
+echo "# 0 or empty - standard Android keyboard" >> AndroidAppSettings.cfg
+echo "# 1 - Simple QWERTY keyboard, no function keys, no arrow keys" >> AndroidAppSettings.cfg
+echo "# 2 - Commodore 64 keyboard" >> AndroidAppSettings.cfg
+echo "# 3 - Amiga keyboard" >> AndroidAppSettings.cfg
+echo TextInputKeyboard=$TextInputKeyboard >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Hack for broken devices: prevent audio chopping, by sleeping a bit after pushing each audio chunk (y)/(n)" >> AndroidAppSettings.cfg
 echo CompatibilityHacksPreventAudioChopping=$CompatibilityHacksPreventAudioChopping >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
@@ -476,6 +483,10 @@ if [ "$CompatibilityHacksTextInputEmulatesHwKeyboard" = "y" ] ; then
 	CompatibilityHacksTextInputEmulatesHwKeyboard=true
 else
 	CompatibilityHacksTextInputEmulatesHwKeyboard=false
+fi
+
+if [ -z "$TextInputKeyboard" ] ; then
+	TextInputKeyboard=0
 fi
 
 if [ "$CompatibilityHacksPreventAudioChopping" = "y" ] ; then
@@ -794,6 +805,7 @@ $SEDI "s/public static boolean NeedGles2 = .*;/public static boolean NeedGles2 =
 $SEDI "s/public static boolean CompatibilityHacksVideo = .*;/public static boolean CompatibilityHacksVideo = $CompatibilityHacksForceScreenUpdate;/" project/src/Globals.java
 $SEDI "s/public static boolean CompatibilityHacksStaticInit = .*;/public static boolean CompatibilityHacksStaticInit = $CompatibilityHacksStaticInit;/" project/src/Globals.java
 $SEDI "s/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = .*;/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = $CompatibilityHacksTextInputEmulatesHwKeyboard;/" project/src/Globals.java
+$SEDI "s/public static int TextInputKeyboard = .*;/public static int TextInputKeyboard = $TextInputKeyboard;/" project/src/Globals.java
 $SEDI "s/public static boolean CompatibilityHacksForceScreenUpdateMouseClick = .*;/public static boolean CompatibilityHacksForceScreenUpdateMouseClick = $CompatibilityHacksForceScreenUpdateMouseClick;/" project/src/Globals.java
 $SEDI "s/public static boolean HorizontalOrientation = .*;/public static boolean HorizontalOrientation = $HorizontalOrientation;/" project/src/Globals.java
 $SEDI "s^public static boolean KeepAspectRatioDefaultSetting = .*^public static boolean KeepAspectRatioDefaultSetting = $SdlVideoResizeKeepAspect;^" project/src/Globals.java

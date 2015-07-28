@@ -43,6 +43,7 @@ class Globals
 	public static boolean CompatibilityHacksForceScreenUpdateMouseClick = true;
 	public static boolean CompatibilityHacksStaticInit = false;
 	public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = false;
+	public static int TextInputKeyboard = 0;
 	public static boolean KeepAspectRatioDefaultSetting = false;
 	public static boolean InhibitSuspend = false;
 	public static boolean CreateService = false;

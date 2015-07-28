@@ -60,9 +60,10 @@ import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.zip.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.CheckedInputStream;
+import java.util.zip.CRC32;
 import java.util.Set;
 import android.text.SpannedString;
 import java.io.BufferedReader;
@@ -86,7 +87,8 @@ import android.app.KeyguardManager;
 import android.view.ViewTreeObserver;
 import android.graphics.Rect;
 import android.view.InputDevice;
-
+import android.inputmethodservice.KeyboardView;
+import android.inputmethodservice.Keyboard;
 
 public class MainActivity extends Activity
 {
@@ -482,6 +484,8 @@ public class MainActivity extends Activity
 		cloudSave.onActivityResult(request, response, data);
 	}
 
+	private int TextInputKeyboardList[] = { 0, R.xml.qwerty, R.xml.c64, R.xml.amiga };
+
 	public void showScreenKeyboardWithoutTextInputField()
 	{
 		if( !keyboardWithoutTextInputShown )
@@ -491,9 +495,78 @@ public class MainActivity extends Activity
 			{
 				public void run()
 				{
-					_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-					_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
-					getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+					if (Globals.TextInputKeyboard == 0)
+					{
+						_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+						_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
+						getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+					}
+					else
+					{
+						if( _screenKeyboard != null )
+							return;
+						class BuiltInKeyboardView extends KeyboardView
+						{
+							public BuiltInKeyboardView(Context context, android.util.AttributeSet attrs)
+							{
+								super(context, attrs);
+							}
+							public boolean dispatchTouchEvent(final MotionEvent ev)
+							{
+								if( ev.getY() < getTop() )
+									return false;
+								if( ev.getAction() == MotionEvent.ACTION_DOWN || ev.getAction() == MotionEvent.ACTION_UP || ev.getAction() == MotionEvent.ACTION_MOVE )
+								{
+									// Convert pointer coords, this will lose multitiouch data, however KeyboardView does not support multitouch anyway
+									MotionEvent converted = MotionEvent.obtain(ev.getDownTime(), ev.getEventTime(), ev.getAction(), ev.getX(), ev.getY() - (float)getTop(), ev.getMetaState());
+									return super.dispatchTouchEvent(converted);
+								}
+								return false;
+							}
+							public boolean onKeyDown(int keyCode, final KeyEvent event)
+							{
+								return false;
+							}
+							public boolean onKeyUp(int keyCode, final KeyEvent event)
+							{
+								return false;
+							}
+						}
+						BuiltInKeyboardView builtinKeyboard = new BuiltInKeyboardView(MainActivity.this, null);
+						builtinKeyboard.setKeyboard(new Keyboard(MainActivity.this, TextInputKeyboardList[Globals.TextInputKeyboard]));
+						builtinKeyboard.setPreviewEnabled(false);
+						builtinKeyboard.setProximityCorrectionEnabled(false);
+						builtinKeyboard.setOnKeyboardActionListener(new KeyboardView.OnKeyboardActionListener()
+						{
+							public void onPress(int key)
+							{
+								MainActivity.this.onKeyDown(key, new KeyEvent(KeyEvent.ACTION_DOWN, key));
+							}
+							public void onRelease(int key)
+							{
+								MainActivity.this.onKeyUp(key, new KeyEvent(KeyEvent.ACTION_UP, key));
+							}
+							public void onText(CharSequence p1) {}
+							public void swipeLeft() {}
+							public void swipeRight() {}
+							public void swipeDown() {}
+							public void swipeUp() {}
+							public void onKey(int p1, int[] p2) {}
+						});
+						/*
+						builtinKeyboard.addOnLayoutChangeListener(new View.OnLayoutChangeListener()
+						{
+							public void onLayoutChange (View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom)
+							{
+								Log.i("SDL", "Built-in keyboard getTop " + top);
+								((KeyboardView)v).setVerticalCorrection(top);
+							}
+						});
+						*/
+						_screenKeyboard = builtinKeyboard;
+						FrameLayout.LayoutParams layout = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM);
+						_videoLayout.addView(_screenKeyboard, layout);
+					}
 				}
 			});
 		}
@@ -504,6 +577,11 @@ public class MainActivity extends Activity
 			{
 				public void run()
 				{
+					if( _screenKeyboard != null )
+					{
+						_videoLayout.removeView(_screenKeyboard);
+						_screenKeyboard = null;
+					}
 					getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 					_inputManager.hideSoftInputFromWindow(mGLView.getWindowToken(), 0);
 					DimSystemStatusBar.get().dim(_videoLayout);
@@ -573,38 +651,39 @@ public class MainActivity extends Activity
 				return false;
 			}
 		};
-		_screenKeyboard = new EditText(this);
+		EditText screenKeyboard = new EditText(this);
 		// This code does not work
 		/*
-		_screenKeyboard.setMaxLines(100);
+		screenKeyboard.setMaxLines(100);
 		ViewGroup.LayoutParams layout = _screenKeyboard.getLayoutParams();
 		if( layout != null )
 		{
 			layout.width = ViewGroup.LayoutParams.FILL_PARENT;
 			layout.height = ViewGroup.LayoutParams.FILL_PARENT;
-			_screenKeyboard.setLayoutParams(layout);
+			screenKeyboard.setLayoutParams(layout);
 		}
-		_screenKeyboard.setGravity(android.view.Gravity.BOTTOM | android.view.Gravity.LEFT);
+		screenKeyboard.setGravity(android.view.Gravity.BOTTOM | android.view.Gravity.LEFT);
 		*/
 		String hint = _screenKeyboardHintMessage;
-		_screenKeyboard.setHint(hint != null ? hint : getString(R.string.text_edit_click_here));
-		_screenKeyboard.setText(oldText);
-		_screenKeyboard.setSelection(_screenKeyboard.getText().length());
-		_screenKeyboard.setOnKeyListener(new simpleKeyListener(this));
-		_screenKeyboard.setBackgroundColor(Color.BLACK); // Full opaque - do not show semi-transparent edit box, it's confusing
-		_screenKeyboard.setTextColor(Color.WHITE); // Just to be sure about gamma
+		screenKeyboard.setHint(hint != null ? hint : getString(R.string.text_edit_click_here));
+		screenKeyboard.setText(oldText);
+		screenKeyboard.setSelection(screenKeyboard.getText().length());
+		screenKeyboard.setOnKeyListener(new simpleKeyListener(this));
+		screenKeyboard.setBackgroundColor(Color.BLACK); // Full opaque - do not show semi-transparent edit box, it's confusing
+		screenKeyboard.setTextColor(Color.WHITE); // Just to be sure about gamma
 		if( isRunningOnOUYA() )
-			_screenKeyboard.setPadding(100, 100, 100, 100); // Bad bad HDMI TVs all have cropped borders
+			screenKeyboard.setPadding(100, 100, 100, 100); // Bad bad HDMI TVs all have cropped borders
+		_screenKeyboard = screenKeyboard;
 		_videoLayout.addView(_screenKeyboard);
 		//_screenKeyboard.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, false));
-		_screenKeyboard.setInputType(InputType.TYPE_CLASS_TEXT);
-		_screenKeyboard.setFocusableInTouchMode(true);
-		_screenKeyboard.setFocusable(true);
-		_screenKeyboard.requestFocus();
-		_inputManager.showSoftInput(_screenKeyboard, InputMethodManager.SHOW_IMPLICIT);
+		screenKeyboard.setInputType(InputType.TYPE_CLASS_TEXT);
+		screenKeyboard.setFocusableInTouchMode(true);
+		screenKeyboard.setFocusable(true);
+		screenKeyboard.requestFocus();
+		_inputManager.showSoftInput(screenKeyboard, InputMethodManager.SHOW_IMPLICIT);
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 		// Hack to try to force on-screen keyboard
-		final EditText keyboard = _screenKeyboard;
+		final EditText keyboard = screenKeyboard;
 		keyboard.postDelayed( new Runnable()
 			{
 				public void run()
@@ -631,12 +710,12 @@ public class MainActivity extends Activity
 		if( keyboardWithoutTextInputShown )
 			showScreenKeyboardWithoutTextInputField();
 
-		if(_screenKeyboard == null)
+		if(_screenKeyboard == null || ! (_screenKeyboard instanceof EditText))
 			return;
 
 		synchronized(textInput)
 		{
-			String text = _screenKeyboard.getText().toString();
+			String text = ((EditText)_screenKeyboard).getText().toString();
 			for(int i = 0; i < text.length(); i++)
 			{
 				DemoRenderer.nativeTextInput( (int)text.charAt(i), (int)text.codePointAt(i) );
@@ -673,10 +752,10 @@ public class MainActivity extends Activity
 		{
 			public void run()
 			{
-				if( _screenKeyboard != null )
+				if( _screenKeyboard != null && _screenKeyboard instanceof EditText )
 				{
 					String hint = _screenKeyboardHintMessage;
-					_screenKeyboard.setHint(hint != null ? hint : getString(R.string.text_edit_click_here));
+					((EditText)_screenKeyboard).setHint(hint != null ? hint : getString(R.string.text_edit_click_here));
 				}
 			}
 		} );
@@ -779,9 +858,9 @@ public class MainActivity extends Activity
 			DemoGLSurfaceView.nativeMouseButtonsPressed(2, 1);
 			return true;
 		}
-		if( _screenKeyboard != null )
-			_screenKeyboard.onKeyDown(keyCode, event);
-		else
+		if( _screenKeyboard != null && _screenKeyboard.onKeyDown(keyCode, event) )
+			return true;
+
 		if( mGLView != null )
 		{
 			if( mGLView.nativeKey( keyCode, 1, event.getUnicodeChar() ) == 0 )
@@ -807,9 +886,9 @@ public class MainActivity extends Activity
 			DemoGLSurfaceView.nativeMouseButtonsPressed(2, 0);
 			return true;
 		}
-		if( _screenKeyboard != null )
-			_screenKeyboard.onKeyUp(keyCode, event);
-		else
+		if( _screenKeyboard != null && _screenKeyboard.onKeyUp(keyCode, event) )
+			return true;
+
 		if( mGLView != null )
 		{
 			if( mGLView.nativeKey( keyCode, 0, event.getUnicodeChar() ) == 0 )
@@ -862,9 +941,9 @@ public class MainActivity extends Activity
 	public boolean dispatchTouchEvent(final MotionEvent ev)
 	{
 		//Log.i("SDL", "dispatchTouchEvent: " + ev.getAction() + " coords " + ev.getX() + ":" + ev.getY() );
-		if(_screenKeyboard != null)
-			_screenKeyboard.dispatchTouchEvent(ev);
-		else
+		if(_screenKeyboard != null && _screenKeyboard.dispatchTouchEvent(ev))
+			return true;
+
 		if( _ad.getView() != null && // User clicked the advertisement, ignore when user moved finger from game screen to advertisement or touches screen with several fingers
 			((ev.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN ||
 			(ev.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) &&
@@ -1325,7 +1404,7 @@ public class MainActivity extends Activity
 	public ProgressDialog loadingDialog = null;
 
 	FrameLayout _videoLayout = null;
-	private EditText _screenKeyboard = null;
+	private View _screenKeyboard = null;
 	private String _screenKeyboardHintMessage = null;
 	static boolean keyboardWithoutTextInputShown = false;
 	private boolean sdlInited = false;
