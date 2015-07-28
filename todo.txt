@@ -5,7 +5,9 @@ TODO, which will get actually done
 
 - TeeWorlds: navigate UI with gamepad.
 
-- TeeWorlds: control movement with gyroscope.
+- OpenArena: tapping and holding joystick will disable Jump button.
+
+- OpenArena: cardboard VR mode.
 
 - SDL: CompatibilityHacksForceScreenUpdate=y does not redraw screen when invoking from background.
 
