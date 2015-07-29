@@ -525,10 +525,17 @@ public class MainActivity extends Activity
 							}
 							public boolean onKeyDown(int keyCode, final KeyEvent event)
 							{
+								if (keyCode == KeyEvent.KEYCODE_BACK)
+									return true;
 								return false;
 							}
 							public boolean onKeyUp(int keyCode, final KeyEvent event)
 							{
+								if (keyCode == KeyEvent.KEYCODE_BACK)
+								{
+									showScreenKeyboardWithoutTextInputField(); // Hide keyboard
+									return true;
+								}
 								return false;
 							}
 						}
