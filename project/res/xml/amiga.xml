@@ -32,7 +32,7 @@
 		<Key android:codes="15" android:keyLabel="8"/>
 		<Key android:codes="16" android:keyLabel="9"/>
 		<Key android:codes="7" android:keyLabel="0"/>
-		<Key android:codes="69" android:keyLabel="-" android:keyEdgeFlags="right"/>
+		<Key android:codes="67" android:keyLabel="DEL" android:keyEdgeFlags="right"/>
 	</Row>
 	<Row>
 		<Key android:codes="61" android:keyLabel="TAB" android:keyEdgeFlags="left"/>
@@ -46,7 +46,7 @@
 		<Key android:codes="37" android:keyLabel="i"/>
 		<Key android:codes="43" android:keyLabel="o"/>
 		<Key android:codes="44" android:keyLabel="p"/>
-		<Key android:codes="70" android:keyLabel="=" android:keyEdgeFlags="right"/>
+		<Key android:codes="66" android:keyLabel="RET" android:keyEdgeFlags="right"/>
 	</Row>
 	<Row>
 		<Key android:codes="113" android:keyLabel="CTRL" android:keyEdgeFlags="left"/>
@@ -80,11 +80,11 @@
 		<Key android:codes="57" android:keyLabel="ALT" android:keyEdgeFlags="left"/>
 		<Key android:codes="68" android:keyLabel="'" />
 		<Key android:codes="73" android:keyLabel="\\"/>
-		<Key android:codes="18" android:keyLabel="#"/>
+		<Key android:codes="69" android:keyLabel="-"/>
 		<Key android:codes="62" android:keyLabel="SPACE" android:keyWidth="30%p" />
+		<Key android:codes="70" android:keyLabel="="/>
 		<Key android:codes="71" android:keyLabel="["/>
 		<Key android:codes="72" android:keyLabel="]"/>
-		<Key android:codes="58" android:keyLabel="ALT"/>
-		<Key android:codes="67" android:keyLabel="DEL" android:keyEdgeFlags="right"/>
+		<Key android:codes="58" android:keyLabel="ALT" android:keyEdgeFlags="right"/>
 	</Row>
 </Keyboard>
