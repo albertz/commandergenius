@@ -1682,6 +1682,13 @@ void SDL_ANDROID_SetGamepadKeymap(int A, int B, int X, int Y, int L1, int R1, in
 	if (RThumb) SDL_android_keymap[KEYCODE_BUTTON_THUMBR] = RThumb;
 }
 
+void SDL_ANDROID_SetAndroidKeycode(int Android_Key, int Sdl_Key)
+{
+	if (Android_Key < 0 || Android_Key >= KEYCODE_LAST)
+		return;
+	SDL_android_keymap[Android_Key] = Sdl_Key;
+}
+
 void *mouseClickTimeoutThread (void * unused)
 {
 	struct timespec ts;

@@ -145,6 +145,11 @@ extern DECLSPEC int SDLCALL SDL_IsScreenKeyboardShown(void *unused);
    On OUYA: O = A, U = X, Y = Y, A = B */
 extern DECLSPEC void SDLCALL SDL_ANDROID_SetGamepadKeymap(int A, int B, int X, int Y, int L1, int R1, int L2, int R2, int LThumb, int RThumb);
 
+/* Set SDL keycode for hardware Android key. Android keycodes are defined here:
+http://developer.android.com/reference/android/view/KeyEvent.html#KEYCODE_0
+KEYCODE_VOLUME_UP = 24, KEYCODE_VOLUME_DOWN = 25, KEYCODE_BACK = 4 */
+extern DECLSPEC void SDLCALL SDL_ANDROID_SetAndroidKeycode(int Android_Key, int Sdl_Key);
+
 /* Copy contents of Android clipboard into supplied buffer */
 extern DECLSPEC void SDLCALL SDL_ANDROID_GetClipboardText(char * buf, int len);
 
