@@ -5,12 +5,11 @@
 	android:horizontalGap="0px"
 	android:verticalGap="0px"
 	android:keyHeight="10%p">
-	
 	<Row>
-		<Key android:codes="0" android:keyLabel="C=" android:keyEdgeFlags="left"/>
+		<Key android:codes="113" android:keyLabel="C=" android:keyEdgeFlags="left"/>
 		<Key android:codes="111" android:keyLabel="RS" />
-		<Key android:codes="0" android:keyLabel="CTRL" />
-		<Key android:codes="102" android:keyLabel="F1" />
+		<Key android:codes="5" android:keyLabel="CTRL" />
+		<Key android:codes="126" android:keyLabel="F1" />
 		<Key android:codes="103" android:keyLabel="F3" />
 		<Key android:codes="104" android:keyLabel="F5" />
 		<Key android:codes="105" android:keyLabel="F7" />
@@ -45,10 +44,10 @@
 		<Key android:codes="43" android:keyLabel="o"/>
 		<Key android:codes="44" android:keyLabel="p"/>
 		<Key android:codes="72" android:keyLabel="*"/>
-		<Key android:codes="0" android:keyLabel="RST" android:keyEdgeFlags="right"/>
+		<Key android:codes="92" android:keyLabel="RST" android:keyEdgeFlags="right"/>
 	</Row>
 	<Row>
-		<Key android:codes="0" android:keyLabel="SL" android:keyEdgeFlags="left"/>
+		<Key android:codes="115" android:keyLabel="SL" android:keyEdgeFlags="left"/>
 		<Key android:codes="29" android:keyLabel="a"/>
 		<Key android:codes="47" android:keyLabel="s"/>
 		<Key android:codes="32" android:keyLabel="d"/>
@@ -62,7 +61,7 @@
 		<Key android:codes="75" android:keyLabel=";" android:keyEdgeFlags="right"/>
 	</Row>
 	<Row>
-		<Key android:codes="0" android:keyLabel="SHFT" android:keyEdgeFlags="left"/>
+		<Key android:codes="59" android:keyLabel="SHFT" android:keyEdgeFlags="left"/>
 		<Key android:codes="54" android:keyLabel="z"/>
 		<Key android:codes="52" android:keyLabel="x"/>
 		<Key android:codes="31" android:keyLabel="c"/>
@@ -70,10 +69,10 @@
 		<Key android:codes="30" android:keyLabel="b"/>
 		<Key android:codes="42" android:keyLabel="n"/>
 		<Key android:codes="41" android:keyLabel="m"/>
-		<Key android:codes="56" android:keyLabel=","/>
+		<Key android:codes="55" android:keyLabel=","/>
 		<Key android:codes="56" android:keyLabel="."/>
 		<Key android:codes="76" android:keyLabel="/"/>
-		<Key android:codes="0" android:keyLabel="SHFT" android:keyEdgeFlags="right"/>
+		<Key android:codes="60" android:keyLabel="SHFT" android:keyEdgeFlags="right"/>
 	</Row>
 	<Row android:rowEdgeFlags="bottom">
 		<Key android:codes="124" android:keyLabel="GBP" android:keyWidth="10%p" android:keyEdgeFlags="left"/>
