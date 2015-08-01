@@ -195,6 +195,7 @@ echo "# 0 or empty - standard Android keyboard" >> AndroidAppSettings.cfg
 echo "# 1 - Simple QWERTY keyboard, no function keys, no arrow keys" >> AndroidAppSettings.cfg
 echo "# 2 - Commodore 64 keyboard" >> AndroidAppSettings.cfg
 echo "# 3 - Amiga keyboard" >> AndroidAppSettings.cfg
+echo "# 4 - Atari800 keyboard" >> AndroidAppSettings.cfg
 echo TextInputKeyboard=$TextInputKeyboard >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Hack for broken devices: prevent audio chopping, by sleeping a bit after pushing each audio chunk (y)/(n)" >> AndroidAppSettings.cfg
