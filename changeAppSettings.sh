@@ -316,6 +316,11 @@ echo "# 1 = Simple Theme by Beholder (white, with cross joystick)" >> AndroidApp
 echo "# 2 = Sun by Sirea (yellow, with round joystick)" >> AndroidAppSettings.cfg
 echo "# 3 = Keen by Gerstrong (multicolor, with round joystick)" >> AndroidAppSettings.cfg
 echo "# 4 = Retro by Santiago Radeff (red/white, with cross joystick)" >> AndroidAppSettings.cfg
+echo "# 5 = GameBoy from RetroArch" >> AndroidAppSettings.cfg
+echo "# 6 = PlayStation from RetroArch" >> AndroidAppSettings.cfg
+echo "# 7 = SuperNintendo from RetroArch" >> AndroidAppSettings.cfg
+echo "# 8 = DualShock from RetroArch" >> AndroidAppSettings.cfg
+echo "# 9 = Nintendo64 from RetroArch" >> AndroidAppSettings.cfg
 echo TouchscreenKeysTheme=$TouchscreenKeysTheme >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Redefine gamepad keys to SDL keysyms, button order is:" >> AndroidAppSettings.cfg
