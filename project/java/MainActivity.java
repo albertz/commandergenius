@@ -484,7 +484,7 @@ public class MainActivity extends Activity
 		cloudSave.onActivityResult(request, response, data);
 	}
 
-	private int TextInputKeyboardList[] = { 0, R.xml.qwerty, R.xml.c64, R.xml.amiga };
+	private int TextInputKeyboardList[] = { 0, R.xml.qwerty, R.xml.c64, R.xml.amiga, R.xml.atari800 };
 
 	public void showScreenKeyboardWithoutTextInputField()
 	{
