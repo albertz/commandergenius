@@ -62,3 +62,6 @@
 [submodule "project/jni/vncserver/src"]
 	path = project/jni/vncserver/src
 	url = git@github.com:LibVNC/libvncserver.git
+[submodule "project/jni/application/vice/vice"]
+	path = project/jni/application/vice/vice
+	url = git@github.com:lubomyr/vice-2.4.git
