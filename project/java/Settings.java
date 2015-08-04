@@ -617,6 +617,12 @@ class Settings
 		SdcardAppPath.setEnv(p);
 		nativeSetEnv( "HOME", Globals.DataDir );
 		nativeSetEnv( "SDCARD", Environment.getExternalStorageDirectory().getAbsolutePath() );
+		nativeSetEnv( "SDCARD_DOWNLOADS", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() );
+		nativeSetEnv( "SDCARD_PICTURES", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath() );
+		nativeSetEnv( "SDCARD_MOVIES", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath() );
+		nativeSetEnv( "SDCARD_DCIM", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() );
+		nativeSetEnv( "SDCARD_MUSIC", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath() );
+		nativeSetEnv( "SDCARD_MUSIC", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath() );
 		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
 		nativeSetEnv( "ANDROID_PACKAGE_NAME", p.getPackageName() );
 		nativeSetEnv( "ANDROID_MY_OWN_APP_FILE", p.getPackageResourcePath() );
