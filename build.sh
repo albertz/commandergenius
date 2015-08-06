@@ -39,14 +39,34 @@ if [ "$#" -gt 0 -a "$1" = "debug" ]; then
 	export NDK_DEBUG=1
 fi
 
+if [ "$#" -gt 0 -a "$1" '!=' "-h" ]; then
+	echo "Switching build target to $1"
+	if [ -e project/jni/application/$1 ]; then
+		rm -f project/jni/application/src
+		ln -s "$1" project/jni/application/src
+	else
+		echo "Error: no app $1 under project/jni/application"
+		echo "Available applications:"
+		cd project/jni/application
+		for f in *; do
+			if [ -e "$f/AndroidAppSettings.cfg" ]; then
+				echo "$f"
+			fi
+		done
+		exit 1
+	fi
+	shift
+fi
+
 if [ "$#" -gt 0 -a "$1" = "-h" ]; then
-	echo "Usage: $0 [-s] [-i] [-r] [-q] [debug|release]"
-	echo "    -s: sign APK file after building"
-	echo "    -i: install APK file to device after building"
-	echo "    -r: run APK file on device after building"
-	echo "    -q: quick-rebuild C code, without rebuilding Java files"
-	echo "    debug: build debug package"
-	echo "    release: build release package (default)"
+	echo "Usage: $0 [-s] [-i] [-r] [-q] [debug|release] [app-name]"
+	echo "    -s:       sign APK file after building"
+	echo "    -i:       install APK file to device after building"
+	echo "    -r:       run APK file on device after building"
+	echo "    -q:       quick-rebuild C code, without rebuilding Java files"
+	echo "    debug:    build debug package"
+	echo "    release:  build release package (default)"
+	echo "    app-name: directory under project/jni/application to be compiled"
 	exit 0
 fi
 

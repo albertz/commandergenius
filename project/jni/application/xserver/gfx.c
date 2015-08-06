@@ -114,7 +114,7 @@ static int unpackFiles(const char *archive, const char *script, const char *dele
 			{
 				sprintf(unpackLog[0], "Error: not enough free space on internal storage");
 				sprintf(unpackLog[1], "Available %llu Mb, required %d Mb", (uint64_t)freeSpace.f_bsize * freeSpace.f_bavail / 1024 / 1024, freeSpaceRequiredMb);
-				sprintf(unpackLog[2], "Please uninstall large apps to free more space on internal storage");
+				sprintf(unpackLog[2], "Uninstall large apps to free more space on internal storage");
 				sleep(1);
 				continue;
 			}
