@@ -14,4 +14,5 @@ This will create Debian system image dist-debian-jessie.tar.xz
 Upload resulting system image somewhere, and change download URL inside
 AndroidAppSettings.cfg, then recompile .apk file.
 
-Then follow instructions in project/jni/application/xserver/readme.txt
+Then follow instructions here:
+https://github.com/pelya/commandergenius/tree/sdl_android/project/jni/application/xserver
