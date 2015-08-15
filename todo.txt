@@ -5,7 +5,7 @@ TODO, which will get actually done
 
 - TeeWorlds: navigate UI with gamepad.
 
-- OpenArena: tapping and holding joystick will disable Jump button.
+- OpenArena: dynamic RPG joystick, with dynamic camera.
 
 - OpenArena: cardboard VR mode.
 
