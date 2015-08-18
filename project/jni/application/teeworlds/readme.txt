@@ -9,3 +9,7 @@ then launch commands:
     android update project -p project
     ./build.sh
 That should do it.
+
+Bot sources are not available, because of cheaters that use aimbot client.
+They are available on request from here:
+https://www.teeworlds.com/forum/viewtopic.php?id=11397
