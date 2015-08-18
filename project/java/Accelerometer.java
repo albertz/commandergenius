@@ -89,7 +89,12 @@ class AccelerometerReader implements SensorEventListener
 	public void onSensorChanged(SensorEvent event)
 	{
 		if( Globals.HorizontalOrientation )
-			nativeAccelerometer(event.values[1], -event.values[0], event.values[2]);
+		{
+			if( gyro.invertedOrientation )
+				nativeAccelerometer(-event.values[1], event.values[0], event.values[2]);
+			else
+				nativeAccelerometer(event.values[1], -event.values[0], event.values[2]);
+		}
 		else
 			nativeAccelerometer(event.values[0], event.values[1], event.values[2]); // TODO: not tested!
 	}
