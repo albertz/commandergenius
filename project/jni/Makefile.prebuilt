@@ -25,7 +25,7 @@ $(ICONV) $(ICU):
 		cp -f $$ARCH/libiconv.so $$ARCH/libcharset.so ../lib/$$ARCH/  ; \
 		cp -f $$ARCH/include/*.h ../include/  ; \
 		mkdir -p ../../icuuc/lib/$$ARCH ../../icuuc/include/layout ../../icuuc/include/unicode  ; \
-		cp -f $$ARCH/libicu*.a ../../icuuc/$$ARCH/  ; \
+		cp -f $$ARCH/libicu*.a ../../icuuc/lib/$$ARCH/  ; \
 		cp -f $$ARCH/include/layout/*.h ../../icuuc/include/layout/  ; \
 		cp -f $$ARCH/include/unicode/*.h ../../icuuc/include/unicode/  ; \
 	done
