@@ -1,0 +1,34 @@
+# Makefile to build precompiled libraries, which cannot be built using standard NDK makefiles
+# TODO: libboost, libffmpeg, libpython (used only in GemRB)
+
+ARCHES32 := armeabi armeabi-v7a x86 mips
+ARCHES64 := arm64-v8a x86_64
+
+ICONV := $(foreach ARCH, $(ARCHES32), iconv/lib/$(ARCH)/libiconv.so iconv/lib/$(ARCH)/libcharset.so)
+
+ICU_LIBS := data i18n io le lx test tu uc
+ICU := $(foreach ARCH, $(ARCHES32), $(foreach NAME, $(ICU_LIBS), icuuc/lib/$(ARCH)/libicu$(NAME).a))
+
+OPENSSL := $(foreach ARCH, $(ARCHES32) $(ARCHES64), openssl/lib-$(ARCH)/libcrypto.a openssl/lib-$(ARCH)/libssl.a)
+
+LIBS := $(ICONV) $(ICU) $(OPENSSL)
+
+prebuilt-libraries: $(LIBS)
+
+.NOTPARALLEL: $(LIBS)
+
+$(ICONV) $(ICU):
+	cd iconv/src  && \
+	./build.sh  && \
+	for ARCH in $(ARCHES32); do  \
+		mkdir -p ../lib/$$ARCH  ; \
+		cp -f $$ARCH/libiconv.so $$ARCH/libcharset.so ../lib/$$ARCH/  ; \
+		cp -f $$ARCH/include/*.h ../include/  ; \
+		mkdir -p ../../icuuc/lib/$$ARCH ../../icuuc/include/layout ../../icuuc/include/unicode  ; \
+		cp -f $$ARCH/libicu*.a ../../icuuc/$$ARCH/  ; \
+		cp -f $$ARCH/include/layout/*.h ../../icuuc/include/layout/  ; \
+		cp -f $$ARCH/include/unicode/*.h ../../icuuc/include/unicode/  ; \
+	done
+
+$(OPENSSL):
+	cd openssl && ./compile.sh

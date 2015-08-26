@@ -968,4 +968,8 @@ if uname -s | grep -i "darwin" > /dev/null ; then
 	find project/src -name "*.killme.tmp" -delete
 fi
 
+echo Compiling prebuilt libraries
+
+make -C project/jni -f Makefile.prebuilt
+
 echo Done
