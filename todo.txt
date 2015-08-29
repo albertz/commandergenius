@@ -5,8 +5,6 @@ TODO, which will get actually done
 
 - TeeWorlds: navigate UI with gamepad.
 
-- OpenArena: dynamic RPG joystick, with dynamic camera.
-
 - OpenArena: cardboard VR mode.
 
 - SDL: implement SDL_GL_LoadLibrary() / SDL_GL_GetProcAddress() / SDL_GL_SetAttribute() / SDL_GL_GetAttribute().
