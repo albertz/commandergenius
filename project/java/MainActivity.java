@@ -859,9 +859,9 @@ public class MainActivity extends Activity
 	@Override
 	public boolean onKeyDown(int keyCode, final KeyEvent event)
 	{
-		if( keyCode == KeyEvent.KEYCODE_BACK && event.getSource() == InputDevice.SOURCE_MOUSE )
+		if( keyCode == KeyEvent.KEYCODE_BACK && (event.getSource() & InputDevice.SOURCE_MOUSE)== InputDevice.SOURCE_MOUSE )
 		{
-			// Stupid Samsung remaps right mouse button to BACK key
+			// Stupid Samsung and stupid Acer remaps right mouse button to BACK key
 			DemoGLSurfaceView.nativeMouseButtonsPressed(2, 1);
 			return true;
 		}
@@ -887,9 +887,9 @@ public class MainActivity extends Activity
 	@Override
 	public boolean onKeyUp(int keyCode, final KeyEvent event)
 	{
-		if( keyCode == KeyEvent.KEYCODE_BACK && event.getSource() == InputDevice.SOURCE_MOUSE )
+		if( keyCode == KeyEvent.KEYCODE_BACK && (event.getSource() & InputDevice.SOURCE_MOUSE)== InputDevice.SOURCE_MOUSE )
 		{
-			// Stupid Samsung remaps right mouse button to BACK key
+			// Stupid Samsung and stupid Acer remaps right mouse button to BACK key
 			DemoGLSurfaceView.nativeMouseButtonsPressed(2, 0);
 			return true;
 		}
