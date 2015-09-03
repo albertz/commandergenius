@@ -44,6 +44,6 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DBCMHOST -include include/android_debug.h
 
-#LOCAL_LDLIBS := -ldl -llog -lEGL 
+#LOCAL_LDLIBS := -ldl -llog -lEGL
 
 include $(BUILD_STATIC_LIBRARY)

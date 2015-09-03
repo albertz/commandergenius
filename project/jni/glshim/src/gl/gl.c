@@ -28,6 +28,7 @@ GLint readhack_y = 0;
 GLfloat readhack_depth = 0.0f;
 GLuint readhack_seq = 0;
 GLuint gl_batch = 0;
+GLuint gl_mergelist = 1;
 
 __attribute__((constructor))
 void initialize_glshim() {
@@ -57,6 +58,11 @@ void initialize_glshim() {
     if (env_batch && strcmp(env_batch, "0") == 0) {
         gl_batch = 0;
         printf("LIBGL: Batch mode disabled\n");
+    }
+    if (env_batch && strcmp(env_batch, "2") == 0) {
+        gl_batch = 0;
+        gl_mergelist = 0;
+        printf("LIBGL: Batch mode disabled, merging of list disabled too\n");
     }
     
     if (gl_batch) init_batch();
@@ -216,10 +222,10 @@ void glGetIntegerv(GLenum pname, GLint *params) {
 			// get standard ones
 			gles_glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, params);
 			// add fake DXTc
-			params[dummy++]=COMPRESSED_RGB_S3TC_DXT1_EXT;
-			params[dummy++]=COMPRESSED_RGBA_S3TC_DXT1_EXT;
-			params[dummy++]=COMPRESSED_RGBA_S3TC_DXT3_EXT;
-			params[dummy++]=COMPRESSED_RGBA_S3TC_DXT5_EXT;
+			params[dummy++]=GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+			params[dummy++]=GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+			params[dummy++]=GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+			params[dummy++]=GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 			break;
 	case GL_MAX_MODELVIEW_STACK_DEPTH:
 			*params=MAX_STACK_MODELVIEW;
@@ -360,11 +366,11 @@ void glGetFloatv(GLenum pname, GLfloat *params) {
 		*params=(state.buffers.elements)?state.buffers.elements->buffer:0;
 		break;
 	case  GL_PIXEL_PACK_BUFFER_BINDING:
-			*params=(state.buffers.pack)?state.buffers.pack->buffer:0;
-			break;
+        *params=(state.buffers.pack)?state.buffers.pack->buffer:0;
+		break;
 	case  GL_PIXEL_UNPACK_BUFFER_BINDING:
-			*params=(state.buffers.unpack)?state.buffers.unpack->buffer:0;
-			break;
+		*params=(state.buffers.unpack)?state.buffers.unpack->buffer:0;
+		break;
     default:
 		errorGL();
 		gles_glGetFloatv(pname, params);
@@ -542,6 +548,10 @@ static inline bool should_intercept_render(GLenum mode) {
 void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) {
 //printf("glDrawElements(0x%04X, %d, 0x%04X, %p), map=%p\n", mode, count, type, indices, (state.buffers.elements)?state.buffers.elements->data:NULL);
     // TODO: split for count > 65535?
+    // special check for QUADS and TRIANGLES that need multiple of 4 or 3 vertex...
+    if (mode == GL_QUADS) while(count%4) count--;
+    else if (mode == GL_TRIANGLES) while(count%3) count--;
+    
     if (count<0) {
 		errorShim(GL_INVALID_VALUE);
 		return;
@@ -567,6 +577,7 @@ void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indic
         list = arrays_to_renderlist(list, mode, min, max + 1 + min);
         list->indices = sindices;
         list->ilen = count;
+        list->indice_cap = count;
         end_renderlist(list);
         
         state.list.active = extend_renderlist(list);
@@ -593,6 +604,7 @@ void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indic
         GLuint len = 0;
         for (int i=0; i<count; i++)
             if (len<sindices[i]) len = sindices[i]; // get the len of the arrays
+        len++;  // lenght is max(indices) + 1 !
 #define shift_pointer(a, b) \
 		if (state.enable.b && state.pointers.a.buffer) state.pointers.a.pointer += (uintptr_t)state.pointers.a.buffer->data;
 	
@@ -715,12 +727,26 @@ void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indic
 }
 
 void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
+    // special check for QUADS and TRIANGLES that need multiple of 4 or 3 vertex...
+    if (mode == GL_QUADS) while(count%4) count--;
+    else if (mode == GL_TRIANGLES) while(count%3) count--;
+
 	if (count<0) {
 		errorShim(GL_INVALID_VALUE);
 		return;
 	}
     if (count==0) {
         noerrorShim();
+        return;
+    }
+    // special case for (very) large GL_QUADS array
+    if ((mode==GL_QUADS) && (count>4*8000)) {
+        // split the array in manageable slice
+        int cnt = 4*8000;
+        for (int i=0; i<count; i+=4*8000) {
+            if (i+cnt>count) cnt = count-i;
+            glDrawArrays(mode, i, cnt);
+        }
         return;
     }
 	noerrorShim();
@@ -1263,7 +1289,7 @@ void glNewList(GLuint list, GLenum mode) {
     state.list.name = list;
     state.list.mode = mode;
     // TODO: if state.list.active is already defined, we probably need to clean up here
-    state.list.active = state.list.first = alloc_renderlist();
+    state.list.active = alloc_renderlist();
     state.list.compiling = true;
 }
 
@@ -1273,7 +1299,7 @@ void glEndList() {
     if (state.list.compiling) {
 	// Free the previous list if it exist...
         free_renderlist(state.lists[list - 1]);
-        state.lists[list - 1] = state.list.first;
+        state.lists[list - 1] = GetFirst(state.list.active);
         state.list.compiling = false;
         end_renderlist(state.list.active);
         if (gl_batch) {
@@ -1567,12 +1593,12 @@ void glBlendFunc(GLenum sfactor, GLenum dfactor) {
         default:
             break;
     }
-    
+/*
     if ((sfactor==GL_SRC_ALPHA) && (dfactor==GL_ONE)) {
-        // special case, as seen in Xash3D
+        // special case, as seen in Xash3D, but it breaks torus_trooper, so disabled
         sfactor = GL_ONE;
     }
-    
+*/
     gles_glBlendFunc(sfactor, dfactor);
 }
 
