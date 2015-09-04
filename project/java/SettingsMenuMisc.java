@@ -213,25 +213,30 @@ class SettingsMenuMisc extends SettingsMenu
 		void run (final MainActivity p)
 		{
 			String [] downloadFiles = Globals.DataDownloadUrl;
-			final boolean [] mandatory = new boolean[downloadFiles.length];
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(p);
 			builder.setTitle(p.getResources().getString(R.string.downloads));
 
-			CharSequence[] items = new CharSequence[downloadFiles.length];
+			final int itemsIdx[] = new int[downloadFiles.length];
+			ArrayList<CharSequence> items = new ArrayList<CharSequence>();
+			ArrayList<Boolean> enabledItems = new ArrayList<Boolean>();
 			for(int i = 0; i < downloadFiles.length; i++ )
 			{
-				items[i] = new String(downloadFiles[i].split("[|]")[0]);
-				if( items[i].toString().indexOf("!") == 0 )
-					items[i] = items[i].toString().substring(1);
-				if( items[i].toString().indexOf("!") == 0 )
+				String item = new String(downloadFiles[i].split("[|]")[0]);
+				boolean enabled = false;
+				if( item.toString().indexOf("!") == 0 )
 				{
-					items[i] = items[i].toString().substring(1);
-					mandatory[i] = true;
+					item = item.toString().substring(1);
+					enabled = true;
 				}
+				if( item.toString().indexOf("!") == 0 ) // Download is mandatory
+					continue;
+				itemsIdx[items.size()] = i;
+				items.add(item);
+				enabledItems.add(enabled);
 			}
 
-			if( Globals.OptionalDataDownload == null || Globals.OptionalDataDownload.length != items.length )
+			if( Globals.OptionalDataDownload == null || Globals.OptionalDataDownload.length != downloadFiles.length )
 			{
 				Globals.OptionalDataDownload = new boolean[downloadFiles.length];
 				boolean oldFormat = true;
@@ -244,22 +249,24 @@ class SettingsMenuMisc extends SettingsMenu
 					}
 				}
 				if( oldFormat )
-				{
 					Globals.OptionalDataDownload[0] = true;
-					mandatory[0] = true;
-				}
+			}
+			if( enabledItems.size() <= 0 )
+			{
+				goBack(p);
+				return;
 			}
 
-			builder.setMultiChoiceItems(items, Globals.OptionalDataDownload, new DialogInterface.OnMultiChoiceClickListener()
+			// Convert Boolean[] to boolean[], meh
+			boolean[] enabledItems2 = new boolean[enabledItems.size()];
+			for( int i = 0; i < enabledItems.size(); i++ )
+				enabledItems2[i] = enabledItems.get(i);
+
+			builder.setMultiChoiceItems(items.toArray(new CharSequence[0]), enabledItems2, new DialogInterface.OnMultiChoiceClickListener()
 			{
 				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
 				{
-					Globals.OptionalDataDownload[item] = isChecked;
-					if( mandatory[item] && !isChecked )
-					{
-						Globals.OptionalDataDownload[item] = true;
-						((AlertDialog)dialog).getListView().setItemChecked(item, true);
-					}
+					Globals.OptionalDataDownload[itemsIdx[item]] = isChecked;
 				}
 			});
 			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener()
