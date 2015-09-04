@@ -1034,28 +1034,6 @@ public class MainActivity extends Activity
 		this.runOnUiThread(cb);
 	}
 
-	public void showTaskbarNotification()
-	{
-		showTaskbarNotification("SDL application paused", "SDL application", "Application is paused, click to activate");
-	}
-
-	// Stolen from SDL port by Mamaich
-	public void showTaskbarNotification(String text0, String text1, String text2)
-	{
-		NotificationManager NotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		Intent intent = new Intent(this, MainActivity.class);
-		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
-		Notification n = new Notification(R.drawable.icon, text0, System.currentTimeMillis());
-		n.setLatestEventInfo(this, text1, text2, pendingIntent);
-		NotificationManager.notify(NOTIFY_ID, n);
-	}
-
-	public void hideTaskbarNotification()
-	{
-		NotificationManager NotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		NotificationManager.cancel(NOTIFY_ID);
-	}
-
 	@Override
 	public void onNewIntent(Intent i)
 	{
@@ -1395,8 +1373,6 @@ public class MainActivity extends Activity
 	}
 
 	public FrameLayout getVideoLayout() { return _videoLayout; }
-
-	static int NOTIFY_ID = 12367098; // Random ID
 
 	DemoGLSurfaceView mGLView = null;
 	private static AudioThread mAudioThread = null;

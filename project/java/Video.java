@@ -376,6 +376,10 @@ abstract class DifferentTouchInput
 					if( (buttonStateNew & i) != (buttonState & i) )
 						DemoGLSurfaceView.nativeMouseButtonsPressed(i, ((buttonStateNew & i) == 0) ? 0 : 1);
 				}
+				if( (buttonStateNew & MotionEvent.BUTTON_STYLUS_PRIMARY) != (buttonState & MotionEvent.BUTTON_STYLUS_PRIMARY) )
+					DemoGLSurfaceView.nativeMouseButtonsPressed(2, ((buttonStateNew & MotionEvent.BUTTON_STYLUS_PRIMARY) == 0) ? 0 : 1);
+				if( (buttonStateNew & MotionEvent.BUTTON_STYLUS_SECONDARY) != (buttonState & MotionEvent.BUTTON_STYLUS_SECONDARY) )
+					DemoGLSurfaceView.nativeMouseButtonsPressed(4, ((buttonStateNew & MotionEvent.BUTTON_STYLUS_SECONDARY) == 0) ? 0 : 1);
 				buttonState = buttonStateNew;
 			}
 			super.process(event);

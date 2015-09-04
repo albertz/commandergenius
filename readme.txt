@@ -12,9 +12,9 @@ Installation
 
 Install latest Android SDK and NDK from http://developer.android.com/index.html
 You'll need to install Java Ant too. Since for building apk files some java classes are needed as well,
-it is recommended to install OpenJDK and its development files. (On RPM based distros 
+it is recommended to install OpenJDK and its development files. (On RPM based distros
 usually called java-x.x.x-openjdk and java-x.x.x-openjdk-devel)
-The application will run on Android 2.3 and above, but will use features from Android 5.1 if available.
+The application will run on Android 2.3 and above, but will use features from Android 6.0 if available.
 The most supported environment for this port is Linux, MacOs should be okay too.
 If you're developing under Windows you'd better install Portable Ubuntu, to get proper Linux environment
 running inside Windows, then install Linux toolchain on it.
