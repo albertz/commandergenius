@@ -895,6 +895,7 @@ for F in */strings.xml; do
 done
 cd ../../..
 
+SDK_DIR=`grep '^sdk.dir' project/local.properties | sed 's/.*=//'`
 mkdir -p project/libs
 
 if [ "$GooglePlayGameServicesId" = "n" -o -z "$GooglePlayGameServicesId" ] ; then
@@ -912,7 +913,6 @@ else
 		cat $F | sed "s/^package .*;/package $AppFullName;/" >> project/src/$OUT
 	done
 	$SEDI "s/==GOOGLEPLAYGAMESERVICES_APP_ID==/$GooglePlayGameServicesId/g" project/res/values/strings.xml
-	SDK_DIR=`grep '^sdk.dir' project/local.properties | sed 's/.*=//'`
 	grep 'google-play-services' project/local.properties > /dev/null || {
 		# Ant is way too smart, and adds current project path in front of the ${sdk.dir}
 		echo 'android.library.reference.1=../../../../../../../../../../../../../../${sdk.dir}/extras/google/google_play_services/libproject/google-play-services_lib' >> project/local.properties
