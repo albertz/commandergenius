@@ -245,7 +245,6 @@ Display *glXGetCurrentDisplay();
 
 // GLX 1.3
 GLXContext glXGetCurrentContext();
-
 XVisualInfo *glXGetVisualFromFBConfig(Display *display, GLXFBConfig config);
 GLXFBConfig *glXChooseFBConfig(Display *display, int screen, const int *attrib_list, int *count);
 GLXFBConfig *glXGetFBConfigs(Display *display, int screen, int *count);

@@ -3,18 +3,13 @@
 {{ super() }}
 
 {% endblock %}
-{% block content %}
-{% include "base/packed_call.j2" %}
-
-{% endblock %}
-
 {% block definition %}
 #ifndef skip_{{ func.name }}
 {{ super() -}}
 #endif
 {% endblock %}
 {% block load %}
-    LOAD_GLES({{ func.name }});
+    LOAD_GLES_OES({{ func.name }});
 {% endblock %}
 {% block call %}
 #ifndef direct_{{ func.name }}

@@ -1,3 +1,4 @@
+{% block headers %}
 {% for header in headers %}
 {% if "<" in header %}
 #include {{ header }}
@@ -5,3 +6,4 @@
 #include "{{ header }}"
 {% endif %}
 {% endfor %}
+{% endblock %}

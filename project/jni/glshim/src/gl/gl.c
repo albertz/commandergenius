@@ -1667,12 +1667,12 @@ void glBlendFunc(GLenum sfactor, GLenum dfactor) {
         default:
             break;
     }
-/*
+/*    
     if ((sfactor==GL_SRC_ALPHA) && (dfactor==GL_ONE)) {
         // special case, as seen in Xash3D, but it breaks torus_trooper, so disabled
         sfactor = GL_ONE;
     }
-*/
+*/    
     gles_glBlendFunc(sfactor, dfactor);
 }
 

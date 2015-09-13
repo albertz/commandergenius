@@ -1,6 +1,17 @@
 {% extends "base/header.j2" %}
 {% block content %}
 
+typedef struct {
+    int format;
+    void *func;
+    void *args;
+} packed_call_t;
+
+typedef struct {
+    int func;
+    void *args;
+} indexed_call_t;
+
 enum FORMAT {
 {% for f in formats %}
     FORMAT_{{ f.types }},
@@ -19,7 +30,6 @@ typedef struct {
 typedef struct {
     int format;
     FUNC_{{ f.types }} func;
-    int refs;
     {% if f.args %}
     ARGS_{{ f.types }} args;
     {% endif %}
