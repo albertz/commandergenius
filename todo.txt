@@ -14,7 +14,7 @@ TODO, which will get actually done
 - USB Keyboard: options for camera feed size and for redefining remote menu hotkey, control mouse with gyroscope.
 
 - OpenTTD: 24bpp color mode + 32bpp blitter in SDL menu.
-
+- OpenTTD: station names truncated on high resolution.
 - SDL: add option for non-fullscreen non-immersive mode.
 
 - UQM HD: add fonts from http://mosc-portal.bursa.ru/showthread.php?t=206 and switch back to joystick controls, set 4:3 aspect ratio as default.
