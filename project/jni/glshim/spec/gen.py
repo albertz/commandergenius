@@ -8,6 +8,7 @@ from yaml import load
 split_re = re.compile(r'^(?P<type>.*?)\s*(?P<name>\w+)$')
 env = jinja2.Environment(
     trim_blocks=True,
+    lstrip_blocks=True,
     loader=jinja2.FileSystemLoader('template'),
 )
 
@@ -19,30 +20,27 @@ def args(args, add_type=True):
 
 f = '0.2f'
 printf_lookup = {
-    'GLbitfield':    'd',
-    'GLboolean':     'd',
-    'GLbyte':        'c',
-    'GLubyte':       'c',
-    'GLchar':        'c',
-    'GLdouble':      '0.2f',
-    'GLenum':        '0x%04X',
-    'GLfloat':       '0.2f',
-    'GLint':         'd',
-    'GLintptr':      'd',
-    'GLintptrARB':   'd',
-    'GLshort':       'd',
-    'GLsizei':       'd',
-    'GLsizeiptr':    'd',
+    'GLbitfield': 'd',
+    'GLboolean': 'd',
+    'GLbyte': 'c',
+    'GLubyte': 'c',
+    'GLchar': 'c',
+    'GLdouble': '0.2f',
+    'GLenum': 'u',
+    'GLfloat': '0.2f',
+    'GLint': 'd',
+    'GLintptr': 'd',
+    'GLintptrARB': 'd',
+    'GLshort': 'd',
+    'GLsizei': 'd',
+    'GLsizeiptr': 'd',
     'GLsizeiptrARB': 'd',
-    'GLuint':        'u',
-    'GLushort':      'u',
-    'GLvoid':        'p',
+    'GLuint': 'u',
+    'GLushort': 'u',
+    'GLvoid': 'p',
 }
 
 def printf(args):
-    if isinstance(args, dict):
-        args = (args,)
-
     types = []
     for arg in args:
         typ = arg['type']
@@ -50,11 +48,10 @@ def printf(args):
             t = 'p'
         else:
             t = printf_lookup.get(typ, 'p')
-        if not '%' in t:
-            t = '%' + t
+
         types.append(t)
 
-    return ', '.join(types)
+    return ', '.join('%' + t for t in types)
 
 def unconst(s):
     split = s.split(' ')

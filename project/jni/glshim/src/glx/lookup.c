@@ -310,7 +310,7 @@ void *glXGetProcAddressARB(const char *name) {
     EX(glDrawBuffer);
     EX(glDrawPixels);
     EX(glDrawRangeElements);
-    EXT(glDrawRangeElements);
+    EX(glDrawRangeElementsEXT);
     EX(glEdgeFlag);
     EX(glEnd);
     EX(glEndList);
@@ -465,7 +465,6 @@ void *glXGetProcAddressARB(const char *name) {
     STUB(glIndexPointer);
 
     printf("glXGetProcAddress: %s not found.\n", name);
-
     return NULL;
 }
 
