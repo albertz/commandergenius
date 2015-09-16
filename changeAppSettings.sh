@@ -933,7 +933,7 @@ fi
 
 ln -s -f $SDK_DIR/platforms/android-23/optional/org.apache.http.legacy.jar project/libs
 
-if [ -e project/jni/application/src/project.patch ]; then patch -p1 --no-backup-if-mismatch < project/jni/application/src/project.patch || exit 1 ; fi
+if [ -e project/jni/application/src/project.patch ]; then patch -p1 --dry-run -f -R < project/jni/application/src/project.patch > /dev/null 2>&1 || patch -p1 --no-backup-if-mismatch < project/jni/application/src/project.patch || exit 1 ; fi
 
 echo Cleaning up dependencies
 rm -rf project/libs/*/* project/gen
