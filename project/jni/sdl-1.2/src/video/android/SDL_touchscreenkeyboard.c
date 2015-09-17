@@ -624,6 +624,7 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 			if( pointerInButtonRect[BUTTON_ARROWS+j] == pointerId )
 			{
 				processed |= 1<<(BUTTON_ARROWS+j);
+				/*
 				if( floatingScreenJoystick && j == 0 && ! InsideRect( &arrows[j], x, y ) )
 				{
 					int xx = 0, yy = 0;
@@ -633,7 +634,8 @@ unsigned SDL_ANDROID_processTouchscreenKeyboard(int x, int y, int action, int po
 					arrows[0].y += yy;
 					arrowsDraw[0] = arrowsExtended[0] = arrows[0];
 				}
-				if( ! InsideRect( &arrowsExtended[j], x, y ) )
+				*/
+				if( ! InsideRect( &arrowsExtended[j], x, y ) && ! floatingScreenJoystick )
 				{
 					pointerInButtonRect[BUTTON_ARROWS+j] = -1;
 					if( SDL_ANDROID_joysticksAmount > 0 )
