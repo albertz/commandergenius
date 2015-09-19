@@ -47,3 +47,4 @@ LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DBCMHOST -include include/andro
 #LOCAL_LDLIBS := -ldl -llog -lEGL
 
 include $(BUILD_STATIC_LIBRARY)
+
