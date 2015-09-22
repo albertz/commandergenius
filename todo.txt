@@ -17,6 +17,8 @@ TODO, which will get actually done
 
 - OpenTTD: station names truncated on high resolution.
 
+- OpenTTD: Fix team chat with 6 or more players.
+
 - SDL: add option for non-fullscreen non-immersive mode.
 
 - UQM HD: add fonts from http://mosc-portal.bursa.ru/showthread.php?t=206 and switch back to joystick controls, set 4:3 aspect ratio as default.
