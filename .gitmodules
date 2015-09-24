@@ -49,7 +49,6 @@
 [submodule "project/jni/application/openttd/src"]
 	path = project/jni/application/openttd/src
 	url = git@github.com:pelya/openttd-android.git
-	branch = master
 [submodule "project/jni/application/xserver-debian/xserver"]
 	path = project/jni/application/xserver-debian/xserver
 	url = git@github.com:pelya/xserver.git
@@ -65,3 +64,7 @@
 [submodule "project/jni/application/vice/vice"]
 	path = project/jni/application/vice/vice
 	url = git@github.com:lubomyr/vice-2.4.git
+[submodule "project/jni/openssl/openssl/jni"]
+	path = project/jni/openssl/openssl/jni
+	url = https://android.googlesource.com/platform/external/openssl
+	branch = lollipop-mr1-dev

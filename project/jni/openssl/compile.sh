@@ -2,13 +2,11 @@
 
 ARCH_LIST="armeabi armeabi-v7a arm64-v8a x86 mips x86_64"
 
-[ -e openssl ] || {
-	mkdir -p openssl
-	git clone --depth=1 -b lollipop-mr1-dev https://android.googlesource.com/platform/external/openssl openssl/jni || exit 1
-} || exit 1
 #sed -i 's/BUILD_HOST_SHARED_LIBRARY/BUILD_SHARED_LIBRARY/g' openssl/jni/*.mk
 #sed -i 's/BUILD_HOST_STATIC_LIBRARY/BUILD_STATIC_LIBRARY/g' openssl/jni/*.mk
-sed -i 's@external/openssl/@jni/@g' openssl/jni/*.mk
+#sed -i 's@external/openssl/@jni/@g' openssl/jni/*.mk
+mkdir -p openssl/external
+ln -s ../jni openssl/external/openssl
 cp -f Apps.mk openssl/jni/Apps.mk
 touch openssl/jni/Empty.mk
 echo APP_MODULES := libcrypto_static_ndk libssl_static_ndk > openssl/jni/Application.mk
