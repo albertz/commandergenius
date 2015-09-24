@@ -9,7 +9,7 @@
 #include <android/log.h>
 
 #ifdef __cplusplus
-// Include everything beforehand, so we wont' get compiler eerors because of our #define
+// Include everything beforehand, so we wont' get compiler errors because of our #define
 #include <string>
 #include <ios>
 #include <streambuf>
@@ -67,3 +67,4 @@ static inline int __sdl_logged_fprintf(FILE *stream, const char *format, ...)
 #define fprintf(...) __sdl_logged_fprintf(__VA_ARGS__)
 
 #endif
+
