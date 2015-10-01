@@ -71,21 +71,16 @@ void initialize_glshim() {
 
 // config functions
 const GLubyte *glGetString(GLenum name) {
-    LOAD_GLES(glGetString);
+//    LOAD_GLES(glGetString);
     const GLubyte *str;
     errorShim(GL_NO_ERROR);
-	if ((str=gles_glGetString(name))==NULL)
-		printf("**warning** glGetString(%i) called with bad init\n", name);
+/*	if ((str=gles_glGetString(name))==NULL)
+		printf("**warning** glGetString(%i) called with bad init\n", name);*/
     switch (name) {
         case GL_VERSION:
-#ifdef USE_ES2
-            return (GLubyte *)"4.3 glshim wrapper";
-#else
             return (GLubyte *)"1.5 glshim wrapper";
-#endif
         case GL_EXTENSIONS:
             return (const GLubyte *)(char *){
-#ifndef USE_ES2
                 "GL_ARB_vertex_buffer_object "
                 "GL_ARB_vertex_buffer "
                 "GL_EXT_vertex_array "
@@ -124,24 +119,13 @@ const GLubyte *glGetString(GLenum name) {
 //                "GL_EXT_blend_logic_op "
 //                "GL_EXT_blend_color "
 //                "GL_ARB_texture_cube_map "
-#else
-                "GL_ARB_vertex_shader "
-                "GL_ARB_fragment_shader "
-                "GL_ARB_vertex_buffer_object "
-                "GL_EXT_framebuffer_object "
-                "GL_EXT_vertex_array "
-#endif
             };
 		case GL_VENDOR:
 			return (GLubyte *)"OpenPandora";
 		case GL_RENDERER:
-#ifdef USE_ES2
-			return (GLubyte *)"GLESv2 wrapper";
-#else
 			return (GLubyte *)"GLES_CM wrapper";
 		case GL_SHADING_LANGUAGE_VERSION:
 			return (GLubyte *)"";
-#endif
         default:
 			errorShim(GL_INVALID_ENUM);
             return (str)?str:(GLubyte*)"";
@@ -436,6 +420,7 @@ static void proxy_glEnable(GLenum cap, bool enable, void (*next)(GLenum)) {
         state.enable.texture_2d[state.texture.active] = enable;
 #endif
     switch (cap) {
+        enable(GL_AUTO_NORMAL, auto_normal);
         proxy_enable(GL_BLEND, blend);
         proxy_enable(GL_TEXTURE_2D, texture_2d[state.texture.active]);
         enable(GL_TEXTURE_GEN_S, texgen_s[state.texture.active]);
@@ -541,35 +526,34 @@ void glDisableClientState(GLenum cap) {
 }
 #endif
 
+#define isenabled(what, where) \
+    case what: return state.enable.where
+    
 GLboolean glIsEnabled(GLenum cap) {
     // should flush for now... to be optimized later!
     if (state.gl_batch) flush();
     LOAD_GLES(glIsEnabled);
     noerrorShim();
     switch (cap) {
-        case GL_LINE_STIPPLE:
-            return state.enable.line_stipple;
-        case GL_TEXTURE_GEN_S:
-            return state.enable.texgen_s[state.texture.active];
-        case GL_TEXTURE_GEN_T:
-            return state.enable.texgen_t[state.texture.active];
-        case GL_TEXTURE_GEN_R:
-            return state.enable.texgen_t[state.texture.active];
-		case GL_TEXTURE_COORD_ARRAY:
-			return state.enable.tex_coord_array[state.texture.client];
-		case GL_COLOR_SUM:
-			return state.enable.color_sum;
-		case GL_SECONDARY_COLOR_ARRAY:
-			return state.enable.secondary_array;
-        case GL_TEXTURE_1D:
-            return state.enable.texture_1d[state.texture.active];
-        case GL_TEXTURE_3D:
-            return state.enable.texture_1d[state.texture.active];
+        isenabled(GL_AUTO_NORMAL, auto_normal);
+        isenabled(GL_LINE_STIPPLE, line_stipple);
+        isenabled(GL_TEXTURE_GEN_S, texgen_s[state.texture.active]);
+        isenabled(GL_TEXTURE_GEN_T, texgen_t[state.texture.active]);
+        isenabled(GL_TEXTURE_GEN_R, texgen_r[state.texture.active]);
+		isenabled(GL_COLOR_SUM, color_sum);
+		isenabled(GL_SECONDARY_COLOR_ARRAY, secondary_array);
+        isenabled(GL_TEXTURE_1D, texture_1d[state.texture.active]);
+        isenabled(GL_TEXTURE_3D, texture_3d[state.texture.active]);
+        isenabled(GL_VERTEX_ARRAY, vertex_array);
+        isenabled(GL_NORMAL_ARRAY, normal_array);
+        isenabled(GL_COLOR_ARRAY, color_array);
+        isenabled(GL_TEXTURE_COORD_ARRAY, tex_coord_array[state.texture.client]);
         default:
 			errorGL();
             return gles_glIsEnabled(cap);
     }
 }
+#undef isenabled
 
 static renderlist_t *arrays_to_renderlist(renderlist_t *list, GLenum mode,
                                         GLsizei skip, GLsizei count) {
@@ -648,7 +632,7 @@ void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indic
         list->indices = sindices;
         list->ilen = count;
         list->indice_cap = count;
-        end_renderlist(list);
+        //end_renderlist(list);
         
         state.list.active = extend_renderlist(list);
         return;
@@ -1371,12 +1355,12 @@ void glEndList() {
         state.list.compiling = false;
         end_renderlist(state.list.active);
         state.list.active = NULL;
+        if (gl_batch==1) {
+            init_batch();
+        } 
         if (state.list.mode == GL_COMPILE_AND_EXECUTE) {
             glCallList(list);
         }
-        if (gl_batch) {
-            init_batch();
-        } 
     }
 }
 
@@ -1437,6 +1421,9 @@ void glCallLists(GLsizei n, GLenum type, const GLvoid *lists) {
 }
 
 void glDeleteList(GLuint list) {
+    if(state.gl_batch) {
+        flush();
+    }
     renderlist_t *l = glGetList(list);
     if (l) {
         free_renderlist(l);
