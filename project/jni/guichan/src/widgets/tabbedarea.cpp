@@ -319,7 +319,7 @@ namespace gcn
     {
         for (unsigned int i = 0; i < mTabs.size(); i++)
         {
-            mTabs[i].second->logic();
+                  mTabs[i].second->logic();
         }
     }
 

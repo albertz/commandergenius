@@ -8,7 +8,7 @@
 #define HAVE_DLFCN_H 1
 
 /* Define to 1 if you have the <GL/gl.h> header file. */
-/* #undef HAVE_GL_GL_H */
+#define HAVE_GL_GL_H 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1

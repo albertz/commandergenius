@@ -103,8 +103,7 @@ namespace gcn
          * @param x The x coordinate where to draw the string.
          * @param y The y coordinate where to draw the string.
          */
-        virtual void drawString(Graphics* graphics, const std::string& text,
-                                int x, int y) = 0;
+        virtual void drawString(Graphics* graphics, const std::string& text, int x, int y) = 0;
     };
 }
 

@@ -1,0 +1,12 @@
+prefix=/usr/local/angstrom/arm/arm-angstrom-linux-gnueabi/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: guichan
+Description: A portable C++ GUI library designed for games using Allegro, HGE, OpenGL, OpenLayer and/or SDL.
+Version: 0.8.2
+Requires: sdl
+Conflicts:
+Libs: -L${libdir} -lguichan_sdl
+Cflags: -I${includedir}

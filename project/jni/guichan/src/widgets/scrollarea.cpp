@@ -58,7 +58,7 @@ namespace gcn
         mHScroll = 0;
         mHPolicy = SHOW_AUTO;
         mVPolicy = SHOW_AUTO;
-        mScrollbarWidth = 12;
+        mScrollbarWidth = 22;
         mUpButtonPressed = false;
         mDownButtonPressed = false;
         mLeftButtonPressed = false;
