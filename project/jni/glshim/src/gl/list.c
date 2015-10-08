@@ -62,6 +62,7 @@ renderlist_t *alloc_renderlist() {
     list->set_texture = false;
     list->texture = 0;*/
     list->target_texture = GL_TEXTURE_2D;
+    list->tmu = state.texture.active;
     /*
     list->polygon_mode = 0;
     list->fog_op = 0;
@@ -95,6 +96,8 @@ bool ispurerender_renderlist(renderlist_t *list) {
     if (list->texgen)
         return false;
     if (list->mode_init == 0)
+        return false;
+    if (list->set_texture || list->set_tmu)
         return false;
     
     return true;
@@ -494,6 +497,7 @@ renderlist_t *extend_renderlist(renderlist_t *list) {
         renderlist_t *new = alloc_renderlist();
         list->next = new;
         new->prev = list;
+        new->tmu = list->tmu;
         if (list->open)
             end_renderlist(list);
         return new;
@@ -584,6 +588,10 @@ void adjust_renderlist(renderlist_t *list) {
     list->open = false;
     for (int a=0; a<MAX_TEX; a++) {
 	    gltexture_t *bound = state.texture.bound[a];
+        // in case of Texture bounding inside a list
+        if (list->set_texture && (list->tmu == a))
+            bound = getTexture(list->target_texture, list->texture);
+        // adjust the tex_coord now
 	    if ((list->tex[a]) && (bound) && ((bound->width != bound->nwidth) || (bound->height != bound->nheight))) {
 		    tex_coord_npot(list->tex[a], list->len, bound->width, bound->height, bound->nwidth, bound->nheight);
 	    }
@@ -672,11 +680,14 @@ void draw_renderlist(renderlist_t *list) {
                     break;
             }
         }
-        old_tex = state.texture.active;
+        if (list->set_tmu) {
+            glActiveTexture(GL_TEXTURE0+list->tmu);
+        }
 	    if (list->set_texture) {
-		glBindTexture(list->target_texture, list->texture);
+            glBindTexture(list->target_texture, list->texture);
         }
         // raster
+        old_tex = state.texture.active;
         if (list->raster_op) {
             if (list->raster_op==1) {
                 glRasterPos3f(list->raster_xyz[0], list->raster_xyz[1], list->raster_xyz[2]);
@@ -1249,6 +1260,11 @@ void rlMultiTexCoord2f(renderlist_t *list, GLenum target, GLfloat s, GLfloat t) 
     }
     GLfloat *tex = state.texcoord[tmu];
     tex[0] = s; tex[1] = t;
+}
+
+void rlActiveTexture(renderlist_t *list, GLenum texture ) {
+    list->set_tmu = true;
+    list->tmu = texture - GL_TEXTURE0;
 }
 
 void rlBindTexture(renderlist_t *list, GLenum target, GLuint texture) {

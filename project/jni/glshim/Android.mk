@@ -19,6 +19,7 @@ LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES) -DBCMHOST
 LOCAL_SRC_FILES := \
 	src/gl/array.c \
 	src/gl/buffers.c \
+	src/gl/debug.c \
 	src/gl/decompress.c \
 	src/gl/eval.c \
 	src/gl/framebuffers.c \

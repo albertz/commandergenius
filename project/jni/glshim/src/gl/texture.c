@@ -826,6 +826,46 @@ GLboolean glIsTexture(	GLuint texture) {
 	return GL_TRUE;
 }
 
+gltexture_t* getTexture(GLenum target, GLuint texture) {
+    // Get a texture based on glID
+    gltexture_t* tex = NULL;
+    if (texture == 0) return tex;
+    int ret;
+    khint_t k;
+    khash_t(tex) *list = state.texture.list;
+    if (! list) {
+        list = state.texture.list = kh_init(tex);
+        // segfaults if we don't do a single put
+        kh_put(tex, list, 1, &ret);
+        kh_del(tex, list, 1);
+    }
+    k = kh_get(tex, list, texture);
+    
+    if (k == kh_end(list)){
+        LOAD_GLES(glGenTextures);
+        k = kh_put(tex, list, texture, &ret);
+        tex = kh_value(list, k) = malloc(sizeof(gltexture_t));
+        tex->texture = texture;
+        gles_glGenTextures(1, &tex->glname);
+        tex->target = target;
+        tex->width = 0;
+        tex->height = 0;
+        tex->uploaded = false;
+        tex->mipmap_auto = default_tex_mipmap;
+        tex->mipmap_need = 0;
+        tex->alpha = true;
+        tex->streamed = false;
+        tex->streamingID = -1;
+        tex->min_filter = tex->mag_filter = GL_LINEAR;
+        tex->format = GL_RGBA;
+        tex->type = GL_UNSIGNED_BYTE;
+        tex->data = NULL;
+    } else {
+        tex = kh_value(list, k);
+    }
+    return tex;
+}
+
 void glBindTexture(GLenum target, GLuint texture) {
 	noerrorShim();
     if ((target!=GL_PROXY_TEXTURE_2D) && (state.list.active && (state.gl_batch && !state.list.compiling)))  {
@@ -848,39 +888,7 @@ void glBindTexture(GLenum target, GLuint texture) {
         gltexture_t *tex = NULL;
         //printf("glBindTexture(0x%04X, %u), active=%i, client=%i\n", target, texture, state.texture.active, state.texture.client);
         if (texture) {
-            int ret;
-            khint_t k;
-            khash_t(tex) *list = state.texture.list;
-            if (! list) {
-                list = state.texture.list = kh_init(tex);
-                // segfaults if we don't do a single put
-                kh_put(tex, list, 1, &ret);
-                kh_del(tex, list, 1);
-            }
-            k = kh_get(tex, list, texture);
-            
-            if (k == kh_end(list)){
-				LOAD_GLES(glGenTextures);
-                k = kh_put(tex, list, texture, &ret);
-                tex = kh_value(list, k) = malloc(sizeof(gltexture_t));
-                tex->texture = texture;
-                gles_glGenTextures(1, &tex->glname);
-                tex->target = target;
-                tex->width = 0;
-                tex->height = 0;
-                tex->uploaded = false;
-                tex->mipmap_auto = default_tex_mipmap;
-                tex->mipmap_need = 0;
-				tex->alpha = true;
-				tex->streamed = false;
-				tex->streamingID = -1;
-				tex->min_filter = tex->mag_filter = GL_LINEAR;
-                tex->format = GL_RGBA;
-                tex->type = GL_UNSIGNED_BYTE;
-                tex->data = NULL;
-            } else {
-                tex = kh_value(list, k);
-            }
+            tex = getTexture(target, texture);
             if (state.texture.bound[state.texture.active] == tex)
             	tex_changed = 0;
             texture = tex->glname;
@@ -1218,7 +1226,11 @@ void glActiveTexture( GLenum texture ) {
         flush();
     }
  }
- PUSH_IF_COMPILING(glActiveTexture);
+ if (state.list.active) {
+     NewStage(state.list.active, STAGE_ACTIVETEX);
+     rlActiveTexture(state.list.active, texture);
+     return;
+ }
  
  if ((texture < GL_TEXTURE0) || (texture >= GL_TEXTURE0+MAX_TEX)) {
     errorShim(GL_INVALID_ENUM);
@@ -1246,7 +1258,7 @@ void glClientActiveTexture( GLenum texture ) {
 }
 
 void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data) {
-//printf("glReadPixels(%i, %i, %i, %i, 0x%04X, 0x%04X, 0x%p)\n", x, y, width, height, format, type, data);
+    //printf("glReadPixels(%i, %i, %i, %i, 0x%04X, 0x%04X, 0x%p)\n", x, y, width, height, format, type, data);
     GLuint old_glbatch = state.gl_batch;
     if (state.gl_batch) {
         flush();
@@ -1288,7 +1300,7 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format
 void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                 GLint x, GLint y, GLsizei width, GLsizei height) {
     //printf("glCopyTexSubImage2D(%s, %i, %i, %i, %i, %i, %i, %i), bounded texture=%u format/type=%s, %s\n", PrintEnum(target), level, xoffset, yoffset, x, y, width, height, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->texture:0, PrintEnum((state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->format:0), PrintEnum((state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->type:0));
-// PUSH_IF_COMPILING(glCopyTexSubImage2D);
+    // PUSH_IF_COMPILING(glCopyTexSubImage2D);
     GLuint old_glbatch = state.gl_batch;
     if (state.gl_batch) {
         flush();
