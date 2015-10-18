@@ -21,6 +21,7 @@ echo
 rm -f MainActivity-debug.apk
 zipalign 4 Signed.apk MainActivity-debug.apk
 rm -f Signed.apk
+cp -f MainActivity-debug.apk ../../$APPNAME-$APPVER.apk
 
 if false; then
 #DEBUGINFODIR=`aapt dump badging App.apk | grep "package:" | sed "s/.*name=[']\([^']*\)['].*versionCode=[']\([^']*\)['].*/\1-\2/" | tr " '/" '---'`
@@ -30,5 +31,4 @@ mkdir -p ../debuginfo/$DEBUGINFODIR/x86 ../debuginfo/$DEBUGINFODIR/armeabi-v7a
 cp -f ../obj/local/x86/*.so ../debuginfo/$DEBUGINFODIR/x86
 cp -f ../obj/local/armeabi-v7a/*.so ../debuginfo/$DEBUGINFODIR/armeabi-v7a
 cp -f MainActivity-debug.apk ../debuginfo/$DEBUGINFODIR/$APPNAME-$APPVER.apk
-cp -f MainActivity-debug.apk ../../$APPNAME-$APPVER.apk
 fi
