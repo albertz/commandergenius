@@ -68,3 +68,6 @@
 	path = project/jni/openssl/openssl/jni
 	url = https://android.googlesource.com/platform/external/openssl
 	branch = lollipop-mr1-dev
+[submodule "project/jni/application/xserver/pulseaudio"]
+	path = project/jni/application/xserver/pulseaudio
+	url = git@github.com:pelya/pulseaudio-android.git

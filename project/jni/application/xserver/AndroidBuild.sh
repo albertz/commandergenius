@@ -71,6 +71,7 @@ rm -rf $CURDIR/tmp-$1
 mkdir -p $CURDIR/tmp-$1
 cd $CURDIR/tmp-$1
 cp $CURDIR/xserver/data/busybox-$1 ./busybox
+#cp $CURDIR/pulseaudio/pulseaudio-$1 ./pulseaudio
 cp $CURDIR/ssh ./
 cp $CURDIR/sshpass ./
 mkdir -p usr/bin
