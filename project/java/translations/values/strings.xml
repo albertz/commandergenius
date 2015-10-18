@@ -199,4 +199,7 @@
 
     <string name="restarting_please_wait">Restarting, please wait.</string>
 
+    <string name="notification_app_is_running">%s is running</string>
+    <string name="notification_stop">Stop</string>
+
 </resources>

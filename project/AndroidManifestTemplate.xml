@@ -38,6 +38,10 @@
 				  android:windowSoftInputMode="stateUnspecified"
 				  android:process=":RestartMainActivity"
 		/>
+		<service android:name=".DummyService"
+				 android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection"
+				 android:enabled="true"
+		/>
 	</application>
 
 	<uses-sdk android:minSdkVersion="9" android:targetSdkVersion="23"/>

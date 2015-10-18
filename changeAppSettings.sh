@@ -6,13 +6,16 @@ JAVA_SRC_PATH=project/java
 
 if [ "X$1" = "X-a" ]; then
 	AUTO=a
+	shift
 fi
 if [ "X$1" = "X-v" ]; then
 	AUTO=v
+	shift
 fi
 if [ "X$1" = "X-u" ]; then
 	CHANGED=1
 	AUTO=a
+	shift
 fi
 if [ "X$1" = "X-h" ]; then
 	echo "Usage: $0 [-a] [-v] [-u]"
@@ -20,6 +23,25 @@ if [ "X$1" = "X-h" ]; then
 	echo "       -v: ask for new version number on terminal"
 	echo "       -u: update AndroidAppSettings.cfg, this may add new config options to it"
 	exit
+fi
+
+if [ "$#" -gt 0 ]; then
+	echo "Switching build target to $1"
+	if [ -e project/jni/application/$1 ]; then
+		rm -f project/jni/application/src
+		ln -s "$1" project/jni/application/src
+	else
+		echo "Error: no app $1 under project/jni/application"
+		echo "Available applications:"
+		cd project/jni/application
+		for f in *; do
+			if [ -e "$f/AndroidAppSettings.cfg" ]; then
+				echo "$f"
+			fi
+		done
+		exit 1
+	fi
+	shift
 fi
 
 . ./AndroidAppSettings.cfg

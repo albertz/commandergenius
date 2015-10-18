@@ -89,6 +89,8 @@ import android.graphics.Rect;
 import android.view.InputDevice;
 import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.Keyboard;
+import android.app.Notification;
+import android.app.PendingIntent;
 
 public class MainActivity extends Activity
 {
@@ -226,6 +228,7 @@ public class MainActivity extends Activity
 		(new Thread(new Callback(this))).start();
 		if( Globals.CreateService )
 		{
+			Log.v("SDL", "Starting dummy service - displaying notification");
 			Intent intent = new Intent(this, DummyService.class);
 			startService(intent);
 		}
@@ -1483,27 +1486,5 @@ abstract class SetLayerType
 		public void setLayerType(final View view)
 		{
 		}
-	}
-}
-
-class DummyService extends Service
-{
-	public DummyService()
-	{
-		super();
-	}
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId)
-	{
-		return Service.START_STICKY;
-	}
-	@Override
-	public void onDestroy()
-	{
-	}
-	@Override
-	public IBinder onBind(Intent intent)
-	{
-		return null;
 	}
 }
