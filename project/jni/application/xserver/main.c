@@ -105,7 +105,7 @@ int main( int argc, char* argv[] )
 						"%s/img/usr/share/fonts/X11/Type1,"
 						"%s/img/usr/share/fonts/X11/100dpi,"
 						"%s/img/usr/share/fonts/X11/75dpi,"
-						"%s/img/usr/share/fonts/X11/cyrillic"
+						"%s/img/usr/share/fonts/X11/cyrillic,"
 						"%s/usr/share/fonts",
 						getenv("SECURE_STORAGE_DIR"),
 						getenv("SECURE_STORAGE_DIR"),
