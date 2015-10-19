@@ -684,11 +684,11 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 void XSDL_generateBackground(const char * port, int showHelp, int resolutionW, int resolutionH)
 {
 	int sd, addr, ifc_num, i;
-    struct ifconf ifc;
-    struct ifreq ifr[20];
-    SDL_Surface * surf;
-    int y = resolutionH * 1 / 3;
-    char msg[128];
+	struct ifconf ifc;
+	struct ifreq ifr[20];
+	SDL_Surface * surf;
+	int y = resolutionH * 1 / 3;
+	char msg[128];
 
 	if (resolutionH > resolutionW)
 		resolutionH = resolutionW;
@@ -708,50 +708,53 @@ void XSDL_generateBackground(const char * port, int showHelp, int resolutionW, i
 	renderStringScaled("Launch these commands on your Linux PC:", 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
 	y += resolutionH * 30 / VID_Y;
 
-    sd = socket(PF_INET, SOCK_DGRAM, 0);
-    if (sd > 0)
-    {
-        ifc.ifc_len = sizeof(ifr);
-        ifc.ifc_ifcu.ifcu_buf = (caddr_t)ifr;
+	sd = socket(PF_INET, SOCK_DGRAM, 0);
+	if (sd > 0)
+	{
+		ifc.ifc_len = sizeof(ifr);
+		ifc.ifc_ifcu.ifcu_buf = (caddr_t)ifr;
 
-        if (ioctl(sd, SIOCGIFCONF, &ifc) == 0)
-        {
-            ifc_num = ifc.ifc_len / sizeof(struct ifreq);
-            __android_log_print(ANDROID_LOG_INFO, "XSDL", "%d network interfaces found", ifc_num);
+		if (ioctl(sd, SIOCGIFCONF, &ifc) == 0)
+		{
+			ifc_num = ifc.ifc_len / sizeof(struct ifreq);
+			__android_log_print(ANDROID_LOG_INFO, "XSDL", "%d network interfaces found", ifc_num);
 
-            for (i = 0; i < ifc_num; ++i)
-            {
-                int addr = 0;
-                char saddr[32];
-                if (ifr[i].ifr_addr.sa_family != AF_INET)
-                    continue;
+			for (i = 0; i < ifc_num; ++i)
+			{
+				int addr = 0;
+				char saddr[32];
+				if (ifr[i].ifr_addr.sa_family != AF_INET)
+					continue;
 
-                if (ioctl(sd, SIOCGIFADDR, &ifr[i]) == 0)
-                    addr = ((struct sockaddr_in *)(&ifr[i].ifr_addr))->sin_addr.s_addr;
-                if (addr == 0)
-                    continue;
-                sprintf (saddr, "%d.%d.%d.%d", (addr & 0xFF), (addr >> 8 & 0xFF), (addr >> 16 & 0xFF), (addr >> 24 & 0xFF));
-                __android_log_print(ANDROID_LOG_INFO, "XSDL", "interface: %s address: %s\n", ifr[i].ifr_name, saddr);
-                if (strcmp(saddr, "127.0.0.1") == 0)
-                    continue;
-                sprintf (msg, "env DISPLAY=%s%s metacity &", saddr, port);
-                renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
-                y += resolutionH * 15 / VID_Y;
-                sprintf (msg, "env DISPLAY=%s%s gimp", saddr, port);
-                renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
-                y += resolutionH * 20 / VID_Y;
-            }
-        }
+				if (ioctl(sd, SIOCGIFADDR, &ifr[i]) == 0)
+					addr = ((struct sockaddr_in *)(&ifr[i].ifr_addr))->sin_addr.s_addr;
+				if (addr == 0)
+					continue;
+				sprintf (saddr, "%d.%d.%d.%d", (addr & 0xFF), (addr >> 8 & 0xFF), (addr >> 16 & 0xFF), (addr >> 24 & 0xFF));
+				__android_log_print(ANDROID_LOG_INFO, "XSDL", "interface: %s address: %s\n", ifr[i].ifr_name, saddr);
+				if (strcmp(saddr, "127.0.0.1") == 0)
+					continue;
+				sprintf (msg, "export DISPLAY=%s%s", saddr, port);
+				renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+				y += resolutionH * 15 / VID_Y;
+				sprintf (msg, "export PULSE_SERVER=tcp:%s:4712", saddr);
+				renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+				y += resolutionH * 15 / VID_Y;
+				sprintf (msg, "metacity & gimp");
+				renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+				y += resolutionH * 20 / VID_Y;
+			}
+		}
 
-        close(sd);
-    }
+		close(sd);
+	}
 
-    y += resolutionH * 10 / VID_Y;
-    sprintf (msg, "To tunnel X over SSH, forward port %d", atoi(port+1) + 6000);
-    renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
-    y += resolutionH * 15 / VID_Y;
-    sprintf (msg, "in your SSH client");
-    renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+	y += resolutionH * 10 / VID_Y;
+	sprintf (msg, "To tunnel X over SSH, forward port %d", atoi(port+1) + 6000);
+	renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+	y += resolutionH * 15 / VID_Y;
+	sprintf (msg, "in your SSH client");
+	renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
 
 	SDL_SaveBMP(surf, "background.bmp");
 	SDL_FreeSurface(surf);

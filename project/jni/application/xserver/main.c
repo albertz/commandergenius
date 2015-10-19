@@ -100,11 +100,14 @@ int main( int argc, char* argv[] )
 	if (getenv("SDL_RESTART_PARAMS") && getenv("SDL_RESTART_PARAMS")[0])
 		strcpy(port, getenv("SDL_RESTART_PARAMS"));
 
-	sprintf(fontpath,	"%s/img/usr/share/fonts/X11/misc,"
+	snprintf(fontpath, sizeof(fontpath),
+						"%s/img/usr/share/fonts/X11/misc,"
 						"%s/img/usr/share/fonts/X11/Type1,"
 						"%s/img/usr/share/fonts/X11/100dpi,"
 						"%s/img/usr/share/fonts/X11/75dpi,"
 						"%s/img/usr/share/fonts/X11/cyrillic",
+						"%s/usr/share/fonts",
+						getenv("SECURE_STORAGE_DIR"),
 						getenv("SECURE_STORAGE_DIR"),
 						getenv("SECURE_STORAGE_DIR"),
 						getenv("SECURE_STORAGE_DIR"),
