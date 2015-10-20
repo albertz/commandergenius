@@ -105,6 +105,8 @@ public class DummyService extends Service
 		if (intent != null && Intent.ACTION_DELETE.equals(intent.getAction()))
 		{
 			Log.v("SDL", "User dismissed notification, killing myself");
+			stopSelfResult(5);
+			stopSelfResult(0);
 			System.exit(0);
 		}
 		Log.v("SDL", "Starting dummy service - displaying notification");
