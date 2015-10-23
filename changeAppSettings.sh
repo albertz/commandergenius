@@ -801,6 +801,8 @@ esac
 
 if [ "$AccessSdCard" = "n" ]; then
 	$SEDI "/==EXTERNAL_STORAGE==/ d" project/AndroidManifest.xml
+else
+	$SEDI "/==NOT_EXTERNAL_STORAGE==/ d" project/AndroidManifest.xml
 fi
 
 if [ "$AccessInternet" = "n" ]; then
