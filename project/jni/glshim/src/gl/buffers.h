@@ -55,11 +55,22 @@ typedef struct {
     pointer_state_t vertex, color, normal, tex_coord[MAX_TEX], secondary;
 } pointer_states_t;
 
-
 // VAO ****************
 typedef struct {
     GLuint           array;
+    // pointer state
     pointer_states_t pointers;
+    // buffer state
+    glbuffer_t *vertex;
+    glbuffer_t *elements;
+    glbuffer_t *pack;
+    glbuffer_t *unpack;
+    // client state
+    GLboolean  secondary_array,
+               color_array,
+               normal_array,
+               vertex_array,
+               tex_coord_array[MAX_TEX];
 } glvao_t;
 
 KHASH_MAP_INIT_INT(glvao, glvao_t*)
