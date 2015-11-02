@@ -72,6 +72,7 @@ static jobject JavaRenderer = NULL;
 static jmethodID JavaSwapBuffers = NULL;
 static jmethodID JavaShowScreenKeyboard = NULL;
 static jmethodID JavaToggleScreenKeyboardWithoutTextInput = NULL;
+static jmethodID JavaToggleInternalScreenKeyboard = NULL;
 static jmethodID JavaHideScreenKeyboard = NULL;
 static jmethodID JavaIsScreenKeyboardShown = NULL;
 static jmethodID JavaSetScreenKeyboardHintMessage = NULL;
@@ -238,6 +239,12 @@ int SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(void)
 	return 1;
 }
 
+int SDL_ANDROID_ToggleInternalScreenKeyboard(SDL_InternalKeyboard_t keyboard)
+{
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaToggleInternalScreenKeyboard, (jint)keyboard );
+	return 1;
+}
+
 #if SDL_VERSION_ATLEAST(1,3,0)
 #else
 extern int SDL_Flip(SDL_Surface *screen);
@@ -333,6 +340,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaSwapBuffers = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "swapBuffers", "()I");
 	JavaShowScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboard", "(Ljava/lang/String;I)V");
 	JavaToggleScreenKeyboardWithoutTextInput = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showScreenKeyboardWithoutTextInputField", "()V");
+	JavaToggleInternalScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "showInternalScreenKeyboard", "(I)V");
 	JavaHideScreenKeyboard = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "hideScreenKeyboard", "()V");
 	JavaIsScreenKeyboardShown = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "isScreenKeyboardShown", "()I");
 	JavaSetScreenKeyboardHintMessage = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setScreenKeyboardHintMessage", "(Ljava/lang/String;)V");

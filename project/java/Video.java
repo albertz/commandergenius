@@ -763,7 +763,12 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 
 	public void showScreenKeyboardWithoutTextInputField() // Called from native code
 	{
-		context.showScreenKeyboardWithoutTextInputField();
+		context.showScreenKeyboardWithoutTextInputField(Globals.TextInputKeyboard);
+	}
+
+	public void showInternalScreenKeyboard(int keyboard) // Called from native code
+	{
+		context.showScreenKeyboardWithoutTextInputField(keyboard);
 	}
 
 	public void showScreenKeyboard(final String oldText, int unused) // Called from native code

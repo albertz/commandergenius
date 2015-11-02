@@ -487,9 +487,15 @@ public class MainActivity extends Activity
 		cloudSave.onActivityResult(request, response, data);
 	}
 
-	private int TextInputKeyboardList[] = { 0, R.xml.qwerty, R.xml.c64, R.xml.amiga, R.xml.atari800 };
+	private int TextInputKeyboardList[][] =
+	{
+		{ 0, R.xml.qwerty, R.xml.c64, R.xml.amiga, R.xml.atari800 },
+		{ 0, R.xml.qwerty_shift, R.xml.c64, R.xml.amiga, R.xml.atari800 },
+		{ 0, R.xml.qwerty_alt, R.xml.c64, R.xml.amiga, R.xml.atari800 },
+		{ 0, R.xml.qwerty_alt_shift, R.xml.c64, R.xml.amiga, R.xml.atari800 }
+	};
 
-	public void showScreenKeyboardWithoutTextInputField()
+	public void showScreenKeyboardWithoutTextInputField(final int keyboard)
 	{
 		if( !keyboardWithoutTextInputShown )
 		{
@@ -498,7 +504,7 @@ public class MainActivity extends Activity
 			{
 				public void run()
 				{
-					if (Globals.TextInputKeyboard == 0)
+					if (keyboard == 0)
 					{
 						_inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 						_inputManager.showSoftInput(mGLView, InputMethodManager.SHOW_FORCED);
@@ -510,6 +516,8 @@ public class MainActivity extends Activity
 							return;
 						class BuiltInKeyboardView extends KeyboardView
 						{
+							public boolean shift = false;
+							public boolean alt = false;
 							public BuiltInKeyboardView(Context context, android.util.AttributeSet attrs)
 							{
 								super(context, attrs);
@@ -526,35 +534,83 @@ public class MainActivity extends Activity
 								}
 								return false;
 							}
-							public boolean onKeyDown(int keyCode, final KeyEvent event)
+							public boolean onKeyDown(int key, final KeyEvent event)
 							{
-								if (keyCode == KeyEvent.KEYCODE_BACK)
-									return true;
 								return false;
 							}
-							public boolean onKeyUp(int keyCode, final KeyEvent event)
+							public boolean onKeyUp(int key, final KeyEvent event)
 							{
-								if (keyCode == KeyEvent.KEYCODE_BACK)
-								{
-									showScreenKeyboardWithoutTextInputField(); // Hide keyboard
-									return true;
-								}
 								return false;
+							}
+							public void ChangeKeyboard()
+							{
+								int idx = (shift ? 1 : 0) + (alt ? 2 : 0);
+								setKeyboard(new Keyboard(MainActivity.this, TextInputKeyboardList[idx][keyboard]));
+								setPreviewEnabled(false);
+								setProximityCorrectionEnabled(false);
 							}
 						}
-						BuiltInKeyboardView builtinKeyboard = new BuiltInKeyboardView(MainActivity.this, null);
-						builtinKeyboard.setKeyboard(new Keyboard(MainActivity.this, TextInputKeyboardList[Globals.TextInputKeyboard]));
+						final BuiltInKeyboardView builtinKeyboard = new BuiltInKeyboardView(MainActivity.this, null);
+						builtinKeyboard.setKeyboard(new Keyboard(MainActivity.this, TextInputKeyboardList[0][keyboard]));
 						builtinKeyboard.setPreviewEnabled(false);
 						builtinKeyboard.setProximityCorrectionEnabled(false);
 						builtinKeyboard.setOnKeyboardActionListener(new KeyboardView.OnKeyboardActionListener()
 						{
 							public void onPress(int key)
 							{
+								if (key == KeyEvent.KEYCODE_BACK)
+									return;
+								if (key < 0)
+									return;
+								if (key > 100000)
+								{
+									key -= 100000;
+									MainActivity.this.onKeyDown(KeyEvent.KEYCODE_SHIFT_LEFT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_LEFT));
+								}
 								MainActivity.this.onKeyDown(key, new KeyEvent(KeyEvent.ACTION_DOWN, key));
 							}
 							public void onRelease(int key)
 							{
+								if (key == KeyEvent.KEYCODE_BACK)
+								{
+									builtinKeyboard.setOnKeyboardActionListener(null);
+									showScreenKeyboardWithoutTextInputField(0); // Hide keyboard
+									return;
+								}
+								if (key == Keyboard.KEYCODE_SHIFT)
+								{
+									builtinKeyboard.shift = ! builtinKeyboard.shift;
+									if (builtinKeyboard.shift && !builtinKeyboard.alt)
+										MainActivity.this.onKeyDown(KeyEvent.KEYCODE_SHIFT_LEFT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_LEFT));
+									else
+										MainActivity.this.onKeyUp(KeyEvent.KEYCODE_SHIFT_LEFT, new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT));
+									builtinKeyboard.ChangeKeyboard();
+									return;
+								}
+								if (key == Keyboard.KEYCODE_ALT)
+								{
+									builtinKeyboard.alt = ! builtinKeyboard.alt;
+									if (builtinKeyboard.alt)
+										MainActivity.this.onKeyUp(KeyEvent.KEYCODE_SHIFT_LEFT, new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT));
+									else
+										builtinKeyboard.shift = false;
+									builtinKeyboard.ChangeKeyboard();
+									return;
+								}
+								if (key < 0)
+									return;
+
+								boolean shifted = false;
+								if (key > 100000)
+								{
+									key -= 100000;
+									shifted = true;
+								}
+
 								MainActivity.this.onKeyUp(key, new KeyEvent(KeyEvent.ACTION_UP, key));
+
+								if (shifted)
+									MainActivity.this.onKeyUp(KeyEvent.KEYCODE_SHIFT_LEFT, new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT));
 							}
 							public void onText(CharSequence p1) {}
 							public void swipeLeft() {}
@@ -563,16 +619,6 @@ public class MainActivity extends Activity
 							public void swipeUp() {}
 							public void onKey(int p1, int[] p2) {}
 						});
-						/*
-						builtinKeyboard.addOnLayoutChangeListener(new View.OnLayoutChangeListener()
-						{
-							public void onLayoutChange (View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom)
-							{
-								Log.i("SDL", "Built-in keyboard getTop " + top);
-								((KeyboardView)v).setVerticalCorrection(top);
-							}
-						});
-						*/
 						_screenKeyboard = builtinKeyboard;
 						FrameLayout.LayoutParams layout = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM);
 						_videoLayout.addView(_screenKeyboard, layout);
@@ -606,7 +652,7 @@ public class MainActivity extends Activity
 	{
 		if(Globals.CompatibilityHacksTextInputEmulatesHwKeyboard)
 		{
-			showScreenKeyboardWithoutTextInputField();
+			showScreenKeyboardWithoutTextInputField(Globals.TextInputKeyboard);
 			return;
 		}
 		if(_screenKeyboard != null)
@@ -718,7 +764,7 @@ public class MainActivity extends Activity
 	public void hideScreenKeyboard()
 	{
 		if( keyboardWithoutTextInputShown )
-			showScreenKeyboardWithoutTextInputField();
+			showScreenKeyboardWithoutTextInputField(Globals.TextInputKeyboard);
 
 		if(_screenKeyboard == null || ! (_screenKeyboard instanceof EditText))
 			return;

@@ -117,6 +117,16 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleScreenKeyboardTextInput(const char
 /* Show only the bare Android QWERTY keyboard without any text input field, so it won't cover the screen */
 extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(void);
 
+typedef enum
+{
+	SDL_KEYBOARD_QWERTY = 1,
+	SDL_KEYBOARD_COMMODORE = 2,
+	SDL_KEYBOARD_AMIGA = 3,
+	SDL_KEYBOARD_ATARI800 = 4,
+} SDL_InternalKeyboard_t;
+/* Show internal keyboard, built into SDL */
+extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleInternalScreenKeyboard(SDL_InternalKeyboard_t keyboard);
+
 /* Show Android QWERTY keyboard, and pass entered text back to application in a buffer,
    using buffer contents as previous text (UTF-8 encoded), the buffer may be of any size -
    this call will block until user typed all text. */
