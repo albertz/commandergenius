@@ -75,27 +75,27 @@ void tex_setup_texcoord(GLuint texunit, GLuint len) {
     int changes = 0;
     if ((state.texture.rect_arb[texunit]) || 
         (bound && ((bound->width!=bound->nwidth)||(bound->height!=bound->nheight)||
-        (bound->shrink && (state.pointers.tex_coord[texunit].type!=GL_FLOAT) && (state.pointers.tex_coord[texunit].type!=GL_DOUBLE)))))
+        (bound->shrink && (state.vao->pointers.tex_coord[texunit].type!=GL_FLOAT) && (state.vao->pointers.tex_coord[texunit].type!=GL_DOUBLE)))))
         changes = 1;
 	if (old!=texunit) glClientActiveTexture(texunit+GL_TEXTURE0);
     if (changes) {
         // first convert to GLfloat, without normalization
-        tex[texunit] = copy_gl_pointer_raw(&state.pointers.tex_coord[texunit], 2, 0, len, state.pointers.tex_coord[texunit].buffer);
+        tex[texunit] = copy_gl_pointer_raw(&state.vao->pointers.tex_coord[texunit], 2, 0, len, state.vao->pointers.tex_coord[texunit].buffer);
         if (!tex[texunit]) {
             printf("LibGL: Error with Texture tranform\n");
-            gles_glTexCoordPointer(len, state.pointers.tex_coord[texunit].type, state.pointers.tex_coord[texunit].stride, state.pointers.tex_coord[texunit].pointer);
+            gles_glTexCoordPointer(len, state.vao->pointers.tex_coord[texunit].type, state.vao->pointers.tex_coord[texunit].stride, state.vao->pointers.tex_coord[texunit].pointer);
             if (old!=texunit) glClientActiveTexture(old+GL_TEXTURE0);
             return;
         }
         // Normalize if needed
-        if ((state.texture.rect_arb[texunit]) || ((state.pointers.tex_coord[texunit].type!=GL_FLOAT) && (state.pointers.tex_coord[texunit].type!=GL_DOUBLE)))
+        if ((state.texture.rect_arb[texunit]) || ((state.vao->pointers.tex_coord[texunit].type!=GL_FLOAT) && (state.vao->pointers.tex_coord[texunit].type!=GL_DOUBLE)))
             tex_coord_rect_arb(tex[texunit], len, bound->width, bound->height);
         if ((bound->width!=bound->nwidth) || (bound->height!=bound->nheight))
             tex_coord_npot(tex[texunit], len, bound->width, bound->height, bound->nwidth, bound->nheight);
         // All done, setup the texcoord array now
         gles_glTexCoordPointer(2, GL_FLOAT, 0, tex[texunit]);
     } else {
-        gles_glTexCoordPointer(state.pointers.tex_coord[texunit].size, state.pointers.tex_coord[texunit].type, state.pointers.tex_coord[texunit].stride, state.pointers.tex_coord[texunit].pointer);
+        gles_glTexCoordPointer(state.vao->pointers.tex_coord[texunit].size, state.vao->pointers.tex_coord[texunit].type, state.vao->pointers.tex_coord[texunit].stride, state.vao->pointers.tex_coord[texunit].pointer);
     }
 	if (old!=texunit) glClientActiveTexture(old+GL_TEXTURE0);
 }
@@ -104,6 +104,7 @@ int nolumalpha = 0;
 
 static void *swizzle_texture(GLsizei width, GLsizei height,
                              GLenum *format, GLenum *type,
+                             GLenum intermediaryformat, GLenum internalformat,
                              const GLvoid *data) {
     bool convert = false;
     GLenum dest_format = GL_RGBA;
@@ -114,11 +115,22 @@ static void *swizzle_texture(GLsizei width, GLsizei height,
             dest_format = GL_RGB;
             break;
         case GL_ALPHA:
+            dest_format = GL_ALPHA;
         case GL_RGBA:
+            break;
+        case GL_LUMINANCE8_ALPHA8:
+            if(nolumalpha)
+                convert = true;
+            else {
+                dest_format = GL_LUMINANCE_ALPHA;
+                *format = GL_LUMINANCE_ALPHA;
+            }
             break;
         case GL_LUMINANCE_ALPHA:
             if(nolumalpha)
                 convert = true;
+            else
+                dest_format = GL_LUMINANCE_ALPHA;
             break;
         case GL_RGB5:
             dest_type = GL_UNSIGNED_SHORT_5_6_5;
@@ -127,7 +139,6 @@ static void *swizzle_texture(GLsizei width, GLsizei height,
         case GL_RGB8:
             dest_format = GL_RGB;
             *format = GL_RGB;
-            //convert = true;
             break;
         case GL_RGBA8:
             dest_format = GL_RGBA;
@@ -138,14 +149,36 @@ static void *swizzle_texture(GLsizei width, GLsizei height,
             break;
     }
     switch (*type) {
+        case GL_UNSIGNED_SHORT_4_4_4_4_REV:
+            if(dest_format==GL_RGBA)
+                dest_type = GL_UNSIGNED_SHORT_4_4_4_4;
+            convert = true;
+            break;
+        case GL_UNSIGNED_SHORT_4_4_4_4:
+            if(dest_format==GL_RGBA)
+                dest_type = GL_UNSIGNED_SHORT_4_4_4_4;
+            convert = true;
+            break;
+        case GL_UNSIGNED_SHORT_1_5_5_5_REV:
+            if(dest_format==GL_RGBA)
+                dest_type = GL_UNSIGNED_SHORT_5_5_5_1;
+            convert = true;
+            break;
+        case GL_UNSIGNED_SHORT_5_5_5_1:
+            if(dest_format==GL_RGBA)
+                dest_type = GL_UNSIGNED_SHORT_5_5_5_1;
+            convert = true;
+            break;
+        case GL_UNSIGNED_SHORT_5_6_5_REV:
+            if (dest_format==GL_RGB)
+                dest_type = GL_UNSIGNED_SHORT_5_6_5;
+            convert = true;
+            break;
         case GL_UNSIGNED_SHORT_5_6_5:
             if (dest_format==GL_RGB)
                 dest_type = GL_UNSIGNED_SHORT_5_6_5;
             break;
-        //case GL_FLOAT:
         case GL_UNSIGNED_BYTE:
-        case GL_UNSIGNED_SHORT_4_4_4_4:
-        case GL_UNSIGNED_SHORT_5_5_5_1:
             break;
         case GL_UNSIGNED_INT_8_8_8_8_REV:
             *type = GL_UNSIGNED_BYTE;
@@ -154,23 +187,45 @@ static void *swizzle_texture(GLsizei width, GLsizei height,
             convert = true;
             break;
     }
+    if(*format != intermediaryformat || intermediaryformat!=internalformat) {
+        dest_format = intermediaryformat;
+        dest_type = GL_UNSIGNED_BYTE;
+        convert = true;
+    }
 	if (data) {
 		if (convert) {
 			GLvoid *pixels = (GLvoid *)data;
 			if (! pixel_convert(data, &pixels, width, height,
 								*format, *type, dest_format, dest_type, 0)) {
-				printf("libGL swizzle error: (%#4x, %#4x -> %#4x, %#4x)\n",
-					*format, *type, dest_format, dest_type);
+				printf("libGL swizzle error: (%s, %s -> %s, %s)\n",
+					PrintEnum(*format), PrintEnum(*type), PrintEnum(dest_format), PrintEnum(dest_type));
 				return NULL;
 			}
 			*type = dest_type;
 			*format = dest_format;
+            if(dest_format!=internalformat) {
+                GLvoid *pix2 = (GLvoid *)pixels;
+                if (! pixel_convert(pixels, &pix2, width, height,
+                                    dest_format, dest_type, internalformat, dest_type, 0)) {
+                    printf("libGL swizzle error: (%s, %s -> %s, %s)\n",
+                        PrintEnum(dest_format), PrintEnum(dest_type), PrintEnum(internalformat), PrintEnum(dest_type));
+                    return NULL;
+                }
+                if(pix2!=pixels) {
+                    if (pixels!=data)
+                        free(pixels);
+                    pixels = pix2;
+                }
+                dest_format = internalformat;
+                *type = internalformat;
+                *format = dest_format;
+            }
 			GLvoid *pix2 = pixels;
 			if (raster_need_transform())
 				if (!pixel_transform(data, &pixels, width, height,
 								*format, *type, raster_scale, raster_bias)) {
-					printf("libGL swizzle/convert error: (%#4x, %#4x -> %#4x, %#4x)\n",
-						*format, *type, dest_format, dest_type);
+					printf("libGL swizzle/convert error: (%s, %s -> %s, %s)\n",
+						PrintEnum(*format), PrintEnum(*type), PrintEnum(dest_format), PrintEnum(dest_type));
 					pix2 = pixels;
 				}
 			if (pix2!=pixels && pixels!=data)
@@ -180,10 +235,72 @@ static void *swizzle_texture(GLsizei width, GLsizei height,
     } else {
 		if (convert) {
 			*type = dest_type;
-			*format = dest_format;
+			*format = internalformat;
 		}
 	}
     return (void *)data;
+}
+
+GLenum swizzle_internalformat(GLenum *internalformat) {
+    GLenum ret;
+    GLenum sret;
+    switch(*internalformat) {
+        case GL_R:
+        case 1: 
+            ret = GL_R; sret = GL_RGB; 
+            break;
+        case GL_RG:
+        case 2: 
+            ret = GL_RG; sret = GL_RGB; 
+            break;
+        case GL_RGB5:
+        case GL_RGB8:
+        case GL_RGB:
+        case GL_BGR:
+        case GL_RGB16:
+        case GL_RGB16F:
+        case GL_RGB32F:
+        case 3: 
+            ret = GL_RGB; sret = GL_RGB; 
+            break;
+        case GL_RGBA8:
+        case GL_RGBA4:
+        case GL_BGRA:
+        case GL_RGBA16:
+        case GL_RGBA16F:
+        case GL_RGBA32F:
+        case GL_RGB5_A1:
+        case GL_RGB10_A2:
+        case 4: 
+            ret = GL_RGBA; sret = GL_RGBA; 
+            break;
+        case GL_ALPHA8:
+        case GL_ALPHA:
+            ret = GL_ALPHA; sret = GL_ALPHA;
+            break;
+        case GL_LUMINANCE8:
+        case GL_LUMINANCE16:
+        case GL_LUMINANCE:
+            ret = GL_LUMINANCE; sret = GL_LUMINANCE;
+            break;
+        case GL_LUMINANCE4_ALPHA4:
+        case GL_LUMINANCE8_ALPHA8:
+        case GL_LUMINANCE16_ALPHA16:
+        case GL_LUMINANCE_ALPHA:
+            ret = GL_LUMINANCE_ALPHA;
+            if (nolumalpha)
+                sret = GL_RGBA;
+            else
+                sret = GL_LUMINANCE_ALPHA;
+            break;
+        default:
+            ret = GL_RGBA;
+            sret = GL_RGBA;
+            break;
+        // Default...RGBA / RGBA will be fine....
+    }
+    *internalformat = ret;
+    return sret;
 }
 
 int automipmap = 0;
@@ -220,8 +337,8 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
 
     GLvoid *datab = (GLvoid*)data;
     
-	if (state.buffers.unpack)
-		datab += (uintptr_t)state.buffers.pack->data;
+	if (state.vao->unpack)
+		datab += (uintptr_t)state.vao->pack->data;
         
     GLvoid *pixels = (GLvoid *)datab;
     border = 0;	//TODO: something?
@@ -237,6 +354,11 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
             }
             else
                 bound->mipmap_need = 1;
+     }
+     GLenum new_format = swizzle_internalformat(&internalformat);
+     if (bound) {
+         bound->orig_internal = internalformat;
+         bound->internalformat = new_format;
      }
      if (datab) {
 
@@ -257,7 +379,7 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
         }
 
         GLvoid *old = pixels;
-        pixels = (GLvoid *)swizzle_texture(width, height, &format, &type, old);
+        pixels = (GLvoid *)swizzle_texture(width, height, &format, &type, internalformat, new_format, old);
         if (old != pixels && old != datab) {
             free(old);
         }
@@ -469,7 +591,7 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
 	    if (bound) {
             bound->shrink = 0;
             if (!bound->streamed)
-                swizzle_texture(width, height, &format, &type, NULL);	// convert format even if data is NULL
+                swizzle_texture(width, height, &format, &type, internalformat, new_format, NULL);	// convert format even if data is NULL
             if ((texshrink>0) && !bound->streamed) {
                 switch(texshrink) {
                     case 1: //everything / 2
@@ -623,8 +745,8 @@ void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
     }
 
     GLvoid *datab = (GLvoid*)data;
-	if (state.buffers.unpack)
-		datab += (uintptr_t)state.buffers.pack->data;
+	if (state.vao->unpack)
+		datab += (uintptr_t)state.vao->pack->data;
     GLvoid *pixels = (GLvoid*)datab;
 
     LOAD_GLES(glTexSubImage2D);
@@ -680,10 +802,19 @@ void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
 #endif
     {
         //pixels = (GLvoid *)swizzle_texture(width, height, &format, &type, old);
-        if (!pixel_convert(old, &pixels, width, height, format, type, bound->format, bound->type, 0)) {
+        if (!pixel_convert(old, &pixels, width, height, format, type, bound->orig_internal, bound->type, 0)) {
             printf("LIBGL: Error in pixel_convert while glTexSubImage2D\n");
         } else {
-            format = bound->format;
+            if(bound->orig_internal!=bound->internalformat) {
+                GLvoid* pix2 = pixels;
+                if (!pixel_convert(pixels, &pix2, width, height, bound->orig_internal, bound->type, bound->internalformat, bound->type, 0)) {
+                    printf("LIBGL: Error in pixel_convert while glTexSubImage2D\n");
+                }
+                if (pixels != pix2 && pixels != old)
+                    free(pixels);
+                pixels = pix2;
+            }
+            format = bound->internalformat;
             type = bound->type;
         }
         
@@ -827,6 +958,9 @@ void glPixelStorei(GLenum pname, GLint param) {
         case GL_UNPACK_LSB_FIRST:
             state.texture.unpack_lsb_first = param;
             break;
+        case GL_UNPACK_IMAGE_HEIGHT:
+            state.texture.unpack_image_height = param;
+            break;
         case GL_UNPACK_SWAP_BYTES:
         case GL_PACK_SWAP_BYTES:
             // Fake... TODO?
@@ -843,6 +977,9 @@ void glPixelStorei(GLenum pname, GLint param) {
             break;
         case GL_PACK_LSB_FIRST:
             state.texture.pack_lsb_first = param;
+            break;
+        case GL_PACK_IMAGE_HEIGHT:
+            state.texture.pack_image_height = param;
             break;
         default:
 			errorGL();
@@ -902,6 +1039,8 @@ gltexture_t* getTexture(GLenum target, GLuint texture) {
         tex->min_filter = tex->mag_filter = GL_LINEAR;
         tex->format = GL_RGBA;
         tex->type = GL_UNSIGNED_BYTE;
+        tex->orig_internal = GL_RGBA;
+        tex->internalformat = GL_RGBA;
         tex->data = NULL;
     } else {
         tex = kh_value(list, k);
@@ -1028,6 +1167,7 @@ void glTexParameteri(GLenum target, GLenum pname, GLint param) {
 	    if (texture)
 		texture->mipmap_auto = (param)?1:0;
 	    return;			// not on GLES
+    case GL_TEXTURE_BASE_LEVEL:
 	case GL_TEXTURE_MIN_LOD:
 	case GL_TEXTURE_MAX_LOD:
 	case GL_TEXTURE_LOD_BIAS:
@@ -1227,8 +1367,8 @@ void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoi
     //printf("glGetTexImage(0x%04X, %i, 0x%04X, 0x%04X, 0x%p), texture=%u, size=%i,%i\n", target, level, format, type, img, bound->glname, width, height);
 	
 	GLvoid *dst = img;
-    if (state.buffers.pack)
-        dst += (uintptr_t)state.buffers.pack->data;
+    if (state.vao->pack)
+        dst += (uintptr_t)state.vao->pack->data;
 #ifdef TEXSTREAM
     if (texstream && bound->streamed) {
         noerrorShim();
@@ -1315,8 +1455,8 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format
     LOAD_GLES(glReadPixels);
     errorGL();
     GLvoid* dst = data;
-    if (state.buffers.pack)
-		dst += (uintptr_t)state.buffers.pack->data;
+    if (state.vao->pack)
+		dst += (uintptr_t)state.vao->pack->data;
 		
 	readfboBegin();
     if (format == GL_RGBA && format == GL_UNSIGNED_BYTE) {
@@ -1354,10 +1494,10 @@ void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
     errorGL();
 
     // "Unmap" if buffer mapped...
-    glbuffer_t *pack = state.buffers.pack;
-    glbuffer_t *unpack = state.buffers.unpack;
-    state.buffers.pack = NULL;
-    state.buffers.unpack = NULL;
+    glbuffer_t *pack = state.vao->pack;
+    glbuffer_t *unpack = state.vao->unpack;
+    state.vao->pack = NULL;
+    state.vao->unpack = NULL;
  
     gltexture_t* bound = state.texture.bound[state.texture.active];
     if (!bound) {
@@ -1393,8 +1533,8 @@ void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
         }
     }
     // "Remap" if buffer mapped...
-    state.buffers.pack = pack;
-    state.buffers.unpack = unpack;
+    state.vao->pack = pack;
+    state.vao->unpack = unpack;
     state.gl_batch = old_glbatch;
 }
 
@@ -1412,10 +1552,10 @@ void glCopyTexImage2D(GLenum target,  GLint level,  GLenum internalformat,  GLin
      errorGL();
 
      // "Unmap" if buffer mapped...
-     glbuffer_t *pack = state.buffers.pack;
-     glbuffer_t *unpack = state.buffers.unpack;
-     state.buffers.pack = NULL;
-     state.buffers.unpack = NULL;
+     glbuffer_t *pack = state.vao->pack;
+     glbuffer_t *unpack = state.vao->unpack;
+     state.vao->pack = NULL;
+     state.vao->unpack = NULL;
     
     if (copytex) {
         LOAD_GLES(glCopyTexImage2D);
@@ -1428,8 +1568,8 @@ void glCopyTexImage2D(GLenum target,  GLint level,  GLenum internalformat,  GLin
     }
     
      // "Remap" if buffer mapped...
-     state.buffers.pack = pack;
-     state.buffers.unpack = unpack;
+     state.vao->pack = pack;
+     state.vao->unpack = unpack;
      
      state.gl_batch = old_glbatch;
 }
@@ -1524,7 +1664,7 @@ void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
 		errorShim(GL_INVALID_OPERATION);
 	    return;		// no texture bounded...
 	}
-//printf("glCompressedTexImage2D on target=0x%04X with size(%i,%i), internalformat=%04x, imagesize=%i, upackbuffer=%p\n", target, width, height, internalformat, imageSize, state.buffers.unpack?state.buffers.unpack->data:0);
+//printf("glCompressedTexImage2D on target=%s with size(%i,%i), internalformat=s, imagesize=%i, upackbuffer=%p\n", PrintEnum(target), width, height, PrintEnum(internalformat), imageSize, state.buffers.unpack?state.buffers.unpack->data:0);
     // hack...
     if (internalformat==GL_RGBA8)
         internalformat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
@@ -1542,8 +1682,8 @@ void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
     LOAD_GLES(glCompressedTexImage2D);
     errorGL();
     
-    glbuffer_t *unpack = state.buffers.unpack;
-    state.buffers.unpack = NULL;
+    glbuffer_t *unpack = state.vao->unpack;
+    state.vao->unpack = NULL;
     GLvoid *datab = (GLvoid*)data;
     if (unpack)
 		datab += (uintptr_t)unpack->data;
@@ -1599,7 +1739,7 @@ void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
         state.texture.bound[state.texture.active]->compressed = true;
 	    gles_glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, datab);
 	}
-	state.buffers.unpack = unpack;
+	state.vao->unpack = unpack;
     state.gl_batch = old_glbatch;
 }
 
@@ -1626,8 +1766,8 @@ void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
 		return;
 	}
     //printf("glCompressedTexSubImage2D with unpack_row_length(%i), size(%i,%i), pos(%i,%i) and skip={%i,%i}, internalformat=%s, imagesize=%i\n", state.texture.unpack_row_length, width, height, xoffset, yoffset, state.texture.unpack_skip_pixels, state.texture.unpack_skip_rows, PrintEnum(format), imageSize);
-    glbuffer_t *unpack = state.buffers.unpack;
-    state.buffers.unpack = NULL;
+    glbuffer_t *unpack = state.vao->unpack;
+    state.vao->unpack = NULL;
     GLvoid *datab = (GLvoid*)data;
     if (unpack)
 		datab += (uintptr_t)unpack->data;
