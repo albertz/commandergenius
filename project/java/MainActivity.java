@@ -433,6 +433,10 @@ public class MainActivity extends Activity
 		//if( _ad.getView() != null )
 		//	_ad.getView().onResume();
 		_isPaused = false;
+		// Nvidia is too smart to use Samsung's stylus API, obviously they need their own method to enable hover events
+		Intent i = new Intent("com.nvidia.intent.action.ENABLE_STYLUS");
+		i.putExtra("package", getPackageName());
+		sendBroadcast(i);
 	}
 
 	@Override
