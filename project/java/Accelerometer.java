@@ -36,6 +36,7 @@ import android.hardware.SensorEvent;
 import android.util.Log;
 import android.widget.TextView;
 import android.os.Build;
+import java.util.Arrays;
 
 
 class AccelerometerReader implements SensorEventListener
@@ -105,33 +106,162 @@ class AccelerometerReader implements SensorEventListener
 
 	static class GyroscopeListener implements SensorEventListener
 	{
-		public float x1 = 0.0f, x2 = 0.0f, xc = 0.0f, y1 = 0.0f, y2 = 0.0f, yc = 0.0f, z1 = 0.0f, z2 = 0.0f, zc = 0.0f;
 		public boolean invertedOrientation = false;
+
+		final float noiseMin[] = new float[] { -1.0f, -1.0f, -1.0f }; // Large initial values, they will only decrease
+		final float noiseMax[] = new float[] { 1.0f, 1.0f, 1.0f };
+
+		float noiseData[][] = new float[200][3];
+		int noiseDataIdx = noiseData.length * 3 / 4; // Speed up first measurement, to converge to sane values faster
+		int noiseMovementDetected = 0;
+		float noiseMeasuredRange[] = null;
+		
+		static int noiseCounter = 0;
+
 		public GyroscopeListener()
 		{
 		}
-		public void onSensorChanged(SensorEvent event)
+
+		void collectNoiseData(final float[] data)
 		{
-			if( event.values[0] < x1 || event.values[0] > x2 ||
-				event.values[1] < y1 || event.values[1] > y2 ||
-				event.values[2] < z1 || event.values[2] > z2 )
+			for( int i = 0; i < 3; i++ )
 			{
-				if( Globals.HorizontalOrientation )
+				if( data[i] < noiseMin[i] || data[i] > noiseMax[i] )
 				{
-					if( invertedOrientation )
-						nativeGyroscope(-(event.values[0] - xc), -(event.values[1] - yc), event.values[2] - zc);
-					else
-						nativeGyroscope(event.values[0] - xc, event.values[1] - yc, event.values[2] - zc);
+					// Movement detected, this can converge our min/max too early, so we're discarding last few values
+					if( noiseMovementDetected < 0 )
+					{
+						int discard = 10;
+						if( -noiseMovementDetected < discard )
+							discard = -noiseMovementDetected;
+						noiseDataIdx -= discard;
+						if( noiseDataIdx < 0 )
+							noiseDataIdx = 0;
+					}
+					noiseMovementDetected = 10;
+					return;
 				}
-				else
+				noiseData[noiseDataIdx][i] = data[i];
+			}
+			noiseMovementDetected--;
+			if( noiseMovementDetected >= 0 )
+				return; // Also discard several values after the movement stopped
+			noiseDataIdx++;
+
+			if( noiseDataIdx < noiseData.length )
+				return;
+
+			noiseCounter++;
+			Log.i( "SDL", "GYRO_NOISE: Measuring in progress... " + noiseCounter ); // DEBUG
+			if( noiseCounter > 15 )
+			{
+				Log.i( "SDL", "GYRO_NOISE: Measuring done! Max iteration reached " + noiseCounter ); // DEBUG
+				noiseData = null;
+				noiseMeasuredRange = null;
+			}
+
+			noiseDataIdx = 0;
+			boolean changed = false;
+			for( int i = 0; i < 3; i++ )
+			{
+				float min = 1.0f;
+				float max = -1.0f;
+				for( int ii = 0; ii < noiseData.length; ii++ )
 				{
-					if( invertedOrientation )
-						nativeGyroscope(-(event.values[1] - yc), event.values[0] - xc, event.values[2] - zc);
-					else
-						nativeGyroscope(event.values[1] - yc, -(event.values[0] - xc), event.values[2] - zc);
+					if( min > noiseData[ii][i] )
+						min = noiseData[ii][i];
+					if( max < noiseData[ii][i] )
+						max = noiseData[ii][i];
+				}
+				// Increase the range a bit, for conservative noise filtering
+				float middle = (min + max) / 2.0f;
+				min += (min - middle) * 0.2f;
+				max += (max - middle) * 0.2f;
+				// Check if range between min/max is less then the current range, as a safety measure,
+				// and min/max range is not jumping outside of previously measured range
+				if( max - min < noiseMax[i] - noiseMin[i] && min >= noiseMin[i] && max <= noiseMax[i] )
+				{
+					noiseMax[i] = (noiseMax[i] + max * 4.0f) / 5.0f;
+					noiseMin[i] = (noiseMin[i] + min * 4.0f) / 5.0f;
+					changed = true;
 				}
 			}
+
+			Log.i( "SDL", "GYRO_NOISE: MIN MAX: " + Arrays.toString(noiseMin) + " " + Arrays.toString(noiseMax) ); // DEBUG
+
+			if( !changed )
+				return;
+
+			// Determine when to stop measuring - check that the previous min/max range is close to the current one
+
+			float range[] = new float[3];
+			for( int i = 0; i < 3; i++ )
+				range[i] = noiseMax[i] - noiseMin[i];
+
+			Log.i( "SDL", "GYRO_NOISE: RANGE:   " + Arrays.toString(range) + " " + Arrays.toString(noiseMeasuredRange) ); // DEBUG
+
+			if( noiseMeasuredRange == null )
+			{
+				noiseMeasuredRange = range;
+				return;
+			}
+
+			for( int i = 0; i < 3; i++ )
+			{
+				if( noiseMeasuredRange[i] / range[i] > 1.2f )
+				{
+					noiseMeasuredRange = range;
+					return;
+				}
+			}
+
+			// We converged to the final min/max, stop measuring
+			noiseData = null;
+			noiseMeasuredRange = null;
+			Log.i( "SDL", "GYRO_NOISE: Measuring done! Range converged on iteration " + noiseCounter ); // DEBUG
 		}
+
+		public void onSensorChanged(final SensorEvent event)
+		{
+			boolean filtered = true;
+			final float[] data = event.values;
+
+			if( noiseData != null )
+				collectNoiseData(data);
+
+			for( int i = 0; i < 3; i++ )
+			{
+				if( data[i] < noiseMin[i] )
+				{
+					filtered = false;
+					data[i] -= noiseMin[i];
+				}
+				else if( data[i] > noiseMax[i] )
+				{
+					filtered = false;
+					data[i] -= noiseMax[i];
+				}
+			}
+
+			if( filtered )
+				return;
+
+			if( Globals.HorizontalOrientation )
+			{
+				if( invertedOrientation )
+					nativeGyroscope(-data[0], -data[1], data[2]);
+				else
+					nativeGyroscope(data[0], data[1], data[2]);
+			}
+			else
+			{
+				if( invertedOrientation )
+					nativeGyroscope(-data[1], data[0], data[2]);
+				else
+					nativeGyroscope(data[1], -data[0], data[2]);
+			}
+		}
+
 		public void onAccuracyChanged(Sensor s, int a)
 		{
 		}

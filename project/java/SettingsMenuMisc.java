@@ -589,157 +589,19 @@ class SettingsMenuMisc extends SettingsMenu
 		}
 	}
 
-	static class GyroscopeCalibration extends Menu implements SensorEventListener
+	static class GyroscopeCalibration extends Menu
 	{
 		String title(final MainActivity p)
 		{
-			return p.getResources().getString(R.string.calibrate_gyroscope);
+			return "";
 		}
 		boolean enabled()
 		{
-			return Globals.AppUsesGyroscope || Globals.MoveMouseWithGyroscope;
+			return false;
 		}
 		void run (final MainActivity p)
 		{
-			if( !(Globals.AppUsesGyroscope || Globals.MoveMouseWithGyroscope) || !AccelerometerReader.gyro.available(p) )
-			{
-				if( Globals.AppUsesGyroscope || Globals.MoveMouseWithGyroscope )
-				{
-					Toast toast = Toast.makeText(p, p.getResources().getString(R.string.calibrate_gyroscope_not_supported), Toast.LENGTH_LONG);
-					toast.show();
-				}
-				goBack(p);
-				return;
-			}
-			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(p.getResources().getString(R.string.calibrate_gyroscope));
-			builder.setMessage(p.getResources().getString(R.string.calibrate_gyroscope_text));
-			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-			{
-				public void onClick(DialogInterface dialog, int item) 
-				{
-					dialog.dismiss();
-					startCalibration(p);
-				}
-			});
-			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-			{
-				public void onCancel(DialogInterface dialog)
-				{
-					goBack(p);
-				}
-			});
-			AlertDialog alert = builder.create();
-			alert.setOwnerActivity(p);
-			alert.show();
-		}
-
-		ImageView img;
-		Bitmap bmp;
-		int numEvents;
-		MainActivity p;
-
-		void startCalibration(final MainActivity _p)
-		{
-			p = _p;
-			img = new ImageView(p);
-			img.setLayoutParams(new ViewGroup.LayoutParams( ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-			img.setScaleType(ImageView.ScaleType.MATRIX);
-			bmp = BitmapFactory.decodeResource( p.getResources(), R.drawable.calibrate );
-			img.setImageBitmap(bmp);
-			Matrix m = new Matrix();
-			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
-			RectF dst = new RectF(	p.getVideoLayout().getWidth()/2 - 50, p.getVideoLayout().getHeight()/2 - 50,
-									p.getVideoLayout().getWidth()/2 + 50, p.getVideoLayout().getHeight()/2 + 50);
-			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
-			img.setImageMatrix(m);
-			p.getVideoLayout().addView(img);
-			numEvents = -10;
-			AccelerometerReader.gyro.x1 = 100;
-			AccelerometerReader.gyro.x2 = -100;
-			AccelerometerReader.gyro.xc = 0;
-			AccelerometerReader.gyro.y1 = 100;
-			AccelerometerReader.gyro.y2 = -100;
-			AccelerometerReader.gyro.yc = 0;
-			AccelerometerReader.gyro.z1 = 100;
-			AccelerometerReader.gyro.z2 = -100;
-			AccelerometerReader.gyro.zc = 0;
-			AccelerometerReader.gyro.registerListener(p, this);
-			(new Thread(new Runnable()
-			{
-				public void run()
-				{
-					for(int count = 1; count < 10; count++)
-					{
-						p.setText("" + count * 10 + "% ...");
-						try {
-							Thread.sleep(300);
-						} catch( Exception e ) {}
-					}
-					finishCalibration(p);
-				}
-			}
-			)).start();
-		}
-
-		public void onSensorChanged(SensorEvent event)
-		{
-			gyroscopeEvent(event.values[0], event.values[1], event.values[2]);
-		}
-		public void onAccuracyChanged(Sensor s, int a)
-		{
-		}
-		void gyroscopeEvent(float x, float y, float z)
-		{
-			numEvents++;
-			if (numEvents <= 0)
-				return; // Skip few initial measurements, they may be incorrect
-			AccelerometerReader.gyro.xc += x;
-			AccelerometerReader.gyro.yc += y;
-			AccelerometerReader.gyro.zc += z;
-			AccelerometerReader.gyro.x1 = Math.min(AccelerometerReader.gyro.x1, x * 1.02f); // Small safety bound coefficient
-			AccelerometerReader.gyro.x2 = Math.max(AccelerometerReader.gyro.x2, x * 1.02f);
-			AccelerometerReader.gyro.y1 = Math.min(AccelerometerReader.gyro.y1, y * 1.02f);
-			AccelerometerReader.gyro.y2 = Math.max(AccelerometerReader.gyro.y2, y * 1.02f);
-			AccelerometerReader.gyro.z1 = Math.min(AccelerometerReader.gyro.z1, z * 1.02f);
-			AccelerometerReader.gyro.z2 = Math.max(AccelerometerReader.gyro.z2, z * 1.02f);
-			final Matrix m = new Matrix();
-			RectF src = new RectF(0, 0, bmp.getWidth(), bmp.getHeight());
-			RectF dst = new RectF(	x * 5000 + p.getVideoLayout().getWidth()/2 - 50, y * 5000 + p.getVideoLayout().getHeight()/2 - 50,
-									x * 5000 + p.getVideoLayout().getWidth()/2 + 50, y * 5000 + p.getVideoLayout().getHeight()/2 + 50);
-			m.setRectToRect(src, dst, Matrix.ScaleToFit.FILL);
-			p.runOnUiThread(new Runnable()
-			{
-				public void run()
-				{
-					img.setImageMatrix(m);
-				}
-			});
-		}
-		void finishCalibration(final MainActivity p)
-		{
-			AccelerometerReader.gyro.unregisterListener(p, this);
-			try {
-				Thread.sleep(200); // Just in case we have pending events
-			} catch( Exception e ) {}
-			if( numEvents > 10 )
-			{
-				AccelerometerReader.gyro.xc /= (float)numEvents;
-				AccelerometerReader.gyro.yc /= (float)numEvents;
-				AccelerometerReader.gyro.zc /= (float)numEvents;
-				Log.i("SDL", "libSDL: gyroscope calibration: " +
-						AccelerometerReader.gyro.x1 + " < " + AccelerometerReader.gyro.xc + " > " + AccelerometerReader.gyro.x2 +  " : " +
-						AccelerometerReader.gyro.y1 + " < " + AccelerometerReader.gyro.yc + " > " + AccelerometerReader.gyro.y2 +  " : " +
-						AccelerometerReader.gyro.z1 + " < " + AccelerometerReader.gyro.zc + " > " + AccelerometerReader.gyro.z2);
-			}
-			p.runOnUiThread(new Runnable()
-			{
-				public void run()
-				{
-					p.getVideoLayout().removeView(img);
-					goBack(p);
-				}
-			});
+			goBack(p);
 		}
 	}
 

@@ -243,7 +243,6 @@ class SettingsMenu
 				new SettingsMenuMisc.OptionalDownloadConfig(false),
 				new SettingsMenuKeyboard.KeyboardConfigMainMenu(),
 				new SettingsMenuMouse.MouseConfigMainMenu(),
-				new SettingsMenuMisc.GyroscopeCalibration(),
 				new SettingsMenuMisc.AudioConfig(),
 				new SettingsMenuKeyboard.RemapHwKeysConfig(),
 				new SettingsMenuKeyboard.ScreenGesturesConfig(),

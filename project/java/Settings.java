@@ -163,15 +163,16 @@ class Settings
 			out.writeBoolean(false); // Unused
 			out.writeInt(Globals.TouchscreenKeyboardDrawSize);
 			out.writeInt(p.getApplicationVersion());
-			out.writeFloat(AccelerometerReader.gyro.x1);
-			out.writeFloat(AccelerometerReader.gyro.x2);
-			out.writeFloat(AccelerometerReader.gyro.xc);
-			out.writeFloat(AccelerometerReader.gyro.y1);
-			out.writeFloat(AccelerometerReader.gyro.y2);
-			out.writeFloat(AccelerometerReader.gyro.yc);
-			out.writeFloat(AccelerometerReader.gyro.z1);
-			out.writeFloat(AccelerometerReader.gyro.z2);
-			out.writeFloat(AccelerometerReader.gyro.zc);
+			// Gyroscope calibration data, now unused
+			out.writeFloat(0.0f);
+			out.writeFloat(0.0f);
+			out.writeFloat(0.0f);
+			out.writeFloat(0.0f);
+			out.writeFloat(0.0f);
+			out.writeFloat(0.0f);
+			out.writeFloat(0.0f);
+			out.writeFloat(0.0f);
+			out.writeFloat(0.0f);
 
 			out.writeBoolean(Globals.OuyaEmulation);
 			out.writeBoolean(Globals.HoverJitterFilter);
@@ -356,15 +357,16 @@ class Settings
 			settingsFile.readBoolean(); // Unused
 			Globals.TouchscreenKeyboardDrawSize = settingsFile.readInt();
 			int cfgVersion = settingsFile.readInt();
-			AccelerometerReader.gyro.x1 = settingsFile.readFloat();
-			AccelerometerReader.gyro.x2 = settingsFile.readFloat();
-			AccelerometerReader.gyro.xc = settingsFile.readFloat();
-			AccelerometerReader.gyro.y1 = settingsFile.readFloat();
-			AccelerometerReader.gyro.y2 = settingsFile.readFloat();
-			AccelerometerReader.gyro.yc = settingsFile.readFloat();
-			AccelerometerReader.gyro.z1 = settingsFile.readFloat();
-			AccelerometerReader.gyro.z2 = settingsFile.readFloat();
-			AccelerometerReader.gyro.zc = settingsFile.readFloat();
+			// Gyroscope calibration data, now unused
+			settingsFile.readFloat();
+			settingsFile.readFloat();
+			settingsFile.readFloat();
+			settingsFile.readFloat();
+			settingsFile.readFloat();
+			settingsFile.readFloat();
+			settingsFile.readFloat();
+			settingsFile.readFloat();
+			settingsFile.readFloat();
 
 			Globals.OuyaEmulation = settingsFile.readBoolean();
 			Globals.HoverJitterFilter = settingsFile.readBoolean();
