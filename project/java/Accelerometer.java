@@ -108,15 +108,32 @@ class AccelerometerReader implements SensorEventListener
 	{
 		public boolean invertedOrientation = false;
 
-		final float noiseMin[] = new float[] { -1.0f, -1.0f, -1.0f }; // Large initial values, they will only decrease
-		final float noiseMax[] = new float[] { 1.0f, 1.0f, 1.0f };
+		// Noise filter with sane initial values, so user will be able
+		// to move gyroscope during the first 10 seconds, while the noise is measured.
+		// After that the values are replaced by noiseMin/noiseMax.
+		final float filterMin[] = new float[] { -0.05f, -0.05f, -0.05f };
+		final float filterMax[] = new float[] { 0.05f, 0.05f, 0.05f };
 
-		float noiseData[][] = new float[200][3];
-		int noiseDataIdx = noiseData.length * 3 / 4; // Speed up first measurement, to converge to sane values faster
-		int noiseMovementDetected = 0;
-		float noiseMeasuredRange[] = null;
-		
-		static int noiseCounter = 0;
+		// The noise levels we're measuring.
+		// Large initial values, they will decrease, but never increase.
+		float noiseMin[] = new float[] { -1.0f, -1.0f, -1.0f };
+		float noiseMax[] = new float[] { 1.0f, 1.0f, 1.0f };
+
+		// The gyro data buffer, from which we care calculating min/max noise values.
+		// The bigger it is, the more precise the calclations, and the longer it takes to converge.
+		float noiseData[][] = new float[200][noiseMin.length];
+		int noiseDataIdx = 0;
+
+		// When we detect movement, we remove last few values of the measured data.
+		// The movement is detected by comparing values to noiseMin/noiseMax of the previous iteration.
+		int movementBackoff = 0;
+
+		// Difference between min/max in the previous measurement iteration,
+		// used to determine when we should stop measuring, when the change becomes negligilbe.
+		float measuredNoiseRange[] = null;
+
+		// How long the algorithm is running, to stop it if it does not converge.
+		int measurementIteration = 0;
 
 		public GyroscopeListener()
 		{
@@ -124,45 +141,52 @@ class AccelerometerReader implements SensorEventListener
 
 		void collectNoiseData(final float[] data)
 		{
-			for( int i = 0; i < 3; i++ )
+			for( int i = 0; i < noiseMin.length; i++ )
 			{
 				if( data[i] < noiseMin[i] || data[i] > noiseMax[i] )
 				{
 					// Movement detected, this can converge our min/max too early, so we're discarding last few values
-					if( noiseMovementDetected < 0 )
+					if( movementBackoff < 0 )
 					{
 						int discard = 10;
-						if( -noiseMovementDetected < discard )
-							discard = -noiseMovementDetected;
+						if( -movementBackoff < discard )
+							discard = -movementBackoff;
 						noiseDataIdx -= discard;
 						if( noiseDataIdx < 0 )
 							noiseDataIdx = 0;
 					}
-					noiseMovementDetected = 10;
+					movementBackoff = 10;
 					return;
 				}
 				noiseData[noiseDataIdx][i] = data[i];
 			}
-			noiseMovementDetected--;
-			if( noiseMovementDetected >= 0 )
+			movementBackoff--;
+			if( movementBackoff >= 0 )
 				return; // Also discard several values after the movement stopped
 			noiseDataIdx++;
 
 			if( noiseDataIdx < noiseData.length )
 				return;
 
-			noiseCounter++;
-			Log.i( "SDL", "GYRO_NOISE: Measuring in progress... " + noiseCounter ); // DEBUG
-			if( noiseCounter > 15 )
+			measurementIteration++;
+			Log.d( "SDL", "GYRO_NOISE: Measuring in progress... " + measurementIteration );
+			if( measurementIteration > 5 )
 			{
-				Log.i( "SDL", "GYRO_NOISE: Measuring done! Max iteration reached " + noiseCounter ); // DEBUG
+				// We've collected enough data to use our noise min/max values as a new filter
+				System.arraycopy(noiseMin, 0, filterMin, 0, filterMin.length);
+				System.arraycopy(noiseMax, 0, filterMax, 0, filterMax.length);
+			}
+			if( measurementIteration > 15 )
+			{
+				Log.d( "SDL", "GYRO_NOISE: Measuring done! Maximum number of iterations reached: " + measurementIteration );
 				noiseData = null;
-				noiseMeasuredRange = null;
+				measuredNoiseRange = null;
+				return;
 			}
 
 			noiseDataIdx = 0;
 			boolean changed = false;
-			for( int i = 0; i < 3; i++ )
+			for( int i = 0; i < noiseMin.length; i++ )
 			{
 				float min = 1.0f;
 				float max = -1.0f;
@@ -173,7 +197,7 @@ class AccelerometerReader implements SensorEventListener
 					if( max < noiseData[ii][i] )
 						max = noiseData[ii][i];
 				}
-				// Increase the range a bit, for conservative noise filtering
+				// Increase the range a bit, for safe conservative filtering
 				float middle = (min + max) / 2.0f;
 				min += (min - middle) * 0.2f;
 				max += (max - middle) * 0.2f;
@@ -181,44 +205,47 @@ class AccelerometerReader implements SensorEventListener
 				// and min/max range is not jumping outside of previously measured range
 				if( max - min < noiseMax[i] - noiseMin[i] && min >= noiseMin[i] && max <= noiseMax[i] )
 				{
-					noiseMax[i] = (noiseMax[i] + max * 4.0f) / 5.0f;
+					// Move old min/max closer to the measured min/max, but do not replace the values altogether
 					noiseMin[i] = (noiseMin[i] + min * 4.0f) / 5.0f;
+					noiseMax[i] = (noiseMax[i] + max * 4.0f) / 5.0f;
 					changed = true;
 				}
 			}
 
-			Log.i( "SDL", "GYRO_NOISE: MIN MAX: " + Arrays.toString(noiseMin) + " " + Arrays.toString(noiseMax) ); // DEBUG
+			Log.d( "SDL", "GYRO_NOISE: MIN MAX: " + Arrays.toString(noiseMin) + " " + Arrays.toString(noiseMax) );
 
 			if( !changed )
 				return;
 
-			// Determine when to stop measuring - check that the previous min/max range is close to the current one
+			// Determine when to stop measuring - check that the previous min/max range is close enough to the current one
 
-			float range[] = new float[3];
-			for( int i = 0; i < 3; i++ )
+			float range[] = new float[noiseMin.length];
+			for( int i = 0; i < noiseMin.length; i++ )
 				range[i] = noiseMax[i] - noiseMin[i];
 
-			Log.i( "SDL", "GYRO_NOISE: RANGE:   " + Arrays.toString(range) + " " + Arrays.toString(noiseMeasuredRange) ); // DEBUG
+			Log.d( "SDL", "GYRO_NOISE: RANGE:   " + Arrays.toString(range) + " " + Arrays.toString(measuredNoiseRange) );
 
-			if( noiseMeasuredRange == null )
+			if( measuredNoiseRange == null )
 			{
-				noiseMeasuredRange = range;
-				return;
+				measuredNoiseRange = range;
+				return; // First iteration, skip further checks
 			}
 
-			for( int i = 0; i < 3; i++ )
+			for( int i = 0; i < range.length; i++ )
 			{
-				if( noiseMeasuredRange[i] / range[i] > 1.2f )
+				if( measuredNoiseRange[i] / range[i] > 1.2f )
 				{
-					noiseMeasuredRange = range;
+					measuredNoiseRange = range;
 					return;
 				}
 			}
 
-			// We converged to the final min/max, stop measuring
+			// We converged to the final min/max filter values, stop measuring
+			System.arraycopy(noiseMin, 0, filterMin, 0, filterMin.length);
+			System.arraycopy(noiseMax, 0, filterMax, 0, filterMax.length);
 			noiseData = null;
-			noiseMeasuredRange = null;
-			Log.i( "SDL", "GYRO_NOISE: Measuring done! Range converged on iteration " + noiseCounter ); // DEBUG
+			measuredNoiseRange = null;
+			Log.d( "SDL", "GYRO_NOISE: Measuring done! Range converged on iteration " + measurementIteration );
 		}
 
 		public void onSensorChanged(final SensorEvent event)
@@ -231,15 +258,15 @@ class AccelerometerReader implements SensorEventListener
 
 			for( int i = 0; i < 3; i++ )
 			{
-				if( data[i] < noiseMin[i] )
+				if( data[i] < filterMin[i] )
 				{
 					filtered = false;
-					data[i] -= noiseMin[i];
+					data[i] -= filterMin[i];
 				}
-				else if( data[i] > noiseMax[i] )
+				else if( data[i] > filterMax[i] )
 				{
 					filtered = false;
-					data[i] -= noiseMax[i];
+					data[i] -= filterMax[i];
 				}
 			}
 
