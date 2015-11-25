@@ -31,7 +31,7 @@
 		<Key android:codes="134" android:keyLabel="F4" android:isRepeatable="true" android:keyEdgeFlags="right" />
 	</Row>
 	<Row>
-		<Key android:codes="-1"  android:keyLabel="123…" android:keyEdgeFlags="left" android:isRepeatable="true"/>
+		<Key android:codes="-1"  android:keyLabel="123…" android:keyEdgeFlags="left"/>
 		<Key android:codes="143" android:keyLabel="NumLk" android:isRepeatable="true"/>
 		<Key android:codes="120" android:keyLabel="Print" android:isRepeatable="true"/>
 		<Key android:codes="116" android:keyLabel="ScrollLk" android:isRepeatable="true"/>
@@ -43,7 +43,7 @@
 		<Key android:codes="138" android:keyLabel="F8" android:keyEdgeFlags="right" android:isRepeatable="true"/>
 	</Row>
 	<Row android:rowEdgeFlags="bottom">
-		<Key android:codes="-6"  android:keyLabel="abc…" android:keyEdgeFlags="left" android:isRepeatable="true"/>
+		<Key android:codes="-6"  android:keyLabel="abc…" android:keyEdgeFlags="left"/>
 		<Key android:codes="154" android:keyLabel="Kp /" android:isRepeatable="true"/>
 		<Key android:codes="155" android:keyLabel="Kp *" android:isRepeatable="true"/>
 		<Key android:codes="156" android:keyLabel="Kp -" android:isRepeatable="true"/>

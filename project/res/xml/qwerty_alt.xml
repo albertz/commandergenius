@@ -31,7 +31,7 @@
 		<Key android:codes="123" android:keyLabel="End" android:isRepeatable="true" android:keyEdgeFlags="right" />
 	</Row>
 	<Row>
-		<Key android:codes="-1"  android:keyLabel="!@#…" android:keyEdgeFlags="left" android:isRepeatable="true"/>
+		<Key android:codes="-1"  android:keyLabel="!@#…" android:keyEdgeFlags="left"/>
 		<Key android:codes="75"  android:keyLabel="'" android:isRepeatable="true"/>
 		<Key android:codes="100075"  android:keyLabel="&quot;" android:isRepeatable="true"/>
 		<Key android:codes="61"  android:keyLabel="Tab" android:isRepeatable="true"/>
@@ -43,15 +43,15 @@
 		<Key android:codes="22"  android:keyLabel="→" android:keyEdgeFlags="right" android:isRepeatable="true"/>
 	</Row>
 	<Row android:rowEdgeFlags="bottom">
-		<Key android:codes="-6"  android:keyLabel="abc…"  android:keyEdgeFlags="left" android:isRepeatable="true"/>
-		<Key android:codes="59"  android:keyLabel="Shift"    android:isRepeatable="true"/>
-		<Key android:codes="113" android:keyLabel="Ctrl" android:isRepeatable="true"/>
-		<Key android:codes="117" android:keyLabel="☆"    android:isRepeatable="true"/>
-		<Key android:codes="57"  android:keyLabel="Alt"  android:isRepeatable="true"/>
-		<Key android:codes="58"  android:keyLabel="Alt"  android:isRepeatable="true"/>
-		<Key android:codes="118" android:keyLabel="☆"    android:isRepeatable="true"/>
-		<Key android:codes="226" android:keyLabel="•••"  android:isRepeatable="true"/>
-		<Key android:codes="114" android:keyLabel="Ctrl" android:isRepeatable="true"/>
-		<Key android:codes="60"  android:keyLabel="Shift"    android:isRepeatable="true"/>
+		<Key android:codes="-6"  android:keyLabel="abc…"  android:keyEdgeFlags="left"/>
+		<Key android:codes="59"  android:keyLabel="Shift" android:isSticky="true"/>
+		<Key android:codes="113" android:keyLabel="Ctrl"  android:isSticky="true"/>
+		<Key android:codes="117" android:keyLabel="Meta"     android:isSticky="true"/>
+		<Key android:codes="57"  android:keyLabel="Alt"   android:isSticky="true"/>
+		<Key android:codes="58"  android:keyLabel="Alt"   android:isSticky="true"/>
+		<Key android:codes="118" android:keyLabel="Meta"     android:isSticky="true"/>
+		<Key android:codes="226" android:keyLabel="Menu"   android:isRepeatable="true"/>
+		<Key android:codes="114" android:keyLabel="Ctrl"  android:isSticky="true"/>
+		<Key android:codes="60"  android:keyLabel="Shift" android:isSticky="true"/>
 	</Row>
 </Keyboard>

@@ -91,6 +91,7 @@ import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.Keyboard;
 import android.app.Notification;
 import android.app.PendingIntent;
+import java.util.TreeSet;
 
 public class MainActivity extends Activity
 {
@@ -522,6 +523,7 @@ public class MainActivity extends Activity
 						{
 							public boolean shift = false;
 							public boolean alt = false;
+							public TreeSet<Integer> stickyKeys = new TreeSet<Integer>();
 							public BuiltInKeyboardView(Context context, android.util.AttributeSet attrs)
 							{
 								super(context, attrs);
@@ -552,12 +554,18 @@ public class MainActivity extends Activity
 								setKeyboard(new Keyboard(MainActivity.this, TextInputKeyboardList[idx][keyboard]));
 								setPreviewEnabled(false);
 								setProximityCorrectionEnabled(false);
+								for (Keyboard.Key k: getKeyboard().getKeys())
+								{
+									if (stickyKeys.contains(k.codes[0]))
+									{
+										k.on = true;
+										invalidateAllKeys();
+									}
+								}
 							}
 						}
 						final BuiltInKeyboardView builtinKeyboard = new BuiltInKeyboardView(MainActivity.this, null);
-						builtinKeyboard.setKeyboard(new Keyboard(MainActivity.this, TextInputKeyboardList[0][keyboard]));
-						builtinKeyboard.setPreviewEnabled(false);
-						builtinKeyboard.setProximityCorrectionEnabled(false);
+						builtinKeyboard.ChangeKeyboard();
 						builtinKeyboard.setOnKeyboardActionListener(new KeyboardView.OnKeyboardActionListener()
 						{
 							public void onPress(int key)
@@ -566,6 +574,11 @@ public class MainActivity extends Activity
 									return;
 								if (key < 0)
 									return;
+								for (Keyboard.Key k: builtinKeyboard.getKeyboard().getKeys())
+								{
+									if (k.sticky && key == k.codes[0])
+										return;
+								}
 								if (key > 100000)
 								{
 									key -= 100000;
@@ -603,6 +616,23 @@ public class MainActivity extends Activity
 								}
 								if (key < 0)
 									return;
+								for (Keyboard.Key k: builtinKeyboard.getKeyboard().getKeys())
+								{
+									if (k.sticky && key == k.codes[0])
+									{
+										if (k.on)
+										{
+											builtinKeyboard.stickyKeys.add(key);
+											MainActivity.this.onKeyDown(key, new KeyEvent(KeyEvent.ACTION_DOWN, key));
+										}
+										else
+										{
+											builtinKeyboard.stickyKeys.remove(key);
+											MainActivity.this.onKeyUp(key, new KeyEvent(KeyEvent.ACTION_UP, key));
+										}
+										return;
+									}
+								}
 
 								boolean shifted = false;
 								if (key > 100000)
@@ -614,7 +644,18 @@ public class MainActivity extends Activity
 								MainActivity.this.onKeyUp(key, new KeyEvent(KeyEvent.ACTION_UP, key));
 
 								if (shifted)
+								{
 									MainActivity.this.onKeyUp(KeyEvent.KEYCODE_SHIFT_LEFT, new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT));
+									builtinKeyboard.stickyKeys.remove(KeyEvent.KEYCODE_SHIFT_LEFT);
+									for (Keyboard.Key k: builtinKeyboard.getKeyboard().getKeys())
+									{
+										if (k.sticky && k.codes[0] == KeyEvent.KEYCODE_SHIFT_LEFT && k.on)
+										{
+											k.on = false;
+											builtinKeyboard.invalidateAllKeys();
+										}
+									}
+								}
 							}
 							public void onText(CharSequence p1) {}
 							public void swipeLeft() {}

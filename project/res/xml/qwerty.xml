@@ -30,7 +30,7 @@
 		<Key android:codes="74" android:keyLabel=";" android:keyEdgeFlags="right" android:isRepeatable="true"/>
 	</Row>
 	<Row>
-		<Key android:codes="-1" android:keyLabel="⇪" android:keyEdgeFlags="left" android:isRepeatable="true"/>
+		<Key android:codes="-1" android:keyLabel="⇪" android:keyEdgeFlags="left"/>
 		<Key android:codes="54" android:keyLabel="z" android:isRepeatable="true"/>
 		<Key android:codes="52" android:keyLabel="x" android:isRepeatable="true"/>
 		<Key android:codes="31" android:keyLabel="c" android:isRepeatable="true"/>
@@ -38,10 +38,10 @@
 		<Key android:codes="30" android:keyLabel="b" android:isRepeatable="true"/>
 		<Key android:codes="42" android:keyLabel="n" android:isRepeatable="true"/>
 		<Key android:codes="41" android:keyLabel="m" android:isRepeatable="true"/>
-		<Key android:codes="67" android:keyLabel="←x" android:keyWidth="20%p" android:keyEdgeFlags="right" android:isRepeatable="true"/>
+		<Key android:codes="67" android:keyLabel="≪ ×" android:keyWidth="20%p" android:keyEdgeFlags="right" android:isRepeatable="true"/>
 	</Row>
 	<Row android:rowEdgeFlags="bottom">
-		<Key android:codes="-6" android:keyLabel="123…" android:keyEdgeFlags="left" android:isRepeatable="true"/>
+		<Key android:codes="-6" android:keyLabel="123…" android:keyEdgeFlags="left"/>
 		<Key android:codes="71" android:keyLabel="[" android:isRepeatable="true"/>
 		<Key android:codes="72" android:keyLabel="]" android:isRepeatable="true"/>
 		<Key android:codes="76" android:keyLabel="/" android:isRepeatable="true"/>
