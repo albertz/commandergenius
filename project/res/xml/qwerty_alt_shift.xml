@@ -32,7 +32,7 @@
 	</Row>
 	<Row>
 		<Key android:codes="-1"  android:keyLabel="123…" android:keyEdgeFlags="left"/>
-		<Key android:codes="143" android:keyLabel="NumLk" android:isRepeatable="true"/>
+		<Key android:codes="143" android:keyLabel="NumLk" android:isSticky="true"/>
 		<Key android:codes="120" android:keyLabel="Print" android:isRepeatable="true"/>
 		<Key android:codes="116" android:keyLabel="ScrollLk" android:isRepeatable="true"/>
 		<Key android:codes="121" android:keyLabel="Pause" android:isRepeatable="true"/>
