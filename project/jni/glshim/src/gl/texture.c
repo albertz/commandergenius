@@ -33,7 +33,7 @@ void tex_coord_rect_arb(GLfloat *tex, GLsizei len,
     for (int i = 0; i < len; i++) {
         tex[0] *= iwidth;
         tex[1] *= iheight;
-        tex += 2;
+        tex += 4;
     }
 }
 
@@ -48,7 +48,7 @@ void tex_coord_npot(GLfloat *tex, GLsizei len,
     for (int i = 0; i < len; i++) {
         tex[0] *= wratio;
         tex[1] *= hratio;
-        tex += 2;
+        tex += 4;
     }
 }
 
@@ -80,7 +80,7 @@ void tex_setup_texcoord(GLuint texunit, GLuint len) {
 	if (old!=texunit) glClientActiveTexture(texunit+GL_TEXTURE0);
     if (changes) {
         // first convert to GLfloat, without normalization
-        tex[texunit] = copy_gl_pointer_raw(&state.vao->pointers.tex_coord[texunit], 2, 0, len, state.vao->pointers.tex_coord[texunit].buffer);
+        tex[texunit] = copy_gl_pointer_tex(&state.vao->pointers.tex_coord[texunit], 4, 0, len, state.vao->pointers.tex_coord[texunit].buffer);
         if (!tex[texunit]) {
             printf("LibGL: Error with Texture tranform\n");
             gles_glTexCoordPointer(len, state.vao->pointers.tex_coord[texunit].type, state.vao->pointers.tex_coord[texunit].stride, state.vao->pointers.tex_coord[texunit].pointer);
@@ -93,7 +93,7 @@ void tex_setup_texcoord(GLuint texunit, GLuint len) {
         if ((bound->width!=bound->nwidth) || (bound->height!=bound->nheight))
             tex_coord_npot(tex[texunit], len, bound->width, bound->height, bound->nwidth, bound->nheight);
         // All done, setup the texcoord array now
-        gles_glTexCoordPointer(2, GL_FLOAT, 0, tex[texunit]);
+        gles_glTexCoordPointer(4, GL_FLOAT, 0, tex[texunit]);
     } else {
         gles_glTexCoordPointer(state.vao->pointers.tex_coord[texunit].size, state.vao->pointers.tex_coord[texunit].type, state.vao->pointers.tex_coord[texunit].stride, state.vao->pointers.tex_coord[texunit].pointer);
     }
@@ -247,11 +247,15 @@ GLenum swizzle_internalformat(GLenum *internalformat) {
     switch(*internalformat) {
         case GL_R:
         case 1: 
-            ret = GL_R; sret = GL_RGB; 
+            ret = GL_LUMINANCE; sret = GL_LUMINANCE; 
             break;
         case GL_RG:
         case 2: 
-            ret = GL_RG; sret = GL_RGB; 
+            ret = GL_LUMINANCE_ALPHA;
+            if (nolumalpha)
+                sret = GL_RGBA;
+            else
+                sret = GL_LUMINANCE_ALPHA;
             break;
         case GL_RGB5:
         case GL_RGB8:
@@ -1031,12 +1035,12 @@ gltexture_t* getTexture(GLenum target, GLuint texture) {
         tex->width = 0;
         tex->height = 0;
         tex->uploaded = false;
-        tex->mipmap_auto = default_tex_mipmap;
-        tex->mipmap_need = 0;
+        tex->mipmap_auto = default_tex_mipmap || (automipmap==1);
+        tex->mipmap_need = (automipmap==1)?1:0;
         tex->alpha = true;
         tex->streamed = false;
         tex->streamingID = -1;
-        tex->min_filter = tex->mag_filter = GL_LINEAR;
+        tex->min_filter = tex->mag_filter = (automipmap==1)?GL_LINEAR_MIPMAP_LINEAR:GL_LINEAR;
         tex->format = GL_RGBA;
         tex->type = GL_UNSIGNED_BYTE;
         tex->orig_internal = GL_RGBA;
