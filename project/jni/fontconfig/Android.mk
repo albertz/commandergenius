@@ -7,7 +7,7 @@ LOCAL_MODULE := fontconfig
 
 LOCAL_CFLAGS := -DFONTCONFIG_PATH=\".fontconfig\"
 LOCAL_CFLAGS += -DFC_CACHEDIR=\".font-cache\"
-LOCAL_CFLAGS += -DFC_DEFAULT_FONTS=\"/system/fonts\"
+LOCAL_CFLAGS += -DFC_DEFAULT_FONTS='(getenv("FONTCONFIG_FONTS") ? getenv("FONTCONFIG_FONTS") : "/system/fonts")'
 LOCAL_CFLAGS += -I$(LOCAL_PATH) -I$(LOCAL_PATH)/src
 LOCAL_CFLAGS += -DHAVE_CONFIG_H
 
