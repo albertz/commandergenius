@@ -202,8 +202,6 @@ class Settings
 		}
 		Log.i("SDL", "libSDL: Settings.Load(): enter");
 		nativeInitKeymap();
-		if( p.isRunningOnOUYA() )
-			nativeSetKeymapKey(KeyEvent.KEYCODE_MENU, nativeGetKeymapKey(KeyEvent.KEYCODE_BACK)); // Ouya does not have Back key, only Menu, so remap Back keycode to Menu
 		for( int i = 0; i < SDL_Keys.JAVA_KEYCODE_LAST; i++ )
 		{
 			int sdlKey = nativeGetKeymapKey(i);
@@ -635,7 +633,11 @@ class Settings
 			nativeSetEnv( "ANDROID_PACKAGE_PATH", p.getPackageCodePath() );
 		Log.d("SDL", "libSDL: Is running on OUYA: " + p.isRunningOnOUYA());
 		if( p.isRunningOnOUYA() )
+		{
 			nativeSetEnv( "OUYA", "1" );
+			nativeSetEnv( "TV", "1" );
+			nativeSetEnv( "ANDROID_TV", "1" );
+		}
 		if (p.getIntent().getStringExtra(RestartMainActivity.SDL_RESTART_PARAMS) != null)
 			nativeSetEnv( RestartMainActivity.SDL_RESTART_PARAMS, p.getIntent().getStringExtra(RestartMainActivity.SDL_RESTART_PARAMS) );
 		try {

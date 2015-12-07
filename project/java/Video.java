@@ -616,6 +616,8 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	int mLastPendingResize = 0;
 	public void onWindowResize(final int w, final int h)
 	{
+		if (context.isRunningOnOUYA())
+			return; // TV screen is never resized, and this event will mess up TV borders
 		Log.d("SDL", "libSDL: DemoRenderer.onWindowResize(): " + w + "x" + h);
 		mLastPendingResize ++;
 		final int resizeThreadIndex = mLastPendingResize;
@@ -990,6 +992,8 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	@Override
 	public boolean onTouchEvent(final MotionEvent event) 
 	{
+		if (getX() != 0)
+			event.offsetLocation(-getX(), -getY());
 		DifferentTouchInput.touchInput.process(event);
 		if( DemoRenderer.mRatelimitTouchEvents )
 		{

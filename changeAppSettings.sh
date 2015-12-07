@@ -909,7 +909,7 @@ cat project/jni/SettingsTemplate.mk | \
 	project/jni/Settings.mk
 
 echo Patching strings.xml
-rm -rf project/res/values*
+rm -rf project/res/values*/strings.xml
 cd $JAVA_SRC_PATH/translations
 for F in */strings.xml; do
 	mkdir -p ../../res/`dirname $F`
@@ -993,6 +993,13 @@ rm -rf project/bin/res
 
 rm -rf project/jni/android-support
 ln -s "`which ndk-build | sed 's@/ndk-build@@'`/sources/android/support" project/jni/android-support
+
+rm -rf project/res/drawable/banner.png
+if [ -e project/jni/application/src/banner.png ]; then
+	ln -s ../../jni/application/src/banner.png project/res/drawable/banner.png
+else
+	ln -s ../../themes/tv-banner-placeholder.png project/res/drawable/banner.png
+fi
 
 if uname -s | grep -i "darwin" > /dev/null ; then
 	find project/src -name "*.killme.tmp" -delete

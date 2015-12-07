@@ -6,7 +6,7 @@ project/libs
 project/assets
 project/obj
 project/src
-project/res/values*
+project/res/values*/strings.xml
 project/AndroidManifest.xml
 project/jni/Settings.mk
 project/jni/application/*/libapplication*.so
@@ -17,3 +17,4 @@ project/proguard-project.txt
 project/proguard-local.cfg
 project/themes/converter
 project/jni/android-support
+project/res/drawable/banner.png

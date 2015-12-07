@@ -420,17 +420,6 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 		window.w = width;
 		window.h = height;
 
-		if( getenv("OUYA") )
-		{
-			// Leave 10% at the borders blank, because all TVs have crazy thick edges and not enough pixels
-			// Also this is enforced by Ouya guidelines, so there's not much choice.
-			window.x += window.w / 10;
-			window.y += window.h / 10;
-			window.w -= window.w / 5;
-			window.h -= window.h / 5;
-			SDL_ANDROID_ForceClearScreenRectAmount = 4;
-		}
-
 		SDL_ANDROID_ForceClearScreenRect[0].x = 0;
 		SDL_ANDROID_ForceClearScreenRect[0].y = 0;
 		SDL_ANDROID_ForceClearScreenRect[0].w = window.x;

@@ -92,6 +92,7 @@ import android.inputmethodservice.Keyboard;
 import android.app.Notification;
 import android.app.PendingIntent;
 import java.util.TreeSet;
+import android.app.UiModeManager;
 
 public class MainActivity extends Activity
 {
@@ -349,7 +350,13 @@ public class MainActivity extends Activity
 		setContentView(_videoLayout);
 		mGLView = new DemoGLSurfaceView(this);
 		SetLayerType.get().setLayerType(mGLView);
-		_videoLayout.addView(mGLView);
+		FrameLayout.LayoutParams margin = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+		// Add TV screen borders, if needed
+		margin.setMargins(  getResources().getDimensionPixelOffset(R.dimen.screen_border_horizontal),
+							getResources().getDimensionPixelOffset(R.dimen.screen_border_vertical),
+							getResources().getDimensionPixelOffset(R.dimen.screen_border_horizontal),
+							getResources().getDimensionPixelOffset(R.dimen.screen_border_vertical));
+		_videoLayout.addView(mGLView, margin);
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
 		mGLView.requestFocus();
@@ -1444,7 +1451,8 @@ public class MainActivity extends Activity
 			return true;
 		} catch (PackageManager.NameNotFoundException e) {
 		}
-		return Globals.OuyaEmulation;
+		UiModeManager uiModeManager = (UiModeManager) getSystemService(UI_MODE_SERVICE);
+		return (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) || Globals.OuyaEmulation;
 	}
 
 	public boolean isCurrentOrientationHorizontal()

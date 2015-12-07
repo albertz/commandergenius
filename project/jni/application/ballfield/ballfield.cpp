@@ -658,7 +658,7 @@ int main(int argc, char* argv[])
 
 		int mx, my;
 		int b = SDL_GetMouseState(&mx, &my);
-		//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Mouse buttons: %d", b);
+		//__android_log_print(ANDROID_LOG_INFO, "Ballfield", "Mouse: %04d %04d buttons %d", mx, my, b);
 		int cursorIdx = 0;
 		if( b & SDL_BUTTON_LMASK )
 			cursorIdx |= 1;
