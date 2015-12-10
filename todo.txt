@@ -5,7 +5,7 @@ TODO, which will get actually done
 
 - TeeWorlds: navigate UI with gamepad.
 
-- OpenArena: cardboard VR mode.
+- OpenArena: cardboard VR mode, and fix aiming angles jumping at random after the first zoom.
 
 - SDL: implement SDL_GL_LoadLibrary() / SDL_GL_GetProcAddress() / SDL_GL_SetAttribute() / SDL_GL_GetAttribute().
 
