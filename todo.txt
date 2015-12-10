@@ -26,3 +26,5 @@ TODO, which will get actually done
 - SDL: gyroscope calibration is broken.
 
 - SDL: additional option in config for choosing opengl mode: native or glshim.
+
+- Debian: proot crashes on Shield TV arm64 box.
