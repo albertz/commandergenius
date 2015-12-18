@@ -638,6 +638,11 @@ class Settings
 			nativeSetEnv( "TV", "1" );
 			nativeSetEnv( "ANDROID_TV", "1" );
 		}
+		if (p.getIntent().getCategories() != null && p.getIntent().getCategories().contains("com.google.intent.category.CARDBOARD")) {
+			nativeSetEnv( "CARDBOARD", "1" );
+			nativeSetEnv( "VR", "1" );
+			nativeSetEnv( "CARDBOARD_VR", "1" );
+		}
 		if (p.getIntent().getStringExtra(RestartMainActivity.SDL_RESTART_PARAMS) != null)
 			nativeSetEnv( RestartMainActivity.SDL_RESTART_PARAMS, p.getIntent().getStringExtra(RestartMainActivity.SDL_RESTART_PARAMS) );
 		try {
