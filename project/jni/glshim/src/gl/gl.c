@@ -626,7 +626,7 @@ static renderlist_t *arrays_to_renderlist(renderlist_t *list, GLenum mode,
     list->cap = count-skip;
     
 	if (state.vao->vertex_array) {
-		list->vert = copy_gl_pointer_raw(&state.vao->pointers.vertex, 3, skip, count, state.vao->pointers.vertex.buffer);	//TODO, what if size == 4
+		list->vert = copy_gl_pointer_tex(&state.vao->pointers.vertex, 4, skip, count, state.vao->pointers.vertex.buffer);
 	}
 	if (state.vao->color_array) {
 		list->color = copy_gl_pointer_color(&state.vao->pointers.color, 4, skip, count, state.vao->pointers.color.buffer);
@@ -699,13 +699,18 @@ void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indic
      }
 
      if (should_intercept_render(mode)) {
-    // TODO: do this in a more direct fashion.
-        glBegin(mode);
-        for (int i = 0; i < count; i++) {
-            glArrayElement(sindices[i]);
-        }
-        glEnd();
-        free(sindices);
+        renderlist_t *list = NULL;
+        GLsizei min, max;
+
+        normalize_indices(sindices, &max, &min, count);
+        list = arrays_to_renderlist(list, mode, min, max + 1 + min);
+        list->indices = sindices;
+        list->ilen = count;
+        list->indice_cap = count;
+        end_renderlist(list);
+        draw_renderlist(list);
+        free_renderlist(list);
+        
         return;
      } else {
 		LOAD_GLES(glDrawElements);
@@ -1221,9 +1226,9 @@ void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz) {
 #endif
 }
 
-void glVertex3f(GLfloat x, GLfloat y, GLfloat z) {
+void glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w) {
     if (state.list.active) {
-        rlVertex3f(state.list.active, x, y, z);
+        rlVertex4f(state.list.active, x, y, z, w);
         noerrorShim();
     }
 }
@@ -1374,8 +1379,10 @@ void glArrayElement(GLint i) {
         v = gl_pointer_index(p, i);
         if (p->size == 4) {
             glVertex4fv(v);
-        } else {
+        } else if (p->size == 3) {
             glVertex3fv(v);
+        } else {
+            glVertex2fv(v);
         }
     }
 }
