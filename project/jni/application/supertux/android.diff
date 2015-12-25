@@ -1,13 +1,3 @@
-diff --git a/configure b/configure
-index b728243..75a4bb4 100755
---- a/configure
-+++ b/configure
-@@ -6,4 +6,4 @@ set -e
- mkdir -p build
- cd build
- cmake .. "$@"
--
-+make -j8
 diff --git a/src/control/controller.cpp b/src/control/controller.cpp
 index 49996e2..6ad4ed8 100644
 --- a/src/control/controller.cpp
