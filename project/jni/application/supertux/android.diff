@@ -91,7 +91,7 @@ index 6680c04..401eacc 100644
  
  #include <algorithm>
 diff --git a/src/control/input_manager.cpp b/src/control/input_manager.cpp
-index 588e4b7..57884d1 100644
+index 3925293..7a20971 100644
 --- a/src/control/input_manager.cpp
 +++ b/src/control/input_manager.cpp
 @@ -19,8 +19,8 @@
@@ -108,7 +108,7 @@ index 588e4b7..57884d1 100644
 @@ -33,9 +33,9 @@ InputManager::InputManager(KeyboardConfig& keyboard_config,
                             JoystickConfig& joystick_config) :
    controller(new Controller),
-   m_use_game_controller(true),
+   m_use_game_controller(joystick_config.use_game_controller),
 -  keyboard_manager(new KeyboardManager(this, keyboard_config)),
 -  joystick_manager(new JoystickManager(this, joystick_config)),
 -  game_controller_manager(new GameControllerManager(this))
@@ -157,12 +157,12 @@ index 588e4b7..57884d1 100644
        break;
    }
 diff --git a/src/control/input_manager.hpp b/src/control/input_manager.hpp
-index c8e0df6..5dd6c60 100644
+index ff5146c..713af95 100644
 --- a/src/control/input_manager.hpp
 +++ b/src/control/input_manager.hpp
 @@ -68,8 +68,8 @@ private:
  public:
-   bool m_use_game_controller;
+   bool& m_use_game_controller;
    std::unique_ptr<KeyboardManager> keyboard_manager;
 -  std::unique_ptr<JoystickManager> joystick_manager;
 -  std::unique_ptr<GameControllerManager> game_controller_manager;
@@ -172,7 +172,7 @@ index c8e0df6..5dd6c60 100644
  private:
    InputManager(const InputManager&);
 diff --git a/src/control/keyboard_config.hpp b/src/control/keyboard_config.hpp
-index e848067..fe1b785 100644
+index 6f8d88e..86894e8 100644
 --- a/src/control/keyboard_config.hpp
 +++ b/src/control/keyboard_config.hpp
 @@ -25,6 +25,8 @@
@@ -268,7 +268,7 @@ index 07885f9..ae02e33 100644
  
  private:
 diff --git a/src/gui/dialog.cpp b/src/gui/dialog.cpp
-index 57d74e4..66bf674 100644
+index 98a910b..0d61a08 100644
 --- a/src/gui/dialog.cpp
 +++ b/src/gui/dialog.cpp
 @@ -14,6 +14,8 @@
@@ -281,10 +281,10 @@ index 57d74e4..66bf674 100644
  
  #include <algorithm>
 diff --git a/src/gui/menu.cpp b/src/gui/menu.cpp
-index 7d3b52f..a043fb3 100644
+index 69cecf6..6eda865 100644
 --- a/src/gui/menu.cpp
 +++ b/src/gui/menu.cpp
-@@ -625,7 +625,9 @@ Menu::get_item_by_id(int id)
+@@ -383,7 +383,9 @@ Menu::get_item_by_id(int id)
      }
    }
  
@@ -296,7 +296,7 @@ index 7d3b52f..a043fb3 100644
  
  const MenuItem&
 diff --git a/src/object/player.cpp b/src/object/player.cpp
-index d48d410..d2cb99c 100644
+index c59f763..9d4a237 100644
 --- a/src/object/player.cpp
 +++ b/src/object/player.cpp
 @@ -160,6 +160,7 @@ Player::Player(PlayerStatus* _player_status, const std::string& name_) :
@@ -328,7 +328,7 @@ index d48d410..d2cb99c 100644
    physic.reset();
  }
  
-@@ -526,12 +534,14 @@ Player::handle_horizontal_input()
+@@ -534,12 +542,14 @@ Player::handle_horizontal_input()
  
    float dirsign = 0;
    if(!duck || physic.get_velocity_y() != 0) {
@@ -346,7 +346,7 @@ index d48d410..d2cb99c 100644
        old_dir = dir;
        dir = RIGHT;
        dirsign = 1;
-@@ -724,7 +734,7 @@ Player::handle_vertical_input()
+@@ -732,7 +742,7 @@ Player::handle_vertical_input()
  {
    // Press jump key
    if(controller->pressed(Controller::JUMP)) jump_button_timer.start(JUMP_GRACE_TIME);
@@ -355,7 +355,7 @@ index d48d410..d2cb99c 100644
      jump_button_timer.stop();
      if (duck) {
        // when running, only jump a little bit; else do a backflip
-@@ -764,7 +774,7 @@ Player::handle_vertical_input()
+@@ -772,7 +782,7 @@ Player::handle_vertical_input()
  
  
    // Let go of jump key
@@ -364,7 +364,7 @@ index d48d410..d2cb99c 100644
      if (!backflipping && jumping && physic.get_velocity_y() < 0) {
        jumping = false;
        early_jump_apex();
-@@ -846,6 +856,8 @@ Player::handle_input()
+@@ -854,6 +864,8 @@ Player::handle_input()
    /* Handle vertical movement: */
    if (!stone) handle_vertical_input();
  
@@ -373,7 +373,7 @@ index d48d410..d2cb99c 100644
    /* Shoot! */
    if (controller->pressed(Controller::ACTION) && (player_status->bonus == FIRE_BONUS || player_status->bonus == ICE_BONUS)) {
      if((player_status->bonus == FIRE_BONUS &&
-@@ -1190,6 +1202,13 @@ Player::draw(DrawingContext& context)
+@@ -1208,6 +1220,13 @@ Player::draw(DrawingContext& context)
      context.draw_surface(airarrow, Vector(px, py), LAYER_HUD - 1);
    }
  
@@ -387,7 +387,7 @@ index d48d410..d2cb99c 100644
    std::string sa_prefix = "";
    std::string sa_postfix = "";
  
-@@ -1766,4 +1785,65 @@ Player::handle_input_climbing()
+@@ -1784,4 +1803,65 @@ Player::handle_input_climbing()
    physic.set_acceleration(0, 0);
  }
  
@@ -454,10 +454,10 @@ index d48d410..d2cb99c 100644
 +
  /* EOF */
 diff --git a/src/object/player.hpp b/src/object/player.hpp
-index 4d178aa..bf42dd5 100644
+index f606e04..cfc6451 100644
 --- a/src/object/player.hpp
 +++ b/src/object/player.hpp
-@@ -246,6 +246,7 @@ private:
+@@ -247,6 +247,7 @@ private:
  
    void handle_horizontal_input();
    void handle_vertical_input();
@@ -465,7 +465,7 @@ index 4d178aa..bf42dd5 100644
  
    void activate();
    void deactivate();
-@@ -322,6 +323,15 @@ public:
+@@ -327,6 +328,15 @@ public:
  
    SurfacePtr airarrow; /**< arrow indicating Tux' position when he's above the camera */
  
@@ -504,7 +504,7 @@ index 277f993..356dae0 100644
    PHYSFS_file* file = (PHYSFS_file*) context->hidden.unknown.data1;
  
 diff --git a/src/supertux/gameconfig.cpp b/src/supertux/gameconfig.cpp
-index 8c2635e..fa862a3 100644
+index d4b0a69..a296960 100644
 --- a/src/supertux/gameconfig.cpp
 +++ b/src/supertux/gameconfig.cpp
 @@ -34,7 +34,7 @@ Config::Config() :
@@ -517,7 +517,7 @@ index 8c2635e..fa862a3 100644
    try_vsync(true),
    show_fps(false),
 diff --git a/src/supertux/main.cpp b/src/supertux/main.cpp
-index c5ca4e8..00010c1 100644
+index 20d51f1..d801b27 100644
 --- a/src/supertux/main.cpp
 +++ b/src/supertux/main.cpp
 @@ -20,6 +20,9 @@
@@ -530,7 +530,7 @@ index c5ca4e8..00010c1 100644
  #include <boost/format.hpp>
  #include <boost/optional.hpp>
  #include <array>
-@@ -129,7 +132,7 @@ public:
+@@ -130,7 +133,7 @@ public:
      if (!PHYSFS_init(argv0))
      {
        std::stringstream msg;
@@ -539,7 +539,7 @@ index c5ca4e8..00010c1 100644
        throw std::runtime_error(msg.str());
      }
      else
-@@ -144,50 +147,9 @@ public:
+@@ -145,50 +148,9 @@ public:
  
    void find_datadir()
    {
@@ -592,7 +592,7 @@ index c5ca4e8..00010c1 100644
      }
    }
  
-@@ -253,7 +215,7 @@ class SDLSubsystem
+@@ -254,7 +216,7 @@ class SDLSubsystem
  public:
    SDLSubsystem()
    {
@@ -601,7 +601,7 @@ index c5ca4e8..00010c1 100644
      {
        std::stringstream msg;
        msg << "Couldn't initialize SDL: " << SDL_GetError();
-@@ -272,7 +234,7 @@ public:
+@@ -273,7 +235,7 @@ public:
  void
  Main::init_video()
  {
@@ -610,7 +610,7 @@ index c5ca4e8..00010c1 100644
  
    const char* icon_fname = "images/engine/icons/supertux-256x256.png";
    SDL_Surface* icon = IMG_Load_RW(get_physfs_SDLRWops(icon_fname), true);
-@@ -282,7 +244,7 @@ Main::init_video()
+@@ -283,7 +245,7 @@ Main::init_video()
    }
    else
    {
@@ -619,7 +619,7 @@ index c5ca4e8..00010c1 100644
      SDL_FreeSurface(icon);
    }
    SDL_ShowCursor(0);
-@@ -398,6 +360,14 @@ Main::run(int argc, char** argv)
+@@ -399,6 +361,14 @@ Main::run(int argc, char** argv)
    {
      CommandLineArguments args;
  
@@ -635,47 +635,47 @@ index c5ca4e8..00010c1 100644
      {
        args.parse_args(argc, argv);
 diff --git a/src/supertux/menu/joystick_menu.cpp b/src/supertux/menu/joystick_menu.cpp
-index adde0c5..b9eeef3 100644
+index 0b6ba9b..bd7a493 100644
 --- a/src/supertux/menu/joystick_menu.cpp
 +++ b/src/supertux/menu/joystick_menu.cpp
-@@ -54,6 +54,7 @@ JoystickMenu::recreate_menu()
-              !m_input_manager.use_game_controller())
+@@ -56,6 +56,7 @@ JoystickMenu::recreate_menu()
+              &m_auto_joystick_cfg)
      ->set_help(_("Use manual configuration instead of SDL2's automatic GameController support"));
  
 +#if 0
    if (m_input_manager.use_game_controller())
    {
      m_joysticks_available = false;
-@@ -84,13 +85,14 @@ JoystickMenu::recreate_menu()
-       add_toggle(MNID_JUMP_WITH_UP, _("Jump with Up"), g_config->joystick_config.jump_with_up_joy);
+@@ -86,13 +87,14 @@ JoystickMenu::recreate_menu()
+       add_toggle(MNID_JUMP_WITH_UP, _("Jump with Up"), &g_config->joystick_config.jump_with_up_joy);
      }
      else
 +#endif
      {
        m_joysticks_available = false;
  
-       add_inactive(-1, _("No Joysticks found"));
+       add_inactive(_("No Joysticks found"));
        add_entry(MNID_SCAN_JOYSTICKS, _("Scan for Joysticks"));
      }
 -  }
-+  //}
++//  }
  
    add_hl();
    add_back(_("Back"));
-@@ -118,7 +120,7 @@ JoystickMenu::menu_action(MenuItem* item)
-   if (0 <= item->id && item->id < Controller::CONTROLCOUNT)
-   {
-     item->change_input(_("Press Button"));
+@@ -124,7 +126,7 @@ JoystickMenu::menu_action(MenuItem* item)
+       return;
+     }
+     micf->change_input(_("Press Button"));
 -    m_input_manager.joystick_manager->bind_next_event_to(static_cast<Controller::Control>(item->id));
 +    //m_input_manager.joystick_manager->bind_next_event_to(static_cast<Controller::Control>(item->id));
    }
-   else if (item->id == MNID_JUMP_WITH_UP)
+   else if (item->id == MNID_AUTO_JOYSTICK_CFG)
    {
 diff --git a/src/supertux/menu/keyboard_menu.cpp b/src/supertux/menu/keyboard_menu.cpp
-index 9b25f8c..2c05d16 100644
+index 2078b9f..bcc6226 100644
 --- a/src/supertux/menu/keyboard_menu.cpp
 +++ b/src/supertux/menu/keyboard_menu.cpp
-@@ -82,9 +82,9 @@ KeyboardMenu::get_key_name(SDL_Keycode key)
+@@ -83,9 +83,9 @@ KeyboardMenu::get_key_name(SDL_Keycode key) const
        return _("Right Alt");
      case SDLK_LALT:
        return _("Left Alt");
@@ -688,7 +688,7 @@ index 9b25f8c..2c05d16 100644
      default:
        return SDL_GetKeyName(static_cast<SDL_Keycode>(key));
 diff --git a/src/supertux/menu/keyboard_menu.hpp b/src/supertux/menu/keyboard_menu.hpp
-index 3230f34..5eedfd8 100644
+index 98d84a2..14baf3e 100644
 --- a/src/supertux/menu/keyboard_menu.hpp
 +++ b/src/supertux/menu/keyboard_menu.hpp
 @@ -21,6 +21,8 @@
@@ -701,13 +701,13 @@ index 3230f34..5eedfd8 100644
  {
  private:
 diff --git a/src/supertux/menu/options_menu.cpp b/src/supertux/menu/options_menu.cpp
-index f9e4821..b8d3fc0 100644
+index 26f6d69..b884d2e 100644
 --- a/src/supertux/menu/options_menu.cpp
 +++ b/src/supertux/menu/options_menu.cpp
-@@ -104,25 +104,15 @@ OptionsMenu::OptionsMenu(bool complete)
-     }
+@@ -126,22 +126,13 @@ OptionsMenu::OptionsMenu(bool complete) :
    }
  
+   resolutions.clear();
 -  int display_mode_count = SDL_GetNumDisplayModes(0);
    std::string last_display_mode;
 -  for(int i = 0; i < display_mode_count; ++i)
@@ -720,20 +720,17 @@ index f9e4821..b8d3fc0 100644
 -      log_warning << "failed to get display mode: " << SDL_GetError() << std::endl;
 -    }
 -    else
--    {
++    SDL_Rect mode = *(SDL_ListModes(NULL, 0)[i]);
+     {
        std::ostringstream out;
--      out << mode.w << "x" << mode.h << "@" << mode.refresh_rate;
-+      out << SDL_ListModes(NULL, 0)[i]->w << "x" << SDL_ListModes(NULL, 0)[i]->h << "@60";
+       out << mode.w << "x" << mode.h;
+-      if(mode.refresh_rate)
+-        out << "@" << mode.refresh_rate;
        if(last_display_mode == out.str())
          continue;
        last_display_mode = out.str();
-       fullscreen_res->list.push_back(out.str());
--    }
-   }
-   fullscreen_res->list.push_back("Desktop");
- 
 diff --git a/src/supertux/screen_manager.cpp b/src/supertux/screen_manager.cpp
-index 85d9f63..15304de 100644
+index 23f1086..960276b 100644
 --- a/src/supertux/screen_manager.cpp
 +++ b/src/supertux/screen_manager.cpp
 @@ -195,7 +195,7 @@ ScreenManager::update_gamelogic(float elapsed_time)
@@ -782,7 +779,7 @@ index 85d9f63..15304de 100644
                   event.key.keysym.sym == SDLK_F12)
          {
            take_screenshot();
-@@ -376,7 +362,7 @@ ScreenManager::run(DrawingContext &context)
+@@ -370,7 +356,7 @@ ScreenManager::run(DrawingContext &context)
        timestep *= m_speed;
        game_time += timestep;
  
@@ -792,7 +789,7 @@ index 85d9f63..15304de 100644
        frames += 1;
      }
 diff --git a/src/supertux/screen_manager.hpp b/src/supertux/screen_manager.hpp
-index 20259bf..d3cee66 100644
+index 3cd3889..09797d1 100644
 --- a/src/supertux/screen_manager.hpp
 +++ b/src/supertux/screen_manager.hpp
 @@ -64,7 +64,7 @@ private:
@@ -805,19 +802,21 @@ index 20259bf..d3cee66 100644
  
  private:
 diff --git a/src/util/log.cpp b/src/util/log.cpp
-index 255a427..b788a5e 100644
+index 2ace6de..1e34498 100644
 --- a/src/util/log.cpp
 +++ b/src/util/log.cpp
-@@ -18,18 +18,94 @@
+@@ -18,20 +18,96 @@
  #include "util/log.hpp"
  
  #include <iostream>
-+#ifdef ANDROID
++#ifdef __ANDROID__
 +#include <android/log.h>
 +#endif
  
  #include "math/rectf.hpp"
  #include "supertux/console.hpp"
+ #include "supertux/gameconfig.hpp"
+ #include "supertux/globals.hpp"
  
 +#ifdef ANDROID
 +class _android_debugbuf: public std::streambuf
@@ -903,6 +902,31 @@ index 255a427..b788a5e 100644
  }
  
  static std::ostream& log_generic_f (const char *prefix, const char* file, int line, bool use_console_buffer = true)
+diff --git a/src/util/log.hpp b/src/util/log.hpp
+index b256a74..1a75474 100644
+--- a/src/util/log.hpp
++++ b/src/util/log.hpp
+@@ -45,6 +45,20 @@ void log_info_callback(const std::string& str);
+ void log_error_callback(const std::string& str);
+ void log_warning_callback(const std::string& str);
+ 
++#ifdef __ANDROID__
++#include <sstream>
++// Where else to put this, eh?
++namespace std
++{
++    template < typename T > std::string to_string( const T& n )
++    {
++        std::ostringstream ss;
++        ss << n ;
++        return ss.str() ;
++    }
++}
++#endif
++
+ #endif
+ 
+ /* EOF */
 diff --git a/src/video/gl/gl_lightmap.cpp b/src/video/gl/gl_lightmap.cpp
 index 97cf70a..3b39497 100644
 --- a/src/video/gl/gl_lightmap.cpp
@@ -916,7 +940,7 @@ index 97cf70a..3b39497 100644
  
  GLLightmap::~GLLightmap()
 diff --git a/src/video/gl/gl_painter.cpp b/src/video/gl/gl_painter.cpp
-index 12ee0a5..a1a3f8d 100644
+index 229db78..a725286 100644
 --- a/src/video/gl/gl_painter.cpp
 +++ b/src/video/gl/gl_painter.cpp
 @@ -14,6 +14,9 @@
@@ -974,7 +998,7 @@ index 12ee0a5..a1a3f8d 100644
                surface_data->get_uv_left(),
                surface_data->get_uv_top(),
                surface_data->get_uv_right(),
-@@ -387,4 +399,11 @@ GLPainter::draw_inverse_ellipse(const DrawingRequest& request)
+@@ -388,4 +400,11 @@ GLPainter::draw_inverse_ellipse(const DrawingRequest& request)
    glColor4f(1, 1, 1, 1);
  }
  
@@ -1028,10 +1052,10 @@ index bb3dd75..6ac8add 100644
  private:
    GLPainter(const GLPainter&) = delete;
 diff --git a/src/video/gl/gl_renderer.cpp b/src/video/gl/gl_renderer.cpp
-index 8f4a18ee..aa5670a 100644
+index 7ec1a0e..b644490 100644
 --- a/src/video/gl/gl_renderer.cpp
 +++ b/src/video/gl/gl_renderer.cpp
-@@ -43,35 +43,13 @@
+@@ -44,35 +44,13 @@
  #endif
  
  GLRenderer::GLRenderer() :
@@ -1070,7 +1094,7 @@ index 8f4a18ee..aa5670a 100644
  
  #ifdef USE_GLBINDING
  
-@@ -107,15 +85,6 @@ GLRenderer::GLRenderer() :
+@@ -108,15 +86,6 @@ GLRenderer::GLRenderer() :
  
  #endif
  
@@ -1086,7 +1110,7 @@ index 8f4a18ee..aa5670a 100644
    // Init the projection matrix, viewport and stuff
    apply_config();
  
-@@ -136,8 +105,8 @@ GLRenderer::GLRenderer() :
+@@ -137,8 +106,8 @@ GLRenderer::GLRenderer() :
  
  GLRenderer::~GLRenderer()
  {
@@ -1097,7 +1121,7 @@ index 8f4a18ee..aa5670a 100644
  }
  
  void
-@@ -213,7 +182,14 @@ void
+@@ -214,7 +183,14 @@ void
  GLRenderer::flip()
  {
    assert_gl("drawing");
@@ -1113,7 +1137,7 @@ index 8f4a18ee..aa5670a 100644
  }
  
  void
-@@ -229,9 +205,17 @@ GLRenderer::apply_config()
+@@ -230,9 +206,17 @@ GLRenderer::apply_config()
  {
    apply_video_mode();
  
@@ -1134,7 +1158,7 @@ index 8f4a18ee..aa5670a 100644
  
    float pixel_aspect_ratio = 1.0f;
    if (g_config->aspect_size != Size(0, 0))
-@@ -264,9 +248,9 @@ GLRenderer::apply_config()
+@@ -265,9 +249,9 @@ GLRenderer::apply_config()
    {
      // Clear both buffers so that we get a clean black border without junk
      glClear(GL_COLOR_BUFFER_BIT);
@@ -1146,7 +1170,7 @@ index 8f4a18ee..aa5670a 100644
    }
  
    glViewport(m_viewport.x, m_viewport.y, m_viewport.w, m_viewport.h);
-@@ -285,102 +269,15 @@ GLRenderer::apply_config()
+@@ -286,102 +270,15 @@ GLRenderer::apply_config()
  void
  GLRenderer::apply_video_mode()
  {
@@ -1258,7 +1282,7 @@ index 8f4a18ee..aa5670a 100644
  }
  
  void
-@@ -433,9 +330,9 @@ GLRenderer::to_logical(int physical_x, int physical_y)
+@@ -434,9 +331,9 @@ GLRenderer::to_logical(int physical_x, int physical_y)
  void
  GLRenderer::set_gamma(float gamma)
  {
@@ -1272,7 +1296,7 @@ index 8f4a18ee..aa5670a 100644
  
  /* EOF */
 diff --git a/src/video/gl/gl_renderer.hpp b/src/video/gl/gl_renderer.hpp
-index 5da04a8..b73eb9d 100644
+index 3aa37b4..0e3cbe7 100644
 --- a/src/video/gl/gl_renderer.hpp
 +++ b/src/video/gl/gl_renderer.hpp
 @@ -27,8 +27,8 @@
@@ -1290,8 +1314,8 @@ index 5da04a8..b73eb9d 100644
    Vector to_logical(int physical_x, int physical_y) override;
    void set_gamma(float gamma) override;
  
--  SDL_Window* get_window() const { return m_window; }
-+  //SDL_Window* get_window() const { return m_window; }
+-  SDL_Window* get_window() const override { return m_window; }
++  //SDL_Window* get_window() const override { return m_window; }
  
  private:
    void apply_video_mode();
@@ -1507,7 +1531,7 @@ index 7cb634f..787d702 100644
    void set_texture_params();
  };
 diff --git a/src/video/gl/gl_video_system.cpp b/src/video/gl/gl_video_system.cpp
-index 87b0ab7..328a58c 100644
+index d93c6cd..b65b0bd 100644
 --- a/src/video/gl/gl_video_system.cpp
 +++ b/src/video/gl/gl_video_system.cpp
 @@ -69,6 +69,7 @@ void
@@ -1657,11 +1681,11 @@ index 46be85c..72f7cb8 100644
  class Size;
  class Vector;
 diff --git a/src/video/video_system.cpp b/src/video/video_system.cpp
-index dd736d0..726c81a 100644
+index 105e427..898dea7 100644
 --- a/src/video/video_system.cpp
 +++ b/src/video/video_system.cpp
-@@ -19,7 +19,7 @@
- #include <config.h>
+@@ -20,7 +20,7 @@
+ #include <stdexcept>
  
  #include "util/log.hpp"
 -#include "video/sdl/sdl_video_system.hpp"
@@ -1669,7 +1693,7 @@ index dd736d0..726c81a 100644
  
  #ifdef HAVE_OPENGL
  #include "video/gl/gl_video_system.hpp"
-@@ -31,33 +31,15 @@ VideoSystem::create(VideoSystem::Enum video_system)
+@@ -32,33 +32,15 @@ VideoSystem::create(VideoSystem::Enum video_system)
    switch(video_system)
    {
      case AUTO_VIDEO:
