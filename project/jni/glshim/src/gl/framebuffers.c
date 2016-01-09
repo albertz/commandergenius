@@ -53,7 +53,7 @@ void readfboEnd() {
 	gles_glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
-void glGenFramebuffers(GLsizei n, GLuint *ids) {
+void glshim_glGenFramebuffers(GLsizei n, GLuint *ids) {
     LOAD_GLES_OES(glGenFramebuffers);
     //printf("glGenFramebuffers(%i, %p)\n", n, ids);
     GLsizei m = 0;
@@ -68,9 +68,9 @@ void glGenFramebuffers(GLsizei n, GLuint *ids) {
     gles_glGenFramebuffers(n-m, ids+m);
 }
 
-void glDeleteFramebuffers(GLsizei n, GLuint *framebuffers) {
+void glshim_glDeleteFramebuffers(GLsizei n, GLuint *framebuffers) {
     //printf("glDeleteFramebuffers(%i, %p), framebuffers[0]=%u\n", n, framebuffers, framebuffers[0]);
-    if (state.gl_batch) flush();
+    if (glstate.gl_batch) flush();
     if (g_recyclefbo) {
         //printf("Recycling %i FBOs\n", n);
         noerrorShim();
@@ -91,9 +91,9 @@ void glDeleteFramebuffers(GLsizei n, GLuint *framebuffers) {
     }
 }
 
-GLboolean glIsFramebuffer(GLuint framebuffer) {
+GLboolean glshim_glIsFramebuffer(GLuint framebuffer) {
     //printf("glIsFramebuffer(%u)\n", framebuffer);
-    if (state.gl_batch) flush();
+    if (glstate.gl_batch) flush();
     LOAD_GLES_OES(glIsFramebuffer);
     
     errorGL();
@@ -102,8 +102,8 @@ GLboolean glIsFramebuffer(GLuint framebuffer) {
 
 GLenum fb_status;
 
-GLenum glCheckFramebufferStatus(GLenum target) {
-    if (state.gl_batch) flush();
+GLenum glshim_glCheckFramebufferStatus(GLenum target) {
+    if (glstate.gl_batch) flush();
 //#define BEFORE 1
 #ifdef BEFORE
     GLenum result = fb_status;
@@ -119,10 +119,10 @@ GLenum glCheckFramebufferStatus(GLenum target) {
     return result;
 }
 
-void glBindFramebuffer(GLenum target, GLuint framebuffer) {
-    //printf("glBindFramebuffer(%s, %u), list=%s\n", PrintEnum(target), framebuffer, state.list.active?"active":"none");
+void glshim_glBindFramebuffer(GLenum target, GLuint framebuffer) {
+    //printf("glBindFramebuffer(%s, %u), list=%s\n", PrintEnum(target), framebuffer, glstate.list.active?"active":"none");
 	//PUSH_IF_COMPILING(glBindFramebuffer);
-    if (state.gl_batch) flush();
+    if (glstate.gl_batch) flush();
     LOAD_GLES_OES(glBindFramebuffer);
     LOAD_GLES_OES(glCheckFramebufferStatus);
     LOAD_GLES(glGetError);
@@ -164,12 +164,12 @@ void glBindFramebuffer(GLenum target, GLuint framebuffer) {
 }
 
 
-void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) {
+void glshim_glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) {
     static GLuint scrap_tex = 0;
     static int scrap_width = 0;
     static int scrap_height = 0;
     
-    if (state.gl_batch) flush();
+    if (glstate.gl_batch) flush();
     LOAD_GLES_OES(glFramebufferTexture2D);
     LOAD_GLES(glTexImage2D);
     LOAD_GLES(glBindTexture);
@@ -187,9 +187,9 @@ void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, 
         gltexture_t *tex = NULL;
         int ret;
         khint_t k;
-        khash_t(tex) *list = state.texture.list;
+        khash_t(tex) *list = glstate.texture.list;
         if (! list) {
-            list = state.texture.list = kh_init(tex);
+            list = glstate.texture.list = kh_init(tex);
             // segfaults if we don't do a single put
             kh_put(tex, list, 1, &ret);
             kh_del(tex, list, 1);
@@ -209,7 +209,7 @@ void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, 
                 tex->nwidth = npot(tex->width);
                 tex->nheight = npot(tex->height);
                 tex->shrink = 0;
-                gltexture_t *bound = state.texture.bound[state.texture.active];
+                gltexture_t *bound = glstate.texture.bound[glstate.texture.active];
                 GLuint oldtex = (bound)?bound->glname:0;
                 if (oldtex!=tex->glname) gles_glBindTexture(GL_TEXTURE_2D, tex->glname);
                 gles_glTexImage2D(GL_TEXTURE_2D, 0, tex->format, tex->nwidth, tex->nheight, 0, tex->format, tex->type, NULL);
@@ -222,7 +222,7 @@ void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, 
                 tex->nwidth = (tex->nwidth<32)?32:tex->nwidth;
                 tex->nheight = (tex->nheight<32)?32:tex->nheight;
                 tex->shrink = 0;
-                gltexture_t *bound = state.texture.bound[state.texture.active];
+                gltexture_t *bound = glstate.texture.bound[glstate.texture.active];
                 GLuint oldtex = (bound)?bound->glname:0;
                 if (oldtex!=tex->glname) gles_glBindTexture(GL_TEXTURE_2D, tex->glname);
                 gles_glTexImage2D(GL_TEXTURE_2D, 0, tex->format, tex->nwidth, tex->nheight, 0, tex->format, tex->type, NULL);
@@ -238,11 +238,11 @@ void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, 
 	if (level!=0) {
         //bind a scrap texture, we don't want level != 0 binding on GLES
         if(!scrap_tex)
-            glGenTextures(1, &scrap_tex);
+            glshim_glGenTextures(1, &scrap_tex);
         if ((scrap_width!=twidth) || (scrap_height!=theight)) {
                 scrap_width = twidth;
                 scrap_height = theight;
-                gltexture_t *bound = state.texture.bound[state.texture.active];
+                gltexture_t *bound = glstate.texture.bound[glstate.texture.active];
                 GLuint oldtex = (bound)?bound->glname:0;
                 if (oldtex!=scrap_tex) gles_glBindTexture(GL_TEXTURE_2D, scrap_tex);
                 gles_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, scrap_width, scrap_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -255,15 +255,15 @@ void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, 
     gles_glFramebufferTexture2D(target, attachment, textarget, texture, 0);
 }
 
-void glFramebufferTexture1D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) {
-    glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texture, level);
+void glshim_glFramebufferTexture1D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) {
+    glshim_glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texture, level);
 }
-void glFramebufferTexture3D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level, GLint layer) {
+void glshim_glFramebufferTexture3D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level, GLint layer) {
     (void)layer;
-    glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texture, level);
+    glshim_glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texture, level);
 }
 
-void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers) {
+void glshim_glGenRenderbuffers(GLsizei n, GLuint *renderbuffers) {
     LOAD_GLES_OES(glGenRenderbuffers);
     //printf("glGenRenderbuffers(%i, %p)\n", n, renderbuffers);
     
@@ -271,7 +271,7 @@ void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers) {
     gles_glGenRenderbuffers(n, renderbuffers);
 }
 
-void glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) {
+void glshim_glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) {
     LOAD_GLES_OES(glFramebufferRenderbuffer);
     LOAD_GLES_OES(glGetFramebufferAttachmentParameteriv);
     //printf("glFramebufferRenderbuffer(%s, %s, %s, %u)\n", PrintEnum(target), PrintEnum(attachment), PrintEnum(renderbuffertarget), renderbuffer);
@@ -296,8 +296,8 @@ void glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbu
     gles_glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
 }
 
-void glDeleteRenderbuffers(GLsizei n, GLuint *renderbuffers) {
-    if (state.gl_batch) flush();
+void glshim_glDeleteRenderbuffers(GLsizei n, GLuint *renderbuffers) {
+    if (glstate.gl_batch) flush();
     LOAD_GLES_OES(glDeleteRenderbuffers);
     
     // check if we delete a depthstencil
@@ -322,7 +322,7 @@ void glDeleteRenderbuffers(GLsizei n, GLuint *renderbuffers) {
     gles_glDeleteRenderbuffers(n, renderbuffers);
 }
 
-void glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height) {
+void glshim_glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height) {
     LOAD_GLES_OES(glRenderbufferStorage);
     LOAD_GLES_OES(glGenRenderbuffers);
     LOAD_GLES_OES(glBindRenderbuffer);
@@ -369,12 +369,12 @@ void glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, 
     gles_glRenderbufferStorage(target, internalformat, width, height);
 }
 
-void glRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height) {    //STUB
-    glRenderbufferStorage(target, internalformat, width, height);
+void glshim_glRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height) {    //STUB
+    glshim_glRenderbufferStorage(target, internalformat, width, height);
 }
 
-void glBindRenderbuffer(GLenum target, GLuint renderbuffer) {
-    if (state.gl_batch) flush();
+void glshim_glBindRenderbuffer(GLenum target, GLuint renderbuffer) {
+    if (glstate.gl_batch) flush();
     LOAD_GLES_OES(glBindRenderbuffer);
     //printf("glBindRenderbuffer(%s, %u), binded Fbo=%u\n", PrintEnum(target), renderbuffer, current_fb);
     
@@ -384,16 +384,16 @@ void glBindRenderbuffer(GLenum target, GLuint renderbuffer) {
     gles_glBindRenderbuffer(target, renderbuffer);
 }
 
-GLboolean glIsRenderbuffer(GLuint renderbuffer) {
+GLboolean glshim_glIsRenderbuffer(GLuint renderbuffer) {
     //printf("glIsRenderbuffer(%u)\n", renderbuffer);
-    if (state.gl_batch) flush();
+    if (glstate.gl_batch) flush();
     LOAD_GLES_OES(glIsRenderbuffer);
     
     errorGL();
     return gles_glIsRenderbuffer(renderbuffer);
 }
 
-void glGenerateMipmap(GLenum target) {
+void glshim_glGenerateMipmap(GLenum target) {
     //printf("glGenerateMipmap(0x%04X)\n", target);
     LOAD_GLES_OES(glGenerateMipmap);
     
@@ -401,7 +401,7 @@ void glGenerateMipmap(GLenum target) {
     return gles_glGenerateMipmap(target);
 }
 
-void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint *params) {
+void glshim_glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint *params) {
     //printf("glGetFramebufferAttachmentParameteriv(%s, %s, %s, %p)\n", PrintEnum(target), PrintEnum(attachment), PrintEnum(pname), params);
     LOAD_GLES_OES(glGetFramebufferAttachmentParameteriv);
     
@@ -409,7 +409,7 @@ void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLe
     return gles_glGetFramebufferAttachmentParameteriv(target, attachment, pname, params);
 }
 
-void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint * params) {
+void glshim_glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint * params) {
     //printf("glGetRenderbufferParameteriv(%s, %s, %p)\n", PrintEnum(target), PrintEnum(pname), params);
     LOAD_GLES_OES(glGetRenderbufferParameteriv);
     
@@ -441,9 +441,9 @@ void createMainFBO(int width, int height) {
         deleteMainFBO();
     }
     // switch to texture unit 0 if needed
-    if (state.texture.active != 0)
+    if (glstate.texture.active != 0)
         gles_glActiveTexture(GL_TEXTURE0);
-    if (state.texture.client != 0)
+    if (glstate.texture.client != 0)
         gles_glClientActiveTexture(GL_TEXTURE0);
         
     mainfbo_width = width;
@@ -495,12 +495,12 @@ void createMainFBO(int width, int height) {
             gles_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
     // Put everything back, and active the MainFBO
-    if (state.texture.bound[0]) 
-        gles_glBindTexture(GL_TEXTURE_2D, state.texture.bound[0]->glname);
-    if (state.texture.active != 0)
-        gles_glActiveTexture(GL_TEXTURE0 + state.texture.active);
-    if (state.texture.client != 0)
-        gles_glClientActiveTexture(GL_TEXTURE0 + state.texture.client);
+    if (glstate.texture.bound[0]) 
+        gles_glBindTexture(GL_TEXTURE_2D, glstate.texture.bound[0]->glname);
+    if (glstate.texture.active != 0)
+        gles_glActiveTexture(GL_TEXTURE0 + glstate.texture.active);
+    if (glstate.texture.client != 0)
+        gles_glClientActiveTexture(GL_TEXTURE0 + glstate.texture.client);
     
 }
 
@@ -518,12 +518,12 @@ void blitMainFBO() {
         return;
     
     // switch to texture unit 0 if needed
-    int old_tex = state.texture.active;
-    int old_client = state.texture.client;
-    if (state.texture.active != 0)
-        glActiveTexture(GL_TEXTURE0);
-    if (state.texture.client != 0)
-        glClientActiveTexture(GL_TEXTURE0);
+    int old_tex = glstate.texture.active;
+    int old_client = glstate.texture.client;
+    if (glstate.texture.active != 0)
+        glshim_glActiveTexture(GL_TEXTURE0);
+    if (glstate.texture.client != 0)
+        glshim_glClientActiveTexture(GL_TEXTURE0);
     // bind the FBO texture
     gles_glEnable(GL_TEXTURE_2D);
     gles_glBindTexture(GL_TEXTURE_2D, mainfbo_tex);
@@ -546,17 +546,17 @@ void blitMainFBO() {
         LOAD_GLES(glPushMatrix);
         LOAD_GLES(glPopMatrix);
         
-        glPushAttrib(GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_TRANSFORM_BIT | GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);
+        glshim_glPushAttrib(GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_TRANSFORM_BIT | GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);
 
-        glMatrixMode(GL_TEXTURE);
+        glshim_glMatrixMode(GL_TEXTURE);
         gles_glPushMatrix();
-        glLoadIdentity();
-        glMatrixMode(GL_PROJECTION);
+        glshim_glLoadIdentity();
+        glshim_glMatrixMode(GL_PROJECTION);
         gles_glPushMatrix();
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
+        glshim_glLoadIdentity();
+        glshim_glMatrixMode(GL_MODELVIEW);
         gles_glPushMatrix();
-        glLoadIdentity();
+        glshim_glLoadIdentity();
         GLfloat vert[] = {
             -1, -1,
             +1, -1,
@@ -572,69 +572,69 @@ void blitMainFBO() {
             0, sh
         };
 
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        glshim_glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
 
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_LIGHTING);
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_ALPHA_TEST);
-        glDisable(GL_BLEND);
+        glshim_glDisable(GL_DEPTH_TEST);
+        glshim_glDisable(GL_LIGHTING);
+        glshim_glDisable(GL_CULL_FACE);
+        glshim_glDisable(GL_ALPHA_TEST);
+        glshim_glDisable(GL_BLEND);
 
 //        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     
-        if(!state.clientstate.vertex_array) {
+        if(!glstate.clientstate.vertex_array) {
             gles_glEnableClientState(GL_VERTEX_ARRAY);
-            state.clientstate.vertex_array = 1;
+            glstate.clientstate.vertex_array = 1;
         }
         gles_glVertexPointer(2, GL_FLOAT, 0, vert);
-        if(!state.clientstate.tex_coord_array[0]) {
+        if(!glstate.clientstate.tex_coord_array[0]) {
             gles_glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            state.clientstate.tex_coord_array[0] = 1;
+            glstate.clientstate.tex_coord_array[0] = 1;
         }
         gles_glTexCoordPointer(2, GL_FLOAT, 0, tex);
         for (int a=1; a <MAX_TEX; a++)
-            if(state.clientstate.tex_coord_array[a]) {
-                glClientActiveTexture(GL_TEXTURE0 + a);
+            if(glstate.clientstate.tex_coord_array[a]) {
+                glshim_glClientActiveTexture(GL_TEXTURE0 + a);
                 gles_glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-                state.clientstate.tex_coord_array[a] = 0;
+                glstate.clientstate.tex_coord_array[a] = 0;
             }
-        if(state.clientstate.color_array) {
+        if(glstate.clientstate.color_array) {
             gles_glDisableClientState(GL_COLOR_ARRAY);
-            state.clientstate.color_array = 0;
+            glstate.clientstate.color_array = 0;
         }
-        if(state.clientstate.normal_array) {
+        if(glstate.clientstate.normal_array) {
             gles_glDisableClientState(GL_NORMAL_ARRAY);
-            state.clientstate.normal_array = 0;
+            glstate.clientstate.normal_array = 0;
         }
 
 
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        glshim_glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         
         gles_glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         // All the previous states are Pushed / Poped anyway...
-        glPopClientAttrib();
-        glMatrixMode(GL_MODELVIEW);
+        glshim_glPopClientAttrib();
+        glshim_glMatrixMode(GL_MODELVIEW);
         gles_glPopMatrix();
-        glMatrixMode(GL_PROJECTION);
+        glshim_glMatrixMode(GL_PROJECTION);
         gles_glPopMatrix();
-        glMatrixMode(GL_TEXTURE);
+        glshim_glMatrixMode(GL_TEXTURE);
         gles_glPopMatrix();
-        glPopAttrib();
+        glshim_glPopAttrib();
     }
     #endif
     // put back viewport
     gles_glViewport(old_vp[0], old_vp[1], old_vp[2], old_vp[3]);
     // Put everything back
-    if (state.texture.bound[0]) 
-        gles_glBindTexture(GL_TEXTURE_2D, state.texture.bound[0]->glname);
+    if (glstate.texture.bound[0]) 
+        gles_glBindTexture(GL_TEXTURE_2D, glstate.texture.bound[0]->glname);
     else
         gles_glBindTexture(GL_TEXTURE_2D, 0);
-    if (!state.enable.texture_2d[0])
+    if (!glstate.enable.texture_2d[0])
         gles_glDisable(GL_TEXTURE_2D);
     if (old_tex != 0)
-        glActiveTexture(GL_TEXTURE0 + old_tex);
+        glshim_glActiveTexture(GL_TEXTURE0 + old_tex);
     if (old_client != 0)
-        glClientActiveTexture(GL_TEXTURE0 + old_client);
+        glshim_glClientActiveTexture(GL_TEXTURE0 + old_client);
 }
 
 void bindMainFBO() {
@@ -683,11 +683,11 @@ void deleteMainFBO() {
     // all done...
 }
 
-void glFramebufferTextureLayer(	GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer) {
-    glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texture,	level); // Force Texture2D, ignore layer...
+void glshim_glFramebufferTextureLayer(	GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer) {
+    glshim_glFramebufferTexture2D(target, attachment, GL_TEXTURE_2D, texture,	level); // Force Texture2D, ignore layer...
 }
 
-void glBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) {
+void glshim_glBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) {
     // TODO!
     // create a temp texture
     // glCopyPixel of read FBO
@@ -697,64 +697,45 @@ printf("glBlitFramebuffer(%d, %d, %d, %d,  %d, %d, %d, %d,  0x%04X, 0x%04X)\n",
     srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 }
 
+// direct wrapper
+
+void glGenFramebuffers(GLsizei n, GLuint *ids) __attribute__((alias ("glshim_glGenFramebuffers")));
+void glDeleteFramebuffers(GLsizei n, GLuint *framebuffers) __attribute__((alias ("glshim_glDeleteFramebuffers")));
+GLboolean glIsFramebuffer(GLuint framebuffer) __attribute__((alias ("glshim_glIsFramebuffer")));
+GLenum glCheckFramebufferStatus(GLenum target) __attribute__((alias ("glshim_glCheckFramebufferStatus")));
+void glBindFramebuffer(GLenum target, GLuint framebuffer) __attribute__((alias ("glshim_glBindFramebuffer")));
+void glFramebufferTexture1D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) __attribute__((alias ("glshim_glFramebufferTexture1D")));
+void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) __attribute__((alias ("glshim_glFramebufferTexture2D")));
+void glFramebufferTexture3D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level, GLint layer) __attribute__((alias ("glshim_glFramebufferTexture3D")));
+void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers) __attribute__((alias ("glshim_glGenRenderbuffers")));
+void glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) __attribute__((alias ("glshim_glFramebufferRenderbuffer")));
+void glDeleteRenderbuffers(GLsizei n, GLuint *renderbuffers) __attribute__((alias ("glshim_glDeleteRenderbuffers")));
+void glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height) __attribute__((alias ("glshim_glRenderbufferStorage")));
+void glBindRenderbuffer(GLenum target, GLuint renderbuffer) __attribute__((alias ("glshim_glBindRenderbuffer")));
+GLboolean glIsRenderbuffer(GLuint renderbuffer) __attribute__((alias ("glshim_glIsRenderbuffer")));
+void glGenerateMipmap(GLenum target) __attribute__((alias ("glshim_glGenerateMipmap")));
+void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint *params) __attribute__((alias ("glshim_glGetFramebufferAttachmentParameteriv")));
+void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint * params) __attribute__((alias ("glshim_glGetRenderbufferParameteriv")));
+void glFramebufferTextureLayer(	GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer) __attribute__((alias ("glshim_glFramebufferTextureLayer")));
+void glBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) __attribute__((alias ("glshim_glBlitFramebuffer")));
 
 // EXT direct wrapper
-void glGenFramebuffersEXT(GLsizei n, GLuint *ids) {
-    glGenFramebuffers(n, ids);
-}
-void glDeleteFramebuffersEXT(GLsizei n, GLuint *framebuffers) {
-    glDeleteFramebuffers(n, framebuffers);
-}
-GLboolean glIsFramebufferEXT(GLuint framebuffer) {
-    return glIsFramebuffer(framebuffer);
-}
-GLenum glCheckFramebufferStatusEXT(GLenum target) {
-    return glCheckFramebufferStatus(target);
-}
-void glBindFramebufferEXT(GLenum target, GLuint framebuffer) {
-    glBindFramebuffer(target, framebuffer);
-}
-void glFramebufferTexture1DEXT(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) {
-    glFramebufferTexture1D(target, attachment, textarget, texture, level);
-}
-void glFramebufferTexture2DEXT(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) {
-    glFramebufferTexture2D(target, attachment, textarget, texture, level);
-}
-void glFramebufferTexture3DEXT(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level, GLint layer) {
-    glFramebufferTexture3D(target, attachment, textarget, texture, level, layer);
-}
-void glGenRenderbuffersEXT(GLsizei n, GLuint *renderbuffers) {
-    glGenRenderbuffers(n, renderbuffers);
-}
-void glFramebufferRenderbufferEXT(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) {
-    glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
-}
-void glDeleteRenderbuffersEXT(GLsizei n, GLuint *renderbuffers) {
-    glDeleteRenderbuffers(n, renderbuffers);
-}
-void glRenderbufferStorageEXT(GLenum target, GLenum internalformat, GLsizei width, GLsizei height) {
-    glRenderbufferStorage(target, internalformat, width, height);
-}
-void glBindRenderbufferEXT(GLenum target, GLuint renderbuffer) {
-    glBindRenderbuffer(target, renderbuffer);
-}
-GLboolean glIsRenderbufferEXT(GLuint renderbuffer) {
-    return glIsRenderbuffer(renderbuffer);
-}
-void glGenerateMipmapEXT(GLenum target) {
-    glGenerateMipmap(target);
-}
-void glGetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment, GLenum pname, GLint *params) {
-    glGetFramebufferAttachmentParameteriv(target, attachment, pname, params);
-}
-void glGetRenderbufferParameterivEXT(GLenum target, GLenum pname, GLint * params) {
-    glGetRenderbufferParameteriv(target, pname, params);
-}
-
-void glFramebufferTextureLayerEXT(	GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer) {
-    glFramebufferTextureLayer(target, attachment, texture, level, layer);
-}
-
-void glBlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) {
-    glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
-}
+void glGenFramebuffersEXT(GLsizei n, GLuint *ids) __attribute__((alias ("glshim_glGenFramebuffers")));
+void glDeleteFramebuffersEXT(GLsizei n, GLuint *framebuffers) __attribute__((alias ("glshim_glDeleteFramebuffers")));
+GLboolean glIsFramebufferEXT(GLuint framebuffer) __attribute__((alias ("glshim_glIsFramebuffer")));
+GLenum glCheckFramebufferStatusEXT(GLenum target) __attribute__((alias ("glshim_glCheckFramebufferStatus")));
+void glBindFramebufferEXT(GLenum target, GLuint framebuffer) __attribute__((alias ("glshim_glBindFramebuffer")));
+void glFramebufferTexture1DEXT(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) __attribute__((alias ("glshim_glFramebufferTexture1D")));
+void glFramebufferTexture2DEXT(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level) __attribute__((alias ("glshim_glFramebufferTexture2D")));
+void glFramebufferTexture3DEXT(GLenum target, GLenum attachment, GLenum textarget, GLuint texture,	GLint level, GLint layer) __attribute__((alias ("glshim_glFramebufferTexture3D")));
+void glGenRenderbuffersEXT(GLsizei n, GLuint *renderbuffers) __attribute__((alias ("glshim_glGenRenderbuffers")));
+void glFramebufferRenderbufferEXT(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) __attribute__((alias ("glshim_glFramebufferRenderbuffer")));
+void glDeleteRenderbuffersEXT(GLsizei n, GLuint *renderbuffers) __attribute__((alias ("glshim_glDeleteRenderbuffers")));
+void glRenderbufferStorageEXT(GLenum target, GLenum internalformat, GLsizei width, GLsizei height) __attribute__((alias ("glshim_glRenderbufferStorage")));
+void glBindRenderbufferEXT(GLenum target, GLuint renderbuffer) __attribute__((alias ("glshim_glBindRenderbuffer")));
+GLboolean glIsRenderbufferEXT(GLuint renderbuffer) __attribute__((alias ("glshim_glIsRenderbuffer")));
+void glGenerateMipmapEXT(GLenum target) __attribute__((alias ("glshim_glGenerateMipmap")));
+void glGetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment, GLenum pname, GLint *params) __attribute__((alias ("glshim_glGetFramebufferAttachmentParameteriv")));
+void glGetRenderbufferParameterivEXT(GLenum target, GLenum pname, GLint * params) __attribute__((alias ("glshim_glGetRenderbufferParameteriv")));
+void glFramebufferTextureLayerEXT(	GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer) __attribute__((alias ("glshim_glFramebufferTextureLayer")));
+void glBlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) __attribute__((alias ("glshim_glBlitFramebuffer")));

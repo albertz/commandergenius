@@ -2,13 +2,13 @@
 
 //extern void* eglGetProcAddress(const char*);
 
-void glTexGeni(GLenum coord, GLenum pname, GLint param) {
+void glshim_glTexGeni(GLenum coord, GLenum pname, GLint param) {
     GLfloat params[4] = {0,0,0,0};
     params[0]=param;
-    glTexGenfv(coord, pname, params);
+    glshim_glTexGenfv(coord, pname, params);
 }
 
-void glTexGenfv(GLenum coord, GLenum pname, const GLfloat *param) {
+void glshim_glTexGenfv(GLenum coord, GLenum pname, const GLfloat *param) {
     
     /*
     If pname is GL_TEXTURE_GEN_MODE, then the array must contain
@@ -19,10 +19,10 @@ void glTexGenfv(GLenum coord, GLenum pname, const GLfloat *param) {
     generation function specified by pname.
     */
 
-    //printf("glTexGenfv(0x%04X, 0x%04X, [%.02f, ...]), texture=%i\n", coord, pname, param[0], state.texture.active);
-    if ((state.list.compiling || state.gl_batch) && state.list.active) {
-		NewStage(state.list.active, STAGE_TEXGEN);
-		rlTexGenfv(state.list.active, coord, pname, param);
+    //printf("glTexGenfv(0x%04X, 0x%04X, [%.02f, ...]), texture=%i\n", coord, pname, param[0], glstate.texture.active);
+    if ((glstate.list.compiling || glstate.gl_batch) && glstate.list.active) {
+		NewStage(glstate.list.active, STAGE_TEXGEN);
+		rlTexGenfv(glstate.list.active, coord, pname, param);
         noerrorShim();
 		return;
 	}
@@ -32,9 +32,9 @@ void glTexGenfv(GLenum coord, GLenum pname, const GLfloat *param) {
     switch(pname) {
         case GL_TEXTURE_GEN_MODE:
             switch (coord) {
-                case GL_S: state.texgen[state.texture.active].S = param[0]; break;
-                case GL_T: state.texgen[state.texture.active].T = param[0]; break;
-                case GL_R: state.texgen[state.texture.active].R = param[0]; break;
+                case GL_S: glstate.texgen[glstate.texture.active].S = param[0]; break;
+                case GL_T: glstate.texgen[glstate.texture.active].T = param[0]; break;
+                case GL_R: glstate.texgen[glstate.texture.active].R = param[0]; break;
                 default:
                     errorShim(GL_INVALID_ENUM);
                 return;
@@ -42,13 +42,13 @@ void glTexGenfv(GLenum coord, GLenum pname, const GLfloat *param) {
         case GL_OBJECT_PLANE:
             switch (coord) {
                 case GL_S:
-                    memcpy(state.texgen[state.texture.active].S_O, param, 4 * sizeof(GLfloat));
+                    memcpy(glstate.texgen[glstate.texture.active].S_O, param, 4 * sizeof(GLfloat));
                     break;
                 case GL_T:
-                    memcpy(state.texgen[state.texture.active].T_O, param, 4 * sizeof(GLfloat));
+                    memcpy(glstate.texgen[glstate.texture.active].T_O, param, 4 * sizeof(GLfloat));
                     break;
                 case GL_R:
-                    memcpy(state.texgen[state.texture.active].R_O, param, 4 * sizeof(GLfloat));
+                    memcpy(glstate.texgen[glstate.texture.active].R_O, param, 4 * sizeof(GLfloat));
                     break;
                 default:
                     errorShim(GL_INVALID_ENUM);
@@ -57,13 +57,13 @@ void glTexGenfv(GLenum coord, GLenum pname, const GLfloat *param) {
         case GL_EYE_PLANE:
             switch (coord) {
                 case GL_S:
-                    memcpy(state.texgen[state.texture.active].S_E, param, 4 * sizeof(GLfloat));
+                    memcpy(glstate.texgen[glstate.texture.active].S_E, param, 4 * sizeof(GLfloat));
                     break;
                 case GL_T:
-                    memcpy(state.texgen[state.texture.active].T_E, param, 4 * sizeof(GLfloat));
+                    memcpy(glstate.texgen[glstate.texture.active].T_E, param, 4 * sizeof(GLfloat));
                     break;
                 case GL_R:
-                    memcpy(state.texgen[state.texture.active].R_E, param, 4 * sizeof(GLfloat));
+                    memcpy(glstate.texgen[glstate.texture.active].R_E, param, 4 * sizeof(GLfloat));
                     break;
                 default:
                     errorShim(GL_INVALID_ENUM);
@@ -73,28 +73,28 @@ void glTexGenfv(GLenum coord, GLenum pname, const GLfloat *param) {
             errorShim(GL_INVALID_ENUM);
     }
 }
-void glGetTexGenfv(GLenum coord,GLenum pname,GLfloat *params) {
+void glshim_glGetTexGenfv(GLenum coord,GLenum pname,GLfloat *params) {
     if (gl_batch) flush();
     noerrorShim();
 	switch(pname) {
 		case GL_TEXTURE_GEN_MODE:
 			switch (coord) {
-				case GL_S: *params = state.texgen[state.texture.active].S; break;
-				case GL_T: *params = state.texgen[state.texture.active].T; break;
-				case GL_R: *params = state.texgen[state.texture.active].R; break;
+				case GL_S: *params = glstate.texgen[glstate.texture.active].S; break;
+				case GL_T: *params = glstate.texgen[glstate.texture.active].T; break;
+				case GL_R: *params = glstate.texgen[glstate.texture.active].R; break;
 				default: *params = GL_EYE_LINEAR;
 			}
 			break;
 		case GL_OBJECT_PLANE:
 			switch (coord) {
 				case GL_S:
-					memcpy(params, state.texgen[state.texture.active].S_O, 4 * sizeof(GLfloat));
+					memcpy(params, glstate.texgen[glstate.texture.active].S_O, 4 * sizeof(GLfloat));
 					break;
 				case GL_T:
-					memcpy(params, state.texgen[state.texture.active].T_O, 4 * sizeof(GLfloat));
+					memcpy(params, glstate.texgen[glstate.texture.active].T_O, 4 * sizeof(GLfloat));
 					break;
 				case GL_R:
-					memcpy(params, state.texgen[state.texture.active].R_O, 4 * sizeof(GLfloat));
+					memcpy(params, glstate.texgen[glstate.texture.active].R_O, 4 * sizeof(GLfloat));
 					break;
                 default:
                     errorShim(GL_INVALID_ENUM);
@@ -102,13 +102,13 @@ void glGetTexGenfv(GLenum coord,GLenum pname,GLfloat *params) {
 		case GL_EYE_PLANE:
 			switch (coord) {
 				case GL_S:
-					memcpy(params, state.texgen[state.texture.active].S_E, 4 * sizeof(GLfloat));
+					memcpy(params, glstate.texgen[glstate.texture.active].S_E, 4 * sizeof(GLfloat));
 					break;
 				case GL_T:
-					memcpy(params, state.texgen[state.texture.active].T_E, 4 * sizeof(GLfloat));
+					memcpy(params, glstate.texgen[glstate.texture.active].T_E, 4 * sizeof(GLfloat));
 					break;
 				case GL_R:
-					memcpy(params, state.texgen[state.texture.active].R_E, 4 * sizeof(GLfloat));
+					memcpy(params, glstate.texgen[glstate.texture.active].R_E, 4 * sizeof(GLfloat));
 					break;
                 default:
                     errorShim(GL_INVALID_ENUM);
@@ -251,7 +251,7 @@ void sphere_loop(const GLfloat *verts, const GLfloat *norm, GLfloat *out, GLint 
     }*/
     // First get the ModelviewMatrix
     GLfloat ModelviewMatrix[16], InvModelview[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, InvModelview);
+    glshim_glGetFloatv(GL_MODELVIEW_MATRIX, InvModelview);
     // column major -> row major
     for (int i=0; i<4; i++)
         for (int j=0; j<4; j++)
@@ -264,7 +264,7 @@ void sphere_loop(const GLfloat *verts, const GLfloat *norm, GLfloat *out, GLint 
 	GLushort k = indices?indices[i]:i;
         matrix_vector(ModelviewMatrix, verts+k*4, eye);
         vector_normalize(eye);
-        vector3_matrix((norm)?(norm+k*3):state.normal, InvModelview, eye_norm);
+        vector3_matrix((norm)?(norm+k*3):glstate.normal, InvModelview, eye_norm);
         vector_normalize(eye_norm);
         a=dot(eye, eye_norm)*2.0f;
         for (int j=0; j<4; j++)
@@ -293,7 +293,7 @@ void eye_loop(const GLfloat *verts, const GLfloat *param, GLfloat *out, GLint co
     for (int i=0; i<count; i++) {
 	GLushort k = indices?indices[i]:i;
         matrix_vector(ModelviewMatrix, verts+k*4, tmp);
-        out[k*4]=dot(plane, tmp);
+        out[k*4]=dot4(plane, tmp);
     }
 
 }
@@ -316,23 +316,23 @@ void gen_tex_coords(GLfloat *verts, GLfloat *norm, GLfloat **coords, GLint count
     // TODO: do less work when called from glDrawElements?
     (*needclean) = 0;
     // special case : no texgen but texture activated, create a simple 1 repeated element
-    if (!state.enable.texgen_s[texture] && !state.enable.texgen_t[texture] && !state.enable.texgen_r[texture]) {
+    if (!glstate.enable.texgen_s[texture] && !glstate.enable.texgen_t[texture] && !glstate.enable.texgen_r[texture]) {
 	if ((*coords)==NULL) 
 	    *coords = (GLfloat *)malloc(count * 4 * sizeof(GLfloat));
 	if (indices)
 	    for (int i=0; i<ilen; i++) {
-		memcpy((*coords)+indices[i]*4, state.texcoord[texture], sizeof(GLfloat)*4);
+		memcpy((*coords)+indices[i]*4, glstate.texcoord[texture], sizeof(GLfloat)*4);
 	    }
 	else
 	    for (int i=0; i<count*4; i+=4) {
-		memcpy((*coords)+i, state.texcoord[texture], sizeof(GLfloat)*4);
+		memcpy((*coords)+i, glstate.texcoord[texture], sizeof(GLfloat)*4);
 	    }
 	return;
     }
     // special case: SPHERE_MAP needs both texgen to make sense
-    if ((state.enable.texgen_s[texture] && (state.texgen[texture].S==GL_SPHERE_MAP)) && (state.enable.texgen_t[texture] && (state.texgen[texture].T==GL_SPHERE_MAP)))
+    if ((glstate.enable.texgen_s[texture] && (glstate.texgen[texture].S==GL_SPHERE_MAP)) && (glstate.enable.texgen_t[texture] && (glstate.texgen[texture].T==GL_SPHERE_MAP)))
     {
-	if (!state.enable.texture_2d[texture])
+	if (!glstate.enable.texture_2d[texture])
 	    return;
 	if ((*coords)==NULL) 
 	    *coords = (GLfloat *)malloc(count * 4 * sizeof(GLfloat));
@@ -340,14 +340,14 @@ void gen_tex_coords(GLfloat *verts, GLfloat *norm, GLfloat **coords, GLint count
         return;
     }
     // special case: REFLECTION_MAP  needs the 3 texgen to make sense
-    if ((state.enable.texgen_s[texture] && (state.texgen[texture].S==GL_REFLECTION_MAP)) 
-     && (state.enable.texgen_t[texture] && (state.texgen[texture].T==GL_REFLECTION_MAP))
-     && (state.enable.texgen_r[texture] && (state.texgen[texture].R==GL_REFLECTION_MAP)))
+    if ((glstate.enable.texgen_s[texture] && (glstate.texgen[texture].S==GL_REFLECTION_MAP)) 
+     && (glstate.enable.texgen_t[texture] && (glstate.texgen[texture].T==GL_REFLECTION_MAP))
+     && (glstate.enable.texgen_r[texture] && (glstate.texgen[texture].R==GL_REFLECTION_MAP)))
     {
         *needclean=1;
         // setup reflection map!
-        GLuint old_tex=state.texture.active;
-        if (old_tex!=texture) glActiveTexture(GL_TEXTURE0 + texture);
+        GLuint old_tex=glstate.texture.active;
+        if (old_tex!=texture) glshim_glActiveTexture(GL_TEXTURE0 + texture);
         LOAD_GLES_OES(glTexGeni);
         LOAD_GLES_OES(glTexGenfv);
         LOAD_GLES(glEnable);
@@ -358,19 +358,19 @@ void gen_tex_coords(GLfloat *verts, GLfloat *norm, GLfloat **coords, GLint count
         // enable texgen
         gles_glEnable(GL_TEXTURE_GEN_STR);      //GLES only support the 3 gen at the same time!
 
-        if (old_tex!=texture) glActiveTexture(GL_TEXTURE0 + old_tex);
+        if (old_tex!=texture) glshim_glActiveTexture(GL_TEXTURE0 + old_tex);
             
         return;
     }
     // special case: NORMAL_MAP  needs the 3 texgen to make sense
-    if ((state.enable.texgen_s[texture] && (state.texgen[texture].S==GL_NORMAL_MAP)) 
-     && (state.enable.texgen_t[texture] && (state.texgen[texture].T==GL_NORMAL_MAP))
-     && (state.enable.texgen_r[texture] && (state.texgen[texture].R==GL_NORMAL_MAP)))
+    if ((glstate.enable.texgen_s[texture] && (glstate.texgen[texture].S==GL_NORMAL_MAP)) 
+     && (glstate.enable.texgen_t[texture] && (glstate.texgen[texture].T==GL_NORMAL_MAP))
+     && (glstate.enable.texgen_r[texture] && (glstate.texgen[texture].R==GL_NORMAL_MAP)))
     {
         *needclean=1;
         // setup reflection map!
-        GLuint old_tex=state.texture.active;
-        if (old_tex!=texture) glActiveTexture(GL_TEXTURE0 + texture);
+        GLuint old_tex=glstate.texture.active;
+        if (old_tex!=texture) glshim_glActiveTexture(GL_TEXTURE0 + texture);
         LOAD_GLES_OES(glTexGeni);
         LOAD_GLES_OES(glTexGenfv);
         LOAD_GLES(glEnable);
@@ -381,18 +381,18 @@ void gen_tex_coords(GLfloat *verts, GLfloat *norm, GLfloat **coords, GLint count
         // enable texgen
         gles_glEnable(GL_TEXTURE_GEN_STR);
 
-        if (old_tex!=texture) glActiveTexture(GL_TEXTURE0 + old_tex);
+        if (old_tex!=texture) glshim_glActiveTexture(GL_TEXTURE0 + old_tex);
             
         return;
     }
-    if (!state.enable.texture_2d[texture])
+    if (!glstate.enable.texture_2d[texture])
 	return;
     if ((*coords)==NULL) 
         *coords = (GLfloat *)malloc(count * 4 * sizeof(GLfloat));
-    if (state.enable.texgen_s[texture])
-        tex_coord_loop(verts, norm, *coords, (indices)?ilen:count, state.texgen[texture].S, state.texgen[texture].S_O, state.texgen[texture].S_E, indices);
-    if (state.enable.texgen_t[texture])
-        tex_coord_loop(verts, norm, *coords+1, (indices)?ilen:count, state.texgen[texture].T, state.texgen[texture].T_O, state.texgen[texture].T_E, indices);
+    if (glstate.enable.texgen_s[texture])
+        tex_coord_loop(verts, norm, *coords, (indices)?ilen:count, glstate.texgen[texture].S, glstate.texgen[texture].S_O, glstate.texgen[texture].S_E, indices);
+    if (glstate.enable.texgen_t[texture])
+        tex_coord_loop(verts, norm, *coords+1, (indices)?ilen:count, glstate.texgen[texture].T, glstate.texgen[texture].T_O, glstate.texgen[texture].T_E, indices);
     for (int i=0; i<count; i++) {
         GLushort k = indices?indices[i]:i;
         (*coords)[k*4+2] = 0.0f;
@@ -404,38 +404,47 @@ void gen_tex_clean(GLint cleancode, int texture) {
 	if (cleancode == 0)
 		return;
 	if (cleancode == 1) {
-		GLuint old_tex=state.texture.active;
-		if (old_tex!=texture) glActiveTexture(GL_TEXTURE0 + texture);
+		GLuint old_tex=glstate.texture.active;
+		if (old_tex!=texture) glshim_glActiveTexture(GL_TEXTURE0 + texture);
 		LOAD_GLES(glDisable);
 		gles_glDisable(GL_TEXTURE_GEN_STR);
-		if (old_tex!=texture) glActiveTexture(GL_TEXTURE0 + old_tex);
+		if (old_tex!=texture) glshim_glActiveTexture(GL_TEXTURE0 + old_tex);
 		return;
 	}
 }
 
-void glLoadTransposeMatrixf(const GLfloat *m) {
+void glshim_glLoadTransposeMatrixf(const GLfloat *m) {
 	GLfloat mf[16];
 	matrix_row_column(m, mf);
-	glLoadMatrixf(mf);
+	glshim_glLoadMatrixf(mf);
     errorGL();
 }
 
-void glLoadTransposeMatrixd(const GLdouble *m) {
+void glshim_glLoadTransposeMatrixd(const GLdouble *m) {
 	GLfloat mf[16];
 	for (int i=0; i<16; i++)
 		mf[i] = m[i];
-	glLoadTransposeMatrixf(mf);
+	glshim_glLoadTransposeMatrixf(mf);
 }
 
-void glMultTransposeMatrixd(const GLdouble *m) {
+void glshim_glMultTransposeMatrixd(const GLdouble *m) {
 	GLfloat mf[16];
 	for (int i=0; i<16; i++)
 		mf[i] = m[i];
-	glMultTransposeMatrixf(mf);
+	glshim_glMultTransposeMatrixf(mf);
 }
-void glMultTransposeMatrixf(const GLfloat *m) {
+void glshim_glMultTransposeMatrixf(const GLfloat *m) {
 	GLfloat mf[16];
 	matrix_row_column(m, mf);
-	glMultMatrixf(mf);
+	glshim_glMultMatrixf(mf);
     errorGL();
 }
+
+void glTexGenfv(GLenum coord, GLenum pname, const GLfloat *params) __attribute__((alias("glshim_glTexGenfv")));
+void glTexGeni(GLenum coord, GLenum pname, GLint param) __attribute__((alias("glshim_glTexGeni")));
+void glGetTexGenfv(GLenum coord,GLenum pname,GLfloat *params) __attribute__((alias("glshim_glGetTexGenfv")));
+
+void glLoadTransposeMatrixf(const GLfloat *m) __attribute__((alias("glshim_glLoadTransposeMatrixf")));
+void glLoadTransposeMatrixd(const GLdouble *m) __attribute__((alias("glshim_glLoadTransposeMatrixd")));
+void glMultTransposeMatrixd(const GLdouble *m) __attribute__((alias("glshim_glMultTransposeMatrixd")));
+void glMultTransposeMatrixf(const GLfloat *m) __attribute__((alias("glshim_glMultTransposeMatrixf")));

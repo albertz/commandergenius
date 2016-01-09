@@ -1,12 +1,12 @@
 #include "light.h"
 
 #ifndef USE_ES2
-void glLightModelf(GLenum pname, GLfloat param) {
+void glshim_glLightModelf(GLenum pname, GLfloat param) {
 //printf("%sglLightModelf(%04X, %.2f)\n", (state.list.compiling)?"list":"", pname, param);
-    if (state.list.compiling && state.list.active) {
+    if (glstate.list.compiling && glstate.list.active) {
 		GLfloat dummy[4];
 		dummy[0]=param;
-		glLightModelfv(pname, dummy);
+		glshim_glLightModelfv(pname, dummy);
 		return;
 	}
     LOAD_GLES(glLightModelf);
@@ -23,15 +23,15 @@ void glLightModelf(GLenum pname, GLfloat param) {
     }
 }
 
-void glLightModelfv(GLenum pname, const GLfloat* params) {
+void glshim_glLightModelfv(GLenum pname, const GLfloat* params) {
 //printf("%sglLightModelfv(%04X, [%.2f, %.2f, %.2f, %.2f])\n", (state.list.compiling)?"list":"", pname, params[0], params[1], params[2], params[3]);
-    if (state.list.compiling && state.list.active) {
-		NewStage(state.list.active, STAGE_LIGHTMODEL);
-/*		if (state.list.active->lightmodel)
-			state.list.active = extend_renderlist(state.list.active);*/
-		state.list.active->lightmodelparam = pname;
-		state.list.active->lightmodel = (GLfloat*)malloc(4*sizeof(GLfloat));
-		memcpy(state.list.active->lightmodel, params, 4*sizeof(GLfloat));
+    if (glstate.list.compiling && glstate.list.active) {
+		NewStage(glstate.list.active, STAGE_LIGHTMODEL);
+/*		if (glstate.list.active->lightmodel)
+			glstate.list.active = extend_renderlist(glstate.list.active);*/
+		glstate.list.active->lightmodelparam = pname;
+		glstate.list.active->lightmodel = (GLfloat*)malloc(4*sizeof(GLfloat));
+		memcpy(glstate.list.active->lightmodel, params, 4*sizeof(GLfloat));
         noerrorShim();
 		return;
 	}
@@ -49,11 +49,11 @@ void glLightModelfv(GLenum pname, const GLfloat* params) {
     }
 }
 
-void glLightfv(GLenum light, GLenum pname, const GLfloat* params) {
+void glshim_glLightfv(GLenum light, GLenum pname, const GLfloat* params) {
 //printf("%sglLightfv(%04X, %04X, [%.2f, %.2f, %.2f, %.2f])\n", (state.list.compiling)?"list":"", light, pname, params[0], params[1], params[2], params[3]);
-    if (state.list.compiling && state.list.active) {
-		NewStage(state.list.active, STAGE_LIGHT);
-		rlLightfv(state.list.active, light, pname, params);
+    if (glstate.list.compiling && glstate.list.active) {
+		NewStage(glstate.list.active, STAGE_LIGHT);
+		rlLightfv(glstate.list.active, light, pname, params);
         noerrorShim();
 		return;
 	}
@@ -62,10 +62,15 @@ void glLightfv(GLenum light, GLenum pname, const GLfloat* params) {
     errorGL();
 }
 
-void glLightf(GLenum light, GLenum pname, const GLfloat params) {
+void glshim_glLightf(GLenum light, GLenum pname, const GLfloat params) {
 	GLfloat dummy[4];
 	dummy[0]=params;
-	glLightfv(light, pname, dummy);
+	glshim_glLightfv(light, pname, dummy);
     errorGL();
 }
+
+void glLightModelf(GLenum pname, GLfloat param) __attribute__((alias("glshim_glLightModelf")));
+void glLightModelfv(GLenum pname, const GLfloat* params) __attribute__((alias("glshim_glLightModelfv")));
+void glLightfv(GLenum light, GLenum pname, const GLfloat* params) __attribute__((alias("glshim_glLightfv")));
+void glLightf(GLenum light, GLenum pname, const GLfloat params) __attribute__((alias("glshim_glLightf")));
 #endif

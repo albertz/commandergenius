@@ -4,6 +4,7 @@
 #include "debug.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include "gles.h"
 #include "../glx/streaming.h"
 
 #ifndef GL_TEXTURE_STREAM_IMG  
@@ -60,7 +61,7 @@ void tex_coord_npot(GLfloat *tex, GLsizei len,
  */
 void tex_setup_texcoord(GLuint texunit, GLuint len) {
     LOAD_GLES(glTexCoordPointer);
-    GLuint old = state.texture.client;
+    GLuint old = glstate.texture.client;
     
     static void * tex[8] = {0,0,0,0,0,0,0,0};   // hugly but convenient...
     
@@ -69,35 +70,35 @@ void tex_setup_texcoord(GLuint texunit, GLuint len) {
         tex[texunit]=NULL;
     }
         
-    gltexture_t *bound = state.texture.bound[texunit];
+    gltexture_t *bound = glstate.texture.bound[texunit];
     
     // check if some changes are needed
     int changes = 0;
-    if ((state.texture.rect_arb[texunit]) || 
+    if ((glstate.texture.rect_arb[texunit]) || 
         (bound && ((bound->width!=bound->nwidth)||(bound->height!=bound->nheight)||
-        (bound->shrink && (state.vao->pointers.tex_coord[texunit].type!=GL_FLOAT) && (state.vao->pointers.tex_coord[texunit].type!=GL_DOUBLE)))))
+        (bound->shrink && (glstate.vao->pointers.tex_coord[texunit].type!=GL_FLOAT) && (glstate.vao->pointers.tex_coord[texunit].type!=GL_DOUBLE)))))
         changes = 1;
-	if (old!=texunit) glClientActiveTexture(texunit+GL_TEXTURE0);
+	if (old!=texunit) glshim_glClientActiveTexture(texunit+GL_TEXTURE0);
     if (changes) {
         // first convert to GLfloat, without normalization
-        tex[texunit] = copy_gl_pointer_tex(&state.vao->pointers.tex_coord[texunit], 4, 0, len, state.vao->pointers.tex_coord[texunit].buffer);
+        tex[texunit] = copy_gl_pointer_tex(&glstate.vao->pointers.tex_coord[texunit], 4, 0, len, glstate.vao->pointers.tex_coord[texunit].buffer);
         if (!tex[texunit]) {
             printf("LibGL: Error with Texture tranform\n");
-            gles_glTexCoordPointer(len, state.vao->pointers.tex_coord[texunit].type, state.vao->pointers.tex_coord[texunit].stride, state.vao->pointers.tex_coord[texunit].pointer);
-            if (old!=texunit) glClientActiveTexture(old+GL_TEXTURE0);
+            gles_glTexCoordPointer(len, glstate.vao->pointers.tex_coord[texunit].type, glstate.vao->pointers.tex_coord[texunit].stride, glstate.vao->pointers.tex_coord[texunit].pointer);
+            if (old!=texunit) glshim_glClientActiveTexture(old+GL_TEXTURE0);
             return;
         }
         // Normalize if needed
-        if ((state.texture.rect_arb[texunit]) || ((state.vao->pointers.tex_coord[texunit].type!=GL_FLOAT) && (state.vao->pointers.tex_coord[texunit].type!=GL_DOUBLE)))
+        if ((glstate.texture.rect_arb[texunit]) || ((glstate.vao->pointers.tex_coord[texunit].type!=GL_FLOAT) && (glstate.vao->pointers.tex_coord[texunit].type!=GL_DOUBLE)))
             tex_coord_rect_arb(tex[texunit], len, bound->width, bound->height);
         if ((bound->width!=bound->nwidth) || (bound->height!=bound->nheight))
             tex_coord_npot(tex[texunit], len, bound->width, bound->height, bound->nwidth, bound->nheight);
         // All done, setup the texcoord array now
         gles_glTexCoordPointer(4, GL_FLOAT, 0, tex[texunit]);
     } else {
-        gles_glTexCoordPointer(state.vao->pointers.tex_coord[texunit].size, state.vao->pointers.tex_coord[texunit].type, state.vao->pointers.tex_coord[texunit].stride, state.vao->pointers.tex_coord[texunit].pointer);
+        gles_glTexCoordPointer(glstate.vao->pointers.tex_coord[texunit].size, glstate.vao->pointers.tex_coord[texunit].type, glstate.vao->pointers.tex_coord[texunit].stride, glstate.vao->pointers.tex_coord[texunit].pointer);
     }
-	if (old!=texunit) glClientActiveTexture(old+GL_TEXTURE0);
+	if (old!=texunit) glshim_glClientActiveTexture(old+GL_TEXTURE0);
 }
 
 int nolumalpha = 0;
@@ -267,6 +268,7 @@ GLenum swizzle_internalformat(GLenum *internalformat) {
         case 3: 
             ret = GL_RGB; sret = GL_RGB; 
             break;
+        case GL_RGBA:
         case GL_RGBA8:
         case GL_RGBA4:
         case GL_BGRA:
@@ -320,12 +322,11 @@ static int default_tex_mipmap = 0;
 static int proxy_width = 0;
 static int proxy_height = 0;
 
-void glTexImage2D(GLenum target, GLint level, GLint internalformat,
+void glshim_glTexImage2D(GLenum target, GLint level, GLint internalformat,
                   GLsizei width, GLsizei height, GLint border,
                   GLenum format, GLenum type, const GLvoid *data) {
 
-    //printf("glTexImage2D on target=%s with unpack_row_length(%i), size(%i,%i) and skip(%i,%i), format(internal)=%s(%s), type=%s, data=%08x, level=%i (mipmap_need=%i, mipmap_auto=%i) => texture=%u (streamed=%i)\n", PrintEnum(target), state.texture.unpack_row_length, width, height, state.texture.unpack_skip_pixels, state.texture.unpack_skip_rows, PrintEnum(format), PrintEnum(internalformat), PrintEnum(type), data, level, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->mipmap_need:0, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->mipmap_auto:0, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->texture:0, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->streamed:0);
-
+    //printf("glTexImage2D on target=%s with unpack_row_length(%i), size(%i,%i) and skip(%i,%i), format(internal)=%s(%s), type=%s, data=%08x, level=%i (mipmap_need=%i, mipmap_auto=%i) => texture=%u (streamed=%i), glstate.list.compiling=%d\n", PrintEnum(target), glstate.texture.unpack_row_length, width, height, glstate.texture.unpack_skip_pixels, glstate.texture.unpack_skip_rows, PrintEnum(format), PrintEnum(internalformat), PrintEnum(type), data, level, (glstate.texture.bound[glstate.texture.active])?glstate.texture.bound[glstate.texture.active]->mipmap_need:0, (glstate.texture.bound[glstate.texture.active])?glstate.texture.bound[glstate.texture.active]->mipmap_auto:0, (glstate.texture.bound[glstate.texture.active])?glstate.texture.bound[glstate.texture.active]->texture:0, (glstate.texture.bound[glstate.texture.active])?glstate.texture.bound[glstate.texture.active]->streamed:0, glstate.list.compiling);
     // proxy case
     if (target == GL_PROXY_TEXTURE_2D) {
         proxy_width = ((width<<level)>(texshrink==8)?8192:2048)?0:width;
@@ -333,27 +334,27 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
         return;
     }
     //PUSH_IF_COMPILING(glTexImage2D);
-    GLuint old_glbatch = state.gl_batch;
-    if (state.gl_batch) {
+    GLuint old_glbatch = glstate.gl_batch;
+    if (glstate.gl_batch) {
         flush();
-        state.gl_batch = 0;
+        glstate.gl_batch = 0;
     }
 
     GLvoid *datab = (GLvoid*)data;
     
-	if (state.vao->unpack)
-		datab += (uintptr_t)state.vao->pack->data;
+	if (glstate.vao->unpack)
+		datab += (uintptr_t)glstate.vao->pack->data;
         
     GLvoid *pixels = (GLvoid *)datab;
     border = 0;	//TODO: something?
     noerrorShim();
 
-    gltexture_t *bound = state.texture.bound[state.texture.active];
+    gltexture_t *bound = glstate.texture.bound[glstate.texture.active];
     if (bound) bound->alpha = pixel_hasalpha(format);
     if (automipmap) {
         if (bound && (level>0))
             if ((automipmap==1) || (automipmap==3) || bound->mipmap_need) {
-                state.gl_batch = old_glbatch;
+                glstate.gl_batch = old_glbatch;
                 return;			// has been handled by auto_mipmap
             }
             else
@@ -367,14 +368,14 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
      if (datab) {
 
         // implements GL_UNPACK_ROW_LENGTH
-        if ((state.texture.unpack_row_length && state.texture.unpack_row_length != width) || state.texture.unpack_skip_pixels || state.texture.unpack_skip_rows) {
+        if ((glstate.texture.unpack_row_length && glstate.texture.unpack_row_length != width) || glstate.texture.unpack_skip_pixels || glstate.texture.unpack_skip_rows) {
             int imgWidth, pixelSize;
             pixelSize = pixel_sizeof(format, type);
-            imgWidth = ((state.texture.unpack_row_length)? state.texture.unpack_row_length:width) * pixelSize;
+            imgWidth = ((glstate.texture.unpack_row_length)? glstate.texture.unpack_row_length:width) * pixelSize;
             GLubyte *dst = (GLubyte *)malloc(width * height * pixelSize);
             pixels = (GLvoid *)dst;
             const GLubyte *src = (GLubyte *)datab;
-            src += state.texture.unpack_skip_pixels * pixelSize + state.texture.unpack_skip_rows * imgWidth;
+            src += glstate.texture.unpack_skip_pixels * pixelSize + glstate.texture.unpack_skip_rows * imgWidth;
             for (int y = 0; y < height; y += 1) {
                 memcpy(dst, src, width * pixelSize);
                 src += imgWidth;
@@ -579,7 +580,7 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
 			if (bound->streamingID>-1) {	// success
 				bound->streamed = true;
 				ApplyFilterID(bound->streamingID, bound->min_filter, bound->mag_filter);
-				GLboolean tmp = state.enable.texture_2d[state.texture.active];
+				GLboolean tmp = glstate.enable.texture_2d[glstate.texture.active];
 				LOAD_GLES(glDisable);
 				LOAD_GLES(glEnable);
 				if (tmp)
@@ -695,8 +696,8 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
                     if ((bound) && (bound->mipmap_need)) {
                         // remove the need for mipmap...
                         bound->mipmap_need = 0;
-                        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, bound->min_filter);
-                        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, bound->mag_filter);
+                        glshim_glTexParameteri(target, GL_TEXTURE_MIN_FILTER, bound->min_filter);
+                        glshim_glTexParameteri(target, GL_TEXTURE_MAG_FILTER, bound->mag_filter);
                     }
                 }
                 
@@ -715,7 +716,7 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
                     gles_glTexParameteri( target, GL_GENERATE_MIPMAP, GL_FALSE );*/
             } else {
                 if (pixels)
-                    glTexSubImage2D(target, level, 0, 0, width, height, format, type, pixels);	// (should never happens) updload the 1st data...
+                    glshim_glTexSubImage2D(target, level, 0, 0, width, height, format, type, pixels);	// (should never happens) updload the 1st data...
                 }
         }
     }
@@ -734,54 +735,54 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
     if (pixels != datab) {
         free(pixels);
     }
-    state.gl_batch = old_glbatch;
+    glstate.gl_batch = old_glbatch;
 }
 
-void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+void glshim_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                      GLsizei width, GLsizei height, GLenum format, GLenum type,
                      const GLvoid *data) {
 
 	//PUSH_IF_COMPILING(glTexSubImage2D);
-    GLuint old_glbatch = state.gl_batch;
-    if (state.gl_batch) {
+    GLuint old_glbatch = glstate.gl_batch;
+    if (glstate.gl_batch) {
         flush();
-        state.gl_batch = 0;
+        glstate.gl_batch = 0;
     }
 
     GLvoid *datab = (GLvoid*)data;
-	if (state.vao->unpack)
-		datab += (uintptr_t)state.vao->pack->data;
+	if (glstate.vao->unpack)
+		datab += (uintptr_t)glstate.vao->pack->data;
     GLvoid *pixels = (GLvoid*)datab;
 
     LOAD_GLES(glTexSubImage2D);
     LOAD_GLES(glTexParameteri);
     noerrorShim();
-    //printf("glTexSubImage2D on target=%s with unpack_row_length(%i), size(%i,%i), pos(%i,%i) and skip={%i,%i}, format=%s, type=%s, level=%i, texture=%u\n", PrintEnum(target), state.texture.unpack_row_length, width, height, xoffset, yoffset, state.texture.unpack_skip_pixels, state.texture.unpack_skip_rows, PrintEnum(format), PrintEnum(type), level, state.texture.bound[state.texture.active]->texture);
+    //printf("glTexSubImage2D on target=%s with unpack_row_length(%i), size(%i,%i), pos(%i,%i) and skip={%i,%i}, format=%s, type=%s, level=%i, texture=%u\n", PrintEnum(target), glstate.texture.unpack_row_length, width, height, xoffset, yoffset, glstate.texture.unpack_skip_pixels, glstate.texture.unpack_skip_rows, PrintEnum(format), PrintEnum(type), level, glstate.texture.bound[glstate.texture.active]->texture);
     if (width==0 || height==0) {
-        state.gl_batch = old_glbatch;
+        glstate.gl_batch = old_glbatch;
         return;
     }
     target = map_tex_target(target);
     
-    gltexture_t *bound = state.texture.bound[state.texture.active];
+    gltexture_t *bound = glstate.texture.bound[glstate.texture.active];
     if (automipmap) {
         if (bound && (level>0))
             if ((automipmap==1) || (automipmap==3) || bound->mipmap_need) {
-                state.gl_batch = old_glbatch;
+                glstate.gl_batch = old_glbatch;
                 return;			// has been handled by auto_mipmap
             }
             else
                 bound->mipmap_need = 1;
     }
 
-    if ((state.texture.unpack_row_length && state.texture.unpack_row_length != width) || state.texture.unpack_skip_pixels || state.texture.unpack_skip_rows) {
+    if ((glstate.texture.unpack_row_length && glstate.texture.unpack_row_length != width) || glstate.texture.unpack_skip_pixels || glstate.texture.unpack_skip_rows) {
 	    int imgWidth, pixelSize;
 	    pixelSize = pixel_sizeof(format, type);
-	    imgWidth = ((state.texture.unpack_row_length)? state.texture.unpack_row_length:width) * pixelSize;
+	    imgWidth = ((glstate.texture.unpack_row_length)? glstate.texture.unpack_row_length:width) * pixelSize;
 	    GLubyte *dst = (GLubyte *)malloc(width * height * pixelSize);
 	    pixels = (GLvoid *)dst;
 	    const GLubyte *src = (GLubyte *)datab;
-	    src += state.texture.unpack_skip_pixels * pixelSize + state.texture.unpack_skip_rows * imgWidth;
+	    src += glstate.texture.unpack_skip_pixels * pixelSize + glstate.texture.unpack_skip_rows * imgWidth;
 	    for (int y = 0; y < height; y += 1) {
 		    memcpy(dst, src, width * pixelSize);
 		    src += imgWidth;
@@ -836,7 +837,7 @@ void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
             // nothing to do...
             if (pixels != datab)
                 free((GLvoid *)pixels);
-            state.gl_batch = old_glbatch;
+            glstate.gl_batch = old_glbatch;
             return;
         }
         // ok, now standard cases....
@@ -888,102 +889,102 @@ void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
 
     if (pixels != datab)
         free((GLvoid *)pixels);
-    state.gl_batch = old_glbatch;
+    glstate.gl_batch = old_glbatch;
 }
 
 // 1d stubs
-void glTexImage1D(GLenum target, GLint level, GLint internalFormat,
+void glshim_glTexImage1D(GLenum target, GLint level, GLint internalFormat,
                   GLsizei width, GLint border,
                   GLenum format, GLenum type, const GLvoid *data) {
 
     // TODO: maybe too naive to force GL_TEXTURE_2D here?
-    glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, 1,
+    glshim_glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, 1,
                  border, format, type, data);
 }
-void glTexSubImage1D(GLenum target, GLint level, GLint xoffset,
+void glshim_glTexSubImage1D(GLenum target, GLint level, GLint xoffset,
                      GLsizei width, GLenum format, GLenum type,
                      const GLvoid *data) {
 
-    glTexSubImage2D(GL_TEXTURE_2D, level, xoffset, 0,
+    glshim_glTexSubImage2D(GL_TEXTURE_2D, level, xoffset, 0,
                     width, 1, format, type, data);
 }
-void glCopyTexImage1D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y,
+void glshim_glCopyTexImage1D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y,
 		    GLsizei width, GLint border) {
-    glCopyTexImage2D(GL_TEXTURE_2D, level, internalformat, x, y, width, 1, border);
+    glshim_glCopyTexImage2D(GL_TEXTURE_2D, level, internalformat, x, y, width, 1, border);
 		    
 }
 
-void glCopyTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLint x, GLint y,
+void glshim_glCopyTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLint x, GLint y,
                                 GLsizei width) {
-    glCopyTexSubImage2D(GL_TEXTURE_2D, level, xoffset, 0, x, y, width, 1);
+    glshim_glCopyTexSubImage2D(GL_TEXTURE_2D, level, xoffset, 0, x, y, width, 1);
 }
                                 
-void glCopyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+void glshim_glCopyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                                 GLint x, GLint y, GLsizei width, GLsizei height) {
-    glCopyTexSubImage2D(GL_TEXTURE_2D, level, xoffset, yoffset, x, y, width, height);
+    glshim_glCopyTexSubImage2D(GL_TEXTURE_2D, level, xoffset, yoffset, x, y, width, height);
 }
 
                                 
 
 
 // 3d stubs
-void glTexImage3D(GLenum target, GLint level, GLint internalFormat,
+void glshim_glTexImage3D(GLenum target, GLint level, GLint internalFormat,
                   GLsizei width, GLsizei height, GLsizei depth, GLint border,
                   GLenum format, GLenum type, const GLvoid *data) {
 
     // TODO: maybe too naive to force GL_TEXTURE_2D here?
-    glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height,
+    glshim_glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height,
                  border, format, type, data);
 }
-void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, 
+void glshim_glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, 
                      GLsizei width, GLsizei height, GLsizei depth, GLenum format,
                      GLenum type, const GLvoid *data) {
 
-    glTexSubImage2D(target, level, xoffset, yoffset,
+    glshim_glTexSubImage2D(target, level, xoffset, yoffset,
                     width, height, format, type, data);
 }
 
-void glPixelStorei(GLenum pname, GLint param) {
+void glshim_glPixelStorei(GLenum pname, GLint param) {
     // TODO: add to glGetIntegerv?
-//   if (state.gl_batch) flush();
+//   if (glstate.gl_batch) flush();
 
     LOAD_GLES(glPixelStorei);
     noerrorShim();
     switch (pname) {
         case GL_UNPACK_ROW_LENGTH:
-            state.texture.unpack_row_length = param;
+            glstate.texture.unpack_row_length = param;
             break;
         case GL_UNPACK_SKIP_PIXELS:
-            state.texture.unpack_skip_pixels = param;
+            glstate.texture.unpack_skip_pixels = param;
             break;
         case GL_UNPACK_SKIP_ROWS:
-            state.texture.unpack_skip_rows = param;
+            glstate.texture.unpack_skip_rows = param;
             break;
         case GL_UNPACK_LSB_FIRST:
-            state.texture.unpack_lsb_first = param;
+            glstate.texture.unpack_lsb_first = param;
             break;
         case GL_UNPACK_IMAGE_HEIGHT:
-            state.texture.unpack_image_height = param;
+            glstate.texture.unpack_image_height = param;
             break;
         case GL_UNPACK_SWAP_BYTES:
         case GL_PACK_SWAP_BYTES:
             // Fake... TODO?
-            //state.texture.unpack_lsb_first = param;
+            //glstate.texture.unpack_lsb_first = param;
             break;
         case GL_PACK_ROW_LENGTH:
-            state.texture.pack_row_length = param;
+            glstate.texture.pack_row_length = param;
             break;
         case GL_PACK_SKIP_PIXELS:
-            state.texture.pack_skip_pixels = param;
+            glstate.texture.pack_skip_pixels = param;
             break;
         case GL_PACK_SKIP_ROWS:
-            state.texture.pack_skip_rows = param;
+            glstate.texture.pack_skip_rows = param;
             break;
         case GL_PACK_LSB_FIRST:
-            state.texture.pack_lsb_first = param;
+            glstate.texture.pack_lsb_first = param;
             break;
         case GL_PACK_IMAGE_HEIGHT:
-            state.texture.pack_image_height = param;
+            glstate.texture.pack_image_height = param;
             break;
         default:
 			errorGL();
@@ -991,14 +992,14 @@ void glPixelStorei(GLenum pname, GLint param) {
             break;
     }
 }
-GLboolean glIsTexture(	GLuint texture) {
+GLboolean glshim_glIsTexture(	GLuint texture) {
 	noerrorShim();
 	if (!texture) {
 		return GL_FALSE;
 	}
     int ret;
 	khint_t k;
-	khash_t(tex) *list = state.texture.list;
+	khash_t(tex) *list = glstate.texture.list;
 	if (! list) {
 		return GL_FALSE;
 	}
@@ -1010,15 +1011,15 @@ GLboolean glIsTexture(	GLuint texture) {
 	return GL_TRUE;
 }
 
-gltexture_t* getTexture(GLenum target, GLuint texture) {
+gltexture_t* glshim_getTexture(GLenum target, GLuint texture) {
     // Get a texture based on glID
     gltexture_t* tex = NULL;
     if (texture == 0) return tex;
     int ret;
     khint_t k;
-    khash_t(tex) *list = state.texture.list;
+    khash_t(tex) *list = glstate.texture.list;
     if (! list) {
-        list = state.texture.list = kh_init(tex);
+        list = glstate.texture.list = kh_init(tex);
         // segfaults if we don't do a single put
         kh_put(tex, list, 1, &ret);
         kh_del(tex, list, 1);
@@ -1052,36 +1053,36 @@ gltexture_t* getTexture(GLenum target, GLuint texture) {
     return tex;
 }
 
-void glBindTexture(GLenum target, GLuint texture) {
+void glshim_glBindTexture(GLenum target, GLuint texture) {
 	noerrorShim();
-    if ((target!=GL_PROXY_TEXTURE_2D) && (state.list.active && (state.gl_batch && !state.list.compiling)))  {
-        if ((state.statebatch.bound_targ == target) && (state.statebatch.bound_tex == texture))
+    if ((target!=GL_PROXY_TEXTURE_2D) && (glstate.list.active && (glstate.gl_batch && !glstate.list.compiling)))  {
+        if ((glstate.statebatch.bound_targ == target) && (glstate.statebatch.bound_tex == texture))
             return; // nothing to do...
-        if (!state.statebatch.bound_targ) {
-            state.statebatch.bound_targ = target;
-            state.statebatch.bound_tex = texture;
+        if (!glstate.statebatch.bound_targ) {
+            glstate.statebatch.bound_targ = target;
+            glstate.statebatch.bound_tex = texture;
         } else {
             flush();
         }
     }
-    if ((target!=GL_PROXY_TEXTURE_2D) && ((state.list.compiling || state.gl_batch) && state.list.active)) {
+    if ((target!=GL_PROXY_TEXTURE_2D) && ((glstate.list.compiling || glstate.gl_batch) && glstate.list.active)) {
         // check if already a texture binded, if yes, create a new list
-        NewStage(state.list.active, STAGE_BINDTEX);
-        rlBindTexture(state.list.active, target, texture);
+        NewStage(glstate.list.active, STAGE_BINDTEX);
+        rlBindTexture(glstate.list.active, target, texture);
     } else {
     	int tex_changed = 1;
 		int streamingID = -1;
         gltexture_t *tex = NULL;
-        //printf("glBindTexture(0x%04X, %u), active=%i, client=%i\n", target, texture, state.texture.active, state.texture.client);
+        //printf("glBindTexture(0x%04X, %u), active=%i, client=%i\n", target, texture, glstate.texture.active, glstate.texture.client);
         if (texture) {
-            tex = getTexture(target, texture);
-            if (state.texture.bound[state.texture.active] == tex)
+            tex = glshim_getTexture(target, texture);
+            if (glstate.texture.bound[glstate.texture.active] == tex)
             	tex_changed = 0;
             texture = tex->glname;
 			if (texstream && tex->streamed)
 				streamingID = tex->streamingID;
         } else {
-            if (state.texture.bound[state.texture.active] == NULL)
+            if (glstate.texture.bound[glstate.texture.active] == NULL)
             	tex_changed = 0;
         }
 	
@@ -1091,10 +1092,10 @@ tex_changed=1;  // seems buggy, temporary disabling that...
 
         if (tex_changed) {
 
-			GLboolean tmp = state.enable.texture_2d[state.texture.active];
+			GLboolean tmp = glstate.enable.texture_2d[glstate.texture.active];
 #ifdef TEXSTREAM
 	        if (texstream) {  // unbind streaming texture if any...
-	            gltexture_t *bound = state.texture.bound[state.texture.active];
+	            gltexture_t *bound = glstate.texture.bound[glstate.texture.active];
 	            if (bound && bound->streamed) {
 	                if (tmp)
                         gles_glDisable(GL_TEXTURE_STREAM_IMG);
@@ -1105,10 +1106,10 @@ tex_changed=1;  // seems buggy, temporary disabling that...
 	        }
 #endif
 
-	        state.texture.rect_arb[state.texture.active] = (target == GL_TEXTURE_RECTANGLE_ARB);
+	        glstate.texture.rect_arb[glstate.texture.active] = (target == GL_TEXTURE_RECTANGLE_ARB);
 	        target = map_tex_target(target);
 
-            state.texture.bound[state.texture.active] = tex;
+            glstate.texture.bound[glstate.texture.active] = tex;
 
             LOAD_GLES(glBindTexture);
 #ifdef TEXSTREAM
@@ -1129,11 +1130,11 @@ tex_changed=1;  // seems buggy, temporary disabling that...
 }
 
 // TODO: also glTexParameterf(v)?
-void glTexParameteri(GLenum target, GLenum pname, GLint param) {
+void glshim_glTexParameteri(GLenum target, GLenum pname, GLint param) {
     PUSH_IF_COMPILING(glTexParameteri);
     LOAD_GLES(glTexParameteri);
     target = map_tex_target(target);
-    gltexture_t *texture = state.texture.bound[state.texture.active];
+    gltexture_t *texture = glstate.texture.bound[glstate.texture.active];
     switch (pname) {
 	case GL_TEXTURE_MIN_FILTER:
 	case GL_TEXTURE_MAG_FILTER:
@@ -1189,15 +1190,15 @@ void glTexParameteri(GLenum target, GLenum pname, GLint param) {
     errorGL();
 }
 
-void glTexParameterf(GLenum target, GLenum pname, GLfloat param) {
-    glTexParameteri(target, pname, param);
+void glshim_glTexParameterf(GLenum target, GLenum pname, GLfloat param) {
+    glshim_glTexParameteri(target, pname, param);
 }
 
-void glDeleteTextures(GLsizei n, const GLuint *textures) {
-    if (state.gl_batch) flush();
+void glshim_glDeleteTextures(GLsizei n, const GLuint *textures) {
+    if (glstate.gl_batch) flush();
 	noerrorShim();
     LOAD_GLES(glDeleteTextures);
-    khash_t(tex) *list = state.texture.list;
+    khash_t(tex) *list = glstate.texture.list;
     if (list) {
         khint_t k;
         gltexture_t *tex;
@@ -1208,8 +1209,8 @@ void glDeleteTextures(GLsizei n, const GLuint *textures) {
                 tex = kh_value(list, k);
                 int a;
                 for (a=0; a<MAX_TEX; a++) {
-                    if (tex == state.texture.bound[a])
-                        state.texture.bound[a] = NULL;
+                    if (tex == glstate.texture.bound[a])
+                        glstate.texture.bound[a] = NULL;
                 }
 				gles_glDeleteTextures(1, &tex->glname);
 				errorGL();
@@ -1233,19 +1234,19 @@ void glDeleteTextures(GLsizei n, const GLuint *textures) {
     }
 }
 
-void glGenTextures(GLsizei n, GLuint * textures) {
+void glshim_glGenTextures(GLsizei n, GLuint * textures) {
     if (n<=0) 
 		return;
-    if (state.gl_batch) flush();
+    if (glstate.gl_batch) flush();
     LOAD_GLES(glGenTextures);
     gles_glGenTextures(n, textures);
     errorGL();
     // now, add all the textures to the list
     int ret;
 	khint_t k;
-	khash_t(tex) *list = state.texture.list;
+	khash_t(tex) *list = glstate.texture.list;
 	if (! list) {
-		list = state.texture.list = kh_init(tex);
+		list = glstate.texture.list = kh_init(tex);
 		// segfaults if we don't do a single put
 		kh_put(tex, list, 1, &ret);
 		kh_del(tex, list, 1);
@@ -1281,18 +1282,18 @@ void glGenTextures(GLsizei n, GLuint * textures) {
 	}
 }
 
-GLboolean glAreTexturesResident(GLsizei n, const GLuint *textures, GLboolean *residences) {
+GLboolean glshim_glAreTexturesResident(GLsizei n, const GLuint *textures, GLboolean *residences) {
 	noerrorShim();
     return true;
 }
 
-void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params) {
+void glshim_glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params) {
 //printf("glGetTexLevelParameteriv(0x%04X, %d, 0x%04X, %p)\n", target, level, pname, params);
 	// simplification: (mostly) not taking "target" into account here
-    if (state.gl_batch) flush();
+    if (glstate.gl_batch) flush();
 	*params = 0;
 	noerrorShim();
-	gltexture_t* bound = state.texture.bound[state.texture.active];
+	gltexture_t* bound = glstate.texture.bound[glstate.texture.active];
 	switch (pname) {
 		case GL_TEXTURE_WIDTH:
 			if (target==GL_PROXY_TEXTURE_2D)
@@ -1352,9 +1353,9 @@ void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *p
 
 extern GLuint current_fb;   // from framebuffers.c
 
-void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid * img) {
-    if (state.gl_batch) flush();
-	if (state.texture.bound[state.texture.active]==NULL)
+void glshim_glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid * img) {
+    if (glstate.gl_batch) flush();
+	if (glstate.texture.bound[glstate.texture.active]==NULL)
 		return;		// no texture bounded...
 	if (level != 0) {
 		//TODO
@@ -1365,14 +1366,14 @@ void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoi
 	if (target!=GL_TEXTURE_2D)
 		return;
 
-	gltexture_t* bound = state.texture.bound[state.texture.active];
+	gltexture_t* bound = glstate.texture.bound[glstate.texture.active];
 	int width = bound->width;
 	int height = bound->height;
     //printf("glGetTexImage(0x%04X, %i, 0x%04X, 0x%04X, 0x%p), texture=%u, size=%i,%i\n", target, level, format, type, img, bound->glname, width, height);
 	
 	GLvoid *dst = img;
-    if (state.vao->pack)
-        dst += (uintptr_t)state.vao->pack->data;
+    if (glstate.vao->pack)
+        dst += (uintptr_t)glstate.vao->pack->data;
 #ifdef TEXSTREAM
     if (texstream && bound->streamed) {
         noerrorShim();
@@ -1392,30 +1393,30 @@ void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoi
         GLuint old_fbo = current_fb;
         GLuint fbo;
 	
-		glGenFramebuffers(1, &fbo);
-		glBindFramebuffer(GL_FRAMEBUFFER_OES, fbo);
-		glFramebufferTexture2D(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, oldBind, 0);
+		glshim_glGenFramebuffers(1, &fbo);
+		glshim_glBindFramebuffer(GL_FRAMEBUFFER_OES, fbo);
+		glshim_glFramebufferTexture2D(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, oldBind, 0);
 		// Read the pixels!
-		glReadPixels(0, 0, width, height, format, type, img);	// using "full" version with conversion of format/type
-		glBindFramebuffer(GL_FRAMEBUFFER_OES, old_fbo);
-        glDeleteFramebuffers(1, &fbo);
+		glshim_glReadPixels(0, 0, width, height, format, type, img);	// using "full" version with conversion of format/type
+		glshim_glBindFramebuffer(GL_FRAMEBUFFER_OES, old_fbo);
+        glshim_glDeleteFramebuffers(1, &fbo);
         noerrorShim();
 	}
 }
 
-void glActiveTexture( GLenum texture ) {
- if (state.list.active && (state.gl_batch && !state.list.compiling))  {
-    if ((state.statebatch.active_tex == texture))
+void glshim_glActiveTexture( GLenum texture ) {
+ if (glstate.list.active && (glstate.gl_batch && !glstate.list.compiling))  {
+    if ((glstate.statebatch.active_tex == texture))
         return; // nothing to do...
-    if (!state.statebatch.active_tex) {
-        state.statebatch.active_tex = texture;
+    if (!glstate.statebatch.active_tex) {
+        glstate.statebatch.active_tex = texture;
     } else {
         flush();
     }
  }
- if (state.list.active) {
-     NewStage(state.list.active, STAGE_ACTIVETEX);
-     rlActiveTexture(state.list.active, texture);
+ if (glstate.list.active) {
+     NewStage(glstate.list.active, STAGE_ACTIVETEX);
+     rlActiveTexture(glstate.list.active, texture);
      return;
  }
  
@@ -1423,51 +1424,51 @@ void glActiveTexture( GLenum texture ) {
     errorShim(GL_INVALID_ENUM);
    return;
  }
- state.texture.active = texture - GL_TEXTURE0;
+ glstate.texture.active = texture - GL_TEXTURE0;
  LOAD_GLES(glActiveTexture);
  gles_glActiveTexture(texture);
  errorGL();
 }
 
-void glClientActiveTexture( GLenum texture ) {
+void glshim_glClientActiveTexture( GLenum texture ) {
  if ((texture < GL_TEXTURE0) || (texture >= GL_TEXTURE0+MAX_TEX)) {
 	 errorShim(GL_INVALID_ENUM);
    return;
  }
  // try to speed-up things...
- if (state.texture.client == (texture - GL_TEXTURE0))
+ if (glstate.texture.client == (texture - GL_TEXTURE0))
     return;
- if (state.gl_batch) flush();
- state.texture.client = texture - GL_TEXTURE0;
+ if (glstate.gl_batch) flush();
+ glstate.texture.client = texture - GL_TEXTURE0;
  LOAD_GLES(glClientActiveTexture);
  gles_glClientActiveTexture(texture);
  errorGL();
 }
 
-void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data) {
+void glshim_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data) {
     //printf("glReadPixels(%i, %i, %i, %i, 0x%04X, 0x%04X, 0x%p)\n", x, y, width, height, format, type, data);
-    GLuint old_glbatch = state.gl_batch;
-    if (state.gl_batch) {
+    GLuint old_glbatch = glstate.gl_batch;
+    if (glstate.gl_batch) {
         flush();
-        state.gl_batch = 0;
+        glstate.gl_batch = 0;
     }
-    if (state.list.compiling && state.list.active) {
+    if (glstate.list.compiling && glstate.list.active) {
 		errorShim(GL_INVALID_OPERATION);
-        state.gl_batch = old_glbatch;
+        glstate.gl_batch = old_glbatch;
         return;	// never in list
 	}
     LOAD_GLES(glReadPixels);
     errorGL();
     GLvoid* dst = data;
-    if (state.vao->pack)
-		dst += (uintptr_t)state.vao->pack->data;
+    if (glstate.vao->pack)
+		dst += (uintptr_t)glstate.vao->pack->data;
 		
 	readfboBegin();
     if (format == GL_RGBA && format == GL_UNSIGNED_BYTE) {
         // easy passthru
         gles_glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, dst);
         readfboEnd();
-        state.gl_batch = old_glbatch;
+        glstate.gl_batch = old_glbatch;
         return;
     }
     // grab data in GL_RGBA format
@@ -1480,43 +1481,43 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format
     }
     free(pixels);
     readfboEnd();
-    state.gl_batch = old_glbatch;
+    glstate.gl_batch = old_glbatch;
     return;
 }
 
-void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+void glshim_glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                 GLint x, GLint y, GLsizei width, GLsizei height) {
-    //printf("glCopyTexSubImage2D(%s, %i, %i, %i, %i, %i, %i, %i), bounded texture=%u format/type=%s, %s\n", PrintEnum(target), level, xoffset, yoffset, x, y, width, height, (state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->texture:0, PrintEnum((state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->format:0), PrintEnum((state.texture.bound[state.texture.active])?state.texture.bound[state.texture.active]->type:0));
+    //printf("glCopyTexSubImage2D(%s, %i, %i, %i, %i, %i, %i, %i), bounded texture=%u format/type=%s, %s\n", PrintEnum(target), level, xoffset, yoffset, x, y, width, height, (glstate.texture.bound[glstate.texture.active])?glstate.texture.bound[glstate.texture.active]->texture:0, PrintEnum((glstate.texture.bound[glstate.texture.active])?glstate.texture.bound[glstate.texture.active]->format:0), PrintEnum((glstate.texture.bound[glstate.texture.active])?glstate.texture.bound[glstate.texture.active]->type:0));
     // PUSH_IF_COMPILING(glCopyTexSubImage2D);
-    GLuint old_glbatch = state.gl_batch;
-    if (state.gl_batch) {
+    GLuint old_glbatch = glstate.gl_batch;
+    if (glstate.gl_batch) {
         flush();
-        state.gl_batch = 0;
+        glstate.gl_batch = 0;
     }
  
     LOAD_GLES(glCopyTexSubImage2D);
     errorGL();
 
     // "Unmap" if buffer mapped...
-    glbuffer_t *pack = state.vao->pack;
-    glbuffer_t *unpack = state.vao->unpack;
-    state.vao->pack = NULL;
-    state.vao->unpack = NULL;
+    glbuffer_t *pack = glstate.vao->pack;
+    glbuffer_t *unpack = glstate.vao->unpack;
+    glstate.vao->pack = NULL;
+    glstate.vao->unpack = NULL;
  
-    gltexture_t* bound = state.texture.bound[state.texture.active];
+    gltexture_t* bound = glstate.texture.bound[glstate.texture.active];
     if (!bound) {
         errorShim(GL_INVALID_OPERATION);
-        state.gl_batch = old_glbatch;
+        glstate.gl_batch = old_glbatch;
         return;
     }
 #ifdef TEXSTREAM
     if (bound && bound->streamed) {
         void* buff = GetStreamingBuffer(bound->streamingID);
         if ((bound->width == width) && (bound->height == height) && (xoffset == yoffset == 0)) {
-            glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, buff);
+            glshim_glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, buff);
         } else {
             void* tmp = malloc(width*height*2);
-            glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp);
+            glshim_glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp);
             for (int y=0; y<height; y++) {
                 memcpy(buff+((yoffset+y)*bound->width+xoffset)*2, tmp+y*width*2, width*2);
             }
@@ -1531,51 +1532,51 @@ void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
             void* tmp = malloc(width*height*4);
             GLenum format = (bound)?bound->format:GL_RGBA;
             GLenum type = (bound)?bound->type:GL_UNSIGNED_BYTE;
-            glReadPixels(x, y, width, height, format, type, tmp);
-            glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, tmp);
+            glshim_glReadPixels(x, y, width, height, format, type, tmp);
+            glshim_glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, tmp);
             free(tmp);
         }
     }
     // "Remap" if buffer mapped...
-    state.vao->pack = pack;
-    state.vao->unpack = unpack;
-    state.gl_batch = old_glbatch;
+    glstate.vao->pack = pack;
+    glstate.vao->unpack = unpack;
+    glstate.gl_batch = old_glbatch;
 }
 
 
-void glCopyTexImage2D(GLenum target,  GLint level,  GLenum internalformat,  GLint x,  GLint y,  
+void glshim_glCopyTexImage2D(GLenum target,  GLint level,  GLenum internalformat,  GLint x,  GLint y,  
 								GLsizei width,  GLsizei height,  GLint border) {
      //printf("glCopyTexImage2D(0x%04X, %i, 0x%04X, %i, %i, %i, %i, %i), current_fb=%u\n", target, level, internalformat, x, y, width, height, border, current_fb);
      //PUSH_IF_COMPILING(glCopyTexImage2D);
-     GLuint old_glbatch = state.gl_batch;
-     if (state.gl_batch) {
+     GLuint old_glbatch = glstate.gl_batch;
+     if (glstate.gl_batch) {
          flush();
-         state.gl_batch = 0;
+         glstate.gl_batch = 0;
      }
 
      errorGL();
 
      // "Unmap" if buffer mapped...
-     glbuffer_t *pack = state.vao->pack;
-     glbuffer_t *unpack = state.vao->unpack;
-     state.vao->pack = NULL;
-     state.vao->unpack = NULL;
+     glbuffer_t *pack = glstate.vao->pack;
+     glbuffer_t *unpack = glstate.vao->unpack;
+     glstate.vao->pack = NULL;
+     glstate.vao->unpack = NULL;
     
     if (copytex) {
         LOAD_GLES(glCopyTexImage2D);
         gles_glCopyTexImage2D(target, level, GL_RGB, x, y, width, height, border);
     } else {
         void* tmp = malloc(width*height*4);
-        glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
-        glTexImage2D(target, level, internalformat, width, height, border, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
+        glshim_glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
+        glshim_glTexImage2D(target, level, internalformat, width, height, border, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
         free(tmp);
     }
     
      // "Remap" if buffer mapped...
-     state.vao->pack = pack;
-     state.vao->unpack = unpack;
+     glstate.vao->pack = pack;
+     glstate.vao->unpack = unpack;
      
-     state.gl_batch = old_glbatch;
+     glstate.gl_batch = old_glbatch;
 }
 
 
@@ -1649,7 +1650,7 @@ GLvoid *uncompressDXTc(GLsizei width, GLsizei height, GLenum format, GLsizei ima
 	return pixels;
 }
 
-void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
+void glshim_glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
 							GLsizei width, GLsizei height, GLint border,
 							GLsizei imageSize, const GLvoid *data) 
 {
@@ -1658,17 +1659,17 @@ void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
         proxy_height = (height>2048)?0:height;
         return;
     }
-     GLuint old_glbatch = state.gl_batch;
-     if (state.gl_batch) {
+     GLuint old_glbatch = glstate.gl_batch;
+     if (glstate.gl_batch) {
          flush();
-         state.gl_batch = 0;
+         glstate.gl_batch = 0;
      }
 
-    if (state.texture.bound[state.texture.active]==NULL) {
+    if (glstate.texture.bound[glstate.texture.active]==NULL) {
 		errorShim(GL_INVALID_OPERATION);
 	    return;		// no texture bounded...
 	}
-//printf("glCompressedTexImage2D on target=%s with size(%i,%i), internalformat=s, imagesize=%i, upackbuffer=%p\n", PrintEnum(target), width, height, PrintEnum(internalformat), imageSize, state.buffers.unpack?state.buffers.unpack->data:0);
+//printf("glCompressedTexImage2D on target=%s with size(%i,%i), internalformat=s, imagesize=%i, upackbuffer=%p\n", PrintEnum(target), width, height, PrintEnum(internalformat), imageSize, glstate.buffers.unpack?glstate.buffers.unpack->data:0);
     // hack...
     if (internalformat==GL_RGBA8)
         internalformat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
@@ -1686,8 +1687,8 @@ void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
     LOAD_GLES(glCompressedTexImage2D);
     errorGL();
     
-    glbuffer_t *unpack = state.vao->unpack;
-    state.vao->unpack = NULL;
+    glbuffer_t *unpack = glstate.vao->unpack;
+    glstate.vao->unpack = NULL;
     GLvoid *datab = (GLvoid*)data;
     if (unpack)
 		datab += (uintptr_t)unpack->data;
@@ -1713,65 +1714,65 @@ void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
             }
             // automaticaly reduce the pixel size
             half=pixels;
-            state.texture.bound[state.texture.active]->alpha = (internalformat==GL_COMPRESSED_RGB_S3TC_DXT1_EXT)?false:true;
-            state.texture.bound[state.texture.active]->format = GL_RGBA; //internalformat;
-            state.texture.bound[state.texture.active]->type = GL_UNSIGNED_SHORT_4_4_4_4;
-            state.texture.bound[state.texture.active]->compressed = true;
+            glstate.texture.bound[glstate.texture.active]->alpha = (internalformat==GL_COMPRESSED_RGB_S3TC_DXT1_EXT)?false:true;
+            glstate.texture.bound[glstate.texture.active]->format = GL_RGBA; //internalformat;
+            glstate.texture.bound[glstate.texture.active]->type = GL_UNSIGNED_SHORT_4_4_4_4;
+            glstate.texture.bound[glstate.texture.active]->compressed = true;
             if (pixel_thirdscale(pixels, &half, width, height, GL_RGBA, GL_UNSIGNED_BYTE)) 
                 fact = 1;
             else
-                state.texture.bound[state.texture.active]->type = GL_UNSIGNED_BYTE;
+                glstate.texture.bound[glstate.texture.active]->type = GL_UNSIGNED_BYTE;
         } else {
             half = NULL;
             fact = 1;
         }
 		int oldalign;
-		glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldalign);
+		glshim_glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldalign);
 		if (oldalign!=1) 
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glTexImage2D(target, level, GL_RGBA, width>>fact, height>>fact, border, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, half);
+            glshim_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glshim_glTexImage2D(target, level, GL_RGBA, width>>fact, height>>fact, border, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, half);
 		if (oldalign!=1) 
-            glPixelStorei(GL_UNPACK_ALIGNMENT, oldalign);
+            glshim_glPixelStorei(GL_UNPACK_ALIGNMENT, oldalign);
 		if (half!=pixels)
 			free(half);
 		if (pixels!=datab)
 			free(pixels);
 	} else {
-	    state.texture.bound[state.texture.active]->alpha = true;
-        state.texture.bound[state.texture.active]->format = internalformat;
-        state.texture.bound[state.texture.active]->type = GL_UNSIGNED_BYTE;
-        state.texture.bound[state.texture.active]->compressed = true;
+	    glstate.texture.bound[glstate.texture.active]->alpha = true;
+        glstate.texture.bound[glstate.texture.active]->format = internalformat;
+        glstate.texture.bound[glstate.texture.active]->type = GL_UNSIGNED_BYTE;
+        glstate.texture.bound[glstate.texture.active]->compressed = true;
 	    gles_glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, datab);
 	}
-	state.vao->unpack = unpack;
-    state.gl_batch = old_glbatch;
+	glstate.vao->unpack = unpack;
+    glstate.gl_batch = old_glbatch;
 }
 
-void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+void glshim_glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
 							   GLsizei width, GLsizei height, GLenum format, 
 							   GLsizei imageSize, const GLvoid *data) 
 {
-     GLuint old_glbatch = state.gl_batch;
-     if (state.gl_batch) {
+     GLuint old_glbatch = glstate.gl_batch;
+     if (glstate.gl_batch) {
          flush();
-         state.gl_batch = 0;
+         glstate.gl_batch = 0;
      }
 
-	if (state.texture.bound[state.texture.active]==NULL) {
+	if (glstate.texture.bound[glstate.texture.active]==NULL) {
 		errorShim(GL_INVALID_OPERATION);
-        state.gl_batch = old_glbatch;
+        glstate.gl_batch = old_glbatch;
 		return;		// no texture bounded...
 	}
 	if (level != 0) {
 		noerrorShim();
 		//TODO
 		//printf("STUBBED glCompressedTexSubImage2D with level=%i\n", level);
-        state.gl_batch = old_glbatch;
+        glstate.gl_batch = old_glbatch;
 		return;
 	}
-    //printf("glCompressedTexSubImage2D with unpack_row_length(%i), size(%i,%i), pos(%i,%i) and skip={%i,%i}, internalformat=%s, imagesize=%i\n", state.texture.unpack_row_length, width, height, xoffset, yoffset, state.texture.unpack_skip_pixels, state.texture.unpack_skip_rows, PrintEnum(format), imageSize);
-    glbuffer_t *unpack = state.vao->unpack;
-    state.vao->unpack = NULL;
+    //printf("glCompressedTexSubImage2D with unpack_row_length(%i), size(%i,%i), pos(%i,%i) and skip={%i,%i}, internalformat=%s, imagesize=%i\n", glstate.texture.unpack_row_length, width, height, xoffset, yoffset, glstate.texture.unpack_skip_pixels, glstate.texture.unpack_skip_rows, PrintEnum(format), imageSize);
+    glbuffer_t *unpack = glstate.vao->unpack;
+    glstate.vao->unpack = NULL;
     GLvoid *datab = (GLvoid*)data;
     if (unpack)
 		datab += (uintptr_t)unpack->data;
@@ -1798,10 +1799,10 @@ void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
 		#if 1
 		pixel_thirdscale(pixels, &half, width, height, GL_RGBA, GL_UNSIGNED_BYTE);
 		int oldalign;
-		glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldalign);
-		if (oldalign!=1) glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glTexSubImage2D(target, level, xoffset/2, yoffset/2, width/2, height/2, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, half);
-		if (oldalign!=1) glPixelStorei(GL_UNPACK_ALIGNMENT, oldalign);
+		glshim_glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldalign);
+		if (oldalign!=1) glshim_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glshim_glTexSubImage2D(target, level, xoffset/2, yoffset/2, width/2, height/2, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, half);
+		if (oldalign!=1) glshim_glPixelStorei(GL_UNPACK_ALIGNMENT, oldalign);
 		#else
 		pixel_halfscale(pixels, &half, width, height, GL_RGBA, GL_UNSIGNED_BYTE);
 		glTexSubImage2D(target, level, xoffset/2, yoffset/2, width/2, height/2, GL_RGBA, GL_UNSIGNED_BYTE, half);
@@ -1813,11 +1814,11 @@ void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
 	} else {
 		gles_glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, datab);
 	}
-    state.gl_batch = old_glbatch;
+    glstate.gl_batch = old_glbatch;
 }
 
-void glGetCompressedTexImage(GLenum target, GLint lod, GLvoid *img) {
-    if (state.gl_batch) flush();
+void glshim_glGetCompressedTexImage(GLenum target, GLint lod, GLvoid *img) {
+    if (glstate.gl_batch) flush();
 
     printf("LIBGL: Stub GetCompressedTexImage\n");
     
@@ -1825,29 +1826,77 @@ void glGetCompressedTexImage(GLenum target, GLint lod, GLvoid *img) {
     return;
 }
 
-void glCompressedTexImage1D(GLenum target, GLint level, GLenum internalformat,
+void glshim_glCompressedTexImage1D(GLenum target, GLint level, GLenum internalformat,
 							GLsizei width, GLint border,
 							GLsizei imageSize, const GLvoid *data) {
                                 
-    glCompressedTexImage2D(target, level, internalformat, width, 1, border, imageSize, data);
+    glshim_glCompressedTexImage2D(target, level, internalformat, width, 1, border, imageSize, data);
 }
 
-void glCompressedTexImage3D(GLenum target, GLint level, GLenum internalformat,
+void glshim_glCompressedTexImage3D(GLenum target, GLint level, GLenum internalformat,
 							GLsizei width, GLsizei height, GLsizei depth, GLint border,
 							GLsizei imageSize, const GLvoid *data) {
                                 
-    glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
+    glshim_glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
 }
 
-void glCompressedTexSubImage1D(GLenum target, GLint level, GLint xoffset,
+void glshim_glCompressedTexSubImage1D(GLenum target, GLint level, GLint xoffset,
 							   GLsizei width, GLenum format, 
 							   GLsizei imageSize, const GLvoid *data) {
 
-    glCompressedTexSubImage2D(target, level, xoffset, 0, width, 1, format, imageSize, data);
+    glshim_glCompressedTexSubImage2D(target, level, xoffset, 0, width, 1, format, imageSize, data);
 }
-void glCompressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+void glshim_glCompressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
 							   GLsizei width, GLsizei height, GLsizei depth, GLenum format, 
 							   GLsizei imageSize, const GLvoid *data) {
 
-    glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
+    glshim_glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
 }
+
+
+//Direct wrapper
+void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *data) __attribute__((alias("glshim_glTexImage2D")));
+void glTexImage1D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *data) __attribute__((alias("glshim_glTexImage1D")));
+void glTexImage3D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *data) __attribute__((alias("glshim_glTexImage3D")));
+void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *data) __attribute__((alias("glshim_glTexSubImage2D")));
+void glTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid *data) __attribute__((alias("glshim_glTexSubImage1D")));
+void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,  GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *data) __attribute__((alias("glshim_glTexSubImage3D")));
+void glBindTexture(GLenum target, GLuint texture) __attribute__((alias("glshim_glBindTexture")));
+void glGenTextures(GLsizei n, GLuint * textures) __attribute__((alias("glshim_glGenTextures")));
+void glDeleteTextures(GLsizei n, const GLuint * textures) __attribute__((alias("glshim_glDeleteTextures")));
+void glTexParameteri(GLenum target, GLenum pname, GLint param) __attribute__((alias("glshim_glTexParameteri")));
+void glTexParameterf(GLenum target, GLenum pname, GLfloat param) __attribute__((alias("glshim_glTexParameterf")));
+GLboolean glAreTexturesResident(GLsizei n, const GLuint *textures, GLboolean *residences) __attribute__((alias("glshim_glAreTexturesResident")));
+void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params) __attribute__((alias("glshim_glGetTexLevelParameteriv")));
+void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid * img) __attribute__((alias("glshim_glGetTexImage")));
+void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data) __attribute__((alias("glshim_glReadPixels")));
+void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexImage2D")));
+void glCompressedTexImage1D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLint border, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexImage1D")));
+void glCompressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexImage3D")));
+void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexSubImage2D")));
+void glCompressedTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexSubImage1D")));
+void glCompressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexSubImage3D")));
+void glGetCompressedTexImage(GLenum target, GLint lod, GLvoid *img) __attribute__((alias("glshim_glGetCompressedTexImage")));
+void glCopyTexImage1D(GLenum target,  GLint level,  GLenum internalformat,  GLint x,  GLint y, GLsizei width,  GLint border) __attribute__((alias("glshim_glCopyTexImage1D")));
+void glCopyTexImage2D(GLenum target,  GLint level,  GLenum internalformat,  GLint x,  GLint y, GLsizei width,  GLsizei height,  GLint border) __attribute__((alias("glshim_glCopyTexImage2D")));
+void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) __attribute__((alias("glshim_glCopyTexSubImage2D")));
+void glCopyTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width) __attribute__((alias("glshim_glCopyTexSubImage1D")));
+void glCopyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height) __attribute__((alias("glshim_glCopyTexSubImage3D")));
+void glActiveTexture( GLenum texture ) __attribute__((alias("glshim_glActiveTexture")));
+void glClientActiveTexture( GLenum texture ) __attribute__((alias("glshim_glClientActiveTexture")));
+GLboolean glIsTexture( GLuint texture ) __attribute__((alias("glshim_glIsTexture")));
+void glPixelStorei(GLenum pname, GLint param) __attribute__((alias("glshim_glPixelStorei")));
+//EXT mapper
+void glTexSubImage3DEXT(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,  GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *data) __attribute__((alias("glshim_glTexSubImage3D")));
+void glCompressedTexImage2DEXT(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexImage2D")));
+void glCompressedTexImage1DEXT(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLint border, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexImage1D")));
+void glCompressedTexImage3DEXT(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexImage3D")));
+void glCompressedTexSubImage2DEXT(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexSubImage2D")));
+void glCompressedTexSubImage1DEXT(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexSubImage1D")));
+void glCompressedTexSubImage3DEXT(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const GLvoid *data) __attribute__((alias("glshim_glCompressedTexSubImage3D")));
+void glGetCompressedTexImageEXT(GLenum target, GLint lod, GLvoid *img) __attribute__((alias("glshim_glGetCompressedTexImage")));
+void glCopyTexSubImage3DEXT(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height) __attribute__((alias("glshim_glCopyTexSubImage3D")));
+
+//ARB mapper
+void glActiveTextureARB(GLenum texture) __attribute__((alias("glshim_glActiveTexture")));
+void glClientActiveTextureARB(GLenum texture) __attribute__((alias("glshim_glClientActiveTexture")));
