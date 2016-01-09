@@ -182,6 +182,9 @@ echo "# Try to use GLES 2.x context - will revert to GLES 1.X if unsupported by 
 echo "# you need this option only if you're developing 3-d app (y) or (n)" >> AndroidAppSettings.cfg
 echo NeedGles2=$NeedGles2 >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Use glshim library for provide OpenGL 1.x functionality to OpenGL ES accelerated cards (y) or (n)" >> AndroidAppSettings.cfg
+echo UseGlshim=$UseGlshim >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Application uses software video buffer - you're calling SDL_SetVideoMode() without SDL_HWSURFACE and without SDL_OPENGL," >> AndroidAppSettings.cfg
 echo "# this will allow small speed optimization. Enable this even when you're using SDL_HWSURFACE. (y) or (n)" >> AndroidAppSettings.cfg
 echo SwVideoMode=$SwVideoMode >> AndroidAppSettings.cfg
@@ -481,6 +484,13 @@ if [ "$NeedGles2" = "y" ] ; then
 	NeedGles2=true
 else
 	NeedGles2=false
+fi
+
+if [ "$UseGlshim" = "y" ] ; then
+	UseGlshimCFlags=-DUSE_GLSHIM=1
+else
+	UseGlshim=
+	UseGlshimCFlags=
 fi
 
 if [ "$SwVideoMode" = "y" ] ; then
@@ -895,6 +905,7 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
 	sed "s^APPLICATION_OVERLAPS_SYSTEM_HEADERS :=.*^APPLICATION_OVERLAPS_SYSTEM_HEADERS := $AppOverlapsSystemHeaders^" | \
+	sed "s^USE_GLSHIM :=.*^USE_GLSHIM := $UseGlshim^" | \
 	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := \
 		$RedefinedKeycodes \
 		$RedefinedKeycodesScreenKb \
@@ -903,7 +914,8 @@ cat project/jni/SettingsTemplate.mk | \
 		$CompatibilityHacksAppIgnoresAudioBufferSize \
 		$CompatibilityHacksSlowCompatibleEventQueue \
 		$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState \
-		$CompatibilityHacksProperUsageOfSDL_UpdateRects^" | \
+		$CompatibilityHacksProperUsageOfSDL_UpdateRects \
+		$UseGlshimCFlags^" | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
 	sed "s^APPLICATION_BUILD_EXCLUDE :=.*^APPLICATION_BUILD_EXCLUDE := $AppBuildExclude^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \

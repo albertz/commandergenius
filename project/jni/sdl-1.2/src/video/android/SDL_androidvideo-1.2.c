@@ -61,6 +61,10 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 #define DEBUGOUT(...)
 #endif
 
+#ifdef USE_GLSHIM
+#include <GL/gl.h>
+#endif
+
 static int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat);
 static SDL_Rect **ANDROID_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags);
 static SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current, int width, int height, int bpp, Uint32 flags);
@@ -1236,6 +1240,10 @@ static void* ANDROID_GL_GetProcAddress(_THIS, const char *proc)
 	void * func = dlsym(glLibraryHandle, proc);
 	if(!func && gl2LibraryHandle)
 		func = dlsym(gl2LibraryHandle, proc);
+#ifdef USE_GLSHIM
+	if (func==NULL)
+	        func = glXGetProcAddress(proc);
+#endif
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_GL_GetProcAddress(\"%s\"): %p", proc, func);
 	return func;
 };

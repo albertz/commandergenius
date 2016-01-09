@@ -57,6 +57,10 @@ LOCAL_SRC_FILES := $(foreach F, $(SDL_SRCS), $(addprefix $(dir $(F)),$(notdir $(
 
 LOCAL_SHARED_LIBRARIES := sdl_native_helpers # Not really a dependency, needed for CustomBuildScript
 
+ifdef USE_GLSHIM 
+LOCAL_STATIC_LIBRARIES := glshim
+endif
+
 LOCAL_LDLIBS := -lGLESv1_CM -ldl -llog
 
 include $(BUILD_SHARED_LIBRARY)
