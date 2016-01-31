@@ -9,6 +9,8 @@ Known bugs (see also todo.txt)
 
 - 32-bpp color mode does not work with SW video surface, 24-bpp and 32-bpp mode does not work with SDL_HWSURFACE.
 
+- problem with very slow performance when new virtual keyboard appear on screen
+
 Requested features, might never get implemented, see todo.txt for features that are going to be implemented
 ===========================================================================================================
 
@@ -29,3 +31,5 @@ Requested features, might never get implemented, see todo.txt for features that 
 - OpenArena: Shift and Ctrl keys on USB keyboard do not work for text input.
 
 - OpenArena: When entering with USB keyboard into chatbox, first 't' disappears.
+
+- ResidualVM(Grim Fandango), SDL, glshim: (compatibility problem SDL and glshim) 3d textures always displayed over 2d backgrounds
