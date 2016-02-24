@@ -48,6 +48,7 @@ int main( int argc, char* argv[] )
 	int screenResOverride = 0;
 	int screenButtons = 0;
 	int warnDiskSpaceMb = 0;
+	int builtinKeyboard = 0;
 	
 	int resolutionW = atoi(getenv("DISPLAY_RESOLUTION_WIDTH"));
 	int resolutionH = atoi(getenv("DISPLAY_RESOLUTION_HEIGHT"));
@@ -118,7 +119,7 @@ int main( int argc, char* argv[] )
 
 	if( !screenResOverride )
 	{
-		XSDL_showConfigMenu(&resolutionW, &displayW, &resolutionH, &displayH);
+		XSDL_showConfigMenu(&resolutionW, &displayW, &resolutionH, &displayH, &builtinKeyboard, &screenButtons);
 		sprintf( screenres, "%d/%dx%d/%dx%d", resolutionW, displayW, resolutionH, displayH, SDL_GetVideoInfo()->vfmt->BitsPerPixel );
 	}
 
@@ -147,6 +148,12 @@ int main( int argc, char* argv[] )
 		SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_0, 0);
 		SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_1, 0);
 		SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, 0);
+	}
+
+	{
+		char s[16];
+		sprintf(s, "%d", builtinKeyboard);
+		setenv("XSDL_BUILTIN_KEYBOARD", s, 1);
 	}
 
 	__android_log_print(ANDROID_LOG_INFO, "XSDL", "XSDL video resolution %s, args:", screenres);

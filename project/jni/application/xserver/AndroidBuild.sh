@@ -13,9 +13,9 @@ PACKAGE_NAME=`grep AppFullName AndroidAppSettings.cfg | sed 's/.*=//'`
 } || exit 1
 
 ../setEnvironment-$1.sh sh -c '\
-$CC $CFLAGS -c main.c -o main-'"$1.o" || exit 1
+$CC $CFLAGS -Werror=format -c main.c -o main-'"$1.o" || exit 1
 ../setEnvironment-$1.sh sh -c '\
-$CC $CFLAGS -c gfx.c -o gfx-'"$1.o" || exit 1
+$CC $CFLAGS -Werror=format -c gfx.c -o gfx-'"$1.o" || exit 1
 
 [ -e ../../../lib ] || ln -s libs ../../../lib
 
