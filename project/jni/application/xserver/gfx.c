@@ -394,7 +394,7 @@ void XSDL_unpackFiles(int _freeSpaceRequiredMb)
 	SDL_JoystickClose(j0);
 }
 
-void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH)
+void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, int * displayH, int * builtinKeyboard, int * ctrlAltShiftKeys)
 {
 	int x = 0, y = 0, i, ii;
 	SDL_Event event;
@@ -406,6 +406,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	int vertical = SDL_ListModes(NULL, 0)[0]->w < SDL_ListModes(NULL, 0)[0]->h;
 	char cfgpath[PATH_MAX];
 	FILE * cfgfile;
+	int okay = 0;
 
 	if( vertical )
 	{
@@ -459,7 +460,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	cfgfile = fopen(cfgpath, "r");
 	if( cfgfile )
 	{
-		fscanf(cfgfile, "%d %d %d %d", &savedRes, &savedDpi, &customX, &customY);
+		fscanf(cfgfile, "%d %d %d %d %d %d", &savedRes, &savedDpi, &customX, &customY, builtinKeyboard, ctrlAltShiftKeys);
 		fclose(cfgfile);
 	}
 	sprintf(custom, "%dx%d", customX, customY);
@@ -482,7 +483,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 			}
 		}
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
-		y = VID_Y/3;
+		y = VID_Y/4;
 		renderString("Tap the screen to change", vertical ? VID_Y / 2 : VID_X/2, y);
 		y += 30;
 		renderString("display resolution and font scale (DPI)", vertical ? VID_Y / 2 : VID_X/2, y);
@@ -492,6 +493,9 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		renderString(buf, vertical ? VID_Y / 2 : VID_X/2, y);
 		y += 30;
 		sprintf(buf, "Font scale: %s", fontsStr[savedDpi]);
+		renderString(buf, vertical ? VID_Y / 2 : VID_X/2, y);
+		y += 30;
+		sprintf(buf, "Keyboard: %s", *builtinKeyboard == 0 ? "System" : *builtinKeyboard == 1 ? "Builtin QWERTY" : "System + Builtin");
 		renderString(buf, vertical ? VID_Y / 2 : VID_X/2, y);
 		y += 40;
 		sprintf(buf, "Starting in %d seconds", counter / 1000 + 1);
@@ -668,6 +672,58 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 	*displayW = *displayW / fontsVal[dpi];
 	*displayH = *displayH / fontsVal[dpi];
 
+	okay = !config;
+	while ( !okay )
+	{
+		while (SDL_PollEvent(&event))
+		{
+			switch (event.type)
+			{
+				case SDL_KEYDOWN:
+					if (event.key.keysym.sym == SDLK_HELP)
+						return;
+				break;
+				case SDL_MOUSEBUTTONUP:
+				{
+					//SDL_GetMouseState(&x, &y);
+					if( vertical )
+					{
+						int z = x;
+						x = y;
+						y = z;
+					}
+					if( y > 0 && y < VID_Y * 2 / 6 )
+						*builtinKeyboard = (*builtinKeyboard + 1) % 3;
+					if( y > VID_Y * 2 / 6 &&  y < VID_Y * 4 / 6 )
+						*ctrlAltShiftKeys = !*ctrlAltShiftKeys;
+					if( y > VID_Y * 4 / 6 &&  y < VID_Y * 6 / 6 )
+						okay = 1;
+					__android_log_print(ANDROID_LOG_INFO, "XSDL", "Screen coords %d %d dpi %d\n", x, y, res);
+				}
+				break;
+				case SDL_JOYBALLMOTION:
+					x = event.jball.xrel;
+					y = event.jball.yrel;
+				break;
+			}
+		}
+		SDL_FillRect(SDL_GetVideoSurface(), NULL, 0);
+
+		char buf[100];
+
+		sprintf(buf, "Keyboard: %s", *builtinKeyboard == 0 ? "System" : *builtinKeyboard == 1 ? "Builtin QWERTY" : "System + Builtin");
+		renderString(buf, VID_X/2, VID_Y * 1 / 6);
+
+		sprintf(buf, "Separate Ctrl/Alt/Shift keys: %s", *ctrlAltShiftKeys == 0 ? "No" : "Yes");
+		renderString(buf, VID_X/2, VID_Y * 3 / 6);
+
+		sprintf(buf, "Okay");
+		renderString(buf, VID_X/2, VID_Y * 5 / 6);
+
+		SDL_Delay(100);
+		SDL_Flip(SDL_GetVideoSurface());
+	}
+
 	SDL_JoystickClose(j0);
 
 	if( config )
@@ -675,7 +731,7 @@ void XSDL_showConfigMenu(int * resolutionW, int * displayW, int * resolutionH, i
 		cfgfile = fopen(cfgpath, "w");
 		if( cfgfile )
 		{
-			fprintf(cfgfile, "%d %d %d %d\n", res, dpi, customX, customY);
+			fprintf(cfgfile, "%d %d %d %d %d %d\n", res, dpi, customX, customY, *builtinKeyboard, *ctrlAltShiftKeys);
 			fclose(cfgfile);
 		}
 	}
@@ -687,7 +743,7 @@ void XSDL_generateBackground(const char * port, int showHelp, int resolutionW, i
 	struct ifconf ifc;
 	struct ifreq ifr[20];
 	SDL_Surface * surf;
-	int y = resolutionH * 1 / 3;
+	int y = resolutionH * 1 / 6;
 	char msg[128];
 
 	if (resolutionH > resolutionW)
@@ -754,6 +810,13 @@ void XSDL_generateBackground(const char * port, int showHelp, int resolutionW, i
 	renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
 	y += resolutionH * 15 / VID_Y;
 	sprintf (msg, "in your SSH client");
+	renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+
+	y += resolutionH * 20 / VID_Y;
+	sprintf (msg, "If you run Linux in chroot on this device, run:");
+	renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
+	y += resolutionH * 15 / VID_Y;
+	sprintf (msg, "export DISPLAY=:0 PULSE_SERVER=tcp:127.0.0.1:4712");
 	renderStringScaled(msg, 12 * resolutionH / VID_Y, resolutionW/2, y, 255, 255, 255, surf);
 
 	SDL_SaveBMP(surf, "background.bmp");

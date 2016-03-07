@@ -125,7 +125,7 @@ public class DummyService extends Service
 		view.setOnClickPendingIntent(R.id.notificationStop, killIntent);
 		ntf.contentView = view;
 		startForeground(1, ntf);
-		return Service.START_STICKY;
+		return Service.START_NOT_STICKY;
 	}
 	@Override
 	public void onDestroy()
