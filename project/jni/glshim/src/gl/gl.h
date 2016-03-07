@@ -169,6 +169,8 @@ typedef EGLSurface (*eglCreateStreamProducerSurfaceKHR_PTR)(EGLDisplay dpy, EGLC
     }
 
 //printf("list:%i, " #nam "\n", state.list.name);
+// cannot include "debug.h" as it include "gl.h"...
+const char* PrintEnum(GLenum what);
 
 #define PUSH_IF_COMPILING(name) PUSH_IF_COMPILING_EXT(name, name##_ARG_NAMES)
 
@@ -208,7 +210,7 @@ static const GLsizei gl_sizeof(GLenum type) {
             return 1;
     }
     // formats
-    printf("libGL: Unsupported pixel data type: 0x%x\n", type);
+    printf("libGL: Unsupported pixel data type: %s\n", PrintEnum(type));
     return 0;
 }
 
@@ -226,7 +228,7 @@ static const GLuint gl_max_value(GLenum type) {
         case GL_INT:            return 2147483647;
         case GL_UNSIGNED_INT:   return 4294967295;
     }
-    printf("libGL: unknown gl max value type: 0x%x\n", type);
+    printf("libGL: unknown gl max value type: %s\n", PrintEnum(type));
     return 0;
 }
 
@@ -275,7 +277,7 @@ static const GLsizei pixel_sizeof(GLenum format, GLenum type) {
             width = 4;
             break;
         default:
-            printf("libGL: unsupported pixel format %x\n", format);
+            printf("libGL: unsupported pixel format %s\n", PrintEnum(format));
             return 0;
     }
 
