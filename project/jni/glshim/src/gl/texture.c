@@ -225,7 +225,7 @@ static void *swizzle_texture(GLsizei width, GLsizei height,
                     pixels = pix2;
                 }
                 dest_format = internalformat;
-                *type = internalformat;
+                *type = dest_type;
                 *format = dest_format;
             }
 			GLvoid *pix2 = pixels;
@@ -308,15 +308,15 @@ GLenum swizzle_internalformat(GLenum *internalformat) {
             break;
         // compressed format...
         case GL_COMPRESSED_ALPHA:
-            ret = GL_ALPHA;
+            ret = GL_COMPRESSED_RGBA;
             sret = GL_ALPHA;
             break;
         case GL_COMPRESSED_LUMINANCE:
-            ret = GL_LUMINANCE;
+            ret = GL_COMPRESSED_RGB;
             sret = GL_LUMINANCE;
             break;
         case GL_COMPRESSED_LUMINANCE_ALPHA:
-            ret = GL_LUMINANCE_ALPHA;
+            ret = GL_COMPRESSED_RGBA;
             if (nolumalpha)
                 sret = GL_RGBA;
             else
@@ -328,7 +328,15 @@ GLenum swizzle_internalformat(GLenum *internalformat) {
         case GL_COMPRESSED_RGBA:
             sret = GL_RGBA;
             break;
-
+        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+            ret = GL_COMPRESSED_RGB;
+            sret = GL_RGB;
+            break;
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:  // not good, but there is no DXT3 compressor
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            ret = GL_COMPRESSED_RGBA;
+            sret = GL_RGB;
+            break;
         default:
             ret = GL_RGBA;
             sret = GL_RGBA;
@@ -1327,7 +1335,7 @@ GLboolean glshim_glAreTexturesResident(GLsizei n, const GLuint *textures, GLbool
 }
 
 void glshim_glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params) {
-//printf("glGetTexLevelParameteriv(0x%04X, %d, 0x%04X, %p)\n", target, level, pname, params);
+    //printf("glGetTexLevelParameteriv(%s, %d, %s, %p)\n", PrintEnum(target), level, PrintEnum(pname), params);
 	// simplification: (mostly) not taking "target" into account here
     if (glstate.gl_batch) flush();
 	*params = 0;
@@ -1339,16 +1347,26 @@ void glshim_glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, G
 				(*params) = proxy_width>>level;
 			else
 				(*params) = ((bound)?bound->width:2048)>>level;
-            if (*params<=0)     // 1 is the minimum, not 0
-                *params = 1;
+            if(bound && ((bound->orig_internal==GL_COMPRESSED_RGB) || (bound->orig_internal==GL_COMPRESSED_RGBA))) {
+                if (*params<4)      // minimum size of a compressed block is 4
+                    *params = 0;
+            } else {
+                if (*params<=0)     // 1 is the minimum, not 0
+                    *params = 1;
+            }
 			break;
 		case GL_TEXTURE_HEIGHT: 
 			if (target==GL_PROXY_TEXTURE_2D)
 				(*params) = proxy_height>>level;
 			else
 				(*params) = ((bound)?bound->height:2048)>>level; 
-            if (*params<=0)      // 1 is the minimum, not 0
-                *params = 1;
+            if(bound && ((bound->orig_internal==GL_COMPRESSED_RGB) || (bound->orig_internal==GL_COMPRESSED_RGBA))) {
+                if (*params<4)      // minimum size of a compressed block is 4
+                    *params = 0;
+            } else {
+                if (*params<=0)      // 1 is the minimum, not 0, but only on uncompressed textures
+                    *params = 1;
+            }
 			break;
 		case GL_TEXTURE_INTERNAL_FORMAT:
             if (bound && bound->compressed)
@@ -1416,18 +1434,29 @@ void glshim_glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type
     if (glstate.gl_batch) flush();
 	if (glstate.texture.bound[glstate.texture.active]==NULL)
 		return;		// no texture bounded...
+	gltexture_t* bound = glstate.texture.bound[glstate.texture.active];
+	int width = bound->width;
+	int height = bound->height;
 	if (level != 0) {
-		//TODO
-		printf("STUBBED glGetTexImage with level=%i\n", level);
-		return;
+		//printf("STUBBED glGetTexImage with level=%i\n", level);
+        void* tmp = malloc(width*height*pixel_sizeof(format, type)); // tmp space...
+        void* tmp2;
+        glshim_glGetTexImage(target, 0, format, type, tmp);
+        for (int i=0; i<level; i++) {
+            pixel_halfscale(tmp, &tmp2, width, height, format, type);
+            free(tmp);
+            tmp = tmp2;
+            if(width>1) width>>=1;
+            if(height>1) height>>=1;
+        }
+        memcpy(img, tmp, width*height*pixel_sizeof(format, type));
+        free(tmp);
+        return;
 	}
 	
 	if (target!=GL_TEXTURE_2D)
 		return;
 
-	gltexture_t* bound = glstate.texture.bound[glstate.texture.active];
-	int width = bound->width;
-	int height = bound->height;
     //printf("glGetTexImage(0x%04X, %i, 0x%04X, 0x%04X, 0x%p), texture=%u, size=%i,%i\n", target, level, format, type, img, bound->glname, width, height);
 	
 	GLvoid *dst = img;
@@ -1879,8 +1908,8 @@ void glshim_glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
 void glshim_glGetCompressedTexImage(GLenum target, GLint lod, GLvoid *img) {
     if (glstate.gl_batch) flush();
 
-//    printf("LIBGL: Stub GetCompressedTexImage\n");
     gltexture_t* bound = glstate.texture.bound[glstate.texture.active];
+    //printf("glGetCompressedTexImage(%s, %i, %p), bound=%p, bound->orig_internal=%s\n", PrintEnum(target), lod, img, bound, (bound)?PrintEnum(bound->orig_internal):"nil");
     errorShim(GL_INVALID_OPERATION);
     if(!bound)
         return;
