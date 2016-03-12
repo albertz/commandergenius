@@ -352,10 +352,11 @@ public class MainActivity extends Activity
 		SetLayerType.get().setLayerType(mGLView);
 		FrameLayout.LayoutParams margin = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
 		// Add TV screen borders, if needed
-		margin.setMargins(  getResources().getDimensionPixelOffset(R.dimen.screen_border_horizontal),
-							getResources().getDimensionPixelOffset(R.dimen.screen_border_vertical),
-							getResources().getDimensionPixelOffset(R.dimen.screen_border_horizontal),
-							getResources().getDimensionPixelOffset(R.dimen.screen_border_vertical));
+		if( Globals.TvBorders )
+			margin.setMargins(  getResources().getDimensionPixelOffset(R.dimen.screen_border_horizontal),
+								getResources().getDimensionPixelOffset(R.dimen.screen_border_vertical),
+								getResources().getDimensionPixelOffset(R.dimen.screen_border_horizontal),
+								getResources().getDimensionPixelOffset(R.dimen.screen_border_vertical));
 		_videoLayout.addView(mGLView, margin);
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
@@ -779,7 +780,7 @@ public class MainActivity extends Activity
 		screenKeyboard.setOnKeyListener(new simpleKeyListener(this));
 		screenKeyboard.setBackgroundColor(Color.BLACK); // Full opaque - do not show semi-transparent edit box, it's confusing
 		screenKeyboard.setTextColor(Color.WHITE); // Just to be sure about gamma
-		if( isRunningOnOUYA() )
+		if( isRunningOnOUYA() && Globals.TvBorders )
 			screenKeyboard.setPadding(100, 100, 100, 100); // Bad bad HDMI TVs all have cropped borders
 		_screenKeyboard = screenKeyboard;
 		_videoLayout.addView(_screenKeyboard);

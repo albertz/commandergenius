@@ -185,6 +185,7 @@ class Settings
 			out.writeBoolean(Globals.HorizontalOrientation);
 			out.writeBoolean(Globals.ImmersiveMode);
 			out.writeBoolean(Globals.AutoDetectOrientation);
+			out.writeBoolean(Globals.TvBorders);
 
 			out.close();
 			settingsLoaded = true;
@@ -377,6 +378,7 @@ class Settings
 			Globals.HorizontalOrientation = settingsFile.readBoolean();
 			Globals.ImmersiveMode = settingsFile.readBoolean();
 			Globals.AutoDetectOrientation = settingsFile.readBoolean();
+			Globals.TvBorders = settingsFile.readBoolean();
 
 			settingsLoaded = true;
 

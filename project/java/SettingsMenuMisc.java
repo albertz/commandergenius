@@ -357,6 +357,7 @@ class SettingsMenuMisc extends SettingsMenu
 				p.getResources().getString(R.string.video_orientation_autodetect),
 				p.getResources().getString(R.string.video_orientation_vertical),
 				p.getResources().getString(R.string.video_bpp_24),
+				p.getResources().getString(R.string.tv_borders),
 			};
 			boolean defaults[] = {
 				Globals.KeepAspectRatio,
@@ -365,6 +366,7 @@ class SettingsMenuMisc extends SettingsMenu
 				Globals.AutoDetectOrientation,
 				!Globals.HorizontalOrientation,
 				Globals.VideoDepthBpp == 24,
+				Globals.TvBorders,
 			};
 
 			if(Globals.SwVideoMode && !Globals.CompatibilityHacksVideo)
@@ -376,6 +378,7 @@ class SettingsMenuMisc extends SettingsMenu
 					p.getResources().getString(R.string.video_orientation_autodetect),
 					p.getResources().getString(R.string.video_orientation_vertical),
 					p.getResources().getString(R.string.video_bpp_24),
+					p.getResources().getString(R.string.tv_borders),
 					p.getResources().getString(R.string.video_separatethread),
 				};
 				boolean defaults2[] = { 
@@ -385,6 +388,7 @@ class SettingsMenuMisc extends SettingsMenu
 					Globals.AutoDetectOrientation,
 					!Globals.HorizontalOrientation,
 					Globals.VideoDepthBpp == 24,
+					Globals.TvBorders,
 					Globals.MultiThreadedVideo,
 				};
 				items = items2;
@@ -422,49 +426,9 @@ class SettingsMenuMisc extends SettingsMenu
 					if( item == 5 )
 						Globals.VideoDepthBpp = (isChecked ? 24 : 16);
 					if( item == 6 )
+						Globals.TvBorders = isChecked;
+					if( item == 7 )
 						Globals.MultiThreadedVideo = isChecked;
-				}
-			});
-			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-			{
-				public void onClick(DialogInterface dialog, int item) 
-				{
-					dialog.dismiss();
-					if( debugMenuShowCount > 5 || Globals.OuyaEmulation )
-						showDebugMenu(p);
-					else
-						goBack(p);
-				}
-			});
-			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-			{
-				public void onCancel(DialogInterface dialog)
-				{
-					goBack(p);
-				}
-			});
-			AlertDialog alert = builder.create();
-			alert.setOwnerActivity(p);
-			alert.show();
-		}
-
-		void showDebugMenu (final MainActivity p)
-		{
-			CharSequence[] items = {
-				"OUYA emulation"
-			};
-			boolean defaults[] = {
-				Globals.OuyaEmulation,
-			};
-
-			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle("Debug settings");
-			builder.setMultiChoiceItems(items, defaults, new DialogInterface.OnMultiChoiceClickListener() 
-			{
-				public void onClick(DialogInterface dialog, int item, boolean isChecked) 
-				{
-					if( item == 0 )
-						Globals.OuyaEmulation = isChecked;
 				}
 			});
 			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
