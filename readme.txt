@@ -1,7 +1,7 @@
 This is SDL 1.2 and 1.3 ported to Google Android (also bunch of other libs included).
 Sources or patches of the individual games are in the directory project/jni/application.
 
-The libsdl.org now has an official SDL 1.3 Android port, which is more recent and
+The libsdl.org now has an official SDL 1.3/2.0 Android port, which is more recent and
 better suited for creating new applications from scratch, this port is focused mainly
 on SDL 1.2 and compiling existing applications, it's up to you to decide which port is better.
 Also this port is developed very slowly, although the same is true for an official port.
