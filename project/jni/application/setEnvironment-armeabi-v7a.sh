@@ -3,15 +3,15 @@
 IFS='
 '
 
-MYARCH=linux-x86
+MYARCH=linux-x86_64
 if uname -s | grep -i "linux" > /dev/null ; then
-	MYARCH=linux-x86
+	MYARCH=linux-x86_64
 fi
 if uname -s | grep -i "darwin" > /dev/null ; then
-	MYARCH=darwin-x86
+	MYARCH=darwin-x86_64
 fi
 if uname -s | grep -i "windows" > /dev/null ; then
-	MYARCH=windows-x86
+	MYARCH=windows-x86_64
 fi
 
 NDK=`which ndk-build`

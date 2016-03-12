@@ -95,19 +95,18 @@ else
 	sed -i 's/android:debuggable="false"/android:debuggable="true"/g' project/AndroidManifest.xml
 fi
 
-MYARCH=linux-x86
+MYARCH=linux-x86_64
 NCPU=4
 if uname -s | grep -i "linux" > /dev/null ; then
-	MYARCH=linux-x86
+	MYARCH=linux-x86_64
 	NCPU=`cat /proc/cpuinfo | grep -c -i processor`
 fi
 if uname -s | grep -i "darwin" > /dev/null ; then
-	MYARCH=darwin-x86
+	MYARCH=darwin-x86_64
 fi
 if uname -s | grep -i "windows" > /dev/null ; then
-	MYARCH=windows-x86
+	MYARCH=windows-x86_64
 fi
-grep "64.bit" "`which ndk-build | sed 's@/ndk-build@@'`/RELEASE.TXT" >/dev/null 2>&1 && MYARCH="${MYARCH}_64"
 
 $quick_rebuild || rm -r -f project/bin/* # New Android SDK introduced some lame-ass optimizations to the build system which we should take care about
 [ -x project/jni/application/src/AndroidPreBuild.sh ] && {
