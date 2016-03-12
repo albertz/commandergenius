@@ -22,7 +22,7 @@ grep "64.bit" "$NDK/RELEASE.TXT" >/dev/null 2>&1 && MYARCH="${MYARCH}_64"
 
 #echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
-[ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.8
+[ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
 [ -z "$PLATFORMVER" ] && PLATFORMVER=android-14
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then

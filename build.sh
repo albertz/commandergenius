@@ -76,7 +76,7 @@ fi
 }
 
 NDK_TOOLCHAIN_VERSION=$GCCVER
-[ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.8
+[ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
 
 # Set here your own NDK path if needed
 # export PATH=$PATH:~/src/endless_space/android-ndk-r7
@@ -157,21 +157,21 @@ strip_libs() {
 		rm obj/local/x86_64/libapplication.so && \
 		cp jni/application/src/libapplication-x86_64.so obj/local/x86_64/libapplication.so && \
 		cp jni/application/src/libapplication-x86_64.so libs/x86_64/libapplication.so && \
-		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/x86_64-4.9/prebuilt/$MYARCH/bin/x86_64-linux-android-strip --strip-unneeded libs/x86_64/libapplication.so
+		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/x86_64-${NDK_TOOLCHAIN_VERSION}/prebuilt/$MYARCH/bin/x86_64-linux-android-strip --strip-unneeded libs/x86_64/libapplication.so
 	grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
 		grep "MultiABI=" ../AndroidAppSettings.cfg | grep "all\\|arm64-v8a" > /dev/null && \
 		echo Stripping libapplication-arm64-v8a.so by hand && \
 		rm obj/local/arm64-v8a/libapplication.so && \
 		cp jni/application/src/libapplication-arm64-v8a.so obj/local/arm64-v8a/libapplication.so && \
 		cp jni/application/src/libapplication-arm64-v8a.so libs/arm64-v8a/libapplication.so && \
-		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/aarch64-linux-android-4.9/prebuilt/$MYARCH/bin/aarch64-linux-android-strip --strip-unneeded libs/arm64-v8a/libapplication.so
+		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/aarch64-linux-android-${NDK_TOOLCHAIN_VERSION}/prebuilt/$MYARCH/bin/aarch64-linux-android-strip --strip-unneeded libs/arm64-v8a/libapplication.so
 	grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
 		grep "MultiABI=" ../AndroidAppSettings.cfg | grep "all\\|mips64" > /dev/null && \
 		echo Stripping libapplication-mips64.so by hand && \
 		rm obj/local/mips64/libapplication.so && \
 		cp jni/application/src/libapplication-mips64.so obj/local/mips64/libapplication.so && \
 		cp jni/application/src/libapplication-mips64.so libs/mips64/libapplication.so && \
-		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/mips64el-linux-android-4.9/prebuilt/$MYARCH/bin/mips64el-linux-android-strip --strip-unneeded libs/mips64/libapplication.so
+		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/mips64el-linux-android-${NDK_TOOLCHAIN_VERSION}/prebuilt/$MYARCH/bin/mips64el-linux-android-strip --strip-unneeded libs/mips64/libapplication.so
 	return 0
 }
 
