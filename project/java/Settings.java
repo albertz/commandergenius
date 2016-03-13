@@ -418,7 +418,8 @@ class Settings
 				Log.i("SDL", "libSDL: SD card or external storage is not mounted (state " + Environment.getExternalStorageState() + "), switching to the internal storage.");
 				Globals.DownloadToSdcard = false;
 			}
-			if( p.getPackageManager().checkPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, p.getPackageName()) != PackageManager.PERMISSION_GRANTED )
+			if( p.getPackageManager().checkPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, p.getPackageName()) != PackageManager.PERMISSION_GRANTED &&
+				android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.KITKAT )
 			{
 				Log.i("SDL", "libSDL: We don't have permission to write to SD card, switching to the internal storage.");
 				Globals.DownloadToSdcard = false;
