@@ -247,6 +247,7 @@ class SettingsMenu
 				new SettingsMenuKeyboard.RemapHwKeysConfig(),
 				new SettingsMenuKeyboard.ScreenGesturesConfig(),
 				new SettingsMenuMisc.VideoSettingsConfig(),
+				new SettingsMenuMisc.CommandlineConfig(),
 				new SettingsMenuMisc.ResetToDefaultsConfig(),
 				new OkButton(),
 			};

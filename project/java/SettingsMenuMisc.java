@@ -74,6 +74,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorEvent;
 import android.hardware.Sensor;
 import android.widget.Toast;
+import android.text.InputType;
 
 
 class SettingsMenuMisc extends SettingsMenu
@@ -148,38 +149,6 @@ class SettingsMenuMisc extends SettingsMenu
 				{
 					Globals.DataDir = edit.getText().toString();
 					dialog.dismiss();
-					showCommandLineConfig(p);
-				}
-			});
-			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
-			{
-				public void onCancel(DialogInterface dialog)
-				{
-					goBack(p);
-				}
-			});
-			AlertDialog alert = builder.create();
-			alert.setOwnerActivity(p);
-			alert.show();
-		}
-		static void showCommandLineConfig(final MainActivity p)
-		{
-			AlertDialog.Builder builder = new AlertDialog.Builder(p);
-			builder.setTitle(p.getResources().getString(R.string.storage_commandline));
-
-			final EditText edit = new EditText(p);
-			edit.setFocusableInTouchMode(true);
-			edit.setFocusable(true);
-			edit.setText(Globals.CommandLine);
-			builder.setView(edit);
-
-			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
-			{
-				public void onClick(DialogInterface dialog, int item) 
-				{
-					Globals.CommandLine = edit.getText().toString();
-					dialog.dismiss();
-					goBack(p);
 				}
 			});
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
@@ -566,6 +535,48 @@ class SettingsMenuMisc extends SettingsMenu
 		void run (final MainActivity p)
 		{
 			goBack(p);
+		}
+	}
+
+	static class CommandlineConfig extends Menu
+	{
+		String title(final MainActivity p)
+		{
+			return p.getResources().getString(R.string.storage_commandline);
+		}
+		void run (final MainActivity p)
+		{
+			AlertDialog.Builder builder = new AlertDialog.Builder(p);
+			builder.setTitle(p.getResources().getString(R.string.storage_commandline));
+
+			final EditText edit = new EditText(p);
+			edit.setFocusableInTouchMode(true);
+			edit.setFocusable(true);
+			edit.setText(Globals.CommandLine.replace(" ", "\n").replace("	", " "));
+			edit.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+			edit.setMinLines(2);
+			//edit.setMaxLines(100);
+			builder.setView(edit);
+
+			builder.setPositiveButton(p.getResources().getString(R.string.ok), new DialogInterface.OnClickListener() 
+			{
+				public void onClick(DialogInterface dialog, int item) 
+				{
+					Globals.CommandLine = edit.getText().toString().replace(" ", "	").replace("\n", " ");
+					dialog.dismiss();
+					goBack(p);
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
+			{
+				public void onCancel(DialogInterface dialog)
+				{
+					goBack(p);
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.setOwnerActivity(p);
+			alert.show();
 		}
 	}
 
