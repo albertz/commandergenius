@@ -265,6 +265,20 @@ class DataDownloader extends Thread
 				if( ! matched )
 					throw new IOException();
 				Status.setText( res.getString(R.string.download_unneeded) );
+				for( int i = 1; i < downloadUrls.length; i++ )
+				{
+					if( downloadUrls[i].indexOf("obb:") == 0 ) // APK expansion file provided by Google Play
+					{
+						String url = getObbFilePath(downloadUrls[i]);
+						if (new File(url).length() > 256)
+						{
+							Writer writer = new OutputStreamWriter(new FileOutputStream(url), "UTF-8");
+							writer.write("Extracted and truncated\n");
+							writer.close();
+							Log.i("SDL", "Truncated file from expansion: " + url);
+						}
+					}
+				}
 				return true;
 			} catch ( IOException e ) {
 				forceOverwrite = true;
@@ -322,9 +336,7 @@ class DataDownloader extends Thread
 			Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.connecting_to, url) );
 			if( url.indexOf("obb:") == 0 ) // APK expansion file provided by Google Play
 			{
-				url = url.substring("obb:".length());
-				url = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/obb/" +
-						Parent.getPackageName() + "/" + url + "." + Parent.getPackageName() + ".obb";
+				url = getObbFilePath(url);
 				InputStream stream1 = null;
 				try {
 					stream1 = new FileInputStream(url);
@@ -764,7 +776,13 @@ class DataDownloader extends Thread
 	{
 		return outFilesDir + "/" + filename;
 	};
-	
+
+	private String getObbFilePath(final String url)
+	{
+		return Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/obb/" +
+				Parent.getPackageName() + "/" + url.substring("obb:".length()) + "." + Parent.getPackageName() + ".obb";
+	}
+
 	private static DefaultHttpClient HttpWithDisabledSslCertCheck()
 	{
 		return new DefaultHttpClient();
