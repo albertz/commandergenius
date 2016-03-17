@@ -7,11 +7,9 @@ TODO, which will get actually done
 
 - TeeWorlds: aiming with gyroscope.
 
-- OpenArena: fix aiming angles jumping at random after the first zoom and after respawn, publish to Android TV.
-
-- OpenArena: fix VR mode, add settings for eye separation and focus angle.
-
 - OpenArena: add dynamic camera/joystick, add option for joystick tap action.
+
+- OpenArena: add Google Play Games network support.
 
 - USB Keyboard: options for camera feed size and for redefining remote menu hotkey.
 
