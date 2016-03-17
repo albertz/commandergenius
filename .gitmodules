@@ -71,3 +71,6 @@
 [submodule "project/jni/application/xserver/pulseaudio"]
 	path = project/jni/application/xserver/pulseaudio
 	url = git@github.com:pelya/pulseaudio-android.git
+[submodule "project/jni/application/bochs/bochs"]
+	path = project/jni/application/bochs/bochs
+	url = git@github.com:lubomyr/bochs.git

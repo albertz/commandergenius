@@ -129,6 +129,12 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 		}
 	}
 
+	for (i = 0; i < argc; i++)
+	{
+		while( strchr(argv[i], '\t') != NULL )
+			strchr(argv[i], '\t')[0] = ' ';
+	}
+
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Calling SDL_main(\"%s\")", str);
 
 	(*env)->ReleaseStringUTFChars(env, cmdline, jstr);
