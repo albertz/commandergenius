@@ -167,8 +167,9 @@ extern int texstream;
 extern int copytex;
 extern int nolumalpha;
 extern int blendhack;
+extern int export_blendcolor;
 extern int noerror;
-extern char gl_version[50];
+extern char glshim_version[50];
 
 bool g_recyclefbo = false;
 static int  g_width=0, g_height=0;
@@ -430,13 +431,14 @@ static void scan_env() {
     }
 
     env(LIBGL_BLENDHACK, blendhack, "Change Blend GL_SRC_ALPHA, GL_ONE to GL_ONE, GL_ONE");
+    env(LIBGL_BLENDCOLOR, export_blendcolor, "Export a (faked) glBlendColor");
     env(LIBGL_NOERROR, noerror, "glGetError() always return GL_NOERROR");
 
     char *env_version = getenv("LIBGL_VERSION");
     if (env_version) {
-        printf("LIBGL: Overide version string with \"%s\" (should be in the form of \"1.x\")\n", gl_version);
+        printf("LIBGL: Overide version string with \"%s\" (should be in the form of \"1.x\")\n", env_version);
     }
-    snprintf(gl_version, 49, "%s glshim wrapper", (env_version)?env_version:"1.5");
+    snprintf(glshim_version, 49, "%s glshim wrapper", (env_version)?env_version:"1.5");
     
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd))!= NULL)

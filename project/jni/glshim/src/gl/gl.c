@@ -30,7 +30,8 @@ GLuint readhack_seq = 0;
 GLuint gl_batch = 0;
 GLuint gl_mergelist = 1;
 int blendhack = 0;
-char gl_version[50];
+int export_blendcolor = 0;
+char glshim_version[50];
 int initialized = 0;
 int noerror = 0;
 
@@ -121,7 +122,7 @@ const GLubyte *glshim_glGetString(GLenum name) {
 		printf("**warning** glGetString(%i) called with bad init\n", name);*/
     switch (name) {
         case GL_VERSION:
-            return (GLubyte *)gl_version;
+            return (GLubyte *)glshim_version;
         case GL_EXTENSIONS:
             return (const GLubyte *)(char *){
                 "GL_EXT_abgr "
@@ -654,8 +655,6 @@ static renderlist_t *arrays_to_renderlist(renderlist_t *list, GLenum mode,
 		    list->tex[i] = copy_gl_pointer_tex(&glstate.vao->pointers.tex_coord[i], 4, skip, count, glstate.vao->pointers.tex_coord[i].buffer);
 		}
 	}
-	
-    end_renderlist(list);
     return list;
 }
 
@@ -672,7 +671,7 @@ static inline bool should_intercept_render(GLenum mode) {
 }
 
 void glshim_glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) {
-//printf("glDrawElements(0x%04X, %d, 0x%04X, %p), map=%p\n", mode, count, type, indices, (glstate.buffers.elements)?glstate.buffers.elements->data:NULL);
+//printf("glDrawElements(0x%04X, %d, 0x%04X, %p), map=%p\n", mode, count, type, indices, (glstate.vao->elements)?glstate.vao->elements->data:NULL);
     // TODO: split for count > 65535?
     // special check for QUADS and TRIANGLES that need multiple of 4 or 3 vertex...
     if (mode == GL_QUADS) while(count%4) count--;
@@ -914,6 +913,7 @@ void glshim_glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     if (glstate.list.active && (glstate.list.compiling || glstate.gl_batch)) {
         NewStage(glstate.list.active, STAGE_DRAW);
         glstate.list.active = arrays_to_renderlist(glstate.list.active, mode, first, count+first);
+        end_renderlist(list);
         return;
     }
 
@@ -1209,7 +1209,7 @@ void glBegin(GLenum mode) __attribute__((alias("glshim_glBegin")));
 
 void glshim_glEnd() {
     if (!glstate.list.active) return;
-    // check if TEXTUREx is activate and no TexCoord (or texgen), in that cas, create a dummy one base on glstate...
+    // check if TEXTUREx is activate and no TexCoord (or texgen), in that case, create a dummy one base on glstate...
     for (int a=0; a<MAX_TEX; a++)
 		if (glstate.enable.texture_2d[a] && ((glstate.list.active->tex[a]==0) && (!glstate.enable.texgen_s[a])))
 			rlMultiTexCoord4f(glstate.list.active, GL_TEXTURE0+a, glstate.texcoord[a][0], glstate.texcoord[a][1], glstate.texcoord[a][2], glstate.texcoord[a][3]);
@@ -1228,7 +1228,6 @@ void glshim_glEnd() {
 void glEnd() __attribute__((alias("glshim_glEnd")));
 
 void glshim_glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz) {
-    glstate.normal[0] = nx; glstate.normal[1] = ny; glstate.normal[2] = nz;
     if (glstate.list.active) {
         if (glstate.list.active->stage != STAGE_DRAW) {
             if (glstate.list.active->stage != STAGE_DRAW) {
@@ -1246,6 +1245,7 @@ void glshim_glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz) {
         errorGL();
     }
 #endif
+    glstate.normal[0] = nx; glstate.normal[1] = ny; glstate.normal[2] = nz;
 }
 void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz) __attribute__((alias("glshim_glNormal3f")));
 
@@ -1258,9 +1258,6 @@ void glshim_glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w) {
 void glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w) __attribute__((alias("glshim_glVertex4f")));
 
 void glshim_glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
-    // change the state first thing
-    glstate.color[0] = red; glstate.color[1] = green;
-    glstate.color[2] = blue; glstate.color[3] = alpha;
     if (glstate.list.active) {
         if (glstate.list.active->stage != STAGE_DRAW) {
             PUSH_IF_COMPILING(glColor4f);
@@ -1275,19 +1272,22 @@ void glshim_glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
         errorGL();
     }
 #endif
+    // change the state last thing
+    glstate.color[0] = red; glstate.color[1] = green;
+    glstate.color[2] = blue; glstate.color[3] = alpha;
 }
 void glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) __attribute__((alias("glshim_glColor4f")));
 
 void glshim_glSecondaryColor3f(GLfloat r, GLfloat g, GLfloat b) {
-    // change the state first thing
-    glstate.secondary[0] = r; glstate.secondary[1] = g;
-    glstate.secondary[2] = b;
     if (glstate.list.active) {
         rlSecondary3f(glstate.list.active, r, g, b);
         noerrorShim();
     } else {
         noerrorShim();
     }
+    // change the state last thing
+    glstate.secondary[0] = r; glstate.secondary[1] = g;
+    glstate.secondary[2] = b;
 }
 void glSecondaryColor3f(GLfloat r, GLfloat g, GLfloat b) __attribute__((alias("glshim_glSecondaryColor3f")));
 
@@ -1329,20 +1329,18 @@ void glMaterialf(GLenum face, GLenum pname, const GLfloat param) __attribute__((
 #endif
 
 void glshim_glTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q) {
-    glstate.texcoord[0][0] = s; glstate.texcoord[0][1] = t;
-    glstate.texcoord[0][2] = r; glstate.texcoord[0][3] = q;
     if (glstate.list.active) {
         rlTexCoord4f(glstate.list.active, s, t, r, q);
         noerrorShim();
     } else {
         noerrorShim();
     }
+    glstate.texcoord[0][0] = s; glstate.texcoord[0][1] = t;
+    glstate.texcoord[0][2] = r; glstate.texcoord[0][3] = q;
 }
 void glTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q) __attribute__((alias("glshim_glTexCoord4f")));
 
 void glshim_glMultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q) {
-    glstate.texcoord[target-GL_TEXTURE0][0] = s; glstate.texcoord[target-GL_TEXTURE0][1] = t;
-    glstate.texcoord[target-GL_TEXTURE0][2] = r; glstate.texcoord[target-GL_TEXTURE0][3] = q;
 	// TODO, error if target is unsuported texture....
     if (glstate.list.active) {
         rlMultiTexCoord4f(glstate.list.active, target, s, t, r, q);
@@ -1350,6 +1348,8 @@ void glshim_glMultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GL
     } else {
         noerrorShim();
     }
+    glstate.texcoord[target-GL_TEXTURE0][0] = s; glstate.texcoord[target-GL_TEXTURE0][1] = t;
+    glstate.texcoord[target-GL_TEXTURE0][2] = r; glstate.texcoord[target-GL_TEXTURE0][3] = q;
 }
 void glMultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q) __attribute__((alias("glshim_glMultiTexCoord4f")));
 void glMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q) __attribute__((alias("glshim_glMultiTexCoord4f")));
@@ -1744,10 +1744,17 @@ void glshim_glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf a
     LOAD_GLES_OES(glBlendColor);
 	if  (gles_glBlendColor)
 		gles_glBlendColor(red, green, blue, alpha);
-	else
-		printf("stub glBlendColor(%f, %f, %f, %f)\n", red, green, blue, alpha);
+	else {
+        static int test = 1;
+        if (test) {
+            printf("stub glBlendColor(%f, %f, %f, %f)\n", red, green, blue, alpha);
+            test = 0;
+        }
+    }
 }
 void glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) __attribute__((alias("glshim_glBlendColor")));
+void glBlendColorEXT(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) __attribute__((alias("glshim_glBlendColor")));
+void glBlendColorARB(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) __attribute__((alias("glshim_glBlendColor")));
 
 void glshim_glBlendFuncSeparate(GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha)
 {
@@ -1847,6 +1854,15 @@ void glshim_glBlendFunc(GLenum sfactor, GLenum dfactor) {
     gles_glBlendFunc(sfactor, dfactor);
 }
 void glBlendFunc(GLenum sfactor, GLenum dfactor) __attribute__((alias("glshim_glBlendFunc")));
+
+
+void glshim_glStencilMaskSeparate(GLenum face, GLuint mask) {
+    // fake function..., call it only for front or front_and_back, just ignore back (crappy, I know)
+    if ((face==GL_FRONT) || (face==GL_FRONT_AND_BACK))
+        glshim_glStencilMask(mask);
+}
+void glStencilMaskSeparate(GLenum face, GLuint mask) __attribute__((alias("glshim_glStencilMaskSeparate")));
+
 
 void init_statebatch() {
     memset(&glstate.statebatch, 0, sizeof(statebatch_t));
