@@ -1,0 +1,103 @@
+#!/bin/sh
+
+LOCAL_PATH=`dirname $0`
+LOCAL_PATH=`cd $LOCAL_PATH && pwd`
+
+usage="\
+Usage: pkg-config package [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs] [--static-libs]"
+
+if test $# -eq 0; then
+      echo "${usage}" 1>&2
+      exit 1
+fi
+
+PKG=$(
+for ARG in "$@"; do
+    case "$ARG" in
+      -*)
+        ;;
+      *)
+        [ -z "$PKG" ] || { echo "Please specify only one package" > /dev/stderr ; exit 1 ; }
+        echo "$ARG"
+        ;;
+    esac
+done
+)
+
+[ -n "$PKG" ] || { echo "Please specify a package" > /dev/stderr ; exit 1 ; }
+
+#echo PKG IN "'""$PKG""'" > /dev/stderr
+
+case "$PKG" in
+  sdl)
+    PKG=sdl-1.2
+    ;;
+  zlib)
+    PKG=sdl-1.2
+    ;;
+  freetype2)
+    PKG=freetype
+    ;;
+  icu-*)
+    PKG=`echo $PKG | sed 's/^icu-/icu/'`
+    ;;
+  lib*)
+    PKG=`echo $PKG | sed 's/^lib//'`
+    ;;
+  *)
+    ;;
+esac
+
+#echo PKG OUT "'""$PKG""'" > /dev/stderr
+
+prefix=$LOCAL_PATH/../$PKG
+exec_prefix_set=no
+
+[ -e "${prefix}/include" ] || { echo "Package $PKG not found" > /dev/stderr ; exit 1 ; }
+
+
+while test $# -gt 0; do
+  case "$1" in
+    -*=*) optarg=`echo "$1" | LC_ALL="C" sed 's/[-_a-zA-Z0-9]*=//'` ;;
+    *) optarg= ;;
+  esac
+
+  case $1 in
+    --prefix=*)
+      prefix=$optarg
+      if test $exec_prefix_set = no ; then
+        exec_prefix=$optarg
+      fi
+      ;;
+    --prefix)
+      echo $prefix
+      ;;
+    --exec-prefix=*)
+      exec_prefix=$optarg
+      exec_prefix_set=yes
+      ;;
+    --exec-prefix)
+      echo $exec_prefix
+      ;;
+    --version)
+      echo 999.999
+      ;;
+    --modversion)
+      echo 999.999
+      ;;
+    --cflags)
+      echo -I${prefix}/include
+      ;;
+    --libs)
+      echo -l$PKG
+      ;;
+    --static-libs)
+      echo -l$PKG
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+
+exit 0
