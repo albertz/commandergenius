@@ -11,7 +11,7 @@
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -22,6 +22,10 @@
  *
  ***************************************************************************/
 
+/* Hostname buffer size */
+#define HOSTNAME_MAX 1024
+
+/* This returns the local machine's un-qualified hostname */
 int Curl_gethostname(char *name, GETHOSTNAME_TYPE_ARG2 namelen);
 
 #endif /* HEADER_CURL_GETHOSTNAME_H */

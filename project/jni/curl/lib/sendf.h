@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2014, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
+#include "curl_setup.h"
 
 CURLcode Curl_sendf(curl_socket_t sockfd, struct connectdata *,
                     const char *fmt, ...);
@@ -32,9 +32,9 @@ void Curl_failf(struct SessionHandle *, const char *fmt, ...);
 #if defined(CURL_DISABLE_VERBOSE_STRINGS)
 
 #if defined(HAVE_VARIADIC_MACROS_C99)
-#define infof(...)  do { } while (0)
+#define infof(...)  Curl_nop_stmt
 #elif defined(HAVE_VARIADIC_MACROS_GCC)
-#define infof(x...)  do { } while (0)
+#define infof(x...)  Curl_nop_stmt
 #else
 #define infof (void)
 #endif
@@ -51,8 +51,10 @@ void Curl_failf(struct SessionHandle *, const char *fmt, ...);
 #define CLIENTWRITE_HEADER (1<<1)
 #define CLIENTWRITE_BOTH   (CLIENTWRITE_BODY|CLIENTWRITE_HEADER)
 
+CURLcode Curl_client_chop_write(struct connectdata *conn, int type, char *ptr,
+                                size_t len) WARN_UNUSED_RESULT;
 CURLcode Curl_client_write(struct connectdata *conn, int type, char *ptr,
-                           size_t len);
+                           size_t len) WARN_UNUSED_RESULT;
 
 /* internal read-function, does plain socket only */
 CURLcode Curl_read_plain(curl_socket_t sockfd,

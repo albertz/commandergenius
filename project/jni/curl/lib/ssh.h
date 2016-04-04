@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
+#include "curl_setup.h"
 
 #ifdef HAVE_LIBSSH2_H
 #include <libssh2.h>
@@ -36,13 +36,17 @@ typedef enum {
   SSH_NO_STATE = -1,  /* Used for "nextState" so say there is none */
   SSH_STOP = 0,       /* do nothing state, stops the state machine */
 
-  SSH_S_STARTUP,      /* Session startup, First state in SSH-CONNECT */
+  SSH_INIT,           /* First state in SSH-CONNECT */
+  SSH_S_STARTUP,      /* Session startup */
   SSH_HOSTKEY,        /* verify hostkey */
   SSH_AUTHLIST,
   SSH_AUTH_PKEY_INIT,
   SSH_AUTH_PKEY,
   SSH_AUTH_PASS_INIT,
   SSH_AUTH_PASS,
+  SSH_AUTH_AGENT_INIT, /* initialize then wait for connection to agent */
+  SSH_AUTH_AGENT_LIST, /* ask for list then wait for entire list to come */
+  SSH_AUTH_AGENT,      /* attempt one key at a time */
   SSH_AUTH_HOST_INIT,
   SSH_AUTH_HOST,
   SSH_AUTH_KEY_INIT,
@@ -114,6 +118,8 @@ struct ssh_conn {
   char *quote_path1;          /* two generic pointers for the QUOTE stuff */
   char *quote_path2;
   LIBSSH2_SFTP_ATTRIBUTES quote_attrs; /* used by the SFTP_QUOTE state */
+  bool acceptfail;            /* used by the SFTP_QUOTE (continue if
+                                 quote command fails) */
   char *homedir;              /* when doing SFTP we figure out home dir in the
                                  connect phase */
 
@@ -136,6 +142,12 @@ struct ssh_conn {
   LIBSSH2_SFTP_HANDLE *sftp_handle;
   int orig_waitfor;             /* default READ/WRITE bits wait for */
 
+#ifdef HAVE_LIBSSH2_AGENT_API
+  LIBSSH2_AGENT *ssh_agent;     /* proxy to ssh-agent/pageant */
+  struct libssh2_agent_publickey *sshagent_identity,
+                                 *sshagent_prev_identity;
+#endif
+
   /* note that HAVE_LIBSSH2_KNOWNHOST_API is a define set in the libssh2.h
      header */
 #ifdef HAVE_LIBSSH2_KNOWNHOST_API
@@ -146,22 +158,34 @@ struct ssh_conn {
 
 #ifdef USE_LIBSSH2
 
+/* Feature detection based on version numbers to better work with
+   non-configure platforms */
+
 #if !defined(LIBSSH2_VERSION_NUM) || (LIBSSH2_VERSION_NUM < 0x001000)
 #  error "SCP/SFTP protocols require libssh2 0.16 or later"
 #endif
 
-#if defined(LIBSSH2_VERSION_NUM) && (LIBSSH2_VERSION_NUM >= 0x010000)
-#  define HAVE_LIBSSH2_SFTP_SEEK64 1
-#else
-#  undef HAVE_LIBSSH2_SFTP_SEEK64
+#if LIBSSH2_VERSION_NUM >= 0x010000
+#define HAVE_LIBSSH2_SFTP_SEEK64 1
 #endif
 
-#if defined(LIBSSH2_VERSION_NUM) && (LIBSSH2_VERSION_NUM >= 0x010206)
-#  define HAVE_LIBSSH2_SCP_SEND64 1
-#else
-#  undef HAVE_LIBSSH2_SCP_SEND64
+#if LIBSSH2_VERSION_NUM >= 0x010100
+#define HAVE_LIBSSH2_VERSION 1
 #endif
 
+#if LIBSSH2_VERSION_NUM >= 0x010205
+#define HAVE_LIBSSH2_INIT 1
+#define HAVE_LIBSSH2_EXIT 1
+#endif
+
+#if LIBSSH2_VERSION_NUM >= 0x010206
+#define HAVE_LIBSSH2_KNOWNHOST_CHECKP 1
+#define HAVE_LIBSSH2_SCP_SEND64 1
+#endif
+
+#if LIBSSH2_VERSION_NUM >= 0x010208
+#define HAVE_LIBSSH2_SESSION_HANDSHAKE 1
+#endif
 
 extern const struct Curl_handler Curl_handler_scp;
 extern const struct Curl_handler Curl_handler_sftp;

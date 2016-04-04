@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -20,7 +20,7 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
+#include "curl_setup.h"
 
 #include "rawstr.h"
 
@@ -28,6 +28,10 @@
    its behavior is altered by the current locale. */
 char Curl_raw_toupper(char in)
 {
+#if !defined(CURL_DOES_CONVERSIONS)
+  if(in >= 'a' && in <= 'z')
+    return (char)('A' + in - 'a');
+#else
   switch (in) {
   case 'a':
     return 'A';
@@ -82,13 +86,15 @@ char Curl_raw_toupper(char in)
   case 'z':
     return 'Z';
   }
+#endif
+
   return in;
 }
 
 /*
  * Curl_raw_equal() is for doing "raw" case insensitive strings. This is meant
  * to be locale independent and only compare strings we know are safe for
- * this.  See http://daniel.haxx.se/blog/2008/10/15/strcasecmp-in-turkish/ for
+ * this.  See https://daniel.haxx.se/blog/2008/10/15/strcasecmp-in-turkish/ for
  * some further explanation to why this function is necessary.
  *
  * The function is capable of comparing a-z case insensitively even for
@@ -133,10 +139,10 @@ int Curl_raw_nequal(const char *first, const char *second, size_t max)
  */
 void Curl_strntoupper(char *dest, const char *src, size_t n)
 {
-  if (n < 1)
+  if(n < 1)
     return;
 
   do {
     *dest++ = Curl_raw_toupper(*src);
-  } while (*src++ && --n);
+  } while(*src++ && --n);
 }

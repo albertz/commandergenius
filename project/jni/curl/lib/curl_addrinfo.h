@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2012, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -22,11 +22,8 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
+#include "curl_setup.h"
 
-#ifdef HAVE_SYS_SOCKET_H
-#  include <sys/socket.h>
-#endif
 #ifdef HAVE_NETINET_IN_H
 #  include <netinet/in.h>
 #endif
@@ -82,7 +79,12 @@ Curl_ip2addr(int af, const void *inaddr, const char *hostname, int port);
 
 Curl_addrinfo *Curl_str2addr(char *dotted, int port);
 
-#if defined(CURLDEBUG) && defined(HAVE_FREEADDRINFO)
+#ifdef USE_UNIX_SOCKETS
+Curl_addrinfo *Curl_unix2addr(const char *path);
+#endif
+
+#if defined(CURLDEBUG) && defined(HAVE_GETADDRINFO) && \
+    defined(HAVE_FREEADDRINFO)
 void
 curl_dofreeaddrinfo(struct addrinfo *freethis,
                     int line, const char *source);

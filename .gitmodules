@@ -74,3 +74,6 @@
 [submodule "project/jni/application/bochs/bochs"]
 	path = project/jni/application/bochs/bochs
 	url = git@github.com:lubomyr/bochs.git
+[submodule "project/jni/boringssl/boringssl/jni"]
+	path = project/jni/boringssl/boringssl/jni
+	url = https://android.googlesource.com/platform/external/boringssl

@@ -11,6 +11,8 @@ ICU := $(foreach ARCH, $(ARCHES32), $(foreach NAME, $(ICU_LIBS), icuuc/lib/$(ARC
 
 OPENSSL := $(foreach ARCH, $(ARCHES32) $(ARCHES64), openssl/lib-$(ARCH)/libcrypto.a openssl/lib-$(ARCH)/libssl.a)
 
+BORINGSSL := $(foreach ARCH, armeabi-v7a x86 arm64-v8a x86_64, boringssl/lib-$(ARCH)/libcrypto.a boringssl/lib-$(ARCH)/libssl.a)
+
 LIBS := $(ICONV) $(ICU) $(OPENSSL)
 
 prebuilt-libraries: $(LIBS)
@@ -32,3 +34,6 @@ $(ICONV) $(ICU):
 
 $(OPENSSL):
 	cd openssl && ./compile.sh
+
+$(BORINGSSL):
+	cd boringssl && ./compile.sh

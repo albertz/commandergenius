@@ -1,6 +1,5 @@
-#ifndef __TELNET_H
-#define __TELNET_H
-
+#ifndef HEADER_CURL_TELNET_H
+#define HEADER_CURL_TELNET_H
 /***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
@@ -12,7 +11,7 @@
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -25,4 +24,6 @@
 #ifndef CURL_DISABLE_TELNET
 extern const struct Curl_handler Curl_handler_telnet;
 #endif
-#endif
+
+#endif /* HEADER_CURL_TELNET_H */
+

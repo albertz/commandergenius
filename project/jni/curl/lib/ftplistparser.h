@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2012, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -21,8 +21,9 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
+#include "curl_setup.h"
 
-#include <curl/curl.h>
+#ifndef CURL_DISABLE_FTP
 
 /* WRITEFUNCTION callback for parsing LIST responses */
 size_t Curl_ftp_parselist(char *buffer, size_t size, size_t nmemb,
@@ -36,4 +37,5 @@ struct ftp_parselist_data *Curl_ftp_parselist_data_alloc(void);
 
 void Curl_ftp_parselist_data_free(struct ftp_parselist_data **pl_data);
 
+#endif /* CURL_DISABLE_FTP */
 #endif /* HEADER_CURL_FTPLISTPARSER_H */

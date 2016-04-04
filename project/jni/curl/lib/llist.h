@@ -1,5 +1,5 @@
-#ifndef __LLIST_H
-#define __LLIST_H
+#ifndef HEADER_CURL_LLIST_H
+#define HEADER_CURL_LLIST_H
 /***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
@@ -11,7 +11,7 @@
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
+#include "curl_setup.h"
 #include <stddef.h>
 
 typedef void (*curl_llist_dtor)(void *, void *);
@@ -53,4 +53,5 @@ void Curl_llist_destroy(struct curl_llist *, void *);
 int Curl_llist_move(struct curl_llist *, struct curl_llist_element *,
                     struct curl_llist *, struct curl_llist_element *);
 
-#endif
+#endif /* HEADER_CURL_LLIST_H */
+

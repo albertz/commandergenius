@@ -1,6 +1,5 @@
-#ifndef __CURL_SHARE_H
-#define __CURL_SHARE_H
-
+#ifndef HEADER_CURL_SHARE_H
+#define HEADER_CURL_SHARE_H
 /***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
@@ -8,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2005, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -23,9 +22,10 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
+#include "curl_setup.h"
 #include <curl/curl.h>
 #include "cookie.h"
+#include "urldata.h"
 
 /* SalfordC says "A structure member may not be volatile". Hence:
  */
@@ -44,12 +44,18 @@ struct Curl_share {
   curl_unlock_function unlockfunc;
   void *clientdata;
 
-  struct curl_hash *hostcache;
+  struct curl_hash hostcache;
+#if !defined(CURL_DISABLE_HTTP) && !defined(CURL_DISABLE_COOKIES)
   struct CookieInfo *cookies;
+#endif
+
+  struct curl_ssl_session *sslsession;
+  size_t max_ssl_sessions;
+  long sessionage;
 };
 
 CURLSHcode Curl_share_lock (struct SessionHandle *, curl_lock_data,
                             curl_lock_access);
 CURLSHcode Curl_share_unlock (struct SessionHandle *, curl_lock_data);
 
-#endif /* __CURL_SHARE_H */
+#endif /* HEADER_CURL_SHARE_H */

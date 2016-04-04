@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -20,14 +20,8 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
+#include "curl_setup.h"
 
-#include <string.h>
-#include <errno.h>
-
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
@@ -37,16 +31,9 @@
 #ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>     /* required for free() prototypes */
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>     /* for the close() proto */
-#endif
 #ifdef __VMS
 #include <in.h>
 #include <inet.h>
-#include <stdlib.h>
 #endif
 
 #ifdef HAVE_PROCESS_H
@@ -61,18 +48,15 @@
 #include "strerror.h"
 #include "url.h"
 #include "inet_pton.h"
-
-#define _MPRINTF_REPLACE /* use our functions only */
-#include <curl/mprintf.h>
-
+#include "curl_printf.h"
 #include "curl_memory.h"
 /* The last #include file should be: */
 #include "memdebug.h"
 
 /***********************************************************************
- * Only for plain-ipv4 builds
+ * Only for plain IPv4 builds
  **********************************************************************/
-#ifdef CURLRES_IPV4 /* plain ipv4 code coming up */
+#ifdef CURLRES_IPV4 /* plain IPv4 code coming up */
 /*
  * Curl_ipvalid() checks what CURL_IPRESOLVE_* requirements that might've
  * been set and returns TRUE if they are OK.
@@ -80,15 +64,16 @@
 bool Curl_ipvalid(struct connectdata *conn)
 {
   if(conn->ip_version == CURL_IPRESOLVE_V6)
-    /* an ipv6 address was requested and we can't get/use one */
+    /* An IPv6 address was requested and we can't get/use one */
     return FALSE;
 
   return TRUE; /* OK, proceed */
 }
 
 #ifdef CURLRES_SYNCH
+
 /*
- * Curl_getaddrinfo() - the ipv4 synchronous version.
+ * Curl_getaddrinfo() - the IPv4 synchronous version.
  *
  * The original code to this function was from the Dancer source code, written
  * by Bjorn Reese, it has since been patched and modified considerably.
@@ -125,6 +110,8 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
 #endif /* CURLRES_SYNCH */
 #endif /* CURLRES_IPV4 */
 
+#if defined(CURLRES_IPV4) && !defined(CURLRES_ARES)
+
 /*
  * Curl_ipv4_resolve_r() - ipv4 threadsafe resolver function.
  *
@@ -150,7 +137,7 @@ Curl_addrinfo *Curl_ipv4_resolve_r(const char *hostname,
 #if defined(HAVE_GETADDRINFO_THREADSAFE)
   else {
     struct addrinfo hints;
-    char sbuf[NI_MAXSERV];
+    char sbuf[12];
     char *sbufptr = NULL;
 
     memset(&hints, 0, sizeof(hints));
@@ -317,3 +304,4 @@ Curl_addrinfo *Curl_ipv4_resolve_r(const char *hostname,
 
   return ai;
 }
+#endif /* defined(CURLRES_IPV4) && !defined(CURLRES_ARES) */

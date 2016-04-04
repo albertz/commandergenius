@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -22,9 +22,10 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
+#include "curl_setup.h"
 #include "hash.h"
 #include "curl_addrinfo.h"
+#include "asyn.h"
 
 #ifdef HAVE_SETJMP_H
 #include <setjmp.h>
@@ -33,14 +34,6 @@
 #ifdef NETWARE
 #undef in_addr_t
 #define in_addr_t unsigned long
-#endif
-
-/*
- * Comfortable CURLRES_* definitions are included from setup.h
- */
-
-#ifdef USE_ARES
-#include <ares_version.h>
 #endif
 
 /* Allocate enough memory to hold the full name information structs and
@@ -53,17 +46,7 @@
 #define CURL_TIMEOUT_RESOLVE 300 /* when using asynch methods, we allow this
                                     many seconds for a name resolve */
 
-#ifdef CURLRES_ARES
-#define CURL_ASYNC_SUCCESS ARES_SUCCESS
-#if ARES_VERSION >= 0x010500
-/* c-ares 1.5.0 or later, the callback proto is modified */
-#define HAVE_CARES_CALLBACK_TIMEOUTS 1
-#endif
-#else
 #define CURL_ASYNC_SUCCESS CURLE_OK
-#define ares_cancel(x) do {} while(0)
-#define ares_destroy(x) do {} while(0)
-#endif
 
 struct addrinfo;
 struct hostent;
@@ -82,11 +65,10 @@ void Curl_global_host_cache_dtor(void);
 
 struct Curl_dns_entry {
   Curl_addrinfo *addr;
-  /* timestamp == 0 -- entry not in hostcache
-     timestamp != 0 -- entry is in hostcache */
+  /* timestamp == 0 -- CURLOPT_RESOLVE entry, doesn't timeout */
   time_t timestamp;
-  long inuse;      /* use-counter, make very sure you decrease this
-                      when you're done using the address you received */
+  /* use-counter, use Curl_resolv_unlock to release reference */
+  long inuse;
 };
 
 /*
@@ -107,11 +89,21 @@ int Curl_resolv_timeout(struct connectdata *conn, const char *hostname,
                         int port, struct Curl_dns_entry **dnsentry,
                         long timeoutms);
 
+#ifdef CURLRES_IPV6
+/*
+ * Curl_ipv6works() returns TRUE if IPv6 seems to work.
+ */
+bool Curl_ipv6works(void);
+#else
+#define Curl_ipv6works() FALSE
+#endif
+
 /*
  * Curl_ipvalid() checks what CURL_IPRESOLVE_* requirements that might've
  * been set and returns TRUE if they are OK.
  */
 bool Curl_ipvalid(struct connectdata *conn);
+
 
 /*
  * Curl_getaddrinfo() is the generic low-level name resolve API within this
@@ -124,20 +116,6 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
                                 int port,
                                 int *waitp);
 
-CURLcode Curl_is_resolved(struct connectdata *conn,
-                          struct Curl_dns_entry **dns);
-CURLcode Curl_wait_for_resolv(struct connectdata *conn,
-                              struct Curl_dns_entry **dnsentry);
-
-/* Curl_resolv_getsock() is a generic function that exists in multiple
-   versions depending on what name resolve technology we've built to use. The
-   function is called from the multi_getsock() function.  'sock' is a pointer
-   to an array to hold the file descriptors, with 'numsock' being the size of
-   that array (in number of entries). This function is supposed to return
-   bitmask indicating what file descriptors (referring to array indexes in the
-   'sock' array) to wait for, read/write. */
-int Curl_resolv_getsock(struct connectdata *conn, curl_socket_t *sock,
-                        int numsocks);
 
 /* unlock a previously resolved dns entry */
 void Curl_resolv_unlock(struct SessionHandle *data,
@@ -146,8 +124,8 @@ void Curl_resolv_unlock(struct SessionHandle *data,
 /* for debugging purposes only: */
 void Curl_scan_cache_used(void *user, void *ptr);
 
-/* make a new dns cache and return the handle */
-struct curl_hash *Curl_mk_dnscache(void);
+/* init a new dns cache and return success */
+int Curl_mk_dnscache(struct curl_hash *hash);
 
 /* prune old entries from the DNS cache */
 void Curl_hostcache_prune(struct SessionHandle *data);
@@ -167,11 +145,18 @@ int curl_dogetnameinfo(GETNAMEINFO_QUAL_ARG1 GETNAMEINFO_TYPE_ARG1 sa,
 /* IPv4 threadsafe resolve function used for synch and asynch builds */
 Curl_addrinfo *Curl_ipv4_resolve_r(const char * hostname, int port);
 
+CURLcode Curl_async_resolved(struct connectdata *conn,
+                             bool *protocol_connect);
+
+#ifndef CURLRES_ASYNCH
+#define Curl_async_resolved(x,y) CURLE_OK
+#endif
+
 /*
  * Curl_addrinfo_callback() is used when we build with any asynch specialty.
  * Handles end of async request processing. Inserts ai into hostcache when
  * status is CURL_ASYNC_SUCCESS. Twiddles fields in conn to indicate async
- * request completed wether successfull or failed.
+ * request completed whether successful or failed.
  */
 CURLcode Curl_addrinfo_callback(struct connectdata *conn,
                                 int status,
@@ -186,6 +171,18 @@ const char *Curl_printable_address(const Curl_addrinfo *ip,
                                    char *buf, size_t bufsize);
 
 /*
+ * Curl_fetch_addr() fetches a 'Curl_dns_entry' already in the DNS cache.
+ *
+ * Returns the Curl_dns_entry entry pointer or NULL if not in the cache.
+ *
+ * The returned data *MUST* be "unlocked" with Curl_resolv_unlock() after
+ * use, or we'll leak memory!
+ */
+struct Curl_dns_entry *
+Curl_fetch_addr(struct connectdata *conn,
+                const char *hostname,
+                int port);
+/*
  * Curl_cache_addr() stores a 'Curl_addrinfo' struct in the DNS cache.
  *
  * Returns the Curl_dns_entry entry pointer or NULL if the storage failed.
@@ -193,13 +190,6 @@ const char *Curl_printable_address(const Curl_addrinfo *ip,
 struct Curl_dns_entry *
 Curl_cache_addr(struct SessionHandle *data, Curl_addrinfo *addr,
                 const char *hostname, int port);
-
-/*
- * Curl_destroy_thread_data() cleans up async resolver data.
- * Complementary of ares_destroy.
- */
-struct Curl_async; /* forward-declaration */
-void Curl_destroy_thread_data(struct Curl_async *async);
 
 #ifndef INADDR_NONE
 #define CURL_INADDR_NONE (in_addr_t) ~0
@@ -215,5 +205,46 @@ void Curl_destroy_thread_data(struct Curl_async *async);
  */
 extern sigjmp_buf curl_jmpenv;
 #endif
+
+/*
+ * Function provided by the resolver backend to set DNS servers to use.
+ */
+CURLcode Curl_set_dns_servers(struct SessionHandle *data, char *servers);
+
+/*
+ * Function provided by the resolver backend to set
+ * outgoing interface to use for DNS requests
+ */
+CURLcode Curl_set_dns_interface(struct SessionHandle *data,
+                                const char *interf);
+
+/*
+ * Function provided by the resolver backend to set
+ * local IPv4 address to use as source address for DNS requests
+ */
+CURLcode Curl_set_dns_local_ip4(struct SessionHandle *data,
+                                const char *local_ip4);
+
+/*
+ * Function provided by the resolver backend to set
+ * local IPv6 address to use as source address for DNS requests
+ */
+CURLcode Curl_set_dns_local_ip6(struct SessionHandle *data,
+                                const char *local_ip6);
+
+/*
+ * Clean off entries from the cache
+ */
+void Curl_hostcache_clean(struct SessionHandle *data, struct curl_hash *hash);
+
+/*
+ * Destroy the hostcache of this handle.
+ */
+void Curl_hostcache_destroy(struct SessionHandle *data);
+
+/*
+ * Populate the cache with specified entries from CURLOPT_RESOLVE.
+ */
+CURLcode Curl_loadhostpairs(struct SessionHandle *data);
 
 #endif /* HEADER_CURL_HOSTIP_H */

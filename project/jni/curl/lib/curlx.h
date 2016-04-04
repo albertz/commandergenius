@@ -1,5 +1,5 @@
-#ifndef __CURLX_H
-#define __CURLX_H
+#ifndef HEADER_CURL_CURLX_H
+#define HEADER_CURL_CURLX_H
 /***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2008, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -89,9 +89,8 @@
 
 #ifdef ENABLE_CURLX_PRINTF
 /* If this define is set, we define all "standard" printf() functions to use
-   the curlx_* version instead. It makes the source code transparant and
-   easier to understand/patch. Undefine them first in case _MPRINTF_REPLACE
-   is set. */
+   the curlx_* version instead. It makes the source code transparent and
+   easier to understand/patch. Undefine them first. */
 # undef printf
 # undef fprintf
 # undef sprintf
@@ -115,4 +114,5 @@
 # define vaprintf curlx_mvaprintf
 #endif /* ENABLE_CURLX_PRINTF */
 
-#endif /* __CURLX_H */
+#endif /* HEADER_CURL_CURLX_H */
+

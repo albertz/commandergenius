@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -20,24 +20,28 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
-
-#include <string.h>
-#include <stdio.h>
+#include "curl_setup.h"
 
 #include <curl/curl.h>
 #include "urldata.h"
-#include "sslgen.h"
-
-#define _MPRINTF_REPLACE /* use the internal *printf() functions */
-#include <curl/mprintf.h>
+#include "vtls/vtls.h"
+#include "http2.h"
+#include "curl_printf.h"
 
 #ifdef USE_ARES
-#include <ares_version.h>
+#  if defined(CURL_STATICLIB) && !defined(CARES_STATICLIB) && \
+     (defined(WIN32) || defined(_WIN32) || defined(__SYMBIAN32__))
+#    define CARES_STATICLIB
+#  endif
+#  include <ares.h>
 #endif
 
 #ifdef USE_LIBIDN
 #include <stringprep.h>
+#endif
+
+#ifdef USE_LIBPSL
+#include <libpsl.h>
 #endif
 
 #if defined(HAVE_ICONV) && defined(CURL_DOES_CONVERSIONS)
@@ -60,13 +64,28 @@
 #define CURL_LIBSSH2_VERSION LIBSSH2_VERSION
 #endif
 
+void Curl_version_init(void);
+
+/* For thread safety purposes this function is called by global_init so that
+   the static data in both version functions is initialized. */
+void Curl_version_init(void)
+{
+  curl_version();
+  curl_version_info(CURLVERSION_NOW);
+}
+
 char *curl_version(void)
 {
+  static bool initialized;
   static char version[200];
-  char *ptr=version;
+  char *ptr = version;
   size_t len;
   size_t left = sizeof(version);
-  strcpy(ptr, LIBCURL_NAME "/" LIBCURL_VERSION );
+
+  if(initialized)
+    return version;
+
+  strcpy(ptr, LIBCURL_NAME "/" LIBCURL_VERSION);
   len = strlen(ptr);
   left -= len;
   ptr += len;
@@ -99,6 +118,16 @@ char *curl_version(void)
     ptr += len;
   }
 #endif
+#ifdef USE_LIBPSL
+  len = snprintf(ptr, left, " libpsl/%s", psl_get_version());
+  left -= len;
+  ptr += len;
+#endif
+#ifdef USE_WIN32_IDN
+  len = snprintf(ptr, left, " WinIDN");
+  left -= len;
+  ptr += len;
+#endif
 #if defined(HAVE_ICONV) && defined(CURL_DOES_CONVERSIONS)
 #ifdef _LIBICONV_VERSION
   len = snprintf(ptr, left, " iconv/%d.%d",
@@ -115,20 +144,29 @@ char *curl_version(void)
   left -= len;
   ptr += len;
 #endif
+#ifdef USE_NGHTTP2
+  len = Curl_http2_ver(ptr, left);
+  left -= len;
+  ptr += len;
+#endif
 #ifdef USE_LIBRTMP
   {
     char suff[2];
-    if (RTMP_LIB_VERSION & 0xff) {
+    if(RTMP_LIB_VERSION & 0xff) {
       suff[0] = (RTMP_LIB_VERSION & 0xff) + 'a' - 1;
       suff[1] = '\0';
-    } else {
-      suff[0] = '\0';
     }
-    len = snprintf(ptr, left, " librtmp/%d.%d%s",
-      RTMP_LIB_VERSION >> 16, (RTMP_LIB_VERSION >> 8) & 0xff, suff);
+    else
+      suff[0] = '\0';
+
+    snprintf(ptr, left, " librtmp/%d.%d%s",
+             RTMP_LIB_VERSION >> 16, (RTMP_LIB_VERSION >> 8) & 0xff,
+             suff);
 /*
   If another lib version is added below this one, this code would
   also have to do:
+
+    len = what snprintf() returned
 
     left -= len;
     ptr += len;
@@ -136,6 +174,7 @@ char *curl_version(void)
   }
 #endif
 
+  initialized = true;
   return version;
 }
 
@@ -175,8 +214,9 @@ static const char * const protocols[] = {
 #endif
 #ifndef CURL_DISABLE_LDAP
   "ldap",
-#if (defined(USE_OPENLDAP) && defined(USE_SSL)) || \
-   (!defined(USE_OPENLDAP) && defined(HAVE_LDAP_SSL))
+#if !defined(CURL_DISABLE_LDAPS) && \
+    ((defined(USE_OPENLDAP) && defined(USE_SSL)) || \
+     (!defined(USE_OPENLDAP) && defined(HAVE_LDAP_SSL)))
   "ldaps",
 #endif
 #endif
@@ -197,6 +237,14 @@ static const char * const protocols[] = {
 #endif
 #ifdef USE_LIBSSH2
   "sftp",
+#endif
+#if !defined(CURL_DISABLE_SMB) && defined(USE_NTLM) && \
+   (CURL_SIZEOF_CURL_OFF_T > 4) && \
+   (!defined(USE_WINDOWS_SSPI) || defined(USE_WIN32_CRYPTO))
+  "smb",
+#  ifdef USE_SSL
+  "smbs",
+#  endif
 #endif
 #ifndef CURL_DISABLE_SMTP
   "smtp",
@@ -223,23 +271,30 @@ static curl_version_info_data version_info = {
 #ifdef ENABLE_IPV6
   | CURL_VERSION_IPV6
 #endif
-#ifdef HAVE_KRB4
-  | CURL_VERSION_KERBEROS4
-#endif
 #ifdef USE_SSL
   | CURL_VERSION_SSL
 #endif
 #ifdef USE_NTLM
   | CURL_VERSION_NTLM
 #endif
+#if !defined(CURL_DISABLE_HTTP) && defined(USE_NTLM) && \
+  defined(NTLM_WB_ENABLED)
+  | CURL_VERSION_NTLM_WB
+#endif
+#ifdef USE_SPNEGO
+  | CURL_VERSION_SPNEGO
+#endif
+#ifdef USE_KERBEROS5
+  | CURL_VERSION_KERBEROS5
+#endif
+#ifdef HAVE_GSSAPI
+  | CURL_VERSION_GSSAPI
+#endif
 #ifdef USE_WINDOWS_SSPI
   | CURL_VERSION_SSPI
 #endif
 #ifdef HAVE_LIBZ
   | CURL_VERSION_LIBZ
-#endif
-#ifdef HAVE_GSSAPI
-  | CURL_VERSION_GSSNEGOTIATE
 #endif
 #ifdef DEBUGBUILD
   | CURL_VERSION_DEBUG
@@ -250,15 +305,24 @@ static curl_version_info_data version_info = {
 #ifdef CURLRES_ASYNCH
   | CURL_VERSION_ASYNCHDNS
 #endif
-#ifdef HAVE_SPNEGO
-  | CURL_VERSION_SPNEGO
-#endif
 #if (CURL_SIZEOF_CURL_OFF_T > 4) && \
     ( (SIZEOF_OFF_T > 4) || defined(USE_WIN32_LARGE_FILES) )
   | CURL_VERSION_LARGEFILE
 #endif
 #if defined(CURL_DOES_CONVERSIONS)
   | CURL_VERSION_CONV
+#endif
+#if defined(USE_TLS_SRP)
+  | CURL_VERSION_TLSAUTH_SRP
+#endif
+#if defined(USE_NGHTTP2)
+  | CURL_VERSION_HTTP2
+#endif
+#if defined(USE_UNIX_SOCKETS)
+  | CURL_VERSION_UNIX_SOCKETS
+#endif
+#if defined(USE_LIBPSL)
+  | CURL_VERSION_PSL
 #endif
   ,
   NULL, /* ssl_version */
@@ -274,12 +338,18 @@ static curl_version_info_data version_info = {
 
 curl_version_info_data *curl_version_info(CURLversion stamp)
 {
+  static bool initialized;
 #ifdef USE_LIBSSH2
   static char ssh_buffer[80];
 #endif
-
 #ifdef USE_SSL
   static char ssl_buffer[80];
+#endif
+
+  if(initialized)
+    return &version_info;
+
+#ifdef USE_SSL
   Curl_ssl_version(ssl_buffer, sizeof(ssl_buffer));
   version_info.ssl_version = ssl_buffer;
 #endif
@@ -301,6 +371,8 @@ curl_version_info_data *curl_version_info(CURLversion stamp)
   version_info.libidn = stringprep_check_version(LIBIDN_REQUIRED_VERSION);
   if(version_info.libidn)
     version_info.features |= CURL_VERSION_IDN;
+#elif defined(USE_WIN32_IDN)
+  version_info.features |= CURL_VERSION_IDN;
 #endif
 
 #if defined(HAVE_ICONV) && defined(CURL_DOES_CONVERSIONS)
@@ -319,5 +391,6 @@ curl_version_info_data *curl_version_info(CURLversion stamp)
 
   (void)stamp; /* avoid compiler warnings, we don't use this */
 
+  initialized = true;
   return &version_info;
 }

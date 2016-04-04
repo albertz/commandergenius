@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -20,52 +20,9 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
+#include "curl_setup.h"
 
 #ifndef CURL_DISABLE_GOPHER
-
-/* -- WIN32 approved -- */
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <ctype.h>
-
-#ifdef WIN32
-#include <time.h>
-#include <io.h>
-#else
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#include <netinet/in.h>
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <netdb.h>
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-#ifdef HAVE_NET_IF_H
-#include <net/if.h>
-#endif
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
-
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
-
-
-#endif
 
 #include "urldata.h"
 #include <curl/curl.h>
@@ -79,13 +36,9 @@
 #include "select.h"
 #include "url.h"
 #include "warnless.h"
-
-#define _MPRINTF_REPLACE /* use our functions only */
-#include <curl/mprintf.h>
-
+#include "curl_memory.h"
 /* The last #include file should be: */
 #include "memdebug.h"
-
 
 /*
  * Forward declarations.
@@ -110,10 +63,13 @@ const struct Curl_handler Curl_handler_gopher = {
   ZERO_NULL,                            /* doing */
   ZERO_NULL,                            /* proto_getsock */
   ZERO_NULL,                            /* doing_getsock */
+  ZERO_NULL,                            /* domore_getsock */
   ZERO_NULL,                            /* perform_getsock */
   ZERO_NULL,                            /* disconnect */
+  ZERO_NULL,                            /* readwrite */
   PORT_GOPHER,                          /* defport */
-  PROT_GOPHER                           /* protocol */
+  CURLPROTO_GOPHER,                     /* protocol */
+  PROTOPT_NONE                          /* flags */
 };
 
 static CURLcode gopher_do(struct connectdata *conn, bool *done)
@@ -127,16 +83,18 @@ static CURLcode gopher_do(struct connectdata *conn, bool *done)
   char *sel;
   char *sel_org = NULL;
   ssize_t amount, k;
+  int len;
 
   *done = TRUE; /* unconditionally */
 
   /* Create selector. Degenerate cases: / and /1 => convert to "" */
-  if (strlen(path) <= 2)
+  if(strlen(path) <= 2) {
     sel = (char *)"";
+    len = (int)strlen(sel);
+  }
   else {
     char *newp;
     size_t j, i;
-    int len;
 
     /* Otherwise, drop / and the first character (i.e., item type) ... */
     newp = path;
@@ -150,31 +108,31 @@ static CURLcode gopher_do(struct connectdata *conn, bool *done)
 
     /* ... and finally unescape */
     sel = curl_easy_unescape(data, newp, 0, &len);
-    if (!sel)
+    if(!sel)
       return CURLE_OUT_OF_MEMORY;
     sel_org = sel;
   }
 
   /* We use Curl_write instead of Curl_sendf to make sure the entire buffer is
      sent, which could be sizeable with long selectors. */
-  k = curlx_uztosz(strlen(sel));
+  k = curlx_uztosz(len);
 
   for(;;) {
     result = Curl_write(conn, sockfd, sel, k, &amount);
-    if (CURLE_OK == result) { /* Which may not have written it all! */
+    if(!result) { /* Which may not have written it all! */
       result = Curl_client_write(conn, CLIENTWRITE_HEADER, sel, amount);
       if(result) {
-        Curl_safefree(sel_org);
+        free(sel_org);
         return result;
       }
       k -= amount;
       sel += amount;
-      if (k < 1)
+      if(k < 1)
         break; /* but it did write it all */
     }
     else {
       failf(data, "Failed sending Gopher request");
-      Curl_safefree(sel_org);
+      free(sel_org);
       return result;
     }
     /* Don't busyloop. The entire loop thing is a work-around as it causes a
@@ -189,12 +147,12 @@ static CURLcode gopher_do(struct connectdata *conn, bool *done)
     Curl_socket_ready(CURL_SOCKET_BAD, sockfd, 100);
   }
 
-  Curl_safefree(sel_org);
+  free(sel_org);
 
   /* We can use Curl_sendf to send the terminal \r\n relatively safely and
      save allocing another string/doing another _write loop. */
   result = Curl_sendf(sockfd, conn, "\r\n");
-  if (result != CURLE_OK) {
+  if(result) {
     failf(data, "Failed sending Gopher request");
     return result;
   }
