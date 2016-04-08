@@ -149,6 +149,7 @@ class SettingsMenuMisc extends SettingsMenu
 				{
 					Globals.DataDir = edit.getText().toString();
 					dialog.dismiss();
+					goBack(p);
 				}
 			});
 			builder.setOnCancelListener(new DialogInterface.OnCancelListener()
