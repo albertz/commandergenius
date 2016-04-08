@@ -14,8 +14,11 @@ export CXXFLAGS=-O0
 make -j8 VERBOSE=1 || exit 1
 cd bin
 
+export LD_LIBRARY_PATH=/usr/local/lib
+
 if [ -z "$1" ]; then
-	./openttd -d 2 -r 854x480
+	./openttd -d 2 -r 854x480 -b 32bpp-anim
 else
-	gdb -ex run --args ./openttd -d 2 -r 854x480  -g opntitle.sav
+	gdb -ex run --args \
+	./openttd -d 2 -r 854x480 -b 32bpp-anim -g opntitle.sav
 fi
