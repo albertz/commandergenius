@@ -713,13 +713,58 @@ bool pixel_convert(const GLvoid *src, GLvoid **dst,
         }
         return true;
     }
-    if (((src_format == GL_BGRA)||(src_format == GL_RGBA)) && (dst_format == GL_LUMINANCE_ALPHA) && (dst_type == GL_UNSIGNED_BYTE) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
+    if ((src_format == GL_RGBA) && (dst_format == GL_LUMINANCE_ALPHA) && (dst_type == GL_UNSIGNED_BYTE) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
         GLuint tmp;
         for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
-				tmp = *(const GLuint*)src_pos;
-                *(GLushort*)dst_pos = (((((char*)src_pos)[2] + ((char*)src_pos)[1] + ((char*)src_pos)[0])/3)&0xff)<<8 | ((char*)src_pos)[3];
-//				*(GLushort*)dst_pos = (tmp&0x0000ff00) | (tmp&0x000000ff);
+				//tmp = *(const GLuint*)src_pos;
+                unsigned char* byte_src = (unsigned char*)src_pos;
+                *(GLushort*)dst_pos = ((((int)byte_src[0])*77 + ((int)byte_src[1])*151 + ((int)byte_src[2])*28)&0xff00)>>8 | (byte_src[3]<<8);
+				src_pos += src_stride;
+				dst_pos += dst_stride;
+			}
+			if (stride)
+				dst_pos += dst_width;
+        }
+        return true;
+    }
+    if ((src_format == GL_BGRA) && (dst_format == GL_LUMINANCE_ALPHA) && (dst_type == GL_UNSIGNED_BYTE) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
+        GLuint tmp;
+        for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				//tmp = *(const GLuint*)src_pos;
+                unsigned char* byte_src = (unsigned char*)src_pos;
+                *(GLushort*)dst_pos = ((((int)byte_src[2])*77 + ((int)byte_src[1])*151 + ((int)byte_src[0])*28)&0xff00)>>8 | (byte_src[3]<<8);
+				src_pos += src_stride;
+				dst_pos += dst_stride;
+			}
+			if (stride)
+				dst_pos += dst_width;
+        }
+        return true;
+    }
+    if (((src_format == GL_RGBA)||(src_format == GL_RGB)) && (dst_format == GL_LUMINANCE) && (dst_type == GL_UNSIGNED_BYTE) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
+        GLuint tmp;
+        for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				//tmp = *(const GLuint*)src_pos;
+                unsigned char* byte_src = (unsigned char*)src_pos;
+                *(unsigned char*)dst_pos = (((int)byte_src[0])*77 + ((int)byte_src[1])*151 + ((int)byte_src[2])*28)>>8;
+				src_pos += src_stride;
+				dst_pos += dst_stride;
+			}
+			if (stride)
+				dst_pos += dst_width;
+        }
+        return true;
+    }
+    if (((src_format == GL_BGRA)||(src_format == GL_BGR)) && (dst_format == GL_LUMINANCE) && (dst_type == GL_UNSIGNED_BYTE) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
+        GLuint tmp;
+        for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				//tmp = *(const GLuint*)src_pos;
+                unsigned char* byte_src = (unsigned char*)src_pos;
+                *(unsigned char*)dst_pos = (((int)byte_src[2])*77 + ((int)byte_src[1])*151 + ((int)byte_src[0])*28)>>8;
 				src_pos += src_stride;
 				dst_pos += dst_stride;
 			}
@@ -756,7 +801,7 @@ bool pixel_convert(const GLvoid *src, GLvoid **dst,
         }
         return true;
     }
-    if (((src_format == GL_RGB)||(src_format == GL_RGBA)) && (dst_format == GL_RGB) && (dst_type = GL_UNSIGNED_SHORT_5_6_5) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
+    if (((src_format == GL_RGB)||(src_format == GL_RGBA)) && (dst_format == GL_RGB) && (dst_type == GL_UNSIGNED_SHORT_5_6_5) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
         for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
 				*(GLushort*)dst_pos = ((GLushort)(((char*)src_pos)[2]&0xf8)>>(3)) | ((GLushort)(((char*)src_pos)[1]&0xfc)<<(5-2)) | ((GLushort)(((char*)src_pos)[0]&0xf8)<<(11-3));
@@ -768,10 +813,58 @@ bool pixel_convert(const GLvoid *src, GLvoid **dst,
         }
         return true;
     }
-    if (((src_format == GL_BGR) || (src_format == GL_BGRA)) && (dst_format == GL_RGB) && (dst_type = GL_UNSIGNED_SHORT_5_6_5) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
+    if (((src_format == GL_BGR) || (src_format == GL_BGRA)) && (dst_format == GL_RGB) && (dst_type == GL_UNSIGNED_SHORT_5_6_5) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
         for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
 				*(GLushort*)dst_pos = ((GLushort)(((char*)src_pos)[0]&0xf8)>>(3)) | ((GLushort)(((char*)src_pos)[1]&0xfc)<<(5-2)) | ((GLushort)(((char*)src_pos)[2]&0xf8)<<(11-3));
+				src_pos += src_stride;
+				dst_pos += dst_stride;
+			}
+			if (stride)
+				dst_pos += dst_width;
+        }
+        return true;
+    }
+    if ((src_format == GL_RGBA) && (dst_format == GL_RGBA) && (dst_type == GL_UNSIGNED_SHORT_5_5_5_1) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
+        for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				*(GLushort*)dst_pos = ((GLushort)(((char*)src_pos)[2]&0xf8)>>(3-1)) | ((GLushort)(((char*)src_pos)[1]&0xf8)<<(5-2)) | ((GLushort)(((char*)src_pos)[0]&0xf8)<<(10-2)) | ((GLushort)(((char*)src_pos)[3]>0)?1:0);
+				src_pos += src_stride;
+				dst_pos += dst_stride;
+			}
+			if (stride)
+				dst_pos += dst_width;
+        }
+        return true;
+    }
+    if ((src_format == GL_BGRA) && (dst_format == GL_RGBA) && (dst_type == GL_UNSIGNED_SHORT_5_5_5_1) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
+        for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				*(GLushort*)dst_pos = ((GLushort)(((char*)src_pos)[0]&0xf8)>>(3-1)) | ((GLushort)(((char*)src_pos)[1]&0xf8)<<(5-2)) | ((GLushort)(((char*)src_pos)[2]&0xf8)<<(10-2)) | ((GLushort)(((char*)src_pos)[3]>0)?1:0);
+				src_pos += src_stride;
+				dst_pos += dst_stride;
+			}
+			if (stride)
+				dst_pos += dst_width;
+        }
+        return true;
+    }
+    if ((src_format == GL_RGBA) && (dst_format == GL_RGBA) && (dst_type == GL_UNSIGNED_SHORT_4_4_4_4) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
+        for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				*(GLushort*)dst_pos = ((GLushort)(((char*)src_pos)[3]&0xf0))>>(4) | ((GLushort)(((char*)src_pos)[2]&0xf0)) | ((GLushort)(((char*)src_pos)[1]&0xf0))<<(4) | ((GLushort)(((char*)src_pos)[0]&0xf0))<<(8);
+				src_pos += src_stride;
+				dst_pos += dst_stride;
+			}
+			if (stride)
+				dst_pos += dst_width;
+        }
+        return true;
+    }
+    if ((src_format == GL_BGRA) && (dst_format == GL_RGBA) && (dst_type == GL_UNSIGNED_SHORT_4_4_4_4) && ((src_type == GL_UNSIGNED_BYTE)||(src_type == GL_UNSIGNED_INT_8_8_8_8_REV))) {
+        for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				*(GLushort*)dst_pos = ((GLushort)(((char*)src_pos)[3]&0xf0)>>(4)) | ((GLushort)(((char*)src_pos)[0]&0xf0)) | ((GLushort)(((char*)src_pos)[1]&0xf0)<<(4)) | ((GLushort)(((char*)src_pos)[2]&0xf0)<<(8));
 				src_pos += src_stride;
 				dst_pos += dst_stride;
 			}
