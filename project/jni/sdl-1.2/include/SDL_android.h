@@ -126,6 +126,14 @@ extern DECLSPEC void SDLCALL SDL_ANDROID_OpenExternalWebBrowser(const char *url)
 /* Restart current app, you can pass a string to the new app instance, which can be retrieved with getenv("SDL_RESTART_PARAMS") */
 extern DECLSPEC void SDLCALL SDL_ANDROID_RestartMyself(const char *restartParams);
 
+enum {
+	SDL_ANDROID_CONFIG_VIDEO_DEPTH_BPP = 0, /* Can be 16 or 24 for software video modes, OpenGL supports 16/24/32 */
+	/* TODO: more options, see Globals.java */
+};
+
+/* Set SDL Android-specifc option, such as video depth or mouse emulation mode. Most options require restarting the app. */
+extern DECLSPEC void SDLCALL SDL_ANDROID_SetConfigOption(int option, int value);
+
 #ifdef __cplusplus
 }
 #endif

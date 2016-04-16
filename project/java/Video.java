@@ -942,6 +942,11 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		System.exit(0);
 	}
 
+	public void setConfigOptionFromSDL(int option, int value)
+	{
+		Settings.setConfigOptionFromSDL(option, value);
+	}
+
 	private int PowerOf2(int i)
 	{
 		int value = 1;
