@@ -87,6 +87,7 @@ static jmethodID JavaRequestCloudSave = NULL;
 static jmethodID JavaRequestCloudLoad = NULL;
 static jmethodID JavaRequestOpenExternalApp = NULL;
 static jmethodID JavaRequestRestartMyself = NULL;
+static jmethodID JavaRequestSetConfigOption = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
@@ -359,6 +360,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 													"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
 	JavaRequestOpenExternalApp = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "openExternalApp", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 	JavaRequestRestartMyself = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "restartMyself", "(Ljava/lang/String;)V");
+	JavaRequestSetConfigOption = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setConfigOptionFromSDL", "(II)V");
 	
 	ANDROID_InitOSKeymap();
 }
@@ -593,6 +595,11 @@ void SDLCALL SDL_ANDROID_RestartMyself(const char *restartParams)
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestRestartMyself, s1 );
 	(*JavaEnv)->DeleteLocalRef(JavaEnv, s1);
 	(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
+}
+
+void SDLCALL SDL_ANDROID_SetConfigOption(int option, int value)
+{
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestSetConfigOption, (jint)option, (jint)value );
 }
 
 void SDLCALL SDL_ANDROID_OpenExternalWebBrowser(const char *url)

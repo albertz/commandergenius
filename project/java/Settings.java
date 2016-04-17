@@ -885,7 +885,23 @@ class Settings
 		}
 		return true;
 	}
-	
+
+	static final int SDL_ANDROID_CONFIG_VIDEO_DEPTH_BPP = 0;
+
+	public static void setConfigOptionFromSDL(int option, int value)
+	{
+		switch (option)
+		{
+			case SDL_ANDROID_CONFIG_VIDEO_DEPTH_BPP:
+				Globals.VideoDepthBpp = value;
+				break;
+			default:
+				Log.e("SDL", "setConfigOptionFromSDL: cannot find option with ID " + option + ", value " + value);
+				break;
+		}
+		Save(MainActivity.instance);
+	}
+
 	private static native void nativeSetAccelerometerSettings(int sensitivity, int centerPos);
 	private static native void nativeSetMouseUsed(int RightClickMethod, int ShowScreenUnderFinger, int LeftClickMethod, 
 													int MoveMouseWithJoystick, int ClickMouseWithDpad, int MaxForce, int MaxRadius,
