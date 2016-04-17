@@ -31,5 +31,3 @@ Requested features, might never get implemented, see todo.txt for features that 
 - OpenArena: Shift and Ctrl keys on USB keyboard do not work for text input.
 
 - OpenArena: When entering with USB keyboard into chatbox, first 't' disappears.
-
-- ResidualVM(Grim Fandango), SDL, glshim: (compatibility problem SDL and glshim) 3d textures always displayed over 2d backgrounds
