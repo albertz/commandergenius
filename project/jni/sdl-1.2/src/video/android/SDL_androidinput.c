@@ -528,7 +528,7 @@ static void ProcessMouseUp( int x, int y )
 			SDL_ANDROID_MainThreadPushMouseMotion( mouseInitialX - 1, mouseInitialY );
 		mouseInitialX = -1;
 		mouseInitialY = -1;
-		deferredMouseTap = 1;
+		deferredMouseTap = 10;
 		mouseClickTimeout = 200;
 		if( mouseClickTimeoutInitialized )
 			sem_post(&mouseClickTimeoutSemaphore);
@@ -878,7 +878,9 @@ static void ProcessDeferredMouseTap()
 {
 	if( deferredMouseTap > 0 )
 	{
-		deferredMouseTap = 0;
+		deferredMouseTap--;
+		if (deferredMouseTap > 0)
+			return;
 		SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
 		if( forceScreenUpdateMouseClick && SDL_ANDROID_currentMouseX + 1 < SDL_ANDROID_sFakeWindowWidth )
 			SDL_ANDROID_MainThreadPushMouseMotion( SDL_ANDROID_currentMouseX + 1, SDL_ANDROID_currentMouseY );
