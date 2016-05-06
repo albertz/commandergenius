@@ -1,7 +1,0 @@
-touch 0101120002 *
-touch 0101120002 src/*
-touch 0101120002 src/docs/*
-touch 0101120002 src/gfx/*
-touch 0101120002 src/levels/*
-touch 0101120002 src/sounds/*
-

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=LBreakout2
-Comment=A ball-and-paddle game with nice graphics.
-Exec=lbreakout2
-Icon=/usr/local/share/icons/lbreakout48.gif
-Type=Application
-Categories=Game;
