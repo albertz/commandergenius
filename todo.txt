@@ -9,9 +9,7 @@ TODO, which will get actually done
 
 - OpenArena: add dynamic camera/joystick, add option for joystick tap action.
 
-- OpenArena: add Google Play Games network support.
-
-- OpenArena: first-person mode camera sometimes looks down after respawn.
+- OpenArena: NAT traversal, check that you can host and connect on IPv6.
 
 - USB Keyboard: options for camera feed size and for redefining remote menu hotkey.
 
