@@ -305,7 +305,7 @@ echo "# API is defined in file SDL_android.h: int SDL_ANDROID_OpenAudioRecording
 echo "# This option will add additional permission to Android manifest (y)/(n)" >> AndroidAppSettings.cfg
 echo AppRecordsAudio=$AppRecordsAudio >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Application needs to access SD card. If your data files are bigger than 5 Mb, enable it. (y) / (n)" >> AndroidAppSettings.cfg
+echo "# Application needs to access SD card. Always disable it, unless you want to access user photos and downloads. (y) / (n)" >> AndroidAppSettings.cfg
 echo AccessSdCard=$AccessSdCard >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application needs Internet access. If you disable it, you'll have to bundle all your data files inside .apk (y) / (n)" >> AndroidAppSettings.cfg
@@ -812,10 +812,10 @@ case "$MinimumScreenSize" in
 		;;
 esac
 
-if [ "$AccessSdCard" = "n" ]; then
-	$SEDI "/==EXTERNAL_STORAGE==/ d" project/AndroidManifest.xml
-else
+if [ "$AccessSdCard" = "y" ]; then
 	$SEDI "/==NOT_EXTERNAL_STORAGE==/ d" project/AndroidManifest.xml
+else
+	$SEDI "/==EXTERNAL_STORAGE==/ d" project/AndroidManifest.xml # Disabled by default
 fi
 
 if [ "$AccessInternet" = "n" ]; then
