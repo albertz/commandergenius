@@ -5,7 +5,8 @@ LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 mkdir -p openttd-pc openttd-pc/baseset
 cd openttd-pc
-[ -e bin/baseset ] || cp -a ../src/bin .
+[ -e bin/baseset ] || cp -a ../src/bin ./
+[ -e bin/fonts ] || cp -a ../data/fonts bin/
 
 export CFLAGS=-O0
 export CXXFLAGS=-O0
