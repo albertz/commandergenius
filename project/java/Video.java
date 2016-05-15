@@ -744,7 +744,7 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 				this.notify();
 			}
 		}
-		if( context.isScreenKeyboardShown() )
+		if( context.isScreenKeyboardShown() && !context.keyboardWithoutTextInputShown )
 		{
 			try {
 				Thread.sleep(50); // Give some time to the keyboard input thread
