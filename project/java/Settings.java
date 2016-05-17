@@ -441,6 +441,14 @@ class Settings
 					for( String s: fileList )
 						if( s.toUpperCase().startsWith(DataDownloader.DOWNLOAD_FLAG_FILENAME.toUpperCase()) )
 							Globals.DataDir = SdcardAppPath.getPath(p);
+
+				try {
+					new File(Globals.DataDir).mkdirs();
+					new FileOutputStream( new File(Globals.DataDir, ".nomedia") ).close();
+				} catch (Exception e) {
+					Globals.DownloadToSdcard = false; // SD card not writable
+					Globals.DataDir = p.getFilesDir().getAbsolutePath();
+				}
 			}
 		}
 
@@ -795,6 +803,14 @@ class Settings
 						continue;
 					StatFs stat = new StatFs(path.getPath());
 					long size = (long)stat.getAvailableBlocks() * stat.getBlockSize() / 1024 / 1024;
+
+					try {
+						path.mkdirs();
+						new FileOutputStream( new File(path, ".nomedia") ).close();
+					} catch (Exception e) {
+						size = -1; // Not writable
+					}
+
 					if( size > maxSize )
 					{
 						maxSize = size;
