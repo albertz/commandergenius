@@ -1,6 +1,6 @@
 You will need to install some packages to your Debian/Ubuntu first.
 
-You will need both xcb-proto and python-xcbgen packages to have version 1.10-1,
+You will need both xcb-proto and python-xcbgen packages to have version 1.10-1 or newer,
 so you need to build on at least Debian Jessie or newer distribution.
 
 Install following packages, assuming fresh Debian Jessie installation for x86_64 architecture:
@@ -18,7 +18,7 @@ libxmuu-dev libxt-dev libsm-dev libice-dev libxrender-dev libxrandr-dev xfonts-u
 curl autoconf automake libtool pkg-config libjpeg-dev libpng-dev git mc locales \
 openjdk-7-jdk ant make zip libstdc++6:i386 libgcc1:i386 zlib1g:i386 libncurses5:i386
 
-Install Android NDK r10e and Android SDK with Android 5.1 framework, they must be in your $PATH.
+Install Android NDK r11c and Android SDK with Android 6.0 framework, they must be in your $PATH.
 
 Download SDL repo, select xserver project, and build it:
 

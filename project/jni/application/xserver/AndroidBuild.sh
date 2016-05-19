@@ -72,7 +72,7 @@ xkb/.libs/libxkbstubs.a \
 composite/.libs/libcomposite.a \
 os/.libs/libos.a \
 hw/kdrive/linux/.libs/liblinux.a \
--lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lts -lfreetype -landroid-shmem' \
+-lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lts -lfreetype -landroid-shmem -lcrypto' \
 || exit 1
 
 rm -rf $CURDIR/tmp-$1
