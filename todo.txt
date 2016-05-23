@@ -7,9 +7,11 @@ TODO, which will get actually done
 
 - TeeWorlds: tap-and-swipe controls.
 
-- OpenArena: add dynamic camera/joystick, add option for joystick tap action.
+- OpenArena: add dynamic camera button to joystick, add option for joystick tap action.
 
 - OpenArena: NAT traversal, check that you can host and connect on IPv6.
+
+- OpenArena: SDL: show Marshmallow permission dialog when opening microphone.
 
 - USB Keyboard: options for camera feed size and for redefining remote menu hotkey.
 
