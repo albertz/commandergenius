@@ -95,7 +95,8 @@
 
 #if (OPENSSL_VERSION_NUMBER >= 0x10000000L)
 #define HAVE_ERR_REMOVE_THREAD_STATE 1
-#if (OPENSSL_VERSION_NUMBER >= 0x10100004L)
+#if (OPENSSL_VERSION_NUMBER >= 0x10100004L) && \
+  !defined(LIBRESSL_VERSION_NUMBER)
 /* OpenSSL 1.1.0-pre4 removed the argument! */
 #define HAVE_ERR_REMOVE_THREAD_STATE_NOARG 1
 #endif
@@ -113,6 +114,7 @@
 #define SSLEAY_VERSION_NUMBER OPENSSL_VERSION_NUMBER
 #define HAVE_X509_GET0_EXTENSIONS 1 /* added in 1.1.0 -pre1 */
 #define HAVE_OPAQUE_EVP_PKEY 1 /* since 1.1.0 -pre3 */
+#define HAVE_OPAQUE_RSA_DSA_DH 1 /* since 1.1.0 -pre5 */
 #endif
 
 #if (OPENSSL_VERSION_NUMBER >= 0x1000200fL) && /* 1.0.2 or later */ \
@@ -748,7 +750,7 @@ void Curl_ossl_cleanup(void)
 }
 
 /*
- * This function uses SSL_peek to determine connection status.
+ * This function is used to determine connection status.
  *
  * Return codes:
  *     1 means the connection is still in place
@@ -757,16 +759,45 @@ void Curl_ossl_cleanup(void)
  */
 int Curl_ossl_check_cxn(struct connectdata *conn)
 {
-  int rc;
+  /* SSL_peek takes data out of the raw recv buffer without peeking so we use
+     recv MSG_PEEK instead. Bug #795 */
+#ifdef MSG_PEEK
   char buf;
-
-  rc = SSL_peek(conn->ssl[FIRSTSOCKET].handle, (void*)&buf, 1);
-  if(rc > 0)
-    return 1; /* connection still in place */
-
-  if(rc == 0)
+  ssize_t nread;
+  nread = recv((RECV_TYPE_ARG1)conn->sock[FIRSTSOCKET], (RECV_TYPE_ARG2)&buf,
+               (RECV_TYPE_ARG3)1, (RECV_TYPE_ARG4)MSG_PEEK);
+  if(nread == 0)
     return 0; /* connection has been closed */
-
+  else if(nread == 1)
+    return 1; /* connection still in place */
+  else if(nread == -1) {
+      int err = SOCKERRNO;
+      if(err == EINPROGRESS ||
+#if defined(EAGAIN) && (EAGAIN != EWOULDBLOCK)
+         err == EAGAIN ||
+#endif
+         err == EWOULDBLOCK)
+        return 1; /* connection still in place */
+      if(err == ECONNRESET ||
+#ifdef ECONNABORTED
+         err == ECONNABORTED ||
+#endif
+#ifdef ENETDOWN
+         err == ENETDOWN ||
+#endif
+#ifdef ENETRESET
+         err == ENETRESET ||
+#endif
+#ifdef ESHUTDOWN
+         err == ESHUTDOWN ||
+#endif
+#ifdef ETIMEDOUT
+         err == ETIMEDOUT ||
+#endif
+         err == ENOTCONN)
+        return 0; /* connection has been closed */
+  }
+#endif
   return -1; /* connection status unknown */
 }
 
@@ -1837,12 +1868,12 @@ static CURLcode ossl_connect_step1(struct connectdata *conn, int sockindex)
   SSL_CTX_set_options(connssl->ctx, ctx_options);
 
 #ifdef HAS_NPN
-  if(data->set.ssl_enable_npn)
+  if(conn->bits.tls_enable_npn)
     SSL_CTX_set_next_proto_select_cb(connssl->ctx, select_next_proto_cb, conn);
 #endif
 
 #ifdef HAS_ALPN
-  if(data->set.ssl_enable_alpn) {
+  if(conn->bits.tls_enable_alpn) {
     int cur = 0;
     unsigned char protocols[128];
 
@@ -2163,7 +2194,7 @@ static CURLcode ossl_connect_step2(struct connectdata *conn, int sockindex)
     /* Sets data and len to negotiated protocol, len is 0 if no protocol was
      * negotiated
      */
-    if(data->set.ssl_enable_alpn) {
+    if(conn->bits.tls_enable_alpn) {
       const unsigned char* neg_protocol;
       unsigned int len;
       SSL_get0_alpn_selected(connssl->handle, &neg_protocol, &len);
@@ -2226,16 +2257,23 @@ static void pubkey_show(struct SessionHandle *data,
 
   snprintf(namebuf, sizeof(namebuf), "%s(%s)", type, name);
 
-  BN_print(mem, bn);
+  if(bn)
+    BN_print(mem, bn);
   push_certinfo(namebuf, num);
 }
 
+#ifdef HAVE_OPAQUE_RSA_DSA_DH
+#define print_pubkey_BN(_type, _name, _num)              \
+  pubkey_show(data, mem, _num, #_type, #_name, _name)
+
+#else
 #define print_pubkey_BN(_type, _name, _num)    \
 do {                              \
   if(_type->_name) { \
     pubkey_show(data, mem, _num, #_type, #_name, _type->_name); \
   } \
 } WHILE_FALSE
+#endif
 
 static int X509V3_ext(struct SessionHandle *data,
                       int certnum,
@@ -2321,7 +2359,7 @@ static CURLcode get_cert_chain(struct connectdata *conn,
     EVP_PKEY *pubkey=NULL;
     int j;
     char *ptr;
-    ASN1_BIT_STRING *psig;
+    ASN1_BIT_STRING *psig = NULL;
 
     X509_NAME_print_ex(mem, X509_get_subject_name(x), 0, XN_FLAG_ONELINE);
     push_certinfo("Subject", i);
@@ -2341,16 +2379,18 @@ static CURLcode get_cert_chain(struct connectdata *conn,
 
 #if defined(HAVE_X509_GET0_SIGNATURE) && defined(HAVE_X509_GET0_EXTENSIONS)
     {
-      X509_ALGOR *palg;
+      X509_ALGOR *palg = NULL;
       ASN1_STRING *a = ASN1_STRING_new();
       if(a) {
         X509_get0_signature(&psig, &palg, x);
         X509_signature_print(mem, palg, a);
         ASN1_STRING_free(a);
-      }
-      i2a_ASN1_OBJECT(mem, palg->algorithm);
-      push_certinfo("Public Key Algorithm", i);
 
+        if(palg) {
+          i2a_ASN1_OBJECT(mem, palg->algorithm);
+          push_certinfo("Public Key Algorithm", i);
+        }
+      }
       X509V3_ext(data, i, X509_get0_extensions(x));
     }
 #else
@@ -2395,9 +2435,35 @@ static CURLcode get_cert_chain(struct connectdata *conn,
 #else
         rsa = pubkey->pkey.rsa;
 #endif
+
+#ifdef HAVE_OPAQUE_RSA_DSA_DH
+        {
+          BIGNUM *n;
+          BIGNUM *e;
+          BIGNUM *d;
+          BIGNUM *p;
+          BIGNUM *q;
+          BIGNUM *dmp1;
+          BIGNUM *dmq1;
+          BIGNUM *iqmp;
+
+          RSA_get0_key(rsa, &n, &e, &d);
+          RSA_get0_factors(rsa, &p, &q);
+          RSA_get0_crt_params(rsa, &dmp1, &dmq1, &iqmp);
+          BN_print(mem, n);
+          push_certinfo("RSA Public Key", i);
+          print_pubkey_BN(rsa, n, i);
+          print_pubkey_BN(rsa, e, i);
+          print_pubkey_BN(rsa, d, i);
+          print_pubkey_BN(rsa, p, i);
+          print_pubkey_BN(rsa, q, i);
+          print_pubkey_BN(rsa, dmp1, i);
+          print_pubkey_BN(rsa, dmq1, i);
+          print_pubkey_BN(rsa, iqmp, i);
+        }
+#else
         BIO_printf(mem, "%d", BN_num_bits(rsa->n));
         push_certinfo("RSA Public Key", i);
-
         print_pubkey_BN(rsa, n, i);
         print_pubkey_BN(rsa, e, i);
         print_pubkey_BN(rsa, d, i);
@@ -2406,6 +2472,8 @@ static CURLcode get_cert_chain(struct connectdata *conn,
         print_pubkey_BN(rsa, dmp1, i);
         print_pubkey_BN(rsa, dmq1, i);
         print_pubkey_BN(rsa, iqmp, i);
+#endif
+
         break;
       }
       case EVP_PKEY_DSA:
@@ -2416,11 +2484,30 @@ static CURLcode get_cert_chain(struct connectdata *conn,
 #else
         dsa = pubkey->pkey.dsa;
 #endif
+#ifdef HAVE_OPAQUE_RSA_DSA_DH
+        {
+          BIGNUM *p;
+          BIGNUM *q;
+          BIGNUM *g;
+          BIGNUM *priv_key;
+          BIGNUM *pub_key;
+
+          DSA_get0_pqg(dsa, &p, &q, &g);
+          DSA_get0_key(dsa, &pub_key, &priv_key);
+
+          print_pubkey_BN(dsa, p, i);
+          print_pubkey_BN(dsa, q, i);
+          print_pubkey_BN(dsa, g, i);
+          print_pubkey_BN(dsa, priv_key, i);
+          print_pubkey_BN(dsa, pub_key, i);
+        }
+#else
         print_pubkey_BN(dsa, p, i);
         print_pubkey_BN(dsa, q, i);
         print_pubkey_BN(dsa, g, i);
         print_pubkey_BN(dsa, priv_key, i);
         print_pubkey_BN(dsa, pub_key, i);
+#endif
         break;
       }
       case EVP_PKEY_DH:
@@ -2431,10 +2518,27 @@ static CURLcode get_cert_chain(struct connectdata *conn,
 #else
         dh = pubkey->pkey.dh;
 #endif
+#ifdef HAVE_OPAQUE_RSA_DSA_DH
+        {
+          BIGNUM *p;
+          BIGNUM *q;
+          BIGNUM *g;
+          BIGNUM *priv_key;
+          BIGNUM *pub_key;
+          DH_get0_pqg(dh, &p, &q, &g);
+          DH_get0_key(dh, &pub_key, &priv_key);
+          print_pubkey_BN(dh, p, i);
+          print_pubkey_BN(dh, q, i);
+          print_pubkey_BN(dh, g, i);
+          print_pubkey_BN(dh, priv_key, i);
+          print_pubkey_BN(dh, pub_key, i);
+       }
+#else
         print_pubkey_BN(dh, p, i);
         print_pubkey_BN(dh, g, i);
         print_pubkey_BN(dh, priv_key, i);
         print_pubkey_BN(dh, pub_key, i);
+#endif
         break;
       }
 #if 0
@@ -2446,9 +2550,11 @@ static CURLcode get_cert_chain(struct connectdata *conn,
       EVP_PKEY_free(pubkey);
     }
 
-    for(j = 0; j < psig->length; j++)
-      BIO_printf(mem, "%02x:", psig->data[j]);
-    push_certinfo("Signature", i);
+    if(psig) {
+      for(j = 0; j < psig->length; j++)
+        BIO_printf(mem, "%02x:", psig->data[j]);
+      push_certinfo("Signature", i);
+    }
 
     PEM_write_bio_X509(mem, x);
     push_certinfo("Cert", i);

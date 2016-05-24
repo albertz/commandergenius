@@ -641,7 +641,7 @@ gtls_connect_step1(struct connectdata *conn,
 #endif
 
 #ifdef HAS_ALPN
-  if(data->set.ssl_enable_alpn) {
+  if(conn->bits.tls_enable_alpn) {
     int cur = 0;
     gnutls_datum_t protocols[2];
 
@@ -1240,7 +1240,7 @@ gtls_connect_step3(struct connectdata *conn,
   infof(data, "\t compression: %s\n", ptr);
 
 #ifdef HAS_ALPN
-  if(data->set.ssl_enable_alpn) {
+  if(conn->bits.tls_enable_alpn) {
     rc = gnutls_alpn_get_selected_protocol(session, &proto);
     if(rc == 0) {
       infof(data, "ALPN, server accepted to use %.*s\n", proto.size,
@@ -1381,7 +1381,7 @@ static ssize_t gtls_send(struct connectdata *conn,
 {
   ssize_t rc = gnutls_record_send(conn->ssl[sockindex].session, mem, len);
 
-  if(rc < 0 ) {
+  if(rc < 0) {
     *curlcode = (rc == GNUTLS_E_AGAIN)
       ? CURLE_AGAIN
       : CURLE_SEND_ERROR;

@@ -4,52 +4,46 @@
                             | (__| |_| |  _ <| |___
                              \___|\___/|_| \_\_____|
 
-Include files for libcurl, external users.
+README
 
-They're all placed in the curl subdirectory here for better fit in any kind
-of environment. You must include files from here using...
+  Curl is a command line tool for transferring data specified with URL
+  syntax. Find out how to use curl by reading the curl.1 man page or the
+  MANUAL document. Find out how to install Curl by reading the INSTALL
+  document.
 
-        #include <curl/curl.h>
+  libcurl is the library curl is using to do its job. It is readily
+  available to be used by your software. Read the libcurl.3 man page to
+  learn how!
 
-... style and point the compiler's include path to the directory holding the
-curl subdirectory. It makes it more likely to survive future modifications.
+  You find answers to the most frequent questions we get in the FAQ document.
 
-NOTE FOR LIBCURL HACKERS
+  Study the COPYING file for distribution terms and similar. If you distribute
+  curl binaries or other binaries that involve libcurl, you might enjoy the
+  LICENSE-MIXING document.
 
-The following notes apply to libcurl version 7.19.0 and later.
+CONTACT
 
-* The distributed curl/curlbuild.h file is only intended to be used on systems
-  which can not run the also distributed configure script.
+  If you have problems, questions, ideas or suggestions, please contact us
+  by posting to a suitable mailing list. See https://curl.haxx.se/mail/
 
-* The distributed curlbuild.h file is generated as a copy of curlbuild.h.dist
-  when the libcurl source code distribution archive file is originally created.
+  All contributors to the project are listed in the THANKS document.
 
-* If you check out from git on a non-configure platform, you must run the
-  appropriate buildconf* script to set up curlbuild.h and other local files
-  before being able of compiling the library.
+WEB SITE
 
-* On systems capable of running the configure script, the configure process
-  will overwrite the distributed include/curl/curlbuild.h file with one that
-  is suitable and specific to the library being configured and built, which
-  is generated from the include/curl/curlbuild.h.in template file.
+  Visit the curl web site for the latest news and downloads:
 
-* If you intend to distribute an already compiled libcurl library you _MUST_
-  also distribute along with it the generated curl/curlbuild.h which has been
-  used to compile it. Otherwise the library will be of no use for the users of
-  the library that you have built. It is _your_ responsibility to provide this
-  file. No one at the cURL project can know how you have built the library.
+        https://curl.haxx.se/
 
-* File curl/curlbuild.h includes platform and configuration dependent info,
-  and must not be modified by anyone. Configure script generates it for you.
+GIT
 
-* We cannot assume anything else but very basic compiler features being
-  present. While libcurl requires an ANSI C compiler to build, some of the
-  earlier ANSI compilers clearly can't deal with some preprocessor operators.
+  To download the very latest source off the GIT server do this:
 
-* Newlines must remain unix-style for older compilers' sake.
+    git clone https://github.com/curl/curl.git
 
-* Comments must be written in the old-style /* unnested C-fashion */
+  (you'll get a directory named curl created, filled with the source code)
 
-To figure out how to do good and portable checks for features, operating
-systems or specific hardwarare, a very good resource is Bjorn Reese's
-collection at http://predef.sf.net/
+NOTICE
+
+  Curl contains pieces of source code that is Copyright (c) 1998, 1999
+  Kungliga Tekniska Högskolan. This notice is included here to comply with the
+  distribution terms.

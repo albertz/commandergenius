@@ -75,9 +75,9 @@
 #include "multiif.h"
 #include "connect.h"
 #include "non-ascii.h"
-#include "curl_printf.h"
 
-/* The last #include files should be: */
+/* The last 3 #include files should be in this order */
+#include "curl_printf.h"
 #include "curl_memory.h"
 #include "memdebug.h"
 
@@ -694,7 +694,7 @@ static CURLcode readwrite_data(struct SessionHandle *data,
         }
 
         nread = (ssize_t) (k->maxdownload - k->bytecount);
-        if(nread < 0 ) /* this should be unusual */
+        if(nread < 0) /* this should be unusual */
           nread = 0;
 
         k->keepon &= ~KEEP_RECV; /* we're done reading */
@@ -779,7 +779,7 @@ static CURLcode readwrite_data(struct SessionHandle *data,
           return result;
       }
 
-    } /* if(! header and data to read ) */
+    } /* if(!header and data to read) */
 
     if(conn->handler->readwrite &&
        (excess > 0 && !conn->bits.stream_was_rewound)) {
@@ -805,7 +805,7 @@ static CURLcode readwrite_data(struct SessionHandle *data,
   } while(data_pending(conn) && maxloops--);
 
   if(((k->keepon & (KEEP_RECV|KEEP_SEND)) == KEEP_SEND) &&
-     conn->bits.close ) {
+     conn->bits.close) {
     /* When we've read the entire thing and the close bit is set, the server
        may now close the connection. If there's now any kind of sending going
        on from our side, we need to stop that immediately. */
@@ -815,6 +815,20 @@ static CURLcode readwrite_data(struct SessionHandle *data,
 
   return CURLE_OK;
 }
+
+static CURLcode done_sending(struct connectdata *conn,
+                             struct SingleRequest *k)
+{
+  k->keepon &= ~KEEP_SEND; /* we're done writing */
+
+  if(conn->bits.rewindaftersend) {
+    CURLcode result = Curl_readrewind(conn);
+    if(result)
+      return result;
+  }
+  return CURLE_OK;
+}
+
 
 /*
  * Send data to upload to the server, when the socket is writable.
@@ -887,14 +901,9 @@ static CURLcode readwrite_upload(struct SessionHandle *data,
         break;
       }
       else if(nread<=0) {
-        /* done */
-        k->keepon &= ~KEEP_SEND; /* we're done writing */
-
-        if(conn->bits.rewindaftersend) {
-          result = Curl_readrewind(conn);
-          if(result)
-            return result;
-        }
+        result = done_sending(conn, k);
+        if(result)
+          return result;
         break;
       }
 
@@ -1004,8 +1013,9 @@ static CURLcode readwrite_upload(struct SessionHandle *data,
       data->req.upload_present = 0; /* no more bytes left */
 
       if(k->upload_done) {
-        /* switch off writing, we're done! */
-        k->keepon &= ~KEEP_SEND; /* we're done writing */
+        result = done_sending(conn, k);
+        if(result)
+          return result;
       }
     }
 
@@ -1375,6 +1385,16 @@ CURLcode Curl_pretransfer(struct SessionHandle *data)
        consider to be fine */
     data->state.authhost.picked &= data->state.authhost.want;
     data->state.authproxy.picked &= data->state.authproxy.want;
+
+    if(data->set.wildcardmatch) {
+      struct WildcardData *wc = &data->wildcard;
+      if(!wc->filelist) {
+        result = Curl_wildcard_init(wc); /* init wildcard structures */
+        if(result)
+          return CURLE_OUT_OF_MEMORY;
+      }
+    }
+
   }
 
   return result;
@@ -1836,63 +1856,6 @@ CURLcode Curl_follow(struct SessionHandle *data,
 
   return CURLE_OK;
 #endif /* CURL_DISABLE_HTTP */
-}
-
-CURLcode
-Curl_reconnect_request(struct connectdata **connp)
-{
-  CURLcode result = CURLE_OK;
-  struct connectdata *conn = *connp;
-  struct SessionHandle *data = conn->data;
-
-  /* This was a re-use of a connection and we got a write error in the
-   * DO-phase. Then we DISCONNECT this connection and have another attempt to
-   * CONNECT and then DO again! The retry cannot possibly find another
-   * connection to re-use, since we only keep one possible connection for
-   * each.  */
-
-  infof(data, "Re-used connection seems dead, get a new one\n");
-
-  connclose(conn, "Reconnect dead connection"); /* enforce close */
-  result = Curl_done(&conn, result, FALSE); /* we are so done with this */
-
-  /* conn may no longer be a good pointer, clear it to avoid mistakes by
-     parent functions */
-  *connp = NULL;
-
-  /*
-   * According to bug report #1330310. We need to check for CURLE_SEND_ERROR
-   * here as well. I figure this could happen when the request failed on a FTP
-   * connection and thus Curl_done() itself tried to use the connection
-   * (again). Slight Lack of feedback in the report, but I don't think this
-   * extra check can do much harm.
-   */
-  if(!result || (CURLE_SEND_ERROR == result)) {
-    bool async;
-    bool protocol_done = TRUE;
-
-    /* Now, redo the connect and get a new connection */
-    result = Curl_connect(data, connp, &async, &protocol_done);
-    if(!result) {
-      /* We have connected or sent away a name resolve query fine */
-
-      conn = *connp; /* setup conn to again point to something nice */
-      if(async) {
-        /* Now, if async is TRUE here, we need to wait for the name
-           to resolve */
-        result = Curl_resolver_wait_resolv(conn, NULL);
-        if(result)
-          return result;
-
-        /* Resolved, continue with the connection */
-        result = Curl_async_resolved(conn, &protocol_done);
-        if(result)
-          return result;
-      }
-    }
-  }
-
-  return result;
 }
 
 /* Returns CURLE_OK *and* sets '*url' if a request retry is wanted.

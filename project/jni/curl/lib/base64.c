@@ -23,13 +23,13 @@
 /* Base64 encoding/decoding */
 
 #include "curl_setup.h"
-#include "curl_printf.h"
 #include "urldata.h" /* for the SessionHandle definition */
 #include "warnless.h"
 #include "curl_base64.h"
 #include "non-ascii.h"
 
-/* The last #include files should be: */
+/* The last 3 #include files should be in this order */
+#include "curl_printf.h"
 #include "curl_memory.h"
 #include "memdebug.h"
 
@@ -246,7 +246,7 @@ static CURLcode base64_encode(const char *table64,
                table64[obuf[0]],
                table64[obuf[1]],
                table64[obuf[2]],
-               table64[obuf[3]] );
+               table64[obuf[3]]);
       break;
     }
     output += 4;

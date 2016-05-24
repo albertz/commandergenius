@@ -28,7 +28,7 @@
  * NTLM details:
  *
  * http://davenport.sourceforge.net/ntlm.html
- * http://www.innovation.ch/java/ntlm.html
+ * https://www.innovation.ch/java/ntlm.html
  */
 
 #define DEBUG_ME 0
@@ -49,8 +49,8 @@
 #endif
 
 #define BUILDING_CURL_NTLM_MSGS_C
-#include "curl_ntlm_msgs.h"
-#include "curl_sasl.h"
+#include "vauth/vauth.h"
+#include "vauth/ntlm.h"
 #include "curl_endian.h"
 #include "curl_printf.h"
 
@@ -138,7 +138,9 @@ static void ntlm_print_flags(FILE *handle, unsigned long flags)
 static void ntlm_print_hex(FILE *handle, const char *buf, size_t len)
 {
   const char *p = buf;
-  (void)handle;
+
+  (void) handle;
+
   fprintf(stderr, "0x");
   while(len-- > 0)
     fprintf(stderr, "%02.2x", (unsigned int)*p++);
@@ -215,7 +217,7 @@ static CURLcode ntlm_decode_type2_target(struct SessionHandle *data,
 */
 
 /*
- * Curl_sasl_decode_ntlm_type2_message()
+ * Curl_auth_decode_ntlm_type2_message()
  *
  * This is used to decode an already encoded NTLM type-2 message. The message
  * is first decoded from a base64 string into a raw NTLM message and checked
@@ -230,7 +232,7 @@ static CURLcode ntlm_decode_type2_target(struct SessionHandle *data,
  *
  * Returns CURLE_OK on success.
  */
-CURLcode Curl_sasl_decode_ntlm_type2_message(struct SessionHandle *data,
+CURLcode Curl_auth_decode_ntlm_type2_message(struct SessionHandle *data,
                                              const char *type2msg,
                                              struct ntlmdata *ntlm)
 {
@@ -327,7 +329,7 @@ static void unicodecpy(unsigned char *dest, const char *src, size_t length)
 }
 
 /*
- * Curl_sasl_create_ntlm_type1_message()
+ * Curl_auth_create_ntlm_type1_message()
  *
  * This is used to generate an already encoded NTLM type-1 message ready for
  * sending to the recipient using the appropriate compile time crypto API.
@@ -343,7 +345,7 @@ static void unicodecpy(unsigned char *dest, const char *src, size_t length)
  *
  * Returns CURLE_OK on success.
  */
-CURLcode Curl_sasl_create_ntlm_type1_message(const char *userp,
+CURLcode Curl_auth_create_ntlm_type1_message(const char *userp,
                                              const char *passwdp,
                                              struct ntlmdata *ntlm,
                                              char **outptr, size_t *outlen)
@@ -376,7 +378,7 @@ CURLcode Curl_sasl_create_ntlm_type1_message(const char *userp,
   (void)passwdp;
 
   /* Clean up any former leftovers and initialise to defaults */
-  Curl_sasl_ntlm_cleanup(ntlm);
+  Curl_auth_ntlm_cleanup(ntlm);
 
 #if USE_NTRESPONSES && USE_NTLM2SESSION
 #define NTLM2FLAG NTLMFLAG_NEGOTIATE_NTLM2_KEY
@@ -446,7 +448,7 @@ CURLcode Curl_sasl_create_ntlm_type1_message(const char *userp,
 }
 
 /*
- * Curl_sasl_create_ntlm_type3_message()
+ * Curl_auth_create_ntlm_type3_message()
  *
  * This is used to generate an already encoded NTLM type-3 message ready for
  * sending to the recipient using the appropriate compile time crypto API.
@@ -463,7 +465,7 @@ CURLcode Curl_sasl_create_ntlm_type1_message(const char *userp,
  *
  * Returns CURLE_OK on success.
  */
-CURLcode Curl_sasl_create_ntlm_type3_message(struct SessionHandle *data,
+CURLcode Curl_auth_create_ntlm_type3_message(struct SessionHandle *data,
                                              const char *userp,
                                              const char *passwdp,
                                              struct ntlmdata *ntlm,
@@ -813,9 +815,28 @@ CURLcode Curl_sasl_create_ntlm_type3_message(struct SessionHandle *data,
   /* Return with binary blob encoded into base64 */
   result = Curl_base64_encode(NULL, (char *)ntlmbuf, size, outptr, outlen);
 
-  Curl_sasl_ntlm_cleanup(ntlm);
+  Curl_auth_ntlm_cleanup(ntlm);
 
   return result;
+}
+
+/*
+* Curl_auth_ntlm_cleanup()
+*
+* This is used to clean up the NTLM specific data.
+*
+* Parameters:
+*
+* ntlm    [in/out] - The NTLM data struct being cleaned up.
+*
+*/
+void Curl_auth_ntlm_cleanup(struct ntlmdata *ntlm)
+{
+  /* Free the target info */
+  Curl_safefree(ntlm->target_info);
+
+  /* Reset any variables */
+  ntlm->target_info_len = 0;
 }
 
 #endif /* USE_NTLM && !USE_WINDOWS_SSPI */

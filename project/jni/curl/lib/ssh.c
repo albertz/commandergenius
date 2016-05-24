@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -83,9 +83,10 @@
 #include "multiif.h"
 #include "select.h"
 #include "warnless.h"
+
+/* The last 3 #include files should be in this order */
 #include "curl_printf.h"
 #include "curl_memory.h"
-/* The last #include file should be: */
 #include "memdebug.h"
 
 #ifdef WIN32
@@ -362,6 +363,9 @@ static void state(struct connectdata *conn, sshstate nowstate)
     "SSH_SFTP_QUOTE_RENAME",
     "SSH_SFTP_QUOTE_RMDIR",
     "SSH_SFTP_QUOTE_UNLINK",
+    "SSH_SFTP_QUOTE_STATVFS",
+    "SSH_SFTP_GETINFO",
+    "SSH_SFTP_FILETIME",
     "SSH_SFTP_TRANS_INIT",
     "SSH_SFTP_UPLOAD_INIT",
     "SSH_SFTP_CREATE_DIRS_INIT",
@@ -414,7 +418,7 @@ static CURLcode ssh_getworkingpath(struct connectdata *conn,
   if(!working_path)
     return CURLE_OUT_OF_MEMORY;
 
-  /* Check for /~/ , indicating relative to the user's home directory */
+  /* Check for /~/, indicating relative to the user's home directory */
   if(conn->handler->protocol & CURLPROTO_SCP) {
     real_path = malloc(working_path_len+1);
     if(real_path == NULL) {
@@ -1183,7 +1187,7 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
         state(conn, SSH_SFTP_QUOTE);
       }
       else {
-        state(conn, SSH_SFTP_TRANS_INIT);
+        state(conn, SSH_SFTP_GETINFO);
       }
       break;
 
@@ -1361,6 +1365,10 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
           state(conn, SSH_SFTP_QUOTE_UNLINK);
           break;
         }
+        else if(curl_strnequal(cmd, "statvfs ", 8)) {
+          state(conn, SSH_SFTP_QUOTE_STATVFS);
+          break;
+        }
 
         failf(data, "Unknown SFTP command");
         Curl_safefree(sshc->quote_path1);
@@ -1372,7 +1380,7 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
       }
     }
     if(!sshc->quote_item) {
-      state(conn, SSH_SFTP_TRANS_INIT);
+      state(conn, SSH_SFTP_GETINFO);
     }
     break;
 
@@ -1391,7 +1399,7 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
           sshc->nextstate = SSH_NO_STATE;
         }
         else {
-          state(conn, SSH_SFTP_TRANS_INIT);
+          state(conn, SSH_SFTP_GETINFO);
         }
       }
       break;
@@ -1610,6 +1618,87 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
       }
       state(conn, SSH_SFTP_NEXT_QUOTE);
       break;
+
+    case SSH_SFTP_QUOTE_STATVFS:
+    {
+      LIBSSH2_SFTP_STATVFS statvfs;
+      rc = libssh2_sftp_statvfs(sshc->sftp_session, sshc->quote_path1,
+                                curlx_uztoui(strlen(sshc->quote_path1)),
+                                &statvfs);
+
+      if(rc == LIBSSH2_ERROR_EAGAIN) {
+        break;
+      }
+      else if(rc != 0 && !sshc->acceptfail) {
+        err = sftp_libssh2_last_error(sshc->sftp_session);
+        Curl_safefree(sshc->quote_path1);
+        failf(data, "statvfs command failed: %s", sftp_libssh2_strerror(err));
+        state(conn, SSH_SFTP_CLOSE);
+        sshc->nextstate = SSH_NO_STATE;
+        sshc->actualcode = CURLE_QUOTE_ERROR;
+        break;
+      }
+      else if(rc == 0) {
+        char *tmp = aprintf("statvfs:\n"
+                            "f_bsize: %llu\n" "f_frsize: %llu\n"
+                            "f_blocks: %llu\n" "f_bfree: %llu\n"
+                            "f_bavail: %llu\n" "f_files: %llu\n"
+                            "f_ffree: %llu\n" "f_favail: %llu\n"
+                            "f_fsid: %llu\n" "f_flag: %llu\n"
+                            "f_namemax: %llu\n",
+                            statvfs.f_bsize, statvfs.f_frsize,
+                            statvfs.f_blocks, statvfs.f_bfree,
+                            statvfs.f_bavail, statvfs.f_files,
+                            statvfs.f_ffree, statvfs.f_favail,
+                            statvfs.f_fsid, statvfs.f_flag,
+                            statvfs.f_namemax);
+        if(!tmp) {
+          result = CURLE_OUT_OF_MEMORY;
+          state(conn, SSH_SFTP_CLOSE);
+          sshc->nextstate = SSH_NO_STATE;
+          break;
+        }
+
+        result = Curl_client_write(conn, CLIENTWRITE_HEADER, tmp, strlen(tmp));
+        free(tmp);
+        if(result) {
+          state(conn, SSH_SFTP_CLOSE);
+          sshc->nextstate = SSH_NO_STATE;
+          sshc->actualcode = result;
+        }
+      }
+      state(conn, SSH_SFTP_NEXT_QUOTE);
+      break;
+    }
+
+    case SSH_SFTP_GETINFO:
+    {
+      if(data->set.get_filetime) {
+        state(conn, SSH_SFTP_FILETIME);
+      }
+      else {
+        state(conn, SSH_SFTP_TRANS_INIT);
+      }
+      break;
+    }
+
+    case SSH_SFTP_FILETIME:
+    {
+      LIBSSH2_SFTP_ATTRIBUTES attrs;
+
+      rc = libssh2_sftp_stat_ex(sshc->sftp_session, sftp_scp->path,
+                                curlx_uztoui(strlen(sftp_scp->path)),
+                                LIBSSH2_SFTP_STAT, &attrs);
+      if(rc == LIBSSH2_ERROR_EAGAIN) {
+        break;
+      }
+      else if(rc == 0) {
+        data->info.filetime = (long)attrs.mtime;
+      }
+
+      state(conn, SSH_SFTP_TRANS_INIT);
+      break;
+    }
 
     case SSH_SFTP_TRANS_INIT:
       if(data->set.upload)
@@ -2980,8 +3069,7 @@ static CURLcode ssh_done(struct connectdata *conn, CURLcode status)
 
        TODO: when the multi interface is used, this _really_ should be using
        the ssh_multi_statemach function but we have no general support for
-       non-blocking DONE operations, not in the multi state machine and with
-       Curl_done() invokes on several places in the code!
+       non-blocking DONE operations!
     */
     result = ssh_block_statemach(conn, FALSE);
   }
