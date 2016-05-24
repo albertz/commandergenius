@@ -8,14 +8,14 @@ ifneq (openssl,$(LOCAL_MODULE))
 ifneq ($(filter arm mips x86, $(TARGET_ARCH)),)
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
-LOCAL_SRC_FILES := lib-$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
+LOCAL_SRC_FILES := lib-$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
 LOCAL_BUILT_MODULE := # This fixes a bug in NDK r10d
 
 # NDK is buggy meh
-obj/local/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a: $(LOCAL_PATH)/$(LOCAL_SRC_FILES)
+obj/local/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so: $(LOCAL_PATH)/$(LOCAL_SRC_FILES)
 	cp -f $< $@
 
-include $(PREBUILT_STATIC_LIBRARY)
+include $(PREBUILT_SHARED_LIBRARY)
 
 endif
 endif

@@ -1,21 +1,46 @@
 #!/bin/sh
 
-ARCH_LIST="armeabi armeabi-v7a arm64-v8a x86 mips x86_64"
+ARCH_LIST="x86 mips armeabi-v7a armeabi" # armv5 is so outdated
 
-#sed -i 's/BUILD_HOST_SHARED_LIBRARY/BUILD_SHARED_LIBRARY/g' openssl/jni/*.mk
-#sed -i 's/BUILD_HOST_STATIC_LIBRARY/BUILD_STATIC_LIBRARY/g' openssl/jni/*.mk
-#sed -i 's@external/openssl/@jni/@g' openssl/jni/*.mk
-mkdir -p openssl/external
-ln -s ../jni openssl/external/openssl
-cp -f Apps.mk openssl/jni/Apps.mk
-touch openssl/jni/Empty.mk
-echo APP_MODULES := libcrypto_static_ndk libssl_static_ndk > openssl/jni/Application.mk
-echo APP_ABI := $ARCH_LIST >> openssl/jni/Application.mk
-ndk-build -j8 V=1 -C openssl BUILD_HOST_SHARED_LIBRARY=jni/Empty.mk BUILD_HOST_STATIC_LIBRARY=jni/Empty.mk || exit 1
+mkdir -p build
+
+build() {
+	ARCH=$1
+	case $ARCH in
+		armeabi-v7a)
+			CONFIGURE_ARCH=android-armv7;;
+		armeabi)
+			CONFIGURE_ARCH=android;;
+		*)
+			CONFIGURE_ARCH=android-$ARCH;;
+	esac
+
+	rm -rf build/$ARCH
+	mkdir -p build/$ARCH
+	cd build/$ARCH
+
+	tar -x -v -z -f ../../openssl-1.0.2h.tar.gz --strip=1
+	../../setCrossEnvironment-$ARCH.sh ./Configure shared zlib --prefix=`pwd`/dist $CONFIGURE_ARCH -fPIC || exit 1
+	# OpenSSL build system disables parallel compilation, -j4 won't do anything
+	../../setCrossEnvironment-$ARCH.sh make CALC_VERSIONS="SHLIB_COMPAT=; SHLIB_SOVER=" || exit 1
+
+	cd ../..
+
+	rm -rf lib-$ARCH
+	mkdir -p lib-$ARCH
+	cp build/$ARCH/libcrypto.so lib-${ARCH}/libcrypto.so || exit 1
+	cp build/$ARCH/libssl.so lib-${ARCH}/libssl.so || exit 1
+}
+
+PIDS=""
 for ARCH in $ARCH_LIST; do
-	mkdir -p lib-${ARCH}
-	cp -f openssl/obj/local/$ARCH/libcrypto_static_ndk.a lib-${ARCH}/libcrypto.a || exit 1
-	cp -f openssl/obj/local/$ARCH/libssl_static_ndk.a lib-${ARCH}/libssl.a || exit 1
+	build $ARCH &
+	PIDS="$PIDS $!"
 done
+
+for PID in $PIDS; do
+	wait $PID || exit 1
+done
+
 rm -rf include
-cp -a openssl/jni/include ./
+cp -r -L build/armeabi-v7a/include ./ || exit 1

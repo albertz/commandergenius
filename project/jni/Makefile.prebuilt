@@ -9,9 +9,7 @@ ICONV := $(foreach ARCH, $(ARCHES32), iconv/lib/$(ARCH)/libiconv.so iconv/lib/$(
 ICU_LIBS := data i18n io le lx test tu uc
 ICU := $(foreach ARCH, $(ARCHES32), $(foreach NAME, $(ICU_LIBS), icuuc/lib/$(ARCH)/libicu$(NAME).a))
 
-OPENSSL := $(foreach ARCH, $(ARCHES32) $(ARCHES64), openssl/lib-$(ARCH)/libcrypto.a openssl/lib-$(ARCH)/libssl.a)
-
-BORINGSSL := $(foreach ARCH, armeabi-v7a x86 arm64-v8a x86_64, boringssl/lib-$(ARCH)/libcrypto.a boringssl/lib-$(ARCH)/libssl.a)
+OPENSSL := $(foreach ARCH, $(ARCHES32), openssl/lib-$(ARCH)/libcrypto.so openssl/lib-$(ARCH)/libssl.so)
 
 LIBS := $(ICONV) $(ICU) $(OPENSSL)
 
@@ -34,6 +32,3 @@ $(ICONV) $(ICU):
 
 $(OPENSSL):
 	cd openssl && ./compile.sh
-
-$(BORINGSSL):
-	cd boringssl && ./compile.sh
