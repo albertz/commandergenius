@@ -446,6 +446,7 @@ class Settings
 					new File(Globals.DataDir).mkdirs();
 					new FileOutputStream( new File(Globals.DataDir, ".nomedia") ).close();
 				} catch (Exception e) {
+					Log.i("SDL", "libSDL: cannot create .nomedia file at " + Globals.DataDir + " - switching to internal storage");
 					Globals.DownloadToSdcard = false; // SD card not writable
 					Globals.DataDir = p.getFilesDir().getAbsolutePath();
 				}
