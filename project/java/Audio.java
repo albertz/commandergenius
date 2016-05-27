@@ -196,7 +196,7 @@ class AudioThread
 				mRecorder.release();
 			mRecorder = null;
 			try {
-				mRecorder = new AudioRecord(AudioSource.DEFAULT, rate, channelConfig, encodingConfig, minBufferSize);
+				mRecorder = new AudioRecord(AudioSource.VOICE_CALL, rate, channelConfig, encodingConfig, minBufferSize);
 				mRecorderBufferSize = minBufferSize;
 			} catch (IllegalArgumentException e) {
 				Log.i("SDL", "SDL: error: failed to open recording device!");
