@@ -77,3 +77,6 @@
 [submodule "project/jni/boringssl/boringssl/jni"]
 	path = project/jni/boringssl/boringssl/jni
 	url = https://android.googlesource.com/platform/external/boringssl
+[submodule "project/jni/application/supertux/supertux"]
+	path = project/jni/application/supertux/supertux
+	url = git@github.com:pelya/supertux.git

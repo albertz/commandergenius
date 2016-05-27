@@ -93,6 +93,8 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import java.util.TreeSet;
 import android.app.UiModeManager;
+import android.Manifest;
+
 
 public class MainActivity extends Activity
 {
@@ -1488,6 +1490,20 @@ public class MainActivity extends Activity
 			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 		else
 			setRequestedOrientation(Globals.HorizontalOrientation ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+	{
+		if (permissions.length == 0 || grantResults.length == 0)
+		{
+			Log.i("SDL", "libSDL: Permission request dialog was aborted");
+			return;
+		}
+		if (Manifest.permission.RECORD_AUDIO.equals(permissions[0]))
+		{
+			Log.i("SDL", "libSDL: Record audio permission: " + (grantResults[0] == PackageManager.PERMISSION_GRANTED ? "GRANTED" : "DENIED"));
+		}
 	}
 
 	public FrameLayout getVideoLayout() { return _videoLayout; }

@@ -37,7 +37,8 @@ import android.media.MediaRecorder.AudioSource;
 import java.io.*;
 import android.util.Log;
 import java.util.concurrent.Semaphore;
-
+import android.Manifest;
+import android.content.pm.PackageManager;
 
 
 class AudioThread
@@ -166,6 +167,16 @@ class AudioThread
 
 	private byte[] startRecording(int rate, int channels, int encoding, int bufsize)
 	{
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
+		{
+			int permissionCheck = mParent.checkSelfPermission(Manifest.permission.RECORD_AUDIO);
+			if (permissionCheck != PackageManager.PERMISSION_GRANTED)
+			{
+				mParent.requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 0);
+				return null;
+			}
+		}
+
 		if( mRecordThread == null )
 		{
 			mRecordThread = new RecordingThread();
@@ -199,8 +210,26 @@ class AudioThread
 				mRecorder = new AudioRecord(AudioSource.VOICE_CALL, rate, channelConfig, encodingConfig, minBufferSize);
 				mRecorderBufferSize = minBufferSize;
 			} catch (IllegalArgumentException e) {
-				Log.i("SDL", "SDL: error: failed to open recording device!");
-				return null;
+				Log.i("SDL", "SDL: error: failed to open VOICE_CALL recording device!");
+				try {
+					mRecorder = new AudioRecord(AudioSource.VOICE_UPLINK, rate, channelConfig, encodingConfig, minBufferSize);
+					mRecorderBufferSize = minBufferSize;
+				} catch (IllegalArgumentException ee) {
+					Log.i("SDL", "SDL: error: failed to open VOICE_UPLINK recording device!");
+					try {
+						mRecorder = new AudioRecord(AudioSource.VOICE_RECOGNITION, rate, channelConfig, encodingConfig, minBufferSize);
+						mRecorderBufferSize = minBufferSize;
+					} catch (IllegalArgumentException eee) {
+						Log.i("SDL", "SDL: error: failed to open VOICE_RECOGNITION recording device!");
+						try {
+							mRecorder = new AudioRecord(AudioSource.DEFAULT, rate, channelConfig, encodingConfig, minBufferSize);
+							mRecorderBufferSize = minBufferSize;
+						} catch (IllegalArgumentException eeee) {
+							Log.i("SDL", "SDL: error: failed to open DEFAULT recording device!");
+							return null;
+						}
+					}
+				}
 			}
 		}
 		else
