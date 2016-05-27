@@ -207,27 +207,21 @@ class AudioThread
 				mRecorder.release();
 			mRecorder = null;
 			try {
-				mRecorder = new AudioRecord(AudioSource.VOICE_CALL, rate, channelConfig, encodingConfig, minBufferSize);
+				mRecorder = new AudioRecord(AudioSource.MIC, rate, channelConfig, encodingConfig, minBufferSize);
 				mRecorderBufferSize = minBufferSize;
 			} catch (IllegalArgumentException e) {
-				Log.i("SDL", "SDL: error: failed to open VOICE_CALL recording device!");
+				Log.i("SDL", "SDL: error: failed to open MIC recording device!");
 				try {
-					mRecorder = new AudioRecord(AudioSource.VOICE_UPLINK, rate, channelConfig, encodingConfig, minBufferSize);
+					mRecorder = new AudioRecord(AudioSource.VOICE_RECOGNITION, rate, channelConfig, encodingConfig, minBufferSize);
 					mRecorderBufferSize = minBufferSize;
-				} catch (IllegalArgumentException ee) {
-					Log.i("SDL", "SDL: error: failed to open VOICE_UPLINK recording device!");
+				} catch (IllegalArgumentException eee) {
+					Log.i("SDL", "SDL: error: failed to open VOICE_RECOGNITION recording device!");
 					try {
-						mRecorder = new AudioRecord(AudioSource.VOICE_RECOGNITION, rate, channelConfig, encodingConfig, minBufferSize);
+						mRecorder = new AudioRecord(AudioSource.DEFAULT, rate, channelConfig, encodingConfig, minBufferSize);
 						mRecorderBufferSize = minBufferSize;
-					} catch (IllegalArgumentException eee) {
-						Log.i("SDL", "SDL: error: failed to open VOICE_RECOGNITION recording device!");
-						try {
-							mRecorder = new AudioRecord(AudioSource.DEFAULT, rate, channelConfig, encodingConfig, minBufferSize);
-							mRecorderBufferSize = minBufferSize;
-						} catch (IllegalArgumentException eeee) {
-							Log.i("SDL", "SDL: error: failed to open DEFAULT recording device!");
-							return null;
-						}
+					} catch (IllegalArgumentException eeee) {
+						Log.i("SDL", "SDL: error: failed to open DEFAULT recording device!");
+						return null;
 					}
 				}
 			}
