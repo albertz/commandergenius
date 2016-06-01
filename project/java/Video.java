@@ -997,8 +997,11 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	@Override
 	public boolean onTouchEvent(final MotionEvent event) 
 	{
-		if (getX() != 0)
-			event.offsetLocation(-getX(), -getY());
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+		{
+			if (getX() != 0)
+				event.offsetLocation(-getX(), -getY());
+		}
 		DifferentTouchInput.touchInput.process(event);
 		if( DemoRenderer.mRatelimitTouchEvents )
 		{
