@@ -23,6 +23,8 @@ TODO, which will get actually done
 
 - SDL: request SD card permission on Android 6.
 
+- SDL: when AccessSdCard=n the app picks internal storage instead of it's own writable SD card dir.
+
 - SDL: add option for non-fullscreen non-immersive mode.
 
 - SDL: add option to remove border for Android TV.
