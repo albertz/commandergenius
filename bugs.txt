@@ -9,8 +9,6 @@ Known bugs (see also todo.txt)
 
 - 32-bpp color mode does not work with SW video surface, 24-bpp and 32-bpp mode does not work with SDL_HWSURFACE.
 
-- problem with very slow performance when new virtual keyboard appear on screen
-
 Requested features, might never get implemented, see todo.txt for features that are going to be implemented
 ===========================================================================================================
 
