@@ -970,7 +970,8 @@ char *__PHYSFS_convertToDependent(const char *prepend,
 #define PHYSFS_LIL_ENDIAN  1234
 #define PHYSFS_BIG_ENDIAN  4321
 
-#if  defined(__i386__) || defined(__ia64__) || defined(_M_IX86) || defined(_M_IA64) || \
+#if  defined(__i386__) || defined(__ia64__) || \
+     defined(_M_IX86) || defined(_M_IA64) || defined(_M_X64) || \
     (defined(__alpha__) || defined(__alpha)) || \
      defined(__arm__) || defined(ARM) || \
     (defined(__mips__) && defined(__MIPSEL__)) || \
@@ -1225,8 +1226,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos);
  *
  * Not all file types can "tell"; this is to be expected by the caller.
  *
- * On error, call __PHYSFS_setError() and return zero. On success, return
- *  a non-zero value.
+ * On error, call __PHYSFS_setError() and return -1. On success, return >= 0.
  */
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque);
 
@@ -1305,12 +1305,12 @@ char *__PHYSFS_platformGetUserName(void);
 char *__PHYSFS_platformGetUserDir(void);
 
 /*
- * Return a number that uniquely identifies the current thread.
- *  On a platform without threading, (1) will suffice. These numbers are
+ * Return a pointer that uniquely identifies the current thread.
+ *  On a platform without threading, (0x1) will suffice. These numbers are
  *  arbitrary; the only requirement is that no two threads have the same
- *  number.
+ *  pointer.
  */
-PHYSFS_uint64 __PHYSFS_platformGetThreadID(void);
+void *__PHYSFS_platformGetThreadID(void);
 
 /*
  * Return non-zero if filename (in platform-dependent notation) exists.
