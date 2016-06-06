@@ -634,15 +634,13 @@ class Settings
 		nativeSetEnv( "SDCARD_MOVIES", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath() );
 		nativeSetEnv( "SDCARD_DCIM", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() );
 		nativeSetEnv( "SDCARD_MUSIC", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath() );
-		nativeSetEnv( "SDCARD_MUSIC", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath() );
 		nativeSetEnv( "ANDROID_VERSION", String.valueOf(android.os.Build.VERSION.SDK_INT) );
 		nativeSetEnv( "ANDROID_PACKAGE_NAME", p.getPackageName() );
-		nativeSetEnv( "ANDROID_MY_OWN_APP_FILE", p.getPackageResourcePath() );
+		nativeSetEnv( "ANDROID_PACKAGE_PATH", p.getPackageCodePath() );
+		nativeSetEnv( "ANDROID_MY_OWN_APP_FILE", p.getPackageResourcePath() ); // This may be different from p.getPackageCodePath() on multi-user systems, but should still be the same .apk file
 		try {
 			nativeSetEnv( "ANDROID_APP_NAME", p.getString(p.getApplicationInfo().labelRes) );
 		} catch (Exception eeeeee) {}
-		if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO )
-			nativeSetEnv( "ANDROID_PACKAGE_PATH", p.getPackageCodePath() );
 		Log.d("SDL", "libSDL: Is running on OUYA: " + p.isRunningOnOUYA());
 		if( p.isRunningOnOUYA() )
 		{
