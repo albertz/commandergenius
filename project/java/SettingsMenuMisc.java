@@ -91,8 +91,8 @@ class SettingsMenuMisc extends SettingsMenu
 			long freePhone = 0;
 			try
 			{
-				StatFs sdcard = new StatFs(Environment.getExternalStorageDirectory().getPath());
-				StatFs phone = new StatFs(Environment.getDataDirectory().getPath());
+				StatFs sdcard = new StatFs(Settings.SdcardAppPath.get().bestPath(p));
+				StatFs phone = new StatFs(p.getFilesDir().getAbsolutePath());
 				freeSdcard = (long)sdcard.getAvailableBlocks() * sdcard.getBlockSize() / 1024 / 1024;
 				freePhone = (long)phone.getAvailableBlocks() * phone.getBlockSize() / 1024 / 1024;
 			}
@@ -115,7 +115,7 @@ class SettingsMenuMisc extends SettingsMenu
 					{
 						Globals.DownloadToSdcard = (item != 0);
 						Globals.DataDir = Globals.DownloadToSdcard ?
-										Settings.SdcardAppPath.getPath(p) :
+										Settings.SdcardAppPath.get().bestPath(p) :
 										p.getFilesDir().getAbsolutePath();
 						goBack(p);
 					}

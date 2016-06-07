@@ -425,7 +425,7 @@ class Settings
 				Globals.DownloadToSdcard = false;
 			}
 			Globals.DataDir = Globals.DownloadToSdcard ?
-								SdcardAppPath.getBestPath(p) :
+								SdcardAppPath.get().bestPath(p) :
 								p.getFilesDir().getAbsolutePath();
 			if( Globals.DownloadToSdcard )
 			{
@@ -436,11 +436,11 @@ class Settings
 						if( s.toUpperCase().startsWith(DataDownloader.DOWNLOAD_FLAG_FILENAME.toUpperCase()) )
 							Globals.DataDir = SdcardAppPath.deprecatedPath(p);
 				// Also check for pre-Kitkat files location
-				fileList = new File(SdcardAppPath.getPath(p)).list();
+				fileList = new File(SdcardAppPath.get().path(p)).list();
 				if( fileList != null )
 					for( String s: fileList )
 						if( s.toUpperCase().startsWith(DataDownloader.DOWNLOAD_FLAG_FILENAME.toUpperCase()) )
-							Globals.DataDir = SdcardAppPath.getPath(p);
+							Globals.DataDir = SdcardAppPath.get().path(p);
 
 				try {
 					new File(Globals.DataDir).mkdirs();
@@ -464,30 +464,34 @@ class Settings
 
 	public static boolean deleteRecursively(File dir)
 	{
+		boolean success = true;
 		if (dir.isDirectory()) {
 			String[] children = dir.list();
 			for (int i=0; i<children.length; i++)
 			{
-				boolean success = deleteRecursively(new File(dir, children[i]));
-				if (!success)
-					return false;
+				if (!deleteRecursively(new File(dir, children[i])))
+					success = false;
 			}
 		}
-		return dir.delete();
+		if (!dir.delete())
+			success = false;
+		return success;
 	}
 	public static boolean deleteRecursivelyAndLog(File dir)
 	{
+		boolean success = true;
 		Log.v("SDL", "Deleting old file: " + dir.getAbsolutePath() + " exists " + dir.exists());
 		if (dir.isDirectory()) {
 			String[] children = dir.list();
 			for (int i=0; i<children.length; i++)
 			{
-				boolean success = deleteRecursively(new File(dir, children[i]));
-				if (!success)
-					return false;
+				if (!deleteRecursively(new File(dir, children[i])))
+					success = false;
 			}
 		}
-		return dir.delete();
+		if (!dir.delete())
+			success = false;
+		return success;
 	}
 	public static void DeleteFilesOnUpgrade(final MainActivity p)
 	{
@@ -496,10 +500,9 @@ class Settings
 		{
 			if( path.equals("") )
 				continue;
-			
-			deleteRecursivelyAndLog(new File( SdcardAppPath.getPath(p) + "/" + path ));
 			deleteRecursivelyAndLog(new File( p.getFilesDir().getAbsolutePath() + "/" + path ));
-			deleteRecursivelyAndLog(new File( SdcardAppPath.deprecatedPath(p) + "/" + path ));
+			for( String sdpath: SdcardAppPath.get().allPaths(p) )
+				deleteRecursivelyAndLog(new File(sdpath + "/" + path ));
 		}
 	}
 	public static void DeleteSdlConfigOnUpgradeAndRestart(final MainActivity p)
@@ -626,7 +629,7 @@ class Settings
 		nativeSetEnv( "SECURE_STORAGE_DIR", p.getFilesDir().getAbsolutePath() );
 		nativeSetEnv( "DATADIR", Globals.DataDir );
 		nativeSetEnv( "UNSECURE_STORAGE_DIR", Globals.DataDir );
-		SdcardAppPath.setEnv(p);
+		SdcardAppPath.get().setEnv(p);
 		nativeSetEnv( "HOME", Globals.DataDir );
 		nativeSetEnv( "SDCARD", Environment.getExternalStorageDirectory().getAbsolutePath() );
 		nativeSetEnv( "SDCARD_DOWNLOADS", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() );
@@ -733,45 +736,32 @@ class Settings
 
 	abstract static class SdcardAppPath
 	{
-		private static SdcardAppPath get()
+		public static SdcardAppPath get()
 		{
 			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT)
 				return Kitkat.Holder.sInstance;
-			else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.FROYO)
-				return Froyo.Holder.sInstance;
 			else
-				return Dummy.Holder.sInstance;
+				return Froyo.Holder.sInstance;
 		}
-		public abstract String path(final Context p);
-		private void setEnvInternal(final Context p)
+		public String path(final Context p)
 		{
-			nativeSetEnv( "UNSECURE_STORAGE_DIR_0", Globals.DataDir );
+			return get().path(p);
 		}
-		public static void setEnv(final Context p)
+		public void setEnv(final Context p)
 		{
-			get().setEnvInternal(p);
+			get().setEnv(p);
 		}
 		public String bestPath(final Context p)
 		{
-			return path(p);
+			return get().bestPath(p);
 		};
-		public static String deprecatedPath(final Context p)
+		public String[] allPaths(final Context p)
+		{
+			return get().allPaths(p);
+		};
+		public static final String deprecatedPath(final Context p)
 		{
 			return Environment.getExternalStorageDirectory().getAbsolutePath() + "/app-data/" + p.getPackageName();
-		}
-		public static String getPath(final Context p)
-		{
-			try {
-				return get().path(p);
-			} catch(Exception e) { }
-			return Dummy.Holder.sInstance.path(p);
-		}
-		public static String getBestPath(final Context p)
-		{
-			try {
-				return get().bestPath(p);
-			} catch(Exception e) { }
-			return Dummy.Holder.sInstance.path(p);
 		}
 
 		private static class Froyo extends SdcardAppPath
@@ -780,9 +770,25 @@ class Settings
 			{
 				private static final Froyo sInstance = new Froyo();
 			}
+			@Override
 			public String path(final Context p)
 			{
 				return p.getExternalFilesDir(null).getAbsolutePath();
+			}
+			@Override
+			public void setEnv(final Context p)
+			{
+				nativeSetEnv( "UNSECURE_STORAGE_DIR_0", Globals.DataDir );
+			}
+			@Override
+			public String bestPath(final Context p)
+			{
+				return path(p);
+			}
+			@Override
+			public String[] allPaths(final Context p)
+			{
+				return new String[] { path(p), deprecatedPath(p) };
 			}
 		}
 		private static class Kitkat extends Froyo
@@ -791,6 +797,7 @@ class Settings
 			{
 				private static final Kitkat sInstance = new Kitkat();
 			}
+			@Override
 			public String bestPath(final Context p)
 			{
 				File[] paths = p.getExternalFilesDirs(null);
@@ -818,7 +825,8 @@ class Settings
 				}
 				return ret;
 			};
-			public void setEnvInternal(final Context p)
+			@Override
+			public void setEnv(final Context p)
 			{
 				File[] paths = p.getExternalFilesDirs(null);
 				int index = 0;
@@ -832,16 +840,24 @@ class Settings
 					index++;
 				}
 			}
-		}
-		private static class Dummy extends SdcardAppPath
-		{
-			private static class Holder
+			@Override
+			public String[] allPaths(final Context p)
 			{
-				private static final Dummy sInstance = new Dummy();
-			}
-			public String path(final Context p)
-			{
-				return Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + p.getPackageName() + "/files";
+				ArrayList<String> ret = new ArrayList<String>();
+				for( File path: p.getExternalFilesDirs(null) )
+				{
+					if( path == null )
+						continue;
+					try {
+						path.mkdirs();
+						new FileOutputStream( new File(path, ".nomedia") ).close();
+					} catch (Exception e) {
+						continue;
+					}
+					ret.add(path.getAbsolutePath());
+				}
+				ret.add(deprecatedPath(p));
+				return ret.toArray(new String[0]);
 			}
 		}
 	}
