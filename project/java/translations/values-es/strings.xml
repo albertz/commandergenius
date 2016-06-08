@@ -22,7 +22,7 @@
     <string name="storage_phone">Almacenamiento interno - %d MB libres</string>
     <string name="storage_sd">Almacenamiento SD card - %d MB libres</string>
     <string name="storage_custom">Especifique el directorio</string>
-    <string name="storage_commandline">Especifique los parámetros de la línea de comandos</string>
+    <string name="storage_commandline">Especifique los parámetros de la línea de comandos, one argument per line</string>
     <string name="storage_question">Lugar donde guardar los datos de la instalación</string>
     <string name="optional_downloads">Descargas</string>
     <string name="downloads">Descargas</string>

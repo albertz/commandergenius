@@ -22,7 +22,7 @@
     <string name="storage_phone">Internal storage - %d MB free</string>
     <string name="storage_sd">SD card storage - %d MB free</string>
     <string name="storage_custom">Specify directory</string>
-    <string name="storage_commandline">Specify command line parameters</string>
+    <string name="storage_commandline">Command line parameters, one argument per line</string>
     <string name="storage_question">Data installation location</string>
     <string name="optional_downloads">Downloads</string>
     <string name="downloads">Downloads</string>

@@ -553,7 +553,11 @@ class SettingsMenuMisc extends SettingsMenu
 			final EditText edit = new EditText(p);
 			edit.setFocusableInTouchMode(true);
 			edit.setFocusable(true);
-			edit.setText(Globals.CommandLine.replace(" ", "\n").replace("	", " "));
+			if (Globals.CommandLine.length() == 0)
+				Globals.CommandLine = "SDL_app";
+			if (Globals.CommandLine.indexOf(" ") == -1)
+				Globals.CommandLine += " ";
+			edit.setText(Globals.CommandLine.substring(Globals.CommandLine.indexOf(" ")).replace(" ", "\n").replace("	", " "));
 			edit.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
 			edit.setMinLines(2);
 			//edit.setMaxLines(100);
@@ -563,7 +567,18 @@ class SettingsMenuMisc extends SettingsMenu
 			{
 				public void onClick(DialogInterface dialog, int item) 
 				{
-					Globals.CommandLine = edit.getText().toString().replace(" ", "	").replace("\n", " ");
+					Globals.CommandLine = "SDL_app";
+					String args[] = edit.getText().toString().split("\n");
+					boolean firstArg = true;
+					for( String arg: args )
+					{
+						Globals.CommandLine += " ";
+						if( firstArg )
+							Globals.CommandLine += arg;
+						else
+							Globals.CommandLine += arg.replace(" ", "	");
+						firstArg = false;
+					}
 					dialog.dismiss();
 					goBack(p);
 				}

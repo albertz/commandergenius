@@ -95,7 +95,7 @@
 <string name="accel_veryfast">Дуже швидко</string>
 <string name="remap_screenkb_button_gestures_sensitivity">Чутливість жесту двома пальцями по екрану</string>
 <string name="storage_custom">Вкажіть каталог</string>
-<string name="storage_commandline">Вкажіть параметри командного рядка</string>
+<string name="storage_commandline">Вкажіть параметри командного рядка, кожен аргумент на окремому рядку</string>
 <string name="calibrate_touchscreen">Калібрування сенсорного екрану</string>
 <string name="calibrate_touchscreen_touch">Доторкнiться до всіх країв екрану, потiм натисніть Назад/BACK</string>
 <string name="screenkb_custom_layout">Налаштування положення кнопок</string>
