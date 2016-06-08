@@ -76,7 +76,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	int i = 0;
 	char curdir[PATH_MAX] = "";
 	const jbyte *jstr;
-	const char * str = "sdl";
+	const char * str = "SDL_app";
 
 	static_env = env;
 	static_thiz = thiz;

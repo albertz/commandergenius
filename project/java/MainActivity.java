@@ -39,6 +39,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 import android.graphics.drawable.Drawable;
 import android.graphics.Color;
 import android.content.res.Configuration;
@@ -352,17 +353,80 @@ public class MainActivity extends Activity
 		setContentView(_videoLayout);
 		mGLView = new DemoGLSurfaceView(this);
 		SetLayerType.get().setLayerType(mGLView);
-		FrameLayout.LayoutParams margin = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
 		// Add TV screen borders, if needed
 		if( Globals.TvBorders )
-			margin.setMargins(  getResources().getDimensionPixelOffset(R.dimen.screen_border_horizontal),
-								getResources().getDimensionPixelOffset(R.dimen.screen_border_vertical),
-								getResources().getDimensionPixelOffset(R.dimen.screen_border_horizontal),
-								getResources().getDimensionPixelOffset(R.dimen.screen_border_vertical));
-		_videoLayout.addView(mGLView, margin);
+		{
+			RelativeLayout view = new RelativeLayout(this);
+			RelativeLayout.LayoutParams layout;
+
+			/*
+			layout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+			layout.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
+			layout.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+			mGLView.setLayoutParams(layout);
+			view.addView(mGLView);
+			*/
+
+			layout = new RelativeLayout.LayoutParams(getResources().getDimensionPixelOffset(R.dimen.screen_border_horizontal), RelativeLayout.LayoutParams.MATCH_PARENT);
+			layout.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
+			layout.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+			ImageView borderLeft = new ImageView(this);
+			borderLeft.setId(R.drawable.b1); // Any random ID
+			borderLeft.setImageResource(R.drawable.tv_border_left);
+			borderLeft.setScaleType(ImageView.ScaleType.FIT_XY);
+			view.addView(borderLeft, layout);
+
+			layout = new RelativeLayout.LayoutParams(getResources().getDimensionPixelOffset(R.dimen.screen_border_horizontal), RelativeLayout.LayoutParams.MATCH_PARENT);
+			layout.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+			layout.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+			ImageView borderRight = new ImageView(this);
+			borderRight.setId(R.drawable.b2);
+			borderRight.setImageResource(R.drawable.tv_border_left);
+			borderRight.setScaleType(ImageView.ScaleType.FIT_XY);
+			borderRight.setScaleX(-1f);
+			view.addView(borderRight, layout);
+
+			layout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, getResources().getDimensionPixelOffset(R.dimen.screen_border_vertical));
+			layout.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+			layout.addRule(RelativeLayout.RIGHT_OF, borderLeft.getId());
+			layout.addRule(RelativeLayout.LEFT_OF, borderRight.getId());
+			ImageView borderTop = new ImageView(this);
+			borderTop.setId(R.drawable.b3);
+			borderTop.setImageResource(R.drawable.tv_border_top);
+			borderTop.setScaleType(ImageView.ScaleType.FIT_XY);
+			view.addView(borderTop, layout);
+
+			layout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, getResources().getDimensionPixelOffset(R.dimen.screen_border_vertical));
+			layout.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+			layout.addRule(RelativeLayout.RIGHT_OF, borderLeft.getId());
+			layout.addRule(RelativeLayout.LEFT_OF, borderRight.getId());
+			ImageView borderBottom = new ImageView(this);
+			borderBottom.setId(R.drawable.b4);
+			borderBottom.setImageResource(R.drawable.tv_border_top);
+			borderBottom.setScaleType(ImageView.ScaleType.FIT_XY);
+			borderBottom.setScaleY(-1f);
+			view.addView(borderBottom, layout);
+
+			layout = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+			layout.addRule(RelativeLayout.RIGHT_OF, borderLeft.getId());
+			layout.addRule(RelativeLayout.LEFT_OF, borderRight.getId());
+			layout.addRule(RelativeLayout.BELOW, borderTop.getId());
+			layout.addRule(RelativeLayout.ABOVE, borderBottom.getId());
+			mGLView.setLayoutParams(layout);
+
+			view.addView(mGLView);
+
+			_videoLayout.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+		}
+		else
+		{
+			_videoLayout.addView(mGLView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+		}
 		mGLView.setFocusableInTouchMode(true);
 		mGLView.setFocusable(true);
 		mGLView.requestFocus();
+
+
 		if( _ad.getView() != null )
 		{
 			_videoLayout.addView(_ad.getView());
