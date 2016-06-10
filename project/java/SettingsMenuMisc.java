@@ -91,10 +91,10 @@ class SettingsMenuMisc extends SettingsMenu
 			long freePhone = 0;
 			try
 			{
-				StatFs sdcard = new StatFs(Settings.SdcardAppPath.get().bestPath(p));
 				StatFs phone = new StatFs(p.getFilesDir().getAbsolutePath());
-				freeSdcard = (long)sdcard.getAvailableBlocks() * sdcard.getBlockSize() / 1024 / 1024;
 				freePhone = (long)phone.getAvailableBlocks() * phone.getBlockSize() / 1024 / 1024;
+				StatFs sdcard = new StatFs(Settings.SdcardAppPath.get().bestPath(p));
+				freeSdcard = (long)sdcard.getAvailableBlocks() * sdcard.getBlockSize() / 1024 / 1024;
 			}
 			catch(Exception e) {}
 

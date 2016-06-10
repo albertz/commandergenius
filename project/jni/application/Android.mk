@@ -63,6 +63,11 @@ SDL_APP_LIB_DEPENDS-$(TARGET_ARCH_ABI) := $(LOCAL_PATH)/src/AndroidBuild.sh $(LO
 SDL_APP_LIB_DEPENDS-$(TARGET_ARCH_ABI) += $(foreach LIB, $(LOCAL_SHARED_LIBRARIES), obj/local/$(TARGET_ARCH_ABI)/lib$(LIB).so)
 SDL_APP_LIB_DEPENDS-$(TARGET_ARCH_ABI) += $(foreach LIB, $(LOCAL_STATIC_LIBRARIES), obj/local/$(TARGET_ARCH_ABI)/lib$(LIB).a)
 
+.PHONY: obj/local/$(TARGET_ARCH_ABI)/libcrypto.so obj/local/$(TARGET_ARCH_ABI)/libssl.so obj/local/$(TARGET_ARCH_ABI)/libcurl.so
+obj/local/$(TARGET_ARCH_ABI)/libcrypto.so: obj/local/$(TARGET_ARCH_ABI)/libcrypto.so.sdl.0.so
+obj/local/$(TARGET_ARCH_ABI)/libssl.so: obj/local/$(TARGET_ARCH_ABI)/libssl.so.sdl.0.so
+obj/local/$(TARGET_ARCH_ABI)/libcurl.so: obj/local/$(TARGET_ARCH_ABI)/libcurl-sdl.so
+
 include $(BUILD_SHARED_LIBRARY)
 
 ifneq ($(APPLICATION_CUSTOM_BUILD_SCRIPT),)
@@ -118,5 +123,11 @@ obj/local/arm64-v8a/libapplication.so: $(LOCAL_PATH)/src/libapplication-arm64-v8
 $(LOCAL_PATH)/src/libapplication-arm64-v8a.so: $(SDL_APP_LIB_DEPENDS-arm64-v8a) OVERRIDE_CUSTOM_LIB
 	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
 	./AndroidBuild.sh arm64-v8a aarch64-linux-android && $(PARALLEL_UNLOCK)
+
+obj/local/x86_64/libapplication.so: $(LOCAL_PATH)/src/libapplication-x86_64.so
+
+$(LOCAL_PATH)/src/libapplication-x86_64.so: $(SDL_APP_LIB_DEPENDS-x86_64) OVERRIDE_CUSTOM_LIB
+	cd $(LOCAL_PATH_SDL_APPLICATION)/src && $(PARALLEL_LOCK) && \
+	./AndroidBuild.sh x86_64 x86_64-linux-android && $(PARALLEL_UNLOCK)
 
 endif # $(APPLICATION_CUSTOM_BUILD_SCRIPT)

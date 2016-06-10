@@ -1241,8 +1241,9 @@ public class MainActivity extends Activity
 		// Load all libraries
 		try
 		{
-			for(String l : Globals.AppLibraries)
+			for(String l_unmapped : Globals.AppLibraries)
 			{
+				String l = GetMappedLibraryName(l_unmapped);
 				try
 				{
 					String libname = System.mapLibraryName(l);
@@ -1342,8 +1343,9 @@ public class MainActivity extends Activity
 					out.close();
 				}
 
-				for(String l : Globals.AppLibraries)
+				for(String l_unmapped : Globals.AppLibraries)
 				{
+					String l = GetMappedLibraryName(l_unmapped);
 					String libname = System.mapLibraryName(l);
 					File libpath = new File(libDir, libname);
 					Log.i("SDL", "libSDL: loading lib " + libpath.getPath());
@@ -1467,10 +1469,20 @@ public class MainActivity extends Activity
 		}
 	};
 
+	public static String GetMappedLibraryName(final String s)
+	{
+		for (int i = 0; i < Globals.LibraryNamesMap.length; i++)
+		{
+			if( Globals.LibraryNamesMap[i][0].equals(s) )
+				return Globals.LibraryNamesMap[i][1];
+		}
+		return s;
+	}
+
 	public static void LoadApplicationLibrary(final Context context)
 	{
 		Settings.nativeChdir(Globals.DataDir);
-		for(String l : Globals.AppMainLibraries)
+		for(String l: Globals.AppMainLibraries)
 		{
 			try
 			{

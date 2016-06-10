@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ARCH_LIST="x86 mips armeabi-v7a armeabi" # armv5 is so outdated
+ARCH_LIST="x86 mips armeabi-v7a armeabi"
 
 mkdir -p build
 
@@ -20,16 +20,18 @@ build() {
 	cd build/$ARCH
 
 	tar -x -v -z -f ../../openssl-1.0.2h.tar.gz --strip=1
+	#sed -i.old 's/-Wl,-soname=[$][$]SHLIB[$][$]SHLIB_SOVER[$][$]SHLIB_SUFFIX//g' Makefile.shared
 	../../setCrossEnvironment-$ARCH.sh ./Configure shared zlib --prefix=`pwd`/dist $CONFIGURE_ARCH -fPIC || exit 1
 	# OpenSSL build system disables parallel compilation, -j4 won't do anything
-	../../setCrossEnvironment-$ARCH.sh make CALC_VERSIONS="SHLIB_COMPAT=; SHLIB_SOVER=" || exit 1
+
+	../../setCrossEnvironment-$ARCH.sh make CALC_VERSIONS='SHLIB_COMPAT=; SHLIB_SOVER=.sdl.0.so'
 
 	cd ../..
 
 	rm -rf lib-$ARCH
 	mkdir -p lib-$ARCH
-	cp build/$ARCH/libcrypto.so lib-${ARCH}/libcrypto.so || exit 1
-	cp build/$ARCH/libssl.so lib-${ARCH}/libssl.so || exit 1
+	cp build/$ARCH/libcrypto.so.sdl.0.so lib-${ARCH}/libcrypto.so.sdl.0.so || exit 1
+	cp build/$ARCH/libssl.so.sdl.0.so lib-${ARCH}/libssl.so.sdl.0.so || exit 1
 }
 
 PIDS=""

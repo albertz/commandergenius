@@ -773,6 +773,12 @@ class Settings
 			@Override
 			public String path(final Context p)
 			{
+				if( p.getExternalFilesDir(null) == null )
+				{
+					if( Environment.getExternalStorageDirectory() == null )
+						return "/sdcard/Android/data/" + p.getPackageName() + "/files";
+					return Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + p.getPackageName() + "/files";
+				}
 				return p.getExternalFilesDir(null).getAbsolutePath();
 			}
 			@Override
@@ -807,8 +813,11 @@ class Settings
 				{
 					if( path == null )
 						continue;
-					StatFs stat = new StatFs(path.getPath());
-					long size = (long)stat.getAvailableBlocks() * stat.getBlockSize() / 1024 / 1024;
+					long size = -1;
+					try {
+						StatFs stat = new StatFs(path.getPath());
+						size = (long)stat.getAvailableBlocks() * stat.getBlockSize() / 1024 / 1024;
+					} catch (Exception ee) {} // Can throw an exception if we cannot read from SD card
 
 					try {
 						path.mkdirs();
