@@ -1,2 +1,2 @@
-AndroidData
-*.so
+/AndroidData/*.pk3
+/*.so
