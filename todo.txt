@@ -29,6 +29,8 @@ TODO, which will get actually done
 
 - SDL: add option for non-fullscreen non-immersive mode.
 
+- SDL: new commandline arguments editor adds extra blank parameter at the beginning.
+
 - Debian: proot crashes on Shield TV arm64 box.
 
 - Debian: add harldink simulation to proot, for Android 6.
