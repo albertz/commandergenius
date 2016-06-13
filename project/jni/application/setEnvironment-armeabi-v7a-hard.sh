@@ -37,7 +37,12 @@ echo $APP_MODULES | xargs -n 1 echo | while read LIB ; do
 	STATIC=`echo $APP_AVAILABLE_STATIC_LIBS application sdl_main stlport stdout-test | grep "\\\\b$LIB\\\\b"`
 	if [ -n "$STATIC" ] ; then true
 	else
-		echo $LIB
+		case $LIB in
+			crypto) echo crypto.so.sdl.0;;
+			ssl) echo ssl.so.sdl.0;;
+			curl) echo curl-sdl;;
+			*) echo $LIB;;
+		esac
 	fi
 done
 )
