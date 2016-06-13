@@ -15,6 +15,8 @@ TODO, which will get actually done
 
 - OpenArena: UPnP support.
 
+- OpenArena: check hardware keyboard text input for game console.
+
 - USB Keyboard: options for camera feed size and for redefining remote menu hotkey.
 
 - UQM HD: add fonts from http://mosc-portal.bursa.ru/showthread.php?t=206 and switch back to joystick controls, set 4:3 aspect ratio as default.
