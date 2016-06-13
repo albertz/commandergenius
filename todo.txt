@@ -9,9 +9,11 @@ TODO, which will get actually done
 
 - OpenArena: add dynamic camera button to joystick, add option for joystick tap action.
 
-- OpenArena: NAT traversal, check that you can host and connect on IPv6.
+- OpenArena: tap to aim for aiming modes with shoot button.
 
-- OpenArena: SDL: show Marshmallow permission dialog when opening microphone.
+- OpenArena: in tap to shoot mode, the second tap must stop shooting.
+
+- OpenArena: UPnP support.
 
 - USB Keyboard: options for camera feed size and for redefining remote menu hotkey.
 
@@ -23,11 +25,7 @@ TODO, which will get actually done
 
 - SDL: request SD card permission on Android 6.
 
-- SDL: when AccessSdCard=n the app picks internal storage instead of it's own writable SD card dir.
-
 - SDL: add option for non-fullscreen non-immersive mode.
-
-- SDL: add option to remove border for Android TV.
 
 - Debian: proot crashes on Shield TV arm64 box.
 
