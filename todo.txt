@@ -15,7 +15,7 @@ TODO, which will get actually done
 
 - OpenArena: UPnP support.
 
-- OpenArena: check hardware keyboard text input for game console.
+- OpenArena: voting is broken.
 
 - USB Keyboard: options for camera feed size and for redefining remote menu hotkey.
 
