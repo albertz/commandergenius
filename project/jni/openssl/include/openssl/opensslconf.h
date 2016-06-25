@@ -118,8 +118,8 @@ extern "C" {
 
 #if !(defined(VMS) || defined(__VMS)) /* VMS uses logical names instead */
 #if defined(HEADER_CRYPTLIB_H) && !defined(OPENSSLDIR)
-#define ENGINESDIR "/home/pelya/src/endless_space/SDL-android/project/jni/openssl/build/armeabi-v7a/dist/lib/engines"
-#define OPENSSLDIR "/home/pelya/src/endless_space/SDL-android/project/jni/openssl/build/armeabi-v7a/dist/ssl"
+#define ENGINESDIR "/home/gerstrong/workspace/SDLAndroid/project/jni/openssl/build/armeabi-v7a/dist/lib/engines"
+#define OPENSSLDIR "/home/gerstrong/workspace/SDLAndroid/project/jni/openssl/build/armeabi-v7a/dist/ssl"
 #endif
 #endif
 
