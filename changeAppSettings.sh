@@ -373,7 +373,7 @@ echo "# GCC version, 4.6 (default) or 4.8, CLANG is not supported yet" >> Androi
 echo NDK_TOOLCHAIN_VERSION=$NDK_TOOLCHAIN_VERSION >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Specify architectures to compile, 'all' or 'y' to compile for all architectures." >> AndroidAppSettings.cfg
-echo "# Available architectures: armeabi armeabi-v7a armeabi-v7a-hard x86 mips" >> AndroidAppSettings.cfg
+echo "# Available architectures: armeabi armeabi-v7a x86 mips" >> AndroidAppSettings.cfg
 echo MultiABI=\'$MultiABI\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Optional shared libraries to compile - removing some of them will save space" >> AndroidAppSettings.cfg
