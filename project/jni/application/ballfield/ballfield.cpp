@@ -18,6 +18,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_screenkeyboard.h>
+#include <SDL/SDL_android.h>
 
 #define fprintf(X, ...) __android_log_print(ANDROID_LOG_INFO, "Ballfield", __VA_ARGS__)
 #define printf(...) __android_log_print(ANDROID_LOG_INFO, "Ballfield", __VA_ARGS__)
@@ -686,7 +687,10 @@ int main(int argc, char* argv[])
 					if(evt.key.keysym.sym == SDLK_0)
 						SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, 1);
 					if(evt.key.keysym.sym == SDLK_1)
+					{
 						SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, 0);
+						SDL_ANDROID_RequestExternalStorageRuntimePermission();
+					}
 					if(evt.key.keysym.sym == SDLK_2)
 					{
 						SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_DPAD, 1);

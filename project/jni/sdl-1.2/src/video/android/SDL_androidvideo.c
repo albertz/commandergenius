@@ -88,6 +88,7 @@ static jmethodID JavaRequestCloudLoad = NULL;
 static jmethodID JavaRequestOpenExternalApp = NULL;
 static jmethodID JavaRequestRestartMyself = NULL;
 static jmethodID JavaRequestSetConfigOption = NULL;
+static jmethodID JavaRequestExternalStorageRuntimePermission = NULL;
 static int glContextLost = 0;
 static int showScreenKeyboardDeferred = 0;
 static const char * showScreenKeyboardOldText = "";
@@ -361,6 +362,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject t
 	JavaRequestOpenExternalApp = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "openExternalApp", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 	JavaRequestRestartMyself = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "restartMyself", "(Ljava/lang/String;)V");
 	JavaRequestSetConfigOption = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "setConfigOptionFromSDL", "(II)V");
+	JavaRequestExternalStorageRuntimePermission = (*JavaEnv)->GetMethodID(JavaEnv, JavaRendererClass, "requestExternalStorageRuntimePermissionFromSDL", "()V");
 	
 	ANDROID_InitOSKeymap();
 }
@@ -605,6 +607,11 @@ void SDLCALL SDL_ANDROID_SetConfigOption(int option, int value)
 void SDLCALL SDL_ANDROID_OpenExternalWebBrowser(const char *url)
 {
 	SDL_ANDROID_OpenExternalApp(NULL, NULL, url);
+}
+
+void SDLCALL SDL_ANDROID_RequestExternalStorageRuntimePermission()
+{
+	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestExternalStorageRuntimePermission );
 }
 
 // Dummy callback for SDL2 to satisfy linker

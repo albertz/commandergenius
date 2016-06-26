@@ -1580,6 +1580,11 @@ public class MainActivity extends Activity
 		{
 			Log.i("SDL", "libSDL: Record audio permission: " + (grantResults[0] == PackageManager.PERMISSION_GRANTED ? "GRANTED" : "DENIED"));
 		}
+		if (Manifest.permission.WRITE_EXTERNAL_STORAGE.equals(permissions[0]))
+		{
+			Log.i("SDL", "libSDL: Write external storage permission: " + (grantResults[0] == PackageManager.PERMISSION_GRANTED ? "GRANTED" : "DENIED"));
+			writeExternalStoragePermissionDialogAnswered = true;
+		}
 	}
 
 	public FrameLayout getVideoLayout() { return _videoLayout; }
@@ -1620,6 +1625,7 @@ public class MainActivity extends Activity
 
 	public LinkedList<Integer> textInput = new LinkedList<Integer> ();
 	public static MainActivity instance = null;
+	public boolean writeExternalStoragePermissionDialogAnswered = false;
 }
 
 // *** HONEYCOMB / ICS FIX FOR FULLSCREEN MODE, by lmak ***
