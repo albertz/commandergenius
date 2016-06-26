@@ -88,11 +88,21 @@ while test $# -gt 0; do
     --cflags)
       echo -I${prefix}/include
       ;;
-    --libs)
-      echo -l$PKG
-      ;;
-    --static-libs)
-      echo -l$PKG
+    --libs|--static-libs)
+      case $PKG in
+        curl|libcurl)
+          echo -lcurl-sdl -l:libssl.so.sdl.0.so -l:libcrypto.so.sdl.0.so
+          ;;
+        crypto|libcrypto)
+          echo -l:libcrypto.so.sdl.0.so
+          ;;
+        openssl|ssl|libssl)
+          echo -l:libssl.so.sdl.0.so -l:libcrypto.so.sdl.0.so
+          ;;
+        *)
+          echo -l$PKG
+          ;;
+      esac
       ;;
     *)
       ;;
