@@ -4,13 +4,13 @@ CURDIR=`pwd`
 
 PACKAGE_NAME=`grep AppFullName AndroidAppSettings.cfg | sed 's/.*=//'`
 
-[ -e pulseaudio/android-build.sh ] && {
+if [ -e pulseaudio/android-build.sh ]; then
 	[ -e pulseaudio/$1/install/bin/pulseaudio ] || {
 		cd pulseaudio
 		./android-build.sh || exit 1
 		cd ..
 	} || exit 1
-} || exit 1
+fi
 
 ../setEnvironment-$1.sh sh -c '\
 $CC $CFLAGS -Werror=format -c main.c -o main-'"$1.o" || exit 1
@@ -72,7 +72,7 @@ xkb/.libs/libxkbstubs.a \
 composite/.libs/libcomposite.a \
 os/.libs/libos.a \
 hw/kdrive/linux/.libs/liblinux.a \
--lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lts -lfreetype -landroid-shmem -lcrypto' \
+-lpixman-1 -lXfont -lXau -lXdmcp -lfontenc -lts -lfreetype -landroid-shmem -l:libcrypto.so.sdl.0.so' \
 || exit 1
 
 rm -rf $CURDIR/tmp-$1

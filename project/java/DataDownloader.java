@@ -53,6 +53,9 @@ import android.text.SpannedString;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+
 
 class CountingInputStream extends BufferedInputStream
 {
@@ -328,6 +331,19 @@ class DataDownloader extends Thread
 			Status.setText( downloadCount + "/" + downloadTotal + ": " + res.getString(R.string.connecting_to, url) );
 			if( url.indexOf("obb:") == 0 ) // APK expansion file provided by Google Play
 			{
+				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
+				{
+					int permissionCheck = Parent.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+					if (permissionCheck != PackageManager.PERMISSION_GRANTED && !Parent.writeExternalStoragePermissionDialogAnswered)
+					{
+						Parent.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+						while( !Parent.writeExternalStoragePermissionDialogAnswered )
+						{
+							try{ Thread.sleep(300); } catch (InterruptedException e) {}
+						}
+					}
+				}
+
 				url = getObbFilePath(url);
 				InputStream stream1 = null;
 				try {

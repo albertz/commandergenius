@@ -134,6 +134,9 @@ enum {
 /* Set SDL Android-specifc option, such as video depth or mouse emulation mode. Most options require restarting the app. */
 extern DECLSPEC void SDLCALL SDL_ANDROID_SetConfigOption(int option, int value);
 
+/* Show runtime permission dialog for accessing SD card on Android 6.0 and above */
+extern DECLSPEC void SDLCALL SDL_ANDROID_RequestExternalStorageRuntimePermission();
+
 #ifdef __cplusplus
 }
 #endif

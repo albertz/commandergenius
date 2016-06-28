@@ -21,6 +21,7 @@ fi
 # Do not generate shared game logic libs - QVM files are used instead
 # ../setEnvironment-armeabi.sh sh -c "cd vm/build/release-android-$1/baseq3 && \$STRIP --strip-unneeded *.so && zip ../../../../AndroidData/binaries.zip *.so"
 
+env PATH=`pwd`/..:$PATH \
 ../setEnvironment-$1.sh make -j8 -C engine release \
 PLATFORM=android ARCH=$1 USE_GLES=1 USE_LOCAL_HEADERS=0 BUILD_CLIENT_SMP=0 \
 USE_OPENAL=1 USE_OPENAL_DLOPEN=0 USE_VOIP=1 USE_CURL=1 USE_CURL_DLOPEN=0 USE_CODEC_VORBIS=1 USE_MUMBLE=0 USE_FREETYPE=1 \
