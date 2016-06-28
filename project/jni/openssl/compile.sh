@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ARCH_LIST="x86 mips armeabi-v7a armeabi"
+ARCH_LIST="arm64-v8a x86 mips armeabi-v7a armeabi"
 
 mkdir -p build
 
@@ -10,6 +10,8 @@ build() {
 		armeabi-v7a)
 			CONFIGURE_ARCH=android-armv7;;
 		armeabi)
+			CONFIGURE_ARCH=android;;
+		arm64-v8a)
 			CONFIGURE_ARCH=android;;
 		*)
 			CONFIGURE_ARCH=android-$ARCH;;
