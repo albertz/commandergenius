@@ -15,10 +15,14 @@ export ARCH=$1
 [ -e openttd-$VER-$1/Makefile ] || {
 	rm -f src/src/rev.cpp
 	env PATH=$LOCAL_PATH/..:$PATH \
-	../setEnvironment-$1.sh sh -c "cd openttd-$VER-$1 && env ../src/configure --host=$2 --with-sdl --with-freetype --with-png --with-zlib --with-icu --with-libtimidity --with-lzo2=$LOCAL_PATH/../../../obj/local/$ARCH/liblzo2.so --prefix-dir='.' --data-dir='' --without-allegro --with-fontconfig --with-lzma --endian=LE"
+	env CLANG=1 ../setEnvironment-$1.sh sh -c "cd openttd-$VER-$1 && env ../src/configure --with-sdl --with-freetype --with-png --with-zlib --with-icu --with-libtimidity --with-lzo2=$LOCAL_PATH/../../../obj/local/$ARCH/liblzo2.so --prefix-dir='.' --data-dir='' --without-allegro --with-fontconfig --with-lzma --endian=LE"
 } || exit 1
 
 NCPU=4
 uname -s | grep -i "linux" > /dev/null && NCPU=`cat /proc/cpuinfo | grep -c -i processor`
 
-../setEnvironment-$1.sh sh -c "cd openttd-$VER-$1 && make -j$NCPU VERBOSE=1 STRIP='' LIBS='-lsdl-1.2 -llzo2 -lpng -ltimidity -lfreetype -lfontconfig -lexpat -licui18n -liculx -licule -licuuc -licudata -lgcc -lz -lc -lgnustl_static -lsupc++'" && cp -f openttd-$VER-$1/objs/release/openttd libapplication-$1.so || exit 1
+# clang arm hack
+LIBATOMIC=
+echo $1 | grep 'arm' && LIBATOMIC=-latomic
+
+env CLANG=1 LIBATOMIC=$LIBATOMIC ../setEnvironment-$1.sh sh -c "cd openttd-$VER-$1 && make -j$NCPU VERBOSE=1 STRIP='' LIBS='-lsdl-1.2 -llzo2 -lpng -ltimidity -lfreetype -lfontconfig -lexpat -licui18n -liculx -licule -licuuc -licudata -lgcc -lz -lc -lgnustl_static -lsupc++ $LIBATOMIC'" && cp -f openttd-$VER-$1/objs/release/openttd libapplication-$1.so || exit 1

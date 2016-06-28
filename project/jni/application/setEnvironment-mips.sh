@@ -21,7 +21,7 @@ NDK=`readlink -f $NDK`
 #echo NDK $NDK
 GCCPREFIX=mipsel-linux-android
 [ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
-[ -z "$PLATFORMVER" ] && PLATFORMVER=android-14
+[ -z "$PLATFORMVER" ] && PLATFORMVER=android-24
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then
 	LOCAL_PATH=`realpath $LOCAL_PATH`
@@ -53,10 +53,9 @@ MISSING_LIB=
 
 CFLAGS="\
 -fpic -fno-strict-aliasing -finline-functions -ffunction-sections \
--funwind-tables -fmessage-length=0 -fno-inline-functions-called-once \
--fgcse-after-reload -frerun-cse-after-loop -frename-registers \
+-funwind-tables -fstack-protector-strong -fmessage-length=0 \
 -no-canonical-prefixes -O2 -g -DNDEBUG -fomit-frame-pointer \
--funswitch-loops -finline-limit=300 \
+-funswitch-loops -finline-limit=300 -mips32 \
 -DANDROID -Wall -Wno-unused -Wa,--noexecstack -Wformat -Werror=format-security \
 -isystem$NDK/platforms/$PLATFORMVER/arch-mips/usr/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$NDK_TOOLCHAIN_VERSION/include \
@@ -89,23 +88,44 @@ $SHARED \
 -L$NDK/platforms/$PLATFORMVER/arch-mips/usr/lib \
 -lc -lm -lGLESv1_CM -ldl -llog -lz \
 -L$NDK/sources/cxx-stl/gnu-libstdc++/$NDK_TOOLCHAIN_VERSION/libs/$ARCH \
--lgnustl_static \
+-lgnustl_static -mips32 \
 -no-canonical-prefixes $UNRESOLVED -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now \
+-Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings \
 -lsupc++ \
 $MISSING_LIB $LDFLAGS"
 
-#echo env CFLAGS=\""$CFLAGS"\" LDFLAGS=\""$LDFLAGS"\" "$@"
+CC="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-gcc"
+CXX="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-g++"
+CPP="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-cpp $CFLAGS"
+
+if [ -n "$CLANG" ]; then
+
+CFLAGS="\
+-gcc-toolchain $NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH \
+-target mipsel-none-linux-android -Wno-invalid-command-line-argument -Wno-unused-command-line-argument \
+$CFLAGS"
+
+LDFLAGS="$LDFLAGS \
+-lgcc \
+-gcc-toolchain $NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH \
+-target mipsel-none-linux-android"
+
+CC="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/clang"
+CXX="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/clang++"
+CPP="$CC -E $CFLAGS"
+
+fi
 
 env PATH=$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
 CFLAGS="$CFLAGS" \
 CXXFLAGS="$CXXFLAGS $CFLAGS -frtti -fexceptions" \
 LDFLAGS="$LDFLAGS" \
-CC="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-gcc" \
-CXX="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-g++" \
+CC="$CC" \
+CXX="$CXX" \
 RANLIB="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-ranlib" \
-LD="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-g++" \
+LD="$CXX" \
 AR="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-ar" \
-CPP="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-cpp $CFLAGS" \
+CPP="$CPP" \
 NM="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-nm" \
 AS="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-as" \
 STRIP="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-strip" \

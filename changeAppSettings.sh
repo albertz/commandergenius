@@ -369,11 +369,11 @@ echo >> AndroidAppSettings.cfg
 echo "# Minimum amount of RAM application requires, in Mb, SDL will print warning to user if it's lower" >> AndroidAppSettings.cfg
 echo AppMinimumRAM=$AppMinimumRAM >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# GCC version, 4.6 (default) or 4.8, CLANG is not supported yet" >> AndroidAppSettings.cfg
+echo "# GCC version, or 'clang' for CLANG" >> AndroidAppSettings.cfg
 echo NDK_TOOLCHAIN_VERSION=$NDK_TOOLCHAIN_VERSION >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Specify architectures to compile, 'all' or 'y' to compile for all architectures." >> AndroidAppSettings.cfg
-echo "# Available architectures: armeabi armeabi-v7a armeabi-v7a-hard x86 mips" >> AndroidAppSettings.cfg
+echo "# Available architectures: armeabi armeabi-v7a x86 mips arm64-v8a x86_64" >> AndroidAppSettings.cfg
 echo MultiABI=\'$MultiABI\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Optional shared libraries to compile - removing some of them will save space" >> AndroidAppSettings.cfg
@@ -943,6 +943,7 @@ if [ "$GooglePlayGameServicesId" = "n" -o -z "$GooglePlayGameServicesId" ] ; the
 	grep 'google-play-services' project/local.properties > /dev/null && {
 		$SEDI 's/.*google-play-services.*//g' project/local.properties
 		rm -f project/libs/android-support-v4.jar
+		rm -f project/libs/play-services-games.jar
 	}
 else
 	for F in $JAVA_SRC_PATH/googleplaygameservices/*.java; do

@@ -130,13 +130,6 @@ strip_libs() {
 		cp jni/application/src/libapplication-armeabi-v7a.so libs/armeabi-v7a/libapplication.so && \
 		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-${NDK_TOOLCHAIN_VERSION}/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi-v7a/libapplication.so
 	grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
-		grep "MultiABI=" ../AndroidAppSettings.cfg | grep "armeabi-v7a-hard" > /dev/null && \
-		echo Stripping libapplication-armeabi-v7a-hard.so by hand && \
-		rm obj/local/armeabi-v7a-hard/libapplication.so && \
-		cp jni/application/src/libapplication-armeabi-v7a-hard.so obj/local/armeabi-v7a-hard/libapplication.so && \
-		cp jni/application/src/libapplication-armeabi-v7a-hard.so libs/armeabi-v7a/libapplication.so && \
-		`which ndk-build | sed 's@/ndk-build@@'`/toolchains/arm-linux-androideabi-${NDK_TOOLCHAIN_VERSION}/prebuilt/$MYARCH/bin/arm-linux-androideabi-strip --strip-unneeded libs/armeabi-v7a/libapplication.so
-	grep "CustomBuildScript=y" ../AndroidAppSettings.cfg > /dev/null && \
 		grep "MultiABI=" ../AndroidAppSettings.cfg | grep "all\\|mips" > /dev/null && \
 		echo Stripping libapplication-mips.so by hand && \
 		rm obj/local/mips/libapplication.so && \
