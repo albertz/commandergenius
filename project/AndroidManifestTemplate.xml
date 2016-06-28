@@ -47,7 +47,7 @@
 		/>
 	</application>
 
-	<uses-sdk android:minSdkVersion="9" android:targetSdkVersion="24"/>
+	<uses-sdk android:minSdkVersion="9" android:targetSdkVersion="23"/>
 	<!-- ==INTERNET== --> <uses-permission android:name="android.permission.INTERNET" />
 	<!-- ==EXTERNAL_STORAGE== --> <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 	<!-- ==EXTERNAL_STORAGE== --> <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
