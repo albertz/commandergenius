@@ -19,7 +19,7 @@ NDK=`dirname $NDK`
 NDK=`readlink -f $NDK`
 
 [ -z "$NDK" ] && { echo "You need Andorid NDK r8 or newer installed to run this script" ; exit 1 ; }
-GCCPREFIX=mipsel-linux-android
+GCCPREFIX=aarch64-linux-android
 GCCVER=${GCCVER:-4.9}
 PLATFORMVER=${PLATFORMVER:-android-24}
 LOCAL_PATH=`dirname $0`
@@ -28,20 +28,18 @@ if which realpath > /dev/null ; then
 else
 	LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 fi
-ARCH=mips
+ARCH=arm64-v8a
 
 CFLAGS="\
--fpic -fno-strict-aliasing -finline-functions -ffunction-sections \
--funwind-tables -fmessage-length=0 -fno-inline-functions-called-once \
--fgcse-after-reload -frerun-cse-after-loop -frename-registers \
--no-canonical-prefixes -O2 -g -DNDEBUG -fomit-frame-pointer \
--funswitch-loops -finline-limit=300 \
+-fpic -ffunction-sections -funwind-tables -fstack-protector-strong \
+-no-canonical-prefixes \
+-O2 -g -DNDEBUG \
+-fomit-frame-pointer -fno-strict-aliasing -finline-limit=300 \
 -DANDROID -Wall -Wno-unused -Wa,--noexecstack -Wformat -Werror=format-security \
--isystem$NDK/platforms/$PLATFORMVER/arch-mips/usr/include \
+-isystem$NDK/platforms/$PLATFORMVER/arch-arm64/usr/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
 -isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH/include \
 $CFLAGS"
-
 
 UNRESOLVED="-Wl,--no-undefined"
 SHARED="-Wl,--gc-sections -Wl,-z,nocopyreloc"
@@ -55,17 +53,18 @@ fi
 
 LDFLAGS="\
 $SHARED \
---sysroot=$NDK/platforms/$PLATFORMVER/arch-mips \
--L$NDK/platforms/$PLATFORMVER/arch-mips/usr/lib \
+--sysroot=$NDK/platforms/$PLATFORMVER/arch-arm64 \
+-L$NDK/platforms/$PLATFORMVER/arch-arm64/usr/lib \
 -lc -lm -ldl -lz \
 -L$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH \
 -lgnustl_static \
 -no-canonical-prefixes $UNRESOLVED -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now \
+-Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings \
 -lsupc++ \
 $LDFLAGS"
 
 env PATH=$NDK/toolchains/$GCCPREFIX-$GCCVER/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
-ANDROID_DEV=$NDK/platforms/$PLATFORMVER/arch-mips/usr \
+ANDROID_DEV=$NDK/platforms/$PLATFORMVER/arch-arm64/usr \
 CFLAGS="$CFLAGS" \
 CXXFLAGS="$CXXFLAGS $CFLAGS" \
 LDFLAGS="$LDFLAGS" \

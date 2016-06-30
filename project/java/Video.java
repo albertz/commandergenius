@@ -63,6 +63,8 @@ import android.content.Intent;
 import android.view.View;
 import android.view.Display;
 import android.net.Uri;
+import android.Manifest;
+import android.content.pm.PackageManager;
 
 
 class Mouse
@@ -945,6 +947,18 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 	public void setConfigOptionFromSDL(int option, int value)
 	{
 		Settings.setConfigOptionFromSDL(option, value);
+	}
+
+	public void requestExternalStorageRuntimePermissionFromSDL()
+	{
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
+		{
+			int permissionCheck = context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+			if (permissionCheck != PackageManager.PERMISSION_GRANTED && !context.writeExternalStoragePermissionDialogAnswered)
+			{
+				context.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+			}
+		}
 	}
 
 	private int PowerOf2(int i)

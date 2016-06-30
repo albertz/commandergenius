@@ -7,7 +7,7 @@ LOCAL_MODULE_FILENAME := lib$(notdir $(LOCAL_PATH)).so.sdl.0 # It clashes with s
 
 
 ifneq (openssl,$(LOCAL_MODULE))
-ifneq ($(filter arm mips x86, $(TARGET_ARCH)),)
+ifneq ($(filter arm mips x86 arm64, $(TARGET_ARCH)),)
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_SRC_FILES := lib-$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so.sdl.0.so
