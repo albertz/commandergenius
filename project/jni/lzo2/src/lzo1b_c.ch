@@ -2,21 +2,7 @@
 
    This file is part of the LZO real-time data compression library.
 
-   Copyright (C) 2010 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2009 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2008 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2007 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2006 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2005 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2004 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2003 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2002 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2001 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2000 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1999 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1998 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1997 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1996 Markus Franz Xaver Johannes Oberhumer
+   Copyright (C) 1996-2015 Markus Franz Xaver Johannes Oberhumer
    All Rights Reserved.
 
    The LZO library is free software; you can redistribute it and/or
@@ -73,12 +59,15 @@
 // I really apologize for this spaghetti code.
 ************************************************************************/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 LZO_PRIVATE(int)
 do_compress    ( const lzo_bytep in , lzo_uint  in_len,
                        lzo_bytep out, lzo_uintp out_len,
                        lzo_voidp wrkmem )
 {
-    register const lzo_bytep ip;
+    const lzo_bytep ip;
 #if (DD_BITS > 0)
 #if defined(__LZO_HASH_INCREMENTAL)
     lzo_xint dv;
@@ -99,7 +88,7 @@ do_compress    ( const lzo_bytep in , lzo_uint  in_len,
     lzo_dict_p const dict = (lzo_dict_p) wrkmem;
 
 
-#if defined(LZO_COLLECT_STATS)
+#if (LZO_COLLECT_STATS)
     lzo_stats->r_bits   = R_BITS;
     lzo_stats->m3o_bits = M3O_BITS;
     lzo_stats->dd_bits  = DD_BITS;
@@ -107,11 +96,11 @@ do_compress    ( const lzo_bytep in , lzo_uint  in_len,
     lzo_stats->d_bits   = D_BITS;
     lzo_stats->min_lookahead  = MIN_LOOKAHEAD;
     lzo_stats->max_lookbehind = MAX_LOOKBEHIND;
-    lzo_stats->compress_id    = LZO_CPP_MACRO_EXPAND(COMPRESS_ID);
+    lzo_stats->compress_id    = LZO_PP_MACRO_EXPAND(COMPRESS_ID);
 #endif
 
     /* init dictionary */
-#if defined(LZO_DETERMINISTIC)
+#if (LZO_DETERMINISTIC)
     BZERO8_PTR(wrkmem,sizeof(lzo_dict_t),D_SIZE);
 #endif
 
@@ -227,7 +216,7 @@ match:
 
     assert(ip <= in_end);
 
-#if defined(LZO_COLLECT_STATS)
+#if (LZO_COLLECT_STATS)
     {
         lzo_uint i;
         const lzo_bytep p;
@@ -265,8 +254,9 @@ match:
     *out_len = pd(op, out);
     return LZO_E_OK;                /* compression went ok */
 }
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 
-/*
-vi:ts=4:et
-*/
+/* vim:set ts=4 sw=4 et: */

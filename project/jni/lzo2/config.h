@@ -1,6 +1,9 @@
 /* config.h.  Generated from config.hin by configure.  */
 /* config.hin.  Generated from configure.ac by autoheader.  */
 
+#ifndef __LZO_AUTOCONF_CONFIG_H_INCLUDED
+#define __LZO_AUTOCONF_CONFIG_H_INCLUDED 1
+
 /* Define if building universal (internal helper macro) */
 /* #undef AC_APPLE_UNIVERSAL_BUILD */
 
@@ -264,7 +267,7 @@
 #define PACKAGE_NAME "LZO"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "LZO 2.04"
+#define PACKAGE_STRING "LZO 2.09"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "lzo"
@@ -273,13 +276,17 @@
 #define PACKAGE_URL "http://www.oberhumer.com/opensource/lzo/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.04"
+#define PACKAGE_VERSION "2.09"
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
 
 /* The size of `dev_t', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_DEV_T 4
+#else
+#define SIZEOF_DEV_T 8
+#endif
 
 /* The size of `double', as computed by sizeof. */
 #define SIZEOF_DOUBLE 8
@@ -288,7 +295,11 @@
 #define SIZEOF_FLOAT 4
 
 /* The size of `fpos_t', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_FPOS_T 4
+#else
+#define SIZEOF_FPOS_T 8
+#endif
 
 /* The size of `int', as computed by sizeof. */
 #define SIZEOF_INT 4
@@ -297,10 +308,18 @@
 #define SIZEOF_INTMAX_T 8
 
 /* The size of `intptr_t', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_INTPTR_T 4
+#else
+#define SIZEOF_INTPTR_T 8
+#endif
 
 /* The size of `long', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_LONG 4
+#else
+#define SIZEOF_LONG 8
+#endif
 
 /* The size of `long double', as computed by sizeof. */
 #define SIZEOF_LONG_DOUBLE 8
@@ -309,34 +328,62 @@
 #define SIZEOF_LONG_LONG 8
 
 /* The size of `mode_t', as computed by sizeof. */
-#define SIZEOF_MODE_T 2
+#define SIZEOF_MODE_T 4
 
 /* The size of `off_t', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_OFF_T 4
+#else
+#define SIZEOF_OFF_T 8
+#endif
 
 /* The size of `ptrdiff_t', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_PTRDIFF_T 4
+#else
+#define SIZEOF_PTRDIFF_T 8
+#endif
 
 /* The size of `short', as computed by sizeof. */
 #define SIZEOF_SHORT 2
 
 /* The size of `size_t', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_SIZE_T 4
+#else
+#define SIZEOF_SIZE_T 8
+#endif
 
 /* The size of `ssize_t', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_SSIZE_T 4
+#else
+#define SIZEOF_SSIZE_T 8
+#endif
 
 /* The size of `time_t', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_TIME_T 4
+#else
+#define SIZEOF_TIME_T 8
+#endif
 
 /* The size of `uintmax_t', as computed by sizeof. */
 #define SIZEOF_UINTMAX_T 8
 
 /* The size of `uintptr_t', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_UINTPTR_T 4
+#else
+#define SIZEOF_UINTPTR_T 8
+#endif
 
 /* The size of `void *', as computed by sizeof. */
+#if !defined(__LP64__)
 #define SIZEOF_VOID_P 4
+#else
+#define SIZEOF_VOID_P 8
+#endif
 
 /* The size of `__int16', as computed by sizeof. */
 #define SIZEOF___INT16 0
@@ -354,7 +401,7 @@
 #define TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define VERSION "2.04"
+#define VERSION "2.09"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
@@ -385,3 +432,5 @@
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 /* #undef size_t */
+
+#endif /* already included */

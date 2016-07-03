@@ -2,21 +2,7 @@
 
    This file is part of the LZO real-time data compression library.
 
-   Copyright (C) 2010 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2009 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2008 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2007 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2006 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2005 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2004 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2003 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2002 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2001 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2000 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1999 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1998 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1997 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1996 Markus Franz Xaver Johannes Oberhumer
+   Copyright (C) 1996-2015 Markus Franz Xaver Johannes Oberhumer
    All Rights Reserved.
 
    The LZO library is free software; you can redistribute it and/or
@@ -91,10 +77,10 @@
 #if !defined(NDEBUG)
                 const lzo_bytep z_pos = NULL;
 #endif
-#if defined(LZO_DICT_USE_PTR)
+#if (LZO_DICT_USE_PTR)
                 m_pos = *d;
                 assert((z_pos = m_pos) == *d);
-#if defined(LZO_DETERMINISTIC)
+#if (LZO_DETERMINISTIC)
                 assert(m_pos == NULL || m_pos >= in);
                 assert(m_pos == NULL || m_pos < ip);
 #endif
@@ -113,7 +99,7 @@
                     ((void)(0));
                 else if (*m_pos++ == *ip++ && *m_pos++ == *ip++ && *m_pos++ == *ip++)
                 {
-#if !defined(LZO_DICT_USE_PTR)
+#if !(LZO_DICT_USE_PTR)
                     assert((z_pos = ip - 3 - x_off) == (m_pos - 3));
 #endif
                     /* a match */
@@ -207,6 +193,4 @@
 #endif /* (DD_BITS == 0) */
 
 
-/*
-vi:ts=4:et
-*/
+/* vim:set ts=4 sw=4 et: */

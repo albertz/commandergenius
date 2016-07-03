@@ -2,21 +2,7 @@
 
    This file is part of the LZO real-time data compression library.
 
-   Copyright (C) 2010 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2009 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2008 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2007 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2006 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2005 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2004 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2003 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2002 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2001 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 2000 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1999 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1998 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1997 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1996 Markus Franz Xaver Johannes Oberhumer
+   Copyright (C) 1996-2015 Markus Franz Xaver Johannes Oberhumer
    All Rights Reserved.
 
    The LZO library is free software; you can redistribute it and/or
@@ -60,14 +46,14 @@ extern "C" {
 // Examine the symbol 'lzo1b_stats' with a debugger.
 ************************************************************************/
 
-#if defined(LZO_COLLECT_STATS)
+#if (LZO_COLLECT_STATS)
 #  define LZO_STATS(expr)   expr
 #else
 #  define LZO_STATS(expr)   ((void) 0)
 #endif
 
 
-#if defined(LZO_COLLECT_STATS)
+#if (LZO_COLLECT_STATS)
 
 typedef struct
 {
@@ -139,6 +125,5 @@ extern lzo1b_stats_t * const lzo1b_stats;
 
 #endif /* already included */
 
-/*
-vi:ts=4:et
-*/
+
+/* vim:set ts=4 sw=4 et: */
