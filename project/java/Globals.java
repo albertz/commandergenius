@@ -32,7 +32,7 @@ class Globals
 	public static String ApplicationName = "CommanderGenius";
 	public static String AppLibraries[] = { "sdl-1.2", };
 	public static String AppMainLibraries[] = { "application", "sdl_main" };
-	public static String LibraryNamesMap[][] = { { "crypto", "crypto.so.sdl.0" }, { "ssl", "ssl.so.sdl.0" }, { "curl", "curl-sdl" } }; // Because some libraries are named differently to not clash with system libs
+	public static String LibraryNamesMap[][] = { { "crypto", "crypto.so.sdl.1" }, { "ssl", "ssl.so.sdl.1" }, { "curl", "curl-sdl" } }; // Because some libraries are named differently to not clash with system libs
 	public static final boolean Using_SDL_1_3 = false;
 	public static final boolean Using_SDL_2_0 = false;
 	public static String[] DataDownloadUrl = { "Data files are 2 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-data.zip/download", "High-quality GFX and music - 40 Mb|https://sourceforge.net/projects/libsdl-android/files/CommanderGenius/commandergenius-hqp.zip/download" };
