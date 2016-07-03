@@ -21,7 +21,7 @@ NDK=`readlink -f $NDK`
 #echo NDK $NDK
 GCCPREFIX=aarch64-linux-android
 [ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
-[ -z "$PLATFORMVER" ] && PLATFORMVER=android-24
+[ -z "$PLATFORMVER" ] && PLATFORMVER=android-21
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then
 	LOCAL_PATH=`realpath $LOCAL_PATH`
@@ -38,8 +38,8 @@ echo $APP_MODULES | xargs -n 1 echo | while read LIB ; do
 	if [ -n "$STATIC" ] ; then true
 	else
 		case $LIB in
-			crypto) echo crypto.so.sdl.0;;
-			ssl) echo ssl.so.sdl.0;;
+			crypto) echo crypto.so.sdl.1;;
+			ssl) echo ssl.so.sdl.1;;
 			curl) echo curl-sdl;;
 			*) echo $LIB;;
 		esac

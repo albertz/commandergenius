@@ -26,14 +26,14 @@ build() {
 	../../setCrossEnvironment-$ARCH.sh ./Configure shared zlib --prefix=`pwd`/dist $CONFIGURE_ARCH -fPIC || exit 1
 	# OpenSSL build system disables parallel compilation, -j4 won't do anything
 
-	../../setCrossEnvironment-$ARCH.sh make CALC_VERSIONS='SHLIB_COMPAT=; SHLIB_SOVER=.sdl.0.so'
+	../../setCrossEnvironment-$ARCH.sh make CALC_VERSIONS='SHLIB_COMPAT=; SHLIB_SOVER=.sdl.1.so'
 
 	cd ../..
 
 	rm -rf lib-$ARCH
 	mkdir -p lib-$ARCH
-	cp build/$ARCH/libcrypto.so.sdl.0.so lib-${ARCH}/libcrypto.so.sdl.0.so || exit 1
-	cp build/$ARCH/libssl.so.sdl.0.so lib-${ARCH}/libssl.so.sdl.0.so || exit 1
+	cp build/$ARCH/libcrypto.so.sdl.1.so lib-${ARCH}/libcrypto.so.sdl.1.so || exit 1
+	cp build/$ARCH/libssl.so.sdl.1.so lib-${ARCH}/libssl.so.sdl.1.so || exit 1
 }
 
 PIDS=""

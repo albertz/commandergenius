@@ -53,4 +53,4 @@ SDL_VERSION := 1.2
 #APP_CXXFLAGS := -flto
 #APP_LDFLAGS := -flto
 # Latest GCC got better LTO support
-NDK_TOOLCHAIN_VERSION := 4.6
+NDK_TOOLCHAIN_VERSION := clang

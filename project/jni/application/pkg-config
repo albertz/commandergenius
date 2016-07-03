@@ -91,13 +91,13 @@ while test $# -gt 0; do
     --libs|--static-libs)
       case $PKG in
         curl|libcurl)
-          echo -lcurl-sdl -l:libssl.so.sdl.0.so -l:libcrypto.so.sdl.0.so
+          echo -lcurl-sdl -l:libssl.so.sdl.1.so -l:libcrypto.so.sdl.1.so
           ;;
         crypto|libcrypto)
-          echo -l:libcrypto.so.sdl.0.so
+          echo -l:libcrypto.so.sdl.1.so
           ;;
         openssl|ssl|libssl)
-          echo -l:libssl.so.sdl.0.so -l:libcrypto.so.sdl.0.so
+          echo -l:libssl.so.sdl.1.so -l:libcrypto.so.sdl.1.so
           ;;
         *)
           echo -l$PKG
