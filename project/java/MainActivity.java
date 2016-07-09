@@ -354,7 +354,7 @@ public class MainActivity extends Activity
 		mGLView = new DemoGLSurfaceView(this);
 		SetLayerType.get().setLayerType(mGLView);
 		// Add TV screen borders, if needed
-		if( Globals.TvBorders )
+		if( isRunningOnOUYA() && Globals.TvBorders )
 		{
 			RelativeLayout view = new RelativeLayout(this);
 			RelativeLayout.LayoutParams layout;
