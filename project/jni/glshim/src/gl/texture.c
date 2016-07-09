@@ -82,7 +82,7 @@ void tex_setup_texcoord(GLuint texunit, GLuint len) {
 	if (old!=texunit) glshim_glClientActiveTexture(texunit+GL_TEXTURE0);
     if (changes) {
         // first convert to GLfloat, without normalization
-        tex[texunit] = copy_gl_pointer_tex(&glstate.vao->pointers.tex_coord[texunit], 4, 0, len, glstate.vao->pointers.tex_coord[texunit].buffer);
+        tex[texunit] = copy_gl_pointer_tex(&glstate.vao->pointers.tex_coord[texunit], 4, 0, len, /*glstate.vao->pointers.tex_coord[texunit].buffer*/NULL);  // the Buffer is already taken into account
         if (!tex[texunit]) {
             printf("LibGL: Error with Texture tranform\n");
             gles_glTexCoordPointer(len, glstate.vao->pointers.tex_coord[texunit].type, glstate.vao->pointers.tex_coord[texunit].stride, glstate.vao->pointers.tex_coord[texunit].pointer);
@@ -1184,18 +1184,19 @@ gltexture_t* glshim_getTexture(GLenum target, GLuint texture) {
     }
     return tex;
 }
-
+#define batch_activetex (glstate.statebatch.active_tex_changed?glstate.statebatch.active_tex:glstate.texture.active)
 void glshim_glBindTexture(GLenum target, GLuint texture) {
 	noerrorShim();
     if ((target!=GL_PROXY_TEXTURE_2D) && (glstate.list.active && (glstate.gl_batch && !glstate.list.compiling)))  {
-        if ((glstate.statebatch.bound_targ == target) && (glstate.statebatch.bound_tex == texture))
+        //printf("=> glBindTexture(0x%04X, %u), active=%i, client=%i, batch_active=%i, batch_bound=0x%04X, batch_tex=%u\n", target, texture, glstate.texture.active, glstate.texture.client, batch_activetex, glstate.statebatch.bound_targ[batch_activetex], glstate.statebatch.bound_tex[batch_activetex]);
+        if ((glstate.statebatch.bound_targ[batch_activetex] == target) && (glstate.statebatch.bound_tex[batch_activetex] == texture))
             return; // nothing to do...
-        if (!glstate.statebatch.bound_targ) {
-            glstate.statebatch.bound_targ = target;
-            glstate.statebatch.bound_tex = texture;
-        } else {
+        if (glstate.statebatch.bound_targ[batch_activetex]) {
             flush();
         }
+        glstate.statebatch.bound_targ[batch_activetex] = target;
+        glstate.statebatch.bound_tex[batch_activetex] = texture;
+        //printf(" <= glBindTexture(0x%04X, %u), active=%i, client=%i, batch_active=%i, batch_bound=0x%04X, batch_tex=%u\n", target, texture, glstate.texture.active, glstate.texture.client, batch_activetex, glstate.statebatch.bound_targ[batch_activetex], glstate.statebatch.bound_tex[batch_activetex]);
     }
     if ((target!=GL_PROXY_TEXTURE_2D) && ((glstate.list.compiling || glstate.gl_batch) && glstate.list.active)) {
         // check if already a texture binded, if yes, create a new list
@@ -1260,6 +1261,7 @@ tex_changed=1;  // seems buggy, temporary disabling that...
         }
     }
 }
+#undef batch_activetex
 
 // TODO: also glTexParameterf(v)?
 void glshim_glTexParameteri(GLenum target, GLenum pname, GLint param) {

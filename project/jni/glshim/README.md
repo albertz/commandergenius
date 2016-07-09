@@ -21,7 +21,7 @@ Compiling
 ----
 *for Pandora*
 
-    cmake . ; make GL
+    cmake . -DPANDORA=1; make GL
     
 *or for the Raspberry Pi*
 
@@ -35,19 +35,16 @@ Compiling
 
     An Android.mk is provided that should compile with an NDK
 
-
 *or use ccmake*
-Alternatively, you can use the curses-bases ccmake to select wich platform to use interactively.
+
+Alternatively, you can use the curses-bases ccmake (or any other gui frontend for cmake) to select wich platform to use interactively.
     
 ----
 
 GLU
 ----
+
 Standard GLU do works without any issues.
-
-But you can also find a GLES optimized version og GLU there https://github.com/lunixbochs/glues
-
-    git clone git@github.com:lunixbochs/glues.git; git checkout glu; cmake .; make
 
 ----
 
@@ -147,8 +144,13 @@ Experimental: Change Blend GL_SRC_ALPHA, GL_ONE to GL_ONE, GL_ONE
  * 0 : Default, nothing special
  * 1 : Change Blend GL_SRC_ALPHA, GL_ONE to GL_ONE, GL_ONE (can be usefull for Xash3D engine)
 
+##### LIBGL_BLENDCOLOR
+Hack: Export a (faked) glBlendColor
+ * 0 : Default, don't expose gBlendColor
+ * 1 : Exposed the function (if no hadware support, faked function willbe used)
+
 ##### LIBGL_VERSION
-Control the glGetString version. Overide version string (should be in the form of "1.x")
+Hack: Control the glGetString version. Overide version string (should be in the form of "1.x")
 
 ##### LIBGL_BATCH
 Experimental: Batch mode (fuse of contigous Display list, to limit Draw calls)
@@ -160,4 +162,19 @@ Experimental: Batch mode (fuse of contigous Display list, to limit Draw calls)
 Hack: glGetError() always return GL_NOERROR
  * 0 : Default, glGetError behave as it should
  * 1 : glGetError never fail.
+
+##### LIBGL_GAMMA
+Pandora Hack: Set a Gamma value (in decimal formal, 1.0 means no gamma boost)
+ * X.Y : Use X.Y as gamma when creating context (typical value can be 1.6 or 2.0)
+
+##### LIBGL_SRGB
+ODROID Hack: Enable sRGB Surface (so Gamma corrected), if Hardware support it
+ * 0 : Default, don't try to use sRGB surface
+ * 1 : Enable sRGB Surface (but support will be tested first, must have EGL_KHR_gl_colorspace extension)
+
+##### LIBGL_FASTMATH
+Hack: Activate some Fast Math in processor/coprocessor
+ * 0 : Default, nothing special
+ * 1 : On OpenPandora, activate "RunFast" on Cortex-A8 (mode default NaN, flush-to-zero)
+     : Not implemented on other platforms (will do nothing)
 

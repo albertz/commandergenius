@@ -33,7 +33,7 @@ int blendhack = 0;
 int export_blendcolor = 0;
 char glshim_version[50];
 int initialized = 0;
-int noerror = 0;
+int glshim_noerror = 0;
 
 __attribute__((constructor))
 void initialize_glshim() {
@@ -194,7 +194,7 @@ void transposeMatrix(float *matrix)
 }
 
 // glGet
-extern float zoomx, zoomy;
+extern float raster_zoomx, raster_zoomy;
 extern GLfloat raster_scale[4];
 extern GLfloat raster_bias[4];
 
@@ -363,10 +363,10 @@ void glshim_glGetFloatv(GLenum pname, GLfloat *params) {
 	    *params = glstate.texture.pack_lsb_first;
 	    break;
         case GL_ZOOM_X:
-	    *params = zoomx;
+	    *params = raster_zoomx;
 	    break;
         case GL_ZOOM_Y:
-	    *params = zoomy;
+	    *params = raster_zoomy;
 	    break;
         case GL_RED_SCALE:
 	    *params = raster_scale[0];
@@ -522,7 +522,9 @@ void glshim_glEnable(GLenum cap) {
             case GL_BLEND: which_cap = ENABLED_BLEND; break;
             case GL_CULL_FACE: which_cap = ENABLED_CULL; break;
             case GL_DEPTH_TEST: which_cap = ENABLED_DEPTH; break;
-            case GL_TEXTURE_2D: which_cap = ENABLED_TEX2D; break;
+            case GL_TEXTURE_2D: which_cap = ENABLED_TEX2D_TEX0
+                +(glstate.statebatch.active_tex_changed?glstate.statebatch.active_tex:glstate.texture.active); 
+                    break;
             default: which_cap = ENABLED_LAST; break;
         }
         if (which_cap!=ENABLED_LAST) {
@@ -556,7 +558,9 @@ void glshim_glDisable(GLenum cap) {
             case GL_BLEND: which_cap = ENABLED_BLEND; break;
             case GL_CULL_FACE: which_cap = ENABLED_CULL; break;
             case GL_DEPTH_TEST: which_cap = ENABLED_DEPTH; break;
-            case GL_TEXTURE_2D: which_cap = ENABLED_TEX2D; break;
+            case GL_TEXTURE_2D: which_cap = ENABLED_TEX2D_TEX0
+                +(glstate.statebatch.active_tex_changed?glstate.statebatch.active_tex:glstate.texture.active); 
+                break;
             default: which_cap = ENABLED_LAST; break;
         }
         if (which_cap!=ENABLED_LAST) {
@@ -671,7 +675,7 @@ static inline bool should_intercept_render(GLenum mode) {
 }
 
 void glshim_glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) {
-//printf("glDrawElements(0x%04X, %d, 0x%04X, %p), map=%p\n", mode, count, type, indices, (glstate.vao->elements)?glstate.vao->elements->data:NULL);
+    //printf("glDrawElements(0x%04X, %d, 0x%04X, %p), map=%p\n", mode, count, type, indices, (glstate.vao->elements)?glstate.vao->elements->data:NULL);
     // TODO: split for count > 65535?
     // special check for QUADS and TRIANGLES that need multiple of 4 or 3 vertex...
     if (mode == GL_QUADS) while(count%4) count--;
@@ -1746,7 +1750,7 @@ void glPopMatrix() __attribute__((alias("glshim_glPopMatrix")));
 
 GLenum glshim_glGetError() {
 	LOAD_GLES(glGetError);
-    if(noerror)
+    if(glshim_noerror)
         return GL_NO_ERROR;
 	if (glstate.shim_error) {
 		GLenum tmp = glstate.last_error;
@@ -1888,7 +1892,7 @@ void init_statebatch() {
 
 void flush() {
     // flush internal list
-//printf("flush glstate.list.active=%p, gl_batch=%i(%i)\n", glstate.list.active, glstate.gl_batch, gl_batch);
+    //printf("flush glstate.list.active=%p, gl_batch=%i(%i)\n", glstate.list.active, glstate.gl_batch, gl_batch);
     renderlist_t *mylist = glstate.list.active;
     if (mylist) {
         GLuint old = glstate.gl_batch;

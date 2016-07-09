@@ -2,8 +2,14 @@
 #include <execinfo.h>
 #endif
 #include <fcntl.h>
-#ifdef PANDORA
+#if defined(PANDORA) || defined(ODROID)
+#define USE_FBIO 1
+#endif
+
+#ifdef USE_FBIO
 #include <linux/fb.h>
+#endif
+#ifdef PANDORA
 #include <sys/socket.h>
 #include <sys/un.h>
 #endif
@@ -18,10 +24,18 @@
 #include "../gl/gl.h"
 #include "../glx/streaming.h"
 
+#ifndef EGL_GL_COLORSPACE_KHR
+#define EGL_GL_COLORSPACE_KHR                   0x309D
+#define EGL_GL_COLORSPACE_SRGB_KHR              0x3089
+#define EGL_GL_COLORSPACE_LINEAR_KHR            0x308A
+#endif
+
 static bool eglInitialized = false;
 static EGLDisplay eglDisplay;
 static EGLSurface eglSurface;
 static EGLConfig eglConfigs[1];
+static int glx_default_depth=0;
+static int glx_surface_srgb=0;  // default to not try to create an sRGB surface
 #ifdef PANDORA
 static struct sockaddr_un sun;
 static int sock = -2;
@@ -145,9 +159,11 @@ static GLXContext fbContext = NULL;
 
 static int fbcontext_count = 0;
 
-#ifdef PANDORA
+#ifdef USE_FBIO
 #ifndef FBIO_WAITFORVSYNC
 #define FBIO_WAITFORVSYNC _IOW('F', 0x20, __u32)
+#endif
+#ifdef PANDORA
 static float pandora_gamma = 0.0f;
 #endif
 static int fbdev = -1;
@@ -169,7 +185,7 @@ extern int copytex;
 extern int nolumalpha;
 extern int blendhack;
 extern int export_blendcolor;
-extern int noerror;
+extern int glshim_noerror;
 extern char glshim_version[50];
 
 bool g_recyclefbo = false;
@@ -196,7 +212,7 @@ static void init_display(Display *display) {
 }
 #endif //ANDROID
 static void init_vsync() {
-#ifdef PANDORA
+#ifdef USE_FBIO
     fbdev = open("/dev/fb0", O_RDONLY);
     if (fbdev < 0) {
         fprintf(stderr, "Could not open /dev/fb0 for vsync.\n");
@@ -205,7 +221,7 @@ static void init_vsync() {
 }
 
 static void xrefresh() {
-    system("xrefresh");
+    int dummy = system("xrefresh");
 }
 
 #ifdef PANDORA
@@ -217,7 +233,7 @@ static void pandora_set_gamma() {
     if(pandora_gamma>0.0f) {
         char buf[50];
         sprintf(buf, "sudo /usr/pandora/scripts/op_gamma.sh %.2f", pandora_gamma);
-        system(buf);
+        int dummy = system(buf);
     }
 }
 #endif
@@ -247,7 +263,7 @@ static void signal_handler(int sig) {
                 if (! size) {
                     printf("No stacktrace. Compile with -funwind-tables.\n");
                 } else {
-                    printf("Stacktrace: %i\n", size);
+                    printf("Stacktrace: %zd\n", size);
                     backtrace_symbols_fd(array, size, 2);
                 }
                 break;
@@ -277,6 +293,17 @@ static void init_liveinfo() {
         sock=-1;
     } else
         fcntl(sock, F_SETFL, O_NONBLOCK);
+}
+
+static void fast_math() {
+  // enable Cortex A8 RunFast
+   int v = 0;
+   __asm__ __volatile__ (
+     "vmrs %0, fpscr\n"
+     "orr  %0, #((1<<25)|(1<<24))\n" // default NaN, flush-to-zero
+     "vmsr fpscr, %0\n"
+     //"vmrs %0, fpscr\n"
+     : "=&r"(v));
 }
 #endif
 extern void initialize_glshim();
@@ -339,11 +366,13 @@ static void scan_env() {
             g_usefbo = true;
     }
     env(LIBGL_FPS, g_showfps, "fps counter enabled");
-#ifdef PANDORA
+#ifdef USE_FBIO
     env(LIBGL_VSYNC, g_vsync, "vsync enabled");
     if (g_vsync) {
         init_vsync();
     }
+#endif
+#ifdef PANDORA
     init_liveinfo();
     if (sock>-1) {
         printf("LIBGL: LiveInfo detected, fps will be shown\n");
@@ -450,7 +479,7 @@ static void scan_env() {
 
     env(LIBGL_BLENDHACK, blendhack, "Change Blend GL_SRC_ALPHA, GL_ONE to GL_ONE, GL_ONE");
     env(LIBGL_BLENDCOLOR, export_blendcolor, "Export a (faked) glBlendColor");
-    env(LIBGL_NOERROR, noerror, "glGetError() always return GL_NOERROR");
+    env(LIBGL_NOERROR, glshim_noerror, "glGetError() always return GL_NOERROR");
 
     char *env_version = getenv("LIBGL_VERSION");
     if (env_version) {
@@ -465,6 +494,20 @@ static void scan_env() {
         atexit(pandora_reset_gamma);
     }
 #endif
+    char *env_srgb = getenv("LIBGL_SRGB");
+    if (env_srgb && strcmp(env_srgb, "1") == 0) {
+        glx_surface_srgb = 1;
+        printf("LIBGL: enabling sRGB support\n");
+    }
+    char *env_fastmath = getenv("LIBGL_FASTMATH");
+    if (env_fastmath && strcmp(env_fastmath, "1") == 0) {
+#ifdef PANDORA
+        printf("LIBGL: Enable FastMath for cortex-a8\n");
+        fast_math();
+#else
+        printf("LIBGL: No FastMath on this platform\n");
+#endif
+    }
     
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd))!= NULL)
@@ -522,8 +565,8 @@ GLXContext glXCreateContext(Display *display,
     LOAD_EGL(eglInitialize);
     LOAD_EGL(eglCreateContext);
     LOAD_EGL(eglChooseConfig);
+    LOAD_EGL(eglQueryString);
     
-
     GLXContext fake = malloc(sizeof(struct __GLXContextRec));
 	memset(fake, 0, sizeof(struct __GLXContextRec));
 	if (!g_usefb) {
@@ -571,6 +614,15 @@ GLXContext glXCreateContext(Display *display,
         eglInitialized = true;
     }
 
+    // With the display, try to check if sRGB surface are supported
+    if (glx_surface_srgb==1) {
+        if(strstr(egl_eglQueryString(eglDisplay, EGL_EXTENSIONS), "EGL_KHR_gl_colorspace")) {
+            printf("LIBGL: sRGB surface supported\n");
+            glx_surface_srgb=2; // test only 1 time
+        } else
+            glx_surface_srgb=0;
+    }
+
     int configsFound;
 	if (!g_usefb)
 		result = egl_eglChooseConfig(eglDisplay, configAttribs, fake->eglConfigs, 1, &configsFound);
@@ -601,7 +653,7 @@ GLXContext glXCreateContext(Display *display,
 		egl_eglMakeCurrent(eglDisplay, NULL, NULL, EGL_NO_CONTEXT);
 	}
 
-	//*TODO* put eglContext inside GLXcontext, to handle multiple Glxcontext
+	// *TODO* put eglContext inside GLXcontext, to handle multiple Glxcontext
         
     return fake;
 }
@@ -672,12 +724,12 @@ XVisualInfo *glXChooseVisual(Display *display,
         g_display = XOpenDisplay(NULL);
     }
 */
-    int default_depth = XDefaultDepth(display, screen);
-    if (default_depth != 16 && default_depth != 24)
-        printf("libGL: unusual desktop color depth %d\n", default_depth);
+    glx_default_depth = XDefaultDepth(display, screen);
+    if (glx_default_depth != 16 && glx_default_depth != 24  && glx_default_depth != 32)
+        printf("libGL: unusual desktop color depth %d\n", glx_default_depth);
 
     XVisualInfo *visual = (XVisualInfo *)malloc(sizeof(XVisualInfo));
-    if (!XMatchVisualInfo(display, screen, default_depth, TrueColor, visual)) {
+    if (!XMatchVisualInfo(display, screen, glx_default_depth, TrueColor, visual)) {
         printf("libGL: XMatchVisualInfo failed in glXChooseVisual\n");
         return NULL;
     }
@@ -726,6 +778,7 @@ Bool glXMakeCurrent(Display *display,
     if (g_usefb)
         drawable = 0;
     EGLBoolean result;
+    EGLint const sRGB[] = {EGL_GL_COLORSPACE_KHR, EGL_GL_COLORSPACE_SRGB_KHR, EGL_NONE};
 	if (!g_usefb) {
 		// need current surface for eglSwapBuffer
 		eglContext = context->eglContext;
@@ -737,12 +790,13 @@ Bool glXMakeCurrent(Display *display,
 		// Now get the Surface
 		if (context->eglSurface)
 			eglSurface = context->eglSurface;		// reused previously created Surface
-		else
-			eglSurface = context->eglSurface = egl_eglCreateWindowSurface(eglDisplay, context->eglConfigs[0], drawable, NULL);
-        result = egl_eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
+		else {
+			eglSurface = context->eglSurface = egl_eglCreateWindowSurface(eglDisplay, context->eglConfigs[0], drawable, (glx_surface_srgb)?sRGB:NULL);
+        }
+        	result = egl_eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
 	} else {
         if (!eglSurface) {
-            eglSurface = egl_eglCreateWindowSurface(eglDisplay, eglConfigs[0], drawable, NULL); // create surface only if needed
+            eglSurface = egl_eglCreateWindowSurface(eglDisplay, eglConfigs[0], drawable, (glx_surface_srgb)?sRGB:NULL); // create surface only if needed
             result = egl_eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
         } else
             result = EGL_TRUE;
@@ -784,7 +838,7 @@ void glXSwapBuffers(Display *display,
     if (glstate.gl_batch || glstate.list.active){
         flush();
     }
-#ifdef PANDORA
+#ifdef USE_FBIO
     if (g_vsync && fbdev >= 0) {
         // TODO: can I just return if I don't meet vsync over multiple frames?
         // this will just block otherwise.
@@ -886,7 +940,7 @@ Bool glXQueryVersion(Display *display, int *major, int *minor) {
 const char *glXGetClientString(Display *display, int name) {
     // TODO: return actual data here
     switch (name) {
-        case GLX_VENDOR: return "OpenPandora";
+        case GLX_VENDOR: return "ptitSeb";
         case GLX_VERSION: return "1.4 OpenPandora";
         case GLX_EXTENSIONS: break;
     }
@@ -943,8 +997,10 @@ XVisualInfo *glXGetVisualFromFBConfig(Display *display, GLXFBConfig config) {
     /*if (g_display == NULL) {
         g_display = XOpenDisplay(NULL);
     }*/
+    if (glx_default_depth==0)
+        glx_default_depth = XDefaultDepth(display, 0);
     XVisualInfo *visual = (XVisualInfo *)malloc(sizeof(XVisualInfo));
-    XMatchVisualInfo(display, 0, 16, TrueColor, visual);
+    XMatchVisualInfo(display, 0, glx_default_depth, TrueColor, visual);
     return visual;
 }
 
@@ -956,7 +1012,7 @@ GLXContext glXCreateNewContext(Display *display, GLXFBConfig config,
 #endif //ANDROID
 void glXSwapIntervalMESA(int interval) {
     printf("glXSwapInterval(%i)\n", interval);
-#ifdef PANDORA
+#ifdef USE_FBIO
     if (! g_vsync)
         printf("Enable LIBGL_VSYNC=1 if you want to use vsync.\n");
     swap_interval = interval;
@@ -982,7 +1038,7 @@ void glXCopyContext(Display *display, GLXContext src, GLXContext dst, GLuint mas
 }
 void glXCreateGLXPixmap(Display *display, XVisualInfo * visual, Pixmap pixmap) {} // should return GLXPixmap
 void glXDestroyGLXPixmap(Display *display, void *pixmap) {} // really wants a GLXpixmap
-void glXCreateWindow(Display *display, GLXFBConfig config, Window win, int *attrib_list) {} // should return GLXWindow
+Window glXCreateWindow(Display *display, GLXFBConfig config, Window win, int *attrib_list) {return win;} // should return GLXWindow
 void glXDestroyWindow(Display *display, void *win) {} // really wants a GLXWindow
 
 GLXDrawable glXGetCurrentDrawable() {
