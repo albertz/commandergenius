@@ -80,3 +80,6 @@
 [submodule "project/jni/application/supertux/supertux"]
 	path = project/jni/application/supertux/supertux
 	url = git@github.com:pelya/supertux.git
+[submodule "project/jni/application/fheroes2/fheroes2"]
+	path = project/jni/application/fheroes2/fheroes2
+	url = http://github.com/gerstrong/fheroes2plus.git
