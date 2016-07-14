@@ -54,6 +54,8 @@
 
 #ifdef ANDROID
 #include <SDL_screenkeyboard.h>
+
+int showAndroidKeyboard = 1;
 #endif
 
 namespace gcn
@@ -152,7 +154,8 @@ namespace gcn
     void TextField::mousePressed(MouseEvent& mouseEvent)
     {
 #ifdef ANDROID
-        SDL_ANDROID_ToggleScreenKeyboardTextInput(getText().c_str());
+        if (showAndroidKeyboard)
+            SDL_ANDROID_ToggleScreenKeyboardTextInput(getText().c_str());
 #endif
         if (mouseEvent.getButton() == MouseEvent::LEFT)
         {
@@ -284,4 +287,15 @@ namespace gcn
     {
         fixScroll();
     }
+    
+#ifdef ANDROID	
+	// disable android virtual keyboard on textField
+	void TextField::disableVirtualKeyboard(int act)
+	{
+	  if (act)
+	    showAndroidKeyboard = 0;
+	  else
+	    showAndroidKeyboard = 1;
+	}
+#endif
 }

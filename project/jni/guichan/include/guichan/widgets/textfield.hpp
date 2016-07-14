@@ -138,6 +138,11 @@ namespace gcn
 
         virtual void keyPressed(KeyEvent& keyEvent);
 
+#ifdef ANDROID	
+	// show android keyboard on textField
+	virtual void disableVirtualKeyboard(int act);
+#endif
+
     protected:
         /**
          * Draws the caret. Overloaded this method if you want to
