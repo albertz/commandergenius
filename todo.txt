@@ -11,11 +11,7 @@ TODO, which will get actually done
 
 - OpenArena: tap to aim for aiming modes with shoot button.
 
-- OpenArena: in tap to shoot mode, the second tap must stop shooting.
-
-- OpenArena: UPnP support.
-
-- OpenArena: voting is broken.
+- OpenArena: Option for the second tap to stop shooting in tap to shoot mode, 
 
 - USB Keyboard: options for camera feed size and for redefining remote menu hotkey.
 
