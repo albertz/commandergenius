@@ -13,6 +13,8 @@ TODO, which will get actually done
 
 - OpenArena: Option for the second tap to stop shooting in tap to shoot mode, 
 
+- SuperTux: Light and Magic level is broken
+
 - USB Keyboard: options for camera feed size and for redefining remote menu hotkey.
 
 - UQM HD: add fonts from http://mosc-portal.bursa.ru/showthread.php?t=206 and switch back to joystick controls, set 4:3 aspect ratio as default.
