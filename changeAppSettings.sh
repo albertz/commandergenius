@@ -387,6 +387,9 @@ echo >> AndroidAppSettings.cfg
 echo "# Aditional CFLAGS for application" >> AndroidAppSettings.cfg
 echo AppCflags=\'$AppCflags\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Aditional C++-specific compiler flags for application, added after AppCflags" >> AndroidAppSettings.cfg
+echo AppCppflags=\'$AppCppflags\' >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Additional LDFLAGS for application" >> AndroidAppSettings.cfg
 echo AppLdflags=\'$AppLdflags\' >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
@@ -903,6 +906,7 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^SDL_VIDEO_RENDER_RESIZE := .*^SDL_VIDEO_RENDER_RESIZE := $SdlVideoResize^" | \
 	sed "s^COMPILED_LIBRARIES := .*^COMPILED_LIBRARIES := $CompiledLibraries^" | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
+	sed "s^APPLICATION_ADDITIONAL_CPPFLAGS :=.*^APPLICATION_ADDITIONAL_CPPFLAGS := $AppCppflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
 	sed "s^APPLICATION_OVERLAPS_SYSTEM_HEADERS :=.*^APPLICATION_OVERLAPS_SYSTEM_HEADERS := $AppOverlapsSystemHeaders^" | \
 	sed "s^USE_GLSHIM :=.*^USE_GLSHIM := $UseGlshim^" | \
