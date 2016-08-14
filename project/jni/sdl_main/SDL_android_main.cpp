@@ -18,7 +18,7 @@ extern "C" void SDL_Android_Init(JNIEnv* env, jclass cls);
 // Library init
 extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
-    return JNI_VERSION_1_4;
+    return JNI_VERSION_1_6;
 }
 
 // Start up the SDL app

@@ -79,7 +79,10 @@ extern DECLSPEC int SDLCALL SDL_ANDROID_SetAdvertisementPosition(int x, int y);
 extern DECLSPEC int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void);
 
 
-/** Exports for Java environment and Video object instance */
+/** Exports for Java environment and Video object instance.
+    To get JNIEnv pointer, use following code:
+    JNIEnv *env = NULL;
+    (*SDL_ANDROID_JavaVM())->GetEnv(SDL_ANDROID_JavaVM(), &env, JNI_VERSION_1_6); */
 extern DECLSPEC JavaVM* SDL_ANDROID_JavaVM();
 
 /*

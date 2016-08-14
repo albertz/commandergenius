@@ -66,7 +66,6 @@ SDL_Rect SDL_ANDROID_ForceClearScreenRect[4] = { { 0, 0, 0, 0 }, { 0, 0, 0, 0 },
 int SDL_ANDROID_ForceClearScreenRectAmount = 0;
 
 // Extremely wicked JNI environment to call Java functions from C code
-static JNIEnv* JavaEnv = NULL;
 static jclass JavaRendererClass = NULL;
 static jobject JavaRenderer = NULL;
 static jmethodID JavaSwapBuffers = NULL;
@@ -114,14 +113,23 @@ static void appRestoredCallbackDefault(void)
 	SDL_ANDROID_ResumeAudioPlayback();
 }
 
+
 static SDL_ANDROID_ApplicationPutToBackgroundCallback_t appPutToBackgroundCallback = appPutToBackgroundCallbackDefault;
 static SDL_ANDROID_ApplicationPutToBackgroundCallback_t appRestoredCallback = appRestoredCallbackDefault;
 static SDL_ANDROID_ApplicationPutToBackgroundCallback_t openALPutToBackgroundCallback = NULL;
 static SDL_ANDROID_ApplicationPutToBackgroundCallback_t openALRestoredCallback = NULL;
 
+static inline JNIEnv *GetJavaEnv(void)
+{
+	JavaVM *vm = SDL_ANDROID_JavaVM();
+	JNIEnv *ret = NULL;
+	(*vm)->GetEnv(vm, &ret, JNI_VERSION_1_6);
+	return ret;
+}
+
 int SDL_ANDROID_CallJavaSwapBuffers()
 {
-
+	JNIEnv *JavaEnv = GetJavaEnv();
 	if( !glContextLost )
 	{
 		// Clear part of screen not used by SDL - on Android the screen contains garbage after each frame
@@ -236,12 +244,14 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeGlContextRecreated) ( JNIEnv*  env, jobject 
 
 int SDL_ANDROID_ToggleScreenKeyboardWithoutTextInput(void)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaToggleScreenKeyboardWithoutTextInput );
 	return 1;
 }
 
 int SDL_ANDROID_ToggleInternalScreenKeyboard(SDL_InternalKeyboard_t keyboard)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaToggleInternalScreenKeyboard, (jint)keyboard );
 	return 1;
 }
@@ -254,6 +264,8 @@ extern SDL_Surface *SDL_GetVideoSurface(void);
 
 void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf, int outBufLen)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
+
 	// Clear mouse button state, to avoid repeated clicks on the text field in some apps
 	SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_LEFT );
 	SDL_ANDROID_MainThreadPushMouseButton( SDL_RELEASED, SDL_BUTTON_RIGHT );
@@ -302,6 +314,7 @@ void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf,
 
 void SDL_ANDROID_CallJavaHideScreenKeyboard()
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaHideScreenKeyboard );
 }
 
@@ -318,6 +331,7 @@ JAVA_EXPORT_NAME(DemoGLSurfaceView_nativeScreenKeyboardShown) ( JNIEnv*  env, jo
 
 void SDL_ANDROID_CallJavaSetScreenKeyboardHintMessage(const char *hint)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->PushLocalFrame(JavaEnv, 1);
 	jstring s = hint ? (*JavaEnv)->NewStringUTF(JavaEnv, hint) : NULL;
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetScreenKeyboardHintMessage, s );
@@ -328,13 +342,14 @@ void SDL_ANDROID_CallJavaSetScreenKeyboardHintMessage(const char *hint)
 
 void SDL_ANDROID_CallJavaStartAccelerometerGyroscope(int start)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaStartAccelerometerGyroscope, (jint) start );
 }
 
 JNIEXPORT void JNICALL
 JAVA_EXPORT_NAME(DemoRenderer_nativeInitJavaCallbacks) ( JNIEnv*  env, jobject thiz )
 {
-	JavaEnv = env;
+	JNIEnv *JavaEnv = env;
 	JavaRenderer = (*JavaEnv)->NewGlobalRef( JavaEnv, thiz );
 	
 	JavaRendererClass = (*JavaEnv)->GetObjectClass(JavaEnv, thiz);
@@ -433,6 +448,7 @@ void SDLCALL SDL_ANDROID_GetClipboardText(char * buf, int len)
 
 int SDLCALL SDL_SetClipboardText(const char *text)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->PushLocalFrame(JavaEnv, 1);
 	jstring s = (*JavaEnv)->NewStringUTF(JavaEnv, text);
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetClipboardText, s );
@@ -444,6 +460,7 @@ int SDLCALL SDL_SetClipboardText(const char *text)
 char * SDLCALL SDL_GetClipboardText(void)
 {
 	char *buf = NULL;
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->PushLocalFrame( JavaEnv, 1 );
 	jstring s = (jstring) (*JavaEnv)->CallObjectMethod( JavaEnv, JavaRenderer, JavaGetClipboardText );
 	if( s )
@@ -489,6 +506,7 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeClipboardChanged) ( JNIEnv* env, jobject thi
 int SDLCALL SDL_ANDROID_GetAdvertisementParams(int * visible, SDL_Rect * position)
 {
 	jint arr[5];
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->PushLocalFrame( JavaEnv, 1 );
 	jintArray elemArr = (*JavaEnv)->NewIntArray(JavaEnv, 5);
 	if (elemArr == NULL)
@@ -511,16 +529,19 @@ int SDLCALL SDL_ANDROID_GetAdvertisementParams(int * visible, SDL_Rect * positio
 }
 int SDLCALL SDL_ANDROID_SetAdvertisementVisible(int visible)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetAdvertisementVisible, (jint)visible );
 	return 1;
 }
 int SDLCALL SDL_ANDROID_SetAdvertisementPosition(int left, int top)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaSetAdvertisementPosition, (jint)left, (jint)top );
 	return 1;
 }
 int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestNewAdvertisement );
 	return 1;
 }
@@ -528,6 +549,7 @@ int SDLCALL SDL_ANDROID_RequestNewAdvertisement(void)
 int SDLCALL SDL_ANDROID_CloudSave(const char *filename, const char *saveId, const char *dialogTitle,
 									const char *description, const char *screenshotFile, uint64_t playedTimeMs)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "SDL_ANDROID_CloudSave: played time %llu", playedTimeMs);
 	if( !filename )
 		return 0;
@@ -557,6 +579,7 @@ int SDLCALL SDL_ANDROID_CloudSave(const char *filename, const char *saveId, cons
 
 int SDLCALL SDL_ANDROID_CloudLoad(const char *filename, const char *saveId, const char *dialogTitle)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	if( !filename )
 		return 0;
 	if( !saveId )
@@ -577,6 +600,7 @@ int SDLCALL SDL_ANDROID_CloudLoad(const char *filename, const char *saveId, cons
 
 void SDLCALL SDL_ANDROID_OpenExternalApp(const char *package, const char *activity, const char *data)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->PushLocalFrame(JavaEnv, 3);
 	jstring s1 = package ? (*JavaEnv)->NewStringUTF(JavaEnv, package) : (*JavaEnv)->NewStringUTF(JavaEnv, "");
 	jstring s2 = activity ? (*JavaEnv)->NewStringUTF(JavaEnv, activity) : (*JavaEnv)->NewStringUTF(JavaEnv, "");
@@ -590,6 +614,7 @@ void SDLCALL SDL_ANDROID_OpenExternalApp(const char *package, const char *activi
 
 void SDLCALL SDL_ANDROID_RestartMyself(const char *restartParams)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->PushLocalFrame(JavaEnv, 1);
 	jstring s1 = restartParams ? (*JavaEnv)->NewStringUTF(JavaEnv, restartParams) : (*JavaEnv)->NewStringUTF(JavaEnv, "");
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestRestartMyself, s1 );
@@ -599,6 +624,7 @@ void SDLCALL SDL_ANDROID_RestartMyself(const char *restartParams)
 
 void SDLCALL SDL_ANDROID_SetConfigOption(int option, int value)
 {
+	JNIEnv *JavaEnv = GetJavaEnv();
 	(*JavaEnv)->CallVoidMethod( JavaEnv, JavaRenderer, JavaRequestSetConfigOption, (jint)option, (jint)value );
 }
 

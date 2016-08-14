@@ -44,26 +44,17 @@ jobject SDL_ANDROID_JniVideoObject()
 	return static_thiz;
 }
 
-void redirectStdout()
-{
-	freopen( "stdout.log", "w", stdout );
-	dup2( fileno(stdout), fileno(stderr) );
-}
-
 #if SDL_VERSION_ATLEAST(1,3,0)
 #else
 extern void SDL_ANDROID_MultiThreadedVideoLoopInit();
 extern void SDL_ANDROID_MultiThreadedVideoLoop();
 
-static int threadedMain(void * waitForDebugger);
+static int threadedMain(void * unused);
 
-int threadedMain(void * waitForDebugger)
+int threadedMain(void * unused)
 {
-	if( waitForDebugger )
-	{
-		//__android_log_print(ANDROID_LOG_INFO, "libSDL", "We are being debugged - waiting for debugger for 7 seconds");
-		//usleep(7000000);
-	}
+	static JNIEnv *JavaEnv = NULL;
+	(*SDL_ANDROID_JavaVM())->AttachCurrentThread(SDL_ANDROID_JavaVM(), &JavaEnv, NULL);
 	SDL_main( argc, argv );
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Application closed, calling exit(0)");
 	exit(0);
@@ -71,7 +62,7 @@ int threadedMain(void * waitForDebugger)
 #endif
 
 extern C_LINKAGE void
-JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring jcurdir, jstring cmdline, jint multiThreadedVideo, jint waitForDebugger )
+JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring jcurdir, jstring cmdline, jint multiThreadedVideo, jint unused )
 {
 	int i = 0;
 	char curdir[PATH_MAX] = "";
@@ -92,9 +83,6 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 	chdir(curdir);
 	setenv("HOME", curdir, 1);
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "Changing curdir to \"%s\"", curdir);
-
-	if( waitForDebugger )
-		redirectStdout();
 
 	jstr = (*env)->GetStringUTFChars(env, cmdline, NULL);
 
@@ -147,17 +135,12 @@ JAVA_EXPORT_NAME(DemoRenderer_nativeInit) ( JNIEnv*  env, jobject thiz, jstring 
 #else
 	if( ! multiThreadedVideo )
 	{
-		if( waitForDebugger )
-		{
-			//__android_log_print(ANDROID_LOG_INFO, "libSDL", "We are being debugged - waiting for debugger for 7 seconds");
-			//usleep(7000000);
-		}
 		SDL_main( argc, argv );
 	}
 	else
 	{
 		SDL_ANDROID_MultiThreadedVideoLoopInit();
-		SDL_CreateThread(threadedMain, (void *)waitForDebugger);
+		SDL_CreateThread(threadedMain, NULL);
 		SDL_ANDROID_MultiThreadedVideoLoop();
 	}
 #endif

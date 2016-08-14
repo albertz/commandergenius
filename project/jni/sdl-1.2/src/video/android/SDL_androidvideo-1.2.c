@@ -1383,7 +1383,7 @@ int ANDROID_VideoInitMT(_THIS, SDL_PixelFormat *vformat)
 
 SDL_Surface *ANDROID_SetVideoModeMT(_THIS, SDL_Surface *current, int width, int height, int bpp, Uint32 flags)
 {
-	if( flags & SDL_OPENGL || flags & SDL_HWSURFACE )
+	if( flags & SDL_OPENGL || (flags & SDL_HWSURFACE && !SDL_ANDROID_VideoForceSoftwareMode) )
 	{
 		return NULL;
 	}

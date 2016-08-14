@@ -138,5 +138,4 @@ class Globals
 	public static boolean MultiThreadedVideo = false;
 
 	public static boolean OuyaEmulation = false; // For debugging
-	public static boolean RedirectStdout = false; // For debugging
 }
