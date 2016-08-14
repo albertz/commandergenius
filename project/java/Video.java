@@ -949,18 +949,6 @@ class DemoRenderer extends GLSurfaceView_SDL.Renderer
 		Settings.setConfigOptionFromSDL(option, value);
 	}
 
-	public void requestExternalStorageRuntimePermissionFromSDL()
-	{
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-		{
-			int permissionCheck = context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-			if (permissionCheck != PackageManager.PERMISSION_GRANTED && !context.writeExternalStoragePermissionDialogAnswered)
-			{
-				context.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-			}
-		}
-	}
-
 	private int PowerOf2(int i)
 	{
 		int value = 1;

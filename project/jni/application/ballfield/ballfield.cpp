@@ -685,11 +685,12 @@ int main(int argc, char* argv[])
 				if( evt.key.state == SDL_RELEASED )
 				{
 					if(evt.key.keysym.sym == SDLK_0)
+					{
 						SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, 1);
+					}
 					if(evt.key.keysym.sym == SDLK_1)
 					{
 						SDL_ANDROID_SetScreenKeyboardButtonShown(SDL_ANDROID_SCREENKEYBOARD_BUTTON_2, 0);
-						SDL_ANDROID_RequestExternalStorageRuntimePermission();
 					}
 					if(evt.key.keysym.sym == SDLK_2)
 					{

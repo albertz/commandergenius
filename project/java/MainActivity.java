@@ -95,6 +95,8 @@ import android.app.PendingIntent;
 import java.util.TreeSet;
 import android.app.UiModeManager;
 import android.Manifest;
+import android.content.pm.PermissionInfo;
+import java.util.Arrays;
 
 
 public class MainActivity extends Activity
@@ -238,6 +240,25 @@ public class MainActivity extends Activity
 			startService(intent);
 		}
 		cloudSave = new CloudSave(this);
+		// Request SD card permission right during start, because game devs don't care about runtime permissions and stuff
+		try
+		{
+			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M )
+			{
+				PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_PERMISSIONS | PackageManager.GET_META_DATA);
+				Log.v("SDL", "SD card permission 1: " + getPackageName() + " perms " + info.requestedPermissions + " name " + info.packageName + " ver " + info.versionName);
+				if( info.requestedPermissions != null && Arrays.asList(info.requestedPermissions).contains(Manifest.permission.WRITE_EXTERNAL_STORAGE) )
+				{
+					Log.v("SDL", "SD card permission 4: REQUEST");
+					int permissionCheck = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+					if (permissionCheck != PackageManager.PERMISSION_GRANTED && !writeExternalStoragePermissionDialogAnswered)
+					{
+						requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+					}
+				}
+			}
+		}
+		catch(Exception e) {}
 	}
 	
 	public void setUpStatusLabel()
