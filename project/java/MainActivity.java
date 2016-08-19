@@ -660,6 +660,7 @@ public class MainActivity extends Activity
 							}
 						}
 						final BuiltInKeyboardView builtinKeyboard = new BuiltInKeyboardView(MainActivity.this, null);
+						builtinKeyboard.setAlpha(0.7f);
 						builtinKeyboard.ChangeKeyboard();
 						builtinKeyboard.setOnKeyboardActionListener(new KeyboardView.OnKeyboardActionListener()
 						{
