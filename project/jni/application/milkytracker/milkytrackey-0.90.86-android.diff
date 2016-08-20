@@ -1,0 +1,131 @@
+Only in milkytracker-0.90.86: configure.orig
+Only in milkytracker-0.90.86: configure.rej
+Only in milkytracker-0.90.86/platforms/osx/milkytracker_universal/milkytracker_universal.xcodeproj: project.pbxproj
+diff -ru old/milkytracker-0.90.86/src/ppui/sdl/DisplayDevice_SDL.cpp milkytracker-0.90.86/src/ppui/sdl/DisplayDevice_SDL.cpp
+--- old/milkytracker-0.90.86/src/ppui/sdl/DisplayDevice_SDL.cpp	2013-11-09 00:11:59.000000000 +0000
++++ milkytracker-0.90.86/src/ppui/sdl/DisplayDevice_SDL.cpp	2015-03-05 13:45:09.000000000 +0000
+@@ -47,6 +47,7 @@
+ 			return NULL;
+ 		}
+ 	}
++	SDL_Flip(screen); // Update screen on Android
+ 
+ 	return screen;
+ }
+@@ -173,6 +174,8 @@
+ void PPDisplayDevice::setSize(const PPSize& size)
+ {
+ 	theSurface = SDL_SetVideoMode(size.width, size.height, theSurface->format->BitsPerPixel, theSurface->flags);
++	if(theSurface)
++		SDL_Flip(theSurface); // Update screen on Android
+ }
+ 
+ bool PPDisplayDevice::goFullScreen(bool b)
+diff -ru old/milkytracker-0.90.86/src/tracker/sdl/SDL_Main.cpp milkytracker-0.90.86/src/tracker/sdl/SDL_Main.cpp
+--- old/milkytracker-0.90.86/src/tracker/sdl/SDL_Main.cpp	2013-11-09 00:12:02.000000000 +0000
++++ milkytracker-0.90.86/src/tracker/sdl/SDL_Main.cpp	2015-03-05 13:45:32.000000000 +0000
+@@ -302,7 +302,7 @@
+ #endif
+ 
+ 	if (lMouseDown &&
+-		(timerTicker - lButtonDownStartTime) > 25)
++		(timerTicker - lButtonDownStartTime) > 100)
+ 	{
+ 		ev.code = SDLUserEventLMouseRepeat;
+ 		ev.data1 = (void*)p.x;
+@@ -314,7 +314,7 @@
+ 	}
+ 
+ 	if (rMouseDown &&
+-		(timerTicker - rButtonDownStartTime) > 25)
++		(timerTicker - rButtonDownStartTime) > 100)
+ 	{
+ 		ev.code = SDLUserEventRMouseRepeat;
+ 		ev.data1 = (void*)p.x;
+@@ -423,7 +423,7 @@
+ 		{
+ 			pp_uint32 deltat = PPGetTickCount() - lmyTime;
+ 			
+-			if (deltat > 500)
++			if (deltat > 2000)
+ 			{
+ 				lClickCount = 0;
+ 				lmyTime = PPGetTickCount();
+@@ -454,7 +454,7 @@
+ 		{
+ 			pp_uint32 deltat = PPGetTickCount() - rmyTime;
+ 			
+-			if (deltat > 500)
++			if (deltat > 2000)
+ 			{
+ 				rClickCount = 0;
+ 				rmyTime = PPGetTickCount();
+@@ -503,11 +503,11 @@
+ 		{
+ 			pp_uint32 deltat = PPGetTickCount() - lmyTime;
+ 			
+-			if (deltat < 500)
++			if (deltat < 2000)
+ 			{
+ 				p.x = localMouseX; p.y = localMouseY;				
+-				if (abs(p.x - llastClickPosition.x) < 4 &&
+-					abs(p.y - llastClickPosition.y) < 4)
++				if (abs(p.x - llastClickPosition.x) < 30 &&
++					abs(p.y - llastClickPosition.y) < 30)
+ 				{					
+ 					PPEvent myEvent(eLMouseDoubleClick, &p, sizeof(PPPoint));					
+ 					RaiseEventSerialized(&myEvent);
+@@ -530,11 +530,11 @@
+ 		{
+ 			pp_uint32 deltat = PPGetTickCount() - rmyTime;
+ 			
+-			if (deltat < 500)
++			if (deltat < 2000)
+ 			{
+ 				p.x = localMouseX; p.y = localMouseY;				
+-				if (abs(p.x - rlastClickPosition.x) < 4 &&
+-					abs(p.y - rlastClickPosition.y) < 4)
++				if (abs(p.x - rlastClickPosition.x) < 30 &&
++					abs(p.y - rlastClickPosition.y) < 30)
+ 				{					
+ 					PPEvent myEvent(eRMouseDoubleClick, &p, sizeof(PPPoint));					
+ 					RaiseEventSerialized(&myEvent);
+@@ -569,13 +569,33 @@
+ 		p.x = localMouseX; p.y = localMouseY;		
+ 		if (mouseButton == 1 && lMouseDown)
+ 		{
+-			PPEvent myEvent(eLMouseDrag, &p, sizeof(PPPoint));			
+-			RaiseEventSerialized(&myEvent);
++			if (abs(p.x - llastClickPosition.x) < 30 &&
++				abs(p.y - llastClickPosition.y) < 30)
++			{
++				PPEvent myEvent(eMouseMoved, &p, sizeof(PPPoint));
++				RaiseEventSerialized(&myEvent);
++			}
++			else
++			{
++				llastClickPosition.x = -31;
++				PPEvent myEvent(eLMouseDrag, &p, sizeof(PPPoint));
++				RaiseEventSerialized(&myEvent);
++			}
+ 		}
+ 		else if (rMouseDown)
+ 		{
+-			PPEvent myEvent(eRMouseDrag, &p, sizeof(PPPoint));			
+-			RaiseEventSerialized(&myEvent);
++			if (abs(p.x - rlastClickPosition.x) < 30 &&
++				abs(p.y - rlastClickPosition.y) < 30)
++			{
++				PPEvent myEvent(eMouseMoved, &p, sizeof(PPPoint));
++				RaiseEventSerialized(&myEvent);
++			}
++			else
++			{
++				rlastClickPosition.x = -31;
++				PPEvent myEvent(eRMouseDrag, &p, sizeof(PPPoint));
++				RaiseEventSerialized(&myEvent);
++			}
+ 		}
+ 	}
+ }
+Only in milkytracker-0.90.86/src/tracker/sdl: SDL_Main.cpp.orig
