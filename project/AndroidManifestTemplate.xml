@@ -64,5 +64,7 @@
 	<!-- ==SCREEN-SIZE-SMALL== --> <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" />
 	<!-- ==SCREEN-SIZE-NORMAL== --> <supports-screens android:smallScreens="false" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" />
 	<!-- ==SCREEN-SIZE-LARGE== --> <supports-screens android:smallScreens="false" android:normalScreens="false" android:largeScreens="true" android:xlargeScreens="true" />
+	<!-- ==GLES2== --> <uses-feature android:glEsVersion="0x00020000" required="true"/>
+	<!-- ==GLES3== --> <uses-feature android:glEsVersion="0x00030000" required="true"/>
 
 </manifest>

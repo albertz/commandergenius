@@ -60,6 +60,7 @@ if [ "$SwVideoMode" = "y" ]; then
 	NeedDepthBuffer=n
 	NeedStencilBuffer=n
 	NeedGles2=n
+	NeedGles3=n
 fi
 
 
@@ -178,9 +179,13 @@ echo >> AndroidAppSettings.cfg
 echo "# Enable OpenGL stencil buffer (needed only for 3-d applications, small speed decrease) (y) or (n)" >> AndroidAppSettings.cfg
 echo NeedStencilBuffer=$NeedStencilBuffer >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Try to use GLES 2.x context - will revert to GLES 1.X if unsupported by device" >> AndroidAppSettings.cfg
+echo "# Use GLES 2.x context" >> AndroidAppSettings.cfg
 echo "# you need this option only if you're developing 3-d app (y) or (n)" >> AndroidAppSettings.cfg
 echo NeedGles2=$NeedGles2 >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
+echo "# Use GLES 3.x context" >> AndroidAppSettings.cfg
+echo "# you need this option only if you're developing 3-d app (y) or (n)" >> AndroidAppSettings.cfg
+echo NeedGles3=$NeedGles3 >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Use glshim library for provide OpenGL 1.x functionality to OpenGL ES accelerated cards (y) or (n)" >> AndroidAppSettings.cfg
 echo UseGlshim=$UseGlshim >> AndroidAppSettings.cfg
@@ -481,12 +486,6 @@ if [ "$NeedStencilBuffer" = "y" ] ; then
 	NeedStencilBuffer=true
 else
 	NeedStencilBuffer=false
-fi
-
-if [ "$NeedGles2" = "y" ] ; then
-	NeedGles2=true
-else
-	NeedGles2=false
 fi
 
 if [ "$UseGlshim" = "y" ] ; then
@@ -831,6 +830,20 @@ else
 	ImmersiveMode=true
 fi
 
+if [ "$NeedGles2" = "y" ] ; then
+	NeedGles2=true
+else
+	NeedGles2=false
+	$SEDI "/==GLES2==/ d" project/AndroidManifest.xml
+fi
+
+if [ "$NeedGles3" = "y" ] ; then
+	NeedGles3=true
+else
+	NeedGles3=false
+	$SEDI "/==GLES3==/ d" project/AndroidManifest.xml
+fi
+
 echo Patching project/src/Globals.java
 $SEDI "s/public static String ApplicationName = .*;/public static String ApplicationName = \"$AppShortName\";/" project/src/Globals.java
 $SEDI "s/public static final boolean Using_SDL_1_3 = .*;/public static final boolean Using_SDL_1_3 = $UsingSdl13;/" project/src/Globals.java
@@ -848,6 +861,7 @@ $SEDI "s/public static int VideoDepthBpp = .*;/public static int VideoDepthBpp =
 $SEDI "s/public static boolean NeedDepthBuffer = .*;/public static boolean NeedDepthBuffer = $NeedDepthBuffer;/" project/src/Globals.java
 $SEDI "s/public static boolean NeedStencilBuffer = .*;/public static boolean NeedStencilBuffer = $NeedStencilBuffer;/" project/src/Globals.java
 $SEDI "s/public static boolean NeedGles2 = .*;/public static boolean NeedGles2 = $NeedGles2;/" project/src/Globals.java
+$SEDI "s/public static boolean NeedGles3 = .*;/public static boolean NeedGles3 = $NeedGles3;/" project/src/Globals.java
 $SEDI "s/public static boolean CompatibilityHacksVideo = .*;/public static boolean CompatibilityHacksVideo = $CompatibilityHacksForceScreenUpdate;/" project/src/Globals.java
 $SEDI "s/public static boolean CompatibilityHacksStaticInit = .*;/public static boolean CompatibilityHacksStaticInit = $CompatibilityHacksStaticInit;/" project/src/Globals.java
 $SEDI "s/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = .*;/public static boolean CompatibilityHacksTextInputEmulatesHwKeyboard = $CompatibilityHacksTextInputEmulatesHwKeyboard;/" project/src/Globals.java
@@ -944,10 +958,9 @@ mkdir -p project/libs
 if [ "$GooglePlayGameServicesId" = "n" -o -z "$GooglePlayGameServicesId" ] ; then
 	$SEDI "/==GOOGLEPLAYGAMESERVICES==/ d" project/AndroidManifest.xml
 	GooglePlayGameServicesId=""
-	grep 'google-play-services' project/local.properties > /dev/null && {
-		$SEDI 's/.*android.library.reference.*//g' project/local.properties
+	grep '=play-services' project/local.properties > /dev/null && {
+		$SEDI 's/.*=play-services.*//g' project/local.properties
 		rm -f project/libs/android-support-v4.jar
-		rm -f project/libs/play-services-games.jar
 	}
 else
 	for F in $JAVA_SRC_PATH/googleplaygameservices/*.java; do

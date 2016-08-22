@@ -1251,13 +1251,20 @@ public class MainActivity extends Activity
 	{
 		try
 		{
-			if(Globals.NeedGles2)
+			if(Globals.NeedGles3)
+			{
+				System.loadLibrary("GLESv3");
+				Log.i("SDL", "libSDL: loaded GLESv3 lib");
+			}
+			else if(Globals.NeedGles2)
+			{
 				System.loadLibrary("GLESv2");
-			Log.i("SDL", "libSDL: loaded GLESv2 lib");
+				Log.i("SDL", "libSDL: loaded GLESv2 lib");
+			}
 		}
 		catch ( UnsatisfiedLinkError e )
 		{
-			Log.i("SDL", "libSDL: Cannot load GLESv2 lib");
+			Log.i("SDL", "libSDL: Cannot load GLESv3 or GLESv2 lib");
 		}
 
 		// Load all libraries

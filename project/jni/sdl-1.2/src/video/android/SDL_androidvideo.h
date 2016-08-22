@@ -55,6 +55,7 @@ extern int SDL_ANDROID_VideoForceSoftwareMode;
 extern int SDL_ANDROID_CompatibilityHacks;
 extern int SDL_ANDROID_ShowMouseCursor;
 extern int SDL_ANDROID_UseGles2;
+extern int SDL_ANDROID_UseGles3;
 extern int SDL_ANDROID_BYTESPERPIXEL;
 extern int SDL_ANDROID_BITSPERPIXEL;
 extern void SDL_ANDROID_TextInputInit(char * buffer, int len);

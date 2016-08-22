@@ -284,7 +284,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 					"setRenderer has already been called for this instance.");
 		}
 		if (mEGLConfigChooser == null) {
-			mEGLConfigChooser = getEglConfigChooser(16, false, false, false);
+			mEGLConfigChooser = getEglConfigChooser(16, false, false, false, false);
 		}
 		mGLThread = new GLThread(renderer);
 		mGLThread.start();
@@ -323,8 +323,8 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 	 *
 	 * @param needDepth
 	 */
-	public void setEGLConfigChooser(int bpp, boolean needDepth, boolean stencil, boolean gles2) {
-		setEGLConfigChooser(getEglConfigChooser(bpp, needDepth, stencil, gles2));
+	public void setEGLConfigChooser(int bpp, boolean needDepth, boolean stencil, boolean gles2, boolean gles3) {
+		setEGLConfigChooser(getEglConfigChooser(bpp, needDepth, stencil, gles2, gles3));
 	}
 
 	/**
@@ -341,9 +341,9 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 	 *
 	 */
 	public void setEGLConfigChooser(int redSize, int greenSize, int blueSize,
-			int alphaSize, int depthSize, int stencilSize, boolean gles2) {
+			int alphaSize, int depthSize, int stencilSize, boolean gles2, boolean gles3) {
 		setEGLConfigChooser(new ComponentSizeChooser(redSize, greenSize,
-				blueSize, alphaSize, depthSize, stencilSize, gles2));
+				blueSize, alphaSize, depthSize, stencilSize, gles2, gles3));
 	}
 	/**
 	 * Set the rendering mode. When renderMode is
@@ -636,6 +636,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 		 */
 		EGLConfig chooseConfig(EGL10 egl, EGLDisplay display);
 		public boolean isGles2Required();
+		public boolean isGles3Required();
 	}
 
 	private static abstract class BaseConfigChooser
@@ -672,7 +673,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 
 	private static class ComponentSizeChooser extends BaseConfigChooser {
 		public ComponentSizeChooser(int redSize, int greenSize, int blueSize,
-				int alphaSize, int depthSize, int stencilSize, boolean isGles2) {
+				int alphaSize, int depthSize, int stencilSize, boolean isGles2, boolean isGles3) {
 			super(new int[] {EGL10.EGL_NONE}); // Get all possible configs
 			mValue = new int[1];
 			mRedSize = redSize;
@@ -682,6 +683,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 			mDepthSize = depthSize;
 			mStencilSize = stencilSize;
 			mIsGles2 = isGles2;
+			mIsGles3 = isGles3;
 	   }
 
 		@Override
@@ -693,7 +695,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 			int idx = 0;
 			int selectidx = -1;
 
-			Log.v("SDL", "Desired GL config: " + "R" + mRedSize + "G" + mGreenSize + "B" + mBlueSize + "A" + mAlphaSize + " depth " + mDepthSize + " stencil " + mStencilSize + " type " + (mIsGles2 ? "GLES2" : "GLES"));
+			Log.v("SDL", "Desired GL config: " + "R" + mRedSize + "G" + mGreenSize + "B" + mBlueSize + "A" + mAlphaSize + " depth " + mDepthSize + " stencil " + mStencilSize + " type " + (mIsGles3 ? "GLES3" : mIsGles2 ? "GLES2" : "GLES"));
 			for(EGLConfig config : configs) {
 				if ( config == null )
 					continue;
@@ -711,7 +713,7 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 						EGL10.EGL_STENCIL_SIZE, 0);
 				int rendertype = findConfigAttrib(egl, display, config,
 						EGL10.EGL_RENDERABLE_TYPE, 0);
-				int desiredtype = mIsGles2 ? EGL_OPENGL_ES2_BIT : EGL_OPENGL_ES_BIT;
+				int desiredtype = mIsGles3 ? EGL_OPENGL_ES3_BIT : mIsGles2 ? EGL_OPENGL_ES2_BIT : EGL_OPENGL_ES_BIT;
 				int nativeRender = findConfigAttrib(egl, display, config,
 						EGL10.EGL_NATIVE_RENDERABLE, 0);
 				int caveat = findConfigAttrib(egl, display, config,
@@ -743,6 +745,8 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 					cfgcur += "GLES";
 				if((rendertype & EGL_OPENGL_ES2_BIT) != 0)
 					cfgcur += " GLES2";
+				if((rendertype & EGL_OPENGL_ES3_BIT) != 0)
+					cfgcur += " GLES3";
 				if((rendertype & EGL_OPENGL_BIT) != 0)
 					cfgcur += " OPENGL";
 				if((rendertype & EGL_OPENVG_BIT) != 0)
@@ -782,6 +786,11 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 			return mIsGles2;
 		}
 
+		public boolean isGles3Required()
+		{
+			return mIsGles3;
+		}
+
 		private int[] mValue;
 		// Subclasses can adjust these values:
 		protected int mRedSize;
@@ -791,11 +800,13 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 		protected int mDepthSize;
 		protected int mStencilSize;
 		protected boolean mIsGles2 = false;
+		protected boolean mIsGles3 = false;
 
 		public static final int EGL_OPENGL_ES_BIT = 1;
 		public static final int EGL_OPENVG_BIT = 2;
 		public static final int EGL_OPENGL_ES2_BIT = 4;
 		public static final int EGL_OPENGL_BIT = 8;
+		public static final int EGL_OPENGL_ES3_BIT = 16;
 		}
 
 	/**
@@ -804,8 +815,8 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 	 *
 	 */
 	private static class SimpleEGLConfigChooser16 extends ComponentSizeChooser {
-		public SimpleEGLConfigChooser16(boolean withDepthBuffer, boolean stencil, boolean gles2) {
-			super(4, 4, 4, 0, withDepthBuffer ? 16 : 0, stencil ? 8 : 0, gles2);
+		public SimpleEGLConfigChooser16(boolean withDepthBuffer, boolean stencil, boolean gles2, boolean gles3) {
+			super(4, 4, 4, 0, withDepthBuffer ? 16 : 0, stencil ? 8 : 0, gles2, gles3);
 			// Adjust target values. This way we'll accept a 4444 or
 			// 555 buffer if there's no 565 buffer available.
 			mRedSize = 5;
@@ -815,8 +826,8 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 	}
 
 	private static class SimpleEGLConfigChooser24 extends ComponentSizeChooser {
-		public SimpleEGLConfigChooser24(boolean withDepthBuffer, boolean stencil, boolean gles2) {
-			super(8, 8, 8, 0, withDepthBuffer ? 16 : 0, stencil ? 8 : 0, gles2);
+		public SimpleEGLConfigChooser24(boolean withDepthBuffer, boolean stencil, boolean gles2, boolean gles3) {
+			super(8, 8, 8, 0, withDepthBuffer ? 16 : 0, stencil ? 8 : 0, gles2, gles3);
 			mRedSize = 8;
 			mGreenSize = 8;
 			mBlueSize = 8;
@@ -824,21 +835,21 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 	}
 
 	private static class SimpleEGLConfigChooser32 extends ComponentSizeChooser {
-		public SimpleEGLConfigChooser32(boolean withDepthBuffer, boolean stencil, boolean gles2) {
-			super(8, 8, 8, 8, withDepthBuffer ? 16 : 0, stencil ? 8 : 0, gles2);
+		public SimpleEGLConfigChooser32(boolean withDepthBuffer, boolean stencil, boolean gles2, boolean gles3) {
+			super(8, 8, 8, 8, withDepthBuffer ? 16 : 0, stencil ? 8 : 0, gles2, gles3);
 			mRedSize = 8;
 			mGreenSize = 8;
 			mBlueSize = 8;
 			mAlphaSize = 8;
 		}
 	}
-	private static ComponentSizeChooser getEglConfigChooser(int videoDepthBpp, boolean withDepthBuffer, boolean stencil, boolean gles2) {
+	private static ComponentSizeChooser getEglConfigChooser(int videoDepthBpp, boolean withDepthBuffer, boolean stencil, boolean gles2, boolean gles3) {
 		if(videoDepthBpp == 16)
-			return new SimpleEGLConfigChooser16(withDepthBuffer, stencil, gles2);
+			return new SimpleEGLConfigChooser16(withDepthBuffer, stencil, gles2, gles3);
 		if(videoDepthBpp == 24)
-			return new SimpleEGLConfigChooser24(withDepthBuffer, stencil, gles2);
+			return new SimpleEGLConfigChooser24(withDepthBuffer, stencil, gles2, gles3);
 		if(videoDepthBpp == 32)
-			return new SimpleEGLConfigChooser32(withDepthBuffer, stencil, gles2);
+			return new SimpleEGLConfigChooser32(withDepthBuffer, stencil, gles2, gles3);
 		return null;
 	};
 
@@ -883,9 +894,12 @@ public class GLSurfaceView_SDL extends SurfaceView implements SurfaceHolder.Call
 			*/
 			final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 			final int[] gles2_attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE };
+			final int[] gles3_attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE };
 
 			mEglContext = mEgl.eglCreateContext(mEglDisplay, mEglConfig,
-					EGL10.EGL_NO_CONTEXT, mEGLConfigChooser.isGles2Required() ? gles2_attrib_list : null );
+					EGL10.EGL_NO_CONTEXT,
+					mEGLConfigChooser.isGles3Required() ? gles3_attrib_list :
+					mEGLConfigChooser.isGles2Required() ? gles2_attrib_list : null );
 
 			if( mEglContext == null || mEglContext == EGL10.EGL_NO_CONTEXT )
 				Log.e("SDL", "GLSurfaceView_SDL::EglHelper::start(): mEglContext is EGL_NO_CONTEXT, error: " + mEgl.eglGetError());

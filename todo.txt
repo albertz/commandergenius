@@ -17,8 +17,6 @@ TODO, which will get actually done
 
 - UQM HD: add fonts from http://mosc-portal.bursa.ru/showthread.php?t=206 and switch back to joystick controls, set 4:3 aspect ratio as default.
 
-- SDL: implement SDL_GL_LoadLibrary() / SDL_GL_GetProcAddress() / SDL_GL_SetAttribute() / SDL_GL_GetAttribute().
-
 - SDL: CompatibilityHacksForceScreenUpdate=y does not redraw screen after putting to background and restoring.
 
 - SDL: request SD card permission on Android 6.

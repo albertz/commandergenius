@@ -553,7 +553,7 @@ class Settings
 	static void Apply(MainActivity p)
 	{
 		setEnvVars(p);
-		nativeSetVideoDepth(Globals.VideoDepthBpp, Globals.NeedGles2 ? 1 : 0);
+		nativeSetVideoDepth(Globals.VideoDepthBpp, Globals.NeedGles2 ? 1 : 0, Globals.NeedGles3 ? 1 : 0);
 		if(Globals.VideoLinearFilter)
 			nativeSetVideoLinearFilter();
 		if( Globals.CompatibilityHacksVideo )
@@ -958,7 +958,7 @@ class Settings
 	private static native void nativeSetMultitouchUsed();
 	private static native void nativeSetTouchscreenKeyboardUsed();
 	private static native void nativeSetVideoLinearFilter();
-	private static native void nativeSetVideoDepth(int bpp, int gles2);
+	private static native void nativeSetVideoDepth(int bpp, int gles2, int gles3);
 	private static native void nativeSetCompatibilityHacks();
 	private static native void nativeSetVideoMultithreaded();
 	private static native void nativeSetVideoForceSoftwareMode();

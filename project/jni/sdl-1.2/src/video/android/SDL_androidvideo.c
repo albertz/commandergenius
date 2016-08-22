@@ -99,6 +99,7 @@ int SDL_ANDROID_CompatibilityHacks = 0;
 int SDL_ANDROID_BYTESPERPIXEL = 2;
 int SDL_ANDROID_BITSPERPIXEL = 16;
 int SDL_ANDROID_UseGles2 = 0;
+int SDL_ANDROID_UseGles3 = 0;
 int SDL_ANDROID_ShowMouseCursor = 0;
 SDL_Rect SDL_ANDROID_VideoDebugRect;
 SDL_Color SDL_ANDROID_VideoDebugRectColor;
@@ -431,11 +432,12 @@ JAVA_EXPORT_NAME(Settings_nativeSetCompatibilityHacks) (JNIEnv* env, jobject thi
 }
 
 JNIEXPORT void JNICALL
-JAVA_EXPORT_NAME(Settings_nativeSetVideoDepth) (JNIEnv* env, jobject thiz, jint bpp, jint UseGles2)
+JAVA_EXPORT_NAME(Settings_nativeSetVideoDepth) (JNIEnv* env, jobject thiz, jint bpp, jint UseGles2, jint UseGles3)
 {
 	SDL_ANDROID_BITSPERPIXEL = bpp;
 	SDL_ANDROID_BYTESPERPIXEL = SDL_ANDROID_BITSPERPIXEL / 8;
 	SDL_ANDROID_UseGles2 = UseGles2;
+	SDL_ANDROID_UseGles3 = UseGles3;
 }
 
 void SDLCALL SDL_ANDROID_GetClipboardText(char * buf, int len)

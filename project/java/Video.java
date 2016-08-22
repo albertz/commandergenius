@@ -991,7 +991,7 @@ class DemoGLSurfaceView extends GLSurfaceView_SDL {
 	public DemoGLSurfaceView(MainActivity context) {
 		super(context);
 		mParent = context;
-		setEGLConfigChooser(Globals.VideoDepthBpp, Globals.NeedDepthBuffer, Globals.NeedStencilBuffer, Globals.NeedGles2);
+		setEGLConfigChooser(Globals.VideoDepthBpp, Globals.NeedDepthBuffer, Globals.NeedStencilBuffer, Globals.NeedGles2, Globals.NeedGles3);
 		mRenderer = new DemoRenderer(context);
 		setRenderer(mRenderer);
 	}

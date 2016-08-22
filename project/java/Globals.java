@@ -40,6 +40,7 @@ class Globals
 	public static boolean NeedDepthBuffer = false;
 	public static boolean NeedStencilBuffer = false;
 	public static boolean NeedGles2 = false;
+	public static boolean NeedGles3 = false;
 	public static boolean CompatibilityHacksVideo = false;
 	public static boolean CompatibilityHacksForceScreenUpdateMouseClick = true;
 	public static boolean CompatibilityHacksStaticInit = false;

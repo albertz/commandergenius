@@ -146,7 +146,6 @@ SDL_Surface *SDL_CurrentVideoSurface = NULL;
 static int HwSurfaceCount = 0;
 static SDL_Surface ** HwSurfaceList = NULL;
 void * glLibraryHandle = NULL;
-void * gl2LibraryHandle = NULL;
 
 static Uint32 SDL_VideoThreadID = 0;
 int SDL_ANDROID_InsideVideoThread()
@@ -218,13 +217,21 @@ static SDL_VideoDevice *ANDROID_CreateDevice(int devindex)
 
 	device->handles_any_size = 1; // Any video mode is OK
 
-	glLibraryHandle = dlopen("libGLESv1_CM.so", RTLD_NOW | RTLD_GLOBAL);
-	if(SDL_ANDROID_UseGles2)
+	if ( SDL_ANDROID_UseGles3 )
 	{
-		gl2LibraryHandle = dlopen("libGLESv2.so", RTLD_NOW | RTLD_GLOBAL);
-		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Loading libGLESv2.so: %p", gl2LibraryHandle);
+		glLibraryHandle = dlopen("libGLESv3.so", RTLD_LAZY | RTLD_GLOBAL);
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Loading libGLESv3.so: %p", glLibraryHandle);
 	}
-	
+	else if ( SDL_ANDROID_UseGles2 )
+	{
+		glLibraryHandle = dlopen("libGLESv2.so", RTLD_LAZY | RTLD_GLOBAL);
+		__android_log_print(ANDROID_LOG_INFO, "libSDL", "Loading libGLESv2.so: %p", glLibraryHandle);
+	}
+	else
+	{
+		glLibraryHandle = dlopen("libGLESv1_CM.so", RTLD_LAZY | RTLD_GLOBAL);
+	}
+
 	return device;
 }
 
@@ -1240,11 +1247,9 @@ void SDL_ANDROID_VideoContextRecreated()
 static void* ANDROID_GL_GetProcAddress(_THIS, const char *proc)
 {
 #ifdef USE_GLSHIM
-        void * func = glXGetProcAddress(proc);
+	void * func = glXGetProcAddress(proc);
 #else
 	void * func = dlsym(glLibraryHandle, proc);
-	if(!func && gl2LibraryHandle)
-		func = dlsym(gl2LibraryHandle, proc);
 #endif
 	__android_log_print(ANDROID_LOG_INFO, "libSDL", "ANDROID_GL_GetProcAddress(\"%s\"): %p", proc, func);
 	return func;
