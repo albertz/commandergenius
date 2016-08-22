@@ -83,3 +83,6 @@
 [submodule "project/jni/application/fheroes2/fheroes2"]
 	path = project/jni/application/fheroes2/fheroes2
 	url = http://github.com/gerstrong/fheroes2plus.git
+[submodule "project/jni/application/ninslash/src"]
+	path = project/jni/application/ninslash/src
+	url = git@github.com:pelya/Ninslash.git
