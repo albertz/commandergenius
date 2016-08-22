@@ -35,6 +35,7 @@ for ARCH in armeabi-v7a x86; do
 	echo "Building teeworlds_srv for $ARCH"
 	env BUILD_EXECUTABLE=1 NO_SHARED_LIBS=1 ../../setEnvironment-$ARCH.sh \
 		sh -c '
+		set -x
 		OBJS=
 		for F in `cat ../server-sources.txt`; do
 			dirname objs/$F.o | xargs mkdir -p
@@ -42,11 +43,12 @@ for ARCH in armeabi-v7a x86; do
 			OBJS="$OBJS objs/$F.o"
 			$CXX $CFLAGS -fno-exceptions -fno-rtti --std=c++11 -flto -Wall -DCONF_RELEASE -I src -c $F -o objs/$F.o || exit 1
 		done
-		echo Linking teeworlds_srv
-		$CXX $CFLAGS -fno-exceptions -fno-rtti $LDFLAGS -pie -flto -pthread -o teeworlds_srv $OBJS || exit 1
-		$STRIP --strip-unneeded teeworlds_srv
+		echo Linking ninslash_srv
+		$CXX $CFLAGS -fno-exceptions -fno-rtti $OBJS $LDFLAGS -pie -flto -pthread -o ninslash_srv || exit 1
+		$STRIP --strip-unneeded ninslash_srv
 		' || exit 1
-	cp teeworlds_srv bin-$ARCH/
+	mkdir -p bin-$ARCH
+	cp ninslash_srv bin-$ARCH/
 	cd bin-$ARCH
 	zip ../../AndroidData/binaries-$ARCH.zip *
 	cd ..
