@@ -54,6 +54,6 @@ for ARCH in armeabi-v7a x86; do
 	cd ../..
 done
 
-ln -s ../src/logo.png ../AndroidData/
+ln -s -f ../src/logo.png ../AndroidData/
 
 exit 0

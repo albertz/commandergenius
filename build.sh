@@ -96,16 +96,18 @@ else
 fi
 
 MYARCH=linux-x86_64
-NCPU=4
-if uname -s | grep -i "linux" > /dev/null ; then
-	MYARCH=linux-x86_64
-	NCPU=`cat /proc/cpuinfo | grep -c -i processor`
-fi
-if uname -s | grep -i "darwin" > /dev/null ; then
-	MYARCH=darwin-x86_64
-fi
-if uname -s | grep -i "windows" > /dev/null ; then
-	MYARCH=windows-x86_64
+if [ -z "$NCPU" ]; then
+	NCPU=4
+	if uname -s | grep -i "linux" > /dev/null ; then
+		MYARCH=linux-x86_64
+		NCPU=`cat /proc/cpuinfo | grep -c -i processor`
+	fi
+	if uname -s | grep -i "darwin" > /dev/null ; then
+		MYARCH=darwin-x86_64
+	fi
+	if uname -s | grep -i "windows" > /dev/null ; then
+		MYARCH=windows-x86_64
+	fi
 fi
 
 $quick_rebuild || rm -r -f project/bin/* # New Android SDK introduced some lame-ass optimizations to the build system which we should take care about
