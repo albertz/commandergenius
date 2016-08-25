@@ -130,7 +130,7 @@ int ANDROID_ToggleFullScreen(_THIS, int fullscreen)
 	return 1;
 }
 
-enum { SDL_NUMMODES = 59 };
+enum { SDL_NUMMODES = 60 };
 static SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
 
 //#define SDL_modelist		(this->hidden->SDL_modelist)
@@ -350,7 +350,8 @@ int ANDROID_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	SDL_modelist[56]->w = 960; SDL_modelist[56]->h = 600; // For ScummVM 3x-mode
 	SDL_modelist[57]->w = 960; SDL_modelist[57]->h = 540; // Virtual wide-screen mode
 	SDL_modelist[58]->w = 720; SDL_modelist[58]->h = 400; // Virtual wide-screen mode
-	SDL_modelist[59] = NULL;
+	SDL_modelist[59]->w = 480; SDL_modelist[59]->h = 272; // PSP
+	SDL_modelist[60] = NULL;
 	// If you going to add another video mode, increase SDL_NUMMODES constant
 	
 	SDL_VideoInit_1_3(NULL, 0);
