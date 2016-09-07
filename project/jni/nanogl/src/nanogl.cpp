@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <dlfcn.h>
+
 
 //#include <cutils/log.h>
 
@@ -42,19 +42,34 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,__VA_ARGS__)
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG,__VA_ARGS__)
 #else
+#ifndef _MSC_VER
+#define LOGI(...) printf("I: "__VA_ARGS__);printf("\n")
+#define LOGD(...) if(DEBUG_NANO) {printf("D: "__VA_ARGS__);printf("\n");} 
+#define LOGE(...) printf("E: "__VA_ARGS__);printf("\n")
+#define LOGW(...) printf("W: "__VA_ARGS__);printf("\n")
+#else
+#define LOGI printf
+#define LOGD printf
+#define LOGE printf
+#define LOGW printf
 
-#define LOGI(...) printf("I: "__VA_ARGS__)
-#define LOGD(...) if(DEBUG_NANO) printf("D: "__VA_ARGS__) 
-#define LOGE(...) printf("E: "__VA_ARGS__)
-#define LOGW(...) printf("W: "__VA_ARGS__)
+#endif
+#endif
 
+#ifdef _WIN32
+#include <windows.h>
+#define dlopen(x,y) LoadLibraryA(x)
+#define dlsym(x,y) (void*)GetProcAddress((HINSTANCE)x,y)
+#define dlclose(x) FreeLibrary((HINSTANCE)x)
+#else
+#include <dlfcn.h>
 #endif
 
 
-#define GL_ENTRY(_r, _api, ...) #_api,
+//#define GL_ENTRY(_r, _api, ...) #_api,
 
 static char const * const gl_names[] = {
-    #include "gl_entries.in"
+    #include "funcnames.h"
     NULL
 };
 
@@ -66,27 +81,21 @@ GlESInterface* glEsImpl = NULL;
 
 extern void InitGLStructs();
 
-static void gl_unimplemented() { 
-	LOGE ("Called unimplemented OpenGL ES API\n"); 
+void APIENTRY gl_unimplemented(GLenum none) {
+#ifndef USE_CORE_PROFILE
+	LOGE ("Called unimplemented OpenGL ES API\n");
+#endif
 }
 
 void *nanoGL_GetProcAddress(const char *name)
 {
-#if defined(__MULTITEXTURE_SUPPORT__)
-	if (!strcmp(procname, "glMultiTexCoord2fARB"))
-	{
-		return (void*)&glMultiTexCoord2fARB;
-	}
-	else if (!strcmp(procname, "glActiveTextureARB"))
-	{
-		return (void*)&glActiveTexture;
-	}
-	else if (!strcmp(procname, "glClientActiveTextureARB"))
-	{
-		return (void*)&glClientActiveTexture;
-	}
+	void *addr = NULL;
+#ifdef XASH_SDL
+	addr = SDL_GL_GetProcAddress( name ); 
+	if( !addr )
 #endif
-	return dlsym(glesLib, name);
+	addr = dlsym(glesLib, name);
+	return addr;
 }
 
 static int CreateGlEsInterface( const char * name, void * lib, void * lib1, void * default_func )
@@ -112,6 +121,19 @@ static int CreateGlEsInterface( const char * name, void * lib, void * lib1, void
 		
 		f = dlsym(lib, *api); // try libGLESxx_CM.so
 
+#ifdef USE_CORE_PROFILE
+		// Hack: try ARB and EXT suffix
+		if (f == NULL) {
+			char namearb[256];
+			snprintf( namearb, 256, "%sARB", *api );
+			f = dlsym( lib, namearb );
+		}
+		if (f == NULL) {
+			char namearb[256];
+			snprintf( namearb, 256, "%sEXT", *api );
+			f = dlsym( lib, namearb );
+		}
+#endif
 		if (f == NULL) {
 			LOGW( "<%s> not found in %s. Trying libEGL.so.", *api, name); //driver);
 			
@@ -121,14 +143,24 @@ static int CreateGlEsInterface( const char * name, void * lib, void * lib1, void
 				
 				if ( f == NULL ) {
 					LOGE ( "<%s> not found in libEGL.so", *api);
-					f = default_func; //(void*)gl_unimplemented;
+                    if( glEsImpl->eglGetProcAddress && ( (void*)glEsImpl->eglGetProcAddress != (void*)gl_unimplemented ) )
+                        f = (void*)glEsImpl->eglGetProcAddress( *api );
+                    if(f == NULL)
+                        f = (void*)default_func; //(void*)gl_unimplemented;
+
 				}
 				else {
 					LOGD ("<%s> @ 0x%p\n", *api, f);
 				}
 			}
-			else 
-				f = default_func;
+			else
+			{
+				LOGE ( "libEGL.so not loaded!");
+                            if( glEsImpl->eglGetProcAddress && ( (void*)glEsImpl->eglGetProcAddress != (void*)gl_unimplemented ) )
+                                f = (void*)glEsImpl->eglGetProcAddress( *api );
+                if( !f )
+				f = (void*)default_func;
+			}
 		}
 		else {
 			LOGD ("<%s> @ 0x%p\n", *api, f);
@@ -136,7 +168,7 @@ static int CreateGlEsInterface( const char * name, void * lib, void * lib1, void
 			
 	    *ptr++ = f;
         api++;
-    }
+    }	
 
 	return 1;
 }
@@ -151,6 +183,60 @@ static int loadDriver(const char * name) {
 /**
  * Init
  */
+#ifdef _WIN32
+int nanoGL_Init()
+{
+	const char * lib1 = "opengl32.dll"; 	// Has both gl* & egl* funcs SDK < 1.5
+	const char * lib2 = "opengl32.dll"; 	// Only gl* funcs SDK >= 1.5
+	const char * lib3 = "opengl32.dll"; 		// Only egl* funcs SDK >= 1.5
+	const char * driver;
+	
+	// load lib
+	LOGI("nanoGL: Init loading driver %s\n", lib1);
+	//LOG (ANDROID_LOG_DEBUG, LOG_TAG, "nanoGL: Init loading driver %s\n", lib1);
+
+	if ( ! loadDriver(lib1) ) 
+	{
+		LOGE("Failed to load driver %s. Trying %s\n", lib1, lib2);
+
+		if ( ! loadDriver(lib2) ) {
+			LOGE ("Failed to load  %s.\n", lib2);
+			return 0;
+		}
+		else
+			driver = lib2;
+	}
+	else
+		driver = lib1;
+
+	void * eglLib;
+	
+	//if ( strcmp(driver, lib2) == 0 ) {
+		LOGD ("**** Will Load EGL subs from %s ****", lib3);
+		
+		eglLib = dlopen(lib3, RTLD_NOW | RTLD_LOCAL);
+		
+		if ( ! eglLib ) {
+			LOGE ( "Failed to load %s", lib3);
+		}
+	//}
+	
+	// Load API gl* for 1.5+  else egl* gl* 
+	//if (CreateGlEsInterface(driver, glesLib, eglLib, NULL) == -1)
+	if ( !CreateGlEsInterface(driver, glesLib, eglLib, (void *) gl_unimplemented) == -1)
+    {
+		// release lib
+		LOGE ( "CreateGlEsInterface failed.");
+
+		dlclose(glesLib);
+	    return 0;
+    }
+
+	// Init nanoGL
+	InitGLStructs();
+	return 1;
+}
+#else
 int nanoGL_Init()
 {
 	const char * lib1 = "libGLESv1_CM.so"; 	// Has both gl* & egl* funcs SDK < 1.5
@@ -199,21 +285,33 @@ int nanoGL_Init()
 	    return 0;
     }
 
+#ifdef __ANDROID__
+	// somewhy it does not initialize correctly
+	*((void**)&glEsImpl->glGenFramebuffers) = (void*)glEsImpl->eglGetProcAddress( "glGenFramebuffersOES" );
+	*((void**)&glEsImpl->glGenRenderbuffers) = (void*)glEsImpl->eglGetProcAddress( "glGenRenderbuffersOES" );
+	*((void**)&glEsImpl->glRenderbufferStorage) = (void*)glEsImpl->eglGetProcAddress( "glRenderbufferStorageOES" );
+	*((void**)&glEsImpl->glBindFramebuffer) = (void*)glEsImpl->eglGetProcAddress( "glBindFramebufferOES" );
+	*((void**)&glEsImpl->glBindRenderbuffer) = (void*)glEsImpl->eglGetProcAddress( "glBindRenderbufferOES" );
+	*((void**)&glEsImpl->glFramebufferTexture2D) = (void*)glEsImpl->eglGetProcAddress( "glFramebufferTexture2DOES" );
+	*((void**)&glEsImpl->glDeleteRenderbuffers) = (void*)glEsImpl->eglGetProcAddress( "glDeleteRenderbuffersOES" );
+	*((void**)&glEsImpl->glDeleteFramebuffers) = (void*)glEsImpl->eglGetProcAddress( "glDeleteFramebuffersOES" );
+	*((void**)&glEsImpl->glFramebufferRenderbuffer) = (void*)glEsImpl->eglGetProcAddress( "glFramebufferRenderbufferOES" );
+#endif
+
 	// Init nanoGL
 	InitGLStructs();
 	return 1;
 }
-
+#endif
 void nanoGL_Destroy()
 {
 	LOGD ("nanoGL_Destroy");
 	
 	if (glEsImpl) {
-        free( glEsImpl); 
+        free( glEsImpl);
         glEsImpl = NULL;
     }
 	
 	// release lib
 	dlclose(glesLib);
 }
-    
