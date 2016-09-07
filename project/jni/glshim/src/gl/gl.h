@@ -17,6 +17,10 @@
 #include <arm_neon.h>
 #endif
 
+#ifndef AliasExport
+#define AliasExport(name)   __attribute__((alias(name))) __attribute__((visibility("default")))
+#endif
+
 #ifndef GL_H
 #define GL_H
 
@@ -370,6 +374,10 @@ void glshim_glPushMatrix();
 void glshim_glPopMatrix();
 GLenum glshim_glGetError();
 
+void glshim_glPointParameteri(GLenum pname, GLint param);
+void glshim_glPointParameteriv(GLenum pname, const GLint * params);
+
+
 void glshim_glSecondaryColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 void glshim_glIndexPointer(GLenum type, GLsizei stride, const GLvoid * pointer);
 void glshim_glEdgeFlagPointer(GLsizei stride, const GLvoid * pointer);
@@ -385,6 +393,9 @@ void glshim_glMultMatrixf(const GLfloat * m);
 void glshim_glFogfv(GLenum pname, const GLfloat* params);
 
 void glshim_glStencilMaskSeparate(GLenum face, GLuint mask);
+
+void glshim_glMultiDrawArrays(GLenum mode, const GLint *first, const GLsizei *count, GLsizei primcount);
+void glshim_glMultiDrawElements( GLenum mode, GLsizei *count, GLenum type, const void * const *indices, GLsizei primcount);
 
 
 void flush();

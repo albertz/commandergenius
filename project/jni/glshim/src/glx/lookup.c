@@ -4,6 +4,9 @@
 #include "glx.h"
 
 #include "../gl/directstate.h"
+
+#define EXPORT __attribute__((visibility("default")))
+
 //#define DEBUG_ADDRESS
 
 extern int export_blendcolor;
@@ -42,7 +45,8 @@ void glXStub(void *x, ...) {
     return;
 }
 
-void *glXGetProcAddressARB(const char *name) {
+
+EXPORT void *glXGetProcAddressARB(const char *name) {
     LOAD_EGL(eglGetProcAddress);
 #ifdef DEBUG_ADDRESS
     static int cnt = 0;
@@ -494,6 +498,14 @@ void *glXGetProcAddressARB(const char *name) {
     _EX(glPixelStoref);
     STUB(glPrioritizeTextures);
     STUB(glSelectBuffer);   //TODO
+
+    _EX(glMultiDrawArrays);
+    _EXT(glMultiDrawArrays);
+    _EX(glMultiDrawElements);
+    _EXT(glMultiDrawElements);
+
+    _EX(glPointParameteri);
+    _EX(glPointParameteriv);
     
     STUB(glFogCoordPointer);
     /*STUB(glEdgeFlagPointerEXT);
@@ -607,6 +619,6 @@ void *glXGetProcAddressARB(const char *name) {
     return NULL;
 }
 
-void *glXGetProcAddress(const char *name) {
+EXPORT void *glXGetProcAddress(const char *name) {
     return glXGetProcAddressARB(name);
 }
