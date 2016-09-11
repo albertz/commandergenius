@@ -1,9 +1,11 @@
 #include <string>
 #include <vector>
+#include <stdio.h>
+
+#include <GLES3/gl3.h>
+
 #include <SDL.h>
 #include <SDL_image.h>
-
-#include "esUtil.h"
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -30,36 +32,166 @@ static void initSDL()
 		SDL_Quit();
 		exit(2);
 	}
-	SDL_WM_SetCaption("test", "test");
 }
 
-void loadShaders()
+static GLuint loadShader ( GLenum type, const char *shaderSrc )
 {
-	char vShaderStr[] =
-		"#version 300 es                            \n"
-		"precision mediump float;                   \n"
-		"layout(location = 0) in vec4 a_position;   \n"
-		"layout(location = 1) in vec2 a_texCoord;   \n"
-		"out vec2 v_texCoord;                       \n"
-		"void main()                                \n"
-		"{                                          \n"
-		"	gl_Position = a_position;               \n"
-		"	v_texCoord = a_texCoord;                \n"
-		"}                                          \n";
+	GLuint shader;
+	GLint compiled;
 
-	char fShaderStr[] =
+	// Create the shader object
+	shader = glCreateShader ( type );
+
+	if ( shader == 0 )
+	{
+		return 0;
+	}
+
+	// Load the shader source
+	glShaderSource ( shader, 1, &shaderSrc, NULL );
+
+	// Compile the shader
+	glCompileShader ( shader );
+
+	// Check the compile status
+	glGetShaderiv ( shader, GL_COMPILE_STATUS, &compiled );
+
+	if ( !compiled )
+	{
+		GLint infoLen = 0;
+
+		glGetShaderiv ( shader, GL_INFO_LOG_LENGTH, &infoLen );
+
+		if ( infoLen > 1 )
+		{
+			char *infoLog = (char *) malloc ( sizeof ( char ) * infoLen );
+
+			glGetShaderInfoLog ( shader, infoLen, NULL, infoLog );
+			printf ( "===========> Error compiling shader:\n");
+			printf ( "===========> %s\n", infoLog );
+
+			free ( infoLog );
+		}
+
+		glDeleteShader ( shader );
+		return 0;
+	}
+
+	return shader;
+
+}
+
+static GLuint loadProgram ( const char *vertShaderSrc, const char *fragShaderSrc )
+{
+	GLuint vertexShader;
+	GLuint fragmentShader;
+	GLuint programObject;
+	GLint linked;
+
+	// Load the vertex/fragment shaders
+	vertexShader = loadShader ( GL_VERTEX_SHADER, vertShaderSrc );
+
+	if ( vertexShader == 0 )
+	{
+		return 0;
+	}
+
+	fragmentShader = loadShader ( GL_FRAGMENT_SHADER, fragShaderSrc );
+
+	if ( fragmentShader == 0 )
+	{
+		glDeleteShader ( vertexShader );
+		return 0;
+	}
+
+	// Create the program object
+	programObject = glCreateProgram ( );
+
+	if ( programObject == 0 )
+	{
+		return 0;
+	}
+
+	glAttachShader ( programObject, vertexShader );
+	glAttachShader ( programObject, fragmentShader );
+
+	// Link the program
+	glLinkProgram ( programObject );
+
+	// Check the link status
+	glGetProgramiv ( programObject, GL_LINK_STATUS, &linked );
+
+	if ( !linked )
+	{
+		GLint infoLen = 0;
+
+		glGetProgramiv ( programObject, GL_INFO_LOG_LENGTH, &infoLen );
+
+		if ( infoLen > 1 )
+		{
+			char *infoLog = (char *) malloc ( sizeof ( char ) * infoLen );
+
+			glGetProgramInfoLog ( programObject, infoLen, NULL, infoLog );
+			printf ( "===========> Error linking program:\n" );
+			printf ( "===========> %s\n", infoLog );
+
+			free ( infoLog );
+		}
+
+		glDeleteProgram ( programObject );
+		return 0;
+	}
+
+	// Free up no longer needed shader resources
+	glDeleteShader ( vertexShader );
+	glDeleteShader ( fragmentShader );
+
+	return programObject;
+}
+
+static void initShaders()
+{
+	char *vertexShaderStr = NULL;
+	asprintf( &vertexShaderStr,
 		"#version 300 es                                     \n"
-		"precision mediump float;                            \n"
-		"in vec2 v_texCoord;                                 \n"
-		"layout(location = 0) out vec4 outColor;             \n"
+		"const mediump float screenWidthDiv = 2.0 / %d.0;    \n"
+		"const mediump float screenHeightDiv = 2.0 / %d.0;   \n"
+		"layout(location = 0) in mediump vec2 a_position;    \n"
+		"layout(location = 1) in mediump vec2 a_texCoord;    \n"
+		"out mediump vec2 v_texCoord;                        \n"
+		"void main()                                         \n"
+		"{                                                   \n"
+		"	gl_Position = vec4(                              \n"
+		"		a_position.x * screenWidthDiv - 1.0f,        \n"
+		"		1.0f - a_position.y * screenHeightDiv,       \n"
+		"		0, 1);                                       \n"
+		"	v_texCoord = a_texCoord;                         \n"
+		"}                                                   \n"
+		, screenWidth, screenHeight );
+
+	const char *fragmentShaderStr =
+		"#version 300 es                                     \n"
+		"in mediump vec2 v_texCoord;                         \n"
+		"layout(location = 0) out lowp vec4 outColor;        \n"
 		"uniform sampler2D s_texture;                        \n"
 		"void main()                                         \n"
 		"{                                                   \n"
 		"	outColor = texture( s_texture, v_texCoord );     \n"
 		"}                                                   \n";
 
+	printf("initShaders(): vertex shader:\n%s\n", vertexShaderStr);
+	printf("initShaders(): fragment shader:\n%s\n", fragmentShaderStr);
+
 	// Load the shaders and get a linked program object
-	drawTextureProgram = esLoadProgram ( vShaderStr, fShaderStr );
+	drawTextureProgram = loadProgram ( vertexShaderStr, fragmentShaderStr );
+	if (drawTextureProgram == 0)
+	{
+		printf("Could not init shaders\n");
+		SDL_Quit();
+		exit(2);
+	}
+
+	free(vertexShaderStr);
 
 	// Get the sampler location
 	drawTextureSamplerLocation = glGetUniformLocation ( drawTextureProgram, "s_texture" );
@@ -75,7 +207,7 @@ static void initGL()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glActiveTexture ( GL_TEXTURE0 );
 
-	loadShaders();
+	initShaders();
 }
 
 static void clearScreen()
@@ -85,10 +217,12 @@ static void clearScreen()
 
 struct Sprite {
 
-	Sprite(const char * path)
+
+	Sprite(const char * path, GLint wrap = GL_CLAMP_TO_EDGE)
 	{
 		w = h = texture = 0;
 		imagePath = path;
+		textureWrap = wrap;
 		loadTexture();
 	}
 
@@ -116,37 +250,17 @@ struct Sprite {
 		// GLES3 always supports non-power-of-two textures, no need to recalculate texture dimensions
 
 		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glTexImage2D(GL_TEXTURE_2D, 0, glFormat, w, h, 0, glFormat, GL_UNSIGNED_BYTE, pic->pixels);
 		SDL_FreeSurface(pic);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		disableRepeat();
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
 
 		return true;
-	}
-
-	void disableRepeat()
-	{
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	}
-
-	void enableRepeat()
-	{
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	}
-
-	void enableMirroredRepeat()
-	{
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 	}
 
 	void draw(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLfloat tex_x1 = 0.0f, GLfloat tex_y1 = 0.0f, GLfloat tex_x2 = 1.0f, GLfloat tex_y2 = 1.0f)
@@ -157,14 +271,14 @@ struct Sprite {
 		glUseProgram( drawTextureProgram );
 
 		GLfloat coords[] = {
-							x, y,                         // Position 0
-							tex_x1, tex_y1,               // TexCoord 0
-							x, y + width,                 // Position 1
-							tex_x1, tex_y2,               // TexCoord 1
-							x + height, y + width,        // Position 2
-							tex_x2, tex_y2,               // TexCoord 2
-							x + height, y,                // Position 3
-							tex_x2, tex_y1                // TexCoord 3
+			x, y,                         // Position 0
+			tex_x1, tex_y1,               // TexCoord 0
+			x, y + height,                // Position 1
+			tex_x1, tex_y2,               // TexCoord 1
+			x + width, y + height,        // Position 2
+			tex_x2, tex_y2,               // TexCoord 2
+			x + width, y,                 // Position 3
+			tex_x2, tex_y1                // TexCoord 3
 		};
 
 		// Load the vertex position
@@ -191,6 +305,7 @@ struct Sprite {
 	GLuint texture;
 	int w, h;
 	std::string imagePath;
+	GLint textureWrap;
 };
 
 int
@@ -205,10 +320,10 @@ main(int argc, char *argv[])
 		sprites.push_back(Sprite("element1.png"));
 		sprites.push_back(Sprite("element2.png"));
 		sprites.push_back(Sprite("element3.png"));
-		sprites.push_back(Sprite("stars.jpg"));
-		sprites.back().enableMirroredRepeat(); // Looks nice
+		//sprites.push_back(Sprite("stars.jpg", GL_REPEAT)); // Repeating tiles
+		sprites.push_back(Sprite("stars.jpg", GL_MIRRORED_REPEAT)); // Looks nice
 
-		int coords[][2] = { {0, 0},
+		float coords[][2] = { {0, 0},
 							{200, 0},
 							{300, 200},
 							{400, 300} };
@@ -219,7 +334,11 @@ main(int argc, char *argv[])
 		while ( ! SDL_GetKeyState(NULL)[SDLK_ESCAPE] ) // Exit by pressing Back button
 		{
 			// clearScreen(); // Do not clear screen, we will fill the screens with tiled background image instead
-			sprites[5].draw(0, 0, screenWidth, screenHeight, 0, 0, (float) screenWidth / sprites[5].w, (float) screenHeight / sprites[5].h);
+			sprites[5].draw(0, 0, screenWidth, screenHeight,
+							coords[0][0] / sprites[5].w * 3,
+							coords[0][0] / sprites[5].h * 2,
+							coords[0][0] / sprites[5].w * 3 + (float) screenWidth / sprites[5].w,
+							coords[0][0] / sprites[5].h * 2 + (float) screenHeight / sprites[5].h);
 
 			int mouseX = 0, mouseY = 0, buttons = 0;
 			buttons = SDL_GetMouseState(&mouseX, &mouseY);
@@ -229,6 +348,12 @@ main(int argc, char *argv[])
 			sprites[2].draw(coords[1][0], coords[1][1], sprites[2].w * pulse * 4, sprites[2].h * pulse * 4);
 			sprites[3].draw(coords[2][0], coords[2][1], sprites[3].w * pulse * 4, sprites[3].h * 2);
 			sprites[4].draw(coords[3][0], coords[3][1], sprites[4].w, sprites[4].h * pulse * 2);
+
+			sprites[1].draw(screenWidth / 2.0f - sprites[1].w / 2.0f, screenHeight / 2.0f - sprites[1].h / 2.0f);
+			sprites[1].draw(0 - sprites[1].w / 2.0f, 0 - sprites[1].h / 2.0f);
+			sprites[1].draw(screenWidth - sprites[1].w / 2.0f, screenHeight - sprites[1].h / 2.0f);
+			sprites[1].draw(0 - sprites[1].w / 2.0f, screenHeight - sprites[1].h / 2.0f);
+			sprites[1].draw(screenWidth - sprites[1].w / 2.0f, 0 - sprites[1].h / 2.0f);
 
 			SDL_GL_SwapBuffers();
 			SDL_Event event;
