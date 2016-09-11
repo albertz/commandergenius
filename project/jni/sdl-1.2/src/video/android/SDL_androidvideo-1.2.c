@@ -43,8 +43,6 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 
 #include <jni.h>
 #include <android/log.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
 #include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
@@ -60,6 +58,8 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 #else
 #define DEBUGOUT(...)
 #endif
+
+#include "SDL_opengles.h"
 
 #ifdef USE_GLSHIM
 #include <GL/gl.h>
@@ -493,8 +493,10 @@ SDL_Surface *ANDROID_SetVideoMode(_THIS, SDL_Surface *current,
 			HwSurfaceList[HwSurfaceCount-1] = current;
 			DEBUGOUT("ANDROID_SetVideoMode() HwSurfaceCount %d HwSurfaceList %p", HwSurfaceCount, HwSurfaceList);
 		}
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
 		glViewport(0, 0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
 		glOrthof(0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight, 0, 0, 1);
+#endif
 	}
 
 	/* Allocate the new pixel format for the screen */
@@ -1038,6 +1040,7 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			SDL_RenderCopy((struct SDL_Texture *)SDL_CurrentVideoSurface->hwdata, &rect, &dstrect);
 			int buttons = SDL_GetMouseState(NULL, NULL);
 			// Do it old-fashioned way with direct GL calls
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
 			glPushMatrix();
 			glLoadIdentity();
 			glOrthof( 0.0f, SDL_ANDROID_sFakeWindowWidth, SDL_ANDROID_sFakeWindowHeight, 0.0f, 0.0f, 1.0f );
@@ -1051,6 +1054,7 @@ static void ANDROID_FlipHWSurfaceInternal(int numrects, SDL_Rect *rects)
 			glDrawArrays(GL_LINE_LOOP, 0, 4);
 			glDisableClientState(GL_VERTEX_ARRAY);
 			glPopMatrix();
+#endif
 		}
 #ifdef VIDEO_DEBUG
 		if( SDL_ANDROID_VideoDebugRect.w > 0 )
@@ -1206,8 +1210,10 @@ void SDL_ANDROID_VideoContextRecreated()
 		SDL_PrivateAndroidSetDesktopMode(SDL_VideoWindow, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
 		SDL_SelectRenderer(SDL_VideoWindow); // Re-apply glOrtho() and blend modes
 		// Re-apply our custom 4:3 screen aspect ratio
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
 		glViewport(0, 0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sRealWindowHeight);
 		glOrthof(0, SDL_ANDROID_sRealWindowWidth, SDL_ANDROID_sWindowHeight, 0, 0, 1);
+#endif
 		for( i = 0; i < HwSurfaceCount; i++ )
 		{
 			// Allocate HW texture

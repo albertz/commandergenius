@@ -32,15 +32,14 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 #include <stdint.h>
 #include <math.h>
 #include <string.h> // for memset()
-#include <GLES/gl.h>
-#include <GLES/glext.h>
 #include <netinet/in.h>
+
+#include "SDL_opengles.h"
 
 #include "SDL_config.h"
 
 #include "SDL_version.h"
 
-//#include "SDL_opengles.h"
 #include "SDL_screenkeyboard.h"
 #include "../SDL_sysvideo.h"
 #include "SDL_androidvideo.h"
@@ -153,6 +152,8 @@ oldGlState;
 
 static inline void beginDrawingTex()
 {
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
+
 #ifndef SDL_TOUCHSCREEN_KEYBOARD_SAVE_RESTORE_OPENGL_STATE
 	// Make the video somehow work on emulator
 	oldGlState.texture2d = GL_TRUE;
@@ -170,7 +171,6 @@ static inline void beginDrawingTex()
 	// However GLES 1.1 spec defines all theese values, so it's a device fault for not implementing them
 	oldGlState.texture2d = glIsEnabled(GL_TEXTURE_2D);
 	glGetIntegerv(GL_ACTIVE_TEXTURE, &oldGlState.texunitId);
-	glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &oldGlState.clientTexunitId);
 #endif
 
 	//R_DumpOpenGlState();
@@ -186,7 +186,6 @@ static inline void beginDrawingTex()
 	*/
 
 	glActiveTexture(GL_TEXTURE0);
-	glClientActiveTexture(GL_TEXTURE0);
 
 #ifdef SDL_TOUCHSCREEN_KEYBOARD_SAVE_RESTORE_OPENGL_STATE
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldGlState.textureId);
@@ -195,15 +194,15 @@ static inline void beginDrawingTex()
 	oldGlState.blend = glIsEnabled(GL_BLEND);
 	glGetIntegerv(GL_BLEND_SRC, &oldGlState.blend1);
 	glGetIntegerv(GL_BLEND_DST, &oldGlState.blend2);
-	glGetBooleanv(GL_COLOR_ARRAY, &oldGlState.colorArray);
+	//glGetBooleanv(GL_COLOR_ARRAY, &oldGlState.colorArray);
 	// It's very unlikely that some app will use GL_TEXTURE_CROP_RECT_OES, so just skip it
 #endif
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glEnable(GL_TEXTURE_2D);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glEnable(GL_BLEND);
-	glDisable(GL_CULL_FACE);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisableClientState(GL_COLOR_ARRAY);
 	//static const GLfloat color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	//glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
@@ -213,27 +212,31 @@ static inline void beginDrawingTex()
 	//glDisableClientState(GL_NORMAL_ARRAY);
 	//glDisableClientState(GL_VERTEX_ARRAY);
 	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 }
 
 static inline void endDrawingTex()
 {
 	// Restore OpenGL state
-	if( oldGlState.texture2d == GL_FALSE )
-		glDisable(GL_TEXTURE_2D);
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
 	glBindTexture(GL_TEXTURE_2D, oldGlState.textureId);
-	glColor4f(oldGlState.color[0], oldGlState.color[1], oldGlState.color[2], oldGlState.color[3]);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
 	if( oldGlState.blend == GL_FALSE )
 		glDisable(GL_BLEND);
 	glBlendFunc(oldGlState.blend1, oldGlState.blend2);
 	glActiveTexture(oldGlState.texunitId);
-	glClientActiveTexture(oldGlState.clientTexunitId);
+
+	if( oldGlState.texture2d == GL_FALSE )
+		glDisable(GL_TEXTURE_2D);
+	glColor4f(oldGlState.color[0], oldGlState.color[1], oldGlState.color[2], oldGlState.color[3]);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldGlState.texEnvMode);
 	if( oldGlState.colorArray )
 		glEnableClientState(GL_COLOR_ARRAY);
+#endif
 }
 
 static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, int flipX, int flipY, float r, float g, float b, float a)
 {
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
 	GLint cropRect[4];
 
 	if( !dest->h || !dest->w )
@@ -269,6 +272,7 @@ static inline void drawCharTexFlip(GLTexture_t * tex, SDL_Rect * src, SDL_Rect *
 	}
 	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, cropRect);
 	glDrawTexiOES(dest->x + SDL_ANDROID_ScreenVisibleRect.x, SDL_ANDROID_sRealWindowHeight - dest->y - dest->h - SDL_ANDROID_ScreenVisibleRect.y, 0, dest->w, dest->h);
+#endif
 }
 
 static inline void drawCharTex(GLTexture_t * tex, SDL_Rect * src, SDL_Rect * dest, float r, float g, float b, float a)
@@ -1336,6 +1340,7 @@ extern DECLSPEC int SDL_ANDROID_ScreenKeyboardUpdateToNewVideoMode(int oldx, int
  */
 void R_DumpOpenGlState(void)
 {
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
 #define CAPABILITY( X ) {GL_ ## X, # X}
 	/* List taken from here: http://www.khronos.org/opengles/sdk/1.1/docs/man/glIsEnabled.xml */
 	const struct { GLenum idx; const char * text; } openGLCaps[] = {
@@ -1423,4 +1428,5 @@ void R_DumpOpenGlState(void)
 
 	glActiveTexture(activeTexUnit);
 	glClientActiveTexture(activeClientTexUnit);
+#endif
 }

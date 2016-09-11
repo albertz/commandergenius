@@ -830,8 +830,13 @@ else
 	ImmersiveMode=true
 fi
 
+GLESLib=-lGLESv1_CM
+GLESVersion=-DSDL_VIDEO_OPENGL_ES_VERSION=1
+
 if [ "$NeedGles2" = "y" ] ; then
 	NeedGles2=true
+	GLESLib=-lGLESv2
+	GLESVersion=-DSDL_VIDEO_OPENGL_ES_VERSION=2
 else
 	NeedGles2=false
 	$SEDI "/==GLES2==/ d" project/AndroidManifest.xml
@@ -839,6 +844,8 @@ fi
 
 if [ "$NeedGles3" = "y" ] ; then
 	NeedGles3=true
+	GLESLib=-lGLESv3
+	GLESVersion=-DSDL_VIDEO_OPENGL_ES_VERSION=3
 else
 	NeedGles3=false
 	$SEDI "/==GLES3==/ d" project/AndroidManifest.xml
@@ -922,6 +929,7 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^APPLICATION_ADDITIONAL_CFLAGS :=.*^APPLICATION_ADDITIONAL_CFLAGS := $AppCflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_CPPFLAGS :=.*^APPLICATION_ADDITIONAL_CPPFLAGS := $AppCppflags^" | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
+	sed "s^APPLICATION_GLES_LIBRARY :=.*^APPLICATION_GLES_LIBRARY := $GLESLib^" | \
 	sed "s^APPLICATION_OVERLAPS_SYSTEM_HEADERS :=.*^APPLICATION_OVERLAPS_SYSTEM_HEADERS := $AppOverlapsSystemHeaders^" | \
 	sed "s^USE_GLSHIM :=.*^USE_GLSHIM := $UseGlshim^" | \
 	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := \
@@ -933,7 +941,8 @@ cat project/jni/SettingsTemplate.mk | \
 		$CompatibilityHacksSlowCompatibleEventQueue \
 		$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState \
 		$CompatibilityHacksProperUsageOfSDL_UpdateRects \
-		$UseGlshimCFlags^" | \
+		$UseGlshimCFlags \
+		$GLESVersion^" | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
 	sed "s^APPLICATION_BUILD_EXCLUDE :=.*^APPLICATION_BUILD_EXCLUDE := $AppBuildExclude^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \

@@ -3184,7 +3184,6 @@ SDL_bool
 SDL_GL_ExtensionSupported(const char *extension)
 {
 #if SDL_VIDEO_OPENGL || SDL_VIDEO_OPENGL_ES
-    const GLubyte *(APIENTRY * glGetStringFunc) (GLenum);
     const char *extensions;
     const char *start;
     const char *where, *terminator;
@@ -3200,12 +3199,7 @@ SDL_GL_ExtensionSupported(const char *extension)
         return SDL_FALSE;
     }
     /* Lookup the available extensions */
-    glGetStringFunc = SDL_GL_GetProcAddress("glGetString");
-    if (glGetStringFunc) {
-        extensions = (const char *) glGetStringFunc(GL_EXTENSIONS);
-    } else {
-        extensions = NULL;
-    }
+    extensions = (const char *) glGetString(GL_EXTENSIONS);
     if (!extensions) {
         return SDL_FALSE;
     }

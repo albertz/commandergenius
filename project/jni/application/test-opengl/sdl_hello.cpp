@@ -185,53 +185,54 @@ main(int argc, char *argv[])
 
 		while ( ! SDL_GetKeyState(NULL)[SDLK_ESCAPE] ) // Exit by pressing Back button
 		{
-		clearScreen();
-		int mouseX = 0, mouseY = 0, buttons = 0;
-		buttons = SDL_GetMouseState(&mouseX, &mouseY);
+			clearScreen();
+			int mouseX = 0, mouseY = 0, buttons = 0;
+			buttons = SDL_GetMouseState(&mouseX, &mouseY);
 
-		sprites[0].draw(mouseX - sprites[0].w/2, mouseY - sprites[0].h/2, sprites[0].w, sprites[0].h, buttons ? 0 : 1, 1, 1, pulse);
+			sprites[1].draw(coords[0][0], coords[0][1]);
+			sprites[2].draw(coords[1][0], coords[1][1], sprites[2].w * pulse * 4, sprites[2].h * pulse * 4);
+			sprites[3].draw(coords[2][0], coords[2][1], sprites[3].w * pulse * 4, sprites[3].h * 2);
+			sprites[4].draw(coords[3][0], coords[3][1], sprites[4].w, sprites[4].h * pulse * 2);
+			sprites[2].draw(coords[1][0] + 300, coords[1][1] + sprites[2].h * pulse * 3, sprites[2].w * 3, sprites[2].h * 3, pulse, pulse, 1.0f - pulse );
 
-		sprites[1].draw(coords[0][0], coords[0][1]);
-		sprites[2].draw(coords[1][0], coords[1][1], sprites[2].w * pulse * 4, sprites[2].h * pulse * 4);
-		sprites[3].draw(coords[2][0], coords[2][1], sprites[3].w * pulse * 4, sprites[3].h * 2);
-		sprites[4].draw(coords[3][0], coords[3][1], sprites[4].w, sprites[4].h * pulse * 2);
+			sprites[0].draw(mouseX - sprites[0].w/2, mouseY - sprites[0].h/2, sprites[0].w, sprites[0].h, buttons ? 0 : 1, 1, 1, pulse);
 
-		SDL_GL_SwapBuffers();
-		SDL_Event event;
-		while( SDL_PollEvent(&event) )
-		{
-			if(event.type == SDL_VIDEORESIZE)
+			SDL_GL_SwapBuffers();
+			SDL_Event event;
+			while( SDL_PollEvent(&event) )
 			{
-			// Reload textures to OpenGL
-			initGL();
-			for(int i = 0; i < sprites.size(); i++)
-				sprites[i].loadTexture();
+				if(event.type == SDL_VIDEORESIZE)
+				{
+				// Reload textures to OpenGL
+				initGL();
+				for(int i = 0; i < sprites.size(); i++)
+					sprites[i].loadTexture();
+				}
+				if(event.type == SDL_KEYUP || event.type == SDL_KEYDOWN)
+				{
+					__android_log_print(ANDROID_LOG_INFO, "Hello", "SDL key event: evt %s state %s key %4d %12s scancode %4d mod %2d unicode %d", event.type == SDL_KEYUP ? "UP	 " : "DOWN" , event.key.state == SDL_PRESSED ? "PRESSED " : "RELEASED", (int)event.key.keysym.sym, SDL_GetKeyName(event.key.keysym.sym), (int)event.key.keysym.scancode, (int)event.key.keysym.mod, (int)event.key.keysym.unicode);
+					if(event.key.keysym.sym == SDLK_ESCAPE)
+						return 0;
+				}
 			}
-			if(event.type == SDL_KEYUP || event.type == SDL_KEYDOWN)
+
+			// Some kinda animation
+
+			pulse += pulseChange;
+			if(pulse > 1.0f)
+				pulseChange = -0.01f;
+			if(pulse < 0)
+				pulseChange = 0.01f;
+
+			for(int i = 0; i < 4; i++)
 			{
-				__android_log_print(ANDROID_LOG_INFO, "Hello", "SDL key event: evt %s state %s key %4d %12s scancode %4d mod %2d unicode %d", event.type == SDL_KEYUP ? "UP	 " : "DOWN" , event.key.state == SDL_PRESSED ? "PRESSED " : "RELEASED", (int)event.key.keysym.sym, SDL_GetKeyName(event.key.keysym.sym), (int)event.key.keysym.scancode, (int)event.key.keysym.mod, (int)event.key.keysym.unicode);
-				if(event.key.keysym.sym == SDLK_ESCAPE)
-					return 0;
+				coords[i][0] += anim;
+				coords[i][1] += anim;
 			}
-		}
-
-		// Some kinda animation
-
-		pulse += pulseChange;
-		if(pulse > 1.0f)
-			pulseChange = -0.01f;
-		if(pulse < 0)
-			pulseChange = 0.01f;
-
-		for(int i = 0; i < 4; i++)
-		{
-			coords[i][0] += anim;
-			coords[i][1] += anim;
-		}
-		if( coords[0][0] < 0 )
-			anim = 1;
-		if( coords[3][1] > screenHeight )
-			anim = -1;
+			if( coords[0][0] < 0 )
+				anim = 1;
+			if( coords[3][1] > screenHeight )
+				anim = -1;
 		}
 
 		SDL_Quit();

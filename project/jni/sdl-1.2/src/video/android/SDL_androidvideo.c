@@ -27,13 +27,13 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 
 #include <jni.h>
 #include <android/log.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
 #include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
 #include <math.h>
 #include <string.h> // for memset()
+
+#include "SDL_opengles.h"
 
 #include "SDL_config.h"
 #include "SDL_version.h"
@@ -124,7 +124,7 @@ static inline JNIEnv *GetJavaEnv(void)
 {
 	JavaVM *vm = SDL_ANDROID_JavaVM();
 	JNIEnv *ret = NULL;
-	(*vm)->GetEnv(vm, &ret, JNI_VERSION_1_6);
+	(*vm)->GetEnv(vm, (void **) &ret, JNI_VERSION_1_6);
 	return ret;
 }
 
@@ -134,6 +134,7 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 	if( !glContextLost )
 	{
 		// Clear part of screen not used by SDL - on Android the screen contains garbage after each frame
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
 		if( SDL_ANDROID_ForceClearScreenRectAmount > 0 )
 		{
 			int i;
@@ -157,7 +158,7 @@ int SDL_ANDROID_CallJavaSwapBuffers()
 			glDisableClientState(GL_VERTEX_ARRAY);
 			glPopMatrix();
 		}
-
+#endif
 		SDL_ANDROID_drawTouchscreenKeyboard();
 	}
 

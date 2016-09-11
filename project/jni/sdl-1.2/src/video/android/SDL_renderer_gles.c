@@ -158,9 +158,6 @@ typedef struct
     SDL_bool GL_OES_draw_texture_supported;
 
     /* OpenGL ES functions */
-#define SDL_PROC(ret,func,params) ret (APIENTRY *func) params;
-#include "SDL_glesfuncs.h"
-#undef SDL_PROC
 
 } GLES_RenderData;
 
@@ -195,12 +192,6 @@ GLES_SetError(const char *prefix, GLenum result)
     case GL_INVALID_OPERATION:
         error = "GL_INVALID_OPERATION";
         break;
-    case GL_STACK_OVERFLOW:
-        error = "GL_STACK_OVERFLOW";
-        break;
-    case GL_STACK_UNDERFLOW:
-        error = "GL_STACK_UNDERFLOW";
-        break;
     case GL_OUT_OF_MEMORY:
         error = "GL_OUT_OF_MEMORY";
         break;
@@ -214,12 +205,6 @@ GLES_SetError(const char *prefix, GLenum result)
 static int
 GLES_LoadFunctions(GLES_RenderData * data)
 {
-
-#define SDL_PROC(ret,func,params) \
-    data->func = func;
-#include "SDL_glesfuncs.h"
-#undef SDL_PROC
-
     return 0;
 }
 
@@ -342,15 +327,15 @@ GLES_CreateRenderer(SDL_Window * window, Uint32 flags)
 #endif
 #endif
 
-    data->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
     renderer->info.max_texture_width = value;
-    data->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
     renderer->info.max_texture_height = value;
 
     /* Set up parameters for rendering */
     data->blendMode = -1;
-    data->glDisable(GL_DEPTH_TEST);
-    data->glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     data->updateSize = SDL_TRUE;
 
     return renderer;
@@ -359,7 +344,7 @@ GLES_CreateRenderer(SDL_Window * window, Uint32 flags)
 static int
 GLES_ActivateRenderer(SDL_Renderer * renderer)
 {
-
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
     GLES_RenderData *data = (GLES_RenderData *) renderer->driverdata;
     SDL_Window *window = renderer->window;
 
@@ -369,26 +354,27 @@ GLES_ActivateRenderer(SDL_Renderer * renderer)
 
     /* Set up parameters for rendering */
     data->blendMode = -1;
-    data->glDisable(GL_DEPTH_TEST);
-    data->glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     data->updateSize = SDL_TRUE;
 
     if (data->updateSize) {
-        data->glMatrixMode(GL_PROJECTION);
-        data->glLoadIdentity();
-        data->glMatrixMode(GL_MODELVIEW);
-        data->glLoadIdentity();
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
 #if SDL_VIDEO_RENDER_RESIZE
-        data->glViewport(0, 0, window->display->desktop_mode.w, window->display->desktop_mode.h);
-        data->glOrthof(0.0, (GLfloat) window->display->desktop_mode.w, (GLfloat) window->display->desktop_mode.h,
+        glViewport(0, 0, window->display->desktop_mode.w, window->display->desktop_mode.h);
+        glOrthof(0.0, (GLfloat) window->display->desktop_mode.w, (GLfloat) window->display->desktop_mode.h,
                        0.0, 0.0, 1.0);
 #else
-        data->glViewport(0, 0, window->w, window->h);
-        data->glOrthof(0.0, (GLfloat) window->w, (GLfloat) window->h, 
+        glViewport(0, 0, window->w, window->h);
+        glOrthof(0.0, (GLfloat) window->w, (GLfloat) window->h, 
                        0.0, 0.0, 1.0);
 #endif
         data->updateSize = SDL_FALSE;
     }
+#endif
     return 0;
 }
 
@@ -475,9 +461,9 @@ GLES_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
 
     texture->driverdata = data;
 
-    renderdata->glGetError();
-    renderdata->glEnable(GL_TEXTURE_2D);
-    renderdata->glGenTextures(1, &data->texture);
+    glGetError();
+    glEnable(GL_TEXTURE_2D);
+    glGenTextures(1, &data->texture);
 
     data->type = GL_TEXTURE_2D;
     /* no NPOV textures allowed in OpenGL ES (yet) */
@@ -491,21 +477,21 @@ GLES_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
 
     data->format = format;
     data->formattype = type;
-    renderdata->glBindTexture(data->type, data->texture);
-    renderdata->glTexParameteri(data->type, GL_TEXTURE_MIN_FILTER,
+    glBindTexture(data->type, data->texture);
+    glTexParameteri(data->type, GL_TEXTURE_MIN_FILTER,
                                 GL_NEAREST);
-    renderdata->glTexParameteri(data->type, GL_TEXTURE_MAG_FILTER,
+    glTexParameteri(data->type, GL_TEXTURE_MAG_FILTER,
                                 GL_NEAREST);
-    renderdata->glTexParameteri(data->type, GL_TEXTURE_WRAP_S,
+    glTexParameteri(data->type, GL_TEXTURE_WRAP_S,
                                 GL_CLAMP_TO_EDGE);
-    renderdata->glTexParameteri(data->type, GL_TEXTURE_WRAP_T,
+    glTexParameteri(data->type, GL_TEXTURE_WRAP_T,
                                 GL_CLAMP_TO_EDGE);
 
-    renderdata->glTexImage2D(data->type, 0, internalFormat, texture_w,
+    glTexImage2D(data->type, 0, internalFormat, texture_w,
                              texture_h, 0, format, type, NULL);
-    renderdata->glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_2D);
 
-    result = renderdata->glGetError();
+    result = glGetError();
     if (result != GL_NO_ERROR) {
         GLES_SetError("glTexImage2D()", result);
         return -1;
@@ -545,8 +531,8 @@ SetupTextureUpdate(GLES_RenderData * renderdata, SDL_Texture * texture,
                    int pitch)
 {
     GLES_TextureData *data = (GLES_TextureData *) texture->driverdata;
-    renderdata->glBindTexture(data->type, data->texture);
-    renderdata->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glBindTexture(data->type, data->texture);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 }
 
 static int
@@ -609,8 +595,8 @@ GLES_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
     void * temp_ptr;
     int i;
 
-    renderdata->glGetError();
-    renderdata->glEnable(data->type);
+    glGetError();
+    glEnable(data->type);
     SetupTextureUpdate(renderdata, texture, pitch);
 
     if( rect->w * bpp == pitch ) {
@@ -626,7 +612,7 @@ GLES_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
          }
     }
 
-    renderdata->glTexSubImage2D(data->type, 0, rect->x, rect->y, rect->w,
+    glTexSubImage2D(data->type, 0, rect->x, rect->y, rect->w,
                                 rect->h, data->format, data->formattype,
                                 temp_buffer);
 
@@ -634,8 +620,8 @@ GLES_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
         SDL_free(temp_buffer);
     }
 
-    renderdata->glDisable(data->type);
-    result = renderdata->glGetError();
+    glDisable(data->type);
+    result = glGetError();
     if (result != GL_NO_ERROR) {
         GLES_SetError("glTexSubImage2D()", result);
         return -1;
@@ -681,52 +667,55 @@ GLES_DirtyTexture(SDL_Renderer * renderer, SDL_Texture * texture,
 static void
 GLES_SetBlendMode(GLES_RenderData * data, int blendMode, int isprimitive)
 {
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
     if (blendMode != data->blendMode) {
         switch (blendMode) {
         case SDL_BLENDMODE_NONE:
-            data->glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-            data->glDisable(GL_BLEND);
+            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+            glDisable(GL_BLEND);
             break;
         case SDL_BLENDMODE_MASK:
             if (isprimitive) {
-                data->glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-                data->glDisable(GL_BLEND);
+                glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+                glDisable(GL_BLEND);
                 /* The same as SDL_BLENDMODE_NONE */
                 blendMode = SDL_BLENDMODE_NONE;
                 break;
             }
             /* fall through */
         case SDL_BLENDMODE_BLEND:
-            data->glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-            data->glEnable(GL_BLEND);
-            data->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
         case SDL_BLENDMODE_ADD:
-            data->glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-            data->glEnable(GL_BLEND);
-            data->glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
             break;
         case SDL_BLENDMODE_MOD:
-            data->glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-            data->glEnable(GL_BLEND);
-            data->glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ZERO, GL_SRC_COLOR);
             break;
         }
         data->blendMode = blendMode;
     }
+#endif
 }
 
 static int
 GLES_RenderDrawPoints(SDL_Renderer * renderer, const SDL_Point * points,
                       int count)
 {
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
     GLES_RenderData *data = (GLES_RenderData *) renderer->driverdata;
     int i;
     GLshort *vertices;
 
     GLES_SetBlendMode(data, renderer->blendMode, 1);
 
-    data->glColor4f((GLfloat) renderer->r * inv255f,
+    glColor4f((GLfloat) renderer->r * inv255f,
                     (GLfloat) renderer->g * inv255f,
                     (GLfloat) renderer->b * inv255f,
                     (GLfloat) renderer->a * inv255f);
@@ -736,12 +725,12 @@ GLES_RenderDrawPoints(SDL_Renderer * renderer, const SDL_Point * points,
         vertices[2*i+0] = (GLshort)points[i].x;
         vertices[2*i+1] = (GLshort)points[i].y;
     }
-    data->glVertexPointer(2, GL_SHORT, 0, vertices);
-    data->glEnableClientState(GL_VERTEX_ARRAY);
-    data->glDrawArrays(GL_POINTS, 0, count);
-    data->glDisableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_SHORT, 0, vertices);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDrawArrays(GL_POINTS, 0, count);
+    glDisableClientState(GL_VERTEX_ARRAY);
     SDL_stack_free(vertices);
-
+#endif
     return 0;
 }
 
@@ -749,13 +738,14 @@ static int
 GLES_RenderDrawLines(SDL_Renderer * renderer, const SDL_Point * points,
                      int count)
 {
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
     GLES_RenderData *data = (GLES_RenderData *) renderer->driverdata;
     int i;
     GLshort *vertices;
 
     GLES_SetBlendMode(data, renderer->blendMode, 1);
 
-    data->glColor4f((GLfloat) renderer->r * inv255f,
+    glColor4f((GLfloat) renderer->r * inv255f,
                     (GLfloat) renderer->g * inv255f,
                     (GLfloat) renderer->b * inv255f,
                     (GLfloat) renderer->a * inv255f);
@@ -765,19 +755,19 @@ GLES_RenderDrawLines(SDL_Renderer * renderer, const SDL_Point * points,
         vertices[2*i+0] = (GLshort)points[i].x;
         vertices[2*i+1] = (GLshort)points[i].y;
     }
-    data->glVertexPointer(2, GL_SHORT, 0, vertices);
-    data->glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_SHORT, 0, vertices);
+    glEnableClientState(GL_VERTEX_ARRAY);
     if (count > 2 && 
         points[0].x == points[count-1].x && points[0].y == points[count-1].y) {
         /* GL_LINE_LOOP takes care of the final segment */
         --count;
-        data->glDrawArrays(GL_LINE_LOOP, 0, count);
+        glDrawArrays(GL_LINE_LOOP, 0, count);
     } else {
-        data->glDrawArrays(GL_LINE_STRIP, 0, count);
+        glDrawArrays(GL_LINE_STRIP, 0, count);
     }
-    data->glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
     SDL_stack_free(vertices);
-
+#endif
     return 0;
 }
 
@@ -785,17 +775,18 @@ static int
 GLES_RenderDrawRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
                      int count)
 {
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
     GLES_RenderData *data = (GLES_RenderData *) renderer->driverdata;
     int i;
 
     GLES_SetBlendMode(data, renderer->blendMode, 1);
 
-    data->glColor4f((GLfloat) renderer->r * inv255f,
+    glColor4f((GLfloat) renderer->r * inv255f,
                     (GLfloat) renderer->g * inv255f,
                     (GLfloat) renderer->b * inv255f,
                     (GLfloat) renderer->a * inv255f);
 
-    data->glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_VERTEX_ARRAY);
     for (i = 0; i < count; ++i) {
         const SDL_Rect *rect = rects[i];
         GLshort minx = rect->x;
@@ -812,11 +803,11 @@ GLES_RenderDrawRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
         vertices[6] = maxx;
         vertices[7] = maxy;
 
-        data->glVertexPointer(2, GL_SHORT, 0, vertices);
-        data->glDrawArrays(GL_LINE_LOOP, 0, 4);
+        glVertexPointer(2, GL_SHORT, 0, vertices);
+        glDrawArrays(GL_LINE_LOOP, 0, 4);
     }
-    data->glDisableClientState(GL_VERTEX_ARRAY);
-
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
     return 0;
 }
 
@@ -824,17 +815,18 @@ static int
 GLES_RenderFillRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
                      int count)
 {
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
     GLES_RenderData *data = (GLES_RenderData *) renderer->driverdata;
     int i;
 
     GLES_SetBlendMode(data, renderer->blendMode, 1);
 
-    data->glColor4f((GLfloat) renderer->r * inv255f,
+    glColor4f((GLfloat) renderer->r * inv255f,
                     (GLfloat) renderer->g * inv255f,
                     (GLfloat) renderer->b * inv255f,
                     (GLfloat) renderer->a * inv255f);
 
-    data->glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_VERTEX_ARRAY);
     for (i = 0; i < count; ++i) {
         const SDL_Rect *rect = rects[i];
         GLshort minx = rect->x;
@@ -851,11 +843,11 @@ GLES_RenderFillRects(SDL_Renderer * renderer, const SDL_Rect ** rects,
         vertices[6] = maxx;
         vertices[7] = maxy;
 
-        data->glVertexPointer(2, GL_SHORT, 0, vertices);
-        data->glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glVertexPointer(2, GL_SHORT, 0, vertices);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
-    data->glDisableClientState(GL_VERTEX_ARRAY);
-
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
     return 0;
 }
 
@@ -863,7 +855,7 @@ static int
 GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
                 const SDL_Rect * srcrect, const SDL_Rect * dstrect)
 {
-
+#if SDL_VIDEO_OPENGL_ES_VERSION == 1
     GLES_RenderData *data = (GLES_RenderData *) renderer->driverdata;
     GLES_TextureData *texturedata = (GLES_TextureData *) texture->driverdata;
     int minx, miny, maxx, maxy;
@@ -872,7 +864,7 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
     void *temp_buffer;          /* used for reformatting dirty rect pixels */
     void *temp_ptr;
 
-    data->glEnable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D);
 
     if (texturedata->dirty.list) {
         SDL_DirtyRect *dirty;
@@ -882,7 +874,7 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
 
         SetupTextureUpdate(data, texture, pitch);
 
-        data->glBindTexture(texturedata->type, texturedata->texture);
+        glBindTexture(texturedata->type, texturedata->texture);
         for (dirty = texturedata->dirty.list; dirty; dirty = dirty->next) {
             SDL_Rect *rect = &dirty->rect;
             pixels =
@@ -906,7 +898,7 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
                 }
             }
 
-            data->glTexSubImage2D(texturedata->type, 0, rect->x, rect->y,
+            glTexSubImage2D(texturedata->type, 0, rect->x, rect->y,
                                   rect->w, rect->h, texturedata->format,
                                   texturedata->formattype, temp_buffer);
 
@@ -917,15 +909,15 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
         SDL_ClearDirtyRects(&texturedata->dirty);
     }
 
-    data->glBindTexture(texturedata->type, texturedata->texture);
+    glBindTexture(texturedata->type, texturedata->texture);
 
     if (texture->modMode) {
-        data->glColor4f((GLfloat) texture->r * inv255f,
+        glColor4f((GLfloat) texture->r * inv255f,
                         (GLfloat) texture->g * inv255f,
                         (GLfloat) texture->b * inv255f,
                         (GLfloat) texture->a * inv255f);
     } else {
-        data->glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     GLES_SetBlendMode(data, texture->blendMode, 0);
@@ -933,16 +925,16 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
     switch (texture->scaleMode) {
     case SDL_SCALEMODE_NONE:
     case SDL_SCALEMODE_FAST:
-        data->glTexParameteri(texturedata->type, GL_TEXTURE_MIN_FILTER,
+        glTexParameteri(texturedata->type, GL_TEXTURE_MIN_FILTER,
                               GL_NEAREST);
-        data->glTexParameteri(texturedata->type, GL_TEXTURE_MAG_FILTER,
+        glTexParameteri(texturedata->type, GL_TEXTURE_MAG_FILTER,
                               GL_NEAREST);
         break;
     case SDL_SCALEMODE_SLOW:
     case SDL_SCALEMODE_BEST:
-        data->glTexParameteri(texturedata->type, GL_TEXTURE_MIN_FILTER,
+        glTexParameteri(texturedata->type, GL_TEXTURE_MIN_FILTER,
                               GL_LINEAR);
-        data->glTexParameteri(texturedata->type, GL_TEXTURE_MAG_FILTER,
+        glTexParameteri(texturedata->type, GL_TEXTURE_MAG_FILTER,
                               GL_LINEAR);
         break;
     }
@@ -955,10 +947,10 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
         cropRect[1] = srcrect->y + srcrect->h;
         cropRect[2] = srcrect->w;
         cropRect[3] = -srcrect->h;
-        data->glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES,
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES,
                                cropRect);
         //__android_log_print(ANDROID_LOG_INFO, "libSDL", "GLES_RenderCopy glDrawTexiOES(%d, %d, %d, %d) cropRect %d:%d:%d:%d", dstrect->x, window->display->desktop_mode.h - dstrect->y - dstrect->h, dstrect->w, dstrect->h, cropRect[0], cropRect[1], cropRect[2], cropRect[3]);
-        data->glDrawTexiOES(dstrect->x,
+        glDrawTexiOES(dstrect->x,
 #if SDL_VIDEO_RENDER_RESIZE
                             window->display->desktop_mode.h - dstrect->y - dstrect->h,
 #else
@@ -1002,17 +994,17 @@ GLES_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture,
         texCoords[6] = maxu;
         texCoords[7] = maxv;
 
-        data->glVertexPointer(2, GL_SHORT, 0, vertices);
-        data->glEnableClientState(GL_VERTEX_ARRAY);
-        data->glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
-        data->glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        data->glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        data->glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        data->glDisableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(2, GL_SHORT, 0, vertices);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
     }
 
-    data->glDisable(GL_TEXTURE_2D);
-
+    glDisable(GL_TEXTURE_2D);
+#endif
     return 0;
 }
 
