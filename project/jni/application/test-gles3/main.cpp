@@ -154,11 +154,11 @@ static void initShaders()
 	char *vertexShaderStr = NULL;
 	asprintf( &vertexShaderStr,
 		"#version 300 es                                     \n"
-		"const mediump float screenWidthDiv = 2.0 / %d.0;    \n"
-		"const mediump float screenHeightDiv = 2.0 / %d.0;   \n"
-		"layout(location = 0) in mediump vec2 a_position;    \n"
-		"layout(location = 1) in mediump vec2 a_texCoord;    \n"
-		"out mediump vec2 v_texCoord;                        \n"
+		"const highp float screenWidthDiv = 2.0 / %d.0;      \n"
+		"const highp float screenHeightDiv = 2.0 / %d.0;     \n"
+		"layout(location = 0) in highp vec2 a_position;      \n"
+		"layout(location = 1) in highp vec2 a_texCoord;      \n"
+		"out highp vec2 v_texCoord;                          \n"
 		"void main()                                         \n"
 		"{                                                   \n"
 		"	gl_Position = vec4(                              \n"
@@ -171,7 +171,7 @@ static void initShaders()
 
 	const char *fragmentShaderStr =
 		"#version 300 es                                     \n"
-		"in mediump vec2 v_texCoord;                         \n"
+		"in highp vec2 v_texCoord;                           \n"
 		"layout(location = 0) out lowp vec4 outColor;        \n"
 		"uniform sampler2D s_texture;                        \n"
 		"void main()                                         \n"
