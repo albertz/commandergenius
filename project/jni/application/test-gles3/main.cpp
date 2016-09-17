@@ -158,7 +158,9 @@ static void initShaders()
 		"const highp float screenHeightDiv = 2.0 / %d.0;     \n"
 		"layout(location = 0) in highp vec2 a_position;      \n"
 		"layout(location = 1) in highp vec2 a_texCoord;      \n"
+		"layout(location = 2) in lowp vec4 a_color;          \n"
 		"out highp vec2 v_texCoord;                          \n"
+		"out lowp vec4 v_color;                              \n"
 		"void main()                                         \n"
 		"{                                                   \n"
 		"	gl_Position = vec4(                              \n"
@@ -166,18 +168,20 @@ static void initShaders()
 		"		1.0f - a_position.y * screenHeightDiv,       \n"
 		"		0, 1);                                       \n"
 		"	v_texCoord = a_texCoord;                         \n"
+		"	v_color = a_color;                               \n"
 		"}                                                   \n"
 		, screenWidth, screenHeight );
 
 	const char *fragmentShaderStr =
-		"#version 300 es                                     \n"
-		"in highp vec2 v_texCoord;                           \n"
-		"layout(location = 0) out lowp vec4 outColor;        \n"
-		"uniform sampler2D s_texture;                        \n"
-		"void main()                                         \n"
-		"{                                                   \n"
-		"	outColor = texture( s_texture, v_texCoord );     \n"
-		"}                                                   \n";
+		"#version 300 es                                               \n"
+		"in highp vec2 v_texCoord;                                     \n"
+		"in lowp vec4 v_color;                                         \n"
+		"layout(location = 0) out lowp vec4 outColor;                  \n"
+		"uniform sampler2D s_texture;                                  \n"
+		"void main()                                                   \n"
+		"{                                                             \n"
+		"	outColor = texture( s_texture, v_texCoord ) * v_color;     \n"
+		"}                                                             \n";
 
 	printf("initShaders(): vertex shader:\n%s\n", vertexShaderStr);
 	printf("initShaders(): fragment shader:\n%s\n", fragmentShaderStr);
@@ -263,7 +267,9 @@ struct Sprite {
 		return true;
 	}
 
-	void draw(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLfloat tex_x1 = 0.0f, GLfloat tex_y1 = 0.0f, GLfloat tex_x2 = 1.0f, GLfloat tex_y2 = 1.0f)
+	void draw(GLfloat x, GLfloat y, GLfloat width, GLfloat height,
+	          GLfloat tex_x1 = 0.0f, GLfloat tex_y1 = 0.0f, GLfloat tex_x2 = 1.0f, GLfloat tex_y2 = 1.0f,
+	          GLfloat r = 1.0f, GLfloat g = 1.0f, GLfloat b = 1.0f, GLfloat a = 1.0f)
 	{
 		if (texture == 0)
 			return;
@@ -280,14 +286,17 @@ struct Sprite {
 			x + width, y,                 // Position 3
 			tex_x2, tex_y1                // TexCoord 3
 		};
+		GLfloat color[] = { r, g, b, a, r, g, b, a, r, g, b, a, r, g, b, a };
 
 		// Load the vertex position
 		glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof ( GLfloat ), coords );
 		// Load the texture coordinate
 		glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof ( GLfloat ), &coords[2] );
+		glVertexAttribPointer( 2, 4, GL_FLOAT, GL_FALSE, 0, color );
 
 		glEnableVertexAttribArray( 0 );
 		glEnableVertexAttribArray( 1 );
+		glEnableVertexAttribArray( 2 );
 
 		glActiveTexture( GL_TEXTURE0 );
 		glBindTexture( GL_TEXTURE_2D, texture );
@@ -300,6 +309,16 @@ struct Sprite {
 	void draw(GLfloat x, GLfloat y)
 	{
 		draw(x, y, w, h);
+	}
+
+	void drawColor(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+	{
+		draw(x, y, width, height, 0.0f, 0.0f, 1.0f, 1.0f, r, g, b, a);
+	}
+
+	void drawColor(GLfloat x, GLfloat y, GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+	{
+		drawColor(x, y, w, h, r, g, b, a);
 	}
 
 	GLuint texture;
@@ -340,11 +359,7 @@ main(int argc, char *argv[])
 							coords[0][0] / sprites[5].w * 3 + (float) screenWidth / sprites[5].w,
 							coords[0][0] / sprites[5].h * 2 + (float) screenHeight / sprites[5].h);
 
-			int mouseX = 0, mouseY = 0, buttons = 0;
-			buttons = SDL_GetMouseState(&mouseX, &mouseY);
-			sprites[0].draw(mouseX - sprites[0].w/2, mouseY - sprites[0].h/2);
-
-			sprites[1].draw(coords[0][0], coords[0][1]);
+			sprites[1].drawColor(coords[0][0], coords[0][1], pulse, pulse, 1.0f - pulse, 1.0f);
 			sprites[2].draw(coords[1][0], coords[1][1], sprites[2].w * pulse * 4, sprites[2].h * pulse * 4);
 			sprites[3].draw(coords[2][0], coords[2][1], sprites[3].w * pulse * 4, sprites[3].h * 2);
 			sprites[4].draw(coords[3][0], coords[3][1], sprites[4].w, sprites[4].h * pulse * 2);
@@ -354,6 +369,10 @@ main(int argc, char *argv[])
 			sprites[1].draw(screenWidth - sprites[1].w / 2.0f, screenHeight - sprites[1].h / 2.0f);
 			sprites[1].draw(0 - sprites[1].w / 2.0f, screenHeight - sprites[1].h / 2.0f);
 			sprites[1].draw(screenWidth - sprites[1].w / 2.0f, 0 - sprites[1].h / 2.0f);
+
+			int mouseX = 0, mouseY = 0, buttons = 0;
+			buttons = SDL_GetMouseState(&mouseX, &mouseY);
+			sprites[0].drawColor(mouseX - sprites[0].w/2, mouseY - sprites[0].h/2, 1.0f, 1.0f, 1.0f, pulse);
 
 			SDL_GL_SwapBuffers();
 			SDL_Event event;
@@ -369,7 +388,7 @@ main(int argc, char *argv[])
 
 				if(event.type == SDL_KEYUP || event.type == SDL_KEYDOWN)
 				{
-					__android_log_print(ANDROID_LOG_INFO, "Hello", "SDL key event: evt %s state %s key %4d %12s scancode %4d mod %2d unicode %d", event.type == SDL_KEYUP ? "UP	 " : "DOWN" , event.key.state == SDL_PRESSED ? "PRESSED " : "RELEASED", (int)event.key.keysym.sym, SDL_GetKeyName(event.key.keysym.sym), (int)event.key.keysym.scancode, (int)event.key.keysym.mod, (int)event.key.keysym.unicode);
+					printf("SDL key event: evt %s state %s key %4d %12s scancode %4d mod %2d unicode %d", event.type == SDL_KEYUP ? "UP	 " : "DOWN" , event.key.state == SDL_PRESSED ? "PRESSED " : "RELEASED", (int)event.key.keysym.sym, SDL_GetKeyName(event.key.keysym.sym), (int)event.key.keysym.scancode, (int)event.key.keysym.mod, (int)event.key.keysym.unicode);
 					if(event.key.keysym.sym == SDLK_ESCAPE)
 						return 0;
 				}
