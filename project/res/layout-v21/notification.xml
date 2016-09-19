@@ -29,7 +29,7 @@
 		android:layout_toRightOf="@id/notificationIcon"
 		android:id="@+id/notificationText"
 		android:text="App is running"
-		android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent"
+		android:textAppearance="@android:style/TextAppearance.Material.Notification.Title"
 		android:gravity="center_vertical"
 		android:clickable="true"
 		android:paddingLeft="10dp"
