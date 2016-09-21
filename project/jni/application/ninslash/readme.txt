@@ -1,11 +1,8 @@
-Quick compilation guide for Debian/Ubuntu (Windows is not supported, MacOsX should be okay though):
-Download SDL Git repo from https://github.com/pelya/commandergenius,
-install latest Java, Android SDK, Android NDK, and "ant" tool (sudo apt-get install ant openjdk-8-jdk),
-then launch commands:
-    git submodule update --init project/jni/application/ninslash/src
-    rm project/jni/application/src # ignore the error
-    ln -s ninslash project/jni/application/src
-    ./changeAppSettings.sh -a
-    android update project -p project -t android-23
-    ./build.sh
-That should do it.
+To compile Android version:
+1. Use Debian or Ubuntu or MacOsX. Windows is not supported.
+2. Install Android SDK: https://developer.android.com/studio/index.html#downloads
+3. Install Android NDK: https://developer.android.com/ndk/downloads/index.html
+4. Install Java and Ant: sudo apt-get install ant openjdk-8-jdk build-essential
+5. Download SDL Git repo: git clone https://github.com/pelya/commandergenius
+6. git submodule update --init project/jni/application/ninslash/src
+7. ./build.sh ninslash

@@ -70,11 +70,6 @@ if [ "$#" -gt 0 -a "$1" = "-h" ]; then
 	exit 0
 fi
 
-[ -e project/local.properties ] || {
-	android update project -p project || exit 1
-	rm -f project/src/Globals.java
-}
-
 NDK_TOOLCHAIN_VERSION=$GCCVER
 [ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
 
@@ -94,6 +89,11 @@ if $build_release ; then
 else
 	sed -i 's/android:debuggable="false"/android:debuggable="true"/g' project/AndroidManifest.xml
 fi
+
+[ -e project/local.properties ] || {
+	android update project -p project -t android-23 || exit 1
+	rm -f project/src/Globals.java
+}
 
 MYARCH=linux-x86_64
 if [ -z "$NCPU" ]; then
