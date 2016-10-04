@@ -58,3 +58,5 @@ SDL_VERSION := 1.2
 #APP_LDFLAGS := -flto
 # Latest GCC got better LTO support
 NDK_TOOLCHAIN_VERSION := clang
+
+APP_PLATFORM := android-18

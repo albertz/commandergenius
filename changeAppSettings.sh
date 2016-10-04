@@ -377,6 +377,12 @@ echo >> AndroidAppSettings.cfg
 echo "# GCC version, or 'clang' for CLANG" >> AndroidAppSettings.cfg
 echo NDK_TOOLCHAIN_VERSION=$NDK_TOOLCHAIN_VERSION >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
+echo "# Android platform version." >> AndroidAppSettings.cfg
+echo "# android-9 = Android 2.3, the earliest supported version." >> AndroidAppSettings.cfg
+echo "# android-18 = Android 4.3, the first version supporting GLES3." >> AndroidAppSettings.cfg
+echo "# android-21 = Android 5.1, the first version with SO_REUSEPORT defined." >> AndroidAppSettings.cfg
+echo APP_PLATFORM=$APP_PLATFORM >> AndroidAppSettings.cfg
+echo >> AndroidAppSettings.cfg
 echo "# Specify architectures to compile, 'all' or 'y' to compile for all architectures." >> AndroidAppSettings.cfg
 echo "# Available architectures: armeabi armeabi-v7a x86 mips arm64-v8a" >> AndroidAppSettings.cfg
 echo MultiABI=\'$MultiABI\' >> AndroidAppSettings.cfg
@@ -697,6 +703,10 @@ for KEY in $RedefinedKeysGamepad; do
 	KEY2=`expr $KEY2 '+' 1`
 done
 
+if [ "$APP_PLATFORM" = "" ]; then
+	APP_PLATFORM=android-18
+fi
+
 if [ "$MultiABI" = "y" ] ; then
 	MultiABI="all"
 elif [ "$MultiABI" = "n" ] ; then
@@ -947,7 +957,8 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^APPLICATION_BUILD_EXCLUDE :=.*^APPLICATION_BUILD_EXCLUDE := $AppBuildExclude^" | \
 	sed "s^APPLICATION_CUSTOM_BUILD_SCRIPT :=.*^APPLICATION_CUSTOM_BUILD_SCRIPT := $CustomBuildScript^" | \
 	sed "s^SDL_VERSION :=.*^SDL_VERSION := $LibSdlVersion^" | \
-	sed "s^NDK_TOOLCHAIN_VERSION :=.*^NDK_TOOLCHAIN_VERSION := $NDK_TOOLCHAIN_VERSION^" >> \
+	sed "s^NDK_TOOLCHAIN_VERSION :=.*^NDK_TOOLCHAIN_VERSION := $NDK_TOOLCHAIN_VERSION^" | \
+	sed "s^APP_PLATFORM :=.*^APP_PLATFORM := $APP_PLATFORM^" >> \
 	project/jni/Settings.mk
 
 echo Patching strings.xml
