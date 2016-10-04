@@ -25,6 +25,7 @@
 				<category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" /> <!-- Samsung's multiwindow -->
 				<action android:name="com.sec.android.airview.HOVER" /> <!-- Stupid Samsung requires their own intent for finger-hover events -->
 				<category android:name="android.intent.category.LEANBACK_LAUNCHER" /> <!-- Android TV requires this -->
+				<category android:name="tv.ouya.intent.category.GAME" /> <!-- For that one user who still got an OUYA in his living room and won't throw it away just because someone else decides that it's dead -->
 			</intent-filter>
 		</activity>
 		<!-- ==ADMOB== --> <activity android:name="com.google.android.gms.ads.AdActivity" android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection"/>

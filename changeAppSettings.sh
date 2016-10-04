@@ -1063,6 +1063,15 @@ done
 rm -rf project/bin/classes
 rm -rf project/bin/res
 
+# Generate OUYA icon, for that one user who still got an OUYA in his living room and won't throw it away just because someone else decides that it's dead
+rm -rf project/res/drawable-xhdpi/ouya_icon.png
+if which convert > /dev/null; then
+	mkdir -p project/res/drawable-xhdpi
+	convert project/res/drawable/icon.png -resize '732x412!' project/res/drawable-xhdpi/ouya_icon.png
+else
+	echo "Install ImageMagick to auto-resize Ouya icon from icon.png"
+fi
+
 ./copyAssets.sh || exit 1
 
 rm -rf project/jni/android-support
