@@ -1075,7 +1075,8 @@ fi
 ./copyAssets.sh || exit 1
 
 rm -rf project/jni/android-support
-ln -s "`which ndk-build | sed 's@/ndk-build@@'`/sources/android/support" project/jni/android-support
+echo "$NDK_TOOLCHAIN_VERSION" | grep 'clang' > /dev/null || \
+	ln -s "`which ndk-build | sed 's@/ndk-build@@'`/sources/android/support" project/jni/android-support
 
 rm -rf project/res/drawable/banner.png
 if [ -e project/jni/application/src/banner.png ]; then
