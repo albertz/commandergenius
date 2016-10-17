@@ -20,7 +20,7 @@
 	</Row>
 	<Row>
 		<Key android:codes="111"  android:keyLabel="Esc" android:keyEdgeFlags="left"/>
-		<Key android:codes="68"  android:keyLabel="'"/>
+		<Key android:codes="68"  android:keyLabel="`"/>
 		<Key android:codes="69"  android:keyLabel="-"/>
 		<Key android:codes="70"  android:keyLabel="="/>
 		<Key android:codes="73"  android:keyLabel="\\"/>
@@ -32,8 +32,8 @@
 	</Row>
 	<Row>
 		<Key android:codes="-1"  android:keyLabel="!@#…" android:keyEdgeFlags="left"/>
-		<Key android:codes="75"  android:keyLabel="`"/>
-		<Key android:codes="100068"  android:keyLabel="&quot;"/>
+		<Key android:codes="75"  android:keyLabel="'"/>
+		<Key android:codes="100075"  android:keyLabel="&quot;"/>
 		<Key android:codes="61"  android:keyLabel="Tab"/>
 		<Key android:codes="115" android:keyLabel="CapsLk"/>
 		<Key android:codes="112" android:keyLabel="Del"/>

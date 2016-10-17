@@ -24,7 +24,7 @@
 		<Key android:codes="100069"  android:keyLabel="_"/>
 		<Key android:codes="100070"  android:keyLabel="+"/>
 		<Key android:codes="100073"  android:keyLabel="|"/>
-		<Key android:codes="100075"  android:keyLabel="~"/>
+		<Key android:codes="100068"  android:keyLabel="~"/>
 		<Key android:codes="131" android:keyLabel="F1"/>
 		<Key android:codes="132" android:keyLabel="F2"/>
 		<Key android:codes="133" android:keyLabel="F3"/>
