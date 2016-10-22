@@ -87,7 +87,12 @@
 #define HAVE_CTYPE_H 1
 #define HAVE_MATH_H 1
 #undef HAVE_ICONV_H
-#define HAVE_SIGNAL_H 1
+/* Android 4.4 has bsd_signal() libc symbol and an inline signal() function in headers,
+   Android 5.0 introduces signal() symbol in libc,
+   which means that libsdl.so compiled for Android 5.0 will crash on Andorid 4.4 and below,
+   furthermore, signal handlers will do nothing good and will block the native stack trace collector on Android,
+   so it's better to disable signals altogether. */
+#undef HAVE_SIGNAL_H
 #undef HAVE_ALTIVEC_H
 
 #define HAVE_MALLOC 1

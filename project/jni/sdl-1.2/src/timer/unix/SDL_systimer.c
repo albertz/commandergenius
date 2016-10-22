@@ -148,6 +148,26 @@ static void HandleAlarm(int sig)
 	}
 }
 
+#if defined(__ANDROID__) && !defined(__LP64__)
+/* Compatibility to Android 4.4 */
+static __inline__ int ___SDL_sigaddset(sigset_t *set, int signum)
+{
+    unsigned long *local_set = (unsigned long *)set;
+    signum--;
+    local_set[signum/LONG_BIT] |= 1UL << (signum%LONG_BIT);
+    return 0;
+}
+
+static __inline__ int ___SDL_sigemptyset(sigset_t *set)
+{
+    memset(set, 0, sizeof *set);
+    return 0;
+}
+
+#define sigaddset ___SDL_sigaddset
+#define sigemptyset ___SDL_sigemptyset
+#endif
+
 int SDL_SYS_TimerInit(void)
 {
 	struct sigaction action;
