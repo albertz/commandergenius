@@ -21,6 +21,29 @@
 #define AliasExport(name)   __attribute__((alias(name))) __attribute__((visibility("default")))
 #endif
 
+#ifndef FASTMATH
+#ifdef __GNUC__
+ #ifdef __arm__
+  #ifdef __ARM_PCS_VFP
+   //#warning Arm Hardfloat detected
+   #define FASTMATH
+  #else
+   #if defined(__ARM_FP) && defined(PANDORA)
+    //#warning Arm SoftFP detected
+    #define FASTMATH __attribute__((pcs("aapcs-vfp")))
+   #else
+	//#warning Arm no FP detected
+	#define FASTMATH
+   #endif
+  #endif
+ #else
+  #define FASTMATH
+ #endif
+#else
+ #define FASTMATH
+#endif
+#endif
+
 #ifndef GL_H
 #define GL_H
 
@@ -90,6 +113,7 @@ typedef EGLSurface (*eglCreateStreamProducerSurfaceKHR_PTR)(EGLDisplay dpy, EGLC
 #endif
 
 #include "loader.h"
+packed_call_t* glCopyPackedCall(const packed_call_t *packed);
 
 #define checkError(code)                          \
     {int error; while ((error = glGetError())) {} \
@@ -153,7 +177,7 @@ typedef EGLSurface (*eglCreateStreamProducerSurfaceKHR_PTR)(EGLDisplay dpy, EGLC
 
 #define GL_TYPE_SWITCH_MAX(name, var, type, code, extra)               \
     switch (type) {                                                \
-	    GL_TYPE_CASE_MAX(name, var, GL_DOUBLE, GLdouble, code, 1.0d)         \
+	    GL_TYPE_CASE_MAX(name, var, GL_DOUBLE, GLdouble, code, 1.0)         \
 	    GL_TYPE_CASE_MAX(name, var, GL_FLOAT, GLfloat, code, 1.0f)           \
 	    GL_TYPE_CASE_MAX(name, var, GL_INT, GLint, code, 2147483647l)               \
 	    GL_TYPE_CASE_MAX(name, var, GL_SHORT, GLshort, code, 32767)           \
@@ -165,8 +189,8 @@ typedef EGLSurface (*eglCreateStreamProducerSurfaceKHR_PTR)(EGLDisplay dpy, EGLC
     }
 	
 #define PUSH_IF_COMPILING_EXT(nam, ...)             \
-    if ((glstate.list.compiling || glstate.gl_batch) && glstate.list.active) { \
-		NewStage(glstate.list.active, STAGE_GLCALL);   \
+    if ((glstate->list.compiling || glstate->gl_batch) && glstate->list.active) { \
+		NewStage(glstate->list.active, STAGE_GLCALL);   \
         push_##nam(__VA_ARGS__);                    \
         noerrorShim();								\
         return (nam##_RETURN)0;                     \
@@ -402,16 +426,16 @@ void flush();
 void init_batch();
 
 #include "state.h"
-extern glstate_t glstate;
+extern glstate_t *glstate;
 
 GLuint gl_batch; // 0 = off, 1 = on
 
 static inline void errorGL() {	// next glGetError will be from GL 
-	glstate.shim_error = 0;
+	glstate->shim_error = 0;
 }
 static inline void errorShim(GLenum error) {	// next glGetError will be "error" from glShim
-	glstate.shim_error = 1;
-	glstate.last_error = error;
+	glstate->shim_error = 1;
+	glstate->last_error = error;
 }
 static inline void noerrorShim() {
 	errorShim(GL_NO_ERROR);

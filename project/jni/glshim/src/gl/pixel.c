@@ -18,7 +18,7 @@ static const colorlayout_t *get_color_map(GLenum format) {
 		map(GL_LUMINANCE, 0, 0, 0, -1);
 		map(GL_ALPHA,-1, -1, -1, 0);
         default:
-            printf("libGL: unknown pixel format %s\n", PrintEnum(format));
+            printf("LIBGL: unknown pixel format %s\n", PrintEnum(format));
             break;
     }
     static colorlayout_t null = {0};
@@ -126,7 +126,7 @@ bool remap_pixel(const GLvoid *src, GLvoid *dst,
         )
         default:
             // TODO: add glSetError?
-            printf("libGL: Unsupported source data type: %s\n", PrintEnum(src_type));
+            printf("LIBGL: Unsupported source data type: %s\n", PrintEnum(src_type));
             return false;
             break;
     }
@@ -179,7 +179,7 @@ bool remap_pixel(const GLvoid *src, GLvoid *dst,
                  (((GLushort)(color[3] * 15.0) & 0x0f));
         )
         default:
-            printf("libGL: Unsupported target data type: %s\n", PrintEnum(dst_type));
+            printf("LIBGL: Unsupported target data type: %s\n", PrintEnum(dst_type));
             return false;
             break;
     }
@@ -279,7 +279,7 @@ bool transform_pixel(const GLvoid *src, GLvoid *dst,
         )
         default:
             // TODO: add glSetError?
-            printf("libGL: transform_pixel: Unsupported source data type: %s\n", PrintEnum(src_type));
+            printf("LIBGL: transform_pixel: Unsupported source data type: %s\n", PrintEnum(src_type));
             return false;
             break;
     }
@@ -327,7 +327,7 @@ bool transform_pixel(const GLvoid *src, GLvoid *dst,
                  ((GLushort)(color[0] * 15.0f) & 0x0f);
         )
         default:
-            printf("libGL: Unsupported target data type: %s\n", PrintEnum(src_type));
+            printf("LIBGL: Unsupported target data type: %s\n", PrintEnum(src_type));
             return false;
             break;
     }
@@ -457,7 +457,7 @@ bool half_pixel(const GLvoid *src0, const GLvoid *src1,
         )
         default:
             // TODO: add glSetError?
-            printf("libGL: half_pixel: Unsupported source data type: %s\n", PrintEnum(src_type));
+            printf("LIBGL: half_pixel: Unsupported source data type: %s\n", PrintEnum(src_type));
             return false;
             break;
     }
@@ -505,7 +505,7 @@ bool half_pixel(const GLvoid *src0, const GLvoid *src1,
                  ((GLushort)(color[3] * 15.0f) & 0x0f);
         )
         default:
-            printf("libGL: half_pixel: Unsupported target data type: %s\n", PrintEnum(src_type));
+            printf("LIBGL: half_pixel: Unsupported target data type: %s\n", PrintEnum(src_type));
             return false;
             break;
     }
@@ -611,7 +611,7 @@ bool quarter_pixel(const GLvoid *src[16],
         )
         default:
             // TODO: add glSetError?
-            printf("libGL: quarter_pixel: Unsupported source data type: %s\n", PrintEnum(src_type));
+            printf("LIBGL: quarter_pixel: Unsupported source data type: %s\n", PrintEnum(src_type));
             return false;
             break;
     }
@@ -647,7 +647,7 @@ bool quarter_pixel(const GLvoid *src[16],
                  ((GLushort)(color[3] * 15.0) & 0x0f);
         )
         default:
-            printf("libGL: quarter_pixel Unsupported target data type: %s\n", PrintEnum(src_type));
+            printf("LIBGL: quarter_pixel Unsupported target data type: %s\n", PrintEnum(src_type));
             return false;
             break;
     }
@@ -882,6 +882,38 @@ bool pixel_convert(const GLvoid *src, GLvoid **dst,
         for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
 				*(GLushort*)dst_pos = ((GLushort)(((char*)src_pos)[3]&0xf0)>>(4)) | ((GLushort)(((char*)src_pos)[0]&0xf0)) | ((GLushort)(((char*)src_pos)[1]&0xf0)<<(4)) | ((GLushort)(((char*)src_pos)[2]&0xf0)<<(8));
+				src_pos += src_stride;
+				dst_pos += dst_stride;
+			}
+			if (stride)
+				dst_pos += dst_width;
+        }
+        return true;
+    }
+    if ((src_format == GL_BGRA) && (dst_format == GL_RGBA) && (dst_type == GL_UNSIGNED_BYTE) && (src_type == GL_UNSIGNED_SHORT_4_4_4_4_REV)) {
+        for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+                const GLushort pix = *(GLushort*)src_pos;
+                ((char*)dst_pos)[3] = ((pix>>12)&0x0f)<<4;
+                ((char*)dst_pos)[2] = ((pix>>8)&0x0f)<<4;
+                ((char*)dst_pos)[1] = ((pix>>4)&0x0f)<<4;
+                ((char*)dst_pos)[0] = ((pix)&0x0f)<<4;  
+				src_pos += src_stride;
+				dst_pos += dst_stride;
+			}
+			if (stride)
+				dst_pos += dst_width;
+        }
+        return true;
+    }
+    if ((src_format == GL_RGBA) && (dst_format == GL_RGBA) && (dst_type == GL_UNSIGNED_BYTE) && (src_type == GL_UNSIGNED_SHORT_5_5_5_1)) {
+        for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+                const GLushort pix = *(GLushort*)src_pos;
+                ((char*)dst_pos)[0] = ((pix>>11)&0x1f)<<3;
+                ((char*)dst_pos)[1] = ((pix>>6)&0x1f)<<3;
+                ((char*)dst_pos)[2] = ((pix>>1)&0x1f)<<3;
+                ((char*)dst_pos)[3] = ((pix)&0x01)?255:0;  
 				src_pos += src_stride;
 				dst_pos += dst_stride;
 			}

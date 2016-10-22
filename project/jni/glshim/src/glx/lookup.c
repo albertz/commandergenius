@@ -45,6 +45,7 @@ void glXStub(void *x, ...) {
     return;
 }
 
+extern int glshim_queries;
 
 EXPORT void *glXGetProcAddressARB(const char *name) {
     LOAD_EGL(eglGetProcAddress);
@@ -100,8 +101,8 @@ EXPORT void *glXGetProcAddressARB(const char *name) {
     EX(glXCreateWindow);
     EX(glXDestroyWindow);
     
-    STUB(glXCreatePbuffer); // to do, using Renderbuffers....
-    STUB(glXDestroyPbuffer);
+    EX(glXCreatePbuffer);
+    EX(glXDestroyPbuffer);
     STUB(glXCreatePixmap);
     STUB(glXDestroyPixmap);
     STUB(glXGetCurrentReadDrawable);
@@ -614,6 +615,17 @@ EXPORT void *glXGetProcAddressARB(const char *name) {
     _EX(glMatrixLoadTransposed);
     _EX(glMatrixMultTransposef);
     _EX(glMatrixMultTransposed);
+
+    if(glshim_queries) {
+        _EX(glGenQueries);
+        _EX(glIsQuery);
+        _EX(glDeleteQueries);
+        _EX(glBeginQuery);
+        _EX(glEndQuery);
+        _EX(glGetQueryiv);
+        _EX(glGetQueryObjectiv);
+        _EX(glGetQueryObjectuiv);
+    }
 
     if (!export_silentstub) printf("glXGetProcAddress: %s not found.\n", name);
     return NULL;

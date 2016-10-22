@@ -30,6 +30,7 @@ LOCAL_SRC_FILES := \
 	src/gl/list.c \
 	src/gl/loader.c \
 	src/gl/pixel.c \
+	src/gl/queries.c \
 	src/gl/raster.c \
 	src/gl/render.c \
 	src/gl/stack.c \

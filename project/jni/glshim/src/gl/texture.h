@@ -100,6 +100,8 @@ typedef struct {
     GLboolean mipmap_need;
 	GLenum min_filter;
 	GLenum mag_filter;
+    GLenum wrap_s;
+    GLenum wrap_t;
     GLboolean uploaded;
     GLboolean alpha;
     GLboolean compressed;
@@ -131,6 +133,6 @@ void glshim_glClientActiveTexture( GLenum texture );
 void glshim_glMultiTexCoord2f( GLenum target, GLfloat s, GLfloat t );
 GLboolean glshim_glIsTexture( GLuint texture );
 
-void tex_setup_texcoord(GLuint texunit, GLuint len);
+void tex_setup_texcoord(GLuint len);
 
 #endif
