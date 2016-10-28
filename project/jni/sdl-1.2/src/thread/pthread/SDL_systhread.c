@@ -76,6 +76,26 @@ int SDL_SYS_CreateThread(SDL_Thread *thread, void *args)
 	return(0);
 }
 
+#if defined(__ANDROID__) && !defined(__LP64__)
+/* Compatibility to Android 4.4 */
+static __inline__ int ___SDL_sigaddset(sigset_t *set, int signum)
+{
+    unsigned long *local_set = (unsigned long *)set;
+    signum--;
+    local_set[signum/LONG_BIT] |= 1UL << (signum%LONG_BIT);
+    return 0;
+}
+
+static __inline__ int ___SDL_sigemptyset(sigset_t *set)
+{
+    memset(set, 0, sizeof *set);
+    return 0;
+}
+
+#define sigaddset ___SDL_sigaddset
+#define sigemptyset ___SDL_sigemptyset
+#endif
+
 void SDL_SYS_SetupThread(void)
 {
 	int i;
