@@ -528,7 +528,7 @@ static void ProcessMouseUp( int x, int y )
 			SDL_ANDROID_MainThreadPushMouseMotion( mouseInitialX - 1, mouseInitialY );
 		mouseInitialX = -1;
 		mouseInitialY = -1;
-		deferredMouseTap = 5;
+		deferredMouseTap = 2;
 		mouseClickTimeout = 200;
 		if( mouseClickTimeoutInitialized )
 			sem_post(&mouseClickTimeoutSemaphore);
