@@ -66,7 +66,7 @@ extern int SDL_ANDROID_ForceClearScreenRectAmount;
 extern int SDL_ANDROID_ShowScreenUnderFinger;
 extern SDL_Rect SDL_ANDROID_ShowScreenUnderFingerRect, SDL_ANDROID_ShowScreenUnderFingerRectSrc;
 extern int SDL_ANDROID_CallJavaSwapBuffers();
-extern void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf, int outBufLen);
+extern void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf, int outBufLen, int async);
 extern void SDL_ANDROID_CallJavaHideScreenKeyboard();
 extern void SDL_ANDROID_CallJavaSetScreenKeyboardHintMessage(const char *hint);
 extern int SDL_ANDROID_IsScreenKeyboardShown();

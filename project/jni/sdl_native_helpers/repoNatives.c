@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include <math.h>
 #include <string.h> // for memset()
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "jniwrapperstuff.h"
 

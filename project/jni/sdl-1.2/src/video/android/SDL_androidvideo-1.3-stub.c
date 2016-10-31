@@ -62,7 +62,7 @@ SDL_VideoDevice *ANDROID_CreateDevice_1_3(int devindex)
 	if ( device ) {
 		SDL_memset(device, 0, sizeof (*device));
 	}
-	if ( (device == NULL) ) {
+	if ( device == NULL ) {
 		SDL_OutOfMemory();
 		if ( device ) {
 			SDL_free(device);

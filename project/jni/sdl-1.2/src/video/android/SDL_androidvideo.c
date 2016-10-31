@@ -42,6 +42,7 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 #include "SDL_mouse.h"
 #include "SDL_mutex.h"
 #include "SDL_thread.h"
+#include "SDL_timer.h"
 #include "SDL_android.h"
 #include "SDL_syswm.h"
 #include "../SDL_sysvideo.h"
@@ -50,6 +51,7 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 
 #include "../SDL_sysvideo.h"
 #include "SDL_androidvideo.h"
+#include "SDL_androidinput.h"
 #include "jniwrapperstuff.h"
 
 
@@ -264,7 +266,7 @@ extern int SDL_Flip(SDL_Surface *screen);
 extern SDL_Surface *SDL_GetVideoSurface(void);
 #endif
 
-void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf, int outBufLen)
+void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf, int outBufLen, int async)
 {
 	JNIEnv *JavaEnv = GetJavaEnv();
 
@@ -306,6 +308,9 @@ void SDL_ANDROID_CallJavaShowScreenKeyboard(const char * oldText, char * outBuf,
 			(*JavaEnv)->DeleteLocalRef( JavaEnv, s );
 			(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
 		}
+
+		if( async )
+			return;
 
 		while( !SDL_ANDROID_TextInputFinished )
 			SDL_Delay(100);
@@ -394,6 +399,7 @@ int SDL_ANDROID_SetApplicationPutToBackgroundCallback(
 
 	if( appRestoredCallback )
 		appRestoredCallback = appRestored;
+	return 0;
 }
 
 extern int SDL_ANDROID_SetOpenALPutToBackgroundCallback(
@@ -406,6 +412,7 @@ int SDL_ANDROID_SetOpenALPutToBackgroundCallback(
 {
 	openALPutToBackgroundCallback = PutToBackground;
 	openALRestoredCallback = Restored;
+	return 0;
 }
 
 JNIEXPORT void JNICALL
@@ -458,6 +465,7 @@ int SDLCALL SDL_SetClipboardText(const char *text)
 	if( s )
 		(*JavaEnv)->DeleteLocalRef( JavaEnv, s );
 	(*JavaEnv)->PopLocalFrame(JavaEnv, NULL);
+	return 0;
 }
 
 char * SDLCALL SDL_GetClipboardText(void)
@@ -495,7 +503,7 @@ int SDLCALL SDL_HasClipboardText(void)
 	return ret;
 }
 
-JAVA_EXPORT_NAME(DemoRenderer_nativeClipboardChanged) ( JNIEnv* env, jobject thiz )
+void JAVA_EXPORT_NAME(DemoRenderer_nativeClipboardChanged) ( JNIEnv* env, jobject thiz )
 {
 	if ( SDL_ProcessEvents[SDL_SYSWMEVENT] == SDL_ENABLE )
 	{

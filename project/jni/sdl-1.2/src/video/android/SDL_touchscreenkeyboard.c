@@ -85,7 +85,7 @@ typedef struct
     GLfloat h;
 } GLTexture_t;
 
-static GLTexture_t arrowImages[9];
+static GLTexture_t arrowImages[12];
 static GLTexture_t buttonAutoFireImages[MAX_BUTTONS_AUTOFIRE*2]; // These are not used anymore
 static GLTexture_t buttonImages[MAX_BUTTONS*2];
 static GLTexture_t mousePointer;
@@ -1171,6 +1171,7 @@ SDLKey SDL_ANDROID_GetScreenKeyboardButtonKey(int buttonId)
 int SDL_ANDROID_SetScreenKeyboardShown(int shown)
 {
 	touchscreenKeyboardShown = shown;
+	return 0;
 };
 
 int SDL_ANDROID_GetScreenKeyboardShown(void)
@@ -1215,15 +1216,27 @@ int SDL_ANDROID_ToggleScreenKeyboardTextInput(const char * previousText)
 		previousText = "";
 	strncpy(textIn, previousText, sizeof(textIn));
 	textIn[sizeof(textIn)-1] = 0;
-	SDL_ANDROID_CallJavaShowScreenKeyboard(textIn, NULL, 0);
+	SDL_ANDROID_CallJavaShowScreenKeyboard(textIn, NULL, 0, 0);
 	return 1;
 };
 
 int SDLCALL SDL_ANDROID_GetScreenKeyboardTextInput(char * textBuf, int textBufSize)
 {
-	SDL_ANDROID_CallJavaShowScreenKeyboard(textBuf, textBuf, textBufSize);
+	SDL_ANDROID_CallJavaShowScreenKeyboard(textBuf, textBuf, textBufSize, 0);
 	return 1;
 };
+
+SDL_AndroidTextInputAsyncStatus_t SDLCALL SDL_ANDROID_GetScreenKeyboardTextInputAsync(char * textBuf, int textBufSize)
+{
+	if( SDL_ANDROID_TextInputFinished )
+	{
+		SDL_ANDROID_TextInputFinished = 0;
+		SDL_ANDROID_IsScreenKeyboardShownFlag = 0;
+		return SDL_ANDROID_TEXTINPUT_ASYNC_FINISHED;
+	}
+	SDL_ANDROID_CallJavaShowScreenKeyboard(textBuf, textBuf, textBufSize, 1);
+	return SDL_ANDROID_TEXTINPUT_ASYNC_IN_PROGRESS;
+}
 
 int SDLCALL SDL_HasScreenKeyboardSupport(void *unused)
 {

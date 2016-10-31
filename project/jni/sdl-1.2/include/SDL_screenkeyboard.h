@@ -128,9 +128,23 @@ typedef enum
 extern DECLSPEC int SDLCALL SDL_ANDROID_ToggleInternalScreenKeyboard(SDL_InternalKeyboard_t keyboard);
 
 /* Show Android QWERTY keyboard, and pass entered text back to application in a buffer,
-   using buffer contents as previous text (UTF-8 encoded), the buffer may be of any size -
-   this call will block until user typed all text. */
+   using buffer contents as previous text (UTF-8 encoded), the buffer may be of any size.
+   This function will block until user typed all text. */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardTextInput(char * textBuf, int textBufSize);
+
+typedef enum
+{
+	SDL_ANDROID_TEXTINPUT_ASYNC_IN_PROGRESS = 0,
+	SDL_ANDROID_TEXTINPUT_ASYNC_FINISHED = 1,
+} SDL_AndroidTextInputAsyncStatus_t;
+
+/* Show Android QWERTY keyboard, and pass entered text back to application in a buffer,
+   using buffer contents as previous text (UTF-8 encoded), the buffer may be of any size.
+   This function will return immediately with return status SDL_ANDROID_TEXTINPUT_ASYNC_IN_PROGRESS,
+   and will change the contents of the buffer in another thread. You then should call this function
+   with the same parameters, until it will return status SDL_ANDROID_TEXTINPUT_ASYNC_FINISHED,
+   and only after this you can access the contents of the buffer. */
+extern DECLSPEC SDL_AndroidTextInputAsyncStatus_t SDLCALL SDL_ANDROID_GetScreenKeyboardTextInputAsync(char * textBuf, int textBufSize);
 
 /* Whether user redefined on-screen keyboard layout via SDL menu, app should not enforce it's own layout in that case */
 extern DECLSPEC int SDLCALL SDL_ANDROID_GetScreenKeyboardRedefinedByUser(void);
