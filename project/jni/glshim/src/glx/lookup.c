@@ -2,6 +2,7 @@
 #include "../gl/gl.h"
 #endif
 #include "glx.h"
+#include "hardext.h"
 
 #include "../gl/directstate.h"
 
@@ -37,7 +38,7 @@ extern int export_silentstub;
 
 #define STUB(func_name)                       \
     if (strcmp(name, #func_name) == 0) {      \
-        if(!export_silentstub) printf("glX stub: %s\n", #func_name); \
+        if(!export_silentstub) LOGD("glX stub: %s\n", #func_name); \
         return (void *)glXStub;               \
     }
 
@@ -67,9 +68,7 @@ EXPORT void *glXGetProcAddressARB(const char *name) {
     EX(glXCreateContext);
     EX(glXCreateNewContext);
 	EX(glXCreateContextAttribsARB);
-    EX(glXCreateGLXPixmap);
     EX(glXDestroyContext);
-    EX(glXDestroyGLXPixmap);
     EX(glXGetConfig);
     EX(glXGetCurrentDisplay);
     EX(glXGetCurrentDrawable);
@@ -103,13 +102,25 @@ EXPORT void *glXGetProcAddressARB(const char *name) {
     
     EX(glXCreatePbuffer);
     EX(glXDestroyPbuffer);
-    STUB(glXCreatePixmap);
-    STUB(glXDestroyPixmap);
+    EX(glXCreatePixmap);
+    EX(glXDestroyPixmap);
+    EX(glXCreateGLXPixmap);
+    EX(glXDestroyGLXPixmap);
     STUB(glXGetCurrentReadDrawable);
     STUB(glXGetSelectedEvent);
     STUB(glXSelectEvent);
 #endif //ANDROID
-    
+    // GL_EXT_texture_object (yeah, super old!)
+    _EXT(glGenTextures);
+    _EXT(glBindTexture);
+    _EXT(glDeleteTextures);
+    _EXT(glIsTexture);
+    _EXT(glAreTexturesResident);
+    _EXT(glPrioritizeTextures);
+
+    // GL_EXT_polygonoffset
+    _EXT(glPolygonOffset);
+
     // GL_ARB_vertex_buffer_object
     _ARB(glBindBuffer);
     _ARB(glBufferData);
@@ -138,52 +149,54 @@ EXPORT void *glXGetProcAddressARB(const char *name) {
     _ARB(glIsVertexArray);
     
     // GL_ARB_frameBuffer_ext
-    _EX(glFramebufferTexture1D);
-    _EX(glFramebufferTexture3D);
-    _EX(glFramebufferTextureLayer);
-    _EX(glRenderbufferStorageMultisample);
-    _EX(glBlitFramebuffer);
-    _EXT(glGenFramebuffers);
-    _EXT(glDeleteFramebuffers);
-    _EXT(glIsFramebuffer);
-    _EXT(glCheckFramebufferStatus);
-    _EXT(glBindFramebuffer);
-    _EXT(glFramebufferTexture2D);
-    _EXT(glFramebufferTexture1D);
-    _EXT(glFramebufferTexture3D);
-    _EXT(glGenRenderbuffers);
-    _EXT(glFramebufferRenderbuffer);
-    _EXT(glDeleteRenderbuffers);
-    _EXT(glRenderbufferStorage);
-    _EXT(glRenderbufferStorageMultisample);
-    _EXT(glBindRenderbuffer);
-    _EXT(glIsRenderbuffer);
-    _EXT(glGenerateMipmap);
-    _EXT(glGetFramebufferAttachmentParameteriv);
-    _EXT(glGetRenderbufferParameteriv);
-    _EXT(glFramebufferTextureLayer);
-    _EXT(glBlitFramebuffer);
-    _ARB(glGenFramebuffers);
-    _ARB(glDeleteFramebuffers);
-    _ARB(glIsFramebuffer);
-    _ARB(glCheckFramebufferStatus);
-    _ARB(glBindFramebuffer);
-    _ARB(glFramebufferTexture2D);
-    _ARB(glFramebufferTexture1D);
-    _ARB(glFramebufferTexture3D);
-    _ARB(glGenRenderbuffers);
-    _ARB(glFramebufferRenderbuffer);
-    _ARB(glDeleteRenderbuffers);
-    _ARB(glRenderbufferStorage);
-    _ARB(glRenderbufferStorageMultisample);
-    _ARB(glBindRenderbuffer);
-    _ARB(glIsRenderbuffer);
-    _ARB(glGenerateMipmap);
-    _ARB(glGetFramebufferAttachmentParameteriv);
-    _ARB(glGetRenderbufferParameteriv);
-    _ARB(glFramebufferTextureLayer);
-    _ARB(glBlitFramebuffer);
-    STUB(glDrawBuffersARB);
+    if(hardext.fbo) {
+        _EX(glFramebufferTexture1D);
+        _EX(glFramebufferTexture3D);
+        _EX(glFramebufferTextureLayer);
+        _EX(glRenderbufferStorageMultisample);
+        _EX(glBlitFramebuffer);
+        _EXT(glGenFramebuffers);
+        _EXT(glDeleteFramebuffers);
+        _EXT(glIsFramebuffer);
+        _EXT(glCheckFramebufferStatus);
+        _EXT(glBindFramebuffer);
+        _EXT(glFramebufferTexture2D);
+        _EXT(glFramebufferTexture1D);
+        _EXT(glFramebufferTexture3D);
+        _EXT(glGenRenderbuffers);
+        _EXT(glFramebufferRenderbuffer);
+        _EXT(glDeleteRenderbuffers);
+        _EXT(glRenderbufferStorage);
+        _EXT(glRenderbufferStorageMultisample);
+        _EXT(glBindRenderbuffer);
+        _EXT(glIsRenderbuffer);
+        _EXT(glGenerateMipmap);
+        _EXT(glGetFramebufferAttachmentParameteriv);
+        _EXT(glGetRenderbufferParameteriv);
+        _EXT(glFramebufferTextureLayer);
+        _EXT(glBlitFramebuffer);
+        _ARB(glGenFramebuffers);
+        _ARB(glDeleteFramebuffers);
+        _ARB(glIsFramebuffer);
+        _ARB(glCheckFramebufferStatus);
+        _ARB(glBindFramebuffer);
+        _ARB(glFramebufferTexture2D);
+        _ARB(glFramebufferTexture1D);
+        _ARB(glFramebufferTexture3D);
+        _ARB(glGenRenderbuffers);
+        _ARB(glFramebufferRenderbuffer);
+        _ARB(glDeleteRenderbuffers);
+        _ARB(glRenderbufferStorage);
+        _ARB(glRenderbufferStorageMultisample);
+        _ARB(glBindRenderbuffer);
+        _ARB(glIsRenderbuffer);
+        _ARB(glGenerateMipmap);
+        _ARB(glGetFramebufferAttachmentParameteriv);
+        _ARB(glGetRenderbufferParameteriv);
+        _ARB(glFramebufferTextureLayer);
+        _ARB(glBlitFramebuffer);
+        STUB(glDrawBuffersARB);
+    }
     
         /*
     MAP_EGL(glGenFramebuffersARB, glGenFramebuffersOES);
@@ -317,7 +330,7 @@ EXPORT void *glXGetProcAddressARB(const char *name) {
     _EX(glArrayElement);
     _EX(glBegin);
     _EX(glBitmap);
-    if(export_blendcolor) {
+    if(export_blendcolor || hardext.blendcolor) {
         _EX(glBlendColor);
         _EXT(glBlendColor);
         _ARB(glBlendColor);
@@ -326,18 +339,21 @@ EXPORT void *glXGetProcAddressARB(const char *name) {
     _ARB(glBlendEquation);
     _EXT(glBlendFunc);
     _ARB(glBlendFunc);
-#ifndef ODROID
-    _EXT(glBlendEquationSeparate);
-    _ARB(glBlendEquationSeparate);
-    _EX(glBlendEquationSeparatei);
-    _EXT(glBlendEquationSeparatei);
-    _ARB(glBlendEquationSeparatei);
-    _EXT(glBlendFuncSeparate);
-    _ARB(glBlendFuncSeparate);
-    _EX(glBlendFuncSeparatei);
-    _EXT(glBlendFuncSeparatei);
-    _ARB(glBlendFuncSeparatei);
-#endif
+
+    if(hardext.blendeq) {
+        _EXT(glBlendEquationSeparate);
+        _ARB(glBlendEquationSeparate);
+        _EX(glBlendEquationSeparatei);
+        _EXT(glBlendEquationSeparatei);
+        _ARB(glBlendEquationSeparatei);
+    }
+    if(hardext.blendfunc) {
+        _EXT(glBlendFuncSeparate);
+        _ARB(glBlendFuncSeparate);
+        _EX(glBlendFuncSeparatei);
+        _EXT(glBlendFuncSeparatei);
+        _ARB(glBlendFuncSeparatei);
+    }
     _EX(glStencilMaskSeparate);
     _EXT(glStencilMaskSeparate);
     _EX(glCallList);
@@ -444,6 +460,8 @@ EXPORT void *glXGetProcAddressARB(const char *name) {
     _EX(glTexImage3D);
     _EX(glTexSubImage1D);
     _EX(glTexSubImage3D);
+    _EXT(glTexImage3D);
+    _EXT(glTexSubImage3D);
     _EX(glCompressedTexImage1D);
     _EX(glCompressedTexSubImage1D);
     _EX(glCompressedTexImage3D);
@@ -478,7 +496,7 @@ EXPORT void *glXGetProcAddressARB(const char *name) {
     STUB(glClearAccum);
     STUB(glColorMaterial);
     STUB(glCopyTexImage3D);
-    STUB(glCopyTexSubImage3D);
+    _EX(glCopyTexSubImage3D);   // It's a stub, calling the 2D one
     STUB(glFeedbackBuffer);
     STUB(glGetClipPlane);
     STUB(glGetLightiv);
@@ -627,7 +645,10 @@ EXPORT void *glXGetProcAddressARB(const char *name) {
         _EX(glGetQueryObjectuiv);
     }
 
-    if (!export_silentstub) printf("glXGetProcAddress: %s not found.\n", name);
+    // GL_ARB_multisample
+    _ARB(glSampleCoverage);
+
+    if (!export_silentstub) LOGD("glXGetProcAddress: %s not found.\n", name);
     return NULL;
 }
 

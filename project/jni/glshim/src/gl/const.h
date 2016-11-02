@@ -59,7 +59,9 @@
 #define GL_TEXTURE_GEN_STR          0x8D60
 
 
-
+// GL_ARB_point_sprite
+#define GL_POINT_SPRITE             0x8861
+#define GL_COORD_REPLACE            0x8862
 
 // GL_ARB_texture_rectangle
 #define GL_TEXTURE_RECTANGLE_ARB          0x84F5
@@ -564,4 +566,5 @@
 #define GL_TEXTURE_INTENSITY_TYPE         0x8C15
 #define GL_DEPTH_COMPONENT24              0x81A6
 #define GL_DEPTH_COMPONENT16              0x81A5
+#define GL_DEPTH_COMPONENT                0x1902
 #define GL_MAX_DRAW_BUFFERS_ARB           0x8824

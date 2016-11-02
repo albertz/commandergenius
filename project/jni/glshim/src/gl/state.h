@@ -16,9 +16,11 @@ typedef struct {
               auto_normal,
               blend,
               color_sum,
+              pointsprite,
               texgen_s[MAX_TEX],
               texgen_t[MAX_TEX],
               texgen_r[MAX_TEX],
+              texgen_q[MAX_TEX],
               texture_2d[MAX_TEX],
               texture_3d[MAX_TEX],
               texture_1d[MAX_TEX];
@@ -29,12 +31,15 @@ typedef struct {
     GLenum S;
     GLenum T;
     GLenum R;
+    GLenum Q;
     GLfloat S_E[4]; // Eye Plane
     GLfloat T_E[4];
     GLfloat R_E[4];
+    GLfloat Q_E[4];
     GLfloat S_O[4]; // Object Plane
     GLfloat T_O[4];
     GLfloat R_O[4];
+    GLfloat Q_O[4];
 } texgen_state_t;
 
 typedef struct {
@@ -52,6 +57,7 @@ typedef struct {
     // TODO: do we only need to worry about GL_TEXTURE_2D?
     GLboolean rect_arb[MAX_TEX];
     gltexture_t *bound[MAX_TEX];
+    GLboolean pscoordreplace[MAX_TEX];
     khash_t(tex) *list;
     GLuint active;	// active texture
 	GLuint client;	// client active texture
@@ -68,6 +74,15 @@ typedef struct {
     GLuint count;
     GLuint cap;
 } displaylist_state_t;
+
+typedef struct {
+    rasterpos_t rPos;
+    viewport_t viewport;
+    GLfloat raster_scale[4];
+    GLfloat raster_bias[4];
+    GLfloat raster_zoomx;
+    GLfloat raster_zoomy;
+} raster_state_t;
 
 
 typedef struct {
@@ -93,6 +108,8 @@ typedef struct {
     GLuint  size;
     GLfloat zmin;
     GLfloat zmax;
+    GLfloat zminoverall;
+    GLfloat zmaxoverall;
     GLuint  overflow;
     GLuint  pos;
     GLboolean  hit;
@@ -171,6 +188,9 @@ typedef struct {
     khash_t(queries) *queries;
     glstack_t *stack;
     glclientstack_t *clientStack;
+    raster_state_t raster;
+    int emulatedPixmap;
+    int emulatedWin;
     int shared_cnt;
 } glstate_t;
 

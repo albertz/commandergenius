@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "khash.h"
+#include "logs.h"
 
 #ifdef __ARM_NEON__
 #include <arm_neon.h>
@@ -235,10 +236,11 @@ static const GLsizei gl_sizeof(GLenum type) {
         case GL_UNSIGNED_BYTE:
         case GL_UNSIGNED_BYTE_2_3_3_REV:
         case GL_UNSIGNED_BYTE_3_3_2:
+        case GL_DEPTH_COMPONENT:
             return 1;
     }
     // formats
-    printf("libGL: Unsupported pixel data type: %s\n", PrintEnum(type));
+    LOGD("LIBGL: Unsupported pixel data type: %s\n", PrintEnum(type));
     return 0;
 }
 
@@ -256,7 +258,7 @@ static const GLuint gl_max_value(GLenum type) {
         case GL_INT:            return 2147483647;
         case GL_UNSIGNED_INT:   return 4294967295;
     }
-    printf("libGL: unknown gl max value type: %s\n", PrintEnum(type));
+    LOGD("LIBGL: unknown gl max value type: %s\n", PrintEnum(type));
     return 0;
 }
 
@@ -288,6 +290,7 @@ static const GLsizei pixel_sizeof(GLenum format, GLenum type) {
         case GL_RED:
 		case GL_ALPHA:
 		case GL_LUMINANCE:
+        case GL_DEPTH_COMPONENT:
             width = 1;
             break;
         case GL_RG:
@@ -305,7 +308,7 @@ static const GLsizei pixel_sizeof(GLenum format, GLenum type) {
             width = 4;
             break;
         default:
-            printf("libGL: unsupported pixel format %s\n", PrintEnum(format));
+            LOGD("LIBGL: unsupported pixel format %s\n", PrintEnum(format));
             return 0;
     }
 
@@ -329,6 +332,7 @@ static const GLboolean pixel_hasalpha(GLenum format) {
     case GL_RGB:
     case GL_BGR:
     case GL_RGB8:
+    case GL_DEPTH_COMPONENT:
 	    return false;
         default:
             return true;

@@ -6,13 +6,13 @@ This is a shim providing OpenGL 1.x functionality to OpenGL ES accelerated cards
 Most function of OpenGL up to 1.5 are supported, with some notable exceptions:
  * Reading of Depth or Stencil buffer will not work
  * GL_FEEDBACK mode is not implemented
- * OcclusionQuery is not implemented
  
 Some know limitations:
  * GL_SELECT as some limitation in its implementation (for exemple, current Depth buffer or binded texture are not taken into account)
  * NPOT texture are supported, but not with GL_REPEAT / GL_MIRRORED, only GL_CLAMP will work properly
  * Framebuffer use FRAMEBUFFER_OES extension (that must be present in the GLES 1.1 stack)
  * Multiple Color attachment on Framebuffer are not supported
+ * OcclusionQuery is implemented, but with a 0 bits precision
  * Probably many other things
 
 ----
@@ -65,6 +65,7 @@ Controls the Framebuffer output
  * 0 : Default, using standard x11 rendering
  * 1 : Use Framebuffer output (x11 bypassed, only fullscreen)
  * 2 : Use Framebuffer, but also an intermediary FBO
+ * 3 : Use PBuffer, allowing x11 rendering even if driver doesn't support it 
 
 ##### LIBGL_XREFRESH
 Debug helper in specific cases
@@ -194,7 +195,12 @@ Expose NPOT (Non Power of Two) Support
  * 1 : Expose limited NPOT extension
  * 2 : Expose GL_ARB_texture_non_power_of_two extension
 
-##### LIBGL_QUERIES
+##### LIBGL_GLQUERIES
 Expose glQueries functions
- * 0 : Default, don't expose the function (fake one will be used if called)
- * 1 : Expose fake functions (always answer 0)
+ * 0 : Don't expose the function (fake one will be used if called)
+ * 1 : Default, expose fake functions (always answer 0)
+
+##### LIBGL_NOTEST
+Initial Hardware test
+ * 0 : Default, perform intial hardware testing (using a PBuffer)
+ * 1 : Do not perform test (no extensions tested or used)

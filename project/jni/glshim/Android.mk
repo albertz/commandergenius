@@ -11,8 +11,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := glshim
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
-	$(LOCAL_PATH)/src/util \
-	$(LOCAL_PATH)/src/util/vectorial
+	$(LOCAL_PATH)/src/util
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES) -DBCMHOST
 
@@ -43,10 +42,11 @@ LOCAL_SRC_FILES := \
 	src/gl/wrap/glstub.c \
 	src/gl/math/eval.c \
 	src/glx/glx.c \
+	src/glx/hardext.c \
 	src/glx/lookup.c \
 	src/glx/streaming.c
 
-LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DBCMHOST -include include/android_debug.h
+LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DBCMHOST -fvisibility=hidden -include include/android_debug.h
 
 #LOCAL_LDLIBS := -ldl -llog -lEGL
 

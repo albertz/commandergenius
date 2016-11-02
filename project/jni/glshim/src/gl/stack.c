@@ -1,4 +1,5 @@
 #include "stack.h"
+#include "../glx/hardext.h"
 
 void glshim_glPushAttrib(GLbitfield mask) {
     //printf("glPushAttrib(0x%04X)\n", mask);
@@ -23,6 +24,7 @@ void glshim_glPushAttrib(GLbitfield mask) {
     cur->clip_planes = NULL;
     cur->lights_enabled = NULL;
     cur->lights = NULL;
+    cur->materials = NULL;
 
     // TODO: GL_ACCUM_BUFFER_BIT
 
@@ -77,10 +79,8 @@ void glshim_glPushAttrib(GLbitfield mask) {
         cur->dither = glshim_glIsEnabled(GL_DITHER);
         cur->fog = glshim_glIsEnabled(GL_FOG);
 
-        GLint max_lights;
-        glshim_glGetIntegerv(GL_MAX_LIGHTS, &max_lights);
-        cur->lights_enabled = (GLboolean *)malloc(max_lights * sizeof(GLboolean));
-        for (i = 0; i < max_lights; i++) {
+        cur->lights_enabled = (GLboolean *)malloc(hardext.maxlights * sizeof(GLboolean));
+        for (i = 0; i < hardext.maxlights; i++) {
             *(cur->lights_enabled + i) = glshim_glIsEnabled(GL_LIGHT0 + i);
         }
 
@@ -105,15 +105,16 @@ void glshim_glPushAttrib(GLbitfield mask) {
         cur->scissor_test = glshim_glIsEnabled(GL_SCISSOR_TEST);
         cur->stencil_test = glshim_glIsEnabled(GL_STENCIL_TEST);
         int a;
-        for (a=0; a<MAX_TEX; a++) {
+        for (a=0; a<hardext.maxtex; a++) {
             cur->texture_1d[a] = glstate->enable.texture_1d[a];
             cur->texture_2d[a] = glstate->enable.texture_2d[a];
             cur->texture_3d[a] = glstate->enable.texture_3d[a];
             cur->texgen_s[a] = glstate->enable.texgen_s[a];
             cur->texgen_r[a] = glstate->enable.texgen_r[a];
             cur->texgen_t[a] = glstate->enable.texgen_t[a];
+            cur->texgen_q[a] = glstate->enable.texgen_q[a];
         }
-        
+        cur->pointsprite = glshim_glIsEnabled(GL_POINT_SPRITE);
     }
 
     // TODO: GL_EVAL_BIT
@@ -137,20 +138,33 @@ void glshim_glPushAttrib(GLbitfield mask) {
 
     if (mask & GL_LIGHTING_BIT) {
         cur->lighting = glshim_glIsEnabled(GL_LIGHTING);
-        glshim_glGetIntegerv(GL_LIGHT_MODEL_AMBIENT, cur->light_model_ambient);
+        glshim_glGetFloatv(GL_LIGHT_MODEL_AMBIENT, cur->light_model_ambient);
         glshim_glGetIntegerv(GL_LIGHT_MODEL_TWO_SIDE, &cur->light_model_two_side);
 
         int i;
-        GLint max_lights;
-        glshim_glGetIntegerv(GL_MAX_LIGHTS, &max_lights);
-        cur->lights_enabled = (GLboolean *)malloc(max_lights * sizeof(GLboolean));
-        cur->lights = (GLfloat *)malloc(max_lights * sizeof(GLfloat));
-        for (i = 0; i < max_lights; i++) {
+        int j=0;
+        cur->lights_enabled = (GLboolean *)malloc(hardext.maxlights * sizeof(GLboolean));
+        cur->lights = (GLfloat *)malloc(hardext.maxlights * sizeof(GLfloat)*(10*4));
+        for (i = 0; i < hardext.maxlights; i++) {
             *(cur->lights_enabled + i) = glshim_glIsEnabled(GL_LIGHT0 + i);
-            /* TODO: record all data about the lights
-            glGetFloatv(GL_LIGHT0 + i, cur->lights + i);
-            */
+            #define L(A) glshim_glGetLightfv(GL_LIGHT0 + i, A, cur->lights+j); j+=4
+            L(GL_AMBIENT);
+            L(GL_DIFFUSE);
+            L(GL_SPECULAR);
+            L(GL_POSITION); 
+            L(GL_SPOT_CUTOFF);
+            L(GL_SPOT_DIRECTION);
+            L(GL_SPOT_EXPONENT);
+            L(GL_CONSTANT_ATTENUATION);
+            L(GL_LINEAR_ATTENUATION);
+            L(GL_QUADRATIC_ATTENUATION);
+            #undef L
         }
+        j=0;
+        cur->materials = (GLfloat *)malloc(1 * sizeof(GLfloat)*(5*4));
+        #define M(A) glshim_glGetMaterialfv(GL_FRONT, A, cur->materials+j); j+=4
+        M(GL_AMBIENT); M(GL_DIFFUSE); M(GL_SPECULAR); M(GL_EMISSION); M(GL_SHININESS);  // handle both face at some point?
+        #undef M
         glshim_glGetIntegerv(GL_SHADE_MODEL, &cur->shade_model);
     }
 
@@ -188,6 +202,13 @@ void glshim_glPushAttrib(GLbitfield mask) {
     if (mask & GL_POINT_BIT) {
         cur->point_smooth = glshim_glIsEnabled(GL_POINT_SMOOTH);
         glshim_glGetFloatv(GL_POINT_SIZE, &cur->point_size);
+        if(hardext.pointsprite) {
+            cur->pointsprite = glshim_glIsEnabled(GL_POINT_SPRITE);
+            int a;
+            for (a=0; a<hardext.maxtex; a++) {
+                cur->pscoordreplace[a] = glstate->texture.pscoordreplace[a];
+            }
+        }
     }
 
     // TODO: GL_POLYGON_BIT
@@ -219,10 +240,11 @@ void glshim_glPushAttrib(GLbitfield mask) {
     if (mask & GL_TEXTURE_BIT) {
         cur->active=glstate->texture.active;
         int a;
-        for (a=0; a<MAX_TEX; a++) {
+        for (a=0; a<hardext.maxtex; a++) {
             cur->texgen_r[a] = glstate->enable.texgen_r[a];
             cur->texgen_s[a] = glstate->enable.texgen_s[a];
             cur->texgen_t[a] = glstate->enable.texgen_t[a];
+            cur->texgen_q[a] = glstate->enable.texgen_q[a];
             cur->texgen[a] = glstate->texgen[a];   // all mode and planes per texture in 1 line
 	        cur->texture[a] = (glstate->texture.bound[a])?glstate->texture.bound[a]->texture:0;
         }
@@ -289,7 +311,7 @@ void glshim_glPushClientAttrib(GLbitfield mask) {
         cur->secondary_enable = glstate->vao->secondary_array;
         cur->normal_enable = glstate->vao->normal_array;
         int a;
-        for (a=0; a<MAX_TEX; a++) {
+        for (a=0; a<hardext.maxtex; a++) {
            cur->tex_enable[a] = glstate->vao->tex_coord_array[a];
         }
         memcpy(&(cur->pointers), &glstate->vao->pointers, sizeof(pointer_states_t));
@@ -374,9 +396,7 @@ void glshim_glPopAttrib() {
         enable_disable(GL_DITHER, cur->dither);
         enable_disable(GL_FOG, cur->fog);
 
-        GLint max_lights;
-        glshim_glGetIntegerv(GL_MAX_LIGHTS, &max_lights);
-        for (i = 0; i < max_lights; i++) {
+        for (i = 0; i < hardext.maxlights; i++) {
             enable_disable(GL_LIGHT0 + i, *(cur->lights_enabled + i));
         }
 
@@ -400,9 +420,10 @@ void glshim_glPopAttrib() {
         enable_disable(GL_SAMPLE_COVERAGE, cur->sample_coverage);
         enable_disable(GL_SCISSOR_TEST, cur->scissor_test);
         enable_disable(GL_STENCIL_TEST, cur->stencil_test);
+        enable_disable(GL_POINT_SPRITE, cur->pointsprite);
         int a;
         int old_tex = glstate->texture.active;
-        for (a=0; a<MAX_TEX; a++) {
+        for (a=0; a<hardext.maxtex; a++) {
 			if (glstate->enable.texture_1d[a] != cur->texture_1d[a]) {
 				glshim_glActiveTexture(GL_TEXTURE0+a);
 				enable_disable(GL_TEXTURE_1D, cur->texture_1d[a]);
@@ -418,6 +439,7 @@ void glshim_glPopAttrib() {
             glstate->enable.texgen_r[a] = cur->texgen_r[a];
             glstate->enable.texgen_s[a] = cur->texgen_s[a];
             glstate->enable.texgen_t[a] = cur->texgen_t[a];
+            glstate->enable.texgen_q[a] = cur->texgen_q[a];
          }
          if (glstate->texture.active != old_tex) glshim_glActiveTexture(GL_TEXTURE0+old_tex);
     }
@@ -432,12 +454,43 @@ void glshim_glPopAttrib() {
     }
 
     if (cur->mask & GL_HINT_BIT) {
-        enable_disable(GL_PERSPECTIVE_CORRECTION_HINT, cur->perspective_hint);
-        enable_disable(GL_POINT_SMOOTH_HINT, cur->point_smooth_hint);
-        enable_disable(GL_LINE_SMOOTH_HINT, cur->line_smooth_hint);
-        enable_disable(GL_FOG_HINT, cur->fog_hint);
-        enable_disable(GL_GENERATE_MIPMAP_HINT, cur->mipmap_hint);
+        glshim_glHint(GL_PERSPECTIVE_CORRECTION_HINT, cur->perspective_hint);
+        glshim_glHint(GL_POINT_SMOOTH_HINT, cur->point_smooth_hint);
+        glshim_glHint(GL_LINE_SMOOTH_HINT, cur->line_smooth_hint);
+        glshim_glHint(GL_FOG_HINT, cur->fog_hint);
+        glshim_glHint(GL_GENERATE_MIPMAP_HINT, cur->mipmap_hint);
     }
+
+    if (cur->mask & GL_LIGHTING_BIT) {
+        enable_disable(GL_LIGHTING, cur->lighting);
+        glshim_glLightModelfv(GL_LIGHT_MODEL_AMBIENT, cur->light_model_ambient);
+        glshim_glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, cur->light_model_two_side);
+
+        int i;
+        int j=0;
+        for (i = 0; i < hardext.maxlights; i++) {
+            enable_disable(GL_LIGHT0 + i, *(cur->lights_enabled + i));
+            #define L(A) glshim_glLightfv(GL_LIGHT0 + i, A, cur->lights+j); j+=4
+            L(GL_AMBIENT);
+            L(GL_DIFFUSE);
+            L(GL_SPECULAR);
+            L(GL_POSITION); 
+            L(GL_SPOT_CUTOFF);
+            L(GL_SPOT_DIRECTION);
+            L(GL_SPOT_EXPONENT);
+            L(GL_CONSTANT_ATTENUATION);
+            L(GL_LINEAR_ATTENUATION);
+            L(GL_QUADRATIC_ATTENUATION);
+            #undef L
+        }
+        j=0;
+        #define M(A) glshim_glMaterialfv(GL_FRONT_AND_BACK, A, cur->materials+j); j+=4
+        M(GL_AMBIENT); M(GL_DIFFUSE); M(GL_SPECULAR); M(GL_EMISSION); M(GL_SHININESS);  // handle both face at some point?
+        #undef M
+
+        glshim_glShadeModel(cur->shade_model);
+    }
+
 	// GL_LIST_BIT
     if (cur->mask & GL_LIST_BIT) {
         glshim_glListBase(cur->list_base);
@@ -459,6 +512,17 @@ void glshim_glPopAttrib() {
     if (cur->mask & GL_POINT_BIT) {
         enable_disable(GL_POINT_SMOOTH, cur->point_smooth);
         glshim_glPointSize(cur->point_size);
+        if(hardext.pointsprite) {
+            enable_disable(GL_POINT_SPRITE, cur->pointsprite);
+            int a;
+            for (a=0; a<hardext.maxtex; a++) {
+                if(glstate->texture.pscoordreplace[a]!=cur->pscoordreplace[a]) {
+                    glshim_glActiveTexture(GL_TEXTURE0+a);
+                    glshim_glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, cur->pscoordreplace[a]);
+                }
+            }
+            if (glstate->texture.active!= cur->active) glshim_glActiveTexture(GL_TEXTURE0+cur->active);
+        }
     }
 
     if (cur->mask & GL_SCISSOR_BIT) {
@@ -478,10 +542,11 @@ void glshim_glPopAttrib() {
     if (cur->mask & GL_TEXTURE_BIT) {
         int a;
         //TODO: Enable bit for the 4 texture coordinates
-        for (a=0; a<MAX_TEX; a++) {
+        for (a=0; a<hardext.maxtex; a++) {
             glstate->enable.texgen_r[a] = cur->texgen_r[a];
             glstate->enable.texgen_s[a] = cur->texgen_s[a];
             glstate->enable.texgen_t[a] = cur->texgen_t[a];
+            glstate->enable.texgen_q[a] = cur->texgen_q[a];
             glstate->texgen[a] = cur->texgen[a];   // all mode and planes per texture in 1 line
 			if ((cur->texture[a]==0 && glstate->texture.bound[a] != 0) || (cur->texture[a]!=0 && glstate->texture.bound[a]==0)) {
 			   glshim_glActiveTexture(GL_TEXTURE0+a);
@@ -525,6 +590,7 @@ void glshim_glPopAttrib() {
     maybe_free(cur->clip_planes);
     maybe_free(cur->lights_enabled);
     maybe_free(cur->lights);
+    maybe_free(cur->materials);
     glstate->stack->len--;
 }
 
@@ -571,7 +637,7 @@ void glshim_glPopClientAttrib() {
 			enable_disable(GL_COLOR_ARRAY, cur->color_enable);
 		if (glstate->vao->secondary_array != cur->secondary_enable)
 			enable_disable(GL_SECONDARY_COLOR_ARRAY, cur->secondary_enable);
-        for (int a=0; a<MAX_TEX; a++) {
+        for (int a=0; a<hardext.maxtex; a++) {
 		   if (glstate->vao->tex_coord_array[a] != cur->tex_enable[a]) {
 			   glshim_glClientActiveTexture(GL_TEXTURE0+a);
 			   enable_disable(GL_TEXTURE_COORD_ARRAY, cur->tex_enable[a]);

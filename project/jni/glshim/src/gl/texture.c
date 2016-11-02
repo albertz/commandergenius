@@ -7,6 +7,7 @@
 #include <EGL/eglext.h>
 #include "gles.h"
 #include "../glx/streaming.h"
+#include "../glx/hardext.h"
 
 #ifndef GL_TEXTURE_STREAM_IMG  
 #define GL_TEXTURE_STREAM_IMG                                   0x8C0D     
@@ -151,6 +152,9 @@ void internal2format_type(GLenum internalformat, GLenum *format, GLenum *type)
             *format = GL_RGBA;
             *type = GL_UNSIGNED_BYTE;
             break;
+        case GL_DEPTH_COMPONENT:
+            *format = GL_DEPTH_COMPONENT;
+            *type = GL_UNSIGNED_SHORT;
         default:
             printf("LIBGL: Warning, unknown Internalformat (%s)\n", PrintEnum(internalformat));
             *format = GL_RGBA;
@@ -298,7 +302,7 @@ static void *swizzle_texture(GLsizei width, GLsizei height,
 			GLvoid *pix2 = pixels;
 			if (raster_need_transform())
 				if (!pixel_transform(data, &pixels, width, height,
-								*format, *type, raster_scale, raster_bias)) {
+								*format, *type, glstate->raster.raster_scale, glstate->raster.raster_bias)) {
 					printf("LIBGL: swizzle/convert error: (%s, %s -> %s, %s)\n",
 						PrintEnum(*format), PrintEnum(*type), PrintEnum(dest_format), PrintEnum(dest_type));
 					pix2 = pixels;
@@ -786,11 +790,16 @@ void glshim_glTexImage2D(GLenum target, GLint level, GLint internalformat,
         case GL_PROXY_TEXTURE_2D:
             break;
         default: {
-            GLsizei nheight = npot(height), nwidth = npot(width);
+            GLsizei nheight = (hardext.npot==2)?height:npot(height), nwidth = (hardext.npot==2)?width:npot(width);
 #ifdef PANDORA
+#define NO_1x1
+#endif
+#ifdef NO_1x1
             #define MIN_SIZE 2
-            if(nwidth < MIN_SIZE) nwidth=MIN_SIZE;
-            if(nheight < MIN_SIZE) nheight=MIN_SIZE;
+            if(level==0) {
+                if(nwidth < MIN_SIZE) nwidth=MIN_SIZE;
+                if(nheight < MIN_SIZE) nheight=MIN_SIZE;
+            }
             #undef MIN_SIZE
 #endif
             if (texstream && bound && bound->streamed) {
@@ -828,6 +837,18 @@ void glshim_glTexImage2D(GLenum target, GLint level, GLint internalformat,
                     if (pixels) gles_glTexSubImage2D(target, level, 0, 0, width, height,
                                          format, type, pixels);
                     errorGL();
+#ifdef NO_1x1
+                    if(level==0 && (width==1 || height==1 && pixels)) {
+                        // complete the texture, juste in ase it use GL_REPEAT
+                        // also, don't keep the fact we have resized, the non-adjusted coordinates will work (as the texture is enlarged)
+                        if(width==1) {gles_glTexSubImage2D(target, level, 1, 0, width, height, format, type, pixels); nwidth=1;}
+                        if(height==1) {gles_glTexSubImage2D(target, level, 0, 1, width, height, format, type, pixels); nheight=1;}
+                        if(width==1 && height==1) {   // create a manual mipmap just in case_state
+                            gles_glTexSubImage2D(target, level, 1, 1, width, height, format, type, pixels);
+                            gles_glTexImage2D(target, 1, format, 1, 1, 0, format, type, pixels);
+                        }
+                    }
+#endif
                 } else {
                     gles_glTexImage2D(target, level, format, width, height, border,
                                     format, type, pixels);
@@ -1764,9 +1785,8 @@ void glshim_glClientActiveTexture( GLenum texture ) {
  gles_glClientActiveTexture(texture);
  errorGL();
 }
-
 void glshim_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data) {
-    //printf("glReadPixels(%i, %i, %i, %i, 0x%04X, 0x%04X, 0x%p)\n", x, y, width, height, format, type, data);
+    //printf("glReadPixels(%i, %i, %i, %i, %s, %s, 0x%p)\n", x, y, width, height, PrintEnum(format), PrintEnum(type), data);
     GLuint old_glbatch = glstate->gl_batch;
     if (glstate->gl_batch) {
         flush();
@@ -1784,20 +1804,26 @@ void glshim_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
 		dst += (uintptr_t)glstate->vao->pack->data;
 		
 	readfboBegin();
-    if (format == GL_RGBA && format == GL_UNSIGNED_BYTE) {
+    if ((format == GL_RGBA && type == GL_UNSIGNED_BYTE)     // should not use default GL_RGBA on Pandora as it's very slow...
+       || (format == hardext.readf && type == hardext.readt)    // use the IMPLEMENTATION_READ too...
+       || (format == GL_DEPTH_COMPONENT && type == GL_FLOAT))   // this one will probably fail, as DEPTH is not readable on most GLES hardware 
+    {
         // easy passthru
-        gles_glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, dst);
+        gles_glReadPixels(x, y, width, height, format, type, dst);
         readfboEnd();
         glstate->gl_batch = old_glbatch;
         return;
     }
     // grab data in GL_RGBA format
+    int use_bgra = 0;
+    if(hardext.readf==GL_BGRA && hardext.readt==GL_UNSIGNED_BYTE)
+        use_bgra = 1;   // if IMPLEMENTATION_READ is BGRA, then use it as it's probably faster then RGBA.
     GLvoid *pixels = malloc(width*height*4);
-    gles_glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    gles_glReadPixels(x, y, width, height, use_bgra?GL_BGRA:GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     if (! pixel_convert(pixels, &dst, width, height,
-					    GL_RGBA, GL_UNSIGNED_BYTE, format, type, 0)) {
-        printf("LIBGL: ReadPixels error: (GL_RGBA, UNSIGNED_BYTE -> %s, %s )\n",
-            PrintEnum(format), PrintEnum(type));
+					    use_bgra?GL_BGRA:GL_RGBA, GL_UNSIGNED_BYTE, format, type, 0)) {
+        LOGE("LIBGL: ReadPixels error: (%s, UNSIGNED_BYTE -> %s, %s )\n",
+            PrintEnum(use_bgra?GL_BGRA:GL_RGBA), PrintEnum(format), PrintEnum(type));
     }
     free(pixels);
     readfboEnd();
@@ -2036,20 +2062,28 @@ void glshim_glCompressedTexImage2D(GLenum target, GLint level, GLenum internalfo
             } else {
                 pixels = uncompressDXTc(width, height, internalformat, imageSize, datab);
             }
+            // if RGBA / DXT1, then RGB 000 needs to have 0 alpha too
+            if(internalformat==GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) {
+                GLuint *p = (GLuint*)pixels;
+                for(int i=0; i<width*height; i++, p++)
+                    if(*p==0xff000000) *p=0;
+            }
             // automaticaly reduce the pixel size
             half=pixels;
             glstate->texture.bound[glstate->texture.active]->alpha = (internalformat==GL_COMPRESSED_RGB_S3TC_DXT1_EXT)?false:true;
             format = (internalformat==GL_COMPRESSED_RGB_S3TC_DXT1_EXT)?GL_RGB:GL_RGBA;
-            glstate->texture.bound[glstate->texture.active]->format = format; //internalformat;
             type = (internalformat==GL_COMPRESSED_RGB_S3TC_DXT1_EXT)?GL_UNSIGNED_SHORT_5_6_5:GL_UNSIGNED_SHORT_4_4_4_4;
-            glstate->texture.bound[glstate->texture.active]->type = type;
-            glstate->texture.bound[glstate->texture.active]->compressed = true;
             if (pixel_convert(pixels, &half, width, height, GL_RGBA, GL_UNSIGNED_BYTE, format, type, 0))
                 fact = 0;
 //            if (pixel_thirdscale(pixels, &half, width, height, GL_RGBA, GL_UNSIGNED_BYTE)) 
 //                fact = 1;
-            else
-                glstate->texture.bound[glstate->texture.active]->type = GL_UNSIGNED_BYTE;
+            else {
+                format = GL_RGBA;
+                type = GL_UNSIGNED_BYTE;
+            }
+            glstate->texture.bound[glstate->texture.active]->format = format; //internalformat;
+            glstate->texture.bound[glstate->texture.active]->type = type;
+            glstate->texture.bound[glstate->texture.active]->compressed = true;
         } else {
             fact = 0;
         }
@@ -2057,7 +2091,7 @@ void glshim_glCompressedTexImage2D(GLenum target, GLint level, GLenum internalfo
 		glshim_glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldalign);
 		if (oldalign!=1) 
             glshim_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glshim_glTexImage2D(target, level, GL_RGBA, width>>fact, height>>fact, border, format, type, half);
+		glshim_glTexImage2D(target, level, format, width>>fact, height>>fact, border, format, type, half);
 		if (oldalign!=1) 
             glshim_glPixelStorei(GL_UNPACK_ALIGNMENT, oldalign);
 		if (half!=pixels)
@@ -2223,6 +2257,60 @@ void glshim_glCompressedTexSubImage3D(GLenum target, GLint level, GLint xoffset,
 }
 
 
+void glshim_glTexEnvf(GLenum target, GLenum pname, GLfloat param) {
+    LOAD_GLES(glTexEnvf);
+    PUSH_IF_COMPILING(glTexEnvf);
+
+    if(target==GL_POINT_SPRITE && pname==GL_COORD_REPLACE)
+        glstate->texture.pscoordreplace[glstate->texture.active] = (param!=0.0f)?1:0;
+    gles_glTexEnvf(target, pname, param);
+}
+void glshim_glTexEnvi(GLenum target, GLenum pname, GLint param) {
+    LOAD_GLES(glTexEnvi);
+    PUSH_IF_COMPILING(glTexEnvi);
+    if(target==GL_POINT_SPRITE && pname==GL_COORD_REPLACE)
+        glstate->texture.pscoordreplace[glstate->texture.active] = (param!=0)?1:0;
+    gles_glTexEnvi(target, pname, param);
+}
+void glshim_glTexEnvfv(GLenum target, GLenum pname, const GLfloat *param) {
+    if ((glstate->list.compiling || glstate->gl_batch) && glstate->list.active) {
+		NewStage(glstate->list.active, STAGE_TEXENV);
+		rlTexEnvfv(glstate->list.active, target, pname, param);
+        noerrorShim();
+		return;
+	}
+    LOAD_GLES(glTexEnvfv);
+    gles_glTexEnvfv(target, pname, param);
+}
+void glshim_glTexEnviv(GLenum target, GLenum pname, const GLint *param) {
+    if ((glstate->list.compiling || glstate->gl_batch) && glstate->list.active) {
+		NewStage(glstate->list.active, STAGE_TEXENV);
+		rlTexEnviv(glstate->list.active, target, pname, param);
+        noerrorShim();
+		return;
+	}
+    LOAD_GLES(glTexEnviv);
+    gles_glTexEnviv(target, pname, param);
+}
+void glshim_glGetTexEnvfv(GLenum target, GLenum pname, GLfloat * params) {
+    LOAD_GLES(glGetTexEnvfv);
+    if (glstate->list.active && (glstate->gl_batch && !glstate->list.compiling)) flush();
+    if(target==GL_POINT_SPRITE && pname==GL_COORD_REPLACE)
+        *params = glstate->texture.pscoordreplace[glstate->texture.active];
+    else
+        gles_glGetTexEnvfv(target, pname, params);
+
+}
+void glshim_glGetTexEnviv(GLenum target, GLenum pname, GLint * params) {
+    LOAD_GLES(glGetTexEnviv);
+    if (glstate->list.active && (glstate->gl_batch && !glstate->list.compiling)) flush();
+    if(target==GL_POINT_SPRITE && pname==GL_COORD_REPLACE)
+        *params = glstate->texture.pscoordreplace[glstate->texture.active];
+    else
+        gles_glGetTexEnviv(target, pname, params);
+}
+
+
 //Direct wrapper
 void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *data) AliasExport("glshim_glTexImage2D");
 void glTexImage1D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *data) AliasExport("glshim_glTexImage1D");
@@ -2255,6 +2343,11 @@ void glActiveTexture( GLenum texture ) AliasExport("glshim_glActiveTexture");
 void glClientActiveTexture( GLenum texture ) AliasExport("glshim_glClientActiveTexture");
 GLboolean glIsTexture( GLuint texture ) AliasExport("glshim_glIsTexture");
 void glPixelStorei(GLenum pname, GLint param) AliasExport("glshim_glPixelStorei");
+void glTexEnvf(GLenum target, GLenum pname, GLfloat param) AliasExport("glshim_glTexEnvf");
+void glTexEnvi(GLenum target, GLenum pname, GLint param) AliasExport("glshim_glTexEnvi");
+void glGetTexEnvfv(GLenum target, GLenum pname, GLfloat * params) AliasExport("glshim_glGetTexEnvfv");
+void glGetTexEnviv(GLenum target, GLenum pname, GLint * params) AliasExport("glshim_glGetTexEnviv");
+
 //EXT mapper
 void glTexSubImage3DEXT(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,  GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *data) AliasExport("glshim_glTexSubImage3D");
 void glCompressedTexImage2DEXT(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *data) AliasExport("glshim_glCompressedTexImage2D");
