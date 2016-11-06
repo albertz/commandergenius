@@ -1,11 +1,13 @@
 gl4es
 ====
 
-This is a library providing OpenGL 1.x functionality for OpenGL ES accelerated cards.
+This is a library providing OpenGL 1.x functionality for OpenGL ES accelerated hardware.
 
 This is a fork a glshim (https://github.com/lunixbochs/glshim). Go check this lib if you need things like RemoteGL or if need support for TinyGLES (for 100% software rendering).
 
 The focusse is on compatibility with a wide selection of game and software, as well as speed.
+
+It has been tested successfully of a large selection of games and software, including: Mincraft, OpenMW, SeriousSam, RVGL, TSMC, TORCS, SpeedDreams, GL-117, Blender 2.68 and many more.
 
 Most function of OpenGL up to 1.5 are supported, with some notable exceptions:
  * Reading of Depth or Stencil buffer will not work
@@ -13,7 +15,7 @@ Most function of OpenGL up to 1.5 are supported, with some notable exceptions:
  
 Some know limitations:
  * GL_SELECT as some limitation in its implementation (for exemple, current Depth buffer or binded texture are not taken into account)
- * NPOT texture are supported, but not with GL_REPEAT / GL_MIRRORED, only GL_CLAMP will work properly
+ * NPOT texture are supported, but not with GL_REPEAT / GL_MIRRORED, only GL_CLAMP will work properly (unless the GLES Hardware support NPOT)
  * Framebuffer use FRAMEBUFFER_OES extension (that must be present in the GLES 1.1 stack)
  * Multiple Color attachment on Framebuffer are not supported
  * OcclusionQuery is implemented, but with a 0 bits precision
@@ -213,6 +215,10 @@ Initial Hardware test
 
 Version history
 ----
+
+##### 0.9.2
+ * All matrix are tracked now
+ * Texture Matrix are 100% handled by gl4es. GLES Hardware keep an Identity matrix (TexCoord are transformed if needed). This allows a better handling of NPOT texture on hadware that doesn't support Full NPOT (fixed movies beiing horizontaly shifted in openmw with LIBGL_NPOT=1 for example)
 
 ##### 0.9.1
  * Added gl4es specifics glHint capabilities. If the extension GL_GL4ES_hint is present, than a few Hint are accessible. Look in include/gl4eshint.h for the list.
