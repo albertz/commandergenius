@@ -10,8 +10,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := gl4es
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
-	$(LOCAL_PATH)/src/util
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES) -DBCMHOST
 
@@ -23,11 +22,16 @@ LOCAL_SRC_FILES := \
 	src/gl/directstate.c \
 	src/gl/eval.c \
 	src/gl/framebuffers.c \
+	src/gl/getter.c \
 	src/gl/gl.c \
+	src/gl/hint.c \
+	src/gl/init.c \
 	src/gl/light.c \
 	src/gl/line.c \
 	src/gl/list.c \
 	src/gl/loader.c \
+	src/gl/matrix.c \
+	src/gl/matvec.c \
 	src/gl/pixel.c \
 	src/gl/queries.c \
 	src/gl/raster.c \
@@ -41,14 +45,14 @@ LOCAL_SRC_FILES := \
 	src/gl/wrap/glesext.c \
 	src/gl/wrap/glstub.c \
 	src/gl/math/eval.c \
-	src/glx/glx.c \
 	src/glx/hardext.c \
+	src/glx/glx.c \
 	src/glx/lookup.c \
-	src/glx/streaming.c
+	src/glx/streaming.c \
 
 LOCAL_CFLAGS += -g -std=c99 -funwind-tables -O3 -DBCMHOST -fvisibility=hidden -include include/android_debug.h
 
-#LOCAL_LDLIBS := -ldl -llog -lEGL
+#LOCAL_LDLIBS := -ldl -llog
 
 include $(BUILD_STATIC_LIBRARY)
 

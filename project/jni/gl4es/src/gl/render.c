@@ -1,4 +1,5 @@
 #include "render.h"
+#include "init.h"
 
 void push_hit() {
     // push current hit to hit list, and re-init current hit
@@ -35,7 +36,7 @@ void push_hit() {
 }
 
 
-GLint glshim_glRenderMode(GLenum mode) {
+GLint gl4es_glRenderMode(GLenum mode) {
 	int ret = 0;
     if ((mode==GL_SELECT) || (mode==GL_RENDER)) {  // missing GL_FEEDBACK
         noerrorShim();
@@ -66,7 +67,7 @@ GLint glshim_glRenderMode(GLenum mode) {
         glstate->gl_batch = 0;
         flush();
     }
-    if((mode==GL_RENDER) && (glstate->gl_batch==0) && (gl_batch==1)) {
+    if((mode==GL_RENDER) && (glstate->gl_batch==0) && (globals4es.batch==1)) {
         glstate->gl_batch = 1;
         flush();
     }
@@ -75,7 +76,7 @@ GLint glshim_glRenderMode(GLenum mode) {
 	return ret;
 }
 
-void glshim_glInitNames() {
+void gl4es_glInitNames() {
 	if (glstate->namestack.names == 0) {
 		glstate->namestack.names = (GLuint*)malloc(1024*sizeof(GLuint));
 	}
@@ -83,7 +84,7 @@ void glshim_glInitNames() {
     noerrorShim();
 }
 
-void glshim_glPopName() {
+void gl4es_glPopName() {
     noerrorShim();
 	if (glstate->render_mode != GL_SELECT)
 		return;
@@ -94,7 +95,7 @@ void glshim_glPopName() {
         errorShim(GL_STACK_UNDERFLOW);
 }
 
-void glshim_glPushName(GLuint name) {
+void gl4es_glPushName(GLuint name) {
     noerrorShim();
 	if (glstate->render_mode != GL_SELECT)
 		return;
@@ -106,7 +107,7 @@ void glshim_glPushName(GLuint name) {
 	}
 }
 
-void glshim_glLoadName(GLuint name) {
+void gl4es_glLoadName(GLuint name) {
     noerrorShim();
 	if (glstate->render_mode != GL_SELECT)
 		return;
@@ -118,7 +119,7 @@ void glshim_glLoadName(GLuint name) {
 	glstate->namestack.names[glstate->namestack.top-1] = name;
 }
 
-void glshim_glSelectBuffer(GLsizei size, GLuint *buffer) {
+void gl4es_glSelectBuffer(GLsizei size, GLuint *buffer) {
     noerrorShim();
 	glstate->selectbuf.buffer = buffer;
 	glstate->selectbuf.size = size;
@@ -130,9 +131,9 @@ void init_select() {
 	 Initialize matrix and array vector for a select_Draw*
 	*/
 	 GLfloat tmp[16];
-	 glshim_glGetFloatv(GL_PROJECTION_MATRIX, tmp);
+	 gl4es_glGetFloatv(GL_PROJECTION_MATRIX, tmp);
 	 matrix_transpose(tmp, projection);
-	 glshim_glGetFloatv(GL_MODELVIEW_MATRIX, tmp);
+	 gl4es_glGetFloatv(GL_MODELVIEW_MATRIX, tmp);
 	 matrix_transpose(tmp, modelview);
 }
 
@@ -418,9 +419,9 @@ void select_glDrawElements(const pointer_state_t* vtx, GLenum mode, GLuint count
 }
 
 //Direct wrapper
-GLint glRenderMode(GLenum mode) AliasExport("glshim_glRenderMode");
-void glInitNames() AliasExport("glshim_glInitNames");
-void glPopName() AliasExport("glshim_glPopName");
-void glPushName(GLuint name) AliasExport("glshim_glPushName");
-void glLoadName(GLuint name) AliasExport("glshim_glLoadName");
-void glSelectBuffer(GLsizei size, GLuint *buffer) AliasExport("glshim_glSelectBuffer");
+GLint glRenderMode(GLenum mode) AliasExport("gl4es_glRenderMode");
+void glInitNames() AliasExport("gl4es_glInitNames");
+void glPopName() AliasExport("gl4es_glPopName");
+void glPushName(GLuint name) AliasExport("gl4es_glPushName");
+void glLoadName(GLuint name) AliasExport("gl4es_glLoadName");
+void glSelectBuffer(GLsizei size, GLuint *buffer) AliasExport("gl4es_glSelectBuffer");

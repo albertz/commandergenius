@@ -13,17 +13,10 @@
 #define skip_glColor4f
 #define skip_glDisable
 #define skip_glEnable
-#define skip_glGetIntegerv
-#define skip_glGetString
 #define skip_glIsEnabled
 #define skip_glMaterialfv
 #define skip_glMaterialf
 #define skip_glNormal3f
-
-#define skip_glGetFloatv
-
-#define skip_glPushMatrix
-#define skip_glPopMatrix
 
 #define skip_glBindBuffer
 #define skip_glBufferData
@@ -36,7 +29,6 @@
 #define skip_glUnmapBuffer
 #define skip_glGetBufferParameteriv
 #define skip_glGetBufferSubData
-#define skip_glGetPointerv
 
 #define skip_glBlendColor
 #define skip_glBlendFunc
@@ -49,7 +41,15 @@
 #define skip_glBlendFuncSeparate
 #define skip_glBlendFuncSeparatei
 
+// getter.c
 #define skip_glGetError
+#define skip_glGetPointerv
+#define skip_glGetIntegerv
+#define skip_glGetFloatv
+#define skip_glGetString
+
+// hint.c
+#define skip_glHint
 
 // light.c
 #define skip_glLightModelf
@@ -119,9 +119,18 @@
 #define skip_glFlush
 #define skip_glFinish
 
-// matrix don't go to stack well, because values are pointer, not immediate...
+// matrix.c
+#define skip_glPushMatrix
+#define skip_glPopMatrix
 #define skip_glLoadMatrixf
 #define skip_glMultMatrixf
+#define skip_glMatrixMode
+#define skip_glLoadIdentity
+#define skip_glTranslatef
+#define skip_glScalef
+#define skip_glRotatef
+#define skip_glOrthof
+#define skip_glFrustumf
 
 // MultiDrawArrays
 #define skip_glMultiDrawArrays

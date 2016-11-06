@@ -1,7 +1,11 @@
-glshim
+gl4es
 ====
 
-This is a shim providing OpenGL 1.x functionality to OpenGL ES accelerated cards.
+This is a library providing OpenGL 1.x functionality for OpenGL ES accelerated cards.
+
+This is a fork a glshim (https://github.com/lunixbochs/glshim). Go check this lib if you need things like RemoteGL or if need support for TinyGLES (for 100% software rendering).
+
+The focusse is on compatibility with a wide selection of game and software, as well as speed.
 
 Most function of OpenGL up to 1.5 are supported, with some notable exceptions:
  * Reading of Depth or Stencil buffer will not work
@@ -58,7 +62,7 @@ Put lib/libGL.so.1 in your `LD_LIBRARY_PATH`.
 Usage
 ----
 
-There are many environnement variable to control glshim behavour. All are numeric, except LIBGL_VERSION that take a string.
+There are many environnement variable to control gl4es behavour. All are numeric, except LIBGL_VERSION that take a string.
 
 ##### LIBGL_FB
 Controls the Framebuffer output
@@ -204,3 +208,14 @@ Expose glQueries functions
 Initial Hardware test
  * 0 : Default, perform intial hardware testing (using a PBuffer)
  * 1 : Do not perform test (no extensions tested or used)
+
+----
+
+Version history
+----
+
+##### 0.9.1
+ * Added gl4es specifics glHint capabilities. If the extension GL_GL4ES_hint is present, than a few Hint are accessible. Look in include/gl4eshint.h for the list.
+
+##### 0.9.0
+ * New name: gl4es
