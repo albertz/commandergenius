@@ -61,7 +61,7 @@ If you compile this code with SDL 1.3 or newer, or use in some other way, the li
 
 #include "SDL_opengles.h"
 
-#ifdef USE_GLSHIM
+#ifdef USE_GL4ES
 #include <GL/gl.h>
 #endif
 
@@ -1253,7 +1253,7 @@ void SDL_ANDROID_VideoContextRecreated()
 
 static void* ANDROID_GL_GetProcAddress(_THIS, const char *proc)
 {
-#ifdef USE_GLSHIM
+#ifdef USE_GL4ES
 	void * func = glXGetProcAddress(proc);
 #else
 	void * func = dlsym(glLibraryHandle, proc);

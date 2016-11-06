@@ -3,7 +3,7 @@
 APP_MODULES := application sdl-1.2 sdl_main sdl_native_helpers jpeg png ogg flac vorbis freetype tremor ogg
 
 # To filter out static libs from all libs in makefile
-APP_AVAILABLE_STATIC_LIBS := jpeg png tremor freetype xerces ogg tremor vorbis flac boost_date_time boost_filesystem boost_iostreams boost_program_options boost_regex boost_signals boost_system boost_thread boost_locale glu icudata icutest icui18n icuio icule iculx icutu icuuc sdl_savepng android_support glshim nanogl
+APP_AVAILABLE_STATIC_LIBS := jpeg png tremor freetype xerces ogg tremor vorbis flac boost_date_time boost_filesystem boost_iostreams boost_program_options boost_regex boost_signals boost_system boost_thread boost_locale glu icudata icutest icui18n icuio icule iculx icutu icuuc sdl_savepng android_support gl4es nanogl
 
 APP_ABI := armeabi
 
@@ -46,7 +46,7 @@ APPLICATION_BUILD_EXCLUDE :=
 
 APPLICATION_CUSTOM_BUILD_SCRIPT := 
 
-USE_GLSHIM :=
+USE_GL4ES :=
 
 SDL_ADDITIONAL_CFLAGS := -DSDL_ANDROID_KEYCODE_MOUSE=UNKNOWN -DSDL_ANDROID_KEYCODE_0=LCTRL -DSDL_ANDROID_KEYCODE_1=LALT -DSDL_ANDROID_KEYCODE_2=SPACE -DSDL_ANDROID_KEYCODE_3=RETURN -DSDL_ANDROID_KEYCODE_4=RETURN
 

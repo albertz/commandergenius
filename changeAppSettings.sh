@@ -187,8 +187,8 @@ echo "# Use GLES 3.x context" >> AndroidAppSettings.cfg
 echo "# you need this option only if you're developing 3-d app (y) or (n)" >> AndroidAppSettings.cfg
 echo NeedGles3=$NeedGles3 >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
-echo "# Use glshim library for provide OpenGL 1.x functionality to OpenGL ES accelerated cards (y) or (n)" >> AndroidAppSettings.cfg
-echo UseGlshim=$UseGlshim >> AndroidAppSettings.cfg
+echo "# Use gl4es library for provide OpenGL 1.x functionality to OpenGL ES accelerated cards (y) or (n)" >> AndroidAppSettings.cfg
+echo UseGl4es=$UseGl4es >> AndroidAppSettings.cfg
 echo >> AndroidAppSettings.cfg
 echo "# Application uses software video buffer - you're calling SDL_SetVideoMode() without SDL_HWSURFACE and without SDL_OPENGL," >> AndroidAppSettings.cfg
 echo "# this will allow small speed optimization. Enable this even when you're using SDL_HWSURFACE. (y) or (n)" >> AndroidAppSettings.cfg
@@ -494,11 +494,11 @@ else
 	NeedStencilBuffer=false
 fi
 
-if [ "$UseGlshim" = "y" ] ; then
-	UseGlshimCFlags=-DUSE_GLSHIM=1
+if [ "$UseGl4es" = "y" ] ; then
+	UseGl4esCFlags=-DUSE_GL4ES=1
 else
-	UseGlshim=
-	UseGlshimCFlags=
+	UseGl4es=
+	UseGl4esCFlags=
 fi
 
 if [ "$SwVideoMode" = "y" ] ; then
@@ -941,7 +941,7 @@ cat project/jni/SettingsTemplate.mk | \
 	sed "s^APPLICATION_ADDITIONAL_LDFLAGS :=.*^APPLICATION_ADDITIONAL_LDFLAGS := $AppLdflags^" | \
 	sed "s^APPLICATION_GLES_LIBRARY :=.*^APPLICATION_GLES_LIBRARY := $GLESLib^" | \
 	sed "s^APPLICATION_OVERLAPS_SYSTEM_HEADERS :=.*^APPLICATION_OVERLAPS_SYSTEM_HEADERS := $AppOverlapsSystemHeaders^" | \
-	sed "s^USE_GLSHIM :=.*^USE_GLSHIM := $UseGlshim^" | \
+	sed "s^USE_GL4ES :=.*^USE_GL4ES := $UseGl4es^" | \
 	sed "s^SDL_ADDITIONAL_CFLAGS :=.*^SDL_ADDITIONAL_CFLAGS := \
 		$RedefinedKeycodes \
 		$RedefinedKeycodesScreenKb \
@@ -951,7 +951,7 @@ cat project/jni/SettingsTemplate.mk | \
 		$CompatibilityHacksSlowCompatibleEventQueue \
 		$CompatibilityHacksTouchscreenKeyboardSaveRestoreOpenGLState \
 		$CompatibilityHacksProperUsageOfSDL_UpdateRects \
-		$UseGlshimCFlags \
+		$UseGl4esCFlags \
 		$GLESVersion^" | \
 	sed "s^APPLICATION_SUBDIRS_BUILD :=.*^APPLICATION_SUBDIRS_BUILD := $AppSubdirsBuild^" | \
 	sed "s^APPLICATION_BUILD_EXCLUDE :=.*^APPLICATION_BUILD_EXCLUDE := $AppBuildExclude^" | \
