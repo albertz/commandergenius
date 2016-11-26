@@ -20,11 +20,12 @@ python datasrc/compile.py server_content_header > src/game/generated/server_data
 python scripts/cmd5.py src/engine/shared/protocol.h src/game/generated/protocol.h src/game/tuning.h src/game/gamecore.cpp src/game/generated/protocol.h > src/game/generated/nethash.cpp
 }
 
-[ -n "`find data *.txt *.cfg 'example configs' -cnewer ../AndroidData/data.zip 2>&1`" ] && {
+
 echo "Archiving data"
 mkdir -p ../AndroidData
+rm -f ../AndroidData/data.zip
 zip -r ../AndroidData/data.zip data *.txt *.cfg "example configs" >/dev/null
-}
+
 
 for ARCH in armeabi-v7a x86; do
 	[ -e ../AndroidData/binaries-$ARCH.zip ] && \
