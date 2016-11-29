@@ -37,6 +37,10 @@ Compiling
 
     cmake . -DODROID=1; make GL
 
+*or for CHIP machines*
+
+    cmake . -DCHIP=1; make GL
+
 *or for Android*
 
     An Android.mk is provided that should compile with an NDK
@@ -71,7 +75,7 @@ Controls the Framebuffer output
  * 0 : Default, using standard x11 rendering
  * 1 : Use Framebuffer output (x11 bypassed, only fullscreen)
  * 2 : Use Framebuffer, but also an intermediary FBO
- * 3 : Use PBuffer, allowing x11 rendering even if driver doesn't support it 
+ * 3 : Use PBuffer, allowing x11 (and windowed) rendering even if driver doesn't support it 
 
 ##### LIBGL_XREFRESH
 Debug helper in specific cases
@@ -206,6 +210,11 @@ Expose glQueries functions
  * 0 : Don't expose the function (fake one will be used if called)
  * 1 : Default, expose fake functions (always answer 0)
 
+##### LIBGL_NOTEXMAT
+Handling of Texture Matrix
+ * 0 : Default, perform handling internaly (better handling of NPOT texture on all hardware)
+ * 1 : Let the driver handle texmat (can be faster in some cases, but NPOT texture may be broken)
+
 ##### LIBGL_NOTEST
 Initial Hardware test
  * 0 : Default, perform intial hardware testing (using a PBuffer)
@@ -217,6 +226,11 @@ Version history
 ----
 
 ##### Current version
+ * Improved Texture state tracking
+ * Added LIBGL_NOTEXMAT env. var. switch for Texture Matrix handling
+ * Added GL_EXT_vertex_array_bgra (and NEONinzed some loop)
+ * Finished GL_EXT_direct_state_access extension
+ * Mangled glX function (to be abble to use apitrace to capture GL frames)
  * Return some values in glXQueryServerString, coherent with glXGetClientString
 
 ##### 0.9.2
